@@ -1,0 +1,49 @@
+{% extends "../base.html" %}
+
+{% block content %}
+	<h3>
+		<a href="/sites">Placements</a> &gt; 
+		<a href="/sites/show?id={{site.key}}">{{site.name}}</a>
+	</h3>
+
+	<form method="post">
+		<table>
+			<tr>
+				<th>Name</th><td><input type='text' name="name" size="30" value="{{site.name}}"/></td>
+			</tr>
+			<tr>
+				<th>iTunes/Android Market URL</th><td><input type='text' name="url" size="50" value="{{site.url}}"/></td>
+			</tr>
+			<tr>
+				<th>Description</th><td><textarea name="description" cols="50" rows="3">{{site.description}}</textarea></td>
+			</tr>
+		
+			<tr><td colspan="2"><h4>Ad Properties</h4></td></tr>
+			<tr>
+				<th>Preferred Ad Type</th><td><select name="ad_type">
+						<option value="image" {% ifequal site.ad_type "image" %}selected{% endifequal %}>Text and image</option>
+						<option value="text" {% ifequal site.ad_type "text" %}selected{% endifequal %}>Text only</option>
+					</td>
+			</tr>
+			<tr>
+				<th>Default keywords</th><td><textarea name="keywords" cols=50 rows=5>{{site.keywords}}</textarea></td>
+			</tr>
+			
+			<tr><td colspan="2"><h4>Backfill Strategy</h4></td></tr>			
+			<tr>
+				<th>Backfill Behavior</th><td><select name="backfill">
+						<option value="adsense"  {% ifequal site.backfill "adsense" %}selected{% endifequal %}>Google AdSense</option>
+						<option value="iAd"  {% ifequal site.backfill "iAd" %}selected{% endifequal %}>Apple iAd</option>
+						<option value="clear"  {% ifequal site.backfill "clear" %}selected{% endifequal %}>Show background color</option>
+						<option value="fail" {% ifequal site.backfill "fail" %}selected{% endifequal %}>Return an error</option>
+					</td>
+			</tr>
+			<tr>
+				<th>Threshold CPM</th><td><input type="text" name="backfill_threshold_cpm" size=5 value="{{site.backfill_threshold_cpm}}"/> USD</td>
+			</tr>
+		</table>
+		<p>
+			<input type="submit" value="Save Changes"/>
+		</p>
+	</form>
+{% endblock %}

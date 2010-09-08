@@ -1,0 +1,42 @@
+{% extends "../base.html" %}
+
+{% block content %}
+	<h3>
+		<a href="/sites">Placements</a> &gt; {{site.name}}
+		<div class="toolbar">			
+			<a href="/sites/generate?id={{site.key}}">Get Code Snippet</a>
+			|
+			<a href="/sites/update?id={{site.key}}">Edit {{site.name}}</a>
+		</div>
+	</h3>
+	{{site.description}}
+
+	<img src="{{chart_url}}" width=800 height=200 style="padding: 5px 0 10px 0;"/>
+	
+	<table width="100%">
+		<thead>
+			<tr>
+			<th>Date</th>
+			<th width="75px">Impressions</th>
+			<th width="75px">Clicks</th>
+			<th width="75px">CTR</th>
+			</tr>
+		</thead>
+		{% for s in stats %}
+		<tr>
+			<td>{{s.date|format_date}}</td>
+			<td class="numeric">{{s.impression_count}}</td>
+			<td class="numeric">{{s.click_count}}</td>
+			<td class="numeric">{{s.ctr|percentage}}</td>
+		</tr>
+		{% endfor %}
+		<tr>
+			<td><strong>Total</strong></td>
+			<td class="numeric">{{impression_count}}</td>
+			<td class="numeric">{{click_count}}</td>
+			<td class="numeric">{{ctr|percentage}}</td>
+		</tr>
+		
+	</table>
+	
+{% endblock %}

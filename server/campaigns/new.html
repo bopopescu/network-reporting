@@ -1,0 +1,55 @@
+{% extends "../base.html" %}
+
+{% block content %}
+	<h3><a href="/campaigns">Campaigns</a> &gt; Create a Campaign</h3>
+	<p>
+		Campaigns allow you setup ads that will run on your mobile app placements
+		and on other apps in the network.
+	</p>
+	
+	<form method="post" action="/campaigns/create">
+		<table>
+			<tr>
+				<th>Name</th><td><input type='text' name="name" size="30" placeholder="My Campaign"/></td>
+			</tr>
+			<tr>
+				<th>Description</th><td><textarea name="description" cols="50" rows="3" placeholder="Geo-targeted campaign for My App"></textarea></td>
+			</tr>
+		
+			<tr><td colspan="2"><h4>Campaign Properties</h4></td></tr>
+			<tr>
+				<th>Budget</th><td><input type='text' name="budget" size="5" placeholder="10"/> USD / day</td>
+			</tr>
+			<tr>
+				<th>Bidding Strategy</th>
+				<td><select name="bid_strategy">
+							<option value="cpm">By impression (CPM)</option>
+							<option value="cpc">By click (CPC)</option>
+							<!--><option value="cpa">By conversion (CPA)</option>-->
+						</select>
+				</td>
+			</tr>
+
+			<tr><td colspan="2"><h4>Geographic and Device Targeting</h4></td></tr>
+			<tr>
+				<th>Geo Predicates</th>
+				<td>
+					<textarea name="geo_predicates" cols="50" rows="3">country_name=*</textarea><br/>
+					<tt>country_name=X; region_name=X,country_name=X; city_name=X,region_name=X,country_name=X</tt>
+				</td>
+			</tr>
+
+			<tr>
+				<th>Device Predicates</th>
+				<td>
+					<textarea name="device_predicates" cols="50" rows="3">platform_name=*</textarea><br/>
+					<tt>platform_name=(*,android,iphone)</tt>
+				</td>
+			</tr>
+		</table>
+		
+		<p>
+			<input type="submit" value="Create Campaign &raquo;"/>
+		</p>
+	</form>
+{% endblock %}

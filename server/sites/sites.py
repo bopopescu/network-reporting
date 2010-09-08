@@ -112,7 +112,7 @@ class ShowHandler(webapp.RequestHandler):
 	stats = []
 	for x in range(0, 14):
 		a = today - datetime.timedelta(days=x)
-		stats.append(models.SiteStats.sitestats_for_day(site, a))
+		stats.append(models.SiteStats.gql("where site = :1 and date = :2", site, a).get())
 
 	# chart
 	stats.reverse()

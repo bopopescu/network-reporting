@@ -17,6 +17,10 @@ class SplashHandler(webapp.RequestHandler):
 		self.response.out.write(template.render('splash.html', {}))
 		# self.redirect("/main")
 
+class LogoutHandler(webapp.RequestHandler):
+	def get(self):
+		self.redirect(users.create_logout_url('/main'))
+
 class MainHandler(webapp.RequestHandler):
   def get(self):
 		self.response.out.write(template.render('index.html', {}))
@@ -38,6 +42,7 @@ class AccountHandler(webapp.RequestHandler):
 
 def main():
   application = webapp.WSGIApplication([('/', SplashHandler), 
+										('/logout', LogoutHandler),
 										('/main', MainHandler),
 										('/account', AccountHandler),
 										('/about', AboutHandler)], debug=True)

@@ -1,5 +1,5 @@
 application: mopub-inc
-version: 31-campaigns
+version: 32-campaigns
 runtime: python
 api_version: 1
 default_expiration: "10d"

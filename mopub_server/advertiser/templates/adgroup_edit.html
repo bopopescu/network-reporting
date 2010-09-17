@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% load filters %}
+
+{% block title %}{{campaign.name}}{% endblock %}
+{% block content %}
+	<h3>
+		<a href="/campaigns">Campaigns</a> &gt; 
+		<a href="/advertiser/campaign/show/{{campaign.key}}">{{campaign.name}}</a> &gt;
+		{{a.name}}
+	</h3>
+	<form method="post">
+		<input type="hidden" name="id" value="{{campaign.key}}"/>
+		<table>
+			<tr>
+				<th>Name</th><td><input type='text' name="name" size="30" value="{{a.name}}"/></td>
+			</tr>
+			<tr><th>Max Bid</th><td><input type='text' name="bid" value="{{a.bid}}" size="8"/> USD</td></tr>
+			<tr><td colspan="2"><h4>Ad Group Targeting</h4> 
+				<p>Your bids will be matched with available inventory by matching keywords or 
+					matching placements in your existing applications.</p></td></tr>
+			<tr><th>Keywords</th>
+				<td><textarea rows="4" cols="40" name="keywords">{% for k in a.keywords %}{{k}}
+{% endfor %}</textarea></td></tr>
+			<tr><th>Placements</th>
+				<td><ul style="overflow:auto; height:100px; list-style: none;">
+					{% for s in sites %}
+							<li style="margin-left: 0;">
+								<input type="checkbox" name="site_keys" value="{{s.key}}" {% if s.checked %}checked{% endif %}> {{s.name}}</input>
+							</li>
+					{% endfor %}
+					</ul></td></tr>
+			<tr><td></td><td><input type='submit' value="Save Changes"/></td></tr>
+		</table>
+	</form>
+	
+	
+{% endblock %}

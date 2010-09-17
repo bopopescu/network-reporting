@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% load filters %}
+
+{% block content %}
+	<h3>
+		<a href="/publisher/">Apps</a> &gt; 
+		<a href="/publisher/show/?id={{site.key}}">{{site.name}}</a> &gt;		
+		Get Code Snippet
+	</h3>
+	
+	<h4>iPhone Instructions</h4>
+	<ol>
+		<li>	
+			<p>
+				See the <a href="http://code.google.com/p/mobileadsserving/wiki/IntegrationHowTo">Integration HOWTO</a>, located on the
+					 <a href="http://code.google.com/p/mobileadsserving">MobileAdsServing project on Google Code</a> Wiki.
+			</p>
+		</li>
+		<li>
+		<p>
+			Add the following code to your view's <code>viewDidLoad</code> method (or another suitable place):  
+		</p>
+	
+	<code>
+		<pre style="border: 1px solid #aaa; width: 750px; padding: 10px; background-color: #f8f8f8;">
+ AdController* adC = [[AdController alloc] initWithFormat:AdControllerFormat320x50 
+                                              publisherId:@"{{site.key}}" 
+                                     parentViewController:self];
+ adC.keywords = @"<i>keywords</i>";	// optional keywords
+ [self.view addSubview:adC.view];			</pre>
+	</code>
+		<p></p>
+		</li>
+		<li>
+			If you have trouble, see the <a href="http://code.google.com/p/mobileadsserving/wiki/">MobileAdsServing Wiki pages</a>.
+		</li>
+	</ol>
+
+	<h4>Terms and Conditions</h4>
+	<p>
+		All integrations are governed by the 
+		<a href="https://docs.google.com/document/pub?id=1NA-S5IO6qCVL3M_GcRXDJgP0VNthGKPMb61oQkXU2X8" target="_blank">
+			MoPub Online Standard Terms and Conditions.
+		</a>
+	</p>
+	
+	
+{% endblock %}

@@ -219,6 +219,7 @@ class SiteStats(db.Model):
 	date = db.DateProperty()
 
 	# impressions and clicks
+	request_count = db.IntegerProperty(default=0)
 	impression_count = db.IntegerProperty(default=0)
 	click_count = db.IntegerProperty(default=0)
 
@@ -248,6 +249,9 @@ class SiteStats(db.Model):
 	@classmethod
 	def stats_for_day_with_qualifier(c, owner, q, d):
 		return SiteStats.get_or_insert("%s:%s:%s" % (str(owner.key()), md5.md5(str(q)).hexdigest(), str(d)), owner=owner, date=d)
+		
+	def fill_rate(self):
+	  return self.impression_count / float(self.request_count)
 
 	def ctr(self):
 		if self.impression_count > 0:

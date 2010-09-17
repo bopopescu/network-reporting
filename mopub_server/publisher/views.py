@@ -82,7 +82,7 @@ class IndexHandler(RequestHandler):
 				 'bar_chart_url': bar_chart_url,
 	 			 'account': Account.current_account()})
 		else:
-			return HttpResponseRedirect("/sites/create")
+			return HttpResponseRedirect("/publisher/create")
 
 @login_required			
 def index(request,*args,**kwargs):

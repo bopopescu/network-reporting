@@ -105,12 +105,8 @@ class AdHandler(webapp.RequestHandler):
       html = "internal%dx%d.html" % (format[0], format[1])
       
       # output the request_id and the winning creative_id 
-      logging.info("OLP ad-auction %s %s" % (request_id, c.key()))
+      logging.info("OLP ad-auction %s %s %s" % (id, c.key(), request_id))
 
-      # create an ad click URL
-      ad_click_url = "http://www.mopub.com/m/aclk?id=%s&c=%s" % (request_id, c.key())
-      self.response.headers.add_header("X-Clickthrough", ad_click_url)
-      
       # enqueue impression tracking iff referer is not a crawler bot
       if str(self.request.headers['User-Agent']) not in CRAWLERS:
         taskqueue.add(url='/m/track/ai', params={'c': c.key(), 'q': q, 'id': id})   
@@ -119,15 +115,16 @@ class AdHandler(webapp.RequestHandler):
       logging.debug("eCPM did not exceed threshold, failing")
       html = None
     else:
-      # create an ad click URL
-      ad_click_url = "http://www.mopub.com/m/aclk?id=%s" % (request_id)
-      self.response.headers.add_header("X-Clickthrough", ad_click_url)
-
       # never mind, we should use a backfill strategy
       logging.debug("eCPM did not exceed threshold, using backfill: %s" % h["backfill"])
       self.response.headers.add_header("X-Backfill", str(h["backfill"]))
       html = "%s.html" % h["backfill"]
-    
+
+    # create an ad click URL
+    ad_click_url = "http://www.mopub.com/m/aclk?id=%s&c=%s&req=%s" % (id, str(c.key()) if c else '', request_id)
+    logging.info(ad_click_url)
+    self.response.headers.add_header("X-Clickthrough", str(ad_click_url))
+        
     # write it out
     if html:
       self.response.out.write(template.render(html, {"title": q, 

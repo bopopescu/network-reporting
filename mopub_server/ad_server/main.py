@@ -7,7 +7,6 @@ import re
 import datetime
 import hashlib
 import traceback
-import models
 import random
 import md5
 import time
@@ -25,6 +24,10 @@ from google.appengine.api.urlfetch import fetch
 from google.appengine.api import memcache
 from google.appengine.api import users
 from google.appengine.api.labs import taskqueue
+
+from publisher.models import *
+from advertiser.models import *
+from reporting.models import *
 
 CRAWLERS = ["Mediapartners-Google,gzip(gfe),gzip(gfe)"]
 MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7PnE6cH9_PX7OoeIIr5FjnTA'
@@ -57,7 +60,7 @@ class AdHandler(webapp.RequestHandler):
     # look up parameters for this pub id via memcache
     h = memcache.get("ad2:%s" % id)
     if h is None:
-      site = models.Site.site_by_id(id)
+      site = Site.site_by_id(id)
       if site is None:
         # the user's site key was not set correctly...
         self.error(500)
@@ -184,9 +187,9 @@ class AdHandler(webapp.RequestHandler):
     # 2) throw out ad groups owned by campaigns that have exceeded budget
     # 3) throw out ad groups that restrict by keywords and do not match the keywords
     # 4) throw out ad groups that do not match device and geo predicates
-    ad_groups = models.AdGroup.gql("where site_keys = :1 and active = :2 and deleted = :3 order by bid desc", db.Key(site_key), True, False).fetch(MAX_ADGROUPS)
+    ad_groups = AdGroup.gql("where site_keys = :1 and active = :2 and deleted = :3 order by bid desc", db.Key(site_key), True, False).fetch(MAX_ADGROUPS)
     logging.debug("ad groups: %s" % ad_groups)
-    ad_groups = filter(lambda a: models.SiteStats.stats_for_day(a.campaign, models.SiteStats.today()).revenue < a.campaign.budget, ad_groups)
+    ad_groups = filter(lambda a: SiteStats.stats_for_day(a.campaign, SiteStats.today()).revenue < a.campaign.budget, ad_groups)
     logging.debug("removed over budget, now: %s" % ad_groups)
     ad_groups = filter(lambda a: len(a.keywords) == 0 or set(keywords).intersection(a.keywords) > set(), ad_groups)
     logging.debug("removed keyword non-matches, now: %s" % ad_groups)
@@ -198,7 +201,7 @@ class AdHandler(webapp.RequestHandler):
     # if any ad groups were returned, reduce the creatives into a single list
     #
     if len(ad_groups) > 0:
-      creatives = models.Creative.gql("where ad_group in :1 and format_predicates in :2 and active = :3 and deleted = :4", 
+      creatives = Creative.gql("where ad_group in :1 and format_predicates in :2 and active = :3 and deleted = :4", 
         map(lambda x: x.key(), ad_groups), format_predicates, True, False).fetch(MAX_ADGROUPS)
       logging.debug(creatives)
     
@@ -263,8 +266,8 @@ class AdClickHandler(webapp.RequestHandler):
 class TrackImpression(webapp.RequestHandler):
   def post(self):
     try:
-      s = models.Site.site_by_id(self.request.get("id"))
-      stats = models.SiteStats.sitestats_for_today(s)     
+      s = Site.site_by_id(self.request.get("id"))
+      stats = SiteStats.sitestats_for_today(s)     
       db.run_in_transaction(stats.add_impression)
     except:
       logging.error("failed to track site impression %s" % self.request.get("id"))
@@ -275,16 +278,16 @@ class TrackImpression(webapp.RequestHandler):
 class TrackAdvertiserImpression(webapp.RequestHandler):
   def post(self):
     try:
-      creative = models.Creative.get(self.request.get("c"))
-      d = models.SiteStats.today()
+      creative = Creative.get(self.request.get("c"))
+      d = SiteStats.today()
       
-      db.run_in_transaction(models.SiteStats.stats_for_day(creative, d).add_impression)
-      db.run_in_transaction(models.SiteStats.stats_for_day(creative.ad_group, d).add_impression)
-      db.run_in_transaction(models.SiteStats.stats_for_day(creative.ad_group.campaign, d).add_impression)
+      db.run_in_transaction(SiteStats.stats_for_day(creative, d).add_impression)
+      db.run_in_transaction(SiteStats.stats_for_day(creative.ad_group, d).add_impression)
+      db.run_in_transaction(SiteStats.stats_for_day(creative.ad_group.campaign, d).add_impression)
 
       # add for the ad group sliced by keyword and by placement
-      db.run_in_transaction(models.SiteStats.stats_for_day_with_qualifier(creative.ad_group, self.request.get('q'), d).add_impression)
-      db.run_in_transaction(models.SiteStats.stats_for_day_with_qualifier(creative.ad_group, self.request.get('id'), d).add_impression)
+      db.run_in_transaction(SiteStats.stats_for_day_with_qualifier(creative.ad_group, self.request.get('q'), d).add_impression)
+      db.run_in_transaction(SiteStats.stats_for_day_with_qualifier(creative.ad_group, self.request.get('id'), d).add_impression)
 
     except:
       logging.error("failed to track creative impression %s" % self.request.get("id"))
@@ -295,8 +298,8 @@ class TrackAdvertiserImpression(webapp.RequestHandler):
 class TrackClick(webapp.RequestHandler):
   def post(self):
     try:
-      s = models.Site.site_by_id(self.request.get("id"))
-      stats = models.SiteStats.sitestats_for_today(s)
+      s = Site.site_by_id(self.request.get("id"))
+      stats = SiteStats.sitestats_for_today(s)
       db.run_in_transaction(stats.add_click)
     except:
       logging.error("failed to track click for id %s" % self.request.get("id"))
@@ -309,16 +312,16 @@ class TrackClick(webapp.RequestHandler):
 class TrackAdvertiserClick(webapp.RequestHandler):
   def post(self):
     try:
-      creative = models.Creative.get(self.request.get("c"))
-      d = models.SiteStats.today()
+      creative = Creative.get(self.request.get("c"))
+      d = SiteStats.today()
 
-      db.run_in_transaction(models.SiteStats.stats_for_day(creative, d).add_click_with_revenue, creative.ad_group.bid)
-      db.run_in_transaction(models.SiteStats.stats_for_day(creative.ad_group, d).add_click_with_revenue, creative.ad_group.bid)
-      db.run_in_transaction(models.SiteStats.stats_for_day(creative.ad_group.campaign, d).add_click_with_revenue, creative.ad_group.bid)
+      db.run_in_transaction(SiteStats.stats_for_day(creative, d).add_click_with_revenue, creative.ad_group.bid)
+      db.run_in_transaction(SiteStats.stats_for_day(creative.ad_group, d).add_click_with_revenue, creative.ad_group.bid)
+      db.run_in_transaction(SiteStats.stats_for_day(creative.ad_group.campaign, d).add_click_with_revenue, creative.ad_group.bid)
 
       # add for the ad group sliced by keyword and by placement
-      db.run_in_transaction(models.SiteStats.stats_for_day_with_qualifier(creative.ad_group, self.request.get('q'), d).add_click_with_revenue, creative.ad_group.bid)
-      db.run_in_transaction(models.SiteStats.stats_for_day_with_qualifier(creative.ad_group, self.request.get('id'), d).add_click_with_revenue, creative.ad_group.bid)
+      db.run_in_transaction(SiteStats.stats_for_day_with_qualifier(creative.ad_group, self.request.get('q'), d).add_click_with_revenue, creative.ad_group.bid)
+      db.run_in_transaction(SiteStats.stats_for_day_with_qualifier(creative.ad_group, self.request.get('id'), d).add_click_with_revenue, creative.ad_group.bid)
 
     except:
       logging.error("failed to track creative click for %s" % self.request.get("id"))

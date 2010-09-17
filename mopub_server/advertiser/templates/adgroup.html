@@ -67,7 +67,7 @@
 		{% endif %}
 		{% for s in sites %}
 			<tr>
-				<td><a href="/sites/show?id={{s.key}}">{{s.name}}</a></td>
+				<td><a href="/publisher/show?id={{s.key}}">{{s.name}}</a></td>
 				<td>{{s.stats.impression_count}}</td>
 				<td>{{s.stats.click_count}} ({{s.stats.ctr|percentage}})</td>
 				<td>{{s.stats.revenue|currency}}</td>

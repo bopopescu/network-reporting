@@ -119,6 +119,7 @@ INSTALLED_APPS = (
      'django.contrib.flatpages',
      'django.contrib.redirects',
      'django.contrib.sites',
+     'account',
      'common.ragendja',
      'publisher',
      'advertiser',

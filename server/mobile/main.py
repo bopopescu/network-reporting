@@ -132,7 +132,7 @@ class AdHandler(webapp.RequestHandler):
         "adsense_format": format[2],
         "w": format[0], 
         "h": format[1],
-        "url": "%s&%s" % (ad_click_url, urlencode([("r", c.url)])) if c else "",
+        "url": c.url if c else "",
         "addr": " ".join(addr),
         "client": h["adsense_pub_id"]}))
     else:
@@ -256,27 +256,6 @@ class AdClickHandler(webapp.RequestHandler):
     # forward on to the click URL
     self.redirect(url)
 
-#
-# When a user clicks on a specific creative that is served by us
-#
-class CreativeClickHandler(webapp.RequestHandler):
-  def get(self, id):
-    c = models.Creative.get(id)
-    publisher_id = self.request.get("id")   # publisher ID (aka Placement ID)
-    q = self.request.get("q")               # keywords
-    
-    # enqueue click tracking
-    if publisher_id:
-      taskqueue.add(url='/m/track/c', params={'id': publisher_id, 'q': q})
-    if c:
-      taskqueue.add(url='/m/track/ac', params={'c': id, 'id': publisher_id, 'q': q, 'udid': self.request.get("udid")})
-    
-    # redirect
-    if c.url.startswith("http"):
-      self.redirect(c.url)
-    else:
-      self.redirect("http://%s" % c.url)
-
 # 
 # Tracks an impression on the publisher side.  Accrues an impression
 # to the Site
@@ -347,7 +326,6 @@ class TrackAdvertiserClick(webapp.RequestHandler):
 def main():
   application = webapp.WSGIApplication([('/m/ad', AdHandler),
                     ('/m/aclk', AdClickHandler),
-                    ('/m/cclk/([-\w\.]+)', CreativeClickHandler),
                     ('/m/track/i', TrackImpression),
                     ('/m/track/ai', TrackAdvertiserImpression),
                     ('/m/track/c', TrackClick),

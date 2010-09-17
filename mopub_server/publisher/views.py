@@ -1,0 +1,173 @@
+import logging, os, re, datetime, hashlib
+
+from urllib import urlencode
+
+from google.appengine.api import users, memcache
+from google.appengine.api.urlfetch import fetch
+from google.appengine.ext import db
+from google.appengine.ext.webapp import template
+from google.appengine.ext.webapp.util import run_wsgi_app
+from google.appengine.ext.db import djangoforms
+
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse, HttpResponseRedirect, Http404
+from django.core.urlresolvers import reverse
+from common.ragendja.template import render_to_response, JSONResponse
+
+# from common.ragendja.auth.decorators import google_login_required as login_required
+
+from publisher.models import Site,Account
+from publisher.forms import SiteForm
+from reporting.models import SiteStats
+
+class RequestHandler(object):
+    def __call__(self,request):
+        self.params = request.POST or request.GET
+        self.request = request
+        if request.method == "GET":
+            return self.get()
+        elif request.method == "POST":
+            return self.post()    
+    def get(self):
+        pass
+    def put(self):
+        pass    
+
+class IndexHandler(RequestHandler):
+  def get(self):
+		# compute start times; start day before today so incomplete days don't mess up graphs
+		today = datetime.date.today() - datetime.timedelta(days=1)
+		begin_time = today - datetime.timedelta(days=14)
+		days = [today - datetime.timedelta(days=x) for x in range(0, 14)]
+
+		# gather aggregate data into each site
+		sites = Site.gql("where account = :1", Account.current_account()).fetch(50)		
+		if len(sites) > 0:		
+			# organize impressions by days
+			day_impressions = {}
+			for site in sites:
+				stats = SiteStats.gql("where site = :1 and date >= :2", site, begin_time).fetch(100)
+				site.stats = SiteStats()
+				site.stats.impression_count = sum(map(lambda x: x.impression_count, stats))
+				site.stats.click_count = sum(map(lambda x: x.click_count, stats))
+
+				# now aggregate it into days
+				for stat in stats:
+					day_impressions[stat.date] = (day_impressions.get(stat.date) or 0) + stat.impression_count
+
+			# organize the info on a day by day basis across all sites
+			series = [day_impressions.get(a,0) for a in days]
+			series.reverse()
+			url = "http://chart.apis.google.com/chart?cht=lc&chtt=Total+Daily+Impressions&chs=580x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
+				 ','.join(map(lambda x: str(x), series)),
+				 max(series) * 1.5,
+				 max(series) * 1.5,
+				 '|'.join(map(lambda x: x.strftime("%m/%d"), days)))
+
+			# do a bar graph showing contribution of each site to impression count
+			total_impressions_by_site = []
+			for site in sites:
+				total_impressions_by_site.append({"site": site, "total": site.stats.impression_count})
+			total_impressions_by_site.sort(lambda x,y: cmp(y["total"], x["total"]))	
+			bar_chart_url = "http://chart.apis.google.com/chart?cht=p&chtt=Contribution+by+Placement&chs=200x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chl=&chdlp=b&chdl=%s" % (
+				 ','.join(map(lambda x: str(x["total"]), total_impressions_by_site)),
+				 max(map(lambda x: x.stats.impression_count, sites)) * 1.5,
+				 max(map(lambda x: x.stats.impression_count, sites)) * 1.5,
+				 '|'.join(map(lambda x: x["site"].name, total_impressions_by_site[0:2])))
+
+			# stats
+			return render_to_response(self.request,'index.html', 
+				{'sites': sites, 		
+				 'chart_url': url,
+				 'bar_chart_url': bar_chart_url,
+	 			 'account': Account.current_account()})
+		else:
+			self.redirect("/sites/create")
+
+@login_required			
+def index(request,*args,**kwargs):
+  return IndexHandler()(request,*args,**kwargs)			
+    
+class CreateHandler(RequestHandler):
+  def get(self):
+    f = SiteForm()
+    return render_to_response(self.request,'new.html', {"f": f})
+
+  def post(self):
+    f = SiteForm(data=self.request.POST)
+    site = f.save(commit=False)
+    site.account = Account.current_account()
+    site.put()
+    return HttpResponseRedirect('/publisher/show/?id=%s' % site.key())
+
+@login_required  
+def create(request,*args,**kwargs):
+  return CreateHandler()(request,*args,**kwargs)
+  
+class ShowHandler(RequestHandler):
+  def get(self):
+  	# load the site
+  	site = Site.get(self.request.GET.get('id'))
+  	if site.account.key() != Account.current_account().key():
+  		self.error(404)
+  		return
+
+  	# do all days requested
+  	today = datetime.date.today() - datetime.timedelta(days=1)
+  	stats = []
+  	for x in range(0, 14):
+  		a = today - datetime.timedelta(days=x)
+  		stats.append(SiteStats.gql("where site = :1 and date = :2", site, a).get() or SiteStats(site = site, date = a))
+
+  	# chart
+  	stats.reverse()
+  	url = "http://chart.apis.google.com/chart?cht=lc&chs=800x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
+  		 ','.join(map(lambda x: str(x.impression_count), stats)), 
+  		 max(map(lambda x: x.impression_count, stats)) * 1.5,
+  		 max(map(lambda x: x.impression_count, stats)) * 1.5,
+  		 '|'.join(map(lambda x: x.date.strftime("%m/%d"), stats)))
+
+  	# totals
+  	impression_count = sum(map(lambda x: x.impression_count, stats))
+  	click_count = sum(map(lambda x: x.click_count, stats))
+  	ctr = float(click_count) / float(impression_count) if impression_count > 0 else 0
+
+  	# write response
+  	return render_to_response(self.request,'show.html', {'site':site, 
+  		'impression_count': impression_count, 'click_count': click_count, 'ctr': ctr,
+  		'account':Account.current_account(), 
+  		'chart_url': url,
+  		'stats':stats})
+  
+  
+@login_required
+def show(request,*args,**kwargs):
+  return ShowHandler()(request,*args,**kwargs)   
+
+class UpdateHandler(RequestHandler):
+	def get(self):
+		c = Site.get(self.request.GET.get("id"))
+		f = SiteForm(instance=c)
+		return render_to_response(self.request,'publisher/edit.html', {"f": f, "site": c})
+
+	def post(self):
+		c = Site.get(self.request.GET.get('id'))
+		f = SiteForm(data=self.request.POST, instance=c)
+		if c.account.user == users.get_current_user():
+			f.save(commit=False)
+			c.put()
+		return HttpResponseRedirect('/publisher/show/?id=%s' % c.key())
+  
+
+@login_required
+def update(request,*args,**kwargs):
+  return UpdateHandler()(request,*args,**kwargs)   
+  
+class GenerateHandler(RequestHandler):
+  def get(self):
+  	site = Site.get(self.request.GET.get('id'))
+  	return render_to_response(self.request,'code.html', {'site': site})
+  
+@login_required
+def generate(request,*args,**kwargs):
+  return GenerateHandler()(request,*args,**kwargs) 

@@ -14,7 +14,7 @@
 
 # Django settings for google-app-engine-django project.
 
-import os
+from common.ragendja.settings_pre import *
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -74,15 +74,25 @@ EMAIL_HOST = ''
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.load_template_source',
+    'common.ragendja.template.app_prefixed_loader',
     'django.template.loaders.app_directories.load_template_source',
-#     'django.template.loaders.eggs.load_template_source',
 )
 
 MIDDLEWARE_CLASSES = (
-    'django.middleware.common.CommonMiddleware',
-#    'django.contrib.sessions.middleware.SessionMiddleware',
-#    'django.contrib.auth.middleware.AuthenticationMiddleware',
-#    'django.middleware.doc.XViewMiddleware',
+'django.contrib.sessions.middleware.SessionMiddleware',
+# 'appengine_django.auth.middleware.AuthenticationMiddleware',
+# Django authentication
+# 'django.contrib.auth.middleware.AuthenticationMiddleware',
+# Google authentication
+'common.ragendja.auth.middleware.GoogleAuthenticationMiddleware',
+# Hybrid Django/Google authentication
+#'ragendja.auth.middleware.HybridAuthenticationMiddleware',
+'django.middleware.common.CommonMiddleware',
+'django.middleware.locale.LocaleMiddleware',
+# 'ragendja.sites.dynamicsite.DynamicSiteIDMiddleware',
+# 'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
+# 'django.contrib.redirects.middleware.RedirectFallbackMiddleware',
+
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
@@ -102,8 +112,18 @@ TEMPLATE_DIRS = (
 
 INSTALLED_APPS = (
      'appengine_django',
-#    'django.contrib.auth',
-#    'django.contrib.contenttypes',
-#    'django.contrib.sessions',
-#    'django.contrib.sites',
+     'django.contrib.auth',
+     'django.contrib.sessions',
+     # 'django.contrib.admin',
+     'django.contrib.webdesign',
+     'django.contrib.flatpages',
+     'django.contrib.redirects',
+     'django.contrib.sites',
+     'common.ragendja',
+     'publisher',
+     'advertiser',
 )
+
+IGNORE_APP_URLSAUTO = ()
+
+from common.ragendja.settings_post import *

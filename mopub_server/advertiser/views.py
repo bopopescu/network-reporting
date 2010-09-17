@@ -19,7 +19,8 @@ from common.ragendja.template import render_to_response, JSONResponse
 from advertiser.models import Campaign, AdGroup, Creative
 from advertiser.forms import CampaignForm, AdGroupForm
 
-from sites.models import Site, Account
+from publisher.models import Site, Account
+from reporting.models import SiteStats
 
 class RequestHandler(object):
     def __call__(self,request):
@@ -36,10 +37,10 @@ class RequestHandler(object):
         
 class IndexHandler(RequestHandler):
   def get(self):
-		campaigns = Campaign.gql("where u = :1 and deleted = :2", users.get_current_user(), False).fetch(10)
-		for c in campaigns:
-			c.stats = models.SiteStats.stats_for_day(c, models.SiteStats.today())
-		return render_to_response(self.request,'advertiser/index.html', {'campaigns':campaigns, 'user':users.get_current_user()})
+    campaigns = Campaign.gql("where u = :1 and deleted = :2", users.get_current_user(), False).fetch(10)
+    for c in campaigns:
+      c.stats = SiteStats.stats_for_day(c, SiteStats.today())
+    return render_to_response(self.request,'advertiser/index.html', {'campaigns':campaigns, 'user':users.get_current_user()})
       
 @login_required			
 def index(request,*args,**kwargs):
@@ -72,21 +73,21 @@ class ShowHandler(RequestHandler):
           return self.post()
           
   def get(self, campaign_id):
-		# load the campaign
-		campaign = Campaign.get(campaign_id)
-    # campaign.stats = models.SiteStats.stats_for_day(campaign, models.SiteStats.today())
+    # load the campaign
+    campaign = Campaign.get(campaign_id)
+    campaign.stats = SiteStats.stats_for_day(campaign, SiteStats.today())
 
-		# load the adgroups
-		bids = AdGroup.gql("where campaign=:1 and deleted = :2", campaign, False).fetch(50)
-    # for b in bids:
-    #   b.stats = models.SiteStats.stats_for_day(b, models.SiteStats.today())
+    # load the adgroups
+    bids = AdGroup.gql("where campaign=:1 and deleted = :2", campaign, False).fetch(50)
+    for b in bids:
+      b.stats = SiteStats.stats_for_day(b, SiteStats.today())
 
-		# write response
-		return render_to_response(self.request,'advertiser/show.html', 
-			{'campaign':campaign, 
-			 'bids': bids,
-			 'sites': Site.gql('where account=:1', Account.current_account()),
-			 'user':users.get_current_user()})
+    # write response
+    return render_to_response(self.request,'advertiser/show.html', 
+                                          {'campaign':campaign, 
+                                          'bids': bids,
+                                          'sites': Site.gql('where account=:1', Account.current_account()),
+                                          'user':users.get_current_user()})
 
 @login_required			
 def campaign_show(request,*args,**kwargs):
@@ -157,7 +158,7 @@ def campaign_delete(request,*args,**kwargs):
 class RemoveBidHandler(RequestHandler):
   def post(self):
 		for id in self.request.get_all('id') or []:
-			b = models.AdGroup.get(id)
+			b = AdGroup.get(id)
 			logging.info(b)
 			if b != None and b.campaign.u == users.get_current_user():
 				b.deleted = True
@@ -187,12 +188,12 @@ class ShowAdGroupHandler(RequestHandler):
   def get(self, adgroup_id):
     adgroup = AdGroup.get(adgroup_id)
     creatives = Creative.gql('where ad_group = :1 and deleted = :2', adgroup, False).fetch(50)
-    # for c in creatives:
-    #   c.stats = models.SiteStats.stats_for_day(c, models.SiteStats.today())
+    for c in creatives:
+      c.stats = SiteStats.stats_for_day(c, SiteStats.today())
     sites = map(lambda x: Site.get(x), adgroup.site_keys)
-    # for s in sites:
-    #   s.stats = models.SiteStats.stats_for_day_with_qualifier(adgroup, s.key(), models.SiteStats.today())
-    # keywords = map(lambda k: {"keyword": k, "stats": models.SiteStats.stats_for_day_with_qualifier(adgroup, k, models.SiteStats.today())}, adgroup.keywords)
+    for s in sites:
+      s.stats = SiteStats.stats_for_day_with_qualifier(adgroup, s.key(), SiteStats.today())
+    keywords = map(lambda k: {"keyword": k, "stats": SiteStats.stats_for_day_with_qualifier(adgroup, k, SiteStats.today())}, adgroup.keywords)
     keywords = []
     
     return render_to_response(self.request,'advertiser/adgroup.html', 

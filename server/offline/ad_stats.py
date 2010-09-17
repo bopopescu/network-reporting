@@ -10,10 +10,7 @@ sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/Go
 sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/yaml/lib")
 sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/fancy_urllib")
 
-import wsgiref.handlers, cgi, logging, os, re, datetime, hashlib, models
-import fileinput
-import urlparse
-
+import wsgiref.handlers, cgi, logging, os, re, datetime, hashlib, models, traceback, fileinput, urlparse
 from django.utils import simplejson
 from urllib import urlencode
 from properties import Properties
@@ -76,7 +73,7 @@ class AdStats:
       # also decode the path into a query dict
       d["path"] = urlparse.urlsplit(d.get("url"))[2]
       d["qs"] = urlparse.urlsplit(d.get("url"))[3]
-      d["params"] = cgi.parse_qs(d["qs"])
+      d["params"] = dict(cgi.parse_qsl(d["qs"]))
 
       return d
     else:
@@ -92,18 +89,32 @@ class AdStats:
       return None
     
 #
+# Eventually should be rolled into models
+#
+class UserStats(db.Model):
+  device_id = db.StringProperty()
+  last_updated = db.DateTimeProperty()
+
+  ll = db.StringProperty()
+
+  keywords = db.StringListProperty()
+
+  def __repr__(self):
+    return "%s\tll=%s,q=%s" % (self.device_id, self.ll, self.keywords)
+
+#
 # Generic base class for stats counters
 #
 all_stats = {}
 class StatsCounter(object):
-  def get_site_stats(self, owner_key, date=datetime.datetime.now().date()):
+  def get_site_stats(self, site_key, date=datetime.datetime.now().date()):
     try:
-      if owner_key:
-        key = "%s:%s" % (owner_key, date)
+      if site_key:
+        key = "%s::%s" % (site_key, date)
         s = all_stats.get(key)
         if s is None:
-          s = models.SiteStats(owner=db.get(owner_key), date=date)
-          if s.owner:
+          s = models.SiteStats(site=db.get(site_key), date=date)
+          if s.site:
             all_stats[key] = s
             return s
           else:
@@ -113,6 +124,47 @@ class StatsCounter(object):
         return None
     except:
       return None
+
+  def get_qualifier_stats(self, qualifier_key, date=datetime.datetime.now().date()):
+    if qualifier_key:
+      key = ":%s:%s" % (qualifier_key, date)
+      s = all_stats.get(key)
+      if s is None:
+        s = models.SiteStats(owner=db.get(qualifier_key), date=date)
+        if s.owner:
+          all_stats[key] = s
+          return s
+        else:
+          return None
+      return s
+    else:
+      return None
+  
+  def get_site_stats_with_qualifier(self, site_key, qualifier_key, date=datetime.datetime.now().date()):
+    try:
+      if site_key and qualifier_key:
+        key = "%s:%s:%s" % (site_key, qualifier_key, date)
+        s = all_stats.get(key)
+        if s is None:
+          s = models.SiteStats(site=db.get(site_key), owner=db.get(qualifier_key), date=date)
+          if s.site and s.owner:
+            all_stats[key] = s
+            return s
+          else:
+            return None
+        return s
+      else:
+        return None
+    except:
+      return None
+
+  def get_user_stats(self, device_id):
+    key = "device_id:%s" % device_id
+    s = all_stats.get(key)
+    if s is None:
+      s = models.UserStats(device_id=device_id)
+      all_stats[key] = s
+    return s
 
   # should be overridden by subclasses
   def process(self, logline_dict):
@@ -164,33 +216,73 @@ class PubClickCounter(StatsCounter):
 #
 class CampaignImpressionCounter(StatsCounter):
   def process(self, d):
-    stats = self.get_site_stats(d["params"].get("c"))
-    if stats:
+    if d["params"].get("c") and db.get(d["params"].get("c")):
+      stats = self.get_qualifier_stats(d["params"].get("c"))
+      adgroup_stats = self.get_qualifier_stats(stats.owner.ad_group.key())
+      campaign_stats = self.get_qualifier_stats(stats.owner.ad_group.campaign.key())
+      
       stats.impression_count += 1
+      adgroup_stats.impression_count += 1
+      campaign_stats.impression_count += 1
+
+      site_key = d["params"].get("id")
+      stats_q = self.get_site_stats_with_qualifier(site_key, stats.owner.key())
+      adgroup_stats_q = self.get_site_stats_with_qualifier(site_key, adgroup_stats.owner.key())
+      campaign_stats_q = self.get_site_stats_with_qualifier(site_key, campaign_stats.owner.key())
+      
+      stats_q.impression_count += 1
+      adgroup_stats_q.impression_count += 1
+      campaign_stats_q.impression_count += 1
 
 #
 # CampaignClickCounter - counts clicks and accrues them to creatives, adgroups and campaigns
 #
 class CampaignClickCounter(StatsCounter):
   def process(self, d):
-    if d["params"].get("c"):
-      print d
-      stats = self.get_site_stats(d["params"].get("c")[0])
-      if stats:
-        stats.click_count += 1
+    # accrue this click to a particular creative, campaign and ad group
+    if d["params"].get("c") and db.get(d["params"].get("c")):
+      stats = self.get_qualifier_stats(d["params"].get("c"))
+      adgroup_stats = self.get_qualifier_stats(stats.owner.ad_group.key())
+      campaign_stats = self.get_qualifier_stats(stats.owner.ad_group.campaign.key())
+
+      stats.click_count += 1
+      adgroup_stats.click_count += 1
+      campaign_stats.click_count += 1
+
+      site_key = d["params"].get("id")
+      stats_q = self.get_site_stats_with_qualifier(site_key, stats.owner.key())
+      adgroup_stats_q = self.get_site_stats_with_qualifier(site_key, adgroup_stats.owner.key())
+      campaign_stats_q = self.get_site_stats_with_qualifier(site_key, campaign_stats.owner.key())
+      
+      stats_q.click_count += 1
+      adgroup_stats_q.click_count += 1
+      campaign_stats_q.click_count += 1
+
+#
+# UserInfoAccumulator - accumulates information about a user based on requests
+#
+class UserInfoAccumulator(StatsCounter):
+  def process(self, d):
+    stats = self.get_user_stats(d["params"]["udid"][0])
+    if stats:
+      if d["params"].get("ll"):
+        stats.ll = d["params"]["ll"][0]
+      if d["params"].get("q") and len(d["params"].get("q")[0]) > 0:
+        stats.keywords.append(d["params"]["q"][0])
+
 
 ####
 # main()
 def auth_func():
-#    return raw_input('Username:'), getpass.getpass('Password:')
+#  return "jimepayne", getpass.getpass('Password:')
   return "jimepayne", "91torpedo*"
 
 if __name__ == '__main__':
   if len(sys.argv) < 3:
-      print "Usage: %s [logfile]" % (sys.argv[0],)
+      print "Usage: %s [logfile] [url]" % (sys.argv[0],)
   app_id = "mopub-inc"
-  host = '%s.appspot.com' % app_id
-  logfile = sys.argv[1] if len(sys.argv) == 3 else "logfile"
+  host = sys.argv[2] if len(sys.argv) > 2 else ('%s.appspot.com' % app_id)
+  logfile = sys.argv[1] if len(sys.argv) > 1 else "logfile"
 
   # connect to google datastore
   remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', auth_func, host)
@@ -198,5 +290,5 @@ if __name__ == '__main__':
   # process the logfile .... 
   AdStats().process(logfile)
   for s in StatsCounter.all_stats().values():
-    print "%s\t%d\t%d\t%d" % (s.owner.key(), s.request_count, s.impression_count, s.click_count)
+    print repr(s)
 

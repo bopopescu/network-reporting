@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% load filters %}
+
+
+{% block content %}
+	<h3>
+		Campaigns
+		<div class="toolbar">
+			<a href="/advertiser/campaign/create/">Create a Campaign</a> 
+		</div>
+	</h3>
+	<p>
+		<b>Campaigns</b> are used to set budget and targeting criteria for your mobile ads.<br/>
+		<b>Ad Groups</b> contain actual ad creatives and destination URLs.
+	</p>
+	
+	<table class="wide">
+		<thead>
+			<th width="25%">Campaign</th>
+			<th>Budget</th>
+			<th>Status</th>
+			<th width="75px">Impr.</th>
+			<th width="75px">Clicks</th>
+			<th width="75px">Cost</th>
+		</thead>
+		{% for c in campaigns %}
+			<tr>
+				<td><a href="/campaigns/show/{{c.key}}">{{c.name}}</a></td>
+				<td>{{c.budget|currency}}</td>
+				<td>
+					<b>
+						{% if campaign.deleted %}
+							Deleted
+						{% endif %}
+						{% if campaign.active and not campaign.deleted %}
+							Active
+						{% endif %}
+						{% if not campaign.active and not campaign.deleted %}
+							Paused
+						{% endif %}
+					</b>
+				</td>
+				<td class="numeric">{{c.stats.impression_count}}</td>
+				<td class="numeric">{{c.stats.click_count}} ({{c.stats.ctr|percentage}})
+				<td class="numeric">{{c.stats.revenue|currency}}</td>
+			</tr>
+		{% endfor %}
+	</table>
+{% endblock %}

@@ -1,0 +1,67 @@
+application: mopub-inc
+version: 32-campaigns
+runtime: python
+api_version: 1
+default_expiration: "10d"
+
+handlers:
+- url: /images
+  static_dir: public/images
+  
+- url: /stylesheets
+  static_dir: public/stylesheets
+  
+- url: /js
+  static_dir: public/javascripts
+
+- url: /media
+  static_dir: public/media
+
+- url: /remote_api
+  script: $PYTHON_LIB/google/appengine/ext/remote_api/handler.py
+  login: admin
+      
+- url: /campaigns/creative/image/.*
+  script: campaigns/campaigns.py
+
+- url: /campaigns/?.*
+  script: campaigns/campaigns.py
+  login: required
+
+- url: /sites/?.*
+  script: sites/sites.py
+  login: required
+  
+- url: /ads/?.*
+  script: ads/main.py
+  
+- url: /m/.*
+  script: mobile/main.py
+  
+- url: /mobile/?.*
+  script: mobile/fe.py
+  
+- url: /oauth/.*
+  script: oauth/twitter_oauth_handler.py  
+  
+- url: /pages/?.*
+  script: pages/pages.py
+
+- url: /d/?.*
+  script: main/dashboard.py
+  login: admin
+
+- url: /.*
+  script: main/main.py
+  
+skip_files:
+- ^(.*/)?app\.yaml
+- ^(.*/)?app\.yml
+- ^(.*/)?index\.yaml
+- ^(.*/)?index\.yml
+- ^(.*/)?#.*#
+- ^(.*/)?.*~
+- ^(.*/)?.*\.py[co]
+- ^(.*/)?.*/RCS/.*
+- ^(.*/)?\..*  
+- ^SimpleAds/(.*)

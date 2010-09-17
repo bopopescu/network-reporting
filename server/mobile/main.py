@@ -48,7 +48,7 @@ class AdHandler(webapp.RequestHandler):
     
     # create a unique request id
     request_id = md5.md5("%s:%s" % (self.request.query_string, time.time())).hexdigest()
-    logging.info('OLP ad-request %s %s "%s" "%s"' % (request_id, self.request.remote_addr, self.request.query_string, self.request.headers["User-Agent"]))
+    logging.info('OLP ad-request {"request_id": "%s", "remote_addr": "%s", "q": "%s", "user_agent": "%s"}' % (request_id, self.request.remote_addr, self.request.query_string, self.request.headers["User-Agent"]))
 
     # enqueue impression tracking iff referer is not a crawler bot
     if str(self.request.headers['User-Agent']) not in CRAWLERS:
@@ -105,7 +105,7 @@ class AdHandler(webapp.RequestHandler):
       html = "internal%dx%d.html" % (format[0], format[1])
       
       # output the request_id and the winning creative_id 
-      logging.info("OLP ad-auction %s %s %s" % (id, c.key(), request_id))
+      logging.info('OLP ad-auction {"id": "%s", "c": "%s", "request_id": "%s"}' % (id, c.key(), request_id))
 
       # enqueue impression tracking iff referer is not a crawler bot
       if str(self.request.headers['User-Agent']) not in CRAWLERS:
@@ -122,7 +122,6 @@ class AdHandler(webapp.RequestHandler):
 
     # create an ad click URL
     ad_click_url = "http://www.mopub.com/m/aclk?id=%s&c=%s&req=%s" % (id, str(c.key()) if c else '', request_id)
-    logging.info(ad_click_url)
     self.response.headers.add_header("X-Clickthrough", str(ad_click_url))
         
     # write it out
@@ -133,7 +132,7 @@ class AdHandler(webapp.RequestHandler):
         "adsense_format": format[2],
         "w": format[0], 
         "h": format[1],
-        "url": "/m/cclk/%s?%s" % (c.key(), urlencode([("v", "1"), ("id", id), ("q", q)])) if c else "",
+        "url": "%s&%s" % (ad_click_url, urlencode([("r", c.url)])) if c else "",
         "addr": " ".join(addr),
         "client": h["adsense_pub_id"]}))
     else:

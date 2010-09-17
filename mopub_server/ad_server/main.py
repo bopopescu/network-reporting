@@ -335,6 +335,6 @@ def main():
                     ('/m/track/ac', TrackAdvertiserClick)], debug=True)
   wsgiref.handlers.CGIHandler().run(application)
 
-webapp.template.register_template_library('filters')
+# webapp.template.register_template_library('filters')
 if __name__ == '__main__':
   main()

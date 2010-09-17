@@ -314,7 +314,6 @@ class DisplayCreativeHandler(RequestHandler):
       return HttpResponse(c.image,content_type='image/png')
     return HttpResponse('NOOOOOOOOOOOO IMAGE')
 
-@login_required
 def creative_image(request,*args,**kwargs):
   return DisplayCreativeHandler()(request,*args,**kwargs)
 

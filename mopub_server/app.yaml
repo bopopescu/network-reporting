@@ -1,7 +1,8 @@
-application: google-app-engine-django
-version: 1
+application: mopub-inc
+version: 32-campaigns-django-port
 runtime: python
 api_version: 1
+default_expiration: "10d"
 
 handlers:
 - url: /static
@@ -21,7 +22,6 @@ handlers:
 
 - url: /m/.*
   script: ad_server/main.py
-
 
 - url: /.*
   script: main.py

@@ -123,8 +123,9 @@ INSTALLED_APPS = (
      'common.ragendja',
      'publisher',
      'advertiser',
+     'website',
 )
 
-IGNORE_APP_URLSAUTO = ()
+IGNORE_APP_URLSAUTO = ('website')
 
 from common.ragendja.settings_post import *

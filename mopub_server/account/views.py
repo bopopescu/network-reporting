@@ -45,3 +45,10 @@ class AccountHandler(RequestHandler):
 @login_required			
 def index(request,*args,**kwargs):
   return AccountHandler()(request,*args,**kwargs)			
+
+class LogoutHandler(RequestHandler):
+	def get(self):
+		return HttpResponseRedirect(users.create_logout_url('/main/'))
+		
+def logout(request,*args,**kwargs):
+  return LogoutHandler()(request,*args,**kwargs)

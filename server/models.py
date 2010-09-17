@@ -277,3 +277,7 @@ class SiteStats(db.Model):
 		self.click_count += 1
 		self.revenue += revenue
 		self.put()
+		
+	def __repr__(self):
+	  return "%s (site)\t%s (%s)\t%d\t%d\t%d" % (self.site.key() if self.site else '-', self.owner.key() if self.owner else '-', type(self.owner), self.request_count, self.impression_count, self.click_count)
+	

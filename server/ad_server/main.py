@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+import os
+os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+
 import wsgiref.handlers
 import cgi
 import logging
@@ -11,6 +14,7 @@ import random
 import md5
 import time
 
+from django.template import Template, Context
 from django.utils import simplejson
 
 from urllib import urlencode
@@ -29,7 +33,7 @@ from publisher.models import *
 from advertiser.models import *
 from reporting.models import *
 
-CRAWLERS = ["Mediapartners-Google,gzip(gfe),gzip(gfe)"]
+CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gzip(gfe)"]
 MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7PnE6cH9_PX7OoeIIr5FjnTA'
 #
 # Format properties: width, height, adsense_format, num_creatives
@@ -44,18 +48,24 @@ FORMAT_SIZES = {
   "728x90": [728, 90, "728x90_as", 2],
   "468x60": [468, 60, "468x60_as", 1]
 }
+
+#
+# Templates
+#
+TEMPLATES = {
+  "adsense.html": Template("""<html> <head><title>{{title}} - {{addr}}</title></head> <body style="margin: 0;width:{{w}}px;height:{{h}}px;" > <script type="text/javascript">window.googleAfmcRequest = {client: '{{client}}',ad_type: 'text_image',output: 'html',channel: '',format: '{{adsense_format}}',oe: 'utf8',color_border: '336699',color_bg: 'FFFFFF',color_link: '0000FF',color_text: '000000',color_url: '008000',};</script> <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_afmc_ads.js"></script>  </body> </html> """),
+  "adsense-crawler.html": Template("""<html><head><title>{{title}}</title><body><h1>{{title}}</h1><p>{{addr}}</p></body></html>"""),
+  "clear.html": Template("clear"),
+  "iAd.html": Template("iAd"),
+  "internal300x250.html": Template("""<html> <head><title>{{title}} - {{addr}}</title><style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: {{w}}px;height: {{h}}px;}.creative_headline {font-size: 20px;}.creative .creative_url a {color: green;text-decoration: none;}</style></head> <body style="margin: 0;width:{{w}}px;height:{{h}}px;padding:0;"> {% ifequal c.ad_type "text" %}<div class="creative" onclick="window.location='{{url}}';"><div style="padding: 5px 10px;"><a href="{{url}}" class="creative_headline">{{c.headline}}</a><br/>{{c.line1}}<br/>{{c.line2}}<br/><span class="creative_url"><a href="{{url}}">{{c.display_url}}</a></span></div></div>{% endifequal %}{% ifequal c.ad_type "image" %}<a href="{{url}}"><img src="/advertiser/campaign/creative/image/{{c.key}}/" width={{w}} height={{h}}/></a>{% endifequal %}</body> </html> """),
+  "internal320x50.html": Template("""<html> <head><title>{{title}} - {{addr}}</title><style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: {{w}}px;height: {{h}}px;}.creative .creative_url a {color: green;text-decoration: none;}</style></head> <body style="margin: 0;width:{{w}}px;height:{{h}}px;padding:0;"> {% ifequal c.ad_type "text" %}<div class="creative" onclick="window.location='{{url}}';"><div style="padding: 5px 10px;"><a href="{{url}}" class="creative_headline">{{c.headline}}</a><br/>{{c.line1}} {{c.line2}}<br/><span class="creative_url"><a href="{{url}}">{{c.display_url}}</a></span></div></div>{% endifequal %}{% ifequal c.ad_type "image" %}<a href="{{url}}"><img src="/advertiser/campaign/creative/image/{{c.key}}/" width={{w}} height={{h}}/></a>{% endifequal %}</body> </html> """),
+  "internal468x60.html": Template("""<html> <head><title>{{title}} - {{addr}}</title><style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: {{w}}px;height: {{h}}px;border: 1px solid #0000ee;}.creative_headline {font-size: 20px;}.creative .creative_url a {color: green;text-decoration: none;}</style></head> <body style="margin: 0;width:{{w}}px;height:{{h}}px;padding:0;"> {% ifequal c.ad_type "text" %}<div class="creative" onclick="window.location='{{url}}';"><div style="padding: 5px 10px;"><a href="{{url}}" class="creative_headline">{{c.headline}}</a><br/>{{c.line1}}<br/>{{c.line2}}<br/><span class="creative_url"><a href="{{url}}">{{c.display_url}}</a></span></div></div>{% endifequal %}{% ifequal c.ad_type "image" %}<a href="{{url}}"><img src="/advertiser/campaign/creative/image/{{c.key}}/" width={{w}} height={{h}}/></a>{% endifequal %}</body> </html> """),
+  "internal728x90.html": Template("""<html> <head><title>{{title}} - {{addr}}</title><style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: {{w}}px;height: {{h}}px;border: 1px solid #0000ee;}.creative_headline {font-size: 20px;}.creative .creative_url a {color: green;text-decoration: none;}</style></head> <body style="margin: 0;width:{{w}}px;height:{{h}}px;padding:0;"> {% ifequal c.ad_type "text" %}<div class="creative" onclick="window.location='{{url}}';"><div style="padding: 5px 10px;"><a href="{{url}}" class="creative_headline">{{c.headline}}</a><br/>{{c.line1}}<br/>{{c.line2}}<br/><span class="creative_url"><a href="{{url}}">{{c.display_url}}</a></span></div></div>{% endifequal %}{% ifequal c.ad_type "image" %}<a href="{{url}}"><img src="/advertiser/campaign/creative/image/{{c.key}}/" width={{w}} height={{h}}/></a>{% endifequal %}</body> </html> """)
+}
   
 class AdHandler(webapp.RequestHandler):
   def get(self):
     id = self.request.get("id")
-    
-    # create a unique request id
-    request_id = md5.md5("%s:%s" % (self.request.query_string, time.time())).hexdigest()
-    logging.info('OLP ad-request {"request_id": "%s", "remote_addr": "%s", "q": "%s", "user_agent": "%s"}' % (request_id, self.request.remote_addr, self.request.query_string, self.request.headers["User-Agent"]))
-
-    # enqueue impression tracking iff referer is not a crawler bot
-    if str(self.request.headers['User-Agent']) not in CRAWLERS:
-      taskqueue.add(url='/m/track/i', params={'id': id})    
     
     # look up parameters for this pub id via memcache
     h = memcache.get("ad2:%s" % id)
@@ -66,7 +76,7 @@ class AdHandler(webapp.RequestHandler):
         self.error(500)
         self.response.out.write("Publisher site key %s not valid" % id)
         return
-        
+      
       # create a hash and store in memcache
       h = {"site_key": str(site.key()),
          "default_keywords": site.keywords,
@@ -74,7 +84,7 @@ class AdHandler(webapp.RequestHandler):
          "backfill_threshold_cpm": site.backfill_threshold_cpm,
          "adsense_pub_id": site.account.adsense_pub_id}
       memcache.set("ad:%s" % id, h, 600)
-      
+    
     # get keywords 
     q = self.request.get("q") or ""   
     if len(q) == 0:
@@ -88,58 +98,70 @@ class AdHandler(webapp.RequestHandler):
       f = "320x50"
       format = FORMAT_SIZES.get("320x50")
     logging.debug("format is %s (%s)" % (f, format))
-      
+    
     # look up lat/lon
     addr = ''
     ll = self.request.get("ll")
     if ll:
       addr = self.rgeocode(ll)      
       logging.debug("resolved %s to %s" % (ll, addr))
-      
-    # get creatives that match
-    creatives = AdHandler.get_creatives(h, self.request, q, addr, f)
-    c = creatives[0] if len(creatives) > 0 else None
     
-    # should we show a creative or use our backfill strategy?
-    html = None
-    if c and c.e_cpm() >= h["backfill_threshold_cpm"]:
-      # ok show our ad
-      logging.debug("eCPM exceeded threshold, showing ad")
-      html = "internal%dx%d.html" % (format[0], format[1])
-      
-      # output the request_id and the winning creative_id 
-      logging.info('OLP ad-auction {"id": "%s", "c": "%s", "request_id": "%s"}' % (id, c.key(), request_id))
+    # if this is the Google content crawler, just shortcut and show the right keywords
+    if str(self.request.headers['User-Agent']) in CRAWLERS:
+      # render the content page
+      self.response.out.write(TEMPLATES["adsense-crawler.html"].render({"title": q, "addr": addr}))
+    else:
+      # create a unique request id
+      request_id = md5.md5("%s:%s" % (self.request.query_string, time.time())).hexdigest()
+      logging.info('OLP ad-request {"request_id": "%s", "remote_addr": "%s", "q": "%s", "user_agent": "%s"}' % (request_id, self.request.remote_addr, self.request.query_string, self.request.headers["User-Agent"]))
 
       # enqueue impression tracking iff referer is not a crawler bot
-      if str(self.request.headers['User-Agent']) not in CRAWLERS:
-        taskqueue.add(url='/m/track/ai', params={'c': c.key(), 'q': q, 'id': id})   
-    elif h["backfill"] == "fail":
-      # never mind, we should fail
-      logging.debug("eCPM did not exceed threshold, failing")
+      taskqueue.add(url='/m/track/i', params={'id': id})    
+      
+      # get creatives that match
+      creatives = AdHandler.get_creatives(h, self.request, q, addr, f)
+      c = creatives[0] if len(creatives) > 0 else None
+    
+      # should we show a creative or use our backfill strategy?
       html = None
-    else:
-      # never mind, we should use a backfill strategy
-      logging.debug("eCPM did not exceed threshold, using backfill: %s" % h["backfill"])
-      self.response.headers.add_header("X-Backfill", str(h["backfill"]))
-      html = "%s.html" % h["backfill"]
+      if c and c.e_cpm() >= h["backfill_threshold_cpm"]:
+        # ok show our ad
+        logging.debug("eCPM exceeded threshold, showing ad")
+        html = "internal%dx%d.html" % (format[0], format[1])
+      
+        # output the request_id and the winning creative_id 
+        logging.info('OLP ad-auction {"id": "%s", "c": "%s", "request_id": "%s"}' % (id, c.key(), request_id))
 
-    # create an ad click URL
-    ad_click_url = "http://www.mopub.com/m/aclk?id=%s&c=%s&req=%s" % (id, str(c.key()) if c else '', request_id)
-    self.response.headers.add_header("X-Clickthrough", str(ad_click_url))
+        # enqueue impression tracking iff referer is not a crawler bot
+        if str(self.request.headers['User-Agent']) not in CRAWLERS:
+          taskqueue.add(url='/m/track/ai', params={'c': c.key(), 'q': q, 'id': id})   
+      elif h["backfill"] == "fail":
+        # never mind, we should fail
+        logging.debug("eCPM did not exceed threshold, failing")
+        html = None
+      else:
+        # never mind, we should use a backfill strategy
+        logging.debug("eCPM did not exceed threshold, using backfill: %s" % h["backfill"])
+        self.response.headers.add_header("X-Backfill", str(h["backfill"]))
+        html = "%s.html" % h["backfill"]
+
+      # create an ad click URL
+      ad_click_url = "http://www.mopub.com/m/aclk?id=%s&c=%s&req=%s" % (id, str(c.key()) if c else '', request_id)
+      self.response.headers.add_header("X-Clickthrough", str(ad_click_url))
         
-    # write it out
-    if html:
-      self.response.out.write(template.render(html, {"title": q, 
-        "c": c,
-        "f": f, 
-        "adsense_format": format[2],
-        "w": format[0], 
-        "h": format[1],
-        "url": c.url if c else "",
-        "addr": " ".join(addr),
-        "client": h["adsense_pub_id"]}))
-    else:
-      self.error(404)
+      # write it out
+      if html:
+        self.response.out.write(TEMPLATES[html].render({"title": q, 
+          "c": c,
+          "f": f, 
+          "adsense_format": format[2],
+          "w": format[0], 
+          "h": format[1],
+          "url": c.url if c else "",
+          "addr": " ".join(addr),
+          "client": h["adsense_pub_id"]}))
+      else:
+        self.error(404)
   
   def rgeocode(self, ll):
     url = "http://maps.google.com/maps/geo?%s" % urlencode({"q": ll, 

@@ -3,6 +3,7 @@
 import code
 import getpass
 import sys
+sys.path.append("../..")
 sys.path.append("..")
 sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine")
 sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/django")
@@ -10,10 +11,15 @@ sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/Go
 sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/yaml/lib")
 sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/fancy_urllib")
 
-import wsgiref.handlers, cgi, logging, os, re, datetime, hashlib, models, traceback, fileinput, urlparse
+import wsgiref.handlers, cgi, logging, os, re, datetime, hashlib, traceback, fileinput, urlparse
 from django.utils import simplejson
 from urllib import urlencode
+
 from properties import Properties
+
+import models
+import publisher.models
+import advertiser.models
 
 from google.appengine.api import users, memcache
 from google.appengine.api.urlfetch import fetch
@@ -36,6 +42,8 @@ class AdStats:
     
   OLP_LOGLINE_PAT = re.compile(r'.* OLP (?P<event>[\w\-_]+) (?P<json>\{.*\})')
 
+  CRAWLERS = ["Mediapartners-Google,gzip(gfe),gzip(gfe)"]
+
   def process(self, f):
     props = Properties()
     props.load(file("ad_stats.properties"))
@@ -43,7 +51,7 @@ class AdStats:
     for line in fileinput.input([f]):
       # if this is an apache style log line
       logline_dict = self.parse_logline(line)
-      if logline_dict:
+      if logline_dict and str(logline_dict['client']) not in self.CRAWLERS:
         for proc, regex in props.items():
           if re.compile(regex).match(logline_dict["path"]) != None:
             globals()[proc]().process(logline_dict)
@@ -89,20 +97,6 @@ class AdStats:
       return None
     
 #
-# Eventually should be rolled into models
-#
-class UserStats(db.Model):
-  device_id = db.StringProperty()
-  last_updated = db.DateTimeProperty()
-
-  ll = db.StringProperty()
-
-  keywords = db.StringListProperty()
-
-  def __repr__(self):
-    return "%s\tll=%s,q=%s" % (self.device_id, self.ll, self.keywords)
-
-#
 # Generic base class for stats counters
 #
 all_stats = {}
@@ -110,15 +104,11 @@ class StatsCounter(object):
   def get_site_stats(self, site_key, date=datetime.datetime.now().date()):
     try:
       if site_key:
-        key = "%s::%s" % (site_key, date)
+        key = models.SiteStats.get_key(site_key, None, date)
         s = all_stats.get(key)
         if s is None:
-          s = models.SiteStats(site=db.get(site_key), date=date)
-          if s.site:
-            all_stats[key] = s
-            return s
-          else:
-            return None
+          s = models.SiteStats(site=db.get(site_key), date=date, key=key)
+          all_stats[key] = s
         return s
       else:
         return None
@@ -127,15 +117,11 @@ class StatsCounter(object):
 
   def get_qualifier_stats(self, qualifier_key, date=datetime.datetime.now().date()):
     if qualifier_key:
-      key = ":%s:%s" % (qualifier_key, date)
+      key = models.SiteStats.get_key(None, qualifier_key, date)
       s = all_stats.get(key)
       if s is None:
-        s = models.SiteStats(owner=db.get(qualifier_key), date=date)
-        if s.owner:
-          all_stats[key] = s
-          return s
-        else:
-          return None
+        s = models.SiteStats(owner=db.get(qualifier_key), date=date, key=key)
+        all_stats[key] = s
       return s
     else:
       return None
@@ -143,15 +129,11 @@ class StatsCounter(object):
   def get_site_stats_with_qualifier(self, site_key, qualifier_key, date=datetime.datetime.now().date()):
     try:
       if site_key and qualifier_key:
-        key = "%s:%s:%s" % (site_key, qualifier_key, date)
+        key = models.SiteStats.get_key(site_key, qualifier_key, date)
         s = all_stats.get(key)
         if s is None:
-          s = models.SiteStats(site=db.get(site_key), owner=db.get(qualifier_key), date=date)
-          if s.site and s.owner:
-            all_stats[key] = s
-            return s
-          else:
-            return None
+          s = models.SiteStats(site=db.get(site_key), owner=db.get(qualifier_key), date=date, key=key)
+          all_stats[key] = s
         return s
       else:
         return None
@@ -159,10 +141,10 @@ class StatsCounter(object):
       return None
 
   def get_user_stats(self, device_id):
-    key = "device_id:%s" % device_id
+    key = device_id
     s = all_stats.get(key)
     if s is None:
-      s = models.UserStats(device_id=device_id)
+      s = models.UserStats(device_id=device_id, key_name=device_id)
       all_stats[key] = s
     return s
 
@@ -201,6 +183,16 @@ class PubImpressionCounter(StatsCounter):
     stats = self.get_site_stats(self.get_id_for_dict(d))
     if stats:
       stats.impression_count += 1
+
+#
+# PubLegacyImpressionCounter - counts imprs on publisher ad units
+#
+class PubLegacyImpressionCounter(StatsCounter):
+  def process(self, d):
+    stats = self.get_site_stats(self.get_id_for_dict(d))
+    if stats:
+      stats.impression_count += 1
+
   
 #
 # PubClickCounter - counts clicks
@@ -263,26 +255,25 @@ class CampaignClickCounter(StatsCounter):
 #
 class UserInfoAccumulator(StatsCounter):
   def process(self, d):
-    stats = self.get_user_stats(d["params"]["udid"][0])
+    stats = self.get_user_stats(d["params"]["udid"])
     if stats:
       if d["params"].get("ll"):
-        stats.ll = d["params"]["ll"][0]
-      if d["params"].get("q") and len(d["params"].get("q")[0]) > 0:
-        stats.keywords.append(d["params"]["q"][0])
+        stats.ll = d["params"]["ll"]
+      if d["params"].get("q") and len(d["params"].get("q")) > 0:
+        stats.keywords.append(d["params"]["q"])
 
 
 ####
 # main()
 def auth_func():
-#  return "jimepayne", getpass.getpass('Password:')
-  return "jimepayne", "91torpedo*"
+  return "jimepayne", getpass.getpass('Password:')
 
 if __name__ == '__main__':
   if len(sys.argv) < 3:
-      print "Usage: %s [logfile] [url]" % (sys.argv[0],)
+      print "Usage: %s [logfile] [host]" % (sys.argv[0],)
   app_id = "mopub-inc"
   host = sys.argv[2] if len(sys.argv) > 2 else ('%s.appspot.com' % app_id)
-  logfile = sys.argv[1] if len(sys.argv) > 1 else "logfile"
+  logfile = sys.argv[1] if len(sys.argv) > 1 else "/tmp/logfile"
 
   # connect to google datastore
   remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', auth_func, host)
@@ -291,4 +282,7 @@ if __name__ == '__main__':
   AdStats().process(logfile)
   for s in StatsCounter.all_stats().values():
     print repr(s)
+    
+  # store into database
+  db.put(StatsCounter.all_stats().values())
 

@@ -23,26 +23,26 @@ class SiteStats(db.Model):
 	# conversion information
 	converted_clicks = db.IntegerProperty()
 	conversions = db.IntegerProperty()
-
+	
 	@classmethod
-	def sitestats_for_today(c, site):
-		return SiteStats.sitestats_for_day(site, datetime.datetime.now().date())
-		
+	def get_key(c, site_key, owner_key=None, date=datetime.datetime.now().date()):
+	  return db.Key.from_path("SiteStats", "%s:%s:%s" % (site_key if site_key else '', owner_key if owner_key else '', str(date)))
+
 	@classmethod
 	def today(c):
 		return datetime.datetime.now().date()
 
 	@classmethod
+	def sitestats_for_today(c, site):
+		return SiteStats.sitestats_for_day(site, SiteStats.today())
+
+	@classmethod
 	def sitestats_for_day(c, site, d):
-		return SiteStats.get_or_insert("%s:%s" % (str(site.key()), str(d)), site=site, date=d)
+		return SiteStats.get_or_insert(SiteStats.get_key(site.key(), None, d), site=site, date=d)
 
 	@classmethod
 	def stats_for_day(c, owner, d):
-		return SiteStats.get_or_insert("%s:%s" % (str(owner.key()), str(d)), owner=owner, date=d)
-		
-	@classmethod
-	def stats_for_day_with_qualifier(c, owner, q, d):
-		return SiteStats.get_or_insert("%s:%s:%s" % (str(owner.key()), md5.md5(str(q)).hexdigest(), str(d)), owner=owner, date=d)
+		return SiteStats.get_or_insert(SiteStats.get_key(None, owner.key(), d), owner=owner, date=d)
 		
 	def fill_rate(self):
 	  return self.impression_count / float(self.request_count)
@@ -71,3 +71,20 @@ class SiteStats(db.Model):
 		self.click_count += 1
 		self.revenue += revenue
 		self.put()
+  	
+	def __repr__(self):
+	  return "%s (site)\t%s (%s)\t%d\t%d\t%d" % (self.site.key() if self.site else '-', self.owner.key() if self.owner else '-', type(self.owner), self.request_count, self.impression_count, self.click_count)
+		
+#
+# This contains information about a particular user 
+#
+class UserStats(db.Model):
+  device_id = db.StringProperty()
+  last_updated = db.DateTimeProperty()
+
+  ll = db.StringProperty()
+
+  keywords = db.StringListProperty()
+
+  def __repr__(self):
+    return "%s\tll=%s,q=%s" % (self.device_id, self.ll, self.keywords)	

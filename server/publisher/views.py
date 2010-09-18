@@ -153,8 +153,8 @@ class UpdateHandler(RequestHandler):
 
   def post(self):
     s = Site.get(self.request.GET.get('id'))
-    f = SiteForm(data=self.request.POST, instance=c)
-    if c.account.user == users.get_current_user():
+    f = SiteForm(data=self.request.POST, instance=s)
+    if s.account.user == users.get_current_user():
       f.save(commit=False)
       s.put()
     return HttpResponseRedirect(reverse('publisher_show')+'?id=%s'%s.key())

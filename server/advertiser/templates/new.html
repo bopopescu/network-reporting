@@ -1,9 +1,9 @@
-{% extends "base.html" %}
+{% extends "advertiser/base.html" %}
 
 {% load filters %}
 
 {% block content %}
-	<h3><a href="/advertiser/campaign/">Campaigns</a> &gt; Create a Campaign</h3>
+	<h3><a href="{% url advertiser_campaign %}">Campaigns</a> &gt; Create a Campaign</h3>
 	<p>
 		Campaigns allow you setup ads that will run on your mobile app placements
 		and on other apps in the network.

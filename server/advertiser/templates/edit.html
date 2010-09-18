@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "advertiser/base.html" %}
 
 {% block content %}
 	<form method="post" action=".">
@@ -6,8 +6,8 @@
 		<input type="hidden" name="type" value="follower"/>
 		
 		<h3>
-			<a href="/campaigns">Campaigns</a> &gt; 
-			<a href="/advertiser/campaign/show/{{campaign.key}}">{{campaign.name}}</a>
+			<a href="{% url advertiser_campaign %}">Campaigns</a> &gt; 
+			<a href="{% url advertiser_campaign_show campaign_key=campaign.key %}">{{campaign.name}}</a>
 		</h3>
 		<table>
 			<tr>

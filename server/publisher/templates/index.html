@@ -1,5 +1,5 @@
 
-{% extends "base.html" %}
+{% extends "publisher/base.html" %}
 
 {% load filters %}
 
@@ -8,7 +8,7 @@
 	<h3>		
 		Placements
 		<div class="toolbar">
-			<a href="/publisher/create/">Add a placement</a>
+			<a href="{% url publisher_create %}">Add a placement</a>
 		</div>
 	</h3>
 	<p>

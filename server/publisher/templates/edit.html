@@ -1,14 +1,14 @@
-{% extends "base.html" %}
+{% extends "publisher/base.html" %}
 
 {% load filters %}
 
 {% block content %}
 	<h3>
-		<a href="/publisher">Placements</a> &gt; 
-		<a href="/publisher/show?id={{site.key}}">{{site.name}}</a>
+		<a href="{% url publisher_index %}">Placements</a> &gt; 
+		<a href="{% url publisher_show %}?id={{site.key}}">{{site.name}}</a>
 	</h3>
 
-	<form method="post">
+	<form method="post" action=".">
 		<table>
 			<tr>
 				<th>Name</th><td><input type='text' name="name" size="30" value="{{site.name}}"/></td>

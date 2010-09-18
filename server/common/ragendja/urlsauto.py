@@ -11,7 +11,7 @@ check_app_imports = getattr(settings, 'check_app_imports', None)
 urlpatterns = patterns('')
 
 for app in settings.INSTALLED_APPS:
-    if app == 'ragendja' or app.startswith('django.') or \
+    if app == 'common.ragendja' or app.startswith('django.') or \
             app in IGNORE_APP_URLSAUTO:
         continue
     appname = app.rsplit('.', 1)[-1]

@@ -38,11 +38,11 @@ class SiteStats(db.Model):
 
 	@classmethod
 	def sitestats_for_day(c, site, d):
-		return SiteStats.get_or_insert(SiteStats.get_key(site.key(), None, d), site=site, date=d)
+		return SiteStats.get_or_insert(SiteStats.get_key(site.key(), None, d).name(), site=site, date=d)
 
 	@classmethod
 	def stats_for_day(c, owner, d):
-		return SiteStats.get_or_insert(SiteStats.get_key(None, owner.key(), d), owner=owner, date=d)
+		return SiteStats.get_or_insert(SiteStats.get_key(None, owner.key(), d).name(), owner=owner, date=d)
 		
 	def fill_rate(self):
 	  return self.impression_count / float(self.request_count)

@@ -1,84 +1,9 @@
-{% load filters %}
-
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html>
-<head>
-	<link rel="stylesheet" type="text/css" href="/stylesheets/default.css"></link>
-	<link rel="stylesheet" type="text/css" href="/stylesheets/a.css"></link>
-	<title>MoPub - {% block title %}Mobile Ad Serving and Optimization{% endblock %}</title>
+{% extends "base.html" %}
+{% block content %}
+	<h3>About MoPub</h3>
+	<p>
+		MoPub helps you control your mobile ad inventory, so you can maximize your revenue and gain wider distribution. To learn more about us,
+		contact <a href="mailto:info@mopub.com">info@mopub.com</a>.
+	</p>
 	
-	<meta name="description" content="{% block description %}{% endblock %}" />
-	<!--
-	<link rel="image_src" href="/images/favicon.png" />
-	<link rel="icon" type="image/png" href="/images/favicon.png"></link>		
-	<link rel="shortcut icon" type="image/png" href="/images/favicon.png"></link-->	
-	<script type="text/javascript" src="/js/prototype.js"></script>
-	<script type="text/javascript" src="/js/effects.js"></script>
-	
-	{% block head %}{% endblock %}
-</head>
-<body>
-	<div id="outer">
-		<div id="upbg"></div>
-		<div id="inner">
-			{% block letterhead %}
-				<div id="header">
-					<a href="/main"><img src="/images/logo_header.png" width=60 height=16/></a>
-					<span style="color: #aaa; padding: 15px 0 0 10px;">
-					</span>
-				</div>
-	
-				<div id="menu">
-					<ul>
-						<li>
-							<a href="/advertiser/campaign/">campaigns</a>
-						</li>
-						<li>
-							<a href="/publisher/">placements</a>
-						</li>
-						<li>
-							<a href="/account">account</a>
-						</li>
-					</ul>
-					<div id="date">
-						{% block message %}{% endblock %}				
-					</div>
-				</div>
-				<div class="post_menu"></div>
-			{% endblock %}
-	
-			{% block sidebar %}{% endblock %}
-		
-			<div id="primarycontent">
-				{% block content %}{% endblock %}
-			</div>
-	
-			<div id="footer">
-				<p style="text-align: center; padding-top: 100px;">
-					&copy; 2010 MoPub, Inc. - 
-					<a href="/about">About</a>
-					{% if user %}
-					-
-					you are logged in as <b>{{user.email}}</b> |
-					<a href="/account">my account</a> |
-					<a href="/logout">logout</a>
-					{% endif %}
-				</p>
-		
-			</div>
-
-		</div>
-
-	</div>
-
-	<script type="text/javascript">
-	var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-	document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
-	</script>
-	<script type="text/javascript">
-	try {
-	var pageTracker = _gat._getTracker("UA-248712-16");
-	pageTracker._trackPageview();
-	} catch(err) {}</script>
-</body>
-</html>
+{% endblock %}

@@ -1,12 +1,12 @@
-{% extends "base.html" %}
+{% extends "advertiser/base.html" %}
 
 {% load filters %}
 
 {% block title %}{{campaign.name}}{% endblock %}
 {% block content %}
 	<h3>
-		<a href="/campaigns">Campaigns</a> &gt; 
-		<a href="/advertiser/campaign/show/{{campaign.key}}">{{campaign.name}}</a> &gt;
+		<a href="{% url advertiser_campaign %}">Campaigns</a> &gt; 
+		<a href="{% url advertiser_campaign_show campaign_key=campaign.key %}">{{campaign.name}}</a> &gt;
 		{{a.name}}
 	</h3>
 	<form method="post">

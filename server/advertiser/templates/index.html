@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "advertiser/base.html" %}
 
 {% load filters %}
 
@@ -7,7 +7,7 @@
 	<h3>
 		Campaigns
 		<div class="toolbar">
-			<a href="/advertiser/campaign/create/">Create a Campaign</a> 
+			<a href="{% url advertiser_campaign_create %}">Create a Campaign</a> 
 		</div>
 	</h3>
 	<p>
@@ -26,7 +26,7 @@
 		</thead>
 		{% for c in campaigns %}
 			<tr>
-				<td><a href="/advertiser/campaign/show/{{c.key}}">{{c.name}}</a></td>
+				<td><a href="{% url advertiser_campaign_show campaign_key=c.key%}">{{c.name}}</a></td>
 				<td>{{c.budget|currency}}</td>
 				<td>
 					<b>

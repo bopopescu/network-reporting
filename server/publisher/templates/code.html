@@ -1,11 +1,11 @@
-{% extends "base.html" %}
+{% extends "publisher/base.html" %}
 
 {% load filters %}
 
 {% block content %}
 	<h3>
-		<a href="/publisher/">Apps</a> &gt; 
-		<a href="/publisher/show/?id={{site.key}}">{{site.name}}</a> &gt;		
+		<a href="{% url publisher_index %}">Apps</a> &gt; 
+		<a href="{% url publisher_show %}?id={{site.key}}">{{site.name}}</a> &gt;		
 		Get Code Snippet
 	</h3>
 	

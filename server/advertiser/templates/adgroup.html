@@ -1,15 +1,15 @@
-{% extends "base.html" %}
+{% extends "advertiser/base.html" %}
 
 {% load filters %}
 
 {% block title %}{{campaign.name}}{% endblock %}
 {% block content %}
 	<h3>
-		<a href="/advertiser/campaign/">Campaigns</a> &gt; 
-		<a href="/advertiser/campaign/show/{{campaign.key}}">{{campaign.name}}</a> &gt;
+		<a href="{% url advertiser_campaign %}">Campaigns</a> &gt; 
+		<a href="{% url advertiser_campaign_show campaign_key=campaign.key %}">{{campaign.name}}</a> &gt;
 		{{adgroup.name}}
 		<div class="toolbar">
-			<a href="/advertiser/campaign/adgroup/edit/?id={{adgroup.key}}">
+			<a href="{% url advertiser_adgroup_edit %}?id={{adgroup.key}}">
 				Edit {{adgroup.name}}
 			</a>
 		</div>
@@ -28,8 +28,8 @@
 				{% endif %}
 			</b></td>
 			<td>
-				<form method="post" action="/advertiser/campaign/bid/pause/?id={{adgroup.key}}" style="display: inline;"><input type="submit" value="Pause"></form>
-				<form method="post" action="/advertiser/campaign/bid/delete/?id={{adgroup.key}}" style="display: inline;"><input type="submit" value="Delete"></form>
+				<form method="post" action="{% url advertiser_bid_pause %}?id={{adgroup.key}}" style="display: inline;"><input type="submit" value="Pause"></form>
+				<form method="post" action="{% url advertiser_bid_delete %}?id={{adgroup.key}}" style="display: inline;"><input type="submit" value="Delete"></form>
 			</tr>
 		<tr><th>Max Bid</th><td class="numeric">{{adgroup.bid|currency}}</td></tr>
 	</table>
@@ -87,7 +87,7 @@
 			</a>			
 		</div>
 	</h3>
-	<form method="post" action="/advertiser/campaign/creative/create/" enctype="multipart/form-data"
+	<form method="post" action="{% url advertiser_creative_create %}" enctype="multipart/form-data"
 		id="add_creative_box" style="display:none;" class="special_notice">		
 		<input type="hidden" name="id" value="{{adgroup.key}}"/>
 		<table>
@@ -99,7 +99,7 @@
 			<tr><th></th><td><input type='submit' value="Create Ad &raquo;"/></td></tr>
 		</table>
 	</form>
-	<form method="post" action="/advertiser/campaign/creative/create/" enctype="multipart/form-data"
+	<form method="post" action="{% url advertiser_creative_create %}" enctype="multipart/form-data"
 		id="add_image_creative_box" style="display:none;" class="special_notice">		
 		<input type="hidden" name="id" value="{{adgroup.key}}"/>
 		<table>
@@ -109,7 +109,7 @@
 		</table>
 	</form>
 	
-	<form method="post" action="/advertiser/campaign/creative/delete/">
+	<form method="post" action="{% url advertiser_creative_delete %}">
 	<table class="creatives wide">
 	{% if creatives %}
 		<thead>
@@ -136,7 +136,7 @@
 				{% ifequal c.ad_type "image" %}
 				<div class="creative">
 					<a href="{{c.url}}">
-						<img src="/advertiser/campaign/creative/image/{{c.key}}/" width=250>
+						<img src="{% url advertiser_creative_image creative_key=c.key %}" width=250>
 					</a>
 				</div>
 				{% endifequal %}

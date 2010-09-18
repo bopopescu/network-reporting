@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "website/base.html" %}
 
 {% block content %}
 	<div class="longtext">
@@ -23,7 +23,7 @@
 			It's the simplest thing that could possibly work, while still giving you full control over your inventory.
 		</p>
 		<p class="call_to_action">
-			<a href="/sites"><img src="/images/getstarted.png"></img></a>
+			<a href="{% url publisher_index %}"><img src="/images/getstarted.png"></img></a>
 		</p>
 	</div>
 {% endblock %}

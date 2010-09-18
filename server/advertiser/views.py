@@ -42,9 +42,9 @@ class IndexHandler(RequestHandler):
       c.stats = SiteStats.stats_for_day(c, SiteStats.today())
     return render_to_response(self.request,'advertiser/index.html', {'campaigns':campaigns, 'user':users.get_current_user()})
       
-@login_required			
+@login_required     
 def index(request,*args,**kwargs):
-    return IndexHandler()(request,*args,**kwargs)			
+    return IndexHandler()(request,*args,**kwargs)     
 
 
 class CreateHandler(RequestHandler):
@@ -57,24 +57,24 @@ class CreateHandler(RequestHandler):
     campaign = f.save(commit=False)
     campaign.u = users.get_current_user() 
     campaign.put()
-    return HttpResponseRedirect('/advertiser/campaign/show/%s/' % campaign.key())
+    return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':campaign.key()}))
 
-@login_required			
+@login_required     
 def campaign_create(request,*args,**kwargs):
-  return CreateHandler()(request,*args,**kwargs)			
+  return CreateHandler()(request,*args,**kwargs)      
 
 class ShowHandler(RequestHandler):
-  def __call__(self,request,campaign_id):
+  def __call__(self,request,campaign_key):
       self.params = request.POST or request.GET
       self.request = request
       if request.method == "GET":
-          return self.get(campaign_id)
+          return self.get(campaign_key)
       elif request.method == "POST":
           return self.post()
           
-  def get(self, campaign_id):
+  def get(self, campaign_key):
     # load the campaign
-    campaign = Campaign.get(campaign_id)
+    campaign = Campaign.get(campaign_key)
     campaign.stats = SiteStats.stats_for_day(campaign, SiteStats.today())
 
     # load the adgroups
@@ -89,20 +89,20 @@ class ShowHandler(RequestHandler):
                                           'sites': Site.gql('where account=:1', Account.current_account()),
                                           'user':users.get_current_user()})
 
-@login_required			
+@login_required     
 def campaign_show(request,*args,**kwargs):
- return ShowHandler()(request,*args,**kwargs)	
+ return ShowHandler()(request,*args,**kwargs) 
   
 class AddBidHandler(RequestHandler):
  def post(self):
-		c = Campaign.get(self.request.POST.get('id'))
-		adgroup = AdGroup(campaign=c,
-			name=self.request.POST.get('name'),
-			bid=float(self.request.POST.get('bid')),
-			keywords=filter(lambda k: len(k) > 0, self.request.POST.get('keywords').lower().split('\n')),
-			site_keys=map(lambda x: db.Key(x), self.request.POST.getlist('sites')))
-		adgroup.put()
-		return HttpResponseRedirect('/advertiser/campaign/show/%s/' % c.key())
+    c = Campaign.get(self.request.POST.get('id'))
+    adgroup = AdGroup(campaign=c,
+      name=self.request.POST.get('name'),
+      bid=float(self.request.POST.get('bid')),
+      keywords=filter(lambda k: len(k) > 0, self.request.POST.get('keywords').lower().split('\n')),
+      site_keys=map(lambda x: db.Key(x), self.request.POST.getlist('sites')))
+    adgroup.put()
+    return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':c.key()}))
 
 @login_required  
 def bid_create(request,*args,**kwargs):
@@ -121,7 +121,7 @@ class EditHandler(RequestHandler):
     if c.u == users.get_current_user():
       f.save(commit=False)
       c.put()
-    return HttpResponseRedirect('/advertiser/campaign/show/%s/' % c.key())
+      return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':c.key()}))
 
 @login_required  
 def campaign_edit(request,*args,**kwargs):
@@ -129,12 +129,12 @@ def campaign_edit(request,*args,**kwargs):
 
 class PauseHandler(RequestHandler):
   def post(self):
-		c = Campaign.get(self.request.POST.get('id',self.request.GET.get('id')))
-		if c != None and c.u == users.get_current_user():
-			c.active = not c.active
-			c.deleted = False
-			c.put()
-			return HttpResponseRedirect('/advertiser/campaign/show/%s/' % c.key())
+    c = Campaign.get(self.request.POST.get('id',self.request.GET.get('id')))
+    if c != None and c.u == users.get_current_user():
+      c.active = not c.active
+      c.deleted = False
+      c.put()
+      return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':c.key()}))
   
 @login_required
 def campaign_pause(request,*args,**kwargs):
@@ -142,12 +142,12 @@ def campaign_pause(request,*args,**kwargs):
   
 class DeleteHandler(RequestHandler):
   def post(self):
-		c = Campaign.get(self.request.GET.get('id'))
-		if c != None and c.u == users.get_current_user():
-			c.active = False
-			c.deleted = True
-			c.put()
-			return HttpResponseRedirect('/advertiser/campaign/')
+    c = Campaign.get(self.request.GET.get('id'))
+    if c != None and c.u == users.get_current_user():
+      c.active = False
+      c.deleted = True
+      c.put()
+      return HttpResponseRedirect(reverse('advertiser_campaign'))
 
   
 @login_required
@@ -157,36 +157,36 @@ def campaign_delete(request,*args,**kwargs):
   
 class RemoveBidHandler(RequestHandler):
   def post(self):
-		for id in self.request.get_all('id') or []:
-			b = AdGroup.get(id)
-			logging.info(b)
-			if b != None and b.campaign.u == users.get_current_user():
-				b.deleted = True
-				b.put()
-		return HttpResponseRedirect('/advertiser/campaign/show/%s/' % b.campaign.key())
+    for id in self.request.get_all('id') or []:
+      b = AdGroup.get(id)
+      logging.info(b)
+      if b != None and b.campaign.u == users.get_current_user():
+        b.deleted = True
+        b.put()
+        return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':b.campaign.key()}))
 
 class PauseBidHandler(RequestHandler):
   def post(self):
-		for id in self.request.POST.getlist('id'):
-			b = AdGroup.get(id)
-			logging.info(b)
-			if b != None and b.campaign.u == users.get_current_user():
-				b.active = not b.active
-				b.deleted = False
-				b.put()
-		return HttpResponseRedirect('/advertiser/campaign/adgroup/%s/' % b.key())  
+    for id in self.request.POST.getlist('id'):
+      b = AdGroup.get(id)
+      logging.info(b)
+      if b != None and b.campaign.u == users.get_current_user():
+        b.active = not b.active
+        b.deleted = False
+        b.put()
+        return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':b.key()}))
 
 class ShowAdGroupHandler(RequestHandler):
-  def __call__(self,request,adgroup_id):
+  def __call__(self,request,adgroup_key):
     self.params = request.POST or request.GET
     self.request = request
     if request.method == "GET":
-      return self.get(adgroup_id)
+      return self.get(adgroup_key)
     elif request.method == "POST":
       return self.post()
   
-  def get(self, adgroup_id):
-    adgroup = AdGroup.get(adgroup_id)
+  def get(self, adgroup_key):
+    adgroup = AdGroup.get(adgroup_key)
     creatives = Creative.gql('where ad_group = :1 and deleted = :2', adgroup, False).fetch(50)
     for c in creatives:
       c.stats = SiteStats.stats_for_day(c, SiteStats.today())
@@ -203,9 +203,9 @@ class ShowAdGroupHandler(RequestHandler):
                               'keywords': keywords, 
                               'creatives': creatives})
 
-		
-@login_required		
-def campaign_adgroup_show(request,*args,**kwargs):		
+    
+@login_required   
+def campaign_adgroup_show(request,*args,**kwargs):    
   return ShowAdGroupHandler()(request,*args,**kwargs)
 
 class EditBidHandler(RequestHandler):
@@ -218,7 +218,7 @@ class EditBidHandler(RequestHandler):
     "campaign": a.campaign}
     for s in params['sites']:
       s.checked = s.key() in a.site_keys
-      logging.info(params)	
+      logging.info(params)  
     return render_to_response(self.request,'advertiser/adgroup_edit.html', params)
 
   def post(self):
@@ -231,7 +231,7 @@ class EditBidHandler(RequestHandler):
       a.keywords = filter(lambda k: len(k) > 0, self.request.POST.get('keywords').lower().split('\n'))
       f.save(commit=False)
       a.put()
-    return HttpResponseRedirect('/advertiser/campaign/adgroup/%s/' % a.key())
+      return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':a.key()}))
   
 @login_required
 def campaign_adgroup_edit(request,*args,**kwargs):
@@ -239,14 +239,15 @@ def campaign_adgroup_edit(request,*args,**kwargs):
 
 class PauseBidHandler(RequestHandler):
   def post(self):
-		for id in self.request.GET.getlist('id'):
-			b = AdGroup.get(id)
-			logging.info(b)
-			if b != None and b.campaign.u == users.get_current_user():
-				b.active = not b.active
-				b.deleted = False
-				b.put()
-		return HttpResponseRedirect('/advertiser/campaign/adgroup/%s/' % b.key())
+    for id in self.request.GET.getlist('id'):
+      b = AdGroup.get(id)
+      logging.info(b)
+      if b != None and b.campaign.u == users.get_current_user():
+        b.active = not b.active
+        b.deleted = False
+        b.put()
+    return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':b.key()}))
+
 
 @login_required
 def bid_pause(request,*args,**kwargs):
@@ -260,8 +261,8 @@ class RemoveBidHandler(RequestHandler):
       if b != None and b.campaign.u == users.get_current_user():
         b.deleted = True
         b.put()
-    return HttpResponseRedirect('/advertiser/campaign/show/%s/' % b.campaign.key())
-		
+    return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':b.campaign.key()}))
+  
 @login_required
 def bid_delete(request,*args,**kwargs):
   return RemoveBidHandler()(request,*args,**kwargs)
@@ -293,23 +294,23 @@ class AddCreativeHandler(RequestHandler):
                                   image_width=img.width,
                                   image_height=img.height)
         creative.put()
-    return HttpResponseRedirect('/advertiser/campaign/adgroup/%s/' % ad_group.key())  
+    return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':ad_group.key()}))
   
 @login_required
 def creative_create(request,*args,**kwargs):
   return AddCreativeHandler()(request,*args,**kwargs)  
 
 class DisplayCreativeHandler(RequestHandler):
-  def __call__(self,request,creative_id):
+  def __call__(self,request,creative_key):
     self.params = request.POST or request.GET
     self.request = request
     if request.method == "GET":
-      return self.get(creative_id)
+      return self.get(creative_key)
     elif request.method == "POST":
       return self.post()
 
-  def get(self, creative_id):
-    c = Creative.get(creative_id)
+  def get(self, creative_key):
+    c = Creative.get(creative_key)
     if c and c.ad_type == "image" and c.image:
       return HttpResponse(c.image,content_type='image/png')
     return HttpResponse('NOOOOOOOOOOOO IMAGE')
@@ -320,12 +321,12 @@ def creative_image(request,*args,**kwargs):
 class RemoveCreativeHandler(RequestHandler):
   def post(self):
     ids = self.request.POST.getlist('id')
-    for creative_id in ids:
-      c = Creative.get(creative_id)
+    for creative_key in ids:
+      c = Creative.get(creative_key)
       if c != None and c.ad_group.campaign.u == users.get_current_user():
         c.deleted = True
         c.put()
-    return HttpResponseRedirect('/advertiser/campaign/adgroup/%s/' % c.ad_group.key())
+    return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':c.ad_group.key()}))
 
 @login_required  
 def creative_delete(request,*args,**kwargs):

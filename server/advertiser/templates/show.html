@@ -1,13 +1,13 @@
-{% extends "base.html" %}
+{% extends "advertiser/base.html" %}
 
 {% load filters %}
 
 {% block title %}{{campaign.name}}{% endblock %}
 {% block content %}
 	<h3>
-		<a href="/advertiser/campaign/">Campaigns</a> &gt; {{campaign.name}}
+		<a href="{% url advertiser_campaign %}">Campaigns</a> &gt; {{campaign.name}}
 		<div class="toolbar">
-			<a href="/advertiser/campaign/edit/?id={{campaign.key}}" onclick="javascript:Toggle.display('edit_box');return false;">
+			<a href="{% url advertiser_campaign_edit %}?id={{campaign.key}}" onclick="javascript:Toggle.display('edit_box');return false;">
 				Edit Campaign
 			</a>
 		</div>
@@ -26,8 +26,8 @@
 				{% endif %}
 			</b></td>
 			<td>
-				<form method="post" action="/advertiser/campaign/pause/?id={{campaign.key}}" style="display: inline;"><input type="submit" value="Pause"></form>
-				<form method="post" action="/advertiser/campaign/delete/?id={{campaign.key}}" style="display: inline;"><input type="submit" value="Delete"></form>
+				<form method="post" action="{% url advertiser_campaign_pause %}?id={{campaign.key}}" style="display: inline;"><input type="submit" value="Pause"></form>
+				<form method="post" action="{% url advertiser_campaign_pause %}?id={{campaign.key}}" style="display: inline;"><input type="submit" value="Delete"></form>
 			</tr>
 		<tr><th>Daily budget</th><td class="numeric">{{campaign.budget|currency}}</td></tr>
 		<tr><th>Bid strategy</th>
@@ -45,7 +45,7 @@
 			</a>
 		</div>
 	</h3>
-	<form method="post" action="/advertiser/campaign/bid/create/" id="add_keyword_box" style="display:none;" class="special_notice">
+	<form method="post" action="{% url advertiser_bid_create %}" id="add_keyword_box" style="display:none;" class="special_notice">
 		<input type="hidden" name="id" value="{{campaign.key}}"/>
 		<table>
 			<tr>
@@ -67,7 +67,7 @@
 	</form>
 	
 	<table class="wide">
-		<form method="post" action="/advertiser/campaign/bid/remove">
+		<form method="post" action="{% url advertiser_bid_delete %}">
 			{% if bids %}
 				<thead>
 					<th></th>
@@ -84,7 +84,7 @@
 			{% for b in bids %}
 				<tr>
 					<td><input type="checkbox" name="id" value="{{b.key}}"/></td>
-					<td><a href="/advertiser/campaign/adgroup/{{b.key}}/">{{b.name}}</a></td>
+					<td><a href="{% url advertiser_adgroup_show adgroup_key=b.key %}">{{b.name}}</a></td>
 					<td><b>{% if b.deleted %}
 						Deleted
 					{% endif %}

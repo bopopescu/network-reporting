@@ -40,7 +40,7 @@ class IndexHandler(RequestHandler):
     campaigns = Campaign.gql("where u = :1 and deleted = :2", users.get_current_user(), False).fetch(10)
     for c in campaigns:
       c.stats = SiteStats.stats_for_day(c, SiteStats.today())
-    return render_to_response(self.request,'advertiser/index.html', {'campaigns':campaigns, 'user':users.get_current_user(), 'logout_url':users.create_logout_url("/")})
+    return render_to_response(self.request,'advertiser/index.html', {'campaigns':campaigns})
       
 @login_required     
 def index(request,*args,**kwargs):

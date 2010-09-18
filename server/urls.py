@@ -10,6 +10,6 @@ urlpatterns = auth_patterns + patterns('',
     # (r'^$', 'django.views.generic.simple.direct_to_template',
     #     {'template': 'main.html'}),
     # Override the default registration form
-    (r'^$', redirect_to,{'url':'/splash/'}),
+    (r'^$', 'django.views.generic.simple.direct_to_template',{'template':'website/splash.html'}),
     (r'^', include('website.urls')),
 ) + urlpatterns

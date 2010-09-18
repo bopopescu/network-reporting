@@ -2,5 +2,5 @@
 from django.conf.urls.defaults import *
 
 rootpatterns = patterns('',
-    (r'^publisher/', include('publisher.urls')),
+    (r'^adunits/', include('publisher.urls')),
 )

@@ -25,7 +25,7 @@ handlers:
   login: admin
 
 - url: /stats.*
-  script: $PYTHON_LIB/google/appengine/ext/appstats/ui.py
+  script: appstats.py
 
 - url: /m/.*
   script: ad_server/main.py

@@ -119,9 +119,6 @@ class AdHandler(webapp.RequestHandler):
       request_id = md5.md5("%s:%s" % (self.request.query_string, time.time())).hexdigest()
       logging.info('OLP ad-request {"request_id": "%s", "remote_addr": "%s", "q": "%s", "user_agent": "%s"}' % (request_id, self.request.remote_addr, self.request.query_string, self.request.headers["User-Agent"]))
 
-      # enqueue impression tracking iff referer is not a crawler bot
-      taskqueue.add(url='/m/track/i', params={'id': id})    
-      
       # get creatives that match
       creatives = AdHandler.get_creatives(h, self.request, q, addr, f)
       c = creatives[0] if len(creatives) > 0 else None
@@ -135,10 +132,6 @@ class AdHandler(webapp.RequestHandler):
       
         # output the request_id and the winning creative_id 
         logging.info('OLP ad-auction {"id": "%s", "c": "%s", "request_id": "%s"}' % (id, c.key(), request_id))
-
-        # enqueue impression tracking iff referer is not a crawler bot
-        if str(self.request.headers['User-Agent']) not in CRAWLERS:
-          taskqueue.add(url='/m/track/ai', params={'c': c.key(), 'q': q, 'id': id})   
       elif h["backfill"] == "fail":
         # never mind, we should fail
         logging.debug("eCPM did not exceed threshold, failing")
@@ -283,86 +276,11 @@ class AdClickHandler(webapp.RequestHandler):
     q = self.request.get("q")
     url = self.request.get("r")
     
-    # enqueue click tracking
-    taskqueue.add(url='/m/track/c', params={'id': id, 'q': q})
-
     # forward on to the click URL
     self.redirect(url)
 
-# 
-# Tracks an impression on the publisher side.  Accrues an impression
-# to the Site
-#   
-class TrackImpression(webapp.RequestHandler):
-  def post(self):
-    try:
-      s = Site.site_by_id(self.request.get("id"))
-      stats = SiteStats.sitestats_for_today(s)     
-      db.run_in_transaction(stats.add_impression)
-    except:
-      logging.error("failed to track site impression %s" % self.request.get("id"))
-      
-#     
-# Tracks an advertiser impression
-#
-class TrackAdvertiserImpression(webapp.RequestHandler):
-  def post(self):
-    try:
-      creative = Creative.get(self.request.get("c"))
-      d = SiteStats.today()
-      
-      db.run_in_transaction(SiteStats.stats_for_day(creative, d).add_impression)
-      db.run_in_transaction(SiteStats.stats_for_day(creative.ad_group, d).add_impression)
-      db.run_in_transaction(SiteStats.stats_for_day(creative.ad_group.campaign, d).add_impression)
-
-      # add for the ad group sliced by keyword and by placement
-      db.run_in_transaction(SiteStats.stats_for_day_with_qualifier(creative.ad_group, self.request.get('q'), d).add_impression)
-      db.run_in_transaction(SiteStats.stats_for_day_with_qualifier(creative.ad_group, self.request.get('id'), d).add_impression)
-
-    except:
-      logging.error("failed to track creative impression %s" % self.request.get("id"))
-      
-#
-# Publisher side click tracking... accrues to a Site
-#
-class TrackClick(webapp.RequestHandler):
-  def post(self):
-    try:
-      s = Site.site_by_id(self.request.get("id"))
-      stats = SiteStats.sitestats_for_today(s)
-      db.run_in_transaction(stats.add_click)
-    except:
-      logging.error("failed to track click for id %s" % self.request.get("id"))
-    
-#     
-# Advertiser side click tracking... accrues to a Creative, AdGroup and Campaign
-# Also has budgetary impacts, by accruing the creative's Bid to the total cost of these various
-# elements.
-#
-class TrackAdvertiserClick(webapp.RequestHandler):
-  def post(self):
-    try:
-      creative = Creative.get(self.request.get("c"))
-      d = SiteStats.today()
-
-      db.run_in_transaction(SiteStats.stats_for_day(creative, d).add_click_with_revenue, creative.ad_group.bid)
-      db.run_in_transaction(SiteStats.stats_for_day(creative.ad_group, d).add_click_with_revenue, creative.ad_group.bid)
-      db.run_in_transaction(SiteStats.stats_for_day(creative.ad_group.campaign, d).add_click_with_revenue, creative.ad_group.bid)
-
-      # add for the ad group sliced by keyword and by placement
-      db.run_in_transaction(SiteStats.stats_for_day_with_qualifier(creative.ad_group, self.request.get('q'), d).add_click_with_revenue, creative.ad_group.bid)
-      db.run_in_transaction(SiteStats.stats_for_day_with_qualifier(creative.ad_group, self.request.get('id'), d).add_click_with_revenue, creative.ad_group.bid)
-
-    except:
-      logging.error("failed to track creative click for %s" % self.request.get("id"))
-                  
 def main():
-  application = webapp.WSGIApplication([('/m/ad', AdHandler),
-                    ('/m/aclk', AdClickHandler),
-                    ('/m/track/i', TrackImpression),
-                    ('/m/track/ai', TrackAdvertiserImpression),
-                    ('/m/track/c', TrackClick),
-                    ('/m/track/ac', TrackAdvertiserClick)], debug=True)
+  application = webapp.WSGIApplication([('/m/ad', AdHandler), ('/m/aclk', AdClickHandler)], debug=False)
   wsgiref.handlers.CGIHandler().run(application)
 
 # webapp.template.register_template_library('filters')

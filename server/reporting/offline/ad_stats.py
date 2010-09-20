@@ -3,13 +3,13 @@
 import code
 import getpass
 import sys
-sys.path.append("../..")
-sys.path.append("..")
-sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine")
-sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/django")
-sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/webob")
-sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/yaml/lib")
-sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/fancy_urllib")
+sys.path.append("~/mopub/server")
+sys.path.append("~/mopub/server/reporting")
+sys.path.append("~/google_appengine")
+sys.path.append("~/google_appengine/lib/django")
+sys.path.append("~/google_appengine/lib/webob")
+sys.path.append("~/google_appengine/lib/yaml/lib")
+sys.path.append("~/google_appengine/lib/fancy_urllib")
 
 import wsgiref.handlers, cgi, logging, os, re, datetime, hashlib, traceback, fileinput, urlparse
 from django.utils import simplejson

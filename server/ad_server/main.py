@@ -68,7 +68,7 @@ class AdHandler(webapp.RequestHandler):
     id = self.request.get("id")
     
     # look up parameters for this pub id via memcache
-    h = memcache.get("ad2:%s" % id)
+    h = memcache.get("ad:%s" % id)
     if h is None:
       site = Site.site_by_id(id)
       if site is None:
@@ -83,7 +83,7 @@ class AdHandler(webapp.RequestHandler):
          "backfill": site.backfill,
          "backfill_threshold_cpm": site.backfill_threshold_cpm,
          "adsense_pub_id": site.account.adsense_pub_id}
-      memcache.set("ad:%s" % id, h, 600)
+      memcache.set("ad:%s" % id, h, 300)
     
     # get keywords 
     q = self.request.get("q") or ""   

@@ -79,7 +79,6 @@ TEMPLATE_LOADERS = (
 )
 
 MIDDLEWARE_CLASSES = (
-'google.appengine.ext.appstats.recording.AppStatsDjangoMiddleware',
 'django.contrib.sessions.middleware.SessionMiddleware',
 # 'appengine_django.auth.middleware.AuthenticationMiddleware',
 # Django authentication

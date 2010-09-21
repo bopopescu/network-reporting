@@ -21,9 +21,7 @@
 	<h3>
 		Ad Units
 		<div class="toolbar">
-			<a href="#" onclick="javascript:Toggle.display('add_adunit_box');return false;">
-				New Ad Unit
-			</a>
+      <button onClick="javascript:Toggle.display('add_adunit_box');return false;" class="btn"><span><span>+ New Ad Unit</span></span></button>
 		</div>
 	</h3>
 	<form method="post" action="{% url publisher_create %}" id="add_adunit_box" style="display:none;" class="special_notice">

@@ -1,5 +1,5 @@
 application: mopub-inc
-version: 32-campaigns-django-port
+version: 32-campaigns-django-port-batwood
 runtime: python
 api_version: 1
 default_expiration: "10d"
@@ -10,7 +10,7 @@ handlers:
     
 - url: /images
   static_dir: public/images    
-    
+
 - url: /stylesheets
   static_dir: public/stylesheets
 

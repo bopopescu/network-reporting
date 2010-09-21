@@ -21,21 +21,30 @@
 	<table class="wide">
 		<thead>
 			<tr>
-			<th>Name</th>
-			<th width="75px">Platform</th>
+			<th width="20%">App</th>
+			<th>Ad Unit</th>
 			<th width="75px">Impressions</th>
 			<th width="75px">Clicks</th>
 			<th width="75px">CTR</th>
 			</tr>
 		</thead>
 		{% for a in apps %}
-			<tr>
-				<td><a href="{% url publisher_app_show %}?id={{a.key}}">{{a.name}}</a></td>
-				<td class="numeric">{{a.app_type}}</td>
-				<td class="numeric">{{a.stats.impression_count}}</td>
-				<td class="numeric">{{a.stats.click_count}}</td>
-				<td class="numeric">{{a.stats.ctr|percentage}}</td>
+			<tr class="selectablerow">
+				<td><a href="{% url publisher_app_show %}?id={{a.key}}"><b>{{a.name}}</b></a> ({{a.app_type}})</td>
+        <td></td>
+				<td class="numeric">{{a.impression_count}}</td>
+				<td class="numeric">{{a.click_count}}</td>
+				<td class="numeric">{{a.ctr|percentage}}</td>
 			</tr>
+		  {% for s in a.sites %}
+			<tr class="selectablerow">
+        <td></td>
+				<td><a href="{% url publisher_show %}?id={{s.key}}">{{s.name}}</a></td>
+				<td class="numeric">{{s.stats.impression_count}}</td>
+				<td class="numeric">{{s.stats.click_count}}</td>
+				<td class="numeric">{{s.stats.ctr|percentage}}</td>
+			</tr>
+		  {% endfor %}
 		{% endfor %}
 	</table>
 	

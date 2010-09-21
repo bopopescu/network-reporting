@@ -46,6 +46,10 @@ class AppIndexHandler(RequestHandler):
     if len(apps) > 0:    
       day_impressions = {}
       for app in apps:
+        #sites = Site.gql("where account = :1", Account.current_account()).fetch(50)
+        #for site in sites:
+          #site.app_key = app
+          #site.put()
         app.sites = []
         app.impression_count = 0
         app.click_count = 0
@@ -63,6 +67,7 @@ class AppIndexHandler(RequestHandler):
           # now aggregate it into days
           for stat in stats:
             day_impressions[stat.date] = (day_impressions.get(stat.date) or 0) + stat.impression_count
+        app.ctr = float(app.click_count) / float(app.impression_count) if app.impression_count > 0 else 0
 
       # organize the info on a day by day basis across all sites
       series = [day_impressions.get(a,0) for a in days]
@@ -82,7 +87,7 @@ class AppIndexHandler(RequestHandler):
          ','.join(map(lambda x: str(x["total"]), total_impressions_by_app)),
          max(map(lambda x: x.impression_count, apps)) * 1.5,
          max(map(lambda x: x.impression_count, apps)) * 1.5,
-         '|'.join(map(lambda x: x["app"].name, total_impressions_by_app[0:2])))
+         '|'.join(map(lambda x: x["app"].name, total_impressions_by_app)))
 
       return render_to_response(self.request,'apps_index.html', 
         {'apps': apps,    
@@ -163,7 +168,7 @@ class AppCreateHandler(RequestHandler):
     site = f.save(commit=False)
     site.account = Account.current_account()
     site.put()
-    return HttpResponseRedirect(reverse('publisher_app_index'))
+    return HttpResponseRedirect(reverse('publisher_index'))
 
 @login_required  
 def app_create(request,*args,**kwargs):

@@ -1,7 +1,4 @@
 #!/usr/bin/env python
-import os
-os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
-
 import wsgiref.handlers
 import cgi
 import logging
@@ -13,10 +10,10 @@ import traceback
 import random
 import md5
 import time
-
-from django.template import Template, Context
+import base64, binascii
 from django.utils import simplejson
 
+from string import Template
 from urllib import urlencode
 
 from google.appengine.ext.webapp import template
@@ -35,6 +32,7 @@ from reporting.models import *
 
 CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gzip(gfe)"]
 MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7PnE6cH9_PX7OoeIIr5FjnTA'
+
 #
 # Format properties: width, height, adsense_format, num_creatives
 #
@@ -53,14 +51,20 @@ FORMAT_SIZES = {
 # Templates
 #
 TEMPLATES = {
-  "adsense.html": Template("""<html> <head><title>{{title}} - {{addr}}</title></head> <body style="margin: 0;width:{{w}}px;height:{{h}}px;" > <script type="text/javascript">window.googleAfmcRequest = {client: '{{client}}',ad_type: 'text_image',output: 'html',channel: '',format: '{{adsense_format}}',oe: 'utf8',color_border: '336699',color_bg: 'FFFFFF',color_link: '0000FF',color_text: '000000',color_url: '008000',};</script> <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_afmc_ads.js"></script>  </body> </html> """),
-  "adsense-crawler.html": Template("""<html><head><title>{{title}}</title><body><h1>{{title}}</h1><p>{{addr}}</p></body></html>"""),
+  "adsense.html": Template("""<html> <head><title>$title</title></head> <body style="margin: 0;width:${w}px;height:${h}px;" > <script type="text/javascript">window.googleAfmcRequest = {client: '$client',ad_type: 'text_image', output: 'html', channel: '',format: '$adsense_format',oe: 'utf8',color_border: '336699',color_bg: 'FFFFFF',color_link: '0000FF',color_text: '000000',color_url: '008000',};</script> <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_afmc_ads.js"></script>  </body> </html> """),
+  "adsense-crawler.html": Template("""<html><head><title>$title</title><body><h1>$title</h1><p>$addr</p></body></html>"""),
   "clear.html": Template("clear"),
   "iAd.html": Template("iAd"),
-  "internal300x250.html": Template("""<html> <head><title>{{title}} - {{addr}}</title><style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: {{w}}px;height: {{h}}px;}.creative_headline {font-size: 20px;}.creative .creative_url a {color: green;text-decoration: none;}</style></head> <body style="margin: 0;width:{{w}}px;height:{{h}}px;padding:0;"> {% ifequal c.ad_type "text" %}<div class="creative" onclick="window.location='{{url}}';"><div style="padding: 5px 10px;"><a href="{{url}}" class="creative_headline">{{c.headline}}</a><br/>{{c.line1}}<br/>{{c.line2}}<br/><span class="creative_url"><a href="{{url}}">{{c.display_url}}</a></span></div></div>{% endifequal %}{% ifequal c.ad_type "image" %}<a href="{{url}}"><img src="/advertiser/campaign/creative/image/{{c.key}}/" width={{w}} height={{h}}/></a>{% endifequal %}</body> </html> """),
-  "internal320x50.html": Template("""<html> <head><title>{{title}} - {{addr}}</title><style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: {{w}}px;height: {{h}}px;}.creative .creative_url a {color: green;text-decoration: none;}</style></head> <body style="margin: 0;width:{{w}}px;height:{{h}}px;padding:0;"> {% ifequal c.ad_type "text" %}<div class="creative" onclick="window.location='{{url}}';"><div style="padding: 5px 10px;"><a href="{{url}}" class="creative_headline">{{c.headline}}</a><br/>{{c.line1}} {{c.line2}}<br/><span class="creative_url"><a href="{{url}}">{{c.display_url}}</a></span></div></div>{% endifequal %}{% ifequal c.ad_type "image" %}<a href="{{url}}"><img src="/advertiser/campaign/creative/image/{{c.key}}/" width={{w}} height={{h}}/></a>{% endifequal %}</body> </html> """),
-  "internal468x60.html": Template("""<html> <head><title>{{title}} - {{addr}}</title><style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: {{w}}px;height: {{h}}px;border: 1px solid #0000ee;}.creative_headline {font-size: 20px;}.creative .creative_url a {color: green;text-decoration: none;}</style></head> <body style="margin: 0;width:{{w}}px;height:{{h}}px;padding:0;"> {% ifequal c.ad_type "text" %}<div class="creative" onclick="window.location='{{url}}';"><div style="padding: 5px 10px;"><a href="{{url}}" class="creative_headline">{{c.headline}}</a><br/>{{c.line1}}<br/>{{c.line2}}<br/><span class="creative_url"><a href="{{url}}">{{c.display_url}}</a></span></div></div>{% endifequal %}{% ifequal c.ad_type "image" %}<a href="{{url}}"><img src="/advertiser/campaign/creative/image/{{c.key}}/" width={{w}} height={{h}}/></a>{% endifequal %}</body> </html> """),
-  "internal728x90.html": Template("""<html> <head><title>{{title}} - {{addr}}</title><style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: {{w}}px;height: {{h}}px;border: 1px solid #0000ee;}.creative_headline {font-size: 20px;}.creative .creative_url a {color: green;text-decoration: none;}</style></head> <body style="margin: 0;width:{{w}}px;height:{{h}}px;padding:0;"> {% ifequal c.ad_type "text" %}<div class="creative" onclick="window.location='{{url}}';"><div style="padding: 5px 10px;"><a href="{{url}}" class="creative_headline">{{c.headline}}</a><br/>{{c.line1}}<br/>{{c.line2}}<br/><span class="creative_url"><a href="{{url}}">{{c.display_url}}</a></span></div></div>{% endifequal %}{% ifequal c.ad_type "image" %}<a href="{{url}}"><img src="/advertiser/campaign/creative/image/{{c.key}}/" width={{w}} height={{h}}/></a>{% endifequal %}</body> </html> """)
+  "internal-text.html": Template("""<html>\
+                                    <head><style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: ${w}px;height: ${h}px;}.creative_headline {font-size: 14px;}.creative .creative_url a {color: green;text-decoration: none;}</style></head>\
+                                    <body style="margin: 0;width:${w}px;height:${h}px;padding:0;">\
+                                      <div class="creative"><div style="padding: 5px 10px;"><a href="$url" class="creative_headline">$headline</a><br/>$line1 $line2<br/><span class="creative_url"><a href="$url">$display_url</a></span></div></div>\
+                                    </body> </html> """),
+  "internal-image.html":Template("""<html>\
+                                    <head><style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: ${w}px;height: ${h}px;}.creative_headline {font-size: 20px;}.creative .creative_url a {color: green;text-decoration: none;}</style></head>\
+                                    <body style="margin: 0;width:${w}px;height:${h}px;padding:0;">\
+                                      <a href="$url"><img src="$image_url" width=$w height=$h/></a>
+                                    </body> </html> """),
 }
   
 class AdHandler(webapp.RequestHandler):
@@ -68,7 +72,7 @@ class AdHandler(webapp.RequestHandler):
     id = self.request.get("id")
     
     # look up parameters for this pub id via memcache
-    h = memcache.get("ad2:%s" % id)
+    h = memcache.get("ad:%s" % id)
     if h is None:
       site = Site.site_by_id(id)
       if site is None:
@@ -83,7 +87,7 @@ class AdHandler(webapp.RequestHandler):
          "backfill": site.backfill,
          "backfill_threshold_cpm": site.backfill_threshold_cpm,
          "adsense_pub_id": site.account.adsense_pub_id}
-      memcache.set("ad:%s" % id, h, 600)
+      memcache.set("ad:%s" % id, h, 300)
     
     # get keywords 
     q = self.request.get("q") or ""   
@@ -127,7 +131,7 @@ class AdHandler(webapp.RequestHandler):
       if c and c.e_cpm() >= h["backfill_threshold_cpm"]:
         # ok show our ad
         logging.debug("eCPM exceeded threshold, showing ad")
-        html = "internal%dx%d.html" % (format[0], format[1])
+        html = "internal-%s.html" % c.ad_type
       
         # output the request_id and the winning creative_id 
         logging.info('OLP ad-auction {"id": "%s", "c": "%s", "request_id": "%s"}' % (id, c.key(), request_id))
@@ -151,15 +155,19 @@ class AdHandler(webapp.RequestHandler):
         
       # write it out
       if html:
-        self.response.out.write(TEMPLATES[html].render({"title": q, 
-          "c": c,
+        params = {"title": q, 
           "f": f, 
           "adsense_format": format[2],
           "w": format[0], 
           "h": format[1],
-          "url": c.url if c else "",
           "addr": " ".join(addr),
-          "client": h["adsense_pub_id"]}))
+          "client": h["adsense_pub_id"]}
+        if c:
+          params.update(c.__dict__.get("_entity"))
+          if c.image:
+            params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
+            
+        self.response.out.write(TEMPLATES[html].safe_substitute(params))
       else:
         self.error(404)
   

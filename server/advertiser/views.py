@@ -192,8 +192,7 @@ class ShowAdGroupHandler(RequestHandler):
       c.stats = SiteStats.stats_for_day(c, SiteStats.today())
     sites = map(lambda x: Site.get(x), adgroup.site_keys)
     for s in sites:
-      s.stats = SiteStats.stats_for_day_with_qualifier(adgroup, s.key(), SiteStats.today())
-    keywords = map(lambda k: {"keyword": k, "stats": SiteStats.stats_for_day_with_qualifier(adgroup, k, SiteStats.today())}, adgroup.keywords)
+      s.stats = SiteStats.stats_for_day_with_qualifier(adgroup, s, SiteStats.today())
     keywords = []
     
     return render_to_response(self.request,'advertiser/adgroup.html', 

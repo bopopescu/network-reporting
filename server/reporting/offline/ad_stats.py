@@ -3,13 +3,13 @@
 import code
 import getpass
 import sys
-sys.path.append("../..")
-sys.path.append("..")
-sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine")
-sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/django")
-sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/webob")
-sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/yaml/lib")
-sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/fancy_urllib")
+sys.path.append("/home/ubuntu/mopub/server")
+sys.path.append("/home/ubuntu/mopub/server/reporting")
+sys.path.append("/home/ubuntu/google_appengine")
+sys.path.append("/home/ubuntu/google_appengine/lib/django")
+sys.path.append("/home/ubuntu/google_appengine/lib/webob")
+sys.path.append("/home/ubuntu/google_appengine/lib/yaml/lib")
+sys.path.append("/home/ubuntu/google_appengine/lib/fancy_urllib")
 
 import wsgiref.handlers, cgi, logging, os, re, datetime, hashlib, traceback, fileinput, urlparse
 from django.utils import simplejson
@@ -266,7 +266,7 @@ class UserInfoAccumulator(StatsCounter):
 ####
 # main()
 def auth_func():
-  return "jimepayne", getpass.getpass('Password:')
+  return "olp@mopub.com", "N47935"
 
 if __name__ == '__main__':
   if len(sys.argv) < 3:

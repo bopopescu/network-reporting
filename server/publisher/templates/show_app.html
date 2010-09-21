@@ -65,10 +65,7 @@
 					<th width="75px">Clicks</th>
 					<th width="75px">Cost</th>
 				</thead>
-			{% else %}
-				<tr><td colspan=10>No ad units.</td></tr>
-			{% endif %}
-			{% for s in sites %}
+			  {% for s in sites %}
 				<tr>
 					<td><input type="checkbox" name="id" value="{{s.key}}"/></td>
 					<td><a href="{% url publisher_show %}?id={{ s.key }} %}">{{s.name}}</a></td>
@@ -77,12 +74,15 @@
 					<td class="numeric">{{s.stats.click_count}} ({{s.stats.ctr|percentage}})</td>
 					<td class="numeric">{{s.stats.revenue|currency}}</td>
 				</tr>
-			{% endfor %}
+			  {% endfor %}
 				<tr>
 					<td colspan=8>
 						<p></p><input type='submit' name='delete' value='Delete Ad Units'/>
 					</td>
 				</tr>
+			{% else %}
+				<tr><td colspan=10>No ad units.</td></tr>
+			{% endif %}
 		</form>
 	</table>
 	

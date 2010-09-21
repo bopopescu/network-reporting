@@ -4,7 +4,8 @@
 
 {% block content %}
 	<h3>
-		<a href="{% url publisher_index %}">Placements</a> &gt; 
+		<a href="{% url publisher_index %}">Apps</a> &gt; 
+    <a href="{% url publisher_app_show %}?id={{site.app_key.key}}">{{site.app_key.name}}</a> &gt;
 		<a href="{% url publisher_show %}?id={{site.key}}">{{site.name}}</a>
 	</h3>
 
@@ -12,9 +13,6 @@
 		<table>
 			<tr>
 				<th>Name</th><td><input type='text' name="name" size="30" value="{{site.name}}"/></td>
-			</tr>
-			<tr>
-				<th>iTunes/Android Market URL</th><td><input type='text' name="url" size="50" value="{{site.url}}"/></td>
 			</tr>
 			<tr>
 				<th>Description</th><td><textarea name="description" cols="50" rows="3">{{site.description}}</textarea></td>

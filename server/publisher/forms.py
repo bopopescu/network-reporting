@@ -1,7 +1,12 @@
 from django import forms
-from publisher.models import Site
+from publisher.models import Site, App
+
+class AppForm(forms.ModelForm):
+	class Meta:
+		model = App
+		fields = ('name', 'app_type', 'url', 'description')
 
 class SiteForm(forms.ModelForm):
 	class Meta:
 		model = Site
-		fields = ('name', 'url', 'description', 'ad_type', 'backfill', 'backfill_threshold_cpm', 'keywords')
+		fields = ('name', 'description', 'ad_type', 'backfill', 'backfill_threshold_cpm', 'keywords')

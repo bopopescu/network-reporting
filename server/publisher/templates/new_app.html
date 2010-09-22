@@ -1,0 +1,59 @@
+{% extends "publisher/base.html" %}
+{% block content %}
+<script type="text/javascript">
+function getArtwork() {
+  new Ajax.Request('getartwork',
+    { method:'get',
+      onSuccess: function(transport){
+        var response = transport.responseText;
+        var json = eval('(' + transport.responseText + ')');
+        if (json.resultCount && json.results) {
+          var imgurl = json.results[0].artworkUrl60;
+          var img = document.createElement('img');
+          img.src = imgurl;
+          $('img_container').appendChild(img);
+        }
+      },
+      onFailure: function(){ alert('Something went wrong...') } 
+    });
+}
+</script>
+
+	<h3><a href="{% url publisher_index %}">Apps</a> &gt; Add an App</h3>
+	<p>
+		Apps are your individual applications.  Each app contains one or more ad units
+	</p>
+	
+	<form method="post" action="">
+		<table>
+			<tr>
+				<th>Name</th><td><input type='text' name="name" size="30" placeholder="My App"/></td>
+			</tr>
+      <tr>
+        <th>Platform</th>
+                                <td>
+                                  <select name="app_type"><option value="iphone">iPhone</option><option value="android">Android</option><select>
+                                </td>
+      </tr>
+			<tr>
+				<th>iTunes/Android Market URL</th><td><input type='text' name="url" size="50" placeholder="http://itunes.apple.com/xyz"/></td>
+        <td><button onClick="getArtwork();" type="button" class="btn"><span><span>Get Artwork</span></span></button>&nbsp;&nbsp;&nbsp;</td>
+<!--
+379681467
+http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/wa/wsLookup?id=379681467
+-->
+			</tr>
+			<tr>
+				<th>Description</th><td><textarea name="description" cols="50" rows="3" placeholder=""></textarea></td>
+			</tr>
+			<tr>
+				<th>Icon</th><td id="img_container"></td>
+			</tr>
+		
+		</table>
+		
+		<p>
+      <button type="submit" class="btn primary"><span><span>Add App</span></span></button>&nbsp;&nbsp;&nbsp;
+		</p>
+	</form>
+{% endblock %}

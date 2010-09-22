@@ -4,7 +4,8 @@
 
 {% block content %}
 	<h3>
-		<a href="{% url publisher_index %}">Ad Units</a> &gt; {{site.name}}
+		<a href="{% url publisher_index %}">Apps</a> &gt; 
+    <a href="{% url publisher_app_show %}?id={{site.app_key.key}}">{{site.app_key.name}}</a> &gt; {{site.name}}
 		<div class="toolbar">			
 			<a href="{% url publisher_generate %}?id={{site.key}}">Get Code Snippet</a>
 			|

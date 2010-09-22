@@ -1,1 +1,27 @@
 {% extends 'base.html' %} 
+      {% block letterhead %}
+        <div id="header">
+          <a href="/main"><img src="/images/logo_header.png" width=60 height=16/></a>
+          <span style="color: #aaa; padding: 15px 0 0 10px;">
+          </span>
+        </div>
+
+        <div id="menu">
+          <ul>
+            <li>
+              <a href="/campaigns/">campaigns</a>
+            </li>
+            <li class="active">
+              <a href="/inventory/">inventory</a>
+            </li>
+            <li>
+              <a href="/account/">account</a>
+            </li>
+          </ul>
+          <div id="date">
+            {% block message %}{% endblock %}
+          </div>
+        </div>
+        <div class="post_menu"></div>
+      {% endblock %}
+

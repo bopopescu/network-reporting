@@ -1,11 +1,24 @@
 from google.appengine.ext import db
 from google.appengine.api import users
 
-from account.models import Account, App
+from account.models import Account
+
+# 
+# A mobile app, which can have multiple Sites on which ads can be displayed
+#
+class App(db.Model):
+	account = db.ReferenceProperty(Account)
+
+	name = db.StringProperty()
+	app_type = db.StringProperty(required=True, default="iphone", choices=["iphone", "android", "ipad"])
+	description = db.TextProperty()
+	url = db.StringProperty()
+
+	t = db.DateTimeProperty(auto_now_add=True)
 
 class Site(db.Model):
+	app_key = db.ReferenceProperty(App)
 	account = db.ReferenceProperty(Account)
-	app = db.ReferenceProperty(App)
 	
 	name = db.StringProperty(required=True)
 	url = db.StringProperty()

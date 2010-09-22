@@ -1,5 +1,7 @@
 import logging, os, re, datetime, hashlib
 
+import urllib
+urllib.getproxies_macosx_sysconf = lambda: {}
 from urllib import urlencode
 
 from google.appengine.api import users, memcache
@@ -16,8 +18,8 @@ from common.ragendja.template import render_to_response, JSONResponse
 
 # from common.ragendja.auth.decorators import google_login_required as login_required
 
-from publisher.models import Site,Account
-from publisher.forms import SiteForm
+from publisher.models import Site, Account, App
+from publisher.forms import SiteForm, AppForm
 from reporting.models import SiteStats
 
 class RequestHandler(object):
@@ -33,6 +35,69 @@ class RequestHandler(object):
     def put(self):
         pass    
 
+class AppIndexHandler(RequestHandler):
+  def get(self):
+    # compute start times; start day before today so incomplete days don't mess up graphs
+    today = datetime.date.today() - datetime.timedelta(days=1)
+    begin_time = today - datetime.timedelta(days=14)
+    days = [today - datetime.timedelta(days=x) for x in range(0, 14)]
+
+    apps = App.gql("where account = :1", Account.current_account()).fetch(50)   
+    if len(apps) > 0:    
+      day_impressions = {}
+      for app in apps:
+        app.sites = []
+        app.impression_count = 0
+        app.click_count = 0
+        sites = Site.gql("where app_key = :1", app).fetch(50)   
+        # organize impressions by days
+        for site in sites:
+          stats = SiteStats.gql("where site = :1 and date >= :2", site, begin_time).fetch(100)
+          site.stats = SiteStats()
+          site.stats.impression_count = sum(map(lambda x: x.impression_count, stats))
+          site.stats.click_count = sum(map(lambda x: x.click_count, stats))
+          app.sites.append(site)
+          app.impression_count += site.stats.impression_count
+          app.click_count += site.stats.click_count
+
+          # now aggregate it into days
+          for stat in stats:
+            day_impressions[stat.date] = (day_impressions.get(stat.date) or 0) + stat.impression_count
+        app.ctr = float(app.click_count) / float(app.impression_count) if app.impression_count > 0 else 0
+
+      # organize the info on a day by day basis across all sites
+      series = [day_impressions.get(a,0) for a in days]
+      series.reverse()
+      url = "http://chart.apis.google.com/chart?cht=lc&chtt=Total+Daily+Impressions&chs=580x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
+        ','.join(map(lambda x: str(x), series)),
+        max(series) * 1.5,
+        max(series) * 1.5,
+        '|'.join(map(lambda x: x.strftime("%m/%d"), days)))
+
+      # do a bar graph showing contribution of each site to impression count
+      total_impressions_by_app = []
+      for app in apps:
+        total_impressions_by_app.append({"app": app, "total": app.impression_count})
+      total_impressions_by_app.sort(lambda x,y: cmp(y["total"], x["total"])) 
+      bar_chart_url = "http://chart.apis.google.com/chart?cht=p&chtt=Contribution+by+Placement&chs=200x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chl=&chdlp=b&chdl=%s" % (
+         ','.join(map(lambda x: str(x["total"]), total_impressions_by_app)),
+         max(map(lambda x: x.impression_count, apps)) * 1.5,
+         max(map(lambda x: x.impression_count, apps)) * 1.5,
+         '|'.join(map(lambda x: x["app"].name, total_impressions_by_app)))
+
+      return render_to_response(self.request,'apps_index.html', 
+        {'apps': apps,    
+         'chart_url': url,
+         'bar_chart_url': bar_chart_url,
+         'account': Account.current_account()})
+    else:
+      return HttpResponseRedirect(reverse('publisher_app_create'))
+
+@login_required     
+def index(request,*args,**kwargs):
+  # return HttpResponseRedirect(reverse('publisher_create'))
+  return AppIndexHandler()(request,*args,**kwargs)     
+  
 class IndexHandler(RequestHandler):
   def get(self):
     # compute start times; start day before today so incomplete days don't mess up graphs
@@ -85,26 +150,62 @@ class IndexHandler(RequestHandler):
       return HttpResponseRedirect(reverse('publisher_create'))
 
 @login_required     
-def index(request,*args,**kwargs):
+def adunits_index(request,*args,**kwargs):
   # return HttpResponseRedirect(reverse('publisher_create'))
   return IndexHandler()(request,*args,**kwargs)     
-    
-class CreateHandler(RequestHandler):
+
+class AppCreateHandler(RequestHandler):
   def get(self):
-    f = SiteForm()
-    return render_to_response(self.request,'new.html', {"f": f})
+    f = AppForm()
+    return render_to_response(self.request,'new_app.html', {"f": f})
 
   def post(self):
-    f = SiteForm(data=self.request.POST)
+    f = AppForm(data=self.request.POST)
     site = f.save(commit=False)
     site.account = Account.current_account()
     site.put()
-    return HttpResponseRedirect(reverse('publisher_show')+'?id=%s'%site.key())
+    return HttpResponseRedirect(reverse('publisher_index'))
+
+@login_required  
+def app_create(request,*args,**kwargs):
+  return AppCreateHandler()(request,*args,**kwargs)
+    
+class CreateAdUnitHandler(RequestHandler):
+ def post(self):
+    f = SiteForm(data=self.request.POST)
+    a = App.get(self.request.POST.get('id'))
+    if f.is_valid():
+      site = f.save(commit=False)
+      site.account = Account.current_account()
+      site.app_key = a
+      site.put()
+      return HttpResponseRedirect(reverse('publisher_app_show')+'?id=%s'%a.key())
+    else:
+      print f.errors
 
 @login_required  
 def create(request,*args,**kwargs):
-  return CreateHandler()(request,*args,**kwargs)
+  return CreateAdUnitHandler()(request,*args,**kwargs)   
+
+class ShowAppHandler(RequestHandler):
+  def get(self):
+    # load the site
+    app = App.get(self.request.GET.get('id'))
+    if app.account.key() != Account.current_account().key():
+      self.error(404)
+      return
+
+    # load the ad units
+    sites = Site.gql("where app_key=:1", app).fetch(50)
+
+    # write response
+    return render_to_response(self.request,'show_app.html', {'app':app, 'sites':sites,
+      'account':Account.current_account()})
   
+@login_required
+def app_show(request,*args,**kwargs):
+  return ShowAppHandler()(request,*args,**kwargs)   
+
 class ShowHandler(RequestHandler):
   def get(self):
     # load the site
@@ -140,10 +241,28 @@ class ShowHandler(RequestHandler):
       'chart_url': url,
       'stats':stats})
   
-  
 @login_required
 def show(request,*args,**kwargs):
   return ShowHandler()(request,*args,**kwargs)   
+
+class AppUpdateHandler(RequestHandler):
+  def get(self):
+    a = App.get(self.request.GET.get("id"))
+    f = AppForm(instance=a)
+    return render_to_response(self.request,'publisher/edit_app.html', {"f": f, "app": a})
+
+  def post(self):
+    a = App.get(self.request.GET.get('id'))
+    f = AppForm(data=self.request.POST, instance=a)
+    if a.account.user == users.get_current_user():
+      f.save(commit=False)
+      a.put()
+    return HttpResponseRedirect(reverse('publisher_app_show')+'?id=%s'%a.key())
+  
+
+@login_required
+def app_update(request,*args,**kwargs):
+  return AppUpdateHandler()(request,*args,**kwargs)   
 
 class UpdateHandler(RequestHandler):
   def get(self):
@@ -159,10 +278,18 @@ class UpdateHandler(RequestHandler):
       s.put()
     return HttpResponseRedirect(reverse('publisher_show')+'?id=%s'%s.key())
   
-
 @login_required
 def update(request,*args,**kwargs):
   return UpdateHandler()(request,*args,**kwargs)   
+
+class GetArtworkHandler(RequestHandler):
+  def get(self):
+    response = urllib.urlopen('http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/wa/wsLookup?id=379681467')
+    return HttpResponse(response.read())
+
+@login_required
+def getartwork(request,*args,**kwargs):
+  return GetArtworkHandler()(request,*args,**kwargs)   
   
 class GenerateHandler(RequestHandler):
   def get(self):

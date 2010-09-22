@@ -46,10 +46,6 @@ class AppIndexHandler(RequestHandler):
     if len(apps) > 0:    
       day_impressions = {}
       for app in apps:
-        #sites = Site.gql("where account = :1", Account.current_account()).fetch(50)
-        #for site in sites:
-          #site.app_key = app
-          #site.put()
         app.sites = []
         app.impression_count = 0
         app.click_count = 0

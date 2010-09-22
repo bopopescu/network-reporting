@@ -235,14 +235,6 @@ tr {
 	padding-bottom: 5px;
 }
 
-tr.selectablerow:hover {
-  background-color: #ddd;
-}
-
-tr.selectedrow {
-  background-color: #ccc;
-}
-
 th {
 	text-align: left;
 	vertical-align: top;
@@ -270,6 +262,7 @@ td.numeric_large {
 
 table.wide {
 	width: 100%;
+  border-spacing: 0
 }
 
 hr {

@@ -30,8 +30,7 @@
 		</thead>
 		{% for a in apps %}
 			<tr class="selectablerow">
-				<td><a href="{% url publisher_app_show %}?id={{a.key}}"><b>{{a.name}}</b></a> ({{a.app_type}})</td>
-        <td></td>
+				<td colspan="2"><a href="{% url publisher_app_show %}?id={{a.key}}"><b>{{a.name}}</b></a> ({{a.app_type}})</td>
 				<td class="numeric">{{a.impression_count}}</td>
 				<td class="numeric">{{a.click_count}}</td>
 				<td class="numeric">{{a.ctr|percentage}}</td>

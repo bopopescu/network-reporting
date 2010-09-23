@@ -32,75 +32,28 @@ from reporting.models import *
 
 CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gzip(gfe)"]
 MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7PnE6cH9_PX7OoeIIr5FjnTA'
-
-#
-# Format properties: width, height, adsense_format, num_creatives
-#
-FORMAT_SIZES = {
-  "300x250_as": [300, 250, "300x250_as", 3],
-  "320x50_mb": [320, 50, "320x50_mb", 1],
-  "728x90_as": [728, 90, "728x90_as", 2],
-  "468x60_as": [468, 60, "468x60_as", 1],
-  "300x250": [300, 250, "300x250_as", 3],
-  "320x50": [320, 50, "320x50_mb", 1],
-  "728x90": [728, 90, "728x90_as", 2],
-  "468x60": [468, 60, "468x60_as", 1]
-}
-
-#
-# Templates
-#
-TEMPLATES = {
-  "adsense.html": Template("""<html> <head><title>$title</title></head> <body style="margin: 0;width:${w}px;height:${h}px;" > <script type="text/javascript">window.googleAfmcRequest = {client: '$client',ad_type: 'text_image', output: 'html', channel: '',format: '$adsense_format',oe: 'utf8',color_border: '336699',color_bg: 'FFFFFF',color_link: '0000FF',color_text: '000000',color_url: '008000',};</script> <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_afmc_ads.js"></script>  </body> </html> """),
-  "adsense-crawler.html": Template("""<html><head><title>$title</title><body><h1>$title</h1><p>$addr</p></body></html>"""),
-  "clear.html": Template("clear"),
-  "iAd.html": Template("iAd"),
-  "internal-text.html": Template("""<html>\
-                                    <head><style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: ${w}px;height: ${h}px;}.creative_headline {font-size: 14px;}.creative .creative_url a {color: green;text-decoration: none;}</style></head>\
-                                    <body style="margin: 0;width:${w}px;height:${h}px;padding:0;">\
-                                      <div class="creative"><div style="padding: 5px 10px;"><a href="$url" class="creative_headline">$headline</a><br/>$line1 $line2<br/><span class="creative_url"><a href="$url">$display_url</a></span></div></div>\
-                                    </body> </html> """),
-  "internal-image.html":Template("""<html>\
-                                    <head><style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: ${w}px;height: ${h}px;}.creative_headline {font-size: 20px;}.creative .creative_url a {color: green;text-decoration: none;}</style></head>\
-                                    <body style="margin: 0;width:${w}px;height:${h}px;padding:0;">\
-                                      <a href="$url"><img src="$image_url" width=$w height=$h/></a>
-                                    </body> </html> """),
-}
   
+#
+# Primary ad auction handler 
+#
 class AdHandler(webapp.RequestHandler):
   def get(self):
     id = self.request.get("id")
+    site = Site.site_by_id(id)
     
-    # look up parameters for this pub id via memcache
-    h = memcache.get("ad:%s" % id)
-    if h is None:
-      site = Site.site_by_id(id)
-      if site is None:
-        # the user's site key was not set correctly...
-        self.error(500)
-        self.response.out.write("Publisher site key %s not valid" % id)
-        return
-      
-      # create a hash and store in memcache
-      h = {"site_key": str(site.key()),
-         "default_keywords": site.keywords,
-         "backfill": site.backfill,
-         "backfill_threshold_cpm": site.backfill_threshold_cpm,
-         "adsense_pub_id": site.account.adsense_pub_id}
-      memcache.set("ad:%s" % id, h, 300)
+    # the user's site key was not set correctly...
+    if site is None:
+      self.error(500)
+      self.response.out.write("Publisher site key %s not valid" % id)
+      return
     
     # get keywords 
-    q = self.request.get("q") or ""   
-    if len(q) == 0:
-      q = h["default_keywords"]
+    q = "%s %s" % (self.request.get("q") or "", site.default_keywords)
     logging.debug("keywords are %s" % q)
 
     # get format
-    f = self.request.get("f")
+    f = self.request.get("f") or "320x50"
     format = FORMAT_SIZES.get(f)
-    if f is None or len(f) == 0 or format is None:
-      f = "320x50"
-      format = FORMAT_SIZES.get("320x50")
     logging.debug("format is %s (%s)" % (f, format))
     
     # look up lat/lon
@@ -113,7 +66,7 @@ class AdHandler(webapp.RequestHandler):
     # if this is the Google content crawler, just shortcut and show the right keywords
     if str(self.request.headers['User-Agent']) in CRAWLERS:
       # render the content page
-      self.response.out.write(TEMPLATES["adsense-crawler.html"].render({"title": q, "addr": addr}))
+      self.response.out.write(TEMPLATES["adsense-crawler.html"].safe_substitute({"title": q, "addr": addr}))
     else:
       # create a unique request id
       request_id = md5.md5("%s:%s" % (self.request.query_string, time.time())).hexdigest()
@@ -268,8 +221,50 @@ class AdHandler(webapp.RequestHandler):
   @classmethod
   def format_predicates_for_format(c, f):
     return ["format=%s" % f, "format=*"]
+
+#
+# Creative rendering logic
+#
+class RenderCreativeController(object):
+  
+  #
+  # Format properties: width, height, adsense_format, num_creatives
+  #
+  FORMAT_SIZES = {
+    "300x250_as": [300, 250, "300x250_as", 3],
+    "320x50_mb": [320, 50, "320x50_mb", 1],
+    "728x90_as": [728, 90, "728x90_as", 2],
+    "468x60_as": [468, 60, "468x60_as", 1],
+    "300x250": [300, 250, "300x250_as", 3],
+    "320x50": [320, 50, "320x50_mb", 1],
+    "728x90": [728, 90, "728x90_as", 2],
+    "468x60": [468, 60, "468x60_as", 1]
+  }
+
+  #
+  # Templates
+  #
+  TEMPLATES = {
+    "adsense.html": Template("""<html> <head><title>$title</title></head> <body style="margin: 0;width:${w}px;height:${h}px;" > <script type="text/javascript">window.googleAfmcRequest = {client: '$client',ad_type: 'text_image', output: 'html', channel: '',format: '$adsense_format',oe: 'utf8',color_border: '336699',color_bg: 'FFFFFF',color_link: '0000FF',color_text: '000000',color_url: '008000',};</script> <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_afmc_ads.js"></script>  </body> </html> """),
+    "adsense-crawler.html": Template("""<html><head><title>$title</title><body><h1>$title</h1><p>$addr</p></body></html>"""),
+    "clear.html": Template("clear"),
+    "iAd.html": Template("iAd"),
+    "internal-text.html": Template("""<html>\
+                                      <head><style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: ${w}px;height: ${h}px;}.creative_headline {font-size: 14px;}.creative .creative_url a {color: green;text-decoration: none;}</style></head>\
+                                      <body style="margin: 0;width:${w}px;height:${h}px;padding:0;">\
+                                        <div class="creative"><div style="padding: 5px 10px;"><a href="$url" class="creative_headline">$headline</a><br/>$line1 $line2<br/><span class="creative_url"><a href="$url">$display_url</a></span></div></div>\
+                                      </body> </html> """),
+    "internal-image.html":Template("""<html>\
+                                      <head><style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: ${w}px;height: ${h}px;}.creative_headline {font-size: 20px;}.creative .creative_url a {color: green;text-decoration: none;}</style></head>\
+                                      <body style="margin: 0;width:${w}px;height:${h}px;padding:0;">\
+                                        <a href="$url"><img src="$image_url" width=$w height=$h/></a>
+                                      </body> </html> """),
+  }
+  
+  @classmethod
+  def render_creative(clz, creative, response):
     
-    
+        
 class AdClickHandler(webapp.RequestHandler):
   def get(self):
     id = self.request.get("id")

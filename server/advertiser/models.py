@@ -1,16 +1,42 @@
 from google.appengine.ext import db
+from google.appengine.ext.db import polymodel
 
-# Create your models here.
 #
-# A campaign.  It can run on any number of defined Sites
+# A campaign.  Campaigns have budgetary and time based restrictions.  
 #	
 class Campaign(db.Model):
 	name = db.StringProperty()
 	description = db.TextProperty()
 
-	budget = db.FloatProperty()		# daily budget in USD
-	bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpc")
+  # daily budget in USD
+	budget = db.FloatProperty()	
 	
+	# start and end dates	
+	start_date = db.DateProperty()
+	end_date = db.DateProperty()
+	
+	active = db.BooleanProperty(default=True)
+	deleted = db.BooleanProperty(default=False)
+	
+	# who owns this
+	u = db.UserProperty()	
+	t = db.DateTimeProperty(auto_now_add=True)
+	
+#
+# An ad group, which specifies targeting and relevant behavior
+#
+class AdGroup(db.Model):
+	campaign = db.ReferenceProperty(Campaign)
+	name = db.StringProperty()
+	
+	# the priority level at which this ad group should be auctioned
+	priority_level = db.IntegerProperty(default=1)
+
+  # how bids should be expressed
+	bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpc")	
+	bid = db.FloatProperty()
+
+  # state of this ad group
 	active = db.BooleanProperty(default=True)
 	deleted = db.BooleanProperty(default=False)
 	
@@ -35,19 +61,6 @@ class Campaign(db.Model):
 	# platform_name=X
 	device_predicates = db.StringListProperty(default=["platform_name=*"])
 	
-	# who owns this
-	u = db.UserProperty()	
-	t = db.DateTimeProperty(auto_now_add=True)
-	
-class AdGroup(db.Model):
-	campaign = db.ReferenceProperty(Campaign)
-
-	name = db.StringProperty()
-	bid = db.FloatProperty()
-
-	active = db.BooleanProperty(default=True)
-	deleted = db.BooleanProperty(default=False)
-
 	# all keyword and category bids are tracked here
 	# categories use the category:games convention
 	# if any of the input keywords match the n-grams here then we 
@@ -61,53 +74,34 @@ class AdGroup(db.Model):
 	def __repr__(self):
 		return "AdGroup:'%s'" % self.name
 
-IMAGE_PREDICATES = {"300x250": "format=300x250", 
-	"320x50": "format=320x50", 
-	"300x50": "format=320x50", 
-	"728x90": "format=728x90",
-	"468x60": "format=468x60"}
-class Creative(db.Model):
+class Creative(polymodel.PolyModel):
   ad_group = db.ReferenceProperty(AdGroup)
 
   active = db.BooleanProperty(default=True)
   deleted = db.BooleanProperty(default=False)
 
-  ad_type = db.StringProperty(choices=["text", "image"], default="text")
-
-  # text ad properties
-  headline = db.StringProperty()
-  line1 = db.StringProperty()
-  line2 = db.StringProperty()
-
-  # image properties
-  image = db.BlobProperty()
-  image_width = db.IntegerProperty()
-  image_height = db.IntegerProperty()
+  # the creative type helps the ad server render the right thing if the creative wins the auction
+  ad_type = db.StringProperty(choices=["text", "image", "network", "exchange"], default="text")
 
   # destination URLs
   url = db.StringProperty()
   display_url = db.StringProperty()
 
-  # format predicates
-  # format=320x50
-  # format=*
+  # format predicates - the set of formats that this creative can match
+  # e.g. format=320x50
+  # e.g. format=*
   format_predicates = db.StringListProperty(default=["format=*"])	
 
   # time of creation
   t = db.DateTimeProperty(auto_now_add=True)
 
-  @classmethod
-  def get_format_predicates_for_image(c, img):
-    fp = IMAGE_PREDICATES.get("%dx%d" % (img.width, img.height))
-    return [fp] if fp else None
-
   # calculates the eCPM for this creative, based on 
   # the CPM bid for the ad group or the CPC bid for the ad group and the predicted CTR for this
   # creative
   def e_cpm(self):
-    if self.ad_group.campaign.bid_strategy == 'cpc':
+    if self.ad_group.bid_strategy == 'cpc':
       return self.p_ctr() * self.ad_group.bid * 1000
-    elif self.ad_group.campaign.bid_strategy == 'cpm':
+    elif self.ad_group.bid_strategy == 'cpm':
       return self.ad_group.bid
 
   # predicts a CTR for this ad.  We use 1% for now.
@@ -117,3 +111,33 @@ class Creative(db.Model):
 
   def __repr__(self):
     return "Creative:'%s'" % self.headline
+
+class TextCreative(Creative):
+  # text ad properties
+  headline = db.StringProperty()
+  line1 = db.StringProperty()
+  line2 = db.StringProperty()
+
+class ImageCreative(Creative):
+  # image properties
+  image = db.BlobProperty()
+  image_width = db.IntegerProperty()
+  image_height = db.IntegerProperty()
+
+  @classmethod
+  def get_format_predicates_for_image(c, img):
+    IMAGE_PREDICATES = {"300x250": "format=300x250", 
+    	"320x50": "format=320x50", 
+    	"300x50": "format=320x50", 
+    	"728x90": "format=728x90",
+    	"468x60": "format=468x60"}
+    fp = IMAGE_PREDICATES.get("%dx%d" % (img.width, img.height))
+    return [fp] if fp else None
+
+class NetworkCreative(Creative):
+  # which network?
+  network_type = db.StringProperty(choices=["iad", "adsense", "admob"], default="adsense")
+  
+class ExchangeCreative(Creative):
+  # which exchange?
+  exchange_type = db.StringProperty(choices=["appnexus"])

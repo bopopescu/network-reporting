@@ -9,7 +9,7 @@ from account.models import Account
 class App(db.Model):
 	account = db.ReferenceProperty(Account)
 
-	name = db.StringProperty()
+	name = db.StringProperty(required=True)
 	app_type = db.StringProperty(required=True, default="iphone", choices=["iphone", "android", "ipad"])
 	description = db.TextProperty()
 	url = db.StringProperty()

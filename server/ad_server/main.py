@@ -113,7 +113,7 @@ class AdHandler(webapp.RequestHandler):
     # if this is the Google content crawler, just shortcut and show the right keywords
     if str(self.request.headers['User-Agent']) in CRAWLERS:
       # render the content page
-      self.response.out.write(TEMPLATES["adsense-crawler.html"].render({"title": q, "addr": addr}))
+      self.response.out.write(TEMPLATES["adsense-crawler.html"].safe_substitute({"title": q, "addr": addr}))
     else:
       # create a unique request id
       request_id = md5.md5("%s:%s" % (self.request.query_string, time.time())).hexdigest()

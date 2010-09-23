@@ -214,10 +214,25 @@ class EditBidHandler(RequestHandler):
     params = {"f": f, 
     'sites': Site.gql('where account=:1', Account.current_account()).fetch(100),
     "a": a, 
-    "campaign": a.campaign}
+    "campaign": a.campaign,
+    "device_choices":[list(c) for c in AdGroup.DEVICE_CHOICES],
+    "min_os_choices":[list(c) for c in AdGroup.MIN_OS_CHOICES],
+    "user_types":[list(c) for c in AdGroup.USER_TYPES],
+    }
+    
+    ### TODO: CLEAN UP THIS HACK TO GET THE PROPER SELETIONS
     for s in params['sites']:
       s.checked = s.key() in a.site_keys
       logging.info(params)  
+      
+    for device in params['device_choices']:
+      device.append(device[0] in a.devices)
+    for os in params['min_os_choices']:
+      os.append(os[0] in a.min_os)
+      for device in params['device_choices']:
+        device.append(device[0] in a.devices)
+    for u in params['user_types']:
+      u.append(u[0] in a.active_user)  
     return render_to_response(self.request,'advertiser/adgroup_edit.html', params)
 
   def post(self):
@@ -228,6 +243,13 @@ class EditBidHandler(RequestHandler):
       logging.info(f)
       a.site_keys = map(lambda x:db.Key(x), self.request.POST.getlist("site_keys"))
       a.keywords = filter(lambda k: len(k) > 0, self.request.POST.get('keywords').lower().split('\n'))
+      a.devices = self.request.POST.getlist('devices')
+      a.min_os = self.request.POST.getlist('min_os')
+      a.country = self.request.POST.get('country',None)
+      a.state = self.request.POST.get('state',None)
+      a.city = self.request.POST.get('city',None)
+      a.active_user = self.request.POST.getlist('active_users')
+      a.active_app = self.request.POST.getlist('active_apps')
       f.save(commit=False)
       a.put()
       return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':a.key()}))

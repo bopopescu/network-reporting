@@ -37,7 +37,7 @@ MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7P
 # Format properties: width, height, adsense_format, num_creatives
 #
 FORMAT_SIZES = {
-  "300x250_as": [300, 250, "300x250_as", 3],
+  "300x250_as": [300, 250, "300x250_as",3], 
   "320x50_mb": [320, 50, "320x50_mb", 1],
   "728x90_as": [728, 90, "728x90_as", 2],
   "468x60_as": [468, 60, "468x60_as", 1],
@@ -51,7 +51,7 @@ FORMAT_SIZES = {
 # Templates
 #
 TEMPLATES = {
-  "adsense.html": Template("""<html> <head><title>$title</title></head> <body style="margin: 0;width:${w}px;height:${h}px;" > <script type="text/javascript">window.googleAfmcRequest = {client: '$client',ad_type: 'text_image', output: 'html', channel: '',format: '$adsense_format',oe: 'utf8',color_border: '336699',color_bg: 'FFFFFF',color_link: '0000FF',color_text: '000000',color_url: '008000',};</script> <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_afmc_ads.js"></script>  </body> </html> """),
+  "adsense.html": Template("""<html> <head><title>$title</title></head> <body style="margin: 0;width:${w}px;height:${h}px;" > <script type="text/javascript">function webviewDidClose(){var img = new Image(); img.src="/hellothereimclosing/"} function webviewDidAppear(){var img = new Image(); img.src="/hellothereimopening/"} function close(){window.location="mopub://finishLoad?query=imthequery";} setTimeout("close()",1250);</script><script type="text/javascript">window.googleAfmcRequest = {client: '$client',ad_type: 'text_image', output: 'html', channel: '',format: '$adsense_format',oe: 'utf8',color_border: '336699',color_bg: 'FFFFFF',color_link: '0000FF',color_text: '000000',color_url: '008000',};</script> <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_afmc_ads.js"></script></body> </html> """),
   "adsense-crawler.html": Template("""<html><head><title>$title</title><body><h1>$title</h1><p>$addr</p></body></html>"""),
   "clear.html": Template("clear"),
   "iAd.html": Template("iAd"),

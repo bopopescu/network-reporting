@@ -3,69 +3,132 @@ from google.appengine.ext import db
 # Create your models here.
 #
 # A campaign.  It can run on any number of defined Sites
-#	
+# 
 class Campaign(db.Model):
-	name = db.StringProperty()
-	description = db.TextProperty()
+  name = db.StringProperty()
+  description = db.TextProperty()
 
-	budget = db.FloatProperty()		# daily budget in USD
-	bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpc")
-	
-	active = db.BooleanProperty(default=True)
-	deleted = db.BooleanProperty(default=False)
-	
-	# Geographic preferences are expressed as string tuples that can match
-	# the city, region or country that is resolved via reverse geocode at 
-	# request time.  If the list is blank, any value will match. If the list
-	# is not empty, the value must match one of the elements of the list.
-	# 
-	# Valid predicates are:
-	# city_name=X,region_name=X,country_name=X
-	# region_name=X,country_name=X
-	# country_name=X
-	# zipcode=X
-	#
-	# Each incoming request will be matched against all of these combinations
-	geo_predicates = db.StringListProperty(default=["country_name=*"])
-	
-	# Device and platform preferences are listed similarly:
-	#
-	# model_name=X,brand_name=X
-	# brand_name=X,platform_name=X
-	# platform_name=X
-	device_predicates = db.StringListProperty(default=["platform_name=*"])
-	
-	# who owns this
-	u = db.UserProperty()	
-	t = db.DateTimeProperty(auto_now_add=True)
-	
+  budget = db.FloatProperty()   # daily budget in USD
+  bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpc")
+  
+  active = db.BooleanProperty(default=True)
+  deleted = db.BooleanProperty(default=False)
+  
+  # Geographic preferences are expressed as string tuples that can match
+  # the city, region or country that is resolved via reverse geocode at 
+  # request time.  If the list is blank, any value will match. If the list
+  # is not empty, the value must match one of the elements of the list.
+  # 
+  # Valid predicates are:
+  # city_name=X,region_name=X,country_name=X
+  # region_name=X,country_name=X
+  # country_name=X
+  # zipcode=X
+  #
+  # Each incoming request will be matched against all of these combinations
+  geo_predicates = db.StringListProperty(default=["country_name=*"])
+  
+  # Device and platform preferences are listed similarly:
+  #
+  # model_name=X,brand_name=X
+  # brand_name=X,platform_name=X
+  # platform_name=X
+  device_predicates = db.StringListProperty(default=["platform_name=*"])
+  
+  # who owns this
+  u = db.UserProperty() 
+  t = db.DateTimeProperty(auto_now_add=True)
+  
+  
 class AdGroup(db.Model):
-	campaign = db.ReferenceProperty(Campaign)
+  campaign = db.ReferenceProperty(Campaign)
 
-	name = db.StringProperty()
-	bid = db.FloatProperty()
+  name = db.StringProperty()
+  bid = db.FloatProperty()
 
-	active = db.BooleanProperty(default=True)
-	deleted = db.BooleanProperty(default=False)
+  active = db.BooleanProperty(default=True)
+  deleted = db.BooleanProperty(default=False)
 
-	# all keyword and category bids are tracked here
-	# categories use the category:games convention
-	# if any of the input keywords match the n-grams here then we 
-	# trigger a match
-	keywords = db.StringListProperty()
+  # all keyword and category bids are tracked here
+  # categories use the category:games convention
+  # if any of the input keywords match the n-grams here then we 
+  # trigger a match
+  keywords = db.StringListProperty()
 
-	# all placements that are considered for this ad group
-	# this is a list of keys corresponding to Site objects
-	site_keys = db.ListProperty(db.Key)
+  # all placements that are considered for this ad group
+  # this is a list of keys corresponding to Site objects
+  site_keys = db.ListProperty(db.Key)
+  
+  DEVICE_CHOICES = (
+    ('any','Any'),
+    ('iphone','iPhone'),
+    ('ipod','iPod Touch'),
+    ('ipad','iPad'),
+    ('android','Android'),
+    ('blackberry','Blackberry'),
+    ('windows7','Windows Phone 7'),
+  )
+  devices = db.StringListProperty(default=['any'])
+  
+  MIN_OS_CHOICES = (
+    ('any','Any'),
+    ('iphone__2_0','2.0+'),
+    ('iphone__2_1','2.1+'),
+    ('iphone__3_0','3.0+'),
+    ('iphone__3_1','3.1+'),
+    ('iphone__3_2','3.2+'),
+    ('iphone__4_0','4.0+'),
+    ('iphone__4_1','4.1+'),
+  )
+  min_os = db.StringListProperty(default=['any'])
+  
+  
+  USER_TYPES = (
+    ('any','Any'),
+    ('active_7','7 day active user'),
+    ('active_15','15 day active user'),
+    ('active_30','30 day active user'),
+    ('inactive_7','7 day active user'),
+    ('inactive_15','15 day active user'),
+    ('inactive_30','30 day inactive user'),
+  )
+  
+  active_user = db.StringListProperty(default=['any'])
+  active_app = db.StringListProperty(default=['any'])
+  
+  country = db.StringProperty()
+  state = db.StringProperty()
+  city = db.StringProperty()
+  # Geographic preferences are expressed as string tuples that can match
+  # the city, region or country that is resolved via reverse geocode at 
+  # request time.  If the list is blank, any value will match. If the list
+  # is not empty, the value must match one of the elements of the list.
+  # 
+  # Valid predicates are:
+  # city_name=X,region_name=X,country_name=X
+  # region_name=X,country_name=X
+  # country_name=X
+  # zipcode=X
+  #
+  # Each incoming request will be matched against all of these combinations
+  geo_predicates = db.StringListProperty(default=["country_name=*"])
+  
+  # Device and platform preferences are listed similarly:
+  #
+  # model_name=X,brand_name=X
+  # brand_name=X,platform_name=X
+  # platform_name=X
+  device_predicates = db.StringListProperty(default=["platform_name=*"])
+  
 
-	def __repr__(self):
-		return "AdGroup:'%s'" % self.name
+  def __repr__(self):
+    return "AdGroup:'%s'" % self.name
 
 IMAGE_PREDICATES = {"300x250": "format=300x250", 
-	"320x50": "format=320x50", 
-	"300x50": "format=320x50", 
-	"728x90": "format=728x90",
-	"468x60": "format=468x60"}
+  "320x50": "format=320x50", 
+  "300x50": "format=320x50", 
+  "728x90": "format=728x90",
+  "468x60": "format=468x60"}
 class Creative(db.Model):
   ad_group = db.ReferenceProperty(AdGroup)
 
@@ -91,7 +154,7 @@ class Creative(db.Model):
   # format predicates
   # format=320x50
   # format=*
-  format_predicates = db.StringListProperty(default=["format=*"])	
+  format_predicates = db.StringListProperty(default=["format=*"]) 
 
   # time of creation
   t = db.DateTimeProperty(auto_now_add=True)

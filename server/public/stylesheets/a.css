@@ -262,6 +262,7 @@ td.numeric_large {
 
 table.wide {
 	width: 100%;
+  border-spacing: 0
 }
 
 hr {

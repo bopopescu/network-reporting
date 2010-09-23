@@ -1,5 +1,5 @@
 application: mopub-inc
-version: 32-campaigns-django-port
+version: 33-campaigns
 runtime: python
 api_version: 1
 default_expiration: "10d"
@@ -10,7 +10,7 @@ handlers:
     
 - url: /images
   static_dir: public/images    
-    
+
 - url: /stylesheets
   static_dir: public/stylesheets
 
@@ -23,9 +23,6 @@ handlers:
 - url: /remote_api
   script: $PYTHON_LIB/google/appengine/ext/remote_api/handler.py
   login: admin
-
-- url: /stats.*
-  script: appstats.py
 
 - url: /m/.*
   script: ad_server/main.py

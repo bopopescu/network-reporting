@@ -216,16 +216,31 @@ class AdHandler(webapp.RequestHandler):
                         <body style="margin: 0;width:${w}px;height:${h}px;padding:0;">\
                           <a href="$url"><img src="$image_url" width=$w height=$h/></a>
                         </body> </html> """),
+    "admob": Template("""<html><head></head><body style="margin: 0;width:${w}px;height:${h}px;padding:0;">
+                        <script type="text/javascript">
+                        var admob_vars = {
+                         pubid: '$client', // publisher id
+                         bgcolor: '000000', // background color (hex)
+                         text: 'FFFFFF', // font-color (hex)
+                         ama: false, 
+                         test: false
+                        };
+                        </script>
+                        <script type="text/javascript" src="http://mmv.admob.com/static/iphone/iadmob.js"></script>
+                        </body></html>""")
   }
   def render_creative(self, c, **kwargs):
     if c:
       logging.info("rendering %s" % c.ad_type)
+      format = kwargs["format"]
+
       params = kwargs
       params.update(c.__dict__.get("_entity"))
 
       if c.ad_type == "adsense":
-        format = kwargs["format"]
         params.update({"title": kwargs["q"], "adsense_format": format[2], "w": format[0], "h": format[1], "client": kwargs["site"].account.adsense_pub_id})
+      elif c.ad_type == "admob":
+        params.update({"w": format[0], "h": format[1], "client": kwargs["site"].account.admob_pub_id})
       elif c.ad_type == "image":
         params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
       

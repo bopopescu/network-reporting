@@ -3,38 +3,38 @@ from google.appengine.ext.db import polymodel
 
 #
 # A campaign.  Campaigns have budgetary and time based restrictions.  
-#	
+# 
 class Campaign(db.Model):
-	name = db.StringProperty()
-	description = db.TextProperty()
+  name = db.StringProperty()
+  description = db.TextProperty()
 
   # daily budget in USD
-	budget = db.FloatProperty()	
-	
-	# start and end dates	
-	start_date = db.DateProperty()
-	end_date = db.DateProperty()
-	
-	active = db.BooleanProperty(default=True)
-	deleted = db.BooleanProperty(default=False)
-	
-	# who owns this
-	u = db.UserProperty()	
-	t = db.DateTimeProperty(auto_now_add=True)
-	  
+  budget = db.FloatProperty() 
+  
+  # start and end dates 
+  start_date = db.DateProperty()
+  end_date = db.DateProperty()
+  
+  active = db.BooleanProperty(default=True)
+  deleted = db.BooleanProperty(default=False)
+  
+  # who owns this
+  u = db.UserProperty() 
+  t = db.DateTimeProperty(auto_now_add=True)
+    
 class AdGroup(db.Model):
   campaign = db.ReferenceProperty(Campaign)
   name = db.StringProperty()
 
-	# the priority level at which this ad group should be auctioned
-	priority_level = db.IntegerProperty(default=1)
+  # the priority level at which this ad group should be auctioned
+  priority_level = db.IntegerProperty(default=1)
 
-	bid = db.FloatProperty()
-	bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpc")
+  bid = db.FloatProperty()
+  bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpc")
 
   # state of this ad group
-	active = db.BooleanProperty(default=True)
-	deleted = db.BooleanProperty(default=False)
+  active = db.BooleanProperty(default=True)
+  deleted = db.BooleanProperty(default=False)
 
   # all keyword and category bids are tracked here
   # categories use the category:games convention
@@ -86,6 +86,7 @@ class AdGroup(db.Model):
   country = db.StringProperty()
   state = db.StringProperty()
   city = db.StringProperty()
+  
   # Geographic preferences are expressed as string tuples that can match
   # the city, region or country that is resolved via reverse geocode at 
   # request time.  If the list is blank, any value will match. If the list
@@ -107,7 +108,6 @@ class AdGroup(db.Model):
   # platform_name=X
   device_predicates = db.StringListProperty(default=["platform_name=*"])
   
-
   def __repr__(self):
     return "AdGroup:'%s'" % self.name
 
@@ -127,7 +127,7 @@ class Creative(polymodel.PolyModel):
   # format predicates - the set of formats that this creative can match
   # e.g. format=320x50
   # e.g. format=*
-  format_predicates = db.StringListProperty(default=["format=*"])	
+  format_predicates = db.StringListProperty(default=["format=*"]) 
 
   # time of creation
   t = db.DateTimeProperty(auto_now_add=True)
@@ -167,10 +167,10 @@ class ImageCreative(Creative):
   @classmethod
   def get_format_predicates_for_image(c, img):
     IMAGE_PREDICATES = {"300x250": "format=300x250", 
-    	"320x50": "format=320x50", 
-    	"300x50": "format=320x50", 
-    	"728x90": "format=728x90",
-    	"468x60": "format=468x60"}
+      "320x50": "format=320x50", 
+      "300x50": "format=320x50", 
+      "728x90": "format=728x90",
+      "468x60": "format=468x60"}
     fp = IMAGE_PREDICATES.get("%dx%d" % (img.width, img.height))
     return [fp] if fp else None
 

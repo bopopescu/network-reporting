@@ -82,25 +82,26 @@ class AdAuction(object):
         map(lambda x: x.key(), ad_groups), format_predicates, True, False).fetch(AdAuction.MAX_ADGROUPS)
       logging.debug("eligible creatives: %s" % creatives)
 
-      # for each priority_level, perform an auction among the various creatives 
-      max_priority = max(c.ad_group.priority_level for c in creatives)
-      for p in range(max_priority + 1):
-        players = filter(lambda c: c.ad_group.priority_level == p, creatives)
-        players.sort(lambda x,y: cmp(y.e_cpm(), x.e_cpm()))
-        winning_ecpm = max(c.e_cpm() for c in players) if len(players) > 0 else 0
-        logging.debug("auction at priority=%d: %s, max eCPM=%.2f" % (p, players, winning_ecpm))
+      if len(creatives) > 0:
+        # for each priority_level, perform an auction among the various creatives 
+        max_priority = max(c.ad_group.priority_level for c in creatives)
+        for p in range(max_priority + 1):
+          players = filter(lambda c: c.ad_group.priority_level == p, creatives)
+          players.sort(lambda x,y: cmp(y.e_cpm(), x.e_cpm()))
+          winning_ecpm = max(c.e_cpm() for c in players) if len(players) > 0 else 0
+          logging.debug("auction at priority=%d: %s, max eCPM=%.2f" % (p, players, winning_ecpm))
         
-        # if the winning creative exceeds the ad unit's threshold cpm for the
-        # priority level, then we have a winner
-        if winning_ecpm > site.threshold_cpm(p):
-          # retain all creatives with comparable eCPM and randomize among them
-          winners = filter(lambda x: x.e_cpm() >= winning_ecpm, players)
-          random.shuffle(winners)
+          # if the winning creative exceeds the ad unit's threshold cpm for the
+          # priority level, then we have a winner
+          if winning_ecpm > site.threshold_cpm(p):
+            # retain all creatives with comparable eCPM and randomize among them
+            winners = filter(lambda x: x.e_cpm() >= winning_ecpm, players)
+            random.shuffle(winners)
 
-          # winner
-          winner = winners[0]
-          logging.debug("winning creative = %s" % winner)
-          return winner
+            # winner
+            winner = winners[0]
+            logging.debug("winning creative = %s" % winner)
+            return winner
           
     # nothing... failed auction
     logging.debug("auction failed, returning None")
@@ -203,7 +204,7 @@ class AdHandler(webapp.RequestHandler):
   TEMPLATES = {
     "adsense": Template("""<html> <head><title>$title</title></head> <body style="margin: 0;width:${w}px;height:${h}px;" > <script type="text/javascript">window.googleAfmcRequest = {client: '$client',ad_type: 'text_image', output: 'html', channel: '',format: '$adsense_format',oe: 'utf8',color_border: '336699',color_bg: 'FFFFFF',color_link: '0000FF',color_text: '000000',color_url: '008000',};</script> <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_afmc_ads.js"></script>  </body> </html> """),
     "admob": Template("admob goes here"),
-    "iad": Template("iAd"),
+    "iAd": Template("iAd"),
     "clear": Template(""),
     "text": Template("""<html>\
                         <head><style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: ${w}px;height: ${h}px;}.creative_headline {font-size: 14px;}.creative .creative_url a {color: green;text-decoration: none;}</style></head>\

@@ -16,7 +16,7 @@ from common.ragendja.template import render_to_response, JSONResponse
 
 # from common.ragendja.auth.decorators import google_login_required as login_required
 
-from advertiser.models import Campaign, AdGroup, Creative
+from advertiser.models import *
 from advertiser.forms import CampaignForm, AdGroupForm
 
 from publisher.models import Site, Account
@@ -79,6 +79,7 @@ class ShowHandler(RequestHandler):
 
     # load the adgroups
     bids = AdGroup.gql("where campaign=:1 and deleted = :2", campaign, False).fetch(50)
+    bids.sort(lambda x,y:cmp(x.priority_level, y.priority_level))
     for b in bids:
       b.stats = SiteStats.stats_for_day(b, SiteStats.today())
 
@@ -96,11 +97,11 @@ def campaign_show(request,*args,**kwargs):
 class AddBidHandler(RequestHandler):
  def post(self):
     c = Campaign.get(self.request.POST.get('id'))
-    adgroup = AdGroup(campaign=c,
-      name=self.request.POST.get('name'),
-      bid=float(self.request.POST.get('bid')),
-      keywords=filter(lambda k: len(k) > 0, self.request.POST.get('keywords').lower().split('\n')),
-      site_keys=map(lambda x: db.Key(x), self.request.POST.getlist('sites')))
+    f = AdGroupForm(data=self.request.POST)
+    adgroup = f.save(commit=False)
+    adgroup.campaign=c
+    adgroup.keywords=filter(lambda k: len(k) > 0, self.request.POST.get('keywords').lower().split('\n'))
+    adgroup.site_keys=map(lambda x: db.Key(x), self.request.POST.getlist('sites'))
     adgroup.put()
     return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':c.key()}))
 
@@ -295,7 +296,7 @@ class AddCreativeHandler(RequestHandler):
   def post(self):
     ad_group = AdGroup.get(self.request.POST.get('id'))
     if self.request.POST.get("headline"):
-      creative = Creative(ad_group=ad_group,
+      creative = TextCreative(ad_group=ad_group,
       headline=self.request.POST.get('headline'),
       line1=self.request.POST.get('line1'),
       line2=self.request.POST.get('line2'),
@@ -304,10 +305,10 @@ class AddCreativeHandler(RequestHandler):
       creative.put()
     elif self.request.FILES.get("image"):
       img = images.Image(self.request.FILES.get("image").read())
-      fp = Creative.get_format_predicates_for_image(img)
+      fp = ImageCreative.get_format_predicates_for_image(img)
       if fp is not None:
         img.im_feeling_lucky()
-        creative = Creative(ad_group=ad_group,
+        creative = ImageCreative(ad_group=ad_group,
                                   ad_type="image",
                                   format_predicates=fp,
                                   url=self.request.POST.get('url'),

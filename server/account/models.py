@@ -5,6 +5,7 @@ from google.appengine.api import users
 #
 class Account(db.Model):
 	adsense_pub_id = db.StringProperty()
+	admob_pub_id = db.StringProperty()
 	user = db.UserProperty()
 	
 	@classmethod

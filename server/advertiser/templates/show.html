@@ -30,11 +30,6 @@
 				<form method="post" action="{% url advertiser_campaign_pause %}?id={{campaign.key}}" style="display: inline;"><input type="submit" value="Delete"></form>
 			</tr>
 		<tr><th>Daily budget</th><td class="numeric">{{campaign.budget|currency}}</td></tr>
-		<tr><th>Bid strategy</th>
-				<td class="numeric">{% ifequal campaign.bid_strategy "cpc" %}By click (CPC){% endifequal %}
-						{% ifequal campaign.bid_strategy "cpm" %}By impression (CPM){% endifequal %}</td></tr>
-		<tr><th>Geo predicates</th><td class="numeric">{% for g in campaign.geo_predicates %}{{g}}<br/>{% endfor %}</td></tr>
-		<tr><th>Device predicates</th><td class="numeric">{% for g in campaign.device_predicates %}{{g}}<br/>{% endfor %}</td></tr>
 	</table>
 	
 	<h3>
@@ -51,7 +46,44 @@
 			<tr>
 				<th>Name</th><td><input type='text' name="name" size="30" placeholder="My Ad Group"/></td>
 			</tr>
+			<tr>
+				<th>Priority level</th>
+				<td><select name="priority_level">
+							<option value="1">Sponsorship</option>
+							<option value="2">Direct</option>
+							<option value="3">Promotional</option>
+							<option value="4">Network</option>
+						</select>
+				</td>
+			</tr>
 			<tr><th>Max Bid</th><td><input type='text' name="bid" placeholder="0.50" size="8"/> USD</td></tr>
+			<tr>
+				<th>Bidding Strategy</th>
+				<td><select name="bid_strategy">
+							<option value="cpm">By impression (CPM)</option>
+							<option value="cpc">By click (CPC)</option>
+							<!--><option value="cpa">By conversion (CPA)</option>-->
+						</select>
+				</td>
+			</tr>
+
+			<tr><td colspan="2"><h4>Geographic and Device Targeting</h4></td></tr>
+			<tr>
+				<th>Geo Predicates</th>
+				<td>
+					<textarea name="geo_predicates" cols="50" rows="3">country_name=*</textarea><br/>
+					<tt>country_name=X; region_name=X,country_name=X; city_name=X,region_name=X,country_name=X</tt>
+				</td>
+			</tr>
+
+			<tr>
+				<th>Device Predicates</th>
+				<td>
+					<textarea name="device_predicates" cols="50" rows="3">platform_name=*</textarea><br/>
+					<tt>platform_name=(*,android,iphone)</tt>
+				</td>
+			</tr>
+			
 			<tr><td colspan="2"><h4>Ad Group Targeting</h4> <p>Your bids will be matched with available inventory by matching keywords or 
 					matching placements in your existing applications.</p></td></tr>
 			<tr><th>Keywords</th>
@@ -73,7 +105,8 @@
 					<th></th>
 					<th>Name</th>
 					<th>Status</th>
-					<th>Max Bid</th>
+					<th>Type</th>
+					<th>Bid</th>
 					<th width="75px">Impr.</th>
 					<th width="75px">Clicks</th>
 					<th width="75px">Cost</th>
@@ -94,7 +127,14 @@
 					{% if not b.active and not b.deleted %}
 						Paused
 					{% endif %}</b></td>
-					<td class="numeric">{{b.bid|currency}}</td>
+					<td>
+						{% ifequal b.priority_level 0 %}Super-user {% endifequal %}
+						{% ifequal b.priority_level 1 %}Sponsorship {% endifequal %}
+						{% ifequal b.priority_level 2 %}Direct {% endifequal %}
+						{% ifequal b.priority_level 3 %}Promotional {% endifequal %}
+						{% ifequal b.priority_level 4 %}Network {% endifequal %}
+					</td>
+					<td class="numeric">{{b.bid|currency}} {{b.bid_strategy}}</td>
 					<td class="numeric">{{b.stats.impression_count}}</td>
 					<td class="numeric">{{b.stats.click_count}} ({{b.stats.ctr|percentage}})</td>
 					<td class="numeric">{{b.stats.revenue|currency}}</td>

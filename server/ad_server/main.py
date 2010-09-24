@@ -34,142 +34,208 @@ CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gz
 MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7PnE6cH9_PX7OoeIIr5FjnTA'
 
 #
-# Format properties: width, height, adsense_format, num_creatives
+# Ad auction logic
+# The core of the whole damn thing
 #
-FORMAT_SIZES = {
-  "300x250_as": [300, 250, "300x250_as",3], 
-  "320x50_mb": [320, 50, "320x50_mb", 1],
-  "728x90_as": [728, 90, "728x90_as", 2],
-  "468x60_as": [468, 60, "468x60_as", 1],
-  "300x250": [300, 250, "300x250_as", 3],
-  "320x50": [320, 50, "320x50_mb", 1],
-  "728x90": [728, 90, "728x90_as", 2],
-  "468x60": [468, 60, "468x60_as", 1]
-}
+class AdAuction(object):
+  MAX_ADGROUPS = 30
 
+  # Runs the auction itself.  Returns the winning creative, or None if no creative matched
+  @classmethod
+  def run(cls, **kw):
+    site = kw["site"]
+
+    keywords = kw["q"]
+    geo_predicates = AdAuction.geo_predicates_for_rgeocode(kw["addr"])
+    device_predicates = AdAuction.device_predicates_for_request(kw["request"])
+    format_predicates = AdAuction.format_predicates_for_format(kw["format"])
+    logging.debug("keywords=%s, geo_predicates=%s, device_predicates=%s, format_predicates=%s" % (keywords, geo_predicates, device_predicates, format_predicates))
+
+    # Matching strategy: 
+    # 1) match all ad groups that match the placement that is in question, sort by priority
+    # 2) throw out ad groups owned by campaigns that have exceeded budget or are paused
+    # 3) throw out ad groups that restrict by keywords and do not match the keywords
+    # 4) throw out ad groups that do not match device and geo predicates
+    ad_groups = AdGroup.gql("where site_keys = :1 and active = :2 and deleted = :3", site.key(), True, False).fetch(AdAuction.MAX_ADGROUPS)
+    logging.debug("ad groups: %s" % ad_groups)
+    
+    # campaign exclusions... budget + time
+    ad_groups = filter(lambda a: SiteStats.stats_for_day(a.campaign, SiteStats.today()).revenue < a.campaign.budget, ad_groups)
+    logging.debug("removed over budget, now: %s" % ad_groups)
+    ad_groups = filter(lambda a: a.campaign.active and (a.campaign.start_date >= SiteStats.today() if a.campaign.start_date else True) and (a.campaign.end_date <= SiteStats.today() if a.campaign.end_date else True), ad_groups)
+    logging.debug("removed non running campaigns, now: %s" % ad_groups)
+    
+    # ad group request-based targeting exclusions
+    ad_groups = filter(lambda a: len(a.keywords) == 0 or set(keywords).intersection(a.keywords) > set(), ad_groups)
+    logging.debug("removed keyword non-matches, now: %s" % ad_groups)
+    ad_groups = filter(lambda a: set(geo_predicates).intersection(a.geo_predicates) > set(), ad_groups)
+    logging.debug("removed geo non-matches, now: %s" % ad_groups)
+    ad_groups = filter(lambda a: set(device_predicates).intersection(a.device_predicates) > set(), ad_groups)
+    logging.debug("removed device non-matches, now: %s" % ad_groups)
+    
+    # TODO: frequency capping and other user / request based randomizations
+    pass
+    
+    # if any ad groups were returned, find the creatives that match the requested format in all candidates
+    if len(ad_groups) > 0:
+      creatives = Creative.gql("where ad_group in :1 and format_predicates in :2 and active = :3 and deleted = :4", 
+        map(lambda x: x.key(), ad_groups), format_predicates, True, False).fetch(AdAuction.MAX_ADGROUPS)
+      logging.debug("eligible creatives: %s" % creatives)
+
+      if len(creatives) > 0:
+        # for each priority_level, perform an auction among the various creatives 
+        max_priority = max(c.ad_group.priority_level for c in creatives)
+        for p in range(max_priority + 1):
+          players = filter(lambda c: c.ad_group.priority_level == p, creatives)
+          players.sort(lambda x,y: cmp(y.e_cpm(), x.e_cpm()))
+          winning_ecpm = max(c.e_cpm() for c in players) if len(players) > 0 else 0
+          logging.debug("auction at priority=%d: %s, max eCPM=%.2f" % (p, players, winning_ecpm))
+        
+          # if the winning creative exceeds the ad unit's threshold cpm for the
+          # priority level, then we have a winner
+          if winning_ecpm > site.threshold_cpm(p):
+            # retain all creatives with comparable eCPM and randomize among them
+            winners = filter(lambda x: x.e_cpm() >= winning_ecpm, players)
+            random.shuffle(winners)
+
+            # winner
+            winner = winners[0]
+            logging.debug("winning creative = %s" % winner)
+            return winner
+          
+    # nothing... failed auction
+    logging.debug("auction failed, returning None")
+
+  @classmethod
+  def geo_predicates_for_rgeocode(c, r):
+    if len(r) == 0:
+      return ["country_name=*"]
+    elif len(r) == 2:
+      return ["region_name=%s,country_name=%s" % (r[0], r[1]),
+              "country_name=%s" % r[1],
+              "country_name=*"]
+    elif len(r) == 3:
+      return ["city_name=%s,region_name=%s,country_name=%s" % (r[0], r[1], r[2]),
+              "region_name=%s,country_name=%s" % (r[1], r[2]),
+              "country_name=%s" % r[2],
+              "country_name=*"]
+
+  @classmethod
+  def device_predicates_for_request(c, req):
+    ua = req.headers["User-Agent"]
+    if "Android" in ua:
+      return ["platform_name=android", "platform_name=*"]
+    elif "iPhone" in ua:
+      return ["platform_name=iphone", "platform_name=*"]
+    else:
+      return ["platform_name=*"]
+
+  @classmethod
+  def format_predicates_for_format(c, f):
+    return ["format=%dx%d" % (f[0], f[1]), "format=*"]
+      
 #
-# Templates
+# Primary ad auction handler 
+# -- Handles ad request parameters and normalizes for the auction logic
+# -- Handles rendering the winning creative into the right HTML
 #
-TEMPLATES = {
-  "adsense.html": Template("""<html> <head><title>$title</title></head> <body style="margin: 0;width:${w}px;height:${h}px;" onload='close()'> <script type="text/javascript">function webviewDidClose(){var img = new Image(); img.src="/hellothereimclosing/"} function webviewDidAppear(){var img = new Image(); img.src="/hellothereimopening/"} function close(){window.location="mopub://finishLoad?query=imthequery";}</script><script type="text/javascript">window.googleAfmcRequest = {client: '$client',ad_type: 'text_image', output: 'html', channel: '',format: '$adsense_format',oe: 'utf8',color_border: '336699',color_bg: 'FFFFFF',color_link: '0000FF',color_text: '000000',color_url: '008000',};</script> <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_afmc_ads.js"></script></body> </html> """),
-  "adsense-crawler.html": Template("""<html><head><title>$title</title><body><h1>$title</h1><p>$addr</p></body></html>"""),
-  "clear.html": Template("clear"),
-  "iAd.html": Template("iAd"),
-  "internal-text.html": Template("""<html>\
-                                    <head><style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: ${w}px;height: ${h}px;}.creative_headline {font-size: 14px;}.creative .creative_url a {color: green;text-decoration: none;}</style></head>\
-                                    <body style="margin: 0;width:${w}px;height:${h}px;padding:0;">\
-                                      <div class="creative"><div style="padding: 5px 10px;"><a href="$url" class="creative_headline">$headline</a><br/>$line1 $line2<br/><span class="creative_url"><a href="$url">$display_url</a></span></div></div>\
-                                    </body> </html> """),
-  "internal-image.html":Template("""<html>\
-                                    <head><style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: ${w}px;height: ${h}px;}.creative_headline {font-size: 20px;}.creative .creative_url a {color: green;text-decoration: none;}</style></head>\
-                                    <body style="margin: 0;width:${w}px;height:${h}px;padding:0;">\
-                                      <a href="$url"><img src="$image_url" width=$w height=$h/></a>
-                                    </body> </html> """),
-}
-  
 class AdHandler(webapp.RequestHandler):
+  
+  # Format properties: width, height, adsense_format, num_creatives
+  FORMAT_SIZES = {
+    "300x250_as": (300, 250, "300x250_as", 3),
+    "320x50_mb": (320, 50, "320x50_mb", 1),
+    "728x90_as": (728, 90, "728x90_as", 2),
+    "468x60_as": (468, 60, "468x60_as", 1),
+    "300x250": (300, 250, "300x250_as", 3),
+    "320x50": (320, 50, "320x50_mb", 1),
+    "728x90": (728, 90, "728x90_as", 2),
+    "468x60": (468, 60, "468x60_as", 1)
+  }
+  
   def get(self):
     id = self.request.get("id")
+    site = Site.site_by_id(id) if id else None
     
-    # look up parameters for this pub id via memcache
-    h = memcache.get("ad:%s" % id)
-    if h is None:
-      site = Site.site_by_id(id)
-      if site is None:
-        # the user's site key was not set correctly...
-        self.error(500)
-        self.response.out.write("Publisher site key %s not valid" % id)
-        return
-      
-      # create a hash and store in memcache
-      h = {"site_key": str(site.key()),
-         "default_keywords": site.keywords,
-         "backfill": site.backfill,
-         "backfill_threshold_cpm": site.backfill_threshold_cpm,
-         "adsense_pub_id": site.account.adsense_pub_id}
-      memcache.set("ad:%s" % id, h, 300)
+    # the user's site key was not set correctly...
+    if site is None:
+      self.error(500)
+      self.response.out.write("Publisher site key %s not valid" % id)
+      return
     
     # get keywords 
-    q = self.request.get("q") or ""   
-    if len(q) == 0:
-      q = h["default_keywords"]
+    q = [sz.strip() for sz in ("%s\n%s" % (self.request.get("q").lower(), site.keywords)).split("\n")]
     logging.debug("keywords are %s" % q)
 
     # get format
-    f = self.request.get("f")
-    format = FORMAT_SIZES.get(f)
-    if f is None or len(f) == 0 or format is None:
-      f = "320x50"
-      format = FORMAT_SIZES.get("320x50")
-    logging.debug("format is %s (%s)" % (f, format))
+    f = self.request.get("f") or "320x50"
+    format = self.FORMAT_SIZES.get(f)
+    logging.debug("format is %s (requested '%s')" % (format, f))
     
     # look up lat/lon
-    addr = ''
-    ll = self.request.get("ll")
-    if ll:
-      addr = self.rgeocode(ll)      
-      logging.debug("resolved %s to %s" % (ll, addr))
+    addr = self.rgeocode(self.request.get("ll")) if self.request.get("ll") else ""      
+    logging.debug("geo is %s (requested '%s')" % (addr, self.request.get("ll")))
     
-    # if this is the Google content crawler, just shortcut and show the right keywords
-    if str(self.request.headers['User-Agent']) in CRAWLERS:
-      # render the content page
-      self.response.out.write(TEMPLATES["adsense-crawler.html"].render({"title": q, "addr": addr}))
-    else:
-      # create a unique request id
-      request_id = md5.md5("%s:%s" % (self.request.query_string, time.time())).hexdigest()
+    # get creative exclusions
+    excluded_creatives = self.request.get("excl")
+    
+    # create a unique request id, but only log this line if the user agent is real
+    request_id = md5.md5("%s:%s" % (self.request.query_string, time.time())).hexdigest()
+    if str(self.request.headers['User-Agent']) not in CRAWLERS:
       logging.info('OLP ad-request {"request_id": "%s", "remote_addr": "%s", "q": "%s", "user_agent": "%s"}' % (request_id, self.request.remote_addr, self.request.query_string, self.request.headers["User-Agent"]))
 
-      # enqueue impression tracking iff referer is not a crawler bot
-      taskqueue.add(url='/m/track/i', params={'id': id})    
-      
-      # get creatives that match
-      creatives = AdHandler.get_creatives(h, self.request, q, addr, f)
-      c = creatives[0] if len(creatives) > 0 else None
+    # get winning creative
+    c = AdAuction.run(request=self.request, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, request_id=request_id)
     
-      # should we show a creative or use our backfill strategy?
-      html = None
-      if c and c.e_cpm() >= h["backfill_threshold_cpm"]:
-        # ok show our ad
-        logging.debug("eCPM exceeded threshold, showing ad")
-        html = "internal-%s.html" % c.ad_type
-      
-        # output the request_id and the winning creative_id 
-        logging.info('OLP ad-auction {"id": "%s", "c": "%s", "request_id": "%s"}' % (id, c.key(), request_id))
+    # output the request_id and the winning creative_id if an impression happened
+    if c:
+      logging.info('OLP ad-auction {"id": "%s", "c": "%s", "request_id": "%s"}' % (id, c.key(), request_id))
 
-        # enqueue impression tracking iff referer is not a crawler bot
-        if str(self.request.headers['User-Agent']) not in CRAWLERS:
-          taskqueue.add(url='/m/track/ai', params={'c': c.key(), 'q': q, 'id': id})   
-      elif h["backfill"] == "fail":
-        # never mind, we should fail
-        logging.debug("eCPM did not exceed threshold, failing")
-        html = None
-      else:
-        # never mind, we should use a backfill strategy
-        logging.debug("eCPM did not exceed threshold, using backfill: %s" % h["backfill"])
-        self.response.headers.add_header("X-Backfill", str(h["backfill"]))
-        html = "%s.html" % h["backfill"]
-
-      # create an ad click URL
-      ad_click_url = "http://www.mopub.com/m/aclk?id=%s&c=%s&req=%s" % (id, str(c.key()) if c else '', request_id)
+      # create an ad clickthrough URL
+      ad_click_url = "http://www.mopub.com/m/aclk?id=%s&c=%s&req=%s" % (id, c.key(), request_id)
       self.response.headers.add_header("X-Clickthrough", str(ad_click_url))
-        
-      # write it out
-      if html:
-        params = {"title": q, 
-          "f": f, 
-          "adsense_format": format[2],
-          "w": format[0], 
-          "h": format[1],
-          "addr": " ".join(addr),
-          "client": h["adsense_pub_id"]}
-        if c:
-          params.update(c.__dict__.get("_entity"))
-          if c.image:
-            params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
-            
-        self.response.out.write(TEMPLATES[html].safe_substitute(params))
-      else:
-        self.error(404)
+      
+    # render the creative 
+    self.response.out.write(self.render_creative(c, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, request_id=request_id))
+  
+  #
+  # Templates
+  #
+  TEMPLATES = {
+    "adsense": Template("""<html> <head><title>$title</title></head> <body style="margin: 0;width:${w}px;height:${h}px;" > <script type="text/javascript">window.googleAfmcRequest = {client: '$client',ad_type: 'text_image', output: 'html', channel: '',format: '$adsense_format',oe: 'utf8',color_border: '336699',color_bg: 'FFFFFF',color_link: '0000FF',color_text: '000000',color_url: '008000',};</script> <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_afmc_ads.js"></script>  </body> </html> """),
+    "admob": Template("admob goes here"),
+    "iAd": Template("iAd"),
+    "clear": Template(""),
+    "text": Template("""<html>\
+                        <head><style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: ${w}px;height: ${h}px;}.creative_headline {font-size: 14px;}.creative .creative_url a {color: green;text-decoration: none;}</style></head>\
+                        <body style="margin: 0;width:${w}px;height:${h}px;padding:0;">\
+                          <div class="creative"><div style="padding: 5px 10px;"><a href="$url" class="creative_headline">$headline</a><br/>$line1 $line2<br/><span class="creative_url"><a href="$url">$display_url</a></span></div></div>\
+                        </body> </html> """),
+    "image":Template("""<html>\
+                        <head><style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: ${w}px;height: ${h}px;}.creative_headline {font-size: 20px;}.creative .creative_url a {color: green;text-decoration: none;}</style></head>\
+                        <body style="margin: 0;width:${w}px;height:${h}px;padding:0;">\
+                          <a href="$url"><img src="$image_url" width=$w height=$h/></a>
+                        </body> </html> """),
+  }
+  def render_creative(self, c, **kwargs):
+    if c:
+      logging.info("rendering %s" % c.ad_type)
+      params = kwargs
+      params.update(c.__dict__.get("_entity"))
+
+      if c.ad_type == "adsense":
+        format = kwargs["format"]
+        params.update({"title": kwargs["q"], "adsense_format": format[2], "w": format[0], "h": format[1], "client": kwargs["site"].account.adsense_pub_id})
+      elif c.ad_type == "image":
+        params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
+      
+      # indicate to the client the winning creative type, in case it is natively implemented (iad, clear)
+      self.response.headers.add_header("X-Backfill", str(c.ad_type))
+    
+      # render the HTML body
+      self.response.out.write(self.TEMPLATES[c.ad_type].safe_substitute(params))
+    else:
+      self.response.headers.add_header("X-Backfill", "clear")
   
   def rgeocode(self, ll):
     url = "http://maps.google.com/maps/geo?%s" % urlencode({"q": ll, 
@@ -200,169 +266,18 @@ class AdHandler(webapp.RequestHandler):
     except:
       logging.error("rgeocode failed to parse %s" % json)
       return ()
-
-  @classmethod
-  def get_creatives(c, h, request, q, rgeocode, format):
-    MAX_ADGROUPS = 30
-    keywords = (q or "").split("\n")
-    site_key = h.get("site_key")      # the site key
-    logging.debug("keywords=%s site_key=%s" % (keywords, site_key))
-    
-    geo_predicates = AdHandler.geo_predicates_for_rgeocode(rgeocode)
-    device_predicates = AdHandler.device_predicates_for_request(request)
-    format_predicates = AdHandler.format_predicates_for_format(format)
-    logging.debug("geo_predicates=%s, device_predicates=%s, format_predicates=%s" % (geo_predicates, device_predicates, format_predicates))
-    
-    # Matching strategy: 1) match all ad groups that match the placement that is in question
-    # 2) throw out ad groups owned by campaigns that have exceeded budget
-    # 3) throw out ad groups that restrict by keywords and do not match the keywords
-    # 4) throw out ad groups that do not match device and geo predicates
-    ad_groups = AdGroup.gql("where site_keys = :1 and active = :2 and deleted = :3 order by bid desc", db.Key(site_key), True, False).fetch(MAX_ADGROUPS)
-    logging.debug("ad groups: %s" % ad_groups)
-    ad_groups = filter(lambda a: SiteStats.stats_for_day(a.campaign, SiteStats.today()).revenue < a.campaign.budget, ad_groups)
-    logging.debug("removed over budget, now: %s" % ad_groups)
-    ad_groups = filter(lambda a: len(a.keywords) == 0 or set(keywords).intersection(a.keywords) > set(), ad_groups)
-    logging.debug("removed keyword non-matches, now: %s" % ad_groups)
-    ad_groups = filter(lambda a: set(geo_predicates).intersection(a.campaign.geo_predicates) > set(), ad_groups)
-    logging.debug("removed geo non-matches, now: %s" % ad_groups)
-    ad_groups = filter(lambda a: set(device_predicates).intersection(a.campaign.device_predicates) > set(), ad_groups)
-    logging.debug("removed device non-matches, now: %s" % ad_groups)
-
-    # if any ad groups were returned, reduce the creatives into a single list
-    #
-    if len(ad_groups) > 0:
-      creatives = Creative.gql("where ad_group in :1 and format_predicates in :2 and active = :3 and deleted = :4", 
-        map(lambda x: x.key(), ad_groups), format_predicates, True, False).fetch(MAX_ADGROUPS)
-      logging.debug(creatives)
-    
-      # perform an auction among the creatives to select the winner
-      creatives.sort(lambda x,y: cmp(y.e_cpm(), x.e_cpm()))
-    
-      # retain all creatives with comparable eCPM and randomize among them
-      winning_ecpm = creatives[0].e_cpm() if len(creatives) > 0 else 0
-      creatives = filter(lambda x: x.e_cpm() >= winning_ecpm, creatives)
-      random.shuffle(creatives)
-    
-      logging.debug("returned %d creatives, winning eCPM=%.2f" % (len(creatives), winning_ecpm))
-      return creatives
-    else:
-      return []
-      
-  @classmethod
-  def geo_predicates_for_rgeocode(c, r):
-    if len(r) == 0:
-      return ["country_name=*"]
-    elif len(r) == 2:
-      return ["region_name=%s,country_name=%s" % (r[0], r[1]),
-              "country_name=%s" % r[1],
-              "country_name=*"]
-    elif len(r) == 3:
-      return ["city_name=%s,region_name=%s,country_name=%s" % (r[0], r[1], r[2]),
-              "region_name=%s,country_name=%s" % (r[1], r[2]),
-              "country_name=%s" % r[2],
-              "country_name=*"]
-              
-  @classmethod
-  def device_predicates_for_request(c, req):
-    ua = req.headers["User-Agent"]
-    if "Android" in ua:
-      return ["platform_name=android", "platform_name=*"]
-    elif "iPhone" in ua:
-      return ["platform_name=iphone", "platform_name=*"]
-    else:
-      return ["platform_name=*"]
-      
-  @classmethod
-  def format_predicates_for_format(c, f):
-    return ["format=%s" % f, "format=*"]
-    
-    
+        
 class AdClickHandler(webapp.RequestHandler):
   def get(self):
     id = self.request.get("id")
     q = self.request.get("q")
     url = self.request.get("r")
     
-    # enqueue click tracking
-    taskqueue.add(url='/m/track/c', params={'id': id, 'q': q})
-
     # forward on to the click URL
     self.redirect(url)
 
-# 
-# Tracks an impression on the publisher side.  Accrues an impression
-# to the Site
-#   
-class TrackImpression(webapp.RequestHandler):
-  def post(self):
-    try:
-      s = Site.site_by_id(self.request.get("id"))
-      stats = SiteStats.sitestats_for_today(s)     
-      db.run_in_transaction(stats.add_impression)
-    except:
-      logging.error("failed to track site impression %s" % self.request.get("id"))
-      
-#     
-# Tracks an advertiser impression
-#
-class TrackAdvertiserImpression(webapp.RequestHandler):
-  def post(self):
-    try:
-      creative = Creative.get(self.request.get("c"))
-      d = SiteStats.today()
-      
-      db.run_in_transaction(SiteStats.stats_for_day(creative, d).add_impression)
-      db.run_in_transaction(SiteStats.stats_for_day(creative.ad_group, d).add_impression)
-      db.run_in_transaction(SiteStats.stats_for_day(creative.ad_group.campaign, d).add_impression)
-
-      # add for the ad group sliced by keyword and by placement
-      db.run_in_transaction(SiteStats.stats_for_day_with_qualifier(creative.ad_group, self.request.get('q'), d).add_impression)
-      db.run_in_transaction(SiteStats.stats_for_day_with_qualifier(creative.ad_group, self.request.get('id'), d).add_impression)
-
-    except:
-      logging.error("failed to track creative impression %s" % self.request.get("id"))
-      
-#
-# Publisher side click tracking... accrues to a Site
-#
-class TrackClick(webapp.RequestHandler):
-  def post(self):
-    try:
-      s = Site.site_by_id(self.request.get("id"))
-      stats = SiteStats.sitestats_for_today(s)
-      db.run_in_transaction(stats.add_click)
-    except:
-      logging.error("failed to track click for id %s" % self.request.get("id"))
-    
-#     
-# Advertiser side click tracking... accrues to a Creative, AdGroup and Campaign
-# Also has budgetary impacts, by accruing the creative's Bid to the total cost of these various
-# elements.
-#
-class TrackAdvertiserClick(webapp.RequestHandler):
-  def post(self):
-    try:
-      creative = Creative.get(self.request.get("c"))
-      d = SiteStats.today()
-
-      db.run_in_transaction(SiteStats.stats_for_day(creative, d).add_click_with_revenue, creative.ad_group.bid)
-      db.run_in_transaction(SiteStats.stats_for_day(creative.ad_group, d).add_click_with_revenue, creative.ad_group.bid)
-      db.run_in_transaction(SiteStats.stats_for_day(creative.ad_group.campaign, d).add_click_with_revenue, creative.ad_group.bid)
-
-      # add for the ad group sliced by keyword and by placement
-      db.run_in_transaction(SiteStats.stats_for_day_with_qualifier(creative.ad_group, self.request.get('q'), d).add_click_with_revenue, creative.ad_group.bid)
-      db.run_in_transaction(SiteStats.stats_for_day_with_qualifier(creative.ad_group, self.request.get('id'), d).add_click_with_revenue, creative.ad_group.bid)
-
-    except:
-      logging.error("failed to track creative click for %s" % self.request.get("id"))
-                  
 def main():
-  application = webapp.WSGIApplication([('/m/ad', AdHandler),
-                    ('/m/aclk', AdClickHandler),
-                    ('/m/track/i', TrackImpression),
-                    ('/m/track/ai', TrackAdvertiserImpression),
-                    ('/m/track/c', TrackClick),
-                    ('/m/track/ac', TrackAdvertiserClick)], debug=True)
+  application = webapp.WSGIApplication([('/m/ad', AdHandler), ('/m/aclk', AdClickHandler)], debug=False)
   wsgiref.handlers.CGIHandler().run(application)
 
 # webapp.template.register_template_library('filters')

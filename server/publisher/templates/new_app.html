@@ -2,19 +2,30 @@
 {% block content %}
 <script type="text/javascript">
 function getArtwork() {
-  new Ajax.Request('getartwork',
+  var form = $('app_form');
+  $('loading_img').show();
+  new Ajax.Request('getartwork?app_type='+$(form['app_type']).getValue()+'&url='+$(form['url']).getValue(),
     { method:'get',
       onSuccess: function(transport){
+        $('loading_img').hide();
         var response = transport.responseText;
-        var json = eval('(' + transport.responseText + ')');
-        if (json.resultCount && json.results) {
-          var imgurl = json.results[0].artworkUrl60;
-          var img = document.createElement('img');
-          img.src = imgurl;
-          $('img_container').appendChild(img);
+        if (response) {
+          var json = eval('(' + transport.responseText + ')');
+          if (json.resultCount && json.results) {
+            $(form['name']).value = json.results[0].trackName;
+            //var imgurl = json.results[0].artworkUrl60;
+            //$('img_container').firstChild.src = imgurl;
+            //$('img_container').show();
+            //$('img_chooser').hide();
+            return;
+          }
         }
+        alert("Couldn't get details...");
       },
-      onFailure: function(){ alert('Something went wrong...') } 
+      onFailure: function(){ 
+        $('loading_img').hide();
+        alert('Something went wrong...') 
+      } 
     });
 }
 </script>
@@ -23,32 +34,57 @@ function getArtwork() {
 	<p>
 		Apps are your individual applications.  Each app contains one or more ad units
 	</p>
+  {% if f.errors %}
+  <p style="color:#ff0000">Form error :(</p>
+  {% endif %}
 	
-	<form method="post" action="">
+<script type="text/javascript">
+function TogglePlatform() {
+  $('iphone_text').toggle();
+  $('android_text').toggle();
+}
+</script>
+	<form id='app_form' method="post" action="">
 		<table>
-			<tr>
-				<th>Name</th><td><input type='text' name="name" size="30" placeholder="My App"/></td>
-			</tr>
       <tr>
-        <th>Platform</th>
-                                <td>
-                                  <select name="app_type"><option value="iphone">iPhone</option><option value="android">Android</option><select>
-                                </td>
+        <th style="width:100px;">Platform</th>
+          <td>
+            <select name="app_type" onChange="TogglePlatform();">
+            <option value="iphone">iPhone</option>
+            <option value="android">Android</option></select>
+          </td>
       </tr>
 			<tr>
-				<th>iTunes/Android Market URL</th><td><input type='text' name="url" size="50" placeholder="http://itunes.apple.com/xyz"/></td>
-        <td><button onClick="getArtwork();" type="button" class="btn"><span><span>Get Artwork</span></span></button>&nbsp;&nbsp;&nbsp;</td>
+				<th><div id="iphone_text">iTunes URL</div><div id="android_text" style="display:none;">Package Name</div></th>
+        <td><input id='url' type='text' name="url" size="50" placeholder="http://itunes.apple.com/xyz or com.example.myapp"/></td>
+			</tr>
+      <tr></tr>
+      <tr>
+        <td></td>
+        <td>
+          <button onClick="getArtwork();" type="button" class="btn"><span><span>Get Details</span></span></button>
+          &nbsp;&nbsp;&nbsp;<img id="loading_img" style="display:none;" src="/images/loading.gif"/>
+        </td>
 <!--
 379681467
 http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/wa/wsLookup?id=379681467
 -->
+      </tr>
+
+			<tr><td colspan="2"><h4>Details</h4></td></tr>
+			<tr>
+				<th>Name</th><td><input type='text' name="name" size="30" placeholder="My App"/></td>
 			</tr>
 			<tr>
 				<th>Description</th><td><textarea name="description" cols="50" rows="3" placeholder=""></textarea></td>
 			</tr>
+<!--
 			<tr>
-				<th>Icon</th><td id="img_container"></td>
+				<th>Icon</th>
+        <td id="img_container" style="display:none;"><img src="#"/>&nbsp; &nbsp;<a href="#" onClick="$('img_chooser').show();$('img_container').hide();return false;">Change icon</a></td>
+        <td id="img_chooser"><input type="file" name="icon"/></td>
 			</tr>
+-->
 		
 		</table>
 		

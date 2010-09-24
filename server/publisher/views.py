@@ -83,7 +83,7 @@ class AppIndexHandler(RequestHandler):
          ','.join(map(lambda x: str(x["total"]), total_impressions_by_app)),
          max(map(lambda x: x.impression_count, apps)) * 1.5,
          max(map(lambda x: x.impression_count, apps)) * 1.5,
-         '|'.join(map(lambda x: x["app"].name, total_impressions_by_app)))
+         '|'.join(map(lambda x: x["app"].name, total_impressions_by_app[0:2])))
 
       return render_to_response(self.request,'apps_index.html', 
         {'apps': apps,    
@@ -161,10 +161,13 @@ class AppCreateHandler(RequestHandler):
 
   def post(self):
     f = AppForm(data=self.request.POST)
-    site = f.save(commit=False)
-    site.account = Account.current_account()
-    site.put()
-    return HttpResponseRedirect(reverse('publisher_index'))
+    if f.is_valid():
+      site = f.save(commit=False)
+      site.account = Account.current_account()
+      site.put()
+      return HttpResponseRedirect(reverse('publisher_index'))
+    else:
+      return render_to_response(self.request,'new_app.html', {"f": f})
 
 @login_required  
 def app_create(request,*args,**kwargs):
@@ -284,8 +287,17 @@ def update(request,*args,**kwargs):
 
 class GetArtworkHandler(RequestHandler):
   def get(self):
-    response = urllib.urlopen('http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/wa/wsLookup?id=379681467')
-    return HttpResponse(response.read())
+    p = self.request.GET.get("app_type")
+    url = self.request.GET.get("url")
+    if (p == "iphone"):
+      m = re.search('itunes.apple.com/.*/id(\d+)', url)
+      if m:
+        id = m.group(1)
+        itunes_url = "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/wa/wsLookup?id=" + id
+        response = urllib.urlopen(itunes_url)
+        return HttpResponse(response.read())
+
+    return HttpResponse()
 
 @login_required
 def getartwork(request,*args,**kwargs):

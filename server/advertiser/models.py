@@ -2,7 +2,6 @@ from google.appengine.ext import db
 from google.appengine.ext.db import polymodel
 
 #
-<<<<<<< HEAD
 # A campaign.  Campaigns have budgetary and time based restrictions.  
 #	
 class Campaign(db.Model):
@@ -22,14 +21,11 @@ class Campaign(db.Model):
 	# who owns this
 	u = db.UserProperty()	
 	t = db.DateTimeProperty(auto_now_add=True)
-	
-#
-# An ad group, which specifies targeting and relevant behavior
-#
+	  
 class AdGroup(db.Model):
-	campaign = db.ReferenceProperty(Campaign)
-	name = db.StringProperty()
-	
+  campaign = db.ReferenceProperty(Campaign)
+  name = db.StringProperty()
+
 	# the priority level at which this ad group should be auctioned
 	priority_level = db.IntegerProperty(default=1)
 
@@ -39,81 +35,6 @@ class AdGroup(db.Model):
   # state of this ad group
 	active = db.BooleanProperty(default=True)
 	deleted = db.BooleanProperty(default=False)
-	
-	# Geographic preferences are expressed as string tuples that can match
-	# the city, region or country that is resolved via reverse geocode at 
-	# request time.  If the list is blank, any value will match. If the list
-	# is not empty, the value must match one of the elements of the list.
-	# 
-	# Valid predicates are:
-	# city_name=X,region_name=X,country_name=X
-	# region_name=X,country_name=X
-	# country_name=X
-	# zipcode=X
-	#
-	# Each incoming request will be matched against all of these combinations
-	geo_predicates = db.StringListProperty(default=["country_name=*"])
-	
-	# Device and platform preferences are listed similarly:
-	#
-	# model_name=X,brand_name=X
-	# brand_name=X,platform_name=X
-	# platform_name=X
-	device_predicates = db.StringListProperty(default=["platform_name=*"])
-	
-	# all keyword and category bids are tracked here
-	# categories use the category:games convention
-	# if any of the input keywords match the n-grams here then we 
-	# trigger a match
-	keywords = db.StringListProperty()
-=======
-# A campaign.  It can run on any number of defined Sites
-# 
-class Campaign(db.Model):
-  name = db.StringProperty()
-  description = db.TextProperty()
-
-  budget = db.FloatProperty()   # daily budget in USD
-  bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpc")
-  
-  active = db.BooleanProperty(default=True)
-  deleted = db.BooleanProperty(default=False)
-  
-  # Geographic preferences are expressed as string tuples that can match
-  # the city, region or country that is resolved via reverse geocode at 
-  # request time.  If the list is blank, any value will match. If the list
-  # is not empty, the value must match one of the elements of the list.
-  # 
-  # Valid predicates are:
-  # city_name=X,region_name=X,country_name=X
-  # region_name=X,country_name=X
-  # country_name=X
-  # zipcode=X
-  #
-  # Each incoming request will be matched against all of these combinations
-  geo_predicates = db.StringListProperty(default=["country_name=*"])
-  
-  # Device and platform preferences are listed similarly:
-  #
-  # model_name=X,brand_name=X
-  # brand_name=X,platform_name=X
-  # platform_name=X
-  device_predicates = db.StringListProperty(default=["platform_name=*"])
-  
-  # who owns this
-  u = db.UserProperty() 
-  t = db.DateTimeProperty(auto_now_add=True)
-  
-  
-class AdGroup(db.Model):
-  campaign = db.ReferenceProperty(Campaign)
-
-  name = db.StringProperty()
-  bid = db.FloatProperty()
-
-  active = db.BooleanProperty(default=True)
-  deleted = db.BooleanProperty(default=False)
->>>>>>> b9534d70336165e17b222636d1257d6e923ff6cc
 
   # all keyword and category bids are tracked here
   # categories use the category:games convention
@@ -190,16 +111,7 @@ class AdGroup(db.Model):
   def __repr__(self):
     return "AdGroup:'%s'" % self.name
 
-<<<<<<< HEAD
 class Creative(polymodel.PolyModel):
-=======
-IMAGE_PREDICATES = {"300x250": "format=300x250", 
-  "320x50": "format=320x50", 
-  "300x50": "format=320x50", 
-  "728x90": "format=728x90",
-  "468x60": "format=468x60"}
-class Creative(db.Model):
->>>>>>> b9534d70336165e17b222636d1257d6e923ff6cc
   ad_group = db.ReferenceProperty(AdGroup)
 
   active = db.BooleanProperty(default=True)
@@ -212,17 +124,10 @@ class Creative(db.Model):
   url = db.StringProperty()
   display_url = db.StringProperty()
 
-<<<<<<< HEAD
   # format predicates - the set of formats that this creative can match
   # e.g. format=320x50
   # e.g. format=*
   format_predicates = db.StringListProperty(default=["format=*"])	
-=======
-  # format predicates
-  # format=320x50
-  # format=*
-  format_predicates = db.StringListProperty(default=["format=*"]) 
->>>>>>> b9534d70336165e17b222636d1257d6e923ff6cc
 
   # time of creation
   t = db.DateTimeProperty(auto_now_add=True)

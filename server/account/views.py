@@ -32,23 +32,23 @@ class RequestHandler(object):
         pass    
 
 class AccountHandler(RequestHandler):
-	def get(self):
-		return render_to_response(self.request,'account/account.html', {'account': Account.current_account()})
+  def get(self):
+    return render_to_response(self.request,'account/account.html', {'account': Account.current_account()})
 
-	def post(self):
-		a = Account.current_account()
-		a.adsense_pub_id = self.request.POST.get("adsense_pub_id")
-		a.default_keywords = self.request.POST.get("default_keywords")
-		a.put()
-		return HttpResponseRedirect("/publisher/")
+  def post(self):
+    a = Account.current_account()
+    a.adsense_pub_id = self.request.POST.get("adsense_pub_id")
+    a.admob_pub_id = self.request.POST.get("admob_pub_id")
+    a.put()
+    return HttpResponseRedirect("/account")
 
-@login_required			
+@login_required     
 def index(request,*args,**kwargs):
-  return AccountHandler()(request,*args,**kwargs)			
+  return AccountHandler()(request,*args,**kwargs)     
 
 class LogoutHandler(RequestHandler):
-	def get(self):
-		return HttpResponseRedirect(users.create_logout_url('/main/'))
-		
+  def get(self):
+    return HttpResponseRedirect(users.create_logout_url('/main/'))
+    
 def logout(request,*args,**kwargs):
   return LogoutHandler()(request,*args,**kwargs)

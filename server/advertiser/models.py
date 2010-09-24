@@ -86,6 +86,7 @@ class AdGroup(db.Model):
   country = db.StringProperty()
   state = db.StringProperty()
   city = db.StringProperty()
+  
   # Geographic preferences are expressed as string tuples that can match
   # the city, region or country that is resolved via reverse geocode at 
   # request time.  If the list is blank, any value will match. If the list
@@ -107,7 +108,6 @@ class AdGroup(db.Model):
   # platform_name=X
   device_predicates = db.StringListProperty(default=["platform_name=*"])
   
-
   def __repr__(self):
     return "AdGroup:'%s'" % self.name
 

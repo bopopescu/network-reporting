@@ -164,7 +164,7 @@ class AdHandler(webapp.RequestHandler):
       return
     
     # get keywords 
-    q = ("%s\n%s" % (self.request.get("q").lower(), site.keywords)).split("\n")
+    q = [sz.strip() for sz in ("%s\n%s" % (self.request.get("q").lower(), site.keywords)).split("\n")]
     logging.debug("keywords are %s" % q)
 
     # get format

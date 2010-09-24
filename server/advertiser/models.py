@@ -136,4 +136,19 @@ class ImageCreative(Creative):
     fp = IMAGE_PREDICATES.get("%dx%d" % (img.width, img.height))
     return [fp] if fp else None
 
+class iAdCreative(Creative):
+  def __init__(self):
+    super(ad_type="iAd", format_predicates=["format=320x50"])
+    
+class AdSenseCreative(Creative):
+  def __init__(self):
+    super(ad_type="adsense", format_predicates=["format=*"])
+
+class AdMobCreative(Creative):
+  def __init__(self):
+    super(ad_type="admob", format_predicates=["format=320x50"])
+    
+class NullCreative(Creative):
+  def __init__(self):
+    super(ad_type="clear", format_predicates=["format=*"])
   

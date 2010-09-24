@@ -31,7 +31,19 @@
 				<form method="post" action="{% url advertiser_bid_pause %}?id={{adgroup.key}}" style="display: inline;"><input type="submit" value="Pause"></form>
 				<form method="post" action="{% url advertiser_bid_delete %}?id={{adgroup.key}}" style="display: inline;"><input type="submit" value="Delete"></form>
 			</tr>
+		<tr><th>Priority level</th>
+				<td class="numeric">
+						{% ifequal adgroup.priority_level 1 %}Sponsorship{% endifequal %}
+						{% ifequal adgroup.priority_level 2 %}Direct{% endifequal %}
+						{% ifequal adgroup.priority_level 3 %}Promotional{% endifequal %}
+						{% ifequal adgroup.priority_level 4 %}Network{% endifequal %}
+				</td></tr>
 		<tr><th>Max Bid</th><td class="numeric">{{adgroup.bid|currency}}</td></tr>
+		<tr><th>Bid strategy</th>
+				<td class="numeric">{% ifequal adgroup.bid_strategy "cpc" %}By click (CPC){% endifequal %}
+						{% ifequal adgroup.bid_strategy "cpm" %}By impression (CPM){% endifequal %}</td></tr>
+		<tr><th>Geo predicates</th><td class="numeric">{% for g in adgroup.geo_predicates %}{{g}}<br/>{% endfor %}</td></tr>
+		<tr><th>Device predicates</th><td class="numeric">{% for g in adgroup.device_predicates %}{{g}}<br/>{% endfor %}</td></tr>
 	</table>
 	
 	<h3>

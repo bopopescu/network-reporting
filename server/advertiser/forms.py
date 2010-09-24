@@ -4,9 +4,9 @@ from django import forms
 class CampaignForm(forms.ModelForm):
 	class Meta:
 		model = Campaign
-		fields = ('name', 'description', 'budget', 'bid_strategy', 'geo_predicates', 'device_predicates')
+		fields = ('name', 'description', 'budget')
 
 class AdGroupForm(forms.ModelForm):
 	class Meta:
 		model = AdGroup
-		fields = ('name', 'bid')
+		fields = ('name', 'priority_level', 'bid', 'bid_strategy', 'geo_predicates', 'device_predicates')

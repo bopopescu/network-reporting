@@ -27,12 +27,8 @@ class Site(db.Model):
 	# what kind of ad is preferred here
 	ad_type = db.StringProperty(required=True, choices=["text", "image"], default="image")
 	
-	# backfill strategy
-	backfill = db.StringProperty(choices=["adsense", "fail", "iAd", "clear"], default="adsense")
-	backfill_threshold_cpm = db.FloatProperty(default=0.0)							# will backfill if the eCPM of ads does not exceed this value
-	
-	# defaults for unprovided context information
-	keywords = db.TextProperty()																				# default keywords to use here	
+	# additional keywords that are passed to the auction
+	keywords = db.TextProperty()													
 	
 	# color scheme
 	color_border = db.StringProperty(required=True, default='336699')
@@ -43,6 +39,11 @@ class Site(db.Model):
 	
 	# creation time
 	t = db.DateTimeProperty(auto_now_add=True)
+	
+	# Allows the site to reject ads if their eCPM does not 
+	# exceed a given threshold, on a per-priority level basis
+	def threshold_cpm(self, priority_level):
+	  return 0
 	
 	@classmethod
 	def site_by_id(c, id):

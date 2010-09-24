@@ -32,9 +32,8 @@ class AdGroup(db.Model):
 	# the priority level at which this ad group should be auctioned
 	priority_level = db.IntegerProperty(default=1)
 
-  # how bids should be expressed
-	bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpc")	
 	bid = db.FloatProperty()
+	bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpc")
 
   # state of this ad group
 	active = db.BooleanProperty(default=True)
@@ -81,7 +80,7 @@ class Creative(polymodel.PolyModel):
   deleted = db.BooleanProperty(default=False)
 
   # the creative type helps the ad server render the right thing if the creative wins the auction
-  ad_type = db.StringProperty(choices=["text", "image", "network", "exchange"], default="text")
+  ad_type = db.StringProperty(choices=["text", "image", "iad", "adsense", "admob", "clear"], default="text")
 
   # destination URLs
   url = db.StringProperty()
@@ -110,13 +109,16 @@ class Creative(polymodel.PolyModel):
     return 0.01
 
   def __repr__(self):
-    return "Creative:'%s'" % self.headline
+    return "Creative{ad_type=%s, eCPM=%.02f}" % (self.ad_type, self.e_cpm())
 
 class TextCreative(Creative):
   # text ad properties
   headline = db.StringProperty()
   line1 = db.StringProperty()
   line2 = db.StringProperty()
+  
+  def __repr__(self):
+    return "'%s'" % (self.headline,)
 
 class ImageCreative(Creative):
   # image properties
@@ -134,10 +136,4 @@ class ImageCreative(Creative):
     fp = IMAGE_PREDICATES.get("%dx%d" % (img.width, img.height))
     return [fp] if fp else None
 
-class NetworkCreative(Creative):
-  # which network?
-  network_type = db.StringProperty(choices=["iad", "adsense", "admob"], default="adsense")
   
-class ExchangeCreative(Creative):
-  # which exchange?
-  exchange_type = db.StringProperty(choices=["appnexus"])

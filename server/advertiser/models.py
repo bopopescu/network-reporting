@@ -7,8 +7,10 @@ from google.appengine.ext.db import polymodel
 class Campaign(db.Model):
   name = db.StringProperty()
   description = db.TextProperty()
+  campaign_type = db.StringProperty(choices=['gtee', 'promo', 'network'], default="network")
+  network_type = db.StringProperty(choices=["adsense", "iAd", "admob"])
 
-  # daily budget in USD
+  # daily budget
   budget = db.FloatProperty() 
   
   # start and end dates 
@@ -21,6 +23,10 @@ class Campaign(db.Model):
   # who owns this
   u = db.UserProperty() 
   t = db.DateTimeProperty(auto_now_add=True)
+  
+  def delivery(self):
+    if self.stats: return self.stats.revenue / self.budget
+    else: return 1
     
 class AdGroup(db.Model):
   campaign = db.ReferenceProperty(Campaign)

@@ -60,7 +60,7 @@ class AdAuction(object):
     logging.debug("ad groups: %s" % ad_groups)
     
     # campaign exclusions... budget + time
-    ad_groups = filter(lambda a: SiteStats.stats_for_day(a.campaign, SiteStats.today()).revenue < a.campaign.budget, ad_groups)
+    ad_groups = filter(lambda a: a.campaign.budget is None or SiteStats.stats_for_day(a.campaign, SiteStats.today()).revenue < a.campaign.budget, ad_groups)
     logging.debug("removed over budget, now: %s" % ad_groups)
     ad_groups = filter(lambda a: a.campaign.active and (a.campaign.start_date >= SiteStats.today() if a.campaign.start_date else True) and (a.campaign.end_date <= SiteStats.today() if a.campaign.end_date else True), ad_groups)
     logging.debug("removed non running campaigns, now: %s" % ad_groups)

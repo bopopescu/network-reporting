@@ -67,5 +67,13 @@ indexes:
   - name: active
   - name: deleted
   - name: site_keys
+  - name: bid
+    direction: desc
+
+- kind: AdGroup
+  properties:
+  - name: active
+  - name: deleted
+  - name: site_keys
   - name: max_cpc
     direction: desc

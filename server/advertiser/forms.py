@@ -4,7 +4,7 @@ from django import forms
 class CampaignForm(forms.ModelForm):
 	class Meta:
 		model = Campaign
-		fields = ('name', 'description', 'budget')
+		fields = ('name', 'description', 'budget', 'campaign_type', 'network_type')
 
 class AdGroupForm(forms.ModelForm):
 	class Meta:

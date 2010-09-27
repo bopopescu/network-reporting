@@ -15,6 +15,8 @@ from django.core.urlresolvers import reverse
 from common.ragendja.template import render_to_response, JSONResponse
 
 # from common.ragendja.auth.decorators import google_login_required as login_required
+from common.utils.decorators import whitelist_login_required
+
 
 from advertiser.models import *
 from advertiser.forms import CampaignForm, AdGroupForm
@@ -52,7 +54,7 @@ class IndexHandler(RequestHandler):
         'promo': filter(lambda x: x.campaign_type in ['promo'], campaigns),
         'network': filter(lambda x: x.campaign_type in ['network'], campaigns), })
       
-@login_required     
+@whitelist_login_required     
 def index(request,*args,**kwargs):
     return IndexHandler()(request,*args,**kwargs)     
 
@@ -68,7 +70,7 @@ class CreateHandler(RequestHandler):
     campaign.put()
     return HttpResponseRedirect(reverse('campaign_adgroup_new',kwargs={'campaign_key':campaign.key()}))
 
-@login_required     
+@whitelist_login_required     
 def campaign_create(request,*args,**kwargs):
   return CreateHandler()(request,*args,**kwargs)      
 
@@ -105,7 +107,7 @@ class CreateAdGroupHandler(RequestHandler):
        return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':adgroup.key()}))
             
        
-@login_required     
+@whitelist_login_required     
 def campaign_adgroup_new(request,*args,**kwargs):
   return CreateAdGroupHandler()(request,*args,**kwargs)      
 
@@ -139,7 +141,7 @@ class ShowHandler(RequestHandler):
                                             'bids': bids,
                                             'user':users.get_current_user()})
 
-@login_required     
+@whitelist_login_required     
 def campaign_show(request,*args,**kwargs):
  return ShowHandler()(request,*args,**kwargs) 
 
@@ -158,7 +160,7 @@ class EditHandler(RequestHandler):
       c.put()
       return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':c.key()}))
 
-@login_required  
+@whitelist_login_required  
 def campaign_edit(request,*args,**kwargs):
   return EditHandler()(request,*args,**kwargs)
 
@@ -171,7 +173,7 @@ class PauseHandler(RequestHandler):
       c.put()
       return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':c.key()}))
   
-@login_required
+@whitelist_login_required
 def campaign_pause(request,*args,**kwargs):
   return PauseHandler()(request,*args,**kwargs)
   
@@ -185,7 +187,7 @@ class DeleteHandler(RequestHandler):
       return HttpResponseRedirect(reverse('advertiser_campaign'))
 
   
-@login_required
+@whitelist_login_required
 def campaign_delete(request,*args,**kwargs):
   return DeleteHandler()(request,*args,**kwargs)  
   
@@ -238,7 +240,7 @@ class ShowAdGroupHandler(RequestHandler):
                               'creatives': creatives})
 
     
-@login_required   
+@whitelist_login_required   
 def campaign_adgroup_show(request,*args,**kwargs):    
   return ShowAdGroupHandler()(request,*args,**kwargs)
 
@@ -289,7 +291,7 @@ class EditBidHandler(RequestHandler):
       a.put()
       return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':a.key()}))
   
-@login_required
+@whitelist_login_required
 def campaign_adgroup_edit(request,*args,**kwargs):
   return EditBidHandler()(request,*args,**kwargs)  
 
@@ -305,7 +307,7 @@ class PauseBidHandler(RequestHandler):
     return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':b.key()}))
 
 
-@login_required
+@whitelist_login_required
 def bid_pause(request,*args,**kwargs):
   return PauseBidHandler()(request,*args,**kwargs)
   
@@ -319,7 +321,7 @@ class RemoveBidHandler(RequestHandler):
         b.put()
     return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':b.campaign.key()}))
   
-@login_required
+@whitelist_login_required
 def bid_delete(request,*args,**kwargs):
   return RemoveBidHandler()(request,*args,**kwargs)
 
@@ -358,7 +360,7 @@ class AddCreativeHandler(RequestHandler):
       creative.put()
     return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':ad_group.key()}))
   
-@login_required
+@whitelist_login_required
 def creative_create(request,*args,**kwargs):
   return AddCreativeHandler()(request,*args,**kwargs)  
 
@@ -390,6 +392,6 @@ class RemoveCreativeHandler(RequestHandler):
         c.put()
     return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':c.ad_group.key()}))
 
-@login_required  
+@whitelist_login_required  
 def creative_delete(request,*args,**kwargs):
   return RemoveCreativeHandler()(request,*args,**kwargs)

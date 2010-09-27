@@ -17,6 +17,8 @@ from django.core.urlresolvers import reverse
 from common.ragendja.template import render_to_response, JSONResponse
 
 # from common.ragendja.auth.decorators import google_login_required as login_required
+from common.utils.decorators import whitelist_login_required
+
 
 from publisher.models import Site, Account, App
 from publisher.forms import SiteForm, AppForm
@@ -93,7 +95,7 @@ class AppIndexHandler(RequestHandler):
     else:
       return HttpResponseRedirect(reverse('publisher_app_create'))
 
-@login_required     
+@whitelist_login_required     
 def index(request,*args,**kwargs):
   # return HttpResponseRedirect(reverse('publisher_create'))
   return AppIndexHandler()(request,*args,**kwargs)     
@@ -149,7 +151,7 @@ class IndexHandler(RequestHandler):
     else:
       return HttpResponseRedirect(reverse('publisher_create'))
 
-@login_required     
+@whitelist_login_required     
 def adunits_index(request,*args,**kwargs):
   # return HttpResponseRedirect(reverse('publisher_create'))
   return IndexHandler()(request,*args,**kwargs)     
@@ -169,7 +171,7 @@ class AppCreateHandler(RequestHandler):
     else:
       return render_to_response(self.request,'new_app.html', {"f": f})
 
-@login_required  
+@whitelist_login_required  
 def app_create(request,*args,**kwargs):
   return AppCreateHandler()(request,*args,**kwargs)
     
@@ -186,7 +188,7 @@ class CreateAdUnitHandler(RequestHandler):
     else:
       print f.errors
 
-@login_required  
+@whitelist_login_required  
 def create(request,*args,**kwargs):
   return CreateAdUnitHandler()(request,*args,**kwargs)   
 
@@ -205,7 +207,7 @@ class ShowAppHandler(RequestHandler):
     return render_to_response(self.request,'show_app.html', {'app':app, 'sites':sites,
       'account':Account.current_account()})
   
-@login_required
+@whitelist_login_required
 def app_show(request,*args,**kwargs):
   return ShowAppHandler()(request,*args,**kwargs)   
 
@@ -244,7 +246,7 @@ class ShowHandler(RequestHandler):
       'chart_url': url,
       'stats':stats})
   
-@login_required
+@whitelist_login_required
 def show(request,*args,**kwargs):
   return ShowHandler()(request,*args,**kwargs)   
 
@@ -263,7 +265,7 @@ class AppUpdateHandler(RequestHandler):
     return HttpResponseRedirect(reverse('publisher_app_show')+'?id=%s'%a.key())
   
 
-@login_required
+@whitelist_login_required
 def app_update(request,*args,**kwargs):
   return AppUpdateHandler()(request,*args,**kwargs)   
 
@@ -281,7 +283,7 @@ class UpdateHandler(RequestHandler):
       s.put()
     return HttpResponseRedirect(reverse('publisher_show')+'?id=%s'%s.key())
   
-@login_required
+@whitelist_login_required
 def update(request,*args,**kwargs):
   return UpdateHandler()(request,*args,**kwargs)   
 
@@ -299,7 +301,7 @@ class GetArtworkHandler(RequestHandler):
 
     return HttpResponse()
 
-@login_required
+@whitelist_login_required
 def getartwork(request,*args,**kwargs):
   return GetArtworkHandler()(request,*args,**kwargs)   
   
@@ -308,6 +310,6 @@ class GenerateHandler(RequestHandler):
     site = Site.get(self.request.GET.get('id'))
     return render_to_response(self.request,'code.html', {'site': site})
   
-@login_required
+@whitelist_login_required
 def generate(request,*args,**kwargs):
   return GenerateHandler()(request,*args,**kwargs) 

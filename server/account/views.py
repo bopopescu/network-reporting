@@ -14,6 +14,8 @@ from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
 from common.ragendja.template import render_to_response, JSONResponse
 
+from common.utils.decorators import whitelist_login_required
+
 # from common.ragendja.auth.decorators import google_login_required as login_required
 
 from account.models import Account
@@ -42,7 +44,7 @@ class AccountHandler(RequestHandler):
     a.put()
     return HttpResponseRedirect("/account")
 
-@login_required     
+@whitelist_login_required     
 def index(request,*args,**kwargs):
   return AccountHandler()(request,*args,**kwargs)     
 

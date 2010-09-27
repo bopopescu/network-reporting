@@ -130,6 +130,6 @@ INSTALLED_APPS = (
 
 IGNORE_APP_URLSAUTO = ('website')
 
-WHITELIST_EMAILS = ('test@example.com','nafisjamal@gmail.com','jim.e.payne@gmail.com','bryan.h.atwood@gmail.com','nafisjamal@mopub.com','batwood@mopub.com','jpayne@mopub.com')
+WHITELIST_EMAILS = ('test@example.com','nafisjamal@gmail.com','jim.e.payne@gmail.com','bryan.h.atwood@gmail.com','nafisjamal@mopub.com','batwood@mopub.com','jpayne@mopub.com','test2@example.com')
 
 from common.ragendja.settings_post import *

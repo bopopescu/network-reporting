@@ -9,16 +9,6 @@
 	</p>
 	
 	<form method="post" action="">
-		<h4>Campaign Properties</h4>
-		<table>
-			<tr>
-				<th>Name</th><td><input type='text' name="name" size="30" placeholder="My Campaign"/></td>
-			</tr>
-			<tr>
-				<th>Description</th><td><textarea name="description" cols="50" rows="3" placeholder="Campaign for My New App"></textarea></td>
-			</tr>
-		</table>
-		
 		<h4>What type of campaign would you like to create?</h4>
 		
 			<p>
@@ -62,21 +52,19 @@
 					Use this to fill inventory with ads sold on your behalf by ad networks.
 				</input>
 				<div id="more_box_3" style="display:none;">
-					
-					<table>
-						<tr>
-							<th>Network Type</th><td><select name="network_type">
-								<option value="adsense" onselect="$('publisher_id').value='hi';">Google AdSense</option>
-								<option value="iAd">Apple iAd</option>
-								<option value="admob">AdMob</option>
-								<option value="custom">Custom</option>
-							</td>
-						</tr>
-						
-					</table>
 				</div>
 				
 			</p>
+			
+			<h4>Campaign Properties</h4>
+			<table>
+				<tr>
+					<th>Name</th><td><input type='text' name="name" size="30" placeholder="My Campaign"/></td>
+				</tr>
+				<tr>
+					<th>Description</th><td><textarea name="description" cols="50" rows="3" placeholder="Campaign for My New App"></textarea></td>
+				</tr>
+			</table>
 			
 		<p>
 			<button type="button" class="btn" onclick="form.submit();"><span><span>Create Campaign</span></span></button>

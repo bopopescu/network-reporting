@@ -39,10 +39,15 @@ class IndexHandler(RequestHandler):
   def get(self):
     campaigns = Campaign.gql("where u = :1 and deleted = :2", users.get_current_user(), False).fetch(10)
     for c in campaigns:
-      c.stats = SiteStats.stats_for_day(c, SiteStats.today())
+      a = SiteStats.stats_for_days(c, SiteStats.lastdays())
+      logging.info(a)
+      c.stats = reduce(lambda x, y: x+y, a, SiteStats())
+    today = SiteStats.rollup_for_day(campaigns, SiteStats.today())
+      
     return render_to_response(self.request, 
       'advertiser/index.html', 
       {'campaigns':campaigns, 
+       'today': today,
         'gtee': filter(lambda x: x.campaign_type in ['gtee'], campaigns),
         'promo': filter(lambda x: x.campaign_type in ['promo'], campaigns),
         'network': filter(lambda x: x.campaign_type in ['network'], campaigns), })
@@ -78,7 +83,8 @@ class CreateAdGroupHandler(RequestHandler):
 
   def get(self, campaign_key):
     f = AdGroupForm()
-    return render_to_response(self.request,'advertiser/new_adgroup.html', {"f": f, "c": Campaign.get(campaign_key)})
+    sites = Site.gql('where account=:1', Account.current_account())    
+    return render_to_response(self.request,'advertiser/new_adgroup.html', {"f": f, "c": Campaign.get(campaign_key), "sites": sites})
 
   def post(self, campaign_key):
      c = Campaign.get(campaign_key)
@@ -89,13 +95,15 @@ class CreateAdGroupHandler(RequestHandler):
      adgroup.site_keys=map(lambda x: db.Key(x), self.request.POST.getlist('sites'))
      adgroup.put()
      
-     # if the campaign is a network type, automatically populate the right creative
+     # if the campaign is a network type, automatically populate the right creative and go back to
+     # campaign page
      if c.campaign_type == "network":
-       creative = Creative(ad_type=c.network_type)
-       creative.ad_group = adgroup
+       creative = adgroup.default_creative()
        creative.put()
-     
-     return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':c.key()}))
+       return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':c.key()}))
+     else:
+       return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':adgroup.key()}))
+            
        
 @login_required     
 def campaign_adgroup_new(request,*args,**kwargs):
@@ -129,7 +137,6 @@ class ShowHandler(RequestHandler):
       return render_to_response(self.request,'advertiser/show.html', 
                                             {'campaign':campaign, 
                                             'bids': bids,
-                                            'sites': Site.gql('where account=:1', Account.current_account()),
                                             'user':users.get_current_user()})
 
 @login_required     
@@ -215,7 +222,7 @@ class ShowAdGroupHandler(RequestHandler):
   
   def get(self, adgroup_key):
     adgroup = AdGroup.get(adgroup_key)
-    creatives = Creative.gql('where ad_group = :1 and deleted = :2', adgroup, False).fetch(50)
+    creatives = Creative.gql('where ad_group = :1 and deleted = :2 and ad_type in :3', adgroup, False, ["text", "image"]).fetch(50)
     for c in creatives:
       c.stats = SiteStats.stats_for_day(c, SiteStats.today())
     sites = map(lambda x: Site.get(x), adgroup.site_keys)

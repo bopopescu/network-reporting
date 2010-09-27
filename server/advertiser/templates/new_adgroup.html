@@ -14,12 +14,6 @@
 			<tr>
 				<th>Name</th><td><input type='text' name="name" size="30" placeholder="My Ad Group"/></td>
 			</tr>
-			<tr><th>Ad Units</th>
-				<td><ul style="overflow:auto; height:100px; list-style: none;">
-					{% for s in sites %}
-							<li style="margin-left: 0;"><input type="checkbox" name="sites" value="{{s.key}}"> {{s.name}}</input></li>
-					{% endfor %}
-					</ul></td></tr>
 			
 			{% ifequal c.campaign_type "gtee" %}
 				<h4>Bids</h4>
@@ -47,7 +41,22 @@
 			{% endifequal %}
 			{% ifequal c.campaign_type "network" %}
 				<input type="hidden" name="priority_level" value="4"/>
+					<tr>
+						<th>Network Type</th><td><select name="network_type">
+							<option value="adsense" onselect="$('publisher_id').value='hi';">Google AdSense</option>
+							<option value="iAd">Apple iAd</option>
+							<option value="admob">AdMob</option>
+							<option value="custom">Custom</option>
+						</td>
+					</tr>
 			{% endifequal %}
+			
+			<tr><th>Ad Units</th>
+				<td><ul style="overflow:auto; height:100px; list-style: none;">
+					{% for s in sites %}
+							<li style="margin-left: 0;"><input type="checkbox" name="sites" value="{{s.key}}"> {{s.name}}</input></li>
+					{% endfor %}
+					</ul></td></tr>
 			
 			<tr><td colspan="2"><h4>Settings</h4></td></tr>
 			<tr><th>Goal</th>
@@ -79,7 +88,10 @@
 			<tr><td colspan="2"><h4>Keyword Targeting</h4></td></tr>
 			<tr><th>Keywords</th>
 				<td><textarea cols="50" rows="3" name="keywords" placeholder="Keywords, one per line, e.g. coffee"></textarea></td></tr>
-			<tr><td><input type='submit' value="Create Ad Group &raquo;"/></td><td></td></tr>
 		</table>
+
+		<p>
+			<button type="button" class="btn" onclick="form.submit();"><span><span>Create Ad Group</span></span></button>
+		</p>
 	</form>
 {% endblock %}

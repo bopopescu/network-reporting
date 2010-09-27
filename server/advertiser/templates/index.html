@@ -19,9 +19,9 @@
 	<h3>Today's Stats</h3>
 	<table class="rollups">
 		<tr>
-			<td class="rollup"><b>Impressions</b><br/>15,000</td>
-			<td class="rollup"><b>Clicks</b><br/>150 (1.0%)</td>
-			<td class="rollup"><b>Revenue</b><br/>$75.00</td>
+			<td class="rollup"><b>Impressions</b><br/>{{today.impression_count}}</td>
+			<td class="rollup"><b>Clicks</b><br/>{{today.click_count}} ({{today.ctr|percentage}})</td>
+			<td class="rollup"><b>Revenue</b><br/>{{today.revenue|currency}}</td>
 		</tr>
 	</table>
 	

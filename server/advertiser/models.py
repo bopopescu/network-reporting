@@ -8,7 +8,6 @@ class Campaign(db.Model):
   name = db.StringProperty()
   description = db.TextProperty()
   campaign_type = db.StringProperty(choices=['gtee', 'promo', 'network'], default="network")
-  network_type = db.StringProperty(choices=["adsense", "iAd", "admob"])
 
   # daily budget
   budget = db.FloatProperty() 
@@ -34,6 +33,7 @@ class AdGroup(db.Model):
 
   # the priority level at which this ad group should be auctioned
   priority_level = db.IntegerProperty(default=1)
+  network_type = db.StringProperty(choices=["adsense", "iAd", "admob"])
 
   bid = db.FloatProperty()
   bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpc")
@@ -114,6 +114,15 @@ class AdGroup(db.Model):
   # platform_name=X
   device_predicates = db.StringListProperty(default=["platform_name=*"])
   
+  def default_creative(self):
+    c = None
+    if self.network_type == 'adsense': c = AdSenseCreative(ad_type="adsense", format_predicates=["format=*"])
+    elif self.network_type == 'iAd': c = iAdCreative(ad_type="iAd", format_predicates=["format=320x50"])
+    elif self.network_type == 'admob': c = AdMobCreative(ad_type="admob", format_predicates=["format=320x50"])
+    
+    if c: c.ad_group = self
+    return c
+  
   def __repr__(self):
     return "AdGroup:'%s'" % self.name
 
@@ -181,18 +190,14 @@ class ImageCreative(Creative):
     return [fp] if fp else None
 
 class iAdCreative(Creative):
-  def __init__(self):
-    super(ad_type="iAd", format_predicates=["format=320x50"])
+  pass
     
 class AdSenseCreative(Creative):
-  def __init__(self):
-    super(ad_type="adsense", format_predicates=["format=*"])
+  pass
 
 class AdMobCreative(Creative):
-  def __init__(self):
-    super(ad_type="admob", format_predicates=["format=320x50"])
+  pass
     
 class NullCreative(Creative):
-  def __init__(self):
-    super(ad_type="clear", format_predicates=["format=*"])
+  pass
   

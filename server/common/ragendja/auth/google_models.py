@@ -29,7 +29,7 @@ class GoogleUserTraits(EmailUserTraits):
         abstract = True
 
 class User(GoogleUserTraits):
-    """Extended User class that provides support for Google Accounts."""
+    """Extended User class that provides support for Google login_required."""
     user = db.UserProperty(required=True)
 
     class Meta:

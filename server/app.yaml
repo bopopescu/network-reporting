@@ -27,5 +27,9 @@ handlers:
 - url: /m/.*
   script: ad_server/main.py
 
+- url: /stats.*
+  script: $PYTHON_LIB/google/appengine/ext/appstats/ui.py
+
+
 - url: /.*
   script: main.py

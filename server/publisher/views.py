@@ -17,9 +17,12 @@ from django.core.urlresolvers import reverse
 from common.ragendja.template import render_to_response, JSONResponse
 
 # from common.ragendja.auth.decorators import google_login_required as login_required
+from common.utils.decorators import whitelist_login_required
+
 
 from publisher.models import Site, Account, App
 from publisher.forms import SiteForm, AppForm
+from advertiser.models import Campaign, AdGroup, HtmlCreative
 from reporting.models import SiteStats
 
 class RequestHandler(object):
@@ -93,7 +96,7 @@ class AppIndexHandler(RequestHandler):
     else:
       return HttpResponseRedirect(reverse('publisher_app_create'))
 
-@login_required     
+@whitelist_login_required     
 def index(request,*args,**kwargs):
   # return HttpResponseRedirect(reverse('publisher_create'))
   return AppIndexHandler()(request,*args,**kwargs)     
@@ -149,7 +152,7 @@ class IndexHandler(RequestHandler):
     else:
       return HttpResponseRedirect(reverse('publisher_create'))
 
-@login_required     
+@whitelist_login_required     
 def adunits_index(request,*args,**kwargs):
   # return HttpResponseRedirect(reverse('publisher_create'))
   return IndexHandler()(request,*args,**kwargs)     
@@ -162,14 +165,14 @@ class AppCreateHandler(RequestHandler):
   def post(self):
     f = AppForm(data=self.request.POST)
     if f.is_valid():
-      site = f.save(commit=False)
-      site.account = Account.current_account()
-      site.put()
-      return HttpResponseRedirect(reverse('publisher_index'))
+      app = f.save(commit=False)
+      app.account = Account.current_account()
+      app.put()
+      return HttpResponseRedirect(reverse('publisher_app_show')+'?id=%s'%app.key())
     else:
       return render_to_response(self.request,'new_app.html', {"f": f})
 
-@login_required  
+@whitelist_login_required  
 def app_create(request,*args,**kwargs):
   return AppCreateHandler()(request,*args,**kwargs)
     
@@ -182,11 +185,11 @@ class CreateAdUnitHandler(RequestHandler):
       site.account = Account.current_account()
       site.app_key = a
       site.put()
-      return HttpResponseRedirect(reverse('publisher_app_show')+'?id=%s'%a.key())
+      return HttpResponseRedirect(reverse('publisher_generate')+'?id=%s'%site.key())
     else:
       print f.errors
 
-@login_required  
+@whitelist_login_required  
 def create(request,*args,**kwargs):
   return CreateAdUnitHandler()(request,*args,**kwargs)   
 
@@ -205,7 +208,7 @@ class ShowAppHandler(RequestHandler):
     return render_to_response(self.request,'show_app.html', {'app':app, 'sites':sites,
       'account':Account.current_account()})
   
-@login_required
+@whitelist_login_required
 def app_show(request,*args,**kwargs):
   return ShowAppHandler()(request,*args,**kwargs)   
 
@@ -244,7 +247,7 @@ class ShowHandler(RequestHandler):
       'chart_url': url,
       'stats':stats})
   
-@login_required
+@whitelist_login_required
 def show(request,*args,**kwargs):
   return ShowHandler()(request,*args,**kwargs)   
 
@@ -263,7 +266,7 @@ class AppUpdateHandler(RequestHandler):
     return HttpResponseRedirect(reverse('publisher_app_show')+'?id=%s'%a.key())
   
 
-@login_required
+@whitelist_login_required
 def app_update(request,*args,**kwargs):
   return AppUpdateHandler()(request,*args,**kwargs)   
 
@@ -281,7 +284,7 @@ class UpdateHandler(RequestHandler):
       s.put()
     return HttpResponseRedirect(reverse('publisher_show')+'?id=%s'%s.key())
   
-@login_required
+@whitelist_login_required
 def update(request,*args,**kwargs):
   return UpdateHandler()(request,*args,**kwargs)   
 
@@ -299,15 +302,48 @@ class GetArtworkHandler(RequestHandler):
 
     return HttpResponse()
 
-@login_required
+@whitelist_login_required
 def getartwork(request,*args,**kwargs):
   return GetArtworkHandler()(request,*args,**kwargs)   
   
+# Set up a new user with a default campaign
+class GetStartedHandler(RequestHandler):
+  def get(self):
+    # Check if the user is in the data store and create it if not
+
+    user = users.get_current_user()
+    u = Account.get_by_key_name(user.user_id())
+    if not u:
+      u = Account(key_name=user.user_id(),user=user)
+      u.put()
+
+      logging.debug('oh hai')
+      # Set up a test campaign that returns a demo ad
+      c = Campaign(name="MoPub Test Campaign",
+                   u=user,
+                   campaign_type="promo",
+                   description="Test campaign for checking the mopub works in your application")
+      c.put()
+
+      # Set up a test ad group for this campaign
+      ag = AdGroup(name="MoPub Test Ad Group", campaign=c)
+      ag.put()
+
+      # And set up a default creative
+      h = HtmlCreative(ad_type="html", ad_group=ag)
+      h.put()
+      
+    return HttpResponseRedirect(reverse('publisher_index'))
+
+@login_required
+def getstarted(request,*args,**kwargs):
+  return GetStartedHandler()(request,*args,**kwargs)   
+
 class GenerateHandler(RequestHandler):
   def get(self):
     site = Site.get(self.request.GET.get('id'))
     return render_to_response(self.request,'code.html', {'site': site})
   
-@login_required
+@whitelist_login_required
 def generate(request,*args,**kwargs):
   return GenerateHandler()(request,*args,**kwargs) 

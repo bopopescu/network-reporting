@@ -3,7 +3,7 @@ from google.appengine.ext import db
 from common.ragendja.auth.google_models import GoogleUserTraits
 
 class User(GoogleUserTraits):
-    """User class that provides support for Django and Google Accounts."""
+    """User class that provides support for Django and Google @login_required."""
     user = db.UserProperty()
     username = db.StringProperty(required=True, verbose_name=_('username'))
     email = db.EmailProperty(verbose_name=_('e-mail address'))

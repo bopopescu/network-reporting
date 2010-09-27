@@ -9,19 +9,19 @@
 @interface AdClickController : UIViewController <UIWebViewDelegate, UIActionSheetDelegate> {
 	id<AdControllerDelegate> delegate;
 	
-	UIWebView* webView;
-	UIBarButtonItem* backButton;
-	UIBarButtonItem* forwardButton;
-	UIBarButtonItem* refreshButton;
-	UIBarButtonItem* safariButton;
-	UIBarButtonItem* doneButton;
+	IBOutlet UIWebView* webView;
+	IBOutlet UIBarButtonItem* backButton;
+	IBOutlet UIBarButtonItem* forwardButton;
+	IBOutlet UIBarButtonItem* refreshButton;
+	IBOutlet UIBarButtonItem* safariButton;
+	IBOutlet UIBarButtonItem* doneButton;
 	
-	UIActivityIndicatorView* loading;
-	UIActivityIndicatorView* initialLoad;
+	IBOutlet UIActivityIndicatorView* loading;
+	IBOutlet UIActivityIndicatorView* initialLoad;
 	
 	NSURL* url;
 }
-@property(nonatomic, retain) id<AdControllerDelegate> delegate;
+@property(nonatomic, assign) id<AdControllerDelegate> delegate;
 
 @property(nonatomic, retain) IBOutlet UIWebView* webView;
 @property(nonatomic, retain) IBOutlet UIBarButtonItem* backButton;
@@ -33,7 +33,7 @@
 @property(nonatomic, retain) IBOutlet UIActivityIndicatorView* loading;
 @property(nonatomic, retain) IBOutlet UIActivityIndicatorView* initialLoad;
 
-@property(nonatomic, retain) NSURL* url;
+@property(nonatomic, copy) NSURL* url;
 
 -(id) initWithURL:(NSURL*)u delegate:(id<AdControllerDelegate>)delegate;
 -(IBAction) openInSafari;

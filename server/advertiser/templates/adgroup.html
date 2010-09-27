@@ -97,6 +97,10 @@
 			<a href="#" onclick="javascript:Toggle.display('add_image_creative_box');return false;">
 				Create Image Ad
 			</a>			
+			|
+			<a href="#" onclick="javascript:Toggle.display('add_html_creative_box');return false;">
+				Create Html Ad
+			</a>			
 		</div>
 	</h3>
 	<form method="post" action="{% url advertiser_creative_create %}" enctype="multipart/form-data"
@@ -117,6 +121,15 @@
 		<table>
 			<tr><th>Image File</th><td><input type='file' name="image" size="40"/></td></tr>
 			<tr><th>URL</th><td><input type='text' name="url" size="50"/></td></tr>
+			<tr><th></th><td><input type='submit' value="Create Ad &raquo;"/></td></tr>
+		</table>
+	</form>
+	<form method="post" action="{% url advertiser_creative_create %}" enctype="multipart/form-data"
+		id="add_html_creative_box" style="display:none;" class="special_notice">		
+		<input type="hidden" name="id" value="{{adgroup.key}}"/>
+		<table>
+			<tr><th>Name</th><td><input type='text' name="html_name"></td></tr>
+			<tr><th>HTML Snippet</th><td><textarea name="html_data"></textarea></td></tr>
 			<tr><th></th><td><input type='submit' value="Create Ad &raquo;"/></td></tr>
 		</table>
 	</form>
@@ -151,6 +164,9 @@
 						<img src="{% url advertiser_creative_image creative_key=c.key %}" width=250>
 					</a>
 				</div>
+				{% endifequal %}
+				{% ifequal c.ad_type "html" %}
+				{{c.html_name}}
 				{% endifequal %}
 				<div class="clearall"></div>
 			</td>

@@ -350,6 +350,12 @@ class AddCreativeHandler(RequestHandler):
                                   image_width=img.width,
                                   image_height=img.height)
         creative.put()
+    elif self.request.POST.get("html_name"):
+      creative = HtmlCreative(ad_group=ad_group,
+        ad_type="html",
+        html_name=self.request.POST.get('html_name'),
+        html_data=self.request.POST.get('html_data'))
+      creative.put()
     return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':ad_group.key()}))
   
 @login_required

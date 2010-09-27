@@ -227,7 +227,8 @@ class AdHandler(webapp.RequestHandler):
                         };
                         </script>
                         <script type="text/javascript" src="http://mmv.admob.com/static/iphone/iadmob.js"></script>
-                        </body></html>""")
+                        </body></html>"""),
+    "html":Template("<html><head></head><body style=\"margin: 0;padding:0;\">${html_data}</body></html>"),
   }
   def render_creative(self, c, **kwargs):
     if c:
@@ -243,6 +244,8 @@ class AdHandler(webapp.RequestHandler):
         params.update({"w": format[0], "h": format[1], "client": kwargs["site"].account.admob_pub_id})
       elif c.ad_type == "image":
         params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
+      elif c.ad_type == "html":
+        params.update({"html_data": kwargs["html_data"]})
       
       # indicate to the client the winning creative type, in case it is natively implemented (iad, clear)
       self.response.headers.add_header("X-Backfill", str(c.ad_type))

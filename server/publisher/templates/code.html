@@ -10,6 +10,7 @@
 		Get Code Snippet
 	</h3>
 	
+{% ifequal site.app_key.app_type "iphone" %}
 	<h4>iPhone Instructions</h4>
 	<ol>
 		<li>	
@@ -37,6 +38,61 @@
 			If you have trouble, see the <a href="http://code.google.com/p/mobileadsserving/wiki/">MobileAdsServing Wiki pages</a>.
 		</li>
 	</ol>
+{% endifequal %}
+
+{% ifequal site.app_key.app_type "android" %}
+	<h4>Android Instructions</h4>
+	<ol>
+		<li>	
+			<p>
+				See the <a href="http://code.google.com/p/mobileadsserving/wiki/IntegrationHowTo">Integration HOWTO</a>, located on the
+					 <a href="http://code.google.com/p/mobileadsserving">MobileAdsServing project on Google Code</a> Wiki.
+			</p>
+		</li>
+		<li>
+		<p>
+			Add the following XML block to your layout definition (eg. main.xml):
+		</p>
+	<code>
+		<pre style="border: 1px solid #aaa; width: 750px; padding: 10px; background-color: #f8f8f8;">
+&lt;com.mopub.mobileads.AdView
+  android:id="@+id/adview"
+  android:layout_width="fill_parent"
+  android:layout_height="wrap_content"/&gt;</pre>
+	</code>
+		<p>The AdView element will only take up space if an ad loads.  If you always want to reserve space for the ad even before it loads (at the top of the page, for example), we recommend surrounding the AdView tag with a LinearLayout tag with a fixed height.
+    </p>
+	<code>
+		<pre style="border: 1px solid #aaa; width: 750px; padding: 10px; background-color: #f8f8f8;">
+&lt;LinearLayout
+  android:orientation="vertical"
+  android:layout_width="fill_parent"
+  android:layout_height="50px"&gt;
+
+  &lt;com.mopub.mobileads.AdView
+    android:id="@+id/adview"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"/&gt;
+&lt;/LinearLayout&gt;</pre>
+	</code>
+		</li>
+		<li>
+		<p>
+			Add the following code snippet in your Activity's onCreate() instance (or another suitable place):
+		</p>
+	<code>
+		<pre style="border: 1px solid #aaa; width: 750px; padding: 10px; background-color: #f8f8f8;">
+AdView av = (AdView) findViewById(R.id.adview);
+av.setAdUnitId("{{site.key}}");
+av.loadAd();</pre>
+	</code>
+		<p></p>
+		</li>
+		<li>
+			If you have trouble, see the <a href="http://code.google.com/p/mobileadsserving/wiki/">MobileAdsServing Wiki pages</a>.
+		</li>
+	</ol>
+{% endifequal %}
 
 	<h4>Terms and Conditions</h4>
 	<p>

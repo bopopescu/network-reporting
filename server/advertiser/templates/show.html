@@ -12,36 +12,21 @@
 			</a>
 		</div>
 	</h3>
-	<table>
-		<tr><th>Status</th>
-			<td class="numeric"><b>
-				{% if campaign.deleted %}
-					Deleted
-				{% endif %}
-				{% if campaign.active and not campaign.deleted %}
-					Active
-				{% endif %}
-				{% if not campaign.active and not campaign.deleted %}
-					Paused
-				{% endif %}
-			</b></td>
-			<td>
-				<form method="post" action="{% url advertiser_campaign_pause %}?id={{campaign.key}}" style="display: inline;"><input type="submit" value="Pause"></form>
-				<form method="post" action="{% url advertiser_campaign_pause %}?id={{campaign.key}}" style="display: inline;"><input type="submit" value="Delete"></form>
-			</tr>
-		<tr><th>Daily budget</th><td class="numeric">{{campaign.budget|currency}}</td></tr>
-		<tr><th>Campaign Type</th><td class="numeric">{{campaign.campaign_type}}</td></tr>
-		{% ifequal campaign.campaign_type "network" %}
-			<tr><th>Network Type</th><td class="numeric">{{campaign.network_type}}</td></tr>
-		{% endifequal %}
+
+	<table class="rollups">
+		<tr>
+			<td class="rollup"><b>Impressions</b><br/>{{today.impression_count|withsep}}</td>
+			<td class="rollup"><b>Clicks</b><br/>{{today.click_count|withsep}} ({{today.ctr|percentage}})</td>
+			<td class="rollup"><b>Revenue</b><br/>{{today.revenue|currency}}</td>
+		</tr>
 	</table>
+	
+	<img src="{{chart_url}}" width=780 height=200 style="padding: 5px 0 10px 0;"/>
 	
 	<h3>
 		Ad Groups
 		<div class="toolbar">
-			<a href="{% url campaign_adgroup_new campaign_key=campaign.key%}">
-				Create Ad Group
-			</a>
+			<button type="button" class="btn"><a href="{% url campaign_adgroup_new campaign_key=campaign.key%}"><span><span>Create Ad Group</span></span></a></button>
 		</div>
 	</h3>
 	
@@ -56,7 +41,7 @@
 					<th>Bid</th>
 					<th width="75px">Impr.</th>
 					<th width="75px">Clicks</th>
-					<th width="75px">Cost</th>
+					<th width="75px">Revenue</th>
 				</thead>
 			{% else %}
 				<tr><td colspan=10>No ad groups.</td></tr>
@@ -65,15 +50,17 @@
 				<tr>
 					<td><input type="checkbox" name="id" value="{{b.key}}"/></td>
 					<td><a href="{% url advertiser_adgroup_show adgroup_key=b.key %}">{{b.name}}</a></td>
-					<td><b>{% if b.deleted %}
-						Deleted
-					{% endif %}
-					{% if b.active and not b.deleted %}
-						Active
-					{% endif %}
-					{% if not b.active and not b.deleted %}
-						Paused
-					{% endif %}</b></td>
+					<td>
+						{% if b.deleted %}
+							<img src="/images/deleted.gif" width=9 height=9/>
+						{% endif %}
+						{% if b.active and not b.deleted %}
+							<img src="/images/active.gif" width=9 height=9/>
+						{% endif %}
+						{% if not b.active and not b.deleted %}
+							<img src="/images/paused.gif" width=9 height=9/>
+						{% endif %}
+					</td>
 					<td>
 						{% ifequal b.priority_level 0 %}Super-user {% endifequal %}
 						{% ifequal b.priority_level 1 %}Sponsorship {% endifequal %}

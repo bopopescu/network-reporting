@@ -65,7 +65,7 @@ class AppIndexHandler(RequestHandler):
             day_impressions[stat.date] = (day_impressions.get(stat.date) or 0) + stat.impression_count
         app.ctr = float(app.click_count) / float(app.impression_count) if app.impression_count > 0 else 0
 
-      # organize the info on a day by day basis across all sites
+      # organize the info on a day by day basis across all sites 
       series = [day_impressions.get(a,0) for a in days]
       series.reverse()
       url = "http://chart.apis.google.com/chart?cht=lc&chtt=Total+Daily+Impressions&chs=580x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (

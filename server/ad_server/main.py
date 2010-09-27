@@ -83,9 +83,9 @@ class AdAuction(object):
       creatives = Creative.gql("where ad_group in :1 and format_predicates in :2 and active = :3 and deleted = :4", 
         map(lambda x: x.key(), ad_groups), format_predicates, True, False).fetch(AdAuction.MAX_ADGROUPS)
       
-      logging.info("eligible creatives: %s" % creatives)
+      logging.debug("eligible creatives: %s" % creatives)
       creatives = [c for c in creatives if (not c.ad_type in exclude_params)]  
-      logging.info("eligible creatives after exclusions: %s" % creatives)
+      logging.debug("eligible creatives after exclusions: %s" % creatives)
 
       if len(creatives) > 0:
         # for each priority_level, perform an auction among the various creatives 
@@ -94,16 +94,16 @@ class AdAuction(object):
           players = filter(lambda c: c.ad_group.priority_level == p, creatives)
           players.sort(lambda x,y: cmp(y.e_cpm(), x.e_cpm()))
           winning_ecpm = max(c.e_cpm() for c in players) if len(players) > 0 else 0
-          logging.info("auction at priority=%d: %s, max eCPM=%.2f" % (p, players, winning_ecpm))
+          logging.debug("auction at priority=%d: %s, max eCPM=%.2f" % (p, players, winning_ecpm))
         
           # if the winning creative exceeds the ad unit's threshold cpm for the
           # priority level, then we have a winner
           if winning_ecpm > site.threshold_cpm(p):
             # retain all creatives with comparable eCPM and randomize among them
             winners = filter(lambda x: x.e_cpm() >= winning_ecpm, players)
-            logging.info('winners %s'%winners)
+            logging.debug('winners %s'%winners)
             random.shuffle(winners)
-            logging.info('random winners %s'%winners)
+            logging.debug('random winners %s'%winners)
             
             # winner
             winner = winners[0]
@@ -187,7 +187,7 @@ class AdHandler(webapp.RequestHandler):
     addr = self.rgeocode(self.request.get("ll")) if self.request.get("ll") else ""      
     logging.debug("geo is %s (requested '%s')" % (addr, self.request.get("ll")))
     
-    # get creative exclusions
+    # get creative exclusions usually used to exclude iAd because it has already failed
     excluded_creatives = self.request.get("exclude")
     
     # create a unique request id, but only log this line if the user agent is real
@@ -258,13 +258,14 @@ class AdHandler(webapp.RequestHandler):
         params.update({"html_data": kwargs["html_data"]})
       
       # indicate to the client the winning creative type, in case it is natively implemented (iad, clear)
-      self.response.headers.add_header("X-Backfill", str(c.ad_type))
+      self.response.headers.add_header("X-Adtype", str(c.ad_type))
       
       # render the HTML body
       self.response.out.write(self.TEMPLATES[c.ad_type].safe_substitute(params))
     else:
       self.response.headers.add_header("X-Backfill", "clear")
-      
+    
+    # make sure this response is not cached by the client  
     self.response.headers.add_header('Cache-Control','no-cache')  
   
   def rgeocode(self, ll):

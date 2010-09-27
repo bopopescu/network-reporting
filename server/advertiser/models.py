@@ -133,7 +133,7 @@ class Creative(polymodel.PolyModel):
   deleted = db.BooleanProperty(default=False)
 
   # the creative type helps the ad server render the right thing if the creative wins the auction
-  ad_type = db.StringProperty(choices=["text", "image", "iAd", "adsense", "admob", "clear", "html"], default="text")
+  ad_type = db.StringProperty(choices=["text", "image", "iAd", "adsense", "admob", "html", "clear"], default="text")
 
   # destination URLs
   url = db.StringProperty()
@@ -175,8 +175,8 @@ class TextCreative(Creative):
 
 class HtmlCreative(Creative):
   # html ad properties
-  html_name = db.StringProperty(required=True)
-  html_data = db.StringProperty()
+  html_name = db.StringProperty(required=True, default="Demo HTML Creative")
+  html_data = db.StringProperty(default="<style type=\"text/css\">body {font-size: 12px;font-family:helvetica,arial,sans-serif;margin:0;padding:0;text-align:center} .creative_headline {font-size: 20px;} .creative_promo {color: green;text-decoration: none;}</style><div class=\"creative_headline\">Welcome to mopub!</div><div class=\"creative_promo\">This is a test ad</div><div>You can now set up a new campaign to serve other ads.</div>")
 
 class ImageCreative(Creative):
   # image properties

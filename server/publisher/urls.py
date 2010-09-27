@@ -11,5 +11,6 @@ urlpatterns = patterns('publisher.views',
   url(r'^create$','app_create',name='publisher_app_create'),
   url(r'^edit$','app_update',name='publisher_app_update'),
   url(r'^getartwork$','getartwork',name='publisher_getartwork'),
+  url(r'^getstarted$','getstarted',name='publisher_getstarted'),
   url(r'^$','index',name='publisher_index'),
 )

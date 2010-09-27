@@ -224,7 +224,7 @@ class ShowAdGroupHandler(RequestHandler):
   
   def get(self, adgroup_key):
     adgroup = AdGroup.get(adgroup_key)
-    creatives = Creative.gql('where ad_group = :1 and deleted = :2 and ad_type in :3', adgroup, False, ["text", "image"]).fetch(50)
+    creatives = Creative.gql('where ad_group = :1 and deleted = :2 and ad_type in :3', adgroup, False, ["text", "image", "html"]).fetch(50)
     for c in creatives:
       c.stats = SiteStats.stats_for_day(c, SiteStats.today())
     sites = map(lambda x: Site.get(x), adgroup.site_keys)

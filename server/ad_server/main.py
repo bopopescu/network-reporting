@@ -49,6 +49,8 @@ class AdAuction(object):
     geo_predicates = AdAuction.geo_predicates_for_rgeocode(kw["addr"])
     device_predicates = AdAuction.device_predicates_for_request(kw["request"])
     format_predicates = AdAuction.format_predicates_for_format(kw["format"])
+    exclude_params = kw["excluded_creatives"]
+    excluded_predicates = AdAuction.exclude_predicates_params(exclude_params)
     logging.debug("keywords=%s, geo_predicates=%s, device_predicates=%s, format_predicates=%s" % (keywords, geo_predicates, device_predicates, format_predicates))
 
     # Matching strategy: 
@@ -80,7 +82,10 @@ class AdAuction(object):
     if len(ad_groups) > 0:
       creatives = Creative.gql("where ad_group in :1 and format_predicates in :2 and active = :3 and deleted = :4", 
         map(lambda x: x.key(), ad_groups), format_predicates, True, False).fetch(AdAuction.MAX_ADGROUPS)
-      logging.debug("eligible creatives: %s" % creatives)
+      
+      logging.info("eligible creatives: %s" % creatives)
+      creatives = [c for c in creatives if (not c.ad_type in exclude_params)]  
+      logging.info("eligible creatives after exclusions: %s" % creatives)
 
       if len(creatives) > 0:
         # for each priority_level, perform an auction among the various creatives 
@@ -89,15 +94,17 @@ class AdAuction(object):
           players = filter(lambda c: c.ad_group.priority_level == p, creatives)
           players.sort(lambda x,y: cmp(y.e_cpm(), x.e_cpm()))
           winning_ecpm = max(c.e_cpm() for c in players) if len(players) > 0 else 0
-          logging.debug("auction at priority=%d: %s, max eCPM=%.2f" % (p, players, winning_ecpm))
+          logging.info("auction at priority=%d: %s, max eCPM=%.2f" % (p, players, winning_ecpm))
         
           # if the winning creative exceeds the ad unit's threshold cpm for the
           # priority level, then we have a winner
           if winning_ecpm > site.threshold_cpm(p):
             # retain all creatives with comparable eCPM and randomize among them
             winners = filter(lambda x: x.e_cpm() >= winning_ecpm, players)
+            logging.info('winners %s'%winners)
             random.shuffle(winners)
-
+            logging.info('random winners %s'%winners)
+            
             # winner
             winner = winners[0]
             logging.debug("winning creative = %s" % winner)
@@ -133,7 +140,10 @@ class AdAuction(object):
   @classmethod
   def format_predicates_for_format(c, f):
     return ["format=%dx%d" % (f[0], f[1]), "format=*"]
-      
+  
+  @classmethod
+  def exclude_predicates_params(c,params):
+    return ["exclude=%s"%param for param in params]    
 #
 # Primary ad auction handler 
 # -- Handles ad request parameters and normalizes for the auction logic
@@ -157,6 +167,7 @@ class AdHandler(webapp.RequestHandler):
     id = self.request.get("id")
     site = Site.site_by_id(id) if id else None
     
+    
     # the user's site key was not set correctly...
     if site is None:
       self.error(500)
@@ -177,7 +188,7 @@ class AdHandler(webapp.RequestHandler):
     logging.debug("geo is %s (requested '%s')" % (addr, self.request.get("ll")))
     
     # get creative exclusions
-    excluded_creatives = self.request.get("excl")
+    excluded_creatives = self.request.get("exclude")
     
     # create a unique request id, but only log this line if the user agent is real
     request_id = md5.md5("%s:%s" % (self.request.query_string, time.time())).hexdigest()
@@ -197,13 +208,11 @@ class AdHandler(webapp.RequestHandler):
       
     # render the creative 
     self.response.out.write(self.render_creative(c, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, request_id=request_id))
-  
   #
   # Templates
   #
   TEMPLATES = {
     "adsense": Template("""<html> <head><title>$title</title></head> <body style="margin: 0;width:${w}px;height:${h}px;" > <script type="text/javascript">window.googleAfmcRequest = {client: '$client',ad_type: 'text_image', output: 'html', channel: '',format: '$adsense_format',oe: 'utf8',color_border: '336699',color_bg: 'FFFFFF',color_link: '0000FF',color_text: '000000',color_url: '008000',};</script> <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_afmc_ads.js"></script>  </body> </html> """),
-    "admob": Template("admob goes here"),
     "iAd": Template("iAd"),
     "clear": Template(""),
     "text": Template("""<html>\
@@ -231,7 +240,7 @@ class AdHandler(webapp.RequestHandler):
   }
   def render_creative(self, c, **kwargs):
     if c:
-      logging.info("rendering %s" % c.ad_type)
+      logging.info("rendering: %s" % c.ad_type)
       format = kwargs["format"]
 
       params = kwargs
@@ -240,17 +249,20 @@ class AdHandler(webapp.RequestHandler):
       if c.ad_type == "adsense":
         params.update({"title": kwargs["q"], "adsense_format": format[2], "w": format[0], "h": format[1], "client": kwargs["site"].account.adsense_pub_id})
       elif c.ad_type == "admob":
-        params.update({"w": format[0], "h": format[1], "client": kwargs["site"].account.admob_pub_id})
+        params.update({"title": kwargs["q"], "w": format[0], "h": format[1], "client": kwargs["site"].account.admob_pub_id})
+        self.response.headers.add_header("X-Launchpage","http://c.admob.com/")
       elif c.ad_type == "image":
         params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
       
       # indicate to the client the winning creative type, in case it is natively implemented (iad, clear)
       self.response.headers.add_header("X-Backfill", str(c.ad_type))
-    
+      
       # render the HTML body
       self.response.out.write(self.TEMPLATES[c.ad_type].safe_substitute(params))
     else:
       self.response.headers.add_header("X-Backfill", "clear")
+      
+    self.response.headers.add_header('Cache-Control','no-cache')  
   
   def rgeocode(self, ll):
     url = "http://maps.google.com/maps/geo?%s" % urlencode({"q": ll, 

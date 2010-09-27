@@ -52,3 +52,55 @@ class LogoutHandler(RequestHandler):
     
 def logout(request,*args,**kwargs):
   return LogoutHandler()(request,*args,**kwargs)
+  
+def test(request,*args,**kwargs):
+  import time
+  time.sleep(2)
+  html = """<html> 
+  	<head>
+  		<title></title>
+  		<script>
+  		  function finishLoad(){window.location="mopub://finishLoad";} 
+  		  window.onload = function(){
+  		    finishLoad();
+  		  }
+  		</script>
+  	</head> 
+  	<body style="margin: 0;width:320px;height:480px;" > 
+  		<script type="text/javascript">
+  			function webviewDidClose(){var img = new Image(); img.src="/hellothereimclosing/"} 
+  			function webviewDidAppear(){var img = new Image(); img.src="/hellothereimopening/"} 
+        function showImage(){var img = document.createElement("img"); img.setAttribute('src','/images/yelp.png'); document.body.appendChild(img);}
+        setTimeout("showImage()",1);
+  			function close(){window.location = "mopub://done"};
+  			//setTimeout("close()",10000);
+  		</script>
+  	</body>
+  </html>
+  """
+  response = HttpResponse(html) 
+  # response['X-Closebutton'] = 'Next'
+  return response
+
+def test2(request,*args,**kwargs):
+  raise Http404
+  html = """<html> 
+  	<head>
+  		<title></title>
+  	</head> 
+  	<body style="margin: 0;width:320px;height:480px;" > 
+  		<script type="text/javascript">
+  			function webviewDidClose(){var img = new Image(); img.src="/hellothereimclosing/"} 
+  			function webviewDidAppear(){var img = new Image(); img.src="/hellothereimopening/"} 
+  			function close(){window.location="mopub://finishLoad?query=imthequery";} 
+  			setTimeout("close()",5000);
+
+  			function showImage(){var img = document.createElement("img"); img.setAttribute('src','/images/yelp.png'); document.body.appendChild(img);}
+  			setTimeout("showImage()",3000);
+  		</script>
+  	</body>
+  </html>
+  """
+  response = HttpResponse(html) 
+  response['X-CloseButton'] = 'None'
+  return response  

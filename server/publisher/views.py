@@ -185,7 +185,7 @@ class CreateAdUnitHandler(RequestHandler):
       site.account = Account.current_account()
       site.app_key = a
       site.put()
-      return HttpResponseRedirect(reverse('publisher_app_show')+'?id=%s'%a.key())
+      return HttpResponseRedirect(reverse('publisher_generate')+'?id=%s'%site.key())
     else:
       print f.errors
 

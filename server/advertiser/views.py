@@ -39,13 +39,22 @@ class IndexHandler(RequestHandler):
   def get(self):
     campaigns = Campaign.gql("where u = :1 and deleted = :2", users.get_current_user(), False).fetch(10)
     for c in campaigns:
-      c.stats = SiteStats.stats_for_day(c, SiteStats.today())
-    return render_to_response(self.request,'advertiser/index.html', {'campaigns':campaigns})
+      a = SiteStats.stats_for_days(c, SiteStats.lastdays())
+      logging.info(a)
+      c.stats = reduce(lambda x, y: x+y, a, SiteStats())
+    today = SiteStats.rollup_for_day(campaigns, SiteStats.today())
+      
+    return render_to_response(self.request, 
+      'advertiser/index.html', 
+      {'campaigns':campaigns, 
+       'today': today,
+        'gtee': filter(lambda x: x.campaign_type in ['gtee'], campaigns),
+        'promo': filter(lambda x: x.campaign_type in ['promo'], campaigns),
+        'network': filter(lambda x: x.campaign_type in ['network'], campaigns), })
       
 @login_required     
 def index(request,*args,**kwargs):
     return IndexHandler()(request,*args,**kwargs)     
-
 
 class CreateHandler(RequestHandler):
   def get(self):
@@ -57,11 +66,48 @@ class CreateHandler(RequestHandler):
     campaign = f.save(commit=False)
     campaign.u = users.get_current_user() 
     campaign.put()
-    return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':campaign.key()}))
+    return HttpResponseRedirect(reverse('campaign_adgroup_new',kwargs={'campaign_key':campaign.key()}))
 
 @login_required     
 def campaign_create(request,*args,**kwargs):
   return CreateHandler()(request,*args,**kwargs)      
+
+class CreateAdGroupHandler(RequestHandler):
+  def __call__(self,request,campaign_key):
+      self.params = request.POST or request.GET
+      self.request = request
+      if request.method == "GET":
+          return self.get(campaign_key)
+      elif request.method == "POST":
+          return self.post(campaign_key)
+
+  def get(self, campaign_key):
+    f = AdGroupForm()
+    sites = Site.gql('where account=:1', Account.current_account())    
+    return render_to_response(self.request,'advertiser/new_adgroup.html', {"f": f, "c": Campaign.get(campaign_key), "sites": sites})
+
+  def post(self, campaign_key):
+     c = Campaign.get(campaign_key)
+     f = AdGroupForm(data=self.request.POST)
+     adgroup = f.save(commit=False)
+     adgroup.campaign=c
+     adgroup.keywords=filter(lambda k: len(k) > 0, self.request.POST.get('keywords').lower().split('\n'))
+     adgroup.site_keys=map(lambda x: db.Key(x), self.request.POST.getlist('sites'))
+     adgroup.put()
+     
+     # if the campaign is a network type, automatically populate the right creative and go back to
+     # campaign page
+     if c.campaign_type == "network":
+       creative = adgroup.default_creative()
+       creative.put()
+       return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':c.key()}))
+     else:
+       return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':adgroup.key()}))
+            
+       
+@login_required     
+def campaign_adgroup_new(request,*args,**kwargs):
+  return CreateAdGroupHandler()(request,*args,**kwargs)      
 
 class ShowHandler(RequestHandler):
   def __call__(self,request,campaign_key):
@@ -76,38 +122,26 @@ class ShowHandler(RequestHandler):
     # load the campaign
     campaign = Campaign.get(campaign_key)
     campaign.stats = SiteStats.stats_for_day(campaign, SiteStats.today())
-
+    
     # load the adgroups
     bids = AdGroup.gql("where campaign=:1 and deleted = :2", campaign, False).fetch(50)
     bids.sort(lambda x,y:cmp(x.priority_level, y.priority_level))
     for b in bids:
       b.stats = SiteStats.stats_for_day(b, SiteStats.today())
-
-    # write response
-    return render_to_response(self.request,'advertiser/show.html', 
-                                          {'campaign':campaign, 
-                                          'bids': bids,
-                                          'sites': Site.gql('where account=:1', Account.current_account()),
-                                          'user':users.get_current_user()})
+      
+    # no ad groups?
+    if len(bids) == 0:
+      return HttpResponseRedirect(reverse('campaign_adgroup_new', kwargs={'campaign_key': campaign.key()}))
+    else:
+      # write response
+      return render_to_response(self.request,'advertiser/show.html', 
+                                            {'campaign':campaign, 
+                                            'bids': bids,
+                                            'user':users.get_current_user()})
 
 @login_required     
 def campaign_show(request,*args,**kwargs):
  return ShowHandler()(request,*args,**kwargs) 
-  
-class AddBidHandler(RequestHandler):
- def post(self):
-    c = Campaign.get(self.request.POST.get('id'))
-    f = AdGroupForm(data=self.request.POST)
-    adgroup = f.save(commit=False)
-    adgroup.campaign=c
-    adgroup.keywords=filter(lambda k: len(k) > 0, self.request.POST.get('keywords').lower().split('\n'))
-    adgroup.site_keys=map(lambda x: db.Key(x), self.request.POST.getlist('sites'))
-    adgroup.put()
-    return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':c.key()}))
-
-@login_required  
-def bid_create(request,*args,**kwargs):
-  return AddBidHandler()(request,*args,**kwargs)   
 
 class EditHandler(RequestHandler):
   def get(self):
@@ -188,7 +222,7 @@ class ShowAdGroupHandler(RequestHandler):
   
   def get(self, adgroup_key):
     adgroup = AdGroup.get(adgroup_key)
-    creatives = Creative.gql('where ad_group = :1 and deleted = :2', adgroup, False).fetch(50)
+    creatives = Creative.gql('where ad_group = :1 and deleted = :2 and ad_type in :3', adgroup, False, ["text", "image"]).fetch(50)
     for c in creatives:
       c.stats = SiteStats.stats_for_day(c, SiteStats.today())
     sites = map(lambda x: Site.get(x), adgroup.site_keys)
@@ -316,6 +350,12 @@ class AddCreativeHandler(RequestHandler):
                                   image_width=img.width,
                                   image_height=img.height)
         creative.put()
+    elif self.request.POST.get("html_name"):
+      creative = HtmlCreative(ad_group=ad_group,
+        ad_type="html",
+        html_name=self.request.POST.get('html_name'),
+        html_data=self.request.POST.get('html_data'))
+      creative.put()
     return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':ad_group.key()}))
   
 @login_required

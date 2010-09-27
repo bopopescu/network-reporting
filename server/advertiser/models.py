@@ -7,8 +7,9 @@ from google.appengine.ext.db import polymodel
 class Campaign(db.Model):
   name = db.StringProperty()
   description = db.TextProperty()
+  campaign_type = db.StringProperty(choices=['gtee', 'promo', 'network'], default="network")
 
-  # daily budget in USD
+  # daily budget
   budget = db.FloatProperty() 
   
   # start and end dates 
@@ -21,6 +22,10 @@ class Campaign(db.Model):
   # who owns this
   u = db.UserProperty() 
   t = db.DateTimeProperty(auto_now_add=True)
+  
+  def delivery(self):
+    if self.stats: return self.stats.revenue / self.budget
+    else: return 1
     
 class AdGroup(db.Model):
   campaign = db.ReferenceProperty(Campaign)
@@ -28,6 +33,7 @@ class AdGroup(db.Model):
 
   # the priority level at which this ad group should be auctioned
   priority_level = db.IntegerProperty(default=1)
+  network_type = db.StringProperty(choices=["adsense", "iAd", "admob"])
 
   bid = db.FloatProperty()
   bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpc")
@@ -108,6 +114,15 @@ class AdGroup(db.Model):
   # platform_name=X
   device_predicates = db.StringListProperty(default=["platform_name=*"])
   
+  def default_creative(self):
+    c = None
+    if self.network_type == 'adsense': c = AdSenseCreative(ad_type="adsense", format_predicates=["format=*"])
+    elif self.network_type == 'iAd': c = iAdCreative(ad_type="iAd", format_predicates=["format=320x50"])
+    elif self.network_type == 'admob': c = AdMobCreative(ad_type="admob", format_predicates=["format=320x50"])
+    
+    if c: c.ad_group = self
+    return c
+  
   def __repr__(self):
     return "AdGroup:'%s'" % self.name
 
@@ -118,7 +133,7 @@ class Creative(polymodel.PolyModel):
   deleted = db.BooleanProperty(default=False)
 
   # the creative type helps the ad server render the right thing if the creative wins the auction
-  ad_type = db.StringProperty(choices=["text", "image", "iAd", "adsense", "admob", "clear"], default="text")
+  ad_type = db.StringProperty(choices=["text", "image", "iAd", "adsense", "admob", "clear", "html"], default="text")
 
   # destination URLs
   url = db.StringProperty()
@@ -158,6 +173,11 @@ class TextCreative(Creative):
   def __repr__(self):
     return "'%s'" % (self.headline,)
 
+class HtmlCreative(Creative):
+  # html ad properties
+  html_name = db.StringProperty(required=True)
+  html_data = db.StringProperty()
+
 class ImageCreative(Creative):
   # image properties
   image = db.BlobProperty()
@@ -175,18 +195,14 @@ class ImageCreative(Creative):
     return [fp] if fp else None
 
 class iAdCreative(Creative):
-  def __init__(self):
-    super(ad_type="iAd", format_predicates=["format=320x50"])
+  pass
     
 class AdSenseCreative(Creative):
-  def __init__(self):
-    super(ad_type="adsense", format_predicates=["format=*"])
+  pass
 
 class AdMobCreative(Creative):
-  def __init__(self):
-    super(ad_type="admob", format_predicates=["format=320x50"])
+  pass
     
 class NullCreative(Creative):
-  def __init__(self):
-    super(ad_type="clear", format_predicates=["format=*"])
+  pass
   

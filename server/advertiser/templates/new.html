@@ -5,27 +5,69 @@
 {% block content %}
 	<h3><a href="{% url advertiser_campaign %}">Campaigns</a> &gt; Create a Campaign</h3>
 	<p>
-		Campaigns allow you setup ads that will run on your mobile app placements
-		and on other apps in the network.
+		Campaigns allow you manage ads that will run on your mobile ad units.
 	</p>
 	
 	<form method="post" action="">
-		<table>
-			<tr>
-				<th>Name</th><td><input type='text' name="name" size="30" placeholder="My Campaign"/></td>
-			</tr>
-			<tr>
-				<th>Description</th><td><textarea name="description" cols="50" rows="3" placeholder="Campaign for My New App"></textarea></td>
-			</tr>
+		<h4>What type of campaign would you like to create?</h4>
 		
-			<tr><td colspan="2"><h4>Campaign Properties</h4></td></tr>
-			<tr>
-				<th>Budget</th><td><input type='text' name="budget" size="5" placeholder="10"/> USD / day</td>
-			</tr>
-		</table>
-		
+			<p>
+				<input type="radio" name="campaign_type" value="gtee" onchange="$('more_box_1').show(); $('more_box_2').hide(); $('more_box_3').hide();  "> 
+					<b>Guaranteed</b> <br/>
+					Use this for revenue-generating advertising campaigns on your apps that you sell directly. 
+				</input>
+				<div id="more_box_1" style="display:none;">
+					<table>					
+						<tr>
+							<th>Delivery Budget</th><td><input type='text' name="budget" size="5" placeholder="10"/> USD / day</td>
+						</tr>
+						<tr>
+							<th>Start Date</th><td><input type='text' name="start_date" size="15" placeholder="11/1/2010" disabled="true"/> </td>
+						</tr>
+						<tr>
+							<th>End Date</th><td><input type='text' name="end_date" size="15" placeholder="11/6/2010" disabled="true"/> </td>
+						</tr>
+					</table>
+				</div>
+			</p>
+			<p>
+				<input type="radio" name="campaign_type" value="promo" onchange="$('more_box_1').hide(); $('more_box_2').show(); $('more_box_3').hide();  "> 
+					<b>Promotional</b> <br/>
+					Use this for cross-promotional or marketing campaigns among your apps.					
+				</input>
+				<div id="more_box_2" style="display:none;">
+					<table>
+						<tr>
+							<th>Start Date</th><td><input type='text' name="start_date" size="15" placeholder="11/1/2010" disabled="true"/> </td>
+						</tr>
+						<tr>
+							<th>End Date</th><td><input type='text' name="end_date" size="15" placeholder="11/6/2010" disabled="true"/> </td>
+						</tr>
+					</table>
+				</div>
+			</p>
+			<p>
+				<input type="radio" name="campaign_type" value="network" onchange="$('more_box_1').hide(); $('more_box_2').hide(); $('more_box_3').show();  "> 
+					<b>Network</b> <br/>
+					Use this to fill inventory with ads sold on your behalf by ad networks.
+				</input>
+				<div id="more_box_3" style="display:none;">
+				</div>
+				
+			</p>
+			
+			<h4>Campaign Properties</h4>
+			<table>
+				<tr>
+					<th>Name</th><td><input type='text' name="name" size="30" placeholder="My Campaign"/></td>
+				</tr>
+				<tr>
+					<th>Description</th><td><textarea name="description" cols="50" rows="3" placeholder="Campaign for My New App"></textarea></td>
+				</tr>
+			</table>
+			
 		<p>
-			<input type="submit" value="Create Campaign &raquo;"/>
+			<button type="button" class="btn" onclick="form.submit();"><span><span>Create Campaign</span></span></button>
 		</p>
 	</form>
 {% endblock %}

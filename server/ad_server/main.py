@@ -62,7 +62,7 @@ class AdAuction(object):
     logging.debug("ad groups: %s" % ad_groups)
     
     # campaign exclusions... budget + time
-    ad_groups = filter(lambda a: SiteStats.stats_for_day(a.campaign, SiteStats.today()).revenue < a.campaign.budget, ad_groups)
+    ad_groups = filter(lambda a: a.campaign.budget is None or SiteStats.stats_for_day(a.campaign, SiteStats.today()).revenue < a.campaign.budget, ad_groups)
     logging.debug("removed over budget, now: %s" % ad_groups)
     ad_groups = filter(lambda a: a.campaign.active and (a.campaign.start_date >= SiteStats.today() if a.campaign.start_date else True) and (a.campaign.end_date <= SiteStats.today() if a.campaign.end_date else True), ad_groups)
     logging.debug("removed non running campaigns, now: %s" % ad_groups)
@@ -236,7 +236,8 @@ class AdHandler(webapp.RequestHandler):
                         };
                         </script>
                         <script type="text/javascript" src="http://mmv.admob.com/static/iphone/iadmob.js"></script>
-                        </body></html>""")
+                        </body></html>"""),
+    "html":Template("<html><head></head><body style=\"margin: 0;padding:0;\">${html_data}</body></html>"),
   }
   def render_creative(self, c, **kwargs):
     if c:
@@ -253,6 +254,8 @@ class AdHandler(webapp.RequestHandler):
         self.response.headers.add_header("X-Launchpage","http://c.admob.com/")
       elif c.ad_type == "image":
         params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
+      elif c.ad_type == "html":
+        params.update({"html_data": kwargs["html_data"]})
       
       # indicate to the client the winning creative type, in case it is natively implemented (iad, clear)
       self.response.headers.add_header("X-Backfill", str(c.ad_type))

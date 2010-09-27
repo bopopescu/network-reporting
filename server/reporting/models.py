@@ -3,6 +3,8 @@ from google.appengine.ext import db
 from publisher.models import Site
 import datetime
 import md5
+import logging
+
 # 
 # Tracks statistics for a site for a particular day - clicks and impressions are aggregated
 # into this object
@@ -21,8 +23,8 @@ class SiteStats(db.Model):
   revenue = db.FloatProperty(default=float(0))
 
   # conversion information
-  converted_clicks = db.IntegerProperty()
-  conversions = db.IntegerProperty()
+  converted_clicks = db.IntegerProperty(default=0)
+  conversions = db.IntegerProperty(default=0)
   
   @classmethod
   def get_key(c, site_key, owner_key=None, date=datetime.datetime.now().date()):
@@ -31,6 +33,11 @@ class SiteStats(db.Model):
   @classmethod
   def today(c):
     return datetime.datetime.now().date()
+    
+  @classmethod
+  def lastdays(c, n=7):
+    today = datetime.date.today() - datetime.timedelta(days=1)    # This eliminates partial days contributing to totals or appearing in graphs
+    return [today - datetime.timedelta(days=x) for x in range(0, n)]
 
   @classmethod
   def sitestats_for_today(c, site):
@@ -43,6 +50,15 @@ class SiteStats(db.Model):
   @classmethod
   def stats_for_day(c, owner, d):
     return SiteStats.get_or_insert(SiteStats.get_key(None, owner.key(), d).name(), owner=owner, date=d)
+    
+  @classmethod
+  def rollup_for_day(c, owners, d):
+    a = filter(lambda s: s != None, db.get([SiteStats.get_key(None, owner.key(), d) for owner in owners]))
+    return reduce(lambda x, y: x+y, a, SiteStats())
+    
+  @classmethod
+  def stats_for_days(c, owner, days):
+    return filter(lambda s: s != None, db.get([SiteStats.get_key(None, owner.key(), d) for d in days]))
 
   @classmethod
   def stats_for_day_with_qualifier(c, owner, site, d):
@@ -76,8 +92,19 @@ class SiteStats(db.Model):
     self.revenue += revenue
     self.put()
     
+  def __add__(self, s):
+    return SiteStats(site=self.site, 
+      owner=self.owner, 
+      date=self.date, 
+      request_count = self.request_count + s.request_count, 
+      impression_count = self.impression_count + s.impression_count,
+      click_count = self.click_count + s.click_count,
+      revenue = self.revenue + s.revenue,)
+#      converted_clicks = self.converted_clicks + s.converted_clicks,
+ #     conversions = self.conversions + s.conversions )
+    
   def __repr__(self):
-    return "%s (site)\t%s (%s)\t%d\t%d\t%d" % (self.site.key() if self.site else '-', self.owner.key() if self.owner else '-', type(self.owner), self.request_count, self.impression_count, self.click_count)
+    return "SiteStats{site=%s, owner=%s, %d/%d/%d}" % (self.site.key() if self.site else "None", self.owner.key() if self.owner else "None", self.request_count, self.impression_count, self.click_count)
     
 #
 # This contains information about a particular user 

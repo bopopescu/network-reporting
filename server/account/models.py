@@ -7,6 +7,7 @@ class Account(db.Model):
 	adsense_pub_id = db.StringProperty()
 	admob_pub_id = db.StringProperty()
 	user = db.UserProperty()
+	date_added = db.DateTimeProperty(auto_now_add=True)
 	
 	@classmethod
 	def current_account(cls):

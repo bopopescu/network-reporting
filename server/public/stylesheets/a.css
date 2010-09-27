@@ -265,6 +265,19 @@ table.wide {
   border-spacing: 0
 }
 
+table.rollups {
+  font-size: 18px;
+  width: 100%;
+}
+
+table td.rollup {
+  width: 150px;
+  text-align: center;
+  border: solid 1px #aaa;
+  padding: 15px 0;
+  line-height: 1.4em;
+}
+
 hr {
 	padding: 0;
 	margin: 0;

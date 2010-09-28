@@ -50,7 +50,8 @@ class IndexHandler(RequestHandler):
   def get(self):
     days = SiteStats.lastdays(14)
     
-    campaigns = Campaign.gql("where u = :1 and deleted = :2", users.get_current_user(), False).fetch(100)
+    #campaigns = Campaign.gql("where u = :1 and deleted = :2", users.get_current_user(), False).fetch(100)
+    campaigns = Campaign.gql("where deleted = :1", False).fetch(100)
     for c in campaigns:
       c.all_stats = SiteStats.stats_for_days(c, days)      
       c.stats = reduce(lambda x, y: x+y, c.all_stats, SiteStats())
@@ -89,19 +90,36 @@ class GraphUrlHandler(RequestHandler):
     if type is None:
       type = 'imp'
 
-    campaign = self.request.GET.get("campaign")
-    if campaign is None or campaign == "":
-      campaigns = Campaign.gql("where deleted = :1", False).fetch(100)
+    adgroup_key = self.request.GET.get("adgroup")
+    adgroup = ""
+    if not adgroup is None and not adgroup == "":
+      adgroup = AdGroup.get(adgroup_key)
+      sites = map(lambda x: Site.get(x), adgroup.site_keys)
+      for s in sites:
+        s.all_stats = SiteStats.stats_for_days_with_qualifier(adgroup, s, days)
+        s.stats = reduce(lambda x, y: x+y, s.all_stats, SiteStats())
+
+      # compute rollups to display at the top
+      today = SiteStats.stats_for_day(adgroup, SiteStats.today())
+      if len(sites) > 0:
+        totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[s.all_stats for s in sites])]
+      else:
+        totals = [SiteStats() for d in days]
+
     else:
-      campaigns = [ Campaign.get(campaign) ]
+      campaign = self.request.GET.get("campaign")
+      if campaign is None or campaign == "":
+        campaigns = Campaign.gql("where deleted = :1", False).fetch(100)
+      else:
+        campaigns = [ Campaign.get(campaign) ]
 
-    for c in campaigns:
-      c.all_stats = SiteStats.stats_for_days(c, days)
-      c.stats = reduce(lambda x, y: x+y, c.all_stats, SiteStats())
+      for c in campaigns:
+        c.all_stats = SiteStats.stats_for_days(c, days)
+        c.stats = reduce(lambda x, y: x+y, c.all_stats, SiteStats())
 
-    # compute rollups to display at the top
-    today = SiteStats.rollup_for_day(campaigns, SiteStats.today())
-    totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[c.all_stats for c in campaigns])]
+      # compute rollups to display at the top
+      today = SiteStats.rollup_for_day(campaigns, SiteStats.today())
+      totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[c.all_stats for c in campaigns])]
    
     series = []
     title = ''

@@ -1,13 +1,16 @@
 {% extends 'base.html' %}
       {% block letterhead %}
 <script type="text/javascript">
-function show_graph(elem,type,campaign) {
+function show_graph(elem,type,campaign,adgroup) {
   var chart_url;
   if (!campaign) {
     campaign = ""
   }
+  if (!adgroup) {
+    adgroup = ""
+  }
   new Ajax.Request('{% url advertiser_graph_url %}', { method:'get',
-      parameters: {type: type, campaign: campaign},
+      parameters: {type: type, campaign: campaign, adgroup: adgroup},
       onSuccess: function(transport, json) {
         if (transport.responseText) {
           var response = eval('(' + transport.responseText + ')');

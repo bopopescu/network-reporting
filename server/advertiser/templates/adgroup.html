@@ -17,13 +17,13 @@
 	
 	<table class="rollups">
 		<tr>
-			<td class="rollup"><b>Impressions</b><br/>{{today.impression_count|withsep}}</td>
-			<td class="rollup"><b>Clicks</b><br/>{{today.click_count|withsep}} ({{today.ctr|percentage}})</td>
+			<td class="rollup rollup_selected" onClick="show_graph(this,'imp','','{{adgroup.key}}');"><b>Impressions</b><br/>{{today.impression_count|withsep}}</td>
+			<td class="rollup" onClick="show_graph(this,'clk','','{{adgroup.key}}');"><b>Clicks</b><br/>{{today.click_count|withsep}} ({{today.ctr|percentage}})</td>
 			<td class="rollup"><b>Revenue</b><br/>{{today.revenue|currency}}</td>
 		</tr>
 	</table>
 	
-	<img src="{{chart_url}}" width=780 height=200 style="padding: 5px 0 10px 0;"/>
+	<img id="char_img" src="{{chart_url}}" width=780 height=200 style="padding: 5px 0 10px 0;"/>
 	
 	<h3>Settings</h3>
 	
@@ -77,9 +77,9 @@
 		{% for s in sites %}
 			<tr>
 				<td><a href="/inventory/adunit?id={{s.key}}">{{s.name}}</a></td>
-				<td>{{s.stats.impression_count}}</td>
-				<td>{{s.stats.click_count}} ({{s.stats.ctr|percentage}})</td>
-				<td>{{s.stats.revenue|currency}}</td>
+				<td class="numeric">{{s.stats.impression_count}}</td>
+				<td class="numeric">{{s.stats.click_count}} ({{s.stats.ctr|percentage}})</td>
+				<td class="numeric">{{s.stats.revenue|currency}}</td>
 			</tr>
 		{% empty %}
 			<tr><td>No ad units targeted.</td></tr>

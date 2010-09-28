@@ -21,5 +21,22 @@ def website_splash(request,*args,**kwargs):
   return render_to_response(request, 'splash.html', {'m': request.GET.get("m") or ""})
 
 def website_join(request,*args,**kwargs):
-  send_mail('Mailing list', request.POST.get("email_address"), 'olp@mopub.com', ['beta@mopub.com'], fail_silently=False)  
+  email = request.POST.get("email_address")
+  send_mail('Mailing list', email, 'olp@mopub.com', ['beta@mopub.com'], fail_silently=False)  
+  send_mail('Thank you for your interest in MoPub', '''
+Dear user,
+Thanks again for signing up for MoPub's private beta.  Please help us out by replying to this email
+with some additional information about your apps and your mobile business.  Particularly, we'd be
+interested in the following:
+  
+  - Your apps (names, URLs, etc.) 
+  - Platforms you develop for (iPhone, Android, etc.)
+  - Approximate traffic 
+  - Special advertising needs or ideas
+  
+This will help us prioritize your request in the queue.  
+
+Thanks,
+The MoPub Team
+''', 'MoPub Team <olp@mopub.com>', ['beta@mopub.com'], fail_silently=False)
   return HttpResponseRedirect("/?m=Thanks, we will let you know when an invitation is ready for you.")

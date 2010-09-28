@@ -150,7 +150,7 @@ class StatsCounter(object):
 
   # should be overridden by subclasses
   def process(self, logline_dict):
-    pass
+    raise NotImplementedError
     
   # convenience method to return the right "id" parameter
   def get_id_for_dict(self, d):

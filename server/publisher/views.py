@@ -88,7 +88,7 @@ class AppIndexHandler(RequestHandler):
          max(map(lambda x: x.impression_count, apps)) * 1.5,
          '|'.join(map(lambda x: x["app"].name, total_impressions_by_app[0:2])))
 
-      return render_to_response(self.request,'apps_index.html', 
+      return render_to_response(self.request,'index.html', 
         {'apps': apps,    
          'chart_url': url,
          'bar_chart_url': bar_chart_url,

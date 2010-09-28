@@ -6,14 +6,13 @@
 
 {% block content %}
 	<h3>		
-		Ad Units
+		Apps
 		<div class="toolbar">
-			<a href="{% url publisher_create %}">Add an Ad Unit</a>
+      <button onClick="location.href='{% url publisher_app_create %}'" class="btn"><span><span>+ New App</span></span></button>
 		</div>
 	</h3>
 	<p>
-		<b>Ad Units</b> are used to organize your mobile inventory. Each ad unit should be a single ad slot in your app.<br/>  You can create
-		<b>campaigns</b> targeted to your ad units on a keyword basis.
+		<b>Apps</b> are your individual applications.  You can create <b>Ad Units</b> are used to organize your mobile inventory. Each ad unit should be a single ad slot in your app.<br/> 
 	</p> 
 		
 	<img src="{{chart_url}}" width=580 height=200 style="padding: 5px 0 10px 0;"/>
@@ -22,21 +21,29 @@
 	<table class="wide">
 		<thead>
 			<tr>
-			<th>Name</th>
-			<th class="numeric">Format</th>
+			<th width="50px">App</th>
+			<th>Ad Unit</th>
 			<th class="numeric">Impressions</th>
 			<th class="numeric">Clicks</th>
 			<th class="numeric">CTR</th>
 			</tr>
 		</thead>
-		{% for s in sites %}
+		{% for a in apps %}
+			<tr style="background-color:#eee">
+				<td colspan="2"><a href="{% url publisher_app_show %}?id={{a.key}}"><b>{{a.name}}</b></a> ({{a.app_type}})</td>
+				<td class="numeric"><strong>{{a.impression_count}}</strong></td>
+				<td class="numeric"><strong>{{a.click_count}}</strong></td>
+				<td class="numeric"><strong>{{a.ctr|percentage}}</strong></td>
+			</tr>
+		  {% for s in a.sites %}
 			<tr>
+        <td></td>
 				<td><a href="{% url publisher_show %}?id={{s.key}}">{{s.name}}</a></td>
-				<td class="numeric">{{s.format}}</td>
 				<td class="numeric">{{s.stats.impression_count}}</td>
 				<td class="numeric">{{s.stats.click_count}}</td>
 				<td class="numeric">{{s.stats.ctr|percentage}}</td>
 			</tr>
+		  {% endfor %}
 		{% endfor %}
 	</table>
 	

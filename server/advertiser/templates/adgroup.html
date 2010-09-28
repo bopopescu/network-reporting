@@ -25,8 +25,26 @@
 	
 	<img src="{{chart_url}}" width=780 height=200 style="padding: 5px 0 10px 0;"/>
 	
+	<h3>Settings</h3>
+	
+	<table>
+		<tr><th>Priority level</th>
+			<td class="numeric">
+				{% ifequal adgroup.priority_level 1 %}Sponsorship{% endifequal %}
+				{% ifequal adgroup.priority_level 2 %}Direct{% endifequal %}
+				{% ifequal adgroup.priority_level 3 %}Promotional{% endifequal %}
+				{% ifequal adgroup.priority_level 4 %}Network{% endifequal %}
+			</td></tr>
+			<tr><th>Max Bid</th><td class="numeric">{{adgroup.bid|currency}}</td></tr>
+			<tr><th>Bid strategy</th>
+				<td class="numeric">{% ifequal adgroup.bid_strategy "cpc" %}By click (CPC){% endifequal %}
+					{% ifequal adgroup.bid_strategy "cpm" %}By impression (CPM){% endifequal %}</td></tr>
+			<tr><th>Geo predicates</th><td class="numeric">{% for g in adgroup.geo_predicates %}{{g}}<br/>{% endfor %}</td></tr>
+			<tr><th>Device predicates</th><td class="numeric">{% for g in adgroup.device_predicates %}{{g}}<br/>{% endfor %}</td></tr>
+	</table>
+	
 	<h3>
-		Ad Units
+		Ad Unit Targeting
 	</h3>
 	<table class="wide">
 		{% if adgroup.keywords %}
@@ -50,7 +68,7 @@
 	<table class="wide">
 		{% if sites %}
 			<thead>
-				<th>Placement</th>
+				<th>Name</th>
 				<th width="75px">Impr.</th>
 				<th width="75px">Clicks</th>
 				<th width="75px">Cost</th>

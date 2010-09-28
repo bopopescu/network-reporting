@@ -59,59 +59,113 @@ class AdAuction(object):
     # 3) throw out ad groups that restrict by keywords and do not match the keywords
     # 4) throw out ad groups that do not match device and geo predicates
     ad_groups = AdGroup.gql("where site_keys = :1 and active = :2 and deleted = :3", site.key(), True, False).fetch(AdAuction.MAX_ADGROUPS)
-    logging.debug("ad groups: %s" % ad_groups)
+    logging.info("ad groups: %s" % ad_groups)
     
     # campaign exclusions... budget + time
     ad_groups = filter(lambda a: a.campaign.budget is None or SiteStats.stats_for_day(a.campaign, SiteStats.today()).revenue < a.campaign.budget, ad_groups)
-    logging.debug("removed over budget, now: %s" % ad_groups)
+    logging.info("removed over budget, now: %s" % ad_groups)
     ad_groups = filter(lambda a: a.campaign.active and (a.campaign.start_date >= SiteStats.today() if a.campaign.start_date else True) and (a.campaign.end_date <= SiteStats.today() if a.campaign.end_date else True), ad_groups)
-    logging.debug("removed non running campaigns, now: %s" % ad_groups)
+    logging.info("removed non running campaigns, now: %s" % ad_groups)
     
     # ad group request-based targeting exclusions
     ad_groups = filter(lambda a: len(a.keywords) == 0 or set(keywords).intersection(a.keywords) > set(), ad_groups)
-    logging.debug("removed keyword non-matches, now: %s" % ad_groups)
+    logging.info("removed keyword non-matches, now: %s" % ad_groups)
     ad_groups = filter(lambda a: set(geo_predicates).intersection(a.geo_predicates) > set(), ad_groups)
-    logging.debug("removed geo non-matches, now: %s" % ad_groups)
+    logging.info("removed geo non-matches, now: %s" % ad_groups)
     ad_groups = filter(lambda a: set(device_predicates).intersection(a.device_predicates) > set(), ad_groups)
-    logging.debug("removed device non-matches, now: %s" % ad_groups)
+    logging.info("removed device non-matches, now: %s" % ad_groups)
     
     # TODO: frequency capping and other user / request based randomizations
-    pass
-    
+    udid = kw["udid"]
+    logging.info("udid: %s %s"%(udid,len(ad_groups)))
     # if any ad groups were returned, find the creatives that match the requested format in all candidates
     if len(ad_groups) > 0:
-      creatives = Creative.gql("where ad_group in :1 and format_predicates in :2 and active = :3 and deleted = :4", 
+      all_creatives = Creative.gql("where ad_group in :1 and format_predicates in :2 and active = :3 and deleted = :4", 
         map(lambda x: x.key(), ad_groups), format_predicates, True, False).fetch(AdAuction.MAX_ADGROUPS)
       
-      logging.debug("eligible creatives: %s" % creatives)
-      creatives = [c for c in creatives if (not c.ad_type in exclude_params)]  
-      logging.debug("eligible creatives after exclusions: %s" % creatives)
 
-      if len(creatives) > 0:
+      if len(all_creatives) > 0:
         # for each priority_level, perform an auction among the various creatives 
-        max_priority = max(c.ad_group.priority_level for c in creatives)
+        max_priority = max(c.ad_group.priority_level for c in all_creatives)
         for p in range(max_priority + 1):
-          players = filter(lambda c: c.ad_group.priority_level == p, creatives)
+          players = filter(lambda c: c.ad_group.priority_level == p, all_creatives)
           players.sort(lambda x,y: cmp(y.e_cpm(), x.e_cpm()))
-          winning_ecpm = max(c.e_cpm() for c in players) if len(players) > 0 else 0
-          logging.debug("auction at priority=%d: %s, max eCPM=%.2f" % (p, players, winning_ecpm))
-        
-          # if the winning creative exceeds the ad unit's threshold cpm for the
-          # priority level, then we have a winner
-          if winning_ecpm > site.threshold_cpm(p):
-            # retain all creatives with comparable eCPM and randomize among them
-            winners = filter(lambda x: x.e_cpm() >= winning_ecpm, players)
-            logging.debug('winners %s'%winners)
-            random.shuffle(winners)
-            logging.debug('random winners %s'%winners)
-            
-            # winner
-            winner = winners[0]
-            logging.debug("winning creative = %s" % winner)
-            return winner
           
+          while players:
+            winning_ecpm = max(c.e_cpm() for c in players) if len(players) > 0 else 0
+            logging.info("auction at priority=%d: %s, max eCPM=%.2f" % (p, players, winning_ecpm))
+      
+            # if the winning creative exceeds the ad unit's threshold cpm for the
+            # priority level, then we have a winner
+            if winning_ecpm >= site.threshold_cpm(p):
+              # retain all creatives with comparable eCPM and randomize among them
+              winners = filter(lambda x: x.e_cpm() >= winning_ecpm, players)
+              logging.info("winners: %s",winners)
+              
+              
+              # find out which ad groups are eligible
+              ad_groups = set([c.ad_group for c in winners])
+                            
+              creatives = [c for c in all_creatives if c.ad_group.key() in [a.key() for a in ad_groups]]
+            
+              # exclude according to the exclude parameter must do this after determining adgroups
+              # so that we maintain the correct order for user bucketing
+              logging.info("eligible creatives: %s %s" % (winners,exclude_params))
+              winners = [c for c in winners if not (c.ad_type in exclude_params)]  
+              logging.info("eligible creatives after exclusions: %s" % winners)
+            
+              # calculate the user experiment bucket
+              user_bucket = hash(udid+','.join([str(c.ad_group.key()) for ad_group in ad_groups])) % 100 # user gets assigned a number between 0-99 inclusive
+              user_bucket = 40
+              logging.info("the user bucket is: #%d",user_bucket)
+          
+              # determine in which ad group the user falls into to
+              # otherwise give creatives in the other adgroups a shot
+              # TODO: fix the stagger method how do we get 3 ads all at 100%
+              start_bucket = 0
+              winning_ad_groups = []
+              ad_groups = list(ad_groups)
+              ad_groups.sort(lambda x,y: cmp(x.percent_users,y.percent_users))
+              for ad_group in ad_groups:
+                percent_users = ad_group.percent_users if not (ad_group.percent_users is None) else 100.0
+                if start_bucket <= user_bucket and user_bucket < (start_bucket + percent_users):
+                  winning_ad_groups.append(ad_group)
+                else:
+                  start_bucket += percent_users
+                  start_bucket = start_bucket % 100 
+            
+              # if there is a winning/eligible adgroup find the appropriate creative for it
+              if winning_ad_groups:
+                logging.info("winner ad_groups: %s"%winning_ad_groups)
+              
+                if winning_ad_groups:
+                  winners = [winner for winner in winners if winner.ad_group in winning_ad_groups]
+
+                if winners:
+                  logging.info('winners %s'%winners)
+                  random.shuffle(winners)
+                  logging.debug('random winners %s'%winners)
+          
+                  # winner
+                  winner = winners[0]
+                  logging.debug("winning creative = %s" % winner)
+                  return winner
+                else:
+                  logging.info('taking away some players not in %s'%ad_groups)
+                  logging.info('%s'%players)
+                  players = [c for c in players if not c.ad_group in ad_groups]  
+                  logging.info('%s'%players)
+                    
+                  
+              else:
+                logging.info('taking away some players not in %s'%ad_groups)
+                logging.info('%s'%players)
+                players = [c for c in players if not c.ad_group in ad_groups]  
+                logging.info('%s'%players)
+                
+
     # nothing... failed auction
-    logging.debug("auction failed, returning None")
+    logging.info("auction failed, returning None")
 
   @classmethod
   def geo_predicates_for_rgeocode(c, r):
@@ -160,7 +214,8 @@ class AdHandler(webapp.RequestHandler):
     "300x250": (300, 250, "300x250_as", 3),
     "320x50": (320, 50, "320x50_mb", 1),
     "728x90": (728, 90, "728x90_as", 2),
-    "468x60": (468, 60, "468x60_as", 1)
+    "468x60": (468, 60, "468x60_as", 1),
+    "320x480": (320, 480, "320x480_as", 1),
   }
   
   def get(self):
@@ -195,8 +250,11 @@ class AdHandler(webapp.RequestHandler):
     if str(self.request.headers['User-Agent']) not in CRAWLERS:
       logging.info('OLP ad-request {"request_id": "%s", "remote_addr": "%s", "q": "%s", "user_agent": "%s"}' % (request_id, self.request.remote_addr, self.request.query_string, self.request.headers["User-Agent"]))
 
+    #get udid we should hash it if its not already hashed
+    udid = self.request.get("udid")  
+
     # get winning creative
-    c = AdAuction.run(request=self.request, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, request_id=request_id)
+    c = AdAuction.run(request=self.request, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, udid=udid, request_id=request_id)
     
     # output the request_id and the winning creative_id if an impression happened
     if c:
@@ -206,8 +264,10 @@ class AdHandler(webapp.RequestHandler):
       ad_click_url = "http://www.mopub.com/m/aclk?id=%s&c=%s&req=%s" % (id, c.key(), request_id)
       self.response.headers.add_header("X-Clickthrough", str(ad_click_url))
       
-    # render the creative 
-    self.response.out.write(self.render_creative(c, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, request_id=request_id))
+      # render the creative 
+      self.response.out.write(self.render_creative(c, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, request_id=request_id))
+    else:
+      self.response.set_status(404)
   #
   # Templates
   #
@@ -235,7 +295,7 @@ class AdHandler(webapp.RequestHandler):
                          test: false
                         };
                         </script>
-                        <script type="text/javascript" src="http://mmv.admob.com/static/iphone/iadmob.js"></script>
+                        <script type="text/javascript" src="http://mmv.admob.com/static/iphone/iadmob.js"></script>                        
                         </body></html>"""),
     "html":Template("<html><head></head><body style=\"margin: 0;padding:0;background-color:white\">${html_data}</body></html>"),
   }
@@ -259,10 +319,12 @@ class AdHandler(webapp.RequestHandler):
       
       # indicate to the client the winning creative type, in case it is natively implemented (iad, clear)
       self.response.headers.add_header("X-Adtype", str(c.ad_type))
+      self.response.headers.add_header("X-Backfill", str(c.ad_type))
       
       # render the HTML body
       self.response.out.write(self.TEMPLATES[c.ad_type].safe_substitute(params))
     else:
+      self.response.headers.add_header("X-Adtype", "clear")
       self.response.headers.add_header("X-Backfill", "clear")
     
     # make sure this response is not cached by the client  
@@ -299,10 +361,15 @@ class AdHandler(webapp.RequestHandler):
       return ()
         
 class AdClickHandler(webapp.RequestHandler):
+  # /m/aclk?v=1&udid=26a85bc239152e5fbc221fe5510e6841896dd9f8&q=Hotels:%20Hotel%20Utah%20Saloon%20&id=agltb3B1Yi1pbmNyDAsSBFNpdGUY6ckDDA&r=http://googleads.g.doubleclick.net/aclk?sa=l&ai=BN4FhRH6hTIPcK5TUjQT8o9DTA7qsucAB0vDF6hXAjbcB4KhlEAEYASDgr4IdOABQrJON3ARgyfb4hsijoBmgAbqxif8DsgERYWRzLm1vcHViLWluYy5jb226AQkzMjB4NTBfbWLIAQHaAbwBaHR0cDovL2Fkcy5tb3B1Yi1pbmMuY29tL20vYWQ_dj0xJmY9MzIweDUwJnVkaWQ9MjZhODViYzIzOTE1MmU1ZmJjMjIxZmU1NTEwZTY4NDE4OTZkZDlmOCZsbD0zNy43ODM1NjgsLTEyMi4zOTE3ODcmcT1Ib3RlbHM6JTIwSG90ZWwlMjBVdGFoJTIwU2Fsb29uJTIwJmlkPWFnbHRiM0IxWWkxcGJtTnlEQXNTQkZOcGRHVVk2Y2tEREGAAgGoAwHoA5Ep6AOzAfUDAAAAxA&num=1&sig=AGiWqtx2KR1yHomcTK3f4HJy5kk28bBsNA&client=ca-mb-pub-5592664190023354&adurl=http://www.sanfranciscoluxuryhotels.com/
   def get(self):
     id = self.request.get("id")
     q = self.request.get("q")
-    url = self.request.get("r")
+    
+    # BROKEN
+    # url = self.request.get("r")
+    sz = self.request.query_string
+    url = sz[(sz.rfind("r=") + 2):]
     
     # forward on to the click URL
     self.redirect(url)

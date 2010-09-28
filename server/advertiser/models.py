@@ -30,6 +30,8 @@ class Campaign(db.Model):
 class AdGroup(db.Model):
   campaign = db.ReferenceProperty(Campaign)
   name = db.StringProperty()
+  
+  created = db.DateTimeProperty(auto_now_add=True)
 
   # the priority level at which this ad group should be auctioned
   priority_level = db.IntegerProperty(default=1)
@@ -41,6 +43,10 @@ class AdGroup(db.Model):
   # state of this ad group
   active = db.BooleanProperty(default=True)
   deleted = db.BooleanProperty(default=False)
+  
+  
+  # percent of users to be targetted
+  percent_users = db.FloatProperty(default=100.0)
 
   # all keyword and category bids are tracked here
   # categories use the category:games convention
@@ -114,6 +120,9 @@ class AdGroup(db.Model):
   # platform_name=X
   device_predicates = db.StringListProperty(default=["platform_name=*"])
   
+  def __cmp__(self,other):
+    return self.key().__cmp__(other.key())
+  
   def default_creative(self):
     c = None
     if self.network_type == 'adsense': c = AdSenseCreative(ad_type="adsense", format_predicates=["format=*"])
@@ -176,7 +185,7 @@ class TextCreative(Creative):
 class HtmlCreative(Creative):
   # html ad properties
   html_name = db.StringProperty(required=True, default="Demo HTML Creative")
-  html_data = db.StringProperty(default="<style type=\"text/css\">body {font-size: 12px;font-family:helvetica,arial,sans-serif;margin:0;padding:0;text-align:center} .creative_headline {font-size: 18px;} .creative_promo {color: green;text-decoration: none;}</style><div class=\"creative_headline\">Welcome to mopub!</div><div class=\"creative_promo\">This is a test ad</div><div>You can now set up a new campaign to serve other ads.</div>")
+  html_data = db.TextProperty(default="<style type=\"text/css\">body {font-size: 12px;font-family:helvetica,arial,sans-serif;margin:0;padding:0;text-align:center} .creative_headline {font-size: 18px;} .creative_promo {color: green;text-decoration: none;}</style><div class=\"creative_headline\">Welcome to mopub!</div><div class=\"creative_promo\">This is a test ad</div><div>You can now set up a new campaign to serve other ads.</div>")
 
 class ImageCreative(Creative):
   # image properties

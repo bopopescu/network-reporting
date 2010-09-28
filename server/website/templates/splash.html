@@ -95,22 +95,22 @@
 			  color:#000;
 			  }
 		</style> 
-		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.3/jquery.min.js"></script> 
+		<!--script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.3/jquery.min.js"></script> 
 		<link rel="stylesheet" type="text/css" href="./fancybox/jquery.fancybox.css" media="screen" /> 
 		<script type="text/javascript" src="./fancybox/jquery.fancybox-1.2.4.pack.js"></script> 
 		<script type="text/javascript"> 
 			$(document).ready(function() {
 				$("a.screenshot").fancybox();
 			});
-		</script> 
+		</script--> 
 	</head> 
  
 	<body>		
 		<div style="margin: 150px auto;"> 
 			<div style="text-align: center;"> 
-				<img src="/images/logo_simple.png" width=348 height=93/> 
+				<img src="/images/logo_simple.png" width=348 height=93 alt="MoPub"/> 
 				<p style="font-size: 14px;"> 
-					Control your mobile ads inventory.
+					Control your mobile ad inventory.
 				</p>
 				<ul style="width:150px; margin: 0 auto; "> 
 					<li>Get more users</li><li>  Make more money</li> <li>  Stats that matter  </li>
@@ -119,7 +119,7 @@
 					Enter your email address to be part of our private beta.
 				</p> 
 				<form method="post" action="/splash/join/"> 
-					<input type="text" name="email_address" size=30 style="color:#aaa;" onfocus="this.value='';this.style['color']='#000';" value="Email"/> 
+					<input type="text" name="email_address" size=30 style="color:#aaa;" onfocus="this.value='';this.style['color']='#000';" value="Email"/>
 					<button type="button" class="btn" onclick="form.submit()"><span><span>Request Beta Access</span></span></button> <p>{{m}}</p>
 				</form> 
 			</div> 

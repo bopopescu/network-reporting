@@ -18,6 +18,7 @@ class SiteStats(db.Model):
   request_count = db.IntegerProperty(default=0)
   impression_count = db.IntegerProperty(default=0)
   click_count = db.IntegerProperty(default=0)
+  unique_user_count = db.IntegerProperty(default=0)
 
   # total revenue (cost)
   revenue = db.FloatProperty(default=float(0))
@@ -97,6 +98,14 @@ class SiteStats(db.Model):
     self.click_count += 1
     self.revenue += revenue
     self.put()
+    
+  def add_user(self,u):  
+    if hasattr(self,'unique_user_set'):
+      self.unique_user_set.add(u)
+      self.unique_user_count = len(self.unique_user_set)
+    else:
+      self.unique_user_set = set([u])  
+      self.unique_user_count = 1
     
   def __add__(self, s):
     return SiteStats(site=self.site, 

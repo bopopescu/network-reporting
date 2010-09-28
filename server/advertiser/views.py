@@ -62,12 +62,15 @@ class IndexHandler(RequestHandler):
     
     # make a line graph showing impressions
     series = [s.impression_count for s in totals]
-    chart_url = "http://chart.apis.google.com/chart?cht=lc&chtt=Total+Daily+Impressions&chs=780x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
-      ','.join(map(lambda x: str(x), series)),
-      max(series) * 1.5,
-      max(series) * 1.5,
-      '|'.join(map(lambda x: x.strftime("%m/%d"), days)))
-
+    if series:
+      chart_url = "http://chart.apis.google.com/chart?cht=lc&chtt=Total+Daily+Impressions&chs=780x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
+        ','.join(map(lambda x: str(x), series)),
+        max(series) * 1.5,
+        max(series) * 1.5,
+        '|'.join(map(lambda x: x.strftime("%m/%d"), days)))
+    else:
+      chart_url = None
+        
     return render_to_response(self.request, 
       'advertiser/index.html', 
       {'campaigns':campaigns, 

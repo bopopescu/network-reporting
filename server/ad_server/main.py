@@ -274,27 +274,46 @@ class AdHandler(webapp.RequestHandler):
       self.response.headers.add_header("X-Clickthrough", str(ad_click_url))
       
       # render the creative 
-      self.response.out.write(self.render_creative(c, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, request_id=request_id))
+      self.response.out.write(self.render_creative(c, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, request_id=request_id, v=int(self.request.get('v'))))
     else:
       self.response.set_status(404)
   #
   # Templates
   #
   TEMPLATES = {
-    "adsense": Template("""<html> <head><title>$title</title><script>function finishLoad(){window.location="mopub://finishLoad";} window.onload = function(){finishLoad();} </script></head> <body style="margin: 0;width:${w}px;height:${h}px;" > <script type="text/javascript">window.googleAfmcRequest = {client: '$client',ad_type: 'text_image', output: 'html', channel: '',format: '$adsense_format',oe: 'utf8',color_border: '336699',color_bg: 'FFFFFF',color_link: '0000FF',color_text: '000000',color_url: '008000',};</script> <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_afmc_ads.js"></script>  </body> </html> """),
+    "adsense": Template("""<html>
+                            <head>
+                              <title>$title</title>
+                              $finishLoad
+                            </head>
+                            <body style="margin: 0;width:${w}px;height:${h}px;" >
+                              <script type="text/javascript">window.googleAfmcRequest = {client: '$client',ad_type: 'text_image', output: 'html', channel: '',format: '$adsense_format',oe: 'utf8',color_border: '336699',color_bg: 'FFFFFF',color_link: '0000FF',color_text: '000000',color_url: '008000',};</script> 
+                              <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_afmc_ads.js"></script>  
+                            </body>
+                          </html> """),
     "iAd": Template("iAd"),
     "clear": Template(""),
     "text": Template("""<html>\
-                        <head><style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: ${w}px;height: ${h}px;}.creative_headline {font-size: 14px;}.creative .creative_url a {color: green;text-decoration: none;}</style></head>\
+                        <head>
+                          <style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: ${w}px;height: ${h}px;}.creative_headline {font-size: 14px;}.creative .creative_url a {color: green;text-decoration: none;}
+                          </style>
+                          $finishLoad
+                        </head>\
                         <body style="margin: 0;width:${w}px;height:${h}px;padding:0;">\
                           <div class="creative"><div style="padding: 5px 10px;"><a href="$url" class="creative_headline">$headline</a><br/>$line1 $line2<br/><span class="creative_url"><a href="$url">$display_url</a></span></div></div>\
                         </body> </html> """),
     "image":Template("""<html>\
-                        <head><style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: ${w}px;height: ${h}px;}.creative_headline {font-size: 20px;}.creative .creative_url a {color: green;text-decoration: none;}</style></head>\
+                        <head>
+                          <style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: ${w}px;height: ${h}px;}.creative_headline {font-size: 20px;}.creative .creative_url a {color: green;text-decoration: none;}
+                          </style>
+                          $finishLoad
+                        </head>
                         <body style="margin: 0;width:${w}px;height:${h}px;padding:0;">\
                           <a href="$url"><img src="$image_url" width=$w height=$h/></a>
                         </body> </html> """),
-    "admob": Template("""<html><head><script>function finishLoad(){window.location="mopub://finishLoad";} window.onload = function(){finishLoad();} </script></head><body style="margin: 0;padding:0;">
+    "admob": Template("""<html><head>
+                        $finishLoad
+                        </head><body style="margin: 0;padding:0;">
                         <script type="text/javascript">
                         var admob_vars = {
                          pubid: '$client', // publisher id
@@ -325,6 +344,11 @@ class AdHandler(webapp.RequestHandler):
         params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
       elif c.ad_type == "html":
         params.update({"html_data": kwargs["html_data"]})
+        
+      if kwargs["v"] >= 2:  
+        params.update(finishLoad='<script>function finishLoad(){window.location="mopub://finishLoad";} window.onload = function(){finishLoad();} </script>')
+      else:
+        params.update(finishLoad='')  
       
       # indicate to the client the winning creative type, in case it is natively implemented (iad, clear)
       self.response.headers.add_header("X-Adtype", str(c.ad_type))

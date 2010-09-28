@@ -4,6 +4,23 @@
 
 
 {% block content %}
+<script type="text/javascript">
+function show_graph(elem,type) {
+  var chart_url;
+  new Ajax.Request('graphurl', { method:'get',
+      parameters: {type: type},
+      onSuccess: function(transport, json) {
+        if (transport.responseText) {
+          var response = eval('(' + transport.responseText + ')');
+          $$('td.rollup_selected')[0].removeClassName('rollup_selected');
+          elem.addClassName('rollup_selected');
+          $('chart_img').src = response['chart_url'];
+        }
+      },
+      onFailure: function(){ }
+    });
+}
+</script>
 	<h3>
 		Campaigns
 		<div class="toolbar">
@@ -12,13 +29,13 @@
 	</h3>
 	<table class="rollups">
 		<tr>
-			<td class="rollup"><b>Impressions</b><br/>{{today.impression_count|withsep}}</td>
-			<td class="rollup"><b>Clicks</b><br/>{{today.click_count|withsep}} ({{today.ctr|percentage}})</td>
+			<td class="rollup rollup_selected" onClick="show_graph(this,'imp');"><b>Impressions</b><br/>{{today.impression_count|withsep}}</td>
+			<td class="rollup" onClick="show_graph(this,'clk');"><b>Clicks</b><br/>{{today.click_count|withsep}} ({{today.ctr|percentage}})</td>
 			<td class="rollup"><b>Revenue</b><br/>{{today.revenue|currency}}</td>
 		</tr>
 	</table>
 	
-	<img src="{{chart_url}}" width=780 height=200 style="padding: 5px 0 10px 0;"/>
+	<img id='chart_img' src="{{chart_url}}" width=780 height=200 style="padding: 5px 0 10px 0;"/>
 	
 	<form method="post" action="{% url advertiser_campaign_pause %}">
 		<input type="hidden" name="action"/>
@@ -29,10 +46,10 @@
 			<thead>
 				<th width="25%">Campaign</th>
 				<th>Status</th>
-				<th width="75px">Impr.</th>
-				<th width="75px">Clicks</th>
-				<th width="75px">Revenue</th>
-				<th width="75px">Delivery%</th>
+				<th class="numeric">Impr.</th>
+				<th class="numeric">Clicks</th>
+				<th class="numeric">Revenue</th>
+				<th class="numeric">Delivery%</th>
 			</thead>
 			{% for c in gtee %}
 				<tr>
@@ -65,10 +82,10 @@
 			<thead>
 				<th width="25%">Campaign</th>
 				<th>Status</th>
-				<th width="75px">Impr.</th>
-				<th width="75px">Clicks</th>
-				<th width="75px">Revenue</th>
-				<th width="75px">Delivery%</th>
+				<th class="numeric">Impr.</th>
+				<th class="numeric">Clicks</th>
+				<th class="numeric">Revenue</th>
+				<th class="numeric">Delivery%</th>
 			</thead>
 			{% for c in promo %}
 				<tr>
@@ -101,10 +118,10 @@
 			<thead>
 				<th width="25%">Campaign</th>
 				<th>Status</th>
-				<th width="75px">Req.</th>
-				<th width="75px">Impr.</th>
-				<th width="75px">Clicks</th>
-				<th width="75px">Revenue</th>
+				<th class="numeric">Req.</th>
+				<th class="numeric">Impr.</th>
+				<th class="numeric">Clicks</th>
+				<th class="numeric">Revenue</th>
 			</thead>
 			{% for c in network %}
 				<tr>

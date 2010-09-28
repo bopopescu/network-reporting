@@ -242,6 +242,12 @@ th {
 	font-weight: normal;
 }
 
+th.numeric {
+  width: 75px;
+  text-align: right;
+  padding: 0
+}
+
 thead tr th {
 	border-bottom: 1px solid #aaa;
 	font-style: italic;
@@ -274,12 +280,20 @@ table.rollups {
   width: 100%;
 }
 
-table td.rollup {
+table td.rollup, table td.rollup_selected {
   width: 150px;
   text-align: center;
   border: solid 1px #aaa;
   padding: 15px 0;
   line-height: 1.4em;
+}
+
+table td.rollup_selected {
+  background-color: #ddd;
+}
+
+table td.rollup:hover {
+  background-color: #bbb;
 }
 
 hr {

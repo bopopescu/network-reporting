@@ -50,9 +50,9 @@
 		{% if adgroup.keywords %}
 			<thead>
 				<th>Keyword</th>
-				<th width="75px">Impr.</th>
-				<th width="75px">Clicks</th>
-				<th width="75px">Cost</th>
+				<th class="numeric">Impr.</th>
+				<th class="numeric">Clicks</th>
+				<th class="numeric">Cost</th>
 			</thead>
 		{% endif %}
 		{% for k in keywords %}
@@ -69,9 +69,9 @@
 		{% if sites %}
 			<thead>
 				<th>Name</th>
-				<th width="75px">Impr.</th>
-				<th width="75px">Clicks</th>
-				<th width="75px">Cost</th>
+				<th class="numeric">Impr.</th>
+				<th class="numeric">Clicks</th>
+				<th class="numeric">Cost</th>
 			</thead>
 		{% endif %}
 		{% for s in sites %}
@@ -141,9 +141,9 @@
 				<th></th>
 				<th>Creative</th>
 				<th>Status</th>
-				<th width="75px">Impr.</th>
-				<th width="75px">Clicks</th>
-				<th width="75px">Cost</th>
+				<th class="numeric">Impr.</th>
+				<th class="numeric">Clicks</th>
+				<th class="numeric">Cost</th>
 			</thead>
 		{% endif %}
 		{% for c in creatives %}

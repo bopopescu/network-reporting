@@ -14,12 +14,36 @@ from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
 from common.ragendja.template import render_to_response, JSONResponse
 
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMessage
 
 def website_splash(request,*args,**kwargs):
   logging.info("hi")
   return render_to_response(request, 'splash.html', {'m': request.GET.get("m") or ""})
 
 def website_join(request,*args,**kwargs):
-  send_mail('Mailing list', request.POST.get("email_address"), 'olp@mopub.com', ['beta@mopub.com'], fail_silently=False)  
+  email = request.POST.get("email_address")
+  
+  # send a note to beta@mopub.com with the guy's signup
+  send_mail('Mailing list', email, 'olp@mopub.com', ['beta@mopub.com'], fail_silently=False)  
+  
+  # send a reply
+  msg = EmailMessage('Thank you for your interest in MoPub', '''Hello from MoPub!
+
+Thanks again for signing up for MoPub's private beta.  We are working hard to make mobile
+ads easier and more profitable for you so you can focus on your apps.
+
+Please help us out by replying to this email with some additional information about what you
+are working on.  Particularly, we'd be interested in the following:
+  
+  - Your apps (names, URLs, etc.) 
+  - Platforms you develop for (iPhone, Android, etc.)
+  - Approximate traffic 
+  - Special advertising needs or ideas
+  
+This will help us prioritize your beta request. 
+
+Thanks,
+The MoPub Team
+''', 'MoPub Team <olp@mopub.com>', [email], headers = {'Reply-To': 'beta@mopub.com'})
+  msg.send(fail_silently=False)
   return HttpResponseRedirect("/?m=Thanks, we will let you know when an invitation is ready for you.")

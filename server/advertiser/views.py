@@ -50,8 +50,8 @@ class IndexHandler(RequestHandler):
   def get(self):
     days = SiteStats.lastdays(14)
     
-    #campaigns = Campaign.gql("where u = :1 and deleted = :2", users.get_current_user(), False).fetch(100)
-    campaigns = Campaign.gql("where deleted = :1", False).fetch(100)
+    campaigns = Campaign.gql("where u = :1 and deleted = :2", users.get_current_user(), False).fetch(100)
+    #campaigns = Campaign.gql("where deleted = :1", False).fetch(100)
     for c in campaigns:
       c.all_stats = SiteStats.stats_for_days(c, days)      
       c.stats = reduce(lambda x, y: x+y, c.all_stats, SiteStats())

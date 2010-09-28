@@ -12,13 +12,13 @@
 	</h3>
 	<table class="rollups">
 		<tr>
-			<td class="rollup rollup_selected" onClick="show_graph(this,'imp');"><b>Impressions</b><br/>{{today.impression_count|withsep}}</td>
-			<td class="rollup" onClick="show_graph(this,'clk');"><b>Clicks</b><br/>{{today.click_count|withsep}} ({{today.ctr|percentage}})</td>
+			<td class="rollup rollup_selected" onClick="show_graph_imp(this);"><b>Impressions</b><br/>{{today.impression_count|withsep}}</td>
+			<td class="rollup" onClick="show_graph_clk(this);"><b>Clicks</b><br/>{{today.click_count|withsep}} ({{today.ctr|percentage}})</td>
 			<td class="rollup"><b>Revenue</b><br/>{{today.revenue|currency}}</td>
 		</tr>
 	</table>
 	
-	<img id='chart_img' src="{{chart_url}}" width=780 height=200 style="padding: 5px 0 10px 0;"/>
+	<img id='chart_img' src="{{chart_url_imp}}" width=780 height=200 style="padding: 5px 0 10px 0;"/>
 	
 	<form method="post" action="{% url advertiser_campaign_pause %}">
 		<input type="hidden" name="action"/>

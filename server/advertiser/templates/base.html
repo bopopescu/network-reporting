@@ -1,26 +1,20 @@
 {% extends 'base.html' %}
       {% block letterhead %}
 <script type="text/javascript">
-function show_graph(elem,type,campaign,adgroup) {
-  var chart_url;
-  if (!campaign) {
-    campaign = ""
-  }
-  if (!adgroup) {
-    adgroup = ""
-  }
-  new Ajax.Request('{% url advertiser_graph_url %}', { method:'get',
-      parameters: {type: type, campaign: campaign, adgroup: adgroup},
-      onSuccess: function(transport, json) {
-        if (transport.responseText) {
-          var response = eval('(' + transport.responseText + ')');
-          $$('td.rollup_selected')[0].removeClassName('rollup_selected');
-          elem.addClassName('rollup_selected');
-          $('chart_img').src = response['chart_url'];
-        }
-      },
-      onFailure: function(){ }
-    });
+var chart_url_imp = "{{chart_url_imp|safe}}"
+var chart_url_clk = "{{chart_url_clk|safe}}"
+function highlight_elem(elem) {
+  $$('td.rollup_selected')[0].removeClassName('rollup_selected');
+  elem.addClassName('rollup_selected');
+}
+
+function show_graph_clk(elem) {
+  $('chart_img').src = chart_url_clk;
+  highlight_elem(elem);
+}
+function show_graph_imp(elem) {
+  $('chart_img').src = chart_url_imp;
+  highlight_elem(elem);
 }
 </script>
         <div id="header">

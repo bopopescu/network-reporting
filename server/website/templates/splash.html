@@ -10,6 +10,10 @@
 				font-size: 12px;
 				background-color: #fff;
 			}
+			ul li {
+				margin: 8px 0;
+				text-align: left;
+			}
 			
 			/* Start custom button CSS here
 			---------------------------------------- */
@@ -106,15 +110,17 @@
 			<div style="text-align: center;"> 
 				<img src="/images/logo_simple.png" width=348 height=93/> 
 				<p style="font-size: 14px;"> 
-					Control your mobile ads inventory. <br/> Get more users.  Make more money.  Stats that matter.  
-					
-				</p> 
+					Control your mobile ads inventory.
+				</p>
+				<ul style="width:150px; margin: 0 auto; "> 
+					<li>Get more users</li><li>  Make more money</li> <li>  Stats that matter  </li>
+				</ul> 
 				<p style="margin-top: 80px;"> 
 					Enter your email address to be part of our private beta.
 				</p> 
 				<form method="post" action="/splash/join/"> 
 					<input type="text" name="email_address" size=30 style="color:#aaa;" onfocus="this.value='';this.style['color']='#000';" value="Email"/> 
-					<button type="button" class="btn" onclick="form.submit()"><span><span>Join Beta List</span></span></button> <p>{{m}}</p>
+					<button type="button" class="btn" onclick="form.submit()"><span><span>Request Beta Access</span></span></button> <p>{{m}}</p>
 				</form> 
 			</div> 
 			

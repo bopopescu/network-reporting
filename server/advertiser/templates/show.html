@@ -30,8 +30,9 @@
 		</div>
 	</h3>
 	
-	<table class="wide">
-		<form method="post" action="{% url advertiser_bid_delete %}">
+	<form method="post" action="{% url advertiser_bid_pause %}">
+		<input type="hidden" name="action"/>
+		<table class="wide">
 			{% if bids %}
 				<thead>
 					<th></th>
@@ -86,13 +87,12 @@
 					<td></td>
 				</tr>
 			{% endif %}
-				<tr>
-					<td colspan=8>
-						<p></p><input type='submit' name='delete' value='Delete Ad Groups'/>
-					</td>
-				</tr>
-		</form>
-	</table>
-	
+		</table>
+		<p>
+			<button type="button" class="btn" onclick="form.action.value='pause'; form.submit();"><span><span>Pause</span></span></button>&nbsp;&nbsp;
+			<button type="button" class="btn" onclick="form.action.value='resume'; form.submit();"><span><span>Resume</span></span></button>&nbsp;&nbsp;
+			<button type="button" class="btn" onclick="form.action.value='delete'; form.submit();"><span><span>Delete</span></span></button>
+		</p>		
+	</form>
 	
 {% endblock %}

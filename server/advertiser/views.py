@@ -196,30 +196,27 @@ def campaign_edit(request,*args,**kwargs):
 
 class PauseHandler(RequestHandler):
   def post(self):
-    c = Campaign.get(self.request.POST.get('id',self.request.GET.get('id')))
-    if c != None and c.u == users.get_current_user():
-      c.active = not c.active
-      c.deleted = False
-      c.put()
-      return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':c.key()}))
+    action = self.request.POST.get("action", "pause")
+    logging.info(action)
+    for id in self.request.POST.getlist('id') or []:
+      c = Campaign.get(id)
+      logging.info(c)
+      if c != None and c.u == users.get_current_user():
+        if action == "pause":
+          c.active = False
+          c.deleted = False
+        elif action == "resume":
+          c.active = True
+          c.deleted = False
+        elif action == "delete":
+          c.active = False
+          c.deleted = True
+        c.put()
+    return HttpResponseRedirect(reverse('advertiser_campaign',kwargs={}))
   
 @whitelist_login_required
 def campaign_pause(request,*args,**kwargs):
   return PauseHandler()(request,*args,**kwargs)
-  
-class DeleteHandler(RequestHandler):
-  def post(self):
-    c = Campaign.get(self.request.GET.get('id'))
-    if c != None and c.u == users.get_current_user():
-      c.active = False
-      c.deleted = True
-      c.put()
-      return HttpResponseRedirect(reverse('advertiser_campaign'))
-
-  
-@whitelist_login_required
-def campaign_delete(request,*args,**kwargs):
-  return DeleteHandler()(request,*args,**kwargs)  
   
 class ShowAdGroupHandler(RequestHandler):
   def __call__(self,request,adgroup_key):
@@ -326,14 +323,23 @@ def campaign_adgroup_edit(request,*args,**kwargs):
 
 class PauseBidHandler(RequestHandler):
   def post(self):
-    for id in self.request.POST.getlist('id'):
-      b = AdGroup.get(id)
-      logging.info(b)
-      if b != None and b.campaign.u == users.get_current_user():
-        b.active = not b.active
-        b.deleted = False
-        b.put()
-    return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':b.key()}))
+    action = self.request.POST.get("action", "pause")
+    logging.info(action)
+    for id in self.request.POST.getlist('id') or []:
+      c = AdGroup.get(id)
+      logging.info(c)
+      if c != None and c.campaign.u == users.get_current_user():
+        if action == "pause":
+          c.active = False
+          c.deleted = False
+        elif action == "resume":
+          c.active = True
+          c.deleted = False
+        elif action == "delete":
+          c.active = False
+          c.deleted = True
+        c.put()
+    return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':c.campaign.key()}))
 
 
 @whitelist_login_required

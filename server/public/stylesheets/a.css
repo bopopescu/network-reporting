@@ -271,6 +271,15 @@ table.wide {
   border-spacing: 0
 }
 
+table.wide tr.highlighted {
+  background-color:#eee;
+}
+
+table.wide tr.highlighted td {
+  border-bottom: solid 1px #ccc;
+  border-top: solid 1px #ccc;
+}
+
 table.wide tr td {
   padding: 6px 0;
 }

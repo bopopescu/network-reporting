@@ -29,7 +29,7 @@
 			</tr>
 		</thead>
 		{% for a in apps %}
-			<tr style="background-color:#eee">
+			<tr class="highlighted">
 				<td colspan="2"><a href="{% url publisher_app_show %}?id={{a.key}}"><b>{{a.name}}</b></a> ({{a.app_type}})</td>
 				<td class="numeric"><strong>{{a.impression_count}}</strong></td>
 				<td class="numeric"><strong>{{a.click_count}}</strong></td>

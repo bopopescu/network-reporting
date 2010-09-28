@@ -38,6 +38,16 @@
 			{% endifequal %}
 			{% ifequal c.campaign_type "promo" %}
 				<input type="hidden" name="priority_level" value="3"/>
+				<tr><th>Max Bid</th><td><input type='text' name="bid" placeholder="0.50" size="8"/> USD</td></tr>
+				<tr>
+					<th>Bidding Strategy</th>
+					<td><select name="bid_strategy">
+								<option value="cpm">By impression (CPM)</option>
+								<option value="cpc">By click (CPC)</option>
+								<!--><option value="cpa">By conversion (CPA)</option>-->
+							</select>
+					</td>
+				</tr>
 			{% endifequal %}
 			{% ifequal c.campaign_type "network" %}
 				<input type="hidden" name="priority_level" value="4"/>
@@ -49,6 +59,8 @@
 							<option value="custom">Custom</option>
 						</td>
 					</tr>
+					<tr><th>Network eCPM</th><td><input type='text' name="bid" placeholder="1.00" size="8"/> USD</td></tr>
+					<input type="hidden" name="bid_strategy" value="cpm"/>
 			{% endifequal %}
 			
 			<tr><th>Ad Units</th>

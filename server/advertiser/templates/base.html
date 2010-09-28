@@ -1,5 +1,22 @@
 {% extends 'base.html' %}
       {% block letterhead %}
+<script type="text/javascript">
+var chart_url_imp = "{{chart_url_imp|safe}}"
+var chart_url_clk = "{{chart_url_clk|safe}}"
+function highlight_elem(elem) {
+  $$('td.rollup_selected')[0].removeClassName('rollup_selected');
+  elem.addClassName('rollup_selected');
+}
+
+function show_graph_clk(elem) {
+  $('chart_img').src = chart_url_clk;
+  highlight_elem(elem);
+}
+function show_graph_imp(elem) {
+  $('chart_img').src = chart_url_imp;
+  highlight_elem(elem);
+}
+</script>
         <div id="header">
           <a href="/main"><img src="/images/logo_header.png" width=60 height=16/></a>
           <span style="color: #aaa; padding: 15px 0 0 10px;">

@@ -38,7 +38,8 @@ class RequestHandler(object):
         pass
         
 def gen_graph_url(series, days, title):
-  chart_url = "http://chart.apis.google.com/chart?cht=lc&chtt=Total+Daily+Impressions&chs=780x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
+  chart_url = "http://chart.apis.google.com/chart?cht=lc&chtt=%s&chs=780x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
+    title,
     ','.join(map(lambda x: str(x), series)),
     max(series) * 1.5,
     max(series) * 1.5,
@@ -61,21 +62,19 @@ class IndexHandler(RequestHandler):
     totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[c.all_stats for c in campaigns])]
     
     # make a line graph showing impressions
-    series = [s.impression_count for s in totals]
-    if series:
-      chart_url = "http://chart.apis.google.com/chart?cht=lc&chtt=Total+Daily+Impressions&chs=780x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
-        ','.join(map(lambda x: str(x), series)),
-        max(series) * 1.5,
-        max(series) * 1.5,
-        '|'.join(map(lambda x: x.strftime("%m/%d"), days)))
-    else:
-      chart_url = None
-        
+    impressions = [s.impression_count for s in totals]
+    chart_url_imp = gen_graph_url(impressions, days, "Total+Daily+Impressions")
+
+    # make a line graph showing clicks
+    clicks = [s.click_count for s in totals]
+    chart_url_clk = gen_graph_url(clicks, days, "Total+Daily+Clicks")
+
     return render_to_response(self.request, 
       'advertiser/index.html', 
       {'campaigns':campaigns, 
        'today': today,
-       'chart_url': chart_url,
+       'chart_url_imp': chart_url_imp,
+       'chart_url_clk': chart_url_clk,
         'gtee': filter(lambda x: x.campaign_type in ['gtee'], campaigns),
         'promo': filter(lambda x: x.campaign_type in ['promo'], campaigns),
         'network': filter(lambda x: x.campaign_type in ['network'], campaigns), })
@@ -83,49 +82,6 @@ class IndexHandler(RequestHandler):
 @whitelist_login_required     
 def index(request,*args,**kwargs):
     return IndexHandler()(request,*args,**kwargs)     
-
-class GraphUrlHandler(RequestHandler):
-  def get(self):
-    type = self.request.GET.get("type")
-    if type is None:
-      type = 'imp'
-
-    days = SiteStats.lastdays(14)
-    campaigns = Campaign.gql("where deleted = :1", False).fetch(100)
-    for c in campaigns:
-      c.all_stats = SiteStats.stats_for_days(c, days)
-      c.stats = reduce(lambda x, y: x+y, c.all_stats, SiteStats())
-
-    # compute rollups to display at the top
-    today = SiteStats.rollup_for_day(campaigns, SiteStats.today())
-    totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[c.all_stats for c in campaigns])]
-   
-    series = []
-    title = ''
-    if type == 'imp':
-    # make a line graph showing impressions
-      series = [s.impression_count for s in totals]
-      title = "Total+Daily+Impressions"
-    #elif type == 'clk':
-    else:
-    # make a line graph showing clicks
-      series = [s.click_count for s in totals]
-      title = "Total+Daily+Clicks"
-
-    series.reverse()
-    chart_url = "http://chart.apis.google.com/chart?cht=lc&chtt=%s&chs=780x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
-      title,
-      ','.join(map(lambda x: str(x), series)),
-      max(series) * 1.5,
-      max(series) * 1.5,
-      '|'.join(map(lambda x: x.strftime("%m/%d"), days)))
-
-    return HttpResponse('{"chart_url": "%s"}' % chart_url, content_type="text/javascript")
-
-
-@whitelist_login_required     
-def graph_url(request,*args,**kwargs):
-    return GraphUrlHandler()(request,*args,**kwargs)     
 
 class CreateHandler(RequestHandler):
   def get(self):
@@ -211,19 +167,20 @@ class ShowHandler(RequestHandler):
       totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[b.all_stats for b in bids])]
 
       # make a line graph showing impressions
-      series = [s.impression_count for s in totals]
-      chart_url = "http://chart.apis.google.com/chart?cht=lc&chtt=Total+Daily+Impressions&chs=780x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
-        ','.join(map(lambda x: str(x), series)),
-        max(series) * 1.5,
-        max(series) * 1.5,
-        '|'.join(map(lambda x: x.strftime("%m/%d"), days)))
+      impressions = [s.impression_count for s in totals]
+      chart_url_imp = gen_graph_url(impressions, days, "Total+Daily+Impressions")
+
+      # make a line graph showing clicks
+      clicks = [s.click_count for s in totals]
+      chart_url_clk = gen_graph_url(clicks, days, "Total+Daily+Clicks")
 
       # write response
       return render_to_response(self.request,'advertiser/show.html', 
                                             {'campaign':campaign, 
                                             'bids': bids,
                                             'today': today,
-                                            'chart_url': chart_url,
+                                            'chart_url_imp': chart_url_imp,
+                                            'chart_url_clk': chart_url_clk,
                                             'user':users.get_current_user()})
 
 @whitelist_login_required     
@@ -303,20 +260,21 @@ class ShowAdGroupHandler(RequestHandler):
       totals = [SiteStats() for d in days]
 
     # make a line graph showing impressions
-    series = [s.impression_count for s in totals]
-    chart_url = "http://chart.apis.google.com/chart?cht=lc&chtt=Total+Daily+Impressions&chs=780x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
-      ','.join(map(lambda x: str(x), series)),
-      max(series) * 1.5,
-      max(series) * 1.5,
-      '|'.join(map(lambda x: x.strftime("%m/%d"), days)))
-    
+    impressions = [s.impression_count for s in totals]
+    chart_url_imp = gen_graph_url(impressions, days, "Total+Daily+Impressions")
+
+    # make a line graph showing clicks
+    clicks = [s.click_count for s in totals]
+    chart_url_clk = gen_graph_url(clicks, days, "Total+Daily+Clicks")
+
     return render_to_response(self.request,'advertiser/adgroup.html', 
                               {'campaign': adgroup.campaign,
                               'adgroup': adgroup, 
                               'creatives': creatives,
                               'today': today,
                               'totals': totals,
-                              'chart_url': chart_url,
+                              'chart_url_imp': chart_url_imp,
+                              'chart_url_clk': chart_url_clk,
                               'sites': sites})
     
 @whitelist_login_required   

@@ -221,28 +221,6 @@ class DeleteHandler(RequestHandler):
 def campaign_delete(request,*args,**kwargs):
   return DeleteHandler()(request,*args,**kwargs)  
   
-  
-class RemoveBidHandler(RequestHandler):
-  def post(self):
-    for id in self.request.get_all('id') or []:
-      b = AdGroup.get(id)
-      logging.info(b)
-      if b != None and b.campaign.u == users.get_current_user():
-        b.deleted = True
-        b.put()
-        return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':b.campaign.key()}))
-
-class PauseBidHandler(RequestHandler):
-  def post(self):
-    for id in self.request.POST.getlist('id'):
-      b = AdGroup.get(id)
-      logging.info(b)
-      if b != None and b.campaign.u == users.get_current_user():
-        b.active = not b.active
-        b.deleted = False
-        b.put()
-        return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':b.key()}))
-
 class ShowAdGroupHandler(RequestHandler):
   def __call__(self,request,adgroup_key):
     self.params = request.POST or request.GET

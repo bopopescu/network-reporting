@@ -23,6 +23,18 @@
 	
 	<img src="{{chart_url}}" width=780 height=200 style="padding: 5px 0 10px 0;"/>
 	
+	<h3>Settings</h3>
+	
+	<table>
+		<tr><th>Priority level</th>
+			<td class="numeric">
+				{% ifequal campaign.campaign_type "gtee" %}Guaranteed{% endifequal %}
+				{% ifequal campaign.campaign_type "promo" %}Promotional{% endifequal %}
+				{% ifequal campaign.campaign_type "network" %}Network{% endifequal %}
+			</td></tr>
+			<tr><th>Budget</th><td class="numeric">{{campaign.budget|currency}}</td></tr>
+	</table>
+	
 	<h3>
 		Ad Groups
 		<div class="toolbar">

@@ -242,7 +242,7 @@ class ShowAdGroupHandler(RequestHandler):
       s.stats = reduce(lambda x, y: x+y, s.all_stats, SiteStats())
 
     # compute rollups to display at the top
-    today = SiteStats.rollup_for_day(sites, SiteStats.today())
+    today = SiteStats.stats_for_day(adgroup, SiteStats.today())
     if len(sites) > 0:
       totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[s.all_stats for s in sites])]
     else:

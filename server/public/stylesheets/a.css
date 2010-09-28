@@ -242,6 +242,12 @@ th {
 	font-weight: normal;
 }
 
+th.numeric {
+  width: 75px;
+  text-align: right;
+  padding: 0
+}
+
 thead tr th {
 	border-bottom: 1px solid #aaa;
 	font-style: italic;

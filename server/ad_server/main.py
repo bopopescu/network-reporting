@@ -14,7 +14,7 @@ import base64, binascii
 from django.utils import simplejson
 
 from string import Template
-from urllib import urlencode
+from urllib import urlencode, unquote
 
 from google.appengine.ext.webapp import template
 from google.appengine.api import users
@@ -267,7 +267,7 @@ class AdHandler(webapp.RequestHandler):
       # render the creative 
       self.response.out.write(self.render_creative(c, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, request_id=request_id))
     else:
-      self.response.set_status(404)
+      self.response.out.write("")
   #
   # Templates
   #
@@ -370,12 +370,13 @@ class AdClickHandler(webapp.RequestHandler):
     # url = self.request.get("r")
     sz = self.request.query_string
     url = sz[(sz.rfind("r=") + 2):]
+    url = unquote(url)
     
     # forward on to the click URL
     self.redirect(url)
 
 def main():
-  application = webapp.WSGIApplication([('/m/ad', AdHandler), ('/m/aclk', AdClickHandler)], debug=False)
+  application = webapp.WSGIApplication([('/m/ad', AdHandler), ('/m/aclk', AdClickHandler)], debug=True)
   wsgiref.handlers.CGIHandler().run(application)
 
 # webapp.template.register_template_library('filters')

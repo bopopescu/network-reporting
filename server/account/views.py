@@ -74,7 +74,7 @@ def test(request,*args,**kwargs):
   			function webviewDidAppear(){var img = new Image(); img.src="/hellothereimopening/"} 
         function showImage(){var img = document.createElement("img"); img.setAttribute('src','/images/yelp.png'); document.body.appendChild(img);}
         setTimeout("showImage()",100);
-  			function close(){window.location = "mopub://done"};
+  			function close(){window.location = "mopub://close"};
   			//setTimeout("close()",10000);
   		</script>
   	</body>
@@ -95,7 +95,7 @@ def test2(request,*args,**kwargs):
   			function webviewDidClose(){var img = new Image(); img.src="/hellothereimclosing/"} 
   			function webviewDidAppear(){var img = new Image(); img.src="/hellothereimopening/"} 
   			function close(){window.location="mopub://finishLoad?query=imthequery";} 
-  			setTimeout("close()",5000);
+  			setTimeout("finish()",5000);
 
   			function showImage(){var img = document.createElement("img"); img.setAttribute('src','/images/yelp.png'); document.body.appendChild(img);}
   			setTimeout("showImage()",3000);

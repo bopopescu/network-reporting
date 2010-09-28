@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# !/usr/bin/env python
 import wsgiref.handlers
 import cgi
 import logging
@@ -377,6 +377,7 @@ class AdClickHandler(webapp.RequestHandler):
     q = self.request.get("q")    
     # BROKEN
     url = self.request.get("r")
+
     
     # forward on to the click URL
     self.redirect(url)

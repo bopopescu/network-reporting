@@ -285,13 +285,7 @@ class AdHandler(webapp.RequestHandler):
                         <body style="margin: 0;width:${w}px;height:${h}px;padding:0;">\
                           <a href="$url"><img src="$image_url" width=$w height=$h/></a>
                         </body> </html> """),
-    "admob": Template("""<html>
-                        <head>
-                          <title>$title</title>                          
-                        </head>
-                        
-                        <!-- <body style="margin: 0;width:${w}px;height:${h}px;padding:0;"> -->
-                        <body style="margin: 0;padding:0;">
+    "admob": Template("""<html><head></head><body style="margin: 0;padding:0;">
                         <script type="text/javascript">
                         var admob_vars = {
                          pubid: '$client', // publisher id
@@ -303,7 +297,7 @@ class AdHandler(webapp.RequestHandler):
                         </script>
                         <script type="text/javascript" src="http://mmv.admob.com/static/iphone/iadmob.js"></script>                        
                         </body></html>"""),
-    "html":Template("<html><head></head><body style=\"margin: 0;padding:0;\">${html_data}</body></html>"),
+    "html":Template("<html><head></head><body style=\"margin: 0;padding:0;background-color:white\">${html_data}</body></html>"),
   }
   def render_creative(self, c, **kwargs):
     if c:

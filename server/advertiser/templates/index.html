@@ -7,133 +7,133 @@
 	<h3>
 		Campaigns
 		<div class="toolbar">
-			<select><option>All Apps</option></select>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 			<button type="button" class="btn"><a href="{% url advertiser_campaign_create %}"><span><span>Add Campaign</span></span></a></button>
 		</div>
 	</h3>
-	<p>
-		<b>Campaigns</b> are used to set budgets and start and end date for mobile ads.<br/>
-		<b>Ad Groups</b> match targeting criteria with ads that are targeted to those users.
-	</p>
-	
-	<h3>Today's Stats</h3>
 	<table class="rollups">
 		<tr>
-			<td class="rollup"><b>Impressions</b><br/>{{today.impression_count}}</td>
-			<td class="rollup"><b>Clicks</b><br/>{{today.click_count}} ({{today.ctr|percentage}})</td>
+			<td class="rollup"><b>Impressions</b><br/>{{today.impression_count|withsep}}</td>
+			<td class="rollup"><b>Clicks</b><br/>{{today.click_count|withsep}} ({{today.ctr|percentage}})</td>
 			<td class="rollup"><b>Revenue</b><br/>{{today.revenue|currency}}</td>
 		</tr>
 	</table>
 	
-	<h4>
-		Guaranteed
-	</h4>
-	<table class="wide">
-		<thead>
-			<th width="25%">Campaign</th>
-			<th>Status</th>
-			<th width="75px">Impr.</th>
-			<th width="75px">Clicks</th>
-			<th width="75px">Revenue</th>
-			<th width="75px">Delivery%</th>
-		</thead>
-		{% for c in gtee %}
-			<tr>
-				<td><a href="{% url advertiser_campaign_show campaign_key=c.key%}">{{c.name}}</a></td>
-				<td>
-					<b>
-						{% if campaign.deleted %}
-							Deleted
-						{% endif %}
-						{% if campaign.active and not campaign.deleted %}
-							Active
-						{% endif %}
-						{% if not campaign.active and not campaign.deleted %}
-							Paused
-						{% endif %}
-					</b>
-				</td>
-				<td class="numeric">{{c.stats.impression_count}}</td>
-				<td class="numeric">{{c.stats.click_count}} ({{c.stats.ctr|percentage}})
-				<td class="numeric">{{c.stats.revenue|currency}}</td>
-				<td class="numeric">{{c.delivery|percentage}}</td>
-			</tr>
-		{% empty %}
-			<tr><td>Nothing</td></tr>
-		{% endfor %}
-	</table>
+	<img src="{{chart_url}}" width=780 height=200 style="padding: 5px 0 10px 0;"/>
 	
-	<h4>
-		Promotional
-	</h4>
-	<table class="wide">
-		<thead>
-			<th width="25%">Campaign</th>
-			<th>Status</th>
-			<th width="75px">Impr.</th>
-			<th width="75px">Clicks</th>
-			<th width="75px">Revenue</th>
-			<th width="75px">Delivery%</th>
-		</thead>
-		{% for c in promo %}
-			<tr>
-				<td><a href="{% url advertiser_campaign_show campaign_key=c.key%}">{{c.name}}</a></td>
-				<td>{{c.budget|currency}}</td>
-				<td>
-					<b>
-						{% if campaign.deleted %}
-							Deleted
+	<form method="post" action="{% url advertiser_campaign_pause %}">
+		<input type="hidden" name="action"/>
+		<h4>
+			Guaranteed
+		</h4>
+		<table class="wide">
+			<thead>
+				<th width="25%">Campaign</th>
+				<th>Status</th>
+				<th width="75px">Impr.</th>
+				<th width="75px">Clicks</th>
+				<th width="75px">Revenue</th>
+				<th width="75px">Delivery%</th>
+			</thead>
+			{% for c in gtee %}
+				<tr>
+					<td><input type="checkbox" name="id" value="{{c.key}}"/> <a href="{% url advertiser_campaign_show campaign_key=c.key%}">{{c.name}}</a></td>
+					<td>
+						{% if c.deleted %}
+							<img src="/images/deleted.gif" width=9 height=9/>
 						{% endif %}
-						{% if campaign.active and not campaign.deleted %}
-							Active
+						{% if c.active and not c.deleted %}
+							<img src="/images/active.gif" width=9 height=9/>
 						{% endif %}
-						{% if not campaign.active and not campaign.deleted %}
-							Paused
+						{% if not c.active and not c.deleted %}
+							<img src="/images/paused.gif" width=9 height=9/>
 						{% endif %}
-					</b>
-				</td>
-				<td class="numeric">{{c.stats.impression_count}}</td>
-				<td class="numeric">{{c.stats.click_count}} ({{c.stats.ctr|percentage}})
-				<td class="numeric">{{c.stats.revenue|currency}}</td>
-			</tr>
-		{% endfor %}
-	</table>
+					</td>
+					<td class="numeric">{{c.stats.impression_count|withsep}}</td>
+					<td class="numeric">{{c.stats.click_count|withsep}} ({{c.stats.ctr|percentage}})
+					<td class="numeric">{{c.stats.revenue|currency}}</td>
+					<td class="numeric">{{c.delivery|percentage}}</td>
+				</tr>
+			{% empty %}
+				<tr><td>No campaigns.</td></tr>
+			{% endfor %}
+		</table>
 	
-	<h4>
-		Network
-	</h4>
-	<table class="wide">
-		<thead>
-			<th width="25%">Campaign</th>
-			<th>Status</th>
-			<th width="75px">Impr.</th>
-			<th width="75px">Clicks</th>
-			<th width="75px">Revenue</th>
-			<th width="75px">Delivery%</th>
-		</thead>
-		{% for c in network %}
-			<tr>
-				<td><a href="{% url advertiser_campaign_show campaign_key=c.key%}">{{c.name}}</a></td>
-				<td>
-					<b>
-						{% if campaign.deleted %}
-							Deleted
+		<h4>
+			Promotional
+		</h4>
+		<table class="wide">
+			<thead>
+				<th width="25%">Campaign</th>
+				<th>Status</th>
+				<th width="75px">Impr.</th>
+				<th width="75px">Clicks</th>
+				<th width="75px">Revenue</th>
+				<th width="75px">Delivery%</th>
+			</thead>
+			{% for c in promo %}
+				<tr>
+					<td><input type="checkbox" name="id" value="{{c.key}}"/> <a href="{% url advertiser_campaign_show campaign_key=c.key%}">{{c.name}}</a></td>
+					<td>
+						{% if c.deleted %}
+							<img src="/images/deleted.gif" width=9 height=9/>
 						{% endif %}
-						{% if campaign.active and not campaign.deleted %}
-							Active
+						{% if c.active and not c.deleted %}
+							<img src="/images/active.gif" width=9 height=9/>
 						{% endif %}
-						{% if not campaign.active and not campaign.deleted %}
-							Paused
+						{% if not c.active and not c.deleted %}
+							<img src="/images/paused.gif" width=9 height=9/>
 						{% endif %}
-					</b>
-				</td>
-				<td class="numeric">{{c.stats.impression_count}}</td>
-				<td class="numeric">{{c.stats.click_count}} ({{c.stats.ctr|percentage}})
-				<td class="numeric">{{c.stats.revenue|currency}}</td>
-				<td class="numeric">{{c.delivery|percentage}}</td>
-			</tr>
-		{% empty %}
-			<tr><td>Nothing</td></tr>
-		{% endfor %}
-	</table>
+					</td>
+					<td class="numeric">{{c.stats.impression_count|withsep}}</td>
+					<td class="numeric">{{c.stats.click_count|withsep}} ({{c.stats.ctr|percentage}})
+					<td class="numeric">{{c.stats.revenue|currency}}</td>
+					<td class="numeric">{{c.delivery|percentage}}</td>
+				</tr>
+			{% empty %}
+				<tr><td>No campaigns.</td></tr>
+			{% endfor %}
+		</table>
+	
+		<h4>
+			Network
+		</h4>
+		<table class="wide">
+			<thead>
+				<th width="25%">Campaign</th>
+				<th>Status</th>
+				<th width="75px">Req.</th>
+				<th width="75px">Impr.</th>
+				<th width="75px">Clicks</th>
+				<th width="75px">Revenue</th>
+			</thead>
+			{% for c in network %}
+				<tr>
+					<td><input type="checkbox" name="id" value="{{c.key}}"/> <a href="{% url advertiser_campaign_show campaign_key=c.key%}">{{c.name}}</a></td>
+					<td>
+					{% if c.deleted %}
+						<img src="/images/deleted.gif" width=9 height=9/>
+					{% endif %}
+					{% if c.active and not c.deleted %}
+						<img src="/images/active.gif" width=9 height=9/>
+					{% endif %}
+					{% if not c.active and not c.deleted %}
+						<img src="/images/paused.gif" width=9 height=9/>
+					{% endif %}
+					</td>
+					<td class="numeric">{{c.stats.request_count|withsep}}</td>
+					<td class="numeric">{{c.stats.impression_count|withsep}}</td>
+					<td class="numeric">{{c.stats.click_count|withsep}} ({{c.stats.ctr|percentage}})
+					<td class="numeric">{{c.stats.revenue|currency}}</td>
+				</tr>
+			{% empty %}
+				<tr><td>No campaigns.</td></tr>
+			{% endfor %}
+		</table>
+		
+		<p>
+			<button type="button" class="btn" onclick="form.action.value='pause'; form.submit();"><span><span>Pause</span></span></button>&nbsp;&nbsp;
+			<button type="button" class="btn" onclick="form.action.value='resume'; form.submit();"><span><span>Resume</span></span></button>&nbsp;&nbsp;
+			<button type="button" class="btn" onclick="form.action.value='delete'; form.submit();"><span><span>Delete</span></span></button>
+		</p>		
+	</form>
 {% endblock %}

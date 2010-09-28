@@ -265,6 +265,10 @@ table.wide {
   border-spacing: 0
 }
 
+table.wide tr td {
+  padding: 6px 0;
+}
+
 table.rollups {
   font-size: 18px;
   width: 100%;

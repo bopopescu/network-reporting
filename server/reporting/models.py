@@ -23,8 +23,8 @@ class SiteStats(db.Model):
   revenue = db.FloatProperty(default=float(0))
 
   # conversion information
-  converted_clicks = db.IntegerProperty(default=0)
-  conversions = db.IntegerProperty(default=0)
+  converted_clicks = db.IntegerProperty()
+  conversions = db.IntegerProperty()
   
   @classmethod
   def get_key(c, site_key, owner_key=None, date=datetime.datetime.now().date()):
@@ -35,9 +35,11 @@ class SiteStats(db.Model):
     return datetime.datetime.now().date()
     
   @classmethod
-  def lastdays(c, n=7):
-    today = datetime.date.today() - datetime.timedelta(days=1)    # This eliminates partial days contributing to totals or appearing in graphs
-    return [today - datetime.timedelta(days=x) for x in range(0, n)]
+  def lastdays(c, n=7, omit=0):
+    today = datetime.date.today() - datetime.timedelta(days=omit)    # Set omit=1 to eliminates partial days contributing to totals or appearing in graphs
+    days = [today - datetime.timedelta(days=x) for x in range(0, n)]
+    days.reverse()
+    return days
 
   @classmethod
   def sitestats_for_today(c, site):
@@ -53,16 +55,20 @@ class SiteStats(db.Model):
     
   @classmethod
   def rollup_for_day(c, owners, d):
-    a = filter(lambda s: s != None, db.get([SiteStats.get_key(None, owner.key(), d) for owner in owners]))
+    a = map(lambda s: s or SiteStats(), db.get([SiteStats.get_key(None, owner.key(), d) for owner in owners]))
     return reduce(lambda x, y: x+y, a, SiteStats())
     
   @classmethod
   def stats_for_days(c, owner, days):
-    return filter(lambda s: s != None, db.get([SiteStats.get_key(None, owner.key(), d) for d in days]))
+    return map(lambda s: s or SiteStats(), db.get([SiteStats.get_key(None, owner.key(), d) for d in days]))
 
   @classmethod
   def stats_for_day_with_qualifier(c, owner, site, d):
     return SiteStats.get_or_insert(SiteStats.get_key(site.key(), owner.key(), d).name(), owner=owner, site=site, date=d)
+
+  @classmethod
+  def stats_for_days_with_qualifier(c, owner, site, days):
+    return map(lambda s: s or SiteStats(), db.get([SiteStats.get_key(site.key(), owner.key(), d) for d in days]))
     
   def fill_rate(self):
     return self.impression_count / float(self.request_count)
@@ -99,12 +105,13 @@ class SiteStats(db.Model):
       request_count = self.request_count + s.request_count, 
       impression_count = self.impression_count + s.impression_count,
       click_count = self.click_count + s.click_count,
-      revenue = self.revenue + s.revenue,)
-#      converted_clicks = self.converted_clicks + s.converted_clicks,
- #     conversions = self.conversions + s.conversions )
-    
+      revenue = self.revenue + s.revenue,
+      converted_clicks = self.converted_clicks + s.converted_clicks if self.converted_clicks and s.converted_clicks else None,
+      conversions = self.conversions + s.conversions if self.conversions and s.conversions else None )
+
   def __repr__(self):
     return "SiteStats{site=%s, owner=%s, %d/%d/%d}" % (self.site.key() if self.site else "None", self.owner.key() if self.owner else "None", self.request_count, self.impression_count, self.click_count)
+
     
 #
 # This contains information about a particular user 

@@ -185,7 +185,7 @@ class TextCreative(Creative):
 class HtmlCreative(Creative):
   # html ad properties
   html_name = db.StringProperty(required=True, default="Demo HTML Creative")
-  html_data = db.TextProperty(default="<style type=\"text/css\">body {font-size: 12px;font-family:helvetica,arial,sans-serif;margin:0;padding:0;text-align:center} .creative_headline {font-size: 20px;} .creative_promo {color: green;text-decoration: none;}</style><div class=\"creative_headline\">Welcome to mopub!</div><div class=\"creative_promo\">This is a test ad</div><div>You can now set up a new campaign to serve other ads.</div>")
+  html_data = db.TextProperty(default="<style type=\"text/css\">body {font-size: 12px;font-family:helvetica,arial,sans-serif;margin:0;padding:0;text-align:center} .creative_headline {font-size: 18px;} .creative_promo {color: green;text-decoration: none;}</style><div class=\"creative_headline\">Welcome to mopub!</div><div class=\"creative_promo\">This is a test ad</div><div>You can now set up a new campaign to serve other ads.</div>")
 
 class ImageCreative(Creative):
   # image properties

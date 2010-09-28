@@ -14,40 +14,37 @@
 			</a>
 		</div>
 	</h3>
+	
+	<table class="rollups">
+		<tr>
+			<td class="rollup"><b>Impressions</b><br/>{{today.impression_count|withsep}}</td>
+			<td class="rollup"><b>Clicks</b><br/>{{today.click_count|withsep}} ({{today.ctr|percentage}})</td>
+			<td class="rollup"><b>Revenue</b><br/>{{today.revenue|currency}}</td>
+		</tr>
+	</table>
+	
+	<img src="{{chart_url}}" width=780 height=200 style="padding: 5px 0 10px 0;"/>
+	
+	<h3>Settings</h3>
+	
 	<table>
-		<tr><th>Status</th>
-			<td class="numeric"><b>
-				{% if adgroup.deleted %}
-					Deleted
-				{% endif %}
-				{% if adgroup.active and not adgroup.deleted %}
-					Active
-				{% endif %}
-				{% if not adgroup.active and not adgroup.deleted %}
-					Paused
-				{% endif %}
-			</b></td>
-			<td>
-				<form method="post" action="{% url advertiser_bid_pause %}?id={{adgroup.key}}" style="display: inline;"><input type="submit" value="Pause"></form>
-				<form method="post" action="{% url advertiser_bid_delete %}?id={{adgroup.key}}" style="display: inline;"><input type="submit" value="Delete"></form>
-			</tr>
 		<tr><th>Priority level</th>
-				<td class="numeric">
-						{% ifequal adgroup.priority_level 1 %}Sponsorship{% endifequal %}
-						{% ifequal adgroup.priority_level 2 %}Direct{% endifequal %}
-						{% ifequal adgroup.priority_level 3 %}Promotional{% endifequal %}
-						{% ifequal adgroup.priority_level 4 %}Network{% endifequal %}
-				</td></tr>
-		<tr><th>Max Bid</th><td class="numeric">{{adgroup.bid|currency}}</td></tr>
-		<tr><th>Bid strategy</th>
+			<td class="numeric">
+				{% ifequal adgroup.priority_level 1 %}Sponsorship{% endifequal %}
+				{% ifequal adgroup.priority_level 2 %}Direct{% endifequal %}
+				{% ifequal adgroup.priority_level 3 %}Promotional{% endifequal %}
+				{% ifequal adgroup.priority_level 4 %}Network{% endifequal %}
+			</td></tr>
+			<tr><th>Max Bid</th><td class="numeric">{{adgroup.bid|currency}}</td></tr>
+			<tr><th>Bid strategy</th>
 				<td class="numeric">{% ifequal adgroup.bid_strategy "cpc" %}By click (CPC){% endifequal %}
-						{% ifequal adgroup.bid_strategy "cpm" %}By impression (CPM){% endifequal %}</td></tr>
-		<tr><th>Geo predicates</th><td class="numeric">{% for g in adgroup.geo_predicates %}{{g}}<br/>{% endfor %}</td></tr>
-		<tr><th>Device predicates</th><td class="numeric">{% for g in adgroup.device_predicates %}{{g}}<br/>{% endfor %}</td></tr>
+					{% ifequal adgroup.bid_strategy "cpm" %}By impression (CPM){% endifequal %}</td></tr>
+			<tr><th>Geo predicates</th><td class="numeric">{% for g in adgroup.geo_predicates %}{{g}}<br/>{% endfor %}</td></tr>
+			<tr><th>Device predicates</th><td class="numeric">{% for g in adgroup.device_predicates %}{{g}}<br/>{% endfor %}</td></tr>
 	</table>
 	
 	<h3>
-		Keywords and Placements
+		Ad Unit Targeting
 	</h3>
 	<table class="wide">
 		{% if adgroup.keywords %}
@@ -71,7 +68,7 @@
 	<table class="wide">
 		{% if sites %}
 			<thead>
-				<th>Placement</th>
+				<th>Name</th>
 				<th width="75px">Impr.</th>
 				<th width="75px">Clicks</th>
 				<th width="75px">Cost</th>
@@ -79,130 +76,133 @@
 		{% endif %}
 		{% for s in sites %}
 			<tr>
-				<td><a href="/publisher/show?id={{s.key}}">{{s.name}}</a></td>
+				<td><a href="/inventory/adunit?id={{s.key}}">{{s.name}}</a></td>
 				<td>{{s.stats.impression_count}}</td>
 				<td>{{s.stats.click_count}} ({{s.stats.ctr|percentage}})</td>
 				<td>{{s.stats.revenue|currency}}</td>
 			</tr>
+		{% empty %}
+			<tr><td>No ad units targeted.</td></tr>
 		{% endfor %}
 	</table>
 	
-	<h3>
-		Ad Creatives
-		<div class="toolbar">
-			<a href="#" onclick="javascript:Toggle.display('add_creative_box');return false;">
-				Create Text Ad
-			</a>
-			|
-			<a href="#" onclick="javascript:Toggle.display('add_image_creative_box');return false;">
-				Create Image Ad
-			</a>			
-			|
-			<a href="#" onclick="javascript:Toggle.display('add_html_creative_box');return false;">
-				Create Html Ad
-			</a>			
-		</div>
-	</h3>
-	<form method="post" action="{% url advertiser_creative_create %}" enctype="multipart/form-data"
-		id="add_creative_box" style="display:none;" class="special_notice">		
-		<input type="hidden" name="id" value="{{adgroup.key}}"/>
-		<table>
-			<tr><th>Headline</th><td><input type='text' name="headline" size="40"/></td></tr>
-			<tr><th>Line 1</th><td><input type='text' name="line1" size="30"/></td></tr>
-			<tr><th>Line 2</th><td><input type='text' name="line2" size="30"/></td></tr>
-			<tr><th>URL</th><td><input type='text' name="url" size="50"/></td></tr>
-			<tr><th>Display URL</th><td><input type='text' name="display_url" size="35"/></td></tr>
-			<tr><th></th><td><input type='submit' value="Create Ad &raquo;"/></td></tr>
-		</table>
-	</form>
-	<form method="post" action="{% url advertiser_creative_create %}" enctype="multipart/form-data"
-		id="add_image_creative_box" style="display:none;" class="special_notice">		
-		<input type="hidden" name="id" value="{{adgroup.key}}"/>
-		<table>
-			<tr><th>Image File</th><td><input type='file' name="image" size="40"/></td></tr>
-			<tr><th>URL</th><td><input type='text' name="url" size="50"/></td></tr>
-			<tr><th></th><td><input type='submit' value="Create Ad &raquo;"/></td></tr>
-		</table>
-	</form>
-	<form method="post" action="{% url advertiser_creative_create %}" enctype="multipart/form-data"
-		id="add_html_creative_box" style="display:none;" class="special_notice">		
-		<input type="hidden" name="id" value="{{adgroup.key}}"/>
-		<table>
-			<tr><th>Name</th><td><input type='text' name="html_name"></td></tr>
-			<tr><th>HTML Snippet</th><td><textarea name="html_data"></textarea></td></tr>
-			<tr><th></th><td><input type='submit' value="Create Ad &raquo;"/></td></tr>
-		</table>
-	</form>
+	{% ifnotequal adgroup.campaign.campaign_type "network" %}
+		<h3>
+			Ad Creatives
+			<div class="toolbar">
+				<a href="#" onclick="javascript:Toggle.display('add_creative_box');return false;">
+					Create Text Ad
+				</a>
+				|
+				<a href="#" onclick="javascript:Toggle.display('add_image_creative_box');return false;">
+					Create Image Ad
+				</a>			
+				|
+				<a href="#" onclick="javascript:Toggle.display('add_html_creative_box');return false;">
+					Create Html Ad
+				</a>			
+			</div>
+		</h3>
+		<form method="post" action="{% url advertiser_creative_create %}" enctype="multipart/form-data"
+			id="add_creative_box" style="display:none;" class="special_notice">		
+			<input type="hidden" name="id" value="{{adgroup.key}}"/>
+			<table>
+				<tr><th>Headline</th><td><input type='text' name="headline" size="40"/></td></tr>
+				<tr><th>Line 1</th><td><input type='text' name="line1" size="30"/></td></tr>
+				<tr><th>Line 2</th><td><input type='text' name="line2" size="30"/></td></tr>
+				<tr><th>URL</th><td><input type='text' name="url" size="50"/></td></tr>
+				<tr><th>Display URL</th><td><input type='text' name="display_url" size="35"/></td></tr>
+				<tr><th></th><td><input type='submit' value="Create Ad &raquo;"/></td></tr>
+			</table>
+		</form>
+		<form method="post" action="{% url advertiser_creative_create %}" enctype="multipart/form-data"
+			id="add_image_creative_box" style="display:none;" class="special_notice">		
+			<input type="hidden" name="id" value="{{adgroup.key}}"/>
+			<table>
+				<tr><th>Image File</th><td><input type='file' name="image" size="40"/></td></tr>
+				<tr><th>URL</th><td><input type='text' name="url" size="50"/></td></tr>
+				<tr><th></th><td><input type='submit' value="Create Ad &raquo;"/></td></tr>
+			</table>
+		</form>
+		<form method="post" action="{% url advertiser_creative_create %}" enctype="multipart/form-data"
+			id="add_html_creative_box" style="display:none;" class="special_notice">		
+			<input type="hidden" name="id" value="{{adgroup.key}}"/>
+			<table>
+				<tr><th>Name</th><td><input type='text' name="html_name"></td></tr>
+				<tr><th>HTML Snippet</th><td><textarea name="html_data"></textarea></td></tr>
+				<tr><th></th><td><input type='submit' value="Create Ad &raquo;"/></td></tr>
+			</table>
+		</form>
 	
-	<form method="post" action="{% url advertiser_creative_delete %}">
-	<table class="creatives wide">
-	{% if creatives %}
-		<thead>
-			<th></th>
-			<th>Creative</th>
-			<th>Status</th>
-			<th width="75px">Impr.</th>
-			<th width="75px">Clicks</th>
-			<th width="75px">Cost</th>
-		</thead>
-	{% endif %}
-	{% for c in creatives %}
-		<tr>
-			<td><input type="checkbox" name="id" value="{{c.key}}"></input></td>
-			<td>
-				{% ifequal c.ad_type "text" %}
-				<div class="creative">
-					<a href="{{c.url}}" class="creative_headline">{{c.headline}}</a><br/>
-					{{c.line1}}<br/>
-					{{c.line2}}<br/>
-					<span class="creative_url"><a href="{{c.url}}">{{c.display_url}}</a></span>
-				</div>
-				{% endifequal %}
-				{% ifequal c.ad_type "image" %}
-				<div class="creative">
-					<a href="{{c.url}}">
-						<img src="{% url advertiser_creative_image creative_key=c.key %}" width=250>
-					</a>
-				</div>
-				{% endifequal %}
-				{% ifequal c.ad_type "html" %}
-				{{c.html_name}}
-				{% endifequal %}
-				<div class="clearall"></div>
-			</td>
-			<td>
-				<b>
-					{% if c.deleted %}
-						Deleted
-					{% endif %}
-					{% if c.active and not c.deleted %}
-						Active
-					{% endif %}
-					{% if not c.active and not c.deleted %}
-						Paused
-					{% endif %}
-				</b>
-			</td>
-			<td class="numeric">{{c.stats.impression_count}}</td>
-			<td class="numeric">{{c.stats.click_count}} ({{c.stats.ctr|percentage}})</td>
-			<td class="numeric">{{c.stats.revenue|currency}}</td>
-		</tr>
-	{% endfor %}
-	{% if creatives %}
-		<tr>
-			<td colspan=8>
-				<p></p><input type='submit' name='delete' value='Delete Ads'/>
-			</td>
-		</tr>
-	{% else %}
-		<tr>
-			<td colspan=8>
-				<p>No creatives.</p>
-			</td>
-		</tr>			
-	{% endif %}
-	</table>
-	</form>
-	
+		<form method="post" action="{% url advertiser_creative_delete %}">
+		<table class="creatives wide">
+		{% if creatives %}
+			<thead>
+				<th></th>
+				<th>Creative</th>
+				<th>Status</th>
+				<th width="75px">Impr.</th>
+				<th width="75px">Clicks</th>
+				<th width="75px">Cost</th>
+			</thead>
+		{% endif %}
+		{% for c in creatives %}
+			<tr>
+				<td><input type="checkbox" name="id" value="{{c.key}}"></input></td>
+				<td>
+					{% ifequal c.ad_type "text" %}
+					<div class="creative">
+						<a href="{{c.url}}" class="creative_headline">{{c.headline}}</a><br/>
+						{{c.line1}}<br/>
+						{{c.line2}}<br/>
+						<span class="creative_url"><a href="{{c.url}}">{{c.display_url}}</a></span>
+					</div>
+					{% endifequal %}
+					{% ifequal c.ad_type "image" %}
+					<div class="creative">
+						<a href="{{c.url}}">
+							<img src="{% url advertiser_creative_image creative_key=c.key %}" width=250>
+						</a>
+					</div>
+					{% endifequal %}
+					{% ifequal c.ad_type "html" %}
+					{{c.html_name}}
+					{% endifequal %}
+					<div class="clearall"></div>
+				</td>
+				<td>
+					<b>
+						{% if c.deleted %}
+							Deleted
+						{% endif %}
+						{% if c.active and not c.deleted %}
+							Active
+						{% endif %}
+						{% if not c.active and not c.deleted %}
+							Paused
+						{% endif %}
+					</b>
+				</td>
+				<td class="numeric">{{c.stats.impression_count}}</td>
+				<td class="numeric">{{c.stats.click_count}} ({{c.stats.ctr|percentage}})</td>
+				<td class="numeric">{{c.stats.revenue|currency}}</td>
+			</tr>
+		{% endfor %}
+		{% if creatives %}
+			<tr>
+				<td colspan=8>
+					<p></p><input type='submit' name='delete' value='Delete Ads'/>
+				</td>
+			</tr>
+		{% else %}
+			<tr>
+				<td colspan=8>
+					<p>No creatives.</p>
+				</td>
+			</tr>			
+		{% endif %}
+		</table>
+		</form>
+	{% endifnotequal %}
 	
 {% endblock %}

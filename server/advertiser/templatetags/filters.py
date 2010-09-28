@@ -20,6 +20,9 @@ def currency_no_symbol(value):
 def percentage(value):
 	return "%1.1f%%" % ((value or 0) * 100)
 	
+def withsep(x):
+  return re.sub(r'(\d{3})(?=\d)', r'\1,', str(x)[::-1])[::-1] 
+	
 def format_date(value):
 	return value.strftime("%a, %b %d, %Y")
 	
@@ -53,6 +56,7 @@ def time_ago_in_words(value):
 
 register.filter(currency)
 register.filter(currency_no_symbol)
+register.filter(withsep)
 register.filter(percentage)
 register.filter(format_date)
 register.filter(truncate)

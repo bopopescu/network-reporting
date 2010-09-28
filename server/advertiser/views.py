@@ -39,17 +39,31 @@ class RequestHandler(object):
         
 class IndexHandler(RequestHandler):
   def get(self):
-    campaigns = Campaign.gql("where u = :1 and deleted = :2", users.get_current_user(), False).fetch(10)
+    days = SiteStats.lastdays(14)
+    
+    campaigns = Campaign.gql("where u = :1 and deleted = :2", users.get_current_user(), False).fetch(100)
     for c in campaigns:
-      a = SiteStats.stats_for_days(c, SiteStats.lastdays())
-      logging.info(a)
-      c.stats = reduce(lambda x, y: x+y, a, SiteStats())
+      c.all_stats = SiteStats.stats_for_days(c, days)      
+      c.stats = reduce(lambda x, y: x+y, c.all_stats, SiteStats())
+            
+    # compute rollups to display at the top
     today = SiteStats.rollup_for_day(campaigns, SiteStats.today())
-      
+    totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[c.all_stats for c in campaigns])]
+    
+    # make a line graph showing impressions
+    series = [s.impression_count for s in totals]
+    series.reverse()
+    chart_url = "http://chart.apis.google.com/chart?cht=lc&chtt=Total+Daily+Impressions&chs=780x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
+      ','.join(map(lambda x: str(x), series)),
+      max(series) * 1.5,
+      max(series) * 1.5,
+      '|'.join(map(lambda x: x.strftime("%m/%d"), days)))
+
     return render_to_response(self.request, 
       'advertiser/index.html', 
       {'campaigns':campaigns, 
        'today': today,
+       'chart_url': chart_url,
         'gtee': filter(lambda x: x.campaign_type in ['gtee'], campaigns),
         'promo': filter(lambda x: x.campaign_type in ['promo'], campaigns),
         'network': filter(lambda x: x.campaign_type in ['network'], campaigns), })
@@ -121,24 +135,41 @@ class ShowHandler(RequestHandler):
           return self.post()
           
   def get(self, campaign_key):
+    days = SiteStats.lastdays(14)
+
     # load the campaign
     campaign = Campaign.get(campaign_key)
-    campaign.stats = SiteStats.stats_for_day(campaign, SiteStats.today())
     
     # load the adgroups
-    bids = AdGroup.gql("where campaign=:1 and deleted = :2", campaign, False).fetch(50)
+    bids = AdGroup.gql("where campaign=:1 and deleted = :2", campaign, False).fetch(100)
     bids.sort(lambda x,y:cmp(x.priority_level, y.priority_level))
     for b in bids:
-      b.stats = SiteStats.stats_for_day(b, SiteStats.today())
-      
+      b.all_stats = SiteStats.stats_for_days(b, days)      
+      b.stats = reduce(lambda x, y: x+y, b.all_stats, SiteStats())
+
     # no ad groups?
     if len(bids) == 0:
       return HttpResponseRedirect(reverse('campaign_adgroup_new', kwargs={'campaign_key': campaign.key()}))
     else:
+      # compute rollups to display at the top
+      today = SiteStats.rollup_for_day(bids, SiteStats.today())
+      totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[b.all_stats for b in bids])]
+
+      # make a line graph showing impressions
+      series = [s.impression_count for s in totals]
+      series.reverse()
+      chart_url = "http://chart.apis.google.com/chart?cht=lc&chtt=Total+Daily+Impressions&chs=780x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
+        ','.join(map(lambda x: str(x), series)),
+        max(series) * 1.5,
+        max(series) * 1.5,
+        '|'.join(map(lambda x: x.strftime("%m/%d"), days)))
+
       # write response
       return render_to_response(self.request,'advertiser/show.html', 
                                             {'campaign':campaign, 
                                             'bids': bids,
+                                            'today': today,
+                                            'chart_url': chart_url,
                                             'user':users.get_current_user()})
 
 @whitelist_login_required     
@@ -152,7 +183,6 @@ class EditHandler(RequestHandler):
     return render_to_response(self.request,'advertiser/edit.html', {"f": f, "campaign": c})
 
   def post(self):
-    print self.request.POST
     c = Campaign.get(self.request.POST.get('id'))
     f = CampaignForm(data=self.request.POST, instance=c)
     if c.u == users.get_current_user():
@@ -166,53 +196,28 @@ def campaign_edit(request,*args,**kwargs):
 
 class PauseHandler(RequestHandler):
   def post(self):
-    c = Campaign.get(self.request.POST.get('id',self.request.GET.get('id')))
-    if c != None and c.u == users.get_current_user():
-      c.active = not c.active
-      c.deleted = False
-      c.put()
-      return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':c.key()}))
+    action = self.request.POST.get("action", "pause")
+    logging.info(action)
+    for id in self.request.POST.getlist('id') or []:
+      c = Campaign.get(id)
+      logging.info(c)
+      if c != None and c.u == users.get_current_user():
+        if action == "pause":
+          c.active = False
+          c.deleted = False
+        elif action == "resume":
+          c.active = True
+          c.deleted = False
+        elif action == "delete":
+          c.active = False
+          c.deleted = True
+        c.put()
+    return HttpResponseRedirect(reverse('advertiser_campaign',kwargs={}))
   
 @whitelist_login_required
 def campaign_pause(request,*args,**kwargs):
   return PauseHandler()(request,*args,**kwargs)
   
-class DeleteHandler(RequestHandler):
-  def post(self):
-    c = Campaign.get(self.request.GET.get('id'))
-    if c != None and c.u == users.get_current_user():
-      c.active = False
-      c.deleted = True
-      c.put()
-      return HttpResponseRedirect(reverse('advertiser_campaign'))
-
-  
-@whitelist_login_required
-def campaign_delete(request,*args,**kwargs):
-  return DeleteHandler()(request,*args,**kwargs)  
-  
-  
-class RemoveBidHandler(RequestHandler):
-  def post(self):
-    for id in self.request.get_all('id') or []:
-      b = AdGroup.get(id)
-      logging.info(b)
-      if b != None and b.campaign.u == users.get_current_user():
-        b.deleted = True
-        b.put()
-        return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':b.campaign.key()}))
-
-class PauseBidHandler(RequestHandler):
-  def post(self):
-    for id in self.request.POST.getlist('id'):
-      b = AdGroup.get(id)
-      logging.info(b)
-      if b != None and b.campaign.u == users.get_current_user():
-        b.active = not b.active
-        b.deleted = False
-        b.put()
-        return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':b.key()}))
-
 class ShowAdGroupHandler(RequestHandler):
   def __call__(self,request,adgroup_key):
     self.params = request.POST or request.GET
@@ -223,22 +228,43 @@ class ShowAdGroupHandler(RequestHandler):
       return self.post()
   
   def get(self, adgroup_key):
+    days = SiteStats.lastdays(14)
+
     adgroup = AdGroup.get(adgroup_key)
     creatives = Creative.gql('where ad_group = :1 and deleted = :2 and ad_type in :3', adgroup, False, ["text", "image", "html"]).fetch(50)
     for c in creatives:
-      c.stats = SiteStats.stats_for_day(c, SiteStats.today())
+      c.all_stats = SiteStats.stats_for_days(c, days)
+      c.stats = reduce(lambda x, y: x+y, c.all_stats, SiteStats())
+      
     sites = map(lambda x: Site.get(x), adgroup.site_keys)
     for s in sites:
-      s.stats = SiteStats.stats_for_day_with_qualifier(adgroup, s, SiteStats.today())
-    keywords = []
+      s.all_stats = SiteStats.stats_for_days_with_qualifier(adgroup, s, days)
+      s.stats = reduce(lambda x, y: x+y, s.all_stats, SiteStats())
+
+    # compute rollups to display at the top
+    today = SiteStats.stats_for_day(adgroup, SiteStats.today())
+    if len(sites) > 0:
+      totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[s.all_stats for s in sites])]
+    else:
+      totals = [SiteStats() for d in days]
+
+    # make a line graph showing impressions
+    series = [s.impression_count for s in totals]
+    series.reverse()
+    chart_url = "http://chart.apis.google.com/chart?cht=lc&chtt=Total+Daily+Impressions&chs=780x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
+      ','.join(map(lambda x: str(x), series)),
+      max(series) * 1.5,
+      max(series) * 1.5,
+      '|'.join(map(lambda x: x.strftime("%m/%d"), days)))
     
     return render_to_response(self.request,'advertiser/adgroup.html', 
                               {'campaign': adgroup.campaign,
                               'adgroup': adgroup, 
-                              'sites': sites,
-                              'keywords': keywords, 
-                              'creatives': creatives})
-
+                              'creatives': creatives,
+                              'today': today,
+                              'totals': totals,
+                              'chart_url': chart_url,
+                              'sites': sites})
     
 @whitelist_login_required   
 def campaign_adgroup_show(request,*args,**kwargs):    
@@ -297,14 +323,23 @@ def campaign_adgroup_edit(request,*args,**kwargs):
 
 class PauseBidHandler(RequestHandler):
   def post(self):
-    for id in self.request.GET.getlist('id'):
-      b = AdGroup.get(id)
-      logging.info(b)
-      if b != None and b.campaign.u == users.get_current_user():
-        b.active = not b.active
-        b.deleted = False
-        b.put()
-    return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':b.key()}))
+    action = self.request.POST.get("action", "pause")
+    logging.info(action)
+    for id in self.request.POST.getlist('id') or []:
+      c = AdGroup.get(id)
+      logging.info(c)
+      if c != None and c.campaign.u == users.get_current_user():
+        if action == "pause":
+          c.active = False
+          c.deleted = False
+        elif action == "resume":
+          c.active = True
+          c.deleted = False
+        elif action == "delete":
+          c.active = False
+          c.deleted = True
+        c.put()
+    return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':c.campaign.key()}))
 
 
 @whitelist_login_required
@@ -313,13 +348,15 @@ def bid_pause(request,*args,**kwargs):
   
 class RemoveBidHandler(RequestHandler):
   def post(self):
-    for id in self.request.GET.getlist('id') or []:
+    c = None
+    for id in self.request.POST.getlist('id') or []:
       b = AdGroup.get(id)
       logging.info(b)
+      c = b.campaign
       if b != None and b.campaign.u == users.get_current_user():
         b.deleted = True
         b.put()
-    return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':b.campaign.key()}))
+    return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':c.key()}))
   
 @whitelist_login_required
 def bid_delete(request,*args,**kwargs):

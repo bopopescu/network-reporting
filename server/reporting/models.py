@@ -35,8 +35,8 @@ class SiteStats(db.Model):
     return datetime.datetime.now().date()
     
   @classmethod
-  def lastdays(c, n=7):
-    today = datetime.date.today() - datetime.timedelta(days=1)    # This eliminates partial days contributing to totals or appearing in graphs
+  def lastdays(c, n=7, omit=0):
+    today = datetime.date.today() - datetime.timedelta(days=omit)    # Set omit=1 to eliminates partial days contributing to totals or appearing in graphs
     days = [today - datetime.timedelta(days=x) for x in range(0, n)]
     days.reverse()
     return days

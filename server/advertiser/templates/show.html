@@ -26,7 +26,7 @@
 				{% endif %}
 			</b></td>
 			<td>
-				<form method="post" action="{% url advertiser_campaign_pause %}?id={{campaign.key}}" style="display: inline;"><input type="submit" value="Pause"></form>
+				<form method="post" action="{% url advertiser_campaign_pause %}?id={{campaign.key}}" style="display: inline;"><input type="submit" value="{% if campaign.active %}Pause{% else %}Resume{% endif %}"></form>
 				<form method="post" action="{% url advertiser_campaign_pause %}?id={{campaign.key}}" style="display: inline;"><input type="submit" value="Delete"></form>
 			</tr>
 		<tr><th>Daily budget</th><td class="numeric">{{campaign.budget|currency}}</td></tr>

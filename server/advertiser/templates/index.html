@@ -4,23 +4,6 @@
 
 
 {% block content %}
-<script type="text/javascript">
-function show_graph(elem,type) {
-  var chart_url;
-  new Ajax.Request('graphurl', { method:'get',
-      parameters: {type: type},
-      onSuccess: function(transport, json) {
-        if (transport.responseText) {
-          var response = eval('(' + transport.responseText + ')');
-          $$('td.rollup_selected')[0].removeClassName('rollup_selected');
-          elem.addClassName('rollup_selected');
-          $('chart_img').src = response['chart_url'];
-        }
-      },
-      onFailure: function(){ }
-    });
-}
-</script>
 	<h3>
 		Campaigns
 		<div class="toolbar">

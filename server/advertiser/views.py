@@ -50,8 +50,8 @@ class IndexHandler(RequestHandler):
   def get(self):
     days = SiteStats.lastdays(14)
     
-    campaigns = Campaign.gql("where u = :1 and deleted = :2", users.get_current_user(), False).fetch(100)
-    #campaigns = Campaign.gql("where deleted = :1", False).fetch(100)
+    #campaigns = Campaign.gql("where u = :1 and deleted = :2", users.get_current_user(), False).fetch(100)
+    campaigns = Campaign.gql("where deleted = :1", False).fetch(100)
     for c in campaigns:
       c.all_stats = SiteStats.stats_for_days(c, days)      
       c.stats = reduce(lambda x, y: x+y, c.all_stats, SiteStats())
@@ -83,12 +83,19 @@ def index(request,*args,**kwargs):
 
 class GraphUrlHandler(RequestHandler):
   def get(self):
+    days = SiteStats.lastdays(14)
+
     type = self.request.GET.get("type")
+    # If not type passed, get impression count
     if type is None:
       type = 'imp'
 
-    days = SiteStats.lastdays(14)
-    campaigns = Campaign.gql("where deleted = :1", False).fetch(100)
+    campaign = self.request.GET.get("campaign")
+    if campaign is None or campaign == "":
+      campaigns = Campaign.gql("where deleted = :1", False).fetch(100)
+    else:
+      campaigns = [ Campaign.get(campaign) ]
+
     for c in campaigns:
       c.all_stats = SiteStats.stats_for_days(c, days)
       c.stats = reduce(lambda x, y: x+y, c.all_stats, SiteStats())
@@ -109,7 +116,6 @@ class GraphUrlHandler(RequestHandler):
       series = [s.click_count for s in totals]
       title = "Total+Daily+Clicks"
 
-    series.reverse()
     chart_url = "http://chart.apis.google.com/chart?cht=lc&chtt=%s&chs=780x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
       title,
       ','.join(map(lambda x: str(x), series)),

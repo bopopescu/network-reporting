@@ -1,5 +1,25 @@
 {% extends 'base.html' %}
       {% block letterhead %}
+<script type="text/javascript">
+function show_graph(elem,type,campaign) {
+  var chart_url;
+  if (!campaign) {
+    campaign = ""
+  }
+  new Ajax.Request('{% url advertiser_graph_url %}', { method:'get',
+      parameters: {type: type, campaign: campaign},
+      onSuccess: function(transport, json) {
+        if (transport.responseText) {
+          var response = eval('(' + transport.responseText + ')');
+          $$('td.rollup_selected')[0].removeClassName('rollup_selected');
+          elem.addClassName('rollup_selected');
+          $('chart_img').src = response['chart_url'];
+        }
+      },
+      onFailure: function(){ }
+    });
+}
+</script>
         <div id="header">
           <a href="/main"><img src="/images/logo_header.png" width=60 height=16/></a>
           <span style="color: #aaa; padding: 15px 0 0 10px;">

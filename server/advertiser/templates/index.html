@@ -73,7 +73,6 @@
 			{% for c in promo %}
 				<tr>
 					<td><input type="checkbox" name="id" value="{{c.key}}"/> <a href="{% url advertiser_campaign_show campaign_key=c.key%}">{{c.name}}</a></td>
-					<td>{{c.budget|currency}}</td>
 					<td>
 						{% if c.deleted %}
 							<img src="/images/deleted.gif" width=9 height=9/>
@@ -88,6 +87,7 @@
 					<td class="numeric">{{c.stats.impression_count|withsep}}</td>
 					<td class="numeric">{{c.stats.click_count|withsep}} ({{c.stats.ctr|percentage}})
 					<td class="numeric">{{c.stats.revenue|currency}}</td>
+					<td class="numeric">{{c.delivery|percentage}}</td>
 				</tr>
 			{% empty %}
 				<tr><td>No campaigns.</td></tr>

@@ -61,19 +61,19 @@ def test(request,*args,**kwargs):
   html = """<html> 
   	<head>
   		<title></title>
-  		<script>
+  	</head> 
+  	<body style="margin: 0;width:320px;height:480px;" > 
+    	<script>
   		  function finishLoad(){window.location="mopub://finishLoad";} 
   		  window.onload = function(){
   		    finishLoad();
   		  }
   		</script>
-  	</head> 
-  	<body style="margin: 0;width:320px;height:480px;" > 
   		<script type="text/javascript">
   			function webviewDidClose(){var img = new Image(); img.src="/hellothereimclosing/"} 
   			function webviewDidAppear(){var img = new Image(); img.src="/hellothereimopening/"} 
         function showImage(){var img = document.createElement("img"); img.setAttribute('src','/images/yelp.png'); document.body.appendChild(img);}
-        setTimeout("showImage()",1);
+        setTimeout("showImage()",100);
   			function close(){window.location = "mopub://done"};
   			//setTimeout("close()",10000);
   		</script>
@@ -106,3 +106,8 @@ def test2(request,*args,**kwargs):
   response = HttpResponse(html) 
   response['X-CloseButton'] = 'None'
   return response  
+  
+  
+  
+  
+# <script> function  finishLoad(){window.location="mopub://finishLoad";} window.onload =  function(){ finishLoad(); }  </script> <script type="text/javascript">  function webviewDidClose(){var img  = new Image();  img.src="/hellothereimclosing/"}  function  webviewDidAppear(){var  img  =  new   Image();  img.src="/hellothereimopening/"}  function  showImage(){var  img  =  document.createElement("img"); img.setAttribute('src','/images/yelp.png'); document.body.appendChild(img);} setTimeout("showImage()",100); function  close(){window.location = "mopub://done"}; //setTimeout("close()",10000); </script>

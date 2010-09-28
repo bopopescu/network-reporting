@@ -67,7 +67,7 @@
 						{% ifequal b.priority_level 1 %}Sponsorship {% endifequal %}
 						{% ifequal b.priority_level 2 %}Direct {% endifequal %}
 						{% ifequal b.priority_level 3 %}Promotional {% endifequal %}
-						{% ifequal b.priority_level 4 %}Network {% endifequal %}
+						{% ifequal b.priority_level 4 %}Network ({{ b.network_type }}) {% endifequal %}
 					</td>
 					<td class="numeric">{{b.bid|currency}} {{b.bid_strategy}}</td>
 					<td class="numeric">{{b.stats.impression_count}}</td>

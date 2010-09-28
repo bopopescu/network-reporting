@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# !/usr/bin/env python
 import wsgiref.handlers
 import cgi
 import logging
@@ -32,7 +32,8 @@ from reporting.models import *
 
 CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gzip(gfe)"]
 MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7PnE6cH9_PX7OoeIIr5FjnTA'
-
+DOMAIN = '35-interstitial.latest.mopub-inc.appspot.com'
+# DOMAIN = 'localhost:8080'
 #
 # Ad auction logic
 # The core of the whole damn thing
@@ -78,6 +79,8 @@ class AdAuction(object):
     # TODO: frequency capping and other user / request based randomizations
     udid = kw["udid"]
     logging.info("udid: %s %s"%(udid,len(ad_groups)))
+    
+    
     # if any ad groups were returned, find the creatives that match the requested format in all candidates
     if len(ad_groups) > 0:
       all_creatives = Creative.gql("where ad_group in :1 and format_predicates in :2 and active = :3 and deleted = :4", 
@@ -122,9 +125,15 @@ class AdAuction(object):
               # determine in which ad group the user falls into to
               # otherwise give creatives in the other adgroups a shot
               # TODO: fix the stagger method how do we get 3 ads all at 100%
+              # currently we just mod by 100 such that there is wrapping
               start_bucket = 0
               winning_ad_groups = []
               ad_groups = list(ad_groups)
+              
+              # sort the ad groups by the percent of users desired, this allows us 
+              # to do the appropriate wrapping of the number line if they are nicely behaved
+              # TODO: finalize this so that we can do things like 90% and 15%. We need to decide
+              # what happens in this case
               ad_groups.sort(lambda x,y: cmp(x.percent_users,y.percent_users))
               for ad_group in ad_groups:
                 percent_users = ad_group.percent_users if not (ad_group.percent_users is None) else 100.0
@@ -261,7 +270,7 @@ class AdHandler(webapp.RequestHandler):
       logging.info('OLP ad-auction {"id": "%s", "c": "%s", "request_id": "%s"}' % (id, c.key(), request_id))
 
       # create an ad clickthrough URL
-      ad_click_url = "http://www.mopub.com/m/aclk?id=%s&c=%s&req=%s" % (id, c.key(), request_id)
+      ad_click_url = "http://%s/m/aclk?id=%s&c=%s&req=%s" % (DOMAIN,id, c.key(), request_id)
       self.response.headers.add_header("X-Clickthrough", str(ad_click_url))
       
       # render the creative 
@@ -272,7 +281,7 @@ class AdHandler(webapp.RequestHandler):
   # Templates
   #
   TEMPLATES = {
-    "adsense": Template("""<html> <head><title>$title</title></head> <body style="margin: 0;width:${w}px;height:${h}px;" > <script type="text/javascript">window.googleAfmcRequest = {client: '$client',ad_type: 'text_image', output: 'html', channel: '',format: '$adsense_format',oe: 'utf8',color_border: '336699',color_bg: 'FFFFFF',color_link: '0000FF',color_text: '000000',color_url: '008000',};</script> <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_afmc_ads.js"></script>  </body> </html> """),
+    "adsense": Template("""<html> <head><title>$title</title><script>function finishLoad(){window.location="mopub://finishLoad";} window.onload = function(){finishLoad();} </script></head> <body style="margin: 0;width:${w}px;height:${h}px;" > <script type="text/javascript">window.googleAfmcRequest = {client: '$client',ad_type: 'text_image', output: 'html', channel: '',format: '$adsense_format',oe: 'utf8',color_border: '336699',color_bg: 'FFFFFF',color_link: '0000FF',color_text: '000000',color_url: '008000',};</script> <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_afmc_ads.js"></script>  </body> </html> """),
     "iAd": Template("iAd"),
     "clear": Template(""),
     "text": Template("""<html>\
@@ -285,7 +294,7 @@ class AdHandler(webapp.RequestHandler):
                         <body style="margin: 0;width:${w}px;height:${h}px;padding:0;">\
                           <a href="$url"><img src="$image_url" width=$w height=$h/></a>
                         </body> </html> """),
-    "admob": Template("""<html><head></head><body style="margin: 0;padding:0;">
+    "admob": Template("""<html><head><script>function finishLoad(){window.location="mopub://finishLoad";} window.onload = function(){finishLoad();} </script></head><body style="margin: 0;padding:0;">
                         <script type="text/javascript">
                         var admob_vars = {
                          pubid: '$client', // publisher id
@@ -363,9 +372,9 @@ class AdHandler(webapp.RequestHandler):
 class AdClickHandler(webapp.RequestHandler):
   # /m/aclk?v=1&udid=26a85bc239152e5fbc221fe5510e6841896dd9f8&q=Hotels:%20Hotel%20Utah%20Saloon%20&id=agltb3B1Yi1pbmNyDAsSBFNpdGUY6ckDDA&r=http://googleads.g.doubleclick.net/aclk?sa=l&ai=BN4FhRH6hTIPcK5TUjQT8o9DTA7qsucAB0vDF6hXAjbcB4KhlEAEYASDgr4IdOABQrJON3ARgyfb4hsijoBmgAbqxif8DsgERYWRzLm1vcHViLWluYy5jb226AQkzMjB4NTBfbWLIAQHaAbwBaHR0cDovL2Fkcy5tb3B1Yi1pbmMuY29tL20vYWQ_dj0xJmY9MzIweDUwJnVkaWQ9MjZhODViYzIzOTE1MmU1ZmJjMjIxZmU1NTEwZTY4NDE4OTZkZDlmOCZsbD0zNy43ODM1NjgsLTEyMi4zOTE3ODcmcT1Ib3RlbHM6JTIwSG90ZWwlMjBVdGFoJTIwU2Fsb29uJTIwJmlkPWFnbHRiM0IxWWkxcGJtTnlEQXNTQkZOcGRHVVk2Y2tEREGAAgGoAwHoA5Ep6AOzAfUDAAAAxA&num=1&sig=AGiWqtx2KR1yHomcTK3f4HJy5kk28bBsNA&client=ca-mb-pub-5592664190023354&adurl=http://www.sanfranciscoluxuryhotels.com/
   def get(self):
+    import urllib
     id = self.request.get("id")
-    q = self.request.get("q")
-    
+    q = self.request.get("q")    
     # BROKEN
     # url = self.request.get("r")
     sz = self.request.query_string

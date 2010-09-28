@@ -29,7 +29,7 @@
 			</tr>
 		</thead>
 		{% for a in apps %}
-			<tr class="selectablerow">
+			<tr class="selectablerow" style="background-color:#eee">
 				<td colspan="2"><a href="{% url publisher_app_show %}?id={{a.key}}"><b>{{a.name}}</b></a> ({{a.app_type}})</td>
 				<td class="numeric">{{a.impression_count}}</td>
 				<td class="numeric">{{a.click_count}}</td>

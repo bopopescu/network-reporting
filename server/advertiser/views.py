@@ -37,11 +37,21 @@ class RequestHandler(object):
     def put(self):
         pass
         
+def gen_graph_url(series, days, title):
+  chart_url = "http://chart.apis.google.com/chart?cht=lc&chtt=Total+Daily+Impressions&chs=780x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
+    ','.join(map(lambda x: str(x), series)),
+    max(series) * 1.5,
+    max(series) * 1.5,
+    '|'.join(map(lambda x: x.strftime("%m/%d"), days)))
+
+  return chart_url
+
 class IndexHandler(RequestHandler):
   def get(self):
     days = SiteStats.lastdays(14)
     
     campaigns = Campaign.gql("where u = :1 and deleted = :2", users.get_current_user(), False).fetch(100)
+    #campaigns = Campaign.gql("where deleted = :1", False).fetch(100)
     for c in campaigns:
       c.all_stats = SiteStats.stats_for_days(c, days)      
       c.stats = reduce(lambda x, y: x+y, c.all_stats, SiteStats())
@@ -71,6 +81,49 @@ class IndexHandler(RequestHandler):
 @whitelist_login_required     
 def index(request,*args,**kwargs):
     return IndexHandler()(request,*args,**kwargs)     
+
+class GraphUrlHandler(RequestHandler):
+  def get(self):
+    type = self.request.GET.get("type")
+    if type is None:
+      type = 'imp'
+
+    days = SiteStats.lastdays(14)
+    campaigns = Campaign.gql("where deleted = :1", False).fetch(100)
+    for c in campaigns:
+      c.all_stats = SiteStats.stats_for_days(c, days)
+      c.stats = reduce(lambda x, y: x+y, c.all_stats, SiteStats())
+
+    # compute rollups to display at the top
+    today = SiteStats.rollup_for_day(campaigns, SiteStats.today())
+    totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[c.all_stats for c in campaigns])]
+   
+    series = []
+    title = ''
+    if type == 'imp':
+    # make a line graph showing impressions
+      series = [s.impression_count for s in totals]
+      title = "Total+Daily+Impressions"
+    #elif type == 'clk':
+    else:
+    # make a line graph showing clicks
+      series = [s.click_count for s in totals]
+      title = "Total+Daily+Clicks"
+
+    series.reverse()
+    chart_url = "http://chart.apis.google.com/chart?cht=lc&chtt=%s&chs=780x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
+      title,
+      ','.join(map(lambda x: str(x), series)),
+      max(series) * 1.5,
+      max(series) * 1.5,
+      '|'.join(map(lambda x: x.strftime("%m/%d"), days)))
+
+    return HttpResponse('{"chart_url": "%s"}' % chart_url, content_type="text/javascript")
+
+
+@whitelist_login_required     
+def graph_url(request,*args,**kwargs):
+    return GraphUrlHandler()(request,*args,**kwargs)     
 
 class CreateHandler(RequestHandler):
   def get(self):

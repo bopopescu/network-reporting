@@ -119,7 +119,7 @@ class SiteStats(db.Model):
       conversions = self.conversions + s.conversions if self.conversions and s.conversions else None )
 
   def __repr__(self):
-    return "SiteStats{site=%s, owner=%s, %d/%d/%d/%.2f}" % (self.site.key() if self.site else "None", self.owner.key() if self.owner else "None", self.request_count, self.impression_count, self.click_count, self.revenue)
+    return "SiteStats{site=%s, owner=%s(%s), %d/%d/%d/%.2f, users=%d}" % (self.site.key() if self.site else "None", self.owner.__class__.__name__ if self.owner else '',self.owner.key() if self.owner else "None", self.request_count, self.impression_count, self.click_count, self.revenue, self.unique_user_count)
 
     
 #

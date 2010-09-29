@@ -26,7 +26,7 @@ class SiteStats(db.Model):
   # conversion information
   converted_clicks = db.IntegerProperty()
   conversions = db.IntegerProperty()
-  
+    
   @classmethod
   def get_key(c, site_key, owner_key=None, date=datetime.datetime.now().date()):
     return db.Key.from_path("SiteStats", "%s:%s:%s" % (site_key if site_key else '', owner_key if owner_key else '', str(date)))
@@ -119,7 +119,7 @@ class SiteStats(db.Model):
       conversions = self.conversions + s.conversions if self.conversions and s.conversions else None )
 
   def __repr__(self):
-    return "SiteStats{site=%s, owner=%s, %d/%d/%d}" % (self.site.key() if self.site else "None", self.owner.key() if self.owner else "None", self.request_count, self.impression_count, self.click_count)
+    return "SiteStats{site=%s, owner=%s, %d/%d/%d/%.2f}" % (self.site.key() if self.site else "None", self.owner.key() if self.owner else "None", self.request_count, self.impression_count, self.click_count, self.revenue)
 
     
 #

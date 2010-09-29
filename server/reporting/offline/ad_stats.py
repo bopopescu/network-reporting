@@ -10,6 +10,8 @@ sys.path.append("/home/ubuntu/google_appengine/lib/django")
 sys.path.append("/home/ubuntu/google_appengine/lib/webob")
 sys.path.append("/home/ubuntu/google_appengine/lib/yaml/lib")
 sys.path.append("/home/ubuntu/google_appengine/lib/fancy_urllib")
+# sys.path.append("/Users/njamal/programs/mopub")
+# sys.path.append("/Users/njamal/programs/mopub/server")
 
 import wsgiref.handlers, cgi, logging, os, re, datetime, hashlib, traceback, fileinput, urlparse
 from django.utils import simplejson
@@ -18,8 +20,8 @@ from urllib import urlencode
 from properties import Properties
 
 from reporting.models import *
-import publisher.models
-import advertiser.models
+from publisher.models import *
+from advertiser.models import *
 
 from google.appengine.api import users, memcache
 from google.appengine.api.urlfetch import fetch
@@ -100,6 +102,39 @@ class AdStats:
 # Generic base class for stats counters
 #
 all_stats = {}
+
+class AdGroupCache(object):
+  Klass = AdGroup
+  cache = {}
+
+  @classmethod
+  def get(cls,keys):
+    if not keys.__class__ == list:
+      keys = [keys]
+    
+    objs = []
+    print 'orig kys',keys
+    for key in keys:  
+      if key in cls.cache:
+        print 'found in cache'
+        objs.append(cls.cache.get(key))
+        keys.remove(key)
+    
+    print 'remaining',keys    
+    if keys:
+      print 'not in cache'
+      datastore_objs = cls.Klass.get(keys)
+      # put into local cache
+      for obj in datastore_objs:
+        cls.cache[obj.key()] = obj
+      objs += datastore_objs
+    if len(objs) > 1:
+      return objs
+    return objs[0]  
+
+class CreativeCache(AdGroupCache):
+  Klass = Creative     
+      
 class StatsCounter(object):
   def get_site_stats(self, site_key, date=datetime.datetime.now().date()):
     try:
@@ -192,9 +227,44 @@ class PubUniqueUserCounter(StatsCounter):
 #
 class PubImpressionCounter(StatsCounter):
   def process(self, d):
+    # stats = self.get_site_stats(self.get_id_for_dict(d))
+    # if stats:
+    #   stats.impression_count += 1     
     stats = self.get_site_stats(self.get_id_for_dict(d))
+    creative_key = d["params"].get("c",None)
+    if creative_key:
+      creative_key = db.Key(creative_key)
+
+    # TODO: Have a parent-child relationship such that the key name already tells us the parent key
+    creative = CreativeCache.get(creative_key)
+    adgroup_key = creative.ad_group.key()
+    print adgroup_key
+    adgroup = AdGroupCache.get(adgroup_key)
+
+    # ad_group = AdGroupCache.get(self.)
     if stats:
-      stats.impression_count += 1      
+      stats.impression_count += 1
+      # increment revenue if the bid strategy is cpm
+      if adgroup.bid_strategy == 'cpm':
+        stats.revenue += adgroup.bid*1.0/1000.0       
+
+# TODO: Calculate Revenue on pub ad units
+# class PubImpressionRevenueCounter(StatsCounter):
+#   def process(self, d):
+#     stats = self.get_site_stats(self.get_id_for_dict(d))
+#     creative_key = d["params"].get("c",None)
+#     if creative_key:
+#       creative_key = db.Key(creative_key)
+#     
+#     # TODO: Have a parent-child relationship such that the key name already tells us the parent key
+#     creative = CreativeCache.get(creative_key)
+#     adgroup_key = creative.ad_group.key()
+#     adgroup = AdGroupCache.get(adgroup_key)
+# 
+#     # ad_group = AdGroupCache.get(self.)
+#     if stats:
+#       if adgroup.bid_strategy == 'cpm':
+#         stats.revenue += adgroup.bid*1.0/1000.0
 
 #
 # PubLegacyImpressionCounter - counts imprs on publisher ad units
@@ -214,21 +284,60 @@ class PubClickCounter(StatsCounter):
     stats = self.get_site_stats(self.get_id_for_dict(d))
     if stats:
       stats.click_count += 1
+      
+    stats = self.get_site_stats(self.get_id_for_dict(d))
+    creative_key = d["params"].get("c",None)
+    if creative_key:
+      creative_key = db.Key(creative_key)
+
+      # TODO: Have a parent-child relationship such that the key name already tells us the parent key
+      creative = CreativeCache.get(creative_key)
+      adgroup_key = creative.ad_group.key()
+      adgroup = AdGroupCache.get(adgroup_key)
+      
+      if stats:
+        stats.click_count += 1
+        # update the revenue if the adgroup is cpc based payment
+        if adgroup.bid_strategy == 'cpc':
+          stats.revenue += adgroup.bid
+
+# #
+# # PubClickCounter - counts clicks
+# #
+# class PubClickRevenueCounter(StatsCounter):
+#   def process(self, d):
+#     stats = self.get_site_stats(self.get_id_for_dict(d))
+#     creative_key = d["params"].get("c",None)
+#     if creative_key:
+#       creative_key = db.Key(creative_key)
+#     
+#       # TODO: Have a parent-child relationship such that the key name already tells us the parent key
+#       creative = CreativeCache.get(creative_key)
+#       adgroup_key = creative.ad_group.key()
+#       adgroup = AdGroupCache.get(adgroup_key)
+# 
+#       # ad_group = AdGroupCache.get(self.)
+#       if stats:
+#         if adgroup.bid_strategy == 'cpc':
+#           stats.revenue += adgroup.bid
 
 #
 # CampaignImpressionCounter - counts impressions and accrues them to creatives, adgroups and campaigns
 #
 class CampaignImpressionCounter(StatsCounter):
   def process(self, d):
-    if d["params"].get("c") and db.get(d["params"].get("c")):
-      stats = self.get_qualifier_stats(d["params"].get("c"))
+    creative_key = d["params"].get("c",None)
+    if creative_key and CreativeCache.get(creative_key):
+      stats = self.get_qualifier_stats(str(creative_key))
       adgroup_stats = self.get_qualifier_stats(stats.owner.ad_group.key())
       campaign_stats = self.get_qualifier_stats(stats.owner.ad_group.campaign.key())
       
       stats.impression_count += 1
       adgroup_stats.impression_count += 1
       campaign_stats.impression_count += 1
-
+      
+      
+        
       site_key = d["params"].get("id")
       stats_q = self.get_site_stats_with_qualifier(site_key, stats.owner.key())
       adgroup_stats_q = self.get_site_stats_with_qualifier(site_key, adgroup_stats.owner.key())
@@ -237,6 +346,16 @@ class CampaignImpressionCounter(StatsCounter):
       stats_q.impression_count += 1
       adgroup_stats_q.impression_count += 1
       campaign_stats_q.impression_count += 1
+      
+      adgroup =  stats.owner.ad_group
+      if adgroup.bid_strategy == 'cpm':
+        revenue_increment = adgroup.bid*1.0/1000.0
+        stats.revenue += revenue_increment
+        adgroup_stats.revenue += revenue_increment
+        campaign_stats.revenue += revenue_increment
+        stats_q.revenue += revenue_increment
+        adgroup_stats_q.revenue += revenue_increment
+        campaign_stats_q.revenue += revenue_increment
 
 #
 # CampaignClickCounter - counts clicks and accrues them to creatives, adgroups and campaigns
@@ -244,8 +363,9 @@ class CampaignImpressionCounter(StatsCounter):
 class CampaignClickCounter(StatsCounter):
   def process(self, d):
     # accrue this click to a particular creative, campaign and ad group
-    if d["params"].get("c") and db.get(d["params"].get("c")):
-      stats = self.get_qualifier_stats(d["params"].get("c"))
+    creative_key = d["params"].get("c",None)
+    if creative_key and CreativeCache.get(creative_key):
+      stats = self.get_qualifier_stats(creative_key)
       adgroup_stats = self.get_qualifier_stats(stats.owner.ad_group.key())
       campaign_stats = self.get_qualifier_stats(stats.owner.ad_group.campaign.key())
 
@@ -261,6 +381,17 @@ class CampaignClickCounter(StatsCounter):
       stats_q.click_count += 1
       adgroup_stats_q.click_count += 1
       campaign_stats_q.click_count += 1
+      
+      adgroup =  stats.owner.ad_group
+      if adgroup.bid_strategy == 'cpc':
+        revenue_increment = adgroup.bid
+        stats.revenue += revenue_increment
+        adgroup_stats.revenue += revenue_increment
+        campaign_stats.revenue += revenue_increment
+        stats_q.revenue += revenue_increment
+        adgroup_stats_q.revenue += revenue_increment
+        campaign_stats_q.revenue += revenue_increment
+      
 
 #
 # UserInfoAccumulator - accumulates information about a user based on requests
@@ -280,10 +411,10 @@ class UserInfoAccumulator(StatsCounter):
 def auth_func():
   return "olp@mopub.com", "N47935"
 
-def main(logfile="/tmp/logfile"):
+def main(logfile="/tmp/logfile",app_id="mopub-inc",host="34-stats.latest.mopub-inc.appspot.com"):
 
   # connect to google datastore
-  # remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', auth_func, host)
+  remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', auth_func, host)
 
   # process the logfile .... 
   AdStats().process(logfile)
@@ -301,7 +432,8 @@ def main(logfile="/tmp/logfile"):
   cnt = 0
   while cnt < all_object_count:
     sub_objs = all_objects[cnt:cnt+BULK_NUMBER]
-    db.put(sub_objs)
+    print sub_objs
+    # db.put(sub_objs)
     cnt += BULK_NUMBER
 
 if __name__ == '__main__':

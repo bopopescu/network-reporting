@@ -24,6 +24,7 @@
 		3CB4A0FB113F5E96000DB158 /* AdClickController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3CB4A0F6113F5E96000DB158 /* AdClickController.m */; };
 		3CB4A0FC113F5E96000DB158 /* AdClickController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3CB4A0F7113F5E96000DB158 /* AdClickController.xib */; };
 		3CB4A0FD113F5E96000DB158 /* AdController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3CB4A0F9113F5E96000DB158 /* AdController.m */; };
+		3CB7B7131253CD270055AA00 /* README in Resources */ = {isa = PBXBuildFile; fileRef = 3CB7B7121253CD270055AA00 /* README */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -51,6 +52,7 @@
 		3CB4A0F7113F5E96000DB158 /* AdClickController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = AdClickController.xib; sourceTree = "<group>"; };
 		3CB4A0F8113F5E96000DB158 /* AdController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AdController.h; sourceTree = "<group>"; };
 		3CB4A0F9113F5E96000DB158 /* AdController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AdController.m; sourceTree = "<group>"; };
+		3CB7B7121253CD270055AA00 /* README */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* SimpleAds-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "SimpleAds-Info.plist"; plistStructureDefinitionIdentifier = "com.apple.xcode.plist.structure-definition.iphone.info-plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -136,6 +138,7 @@
 		3CB4A0F4113F5E96000DB158 /* SDK */ = {
 			isa = PBXGroup;
 			children = (
+				3CB7B7121253CD270055AA00 /* README */,
 				3CB0F50E124ADD54002A3B55 /* moPubCloseButtonX.png */,
 				3CA94137124C3D470025DC6F /* moPubCloseButtonNext.png */,
 				3CB4A0F5113F5E96000DB158 /* AdClickController.h */,
@@ -176,7 +179,6 @@
 			isa = PBXProject;
 			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "SimpleAds" */;
 			compatibilityVersion = "Xcode 3.1";
-			developmentRegion = English;
 			hasScannedForEncodings = 1;
 			knownRegions = (
 				English,
@@ -204,6 +206,7 @@
 				3CB0F50F124ADD54002A3B55 /* moPubCloseButtonX.png in Resources */,
 				3CA94138124C3D470025DC6F /* moPubCloseButtonNext.png in Resources */,
 				3C2D3415124C886000371209 /* SecondViewController.xib in Resources */,
+				3CB7B7131253CD270055AA00 /* README in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -15,13 +15,13 @@
 
 	<table class="rollups">
 		<tr>
-			<td class="rollup"><b>Impressions</b><br/>{{today.impression_count|withsep}}</td>
-			<td class="rollup"><b>Clicks</b><br/>{{today.click_count|withsep}} ({{today.ctr|percentage}})</td>
+			<td class="rollup rollup_selected" onClick="show_graph_imp(this);"><b>Impressions</b><br/>{{today.impression_count|withsep}}</td>
+			<td class="rollup" onClick="show_graph_clk(this);"><b>Clicks</b><br/>{{today.click_count|withsep}} ({{today.ctr|percentage}})</td>
 			<td class="rollup"><b>Revenue</b><br/>{{today.revenue|currency}}</td>
 		</tr>
 	</table>
 	
-	<img src="{{chart_url}}" width=780 height=200 style="padding: 5px 0 10px 0;"/>
+	<img id="chart_img" src="{{chart_url_imp}}" width=780 height=200 style="padding: 5px 0 10px 0;"/>
 	
 	<h3>Settings</h3>
 	

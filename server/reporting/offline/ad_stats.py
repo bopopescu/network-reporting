@@ -17,7 +17,7 @@ from urllib import urlencode
 
 from properties import Properties
 
-import models
+from reporting.models import *
 import publisher.models
 import advertiser.models
 
@@ -46,7 +46,7 @@ class AdStats:
 
   def process(self, f):
     props = Properties()
-    props.load(file("ad_stats.properties"))
+    props.load(file("/Users/njamal/programs/mopub/server/reporting/offline/ad_stats.properties"))
     
     for line in fileinput.input([f]):
       # if this is an apache style log line
@@ -104,23 +104,26 @@ class StatsCounter(object):
   def get_site_stats(self, site_key, date=datetime.datetime.now().date()):
     try:
       if site_key:
-        key = models.SiteStats.get_key(site_key, None, date)
+        key = SiteStats.get_key(site_key, None, date)
         s = all_stats.get(key)
         if s is None:
-          s = models.SiteStats(site=db.get(site_key), date=date, key=key)
+          s = SiteStats(site=db.Key(site_key), date=date, key=key)
           all_stats[key] = s
         return s
       else:
         return None
-    except:
+    except Exception, e:
+      print 'StatsCounter.get_site_stats()',e
+      # import traceback
+      # traceback.print_exc(file=sys.stdout)
       return None
 
   def get_qualifier_stats(self, qualifier_key, date=datetime.datetime.now().date()):
     if qualifier_key:
-      key = models.SiteStats.get_key(None, qualifier_key, date)
+      key = SiteStats.get_key(None, qualifier_key, date)
       s = all_stats.get(key)
       if s is None:
-        s = models.SiteStats(owner=db.get(qualifier_key), date=date, key=key)
+        s = SiteStats(owner=db.get(qualifier_key), date=date, key=key)
         all_stats[key] = s
       return s
     else:
@@ -129,22 +132,24 @@ class StatsCounter(object):
   def get_site_stats_with_qualifier(self, site_key, qualifier_key, date=datetime.datetime.now().date()):
     try:
       if site_key and qualifier_key:
-        key = models.SiteStats.get_key(site_key, qualifier_key, date)
+        key = SiteStats.get_key(site_key, qualifier_key, date)
         s = all_stats.get(key)
         if s is None:
-          s = models.SiteStats(site=db.get(site_key), owner=db.get(qualifier_key), date=date, key=key)
+          s = SiteStats(site=db.get(site_key), owner=db.get(qualifier_key), date=date, key=key)
           all_stats[key] = s
         return s
       else:
         return None
-    except:
+    except Exception, e:
+      print 'StatsCounter.get_site_stats_with_qualifier()',e
       return None
+
 
   def get_user_stats(self, device_id):
     key = device_id
     s = all_stats.get(key)
     if s is None:
-      s = models.UserStats(device_id=device_id, key_name=device_id)
+      s = UserStats(device_id=device_id, key_name=device_id)
       all_stats[key] = s
     return s
 
@@ -174,6 +179,13 @@ class PubRequestCounter(StatsCounter):
     if stats:
       stats.request_count += 1
   
+class PubUniqueUserCounter(StatsCounter):
+  def process(self,d):
+    stats = self.get_site_stats(self.get_id_for_dict(d))  
+    if stats:
+      if 'udid' in d["params"]:
+        udid = d["params"]["udid"]
+        stats.add_user(udid)
 # 
 # PubImpressionCounter - counts impressions  on pub ad units
 # 1:1284681678.531128 OLP ad-auction agltb3B1Yi1pbmNyDAsSBFNpdGUYudkDDA agltb3B1Yi1pbmNyEAsSCENyZWF0aXZlGJGQBAw 9093a6dd16c74324a64d3edf388f62ae
@@ -182,7 +194,7 @@ class PubImpressionCounter(StatsCounter):
   def process(self, d):
     stats = self.get_site_stats(self.get_id_for_dict(d))
     if stats:
-      stats.impression_count += 1
+      stats.impression_count += 1      
 
 #
 # PubLegacyImpressionCounter - counts imprs on publisher ad units
@@ -268,21 +280,35 @@ class UserInfoAccumulator(StatsCounter):
 def auth_func():
   return "olp@mopub.com", "N47935"
 
+def main(logfile="/tmp/logfile"):
+
+  # connect to google datastore
+  # remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', auth_func, host)
+
+  # process the logfile .... 
+  AdStats().process(logfile)
+  
+  # print 'DONE PROCESSING'  
+  
+  # for s in StatsCounter.all_stats().values():
+  #   print repr(s)
+    
+  # store into database
+  all_objects = StatsCounter.all_stats().values()
+  all_object_count = len(all_objects)
+  BULK_NUMBER = 100
+  
+  cnt = 0
+  while cnt < all_object_count:
+    sub_objs = all_objects[cnt:cnt+BULK_NUMBER]
+    db.put(sub_objs)
+    cnt += BULK_NUMBER
+
 if __name__ == '__main__':
   if len(sys.argv) < 3:
       print "Usage: %s [logfile] [host]" % (sys.argv[0],)
   app_id = "mopub-inc"
   host = sys.argv[2] if len(sys.argv) > 2 else ('%s.appspot.com' % app_id)
   logfile = sys.argv[1] if len(sys.argv) > 1 else "/tmp/logfile"
-
-  # connect to google datastore
-  remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', auth_func, host)
-
-  # process the logfile .... 
-  AdStats().process(logfile)
-  for s in StatsCounter.all_stats().values():
-    print repr(s)
-    
-  # store into database
-  db.put(StatsCounter.all_stats().values())
-
+  
+  main(logfile)  

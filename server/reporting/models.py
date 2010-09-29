@@ -2,7 +2,7 @@ from google.appengine.ext import db
 
 from publisher.models import Site
 import datetime
-import md5
+import hashlib
 import logging
 
 # 

@@ -1,2 +1,0 @@
-appcfg.py request_logs .. logfile
-appcfg.py --severity=1 request_logs .. - >> logfile

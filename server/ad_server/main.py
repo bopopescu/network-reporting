@@ -8,7 +8,7 @@ import datetime
 import hashlib
 import traceback
 import random
-import md5
+import hashlib
 import time
 import base64, binascii
 from django.utils import simplejson
@@ -256,7 +256,7 @@ class AdHandler(webapp.RequestHandler):
     excluded_creatives = self.request.get("exclude")
     
     # create a unique request id, but only log this line if the user agent is real
-    request_id = md5.md5("%s:%s" % (self.request.query_string, time.time())).hexdigest()
+    request_id = hashlib.md5("%s:%s" % (self.request.query_string, time.time())).hexdigest()
     if str(self.request.headers['User-Agent']) not in CRAWLERS:
       logging.info('OLP ad-request {"request_id": "%s", "remote_addr": "%s", "q": "%s", "user_agent": "%s"}' % (request_id, self.request.remote_addr, self.request.query_string, self.request.headers["User-Agent"]))
 

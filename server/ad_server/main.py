@@ -32,7 +32,7 @@ from reporting.models import *
 
 CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gzip(gfe)"]
 MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7PnE6cH9_PX7OoeIIr5FjnTA'
-DOMAIN = '35-interstitial.latest.mopub-inc.appspot.com'
+DOMAIN = 'ads.mopub.com'
 # DOMAIN = 'localhost:8080'
 #
 # Ad auction logic
@@ -338,7 +338,7 @@ class AdHandler(webapp.RequestHandler):
 
       if c.ad_type == "adsense":
         params.update({"title": kwargs["q"], "adsense_format": format[2], "w": format[0], "h": format[1], "client": kwargs["site"].account.adsense_pub_id})
-        self.response.headers.add_header("X-Launchpage","http://googleads.g.doubleclick.net")
+        # self.response.headers.add_header("X-Launchpage","http://googleads.g.doubleclick.net")
       elif c.ad_type == "admob":
         params.update({"title": kwargs["q"], "w": format[0], "h": format[1], "client": kwargs["site"].account.admob_pub_id})
         self.response.headers.add_header("X-Launchpage","http://c.admob.com/")

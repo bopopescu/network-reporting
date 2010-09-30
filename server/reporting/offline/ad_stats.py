@@ -46,7 +46,7 @@ class AdStats:
 
   def process(self, f):
     props = Properties()
-    props.load(file("ad_stats.properties"))
+    props.load(file("/Users/njamal/programs/mopub/server/reporting/offline/ad_stats.properties"))
     
     for line in fileinput.input([f]):
       # if this is an apache style log line
@@ -295,37 +295,17 @@ class PubRevenueCounter(StatsCounter):
     creative_key_string = d["params"].get("c",None)
     if creative_key_string:
       creative_key = db.Key(creative_key_string)
-    else:
-      creative_key = None  
+      # TODO: Have a parent-child relationship such that the key name already tells us the parent key
+      creative = CreativeCache.get(creative_key)
+      adgroup_key = creative.ad_group.key()
+      adgroup = AdGroupCache.get(adgroup_key)
 
-    # TODO: Have a parent-child relationship such that the key name already tells us the parent key
-    creative = CreativeCache.get(creative_key)
-    adgroup_key = creative.ad_group.key()
-    adgroup = AdGroupCache.get(adgroup_key)
+      # ad_group = AdGroupCache.get(self.)
+      if stats:
+        # increment revenue if the bid strategy is cpm
+        if adgroup.bid_strategy == 'cpm':
+          stats.revenue += adgroup.bid*1.0/1000.0               
 
-    # ad_group = AdGroupCache.get(self.)
-    if stats:
-      # increment revenue if the bid strategy is cpm
-      if adgroup.bid_strategy == 'cpm':
-        stats.revenue += adgroup.bid*1.0/1000.0               
-
-# TODO: Calculate Revenue on pub ad units
-# class PubImpressionRevenueCounter(StatsCounter):
-#   def process(self, d):
-#     stats = self.get_site_stats(self.get_id_for_dict(d))
-#     creative_key = d["params"].get("c",None)
-#     if creative_key:
-#       creative_key = db.Key(creative_key)
-#     
-#     # TODO: Have a parent-child relationship such that the key name already tells us the parent key
-#     creative = CreativeCache.get(creative_key)
-#     adgroup_key = creative.ad_group.key()
-#     adgroup = AdGroupCache.get(adgroup_key)
-# 
-#     # ad_group = AdGroupCache.get(self.)
-#     if stats:
-#       if adgroup.bid_strategy == 'cpm':
-#         stats.revenue += adgroup.bid*1.0/1000.0
 
 #
 # PubLegacyImpressionCounter - counts imprs on publisher ad units
@@ -464,7 +444,29 @@ class CampaignClickCounter(StatsCounter):
         adgroup_stats_q.click_count += 1
         campaign_stats_q.click_count += 1
       
-        adgroup =  stats.owner.ad_group
+        print stats,adgroup_stats,campaign_stats,stats_q,adgroup_stats_q,campaign_stats_q
+            
+class CampaignSpendCounter(StatsCounter):
+  def process(self, d):
+    creative_key_string = d["params"].get("c",None)
+    if creative_key_string:
+      creative_key = db.Key(creative_key_string)
+      creative = CreativeCache.get(creative_key)
+      if creative:
+        adgroup_key = creative.ad_group.key()
+        adgroup = AdGroupCache.get(adgroup_key)
+        campaign_key = adgroup.campaign.key()
+      
+      
+        stats = self.get_qualifier_stats(creative_key)
+        adgroup_stats = self.get_qualifier_stats(adgroup_key)
+        campaign_stats = self.get_qualifier_stats(campaign_key)
+
+        site_key = d["params"].get("id")
+        stats_q = self.get_site_stats_with_qualifier(site_key, creative_key)
+        adgroup_stats_q = self.get_site_stats_with_qualifier(site_key, adgroup_key)
+        campaign_stats_q = self.get_site_stats_with_qualifier(site_key, campaign_key)
+    
         if adgroup.bid_strategy == 'cpc':
           revenue_increment = adgroup.bid
           stats.revenue += revenue_increment
@@ -473,8 +475,6 @@ class CampaignClickCounter(StatsCounter):
           stats_q.revenue += revenue_increment
           adgroup_stats_q.revenue += revenue_increment
           campaign_stats_q.revenue += revenue_increment
-      
-
 #
 # UserInfoAccumulator - accumulates information about a user based on requests
 #
@@ -501,10 +501,10 @@ def main(logfile="/tmp/logfile",app_id="mopub-inc",host="34-stats.latest.mopub-i
   # process the logfile .... 
   AdStats().process(logfile)
   
-  # print 'DONE PROCESSING'  
+  print 'DONE PROCESSING'  
   
-  # for s in StatsCounter.all_stats().values():
-  #   print repr(s)
+  for s in StatsCounter.all_stats().values():
+    print repr(s)
     
   # store into database
   all_objects = StatsCounter.all_stats().values()
@@ -514,7 +514,8 @@ def main(logfile="/tmp/logfile",app_id="mopub-inc",host="34-stats.latest.mopub-i
   cnt = 0
   while cnt < all_object_count:
     sub_objs = all_objects[cnt:cnt+BULK_NUMBER]
-    db.put(sub_objs)
+    print sub_objs
+    # db.put(sub_objs)
     cnt += BULK_NUMBER  
 
 if __name__ == '__main__':

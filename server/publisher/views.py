@@ -274,8 +274,8 @@ class ShowHandler(RequestHandler):
       '|'.join(map(lambda x: x.strftime("%m/%d"), days)))
     # totals
     impression_count = sum(map(lambda x: x.impression_count, stats))
-    logging.info(impression_count)
     click_count = sum(map(lambda x: x.click_count, stats))
+    revenue = sum(map(lambda x: x.revenue, stats))
     ctr = float(click_count) / float(impression_count) if impression_count > 0 else 0
 
     # write response

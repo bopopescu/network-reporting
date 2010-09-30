@@ -93,8 +93,8 @@ class IndexHandler(RequestHandler):
 
     help_text = None
     if network_campaigns:
-      if not (self.account.adsense_pub_id and self.account.admob_pub_id):
-        help_text = 'Blah blah'
+      if not (self.account.adsense_pub_id or self.account.admob_pub_id):
+        help_text = 'Please set up your network ids on the <a href="%s">account page</a>'%reverse('account_index')
 
     return render_to_response(self.request, 
       'advertiser/index.html', 

@@ -21,24 +21,36 @@ from common.utils.decorators import whitelist_login_required
 from account.models import Account
 
 class RequestHandler(object):
-    def __call__(self,request):
+    def __call__(self,request,*args,**kwargs):
         self.params = request.POST or request.GET
         self.request = request
+        self.account = None
+        user = users.get_current_user()
+        if user:
+          if users.is_current_user_admin():
+            account_key_name = request.COOKIES.get("account_impersonation",None)
+            if account_key_name:
+              self.account = Account.get_by_key_name(account_key_name)
+        if not self.account:  
+          self.account = Account.current_account()
+          
+          
+        logging.warning(self.account.key().name())  
         if request.method == "GET":
-            return self.get()
+            return self.get(*args,**kwargs)
         elif request.method == "POST":
-            return self.post()    
+            return self.post(*args,**kwargs)    
     def get(self):
         pass
     def put(self):
-        pass    
+        pass
 
 class AccountHandler(RequestHandler):
   def get(self):
-    return render_to_response(self.request,'account/account.html', {'account': Account.current_account()})
+    return render_to_response(self.request,'account/account.html', {'account': self.account})
 
   def post(self):
-    a = Account.current_account()
+    a = self.account
     a.adsense_pub_id = self.request.POST.get("adsense_pub_id")
     a.admob_pub_id = self.request.POST.get("admob_pub_id")
     a.put()

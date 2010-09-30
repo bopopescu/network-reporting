@@ -4,15 +4,19 @@ from google.appengine.api import users
 # The main account
 #
 class Account(db.Model):
-	adsense_pub_id = db.StringProperty()
-	admob_pub_id = db.StringProperty()
-	user = db.UserProperty()
-	date_added = db.DateTimeProperty(auto_now_add=True)
-	
-	@classmethod
-	def current_account(cls):
-		u = users.get_current_user()
-		return Account.get_or_insert(db.Key.from_path("User", u.user_id()).name(), user=u)
+  adsense_pub_id = db.StringProperty()
+  admob_pub_id = db.StringProperty()
+  user = db.UserProperty()
+  date_added = db.DateTimeProperty(auto_now_add=True)
+  
+  @classmethod
+  def current_account(cls,user=None):
+    if not user:
+      user = users.get_current_user()
+    return Account.get_or_insert(db.Key.from_path("User", user.user_id()).name(), user=user)
+
+  def is_admin():
+    return users.is_current_user_admin()
 
 #
 # A specific ad placement inside an app

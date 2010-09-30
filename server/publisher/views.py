@@ -26,17 +26,29 @@ from advertiser.models import Campaign, AdGroup, HtmlCreative
 from reporting.models import SiteStats
 
 class RequestHandler(object):
-    def __call__(self,request):
+    def __call__(self,request,*args,**kwargs):
         self.params = request.POST or request.GET
         self.request = request
+        self.account = None
+        user = users.get_current_user()
+        if user:
+          if users.is_current_user_admin():
+            account_key_name = request.COOKIES.get("account_impersonation",None)
+            if account_key_name:
+              self.account = Account.get_by_key_name(account_key_name)
+        if not self.account:  
+          self.account = Account.current_account()
+          
+          
+        logging.warning(self.account.key().name())  
         if request.method == "GET":
-            return self.get()
+            return self.get(*args,**kwargs)
         elif request.method == "POST":
-            return self.post()    
+            return self.post(*args,**kwargs)    
     def get(self):
         pass
     def put(self):
-        pass    
+        pass  
 
 class AppIndexHandler(RequestHandler):
   def get(self):
@@ -45,7 +57,7 @@ class AppIndexHandler(RequestHandler):
     begin_time = today - datetime.timedelta(days=14)
     days = [today - datetime.timedelta(days=x) for x in range(0, 14)]
 
-    apps = App.gql("where account = :1", Account.current_account()).fetch(50)   
+    apps = App.gql("where account = :1", self.account).fetch(50)   
     if len(apps) > 0:    
       day_impressions = {}
       for app in apps:
@@ -92,7 +104,7 @@ class AppIndexHandler(RequestHandler):
         {'apps': apps,    
          'chart_url': url,
          'bar_chart_url': bar_chart_url,
-         'account': Account.current_account()})
+         'account': self.account})
     else:
       return HttpResponseRedirect(reverse('publisher_app_create'))
 
@@ -109,7 +121,7 @@ class IndexHandler(RequestHandler):
     days = [today - datetime.timedelta(days=x) for x in range(0, 14)]
 
     # gather aggregate data into each site
-    sites = Site.gql("where account = :1", Account.current_account()).fetch(50)   
+    sites = Site.gql("where account = :1", self.account).fetch(50)   
     if len(sites) > 0:    
       # organize impressions by days
       day_impressions = {}
@@ -148,7 +160,7 @@ class IndexHandler(RequestHandler):
         {'sites': sites,    
          'chart_url': url,
          'bar_chart_url': bar_chart_url,
-         'account': Account.current_account()})
+         'account': self.account})
     else:
       return HttpResponseRedirect(reverse('publisher_create'))
 
@@ -166,7 +178,7 @@ class AppCreateHandler(RequestHandler):
     f = AppForm(data=self.request.POST)
     if f.is_valid():
       app = f.save(commit=False)
-      app.account = Account.current_account()
+      app.account = self.account
       app.put()
       return HttpResponseRedirect(reverse('publisher_app_show')+'?id=%s'%app.key())
     else:
@@ -182,7 +194,7 @@ class CreateAdUnitHandler(RequestHandler):
     a = App.get(self.request.POST.get('id'))
     if f.is_valid():
       site = f.save(commit=False)
-      site.account = Account.current_account()
+      site.account = self.account
       site.app_key = a
       site.put()
       return HttpResponseRedirect(reverse('publisher_generate')+'?id=%s'%site.key())
@@ -197,7 +209,7 @@ class ShowAppHandler(RequestHandler):
   def get(self):
     # load the site
     app = App.get(self.request.GET.get('id'))
-    if app.account.key() != Account.current_account().key():
+    if app.account.key() != self.account.key():
       self.error(404)
       return
 
@@ -206,7 +218,7 @@ class ShowAppHandler(RequestHandler):
 
     # write response
     return render_to_response(self.request,'show_app.html', {'app':app, 'sites':sites,
-      'account':Account.current_account()})
+      'account':self.account})
   
 @whitelist_login_required
 def app_show(request,*args,**kwargs):
@@ -216,7 +228,7 @@ class ShowHandler(RequestHandler):
   def get(self):
     # load the site
     site = Site.get(self.request.GET.get('id'))
-    if site.account.key() != Account.current_account().key():
+    if site.account.key() != self.account.key():
       self.error(404)
       return
 
@@ -243,7 +255,7 @@ class ShowHandler(RequestHandler):
     # write response
     return render_to_response(self.request,'show.html', {'site':site, 
       'impression_count': impression_count, 'click_count': click_count, 'ctr': ctr,
-      'account':Account.current_account(), 
+      'account':self.account, 
       'chart_url': url,
       'stats':stats})
   

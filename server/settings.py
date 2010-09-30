@@ -97,12 +97,12 @@ MIDDLEWARE_CLASSES = (
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
-#   'django.core.context_processors.auth',
+    'django.core.context_processors.auth',
     'django.core.context_processors.debug',
     'django.core.context_processors.i18n',
     'common.ragendja.auth.context_processors.google_user'
 #    'django.core.context_processors.media',  # 0.97 only.
-#    'django.core.context_processors.request',
+   # 'django.core.context_processors.request',
 )
 
 ROOT_URLCONF = 'urls'
@@ -126,10 +126,11 @@ INSTALLED_APPS = (
      'publisher',
      'advertiser',
      'website',
+     'admin',
 )
 
 IGNORE_APP_URLSAUTO = ('website')
 
-WHITELIST_EMAILS = ('test@example.com','nafisjamal@gmail.com','jim.e.payne@gmail.com','bryan.h.atwood@gmail.com','nafisjamal@mopub.com','batwood@mopub.com','jpayne@mopub.com','test2@example.com')
+WHITELIST_EMAILS = ('test@example.com','lamen@user.com','nafisjamal@gmail.com','jim.e.payne@gmail.com','bryan.h.atwood@gmail.com','nafisjamal@mopub.com','batwood@mopub.com','jpayne@mopub.com','test2@example.com')
 
 from common.ragendja.settings_post import *

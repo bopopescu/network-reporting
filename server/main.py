@@ -38,17 +38,18 @@ from google.appengine.ext.webapp import util
 import django.core.handlers.wsgi
 
 
-# import os
-# os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
-# 
-# from google.appengine.dist import use_library
-# use_library('django', '1.1')
-
 def main():
   logging.getLogger().setLevel(logging.DEBUG)
   # Ensure the Django zipfile is in the path if required.
-  if have_django_zip and django_zip_path not in sys.path:
-    sys.path.insert(1, django_zip_path)
+  try:
+    os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+
+    from google.appengine.dist import use_library
+    use_library('django', '1.1')
+  except:
+    logging.info("using django from zip file")
+    if have_django_zip and django_zip_path not in sys.path:
+      sys.path.insert(1, django_zip_path)
 
   # Create a Django application for WSGI.
   application = django.core.handlers.wsgi.WSGIHandler()

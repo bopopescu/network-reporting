@@ -17,7 +17,6 @@ from common.ragendja.template import render_to_response, JSONResponse
 from django.core.mail import send_mail, EmailMessage
 
 def website_splash(request,*args,**kwargs):
-  logging.info("hi")
   return render_to_response(request, 'splash.html', {'m': request.GET.get("m") or ""})
 
 def website_join(request,*args,**kwargs):

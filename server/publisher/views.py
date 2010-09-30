@@ -39,7 +39,6 @@ class RequestHandler(object):
         if not self.account:  
           self.account = Account.current_account()
           
-        logging.warning(self.account.key().name())  
         if request.method == "GET":
             return self.get(*args,**kwargs)
         elif request.method == "POST":
@@ -377,7 +376,6 @@ class GetStartedHandler(RequestHandler):
     if not u:
       u = Account(key_name=user.user_id(),user=user)
       u.put()
-
       
     return HttpResponseRedirect(reverse('publisher_index'))
 

@@ -23,10 +23,10 @@
           </td>
       </tr>
 			<tr>
-				<th>iTunes/Android Market URL</th><td><input type='text' name="url" size="50" placeholder="http://itunes.apple.com/xyz"/ value="{{app.url}}"></td>
+				<th>iTunes/Android Market URL</th><td><input type='text' name="url" size="50" placeholder="http://itunes.apple.com/xyz"/ value="{{app.url|default_if_none:""}}"></td>
 			</tr>
 			<tr>
-				<th>Description</th><td><textarea name="description" cols="50" rows="3">{{app.description}}</textarea></td>
+				<th>Description</th><td><textarea name="description" cols="50" rows="3">{{app.description|default_if_none:""}}</textarea></td>
 			</tr>
 		
 		</table>

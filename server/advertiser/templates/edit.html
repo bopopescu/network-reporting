@@ -14,7 +14,7 @@
 				<th>Name</th><td><input type='text' name="name" size="30" value="{{campaign.name}}"/></td>
 			</tr>
 			<tr>
-				<th>Description</th><td><textarea name="description" cols="50" rows="3">{{campaign.description}}</textarea></td>
+				<th>Description</th><td><textarea name="description" cols="50" rows="3">{{campaign.description|default_if_none:""}}</textarea></td>
 			</tr>
 		
 			<tr><td colspan="2"><h4>Campaign Properties</h4></td></tr>

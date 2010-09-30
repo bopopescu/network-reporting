@@ -39,7 +39,6 @@ class RequestHandler(object):
         if not self.account:  
           self.account = Account.current_account()
           
-          
         logging.warning(self.account.key().name())  
         if request.method == "GET":
             return self.get(*args,**kwargs)
@@ -75,7 +74,7 @@ class AppIndexHandler(RequestHandler):
     # compute start times; start day before today so incomplete days don't mess up graphs
     days = SiteStats.lastdays(14)
 
-    apps = App.gql("where account = :1", Account.current_account()).fetch(50)
+    apps = App.gql("where account = :1", self.account).fetch(50)
     today = SiteStats()
     if len(apps) > 0:
       for a in apps:
@@ -126,7 +125,7 @@ class AppIndexHandler(RequestHandler):
          'chart_url_rev': chart_url_rev,
          'pie_chart_url_imp': pie_chart_url_imp,
          'pie_chart_url_clk': pie_chart_url_clk,
-         'account': Account.current_account()})
+         'account': self.account})
     else:
       return HttpResponseRedirect(reverse('publisher_app_create'))
 
@@ -177,7 +176,7 @@ class ShowAppHandler(RequestHandler):
    
     # load the site
     a = App.get(self.request.GET.get('id'))
-    if a.account.key() != Account.current_account().key():
+    if a.account.key() != self.account.key():
       self.error(404)
       return
 
@@ -232,7 +231,7 @@ class ShowAppHandler(RequestHandler):
          'chart_url_rev': chart_url_rev,
          'pie_chart_url_imp': pie_chart_url_imp,
          'pie_chart_url_clk': pie_chart_url_clk,
-         'account': Account.current_account()})
+         'account': self.account})
 
     # write response
     return render_to_response(self.request,'show_app.html', {'app':app, 'sites':sites,
@@ -280,7 +279,7 @@ class ShowHandler(RequestHandler):
     # write response
     return render_to_response(self.request,'show.html', {'site':site, 
       'impression_count': impression_count, 'click_count': click_count, 'ctr': ctr, 'revenue': revenue,
-      'account':Account.current_account(), 
+      'account':self.account, 
       'chart_url_imp': chart_url_imp,
       'chart_url_clk': chart_url_clk,
       'chart_url_rev': chart_url_rev,
@@ -300,7 +299,7 @@ class AppUpdateHandler(RequestHandler):
   def post(self):
     a = App.get(self.request.GET.get('id'))
     f = AppForm(data=self.request.POST, instance=a)
-    if a.account.user == users.get_current_user():
+    if a.account.user == self.account.user:
       f.save(commit=False)
       a.put()
     return HttpResponseRedirect(reverse('publisher_app_show')+'?id=%s'%a.key())
@@ -319,7 +318,7 @@ class UpdateHandler(RequestHandler):
   def post(self):
     s = Site.get(self.request.GET.get('id'))
     f = SiteForm(data=self.request.POST, instance=s)
-    if s.account.user == users.get_current_user():
+    if s.account.user == self.account.user:
       f.save(commit=False)
       s.put()
     return HttpResponseRedirect(reverse('publisher_show')+'?id=%s'%s.key())
@@ -351,7 +350,7 @@ class GetStartedHandler(RequestHandler):
   def get(self):
     # Check if the user is in the data store and create it if not
 
-    user = users.get_current_user()
+    user = self.account.user
     u = Account.get_by_key_name(user.user_id())
     if not u:
       u = Account(key_name=user.user_id(),user=user)

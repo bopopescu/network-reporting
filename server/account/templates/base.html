@@ -86,7 +86,9 @@
 			{% block sidebar %}{% endblock %}
 		
 			<div id="primarycontent">
-			  <!--<div id="helptext"><div><b>Next</b>: Set up a campaign to target your Ad Units</div></div>-->
+			  {% if helptext %}
+			  <div id="helptext"><div>{{helptext}}</div></div>
+			  {% endif %}
         
 				{% block content %}{% endblock %}
 			</div>

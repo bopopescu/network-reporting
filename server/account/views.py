@@ -35,7 +35,6 @@ class RequestHandler(object):
           self.account = Account.current_account()
           
           
-        logging.warning(self.account.key().name())  
         if request.method == "GET":
             return self.get(*args,**kwargs)
         elif request.method == "POST":

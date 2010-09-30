@@ -39,7 +39,6 @@ class RequestHandler(object):
           self.account = Account.current_account()
           
           
-        logging.warning(self.account.key().name())  
         if request.method == "GET":
             return self.get(*args,**kwargs)
         elif request.method == "POST":
@@ -192,8 +191,6 @@ class ShowHandler(RequestHandler):
       revenue = [s.revenue for s in totals]
       chart_urls['rev'] = gen_graph_url(revenue, days, "Total+Revenue")
       
-      logging.warning(dir(self))
-
       # write response
       return render_to_response(self.request,'advertiser/show.html', 
                                             {'campaign':campaign, 

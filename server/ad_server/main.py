@@ -277,7 +277,7 @@ class AdHandler(webapp.RequestHandler):
       self.response.headers.add_header("X-Clickthrough", str(ad_click_url))
       
       # render the creative 
-      self.response.out.write(self.render_creative(c, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, request_id=request_id, v=int(self.request.get('v'))))
+      self.response.out.write(self.render_creative(c, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, request_id=request_id, v=int(self.request.get('v') or 0)))
     else:
       self.response.out.write("")
   #

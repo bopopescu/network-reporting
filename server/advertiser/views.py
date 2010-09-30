@@ -25,13 +25,25 @@ from publisher.models import Site, Account
 from reporting.models import SiteStats
 
 class RequestHandler(object):
-    def __call__(self,request):
+    def __call__(self,request,*args,**kwargs):
         self.params = request.POST or request.GET
         self.request = request
+        self.account = None
+        user = users.get_current_user()
+        if user:
+          if users.is_current_user_admin():
+            user_key_name = request.COOKIES.get("account_impersonation",None)
+            if user_key_name:
+              self.account = Account.get_by_key_name(user_key_name)
+        if not self.account:  
+          self.account = Account.current_account()
+          
+          
+        logging.warning(self.account.key().name())  
         if request.method == "GET":
-            return self.get()
+            return self.get(*args,**kwargs)
         elif request.method == "POST":
-            return self.post()    
+            return self.post(*args,**kwargs)    
     def get(self):
         pass
     def put(self):
@@ -41,8 +53,8 @@ def gen_graph_url(series, days, title):
   chart_url = "http://chart.apis.google.com/chart?cht=lc&chtt=%s&chs=780x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
     title,
     ','.join(map(lambda x: str(x), series)),
-    max(series) * 1.5,
-    max(series) * 1.5,
+    max(series) * 1.5 if series else 10,
+    max(series) * 1.5 if series else 10,
     '|'.join(map(lambda x: x.strftime("%m/%d"), days)))
 
   return chart_url
@@ -51,7 +63,7 @@ class IndexHandler(RequestHandler):
   def get(self):
     days = SiteStats.lastdays(14)
     
-    campaigns = Campaign.gql("where u = :1 and deleted = :2", users.get_current_user(), False).fetch(100)
+    campaigns = Campaign.gql("where u = :1 and deleted = :2", self.account.user, False).fetch(100)
     #campaigns = Campaign.gql("where deleted = :1", False).fetch(100)
     for c in campaigns:
       c.all_stats = SiteStats.stats_for_days(c, days)      
@@ -91,7 +103,7 @@ class CreateHandler(RequestHandler):
   def post(self):
     f = CampaignForm(data=self.request.POST)
     campaign = f.save(commit=False)
-    campaign.u = users.get_current_user() 
+    campaign.u = self.account.user
     campaign.put()
     return HttpResponseRedirect(reverse('campaign_adgroup_new',kwargs={'campaign_key':campaign.key()}))
 
@@ -100,17 +112,9 @@ def campaign_create(request,*args,**kwargs):
   return CreateHandler()(request,*args,**kwargs)      
 
 class CreateAdGroupHandler(RequestHandler):
-  def __call__(self,request,campaign_key):
-      self.params = request.POST or request.GET
-      self.request = request
-      if request.method == "GET":
-          return self.get(campaign_key)
-      elif request.method == "POST":
-          return self.post(campaign_key)
-
   def get(self, campaign_key):
     f = AdGroupForm()
-    sites = Site.gql('where account=:1', Account.current_account())    
+    sites = Site.gql('where account=:1', self.account)    
     return render_to_response(self.request,'advertiser/new_adgroup.html', {"f": f, "c": Campaign.get(campaign_key), "sites": sites})
 
   def post(self, campaign_key):
@@ -136,15 +140,7 @@ class CreateAdGroupHandler(RequestHandler):
 def campaign_adgroup_new(request,*args,**kwargs):
   return CreateAdGroupHandler()(request,*args,**kwargs)      
 
-class ShowHandler(RequestHandler):
-  def __call__(self,request,campaign_key):
-      self.params = request.POST or request.GET
-      self.request = request
-      if request.method == "GET":
-          return self.get(campaign_key)
-      elif request.method == "POST":
-          return self.post()
-          
+class ShowHandler(RequestHandler):          
   def get(self, campaign_key):
     days = SiteStats.lastdays(14)
 
@@ -173,6 +169,8 @@ class ShowHandler(RequestHandler):
       # make a line graph showing clicks
       clicks = [s.click_count for s in totals]
       chart_url_clk = gen_graph_url(clicks, days, "Total+Daily+Clicks")
+      
+      logging.warning(dir(self))
 
       # write response
       return render_to_response(self.request,'advertiser/show.html', 
@@ -181,7 +179,7 @@ class ShowHandler(RequestHandler):
                                             'today': today,
                                             'chart_url_imp': chart_url_imp,
                                             'chart_url_clk': chart_url_clk,
-                                            'user':users.get_current_user()})
+                                            'user':self.account})
 
 @whitelist_login_required     
 def campaign_show(request,*args,**kwargs):
@@ -196,7 +194,7 @@ class EditHandler(RequestHandler):
   def post(self):
     c = Campaign.get(self.request.POST.get('id'))
     f = CampaignForm(data=self.request.POST, instance=c)
-    if c.u == users.get_current_user():
+    if c.u == self.account.user:
       f.save(commit=False)
       c.put()
       return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':c.key()}))
@@ -212,7 +210,7 @@ class PauseHandler(RequestHandler):
     for id in self.request.POST.getlist('id') or []:
       c = Campaign.get(id)
       logging.info(c)
-      if c != None and c.u == users.get_current_user():
+      if c != None and c.u == self.account.user:
         if action == "pause":
           c.active = False
           c.deleted = False
@@ -230,14 +228,6 @@ def campaign_pause(request,*args,**kwargs):
   return PauseHandler()(request,*args,**kwargs)
   
 class ShowAdGroupHandler(RequestHandler):
-  def __call__(self,request,adgroup_key):
-    self.params = request.POST or request.GET
-    self.request = request
-    if request.method == "GET":
-      return self.get(adgroup_key)
-    elif request.method == "POST":
-      return self.post()
-  
   def get(self, adgroup_key):
     days = SiteStats.lastdays(14)
 
@@ -286,7 +276,7 @@ class EditBidHandler(RequestHandler):
     a = AdGroup.get(self.request.GET.get("id"))
     f = AdGroupForm(instance=a)
     params = {"f": f, 
-    'sites': Site.gql('where account=:1', Account.current_account()).fetch(100),
+    'sites': Site.gql('where account=:1', self.account).fetch(100),
     "a": a, 
     "campaign": a.campaign,
     "device_choices":[list(c) for c in AdGroup.DEVICE_CHOICES],
@@ -313,7 +303,7 @@ class EditBidHandler(RequestHandler):
     key = self.request.GET.get("id")
     a = AdGroup.get(key)
     f = AdGroupForm(data=self.request.POST, instance=a)
-    if a.campaign.u == users.get_current_user():
+    if a.campaign.u == self.account.user:
       logging.info(f)
       a.site_keys = map(lambda x:db.Key(x), self.request.POST.getlist("site_keys"))
       a.keywords = filter(lambda k: len(k) > 0, self.request.POST.get('keywords').lower().split('\n'))
@@ -339,7 +329,7 @@ class PauseBidHandler(RequestHandler):
     for id in self.request.POST.getlist('id') or []:
       c = AdGroup.get(id)
       logging.info(c)
-      if c != None and c.campaign.u == users.get_current_user():
+      if c != None and c.campaign.u == self.account.user:
         if action == "pause":
           c.active = False
           c.deleted = False
@@ -364,7 +354,7 @@ class RemoveBidHandler(RequestHandler):
       b = AdGroup.get(id)
       logging.info(b)
       c = b.campaign
-      if b != None and b.campaign.u == users.get_current_user():
+      if b != None and b.campaign.u == self.account.user:
         b.deleted = True
         b.put()
     return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':c.key()}))
@@ -413,14 +403,6 @@ def creative_create(request,*args,**kwargs):
   return AddCreativeHandler()(request,*args,**kwargs)  
 
 class DisplayCreativeHandler(RequestHandler):
-  def __call__(self,request,creative_key):
-    self.params = request.POST or request.GET
-    self.request = request
-    if request.method == "GET":
-      return self.get(creative_key)
-    elif request.method == "POST":
-      return self.post()
-
   def get(self, creative_key):
     c = Creative.get(creative_key)
     if c and c.ad_type == "image" and c.image:
@@ -435,7 +417,7 @@ class RemoveCreativeHandler(RequestHandler):
     ids = self.request.POST.getlist('id')
     for creative_key in ids:
       c = Creative.get(creative_key)
-      if c != None and c.ad_group.campaign.u == users.get_current_user():
+      if c != None and c.ad_group.campaign.u == self.account.user:
         c.deleted = True
         c.put()
     return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':c.ad_group.key()}))

@@ -54,7 +54,6 @@ class AdStats:
       if logline_dict and str(logline_dict['client']) not in self.CRAWLERS:
         for proc, regex in props.items():
           if re.compile(regex).match(logline_dict["path"]) != None:
-            print line
             globals()[proc]().process(logline_dict)
             
       # if this is an OLP info log
@@ -307,23 +306,6 @@ class PubRevenueCounter(StatsCounter):
         if adgroup.bid_strategy == 'cpm':
           stats.revenue += adgroup.bid*1.0/1000.0               
 
-# TODO: Calculate Revenue on pub ad units
-# class PubImpressionRevenueCounter(StatsCounter):
-#   def process(self, d):
-#     stats = self.get_site_stats(self.get_id_for_dict(d))
-#     creative_key = d["params"].get("c",None)
-#     if creative_key:
-#       creative_key = db.Key(creative_key)
-#     
-#     # TODO: Have a parent-child relationship such that the key name already tells us the parent key
-#     creative = CreativeCache.get(creative_key)
-#     adgroup_key = creative.ad_group.key()
-#     adgroup = AdGroupCache.get(adgroup_key)
-# 
-#     # ad_group = AdGroupCache.get(self.)
-#     if stats:
-#       if adgroup.bid_strategy == 'cpm':
-#         stats.revenue += adgroup.bid*1.0/1000.0
 
 #
 # PubLegacyImpressionCounter - counts imprs on publisher ad units
@@ -436,8 +418,6 @@ class CampaignClickCounter(StatsCounter):
   def process(self, d):
     # accrue this click to a particular creative, campaign and ad group
     creative_key_string = d["params"].get("c",None)
-    print d
-    adsf
     if creative_key_string:
       creative_key = db.Key(creative_key_string)
       creative = CreativeCache.get(creative_key)

@@ -87,7 +87,7 @@
 		
 			<div id="primarycontent">
 			  {% if helptext %}
-			  <div id="helptext"><div>{{helptext}}</div></div>
+			  <div id="helptext"><div>{{helptext|safe}}</div></div>
 			  {% endif %}
         
 				{% block content %}{% endblock %}

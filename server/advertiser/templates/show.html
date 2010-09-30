@@ -17,7 +17,7 @@
 		<tr>
 			<td class="rollup rollup_selected" onClick="show_graph_imp(this);"><b>Impressions</b><br/>{{today.impression_count|withsep}}</td>
 			<td class="rollup" onClick="show_graph_clk(this);"><b>Clicks</b><br/>{{today.click_count|withsep}} ({{today.ctr|percentage}})</td>
-			<td class="rollup"><b>Revenue</b><br/>{{today.revenue|currency}}</td>
+			<td class="rollup" onClick="show_graph_rev(this);"><b>Revenue</b><br/>{{today.revenue|currency}}</td>
 		</tr>
 	</table>
 	

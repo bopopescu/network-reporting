@@ -98,9 +98,14 @@ class AppIndexHandler(RequestHandler):
       # make a line graph showing impressions
       impressions = [s.impression_count for s in totals]
       chart_url_imp = gen_chart_url(impressions, days, "Total+Daily+Impressions")
+      
       # make a line graph showing clicks
       clicks = [s.click_count for s in totals]
       chart_url_clk = gen_chart_url(clicks, days, "Total+Daily+Clicks")
+
+      # make a line graph showing revenue
+      revenue = [s.revenue for s in totals]
+      chart_url_rev = gen_chart_url(revenue, days, "Total+Revenue")
 
       # do a bar graph showing contribution of each site to impression count
       impressions_by_app = []
@@ -118,6 +123,7 @@ class AppIndexHandler(RequestHandler):
          'today': today,
          'chart_url_imp': chart_url_imp,
          'chart_url_clk': chart_url_clk,
+         'chart_url_rev': chart_url_rev,
          'pie_chart_url_imp': pie_chart_url_imp,
          'pie_chart_url_clk': pie_chart_url_clk,
          'account': Account.current_account()})
@@ -194,9 +200,14 @@ class ShowAppHandler(RequestHandler):
     # make a line graph showing impressions
     impressions = [s.impression_count for s in totals]
     chart_url_imp = gen_chart_url(impressions, days, "Total+Daily+Impressions")
+    
     # make a line graph showing clicks
     clicks = [s.click_count for s in totals]
     chart_url_clk = gen_chart_url(clicks, days, "Total+Daily+Clicks")
+    
+    # make a line graph showing revenue
+    revenue = [s.revenue for s in totals]
+    chart_url_rev = gen_chart_url(revenue, days, "Total+Revenue")
 
     # do a bar graph showing contribution of each site to impression count
     if len(a.sites) > 0:
@@ -218,6 +229,7 @@ class ShowAppHandler(RequestHandler):
          'today': today,
          'chart_url_imp': chart_url_imp,
          'chart_url_clk': chart_url_clk,
+         'chart_url_rev': chart_url_rev,
          'pie_chart_url_imp': pie_chart_url_imp,
          'pie_chart_url_clk': pie_chart_url_clk,
          'account': Account.current_account()})
@@ -246,16 +258,20 @@ class ShowHandler(RequestHandler):
 
     # chart
     chart_url_imp = "http://chart.apis.google.com/chart?cht=lc&chs=800x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
-       ','.join(map(lambda x: str(x.impression_count), stats)), 
-       max(map(lambda x: x.impression_count, stats)) * 1.5,
-       max(map(lambda x: x.impression_count, stats)) * 1.5,
-       '|'.join(map(lambda x: x.strftime("%m/%d"), days)))
+      ','.join(map(lambda x: str(x.impression_count), stats)), 
+      max(map(lambda x: x.impression_count, stats)) * 1.5,
+      max(map(lambda x: x.impression_count, stats)) * 1.5,
+      '|'.join(map(lambda x: x.strftime("%m/%d"), days)))
     chart_url_clk = "http://chart.apis.google.com/chart?cht=lc&chs=800x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
-       ','.join(map(lambda x: str(x.click_count), stats)), 
-       max(map(lambda x: x.click_count, stats)) * 1.5,
-       max(map(lambda x: x.click_count, stats)) * 1.5,
-       '|'.join(map(lambda x: x.strftime("%m/%d"), days)))
-
+      ','.join(map(lambda x: str(x.click_count), stats)), 
+      max(map(lambda x: x.click_count, stats)) * 1.5,
+      max(map(lambda x: x.click_count, stats)) * 1.5,
+      '|'.join(map(lambda x: x.strftime("%m/%d"), days)))
+    chart_url_rev = "http://chart.apis.google.com/chart?cht=lc&chs=800x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
+      ','.join(map(lambda x: str(x.revenue), stats)), 
+      max(map(lambda x: x.revenue, stats)) * 1.5,
+      max(map(lambda x: x.revenue, stats)) * 1.5,
+      '|'.join(map(lambda x: x.strftime("%m/%d"), days)))
     # totals
     impression_count = sum(map(lambda x: x.impression_count, stats))
     logging.info(impression_count)
@@ -268,6 +284,7 @@ class ShowHandler(RequestHandler):
       'account':Account.current_account(), 
       'chart_url_imp': chart_url_imp,
       'chart_url_clk': chart_url_clk,
+      'chart_url_rev': chart_url_rev,
       'days': days,
       'stats':stats})
   

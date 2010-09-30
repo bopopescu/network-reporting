@@ -2,7 +2,7 @@ from google.appengine.ext import db
 
 from publisher.models import Site
 import datetime
-import md5
+import hashlib
 import logging
 
 # 
@@ -18,6 +18,7 @@ class SiteStats(db.Model):
   request_count = db.IntegerProperty(default=0)
   impression_count = db.IntegerProperty(default=0)
   click_count = db.IntegerProperty(default=0)
+  unique_user_count = db.IntegerProperty(default=0)
 
   # total revenue (cost)
   revenue = db.FloatProperty(default=float(0))
@@ -25,7 +26,7 @@ class SiteStats(db.Model):
   # conversion information
   converted_clicks = db.IntegerProperty()
   conversions = db.IntegerProperty()
-  
+    
   @classmethod
   def get_key(c, site_key, owner_key=None, date=datetime.datetime.now().date()):
     return db.Key.from_path("SiteStats", "%s:%s:%s" % (site_key if site_key else '', owner_key if owner_key else '', str(date)))
@@ -108,6 +109,14 @@ class SiteStats(db.Model):
     self.revenue += revenue
     self.put()
     
+  def add_user(self,u):  
+    if hasattr(self,'unique_user_set'):
+      self.unique_user_set.add(u)
+      self.unique_user_count = len(self.unique_user_set)
+    else:
+      self.unique_user_set = set([u])  
+      self.unique_user_count = 1
+    
   def __add__(self, s):
     return SiteStats(site=self.site, 
       owner=self.owner, 
@@ -120,7 +129,7 @@ class SiteStats(db.Model):
       conversions = self.conversions + s.conversions if self.conversions and s.conversions else None )
 
   def __repr__(self):
-    return "SiteStats{site=%s, owner=%s, %d/%d/%d}" % (self.site.key() if self.site else "None", self.owner.key() if self.owner else "None", self.request_count, self.impression_count, self.click_count)
+    return "SiteStats{site=%s, owner=%s(%s), %d/%d/%d/%.2f, users=%d}" % (self.site.key() if self.site else "None", self.owner.__class__.__name__ if self.owner else '',self.owner.key() if self.owner else "None", self.request_count, self.impression_count, self.click_count, self.revenue, self.unique_user_count)
 
     
 #

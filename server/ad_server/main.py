@@ -8,7 +8,7 @@ import datetime
 import hashlib
 import traceback
 import random
-import md5
+import hashlib
 import time
 import base64, binascii
 from django.utils import simplejson
@@ -60,25 +60,25 @@ class AdAuction(object):
     # 3) throw out ad groups that restrict by keywords and do not match the keywords
     # 4) throw out ad groups that do not match device and geo predicates
     ad_groups = AdGroup.gql("where site_keys = :1 and active = :2 and deleted = :3", site.key(), True, False).fetch(AdAuction.MAX_ADGROUPS)
-    logging.info("ad groups: %s" % ad_groups)
+    logging.debug("ad groups: %s" % ad_groups)
     
     # campaign exclusions... budget + time
     ad_groups = filter(lambda a: a.campaign.budget is None or SiteStats.stats_for_day(a.campaign, SiteStats.today()).revenue < a.campaign.budget, ad_groups)
-    logging.info("removed over budget, now: %s" % ad_groups)
+    logging.debug("removed over budget, now: %s" % ad_groups)
     ad_groups = filter(lambda a: a.campaign.active and (a.campaign.start_date >= SiteStats.today() if a.campaign.start_date else True) and (a.campaign.end_date <= SiteStats.today() if a.campaign.end_date else True), ad_groups)
-    logging.info("removed non running campaigns, now: %s" % ad_groups)
+    logging.debug("removed non running campaigns, now: %s" % ad_groups)
     
     # ad group request-based targeting exclusions
     ad_groups = filter(lambda a: len(a.keywords) == 0 or set(keywords).intersection(a.keywords) > set(), ad_groups)
-    logging.info("removed keyword non-matches, now: %s" % ad_groups)
+    logging.debug("removed keyword non-matches, now: %s" % ad_groups)
     ad_groups = filter(lambda a: set(geo_predicates).intersection(a.geo_predicates) > set(), ad_groups)
-    logging.info("removed geo non-matches, now: %s" % ad_groups)
+    logging.debug("removed geo non-matches, now: %s" % ad_groups)
     ad_groups = filter(lambda a: set(device_predicates).intersection(a.device_predicates) > set(), ad_groups)
-    logging.info("removed device non-matches, now: %s" % ad_groups)
+    logging.debug("removed device non-matches, now: %s" % ad_groups)
     
     # TODO: frequency capping and other user / request based randomizations
     udid = kw["udid"]
-    logging.info("udid: %s %s"%(udid,len(ad_groups)))
+    logging.debug("udid: %s %s"%(udid,len(ad_groups)))
     
     
     # if any ad groups were returned, find the creatives that match the requested format in all candidates
@@ -96,14 +96,14 @@ class AdAuction(object):
           
           while players:
             winning_ecpm = max(c.e_cpm() for c in players) if len(players) > 0 else 0
-            logging.info("auction at priority=%d: %s, max eCPM=%.2f" % (p, players, winning_ecpm))
+            logging.debug("auction at priority=%d: %s, max eCPM=%.2f" % (p, players, winning_ecpm))
       
             # if the winning creative exceeds the ad unit's threshold cpm for the
             # priority level, then we have a winner
             if winning_ecpm >= site.threshold_cpm(p):
               # retain all creatives with comparable eCPM and randomize among them
               winners = filter(lambda x: x.e_cpm() >= winning_ecpm, players)
-              logging.info("winners: %s",winners)
+              logging.debug("winners: %s",winners)
               
               
               # find out which ad groups are eligible
@@ -113,14 +113,14 @@ class AdAuction(object):
             
               # exclude according to the exclude parameter must do this after determining adgroups
               # so that we maintain the correct order for user bucketing
-              logging.info("eligible creatives: %s %s" % (winners,exclude_params))
+              logging.debug("eligible creatives: %s %s" % (winners,exclude_params))
               winners = [c for c in winners if not (c.ad_type in exclude_params)]  
-              logging.info("eligible creatives after exclusions: %s" % winners)
+              logging.debug("eligible creatives after exclusions: %s" % winners)
             
               # calculate the user experiment bucket
               user_bucket = hash(udid+','.join([str(c.ad_group.key()) for ad_group in ad_groups])) % 100 # user gets assigned a number between 0-99 inclusive
               user_bucket = 40
-              logging.info("the user bucket is: #%d",user_bucket)
+              logging.debug("the user bucket is: #%d",user_bucket)
           
               # determine in which ad group the user falls into to
               # otherwise give creatives in the other adgroups a shot
@@ -145,13 +145,13 @@ class AdAuction(object):
             
               # if there is a winning/eligible adgroup find the appropriate creative for it
               if winning_ad_groups:
-                logging.info("winner ad_groups: %s"%winning_ad_groups)
+                logging.debug("winner ad_groups: %s"%winning_ad_groups)
               
                 if winning_ad_groups:
                   winners = [winner for winner in winners if winner.ad_group in winning_ad_groups]
 
                 if winners:
-                  logging.info('winners %s'%winners)
+                  logging.debug('winners %s'%winners)
                   random.shuffle(winners)
                   logging.debug('random winners %s'%winners)
           
@@ -160,21 +160,21 @@ class AdAuction(object):
                   logging.debug("winning creative = %s" % winner)
                   return winner
                 else:
-                  logging.info('taking away some players not in %s'%ad_groups)
-                  logging.info('%s'%players)
+                  logging.debug('taking away some players not in %s'%ad_groups)
+                  logging.debug('%s'%players)
                   players = [c for c in players if not c.ad_group in ad_groups]  
-                  logging.info('%s'%players)
+                  logging.debug('%s'%players)
                     
                   
               else:
-                logging.info('taking away some players not in %s'%ad_groups)
-                logging.info('%s'%players)
+                logging.debug('taking away some players not in %s'%ad_groups)
+                logging.debug('%s'%players)
                 players = [c for c in players if not c.ad_group in ad_groups]  
-                logging.info('%s'%players)
+                logging.debug('%s'%players)
                 
 
     # nothing... failed auction
-    logging.info("auction failed, returning None")
+    logging.debug("auction failed, returning None")
 
   @classmethod
   def geo_predicates_for_rgeocode(c, r):
@@ -202,6 +202,7 @@ class AdAuction(object):
 
   @classmethod
   def format_predicates_for_format(c, f):
+    # TODO: does this always work for any format
     return ["format=%dx%d" % (f[0], f[1]), "format=*"]
   
   @classmethod
@@ -255,7 +256,7 @@ class AdHandler(webapp.RequestHandler):
     excluded_creatives = self.request.get("exclude")
     
     # create a unique request id, but only log this line if the user agent is real
-    request_id = md5.md5("%s:%s" % (self.request.query_string, time.time())).hexdigest()
+    request_id = hashlib.md5("%s:%s" % (self.request.query_string, time.time())).hexdigest()
     if str(self.request.headers['User-Agent']) not in CRAWLERS:
       logging.info('OLP ad-request {"request_id": "%s", "remote_addr": "%s", "q": "%s", "user_agent": "%s"}' % (request_id, self.request.remote_addr, self.request.query_string, self.request.headers["User-Agent"]))
 
@@ -274,27 +275,46 @@ class AdHandler(webapp.RequestHandler):
       self.response.headers.add_header("X-Clickthrough", str(ad_click_url))
       
       # render the creative 
-      self.response.out.write(self.render_creative(c, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, request_id=request_id))
+      self.response.out.write(self.render_creative(c, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, request_id=request_id, v=int(self.request.get('v'))))
     else:
       self.response.out.write("")
   #
   # Templates
   #
   TEMPLATES = {
-    "adsense": Template("""<html> <head><title>$title</title><script>function finishLoad(){window.location="mopub://finishLoad";} window.onload = function(){finishLoad();} </script></head> <body style="margin: 0;width:${w}px;height:${h}px;" > <script type="text/javascript">window.googleAfmcRequest = {client: '$client',ad_type: 'text_image', output: 'html', channel: '',format: '$adsense_format',oe: 'utf8',color_border: '336699',color_bg: 'FFFFFF',color_link: '0000FF',color_text: '000000',color_url: '008000',};</script> <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_afmc_ads.js"></script>  </body> </html> """),
+    "adsense": Template("""<html>
+                            <head>
+                              <title>$title</title>
+                              $finishLoad
+                            </head>
+                            <body style="margin: 0;width:${w}px;height:${h}px;" >
+                              <script type="text/javascript">window.googleAfmcRequest = {client: '$client',ad_type: 'text_image', output: 'html', channel: '',format: '$adsense_format',oe: 'utf8',color_border: '336699',color_bg: 'FFFFFF',color_link: '0000FF',color_text: '000000',color_url: '008000',};</script> 
+                              <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_afmc_ads.js"></script>  
+                            </body>
+                          </html> """),
     "iAd": Template("iAd"),
     "clear": Template(""),
     "text": Template("""<html>\
-                        <head><style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: ${w}px;height: ${h}px;}.creative_headline {font-size: 14px;}.creative .creative_url a {color: green;text-decoration: none;}</style></head>\
+                        <head>
+                          <style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: ${w}px;height: ${h}px;}.creative_headline {font-size: 14px;}.creative .creative_url a {color: green;text-decoration: none;}
+                          </style>
+                          $finishLoad
+                        </head>\
                         <body style="margin: 0;width:${w}px;height:${h}px;padding:0;">\
                           <div class="creative"><div style="padding: 5px 10px;"><a href="$url" class="creative_headline">$headline</a><br/>$line1 $line2<br/><span class="creative_url"><a href="$url">$display_url</a></span></div></div>\
                         </body> </html> """),
     "image":Template("""<html>\
-                        <head><style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: ${w}px;height: ${h}px;}.creative_headline {font-size: 20px;}.creative .creative_url a {color: green;text-decoration: none;}</style></head>\
+                        <head>
+                          <style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: ${w}px;height: ${h}px;}.creative_headline {font-size: 20px;}.creative .creative_url a {color: green;text-decoration: none;}
+                          </style>
+                          $finishLoad
+                        </head>
                         <body style="margin: 0;width:${w}px;height:${h}px;padding:0;">\
                           <a href="$url"><img src="$image_url" width=$w height=$h/></a>
                         </body> </html> """),
-    "admob": Template("""<html><head><script>function finishLoad(){window.location="mopub://finishLoad";} window.onload = function(){finishLoad();} </script></head><body style="margin: 0;padding:0;">
+    "admob": Template("""<html><head>
+                        $finishLoad
+                        </head><body style="margin: 0;padding:0;">
                         <script type="text/javascript">
                         var admob_vars = {
                          pubid: '$client', // publisher id
@@ -310,7 +330,7 @@ class AdHandler(webapp.RequestHandler):
   }
   def render_creative(self, c, **kwargs):
     if c:
-      logging.info("rendering: %s" % c.ad_type)
+      logging.debug("rendering: %s" % c.ad_type)
       format = kwargs["format"]
 
       params = kwargs
@@ -318,6 +338,7 @@ class AdHandler(webapp.RequestHandler):
 
       if c.ad_type == "adsense":
         params.update({"title": kwargs["q"], "adsense_format": format[2], "w": format[0], "h": format[1], "client": kwargs["site"].account.adsense_pub_id})
+        self.response.headers.add_header("X-Launchpage","http://googleads.g.doubleclick.net")
       elif c.ad_type == "admob":
         params.update({"title": kwargs["q"], "w": format[0], "h": format[1], "client": kwargs["site"].account.admob_pub_id})
         self.response.headers.add_header("X-Launchpage","http://c.admob.com/")
@@ -325,10 +346,18 @@ class AdHandler(webapp.RequestHandler):
         params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
       elif c.ad_type == "html":
         params.update({"html_data": kwargs["html_data"]})
+        
+      if kwargs["v"] >= 2:  
+        params.update(finishLoad='<script>function finishLoad(){window.location="mopub://finishLoad";} window.onload = function(){finishLoad();} </script>')
+      else:
+        params.update(finishLoad='')  
       
       # indicate to the client the winning creative type, in case it is natively implemented (iad, clear)
       self.response.headers.add_header("X-Adtype", str(c.ad_type))
       self.response.headers.add_header("X-Backfill", str(c.ad_type))
+      
+      if str(c.ad_type) == "iAd":
+        self.response.headers.add_header("X-Failurl",self.request.url+'&exclude='+str(c.ad_type))
       
       # render the HTML body
       self.response.out.write(self.TEMPLATES[c.ad_type].safe_substitute(params))

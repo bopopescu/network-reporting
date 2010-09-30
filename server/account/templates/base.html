@@ -22,31 +22,67 @@
 	<div id="outer">
 		<div id="upbg"></div>
 		<div id="inner">
-			{% block letterhead %}
-				<div id="header">
-					<a href="/main"><img src="/images/logo_header.png" width=60 height=16/></a>
-					<span style="color: #aaa; padding: 15px 0 0 10px;">
-					</span>
-				</div>
-	
-				<div id="menu">
-					<ul>
-						<li>
-							<a href="/campaigns/">campaigns</a>
-						</li>
-						<li>
-							<a href="/inventory/">inventory</a>
-						</li>
-						<li class="active">
-							<a href="/account/">account</a>
-						</li>
-					</ul>
-					<div id="date">
-						{% block message %}{% endblock %}				
-					</div>
-				</div>
-				<div class="post_menu"></div>
-			{% endblock %}
+	      {% block letterhead %}
+	        <div id="header">
+	          <a href="/main"><img src="/images/logo_header.png" width=60 height=16/></a>
+	          <span style="color: #aaa; padding: 15px 0 0 10px;">
+	          </span>
+	        </div>
+
+	        <div id="menu">
+	          <ul>
+	            <li>
+	              <a href="/campaigns/">campaigns</a>
+	            </li>
+	            <li>
+	              <a href="/inventory/">inventory</a>
+	            </li>
+	            <li class="active">
+	              <a href="/account/">account</a>
+	            </li>
+	          </ul>
+	          <div id="date">
+	            {% block message %}{% endblock %}
+	          </div>
+	        </div>
+
+			{% if user.is_admin %}
+			<div style="float:right">
+				<form id="admin_user_switch" action="{% url admin_switch_user %}" method="POST">
+					{# user key: <input id="admin_user_switch_email" type="text" name="user_key"/> #}
+					<select name="user_key" id="admin_user_switch_select" onchange='$("admin_user_switch").submit()'>
+					{{ request|all_user_dropdown }}
+					</select>
+				</form>
+			</div>
+			<script type="text/javascript">
+				function getCookie(c_name)
+				{
+				if (document.cookie.length>0)
+				  {
+				  c_start=document.cookie.indexOf(c_name + "=");
+				  if (c_start!=-1)
+				    {
+				    c_start=c_start + c_name.length+1;
+				    c_end=document.cookie.indexOf(";",c_start);
+				    if (c_end==-1) c_end=document.cookie.length;
+				    return unescape(document.cookie.substring(c_start,c_end));
+				    }
+				  }
+				return "";
+				}
+				var user_key_name = getCookie('account_impersonation');
+				var options = $$('select#admin_user_switch_select option');
+				var len = options.length;
+				for (var i = 0; i < len; i++) {
+				    if (options[i].value == user_key_name)
+						options[i].selected = true;
+				}
+			</script>
+			{% endif %}
+	        <div class="post_menu"></div>
+	      {% endblock %}
+
 	
 			{% block sidebar %}{% endblock %}
 		

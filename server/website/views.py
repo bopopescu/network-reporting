@@ -47,3 +47,4 @@ The MoPub Team
 ''', 'MoPub Team <olp@mopub.com>', [email], headers = {'Reply-To': 'beta@mopub.com'})
   msg.send(fail_silently=False)
   return HttpResponseRedirect("/?m=Thanks, we will let you know when an invitation is ready for you.")
+  

@@ -26,17 +26,29 @@ from advertiser.models import Campaign, AdGroup, HtmlCreative
 from reporting.models import SiteStats
 
 class RequestHandler(object):
-    def __call__(self,request):
+    def __call__(self,request,*args,**kwargs):
         self.params = request.POST or request.GET
         self.request = request
+        self.account = None
+        user = users.get_current_user()
+        if user:
+          if users.is_current_user_admin():
+            account_key_name = request.COOKIES.get("account_impersonation",None)
+            if account_key_name:
+              self.account = Account.get_by_key_name(account_key_name)
+        if not self.account:  
+          self.account = Account.current_account()
+          
+          
+        logging.warning(self.account.key().name())  
         if request.method == "GET":
-            return self.get()
+            return self.get(*args,**kwargs)
         elif request.method == "POST":
-            return self.post()    
+            return self.post(*args,**kwargs)    
     def get(self):
         pass
     def put(self):
-        pass    
+        pass  
 
 def gen_chart_url(series, days, title):
   chart_url = "http://chart.apis.google.com/chart?cht=lc&chtt=%s&chs=580x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
@@ -126,7 +138,7 @@ class AppCreateHandler(RequestHandler):
     f = AppForm(data=self.request.POST)
     if f.is_valid():
       app = f.save(commit=False)
-      app.account = Account.current_account()
+      app.account = self.account
       app.put()
       return HttpResponseRedirect(reverse('publisher_app_show')+'?id=%s'%app.key())
     else:
@@ -142,7 +154,7 @@ class CreateAdUnitHandler(RequestHandler):
     a = App.get(self.request.POST.get('id'))
     if f.is_valid():
       site = f.save(commit=False)
-      site.account = Account.current_account()
+      site.account = self.account
       site.app_key = a
       site.put()
       return HttpResponseRedirect(reverse('publisher_generate')+'?id=%s'%site.key())
@@ -212,7 +224,7 @@ class ShowAppHandler(RequestHandler):
 
     # write response
     return render_to_response(self.request,'show_app.html', {'app':app, 'sites':sites,
-      'account':Account.current_account()})
+      'account':self.account})
   
 @whitelist_login_required
 def app_show(request,*args,**kwargs):
@@ -222,7 +234,7 @@ class ShowHandler(RequestHandler):
   def get(self):
     # load the site
     site = Site.get(self.request.GET.get('id'))
-    if site.account.key() != Account.current_account().key():
+    if site.account.key() != self.account.key():
       self.error(404)
       return
 

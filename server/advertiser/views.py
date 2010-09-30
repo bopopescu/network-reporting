@@ -87,14 +87,24 @@ class IndexHandler(RequestHandler):
     revenue = [s.revenue for s in totals]
     chart_urls['rev'] = gen_graph_url(revenue, days, "Total+Revenue")
 
+    promo_campaigns = filter(lambda x: x.campaign_type in ['promo'], campaigns)
+    garauntee_campaigns = filter(lambda x: x.campaign_type in ['gtee'], campaigns)
+    network_campaigns = filter(lambda x: x.campaign_type in ['network'], campaigns)
+
+    help_text = None
+    if network_campaigns:
+      if not (self.account.adsense_pub_id and self.account.admob_pub_id):
+        help_text = 'Blah blah'
+
     return render_to_response(self.request, 
       'advertiser/index.html', 
       {'campaigns':campaigns, 
        'today': today,
        'chart_urls': chart_urls,
-       'gtee': filter(lambda x: x.campaign_type in ['gtee'], campaigns),
-       'promo': filter(lambda x: x.campaign_type in ['promo'], campaigns),
-       'network': filter(lambda x: x.campaign_type in ['network'], campaigns), })
+       'gtee': garauntee_campaigns,
+       'promo': promo_campaigns,
+       'network': network_campaigns,
+       'helptext':help_text })
       
 @whitelist_login_required     
 def index(request,*args,**kwargs):

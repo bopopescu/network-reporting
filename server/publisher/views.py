@@ -279,7 +279,7 @@ class ShowHandler(RequestHandler):
 
     # write response
     return render_to_response(self.request,'show.html', {'site':site, 
-      'impression_count': impression_count, 'click_count': click_count, 'ctr': ctr,
+      'impression_count': impression_count, 'click_count': click_count, 'ctr': ctr, 'revenue': revenue,
       'account':Account.current_account(), 
       'chart_url_imp': chart_url_imp,
       'chart_url_clk': chart_url_clk,

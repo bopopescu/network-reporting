@@ -7,11 +7,11 @@
 		<table>
 			<tr>
 				<th>AdSense Publisher ID</th>
-				<td><input type='text' name="adsense_pub_id" size="30" value="{{account.adsense_pub_id}}"/></td>
+				<td><input type='text' name="adsense_pub_id" size="30" value="{{account.adsense_pub_id|default_if_none:""}}"/></td>
 			</tr>
 			<tr>
 				<th>AdMob Publisher ID</th>
-				<td><input type='text' name="admob_pub_id" size="30" value="{{account.admob_pub_id}}"/></td>
+				<td><input type='text' name="admob_pub_id" size="30" value="{{account.admob_pub_id|default_if_none:""}}"/></td>
 			</tr>
 		</table>
 		<p>

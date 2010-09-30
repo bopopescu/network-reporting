@@ -71,7 +71,8 @@ class SiteStats(db.Model):
     
   @classmethod
   def stats_for_days(c, owner, days):
-    return map(lambda s: s or SiteStats(), db.get([SiteStats.get_key(None, owner.key(), d) for d in days]))
+    keys = [SiteStats.get_key(None, owner.key(), d) for d in days]
+    return map(lambda s: s or SiteStats(), SiteStats.get(keys))
 
   @classmethod
   def stats_for_day_with_qualifier(c, owner, site, d):

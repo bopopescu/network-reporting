@@ -38,6 +38,8 @@ import com.mopub.mobileads.AdView.OnAdLoadedListener;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.InputMethodManager;
@@ -88,7 +90,17 @@ public class SimpleAds extends Activity {
 			}
 		});
     }
+    
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event)  {
+	    if (keyCode == KeyEvent.KEYCODE_BACK && event.getRepeatCount() == 0) {
+	        Log.i("hi","oh hai 2");
+	        return true;
+	    }
 
+	    return super.onKeyDown(keyCode, event);
+	}
+	
 	public void showInterstitialAd() {
 		mInterstitialAdView = new AdView(this);
 		mInterstitialAdView.setAdUnitId("agltb3B1Yi1pbmNyCgsSBFNpdGUYFgw");

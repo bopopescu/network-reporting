@@ -2,8 +2,9 @@
 {% load filters %}
       {% block letterhead %}
 <script type="text/javascript">
-var chart_url_imp = "{{chart_url_imp|safe}}"
-var chart_url_clk = "{{chart_url_clk|safe}}"
+var chart_url_imp = "{{chart_urls.imp|safe}}"
+var chart_url_clk = "{{chart_urls.clk|safe}}"
+var chart_url_rev = "{{chart_urls.rev|safe}}"
 var pie_chart_url_imp = "{{pie_chart_url_imp|safe}}"
 var pie_chart_url_clk = "{{pie_chart_url_clk|safe}}"
 function highlight_elem(elem) {
@@ -19,6 +20,10 @@ function show_graph_clk(elem) {
 function show_graph_imp(elem) {
   $('chart_img').src = chart_url_imp;
   if ($('pie_chart_img')) $('pie_chart_img').src = pie_chart_url_imp;
+  highlight_elem(elem);
+}
+function show_graph_rev(elem) {
+  $('chart_img').src = chart_url_rev;
   highlight_elem(elem);
 }
 </script>

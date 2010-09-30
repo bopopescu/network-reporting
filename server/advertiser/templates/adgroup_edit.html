@@ -109,13 +109,13 @@
 				<td>
 					<table>
 						<tr>
-							<td>Country</td><td><input type="text" name="country" value="{{a.country}}"/></td>
+							<td>Country</td><td><input type="text" name="country" value="{{a.country|default_if_none:""}}"/></td>
 						</tr>
 						<tr>	
-							<td><input name="geo" type="radio"/> State/Province</td><td><input type="text" name="state" value="{{a.state}}"/></td>
+							<td><input name="geo" type="radio"/> State/Province</td><td><input type="text" name="state" value="{{a.state|default_if_none:""}}"/></td>
 						</tr>
 						<tr>
-							<td><input name="geo" type="radio" checked="checked"/> City</td><td><input type="text" name="city" value="{{a.city}}"/></td>
+							<td><input name="geo" type="radio" checked="checked"/> City</td><td><input type="text" name="city" value="{{a.city|default_if_none:""}}"/></td>
 						</tr>
 					</table>
 				</td>

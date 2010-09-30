@@ -64,34 +64,34 @@ class IndexHandler(RequestHandler):
     days = SiteStats.lastdays(14)
     
     campaigns = Campaign.gql("where u = :1 and deleted = :2", self.account.user, False).fetch(100)
-    #campaigns = Campaign.gql("where deleted = :1", False).fetch(100)
+    today = SiteStats()
     for c in campaigns:
       c.all_stats = SiteStats.stats_for_days(c, days)      
       c.stats = reduce(lambda x, y: x+y, c.all_stats, SiteStats())
+      today += c.all_stats[-1]
+      
             
     # compute rollups to display at the top
-    today = SiteStats.rollup_for_day(campaigns, SiteStats.today())
     totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[c.all_stats for c in campaigns])]
     
+    chart_urls = {}
     # make a line graph showing impressions
     impressions = [s.impression_count for s in totals]
-    chart_url_imp = gen_graph_url(impressions, days, "Total+Daily+Impressions")
+    chart_urls['imp'] = gen_graph_url(impressions, days, "Total+Daily+Impressions")
 
     # make a line graph showing clicks
     clicks = [s.click_count for s in totals]
-    chart_url_clk = gen_graph_url(clicks, days, "Total+Daily+Clicks")
+    chart_urls['clk'] = gen_graph_url(clicks, days, "Total+Daily+Clicks")
     
     # make a line graph showing revenue
     revenue = [s.revenue for s in totals]
-    chart_url_rev = gen_graph_url(revenue, days, "Total+Revenue")
+    chart_urls['rev'] = gen_graph_url(revenue, days, "Total+Revenue")
 
     return render_to_response(self.request, 
       'advertiser/index.html', 
       {'campaigns':campaigns, 
        'today': today,
-       'chart_url_imp': chart_url_imp,
-       'chart_url_clk': chart_url_clk,
-       'chart_url_rev': chart_url_rev,
+       'chart_urls': chart_urls,
        'gtee': filter(lambda x: x.campaign_type in ['gtee'], campaigns),
        'promo': filter(lambda x: x.campaign_type in ['promo'], campaigns),
        'network': filter(lambda x: x.campaign_type in ['network'], campaigns), })
@@ -167,13 +167,18 @@ class ShowHandler(RequestHandler):
       today = SiteStats.rollup_for_day(bids, SiteStats.today())
       totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[b.all_stats for b in bids])]
 
+      chart_urls = {}
       # make a line graph showing impressions
       impressions = [s.impression_count for s in totals]
-      chart_url_imp = gen_graph_url(impressions, days, "Total+Daily+Impressions")
+      chart_urls['imp'] = gen_graph_url(impressions, days, "Total+Daily+Impressions")
 
       # make a line graph showing clicks
       clicks = [s.click_count for s in totals]
-      chart_url_clk = gen_graph_url(clicks, days, "Total+Daily+Clicks")
+      chart_urls['clk'] = gen_graph_url(clicks, days, "Total+Daily+Clicks")
+      
+      # make a line graph showing revenue
+      revenue = [s.revenue for s in totals]
+      chart_urls['rev'] = gen_graph_url(revenue, days, "Total+Revenue")
       
       logging.warning(dir(self))
 
@@ -182,8 +187,7 @@ class ShowHandler(RequestHandler):
                                             {'campaign':campaign, 
                                             'bids': bids,
                                             'today': today,
-                                            'chart_url_imp': chart_url_imp,
-                                            'chart_url_clk': chart_url_clk,
+                                            'chart_urls': chart_urls,
                                             'user':self.account})
 
 @whitelist_login_required     
@@ -254,13 +258,18 @@ class ShowAdGroupHandler(RequestHandler):
     else:
       totals = [SiteStats() for d in days]
 
+    chart_urls = {}
     # make a line graph showing impressions
     impressions = [s.impression_count for s in totals]
-    chart_url_imp = gen_graph_url(impressions, days, "Total+Daily+Impressions")
+    chart_urls['imp'] = gen_graph_url(impressions, days, "Total+Daily+Impressions")
 
     # make a line graph showing clicks
     clicks = [s.click_count for s in totals]
-    chart_url_clk = gen_graph_url(clicks, days, "Total+Daily+Clicks")
+    chart_urls['clk'] = gen_graph_url(clicks, days, "Total+Daily+Clicks")
+
+    # make a line graph showing revenue
+    revenue = [s.revenue for s in totals]
+    chart_urls['rev'] = gen_graph_url(revenue, days, "Total+Revenue")
 
     return render_to_response(self.request,'advertiser/adgroup.html', 
                               {'campaign': adgroup.campaign,
@@ -268,8 +277,7 @@ class ShowAdGroupHandler(RequestHandler):
                               'creatives': creatives,
                               'today': today,
                               'totals': totals,
-                              'chart_url_imp': chart_url_imp,
-                              'chart_url_clk': chart_url_clk,
+                              'chart_urls': charts_urls,
                               'sites': sites})
     
 @whitelist_login_required   

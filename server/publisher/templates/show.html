@@ -15,11 +15,11 @@
   <table class="rollups">
     <tr>
       <td class="rollup rollup_selected" onClick="show_graph_imp(this);"><b>Impressions</b><br/>{{impression_count|withsep}}</td>
-      <td class="rollup" onClick="show_graph_clk(this);"><b>Clicks</b><br/>{{click_count|withsep}} ({{ctr|percentage}})</td>      <td class="rollup"><b>Revenue (est.)</b><br/>{{today.revenue|currency}}</td>
+      <td class="rollup" onClick="show_graph_clk(this);"><b>Clicks</b><br/>{{click_count|withsep}} ({{ctr|percentage}})</td>      <td class="rollup" onClick="show_graph_rev(this);"><b>Revenue (est.)</b><br/>{{revenue|currency}}</td>
     </tr>
   </table> 
 
-	<img id="chart_img" src="{{chart_url_imp}}" width=800 height=200 style="padding: 5px 0 10px 0;"/>
+	<img id="chart_img" src="{{chart_urls.imp}}" width=800 height=200 style="padding: 5px 0 10px 0;"/>
 <!--	
   <h3> 
     Campaigns

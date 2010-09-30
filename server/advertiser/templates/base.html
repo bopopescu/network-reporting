@@ -2,9 +2,9 @@
 {% load filters %}
       {% block letterhead %}
 <script type="text/javascript">
-var chart_url_imp = "{{chart_url_imp|safe}}"
-var chart_url_clk = "{{chart_url_clk|safe}}"
-var chart_url_rev = "{{chart_url_rev|safe}}"
+var chart_url_imp = "{{chart_urls.imp|safe}}"
+var chart_url_clk = "{{chart_urls.clk|safe}}"
+var chart_url_rev = "{{chart_urls.rev|safe}}"
 function highlight_elem(elem) {
   $$('td.rollup_selected')[0].removeClassName('rollup_selected');
   elem.addClassName('rollup_selected');

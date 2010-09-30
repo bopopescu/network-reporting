@@ -285,9 +285,12 @@ class PubRequestCounter(StatsCounter):
 #
 class PubImpressionCounter(StatsCounter):
   def process(self, d):
-    # stats = self.get_site_stats(self.get_id_for_dict(d))
-    # if stats:
-    #   stats.impression_count += 1     
+    stats = self.get_site_stats(self.get_id_for_dict(d))
+    if stats:
+      stats.impression_count += 1     
+      
+class PubRevenueCounter(StatsCounter):
+  def process(self, d):
     stats = self.get_site_stats(self.get_id_for_dict(d))
     creative_key_string = d["params"].get("c",None)
     if creative_key_string:
@@ -302,7 +305,6 @@ class PubImpressionCounter(StatsCounter):
 
     # ad_group = AdGroupCache.get(self.)
     if stats:
-      stats.impression_count += 1
       # increment revenue if the bid strategy is cpm
       if adgroup.bid_strategy == 'cpm':
         stats.revenue += adgroup.bid*1.0/1000.0               

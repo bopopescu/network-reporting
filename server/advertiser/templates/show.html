@@ -32,7 +32,12 @@
 				{% ifequal campaign.campaign_type "promo" %}Promotional{% endifequal %}
 				{% ifequal campaign.campaign_type "network" %}Network{% endifequal %}
 			</td></tr>
-			<tr><th>Budget</th><td class="numeric">{{campaign.budget|currency}}</td></tr>
+			{% ifnotequal campaign.campaign_type "network" %}
+				<tr><th>Budget</th><td class="numeric">{{campaign.budget|currency}}</td></tr>
+			{% else %}
+				<tr><th>Budget</th><td class="numeric">Unlimited</td></tr>
+				<tr><th>Start Date/End Date</th><td class="numeric">Forever</td></tr>
+			{% endifnotequal %}
 	</table>
 	
 	<h3>

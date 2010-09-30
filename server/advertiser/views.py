@@ -128,9 +128,11 @@ def campaign_create(request,*args,**kwargs):
 
 class CreateAdGroupHandler(RequestHandler):
   def get(self, campaign_key):
-    f = AdGroupForm()
+    c = Campaign.get(campaign_key)
+    adgroup = AdGroup(name="%s Ad Group" % c.name, campaign=c, bid_strategy="cpm", bid=10.0, percent_users=100.0)
+    f = AdGroupForm(instance=adgroup)
     sites = Site.gql('where account=:1', self.account)    
-    return render_to_response(self.request,'advertiser/new_adgroup.html', {"f": f, "c": Campaign.get(campaign_key), "sites": sites})
+    return render_to_response(self.request,'advertiser/new_adgroup.html', {"f": f, "c": c, "sites": sites})
 
   def post(self, campaign_key):
      c = Campaign.get(campaign_key)

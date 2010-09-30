@@ -7,63 +7,50 @@
 		<a href="{% url publisher_index %}">Apps</a> &gt; 
 		<a href="{% url publisher_app_show %}?id={{site.app_key.key}}">{{site.app_key.name}}</a> &gt; 
 		<a href="{% url publisher_show %}?id={{site.key}}">{{site.name}}</a> &gt;		
-		Get Code Snippet
+		Code Snippet
 	</h3>
 	
-{% ifequal site.app_key.app_type "iphone" %}
-	<h4>iPhone Instructions</h4>
+	<h4>Instructions</h4>
 	<ol>
 		<li>	
 			<p>
-				See the <a href="http://code.google.com/p/mobileadsserving/wiki/IntegrationHowTo">Integration HOWTO</a>, located on the
-					 <a href="http://code.google.com/p/mobileadsserving">MobileAdsServing project on Google Code</a> Wiki.
+				You will need to install the MoPub SDK first. If you have not done so,
+				see the <a href="http://code.google.com/p/mopub/wiki/GettingStarted">MoPub Getting Started instructions</a> on Google Code.
 			</p>
 		</li>
-		<li>
-		<p>
-			Add the following code to your view's <code>viewDidLoad</code> method (or another suitable place):  
-		</p>
+{% ifequal site.app_key.app_type "iphone" %}
+			<li>
+			<p>
+				Add the following code to your view's <code>viewDidLoad</code> method (or another suitable place):  
+			</p>
 	
-	<code>
-		<pre style="border: 1px solid #aaa; width: 750px; padding: 10px; background-color: #f8f8f8;">
+		<code>
+			<pre style="border: 1px solid #aaa; width: 750px; padding: 10px; background-color: #f8f8f8;">
  AdController* adC = [[AdController alloc] initWithFormat:AdControllerFormat320x50 
-                                              publisherId:@"{{site.key}}" 
+                                                 adUnitId:@"<b>{{site.key}}</b>" 
                                      parentViewController:self];
  adC.keywords = @"<i>keywords</i>";	// optional keywords
  [self.view addSubview:adC.view];			</pre>
-	</code>
-		<p></p>
-		</li>
-		<li>
-			If you have trouble, see the <a href="http://code.google.com/p/mobileadsserving/wiki/">MobileAdsServing Wiki pages</a>.
-		</li>
-	</ol>
+		</code>
+			<p></p>
+			</li>
 {% endifequal %}
-
 {% ifequal site.app_key.app_type "android" %}
-	<h4>Android Instructions</h4>
-	<ol>
-		<li>	
+			<li>
 			<p>
-				See the <a href="http://code.google.com/p/mobileadsserving/wiki/IntegrationHowTo">Integration HOWTO</a>, located on the
-					 <a href="http://code.google.com/p/mobileadsserving">MobileAdsServing project on Google Code</a> Wiki.
+				Add the following XML block to your layout definition (eg. main.xml):
 			</p>
-		</li>
-		<li>
-		<p>
-			Add the following XML block to your layout definition (eg. main.xml):
-		</p>
-	<code>
-		<pre style="border: 1px solid #aaa; width: 750px; padding: 10px; background-color: #f8f8f8;">
+		<code>
+			<pre style="border: 1px solid #aaa; width: 750px; padding: 10px; background-color: #f8f8f8;">
 &lt;com.mopub.mobileads.AdView
   android:id="@+id/adview"
   android:layout_width="fill_parent"
   android:layout_height="wrap_content"/&gt;</pre>
-	</code>
-		<p>The AdView element will only take up space if an ad loads.  If you always want to reserve space for the ad even before it loads (at the top of the page, for example), we recommend surrounding the AdView tag with a LinearLayout tag with a fixed height.
-    </p>
-	<code>
-		<pre style="border: 1px solid #aaa; width: 750px; padding: 10px; background-color: #f8f8f8;">
+		</code>
+			<p>The AdView element will only take up space if an ad loads.  If you always want to reserve space for the ad even before it loads (at the top of the page, for example), we recommend surrounding the AdView tag with a LinearLayout tag with a fixed height.
+	    </p>
+		<code>
+			<pre style="border: 1px solid #aaa; width: 750px; padding: 10px; background-color: #f8f8f8;">
 &lt;LinearLayout
   android:orientation="vertical"
   android:layout_width="fill_parent"
@@ -74,33 +61,31 @@
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"/&gt;
 &lt;/LinearLayout&gt;</pre>
-	</code>
-		</li>
-		<li>
-		<p>
-			Add the following code snippet in your Activity's onCreate() instance (or another suitable place):
-		</p>
-	<code>
-		<pre style="border: 1px solid #aaa; width: 750px; padding: 10px; background-color: #f8f8f8;">
+		</code>
+			</li>
+			<li>
+			<p>
+				Add the following code snippet in your Activity's onCreate() instance (or another suitable place):
+			</p>
+		<code>
+			<pre style="border: 1px solid #aaa; width: 750px; padding: 10px; background-color: #f8f8f8;">
 AdView av = (AdView) findViewById(R.id.adview);
 av.setAdUnitId("{{site.key}}");
 av.loadAd();</pre>
-	</code>
-		<p></p>
-		</li>
+		</code>
+			<p></p>
+			</li>
+{% endifequal %}
 		<li>
-			If you have trouble, see the <a href="http://code.google.com/p/mobileadsserving/wiki/">MobileAdsServing Wiki pages</a>.
+			For more options, or if you have trouble, see the <a href="http://code.google.com/p/mopub/">MoPub Google Code project</a>.
 		</li>
 	</ol>
-{% endifequal %}
 
-	<h4>Terms and Conditions</h4>
-	<p>
-		All integrations are governed by the 
-		<a href="https://docs.google.com/document/pub?id=1NA-S5IO6qCVL3M_GcRXDJgP0VNthGKPMb61oQkXU2X8" target="_blank">
-			MoPub Online Standard Terms and Conditions.
-		</a>
-	</p>
-	
+	<form method="get" action="{% url publisher_app_show %}">
+		<input type="hidden" name="id" value="{{site.app_key.key}}"/>
+		<p>
+      <button type="submit" class="btn"><span><span>Finish Integration</span></span></button>&nbsp;&nbsp;&nbsp;
+		</p>
+	</form>
 	
 {% endblock %}

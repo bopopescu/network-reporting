@@ -103,17 +103,10 @@ class IndexHandler(RequestHandler):
       {'campaigns':campaigns, 
        'today': today,
        'chart_urls': chart_urls,
-<<<<<<< HEAD
-       'helptext': helptext,
-       'gtee': filter(lambda x: x.campaign_type in ['gtee'], campaigns),
-       'promo': filter(lambda x: x.campaign_type in ['promo'], campaigns),
-       'network': filter(lambda x: x.campaign_type in ['network'], campaigns), })
-=======
        'gtee': garauntee_campaigns,
        'promo': promo_campaigns,
        'network': network_campaigns,
        'helptext':help_text })
->>>>>>> ca09332a5e3e9e88e5ce3d7bf20c98fd92fc4a8d
       
 @whitelist_login_required     
 def index(request,*args,**kwargs):

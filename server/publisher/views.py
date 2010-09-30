@@ -354,20 +354,6 @@ class GetStartedHandler(RequestHandler):
       u = Account(key_name=user.user_id(),user=user)
       u.put()
 
-      # Set up a test campaign that returns a demo ad
-      c = Campaign(name="MoPub Test Campaign",
-                   u=user,
-                   campaign_type="promo",
-                   description="Test campaign for checking the mopub works in your application")
-      c.put()
-
-      # Set up a test ad group for this campaign
-      ag = AdGroup(name="MoPub Test Ad Group", campaign=c)
-      ag.put()
-
-      # And set up a default creative
-      h = HtmlCreative(ad_type="html", ad_group=ag)
-      h.put()
       
     return HttpResponseRedirect(reverse('publisher_index'))
 

@@ -174,14 +174,18 @@ def create(request,*args,**kwargs):
 
 def add_demo_campaign(site):
   # Set up a test campaign that returns a demo ad
-  c = Campaign(name="MoPub Test Campaign",
+  c = Campaign(name="MoPub Demo Campaign",
                u=site.account.user,
                campaign_type="promo",
-               description="Test campaign for checking the mopub works in your application")
+               description="Demo campaign for checking that MoPub works for your application")
   c.put()
 
   # Set up a test ad group for this campaign
-  ag = AdGroup(name="MoPub Test Ad Group", campaign=c, site_keys=[site.key()])
+  ag = AdGroup(name="MoPub Demo Ad Group",
+               campaign=c,
+               priority_level=3,
+               bid=1.0,
+               site_keys=[site.key()])
   ag.put()
 
   # And set up a default creative

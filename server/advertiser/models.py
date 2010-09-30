@@ -38,7 +38,7 @@ class AdGroup(db.Model):
   network_type = db.StringProperty(choices=["adsense", "iAd", "admob"])
 
   bid = db.FloatProperty()
-  bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpc")
+  bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpm")
 
   # state of this ad group
   active = db.BooleanProperty(default=True)

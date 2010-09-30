@@ -65,11 +65,14 @@ class IndexHandler(RequestHandler):
     
     campaigns = Campaign.gql("where u = :1 and deleted = :2", self.account.user, False).fetch(100)
     today = SiteStats()
+    helptext = "Add a new <b>Campaign</b> to serve ads into your apps"
     for c in campaigns:
       c.all_stats = SiteStats.stats_for_days(c, days)      
       c.stats = reduce(lambda x, y: x+y, c.all_stats, SiteStats())
       today += c.all_stats[-1]
-      
+      logging.info(c.name)
+      if not c.name == str("MoPub Demo Campaign"):
+        helptext = ""
             
     # compute rollups to display at the top
     totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[c.all_stats for c in campaigns])]
@@ -92,6 +95,7 @@ class IndexHandler(RequestHandler):
       {'campaigns':campaigns, 
        'today': today,
        'chart_urls': chart_urls,
+       'helptext': helptext,
        'gtee': filter(lambda x: x.campaign_type in ['gtee'], campaigns),
        'promo': filter(lambda x: x.campaign_type in ['promo'], campaigns),
        'network': filter(lambda x: x.campaign_type in ['network'], campaigns), })

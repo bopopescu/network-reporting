@@ -39,7 +39,6 @@ class RequestHandler(object):
         if not self.account:  
           self.account = Account.current_account()
           
-          
         logging.warning(self.account.key().name())  
         if request.method == "GET":
             return self.get(*args,**kwargs)
@@ -75,7 +74,7 @@ class AppIndexHandler(RequestHandler):
     # compute start times; start day before today so incomplete days don't mess up graphs
     days = SiteStats.lastdays(14)
 
-    apps = App.gql("where account = :1", Account.current_account()).fetch(50)
+    apps = App.gql("where account = :1", self.account).fetch(50)
     today = SiteStats()
     if len(apps) > 0:
       for a in apps:
@@ -120,7 +119,7 @@ class AppIndexHandler(RequestHandler):
          'chart_url_clk': chart_url_clk,
          'pie_chart_url_imp': pie_chart_url_imp,
          'pie_chart_url_clk': pie_chart_url_clk,
-         'account': Account.current_account()})
+         'account': self.account})
     else:
       return HttpResponseRedirect(reverse('publisher_app_create'))
 
@@ -171,7 +170,7 @@ class ShowAppHandler(RequestHandler):
    
     # load the site
     a = App.get(self.request.GET.get('id'))
-    if a.account.key() != Account.current_account().key():
+    if a.account.key() != self.account.key():
       self.error(404)
       return
 
@@ -220,7 +219,7 @@ class ShowAppHandler(RequestHandler):
          'chart_url_clk': chart_url_clk,
          'pie_chart_url_imp': pie_chart_url_imp,
          'pie_chart_url_clk': pie_chart_url_clk,
-         'account': Account.current_account()})
+         'account': self.account})
 
     # write response
     return render_to_response(self.request,'show_app.html', {'app':app, 'sites':sites,
@@ -264,7 +263,7 @@ class ShowHandler(RequestHandler):
     # write response
     return render_to_response(self.request,'show.html', {'site':site, 
       'impression_count': impression_count, 'click_count': click_count, 'ctr': ctr,
-      'account':Account.current_account(), 
+      'account':self.account, 
       'chart_url_imp': chart_url_imp,
       'chart_url_clk': chart_url_clk,
       'days': days,

@@ -64,14 +64,10 @@ class IndexHandler(RequestHandler):
     
     campaigns = Campaign.gql("where u = :1 and deleted = :2", self.account.user, False).fetch(100)
     today = SiteStats()
-    helptext = "Add a new <b>Campaign</b> to serve ads into your apps"
     for c in campaigns:
       c.all_stats = SiteStats.stats_for_days(c, days)      
       c.stats = reduce(lambda x, y: x+y, c.all_stats, SiteStats())
       today += c.all_stats[-1]
-      logging.info(c.name)
-      if not c.name == str("MoPub Demo Campaign"):
-        helptext = ""
             
     # compute rollups to display at the top
     totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[c.all_stats for c in campaigns])]
@@ -234,10 +230,8 @@ def campaign_edit(request,*args,**kwargs):
 class PauseHandler(RequestHandler):
   def post(self):
     action = self.request.POST.get("action", "pause")
-    logging.info(action)
     for id in self.request.POST.getlist('id') or []:
       c = Campaign.get(id)
-      logging.info(c)
       if c != None and c.u == self.account.user:
         if action == "pause":
           c.active = False
@@ -319,7 +313,6 @@ class EditBidHandler(RequestHandler):
     ### TODO: CLEAN UP THIS HACK TO GET THE PROPER SELETIONS
     for s in params['sites']:
       s.checked = s.key() in a.site_keys
-      logging.info(params)  
       
     for device in params['device_choices']:
       device.append(device[0] in a.devices)
@@ -336,7 +329,6 @@ class EditBidHandler(RequestHandler):
     a = AdGroup.get(key)
     f = AdGroupForm(data=self.request.POST, instance=a)
     if a.campaign.u == self.account.user:
-      logging.info(f)
       a.site_keys = map(lambda x:db.Key(x), self.request.POST.getlist("site_keys"))
       a.keywords = filter(lambda k: len(k) > 0, self.request.POST.get('keywords').lower().split('\n'))
       a.devices = self.request.POST.getlist('devices')
@@ -357,10 +349,8 @@ def campaign_adgroup_edit(request,*args,**kwargs):
 class PauseBidHandler(RequestHandler):
   def post(self):
     action = self.request.POST.get("action", "pause")
-    logging.info(action)
     for id in self.request.POST.getlist('id') or []:
       c = AdGroup.get(id)
-      logging.info(c)
       if c != None and c.campaign.u == self.account.user:
         if action == "pause":
           c.active = False
@@ -384,7 +374,6 @@ class RemoveBidHandler(RequestHandler):
     c = None
     for id in self.request.POST.getlist('id') or []:
       b = AdGroup.get(id)
-      logging.info(b)
       c = b.campaign
       if b != None and b.campaign.u == self.account.user:
         b.deleted = True

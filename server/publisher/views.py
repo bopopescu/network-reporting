@@ -282,7 +282,7 @@ class AppUpdateHandler(RequestHandler):
   def post(self):
     a = App.get(self.request.GET.get('id'))
     f = AppForm(data=self.request.POST, instance=a)
-    if a.account.user == users.get_current_user():
+    if a.account.user == self.account.user:
       f.save(commit=False)
       a.put()
     return HttpResponseRedirect(reverse('publisher_app_show')+'?id=%s'%a.key())
@@ -301,7 +301,7 @@ class UpdateHandler(RequestHandler):
   def post(self):
     s = Site.get(self.request.GET.get('id'))
     f = SiteForm(data=self.request.POST, instance=s)
-    if s.account.user == users.get_current_user():
+    if s.account.user == self.account.user:
       f.save(commit=False)
       s.put()
     return HttpResponseRedirect(reverse('publisher_show')+'?id=%s'%s.key())
@@ -333,7 +333,7 @@ class GetStartedHandler(RequestHandler):
   def get(self):
     # Check if the user is in the data store and create it if not
 
-    user = users.get_current_user()
+    user = self.account.user
     u = Account.get_by_key_name(user.user_id())
     if not u:
       u = Account(key_name=user.user_id(),user=user)

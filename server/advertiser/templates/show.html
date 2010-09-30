@@ -21,7 +21,7 @@
 		</tr>
 	</table>
 	
-	<img id="chart_img" src="{{chart_url_imp}}" width=780 height=200 style="padding: 5px 0 10px 0;"/>
+	<img id="chart_img" src="{{chart_urls.imp}}" width=780 height=200 style="padding: 5px 0 10px 0;"/>
 	
 	<h3>Settings</h3>
 	
@@ -38,7 +38,7 @@
 	<h3>
 		Ad Groups
 		<div class="toolbar">
-			<button type="button" class="btn"><a href="{% url campaign_adgroup_new campaign_key=campaign.key%}"><span><span>Create Ad Group</span></span></a></button>
+			<button onClick="location.href='{% url campaign_adgroup_new campaign_key=campaign.key %}'" class="btn"><span><span>+ New Ad Group</span></span></a></button>
 		</div>
 	</h3>
 	

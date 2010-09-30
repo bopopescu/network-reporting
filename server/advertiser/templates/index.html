@@ -7,7 +7,7 @@
 	<h3>
 		Campaigns
 		<div class="toolbar">
-			<button type="button" class="btn"><a href="{% url advertiser_campaign_create %}"><span><span>Add Campaign</span></span></a></button>
+			<button onClick="location.href='{% url advertiser_campaign_create %}'" class="btn"><span><span>+ New Campaign</span></span></a></button>
 		</div>
 	</h3>
 	<table class="rollups">
@@ -18,7 +18,7 @@
 		</tr>
 	</table>
 	
-	<img id='chart_img' src="{{chart_url_imp}}" width=780 height=200 style="padding: 5px 0 10px 0;"/>
+	<img id='chart_img' src="{{chart_urls.imp}}" width=780 height=200 style="padding: 5px 0 10px 0;"/>
 	
 	<form method="post" action="{% url advertiser_campaign_pause %}">
 		<input type="hidden" name="action"/>

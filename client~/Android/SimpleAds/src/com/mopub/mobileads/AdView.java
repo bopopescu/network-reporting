@@ -48,6 +48,7 @@ import android.net.Uri;
 import android.provider.Settings.Secure;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.webkit.WebView;
@@ -99,6 +100,16 @@ public class AdView extends WebView {
 	public void loadUrl(String url) {
 		Runnable getUrl = new LoadUrlThread(url);
 		new Thread(getUrl).start();
+	}
+	
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event)  {
+	    if (keyCode == KeyEvent.KEYCODE_BACK && event.getRepeatCount() == 0) {
+	        Log.i("hi","oh hai");
+	        return true;
+	    }
+
+	    return super.onKeyDown(keyCode, event);
 	}
 	
 	public class LoadUrlThread implements Runnable {

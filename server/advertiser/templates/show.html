@@ -38,7 +38,7 @@
 	<h3>
 		Ad Groups
 		<div class="toolbar">
-			<button type="button" class="btn"><a href="{% url campaign_adgroup_new campaign_key=campaign.key%}"><span><span>Create Ad Group</span></span></a></button>
+			<button onClick="location.href='{% url campaign_adgroup_new campaign_key=campaign.key %}'" class="btn"><span><span>+ New Ad Group</span></span></a></button>
 		</div>
 	</h3>
 	

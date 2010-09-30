@@ -287,7 +287,7 @@ class ShowAdGroupHandler(RequestHandler):
                               'creatives': creatives,
                               'today': today,
                               'totals': totals,
-                              'chart_urls': charts_urls,
+                              'chart_urls': chart_urls,
                               'sites': sites})
     
 @whitelist_login_required   

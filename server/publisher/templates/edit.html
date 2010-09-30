@@ -29,18 +29,6 @@
 				<th>Default keywords</th><td><textarea name="keywords" cols=50 rows=5>{{site.keywords}}</textarea></td>
 			</tr>
 			
-			<tr><td colspan="2"><h4>Backfill Strategy</h4></td></tr>			
-			<tr>
-				<th>Backfill Behavior</th><td><select name="backfill">
-						<option value="adsense"  {% ifequal site.backfill "adsense" %}selected{% endifequal %}>Google AdSense</option>
-						<option value="iAd"  {% ifequal site.backfill "iAd" %}selected{% endifequal %}>Apple iAd</option>
-						<option value="clear"  {% ifequal site.backfill "clear" %}selected{% endifequal %}>Show background color</option>
-						<option value="fail" {% ifequal site.backfill "fail" %}selected{% endifequal %}>Return an error</option>
-					</td>
-			</tr>
-			<tr>
-				<th>Threshold CPM</th><td><input type="text" name="backfill_threshold_cpm" size=5 value="{{site.backfill_threshold_cpm}}"/> USD</td>
-			</tr>
 		</table>
 		<p>
 			<input type="submit" value="Save Changes"/>

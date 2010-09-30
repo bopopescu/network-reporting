@@ -11,12 +11,20 @@
       <button onClick="location.href='{% url publisher_app_create %}'" class="btn"><span><span>+ New App</span></span></button>
 		</div>
 	</h3>
+  {% if not apps %}
 	<p>
 		<b>Apps</b> are your individual applications.  You can create <b>Ad Units</b> are used to organize your mobile inventory. Each ad unit should be a single ad slot in your app.<br/> 
 	</p> 
+  {% endif %}
 		
-	<img src="{{chart_url}}" width=580 height=200 style="padding: 5px 0 10px 0;"/>
-	<img src="{{bar_chart_url}}" width=200 height=200 style="padding: 5px 0 10px 0; float:right;"/>
+  <table class="rollups">
+    <tr>
+      <td class="rollup rollup_selected" onClick="show_graph_imp(this);"><b>Impressions</b><br/>{{today.impression_count|withsep}}</td>
+      <td class="rollup" onClick="show_graph_clk(this);"><b>Clicks</b><br/>{{today.click_count|withsep}} ({{today.ctr|percentage}})</td>      <td class="rollup"><b>Revenue (est.)</b><br/>{{today.revenue|currency}}</td>
+    </tr>
+  </table> 
+	<img id="chart_img" src="{{chart_url_imp}}" width=580 height=200 style="padding: 5px 0 10px 0;"/>
+	<img id="pie_chart_img" src="{{pie_chart_url_imp}}" width=200 height=200 style="padding: 5px 0 10px 0; float:right;"/>
 
 	<table class="wide">
 		<thead>
@@ -31,9 +39,9 @@
 		{% for a in apps %}
 			<tr class="highlighted">
 				<td colspan="2"><a href="{% url publisher_app_show %}?id={{a.key}}"><b>{{a.name}}</b></a> ({{a.app_type}})</td>
-				<td class="numeric"><strong>{{a.impression_count}}</strong></td>
-				<td class="numeric"><strong>{{a.click_count}}</strong></td>
-				<td class="numeric"><strong>{{a.ctr|percentage}}</strong></td>
+				<td class="numeric"><strong>{{a.stats.impression_count}}</strong></td>
+				<td class="numeric"><strong>{{a.stats.click_count}}</strong></td>
+				<td class="numeric"><strong>{{a.stats.ctr|percentage}}</strong></td>
 			</tr>
 		  {% for s in a.sites %}
 			<tr>

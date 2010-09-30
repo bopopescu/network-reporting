@@ -4,6 +4,7 @@
 <script type="text/javascript">
 var chart_url_imp = "{{chart_url_imp|safe}}"
 var chart_url_clk = "{{chart_url_clk|safe}}"
+var chart_url_rev = "{{chart_url_rev|safe}}"
 function highlight_elem(elem) {
   $$('td.rollup_selected')[0].removeClassName('rollup_selected');
   elem.addClassName('rollup_selected');
@@ -15,6 +16,10 @@ function show_graph_clk(elem) {
 }
 function show_graph_imp(elem) {
   $('chart_img').src = chart_url_imp;
+  highlight_elem(elem);
+}
+function show_graph_rev(elem) {
+  $('chart_img').src = chart_url_rev;
   highlight_elem(elem);
 }
 </script>

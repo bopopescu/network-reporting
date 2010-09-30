@@ -216,16 +216,17 @@ class ShowAppHandler(RequestHandler):
 
     chart_urls = {}
     # make a line graph showing impressions
-    impressions = [s.impression_count for s in totals]
-    chart_urls['imp'] = gen_chart_url(impressions, days, "Total+Daily+Impressions")
+    if len(a.sites) >0 :
+      impressions = [s.impression_count for s in totals]
+      chart_urls['imp'] = gen_chart_url(impressions, days, "Total+Daily+Impressions")
     
-    # make a line graph showing clicks
-    clicks = [s.click_count for s in totals]
-    chart_urls['clk'] = gen_chart_url(clicks, days, "Total+Daily+Clicks")
+      # make a line graph showing clicks
+      clicks = [s.click_count for s in totals]
+      chart_urls['clk'] = gen_chart_url(clicks, days, "Total+Daily+Clicks")
     
-    # make a line graph showing revenue
-    revenue = [s.revenue for s in totals]
-    chart_urls['rev'] = gen_chart_url(revenue, days, "Total+Revenue")
+      # make a line graph showing revenue
+      revenue = [s.revenue for s in totals]
+      chart_urls['rev'] = gen_chart_url(revenue, days, "Total+Revenue")
 
     # do a bar graph showing contribution of each site to impression count
     if len(a.sites) > 0:

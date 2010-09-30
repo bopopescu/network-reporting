@@ -16,9 +16,6 @@
 
 from common.ragendja.settings_pre import *
 
-DEBUG = True
-TEMPLATE_DEBUG = DEBUG
-
 ADMINS = (
     # ('Your Name', 'your_email@domain.com'),
 )

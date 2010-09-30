@@ -58,10 +58,11 @@ def time_ago_in_words(value):
 def all_user_dropdown(request,value=200):
   from django.utils.safestring import mark_safe
   from account.models import Account
+  from google.appengine.ext import db
   value = int(value)
   htmls = []
   for account in Account.all().fetch(value):
-    htmls.append('<option value="%s">%s</option>'%(account.user.user_id(),account.user.email()))
+    htmls.append('<option value="%s">%s</option>'%(account.key().name(),account.user.email()))
   return mark_safe('\n'.join(htmls))
 
   

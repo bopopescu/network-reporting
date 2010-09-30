@@ -21,6 +21,7 @@ import logging
 @login_required
 def admin_switch_user(request,*args,**kwargs):
   params = request.POST or request.GET
+  logging.warning(params)
   url = request.META["HTTP_REFERER"]
   # redirect where the request came from
   response = HttpResponseRedirect(url)
@@ -29,12 +30,11 @@ def admin_switch_user(request,*args,**kwargs):
     user_key_name = params.get('user_key',None)
     set_cookie = False
     if user_key_name:
+      logging.warning("USER: %s"%user_key_name)
       account = Account.get_by_key_name(user_key_name)
       if account:
         response.set_cookie('account_impersonation',params.get('user_key'))
         set_cookie = True
     if not set_cookie:
       response.delete_cookie('account_impersonation')    
-        
-      
   return response

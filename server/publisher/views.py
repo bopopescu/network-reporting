@@ -26,7 +26,7 @@ from advertiser.models import Campaign, AdGroup, HtmlCreative
 from reporting.models import SiteStats
 
 class RequestHandler(object):
-    def __call__(self,request):
+    def __call__(self,request,*args,**kwargs):
         self.params = request.POST or request.GET
         self.request = request
         self.account = None
@@ -34,7 +34,7 @@ class RequestHandler(object):
         if user:
           if users.is_current_user_admin():
             account_key_name = request.COOKIES.get("account_impersonation",None)
-            if user_key_name:
+            if account_key_name:
               self.account = Account.get_by_key_name(account_key_name)
         if not self.account:  
           self.account = Account.current_account()
@@ -42,13 +42,13 @@ class RequestHandler(object):
           
         logging.warning(self.account.key().name())  
         if request.method == "GET":
-            return self.get()
+            return self.get(*args,**kwargs)
         elif request.method == "POST":
-            return self.post()    
+            return self.post(*args,**kwargs)    
     def get(self):
         pass
     def put(self):
-        pass    
+        pass  
 
 class AppIndexHandler(RequestHandler):
   def get(self):

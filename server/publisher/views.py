@@ -161,6 +161,9 @@ class CreateAdUnitHandler(RequestHandler):
       site.account = self.account
       site.app_key = a
       site.put()
+      # Check if this is the first ad unit for this account
+      if Site.gql("where account = :1 limit 2", self.account).count() == 1:
+        add_demo_campaign(site)
       return HttpResponseRedirect(reverse('publisher_generate')+'?id=%s'%site.key())
     else:
       print f.errors
@@ -169,6 +172,22 @@ class CreateAdUnitHandler(RequestHandler):
 def create(request,*args,**kwargs):
   return CreateAdUnitHandler()(request,*args,**kwargs)   
 
+def add_demo_campaign(site):
+  # Set up a test campaign that returns a demo ad
+  c = Campaign(name="MoPub Test Campaign",
+               u=site.account.user,
+               campaign_type="promo",
+               description="Test campaign for checking the mopub works in your application")
+  c.put()
+
+  # Set up a test ad group for this campaign
+  ag = AdGroup(name="MoPub Test Ad Group", campaign=c, site_keys=[site.key()])
+  ag.put()
+
+  # And set up a default creative
+  h = HtmlCreative(ad_type="html", ad_group=ag)
+  h.put()
+  
 class ShowAppHandler(RequestHandler):
   def get(self):
     days = SiteStats.lastdays(14)
@@ -355,20 +374,6 @@ class GetStartedHandler(RequestHandler):
       u = Account(key_name=user.user_id(),user=user)
       u.put()
 
-      # Set up a test campaign that returns a demo ad
-      c = Campaign(name="MoPub Test Campaign",
-                   u=user,
-                   campaign_type="promo",
-                   description="Test campaign for checking the mopub works in your application")
-      c.put()
-
-      # Set up a test ad group for this campaign
-      ag = AdGroup(name="MoPub Test Ad Group", campaign=c)
-      ag.put()
-
-      # And set up a default creative
-      h = HtmlCreative(ad_type="html", ad_group=ag)
-      h.put()
       
     return HttpResponseRedirect(reverse('publisher_index'))
 

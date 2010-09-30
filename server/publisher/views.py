@@ -219,17 +219,16 @@ class ShowAppHandler(RequestHandler):
 
     chart_urls = {}
     # make a line graph showing impressions
-    if len(a.sites) >0 :
-      impressions = [s.impression_count for s in totals]
-      chart_urls['imp'] = gen_chart_url(impressions, days, "Total+Daily+Impressions")
-    
-      # make a line graph showing clicks
-      clicks = [s.click_count for s in totals]
-      chart_urls['clk'] = gen_chart_url(clicks, days, "Total+Daily+Clicks")
-    
-      # make a line graph showing revenue
-      revenue = [s.revenue for s in totals]
-      chart_urls['rev'] = gen_chart_url(revenue, days, "Total+Revenue")
+    impressions = [s.impression_count for s in totals]
+    chart_urls['imp'] = gen_chart_url(impressions, days, "Total+Daily+Impressions")
+  
+    # make a line graph showing clicks
+    clicks = [s.click_count for s in totals]
+    chart_urls['clk'] = gen_chart_url(clicks, days, "Total+Daily+Clicks")
+  
+    # make a line graph showing revenue
+    revenue = [s.revenue for s in totals]
+    chart_urls['rev'] = gen_chart_url(revenue, days, "Total+Revenue")
 
     # do a bar graph showing contribution of each site to impression count
     if len(a.sites) > 0:
@@ -245,14 +244,17 @@ class ShowAppHandler(RequestHandler):
     else:
       pie_chart_url_imp = ""
       pie_chart_url_clk = ""
-    
+
+    help_text = 'Create an Ad Unit below' if len(a.sites) == 0 else None
+
     return render_to_response(self.request,'show_app.html', 
         {'app': a,    
          'today': today,
          'chart_urls': chart_urls,
          'pie_chart_url_imp': pie_chart_url_imp,
          'pie_chart_url_clk': pie_chart_url_clk,
-         'account': self.account})
+         'account': self.account,
+         'helptext': help_text})
 
     # write response
     return render_to_response(self.request,'show_app.html', {'app':app, 'sites':sites,
@@ -379,9 +381,24 @@ class GetStartedHandler(RequestHandler):
       
     return HttpResponseRedirect(reverse('publisher_index'))
 
-@login_required
+@whitelist_login_required
 def getstarted(request,*args,**kwargs):
   return GetStartedHandler()(request,*args,**kwargs)   
+
+class RemoveAdUnitHandler(RequestHandler):
+  def post(self):
+    ids = self.request.POST.getlist('id')
+    for adunit_key in ids:
+      a = Site.get(adunit_key)
+      if a != None and a.account == self.account:
+        a.deleted = True
+        a.put()
+    return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':c.ad_group.key()}))
+ 
+@whitelist_login_required
+def adunit_delete(RequestHandler):
+  return RemoveAdUnitHandler()(request,*args,**kwargs)
+    
 
 class GenerateHandler(RequestHandler):
   def get(self):

@@ -96,7 +96,7 @@ class IndexHandler(RequestHandler):
     help_text = None
     if network_campaigns:
       if not (self.account.adsense_pub_id or self.account.admob_pub_id):
-        help_text = 'Please set up your network ids on the <a href="%s">account page</a>'%reverse('account_index')
+        help_text = 'Provide your ad network publisher ids on the <a href="%s">account page</a>'%reverse('account_index')
 
     return render_to_response(self.request, 
       'advertiser/index.html', 
@@ -194,13 +194,20 @@ class ShowHandler(RequestHandler):
       revenue = [s.revenue for s in totals]
       chart_urls['rev'] = gen_graph_url(revenue, days, "Total+Revenue")
       
+      help_text = None
+      if campaign.campaign_type == 'network':
+        if not (self.account.adsense_pub_id or self.account.admob_pub_id):
+          help_text = 'Provide your ad network publisher ids on the <a href="%s">account page</a>'%reverse('account_index')
+
+      
       # write response
       return render_to_response(self.request,'advertiser/show.html', 
                                             {'campaign':campaign, 
                                             'bids': bids,
                                             'today': today,
                                             'chart_urls': chart_urls,
-                                            'user':self.account})
+                                            'user':self.account,
+                                            'helptext':help_text})
 
 @whitelist_login_required     
 def campaign_show(request,*args,**kwargs):

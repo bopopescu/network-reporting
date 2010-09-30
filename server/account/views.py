@@ -34,7 +34,6 @@ class RequestHandler(object):
         if not self.account:  
           self.account = Account.current_account()
           
-          
         if request.method == "GET":
             return self.get(*args,**kwargs)
         elif request.method == "POST":

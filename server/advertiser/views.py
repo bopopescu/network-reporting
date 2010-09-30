@@ -90,15 +90,31 @@ class IndexHandler(RequestHandler):
     revenue = [s.revenue for s in totals]
     chart_urls['rev'] = gen_graph_url(revenue, days, "Total+Revenue")
 
+    promo_campaigns = filter(lambda x: x.campaign_type in ['promo'], campaigns)
+    garauntee_campaigns = filter(lambda x: x.campaign_type in ['gtee'], campaigns)
+    network_campaigns = filter(lambda x: x.campaign_type in ['network'], campaigns)
+
+    help_text = None
+    if network_campaigns:
+      if not (self.account.adsense_pub_id or self.account.admob_pub_id):
+        help_text = 'Please set up your network ids on the <a href="%s">account page</a>'%reverse('account_index')
+
     return render_to_response(self.request, 
       'advertiser/index.html', 
       {'campaigns':campaigns, 
        'today': today,
        'chart_urls': chart_urls,
+<<<<<<< HEAD
        'helptext': helptext,
        'gtee': filter(lambda x: x.campaign_type in ['gtee'], campaigns),
        'promo': filter(lambda x: x.campaign_type in ['promo'], campaigns),
        'network': filter(lambda x: x.campaign_type in ['network'], campaigns), })
+=======
+       'gtee': garauntee_campaigns,
+       'promo': promo_campaigns,
+       'network': network_campaigns,
+       'helptext':help_text })
+>>>>>>> ca09332a5e3e9e88e5ce3d7bf20c98fd92fc4a8d
       
 @whitelist_login_required     
 def index(request,*args,**kwargs):
@@ -122,9 +138,11 @@ def campaign_create(request,*args,**kwargs):
 
 class CreateAdGroupHandler(RequestHandler):
   def get(self, campaign_key):
-    f = AdGroupForm()
+    c = Campaign.get(campaign_key)
+    adgroup = AdGroup(name="%s Ad Group" % c.name, campaign=c, bid_strategy="cpm", bid=10.0, percent_users=100.0)
+    f = AdGroupForm(instance=adgroup)
     sites = Site.gql('where account=:1', self.account)    
-    return render_to_response(self.request,'advertiser/new_adgroup.html', {"f": f, "c": Campaign.get(campaign_key), "sites": sites})
+    return render_to_response(self.request,'advertiser/new_adgroup.html', {"f": f, "c": c, "sites": sites})
 
   def post(self, campaign_key):
      c = Campaign.get(campaign_key)

@@ -1,26 +1,6 @@
+{% extends 'base.html' %}
 {% load filters %}
-{% load googletags %}
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html>
-<head>
-	<link rel="stylesheet" type="text/css" href="/stylesheets/default.css"/>
-	<link rel="stylesheet" type="text/css" href="/stylesheets/a.css"/>
-	<title>MoPub - {% block title %}Mobile Ad Serving and Optimization{% endblock %}</title>
-	
-	<meta name="description" content="{% block description %}{% endblock %}" />
-	<!--
-	<link rel="image_src" href="/images/favicon.png" />
-	<link rel="icon" type="image/png" href="/images/favicon.png"></link>		
-	<link rel="shortcut icon" type="image/png" href="/images/favicon.png"></link-->	
-	<script type="text/javascript" src="/js/prototype.js"></script>
-	<script type="text/javascript" src="/js/effects.js"></script>
-	
-	{% block head %}{% endblock %}
-</head>
-<body>
-	<div id="outer">
-		<div id="inner">
 	      {% block letterhead %}
 	        <div id="header">
 	          <a href="/main"><img src="/images/logo_header.png" width=60 height=16/></a>
@@ -81,45 +61,3 @@
 			{% endif %}
 	        <div class="post_menu"></div>
 	      {% endblock %}
-
-	
-			{% block sidebar %}{% endblock %}
-		
-			<div id="primarycontent">
-			  {% if helptext %}
-			  <div id="helptext"><div>{{helptext|safe}}</div></div>
-			  {% endif %}
-        
-				{% block content %}{% endblock %}
-			</div>
-	
-			<div id="footer">
-				<p style="text-align: center; padding-top: 20px;">
-					&copy; 2010 MoPub, Inc. - 
-					<a href="/about">About</a> -
-					<a href="https://docs.google.com/document/pub?id=1NA-S5IO6qCVL3M_GcRXDJgP0VNthGKPMb61oQkXU2X8" target="_blank">Terms</a>
-					{% if google_user %}
-					-
-					you are logged in as <b>{{google_user}}</b> |
-					<a href="/account">my account</a> |
-					<a href="{% google_logout_url %}">logout</a>
-					{% endif %}
-				</p>
-		
-			</div>
-
-		</div>
-
-	</div>
-
-	<script type="text/javascript">
-	var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-	document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
-	</script>
-	<script type="text/javascript">
-	try {
-	var pageTracker = _gat._getTracker("UA-248712-16");
-	pageTracker._trackPageview();
-	} catch(err) {}</script>
-</body>
-</html>

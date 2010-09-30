@@ -12,6 +12,18 @@
 			</a>
 		</div>
 	</h3>
+  <table class="rollups">
+    <tr>
+      <td class="rollup rollup_selected" onClick="show_graph_imp(this);"><b>Impressions</b><br/>{{today.impression_count|withsep}}</td>
+      <td class="rollup" onClick="show_graph_clk(this);"><b>Clicks</b><br/>{{today.click_count|withsep}} ({{today.ctr|percentage}})</td>      <td class="rollup"><b>Revenue (est.)</b><br/>{{today.revenue|currency}}</td>
+    </tr>
+  </table> 
+	<img id="chart_img" src="{{chart_url_imp}}" width=580 height=200 style="padding: 5px 0 10px 0;"/>
+	{% if pie_chart_url_imp %}
+	<img id="pie_chart_img" src="{{pie_chart_url_imp}}" width=200 height=200 style="padding: 5px 0 10px 0; float:right;"/>
+	{% endif %}
+
+  <h3>Settings</h3> 
 	<table>
 		<tr><th>Name</th><td>{{app.name}}</td></tr>
 		<tr><th>Platform</th><td>{{app.app_type}}</td></tr>
@@ -44,17 +56,16 @@
 	
 	<table class="wide">
 		<form method="post" action="{% url publisher_delete %}">
-			{% if sites %}
+			{% if app.sites %}
 				<thead>
 					<th></th>
 					<th>Name</th>
-					<th>Status</th>
-					<th>Max Bid</th>
+					<th class="numeric">Max Bid</th>
 					<th class="numeric">Impr.</th>
 					<th class="numeric">Clicks</th>
 					<th class="numeric">Cost</th>
 				</thead>
-			  {% for s in sites %}
+			  {% for s in app.sites %}
 				<tr>
 					<td><input type="checkbox" name="id" value="{{s.key}}"/></td>
 					<td><a href="{% url publisher_show %}?id={{ s.key }} %}">{{s.name}}</a><br><span style="color:#888888"> &nbsp; ID: {{s.key}}</span></td>

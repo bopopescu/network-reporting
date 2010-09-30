@@ -12,10 +12,41 @@
 			<a href="{% url publisher_update %}?id={{site.key}}">Edit {{site.name}}</a>
 		</div>
 	</h3>
-	{{site.description}}
+  <table class="rollups">
+    <tr>
+      <td class="rollup rollup_selected" onClick="show_graph_imp(this);"><b>Impressions</b><br/>{{impression_count|withsep}}</td>
+      <td class="rollup" onClick="show_graph_clk(this);"><b>Clicks</b><br/>{{click_count|withsep}} ({{ctr|percentage}})</td>      <td class="rollup"><b>Revenue (est.)</b><br/>{{today.revenue|currency}}</td>
+    </tr>
+  </table> 
 
-	<img src="{{chart_url}}" width=800 height=200 style="padding: 5px 0 10px 0;"/>
-	
+	<img id="chart_img" src="{{chart_url_imp}}" width=800 height=200 style="padding: 5px 0 10px 0;"/>
+<!--	
+  <h3> 
+    Campaigns
+  </h3> 
+
+  <table class="wide"> 
+      <thead> 
+        <th>Name</th> 
+        <th class="numeric">Impr.</th> 
+        <th class="numeric">Clicks</th> 
+        <th class="numeric">Cost</th> 
+      </thead> 
+		{% for c in campaigns %}
+      <tr> 
+        <td><a href="#">{{c.name}}</a></td> 
+        <td class="numeric">0</td> 
+        <td class="numeric">0 (0.0%)</td> 
+        <td class="numeric">$0.00</td> 
+      </tr> 
+		{% endfor %}
+  </table> 
+  <p></p>
+-->
+
+  <h3> 
+    Daily Counts
+  </h3> 
 	<table width="100%" class="wide">
 		<thead>
 			<tr>

@@ -80,6 +80,10 @@ class IndexHandler(RequestHandler):
     # make a line graph showing clicks
     clicks = [s.click_count for s in totals]
     chart_url_clk = gen_graph_url(clicks, days, "Total+Daily+Clicks")
+    
+    # make a line graph showing revenue
+    revenue = [s.revenue for s in totals]
+    chart_url_rev = gen_graph_url(revenue, days, "Total+Revenue")
 
     return render_to_response(self.request, 
       'advertiser/index.html', 
@@ -87,9 +91,10 @@ class IndexHandler(RequestHandler):
        'today': today,
        'chart_url_imp': chart_url_imp,
        'chart_url_clk': chart_url_clk,
-        'gtee': filter(lambda x: x.campaign_type in ['gtee'], campaigns),
-        'promo': filter(lambda x: x.campaign_type in ['promo'], campaigns),
-        'network': filter(lambda x: x.campaign_type in ['network'], campaigns), })
+       'chart_url_rev': chart_url_rev,
+       'gtee': filter(lambda x: x.campaign_type in ['gtee'], campaigns),
+       'promo': filter(lambda x: x.campaign_type in ['promo'], campaigns),
+       'network': filter(lambda x: x.campaign_type in ['network'], campaigns), })
       
 @whitelist_login_required     
 def index(request,*args,**kwargs):

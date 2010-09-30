@@ -229,8 +229,7 @@ class ShowHandler(RequestHandler):
     # load the site
     site = Site.get(self.request.GET.get('id'))
     if site.account.key() != self.account.key():
-      self.error(404)
-      return
+      raise Http404
 
     # do all days requested
     today = datetime.date.today() - datetime.timedelta(days=1)

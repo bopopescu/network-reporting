@@ -175,6 +175,10 @@ class ShowHandler(RequestHandler):
       clicks = [s.click_count for s in totals]
       chart_url_clk = gen_graph_url(clicks, days, "Total+Daily+Clicks")
       
+      # make a line graph showing revenue
+      revenue = [s.revenue for s in totals]
+      chart_url_rev = gen_graph_url(revenue, days, "Total+Revenue")
+      
       logging.warning(dir(self))
 
       # write response
@@ -184,6 +188,7 @@ class ShowHandler(RequestHandler):
                                             'today': today,
                                             'chart_url_imp': chart_url_imp,
                                             'chart_url_clk': chart_url_clk,
+                                            'chart_url_rev': chart_url_rev,
                                             'user':self.account})
 
 @whitelist_login_required     
@@ -262,6 +267,10 @@ class ShowAdGroupHandler(RequestHandler):
     clicks = [s.click_count for s in totals]
     chart_url_clk = gen_graph_url(clicks, days, "Total+Daily+Clicks")
 
+    # make a line graph showing revenue
+    revenue = [s.revenue for s in totals]
+    chart_url_rev = gen_graph_url(revenue, days, "Total+Revenue")
+
     return render_to_response(self.request,'advertiser/adgroup.html', 
                               {'campaign': adgroup.campaign,
                               'adgroup': adgroup, 
@@ -269,6 +278,7 @@ class ShowAdGroupHandler(RequestHandler):
                               'today': today,
                               'totals': totals,
                               'chart_url_imp': chart_url_imp,
+                              'chart_url_rev': chart_url_rev,
                               'chart_url_clk': chart_url_clk,
                               'sites': sites})
     

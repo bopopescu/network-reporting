@@ -57,6 +57,16 @@ class SiteStats(db.Model):
   def rollup_for_day(c, owners, d):
     a = map(lambda s: s or SiteStats(), db.get([SiteStats.get_key(None, owner.key(), d) for owner in owners]))
     return reduce(lambda x, y: x+y, a, SiteStats())
+  
+  @classmethod
+  def rollup_site_for_day(c, sites, d):
+    a = map(lambda s: s or SiteStats(), [SiteStats.gql("where site = :1 and owner = NULL and date = :2", s, d).get() for s in sites])
+    return reduce(lambda x, y: x+y, a, SiteStats())
+    
+  @classmethod
+  def sitestats_for_days(c, site, days):
+    keys = [SiteStats.get_key(site.key(), None, d) for d in days]
+    return map(lambda s: s or SiteStats(), SiteStats.get(keys))
     
   @classmethod
   def stats_for_days(c, owner, days):

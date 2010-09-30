@@ -38,60 +38,76 @@ class RequestHandler(object):
     def put(self):
         pass    
 
+def gen_chart_url(series, days, title):
+  chart_url = "http://chart.apis.google.com/chart?cht=lc&chtt=%s&chs=580x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
+    title,
+    ','.join(map(lambda x: str(x), series)),
+    max(series) * 1.5,
+    max(series) * 1.5,
+    '|'.join(map(lambda x: x.strftime("%m/%d"), days)))
+
+  return chart_url
+  
+def gen_pie_chart_url(series):
+  #TODO: Shouldn't use 'app' as a key name since it also works for ad units
+  chart_url = "http://chart.apis.google.com/chart?cht=p&chtt=Contribution+by+Placement&chs=200x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chl=&chdlp=b&chdl=%s" % (
+    ','.join(map(lambda x: str(x["total"]), series)),
+    max(map(lambda x: x.stats.impression_count, [s["app"] for s in series])) * 1.5,
+    max(map(lambda x: x.stats.impression_count, [s["app"] for s in series])) * 1.5,
+    '|'.join(map(lambda x: x["app"].name, series[0:2])))
+  
+  return chart_url
+
 class AppIndexHandler(RequestHandler):
   def get(self):
     # compute start times; start day before today so incomplete days don't mess up graphs
-    today = datetime.date.today() - datetime.timedelta(days=1)
-    begin_time = today - datetime.timedelta(days=14)
-    days = [today - datetime.timedelta(days=x) for x in range(0, 14)]
+    days = SiteStats.lastdays(14)
 
-    apps = App.gql("where account = :1", Account.current_account()).fetch(50)   
-    if len(apps) > 0:    
-      day_impressions = {}
-      for app in apps:
-        app.sites = []
-        app.impression_count = 0
-        app.click_count = 0
-        sites = Site.gql("where app_key = :1", app).fetch(50)   
+    apps = App.gql("where account = :1", Account.current_account()).fetch(50)
+    today = SiteStats()
+    if len(apps) > 0:
+      for a in apps:
+        a.stats = SiteStats()
+        # TODO: Move this function to the model definition
+        a.sites = Site.gql("where app_key = :1", a).fetch(50)   
         # organize impressions by days
-        for site in sites:
-          stats = SiteStats.gql("where site = :1 and date >= :2", site, begin_time).fetch(100)
-          site.stats = SiteStats()
-          site.stats.impression_count = sum(map(lambda x: x.impression_count, stats))
-          site.stats.click_count = sum(map(lambda x: x.click_count, stats))
-          app.sites.append(site)
-          app.impression_count += site.stats.impression_count
-          app.click_count += site.stats.click_count
+        if len(a.sites) > 0:
+          for s in a.sites:
+            s.all_stats = SiteStats.sitestats_for_days(s, days)
+            today += s.all_stats[-1]
+            s.stats = reduce(lambda x, y: x+y, s.all_stats, SiteStats())
+            a.stats = reduce(lambda x, y: x+y, s.all_stats, a.stats)
+          a.totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[s.all_stats for s in a.sites])]
+        else:
+          a.totals = [SiteStats() for d in days]
 
-          # now aggregate it into days
-          for stat in stats:
-            day_impressions[stat.date] = (day_impressions.get(stat.date) or 0) + stat.impression_count
-        app.ctr = float(app.click_count) / float(app.impression_count) if app.impression_count > 0 else 0
+      totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[a.totals for a in apps])]
 
-      # organize the info on a day by day basis across all sites 
-      series = [day_impressions.get(a,0) for a in days]
-      series.reverse()
-      url = "http://chart.apis.google.com/chart?cht=lc&chtt=Total+Daily+Impressions&chs=580x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
-        ','.join(map(lambda x: str(x), series)),
-        max(series) * 1.5,
-        max(series) * 1.5,
-        '|'.join(map(lambda x: x.strftime("%m/%d"), days)))
+      # make a line graph showing impressions
+      impressions = [s.impression_count for s in totals]
+      chart_url_imp = gen_chart_url(impressions, days, "Total+Daily+Impressions")
+      # make a line graph showing clicks
+      clicks = [s.click_count for s in totals]
+      chart_url_clk = gen_chart_url(clicks, days, "Total+Daily+Clicks")
 
       # do a bar graph showing contribution of each site to impression count
-      total_impressions_by_app = []
-      for app in apps:
-        total_impressions_by_app.append({"app": app, "total": app.impression_count})
-      total_impressions_by_app.sort(lambda x,y: cmp(y["total"], x["total"])) 
-      bar_chart_url = "http://chart.apis.google.com/chart?cht=p&chtt=Contribution+by+Placement&chs=200x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chl=&chdlp=b&chdl=%s" % (
-         ','.join(map(lambda x: str(x["total"]), total_impressions_by_app)),
-         max(map(lambda x: x.impression_count, apps)) * 1.5,
-         max(map(lambda x: x.impression_count, apps)) * 1.5,
-         '|'.join(map(lambda x: x["app"].name, total_impressions_by_app[0:2])))
+      impressions_by_app = []
+      clicks_by_app = []
+      for a in apps:
+        impressions_by_app.append({"app": a, "total": a.stats.impression_count})
+        clicks_by_app.append({"app": a, "total": a.stats.click_count})
+      impressions_by_app.sort(lambda x,y: cmp(y["total"], x["total"])) 
+      clicks_by_app.sort(lambda x,y: cmp(y["total"], x["total"])) 
+      pie_chart_url_imp = gen_pie_chart_url(impressions_by_app)
+      pie_chart_url_clk = gen_pie_chart_url(clicks_by_app)
 
       return render_to_response(self.request,'index.html', 
         {'apps': apps,    
-         'chart_url': url,
-         'bar_chart_url': bar_chart_url,
+         'today': today,
+         'chart_url_imp': chart_url_imp,
+         'chart_url_clk': chart_url_clk,
+         'pie_chart_url_imp': pie_chart_url_imp,
+         'pie_chart_url_clk': pie_chart_url_clk,
          'account': Account.current_account()})
     else:
       return HttpResponseRedirect(reverse('publisher_app_create'))
@@ -101,62 +117,6 @@ def index(request,*args,**kwargs):
   # return HttpResponseRedirect(reverse('publisher_create'))
   return AppIndexHandler()(request,*args,**kwargs)     
   
-class IndexHandler(RequestHandler):
-  def get(self):
-    # compute start times; start day before today so incomplete days don't mess up graphs
-    today = datetime.date.today() - datetime.timedelta(days=1)
-    begin_time = today - datetime.timedelta(days=14)
-    days = [today - datetime.timedelta(days=x) for x in range(0, 14)]
-
-    # gather aggregate data into each site
-    sites = Site.gql("where account = :1", Account.current_account()).fetch(50)   
-    if len(sites) > 0:    
-      # organize impressions by days
-      day_impressions = {}
-      for site in sites:
-        stats = SiteStats.gql("where site = :1 and date >= :2", site, begin_time).fetch(100)
-        site.stats = SiteStats()
-        site.stats.impression_count = sum(map(lambda x: x.impression_count, stats))
-        site.stats.click_count = sum(map(lambda x: x.click_count, stats))
-
-        # now aggregate it into days
-        for stat in stats:
-          day_impressions[stat.date] = (day_impressions.get(stat.date) or 0) + stat.impression_count
-
-      # organize the info on a day by day basis across all sites
-      series = [day_impressions.get(a,0) for a in days]
-      series.reverse()
-      url = "http://chart.apis.google.com/chart?cht=lc&chtt=Total+Daily+Impressions&chs=580x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
-         ','.join(map(lambda x: str(x), series)),
-         max(series) * 1.5,
-         max(series) * 1.5,
-         '|'.join(map(lambda x: x.strftime("%m/%d"), days)))
-
-      # do a bar graph showing contribution of each site to impression count
-      total_impressions_by_site = []
-      for site in sites:
-        total_impressions_by_site.append({"site": site, "total": site.stats.impression_count})
-      total_impressions_by_site.sort(lambda x,y: cmp(y["total"], x["total"])) 
-      bar_chart_url = "http://chart.apis.google.com/chart?cht=p&chtt=Contribution+by+Placement&chs=200x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chl=&chdlp=b&chdl=%s" % (
-         ','.join(map(lambda x: str(x["total"]), total_impressions_by_site)),
-         max(map(lambda x: x.stats.impression_count, sites)) * 1.5,
-         max(map(lambda x: x.stats.impression_count, sites)) * 1.5,
-         '|'.join(map(lambda x: x["site"].name, total_impressions_by_site[0:2])))
-
-      # stats
-      return render_to_response(self.request,'index.html', 
-        {'sites': sites,    
-         'chart_url': url,
-         'bar_chart_url': bar_chart_url,
-         'account': Account.current_account()})
-    else:
-      return HttpResponseRedirect(reverse('publisher_create'))
-
-@whitelist_login_required     
-def adunits_index(request,*args,**kwargs):
-  # return HttpResponseRedirect(reverse('publisher_create'))
-  return IndexHandler()(request,*args,**kwargs)     
-
 class AppCreateHandler(RequestHandler):
   def get(self):
     f = AppForm()
@@ -195,14 +155,60 @@ def create(request,*args,**kwargs):
 
 class ShowAppHandler(RequestHandler):
   def get(self):
+    days = SiteStats.lastdays(14)
+   
     # load the site
-    app = App.get(self.request.GET.get('id'))
-    if app.account.key() != Account.current_account().key():
+    a = App.get(self.request.GET.get('id'))
+    if a.account.key() != Account.current_account().key():
       self.error(404)
       return
 
     # load the ad units
-    sites = Site.gql("where app_key=:1", app).fetch(50)
+    # TODO: This is duplicate code, move to separate function
+    a.stats = SiteStats()
+    today = SiteStats()
+    a.sites = Site.gql("where app_key=:1", a).fetch(50)
+    # organize impressions by days
+    if len(a.sites) > 0:
+      for s in a.sites:
+        s.all_stats = SiteStats.sitestats_for_days(s, days)
+        today += s.all_stats[-1]
+        s.stats = reduce(lambda x, y: x+y, s.all_stats, SiteStats())
+        a.stats = reduce(lambda x, y: x+y, s.all_stats, a.stats)
+      totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[s.all_stats for s in a.sites])]
+    else:
+      totals = [SiteStats() for d in days]
+
+    # make a line graph showing impressions
+    impressions = [s.impression_count for s in totals]
+    chart_url_imp = gen_chart_url(impressions, days, "Total+Daily+Impressions")
+    # make a line graph showing clicks
+    clicks = [s.click_count for s in totals]
+    chart_url_clk = gen_chart_url(clicks, days, "Total+Daily+Clicks")
+
+    # do a bar graph showing contribution of each site to impression count
+    if len(a.sites) > 0:
+      impressions_by_site = []
+      clicks_by_site = []
+      for s in a.sites:
+        impressions_by_site.append({"app": s, "total": s.stats.impression_count})
+        clicks_by_site.append({"app": s, "total": s.stats.click_count})
+        impressions_by_site.sort(lambda x,y: cmp(y["total"], x["total"])) 
+        clicks_by_site.sort(lambda x,y: cmp(y["total"], x["total"])) 
+        pie_chart_url_imp = gen_pie_chart_url(impressions_by_site)
+        pie_chart_url_clk = gen_pie_chart_url(clicks_by_site)
+    else:
+      pie_chart_url_imp = ""
+      pie_chart_url_clk = ""
+    
+    return render_to_response(self.request,'show_app.html', 
+        {'app': a,    
+         'today': today,
+         'chart_url_imp': chart_url_imp,
+         'chart_url_clk': chart_url_clk,
+         'pie_chart_url_imp': pie_chart_url_imp,
+         'pie_chart_url_clk': pie_chart_url_clk,
+         'account': Account.current_account()})
 
     # write response
     return render_to_response(self.request,'show_app.html', {'app':app, 'sites':sites,
@@ -221,22 +227,26 @@ class ShowHandler(RequestHandler):
       return
 
     # do all days requested
-    today = datetime.date.today() - datetime.timedelta(days=1)
-    stats = []
-    for x in range(0, 14):
-      a = today - datetime.timedelta(days=x)
-      stats.append(SiteStats.gql("where site = :1 and date = :2", site, a).get() or SiteStats(site = site, date = a))
+    days = SiteStats.lastdays(14)
+    stats = SiteStats.sitestats_for_days(site, days)
+    for i in range(len(days)):
+      stats[i].date = days[i]
 
     # chart
-    stats.reverse()
-    url = "http://chart.apis.google.com/chart?cht=lc&chs=800x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
+    chart_url_imp = "http://chart.apis.google.com/chart?cht=lc&chs=800x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
        ','.join(map(lambda x: str(x.impression_count), stats)), 
        max(map(lambda x: x.impression_count, stats)) * 1.5,
        max(map(lambda x: x.impression_count, stats)) * 1.5,
-       '|'.join(map(lambda x: x.date.strftime("%m/%d"), stats)))
+       '|'.join(map(lambda x: x.strftime("%m/%d"), days)))
+    chart_url_clk = "http://chart.apis.google.com/chart?cht=lc&chs=800x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
+       ','.join(map(lambda x: str(x.click_count), stats)), 
+       max(map(lambda x: x.click_count, stats)) * 1.5,
+       max(map(lambda x: x.click_count, stats)) * 1.5,
+       '|'.join(map(lambda x: x.strftime("%m/%d"), days)))
 
     # totals
     impression_count = sum(map(lambda x: x.impression_count, stats))
+    logging.info(impression_count)
     click_count = sum(map(lambda x: x.click_count, stats))
     ctr = float(click_count) / float(impression_count) if impression_count > 0 else 0
 
@@ -244,7 +254,9 @@ class ShowHandler(RequestHandler):
     return render_to_response(self.request,'show.html', {'site':site, 
       'impression_count': impression_count, 'click_count': click_count, 'ctr': ctr,
       'account':Account.current_account(), 
-      'chart_url': url,
+      'chart_url_imp': chart_url_imp,
+      'chart_url_clk': chart_url_clk,
+      'days': days,
       'stats':stats})
   
 @whitelist_login_required
@@ -317,7 +329,6 @@ class GetStartedHandler(RequestHandler):
       u = Account(key_name=user.user_id(),user=user)
       u.put()
 
-      logging.debug('oh hai')
       # Set up a test campaign that returns a demo ad
       c = Campaign(name="MoPub Test Campaign",
                    u=user,

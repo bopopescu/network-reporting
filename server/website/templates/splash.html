@@ -110,13 +110,17 @@
 				<ul class="big" style="width:250px; margin: 0 auto; "> 
 					<li>Get more users</li><li>  Make more money</li> <li>  Stats that matter  </li>
 				</ul> 
-				<p style="margin-top: 80px;"> 
-					Enter your email address to be part of our private beta.
-				</p> 
-				<form method="post" action="/splash/join/"> 
-					<input type="text" name="email_address" size=30 style="color:#aaa;" onfocus="this.value='';this.style['color']='#000';" value="Email"/>
-					<button type="button" class="btn" onclick="form.submit()"><span><span>Request Beta Access</span></span></button> <p>{{m}}</p>
-				</form> 
+				{% if m %}
+					<p style="margin-top: 80px;">{{m}}</p>
+				{% else %}
+					<p style="margin-top: 80px;"> 
+						Enter your email address to be part of our private beta.
+					</p> 
+					<form method="post" action="/splash/join/"> 
+						<input type="text" name="email_address" size=30 style="color:#aaa;" onfocus="this.value='';this.style['color']='#000';" value="Email"/>
+						<button type="button" class="btn" onclick="form.submit()"><span><span>Request Beta Access</span></span></button>
+					</form> 
+				{% endif %}
 			</div> 
 			
 			<p style="margin: 105px 0; text-align:center;"> 

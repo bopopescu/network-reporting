@@ -22,6 +22,8 @@
       <td class="rollup rollup_selected" onClick="show_graph_imp(this);"><b>Impressions</b><br/>{{today.impression_count|withsep}}</td>
       <td class="rollup" onClick="show_graph_clk(this);"><b>Clicks</b><br/>{{today.click_count|withsep}} ({{today.ctr|percentage}})</td>      	
 	    <td class="rollup" onClick="show_graph_rev(this);"><b>Revenue (est.)</b><br/>{{today.revenue|currency}}</td>
+	    <td class="rollup" onClick="show_graph_users(this);"><b>Users</b><br/>{{today.unique_user_count}}</td>
+	
     </tr>
   </table> 
 	<img id="chart_img" src="{{chart_urls.imp}}" width=580 height=200 style="padding: 5px 0 10px 0;"/>

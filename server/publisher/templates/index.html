@@ -40,16 +40,16 @@
 		{% for a in apps %}
 			<tr class="highlighted">
 				<td colspan="2"><a href="{% url publisher_app_show %}?id={{a.key}}"><b>{{a.name}}</b></a> ({{a.app_type}})</td>
-				<td class="numeric"><strong>{{a.stats.impression_count}}</strong></td>
-				<td class="numeric"><strong>{{a.stats.click_count}}</strong></td>
+				<td class="numeric"><strong>{{a.stats.impression_count|withsep}}</strong></td>
+				<td class="numeric"><strong>{{a.stats.click_count|withsep}}</strong></td>
 				<td class="numeric"><strong>{{a.stats.ctr|percentage}}</strong></td>
 			</tr>
 		  {% for s in a.sites %}
 			<tr>
         <td></td>
 				<td><a href="{% url publisher_show %}?id={{s.key}}">{{s.name}}</a></td>
-				<td class="numeric">{{s.stats.impression_count}}</td>
-				<td class="numeric">{{s.stats.click_count}}</td>
+				<td class="numeric">{{s.stats.impression_count|withsep}}</td>
+				<td class="numeric">{{s.stats.click_count|withsep}}</td>
 				<td class="numeric">{{s.stats.ctr|percentage}}</td>
 			</tr>
 		  {% endfor %}

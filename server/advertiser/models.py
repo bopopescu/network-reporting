@@ -5,7 +5,7 @@ from google.appengine.ext.db import polymodel
 # A campaign.  Campaigns have budgetary and time based restrictions.  
 # 
 class Campaign(db.Model):
-  name = db.StringProperty()
+  name = db.StringProperty(required=True)
   description = db.TextProperty()
   campaign_type = db.StringProperty(choices=['gtee', 'promo', 'network'], default="network")
 

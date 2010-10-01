@@ -73,13 +73,13 @@ class AppIndexHandler(RequestHandler):
     # compute start times; start day before today so incomplete days don't mess up graphs
     days = SiteStats.lastdays(14)
 
-    apps = App.gql("where account = :1", self.account).fetch(50)
+    apps = App.gql("where account = :1 and deleted = :2", self.account, False).fetch(50)
     today = SiteStats()
     if len(apps) > 0:
       for a in apps:
         a.stats = SiteStats()
-        # TODO: Move this function to the model definition
-        a.sites = Site.gql("where app_key = :1", a).fetch(50)   
+        a.sites = Site.gql("where app_key = :1 and deleted = :2", a, False).fetch(50)   
+        
         # organize impressions by days
         if len(a.sites) > 0:
           for s in a.sites:
@@ -205,7 +205,8 @@ class ShowAppHandler(RequestHandler):
     # TODO: This is duplicate code, move to separate function
     a.stats = SiteStats()
     today = SiteStats()
-    a.sites = Site.gql("where app_key=:1", a).fetch(50)
+    a.sites = Site.gql("where app_key = :1 and deleted = :2", a, False).fetch(50)
+    
     # organize impressions by days
     if len(a.sites) > 0:
       for s in a.sites:
@@ -390,13 +391,13 @@ class RemoveAdUnitHandler(RequestHandler):
     ids = self.request.POST.getlist('id')
     for adunit_key in ids:
       a = Site.get(adunit_key)
-      if a != None and a.account == self.account:
+      if a != None and a.app_key.account == self.account:
         a.deleted = True
         a.put()
-    return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':c.ad_group.key()}))
+    return HttpResponseRedirect(reverse('publisher_app_show') + '?id=%s' % a.app_key.key())
  
 @whitelist_login_required
-def adunit_delete(RequestHandler):
+def adunit_delete(request,*args,**kwargs):
   return RemoveAdUnitHandler()(request,*args,**kwargs)
     
 

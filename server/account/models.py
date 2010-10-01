@@ -1,5 +1,7 @@
 from google.appengine.ext import db
 from google.appengine.api import users
+import logging
+
 #
 # The main account
 #
@@ -17,7 +19,9 @@ class Account(db.Model):
 
   def is_admin():
     return users.is_current_user_admin()
-
-#
-# A specific ad placement inside an app
-#
+    
+  def __eq__(self, other):
+    if other:
+      return str(self.key()) == str(other.key())
+    else:
+      return False

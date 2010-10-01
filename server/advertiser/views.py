@@ -364,7 +364,6 @@ class PauseBidHandler(RequestHandler):
         c.put()
     return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':c.campaign.key()}))
 
-
 @whitelist_login_required
 def bid_pause(request,*args,**kwargs):
   return PauseBidHandler()(request,*args,**kwargs)

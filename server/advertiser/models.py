@@ -120,9 +120,6 @@ class AdGroup(db.Model):
   # platform_name=X
   device_predicates = db.StringListProperty(default=["platform_name=*"])
   
-  def __cmp__(self,other):
-    return self.key().__cmp__(other.key())
-  
   def default_creative(self):
     c = None
     if self.network_type == 'adsense': c = AdSenseCreative(ad_type="adsense", format_predicates=["format=*"])

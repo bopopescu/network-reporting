@@ -43,7 +43,7 @@ This will help us prioritize your beta request.
 
 Thanks,
 The MoPub Team
-''', 'MoPub Team <olp@mopub.com>', [email], ['beta@mopub.com'], headers = {'Reply-To': 'beta@mopub.com'})
+''', 'MoPub Team <olp@mopub.com>', [email], ['beta+bcc@mopub.com'], headers = {'Reply-To': 'beta@mopub.com'})
   msg.send(fail_silently=True)
   return HttpResponseRedirect("/?m=Thanks, we will let you know when an invitation is ready for you.")
   

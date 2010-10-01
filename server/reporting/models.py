@@ -67,7 +67,9 @@ class SiteStats(db.Model):
   @classmethod
   def sitestats_for_days(c, site, days):
     keys = [SiteStats.get_key(site.key(), None, d) for d in days]
-    return map(lambda s: s or SiteStats(), SiteStats.get(keys))
+    # TODO: make all the map() into more python-like
+    return [s or SiteStats() for s in SiteStats.get(keys)]
+    # return map(lambda s: s or SiteStats(), SiteStats.get(keys))
     
   @classmethod
   def stats_for_days(c, owner, days):
@@ -126,6 +128,7 @@ class SiteStats(db.Model):
       impression_count = self.impression_count + s.impression_count,
       click_count = self.click_count + s.click_count,
       revenue = self.revenue + s.revenue,
+      unique_user_count = self.unique_user_count + s.unique_user_count, # TODO: we need to de-dupe this!
       converted_clicks = self.converted_clicks + s.converted_clicks if self.converted_clicks and s.converted_clicks else None,
       conversions = self.conversions + s.conversions if self.conversions and s.conversions else None )
 

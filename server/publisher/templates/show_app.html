@@ -16,13 +16,12 @@
     <tr>
       <td class="rollup rollup_selected" onClick="show_graph_imp(this);"><b>Impressions</b><br/>{{today.impression_count|withsep}}</td>
       <td class="rollup" onClick="show_graph_clk(this);"><b>Clicks</b><br/>{{today.click_count|withsep}} ({{today.ctr|percentage}})</td>      <td class="rollup" onClick="show_graph_rev(this);"><b>Revenue (est.)</b><br/>{{today.revenue|currency}}</td>
+<td class="rollup" onClick="show_graph_users(this);"><b>Users</b><br/>{{today.unique_user_count}}</td>
     </tr>
   </table>
-	{% if chart_urls %}
-		<img id="chart_img" src="{{chart_urls.imp}}" width=580 height=200 style="padding: 5px 0 10px 0;"/>
-		{% if pie_chart_url_imp %}
-		<img id="pie_chart_img" src="{{pie_chart_url_imp}}" width=200 height=200 style="padding: 5px 0 10px 0; float:right;"/>
-		{% endif %}
+	<img id="chart_img" src="{{chart_urls.imp}}" width=580 height=200 style="padding: 5px 0 10px 0;"/>
+	{% if pie_chart_url_imp %}
+	<img id="pie_chart_img" src="{{pie_chart_url_imp}}" width=200 height=200 style="padding: 5px 0 10px 0; float:right;"/>
 	{% endif %}
 
   <h3>Settings</h3> 

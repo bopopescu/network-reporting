@@ -84,14 +84,18 @@ class AppIndexHandler(RequestHandler):
         if len(a.sites) > 0:
           for s in a.sites:
             s.all_stats = SiteStats.sitestats_for_days(s, days)
-            today += s.all_stats[-1]
             s.stats = reduce(lambda x, y: x+y, s.all_stats, SiteStats())
             a.stats = reduce(lambda x, y: x+y, s.all_stats, a.stats)
           a.totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[s.all_stats for s in a.sites])]
         else:
           a.totals = [SiteStats() for d in days]
-
+      
+        app_stats = SiteStats.stats_for_days(a,days)
+        # TODO: Dedupe this by having an account level rollup
+        a.totals = [reduce(lambda x,y: x+y,stats, SiteStats()) for stats in zip(app_stats,a.totals)]
+          
       totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[a.totals for a in apps])]
+      today = totals[-1]
 
       chart_urls = {}
       # make a line graph showing impressions
@@ -105,6 +109,10 @@ class AppIndexHandler(RequestHandler):
       # make a line graph showing revenue
       revenue = [s.revenue for s in totals]
       chart_urls['rev'] = gen_chart_url(revenue, days, "Total+Revenue")
+      
+      # make a line graph showing users
+      unique_users = [s.unique_user_count for s in totals]
+      chart_urls['users'] = gen_chart_url(unique_users, days, "Total+Unique Users")
 
       # do a bar graph showing contribution of each site to impression count
       impressions_by_app = []
@@ -216,7 +224,14 @@ class ShowAppHandler(RequestHandler):
       totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[s.all_stats for s in a.sites])]
     else:
       totals = [SiteStats() for d in days]
+      
+    app_stats = SiteStats.stats_for_days(a,days)
+    # TODO: Dedupe this by having an account level rollup
+    totals = [reduce(lambda x,y: x+y,stats, SiteStats()) for stats in zip(app_stats,totals)]
 
+    # today is the latest day  
+    today += totals[-1] 
+        
     chart_urls = {}
     # make a line graph showing impressions
     impressions = [s.impression_count for s in totals]
@@ -229,6 +244,11 @@ class ShowAppHandler(RequestHandler):
     # make a line graph showing revenue
     revenue = [s.revenue for s in totals]
     chart_urls['rev'] = gen_chart_url(revenue, days, "Total+Revenue")
+    
+    # make a line graph showing users
+    unique_users = [s.unique_user_count for s in totals]
+    chart_urls['users'] = gen_chart_url(unique_users, days, "Total+Unique Users")
+    
 
     # do a bar graph showing contribution of each site to impression count
     if len(a.sites) > 0:
@@ -277,33 +297,37 @@ class ShowHandler(RequestHandler):
     for i in range(len(days)):
       stats[i].date = days[i]
 
+      
     # chart
     chart_urls = {}
-    chart_urls['imp'] = "http://chart.apis.google.com/chart?cht=lc&chs=800x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
-      ','.join(map(lambda x: str(x.impression_count), stats)), 
-      max(map(lambda x: x.impression_count, stats)) * 1.5,
-      max(map(lambda x: x.impression_count, stats)) * 1.5,
-      '|'.join(map(lambda x: x.strftime("%m/%d"), days)))
-    chart_urls['clk'] = "http://chart.apis.google.com/chart?cht=lc&chs=800x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
-      ','.join(map(lambda x: str(x.click_count), stats)), 
-      max(map(lambda x: x.click_count, stats)) * 1.5,
-      max(map(lambda x: x.click_count, stats)) * 1.5,
-      '|'.join(map(lambda x: x.strftime("%m/%d"), days)))
-    chart_urls['rev'] = "http://chart.apis.google.com/chart?cht=lc&chs=800x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
-      ','.join(map(lambda x: str(x.revenue), stats)), 
-      max(map(lambda x: x.revenue, stats)) * 1.5,
-      max(map(lambda x: x.revenue, stats)) * 1.5,
-      '|'.join(map(lambda x: x.strftime("%m/%d"), days)))
+    
+    impressions = [s.impression_count for s in stats]
+    chart_urls['imp'] = gen_chart_url(impressions, days, "Total+Daily+Impressions")
+    
+    # make a line graph showing clicks
+    clicks = [s.click_count for s in stats]
+    chart_urls['clk'] = gen_chart_url(clicks, days, "Total+Daily+Clicks")
+
+    # make a line graph showing revenue
+    revenue = [s.revenue for s in stats]
+    chart_urls['rev'] = gen_chart_url(revenue, days, "Total+Revenue")
+    
+    # make a line graph showing users
+    unique_users = [s.unique_user_count for s in stats]
+    chart_urls['users'] = gen_chart_url(unique_users, days, "Total+Unique Users")
 
     # totals
-    impression_count = sum(map(lambda x: x.impression_count, stats))
-    click_count = sum(map(lambda x: x.click_count, stats))
-    revenue = sum(map(lambda x: x.revenue, stats))
+    todays_stats = stats[-1]
+    
+    impression_count = todays_stats.impression_count
+    click_count = todays_stats.click_count
+    revenue = todays_stats.revenue
+    users = todays_stats.unique_user_count
     ctr = float(click_count) / float(impression_count) if impression_count > 0 else 0
 
     # write response
     return render_to_response(self.request,'show.html', {'site':site, 
-      'impression_count': impression_count, 'click_count': click_count, 'ctr': ctr, 'revenue': revenue,
+      'impression_count': impression_count, 'click_count': click_count, 'ctr': ctr, 'revenue': revenue, 'unique_user_count':users,
       'account':self.account, 
       'chart_urls': chart_urls,
       'days': days,

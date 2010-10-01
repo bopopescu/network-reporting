@@ -13,6 +13,8 @@ class App(db.Model):
 	app_type = db.StringProperty(required=True, default="iphone", choices=["iphone", "android", "ipad"])
 	description = db.TextProperty()
 	url = db.StringProperty()
+	
+	deleted = db.BooleanProperty(default=False)
 
 	t = db.DateTimeProperty(auto_now_add=True)
 
@@ -23,6 +25,8 @@ class Site(db.Model):
 	name = db.StringProperty(required=True)
 	url = db.StringProperty()
 	description = db.TextProperty()
+
+	deleted = db.BooleanProperty(default=False)
 	
 	# what kind of ad is preferred here
 	ad_type = db.StringProperty(required=True, choices=["text", "image"], default="image")

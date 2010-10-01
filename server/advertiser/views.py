@@ -92,7 +92,7 @@ class IndexHandler(RequestHandler):
     help_text = None
     if network_campaigns:
       if not (self.account.adsense_pub_id or self.account.admob_pub_id):
-        help_text = 'Provide your ad network publisher ids on the <a href="%s">account page</a>'%reverse('account_index')
+        help_text = 'Provide your ad network publisher IDs on the <a href="%s">account page</a>'%reverse('account_index')
 
     return render_to_response(self.request, 
       'advertiser/index.html', 
@@ -115,10 +115,13 @@ class CreateHandler(RequestHandler):
 
   def post(self):
     f = CampaignForm(data=self.request.POST)
-    campaign = f.save(commit=False)
-    campaign.u = self.account.user
-    campaign.put()
-    return HttpResponseRedirect(reverse('campaign_adgroup_new',kwargs={'campaign_key':campaign.key()}))
+    if f.is_valid():
+      campaign = f.save(commit=False)
+      campaign.u = self.account.user
+      campaign.put()
+      return HttpResponseRedirect(reverse('campaign_adgroup_new',kwargs={'campaign_key':campaign.key()}))
+    else:
+      return render_to_response(self.request,'advertiser/new.html', {"f": f})
 
 @whitelist_login_required     
 def campaign_create(request,*args,**kwargs):
@@ -193,7 +196,7 @@ class ShowHandler(RequestHandler):
       help_text = None
       if campaign.campaign_type == 'network':
         if not (self.account.adsense_pub_id or self.account.admob_pub_id):
-          help_text = 'Provide your ad network publisher ids on the <a href="%s">account page</a>'%reverse('account_index')
+          help_text = 'Provide your ad network publisher IDs on the <a href="%s">account page</a>'%reverse('account_index')
 
       
       # write response
@@ -363,7 +366,6 @@ class PauseBidHandler(RequestHandler):
           c.deleted = True
         c.put()
     return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':c.campaign.key()}))
-
 
 @whitelist_login_required
 def bid_pause(request,*args,**kwargs):

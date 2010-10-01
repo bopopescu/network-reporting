@@ -5,7 +5,7 @@ from google.appengine.ext.db import polymodel
 # A campaign.  Campaigns have budgetary and time based restrictions.  
 # 
 class Campaign(db.Model):
-  name = db.StringProperty()
+  name = db.StringProperty(required=True)
   description = db.TextProperty()
   campaign_type = db.StringProperty(choices=['gtee', 'promo', 'network'], default="network")
 
@@ -119,9 +119,6 @@ class AdGroup(db.Model):
   # brand_name=X,platform_name=X
   # platform_name=X
   device_predicates = db.StringListProperty(default=["platform_name=*"])
-  
-  def __cmp__(self,other):
-    return self.key().__cmp__(other.key())
   
   def default_creative(self):
     c = None

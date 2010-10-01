@@ -16,8 +16,15 @@
 
 from common.ragendja.settings_pre import *
 
+DEBUG = False
+
+DEFAULT_FROM_EMAIL = 'olp@mopub.com'
+SERVER_EMAIL = 'olp@mopub.com'
+
 ADMINS = (
-    # ('Your Name', 'your_email@domain.com'),
+    ('Nafis', 'nafisjamal@mopub.com'),
+    ('Jim', 'jpayne@mopub.com '),
+    ('Bryan', 'batwood@mopub.com')
 )
 
 MANAGERS = ADMINS

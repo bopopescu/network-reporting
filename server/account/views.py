@@ -67,6 +67,7 @@ def logout(request,*args,**kwargs):
   
 def test(request,*args,**kwargs):
   import time
+  asdf
   time.sleep(2)
   html = """<html> 
   	<head>

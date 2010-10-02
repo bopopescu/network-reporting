@@ -102,7 +102,7 @@
 			<tr>
 				<th>Keywords</th>
 				<td>
-					<textarea rows="4" cols="40" name="keywords">{% for k in a.keywords %}{{k}}{% endfor %}</textarea>
+					<textarea rows="4" cols="40" name="keywords">{{a.keywords|join:"&#10;"}}</textarea>
 				</td>
 			</tr>
 			<tr><th>Location</th>

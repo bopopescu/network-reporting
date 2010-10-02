@@ -92,7 +92,9 @@ class AppIndexHandler(RequestHandler):
       
         app_stats = SiteStats.stats_for_days(a,days)
         # TODO: Dedupe this by having an account level rollup
-        a.totals = [reduce(lambda x,y: x+y,stats, SiteStats()) for stats in zip(app_stats,a.totals)]
+        ## assigns the user count of the app from the app stat rollup
+        for stat,app_stat in zip(a.totals,app_stats):
+          stat.unique_user_count = app_stat.unique_user_count        
           
       totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[a.totals for a in apps])]
       today = totals[-1]
@@ -219,7 +221,6 @@ class ShowAppHandler(RequestHandler):
     if len(a.sites) > 0:
       for s in a.sites:
         s.all_stats = SiteStats.sitestats_for_days(s, days)
-        today += s.all_stats[-1]
         s.stats = reduce(lambda x, y: x+y, s.all_stats, SiteStats())
         a.stats = reduce(lambda x, y: x+y, s.all_stats, a.stats)
       totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[s.all_stats for s in a.sites])]
@@ -227,11 +228,12 @@ class ShowAppHandler(RequestHandler):
       totals = [SiteStats() for d in days]
       
     app_stats = SiteStats.stats_for_days(a,days)
-    # TODO: Dedupe this by having an account level rollup
-    totals = [reduce(lambda x,y: x+y,stats, SiteStats()) for stats in zip(app_stats,totals)]
-
+    # set the apps unique user count from the app stats rollup
+    for stat,app_stat in zip(totals,app_stats):
+      stat.unique_user_count = app_stat.unique_user_count
+      
     # today is the latest day  
-    today += totals[-1] 
+    today = totals[-1] 
         
     chart_urls = {}
     # make a line graph showing impressions

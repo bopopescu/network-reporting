@@ -371,22 +371,6 @@ class PauseBidHandler(RequestHandler):
 def bid_pause(request,*args,**kwargs):
   return PauseBidHandler()(request,*args,**kwargs)
   
-class RemoveBidHandler(RequestHandler):
-  def post(self):
-    c = None
-    for id in self.request.POST.getlist('id') or []:
-      b = AdGroup.get(id)
-      c = b.campaign
-      if b != None and b.campaign.u == self.account.user:
-        b.deleted = True
-        b.put()
-    return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':c.key()}))
-  
-@whitelist_login_required
-def bid_delete(request,*args,**kwargs):
-  return RemoveBidHandler()(request,*args,**kwargs)
-
-#
 # Creative management
 #
 class AddCreativeHandler(RequestHandler):

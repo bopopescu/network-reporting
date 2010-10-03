@@ -5,6 +5,7 @@
 var chart_url_imp = "{{chart_urls.imp|safe}}"
 var chart_url_clk = "{{chart_urls.clk|safe}}"
 var chart_url_rev = "{{chart_urls.rev|safe}}"
+var chart_url_users = "{{chart_urls.users|safe}}"
 var pie_chart_url_imp = "{{pie_chart_url_imp|safe}}"
 var pie_chart_url_clk = "{{pie_chart_url_clk|safe}}"
 function highlight_elem(elem) {
@@ -25,6 +26,10 @@ function show_graph_imp(elem) {
 function show_graph_rev(elem) {
   $('chart_img').src = chart_url_rev;
   highlight_elem(elem);
+}
+function show_graph_users(elem){
+	$('chart_img').src = chart_url_users;
+	highlight_elem(elem);
 }
 function activate_button(elem) {
   $$('button.btn_active')[0].removeClassName('btn_active');

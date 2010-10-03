@@ -16,8 +16,13 @@
 
 from common.ragendja.settings_pre import *
 
+# DEBUG = False
+
+DEFAULT_FROM_EMAIL = 'olp@mopub.com'
+SERVER_EMAIL = 'olp@mopub.com'
+
 ADMINS = (
-    # ('Your Name', 'your_email@domain.com'),
+    ('Bug Team', 'bugs@mopub.com'),
 )
 
 MANAGERS = ADMINS
@@ -76,6 +81,7 @@ TEMPLATE_LOADERS = (
 )
 
 MIDDLEWARE_CLASSES = (
+'common.ragendja.middleware.ErrorMiddleware',
 'google.appengine.ext.appstats.recording.AppStatsDjangoMiddleware',
 'django.contrib.sessions.middleware.SessionMiddleware',
 # 'appengine_django.auth.middleware.AuthenticationMiddleware',

@@ -5,6 +5,31 @@ import datetime
 import hashlib
 import logging
 
+class Pacific_tzinfo(datetime.tzinfo):
+    """Implementation of the Pacific timezone."""
+    def utcoffset(self, dt):
+        return datetime.timedelta(hours=-8) + self.dst(dt)
+
+    def _FirstSunday(self, dt):
+        """First Sunday on or after dt."""
+        return dt + datetime.timedelta(days=(6-dt.weekday()))
+
+    def dst(self, dt):
+        # 2 am on the second Sunday in March
+        dst_start = self._FirstSunday(datetime.datetime(dt.year, 3, 8, 2))
+        # 1 am on the first Sunday in November
+        dst_end = self._FirstSunday(datetime.datetime(dt.year, 11, 1, 1))
+
+        if dst_start <= dt.replace(tzinfo=None) < dst_end:
+            return datetime.timedelta(hours=1)
+        else:
+            return datetime.timedelta(hours=0)
+    def tzname(self, dt):
+        if self.dst(dt) == datetime.timedelta(hours=0):
+            return "PST"
+        else:
+            return "PDT"
+
 # 
 # Tracks statistics for a site for a particular day - clicks and impressions are aggregated
 # into this object
@@ -28,16 +53,16 @@ class SiteStats(db.Model):
   conversions = db.IntegerProperty()
     
   @classmethod
-  def get_key(c, site_key, owner_key=None, date=datetime.datetime.now().date()):
-    return db.Key.from_path("SiteStats", "%s:%s:%s" % (site_key if site_key else '', owner_key if owner_key else '', str(date)))
-
-  @classmethod
   def today(c):
-    return datetime.datetime.now().date()
+    return datetime.datetime.now(Pacific_tzinfo()).date()
+      
+  @classmethod
+  def get_key(c, site_key, owner_key, date):
+    return db.Key.from_path("SiteStats", "%s:%s:%s" % (site_key if site_key else '', owner_key if owner_key else '', str(date)))
     
   @classmethod
   def lastdays(c, n=7, omit=0):
-    today = datetime.date.today() - datetime.timedelta(days=omit)    # Set omit=1 to eliminates partial days contributing to totals or appearing in graphs
+    today = c.today() - datetime.timedelta(days=omit)    # Set omit=1 to eliminates partial days contributing to totals or appearing in graphs
     days = [today - datetime.timedelta(days=x) for x in range(0, n)]
     days.reverse()
     return days
@@ -67,7 +92,9 @@ class SiteStats(db.Model):
   @classmethod
   def sitestats_for_days(c, site, days):
     keys = [SiteStats.get_key(site.key(), None, d) for d in days]
-    return map(lambda s: s or SiteStats(), SiteStats.get(keys))
+    # TODO: make all the map() into more python-like
+    return [s or SiteStats() for s in SiteStats.get(keys)]
+    # return map(lambda s: s or SiteStats(), SiteStats.get(keys))
     
   @classmethod
   def stats_for_days(c, owner, days):
@@ -126,6 +153,7 @@ class SiteStats(db.Model):
       impression_count = self.impression_count + s.impression_count,
       click_count = self.click_count + s.click_count,
       revenue = self.revenue + s.revenue,
+      unique_user_count = self.unique_user_count + s.unique_user_count, # TODO: we need to de-dupe this!
       converted_clicks = self.converted_clicks + s.converted_clicks if self.converted_clicks and s.converted_clicks else None,
       conversions = self.conversions + s.conversions if self.conversions and s.conversions else None )
 

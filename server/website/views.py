@@ -23,7 +23,7 @@ def website_join(request,*args,**kwargs):
   email = request.POST.get("email_address")
   
   # send a note to beta@mopub.com with the guy's signup
-  send_mail('Mailing list', email, 'olp@mopub.com', ['beta@mopub.com'], fail_silently=False)  
+  send_mail('Mailing list', "email=%s" % email, 'olp@mopub.com', ['beta@mopub.com'], fail_silently=True)  
   
   # send a reply
   msg = EmailMessage('Thank you for your interest in MoPub', '''Hello from MoPub!
@@ -43,7 +43,7 @@ This will help us prioritize your beta request.
 
 Thanks,
 The MoPub Team
-''', 'MoPub Team <olp@mopub.com>', [email], headers = {'Reply-To': 'beta@mopub.com'})
-  msg.send(fail_silently=False)
+''', 'MoPub Team <olp@mopub.com>', [email], ['beta+bcc@mopub.com'], headers = {'Reply-To': 'beta@mopub.com'})
+  msg.send(fail_silently=True)
   return HttpResponseRedirect("/?m=Thanks, we will let you know when an invitation is ready for you.")
   

@@ -52,7 +52,7 @@ class AdAuction(object):
     format_predicates = AdAuction.format_predicates_for_format(kw["format"])
     exclude_params = kw["excluded_creatives"]
     excluded_predicates = AdAuction.exclude_predicates_params(exclude_params)
-    logging.debug("keywords=%s, geo_predicates=%s, device_predicates=%s, format_predicates=%s" % (keywords, geo_predicates, device_predicates, format_predicates))
+    logging.warning("keywords=%s, geo_predicates=%s, device_predicates=%s, format_predicates=%s" % (keywords, geo_predicates, device_predicates, format_predicates))
 
     # Matching strategy: 
     # 1) match all ad groups that match the placement that is in question, sort by priority
@@ -60,17 +60,27 @@ class AdAuction(object):
     # 3) throw out ad groups that restrict by keywords and do not match the keywords
     # 4) throw out ad groups that do not match device and geo predicates
     ad_groups = AdGroup.gql("where site_keys = :1 and active = :2 and deleted = :3", site.key(), True, False).fetch(AdAuction.MAX_ADGROUPS)
-    logging.debug("ad groups: %s" % ad_groups)
+    logging.warning("ad groups: %s" % ad_groups)
     
     # campaign exclusions... budget + time
-    ad_groups = filter(lambda a: a.campaign.budget is None or SiteStats.stats_for_day(a.campaign, SiteStats.today()).revenue < a.campaign.budget, ad_groups)
-    logging.debug("removed over budget, now: %s" % ad_groups)
-    ad_groups = filter(lambda a: a.campaign.active and (a.campaign.start_date >= SiteStats.today() if a.campaign.start_date else True) and (a.campaign.end_date <= SiteStats.today() if a.campaign.end_date else True), ad_groups)
-    logging.debug("removed non running campaigns, now: %s" % ad_groups)
+    ad_groups = [a for a in ad_groups 
+                      if a.campaign.budget is None or 
+                      SiteStats.stats_for_day(a.campaign, SiteStats.today()).revenue < a.campaign.budget]
+    # ad_groups = filter(lambda a: a.campaign.budget is None or SiteStats.stats_for_day(a.campaign, SiteStats.today()).revenue < a.campaign.budget, ad_groups)
+    logging.warning("removed over budget, now: %s" % ad_groups)
+    ad_groups = [a for a in ad_groups 
+                      if a.campaign.active and 
+                        (a.campaign.start_date >= SiteStats.today() if a.campaign.start_date else True) 
+                        and (a.campaign.end_date <= SiteStats.today() if a.campaign.end_date else True)]
+    # ad_groups = filter(lambda a: a.campaign.active and (a.campaign.start_date >= SiteStats.today() if a.campaign.start_date else True) and (a.campaign.end_date <= SiteStats.today() if a.campaign.end_date else True), ad_groups)
+    logging.warning("removed non running campaigns, now: %s" % ad_groups)
     
     # ad group request-based targeting exclusions
-    ad_groups = filter(lambda a: len(a.keywords) == 0 or set(keywords).intersection(a.keywords) > set(), ad_groups)
-    logging.debug("removed keyword non-matches, now: %s" % ad_groups)
+    ad_groups = [a for a in ad_groups 
+                    if not a.keywords or set(keywords).intersection(a.keywords) > set()]
+    # filter(lambda a: len(a.keywords) == 0 or set(keywords).intersection(a.keywords) > set(), ad_groups)
+    
+    logging.warning("removed keyword non-matches, now: %s" % ad_groups)
     ad_groups = filter(lambda a: set(geo_predicates).intersection(a.geo_predicates) > set(), ad_groups)
     logging.debug("removed geo non-matches, now: %s" % ad_groups)
     ad_groups = filter(lambda a: set(device_predicates).intersection(a.device_predicates) > set(), ad_groups)
@@ -240,8 +250,14 @@ class AdHandler(webapp.RequestHandler):
       return
     
     # get keywords 
-    q = [sz.strip() for sz in ("%s\n%s" % (self.request.get("q").lower(), site.keywords)).split("\n")]
-    logging.debug("keywords are %s" % q)
+    # q = [sz.strip() for sz in ("%s\n%s" % (self.request.get("q").lower() if self.request.get("q") else '', site.keywords if site.k)).split("\n") if sz.strip()]
+    keywords = []
+    if site.keywords and site.keywords != 'None':
+      keywords += site.keywords.split(',')
+    if self.request.get("q"):
+      keywords += self.request.get("q").lower().split(',')
+    q = keywords
+    logging.warning("keywords are %s" % keywords)
 
     # get format
     f = self.request.get("f") or "320x50"
@@ -339,10 +355,10 @@ class AdHandler(webapp.RequestHandler):
       params.update(c.__dict__.get("_entity"))
 
       if c.ad_type == "adsense":
-        params.update({"title": kwargs["q"], "adsense_format": format[2], "w": format[0], "h": format[1], "client": kwargs["site"].account.adsense_pub_id})
+        params.update({"title": ','.join(kwargs["q"]), "adsense_format": format[2], "w": format[0], "h": format[1], "client": kwargs["site"].account.adsense_pub_id})
         # self.response.headers.add_header("X-Launchpage","http://googleads.g.doubleclick.net")
       elif c.ad_type == "admob":
-        params.update({"title": kwargs["q"], "w": format[0], "h": format[1], "client": kwargs["site"].account.admob_pub_id})
+        params.update({"title": ','.join(kwargs["q"]), "w": format[0], "h": format[1], "client": kwargs["site"].account.admob_pub_id})
         self.response.headers.add_header("X-Launchpage","http://c.admob.com/")
       elif c.ad_type == "image":
         params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)

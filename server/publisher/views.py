@@ -98,6 +98,7 @@ class AppIndexHandler(RequestHandler):
           
       totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[a.totals for a in apps])]
       today = totals[-1]
+      yesterday = totals[-2]
 
       chart_urls = {}
       # make a line graph showing impressions
@@ -130,6 +131,7 @@ class AppIndexHandler(RequestHandler):
       return render_to_response(self.request,'index.html', 
         {'apps': apps,    
          'today': today,
+         'yesterday': yesterday,
          'chart_urls': chart_urls,
          'pie_chart_url_imp': pie_chart_url_imp,
          'pie_chart_url_clk': pie_chart_url_clk,

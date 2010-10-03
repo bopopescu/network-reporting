@@ -128,7 +128,8 @@ INSTALLED_APPS = (
 
 IGNORE_APP_URLSAUTO = ('website')
 
-WHITELIST_EMAILS = ('test@example.com',
+WHITELIST_EMAILS = (
+  'test@example.com',
   'lamen@user.com',
   'nafisjamal@gmail.com',
   'jim.e.payne@gmail.com',

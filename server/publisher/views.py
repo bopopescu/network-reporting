@@ -98,6 +98,7 @@ class AppIndexHandler(RequestHandler):
           
       totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[a.totals for a in apps])]
       today = totals[-1]
+      yesterday = totals[-2]
 
       chart_urls = {}
       # make a line graph showing impressions
@@ -130,6 +131,7 @@ class AppIndexHandler(RequestHandler):
       return render_to_response(self.request,'index.html', 
         {'apps': apps,    
          'today': today,
+         'yesterday': yesterday,
          'chart_urls': chart_urls,
          'pie_chart_url_imp': pie_chart_url_imp,
          'pie_chart_url_clk': pie_chart_url_clk,
@@ -234,6 +236,7 @@ class ShowAppHandler(RequestHandler):
       
     # today is the latest day  
     today = totals[-1] 
+    yesterday = totals[-2] 
         
     chart_urls = {}
     # make a line graph showing impressions
@@ -273,6 +276,7 @@ class ShowAppHandler(RequestHandler):
     return render_to_response(self.request,'show_app.html', 
         {'app': a,    
          'today': today,
+         'yesterday': yesterday,
          'chart_urls': chart_urls,
          'pie_chart_url_imp': pie_chart_url_imp,
          'pie_chart_url_clk': pie_chart_url_clk,
@@ -296,45 +300,42 @@ class ShowHandler(RequestHandler):
 
     # do all days requested
     days = SiteStats.lastdays(14)
-    stats = SiteStats.sitestats_for_days(site, days)
+    site.all_stats = SiteStats.sitestats_for_days(site, days)
     for i in range(len(days)):
-      stats[i].date = days[i]
+      site.all_stats[i].date = days[i]
 
+    site.stats = reduce(lambda x, y: x+y, site.all_stats, SiteStats())
       
     # chart
     chart_urls = {}
     
-    impressions = [s.impression_count for s in stats]
+    impressions = [s.impression_count for s in site.all_stats]
     chart_urls['imp'] = gen_chart_url(impressions, days, "Total+Daily+Impressions")
     
     # make a line graph showing clicks
-    clicks = [s.click_count for s in stats]
+    clicks = [s.click_count for s in site.all_stats]
     chart_urls['clk'] = gen_chart_url(clicks, days, "Total+Daily+Clicks")
 
     # make a line graph showing revenue
-    revenue = [s.revenue for s in stats]
+    revenue = [s.revenue for s in site.all_stats]
     chart_urls['rev'] = gen_chart_url(revenue, days, "Total+Revenue")
     
     # make a line graph showing users
-    unique_users = [s.unique_user_count for s in stats]
+    unique_users = [s.unique_user_count for s in site.all_stats]
     chart_urls['users'] = gen_chart_url(unique_users, days, "Total+Unique Users")
 
     # totals
-    todays_stats = stats[-1]
+    today = site.all_stats[-1]
+    yesterday = site.all_stats[-2]
     
-    impression_count = todays_stats.impression_count
-    click_count = todays_stats.click_count
-    revenue = todays_stats.revenue
-    users = todays_stats.unique_user_count
-    ctr = float(click_count) / float(impression_count) if impression_count > 0 else 0
-
     # write response
-    return render_to_response(self.request,'show.html', {'site':site, 
-      'impression_count': impression_count, 'click_count': click_count, 'ctr': ctr, 'revenue': revenue, 'unique_user_count':users,
-      'account':self.account, 
-      'chart_urls': chart_urls,
-      'days': days,
-      'stats':stats})
+    return render_to_response(self.request,'show.html', 
+        {'site':site,
+         'today': today,
+         'yesterday': yesterday,
+         'account':self.account, 
+         'chart_urls': chart_urls,
+         'days': days})
   
 @whitelist_login_required
 def show(request,*args,**kwargs):

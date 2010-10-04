@@ -3,7 +3,7 @@
 {% load filters %}
 
 {% block content %}
-	<h3><a href="{% url advertiser_campaign %}">Campaigns</a> &gt; <a href="{% url advertiser_campaign_show campaign_key=c.key %}">{{c.name}}</a> &gt; Create an Ad Group</h3>
+	<h3><a href="{% url advertiser_campaign %}">Campaigns</a> &gt; <a href="{% url advertiser_campaign_show campaign_key=c.key %}">{{c.name}}</a> &gt; {{ title }}</h3>
 	<p>
 		Ad groups allow you to target specific users with the right ad.
 	</p>
@@ -68,7 +68,7 @@
 			<tr><th>Ad Units</th>
 				<td><ul style="overflow:auto; height:100px; list-style: none;">
 					{% for s in sites %}
-							<li style="margin-left: 0;"><input type="checkbox" name="sites" value="{{s.key}}"> {{s.name}}</input></li>
+							<li style="margin-left: 0;"><input type="checkbox" name="sites" value="{{s.key}}" {% if s.checked %}checked="checked"{% endif %}> {{s.name}} </input></li>
 					{% endfor %}
 					</ul></td></tr>
 			

@@ -262,8 +262,8 @@ class ShowAppHandler(RequestHandler):
     
 
     # do a bar graph showing contribution of each site to impression count
+    pie_chart_urls = {}
     if len(a.sites) > 0:
-      pie_chart_urls = {}
       impressions_by_site = []
       clicks_by_site = []
       users_by_site = []

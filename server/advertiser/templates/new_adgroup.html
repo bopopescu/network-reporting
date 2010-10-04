@@ -73,9 +73,11 @@
 					</ul></td></tr>
 			
 			<tr><td colspan="2"><h4>Settings</h4></td></tr>
-			<tr><th>Goal</th>
-					<td><input type="text" name="percent_users" value="{{f.instance.percent_users}}" size=5/> % of all <select name="budget_type"><option>Users</option><option>Requests</option></select></td>
-					</tr>
+			<tr>
+				<th>Goal</th>
+				<td>
+					<input type="text" name="percent_users" value="{{f.instance.percent_users}}" size=5/> % of all <select name="budget_type"><option>Users</option><option>Requests</option></select></td>
+			</tr>
 
 			<tr><th>Frequency Caps</th>
 				<td>
@@ -84,7 +86,8 @@
 
 			<tr><td colspan="2"><h4>Keyword Targeting</h4></td></tr>
 			<tr><th>Keywords</th>
-				<td><textarea cols="50" rows="3" name="keywords" placeholder="Keywords, one per line, e.g. coffee"></textarea></td></tr>
+				<td>
+					<textarea cols="50" rows="3" name="keywords" placeholder="Keywords, one per line, e.g. coffee">{{f.instance.keywords|join:"&#10;"}}</textarea></td></tr>
 			<tr><th>Advanced</th>
 				<td>
 					<a href="#" onclick="Toggle.display('advanced');">Show advanced targeting</a>
@@ -99,7 +102,8 @@
 					<tr>
 						<th>Geo Predicates</th>
 						<td>
-							<textarea name="geo_predicates" cols="50" rows="3">country_name=*</textarea><br/>
+							<textarea name="geo_predicates" cols="50" rows="3">{% if f.instance.geo_predicates %}{{f.instance.geo_predicates|join:"&#10;"}}{% else %}country_name=*{% endif %}</textarea>
+							<br/>
 							<tt>country_name=X; region_name=X,country_name=X; city_name=X,region_name=X,country_name=X</tt>
 						</td>
 					</tr>
@@ -107,7 +111,7 @@
 					<tr>
 						<th>Device Predicates</th>
 						<td>
-							<textarea name="device_predicates" cols="50" rows="3">platform_name=*</textarea><br/>
+							<textarea name="device_predicates" cols="50" rows="3">{% if f.instance.geo_predicates %}{{f.instance.device_predicates|join:"&#10;"}}{% else %}platform_name=*{% endif %}</textarea><br/>
 							<tt>platform_name=(*,android,iphone)</tt>
 						</td>
 					</tr>
@@ -117,5 +121,8 @@
 		<p>
 			<button type="button" class="btn" onclick="form.submit();"><span><span>Create Ad Group</span></span></button>
 		</p>
+		
+		<input type="hidden" name="campaign" value="{{ c.key }}"/>
+		
 	</form>
 {% endblock %}

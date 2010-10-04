@@ -128,21 +128,30 @@ def campaign_create(request,*args,**kwargs):
   return CreateHandler()(request,*args,**kwargs)      
 
 class CreateAdGroupHandler(RequestHandler):
-  def get(self, campaign_key=None, adgroup_key=None):
+  def get(self, campaign_key=None, adgroup_key=None, title="Create an Ad Group"):
     if campaign_key:
       c = Campaign.get(campaign_key)
       adgroup = AdGroup(name="%s Ad Group" % c.name, campaign=c, bid_strategy="cpm", bid=10.0, percent_users=100.0)
     if adgroup_key:
       adgroup = AdGroup.get(db.Key(adgroup_key))
+      
       c = adgroup.campaign
       if not adgroup:
         raise Http404("AdGroup does not exist")  
     f = AdGroupForm(instance=adgroup)
-    sites = Site.gql('where account=:1', self.account)    
-    return render_to_response(self.request,'advertiser/new_adgroup.html', {"f": f, "c": c, "sites": sites})
+    sites = Site.gql('where account=:1', self.account).fetch(100)    
+    
+    for site in sites:
+      site.checked = site.key() in adgroup.site_keys
 
-  def post(self, campaign_key=None,adgroup_key=None):
-    f = AdGroupForm(data=self.request.POST)
+    return render_to_response(self.request,'advertiser/new_adgroup.html', {"f": f, "c": c, "sites": sites, "title": title})
+
+  def post(self, campaign_key=None,adgroup_key=None, title="Create an Ad Group"):
+    if adgroup_key:
+      adgroup = AdGroup.get(db.Key(adgroup_key))
+    else:
+      adgroup = None  
+    f = AdGroupForm(data=self.request.POST,instance=adgroup)
     adgroup = f.save(commit=False)
     adgroup.campaign = db.Key(self.request.POST.get("campaign")) # TODO: move into form
     adgroup.keywords=filter(lambda k: len(k) > 0, self.request.POST.get('keywords').lower().split('\n'))
@@ -165,6 +174,7 @@ def campaign_adgroup_new(request,*args,**kwargs):
 
 @whitelist_login_required
 def campaign_adgroup_edit(request,*args,**kwargs):
+  kwargs.update(title="Edit Ad Group")
   return CreateAdGroupHandler()(request,*args,**kwargs)  
   
 

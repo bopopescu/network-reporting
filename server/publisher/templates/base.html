@@ -6,8 +6,9 @@ var chart_url_imp = "{{chart_urls.imp|safe}}"
 var chart_url_clk = "{{chart_urls.clk|safe}}"
 var chart_url_rev = "{{chart_urls.rev|safe}}"
 var chart_url_users = "{{chart_urls.users|safe}}"
-var pie_chart_url_imp = "{{pie_chart_url_imp|safe}}"
-var pie_chart_url_clk = "{{pie_chart_url_clk|safe}}"
+var pie_chart_url_imp = "{{pie_chart_urls.imp|safe}}"
+var pie_chart_url_clk = "{{pie_chart_urls.clk|safe}}"
+var pie_chart_url_users = "{{pie_chart_urls.users|safe}}"
 function highlight_elem(elem) {
   $$('td.rollup_selected')[0].removeClassName('rollup_selected');
   elem.addClassName('rollup_selected');
@@ -29,6 +30,7 @@ function show_graph_rev(elem) {
 }
 function show_graph_users(elem){
 	$('chart_img').src = chart_url_users;
+  if ($('pie_chart_img')) $('pie_chart_img').src = pie_chart_url_users;
 	highlight_elem(elem);
 }
 function activate_button(elem) {

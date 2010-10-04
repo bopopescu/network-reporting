@@ -58,9 +58,10 @@ def gen_chart_url(series, days, title):
 
   return chart_url
   
-def gen_pie_chart_url(series):
+def gen_pie_chart_url(series, title):
   #TODO: Shouldn't use 'app' as a key name since it also works for ad units
-  chart_url = "http://chart.apis.google.com/chart?cht=p&chtt=Contribution+by+Placement&chs=200x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chl=&chdlp=b&chdl=%s" % (
+  chart_url = "http://chart.apis.google.com/chart?cht=p&chtt=%s&chs=200x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chl=&chdlp=b&chdl=%s" % (
+    title,
     ','.join(map(lambda x: str(x["total"]), series)),
     max(map(lambda x: x.stats.impression_count, [s["app"] for s in series])) * 1.5,
     max(map(lambda x: x.stats.impression_count, [s["app"] for s in series])) * 1.5,
@@ -120,21 +121,25 @@ class AppIndexHandler(RequestHandler):
       # do a bar graph showing contribution of each site to impression count
       impressions_by_app = []
       clicks_by_app = []
+      users_by_app = []
+      pie_chart_urls = {}
       for a in apps:
         impressions_by_app.append({"app": a, "total": a.stats.impression_count})
         clicks_by_app.append({"app": a, "total": a.stats.click_count})
+        users_by_app.append({"app": a, "total": a.stats.unique_user_count})
       impressions_by_app.sort(lambda x,y: cmp(y["total"], x["total"])) 
       clicks_by_app.sort(lambda x,y: cmp(y["total"], x["total"])) 
-      pie_chart_url_imp = gen_pie_chart_url(impressions_by_app)
-      pie_chart_url_clk = gen_pie_chart_url(clicks_by_app)
+      users_by_app.sort(lambda x,y: cmp(y["total"], x["total"])) 
+      pie_chart_urls['imp'] = gen_pie_chart_url(impressions_by_app, "Contribution+by+App")
+      pie_chart_urls['clk'] = gen_pie_chart_url(clicks_by_app, "Contribution+by+App")
+      pie_chart_urls['users'] = gen_pie_chart_url(users_by_app, "Contribution+by+App")
 
       return render_to_response(self.request,'publisher/index.html', 
         {'apps': apps,    
          'today': today,
          'yesterday': yesterday,
          'chart_urls': chart_urls,
-         'pie_chart_url_imp': pie_chart_url_imp,
-         'pie_chart_url_clk': pie_chart_url_clk,
+         'pie_chart_urls': pie_chart_urls,
          'account': self.account})
     else:
       return HttpResponseRedirect(reverse('publisher_app_create'))
@@ -258,18 +263,23 @@ class ShowAppHandler(RequestHandler):
 
     # do a bar graph showing contribution of each site to impression count
     if len(a.sites) > 0:
+      pie_chart_urls = {}
       impressions_by_site = []
       clicks_by_site = []
+      users_by_site = []
       for s in a.sites:
         impressions_by_site.append({"app": s, "total": s.stats.impression_count})
         clicks_by_site.append({"app": s, "total": s.stats.click_count})
-        impressions_by_site.sort(lambda x,y: cmp(y["total"], x["total"])) 
-        clicks_by_site.sort(lambda x,y: cmp(y["total"], x["total"])) 
-        pie_chart_url_imp = gen_pie_chart_url(impressions_by_site)
-        pie_chart_url_clk = gen_pie_chart_url(clicks_by_site)
+        users_by_site.append({"app": a, "total": s.stats.unique_user_count})
+      impressions_by_site.sort(lambda x,y: cmp(y["total"], x["total"])) 
+      clicks_by_site.sort(lambda x,y: cmp(y["total"], x["total"])) 
+      users_by_site.sort(lambda x,y: cmp(y["total"], x["total"])) 
+      pie_chart_urls['imp'] = gen_pie_chart_url(impressions_by_site, "Contribution+by+Ad+Unit")
+      pie_chart_urls['clk'] = gen_pie_chart_url(clicks_by_site, "Contribution+by+Ad+Unit")
+      pie_chart_urls['users'] = gen_pie_chart_url(users_by_site, "Contribution+by+Ad+Unit")
     else:
-      pie_chart_url_imp = ""
-      pie_chart_url_clk = ""
+      pie_chart_urls['imp'] = ""
+      pie_chart_urls['clk'] = ""
 
     help_text = 'Create an Ad Unit below' if len(a.sites) == 0 else None
 
@@ -278,8 +288,7 @@ class ShowAppHandler(RequestHandler):
          'today': today,
          'yesterday': yesterday,
          'chart_urls': chart_urls,
-         'pie_chart_url_imp': pie_chart_url_imp,
-         'pie_chart_url_clk': pie_chart_url_clk,
+         'pie_chart_urls': pie_chart_urls,
          'account': self.account,
          'helptext': help_text})
 
@@ -334,6 +343,26 @@ class ShowHandler(RequestHandler):
     today = site.all_stats[-1]
     yesterday = site.all_stats[-2]
     
+    # do a bar graph showing contribution of each site to impression count
+    if len(site.adgroups) > 0:
+      pie_chart_urls = {}
+      impressions_by_ag = []
+      clicks_by_ag = []
+      users_by_ag = []
+      for ag in site.adgroups:
+        impressions_by_ag.append({"app": ag, "total": ag.stats.impression_count})
+        clicks_by_ag.append({"app": ag, "total": ag.stats.click_count})
+        users_by_ag.append({"app": ag, "total": ag.stats.unique_user_count})
+      impressions_by_ag.sort(lambda x,y: cmp(y["total"], x["total"])) 
+      clicks_by_ag.sort(lambda x,y: cmp(y["total"], x["total"])) 
+      users_by_ag.sort(lambda x,y: cmp(y["total"], x["total"])) 
+      pie_chart_urls['imp'] = gen_pie_chart_url(impressions_by_ag, "Contribution+by+Ad+Group")
+      pie_chart_urls['clk'] = gen_pie_chart_url(clicks_by_ag, "Contribution+by+Ad+Group")
+      pie_chart_urls['users'] = gen_pie_chart_url(users_by_ag, "Contribution+by+Ad+Group")
+    else:
+      pie_chart_urls['imp'] = ""
+      pie_chart_urls['clk'] = ""
+    
     # write response
     return render_to_response(self.request,'publisher/show.html', 
         {'site':site,
@@ -341,6 +370,7 @@ class ShowHandler(RequestHandler):
          'yesterday': yesterday,
          'account':self.account, 
          'chart_urls': chart_urls,
+         'pie_chart_urls': pie_chart_urls,
          'days': days})
   
 @whitelist_login_required

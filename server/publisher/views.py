@@ -362,6 +362,7 @@ class ShowHandler(RequestHandler):
     else:
       pie_chart_urls['imp'] = ""
       pie_chart_urls['clk'] = ""
+      pie_chart_urls['users'] = ""
     
     # write response
     return render_to_response(self.request,'publisher/show.html', 

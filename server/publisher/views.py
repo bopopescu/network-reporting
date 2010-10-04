@@ -121,8 +121,8 @@ class AppIndexHandler(RequestHandler):
       impressions_by_app = []
       clicks_by_app = []
       for a in apps:
-        impressions_by_app.append({"app": a, "total": today.impression_count})
-        clicks_by_app.append({"app": a, "total": today.click_count})
+        impressions_by_app.append({"app": a, "total": a.stats.impression_count})
+        clicks_by_app.append({"app": a, "total": a.stats.click_count})
       impressions_by_app.sort(lambda x,y: cmp(y["total"], x["total"])) 
       clicks_by_app.sort(lambda x,y: cmp(y["total"], x["total"])) 
       pie_chart_url_imp = gen_pie_chart_url(impressions_by_app)

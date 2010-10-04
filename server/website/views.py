@@ -17,7 +17,7 @@ from common.ragendja.template import render_to_response, JSONResponse
 from django.core.mail import send_mail, EmailMessage
 
 def website_splash(request,*args,**kwargs):
-  return render_to_response(request, 'splash.html', {'m': request.GET.get("m") or ""})
+  return render_to_response(request, 'website/splash.html', {'m': request.GET.get("m") or ""})
 
 def website_join(request,*args,**kwargs):
   email = request.POST.get("email_address")

@@ -128,7 +128,7 @@ class AppIndexHandler(RequestHandler):
       pie_chart_url_imp = gen_pie_chart_url(impressions_by_app)
       pie_chart_url_clk = gen_pie_chart_url(clicks_by_app)
 
-      return render_to_response(self.request,'index.html', 
+      return render_to_response(self.request,'publisher/index.html', 
         {'apps': apps,    
          'today': today,
          'yesterday': yesterday,
@@ -147,7 +147,7 @@ def index(request,*args,**kwargs):
 class AppCreateHandler(RequestHandler):
   def get(self):
     f = AppForm()
-    return render_to_response(self.request,'new_app.html', {"f": f})
+    return render_to_response(self.request,'publisher/new_app.html', {"f": f})
 
   def post(self):
     f = AppForm(data=self.request.POST)
@@ -157,7 +157,7 @@ class AppCreateHandler(RequestHandler):
       app.put()
       return HttpResponseRedirect(reverse('publisher_app_show')+'?id=%s'%app.key())
     else:
-      return render_to_response(self.request,'new_app.html', {"f": f})
+      return render_to_response(self.request,'publisher/new_app.html', {"f": f})
 
 @whitelist_login_required  
 def app_create(request,*args,**kwargs):
@@ -273,7 +273,7 @@ class ShowAppHandler(RequestHandler):
 
     help_text = 'Create an Ad Unit below' if len(a.sites) == 0 else None
 
-    return render_to_response(self.request,'show_app.html', 
+    return render_to_response(self.request,'publisher/show_app.html', 
         {'app': a,    
          'today': today,
          'yesterday': yesterday,
@@ -284,7 +284,7 @@ class ShowAppHandler(RequestHandler):
          'helptext': help_text})
 
     # write response
-    return render_to_response(self.request,'show_app.html', {'app':app, 'sites':sites,
+    return render_to_response(self.request,'publisher/show_app.html', {'app':app, 'sites':sites,
       'account':self.account})
   
 @whitelist_login_required
@@ -329,7 +329,7 @@ class ShowHandler(RequestHandler):
     yesterday = site.all_stats[-2]
     
     # write response
-    return render_to_response(self.request,'show.html', 
+    return render_to_response(self.request,'publisher/show.html', 
         {'site':site,
          'today': today,
          'yesterday': yesterday,
@@ -431,7 +431,7 @@ def adunit_delete(request,*args,**kwargs):
 class GenerateHandler(RequestHandler):
   def get(self):
     site = Site.get(self.request.GET.get('id'))
-    return render_to_response(self.request,'code.html', {'site': site})
+    return render_to_response(self.request,'publisher/code.html', {'site': site})
   
 @whitelist_login_required
 def generate(request,*args,**kwargs):

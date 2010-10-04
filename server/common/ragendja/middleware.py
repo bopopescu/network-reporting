@@ -42,6 +42,8 @@ class NoHistoryCacheMiddleware(object):
 class ErrorMiddleware(object):
     """Displays a default template on CapabilityDisabledError."""
     def process_exception(self, request, exception):
+        import logging, sys
+        logging.exception('sys.path: %r\nException in request:' % sys.path)
         if isinstance(exception, CapabilityDisabledError):
             return maintenance(request)
         elif isinstance(exception, db.Timeout):

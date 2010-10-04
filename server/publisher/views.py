@@ -92,10 +92,13 @@ class AppIndexHandler(RequestHandler):
       
         app_stats = SiteStats.stats_for_days(a,days)
         # TODO: Dedupe this by having an account level rollup
-        a.totals = [reduce(lambda x,y: x+y,stats, SiteStats()) for stats in zip(app_stats,a.totals)]
+        ## assigns the user count of the app from the app stat rollup
+        for stat,app_stat in zip(a.totals,app_stats):
+          stat.unique_user_count = app_stat.unique_user_count        
           
       totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[a.totals for a in apps])]
       today = totals[-1]
+      yesterday = totals[-2]
 
       chart_urls = {}
       # make a line graph showing impressions
@@ -125,9 +128,10 @@ class AppIndexHandler(RequestHandler):
       pie_chart_url_imp = gen_pie_chart_url(impressions_by_app)
       pie_chart_url_clk = gen_pie_chart_url(clicks_by_app)
 
-      return render_to_response(self.request,'index.html', 
+      return render_to_response(self.request,'publisher/index.html', 
         {'apps': apps,    
          'today': today,
+         'yesterday': yesterday,
          'chart_urls': chart_urls,
          'pie_chart_url_imp': pie_chart_url_imp,
          'pie_chart_url_clk': pie_chart_url_clk,
@@ -143,7 +147,7 @@ def index(request,*args,**kwargs):
 class AppCreateHandler(RequestHandler):
   def get(self):
     f = AppForm()
-    return render_to_response(self.request,'new_app.html', {"f": f})
+    return render_to_response(self.request,'publisher/new_app.html', {"f": f})
 
   def post(self):
     f = AppForm(data=self.request.POST)
@@ -153,7 +157,7 @@ class AppCreateHandler(RequestHandler):
       app.put()
       return HttpResponseRedirect(reverse('publisher_app_show')+'?id=%s'%app.key())
     else:
-      return render_to_response(self.request,'new_app.html', {"f": f})
+      return render_to_response(self.request,'publisher/new_app.html', {"f": f})
 
 @whitelist_login_required  
 def app_create(request,*args,**kwargs):
@@ -219,7 +223,6 @@ class ShowAppHandler(RequestHandler):
     if len(a.sites) > 0:
       for s in a.sites:
         s.all_stats = SiteStats.sitestats_for_days(s, days)
-        today += s.all_stats[-1]
         s.stats = reduce(lambda x, y: x+y, s.all_stats, SiteStats())
         a.stats = reduce(lambda x, y: x+y, s.all_stats, a.stats)
       totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[s.all_stats for s in a.sites])]
@@ -227,11 +230,13 @@ class ShowAppHandler(RequestHandler):
       totals = [SiteStats() for d in days]
       
     app_stats = SiteStats.stats_for_days(a,days)
-    # TODO: Dedupe this by having an account level rollup
-    totals = [reduce(lambda x,y: x+y,stats, SiteStats()) for stats in zip(app_stats,totals)]
-
+    # set the apps unique user count from the app stats rollup
+    for stat,app_stat in zip(totals,app_stats):
+      stat.unique_user_count = app_stat.unique_user_count
+      
     # today is the latest day  
-    today += totals[-1] 
+    today = totals[-1] 
+    yesterday = totals[-2] 
         
     chart_urls = {}
     # make a line graph showing impressions
@@ -268,9 +273,10 @@ class ShowAppHandler(RequestHandler):
 
     help_text = 'Create an Ad Unit below' if len(a.sites) == 0 else None
 
-    return render_to_response(self.request,'show_app.html', 
+    return render_to_response(self.request,'publisher/show_app.html', 
         {'app': a,    
          'today': today,
+         'yesterday': yesterday,
          'chart_urls': chart_urls,
          'pie_chart_url_imp': pie_chart_url_imp,
          'pie_chart_url_clk': pie_chart_url_clk,
@@ -278,7 +284,7 @@ class ShowAppHandler(RequestHandler):
          'helptext': help_text})
 
     # write response
-    return render_to_response(self.request,'show_app.html', {'app':app, 'sites':sites,
+    return render_to_response(self.request,'publisher/show_app.html', {'app':app, 'sites':sites,
       'account':self.account})
   
 @whitelist_login_required
@@ -294,45 +300,42 @@ class ShowHandler(RequestHandler):
 
     # do all days requested
     days = SiteStats.lastdays(14)
-    stats = SiteStats.sitestats_for_days(site, days)
+    site.all_stats = SiteStats.sitestats_for_days(site, days)
     for i in range(len(days)):
-      stats[i].date = days[i]
+      site.all_stats[i].date = days[i]
 
+    site.stats = reduce(lambda x, y: x+y, site.all_stats, SiteStats())
       
     # chart
     chart_urls = {}
     
-    impressions = [s.impression_count for s in stats]
+    impressions = [s.impression_count for s in site.all_stats]
     chart_urls['imp'] = gen_chart_url(impressions, days, "Total+Daily+Impressions")
     
     # make a line graph showing clicks
-    clicks = [s.click_count for s in stats]
+    clicks = [s.click_count for s in site.all_stats]
     chart_urls['clk'] = gen_chart_url(clicks, days, "Total+Daily+Clicks")
 
     # make a line graph showing revenue
-    revenue = [s.revenue for s in stats]
+    revenue = [s.revenue for s in site.all_stats]
     chart_urls['rev'] = gen_chart_url(revenue, days, "Total+Revenue")
     
     # make a line graph showing users
-    unique_users = [s.unique_user_count for s in stats]
+    unique_users = [s.unique_user_count for s in site.all_stats]
     chart_urls['users'] = gen_chart_url(unique_users, days, "Total+Unique Users")
 
     # totals
-    todays_stats = stats[-1]
+    today = site.all_stats[-1]
+    yesterday = site.all_stats[-2]
     
-    impression_count = todays_stats.impression_count
-    click_count = todays_stats.click_count
-    revenue = todays_stats.revenue
-    users = todays_stats.unique_user_count
-    ctr = float(click_count) / float(impression_count) if impression_count > 0 else 0
-
     # write response
-    return render_to_response(self.request,'show.html', {'site':site, 
-      'impression_count': impression_count, 'click_count': click_count, 'ctr': ctr, 'revenue': revenue, 'unique_user_count':users,
-      'account':self.account, 
-      'chart_urls': chart_urls,
-      'days': days,
-      'stats':stats})
+    return render_to_response(self.request,'publisher/show.html', 
+        {'site':site,
+         'today': today,
+         'yesterday': yesterday,
+         'account':self.account, 
+         'chart_urls': chart_urls,
+         'days': days})
   
 @whitelist_login_required
 def show(request,*args,**kwargs):
@@ -428,7 +431,7 @@ def adunit_delete(request,*args,**kwargs):
 class GenerateHandler(RequestHandler):
   def get(self):
     site = Site.get(self.request.GET.get('id'))
-    return render_to_response(self.request,'code.html', {'site': site})
+    return render_to_response(self.request,'publisher/code.html', {'site': site})
   
 @whitelist_login_required
 def generate(request,*args,**kwargs):

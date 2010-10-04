@@ -9,6 +9,10 @@
 		Apps
 		<div class="toolbar">
       <button onClick="location.href='{% url publisher_app_create %}'" class="btn"><span><span>+ New App</span></span></button>
+    <div class="graphselect">
+      <button class="btn btn_active pill-l" onClick="show_today(this);"><span><span>Today</span></span></button>
+      <button class="btn pill-r" onClick="show_yesterday(this);"><span><span>Yesterday</span></span></button>
+    </div>
 		</div>
 	</h3>
   {% if not apps %}
@@ -19,10 +23,10 @@
 		
   <table class="rollups">
     <tr>
-      <td class="rollup rollup_selected" onClick="show_graph_imp(this);"><b>Impressions</b><br/>{{today.impression_count|withsep}}</td>
-      <td class="rollup" onClick="show_graph_clk(this);"><b>Clicks</b><br/>{{today.click_count|withsep}} ({{today.ctr|percentage}})</td>      	
-	    <td class="rollup" onClick="show_graph_rev(this);"><b>Revenue (est.)</b><br/>{{today.revenue|currency}}</td>
-	    <td class="rollup" onClick="show_graph_users(this);"><b>Users</b><br/>{{today.unique_user_count}}</td>
+      <td class="rollup rollup_selected" onClick="show_graph_imp(this);"><b>Impressions</b><br/><div class="data_today">{{today.impression_count|withsep}}</div><div class="data_yesterday" style="display:none;">{{yesterday.impression_count|withsep}}</div></td>
+      <td class="rollup" onClick="show_graph_clk(this);"><b>Clicks</b><br/><div class="data_today">{{today.click_count|withsep}} ({{today.ctr|percentage}})</div><div class="data_yesterday" style="display:none;">{{yesterday.click_count|withsep}} ({{yesterday.ctr|percentage}})</div></td>      	
+	    <td class="rollup" onClick="show_graph_rev(this);"><b>Revenue (est.)</b><br/><div class="data_today">{{today.revenue|currency}}</div><div class="data_yesterday" style="display:none;">{{yesterday.revenue|currency}}</div></td>
+	    <td class="rollup" onClick="show_graph_users(this);"><b>Users</b><br/><div class="data_today">{{today.unique_user_count|withsep}}</div><div class="data_yesterday" style="display:none;">{{yesterday.unique_user_count|withsep}}</div></td>
 	
     </tr>
   </table> 

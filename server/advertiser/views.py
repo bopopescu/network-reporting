@@ -333,7 +333,7 @@ class EditBidHandler(RequestHandler):
     f = AdGroupForm(data=self.request.POST, instance=a)
     if a.campaign.u == self.account.user:
       a.site_keys = map(lambda x:db.Key(x), self.request.POST.getlist("site_keys"))
-      a.keywords = filter(lambda k: len(k) > 0, self.request.POST.get('keywords').lower().split('\n'))
+      a.keywords = [keyword.strip() for keyword in self.request.POST.get('keywords').split('\n') if keyword.strip()]
       a.devices = self.request.POST.getlist('devices')
       a.min_os = self.request.POST.getlist('min_os')
       a.country = self.request.POST.get('country',None)
@@ -371,22 +371,6 @@ class PauseBidHandler(RequestHandler):
 def bid_pause(request,*args,**kwargs):
   return PauseBidHandler()(request,*args,**kwargs)
   
-class RemoveBidHandler(RequestHandler):
-  def post(self):
-    c = None
-    for id in self.request.POST.getlist('id') or []:
-      b = AdGroup.get(id)
-      c = b.campaign
-      if b != None and b.campaign.u == self.account.user:
-        b.deleted = True
-        b.put()
-    return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':c.key()}))
-  
-@whitelist_login_required
-def bid_delete(request,*args,**kwargs):
-  return RemoveBidHandler()(request,*args,**kwargs)
-
-#
 # Creative management
 #
 class AddCreativeHandler(RequestHandler):

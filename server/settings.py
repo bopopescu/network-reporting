@@ -16,8 +16,6 @@
 
 from common.ragendja.settings_pre import *
 
-# DEBUG = False
-
 DEFAULT_FROM_EMAIL = 'olp@mopub.com'
 SERVER_EMAIL = 'olp@mopub.com'
 
@@ -134,7 +132,8 @@ INSTALLED_APPS = (
 
 IGNORE_APP_URLSAUTO = ('website')
 
-WHITELIST_EMAILS = ('test@example.com',
+WHITELIST_EMAILS = (
+  'test@example.com',
   'lamen@user.com',
   'nafisjamal@gmail.com',
   'jim.e.payne@gmail.com',

@@ -1,5 +1,5 @@
 application: mopub-inc
-version: 36-staging
+version: 36-live
 runtime: python
 api_version: 1
 default_expiration: "10d"
@@ -40,4 +40,4 @@ handlers:
   script: main.py
 
 skip_files:
-  - ^(.*/)?django.zip
+  - ^(.*/)?django\.zip

@@ -33,8 +33,8 @@ handlers:
   script: ad_server/main.py
 
 - url: /stats.*
-  script: $PYTHON_LIB/google/appengine/ext/appstats/ui.py
-
+  # script: $PYTHON_LIB/google/appengine/ext/appstats/ui.py
+  script: appstats.py
 
 - url: /.*
   script: main.py

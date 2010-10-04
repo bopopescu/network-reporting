@@ -128,35 +128,45 @@ def campaign_create(request,*args,**kwargs):
   return CreateHandler()(request,*args,**kwargs)      
 
 class CreateAdGroupHandler(RequestHandler):
-  def get(self, campaign_key):
-    c = Campaign.get(campaign_key)
-    adgroup = AdGroup(name="%s Ad Group" % c.name, campaign=c, bid_strategy="cpm", bid=10.0, percent_users=100.0)
+  def get(self, campaign_key=None, adgroup_key=None):
+    if campaign_key:
+      c = Campaign.get(campaign_key)
+      adgroup = AdGroup(name="%s Ad Group" % c.name, campaign=c, bid_strategy="cpm", bid=10.0, percent_users=100.0)
+    if adgroup_key:
+      adgroup = AdGroup.get(db.Key(adgroup_key))
+      c = adgroup.campaign
+      if not adgroup:
+        raise Http404("AdGroup does not exist")  
     f = AdGroupForm(instance=adgroup)
     sites = Site.gql('where account=:1', self.account)    
     return render_to_response(self.request,'advertiser/new_adgroup.html', {"f": f, "c": c, "sites": sites})
 
-  def post(self, campaign_key):
-     c = Campaign.get(campaign_key)
-     f = AdGroupForm(data=self.request.POST)
-     adgroup = f.save(commit=False)
-     adgroup.campaign=c
-     adgroup.keywords=filter(lambda k: len(k) > 0, self.request.POST.get('keywords').lower().split('\n'))
-     adgroup.site_keys=map(lambda x: db.Key(x), self.request.POST.getlist('sites'))
-     adgroup.put()
+  def post(self, campaign_key=None,adgroup_key=None):
+    f = AdGroupForm(data=self.request.POST)
+    adgroup = f.save(commit=False)
+    adgroup.campaign = db.Key(self.request.POST.get("campaign")) # TODO: move into form
+    adgroup.keywords=filter(lambda k: len(k) > 0, self.request.POST.get('keywords').lower().split('\n'))
+    adgroup.site_keys=map(lambda x: db.Key(x), self.request.POST.getlist('sites'))
+    adgroup.put()
      
-     # if the campaign is a network type, automatically populate the right creative and go back to
-     # campaign page
-     if c.campaign_type == "network":
-       creative = adgroup.default_creative()
-       creative.put()
-       return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':c.key()}))
-     else:
-       return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':adgroup.key()}))
-            
+    # if the campaign is a network type, automatically populate the right creative and go back to
+    # campaign page
+    if adgroup.campaign.campaign_type == "network":
+      creative = adgroup.default_creative()
+      creative.put()
+      return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':adgroup.campaign.key()}))
+    else:
+      return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':adgroup.key()}))
+  
        
 @whitelist_login_required     
 def campaign_adgroup_new(request,*args,**kwargs):
   return CreateAdGroupHandler()(request,*args,**kwargs)      
+
+@whitelist_login_required
+def campaign_adgroup_edit(request,*args,**kwargs):
+  return CreateAdGroupHandler()(request,*args,**kwargs)  
+  
 
 class ShowHandler(RequestHandler):          
   def get(self, campaign_key):
@@ -300,54 +310,6 @@ class ShowAdGroupHandler(RequestHandler):
 def campaign_adgroup_show(request,*args,**kwargs):    
   return ShowAdGroupHandler()(request,*args,**kwargs)
 
-class EditBidHandler(RequestHandler):
-  def get(self):
-    a = AdGroup.get(self.request.GET.get("id"))
-    f = AdGroupForm(instance=a)
-    params = {"f": f, 
-    'sites': Site.gql('where account=:1', self.account).fetch(100),
-    "a": a, 
-    "campaign": a.campaign,
-    "device_choices":[list(c) for c in AdGroup.DEVICE_CHOICES],
-    "min_os_choices":[list(c) for c in AdGroup.MIN_OS_CHOICES],
-    "user_types":[list(c) for c in AdGroup.USER_TYPES],
-    }
-    
-    ### TODO: CLEAN UP THIS HACK TO GET THE PROPER SELETIONS
-    for s in params['sites']:
-      s.checked = s.key() in a.site_keys
-      
-    for device in params['device_choices']:
-      device.append(device[0] in a.devices)
-    for os in params['min_os_choices']:
-      os.append(os[0] in a.min_os)
-      for device in params['device_choices']:
-        device.append(device[0] in a.devices)
-    for u in params['user_types']:
-      u.append(u[0] in a.active_user)  
-    return render_to_response(self.request,'advertiser/adgroup_edit.html', params)
-
-  def post(self):
-    key = self.request.GET.get("id")
-    a = AdGroup.get(key)
-    f = AdGroupForm(data=self.request.POST, instance=a)
-    if a.campaign.u == self.account.user:
-      a.site_keys = map(lambda x:db.Key(x), self.request.POST.getlist("site_keys"))
-      a.keywords = [keyword.strip() for keyword in self.request.POST.get('keywords').split('\n') if keyword.strip()]
-      a.devices = self.request.POST.getlist('devices')
-      a.min_os = self.request.POST.getlist('min_os')
-      a.country = self.request.POST.get('country',None)
-      a.state = self.request.POST.get('state',None)
-      a.city = self.request.POST.get('city',None)
-      a.active_user = self.request.POST.getlist('active_users')
-      a.active_app = self.request.POST.getlist('active_apps')
-      f.save(commit=False)
-      a.put()
-      return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':a.key()}))
-  
-@whitelist_login_required
-def campaign_adgroup_edit(request,*args,**kwargs):
-  return EditBidHandler()(request,*args,**kwargs)  
 
 class PauseBidHandler(RequestHandler):
   def post(self):

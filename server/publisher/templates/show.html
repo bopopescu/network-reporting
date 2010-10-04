@@ -25,9 +25,9 @@
     </tr>
   </table>
 
-	<img id="chart_img" src="{{chart_urls.imp}}" width=800 height=200 style="padding: 5px 0 10px 0;"/>
+	<img id="chart_img" src="{{chart_urls.imp}}" width=580 height=200 style="padding: 5px 0 10px 0;"/>
   <h3> 
-    Campaigns
+    Ad Groups
   </h3> 
 
   <table class="wide"> 
@@ -37,12 +37,12 @@
         <th class="numeric">Clicks</th> 
         <th class="numeric">Cost</th> 
       </thead> 
-		{% for c in campaigns %}
+		{% for ag in site.adgroups %}
       <tr> 
-        <td><a href="#">{{c.name}}</a></td> 
-        <td class="numeric">0</td> 
-        <td class="numeric">0 (0.0%)</td> 
-        <td class="numeric">$0.00</td> 
+        <td><a href="#">{{ag.name}}</a></td> 
+        <td class="numeric">{{ag.stats.impression_count|withsep}}</td> 
+        <td class="numeric">{{ag.stats.click_count|withsep}} ({{ag.stats.ctr|percentage}})</td> 
+        <td class="numeric">{{ag.stats.revenue|currency}}</td> 
       </tr> 
 		{% endfor %}
   </table> 

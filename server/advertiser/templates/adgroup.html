@@ -9,7 +9,7 @@
 		<a href="{% url advertiser_campaign_show campaign_key=campaign.key %}">{{campaign.name}}</a> &gt;
 		{{adgroup.name}}
 		<div class="toolbar">
-			<a href="{% url advertiser_adgroup_edit %}?id={{adgroup.key}}">
+			<a href="{% url advertiser_adgroup_edit adgroup_key=adgroup.key %}">
 				Edit {{adgroup.name}}
 			</a>
 		</div>

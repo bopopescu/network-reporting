@@ -28,9 +28,6 @@ import logging
 from appengine_django import InstallAppengineHelperForDjango
 InstallAppengineHelperForDjango()
 
-from appengine_django import have_django_zip
-from appengine_django import django_zip_path
-
 # Google App Engine imports.
 from google.appengine.ext.webapp import util
 

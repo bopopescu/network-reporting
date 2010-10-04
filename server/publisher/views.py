@@ -344,8 +344,8 @@ class ShowHandler(RequestHandler):
     yesterday = site.all_stats[-2]
     
     # do a bar graph showing contribution of each site to impression count
+    pie_chart_urls = {}
     if len(site.adgroups) > 0:
-      pie_chart_urls = {}
       impressions_by_ag = []
       clicks_by_ag = []
       users_by_ag = []

@@ -1,10 +1,11 @@
-import logging, os, sys
-os.environ["DJANGO_SETTINGS_MODULE"] = "settings"
+from appengine_django import LoadDjango
+LoadDjango()
 
-from google.appengine.dist import use_library
-use_library("django", "1.1") # or use_library("django", "1.0") if you're using 1.0
-
+import os
 from django.conf import settings
+
+os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+# Force Django to reload its settings.
 settings._target = None
 
 from google.appengine.ext.appstats.ui import main

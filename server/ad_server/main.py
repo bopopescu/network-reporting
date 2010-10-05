@@ -1,4 +1,26 @@
 # !/usr/bin/env python
+
+# TODO: PLEASE HAVE THIS FIX DJANGO PROBLEMS
+# import logging, os, sys
+# os.environ["DJANGO_SETTINGS_MODULE"] = "settings"
+# 
+# from google.appengine.dist import use_library
+# use_library("django", "1.1") # or use_library("django", "1.0") if you're using 1.0
+# 
+# from django.conf import settings
+# settings._target = None
+
+from appengine_django import LoadDjango
+LoadDjango()
+import os
+from django.conf import settings
+
+os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+# Force Django to reload its settings.
+settings._target = None
+
+# END TODO: PLEASE HAVE THIS FIX DJANGO PROBLEMS
+
 import wsgiref.handlers
 import cgi
 import logging
@@ -29,6 +51,11 @@ from google.appengine.api.labs import taskqueue
 from publisher.models import *
 from advertiser.models import *
 from reporting.models import *
+
+
+
+
+
 
 CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gzip(gfe)"]
 MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7PnE6cH9_PX7OoeIIr5FjnTA'
@@ -106,18 +133,20 @@ class AdAuction(object):
           
           while players:
             winning_ecpm = max(c.e_cpm() for c in players) if len(players) > 0 else 0
-            logging.debug("auction at priority=%d: %s, max eCPM=%.2f" % (p, players, winning_ecpm))
+            logging.warning("auction at priority=%d: %s, max eCPM=%.2f" % (p, players, winning_ecpm))
       
             # if the winning creative exceeds the ad unit's threshold cpm for the
             # priority level, then we have a winner
             if winning_ecpm >= site.threshold_cpm(p):
               # retain all creatives with comparable eCPM and randomize among them
               winners = filter(lambda x: x.e_cpm() >= winning_ecpm, players)
-              logging.warning("winners: %s",winners)
+              logging.warning("%02d winners: %s"%(len(winners),winners))
               
+              campaigns = set([c.ad_group.campaign for c in winners if not c.ad_group.deleted and not c.ad_group.campaign.deleted])
+              logging.warning("campaigns: %s"%campaigns)
               
               # find out which ad groups are eligible
-              ad_groups = set([c.ad_group for c in winners if not c.ad_group.deleted and not c.ad_group.campaign.deleted])
+              ad_groups = set([c.ad_group for c in winners])
               logging.warning("eligible ad_groups: %s" % ad_groups)
                             
               creatives = [c for c in all_creatives if c.ad_group.key() in [a.key() for a in ad_groups]]
@@ -130,8 +159,8 @@ class AdAuction(object):
             
               # calculate the user experiment bucket which is a deterministic function of the udid all the competing ad groups
               user_bucket = hash(udid+','.join([str(c.ad_group.key()) for ad_group in ad_groups])) % 100 # user gets assigned a number between 0-99 inclusive
-              user_bucket = 10
-              logging.debug("the user bucket is: #%d",user_bucket)
+              user_bucket = 20
+              logging.warning("the user bucket is: #%d",user_bucket)
           
               # determine in which ad group the user falls into to
               # otherwise give creatives in the other adgroups a shot
@@ -144,15 +173,14 @@ class AdAuction(object):
               # sort the ad groups by the percent of users desired, this allows us 
               # to do the appropriate wrapping of the number line if they are nicely behaved
               # TODO: finalize this so that we can do things like 90% and 15%. We need to decide
-              # what happens in this case
-              ad_groups.sort(lambda x,y: cmp(x.percent_users,y.percent_users))
+              # what happens in this case, unclear what the intent of this is.
+              ad_groups.sort(lambda x,y: cmp(x.percent_users if x.percent_users else 100.0,y.percent_users if y.percent_users else 100.0))
               for ad_group in ad_groups:
                 percent_users = ad_group.percent_users if not (ad_group.percent_users is None) else 100.0
                 if start_bucket <= user_bucket and user_bucket < (start_bucket + percent_users):
                   winning_ad_groups.append(ad_group)
-                else:
-                  start_bucket += percent_users
-                  start_bucket = start_bucket % 100 
+                start_bucket += percent_users
+                start_bucket = start_bucket % 100 
             
               # if there is a winning/eligible adgroup find the appropriate creative for it
               if winning_ad_groups:
@@ -168,7 +196,7 @@ class AdAuction(object):
           
                   # winner
                   winner = winners[0]
-                  logging.debug("winning creative = %s" % winner)
+                  logging.warning("winning creative = %s" % winner)
                   return winner
                 else:
                   logging.debug('taking away some players not in %s'%ad_groups)

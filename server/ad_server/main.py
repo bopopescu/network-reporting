@@ -159,7 +159,6 @@ class AdAuction(object):
             
               # calculate the user experiment bucket which is a deterministic function of the udid all the competing ad groups
               user_bucket = hash(udid+','.join([str(c.ad_group.key()) for ad_group in ad_groups])) % 100 # user gets assigned a number between 0-99 inclusive
-              user_bucket = 20
               logging.warning("the user bucket is: #%d",user_bucket)
           
               # determine in which ad group the user falls into to

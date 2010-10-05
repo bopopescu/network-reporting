@@ -342,6 +342,7 @@ class AdHandler(webapp.RequestHandler):
                             <body style="margin: 0;width:${w}px;height:${h}px;" >
                               <script type="text/javascript">window.googleAfmcRequest = {client: '$client',ad_type: 'text_image', output: 'html', channel: '',format: '$adsense_format',oe: 'utf8',color_border: '336699',color_bg: 'FFFFFF',color_link: '0000FF',color_text: '000000',color_url: '008000',};</script> 
                               <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_afmc_ads.js"></script>  
+                              $trackingPixel
                             </body>
                           </html> """),
     "iAd": Template("iAd"),
@@ -358,6 +359,7 @@ class AdHandler(webapp.RequestHandler):
                         </head>\
                         <body style="margin: 0;width:${w}px;height:${h}px;padding:0;">\
                           <div class="creative"><div style="padding: 5px 10px;"><a href="$url" class="creative_headline">$headline</a><br/>$line1 $line2<br/><span class="creative_url"><a href="$url">$display_url</a></span></div></div>\
+                          $trackingPixel
                         </body> </html> """),
     "image":Template("""<html>\
                         <head>
@@ -371,7 +373,7 @@ class AdHandler(webapp.RequestHandler):
                         </head>
                         <body style="margin: 0;width:${w}px;height:${h}px;padding:0;">\
                           <a href="$url"><img src="$image_url" width=$w height=$h/></a>
-                        </body> </html> """),
+                        </body>   $trackingPixel</html> """),
     "admob": Template("""<html><head>
                         $finishLoad
                         <script>
@@ -389,13 +391,13 @@ class AdHandler(webapp.RequestHandler):
                         };
                         </script>
                         <script type="text/javascript" src="http://mmv.admob.com/static/iphone/iadmob.js"></script>                        
-                        </body></html>"""),
+                        </body>$trackingPixel</html>"""),
     "html":Template("""<html><head>                    
                         <script>
                           function webviewDidClose(){} 
                           function webviewDidAppear(){} 
                         </script></head>
-                        <body style=\"margin: 0;padding:0;background-color:white\">${html_data}</body></html>"""),
+                        <body style=\"margin: 0;padding:0;background-color:white\">${html_data}$trackingPixel</body></html>"""),
   }
   def render_creative(self, c, **kwargs):
     if c:
@@ -420,6 +422,10 @@ class AdHandler(webapp.RequestHandler):
         params.update(finishLoad='<script>function finishLoad(){window.location="mopub://finishLoad";} window.onload = function(){finishLoad();} </script>')
       else:
         params.update(finishLoad='')  
+      
+      
+      if c.tracking_url:
+        params.update(trackingPixel='<span style="display:none;"><img src="%s"/></span>'%c.tracking_url)
       
       # indicate to the client the winning creative type, in case it is natively implemented (iad, clear)
       self.response.headers.add_header("X-Adtype", str(c.ad_type))
@@ -482,8 +488,18 @@ class AdClickHandler(webapp.RequestHandler):
     # forward on to the click URL
     self.redirect(url)
 
+# TODO: Process this on the logs processor 
+class AppOpenHandler(webapp.RequestHandler):
+  # /m/open?v=1&udid=26a85bc239152e5fbc221fe5510e6841896dd9f8&q=Hotels:%20Hotel%20Utah%20Saloon%20&id=agltb3B1Yi1pbmNyDAsSBFNpdGUY6ckDDA&r=http://googleads.g.doubleclick.net/aclk?sa=l&ai=BN4FhRH6hTIPcK5TUjQT8o9DTA7qsucAB0vDF6hXAjbcB4KhlEAEYASDgr4IdOABQrJON3ARgyfb4hsijoBmgAbqxif8DsgERYWRzLm1vcHViLWluYy5jb226AQkzMjB4NTBfbWLIAQHaAbwBaHR0cDovL2Fkcy5tb3B1Yi1pbmMuY29tL20vYWQ_dj0xJmY9MzIweDUwJnVkaWQ9MjZhODViYzIzOTE1MmU1ZmJjMjIxZmU1NTEwZTY4NDE4OTZkZDlmOCZsbD0zNy43ODM1NjgsLTEyMi4zOTE3ODcmcT1Ib3RlbHM6JTIwSG90ZWwlMjBVdGFoJTIwU2Fsb29uJTIwJmlkPWFnbHRiM0IxWWkxcGJtTnlEQXNTQkZOcGRHVVk2Y2tEREGAAgGoAwHoA5Ep6AOzAfUDAAAAxA&num=1&sig=AGiWqtx2KR1yHomcTK3f4HJy5kk28bBsNA&client=ca-mb-pub-5592664190023354&adurl=http://www.sanfranciscoluxuryhotels.com/
+  def get(self):
+    self.response.out.write("OK") 
+    
+
 def main():
-  application = webapp.WSGIApplication([('/m/ad', AdHandler), ('/m/aclk', AdClickHandler)], debug=True)
+  application = webapp.WSGIApplication([('/m/ad', AdHandler), 
+                                        ('/m/aclk', AdClickHandler),
+                                        ('/m/open',AppOpenHandler)], 
+                                        debug=True)
   wsgiref.handlers.CGIHandler().run(application)
 
 # webapp.template.register_template_library('filters')

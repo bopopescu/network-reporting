@@ -153,11 +153,11 @@ class AdAuction(object):
             
               # exclude according to the exclude parameter must do this after determining adgroups
               # so that we maintain the correct order for user bucketing
-              logging.warning("eligible creatives: %s %s" % (winners,exclude_params))
+              logging.debug("eligible creatives: %s %s" % (winners,exclude_params))
               winners = [c for c in winners if not (c.ad_type in exclude_params)]  
-              logging.warning("eligible creatives after exclusions: %s" % winners)
+              logging.debug("eligible creatives after exclusions: %s" % winners)
             
-              # calculate the user experiment bucket which is a deterministic function of the udid all the competing ad groups
+              # calculate the user experiment bucket
               user_bucket = hash(udid+','.join([str(c.ad_group.key()) for ad_group in ad_groups])) % 100 # user gets assigned a number between 0-99 inclusive
               logging.warning("the user bucket is: #%d",user_bucket)
           
@@ -183,7 +183,7 @@ class AdAuction(object):
             
               # if there is a winning/eligible adgroup find the appropriate creative for it
               if winning_ad_groups:
-                logging.warning("winner ad_groups: %s"%winning_ad_groups)
+                logging.debug("winner ad_groups: %s"%winning_ad_groups)
               
                 if winning_ad_groups:
                   winners = [winner for winner in winners if winner.ad_group in winning_ad_groups]
@@ -263,7 +263,7 @@ class AdHandler(webapp.RequestHandler):
     "320x50": (320, 50, "320x50_mb", 1),
     "728x90": (728, 90, "728x90_as", 2),
     "468x60": (468, 60, "468x60_as", 1),
-    "320x480": (320, 480, "320x480_as", 1),
+    "320x480": (320, 480, "300x250_as", 1),
   }
   
   def get(self):
@@ -323,7 +323,7 @@ class AdHandler(webapp.RequestHandler):
       # render the creative 
       self.response.out.write(self.render_creative(c, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, request_id=request_id, v=int(self.request.get('v') or 0)))
     else:
-      self.response.out.write(self.render_creative(c=None))
+      self.response.out.write("")
   #
   # Templates
   #

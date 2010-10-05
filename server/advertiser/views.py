@@ -141,10 +141,16 @@ class CreateAdGroupHandler(RequestHandler):
     f = AdGroupForm(instance=adgroup)
     sites = Site.gql('where account=:1', self.account).fetch(100)    
     
+    # allow the correct sites to be checked
     for site in sites:
       site.checked = site.key() in adgroup.site_keys
+			
+    networks = [["adsense","Google AdSense",False],["iAd","Apple iAd",False],["admob","AdMob",False],["custom","Custom",False]]
+    for n in networks:
+      if adgroup.network_type == n[0]:
+        n[2] = True
 
-    return render_to_response(self.request,'advertiser/new_adgroup.html', {"f": f, "c": c, "sites": sites, "title": title})
+    return render_to_response(self.request,'advertiser/new_adgroup.html', {"f": f, "c": c, "sites": sites, "title": title, "networks":networks})
 
   def post(self, campaign_key=None,adgroup_key=None, edit=False, title="Create an Ad Group"):
     if adgroup_key:

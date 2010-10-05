@@ -43,7 +43,7 @@
       </thead> 
 		{% for ag in site.adgroups %}
       <tr> 
-        <td><a href="#">{{ag.name}}</a></td> 
+        <td><a href="/campaigns/adgroup/{{ag.key}}">{{ag.name}}</a></td> 
         <td class="numeric">{{ag.stats.impression_count|withsep}}</td> 
         <td class="numeric">{{ag.stats.click_count|withsep}} ({{ag.stats.ctr|percentage}})</td> 
         <td class="numeric">{{ag.stats.revenue|currency}}</td> 

@@ -54,10 +54,9 @@
 				<input type="hidden" name="priority_level" value="4"/>
 					<tr>
 						<th>Network Type</th><td><select name="network_type">
-							<option value="adsense">Google AdSense</option>
-							<option value="iAd">Apple iAd</option>
-							<option value="admob">AdMob</option>
-							<option value="custom">Custom</option>
+							{% for network in networks %}
+							<option value="{{network.0}}" {% if network.2 %}selected="selected"{%endif%}>{{network.1}}</option>
+							{% endfor %}
 						</td>
 					</tr>
 					<tr><th>Network Est. eCPM</th><td>{{f.bid}} USD</td></tr>

@@ -262,8 +262,8 @@ class ShowAppHandler(RequestHandler):
     
 
     # do a bar graph showing contribution of each site to impression count
+    pie_chart_urls = {}
     if len(a.sites) > 0:
-      pie_chart_urls = {}
       impressions_by_site = []
       clicks_by_site = []
       users_by_site = []
@@ -344,8 +344,8 @@ class ShowHandler(RequestHandler):
     yesterday = site.all_stats[-2]
     
     # do a bar graph showing contribution of each site to impression count
+    pie_chart_urls = {}
     if len(site.adgroups) > 0:
-      pie_chart_urls = {}
       impressions_by_ag = []
       clicks_by_ag = []
       users_by_ag = []
@@ -362,6 +362,7 @@ class ShowHandler(RequestHandler):
     else:
       pie_chart_urls['imp'] = ""
       pie_chart_urls['clk'] = ""
+      pie_chart_urls['users'] = ""
     
     # write response
     return render_to_response(self.request,'publisher/show.html', 

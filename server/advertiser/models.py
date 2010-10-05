@@ -28,7 +28,7 @@ class Campaign(db.Model):
     else: return 1
     
 class AdGroup(db.Model):
-  campaign = db.ReferenceProperty(Campaign)
+  campaign = db.ReferenceProperty(Campaign,collection_name="adgroups")
   name = db.StringProperty()
   
   created = db.DateTimeProperty(auto_now_add=True)
@@ -133,7 +133,7 @@ class AdGroup(db.Model):
     return "AdGroup:'%s'" % self.name
 
 class Creative(polymodel.PolyModel):
-  ad_group = db.ReferenceProperty(AdGroup)
+  ad_group = db.ReferenceProperty(AdGroup,collection_name="creatives")
 
   active = db.BooleanProperty(default=True)
   deleted = db.BooleanProperty(default=False)
@@ -168,7 +168,7 @@ class Creative(polymodel.PolyModel):
     return 0.01
 
   def __repr__(self):
-    return "Creative{ad_type=%s, eCPM=%.02f}" % (self.ad_type, self.e_cpm())
+    return "Creative{ad_type=%s, eCPM=%.02f ,key_name=%s}" % (self.ad_type, self.e_cpm(),self.key().id_or_name())
 
 class TextCreative(Creative):
   # text ad properties

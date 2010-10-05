@@ -96,6 +96,7 @@ class AdGroup(db.Model):
   active_app = db.StringListProperty(default=['any'])
   
   country = db.StringProperty()
+  region = db.StringProperty()
   state = db.StringProperty()
   city = db.StringProperty()
   
@@ -131,6 +132,10 @@ class AdGroup(db.Model):
   
   def __repr__(self):
     return "AdGroup:'%s'" % self.name
+    
+  @property
+  def geographic_predicates(self):
+    return self.geo_predicates
 
 class Creative(polymodel.PolyModel):
   ad_group = db.ReferenceProperty(AdGroup,collection_name="creatives")

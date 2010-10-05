@@ -109,9 +109,11 @@ class AdAuction(object):
     
     logging.warning("removed keyword non-matches, now: %s" % ad_groups)
     ad_groups = filter(lambda a: set(geo_predicates).intersection(a.geo_predicates) > set(), ad_groups)
-    logging.debug("removed geo non-matches, now: %s" % ad_groups)
+    ad_groups = [a for a in ad_groups
+                    if set(geo_predicates).intersection(a.geographic_predicates) > set()]
+    logging.warning("removed geo non-matches, now: %s" % ad_groups)
     ad_groups = filter(lambda a: set(device_predicates).intersection(a.device_predicates) > set(), ad_groups)
-    logging.debug("removed device non-matches, now: %s" % ad_groups)
+    logging.warning("removed device non-matches, now: %s" % ad_groups)
     
     # TODO: frequency capping and other user / request based randomizations
     udid = kw["udid"]
@@ -253,7 +255,7 @@ class AdAuction(object):
 #
 class AdHandler(webapp.RequestHandler):
   
-  # Format properties: width, height, adsense_format, num_creatives
+  # AdSense: Format properties: width, height, adsense_format, num_creatives
   FORMAT_SIZES = {
     "300x250_as": (300, 250, "300x250_as", 3),
     "320x50_mb": (320, 50, "320x50_mb", 1),
@@ -332,6 +334,10 @@ class AdHandler(webapp.RequestHandler):
                             <head>
                               <title>$title</title>
                               $finishLoad
+                              <script>
+                                function webviewDidClose(){} 
+                                function webviewDidAppear(){} 
+                              </script>
                             </head>
                             <body style="margin: 0;width:${w}px;height:${h}px;" >
                               <script type="text/javascript">window.googleAfmcRequest = {client: '$client',ad_type: 'text_image', output: 'html', channel: '',format: '$adsense_format',oe: 'utf8',color_border: '336699',color_bg: 'FFFFFF',color_link: '0000FF',color_text: '000000',color_url: '008000',};</script> 
@@ -345,6 +351,10 @@ class AdHandler(webapp.RequestHandler):
                           <style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: ${w}px;height: ${h}px;}.creative_headline {font-size: 14px;}.creative .creative_url a {color: green;text-decoration: none;}
                           </style>
                           $finishLoad
+                          <script>
+                            function webviewDidClose(){} 
+                            function webviewDidAppear(){} 
+                          </script>
                         </head>\
                         <body style="margin: 0;width:${w}px;height:${h}px;padding:0;">\
                           <div class="creative"><div style="padding: 5px 10px;"><a href="$url" class="creative_headline">$headline</a><br/>$line1 $line2<br/><span class="creative_url"><a href="$url">$display_url</a></span></div></div>\
@@ -354,12 +364,20 @@ class AdHandler(webapp.RequestHandler):
                           <style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: ${w}px;height: ${h}px;}.creative_headline {font-size: 20px;}.creative .creative_url a {color: green;text-decoration: none;}
                           </style>
                           $finishLoad
+                          <script>
+                            function webviewDidClose(){} 
+                            function webviewDidAppear(){} 
+                          </script>
                         </head>
                         <body style="margin: 0;width:${w}px;height:${h}px;padding:0;">\
                           <a href="$url"><img src="$image_url" width=$w height=$h/></a>
                         </body> </html> """),
     "admob": Template("""<html><head>
                         $finishLoad
+                        <script>
+                          function webviewDidClose(){} 
+                          function webviewDidAppear(){} 
+                        </script>
                         </head><body style="margin: 0;padding:0;">
                         <script type="text/javascript">
                         var admob_vars = {
@@ -372,7 +390,12 @@ class AdHandler(webapp.RequestHandler):
                         </script>
                         <script type="text/javascript" src="http://mmv.admob.com/static/iphone/iadmob.js"></script>                        
                         </body></html>"""),
-    "html":Template("<html><head></head><body style=\"margin: 0;padding:0;background-color:white\">${html_data}</body></html>"),
+    "html":Template("""<html><head>                    
+                        <script>
+                          function webviewDidClose(){} 
+                          function webviewDidAppear(){} 
+                        </script></head>
+                        <body style=\"margin: 0;padding:0;background-color:white\">${html_data}</body></html>"""),
   }
   def render_creative(self, c, **kwargs):
     if c:

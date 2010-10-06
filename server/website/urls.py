@@ -9,5 +9,6 @@ urlpatterns = patterns('website.views',
   url(r'^about$',direct_to_template,{'template': 'website/about.html'},name='website_about'),
   url(r'^$', 'website_splash', name='website_splash'),
   url(r'^splash$', 'website_splash', name='website_splash'),
+  url(r'^splash2$', 'website_splash2', name='website_splash2'),
   url(r'^splash/join/$', 'website_join', name='website_join'),
 )

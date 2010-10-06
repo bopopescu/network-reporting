@@ -146,6 +146,10 @@ class Creative(polymodel.PolyModel):
   # the creative type helps the ad server render the right thing if the creative wins the auction
   ad_type = db.StringProperty(choices=["text", "image", "iAd", "adsense", "admob", "html", "clear"], default="text")
 
+  # tracking pixel
+  tracking_url = db.StringProperty()
+  
+
   # destination URLs
   url = db.StringProperty()
   display_url = db.StringProperty()

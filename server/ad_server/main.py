@@ -426,6 +426,8 @@ class AdHandler(webapp.RequestHandler):
       
       if c.tracking_url:
         params.update(trackingPixel='<span style="display:none;"><img src="%s"/></span>'%c.tracking_url)
+      else:
+        params.update(trackingPixel='')  
       
       # indicate to the client the winning creative type, in case it is natively implemented (iad, clear)
       self.response.headers.add_header("X-Adtype", str(c.ad_type))

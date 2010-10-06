@@ -295,8 +295,8 @@ class AdHandler(webapp.RequestHandler):
     logging.debug("format is %s (requested '%s')" % (format, f))
     
     # look up lat/lon
-    addr = self.rgeocode(self.request.get("ll")) if self.request.get("ll") else ""      
-    logging.debug("geo is %s (requested '%s')" % (addr, self.request.get("ll")))
+    addr = self.rgeocode(self.request.get("ll")) if self.request.get("ll") else ()      
+    logging.warning("geo is %s (requested '%s')" % (addr, self.request.get("ll")))
     
     # get creative exclusions usually used to exclude iAd because it has already failed
     excluded_creatives = self.request.get("exclude")
@@ -356,6 +356,7 @@ class AdHandler(webapp.RequestHandler):
                             function webviewDidClose(){} 
                             function webviewDidAppear(){} 
                           </script>
+                          <title>$title</title>
                         </head>\
                         <body style="margin: 0;width:${w}px;height:${h}px;padding:0;">\
                           <div class="creative"><div style="padding: 5px 10px;"><a href="$url" class="creative_headline">$headline</a><br/>$line1 $line2<br/><span class="creative_url"><a href="$url">$display_url</a></span></div></div>\
@@ -380,6 +381,7 @@ class AdHandler(webapp.RequestHandler):
                           function webviewDidClose(){} 
                           function webviewDidAppear(){} 
                         </script>
+                        <title>$title</title>
                         </head><body style="margin: 0;padding:0;">
                         <script type="text/javascript">
                         var admob_vars = {
@@ -392,12 +394,12 @@ class AdHandler(webapp.RequestHandler):
                         </script>
                         <script type="text/javascript" src="http://mmv.admob.com/static/iphone/iadmob.js"></script>                        
                         </body>$trackingPixel</html>"""),
-    "html":Template("""<html><head>                    
+    "html":Template("""<html><title>$title</title><head>                    
                         <script>
                           function webviewDidClose(){} 
                           function webviewDidAppear(){} 
                         </script></head>
-                        <body style=\"margin: 0;padding:0;background-color:white\">${html_data}$trackingPixel</body></html>"""),
+                        <body style="margin: 0;padding:0;background-color:white">${html_data}$trackingPixel</body></html>"""),
   }
   def render_creative(self, c, **kwargs):
     if c:
@@ -418,6 +420,11 @@ class AdHandler(webapp.RequestHandler):
       elif c.ad_type == "html":
         params.update({"html_data": kwargs["html_data"]})
         
+      if kwargs["q"] or kwargs["addr"]:
+        params.update(title=','.join(kwargs["q"]+list(kwargs["addr"])))
+      else:
+        params.update(title='')
+        
       if kwargs["v"] >= 2:  
         params.update(finishLoad='<script>function finishLoad(){window.location="mopub://finishLoad";} window.onload = function(){finishLoad();} </script>')
       else:
@@ -426,6 +433,8 @@ class AdHandler(webapp.RequestHandler):
       
       if c.tracking_url:
         params.update(trackingPixel='<span style="display:none;"><img src="%s"/></span>'%c.tracking_url)
+      else:
+        params.update(trackingPixel='')  
       
       # indicate to the client the winning creative type, in case it is natively implemented (iad, clear)
       self.response.headers.add_header("X-Adtype", str(c.ad_type))

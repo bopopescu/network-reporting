@@ -215,8 +215,7 @@ class ShowAppHandler(RequestHandler):
     # load the site
     a = App.get(self.request.GET.get('id'))
     if a.account.key() != self.account.key():
-      self.error(404)
-      return
+      raise Http404
 
     # load the ad units
     # TODO: This is duplicate code, move to separate function

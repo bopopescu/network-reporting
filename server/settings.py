@@ -144,6 +144,7 @@ WHITELIST_EMAILS = (
   'jpayne@mopub.com',
   'test2@example.com',
   'batwood@mopub-inc.com',
-  'rudro@pixar.com')
+  'rudro@pixar.com',
+  'ra.roath@mac.com',)
 
 from common.ragendja.settings_post import *

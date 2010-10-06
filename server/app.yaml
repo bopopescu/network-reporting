@@ -19,6 +19,9 @@ handlers:
 - url: /stylesheets
   static_dir: public/stylesheets
 
+- url: /iblogpro
+  static_dir: public/iblogpro
+
 - url: /js
   static_dir: public/javascripts
 
@@ -41,3 +44,4 @@ handlers:
 
 skip_files:
   - ^(.*/)?django\.zip
+

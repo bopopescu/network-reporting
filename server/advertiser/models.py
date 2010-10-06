@@ -96,6 +96,7 @@ class AdGroup(db.Model):
   active_app = db.StringListProperty(default=['any'])
   
   country = db.StringProperty()
+  region = db.StringProperty()
   state = db.StringProperty()
   city = db.StringProperty()
   
@@ -131,6 +132,10 @@ class AdGroup(db.Model):
   
   def __repr__(self):
     return "AdGroup:'%s'" % self.name
+    
+  @property
+  def geographic_predicates(self):
+    return self.geo_predicates
 
 class Creative(polymodel.PolyModel):
   ad_group = db.ReferenceProperty(AdGroup,collection_name="creatives")
@@ -140,6 +145,10 @@ class Creative(polymodel.PolyModel):
 
   # the creative type helps the ad server render the right thing if the creative wins the auction
   ad_type = db.StringProperty(choices=["text", "image", "iAd", "adsense", "admob", "html", "clear"], default="text")
+
+  # tracking pixel
+  tracking_url = db.StringProperty()
+  
 
   # destination URLs
   url = db.StringProperty()

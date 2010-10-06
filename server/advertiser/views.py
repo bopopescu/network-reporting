@@ -380,7 +380,8 @@ class AddCreativeHandler(RequestHandler):
       line1=self.request.POST.get('line1'),
       line2=self.request.POST.get('line2'),
       url=self.request.POST.get('url'),
-      display_url=self.request.POST.get('display_url'))
+      display_url=self.request.POST.get('display_url'),
+      tracking_url=self.request.POST.get('tracking_url'))
       creative.put()
     elif self.request.FILES.get("image"):
       img = images.Image(self.request.FILES.get("image").read())
@@ -393,13 +394,15 @@ class AddCreativeHandler(RequestHandler):
                                   url=self.request.POST.get('url'),
                                   image=db.Blob(img.execute_transforms()),
                                   image_width=img.width,
-                                  image_height=img.height)
+                                  image_height=img.height,
+                                  tracking_url=self.request.POST.get('tracking_url'))
         creative.put()
     elif self.request.POST.get("html_name"):
       creative = HtmlCreative(ad_group=ad_group,
         ad_type="html",
         html_name=self.request.POST.get('html_name'),
-        html_data=self.request.POST.get('html_data'))
+        html_data=self.request.POST.get('html_data'),
+        tracking_url=self.request.POST.get('tracking_url'))
       creative.put()
     return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':ad_group.key()}))
   

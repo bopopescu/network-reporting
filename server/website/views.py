@@ -19,6 +19,9 @@ from django.core.mail import send_mail, EmailMessage
 def website_splash(request,*args,**kwargs):
   return render_to_response(request, 'website/splash.html', {'m': request.GET.get("m") or ""})
 
+def website_splash2(request,*args,**kwargs):
+  return render_to_response(request, 'website/splash2.html', {'m': request.GET.get("m") or ""})
+
 def website_join(request,*args,**kwargs):
   email = request.POST.get("email_address")
   

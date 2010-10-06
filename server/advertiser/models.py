@@ -48,6 +48,14 @@ class AdGroup(db.Model):
   # percent of users to be targetted
   percent_users = db.FloatProperty(default=100.0)
 
+  # frequency caps
+  minute_frequency_cap = db.IntegerProperty(default=0)
+  hour_frequency_cap = db.IntegerProperty(default=0)
+  daily_frequency_cap = db.IntegerProperty(default=0)
+  weekly_frequency_cap = db.IntegerProperty(default=0)
+  monthly_frequency_cap = db.IntegerProperty(default=0)
+  lifetime_frequency_cap = db.IntegerProperty(default=0)
+  
   # all keyword and category bids are tracked here
   # categories use the category:games convention
   # if any of the input keywords match the n-grams here then we 

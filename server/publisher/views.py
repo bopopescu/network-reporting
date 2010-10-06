@@ -197,7 +197,7 @@ def add_demo_campaign(site):
   c.put()
 
   # Set up a test ad group for this campaign
-  ag = AdGroup(name="MoPub Demo Ad Group",
+  ag = AdGroup(name="MoPub Demo Campaign",
                campaign=c,
                priority_level=3,
                bid=1.0,

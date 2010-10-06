@@ -108,6 +108,59 @@ class IndexHandler(RequestHandler):
 def index(request,*args,**kwargs):
     return IndexHandler()(request,*args,**kwargs)     
 
+class AdGroupIndexHandler(RequestHandler):
+  def get(self):
+    days = SiteStats.lastdays(14)
+
+    campaigns = Campaign.gql("where u = :1 and deleted = :2", self.account.user, False).fetch(100)
+    adgroups = AdGroup.gql("where campaign in :1 and deleted = :2", [x.key() for x in campaigns], False).fetch(100)
+    logging.info(campaigns)
+    
+    today = SiteStats()
+    for c in adgroups:
+      c.all_stats = SiteStats.stats_for_days(c, days)      
+      c.stats = reduce(lambda x, y: x+y, c.all_stats, SiteStats())
+      today += c.all_stats[-1]
+
+    # compute rollups to display at the top
+    totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[c.all_stats for c in adgroups])]
+
+    chart_urls = {}
+    # make a line graph showing impressions
+    impressions = [s.impression_count for s in totals]
+    chart_urls['imp'] = gen_graph_url(impressions, days, "Total+Daily+Impressions")
+
+    # make a line graph showing clicks
+    clicks = [s.click_count for s in totals]
+    chart_urls['clk'] = gen_graph_url(clicks, days, "Total+Daily+Clicks")
+
+    # make a line graph showing revenue
+    revenue = [s.revenue for s in totals]
+    chart_urls['rev'] = gen_graph_url(revenue, days, "Total+Revenue")
+
+    promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], adgroups)
+    garauntee_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee'], adgroups)
+    network_campaigns = filter(lambda x: x.campaign.campaign_type in ['network'], adgroups)
+
+    help_text = None
+    if network_campaigns:
+      if not (self.account.adsense_pub_id or self.account.admob_pub_id):
+        help_text = 'Provide your ad network publisher IDs on the <a href="%s">account page</a>'%reverse('account_index')
+
+    return render_to_response(self.request, 
+      'advertiser/adgroups.html', 
+      {'adgroups':adgroups, 
+       'today': today,
+       'chart_urls': chart_urls,
+       'gtee': garauntee_campaigns,
+       'promo': promo_campaigns,
+       'network': network_campaigns,
+       'helptext':help_text })
+
+@whitelist_login_required     
+def adgroups(request,*args,**kwargs):
+    return AdGroupIndexHandler()(request,*args,**kwargs)
+
 class CreateHandler(RequestHandler):
   def get(self):
     f = CampaignForm()
@@ -119,7 +172,7 @@ class CreateHandler(RequestHandler):
       campaign = f.save(commit=False)
       campaign.u = self.account.user
       campaign.put()
-      return HttpResponseRedirect(reverse('campaign_adgroup_new',kwargs={'campaign_key':campaign.key()}))
+      return HttpResponseRedirect(reverse('campaign_adgroup_new', kwargs={'campaign_key':campaign.key()}))
     else:
       return render_to_response(self.request,'advertiser/new.html', {"f": f})
 
@@ -128,7 +181,7 @@ def campaign_create(request,*args,**kwargs):
   return CreateHandler()(request,*args,**kwargs)      
 
 class CreateAdGroupHandler(RequestHandler):
-  def get(self, campaign_key=None, adgroup_key=None, edit=False,title="Create an Ad Group"):
+  def get(self, campaign_key=None, adgroup_key=None, edit=False, title="Create an Ad Group"):
     if campaign_key:
       c = Campaign.get(campaign_key)
       adgroup = AdGroup(name="%s Ad Group" % c.name, campaign=c, bid_strategy="cpm", bid=10.0, percent_users=100.0)
@@ -159,9 +212,9 @@ class CreateAdGroupHandler(RequestHandler):
       adgroup = None  
     f = AdGroupForm(data=self.request.POST,instance=adgroup)
     adgroup = f.save(commit=False)
-    adgroup.campaign = db.Key(self.request.POST.get("campaign")) # TODO: move into form
-    adgroup.keywords=filter(lambda k: len(k) > 0, self.request.POST.get('keywords').lower().split('\n'))
-    adgroup.site_keys=map(lambda x: db.Key(x), self.request.POST.getlist('sites'))
+    adgroup.campaign = Campaign.get(db.Key(self.request.POST.get("id")))
+    adgroup.keywords = filter(lambda k: len(k) > 0, self.request.POST.get('keywords').lower().split('\n'))
+    adgroup.site_keys = map(lambda x: db.Key(x), self.request.POST.getlist('sites'))
     adgroup.put()
      
     # if the campaign is a network type, automatically populate the right creative and go back to
@@ -169,9 +222,9 @@ class CreateAdGroupHandler(RequestHandler):
     if adgroup.campaign.campaign_type == "network" and not edit:
       creative = adgroup.default_creative()
       creative.put()
-      return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':adgroup.campaign.key()}))
+      return HttpResponseRedirect(reverse('advertiser_campaign',kwargs={}))
     else:
-      return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':adgroup.key()}))
+      return HttpResponseRedirect(reverse('advertiser_campaign',kwargs={}))
   
        
 @whitelist_login_required     
@@ -363,7 +416,7 @@ class PauseAdGroupHandler(RequestHandler):
             update_objs.append(creative)
       if update_objs:
         db.put(update_objs)      
-    return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':a.campaign.key()}))
+    return HttpResponseRedirect(reverse('advertiser_campaign', kwargs={}))
 
 @whitelist_login_required
 def bid_pause(request,*args,**kwargs):

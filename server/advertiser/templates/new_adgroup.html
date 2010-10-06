@@ -3,18 +3,15 @@
 {% load filters %}
 
 {% block content %}
-	<h3><a href="{% url advertiser_campaign %}">Campaigns</a> &gt; <a href="{% url advertiser_campaign_show campaign_key=c.key %}">{{c.name}}</a> &gt; {{ title }}</h3>
+	<h3><a href="{% url advertiser_campaign %}">Campaigns</a> &gt; {{c.name}}</h3>
 	<p>
-		Ad groups allow you to target specific users with the right ad.
+		Configure targeting settings and bids for this campaign. 
 	</p>
 	
 	<form method="post" action="" id="add_keyword_box" >
-		<input type="hidden" name="id" value="{{campaign.key}}"/>
+		<input type="hidden" name="id" value="{{c.key}}"/>
+		<input type="hidden" name="name" value="{{c.name}}"/>
 		<table>
-			<tr>
-				<th>Name</th><td>{{f.name}}</td>
-			</tr>
-			
 			{% ifequal c.campaign_type "gtee" %}
 				<h4>Bids</h4>
 				<tr>
@@ -118,7 +115,7 @@
 		</div>
 
 		<p>
-			<button type="button" class="btn" onclick="form.submit();"><span><span>Create Ad Group</span></span></button>
+			<button type="button" class="btn" onclick="form.submit();"><span><span>Save Changes</span></span></button>
 		</p>
 		
 		<input type="hidden" name="campaign" value="{{ c.key }}"/>

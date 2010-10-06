@@ -67,7 +67,6 @@
 				<th>Status</th>
 				<th class="numeric">Impr.</th>
 				<th class="numeric">Clicks</th>
-				<th class="numeric">Revenue</th>
 				<th class="numeric">Delivery%</th>
 			</thead>
 			{% for c in promo %}
@@ -86,7 +85,6 @@
 					</td>
 					<td class="numeric">{{c.stats.impression_count|withsep}}</td>
 					<td class="numeric">{{c.stats.click_count|withsep}} ({{c.stats.ctr|percentage}})
-					<td class="numeric">{{c.stats.revenue|currency}}</td>
 					<td class="numeric">{{c.delivery|percentage}}</td>
 				</tr>
 			{% empty %}
@@ -101,6 +99,7 @@
 			<thead>
 				<th width="25%">Campaign</th>
 				<th>Status</th>
+				<th>Type</th>
 				<th class="numeric">Req.</th>
 				<th class="numeric">Impr.</th>
 				<th class="numeric">Clicks</th>
@@ -120,6 +119,7 @@
 						<img src="/images/paused.gif" width=9 height=9/>
 					{% endif %}
 					</td>
+					<td>{{ c.network_type }}</td>
 					<td class="numeric">{{c.stats.request_count|withsep}}</td>
 					<td class="numeric">{{c.stats.impression_count|withsep}}</td>
 					<td class="numeric">{{c.stats.click_count|withsep}} ({{c.stats.ctr|percentage}})

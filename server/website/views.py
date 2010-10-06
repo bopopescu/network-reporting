@@ -28,22 +28,12 @@ def website_join(request,*args,**kwargs):
   # send a reply
   msg = EmailMessage('Thank you for your interest in MoPub', '''Hello from MoPub!
 
-Thanks again for signing up for MoPub's private beta.  We are working hard to make mobile
-ads easier and more profitable for you so you can focus on your apps.
-
-Please help us out by replying to this email with some additional information about what you
-are working on.  Particularly, we'd be interested in the following:
-  
-  - Your apps (names, URLs, etc.) 
-  - Platforms you develop for (iPhone, Android, etc.)
-  - Approximate traffic 
-  - Special advertising needs or ideas
-  
-This will help us prioritize your beta request. 
+Thanks again for signing up for MoPub's private beta.  We will get back to you ASAP with 
+instructions on how to join. 
 
 Thanks,
 The MoPub Team
-''', 'MoPub Team <olp@mopub.com>', [email], ['beta+bcc@mopub.com'], headers = {'Reply-To': 'beta@mopub.com'})
+''', 'MoPub Team <olp@mopub.com>', [email], headers = {'Reply-To': 'beta@mopub.com'})
   msg.send(fail_silently=True)
   return HttpResponseRedirect("/?m=Thanks, we will let you know when an invitation is ready for you.")
   

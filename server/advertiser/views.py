@@ -21,7 +21,7 @@ from common.utils.decorators import whitelist_login_required
 from advertiser.models import *
 from advertiser.forms import CampaignForm, AdGroupForm
 
-from publisher.models import Site, Account
+from publisher.models import Site, Account, App
 from reporting.models import SiteStats
 
 class RequestHandler(object):
@@ -197,6 +197,7 @@ class CreateAdGroupHandler(RequestHandler):
     # allow the correct sites to be checked
     for site in sites:
       site.checked = site.key() in adgroup.site_keys
+      site.app = App.get(site.app_key.key())
 			
     networks = [["adsense","Google AdSense",False],["iAd","Apple iAd",False],["admob","AdMob",False],["custom","Custom",False]]
     for n in networks:
@@ -357,6 +358,7 @@ class ShowAdGroupHandler(RequestHandler):
     for s in sites:
       s.all_stats = SiteStats.stats_for_days_with_qualifier(adgroup, s, days)
       s.stats = reduce(lambda x, y: x+y, s.all_stats, SiteStats())
+      s.app = App.get(s.app_key.key())
 
     # compute rollups to display at the top
     today = SiteStats.stats_for_day(adgroup, SiteStats.today())

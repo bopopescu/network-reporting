@@ -76,7 +76,7 @@
 		{% endif %}
 		{% for s in sites %}
 			<tr>
-				<td><a href="/inventory/adunit?id={{s.key}}">{{s.name}}</a></td>
+				<td>{{s.app.name}} > <a href="/inventory/adunit?id={{s.key}}">{{s.name}}</a></td>
 				<td class="numeric">{{s.stats.impression_count}}</td>
 				<td class="numeric">{{s.stats.click_count}} ({{s.stats.ctr|percentage}})</td>
 				<td class="numeric">{{s.stats.revenue|currency}}</td>

@@ -64,7 +64,7 @@
 			<tr><th>Ad Units</th>
 				<td><ul style="overflow:auto; height:100px; list-style: none;">
 					{% for s in sites %}
-							<li style="margin-left: 0;"><input type="checkbox" name="sites" value="{{s.key}}" {% if s.checked %}checked="checked"{% endif %}> {{s.name}} </input></li>
+							<li style="margin-left: 0;"><input type="checkbox" name="sites" value="{{s.key}}" {% if s.checked %}checked="checked"{% endif %}> {{s.app.name}} > {{s.name}} </input></li>
 					{% endfor %}
 					</ul></td></tr>
 			
@@ -77,8 +77,14 @@
 
 			<tr><th>Frequency Caps</th>
 				<td>
-					<input type="checkbox" disabled="true"> Set per user frequency caps</input>
-					</td></tr>
+					<input name="daily_frequency_cap" type="text" value="{{f.instance.daily_frequency_cap}}"/> daily impressions
+				</td>
+			</tr>
+			<tr><th></th>
+				<td>
+					<input name="hourly_frequency_cap" type="text" value="{{f.instance.hourly_frequency_cap}}"/> hourly impressions
+				</td>
+			</tr>
 
 			<tr><td colspan="2"><h4>Keyword Targeting</h4></td></tr>
 			<tr><th>Keywords</th>

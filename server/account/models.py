@@ -10,6 +10,7 @@ class Account(db.Model):
   admob_pub_id = db.StringProperty()
   user = db.UserProperty()
   date_added = db.DateTimeProperty(auto_now_add=True)
+  active = db.BooleanProperty(default=False)
   
   @classmethod
   def current_account(cls,user=None):

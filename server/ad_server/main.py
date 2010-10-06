@@ -47,6 +47,7 @@ from google.appengine.api.urlfetch import fetch
 from google.appengine.api import memcache
 from google.appengine.api import users
 from google.appengine.api.labs import taskqueue
+from google.appengine.api import memcache
 
 from publisher.models import *
 from advertiser.models import *
@@ -65,12 +66,20 @@ DOMAIN = 'ads.mopub.com'
 # Ad auction logic
 # The core of the whole damn thing
 #
+def memcache_key_for_date(udid,datetime,db_key):
+  return '%s:%s:%s'%(udid,datetime.strftime('%y%m%d'),db_key)
+
+def memcache_key_for_hour(udid,datetime,db_key):
+  return '%s:%s:%s'%(udid,datetime.strftime('%y%m%d%H'),db_key)
+
+
 class AdAuction(object):
   MAX_ADGROUPS = 30
 
   # Runs the auction itself.  Returns the winning creative, or None if no creative matched
   @classmethod
   def run(cls, **kw):
+    now = kw["now"]
     site = kw["site"]
 
     keywords = kw["q"]
@@ -117,9 +126,7 @@ class AdAuction(object):
     
     # TODO: frequency capping and other user / request based randomizations
     udid = kw["udid"]
-    logging.debug("udid: %s %s"%(udid,len(ad_groups)))
-    
-    
+        
     # if any ad groups were returned, find the creatives that match the requested format in all candidates
     if len(ad_groups) > 0:
       all_creatives = Creative.gql("where ad_group in :1 and format_predicates in :2 and active = :3 and deleted = :4", 
@@ -182,10 +189,56 @@ class AdAuction(object):
                   winning_ad_groups.append(ad_group)
                 start_bucket += percent_users
                 start_bucket = start_bucket % 100 
-            
+                                
+              # TODO: user based frequency caps
+              user_keys = []
+              for adgroup in winning_ad_groups:
+                if adgroup.daily_frequency_cap:
+                  user_adgroup_daily_key = memcache_key_for_date(udid,now,adgroup.key())
+                  user_keys.append(user_adgroup_daily_key)
+                if adgroup.hourly_frequency_cap:  
+                  user_adgroup_hourly_key = memcache_key_for_hour(udid,now,adgroup.key())
+                  user_keys.append(user_adgroup_hourly_key)
+
+              if user_keys:  
+                frequency_cap_dict = memcache.get_multi(user_keys)    
+              else:
+                frequency_cap_dict = {}
+              
+              winning_ad_groups_new = []
+              logging.warning("winning ad groups: %s"%winning_ad_groups)
+              for adgroup in winning_ad_groups:
+                user_adgroup_daily_key = memcache_key_for_date(udid,now,adgroup.key())
+                user_adgroup_hourly_key = memcache_key_for_hour(udid,now,adgroup.key())
+                daily_frequency_cap = adgroup.daily_frequency_cap
+                hourly_frequency_cap = adgroup.hourly_frequency_cap
+                
+                
+                # pull out the impression count from memcache, otherwise its assumed to be 0
+                if daily_frequency_cap and (user_adgroup_daily_key in frequency_cap_dict):
+                  daily_impression_cnt = int(frequency_cap_dict[user_adgroup_daily_key])
+                else:
+                  daily_impression_cnt = 0 
+                  
+                if hourly_frequency_cap and (user_adgroup_hourly_key in frequency_cap_dict):
+                  hourly_impression_cnt = int(frequency_cap_dict[user_adgroup_hourly_key])
+                else:
+                  hourly_impression_cnt = 0  
+                  
+                logging.warning("daily imps:%d freq cap: %d"%(daily_impression_cnt,daily_frequency_cap))
+                logging.warning("hourly imps:%d freq cap: %d"%(hourly_impression_cnt,hourly_frequency_cap))
+                  
+                  
+                if (not daily_frequency_cap or daily_impression_cnt < daily_frequency_cap) and \
+                   (not hourly_frequency_cap or hourly_impression_cnt < hourly_frequency_cap):
+                  winning_ad_groups_new.append(adgroup)
+                  
+              winning_ad_groups = winning_ad_groups_new
+              logging.warning("winning ad groups after frequency capping: %s"%winning_ad_groups)
+
               # if there is a winning/eligible adgroup find the appropriate creative for it
               if winning_ad_groups:
-                logging.debug("winner ad_groups: %s"%winning_ad_groups)
+                logging.warning("winner ad_groups: %s"%winning_ad_groups)
               
                 if winning_ad_groups:
                   winners = [winner for winner in winners if winner.ad_group in winning_ad_groups]
@@ -200,22 +253,22 @@ class AdAuction(object):
                   logging.warning("winning creative = %s" % winner)
                   return winner
                 else:
-                  logging.debug('taking away some players not in %s'%ad_groups)
-                  logging.debug('%s'%players)
+                  logging.warning('taking away some players not in %s'%ad_groups)
+                  logging.warning('current players: %s'%players)
                   players = [c for c in players if not c.ad_group in ad_groups]  
-                  logging.debug('%s'%players)
-                    
+                  logging.warning('remaining players %s'%players)
                   
               else:
-                logging.debug('taking away some players not in %s'%ad_groups)
-                logging.debug('%s'%players)
+                logging.warning('taking away some players not in %s'%ad_groups)
+                logging.warning('current players: %s'%players)
                 players = [c for c in players if not c.ad_group in ad_groups]  
-                logging.debug('%s'%players)
+                logging.warning('remaining players %s'%players)
                 
 
     # nothing... failed auction
     logging.debug("auction failed, returning None")
-
+    return None
+    
   @classmethod
   def geo_predicates_for_rgeocode(c, r):
     if len(r) == 0:
@@ -271,6 +324,7 @@ class AdHandler(webapp.RequestHandler):
   def get(self):
     id = self.request.get("id")
     site = Site.site_by_id(id) if id else None
+    now = datetime.datetime.now()
     
     
     # the user's site key was not set correctly...
@@ -295,8 +349,8 @@ class AdHandler(webapp.RequestHandler):
     logging.debug("format is %s (requested '%s')" % (format, f))
     
     # look up lat/lon
-    addr = self.rgeocode(self.request.get("ll")) if self.request.get("ll") else ""      
-    logging.debug("geo is %s (requested '%s')" % (addr, self.request.get("ll")))
+    addr = self.rgeocode(self.request.get("ll")) if self.request.get("ll") else ()      
+    logging.warning("geo is %s (requested '%s')" % (addr, self.request.get("ll")))
     
     # get creative exclusions usually used to exclude iAd because it has already failed
     excluded_creatives = self.request.get("exclude")
@@ -312,10 +366,16 @@ class AdHandler(webapp.RequestHandler):
 
 
     # get winning creative
-    c = AdAuction.run(request=self.request, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, udid=udid, request_id=request_id)
+    c = AdAuction.run(request=self.request, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, udid=udid, request_id=request_id, now=now)
     
     # output the request_id and the winning creative_id if an impression happened
     if c:
+      user_adgroup_daily_key = memcache_key_for_date(udid,now,c.ad_group.key())
+      user_adgroup_hourly_key = memcache_key_for_hour(udid,now,c.ad_group.key())
+      logging.warning("user_adgroup_daily_key: %s"%user_adgroup_daily_key)
+      logging.warning("user_adgroup_hourly_key: %s"%user_adgroup_hourly_key)
+      memcache.offset_multi({user_adgroup_daily_key:1,user_adgroup_hourly_key:1}, key_prefix='', namespace=None, initial_value=0)
+      
       logging.info('OLP ad-auction {"id": "%s", "c": "%s", "request_id": "%s", "udid": "%s"}' % (id, c.key(), request_id, udid))
 
       # create an ad clickthrough URL
@@ -325,7 +385,8 @@ class AdHandler(webapp.RequestHandler):
       # render the creative 
       self.response.out.write(self.render_creative(c, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, request_id=request_id, v=int(self.request.get('v') or 0)))
     else:
-      self.response.out.write("")
+      self.response.out.write(self.render_creative(c, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, request_id=request_id, v=int(self.request.get('v') or 0)))
+      
   #
   # Templates
   #
@@ -356,6 +417,7 @@ class AdHandler(webapp.RequestHandler):
                             function webviewDidClose(){} 
                             function webviewDidAppear(){} 
                           </script>
+                          <title>$title</title>
                         </head>\
                         <body style="margin: 0;width:${w}px;height:${h}px;padding:0;">\
                           <div class="creative"><div style="padding: 5px 10px;"><a href="$url" class="creative_headline">$headline</a><br/>$line1 $line2<br/><span class="creative_url"><a href="$url">$display_url</a></span></div></div>\
@@ -380,6 +442,7 @@ class AdHandler(webapp.RequestHandler):
                           function webviewDidClose(){} 
                           function webviewDidAppear(){} 
                         </script>
+                        <title>$title</title>
                         </head><body style="margin: 0;padding:0;">
                         <script type="text/javascript">
                         var admob_vars = {
@@ -392,12 +455,12 @@ class AdHandler(webapp.RequestHandler):
                         </script>
                         <script type="text/javascript" src="http://mmv.admob.com/static/iphone/iadmob.js"></script>                        
                         </body>$trackingPixel</html>"""),
-    "html":Template("""<html><head>                    
+    "html":Template("""<html><title>$title</title><head>                    
                         <script>
                           function webviewDidClose(){} 
                           function webviewDidAppear(){} 
                         </script></head>
-                        <body style=\"margin: 0;padding:0;background-color:white\">${html_data}$trackingPixel</body></html>"""),
+                        <body style="margin: 0;padding:0;background-color:white">${html_data}$trackingPixel</body></html>"""),
   }
   def render_creative(self, c, **kwargs):
     if c:
@@ -418,6 +481,11 @@ class AdHandler(webapp.RequestHandler):
       elif c.ad_type == "html":
         params.update({"html_data": kwargs["html_data"]})
         
+      if kwargs["q"] or kwargs["addr"]:
+        params.update(title=','.join(kwargs["q"]+list(kwargs["addr"])))
+      else:
+        params.update(title='')
+        
       if kwargs["v"] >= 2:  
         params.update(finishLoad='<script>function finishLoad(){window.location="mopub://finishLoad";} window.onload = function(){finishLoad();} </script>')
       else:
@@ -426,6 +494,8 @@ class AdHandler(webapp.RequestHandler):
       
       if c.tracking_url:
         params.update(trackingPixel='<span style="display:none;"><img src="%s"/></span>'%c.tracking_url)
+      else:
+        params.update(trackingPixel='')  
       
       # indicate to the client the winning creative type, in case it is natively implemented (iad, clear)
       self.response.headers.add_header("X-Adtype", str(c.ad_type))

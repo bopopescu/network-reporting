@@ -9,8 +9,14 @@ def whitelist_login_required(function=None, redirect_field_name=REDIRECT_FIELD_N
     and is on the whitelist, redirecting
     to the log-in page if necessary.
     """    
+    
+    def check_whitelist(u):
+      from google.appengine.api import users
+      from account.models import Account
+      return Account.current_account().active
+    
     actual_decorator = user_passes_test(
-        lambda u: u.is_authenticated() and u.email in settings.WHITELIST_EMAILS,
+        lambda u: u.is_authenticated() and check_whitelist(u),
         redirect_field_name=redirect_field_name
     )
     if function:

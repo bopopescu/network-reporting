@@ -100,7 +100,7 @@ MIDDLEWARE_CLASSES = (
 TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.auth',
     'django.core.context_processors.debug',
-    'django.core.context_processors.i18n',
+    # 'django.core.context_processors.i18n',
     'common.ragendja.auth.context_processors.google_user'
 #    'django.core.context_processors.media',  # 0.97 only.
    # 'django.core.context_processors.request',
@@ -134,6 +134,7 @@ IGNORE_APP_URLSAUTO = ('website')
 
 WHITELIST_EMAILS = (
   'test@example.com',
+  'test2@example.com',
   'lamen@user.com',
   'nafisjamal@gmail.com',
   'jim.e.payne@gmail.com',
@@ -143,6 +144,7 @@ WHITELIST_EMAILS = (
   'jpayne@mopub.com',
   'test2@example.com',
   'batwood@mopub-inc.com',
-  'rudro@pixar.com')
+  'rudro@pixar.com',
+  'ra.roath@mac.com',)
 
 from common.ragendja.settings_post import *

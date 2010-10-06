@@ -128,7 +128,7 @@ def campaign_create(request,*args,**kwargs):
   return CreateHandler()(request,*args,**kwargs)      
 
 class CreateAdGroupHandler(RequestHandler):
-  def get(self, campaign_key=None, adgroup_key=None, title="Create an Ad Group"):
+  def get(self, campaign_key=None, adgroup_key=None, edit=False,title="Create an Ad Group"):
     if campaign_key:
       c = Campaign.get(campaign_key)
       adgroup = AdGroup(name="%s Ad Group" % c.name, campaign=c, bid_strategy="cpm", bid=10.0, percent_users=100.0)
@@ -141,12 +141,18 @@ class CreateAdGroupHandler(RequestHandler):
     f = AdGroupForm(instance=adgroup)
     sites = Site.gql('where account=:1', self.account).fetch(100)    
     
+    # allow the correct sites to be checked
     for site in sites:
       site.checked = site.key() in adgroup.site_keys
+			
+    networks = [["adsense","Google AdSense",False],["iAd","Apple iAd",False],["admob","AdMob",False],["custom","Custom",False]]
+    for n in networks:
+      if adgroup.network_type == n[0]:
+        n[2] = True
 
-    return render_to_response(self.request,'advertiser/new_adgroup.html', {"f": f, "c": c, "sites": sites, "title": title})
+    return render_to_response(self.request,'advertiser/new_adgroup.html', {"f": f, "c": c, "sites": sites, "title": title, "networks":networks})
 
-  def post(self, campaign_key=None,adgroup_key=None, title="Create an Ad Group"):
+  def post(self, campaign_key=None,adgroup_key=None, edit=False, title="Create an Ad Group"):
     if adgroup_key:
       adgroup = AdGroup.get(db.Key(adgroup_key))
     else:
@@ -160,7 +166,7 @@ class CreateAdGroupHandler(RequestHandler):
      
     # if the campaign is a network type, automatically populate the right creative and go back to
     # campaign page
-    if adgroup.campaign.campaign_type == "network":
+    if adgroup.campaign.campaign_type == "network" and not edit:
       creative = adgroup.default_creative()
       creative.put()
       return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':adgroup.campaign.key()}))
@@ -174,7 +180,7 @@ def campaign_adgroup_new(request,*args,**kwargs):
 
 @whitelist_login_required
 def campaign_adgroup_edit(request,*args,**kwargs):
-  kwargs.update(title="Edit Ad Group")
+  kwargs.update(title="Edit Ad Group",edit=True)
   return CreateAdGroupHandler()(request,*args,**kwargs)  
   
 
@@ -255,17 +261,29 @@ class PauseHandler(RequestHandler):
     action = self.request.POST.get("action", "pause")
     for id in self.request.POST.getlist('id') or []:
       c = Campaign.get(id)
+      update_objs = []
       if c != None and c.u == self.account.user:
         if action == "pause":
           c.active = False
           c.deleted = False
+          update_objs.append(c)
         elif action == "resume":
           c.active = True
           c.deleted = False
+          update_objs.append(c)
         elif action == "delete":
+          # 'deletes' adgroups and creatives
           c.active = False
           c.deleted = True
-        c.put()
+          update_objs.append(c)
+          for adgroup in c.adgroups:
+            adgroup.deleted = True
+            update_objs.append(adgroup)
+            for creative in adgroup.creatives:
+              creative.deleted = True
+              update_objs.append(creative)
+      if update_objs:        
+        db.put(update_objs)    
     return HttpResponseRedirect(reverse('advertiser_campaign',kwargs={}))
   
 @whitelist_login_required
@@ -321,27 +339,35 @@ def campaign_adgroup_show(request,*args,**kwargs):
   return ShowAdGroupHandler()(request,*args,**kwargs)
 
 
-class PauseBidHandler(RequestHandler):
+class PauseAdGroupHandler(RequestHandler):
   def post(self):
     action = self.request.POST.get("action", "pause")
     for id in self.request.POST.getlist('id') or []:
-      c = AdGroup.get(id)
-      if c != None and c.campaign.u == self.account.user:
+      a = AdGroup.get(id)
+      update_objs = []
+      if a != None and a.campaign.u == self.account.user:
         if action == "pause":
-          c.active = False
-          c.deleted = False
+          a.active = False
+          a.deleted = False
+          update_objs.append(a)
         elif action == "resume":
-          c.active = True
-          c.deleted = False
+          a.active = True
+          a.deleted = False
+          update_objs.append(a)
         elif action == "delete":
-          c.active = False
-          c.deleted = True
-        c.put()
-    return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':c.campaign.key()}))
+          a.active = False
+          a.deleted = True
+          update_objs.append(a)
+          for creative in a.creatives:
+            creative.deleted = True
+            update_objs.append(creative)
+      if update_objs:
+        db.put(update_objs)      
+    return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':a.campaign.key()}))
 
 @whitelist_login_required
 def bid_pause(request,*args,**kwargs):
-  return PauseBidHandler()(request,*args,**kwargs)
+  return PauseAdGroupHandler()(request,*args,**kwargs)
   
 # Creative management
 #

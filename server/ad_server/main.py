@@ -1,4 +1,26 @@
 # !/usr/bin/env python
+
+# TODO: PLEASE HAVE THIS FIX DJANGO PROBLEMS
+# import logging, os, sys
+# os.environ["DJANGO_SETTINGS_MODULE"] = "settings"
+# 
+# from google.appengine.dist import use_library
+# use_library("django", "1.1") # or use_library("django", "1.0") if you're using 1.0
+# 
+# from django.conf import settings
+# settings._target = None
+
+from appengine_django import LoadDjango
+LoadDjango()
+import os
+from django.conf import settings
+
+os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+# Force Django to reload its settings.
+settings._target = None
+
+# END TODO: PLEASE HAVE THIS FIX DJANGO PROBLEMS
+
 import wsgiref.handlers
 import cgi
 import logging
@@ -29,6 +51,11 @@ from google.appengine.api.labs import taskqueue
 from publisher.models import *
 from advertiser.models import *
 from reporting.models import *
+
+
+
+
+
 
 CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gzip(gfe)"]
 MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7PnE6cH9_PX7OoeIIr5FjnTA'
@@ -82,9 +109,11 @@ class AdAuction(object):
     
     logging.warning("removed keyword non-matches, now: %s" % ad_groups)
     ad_groups = filter(lambda a: set(geo_predicates).intersection(a.geo_predicates) > set(), ad_groups)
-    logging.debug("removed geo non-matches, now: %s" % ad_groups)
+    ad_groups = [a for a in ad_groups
+                    if set(geo_predicates).intersection(a.geographic_predicates) > set()]
+    logging.warning("removed geo non-matches, now: %s" % ad_groups)
     ad_groups = filter(lambda a: set(device_predicates).intersection(a.device_predicates) > set(), ad_groups)
-    logging.debug("removed device non-matches, now: %s" % ad_groups)
+    logging.warning("removed device non-matches, now: %s" % ad_groups)
     
     # TODO: frequency capping and other user / request based randomizations
     udid = kw["udid"]
@@ -106,32 +135,33 @@ class AdAuction(object):
           
           while players:
             winning_ecpm = max(c.e_cpm() for c in players) if len(players) > 0 else 0
-            logging.debug("auction at priority=%d: %s, max eCPM=%.2f" % (p, players, winning_ecpm))
+            logging.warning("auction at priority=%d: %s, max eCPM=%.2f" % (p, players, winning_ecpm))
       
             # if the winning creative exceeds the ad unit's threshold cpm for the
             # priority level, then we have a winner
             if winning_ecpm >= site.threshold_cpm(p):
               # retain all creatives with comparable eCPM and randomize among them
               winners = filter(lambda x: x.e_cpm() >= winning_ecpm, players)
-              logging.warning("winners: %s",winners)
+              logging.warning("%02d winners: %s"%(len(winners),winners))
               
+              campaigns = set([c.ad_group.campaign for c in winners if not c.ad_group.deleted and not c.ad_group.campaign.deleted])
+              logging.warning("campaigns: %s"%campaigns)
               
               # find out which ad groups are eligible
-              ad_groups = set([c.ad_group for c in winners if not c.ad_group.deleted and not c.ad_group.campaign.deleted])
+              ad_groups = set([c.ad_group for c in winners])
               logging.warning("eligible ad_groups: %s" % ad_groups)
                             
               creatives = [c for c in all_creatives if c.ad_group.key() in [a.key() for a in ad_groups]]
             
               # exclude according to the exclude parameter must do this after determining adgroups
               # so that we maintain the correct order for user bucketing
-              logging.warning("eligible creatives: %s %s" % (winners,exclude_params))
+              logging.debug("eligible creatives: %s %s" % (winners,exclude_params))
               winners = [c for c in winners if not (c.ad_type in exclude_params)]  
-              logging.warning("eligible creatives after exclusions: %s" % winners)
+              logging.debug("eligible creatives after exclusions: %s" % winners)
             
-              # calculate the user experiment bucket which is a deterministic function of the udid all the competing ad groups
+              # calculate the user experiment bucket
               user_bucket = hash(udid+','.join([str(c.ad_group.key()) for ad_group in ad_groups])) % 100 # user gets assigned a number between 0-99 inclusive
-              user_bucket = 10
-              logging.debug("the user bucket is: #%d",user_bucket)
+              logging.warning("the user bucket is: #%d",user_bucket)
           
               # determine in which ad group the user falls into to
               # otherwise give creatives in the other adgroups a shot
@@ -144,19 +174,18 @@ class AdAuction(object):
               # sort the ad groups by the percent of users desired, this allows us 
               # to do the appropriate wrapping of the number line if they are nicely behaved
               # TODO: finalize this so that we can do things like 90% and 15%. We need to decide
-              # what happens in this case
-              ad_groups.sort(lambda x,y: cmp(x.percent_users,y.percent_users))
+              # what happens in this case, unclear what the intent of this is.
+              ad_groups.sort(lambda x,y: cmp(x.percent_users if x.percent_users else 100.0,y.percent_users if y.percent_users else 100.0))
               for ad_group in ad_groups:
                 percent_users = ad_group.percent_users if not (ad_group.percent_users is None) else 100.0
                 if start_bucket <= user_bucket and user_bucket < (start_bucket + percent_users):
                   winning_ad_groups.append(ad_group)
-                else:
-                  start_bucket += percent_users
-                  start_bucket = start_bucket % 100 
+                start_bucket += percent_users
+                start_bucket = start_bucket % 100 
             
               # if there is a winning/eligible adgroup find the appropriate creative for it
               if winning_ad_groups:
-                logging.warning("winner ad_groups: %s"%winning_ad_groups)
+                logging.debug("winner ad_groups: %s"%winning_ad_groups)
               
                 if winning_ad_groups:
                   winners = [winner for winner in winners if winner.ad_group in winning_ad_groups]
@@ -168,7 +197,7 @@ class AdAuction(object):
           
                   # winner
                   winner = winners[0]
-                  logging.debug("winning creative = %s" % winner)
+                  logging.warning("winning creative = %s" % winner)
                   return winner
                 else:
                   logging.debug('taking away some players not in %s'%ad_groups)
@@ -226,7 +255,7 @@ class AdAuction(object):
 #
 class AdHandler(webapp.RequestHandler):
   
-  # Format properties: width, height, adsense_format, num_creatives
+  # AdSense: Format properties: width, height, adsense_format, num_creatives
   FORMAT_SIZES = {
     "300x250_as": (300, 250, "300x250_as", 3),
     "320x50_mb": (320, 50, "320x50_mb", 1),
@@ -236,7 +265,7 @@ class AdHandler(webapp.RequestHandler):
     "320x50": (320, 50, "320x50_mb", 1),
     "728x90": (728, 90, "728x90_as", 2),
     "468x60": (468, 60, "468x60_as", 1),
-    "320x480": (320, 480, "320x480_as", 1),
+    "320x480": (320, 480, "300x250_as", 1),
   }
   
   def get(self):
@@ -296,7 +325,7 @@ class AdHandler(webapp.RequestHandler):
       # render the creative 
       self.response.out.write(self.render_creative(c, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, request_id=request_id, v=int(self.request.get('v') or 0)))
     else:
-      self.response.out.write(self.render_creative(c=None))
+      self.response.out.write("")
   #
   # Templates
   #
@@ -305,6 +334,10 @@ class AdHandler(webapp.RequestHandler):
                             <head>
                               <title>$title</title>
                               $finishLoad
+                              <script>
+                                function webviewDidClose(){} 
+                                function webviewDidAppear(){} 
+                              </script>
                             </head>
                             <body style="margin: 0;width:${w}px;height:${h}px;" >
                               <script type="text/javascript">window.googleAfmcRequest = {client: '$client',ad_type: 'text_image', output: 'html', channel: '',format: '$adsense_format',oe: 'utf8',color_border: '336699',color_bg: 'FFFFFF',color_link: '0000FF',color_text: '000000',color_url: '008000',};</script> 
@@ -318,6 +351,10 @@ class AdHandler(webapp.RequestHandler):
                           <style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: ${w}px;height: ${h}px;}.creative_headline {font-size: 14px;}.creative .creative_url a {color: green;text-decoration: none;}
                           </style>
                           $finishLoad
+                          <script>
+                            function webviewDidClose(){} 
+                            function webviewDidAppear(){} 
+                          </script>
                         </head>\
                         <body style="margin: 0;width:${w}px;height:${h}px;padding:0;">\
                           <div class="creative"><div style="padding: 5px 10px;"><a href="$url" class="creative_headline">$headline</a><br/>$line1 $line2<br/><span class="creative_url"><a href="$url">$display_url</a></span></div></div>\
@@ -327,12 +364,20 @@ class AdHandler(webapp.RequestHandler):
                           <style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: ${w}px;height: ${h}px;}.creative_headline {font-size: 20px;}.creative .creative_url a {color: green;text-decoration: none;}
                           </style>
                           $finishLoad
+                          <script>
+                            function webviewDidClose(){} 
+                            function webviewDidAppear(){} 
+                          </script>
                         </head>
                         <body style="margin: 0;width:${w}px;height:${h}px;padding:0;">\
                           <a href="$url"><img src="$image_url" width=$w height=$h/></a>
                         </body> </html> """),
     "admob": Template("""<html><head>
                         $finishLoad
+                        <script>
+                          function webviewDidClose(){} 
+                          function webviewDidAppear(){} 
+                        </script>
                         </head><body style="margin: 0;padding:0;">
                         <script type="text/javascript">
                         var admob_vars = {
@@ -345,7 +390,12 @@ class AdHandler(webapp.RequestHandler):
                         </script>
                         <script type="text/javascript" src="http://mmv.admob.com/static/iphone/iadmob.js"></script>                        
                         </body></html>"""),
-    "html":Template("<html><head></head><body style=\"margin: 0;padding:0;background-color:white\">${html_data}</body></html>"),
+    "html":Template("""<html><head>                    
+                        <script>
+                          function webviewDidClose(){} 
+                          function webviewDidAppear(){} 
+                        </script></head>
+                        <body style=\"margin: 0;padding:0;background-color:white\">${html_data}</body></html>"""),
   }
   def render_creative(self, c, **kwargs):
     if c:

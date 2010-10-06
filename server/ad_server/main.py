@@ -66,8 +66,11 @@ DOMAIN = 'ads.mopub.com'
 # Ad auction logic
 # The core of the whole damn thing
 #
-def memcache_key(udid,datetime,db_key):
-  return '%s:%s:%s'%(udid,datetime.date().strftime('%y%m%d'),db_key)
+def memcache_key_for_date(udid,datetime,db_key):
+  return '%s:%s:%s'%(udid,datetime.strftime('%y%m%d'),db_key)
+
+def memcache_key_for_hour(udid,datetime,db_key):
+  return '%s:%s:%s'%(udid,datetime.strftime('%y%m%d%H'),db_key)
 
 
 class AdAuction(object):
@@ -190,26 +193,46 @@ class AdAuction(object):
               # TODO: user based frequency caps
               user_keys = []
               for adgroup in winning_ad_groups:
-                user_adgroup_daily_key = memcache_key(udid,now,adgroup.key())
-                user_keys.append(user_adgroup_daily_key)
-              frequency_cap_dict = memcache.get_multi(user_keys)    
+                if adgroup.daily_frequency_cap:
+                  user_adgroup_daily_key = memcache_key_for_date(udid,now,adgroup.key())
+                  user_keys.append(user_adgroup_daily_key)
+                if adgroup.hourly_frequency_cap:  
+                  user_adgroup_hourly_key = memcache_key_for_hour(udid,now,adgroup.key())
+                  user_keys.append(user_adgroup_hourly_key)
+
+              if user_keys:  
+                frequency_cap_dict = memcache.get_multi(user_keys)    
+              else:
+                frequency_cap_dict = {}
               
               winning_ad_groups_new = []
               logging.warning("winning ad groups: %s"%winning_ad_groups)
               for adgroup in winning_ad_groups:
-                logging.warning("frequency cap %d"%adgroup.daily_frequency_cap)   
-                if adgroup.daily_frequency_cap > 0: # not 0
-                  user_adgroup_daily_key = memcache_key(udid,now,adgroup.key())
-                  # pull out the impression count from memcache, otherwise its assumed to be 0
-                  if user_adgroup_daily_key in frequency_cap_dict:
-                    impression_cnt = int(frequency_cap_dict[user_adgroup_daily_key])
-                  else:
-                    impression_cnt = 0 
-                  logging.warning("impression: %d max: %d"%(impression_cnt,adgroup.daily_frequency_cap))   
-                  if impression_cnt < adgroup.daily_frequency_cap:
-                    winning_ad_groups_new.append(adgroup)
+                user_adgroup_daily_key = memcache_key_for_date(udid,now,adgroup.key())
+                user_adgroup_hourly_key = memcache_key_for_hour(udid,now,adgroup.key())
+                daily_frequency_cap = adgroup.daily_frequency_cap
+                hourly_frequency_cap = adgroup.hourly_frequency_cap
+                
+                
+                # pull out the impression count from memcache, otherwise its assumed to be 0
+                if daily_frequency_cap and (user_adgroup_daily_key in frequency_cap_dict):
+                  daily_impression_cnt = int(frequency_cap_dict[user_adgroup_daily_key])
                 else:
-                  winning_ad_groups_new.append(adgroup)    
+                  daily_impression_cnt = 0 
+                  
+                if hourly_frequency_cap and (user_adgroup_hourly_key in frequency_cap_dict):
+                  hourly_impression_cnt = int(frequency_cap_dict[user_adgroup_daily_key])
+                else:
+                  hourly_impression_cnt = 0  
+                  
+                logging.warning("daily imps:%d freq cap: %d"%(daily_impression_cnt,daily_frequency_cap))
+                logging.warning("hourly imps:%d freq cap: %d"%(hourly_impression_cnt,hourly_frequency_cap))
+                  
+                  
+                if (not daily_frequency_cap or daily_impression_cnt < daily_frequency_cap) and \
+                   (not hourly_frequency_cap or hourly_impression_cnt < hourly_frequency_cap):
+                  winning_ad_groups_new.append(adgroup)
+                  
               winning_ad_groups = winning_ad_groups_new
               logging.warning("winning ad groups after frequency capping: %s"%winning_ad_groups)
 
@@ -347,9 +370,11 @@ class AdHandler(webapp.RequestHandler):
     
     # output the request_id and the winning creative_id if an impression happened
     if c:
-      user_adgroup_daily_key = memcache_key(udid,now,c.ad_group.key())
+      user_adgroup_daily_key = memcache_key_for_date(udid,now,c.ad_group.key())
+      user_adgroup_hourly_key = memcache_key_for_hour(udid,now,c.ad_group.key())
       logging.warning("user_adgroup_daily_key: %s"%user_adgroup_daily_key)
-      memcache.incr(user_adgroup_daily_key, delta=1, namespace=None, initial_value=0)
+      logging.warning("user_adgroup_hourly_key: %s"%user_adgroup_hourly_key)
+      memcache.offset_multi({user_adgroup_daily_key:1,user_adgroup_hourly_key:1}, key_prefix='', namespace=None, initial_value=0)
       
       logging.info('OLP ad-auction {"id": "%s", "c": "%s", "request_id": "%s", "udid": "%s"}' % (id, c.key(), request_id, udid))
 

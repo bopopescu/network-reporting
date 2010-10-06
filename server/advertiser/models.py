@@ -50,7 +50,7 @@ class AdGroup(db.Model):
 
   # frequency caps
   minute_frequency_cap = db.IntegerProperty(default=0)
-  hour_frequency_cap = db.IntegerProperty(default=0)
+  hourly_frequency_cap = db.IntegerProperty(default=0)
   daily_frequency_cap = db.IntegerProperty(default=0)
   weekly_frequency_cap = db.IntegerProperty(default=0)
   monthly_frequency_cap = db.IntegerProperty(default=0)

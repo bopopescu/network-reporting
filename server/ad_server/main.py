@@ -215,7 +215,8 @@ class AdAuction(object):
 
     # nothing... failed auction
     logging.debug("auction failed, returning None")
-
+    return None
+    
   @classmethod
   def geo_predicates_for_rgeocode(c, r):
     if len(r) == 0:
@@ -325,7 +326,8 @@ class AdHandler(webapp.RequestHandler):
       # render the creative 
       self.response.out.write(self.render_creative(c, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, request_id=request_id, v=int(self.request.get('v') or 0)))
     else:
-      self.response.out.write("")
+      self.response.out.write(self.render_creative(c, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, request_id=request_id, v=int(self.request.get('v') or 0)))
+      
   #
   # Templates
   #

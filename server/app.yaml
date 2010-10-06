@@ -1,5 +1,5 @@
 application: mopub-inc
-version: 36-live
+version: 37-live
 runtime: python
 api_version: 1
 default_expiration: "10d"
@@ -18,6 +18,9 @@ handlers:
 
 - url: /stylesheets
   static_dir: public/stylesheets
+
+- url: /iblogpro
+  static_dir: public/iblogpro
 
 - url: /js
   static_dir: public/javascripts
@@ -41,3 +44,4 @@ handlers:
 
 skip_files:
   - ^(.*/)?django\.zip
+

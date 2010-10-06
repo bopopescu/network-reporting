@@ -67,7 +67,7 @@
 			<tr><th>Ad Units</th>
 				<td><ul style="overflow:auto; height:100px; list-style: none;">
 					{% for s in sites %}
-							<li style="margin-left: 0;"><input type="checkbox" name="sites" value="{{s.key}}" {% if s.checked %}checked="checked"{% endif %}> {{s.name}} </input></li>
+							<li style="margin-left: 0;"><input type="checkbox" name="sites" value="{{s.key}}" {% if s.checked %}checked="checked"{% endif %}> {{s.app.name}} > {{s.name}} </input></li>
 					{% endfor %}
 					</ul></td></tr>
 			

@@ -221,7 +221,7 @@ class AdAuction(object):
                   daily_impression_cnt = 0 
                   
                 if hourly_frequency_cap and (user_adgroup_hourly_key in frequency_cap_dict):
-                  hourly_impression_cnt = int(frequency_cap_dict[user_adgroup_daily_key])
+                  hourly_impression_cnt = int(frequency_cap_dict[user_adgroup_hourly_key])
                 else:
                   hourly_impression_cnt = 0  
                   

@@ -6,7 +6,7 @@
 {% block content %}
 	<h3>
 		<a href="{% url advertiser_campaign %}">Campaigns</a> &gt; 
-		<a href="{% url advertiser_campaign_show campaign_key=campaign.key %}">{{campaign.name}}</a> &gt;
+		<!--<a href="{% url advertiser_campaign_show campaign_key=campaign.key %}">{{campaign.name}}</a> &gt;-->
 		{{adgroup.name}}
 		<div class="toolbar">
 			<a href="{% url advertiser_adgroup_edit adgroup_key=adgroup.key %}">
@@ -47,7 +47,7 @@
 		Ad Unit Targeting
 	</h3>
 	<table class="wide">
-		{% if adgroup.keywords %}
+		{% if keywords %}
 			<thead>
 				<th>Keyword</th>
 				<th class="numeric">Impr.</th>

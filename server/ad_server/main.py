@@ -456,7 +456,7 @@ class AdHandler(webapp.RequestHandler):
                           function webviewDidClose(){} 
                           function webviewDidAppear(){} 
                         </script></head>
-                        <body style="margin: 0;padding:0;background-color:white">${html_data}$trackingPixel</body></html>"""),
+                        <body style="margin:0;padding:0;width:${w}px">${html_data}$trackingPixel</body></html>"""),
   }
   def render_creative(self, c, **kwargs):
     if c:
@@ -475,7 +475,7 @@ class AdHandler(webapp.RequestHandler):
       elif c.ad_type == "image":
         params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
       elif c.ad_type == "html":
-        params.update({"html_data": kwargs["html_data"]})
+        params.update({"html_data": kwargs["html_data"], "w": format[0], "h": format[1]})
         
       if kwargs["q"] or kwargs["addr"]:
         params.update(title=','.join(kwargs["q"]+list(kwargs["addr"])))

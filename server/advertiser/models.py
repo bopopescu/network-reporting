@@ -44,7 +44,6 @@ class AdGroup(db.Model):
   active = db.BooleanProperty(default=True)
   deleted = db.BooleanProperty(default=False)
   
-  
   # percent of users to be targetted
   percent_users = db.FloatProperty(default=100.0)
 

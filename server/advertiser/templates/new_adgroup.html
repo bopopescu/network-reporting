@@ -14,6 +14,8 @@
 		<table>
 			{% ifequal c.campaign_type "gtee" %}
 				<h4>Bids</h4>
+				<tr><th>Budget</th><td>{{f.budget}} USD</td></tr>
+				
 				<tr>
 					<th>Priority level</th>
 					<td><select name="priority_level">

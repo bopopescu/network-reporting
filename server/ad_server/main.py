@@ -97,7 +97,7 @@ class AdAuction(object):
     # campaign exclusions... budget + time
     ad_groups = [a for a in ad_groups 
                       if a.campaign.budget is None or 
-                      SiteStats.stats_for_day(a.campaign, SiteStats.today()).revenue < a.campaign.budget]
+                      SiteStats.stats_for_day(a.campaign, SiteStats.today()).revenue < a.budget]
     # ad_groups = filter(lambda a: a.campaign.budget is None or SiteStats.stats_for_day(a.campaign, SiteStats.today()).revenue < a.campaign.budget, ad_groups)
     logging.warning("removed over budget, now: %s" % ad_groups)
     ad_groups = [a for a in ad_groups 

@@ -31,6 +31,13 @@ class AdGroup(db.Model):
   campaign = db.ReferenceProperty(Campaign,collection_name="adgroups")
   name = db.StringProperty()
   
+  # daily budget
+  budget = db.FloatProperty() 
+  
+  # start and end dates 
+  start_date = db.DateProperty()
+  end_date = db.DateProperty()
+  
   created = db.DateTimeProperty(auto_now_add=True)
 
   # the priority level at which this ad group should be auctioned

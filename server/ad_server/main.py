@@ -399,7 +399,7 @@ class AdHandler(webapp.RequestHandler):
                           function webviewDidClose(){} 
                           function webviewDidAppear(){} 
                         </script></head>
-                        <body style="margin: 0;padding:0;background-color:white">${html_data}$trackingPixel</body></html>"""),
+                        <body style="margin:0;padding:0;">${html_data}$trackingPixel</body></html>"""),
   }
   def render_creative(self, c, **kwargs):
     if c:

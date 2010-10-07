@@ -400,7 +400,6 @@ class AdHandler(webapp.RequestHandler):
                               <script type="text/javascript">window.googleAfmcRequest = {client: '$client',ad_type: 'text_image', output: 'html', channel: '',format: '$adsense_format',oe: 'utf8',color_border: '336699',color_bg: 'FFFFFF',color_link: '0000FF',color_text: '000000',color_url: '008000',};</script> 
                               <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_afmc_ads.js"></script>  
                               $trackingPixel
-                              <h1>$title<h1>
                             </body>
                           </html> """),
     "iAd": Template("iAd"),

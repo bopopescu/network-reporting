@@ -22,6 +22,10 @@ class Site(db.Model):
 	app_key = db.ReferenceProperty(App)
 	account = db.ReferenceProperty(Account)
 	
+	# TODO: figure out how to expose this
+	adsense_channel_id = db.StringProperty()
+  
+	
 	name = db.StringProperty(required=True)
 	url = db.StringProperty()
 	description = db.TextProperty()

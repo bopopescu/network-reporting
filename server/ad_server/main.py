@@ -397,7 +397,7 @@ class AdHandler(webapp.RequestHandler):
                               </script>
                             </head>
                             <body style="margin: 0;width:${w}px;height:${h}px;" >
-                              <script type="text/javascript">window.googleAfmcRequest = {client: '$client',ad_type: 'text_image', output: 'html', channel: '',format: '$adsense_format',oe: 'utf8',color_border: '336699',color_bg: 'FFFFFF',color_link: '0000FF',color_text: '000000',color_url: '008000',};</script> 
+                              <script type="text/javascript">window.googleAfmcRequest = {client: '$client',ad_type: 'text_image', output: 'html', channel: '$channel_id',format: '$adsense_format',oe: 'utf8',color_border: '336699',color_bg: 'FFFFFF',color_link: '0000FF',color_text: '000000',color_url: '008000',};</script> 
                               <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_afmc_ads.js"></script>  
                               $trackingPixel
                             </body>
@@ -465,9 +465,10 @@ class AdHandler(webapp.RequestHandler):
 
       params = kwargs
       params.update(c.__dict__.get("_entity"))
-
       if c.ad_type == "adsense":
+        logging.warning("HERHERHERHER %s"%kwargs["site"].adsense_channel_id)
         params.update({"title": ','.join(kwargs["q"]), "adsense_format": format[2], "w": format[0], "h": format[1], "client": kwargs["site"].account.adsense_pub_id})
+        params.update(channel_id=kwargs["site"].adsense_channel_id or '')
         # self.response.headers.add_header("X-Launchpage","http://googleads.g.doubleclick.net")
       elif c.ad_type == "admob":
         params.update({"title": ','.join(kwargs["q"]), "w": format[0], "h": format[1], "client": kwargs["site"].account.admob_pub_id})

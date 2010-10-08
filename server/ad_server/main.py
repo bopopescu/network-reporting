@@ -455,7 +455,6 @@ class AdHandler(webapp.RequestHandler):
                         <script>
                           function webviewDidClose(){} 
                           function webviewDidAppear(){} 
-                          setTimeout('window.location="mopub://reload";', 10000);
                         </script></head>
                         <body style="margin:0;padding:0;width:${w}px">${html_data}$trackingPixel</body></html>"""),
   }

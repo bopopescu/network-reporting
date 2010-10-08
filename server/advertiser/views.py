@@ -470,9 +470,14 @@ class DisplayCreativeHandler(RequestHandler):
     c = Creative.get(creative_key)
     if c and c.ad_type == "image" and c.image:
       return HttpResponse(c.image,content_type='image/png')
+    if c and c.ad_type == "html":
+      return HttpResponse("<html><body>"+c.html_data+"</body></html");
     return HttpResponse('NOOOOOOOOOOOO IMAGE')
 
 def creative_image(request,*args,**kwargs):
+  return DisplayCreativeHandler()(request,*args,**kwargs)
+
+def creative_html(request,*args,**kwargs):
   return DisplayCreativeHandler()(request,*args,**kwargs)
 
 class RemoveCreativeHandler(RequestHandler):

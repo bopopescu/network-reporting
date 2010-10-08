@@ -41,5 +41,5 @@ The MoPub Team
   return HttpResponseRedirect("/?m=Thanks, we will let you know when an invitation is ready for you.")
   
 def website_pending(request,*args,**kwargs):
-  send_mail("New User","%s has signed up for an account. Someone please activate him if necessary. https://appengine.google.com/datastore/explorer?submitted=1&app_id=mopub-inc&kind=Account"%request.user,'olp@mopub.com',['beta@mopub.com'],fail_silently=True)
+  send_mail("New User","%s has signed up for an account. Someone please activate him if necessary. https://appengine.google.com/datastore/explorer?submitted=1&app_id=mopub-inc&kind=Account"%request.user.email,'olp@mopub.com',['beta@mopub.com'],fail_silently=True)
   return render_to_response(request, 'website/pending.html')

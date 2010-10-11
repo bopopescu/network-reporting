@@ -41,3 +41,7 @@ handlers:
 
 - url: /.*
   script: main.py
+
+skip_files:
+  - ^(.*/)?django\.zip
+

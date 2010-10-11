@@ -40,6 +40,7 @@
 		Ad Units
 		<div class="toolbar">
       <button onClick="javascript:Toggle.display('add_adunit_box');return false;" class="btn"><span><span>+ New Ad Unit</span></span></button>
+      {% include "range_select.html" %}
 		</div>
 	</h3>
 	<form method="post" action="{% url publisher_create %}" id="add_adunit_box" style="display:none;" class="special_notice">

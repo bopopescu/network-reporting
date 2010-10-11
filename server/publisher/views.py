@@ -73,6 +73,16 @@ class AppIndexHandler(RequestHandler):
   def get(self):
     # compute start times; start day before today so incomplete days don't mess up graphs
     days = SiteStats.lastdays(14)
+    r_start = 0
+    r_end = 14
+    
+    try:
+      range = self.request.GET.get('range').partition(':')
+      if range[1] == ':':
+        r_start = int(range[0])
+        r_end = int(range[2])
+    except:
+      pass
 
     apps = App.gql("where account = :1 and deleted = :2", self.account, False).fetch(50)
     today = SiteStats()
@@ -85,8 +95,8 @@ class AppIndexHandler(RequestHandler):
         if len(a.sites) > 0:
           for s in a.sites:
             s.all_stats = SiteStats.sitestats_for_days(s, days)
-            s.stats = reduce(lambda x, y: x+y, s.all_stats, SiteStats())
-            a.stats = reduce(lambda x, y: x+y, s.all_stats, a.stats)
+            s.stats = reduce(lambda x, y: x+y, s.all_stats[r_start:r_end], SiteStats())
+            a.stats = reduce(lambda x, y: x+y, s.all_stats[r_start:r_end], a.stats)
           a.totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[s.all_stats for s in a.sites])]
         else:
           a.totals = [SiteStats() for d in days]

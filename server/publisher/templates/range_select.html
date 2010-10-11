@@ -1,0 +1,26 @@
+<div style="padding:12px;position:relative">
+<div style="margin-bottom:10px;position:absolute;right:0px;top:0px;">
+<form id="date_range_switch" action="" method="GET">
+<select id="date_range_switch_select" name="range" onchange='$("date_range_switch").submit()'>
+  <option value="0:14">Last 14 days</option>
+  <option value="7:14" {% if range %}selected{% endif %}>Last 7 days</option>
+  <option value="12:13" {% if range %}selected{% endif %}>Yesterday</option>
+  <option value="13:14" {% if range %}selected{% endif %}>Today</option>
+</select>
+</form>
+<script type="text/javascript">
+  var regexS = "[\\?&]"+"range"+"=([^&#]*)";
+  var regex = new RegExp( regexS );
+  var results = regex.exec( window.location.href );;
+  if (results != null) {
+    range = results[1].replace("%3A",":");
+    var options = $$('select#date_range_switch_select option');
+    var len = options.length;
+    for (var i = 0; i < len; i++) {
+      if (options[i].value == range)
+          options[i].selected = true;
+    }
+  }
+</script>
+</div>
+</div>

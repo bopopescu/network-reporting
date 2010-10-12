@@ -120,7 +120,8 @@ class AdGroupCache(object):
       print 'fetching from remote datastore %s'%keys
       # put into local cache
       for obj in datastore_objs:
-        cls.cache[str(obj.key())] = obj
+        if obj:
+          cls.cache[str(obj.key())] = obj
       objs += datastore_objs
     if len(objs) > 1:
       return objs
@@ -209,11 +210,11 @@ class AppRequestCounter(StatsCounter):
     if ad_unit_key_string:
       try:
         ad_unit_key = db.Key(ad_unit_key_string)
+        ad_unit = AdUnitCache.get(ad_unit_key)
+        app_key = ad_unit.app_key.key()
       except Exception, e:
         print e
         return
-      ad_unit = AdUnitCache.get(ad_unit_key)
-      app_key = ad_unit.app_key.key()
         
       stats = self.get_qualifier_stats(app_key)
       if stats:

@@ -93,14 +93,14 @@
 	
 			<div id="footer">
 				<p style="text-align: center; padding-top: 20px;">
-					&copy; 2010 MoPub, Inc. - 
-					<a href="/about">About</a> -
-					<a href="https://docs.google.com/document/pub?id=1NA-S5IO6qCVL3M_GcRXDJgP0VNthGKPMb61oQkXU2X8" target="_blank">Terms</a>
+					&copy; 2010 MoPub, Inc. &middot;				
+					<a href="http://web.mopub.com/about">About Us</a> -
+					<a href="http://web.mopub.com/">Blog</a> -
+					<a href="http://web.mopub.com/terms">Terms</a>
+					&middot;
 					{% if google_user %}
-					-
-					you are logged in as <b>{{google_user}}</b> |
-					<a href="/account">my account</a> |
-					<a href="{% google_logout_url %}">logout</a>
+					You are logged in as <a href="/account"><b>{{google_user}}</b></a> -
+					<a href="{% google_logout_url %}">Sign out</a>
 					{% endif %}
 				</p>
 		

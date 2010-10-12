@@ -57,6 +57,10 @@ from reporting.models import *
 CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gzip(gfe)"]
 MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7PnE6cH9_PX7OoeIIr5FjnTA'
 DOMAIN = 'ads.mopub.com'
+
+
+# TODO: Logging is fucked up with unicode characters
+
 # DOMAIN = 'localhost:8080'
 #
 # Ad auction logic
@@ -107,6 +111,7 @@ class AdAuction(object):
     # ad_groups = filter(lambda a: a.campaign.active and (a.campaign.start_date >= SiteStats.today() if a.campaign.start_date else True) and (a.campaign.end_date <= SiteStats.today() if a.campaign.end_date else True), ad_groups)
     logging.warning("removed non running campaigns, now: %s" % ad_groups)
     
+    logging.warning("adgroup keywords: %s, query keywords: %s"%(a.keywords,keywords))
     # ad group request-based targeting exclusions
     ad_groups = [a for a in ad_groups 
                     if not a.keywords or set(keywords).intersection(a.keywords) > set()]
@@ -340,9 +345,10 @@ class AdHandler(webapp.RequestHandler):
     logging.warning("keywords are %s" % keywords)
 
     # get format
-    f = self.request.get("f") or "320x50"
+    # f = self.request.get("f") or "320x50" # TODO: remove this default
+    f = "%dx%d"%(int(site.width),int(site.height))
     format = self.FORMAT_SIZES.get(f)
-    logging.debug("format is %s (requested '%s')" % (format, f))
+    logging.warning("format is %s (requested '%s')" % (format, f))
     
     # look up lat/lon
     addr = self.rgeocode(self.request.get("ll")) if self.request.get("ll") else ()      
@@ -351,7 +357,7 @@ class AdHandler(webapp.RequestHandler):
     # get creative exclusions usually used to exclude iAd because it has already failed
     excluded_creatives = self.request.get("exclude")
     
-    #get udid we should hash it if its not already hashed
+    # TODO: get udid we should hash it if its not already hashed
     udid = self.request.get("udid")
     
     # create a unique request id, but only log this line if the user agent is real
@@ -466,7 +472,6 @@ class AdHandler(webapp.RequestHandler):
       params = kwargs
       params.update(c.__dict__.get("_entity"))
       if c.ad_type == "adsense":
-        logging.warning("HERHERHERHER %s"%kwargs["site"].adsense_channel_id)
         params.update({"title": ','.join(kwargs["q"]), "adsense_format": format[2], "w": format[0], "h": format[1], "client": kwargs["site"].account.adsense_pub_id})
         params.update(channel_id=kwargs["site"].adsense_channel_id or '')
         # self.response.headers.add_header("X-Launchpage","http://googleads.g.doubleclick.net")

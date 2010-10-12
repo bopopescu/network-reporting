@@ -54,14 +54,20 @@ class AdStats:
       if logline_dict and str(logline_dict['client']) not in self.CRAWLERS:
         for proc, regex in props.items():
           if re.compile(regex).match(logline_dict["path"]) != None:
-            globals()[proc]().process(logline_dict)
+            try:
+              globals()[proc]().process(logline_dict)
+            except Exception, e:
+              print e  
             
       # if this is an OLP info log
       olp_dict = self.parse_olp(line)
       if olp_dict:
         for proc, regex in props.items():
           if re.compile(regex).match(olp_dict["event"]) != None:
-            globals()[proc]().process(olp_dict)
+            try:
+              globals()[proc]().process(olp_dict)
+            except Exception, e:
+              print e  
   
   # takes a log line and parses it, detecting UserAgent, query parameters, origin IP and other information
   #

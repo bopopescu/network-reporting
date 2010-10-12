@@ -1,0 +1,63 @@
+
+{% extends "publisher/base.html" %}
+
+{% load filters %}
+
+{% block content %}
+	<h3>		
+		Apps
+		<div class="toolbar">
+      <button onClick="location.href='{% url publisher_app_create %}'" class="btn"><span><span>+ New App</span></span></button>
+    <div class="graphselect">
+      <button class="btn btn_active pill-l" onClick="show_today(this);"><span><span>Today</span></span></button>
+      <button class="btn pill-r" onClick="show_yesterday(this);"><span><span>Yesterday</span></span></button>
+    </div>
+		</div>
+	</h3>
+  {% if not apps %}
+	<p>
+		<b>Apps</b> are your individual applications.  You can create <b>Ad Units</b> are used to organize your mobile inventory. Each ad unit should be a single ad slot in your app.<br/> 
+	</p> 
+  {% endif %}
+		
+  <table class="rollups">
+    <tr>
+      <td class="rollup rollup_selected" onClick="show_graph_imp(this);"><b>Impressions</b><br/><div class="data_today">{{today.impression_count|withsep}}</div><div class="data_yesterday" style="display:none;">{{yesterday.impression_count|withsep}}</div></td>
+      <td class="rollup" onClick="show_graph_clk(this);"><b>Clicks</b><br/><div class="data_today">{{today.click_count|withsep}} ({{today.ctr|percentage}})</div><div class="data_yesterday" style="display:none;">{{yesterday.click_count|withsep}} ({{yesterday.ctr|percentage}})</div></td>      	
+	    <td class="rollup" onClick="show_graph_rev(this);"><b>Revenue (est.)</b><br/><div class="data_today">{{today.revenue|currency}}</div><div class="data_yesterday" style="display:none;">{{yesterday.revenue|currency}}</div></td>
+	    <td class="rollup" onClick="show_graph_users(this);"><b>Users</b><br/><div class="data_today">{{today.unique_user_count|withsep}}</div><div class="data_yesterday" style="display:none;">{{yesterday.unique_user_count|withsep}}</div></td>
+	
+    </tr>
+  </table> 
+  <div id="map_canvas" style="margin-top:10px"></div>
+<script type='text/javascript' src='http://www.google.com/jsapi'></script>
+<script type='text/javascript'>
+  google.load('visualization', '1', {'packages': ['geomap']});
+  google.setOnLoadCallback(drawMap);
+  
+  function drawMap() {
+    var data = new google.visualization.DataTable();
+    data.addRows(6);
+    data.addColumn('string', 'Country');
+    data.addColumn('number', 'Popularity');
+    data.setValue(0, 0, 'Germany');
+    data.setValue(0, 1, 200);
+    data.setValue(1, 0, 'United States');
+    data.setValue(1, 1, 10);
+    data.setValue(2, 0, 'Brazil');
+    data.setValue(2, 1, 400);
+    data.setValue(3, 0, 'Canada');
+    data.setValue(3, 1, 500);
+    data.setValue(4, 0, 'France');
+    data.setValue(4, 1, 600);
+    data.setValue(5, 0, 'RU');
+    data.setValue(5, 1, 700);
+    
+    var options = {'width':'800px','colors':[0xFFD78F, 0xFFC352, 0xFFAF02, 0xFF9A01]};
+
+    var geomap = new google.visualization.GeoMap($('map_canvas'));
+    geomap.draw(data, options);
+  }
+</script>
+	
+{% endblock %}

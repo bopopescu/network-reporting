@@ -139,7 +139,7 @@ class AdGroupIndexHandler(RequestHandler):
     chart_urls['rev'] = gen_graph_url(revenue, days, "Total+Revenue")
 
     promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], adgroups)
-    garauntee_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee'], adgroups)
+    guarantee_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee'], adgroups)
     network_campaigns = filter(lambda x: x.campaign.campaign_type in ['network'], adgroups)
 
     help_text = None
@@ -152,7 +152,7 @@ class AdGroupIndexHandler(RequestHandler):
       {'adgroups':adgroups, 
        'today': today,
        'chart_urls': chart_urls,
-       'gtee': garauntee_campaigns,
+       'gtee': guarantee_campaigns,
        'promo': promo_campaigns,
        'network': network_campaigns,
        'helptext':help_text })

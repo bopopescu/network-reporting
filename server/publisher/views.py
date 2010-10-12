@@ -84,79 +84,98 @@ class AppIndexHandler(RequestHandler):
 
     apps = App.gql("where account = :1 and deleted = :2", self.account, False).fetch(50)
     today = SiteStats()
-    if len(apps) > 0:
-      for a in apps:
-        a.stats = SiteStats()
-        a.sites = Site.gql("where app_key = :1 and deleted = :2", a, False).fetch(50)   
-        
-        # organize impressions by days
-        if len(a.sites) > 0:
-          for s in a.sites:
-            s.all_stats = SiteStats.sitestats_for_days(s, days)
-            s.stats = reduce(lambda x, y: x+y, s.all_stats[r_start:r_end], SiteStats())
-            a.stats = reduce(lambda x, y: x+y, s.all_stats[r_start:r_end], a.stats)
-          a.totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[s.all_stats for s in a.sites])]
-        else:
-          a.totals = [SiteStats() for d in days]
-      
-        app_stats = SiteStats.stats_for_days(a,days)
-        # TODO: Dedupe this by having an account level rollup
-        ## assigns the user count of the app from the app stat rollup
-        for stat,app_stat in zip(a.totals,app_stats):
-          stat.unique_user_count = app_stat.unique_user_count        
-          
-      totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[a.totals for a in apps])]
-      today = totals[-1]
-      yesterday = totals[-2]
-
-      chart_urls = {}
-      # make a line graph showing impressions
-      impressions = [s.impression_count for s in totals]
-      chart_urls['imp'] = gen_chart_url(impressions, days, "Total+Daily+Impressions")
-      
-      # make a line graph showing clicks
-      clicks = [s.click_count for s in totals]
-      chart_urls['clk'] = gen_chart_url(clicks, days, "Total+Daily+Clicks")
-
-      # make a line graph showing revenue
-      revenue = [s.revenue for s in totals]
-      chart_urls['rev'] = gen_chart_url(revenue, days, "Total+Revenue")
-      
-      # make a line graph showing users
-      unique_users = [s.unique_user_count for s in totals]
-      chart_urls['users'] = gen_chart_url(unique_users, days, "Total+Unique Users")
-
-      # do a bar graph showing contribution of each site to impression count
-      impressions_by_app = []
-      clicks_by_app = []
-      users_by_app = []
-      pie_chart_urls = {}
-      for a in apps:
-        impressions_by_app.append({"app": a, "total": a.stats.impression_count})
-        clicks_by_app.append({"app": a, "total": a.stats.click_count})
-        users_by_app.append({"app": a, "total": a.stats.unique_user_count})
-      impressions_by_app.sort(lambda x,y: cmp(y["total"], x["total"])) 
-      clicks_by_app.sort(lambda x,y: cmp(y["total"], x["total"])) 
-      users_by_app.sort(lambda x,y: cmp(y["total"], x["total"])) 
-      pie_chart_urls['imp'] = gen_pie_chart_url(impressions_by_app, "Contribution+by+App")
-      pie_chart_urls['clk'] = gen_pie_chart_url(clicks_by_app, "Contribution+by+App")
-      pie_chart_urls['users'] = gen_pie_chart_url(users_by_app, "Contribution+by+App")
-
-      return render_to_response(self.request,'publisher/index.html', 
-        {'apps': apps,    
-         'today': today,
-         'yesterday': yesterday,
-         'chart_urls': chart_urls,
-         'pie_chart_urls': pie_chart_urls,
-         'account': self.account})
-    else:
+    if len(apps) == 0:
       return HttpResponseRedirect(reverse('publisher_app_create'))
+      
+    for a in apps:
+      a.stats = SiteStats()
+      a.sites = Site.gql("where app_key = :1 and deleted = :2", a, False).fetch(50)   
+      
+      # organize impressions by days
+      if len(a.sites) > 0:
+        for s in a.sites:
+          s.all_stats = SiteStats.sitestats_for_days(s, days)
+          s.stats = reduce(lambda x, y: x+y, s.all_stats[r_start:r_end], SiteStats())
+          a.stats = reduce(lambda x, y: x+y, s.all_stats[r_start:r_end], a.stats)
+        a.totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[s.all_stats for s in a.sites])]
+      else:
+        a.totals = [SiteStats() for d in days]
+    
+      app_stats = SiteStats.stats_for_days(a,days)
+      # TODO: Dedupe this by having an account level rollup
+      ## assigns the user count of the app from the app stat rollup
+      for stat,app_stat in zip(a.totals,app_stats):
+        stat.unique_user_count = app_stat.unique_user_count        
+        
+    totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[a.totals for a in apps])]
+    today = totals[-1]
+    yesterday = totals[-2]
+
+    chart_urls = {}
+    # make a line graph showing impressions
+    impressions = [s.impression_count for s in totals]
+    chart_urls['imp'] = gen_chart_url(impressions, days, "Total+Daily+Impressions")
+    
+    # make a line graph showing clicks
+    clicks = [s.click_count for s in totals]
+    chart_urls['clk'] = gen_chart_url(clicks, days, "Total+Daily+Clicks")
+
+    # make a line graph showing revenue
+    revenue = [s.revenue for s in totals]
+    chart_urls['rev'] = gen_chart_url(revenue, days, "Total+Revenue")
+    
+    # make a line graph showing users
+    unique_users = [s.unique_user_count for s in totals]
+    chart_urls['users'] = gen_chart_url(unique_users, days, "Total+Unique Users")
+
+    # do a bar graph showing contribution of each site to impression count
+    impressions_by_app = []
+    clicks_by_app = []
+    users_by_app = []
+    pie_chart_urls = {}
+    for a in apps:
+      impressions_by_app.append({"app": a, "total": a.stats.impression_count})
+      clicks_by_app.append({"app": a, "total": a.stats.click_count})
+      users_by_app.append({"app": a, "total": a.stats.unique_user_count})
+    impressions_by_app.sort(lambda x,y: cmp(y["total"], x["total"])) 
+    clicks_by_app.sort(lambda x,y: cmp(y["total"], x["total"])) 
+    users_by_app.sort(lambda x,y: cmp(y["total"], x["total"])) 
+    pie_chart_urls['imp'] = gen_pie_chart_url(impressions_by_app, "Contribution+by+App")
+    pie_chart_urls['clk'] = gen_pie_chart_url(clicks_by_app, "Contribution+by+App")
+    pie_chart_urls['users'] = gen_pie_chart_url(users_by_app, "Contribution+by+App")
+
+    return render_to_response(self.request,'publisher/index.html', 
+      {'apps': apps,    
+       'today': today,
+       'yesterday': yesterday,
+       'chart_urls': chart_urls,
+       'pie_chart_urls': pie_chart_urls,
+       'account': self.account})
 
 @whitelist_login_required     
 def index(request,*args,**kwargs):
   # return HttpResponseRedirect(reverse('publisher_create'))
   return AppIndexHandler()(request,*args,**kwargs)     
-  
+
+class AppIndexGeoHandler(RequestHandler):
+  def get(self):
+    # compute start times; start day before today so incomplete days don't mess up graphs
+    days = SiteStats.lastdays(14)
+    
+    apps = App.gql("where account = :1 and deleted = :2", self.account, False).fetch(50)
+    today = SiteStats()
+    if len(apps) == 0:
+      return HttpResponseRedirect(reverse('publisher_app_create'))
+
+    return render_to_response(self.request,'publisher/index_geo.html', 
+      {'apps': apps,    
+       'account': self.account})
+
+
+@whitelist_login_required     
+def index_geo(request,*args,**kwargs):
+  return AppIndexGeoHandler()(request,*args,**kwargs)     
+
 class AppCreateHandler(RequestHandler):
   def get(self):
     f = AppForm()

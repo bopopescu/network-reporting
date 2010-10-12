@@ -9,4 +9,4 @@ class AppForm(forms.ModelForm):
 class SiteForm(forms.ModelForm):
 	class Meta:
 		model = Site
-		fields = ('name', 'description', 'ad_type', 'backfill', 'backfill_threshold_cpm', 'keywords')
+		fields = ('name', 'description', 'ad_type', 'backfill', 'backfill_threshold_cpm', 'keywords','width','height','format')

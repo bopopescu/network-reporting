@@ -440,7 +440,7 @@ class AppUpdateHandler(RequestHandler):
 def app_update(request,*args,**kwargs):
   return AppUpdateHandler()(request,*args,**kwargs)   
 
-class UpdateHandler(RequestHandler):
+class UpdateAdUnitHandler(RequestHandler):
   def get(self):
     c = Site.get(self.request.GET.get("id"))
     f = SiteForm(instance=c)
@@ -456,7 +456,7 @@ class UpdateHandler(RequestHandler):
   
 @whitelist_login_required
 def update(request,*args,**kwargs):
-  return UpdateHandler()(request,*args,**kwargs)   
+  return UpdateAdUnitHandler()(request,*args,**kwargs)   
 
 class GetArtworkHandler(RequestHandler):
   def get(self):

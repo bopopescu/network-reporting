@@ -32,6 +32,8 @@ class Site(db.Model):
 
   width = db.FloatProperty()
   height = db.FloatProperty()
+  
+  format = db.StringProperty() #TODO: we should use this w/o explicity using height, width
 
   deleted = db.BooleanProperty(default=False)
   

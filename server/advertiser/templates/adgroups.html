@@ -28,6 +28,7 @@
 		<table class="wide">
 			<thead>
 				<th width="25%">Campaign</th>
+				<th width="75px">CPM</th>
 				<th>Status</th>
 				<th class="numeric">Impr.</th>
 				<th class="numeric">Clicks</th>
@@ -37,6 +38,7 @@
 			{% for c in gtee %}
 				<tr>
 					<td><input type="checkbox" name="id" value="{{c.key}}"/> <a href="{% url advertiser_adgroup_show adgroup_key=c.key%}">{{c.name}}</a></td>
+					<td class="numeric">{{c.bid|currency}}</td>
 					<td>
 						{% if c.deleted %}
 							<img src="/images/deleted.gif" width=9 height=9/>
@@ -64,6 +66,7 @@
 		<table class="wide">
 			<thead>
 				<th width="25%">Campaign</th>
+				<th width="75px">CPM</th>
 				<th>Status</th>
 				<th class="numeric">Impr.</th>
 				<th class="numeric">Clicks</th>
@@ -72,6 +75,7 @@
 			{% for c in promo %}
 				<tr>
 					<td><input type="checkbox" name="id" value="{{c.key}}"/> <a href="{% url advertiser_adgroup_show adgroup_key=c.key%}">{{c.name}}</a></td>
+					<td>{{c.bid|currency}}</td>
 					<td>
 						{% if c.deleted %}
 							<img src="/images/deleted.gif" width=9 height=9/>
@@ -98,6 +102,7 @@
 		<table class="wide">
 			<thead>
 				<th width="25%">Campaign</th>
+				<th width="75px">CPM</th>
 				<th>Status</th>
 				<th>Type</th>
 				<th class="numeric">Req.</th>
@@ -108,6 +113,7 @@
 			{% for c in network %}
 				<tr>
 					<td><input type="checkbox" name="id" value="{{c.key}}"/> <a href="{% url advertiser_adgroup_show adgroup_key=c.key%}">{{c.name}}</a></td>
+					<td>{{c.bid|currency}}</td>
 					<td>
 					{% if c.deleted %}
 						<img src="/images/deleted.gif" width=9 height=9/>

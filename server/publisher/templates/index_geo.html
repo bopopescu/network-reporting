@@ -3,7 +3,6 @@
 
 {% load filters %}
 
-
 {% block content %}
 	<h3>		
 		Apps
@@ -30,40 +29,35 @@
 	
     </tr>
   </table> 
-	<img id="chart_img" src="{{chart_urls.imp}}" width=580 height=200 style="padding: 5px 0 10px 0;"/>
-	<img id="pie_chart_img" src="{{pie_chart_urls.imp}}" width=200 height=200 style="padding: 5px 0 10px 0; float:right;"/>
-
-  <div style="padding:12px;position:relative">
-  {% include "range_select.html" %}
-  </div>
+  <div id="map_canvas" style="margin-top:10px"></div>
+<script type='text/javascript' src='http://www.google.com/jsapi'></script>
+<script type='text/javascript'>
+  google.load('visualization', '1', {'packages': ['geomap']});
+  google.setOnLoadCallback(drawMap);
   
-	<table class="wide">
-		<thead>
-			<tr>
-			<th width="50px">App</th>
-			<th>Ad Unit</th>
-			<th class="numeric">Impressions</th>
-			<th class="numeric">Clicks</th>
-			<th class="numeric">CTR</th>
-			</tr>
-		</thead>
-		{% for a in apps %}
-			<tr class="highlighted">
-				<td colspan="2"><a href="{% url publisher_app_show %}?id={{a.key}}"><b>{{a.name}}</b></a> ({{a.app_type}})</td>
-				<td class="numeric"><strong>{{a.stats.impression_count|withsep}}</strong></td>
-				<td class="numeric"><strong>{{a.stats.click_count|withsep}}</strong></td>
-				<td class="numeric"><strong>{{a.stats.ctr|percentage}}</strong></td>
-			</tr>
-		  {% for s in a.sites %}
-			<tr>
-        <td></td>
-				<td><a href="{% url publisher_show %}?id={{s.key}}">{{s.name}}</a></td>
-				<td class="numeric">{{s.stats.impression_count|withsep}}</td>
-				<td class="numeric">{{s.stats.click_count|withsep}}</td>
-				<td class="numeric">{{s.stats.ctr|percentage}}</td>
-			</tr>
-		  {% endfor %}
-		{% endfor %}
-	</table>
+  function drawMap() {
+    var data = new google.visualization.DataTable();
+    data.addRows(6);
+    data.addColumn('string', 'Country');
+    data.addColumn('number', 'Popularity');
+    data.setValue(0, 0, 'Germany');
+    data.setValue(0, 1, 200);
+    data.setValue(1, 0, 'United States');
+    data.setValue(1, 1, 10);
+    data.setValue(2, 0, 'Brazil');
+    data.setValue(2, 1, 400);
+    data.setValue(3, 0, 'Canada');
+    data.setValue(3, 1, 500);
+    data.setValue(4, 0, 'France');
+    data.setValue(4, 1, 600);
+    data.setValue(5, 0, 'RU');
+    data.setValue(5, 1, 700);
+    
+    var options = {'width':'800px','colors':[0xFFD78F, 0xFFC352, 0xFFAF02, 0xFF9A01]};
+
+    var geomap = new google.visualization.GeoMap($('map_canvas'));
+    geomap.draw(data, options);
+  }
+</script>
 	
 {% endblock %}

@@ -142,7 +142,7 @@ class AdGroupIndexHandler(RequestHandler):
     chart_urls['rev'] = gen_graph_url(revenue, days, "Total+Revenue")
 
     promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], adgroups)
-    garauntee_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee'], adgroups)
+    guarantee_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee'], adgroups)
     network_campaigns = filter(lambda x: x.campaign.campaign_type in ['network'], adgroups)
 
     help_text = None
@@ -155,7 +155,7 @@ class AdGroupIndexHandler(RequestHandler):
       {'adgroups':adgroups, 
        'today': today,
        'chart_urls': chart_urls,
-       'gtee': garauntee_campaigns,
+       'gtee': guarantee_campaigns,
        'promo': promo_campaigns,
        'network': network_campaigns,
        'helptext':help_text })
@@ -479,9 +479,14 @@ class DisplayCreativeHandler(RequestHandler):
     c = Creative.get(creative_key)
     if c and c.ad_type == "image" and c.image:
       return HttpResponse(c.image,content_type='image/png')
+    if c and c.ad_type == "html":
+      return HttpResponse("<html><body>"+c.html_data+"</body></html");
     return HttpResponse('NOOOOOOOOOOOO IMAGE')
 
 def creative_image(request,*args,**kwargs):
+  return DisplayCreativeHandler()(request,*args,**kwargs)
+
+def creative_html(request,*args,**kwargs):
   return DisplayCreativeHandler()(request,*args,**kwargs)
 
 class RemoveCreativeHandler(RequestHandler):

@@ -32,6 +32,7 @@
 	
   <h3> 
     Campaigns
+    {% include "range_select.html" %}
   </h3> 
 
   <table class="wide"> 
@@ -39,7 +40,7 @@
         <th>Name</th> 
         <th class="numeric">Impr.</th> 
         <th class="numeric">Clicks</th> 
-        <th class="numeric">Cost</th> 
+        <th class="numeric">Revenue</th> 
       </thead> 
 		{% for ag in site.adgroups %}
       <tr> 

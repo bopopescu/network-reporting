@@ -64,7 +64,7 @@
 			
 			<tr><td colspan="2"><h4>Targeted Inventory</h4></td></tr>			
 			<tr><th>Ad Units</th>
-				<td><ul style="overflow:auto; height:100px; list-style: none;">
+				<td><ul style="overflow:auto; max-height:100px; list-style: none;border:1px solid #aaa; padding:5px 10px">
 					{% for s in sites %}
 							<li style="margin-left: 0;"><input type="checkbox" name="sites" value="{{s.key}}" {% if s.checked %}checked="checked"{% endif %}> {{s.app.name}} > {{s.name}} </input></li>
 					{% endfor %}

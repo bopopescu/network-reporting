@@ -164,12 +164,17 @@
 					{% ifequal c.ad_type "image" %}
 					<div class="creative">
 						<a href="{{c.url}}">
-							<img src="{% url advertiser_creative_image creative_key=c.key %}" width=250>
+							<img src="{% url advertiser_creative_image creative_key=c.key %}">
 						</a>
 					</div>
 					{% endifequal %}
 					{% ifequal c.ad_type "html" %}
 					{{c.html_name}}
+					<div class="creative">
+					  <iframe src="{% url advertiser_creative_html creative_key=c.key %}" frameborder="0" scrolling="no" width="100%" height="50">
+              <p>Your browser does not support iframes.</p>
+            </iframe>
+					</div>
 					{% endifequal %}
 					<div class="clearall"></div>
 				</td>

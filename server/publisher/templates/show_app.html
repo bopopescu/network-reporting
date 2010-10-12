@@ -40,6 +40,7 @@
 		Ad Units
 		<div class="toolbar">
       <button onClick="javascript:Toggle.display('add_adunit_box');return false;" class="btn"><span><span>+ New Ad Unit</span></span></button>
+      {% include "range_select.html" %}
 		</div>
 	</h3>
 	<form method="post" action="{% url publisher_create %}" id="add_adunit_box" style="display:none;" class="special_notice">
@@ -69,7 +70,7 @@
 					<th class="numeric">Max Bid</th>
 					<th class="numeric">Impr.</th>
 					<th class="numeric">Clicks</th>
-					<th class="numeric">Cost</th>
+					<th class="numeric">Revenue</th>
 				</thead>
 			  {% for s in app.sites %}
 				<tr>

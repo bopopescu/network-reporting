@@ -43,6 +43,13 @@ DIV.toolbar {
 	white-space: nowrap;
 }
 
+.graphselect {
+  position: absolute;
+  right: 5px;
+  top: 2px;
+  font-weight: normal;
+}
+
 .hashtag {
 }
 
@@ -362,7 +369,7 @@ textarea {
 
 .creative {
 	font-size: 13px;
-	width: 250px;
+	width: 320px;
 	border: 1px solid #aaa;
 	padding: 5px;
 }
@@ -466,7 +473,7 @@ button.pill-l span {
   border-right-width:0;
   }
 button.pill-l span span {
-  border-right:1px solid #bbb;
+  border-right:4px solid #bbb;
   }
 button.pill-c span {
   border-right-style:none;
@@ -491,6 +498,10 @@ button.pill-r span {
   }
 .btn:focus, .btn:active {
   outline:none; /* doesn't seem to be respected for <button>, only <a> */
+  }
+.btn_active span {
+  background-position:0 -400px;
+  outline:none;
   }
 
 /* use if one button should be the 'primary' button */

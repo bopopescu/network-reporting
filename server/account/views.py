@@ -34,8 +34,6 @@ class RequestHandler(object):
         if not self.account:  
           self.account = Account.current_account()
           
-          
-        logging.warning(self.account.key().name())  
         if request.method == "GET":
             return self.get(*args,**kwargs)
         elif request.method == "POST":
@@ -69,6 +67,7 @@ def logout(request,*args,**kwargs):
   
 def test(request,*args,**kwargs):
   import time
+  asdf
   time.sleep(2)
   html = """<html> 
   	<head>

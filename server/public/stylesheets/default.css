@@ -374,6 +374,20 @@ background-image: url('/images/a36.gif');
 background-image: url('/images/a38.gif');
 }
 
+#helptext
+{
+  position:absolute;
+  top:-11px;
+  width: 800px;
+  text-align: center;
+}
+#helptext div {
+  border: 1px #006688 solid;
+  background-color: #EEEEFF;
+  padding: 3px 15px;
+  color: #006688;
+  display: inline-block;
+}
 #footer
 {
 position: relative;

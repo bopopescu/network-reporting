@@ -1,10 +1,15 @@
 application: mopub-inc
-version: 34-stats
+version: 36-live
 runtime: python
 api_version: 1
 default_expiration: "10d"
 
 handlers:
+  
+- url: /robots.txt
+  static_files: public/robots.txt
+  upload: public/robots.txt
+
 - url: /static
   static_dir: static
     
@@ -13,6 +18,9 @@ handlers:
 
 - url: /stylesheets
   static_dir: public/stylesheets
+
+- url: /iblogpro
+  static_dir: public/iblogpro
 
 - url: /js
   static_dir: public/javascripts
@@ -28,8 +36,12 @@ handlers:
   script: ad_server/main.py
 
 - url: /stats.*
-  script: $PYTHON_LIB/google/appengine/ext/appstats/ui.py
-
+  # script: $PYTHON_LIB/google/appengine/ext/appstats/ui.py
+  script: appstats.py
 
 - url: /.*
   script: main.py
+
+skip_files:
+  - ^(.*/)?django\.zip
+

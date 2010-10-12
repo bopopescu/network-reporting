@@ -4,6 +4,10 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"> 
 	<head> 
 		<title>MoPub - Mobile Ad Server</title> 
+		<link rel="image_src" href="/images/favicon.png" />
+		<link rel="icon" type="image/png" href="/images/favicon.png"/>
+		<link rel="shortcut icon" type="image/png" href="/images/favicon.png"/>
+		
 		<style type="text/css"> 
 			body {
 				font-family: Verdana, Arial, sans-serif;
@@ -98,33 +102,29 @@
 			  color:#000;
 			  }
 		</style> 
-		<!--script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.3/jquery.min.js"></script> 
-		<link rel="stylesheet" type="text/css" href="./fancybox/jquery.fancybox.css" media="screen" /> 
-		<script type="text/javascript" src="./fancybox/jquery.fancybox-1.2.4.pack.js"></script> 
-		<script type="text/javascript"> 
-			$(document).ready(function() {
-				$("a.screenshot").fancybox();
-			});
-		</script--> 
 	</head> 
  
 	<body>		
 		<div style="margin: 150px auto;"> 
 			<div style="text-align: center;"> 
-				<img src="/images/mopub-logo-white.png" width=572 height=255 alt="MoPub"/> 
+				<img src="/images/mopub-orange-black.png" alt="MoPub" width=389 height=98/> 
 				<p class="big"> 
 					Control your mobile ad inventory.
 				</p>
 				<ul class="big" style="width:250px; margin: 0 auto; "> 
 					<li>Get more users</li><li>  Make more money</li> <li>  Stats that matter  </li>
 				</ul> 
-				<p style="margin-top: 80px;"> 
-					Enter your email address to be part of our private beta.
-				</p> 
-				<form method="post" action="/splash/join/"> 
-					<input type="text" name="email_address" size=30 style="color:#aaa;" onfocus="this.value='';this.style['color']='#000';" value="Email"/>
-					<button type="button" class="btn" onclick="form.submit()"><span><span>Request Beta Access</span></span></button> <p>{{m}}</p>
-				</form> 
+				{% if m %}
+					<p style="margin-top: 80px;">{{m}}</p>
+				{% else %}
+					<p style="margin-top: 80px;"> 
+						Enter your email address to be part of our private beta.
+					</p> 
+					<form method="post" action="/splash/join/"> 
+						<input type="text" name="email_address" size=30 style="color:#aaa;" onfocus="this.value=''; this.style['color']='#000'; " value="Email"/>
+						<button type="button" class="btn" onclick="form.submit()" id="sub"><span><span>Request Beta Access</span></span></button>
+					</form> 
+				{% endif %}
 			</div> 
 			
 			<p style="margin: 105px 0; text-align:center;"> 

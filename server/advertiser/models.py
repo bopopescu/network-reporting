@@ -5,7 +5,7 @@ from google.appengine.ext.db import polymodel
 # A campaign.  Campaigns have budgetary and time based restrictions.  
 # 
 class Campaign(db.Model):
-  name = db.StringProperty()
+  name = db.StringProperty(required=True)
   description = db.TextProperty()
   campaign_type = db.StringProperty(choices=['gtee', 'promo', 'network'], default="network")
 
@@ -28,8 +28,15 @@ class Campaign(db.Model):
     else: return 1
     
 class AdGroup(db.Model):
-  campaign = db.ReferenceProperty(Campaign)
+  campaign = db.ReferenceProperty(Campaign,collection_name="adgroups")
   name = db.StringProperty()
+  
+  # daily budget
+  budget = db.FloatProperty() 
+  
+  # start and end dates 
+  start_date = db.DateProperty()
+  end_date = db.DateProperty()
   
   created = db.DateTimeProperty(auto_now_add=True)
 
@@ -38,16 +45,23 @@ class AdGroup(db.Model):
   network_type = db.StringProperty(choices=["adsense", "iAd", "admob"])
 
   bid = db.FloatProperty()
-  bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpc")
+  bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpm")
 
   # state of this ad group
   active = db.BooleanProperty(default=True)
   deleted = db.BooleanProperty(default=False)
   
-  
   # percent of users to be targetted
   percent_users = db.FloatProperty(default=100.0)
 
+  # frequency caps
+  minute_frequency_cap = db.IntegerProperty(default=0)
+  hourly_frequency_cap = db.IntegerProperty(default=0)
+  daily_frequency_cap = db.IntegerProperty(default=0)
+  weekly_frequency_cap = db.IntegerProperty(default=0)
+  monthly_frequency_cap = db.IntegerProperty(default=0)
+  lifetime_frequency_cap = db.IntegerProperty(default=0)
+  
   # all keyword and category bids are tracked here
   # categories use the category:games convention
   # if any of the input keywords match the n-grams here then we 
@@ -96,6 +110,7 @@ class AdGroup(db.Model):
   active_app = db.StringListProperty(default=['any'])
   
   country = db.StringProperty()
+  region = db.StringProperty()
   state = db.StringProperty()
   city = db.StringProperty()
   
@@ -120,9 +135,6 @@ class AdGroup(db.Model):
   # platform_name=X
   device_predicates = db.StringListProperty(default=["platform_name=*"])
   
-  def __cmp__(self,other):
-    return self.key().__cmp__(other.key())
-  
   def default_creative(self):
     c = None
     if self.network_type == 'adsense': c = AdSenseCreative(ad_type="adsense", format_predicates=["format=*"])
@@ -134,15 +146,23 @@ class AdGroup(db.Model):
   
   def __repr__(self):
     return "AdGroup:'%s'" % self.name
+    
+  @property
+  def geographic_predicates(self):
+    return self.geo_predicates
 
 class Creative(polymodel.PolyModel):
-  ad_group = db.ReferenceProperty(AdGroup)
+  ad_group = db.ReferenceProperty(AdGroup,collection_name="creatives")
 
   active = db.BooleanProperty(default=True)
   deleted = db.BooleanProperty(default=False)
 
   # the creative type helps the ad server render the right thing if the creative wins the auction
   ad_type = db.StringProperty(choices=["text", "image", "iAd", "adsense", "admob", "html", "clear"], default="text")
+
+  # tracking pixel
+  tracking_url = db.StringProperty()
+  
 
   # destination URLs
   url = db.StringProperty()
@@ -171,7 +191,7 @@ class Creative(polymodel.PolyModel):
     return 0.01
 
   def __repr__(self):
-    return "Creative{ad_type=%s, eCPM=%.02f}" % (self.ad_type, self.e_cpm())
+    return "Creative{ad_type=%s, eCPM=%.02f ,key_name=%s}" % (self.ad_type, self.e_cpm(),self.key().id_or_name())
 
 class TextCreative(Creative):
   # text ad properties

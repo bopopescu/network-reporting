@@ -53,10 +53,10 @@
 				</td>
 			</tr>
 
-			<tr><td colspan="2"><h4>Ad Group Targeting</h4> 
+			<tr><td colspan="2"><h4>Targeting</h4> 
 				<p>Your bids will be matched with available inventory by matching keywords or 
 					matching placements in your existing applications.</p></td></tr>
-			<tr><th>Placements</th>
+			<tr><th>Ad Units</th>
 				<td><ul style="overflow:auto; height:100px; list-style: none;">
 					{% for s in sites %}
 							<li style="margin-left: 0;">
@@ -83,39 +83,52 @@
 				</td>
 			</tr>
 			<tr>
-				<th>User</th>
+				<th>Frequency Caps</th>
 				<td>
-					<select name="active_users">
-						{% for u in user_types %}
-						<option value="{{u.0}}" {% if u.2%}selected{% endif %}>{{u.1}}</option>
-						{% endfor %}
-					</select>
-					of 
-					<select name="active_apps">
-						<option value="any">Any</option>
-						{% for s in sites %}
-						<option value="{{s.key}}">{{s.name}}</option>
-						{% endfor %}
-					</select>
+					<input type="checkbox" disabled="true"> Set per user frequency caps</input>
 				</td>
-			</tr>			
+			</tr>
+			
+			<tr>
+				<th>Goal</th>
+				<td>
+					<input type="text" name="percent_users" value="{{f.instance.percent_users}}" size=5/> % of all <select name="budget_type"><option>Users</option><option>Requests</option></select></td>
+			</tr>
+			
+			{# <tr> #}
+			{# 	<th>User</th> #}
+			{# 	<td> #}
+			{# 		<select name="active_users"> #}
+			{# 			{% for u in user_types %} #}
+			{# 			<option value="{{u.0}}" {% if u.2%}selected{% endif %}>{{u.1}}</option> #}
+			{# 			{% endfor %} #}
+			{# 		</select> #}
+			{# 		of  #}
+			{# 		<select name="active_apps"> #}
+			{# 			<option value="any">Any</option> #}
+			{# 			{% for s in sites %} #}
+			{# 			<option value="{{s.key}}">{{s.name}}</option> #}
+			{# 			{% endfor %} #}
+			{# 		</select> #}
+			{# 	</td> #}
+			{# </tr>			 #}
 			<tr>
 				<th>Keywords</th>
 				<td>
-					<textarea rows="4" cols="40" name="keywords">{% for k in a.keywords %}{{k}}{% endfor %}</textarea>
+					<textarea rows="4" cols="40" name="keywords">{{a.keywords|join:"&#10;"}}</textarea>
 				</td>
 			</tr>
 			<tr><th>Location</th>
 				<td>
 					<table>
 						<tr>
-							<td>Country</td><td><input type="text" name="country" value="{{a.country}}"/></td>
+							<td>Country</td><td><input type="text" name="country" value="{{a.country|default_if_none:""}}"/></td>
 						</tr>
 						<tr>	
-							<td><input name="geo" type="radio"/> State/Province</td><td><input type="text" name="state" value="{{a.state}}"/></td>
+							<td><input name="geo" type="radio"/> State/Province</td><td><input type="text" name="state" value="{{a.state|default_if_none:""}}"/></td>
 						</tr>
 						<tr>
-							<td><input name="geo" type="radio" checked="checked"/> City</td><td><input type="text" name="city" value="{{a.city}}"/></td>
+							<td><input name="geo" type="radio" checked="checked"/> City</td><td><input type="text" name="city" value="{{a.city|default_if_none:""}}"/></td>
 						</tr>
 					</table>
 				</td>

@@ -10,19 +10,29 @@
 			<a href="{% url publisher_generate %}?id={{site.key}}">Get Code Snippet</a>
 			|
 			<a href="{% url publisher_update %}?id={{site.key}}">Edit {{site.name}}</a>
+			<div class="graphselect">
+        <button class="btn btn_active pill-l" onClick="show_today(this);"><span><span>Today</span></span></button>
+        <button class="btn pill-r" onClick="show_yesterday(this);"><span><span>Yesterday</span></span></button>
+      </div>
 		</div>
 	</h3>
   <table class="rollups">
     <tr>
-      <td class="rollup rollup_selected" onClick="show_graph_imp(this);"><b>Impressions</b><br/>{{impression_count|withsep}}</td>
-      <td class="rollup" onClick="show_graph_clk(this);"><b>Clicks</b><br/>{{click_count|withsep}} ({{ctr|percentage}})</td>      <td class="rollup"><b>Revenue (est.)</b><br/>{{today.revenue|currency}}</td>
+      <td class="rollup rollup_selected" onClick="show_graph_imp(this);"><b>Impressions</b><br/><div class="data_today">{{today.impression_count|withsep}}</div><div class="data_yesterday" style="display:none;">{{yesterday.impression_count|withsep}}</div></td>
+      <td class="rollup" onClick="show_graph_clk(this);"><b>Clicks</b><br/><div class="data_today">{{today.click_count|withsep}} ({{today.ctr|percentage}})</div><div class="data_yesterday" style="display:none;">{{yesterday.click_count|withsep}} ({{yesterday.ctr|percentage}})</div></td>      	
+	    <td class="rollup" onClick="show_graph_rev(this);"><b>Revenue (est.)</b><br/><div class="data_today">{{today.revenue|currency}}</div><div class="data_yesterday" style="display:none;">{{yesterday.revenue|currency}}</div></td>
+	    <td class="rollup" onClick="show_graph_users(this);"><b>Users</b><br/><div class="data_today">{{today.unique_user_count|withsep}}</div><div class="data_yesterday" style="display:none;">{{yesterday.unique_user_count|withsep}}</div></td>
     </tr>
-  </table> 
+  </table>
 
-	<img id="chart_img" src="{{chart_url_imp}}" width=800 height=200 style="padding: 5px 0 10px 0;"/>
-<!--	
+	<img id="chart_img" src="{{chart_urls.imp}}" width=580 height=200 style="padding: 5px 0 10px 0;"/>
+	{% if pie_chart_urls %}
+	<img id="pie_chart_img" src="{{pie_chart_urls.imp}}" width=200 height=200 style="padding: 5px 0 10px 0; float:right;"/>
+	{% endif %}
+	
   <h3> 
     Campaigns
+    {% include "range_select.html" %}
   </h3> 
 
   <table class="wide"> 
@@ -32,17 +42,16 @@
         <th class="numeric">Clicks</th> 
         <th class="numeric">Cost</th> 
       </thead> 
-		{% for c in campaigns %}
+		{% for ag in site.adgroups %}
       <tr> 
-        <td><a href="#">{{c.name}}</a></td> 
-        <td class="numeric">0</td> 
-        <td class="numeric">0 (0.0%)</td> 
-        <td class="numeric">$0.00</td> 
+        <td><a href="/campaigns/adgroup/{{ag.key}}">{{ag.name}}</a></td> 
+        <td class="numeric">{{ag.stats.impression_count|withsep}}</td> 
+        <td class="numeric">{{ag.stats.click_count|withsep}} ({{ag.stats.ctr|percentage}})</td> 
+        <td class="numeric">{{ag.stats.revenue|currency}}</td> 
       </tr> 
 		{% endfor %}
   </table> 
   <p></p>
--->
 
   <h3> 
     Daily Counts
@@ -56,7 +65,7 @@
 			<th class="numeric">CTR</th>
 			</tr>
 		</thead>
-		{% for s in stats %}
+		{% for s in site.all_stats %}
 		<tr>
 			<td>{{s.date|format_date}}</td>
 			<td class="numeric">{{s.impression_count}}</td>
@@ -66,9 +75,9 @@
 		{% endfor %}
 		<tr>
 			<td><strong>Total</strong></td>
-			<td class="numeric">{{impression_count}}</td>
-			<td class="numeric">{{click_count}}</td>
-			<td class="numeric">{{ctr|percentage}}</td>
+			<td class="numeric">{{site.stats.impression_count}}</td>
+			<td class="numeric">{{site.stats.click_count}}</td>
+			<td class="numeric">{{site.stats.ctr|percentage}}</td>
 		</tr>
 		
 	</table>

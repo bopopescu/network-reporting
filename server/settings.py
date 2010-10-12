@@ -16,11 +16,11 @@
 
 from common.ragendja.settings_pre import *
 
-DEBUG = True
-TEMPLATE_DEBUG = DEBUG
+DEFAULT_FROM_EMAIL = 'olp@mopub.com'
+SERVER_EMAIL = 'olp@mopub.com'
 
 ADMINS = (
-    # ('Your Name', 'your_email@domain.com'),
+    ('Bug Team', 'bugs@mopub.com'),
 )
 
 MANAGERS = ADMINS
@@ -79,6 +79,7 @@ TEMPLATE_LOADERS = (
 )
 
 MIDDLEWARE_CLASSES = (
+'common.ragendja.middleware.ErrorMiddleware',
 'google.appengine.ext.appstats.recording.AppStatsDjangoMiddleware',
 'django.contrib.sessions.middleware.SessionMiddleware',
 # 'appengine_django.auth.middleware.AuthenticationMiddleware',
@@ -99,7 +100,7 @@ MIDDLEWARE_CLASSES = (
 TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.auth',
     'django.core.context_processors.debug',
-    'django.core.context_processors.i18n',
+    # 'django.core.context_processors.i18n',
     'common.ragendja.auth.context_processors.google_user'
 #    'django.core.context_processors.media',  # 0.97 only.
    # 'django.core.context_processors.request',
@@ -131,6 +132,21 @@ INSTALLED_APPS = (
 
 IGNORE_APP_URLSAUTO = ('website')
 
-WHITELIST_EMAILS = ('test@example.com','lamen@user.com','nafisjamal@gmail.com','jim.e.payne@gmail.com','bryan.h.atwood@gmail.com','nafisjamal@mopub.com','batwood@mopub.com','jpayne@mopub.com','test2@example.com')
+WHITELIST_EMAILS = (
+  'test@example.com',
+  'test2@example.com',
+  'lamen@user.com',
+  'nafisjamal@gmail.com',
+  'jim.e.payne@gmail.com',
+  'bryan.h.atwood@gmail.com',
+  'nafisjamal@mopub.com',
+  'batwood@mopub.com',
+  'jpayne@mopub.com',
+  'test2@example.com',
+  'batwood@mopub-inc.com',
+  'rudro@pixar.com',
+  'ra.roath@mac.com',
+  'akshay.kothari@gmail.com',
+  'jon@todoroo.com')
 
 from common.ragendja.settings_post import *

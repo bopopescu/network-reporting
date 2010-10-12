@@ -17,11 +17,11 @@
 		<tr>
 			<td class="rollup rollup_selected" onClick="show_graph_imp(this);"><b>Impressions</b><br/>{{today.impression_count|withsep}}</td>
 			<td class="rollup" onClick="show_graph_clk(this);"><b>Clicks</b><br/>{{today.click_count|withsep}} ({{today.ctr|percentage}})</td>
-			<td class="rollup"><b>Revenue</b><br/>{{today.revenue|currency}}</td>
+			<td class="rollup" onClick="show_graph_rev(this);"><b>Revenue</b><br/>{{today.revenue|currency}}</td>
 		</tr>
 	</table>
 	
-	<img id="chart_img" src="{{chart_url_imp}}" width=780 height=200 style="padding: 5px 0 10px 0;"/>
+	<img id="chart_img" src="{{chart_urls.imp}}" width=780 height=200 style="padding: 5px 0 10px 0;"/>
 	
 	<h3>Settings</h3>
 	
@@ -32,13 +32,18 @@
 				{% ifequal campaign.campaign_type "promo" %}Promotional{% endifequal %}
 				{% ifequal campaign.campaign_type "network" %}Network{% endifequal %}
 			</td></tr>
-			<tr><th>Budget</th><td class="numeric">{{campaign.budget|currency}}</td></tr>
+			{% ifnotequal campaign.campaign_type "network" %}
+				<tr><th>Budget</th><td class="numeric">{{campaign.budget|currency}}</td></tr>
+			{% else %}
+				<tr><th>Budget</th><td class="numeric">Unlimited</td></tr>
+				<tr><th>Start Date/End Date</th><td class="numeric">Forever</td></tr>
+			{% endifnotequal %}
 	</table>
 	
 	<h3>
 		Ad Groups
 		<div class="toolbar">
-			<button type="button" class="btn"><a href="{% url campaign_adgroup_new campaign_key=campaign.key%}"><span><span>Create Ad Group</span></span></a></button>
+			<button onClick="location.href='{% url campaign_adgroup_new campaign_key=campaign.key %}'" class="btn"><span><span>+ New Ad Group</span></span></a></button>
 		</div>
 	</h3>
 	

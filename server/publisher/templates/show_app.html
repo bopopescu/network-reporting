@@ -10,17 +10,23 @@
 			<a href="{% url publisher_app_update %}?id={{app.key}}">
 				Edit App
 			</a>
+    <div class="graphselect">
+      <button class="btn btn_active pill-l" onClick="show_today(this);"><span><span>Today</span></span></button>
+      <button class="btn pill-r" onClick="show_yesterday(this);"><span><span>Yesterday</span></span></button>
+    </div>
 		</div>
 	</h3>
   <table class="rollups">
     <tr>
-      <td class="rollup rollup_selected" onClick="show_graph_imp(this);"><b>Impressions</b><br/>{{today.impression_count|withsep}}</td>
-      <td class="rollup" onClick="show_graph_clk(this);"><b>Clicks</b><br/>{{today.click_count|withsep}} ({{today.ctr|percentage}})</td>      <td class="rollup"><b>Revenue (est.)</b><br/>{{today.revenue|currency}}</td>
+      <td class="rollup rollup_selected" onClick="show_graph_imp(this);"><b>Impressions</b><br/><div class="data_today">{{today.impression_count|withsep}}</div><div class="data_yesterday" style="display:none;">{{yesterday.impression_count|withsep}}</div></td>
+      <td class="rollup" onClick="show_graph_clk(this);"><b>Clicks</b><br/><div class="data_today">{{today.click_count|withsep}} ({{today.ctr|percentage}})</div><div class="data_yesterday" style="display:none;">{{yesterday.click_count|withsep}} ({{yesterday.ctr|percentage}})</div></td>      	
+	    <td class="rollup" onClick="show_graph_rev(this);"><b>Revenue (est.)</b><br/><div class="data_today">{{today.revenue|currency}}</div><div class="data_yesterday" style="display:none;">{{yesterday.revenue|currency}}</div></td>
+	    <td class="rollup" onClick="show_graph_users(this);"><b>Users</b><br/><div class="data_today">{{today.unique_user_count|withsep}}</div><div class="data_yesterday" style="display:none;">{{yesterday.unique_user_count|withsep}}</div></td>
     </tr>
-  </table> 
-	<img id="chart_img" src="{{chart_url_imp}}" width=580 height=200 style="padding: 5px 0 10px 0;"/>
-	{% if pie_chart_url_imp %}
-	<img id="pie_chart_img" src="{{pie_chart_url_imp}}" width=200 height=200 style="padding: 5px 0 10px 0; float:right;"/>
+  </table>
+	<img id="chart_img" src="{{chart_urls.imp}}" width=580 height=200 style="padding: 5px 0 10px 0;"/>
+	{% if pie_chart_urls.imp %}
+	<img id="pie_chart_img" src="{{pie_chart_urls.imp}}" width=200 height=200 style="padding: 5px 0 10px 0; float:right;"/>
 	{% endif %}
 
   <h3>Settings</h3> 
@@ -34,6 +40,7 @@
 		Ad Units
 		<div class="toolbar">
       <button onClick="javascript:Toggle.display('add_adunit_box');return false;" class="btn"><span><span>+ New Ad Unit</span></span></button>
+      {% include "range_select.html" %}
 		</div>
 	</h3>
 	<form method="post" action="{% url publisher_create %}" id="add_adunit_box" style="display:none;" class="special_notice">
@@ -77,7 +84,7 @@
 			  {% endfor %}
 				<tr>
 					<td colspan=8>
-						<p></p><input type='submit' name='delete' value='Delete Ad Units'/>
+						<p></p><input type='submit' name='delete' value='Hide Ad Units'/>
 					</td>
 				</tr>
 			{% else %}

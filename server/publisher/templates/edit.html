@@ -15,7 +15,7 @@
 				<th>Name</th><td><input type='text' name="name" size="30" value="{{site.name}}"/></td>
 			</tr>
 			<tr>
-				<th>Description</th><td><textarea name="description" cols="50" rows="3">{{site.description}}</textarea></td>
+				<th>Description</th><td><textarea name="description" cols="50" rows="3">{{site.description|default_if_none:""}}</textarea></td>
 			</tr>
 		
 			<tr><td colspan="2"><h4>Ad Properties</h4></td></tr>
@@ -26,7 +26,7 @@
 					</td>
 			</tr>
 			<tr>
-				<th>Default keywords</th><td><textarea name="keywords" cols=50 rows=5>{{site.keywords}}</textarea></td>
+				<th>Default keywords</th><td><textarea name="keywords" cols=50 rows=5>{{site.keywords|default_if_none:""}}</textarea></td>
 			</tr>
 			
 		</table>

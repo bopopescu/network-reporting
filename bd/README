@@ -1,0 +1,131 @@
+Uses feeds from iTunes AppStore to populate a BD spreadsheet.
+
+RSS: http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/sf=143441/limit=300/genre=6018/xml
+
+Genres: 6000-6018
+
+{'content': [{'base': 'http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/sf=143441/limit=1/genre=6000/xml', 'type': 'text/html', 'value': u'<table border="0" width="100%">\n    <tr>\n        <td>\n            <table border="0" width="100%" cellspacing="0" cellpadding="0">\n                <tr valign="top" align="left">\n                    \n                        <td align="center" width="166" valign="top">\n                            <a href="http://itunes.apple.com/us/app/dragon-dictation/id341446764?uo=2&mt=8&uo=2"><img border="0" alt="Dragon Dictation artwork" src="http://a1.phobos.apple.com/us/r1000/057/Purple/35/9c/0c/mzi.vktgowzt.100x100-75.jpg" /></a>\n                        </td>\n                        <td width="10"><img alt="" width="10" height="1" src="http://ax.phobos.apple.com.edgesuite.net/images/spacer.gif" /></td>\n                    \t<td width="95%">\n                    \n                    \n                        <b><a href="http://itunes.apple.com/us/app/dragon-dictation/id341446764?uo=2&mt=8&uo=2">Dragon Dictation</a></b><br />\n                        \n                        \n                        \n                        \n                            <a href="http://itunes.apple.com/us/artist/nuance-communications/id341446767?uo=2">Nuance Communications</a><br />\n                        \n                        \n                       <font size="2">\n\t\t\t\t\t\t\n\t\t\t\t\t\t \t<br />\n                            <b>Genre:</b> <a href="http://itunes.apple.com/us/genre/mobile-software-applications/id6000?mt=8&uo=2">Business</a>\n                        \n\t\t\t\t\t\t \t<br />\n                            <b>Price:</b> Free\n                        \n\t\t\t\t\t\t \t<br />\n                            <b>Release Date:</b> December 08, 2009\n                        \n                        </font>\n                    </td>\n                </tr>\n            </table>\n        </td>\n    </tr>\n    <tr>\n        <td>\n            \n                <font size="2"><br />Dragon Dictation is an easy-to-use voice recognition application powered by Dragon\xae NaturallySpeaking\xae that allows you to easily speak and instantly see your text or email messages. In fact, it\u2019s up to five (5) times faster than typing on the keyboard.<br /><br />With Dragon Dictation you can also dictate status updates directly to your Social Networking applications (Facebook and Twitter) or send notes and reminders to yourself\u2026.all using your voice. \xa0So when you\u2019re on-the-go, stop typing and start speaking \u2013 from short text messages to longer email messages, and anything in between. <br /><br />Dragon Dictation currently supports U.S. English, U.K. English, German and French. Italian and Spanish support will be added later this year.<br /><br />REVIEWS<br /><br />Press Reviews:<br /><br />David Pogue - The New York Times : \u201cI\u2019m finding Dragon to be a much faster, more efficient way to spit out e-mail messages, notes, text messages and Twitter updates. It\u2019s really, really cool.\u201d<br /><br />Mel Martin - TUAW.com: \u201cPut this into the \u2018I didn\u2019t think they could ever get this to work on an iPhone\u2019 category. I\u2019m talking about Dragon Dictation from Nuance, the developers of the very popular Dragon Naturally Speaking for the PC.\u201d<br /><br />Arik Hesseldahl \u2013 BusinessWeek: \u201cFor the last few days I\u2019ve been trying two Nuance iPhone apps, Dragon Dictation and Dragon Search on my iPhone. And while they\u2019re not the first voice search or dictation apps for the iPhone, I certainly like the results I\u2019ve been getting.\u201d<br /><br /><br />iTunes Reviews:<br /><br />Miker55 \u2013 \u201cIt\u2019s understood everything I\u2019ve said. I can\u2019t tell you how many times I\u2019ve been driving and wanted to text someone but couldn\u2019t. This app is great!!!\u201d<br /><br />Twebs \u2013 \u201cFor me Dragon dictation is a game changing application. The accuracy is outstanding and it\u2019s very easy to use. I immediately notified everyone I know with an iPhone to pick up this application while it\u2019s still free.\u201d<br /><br />Redman042 \u2013 \u201cI can\u2019t believe my iPhone can do this. Accuracy is amazingly good and transcription is very fast. You can\u2019t even tell that transcription is being done online. I\u2019m very very impressed.\u201d<br /><br /><br />FEATURES<br /><br />\u2022 Voice-to-text transcriptions that may be sent as SMS, Email, or pasted into any application using the clipboard<br />\u2022 Submit text to Social Networking applications \u2013 Twitter and Facebook<br />\u2022 Convenient editing feature that provides a list of suggested words<br />\u2022 Voice driven correction interface<br /><br />REQUIREMENTS<br /><br />\xa0\xa0\xa01. Dragon Dictation requires network connectivity (WiFi or 3G/EDGE).<br />\xa0\xa0\xa02. Dragon Dictation works on iPad, iPhone, and on second and third generation iPod Touch (external microphone required).<br /><br />PRIVACY POLICY<br /><br />In order to improve recognition accuracy, Dragon Dictation will only upload names from your address book when permission is provided... no emails, addresses, phone numbers, or other personal information are uploaded. This information is not used for any purpose other than improving the usability of the application. Dragon Dictation will also utilize the data in spoken messages collected over time to continuously improve and provide high speech recognition accuracy. All data is stored in secure data centers according to stringent privacy and security standards. \xa0For more information, please view our end user license agreement http://www.dragonmobileapps.com/EULA-dict.html<br /></font><br />\n            \n            \n            \n                <font size="2"> &#169; 2010 Nuance Communications, Inc.</font>\n\t        \n        </td>\n    </tr>\n</table>', 'language': u'en'}], 'updated': u'2010-10-01T17:55:12-07:00', 'rights': u'2010 Nuance Communications, Inc.', 'contenttype': u'', 'updated_parsed': time.struct_time(tm_year=2010, tm_mon=10, tm_mday=2, tm_hour=0, tm_min=55, tm_sec=12, tm_wday=5, tm_yday=275, tm_isdst=0), 'links': [{'href': u'http://itunes.apple.com/us/app/dragon-dictation/id341446764?uo=2&mt=8&uo=2', 'type': u'text/html', 'rel': u'alternate'}, {'assettype': u'preview', 'href': u'http://a1.phobos.apple.com/us/r1000/049/Purple/0b/f6/d7/mzl.frrzpucm.320x480-75.jpg', 'rel': u'enclosure', 'title': u'Preview', 'type': u'image/jpeg', 'im:assettype': u'preview'}], 'title': u'Dragon Dictation - Nuance Communications', 'price': u'Free', 'tags': [{'term': u'Business', 'scheme': u'http://itunes.apple.com/us/genre/mobile-software-applications/id6000?mt=8&uo=2', 'label': u'Business'}], 'summary_detail': {'base': 'http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/sf=143441/limit=1/genre=6000/xml', 'type': 'text/plain', 'value': u'Dragon Dictation is an easy-to-use voice recognition application powered by Dragon\xae NaturallySpeaking\xae that allows you to easily speak and instantly see your text or email messages. In fact, it\u2019s up to five (5) times faster than typing on the keyboard.\n\nWith Dragon Dictation you can also dictate status updates directly to your Social Networking applications (Facebook and Twitter) or send notes and reminders to yourself\u2026.all using your voice. \xa0So when you\u2019re on-the-go, stop typing and start speaking \u2013 from short text messages to longer email messages, and anything in between. \n\nDragon Dictation currently supports U.S. English, U.K. English, German and French. Italian and Spanish support will be added later this year.\n\nREVIEWS\n\nPress Reviews:\n\nDavid Pogue - The New York Times : \u201cI\u2019m finding Dragon to be a much faster, more efficient way to spit out e-mail messages, notes, text messages and Twitter updates. It\u2019s really, really cool.\u201d\n\nMel Martin - TUAW.com: \u201cPut this into the \u2018I didn\u2019t think they could ever get this to work on an iPhone\u2019 category. I\u2019m talking about Dragon Dictation from Nuance, the developers of the very popular Dragon Naturally Speaking for the PC.\u201d\n\nArik Hesseldahl \u2013 BusinessWeek: \u201cFor the last few days I\u2019ve been trying two Nuance iPhone apps, Dragon Dictation and Dragon Search on my iPhone. And while they\u2019re not the first voice search or dictation apps for the iPhone, I certainly like the results I\u2019ve been getting.\u201d\n\n\niTunes Reviews:\n\nMiker55 \u2013 \u201cIt\u2019s understood everything I\u2019ve said. I can\u2019t tell you how many times I\u2019ve been driving and wanted to text someone but couldn\u2019t. This app is great!!!\u201d\n\nTwebs \u2013 \u201cFor me Dragon dictation is a game changing application. The accuracy is outstanding and it\u2019s very easy to use. I immediately notified everyone I know with an iPhone to pick up this application while it\u2019s still free.\u201d\n\nRedman042 \u2013 \u201cI can\u2019t believe my iPhone can do this. Accuracy is amazingly good and transcription is very fast. You can\u2019t even tell that transcription is being done online. I\u2019m very very impressed.\u201d\n\n\nFEATURES\n\n\u2022 Voice-to-text transcriptions that may be sent as SMS, Email, or pasted into any application using the clipboard\n\u2022 Submit text to Social Networking applications \u2013 Twitter and Facebook\n\u2022 Convenient editing feature that provides a list of suggested words\n\u2022 Voice driven correction interface\n\nREQUIREMENTS\n\n\xa0\xa0\xa01. Dragon Dictation requires network connectivity (WiFi or 3G/EDGE).\n\xa0\xa0\xa02. Dragon Dictation works on iPad, iPhone, and on second and third generation iPod Touch (external microphone required).\n\nPRIVACY POLICY\n\nIn order to improve recognition accuracy, Dragon Dictation will only upload names from your address book when permission is provided... no emails, addresses, phone numbers, or other personal information are uploaded. This information is not used for any purpose other than improving the usability of the application. Dragon Dictation will also utilize the data in spoken messages collected over time to continuously improve and provide high speech recognition accuracy. All data is stored in secure data centers according to stringent privacy and security standards. \xa0For more information, please view our end user license agreement http://www.dragonmobileapps.com/EULA-dict.html', 'language': u'en'}, 'summary': u'Dragon Dictation is an easy-to-use voice recognition application powered by Dragon\xae NaturallySpeaking\xae that allows you to easily speak and instantly see your text or email messages. In fact, it\u2019s up to five (5) times faster than typing on the keyboard.\n\nWith Dragon Dictation you can also dictate status updates directly to your Social Networking applications (Facebook and Twitter) or send notes and reminders to yourself\u2026.all using your voice. \xa0So when you\u2019re on-the-go, stop typing and start speaking \u2013 from short text messages to longer email messages, and anything in between. \n\nDragon Dictation currently supports U.S. English, U.K. English, German and French. Italian and Spanish support will be added later this year.\n\nREVIEWS\n\nPress Reviews:\n\nDavid Pogue - The New York Times : \u201cI\u2019m finding Dragon to be a much faster, more efficient way to spit out e-mail messages, notes, text messages and Twitter updates. It\u2019s really, really cool.\u201d\n\nMel Martin - TUAW.com: \u201cPut this into the \u2018I didn\u2019t think they could ever get this to work on an iPhone\u2019 category. I\u2019m talking about Dragon Dictation from Nuance, the developers of the very popular Dragon Naturally Speaking for the PC.\u201d\n\nArik Hesseldahl \u2013 BusinessWeek: \u201cFor the last few days I\u2019ve been trying two Nuance iPhone apps, Dragon Dictation and Dragon Search on my iPhone. And while they\u2019re not the first voice search or dictation apps for the iPhone, I certainly like the results I\u2019ve been getting.\u201d\n\n\niTunes Reviews:\n\nMiker55 \u2013 \u201cIt\u2019s understood everything I\u2019ve said. I can\u2019t tell you how many times I\u2019ve been driving and wanted to text someone but couldn\u2019t. This app is great!!!\u201d\n\nTwebs \u2013 \u201cFor me Dragon dictation is a game changing application. The accuracy is outstanding and it\u2019s very easy to use. I immediately notified everyone I know with an iPhone to pick up this application while it\u2019s still free.\u201d\n\nRedman042 \u2013 \u201cI can\u2019t believe my iPhone can do this. Accuracy is amazingly good and transcription is very fast. You can\u2019t even tell that transcription is being done online. I\u2019m very very impressed.\u201d\n\n\nFEATURES\n\n\u2022 Voice-to-text transcriptions that may be sent as SMS, Email, or pasted into any application using the clipboard\n\u2022 Submit text to Social Networking applications \u2013 Twitter and Facebook\n\u2022 Convenient editing feature that provides a list of suggested words\n\u2022 Voice driven correction interface\n\nREQUIREMENTS\n\n\xa0\xa0\xa01. Dragon Dictation requires network connectivity (WiFi or 3G/EDGE).\n\xa0\xa0\xa02. Dragon Dictation works on iPad, iPhone, and on second and third generation iPod Touch (external microphone required).\n\nPRIVACY POLICY\n\nIn order to improve recognition accuracy, Dragon Dictation will only upload names from your address book when permission is provided... no emails, addresses, phone numbers, or other personal information are uploaded. This information is not used for any purpose other than improving the usability of the application. Dragon Dictation will also utilize the data in spoken messages collected over time to continuously improve and provide high speech recognition accuracy. All data is stored in secure data centers according to stringent privacy and security standards. \xa0For more information, please view our end user license agreement http://www.dragonmobileapps.com/EULA-dict.html', 'releasedate': u'2009-12-08T00:00:00-07:00', 'title_detail': {'base': 'http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/sf=143441/limit=1/genre=6000/xml', 'type': 'text/plain', 'value': u'Dragon Dictation - Nuance Communications', 'language': u'en'}, 'link': u'http://itunes.apple.com/us/app/dragon-dictation/id341446764?uo=2&mt=8&uo=2', 'image': {}, 'duration': u'0', 'rights_detail': {'base': 'http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/sf=143441/limit=1/genre=6000/xml', 'type': 'text/plain', 'value': u'2010 Nuance Communications, Inc.', 'language': u'en'}, 'artist': u'Nuance Communications', 'id': u'http://itunes.apple.com/us/app/dragon-dictation/id341446764?uo=2&mt=8&uo=2', 'enclosures': [{'assettype': u'preview', 'href': u'http://a1.phobos.apple.com/us/r1000/049/Purple/0b/f6/d7/mzl.frrzpucm.320x480-75.jpg', 'rel': u'enclosure', 'title': u'Preview', 'type': u'image/jpeg', 'im:assettype': u'preview'}]}
+
+Output:
+
+	<feed xmlns:im="http://itunes.apple.com/rss" xmlns="http://www.w3.org/2005/Atom" xml:lang="en"> 
+		<id>http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/sf=143441/limit=100/xml</id><title>iTunes Store: Top Free Apps</title><updated>2010-10-01T10:09:37-07:00</updated><link rel="alternate" type="text/html" href="http://itunes.apple.com/WebObjects/MZStore.woa/wa/viewTop?id=38&amp;popId=27"/><link rel="self" href="http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/sf=143441/limit=100/xml"/><icon>http://phobos.apple.com/favicon.ico</icon><author><name>iTunes Store</name><uri>http://www.apple.com/itunes/</uri></author><rights>Copyright 2008 Apple Inc.</rights> 
+		
+			<entry> 
+				<updated>2010-10-01T10:09:37-07:00</updated> 
+				
+					<id>http://itunes.apple.com/us/app/0-03-seconds/id392705022?uo=2&amp;mt=8&amp;uo=2</id> 
+				
+					<title>0.03 seconds - Chien Ming Liang</title> 
+				
+					<summary>Top game in many countries within 2 days after released!
+#1st in Free Apps (US)
+#1st in Free Apps (United Kingdom)
+#1st in Free Apps (Canada)
+#1st in Free Apps (Australia)
+#1st in Free Apps (Singapore)
+#1st in Free Apps (Hong Kong)
+...
+ 
+You definitely won&#39;t want to miss this game!
+ 
+If you think you are fast at iPhone games, wait till you try out 0.03s.
+It measures your reaction time to the milliseconds and pixels. Are you game for this?
+ 
+0.03 seconds is a simple yet additive reaction game that brings you hours of challenges and joy! Feel the perfectionist within you while trying to get 5 stars for each stages.
+ 
+Features:
+- 8 stages x 3 Levels
+- HD graphics optimized for iPhone4
+- Very very difficult to win 5 stars
+- Simple to understand and play
+ 
+ 
+*************************************
+Follow us on Twitter to tweet your high scores or see others players&#39; high scores:
+ 
+    @003s (http://twitter.com/003s)
+*************************************
+ 
+ 
+++++ Watch video reviews of 0.03s on you-tube! ++++
+Simply search &#34;0.03 seconds&#34; on youtube.com
++++++++++++++++++++++++++++++++++++++</summary> 
+				
+					<im:name>0.03 seconds</im:name> 
+				
+					<link rel="alternate" type="text/html" href="http://itunes.apple.com/us/app/0-03-seconds/id392705022?uo=2&amp;mt=8&amp;uo=2"/> 
+				
+					<im:contentType term="Application" label="Application"/> 
+				
+					<category term="Games" scheme="http://itunes.apple.com/us/genre/mobile-software-applications/id6014?mt=8&amp;uo=2" label="Games"/> 
+				
+					<link title="Preview" rel="enclosure" type="image/jpeg" href="http://a1.phobos.apple.com/us/r1000/007/Purple/73/39/24/mzl.adxdxeqr.320x480-75.jpg" im:assetType="preview"><im:duration>0</im:duration></link> 
+				
+					<im:artist href="http://itunes.apple.com/us/artist/chien-ming-liang/id386979032?uo=2">Chien Ming Liang</im:artist> 
+				
+					<im:price amount="0.00000" currency="USD">Free</im:price> 
+				
+					<im:image height="53">http://a1.phobos.apple.com/us/r1000/028/Purple/aa/54/36/mzi.ozdrbmyv.53x53-50.jpg</im:image> 
+				
+					<im:image height="75">http://a1.phobos.apple.com/us/r1000/028/Purple/aa/54/36/mzi.ozdrbmyv.75x75-65.jpg</im:image> 
+				
+					<im:image height="100">http://a1.phobos.apple.com/us/r1000/028/Purple/aa/54/36/mzi.ozdrbmyv.100x100-75.jpg</im:image> 
+				
+					<rights>2010 orangenose</rights> 
+				
+					<im:releaseDate label="September 26, 2010">2010-09-26T23:14:08-07:00</im:releaseDate> 
+				
+				
+					<content type="html">&lt;table border=&quot;0&quot; width=&quot;100%&quot;&gt;
+    &lt;tr&gt;
+        &lt;td&gt;
+            &lt;table border=&quot;0&quot; width=&quot;100%&quot; cellspacing=&quot;0&quot; cellpadding=&quot;0&quot;&gt;
+                &lt;tr valign=&quot;top&quot; align=&quot;left&quot;&gt;
+                    
+                        &lt;td align=&quot;center&quot; width=&quot;166&quot; valign=&quot;top&quot;&gt;
+                            &lt;a href=&quot;http://itunes.apple.com/us/app/0-03-seconds/id392705022?uo=2&amp;mt=8&amp;uo=2&quot;&gt;&lt;img border=&quot;0&quot; alt=&quot;0.03 seconds artwork&quot; src=&quot;http://a1.phobos.apple.com/us/r1000/028/Purple/aa/54/36/mzi.ozdrbmyv.100x100-75.jpg&quot;&gt;&lt;/a&gt;
+                        &lt;/td&gt;
+                        &lt;td width=&quot;10&quot;&gt;&lt;img alt=&quot;&quot; width=&quot;10&quot; height=&quot;1&quot; src=&quot;http://ax.phobos.apple.com.edgesuite.net/images/spacer.gif&quot;&gt;&lt;/td&gt;
+                    	&lt;td width=&quot;95%&quot;&gt;
+                    
+                    
+                        &lt;b&gt;&lt;a href=&quot;http://itunes.apple.com/us/app/0-03-seconds/id392705022?uo=2&amp;mt=8&amp;uo=2&quot;&gt;0.03 seconds&lt;/a&gt;&lt;/b&gt;&lt;br/&gt;
+                        
+                        
+                        
+                        
+                            &lt;a href=&quot;http://itunes.apple.com/us/artist/chien-ming-liang/id386979032?uo=2&quot;&gt;Chien Ming Liang&lt;/a&gt;&lt;br/&gt;
+                        
+                        
+                       &lt;font size=&quot;2&quot; face=&quot;Helvetica,Arial,Geneva,Swiss,SunSans-Regular&quot;&gt;
+						
+						 	&lt;br/&gt;
+                            &lt;b&gt;Genre:&lt;/b&gt; &lt;a href=&quot;http://itunes.apple.com/us/genre/mobile-software-applications/id6014?mt=8&amp;uo=2&quot;&gt;Games&lt;/a&gt;
+                        
+						 	&lt;br/&gt;
+                            &lt;b&gt;Price:&lt;/b&gt; Free
+                        
+						 	&lt;br/&gt;
+                            &lt;b&gt;Release Date:&lt;/b&gt; September 26, 2010
+                        
+                        &lt;/font&gt;
+                    &lt;/td&gt;
+                &lt;/tr&gt;
+            &lt;/table&gt;
+        &lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td&gt;
+            
+                &lt;font size=&quot;2&quot; face=&quot;Helvetica,Arial,Geneva,Swiss,SunSans-Regular&quot;&gt;&lt;br/&gt;Top game in many countries within 2 days after released!&lt;br/&gt;#1st in Free Apps (US)&lt;br/&gt;#1st in Free Apps (United Kingdom)&lt;br/&gt;#1st in Free Apps (Canada)&lt;br/&gt;#1st in Free Apps (Australia)&lt;br/&gt;#1st in Free Apps (Singapore)&lt;br/&gt;#1st in Free Apps (Hong Kong)&lt;br/&gt;...&lt;br/&gt;&lt;br/&gt;You definitely won&amp;#39;t want to miss this game!&lt;br/&gt;&lt;br/&gt;If you think you are fast at iPhone games, wait till you try out 0.03s.&lt;br/&gt;It measures your reaction time to the milliseconds and pixels. Are you game for this?&lt;br/&gt;&lt;br/&gt;0.03 seconds is a simple yet additive reaction game that brings you hours of challenges and joy! Feel the perfectionist within you while trying to get 5 stars for each stages.&lt;br/&gt;&lt;br/&gt;Features:&lt;br/&gt;- 8 stages x 3 Levels&lt;br/&gt;- HD graphics optimized for iPhone4&lt;br/&gt;- Very very difficult to win 5 stars&lt;br/&gt;- Simple to understand and play&lt;br/&gt;&lt;br/&gt;&lt;br/&gt;*************************************&lt;br/&gt;Follow us on Twitter to tweet your high scores or see others players&amp;#39; high scores:&lt;br/&gt;&lt;br/&gt;    @003s (http://twitter.com/003s)&lt;br/&gt;*************************************&lt;br/&gt;&lt;br/&gt;&lt;br/&gt;++++ Watch video reviews of 0.03s on you-tube! ++++&lt;br/&gt;Simply search &amp;#34;0.03 seconds&amp;#34; on youtube.com&lt;br/&gt;+++++++++++++++++++++++++++++++++++++&lt;/font&gt;&lt;br/&gt;
+            
+            
+            
+                &lt;font size=&quot;2&quot; face=&quot;Helvetica,Arial,Geneva,Swiss,SunSans-Regular&quot;&gt; &amp;#169; 2010 orangenose&lt;/font&gt;
+	        
+        &lt;/td&gt;
+    &lt;/tr&gt;
+&lt;/table&gt;</content> 
+				
+			</entry>

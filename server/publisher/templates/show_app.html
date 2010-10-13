@@ -18,7 +18,7 @@
 	</h3>
   <table class="rollups">
     <tr>
-      <td class="rollup rollup_selected" onClick="show_graph_imp(this);"><b>Impressions</b><br/><div class="data_today">{{today.impression_count|withsep}}</div><div class="data_yesterday" style="display:none;">{{yesterday.impression_count|withsep}}</div></td>
+      <td class="rollup rollup_selected" onClick="show_graph_imp(this);"><b>Requests</b><br/><div class="data_today">{{today.request_count|withsep}}</div><div class="data_yesterday" style="display:none;">{{yesterday.impression_count|withsep}}</div></td>
       <td class="rollup" onClick="show_graph_clk(this);"><b>Clicks</b><br/><div class="data_today">{{today.click_count|withsep}} ({{today.ctr|percentage}})</div><div class="data_yesterday" style="display:none;">{{yesterday.click_count|withsep}} ({{yesterday.ctr|percentage}})</div></td>      	
 	    <td class="rollup" onClick="show_graph_rev(this);"><b>Revenue (est.)</b><br/><div class="data_today">{{today.revenue|currency}}</div><div class="data_yesterday" style="display:none;">{{yesterday.revenue|currency}}</div></td>
 	    <td class="rollup" onClick="show_graph_users(this);"><b>Users</b><br/><div class="data_today">{{today.unique_user_count|withsep}}</div><div class="data_yesterday" style="display:none;">{{yesterday.unique_user_count|withsep}}</div></td>
@@ -102,7 +102,7 @@
 					<th></th>
 					<th>Name</th>
 					<th class="numeric">Max Bid</th>
-					<th class="numeric">Impr.</th>
+					<th class="numeric">Req.</th>
 					<th class="numeric">Clicks</th>
 					<th class="numeric">Revenue</th>
 				</thead>
@@ -111,7 +111,7 @@
 					<td><input type="checkbox" name="id" value="{{s.key}}"/></td>
 					<td><a href="{% url publisher_show %}?id={{ s.key }} %}">{{s.name}}</a><br><span style="color:#888888"> &nbsp; ID: {{s.key}}</span></td>
 					<td class="numeric">{{s.bid|currency}}</td>
-					<td class="numeric">{{s.stats.impression_count}}</td>
+					<td class="numeric">{{s.stats.request_count}}</td>
 					<td class="numeric">{{s.stats.click_count}} ({{s.stats.ctr|percentage}})</td>
 					<td class="numeric">{{s.stats.revenue|currency}}</td>
 				</tr>

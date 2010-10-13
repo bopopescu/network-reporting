@@ -23,7 +23,7 @@
 		
   <table class="rollups">
     <tr>
-      <td class="rollup rollup_selected" onClick="show_graph_imp(this);"><b>Impressions</b><br/><div class="data_today">{{today.impression_count|withsep}}</div><div class="data_yesterday" style="display:none;">{{yesterday.impression_count|withsep}}</div></td>
+      <td class="rollup rollup_selected" onClick="show_graph_imp(this);"><b>Requests</b><br/><div class="data_today">{{today.request_count|withsep}}</div><div class="data_yesterday" style="display:none;">{{yesterday.impression_count|withsep}}</div></td>
       <td class="rollup" onClick="show_graph_clk(this);"><b>Clicks</b><br/><div class="data_today">{{today.click_count|withsep}} ({{today.ctr|percentage}})</div><div class="data_yesterday" style="display:none;">{{yesterday.click_count|withsep}} ({{yesterday.ctr|percentage}})</div></td>      	
 	    <td class="rollup" onClick="show_graph_rev(this);"><b>Revenue (est.)</b><br/><div class="data_today">{{today.revenue|currency}}</div><div class="data_yesterday" style="display:none;">{{yesterday.revenue|currency}}</div></td>
 	    <td class="rollup" onClick="show_graph_users(this);"><b>Users</b><br/><div class="data_today">{{today.unique_user_count|withsep}}</div><div class="data_yesterday" style="display:none;">{{yesterday.unique_user_count|withsep}}</div></td>
@@ -42,7 +42,7 @@
 			<tr>
 			<th width="50px">App</th>
 			<th>Ad Unit</th>
-			<th class="numeric">Impressions</th>
+			<th class="numeric">Requests</th>
 			<th class="numeric">Clicks</th>
 			<th class="numeric">CTR</th>
 			</tr>
@@ -50,7 +50,7 @@
 		{% for a in apps %}
 			<tr class="highlighted">
 				<td colspan="2"><a href="{% url publisher_app_show %}?id={{a.key}}"><b>{{a.name}}</b></a> ({{a.app_type}})</td>
-				<td class="numeric"><strong>{{a.stats.impression_count|withsep}}</strong></td>
+				<td class="numeric"><strong>{{a.stats.request_count|withsep}}</strong></td>
 				<td class="numeric"><strong>{{a.stats.click_count|withsep}}</strong></td>
 				<td class="numeric"><strong>{{a.stats.ctr|percentage}}</strong></td>
 			</tr>
@@ -58,7 +58,7 @@
 			<tr>
         <td></td>
 				<td><a href="{% url publisher_show %}?id={{s.key}}">{{s.name}}</a></td>
-				<td class="numeric">{{s.stats.impression_count|withsep}}</td>
+				<td class="numeric">{{s.stats.request_count|withsep}}</td>
 				<td class="numeric">{{s.stats.click_count|withsep}}</td>
 				<td class="numeric">{{s.stats.ctr|percentage}}</td>
 			</tr>

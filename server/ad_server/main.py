@@ -378,7 +378,8 @@ class AdHandler(webapp.RequestHandler):
       logging.warning("user_adgroup_hourly_key: %s"%user_adgroup_hourly_key)
       memcache.offset_multi({user_adgroup_daily_key:1,user_adgroup_hourly_key:1}, key_prefix='', namespace=None, initial_value=0)
       
-      logging.info('OLP ad-auction {"id": "%s", "c": "%s", "request_id": "%s", "udid": "%s"}' % (id, c.key(), request_id, udid))
+      if str(self.request.headers['User-Agent']) not in CRAWLERS:
+        logging.info('OLP ad-auction {"id": "%s", "c": "%s", "request_id": "%s", "udid": "%s"}' % (id, c.key(), request_id, udid))
 
       # create an ad clickthrough URL
       ad_click_url = "http://%s/m/aclk?id=%s&c=%s&req=%s" % (DOMAIN,id, c.key(), request_id)

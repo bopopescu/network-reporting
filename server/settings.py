@@ -127,7 +127,7 @@ INSTALLED_APPS = (
      'publisher',
      'advertiser',
      'website',
-     'bizops',
+     # 'bizops',
      'admin',
 )
 

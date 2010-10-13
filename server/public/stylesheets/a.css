@@ -473,7 +473,7 @@ button.pill-l span {
   border-right-width:0;
   }
 button.pill-l span span {
-  border-right:4px solid #bbb;
+  border-right:1px solid #bbb;
   }
 button.pill-c span {
   border-right-style:none;

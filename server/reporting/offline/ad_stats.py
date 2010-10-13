@@ -525,8 +525,8 @@ def main(logfile="/tmp/logfile",app_id="mopub-inc",host="34-stats.latest.mopub-i
   cnt = 0
   while cnt < all_object_count:
     sub_objs = all_objects[cnt:cnt+BULK_NUMBER]
-    print sub_objs
-    # db.put(sub_objs)
+    # print sub_objs
+    db.put(sub_objs)
     cnt += BULK_NUMBER  
 
 if __name__ == '__main__':

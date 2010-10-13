@@ -69,10 +69,10 @@ class AdStats:
       if logline_dict and str(logline_dict['client']) not in self.CRAWLERS:
         for proc, regex in props.items():
           if re.compile(regex).match(logline_dict["path"]) != None:
-            try:
-              globals()[proc]().process(logline_dict)
-            except Exception, e:
-              print e  
+            # try:
+            globals()[proc]().process(logline_dict)
+            # except Exception, e:
+            #   asdf 
             
       # if this is an OLP info log
       olp_dict = self.parse_olp(line)
@@ -295,8 +295,21 @@ class PubRequestCounter(StatsCounter):
 class PubGeoRequestCounter(StatsCounter):
   def process(self, d):
     stats = self.get_site_stats(self.get_id_for_dict(d))
+    country_code = None
     if stats:
-      stats.geo_request_dict.update(us=stats.geo_request_dict.get("us",0)+1)
+      pat = re.compile(r'Mac OS X; (.*?)\)') #TODO: make work for non android
+      match = pat.search(d['client'])
+      if match:
+        country_code = match.group(1).split('-')[1].lower()
+      else:
+        pat = re.compile(r'Android.*; (.*?);')
+        match = pat.search(d['client'])
+        if match:
+          country_code = match.group(1).split('-')[1].lower()
+        
+    if country_code: 
+      stats.geo_request_dict.update({country_code:stats.geo_request_dict.get(country_code,0)+1})
+        
 
   
 # class PubUniqueUserCounter(StatsCounter):

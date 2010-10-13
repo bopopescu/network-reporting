@@ -2,7 +2,7 @@ PATH=$PATH:~/google_appengine
 truncate -s 0 /tmp/logfile
 
 echo N47935 | appcfg.py --version=$1 --no_cookies --email=olp@mopub.com --passin request_logs ~/mopub/server - >> /tmp/logfile 
-echo N47935 | appcfg.py --version=$1 --no_cookies --email=olp@mopub.com --passin --severity=1 request_logs ~/mopub/server - >> /tmp/logfile
+echo N47935 | appcfg.py --version=$1 --no_cookies --email=olp@mopub.com --passin --severity=1 request_logs ~/mopub/server - | grep OLP >> /tmp/logfile
 
 echo N47935 | appcfg.py --version=$2 --no_cookies --email=olp@mopub.com --passin request_logs ~/mopub/server - >> /tmp/logfile 
-echo N47935 | appcfg.py --version=$2 --no_cookies --email=olp@mopub.com --passin --severity=1 request_logs ~/mopub/server - >> /tmp/logfile
+echo N47935 | appcfg.py --version=$2 --no_cookies --email=olp@mopub.com --passin --severity=1 request_logs ~/mopub/server - | grep OLP >> /tmp/logfile

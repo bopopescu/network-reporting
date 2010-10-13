@@ -33,30 +33,48 @@
 <script type='text/javascript' src='http://www.google.com/jsapi'></script>
 <script type='text/javascript'>
   google.load('visualization', '1', {'packages': ['geomap']});
-  google.setOnLoadCallback(drawMap);
-  
-  function drawMap() {
-    var data = new google.visualization.DataTable();
-    data.addRows(6);
-    data.addColumn('string', 'Country');
-    data.addColumn('number', 'Popularity');
-    data.setValue(0, 0, 'Germany');
-    data.setValue(0, 1, 200);
-    data.setValue(1, 0, 'United States');
-    data.setValue(1, 1, 10);
-    data.setValue(2, 0, 'Brazil');
-    data.setValue(2, 1, 400);
-    data.setValue(3, 0, 'Canada');
-    data.setValue(3, 1, 500);
-    data.setValue(4, 0, 'France');
-    data.setValue(4, 1, 600);
-    data.setValue(5, 0, 'RU');
-    data.setValue(5, 1, 700);
-    
-    var options = {'width':'800px','colors':[0xFFD78F, 0xFFC352, 0xFFAF02, 0xFF9A01]};
+  google.setOnLoadCallback(initMap);
 
-    var geomap = new google.visualization.GeoMap($('map_canvas'));
-    geomap.draw(data, options);
+  var geomap;  
+  var options;
+  var data_imp;
+  var data_clk;
+  var data_rev;
+  
+  function drawMap(type) {
+    switch (type) {
+      case 'imp':
+        geomap.draw(data_imp, options);
+        break;
+      case 'clk':
+        geomap.draw(data_clk, options);
+        break;
+      case 'rev':
+        geomap.draw(data_rev, options);
+        break;
+    }
+  }
+  function initMap() {
+    data_imp = new google.visualization.DataTable();
+    data_imp.addRows(6);
+    data_imp.addColumn('string', 'Country');
+    data_imp.addColumn('number', 'Impressions');
+    data_imp.setValue(0, 0, 'Germany');
+    data_imp.setValue(0, 1, 200);
+    data_imp.setValue(1, 0, 'United States');
+    data_imp.setValue(1, 1, 10);
+    data_imp.setValue(2, 0, 'Brazil');
+    data_imp.setValue(2, 1, 400);
+    data_imp.setValue(3, 0, 'Canada');
+    data_imp.setValue(3, 1, 500);
+    data_imp.setValue(4, 0, 'France');
+    data_imp.setValue(4, 1, 600);
+    data_imp.setValue(5, 0, 'RU');
+    data_imp.setValue(5, 1, 700);
+
+    options = {'width':'800px','colors':[0xFFD78F, 0xFFC352, 0xFFAF02, 0xFF9A01]};
+    geomap = new google.visualization.GeoMap($('map_canvas'));
+    drawMap('imp');
   }
 </script>
 	

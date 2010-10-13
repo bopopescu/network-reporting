@@ -14,6 +14,7 @@ from google.appengine.ext.db import djangoforms
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
+from django.utils import simplejson
 from common.ragendja.template import render_to_response, JSONResponse
 
 # from common.ragendja.auth.decorators import google_login_required as login_required
@@ -86,7 +87,10 @@ class AppIndexHandler(RequestHandler):
     today = SiteStats()
     if len(apps) == 0:
       return HttpResponseRedirect(reverse('publisher_app_create'))
-      
+    
+    # Test querying all apps
+    site = Site.gql("where app_key IN :1 and deleted = :2", apps, False).fetch(50)
+    
     for a in apps:
       a.stats = SiteStats()
       a.sites = Site.gql("where app_key = :1 and deleted = :2", a, False).fetch(50)   
@@ -163,14 +167,30 @@ class AppIndexGeoHandler(RequestHandler):
     days = SiteStats.lastdays(14)
     
     apps = App.gql("where account = :1 and deleted = :2", self.account, False).fetch(50)
-    today = SiteStats()
     if len(apps) == 0:
       return HttpResponseRedirect(reverse('publisher_app_create'))
 
-    return render_to_response(self.request,'publisher/index_geo.html', 
-      {'apps': apps,    
-       'account': self.account})
+    geo_imp = {}
+    geo_clk = {}
+    geo_rev = {}
+    for a in apps:
+      a.sites = Site.gql("where app_key = :1 and deleted = :2", a, False).fetch(50)       
+      if len(a.sites) > 0:
+        for s in a.sites:
+          s.all_stats = SiteStats.sitestats_for_days(s, days)
+          #for stats in s.all_stats:
+            #stats.geo_imp = simplejson.loads(stats.geo_impressions)
+            #stats.geo_clk = simplejson.loads(stats.geo_clicks)
+            #stats.geo_rev = simplejson.loads(stats.geo_revenue)
+            #geo_imp = dict( (n, geo_imp.get(n,0)+stats.geo_imp.get(n,0)) for n in set(geo_imp)|set(stats.geo_imp) )
+            #geo_clk = dict( (n, geo_clk.get(n,0)+stats.geo_clk.get(n,0)) for n in set(geo_clk)|set(stats.geo_clk) )
+            #geo_rev = dict( (n, geo_rev.get(n,0)+stats.geo_rev.get(n,0)) for n in set(geo_rev)|set(stats.geo_rev) )
 
+    return render_to_response(self.request,'publisher/index_geo.html', 
+      {'geo_imp': geo_imp,    
+       'geo_clk': geo_clk,
+       'geo_rev': geo_rev,
+       'account': self.account})
 
 @whitelist_login_required     
 def index_geo(request,*args,**kwargs):

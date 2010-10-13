@@ -69,10 +69,10 @@ class AdStats:
       if logline_dict and str(logline_dict['client']) not in self.CRAWLERS:
         for proc, regex in props.items():
           if re.compile(regex).match(logline_dict["path"]) != None:
-            # try:
-            globals()[proc]().process(logline_dict)
-            # except Exception, e:
-            #   asdf 
+            try:
+              globals()[proc]().process(logline_dict)
+            except Exception, e:
+              print e
             
       # if this is an OLP info log
       olp_dict = self.parse_olp(line)
@@ -168,8 +168,6 @@ class StatsCounter(object):
         return None
     except Exception, e:
       print 'StatsCounter.get_site_stats()',e
-      # import traceback
-      # traceback.print_exc(file=sys.stdout)
       return None
 
   def get_qualifier_stats(self, qualifier_key, date=datetime.datetime.now().date()):
@@ -224,6 +222,7 @@ class StatsCounter(object):
   def all_stats(clz):
     return all_stats
 
+## App level processors 
 
 class AppRequestCounter(StatsCounter):
   def process(self, d):
@@ -248,11 +247,7 @@ class AppImpressionCounter(StatsCounter):
   def process(self, d):
     ad_unit_key_string = self.get_id_for_dict(d)
     if ad_unit_key_string:
-      try:
-        ad_unit_key = db.Key(ad_unit_key_string)
-      except Exception, e:
-        print e
-        return
+      ad_unit_key = db.Key(ad_unit_key_string)
       ad_unit = AdUnitCache.get(ad_unit_key)
       if ad_unit:
         app_key = ad_unit.app_key.key()
@@ -260,9 +255,6 @@ class AppImpressionCounter(StatsCounter):
         stats = self.get_qualifier_stats(app_key)
         if stats:
           stats.impression_count += 1
-          if 'udid' in d["params"]:
-            udid = d["params"]["udid"]
-            stats.add_user(udid)  
           
 class AppClickCounter(StatsCounter):
   def process(self, d):
@@ -281,10 +273,6 @@ class AppClickCounter(StatsCounter):
         stats = self.get_qualifier_stats(app_key)
         if stats:
           stats.click_count += 1
-          if 'udid' in d["params"]:
-            udid = d["params"]["udid"]
-            stats.add_user(udid)  
-
 #
 # PubRequestCounter - counts reqs on publisher ad units
 #
@@ -293,9 +281,6 @@ class PubRequestCounter(StatsCounter):
     stats = self.get_site_stats(self.get_id_for_dict(d))
     if stats:
       stats.request_count += 1
-      if 'udid' in d["params"]:
-        udid = d["params"]["udid"]
-        stats.add_user(udid)
 
 class PubGeoRequestCounter(StatsCounter):
   def process(self, d):
@@ -315,16 +300,14 @@ class PubGeoRequestCounter(StatsCounter):
     if country_code: 
       stats.geo_request_dict.update({country_code:stats.geo_request_dict.get(country_code,0)+1})
         
+class PubUniqueUserCounter(StatsCounter):
+   def process(self,d):
+     stats = self.get_site_stats(self.get_id_for_dict(d))  
+     if stats:
+       if 'udid' in d["params"]:
+         udid = d["params"]["udid"]
+         stats.add_user(udid)
 
-  
-# class PubUniqueUserCounter(StatsCounter):
-#   def process(self,d):
-#     stats = self.get_site_stats(self.get_id_for_dict(d))  
-#     if stats:
-#       if 'udid' in d["params"]:
-#         udid = d["params"]["udid"]
-#         stats.add_user(udid)
-# 
 # PubImpressionCounter - counts impressions  on pub ad units
 # 1:1284681678.531128 OLP ad-auction agltb3B1Yi1pbmNyDAsSBFNpdGUYudkDDA agltb3B1Yi1pbmNyEAsSCENyZWF0aXZlGJGQBAw 9093a6dd16c74324a64d3edf388f62ae
 #
@@ -340,17 +323,16 @@ class PubRevenueCounter(StatsCounter):
     creative_key_string = d["params"].get("c",None)
     if creative_key_string:
       creative_key = db.Key(creative_key_string)
+
       # TODO: Have a parent-child relationship such that the key name already tells us the parent key
       creative = CreativeCache.get(creative_key)
       adgroup_key = creative.ad_group.key()
       adgroup = AdGroupCache.get(adgroup_key)
 
-      # ad_group = AdGroupCache.get(self.)
       if stats:
         # increment revenue if the bid strategy is cpm
         if adgroup.bid_strategy == 'cpm':
           stats.revenue += adgroup.bid*1.0/1000.0               
-
 
 #
 # PubLegacyImpressionCounter - counts imprs on publisher ad units
@@ -360,7 +342,6 @@ class PubLegacyImpressionCounter(StatsCounter):
     stats = self.get_site_stats(self.get_id_for_dict(d))
     if stats:
       stats.impression_count += 1
-
   
 #
 # PubClickCounter - counts clicks
@@ -422,8 +403,29 @@ class CampaignImpressionCounter(StatsCounter):
         stats_q.impression_count += 1
         adgroup_stats_q.impression_count += 1
         campaign_stats_q.impression_count += 1
-        
-        #tallies up the unique users for each particular stat
+
+class CampaignUniqueUserCounter(StatsCounter):
+  def process(self, d):
+    creative_key_string = d["params"].get("c",None)
+    if creative_key_string:
+      creative_key = db.Key(creative_key_string)
+      creative = CreativeCache.get(creative_key)
+      if creative:
+        adgroup_key = creative.ad_group.key()
+        adgroup = AdGroupCache.get(adgroup_key)
+        campaign_key = adgroup.campaign.key()
+
+        stats = self.get_qualifier_stats(creative_key)
+        adgroup_stats = self.get_qualifier_stats(adgroup_key)
+        campaign_stats = self.get_qualifier_stats(campaign_key)
+
+        site_key_string = d["params"].get("id")
+        site_key = db.Key(site_key_string)
+        stats_q = self.get_site_stats_with_qualifier(site_key, creative_key)
+        adgroup_stats_q = self.get_site_stats_with_qualifier(site_key, adgroup_key)
+        campaign_stats_q = self.get_site_stats_with_qualifier(site_key, campaign_key)
+  
+        # tallies up the unique users for each particular stat
         for stat in [stats,adgroup_stats,campaign_stats,stats_q,adgroup_stats_q,campaign_stats_q]:
           if 'udid' in d["params"]:
             udid = d["params"]["udid"]

@@ -2,6 +2,7 @@
 {% extends "publisher/base.html" %}
 
 {% load filters %}
+{% load cc_filter %}
 
 {% block content %}
 	<h3>		
@@ -43,6 +44,9 @@
   
   function drawMap(type) {
     switch (type) {
+      case 'req':
+        geomap.draw(data_req, options);
+        break;
       case 'imp':
         geomap.draw(data_imp, options);
         break;
@@ -55,6 +59,17 @@
     }
   }
   function initMap() {
+    data_req = new google.visualization.DataTable();
+    data_req.addRows({{ geo_req|length }});
+    data_req.addColumn('string', 'Country');
+    data_req.addColumn('number', 'Requests');
+    data_req.addColumn('string', 'Title');
+    {% for key, value in geo_req.iteritems %}
+    data_req.setValue({{ forloop.counter0 }}, 0, '{{ key }}');
+    data_req.setValue({{ forloop.counter0 }}, 1, {{ value }});
+    data_req.setValue({{ forloop.counter0 }}, 2, '{{ key|print_country }}');
+    {% endfor %}
+    
     data_imp = new google.visualization.DataTable();
     data_imp.addRows(6);
     data_imp.addColumn('string', 'Country');
@@ -74,8 +89,23 @@
 
     options = {'width':'800px','colors':[0xFFD78F, 0xFFC352, 0xFFAF02, 0xFF9A01]};
     geomap = new google.visualization.GeoMap($('map_canvas'));
-    drawMap('imp');
+    drawMap('req');
   }
 </script>
+<table class="wide">
+	<thead>
+		<tr>
+		<th>Country</th>
+		<th class="numeric">Requests</th>
+		</tr>
+	</thead>
+	{% for key, value in geo_req.iteritems %}
+		<tr>
+			<td>{{key|print_country}}</td>
+			<td class="numeric">{{value|withsep}}</td>
+		</tr>
+	{% endfor %}
+</table>
+
 	
 {% endblock %}

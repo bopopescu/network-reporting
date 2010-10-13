@@ -72,9 +72,9 @@ class SiteStats(db.Model):
         self._geo_request_dict = {}
     return self._geo_request_dict
 
-  def put(self,*arg,**kwargs):
+  def put(self,*args,**kwargs):
     from django.utils import simplejson
-    self._geo_requests_json = simplejson.dumps(getattr(self,'_geo_request_dict'),{})
+    self._geo_requests_json = simplejson.dumps(getattr(self,'_geo_request_dict',{}))
     return super(SiteStats,self).put(*args,**kwargs)
     
   @classmethod

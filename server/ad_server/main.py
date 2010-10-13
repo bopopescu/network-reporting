@@ -111,7 +111,7 @@ class AdAuction(object):
     # ad_groups = filter(lambda a: a.campaign.active and (a.campaign.start_date >= SiteStats.today() if a.campaign.start_date else True) and (a.campaign.end_date <= SiteStats.today() if a.campaign.end_date else True), ad_groups)
     logging.warning("removed non running campaigns, now: %s" % ad_groups)
     
-    logging.warning("adgroup keywords: %s, query keywords: %s"%(a.keywords,keywords))
+    # logging.warning("adgroup keywords: %s, query keywords: %s"%(a.keywords,keywords))
     # ad group request-based targeting exclusions
     ad_groups = [a for a in ad_groups 
                     if not a.keywords or set(keywords).intersection(a.keywords) > set()]

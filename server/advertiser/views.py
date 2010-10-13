@@ -61,7 +61,7 @@ def gen_graph_url(series, days, title):
 class IndexHandler(RequestHandler):
   def get(self):
     days = SiteStats.lastdays(14)
-    
+
     campaigns = Campaign.gql("where u = :1 and deleted = :2", self.account.user, False).fetch(100)
     today = SiteStats()
     for c in campaigns:
@@ -113,7 +113,10 @@ class AdGroupIndexHandler(RequestHandler):
     days = SiteStats.lastdays(14)
 
     campaigns = Campaign.gql("where u = :1 and deleted = :2", self.account.user, False).fetch(100)
-    adgroups = AdGroup.gql("where campaign in :1 and deleted = :2", [x.key() for x in campaigns], False).fetch(100)
+    if campaigns:
+      adgroups = AdGroup.gql("where campaign in :1 and deleted = :2", [x.key() for x in campaigns], False).fetch(100)
+    else:
+      adgroups = []
     logging.info(campaigns)
     
     today = SiteStats()
@@ -139,7 +142,7 @@ class AdGroupIndexHandler(RequestHandler):
     chart_urls['rev'] = gen_graph_url(revenue, days, "Total+Revenue")
 
     promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], adgroups)
-    garauntee_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee'], adgroups)
+    guarantee_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee'], adgroups)
     network_campaigns = filter(lambda x: x.campaign.campaign_type in ['network'], adgroups)
 
     help_text = None
@@ -152,7 +155,7 @@ class AdGroupIndexHandler(RequestHandler):
       {'adgroups':adgroups, 
        'today': today,
        'chart_urls': chart_urls,
-       'gtee': garauntee_campaigns,
+       'gtee': guarantee_campaigns,
        'promo': promo_campaigns,
        'network': network_campaigns,
        'helptext':help_text })
@@ -214,15 +217,21 @@ class CreateAdGroupHandler(RequestHandler):
     f = AdGroupForm(data=self.request.POST,instance=adgroup)
     adgroup = f.save(commit=False)
     adgroup.campaign = Campaign.get(db.Key(self.request.POST.get("id")))
-    adgroup.keywords = filter(lambda k: len(k) > 0, self.request.POST.get('keywords').lower().split('\n'))
+    adgroup.keywords = filter(lambda k: len(k) > 0, self.request.POST.get('keywords').lower().replace('\r','\n').split('\n'))
     adgroup.site_keys = map(lambda x: db.Key(x), self.request.POST.getlist('sites'))
     adgroup.put()
      
     # if the campaign is a network type, automatically populate the right creative and go back to
     # campaign page
-    if adgroup.campaign.campaign_type == "network" and not edit:
-      creative = adgroup.default_creative()
-      creative.put()
+    if adgroup.campaign.campaign_type == "network":
+      if not edit:
+        creative = adgroup.default_creative()
+        creative.put()
+      else:
+        creative = Creative.all().filter("ad_group =",adgroup.key()) .get()
+        creative.ad_type = adgroup.network_type
+        creative.put()
+        
       return HttpResponseRedirect(reverse('advertiser_campaign',kwargs={}))
     else:
       return HttpResponseRedirect(reverse('advertiser_campaign',kwargs={}))

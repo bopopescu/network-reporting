@@ -12,5 +12,6 @@ urlpatterns = patterns('publisher.views',
   url(r'^edit/$','app_update',name='publisher_app_update'),
   url(r'^getartwork/$','getartwork',name='publisher_getartwork'),
   url(r'^getstarted/$','getstarted',name='publisher_getstarted'),
+  url(r'^geo$','index_geo',name='publisher_index_geo'),
   url(r'^$','index',name='publisher_index'),
 )

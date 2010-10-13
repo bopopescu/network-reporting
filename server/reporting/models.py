@@ -60,8 +60,13 @@ class SiteStats(db.Model):
   
   @property
   def geo_requests(self):
-    from django.utils import simplejson
-    return simplejson.loads(self._geo_requests_json)
+    if not hasattr(self,'_geo_requests'):
+      from django.utils import simplejson
+      if self._geo_requests_json:
+        self._geo_requests = simplejson.loads(self._geo_requests_json)
+      else:
+        self._geo_requests = {}  
+    return self._geo_requests
   
   @property  
   def geo_request_dict(self):

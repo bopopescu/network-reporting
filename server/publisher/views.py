@@ -170,6 +170,7 @@ class AppIndexGeoHandler(RequestHandler):
     if len(apps) == 0:
       return HttpResponseRedirect(reverse('publisher_app_create'))
 
+    geo_req = {}  
     geo_imp = {}
     geo_clk = {}
     geo_rev = {}
@@ -178,10 +179,11 @@ class AppIndexGeoHandler(RequestHandler):
       if len(a.sites) > 0:
         for s in a.sites:
           s.all_stats = SiteStats.sitestats_for_days(s, days)
-          #for stats in s.all_stats:
+          for stats in s.all_stats:
             #stats.geo_imp = simplejson.loads(stats.geo_impressions)
             #stats.geo_clk = simplejson.loads(stats.geo_clicks)
             #stats.geo_rev = simplejson.loads(stats.geo_revenue)
+            geo_req = dict( (n, geo_req.get(n,0)+stats.geo_requests.get(n,0)) for n in set(geo_req)|set(stats.geo_requests) )
             #geo_imp = dict( (n, geo_imp.get(n,0)+stats.geo_imp.get(n,0)) for n in set(geo_imp)|set(stats.geo_imp) )
             #geo_clk = dict( (n, geo_clk.get(n,0)+stats.geo_clk.get(n,0)) for n in set(geo_clk)|set(stats.geo_clk) )
             #geo_rev = dict( (n, geo_rev.get(n,0)+stats.geo_rev.get(n,0)) for n in set(geo_rev)|set(stats.geo_rev) )
@@ -190,6 +192,7 @@ class AppIndexGeoHandler(RequestHandler):
       {'geo_imp': geo_imp,    
        'geo_clk': geo_clk,
        'geo_rev': geo_rev,
+       'geo_req': geo_req,
        'account': self.account})
 
 @whitelist_login_required     

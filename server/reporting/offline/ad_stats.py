@@ -254,14 +254,15 @@ class AppImpressionCounter(StatsCounter):
         print e
         return
       ad_unit = AdUnitCache.get(ad_unit_key)
-      app_key = ad_unit.app_key.key()
+      if ad_unit:
+        app_key = ad_unit.app_key.key()
         
-      stats = self.get_qualifier_stats(app_key)
-      if stats:
-        stats.impression_count += 1
-        if 'udid' in d["params"]:
-          udid = d["params"]["udid"]
-          stats.add_user(udid)  
+        stats = self.get_qualifier_stats(app_key)
+        if stats:
+          stats.impression_count += 1
+          if 'udid' in d["params"]:
+            udid = d["params"]["udid"]
+            stats.add_user(udid)  
           
 class AppClickCounter(StatsCounter):
   def process(self, d):
@@ -272,13 +273,17 @@ class AppClickCounter(StatsCounter):
       except Exception, e:
         print e
         return
+
+      ad_unit = AdUnitCache.get(ad_unit_key)
+      if ad_unit:
+        app_key = ad_unit.app_key.key()
         
-      stats = self.get_qualifier_stats(app_key)
-      if stats:
-        stats.click_count += 1
-        if 'udid' in d["params"]:
-          udid = d["params"]["udid"]
-          stats.add_user(udid)  
+        stats = self.get_qualifier_stats(app_key)
+        if stats:
+          stats.click_count += 1
+          if 'udid' in d["params"]:
+            udid = d["params"]["udid"]
+            stats.add_user(udid)  
 
 #
 # PubRequestCounter - counts reqs on publisher ad units

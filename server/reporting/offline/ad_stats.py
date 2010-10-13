@@ -352,8 +352,6 @@ class PubClickRevenueCounter(StatsCounter):
 #
 class CampaignImpressionCounter(StatsCounter):
   def process(self, d):
-    print d
-    asdf
     creative_key_string = d["params"].get("c",None)
     if creative_key_string:
       creative_key = db.Key(creative_key_string)

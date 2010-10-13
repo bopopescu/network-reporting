@@ -2,6 +2,7 @@ application: mopub-inc
 version: 36-live
 runtime: python
 api_version: 1
+# default_expiration: "10d"
 
 handlers:
   
@@ -40,3 +41,6 @@ handlers:
 
 - url: /.*
   script: main.py
+
+skip_files:
+- django\.zip

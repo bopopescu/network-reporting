@@ -1,6 +1,6 @@
 from google.appengine.ext import db
 from google.appengine.ext.db import polymodel
-
+from account.models import Account
 #
 # A campaign.  Campaigns have budgetary and time based restrictions.  
 # 
@@ -21,6 +21,7 @@ class Campaign(db.Model):
   
   # who owns this
   u = db.UserProperty() 
+  account = db.ReferenceProperty(Account)
   t = db.DateTimeProperty(auto_now_add=True)
   
   def delivery(self):
@@ -189,7 +190,10 @@ class Creative(polymodel.PolyModel):
   # TODO: implement this in a better way
   def p_ctr(self):
     return 0.01
-
+    
+  # def __unicode__(self):
+  #   asdf  
+          
   def __repr__(self):
     return "Creative{ad_type=%s, eCPM=%.02f ,key_name=%s}" % (self.ad_type, self.e_cpm(),self.key().id_or_name())
 

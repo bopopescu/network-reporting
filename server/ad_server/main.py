@@ -57,6 +57,10 @@ from reporting.models import *
 CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gzip(gfe)"]
 MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7PnE6cH9_PX7OoeIIr5FjnTA'
 DOMAIN = 'ads.mopub.com'
+
+
+# TODO: Logging is fucked up with unicode characters
+
 # DOMAIN = 'localhost:8080'
 #
 # Ad auction logic
@@ -84,7 +88,7 @@ class AdAuction(object):
     format_predicates = AdAuction.format_predicates_for_format(kw["format"])
     exclude_params = kw["excluded_creatives"]
     excluded_predicates = AdAuction.exclude_predicates_params(exclude_params)
-    logging.warning("keywords=%s, geo_predicates=%s, device_predicates=%s, format_predicates=%s" % (keywords, geo_predicates, device_predicates, format_predicates))
+    logging.debug("keywords=%s, geo_predicates=%s, device_predicates=%s, format_predicates=%s" % (keywords, geo_predicates, device_predicates, format_predicates))
 
     # Matching strategy: 
     # 1) match all ad groups that match the placement that is in question, sort by priority
@@ -92,33 +96,34 @@ class AdAuction(object):
     # 3) throw out ad groups that restrict by keywords and do not match the keywords
     # 4) throw out ad groups that do not match device and geo predicates
     ad_groups = AdGroup.gql("where site_keys = :1 and active = :2 and deleted = :3", site.key(), True, False).fetch(AdAuction.MAX_ADGROUPS)
-    logging.warning("ad groups: %s" % ad_groups)
+    logging.debug("ad groups: %s" % ad_groups)
     
     # campaign exclusions... budget + time
     ad_groups = [a for a in ad_groups 
                       if a.campaign.budget is None or 
                       SiteStats.stats_for_day(a.campaign, SiteStats.today()).revenue < a.budget]
     # ad_groups = filter(lambda a: a.campaign.budget is None or SiteStats.stats_for_day(a.campaign, SiteStats.today()).revenue < a.campaign.budget, ad_groups)
-    logging.warning("removed over budget, now: %s" % ad_groups)
+    logging.debug("removed over budget, now: %s" % ad_groups)
     ad_groups = [a for a in ad_groups 
                       if a.campaign.active and 
                         (a.campaign.start_date >= SiteStats.today() if a.campaign.start_date else True) 
                         and (a.campaign.end_date <= SiteStats.today() if a.campaign.end_date else True)]
     # ad_groups = filter(lambda a: a.campaign.active and (a.campaign.start_date >= SiteStats.today() if a.campaign.start_date else True) and (a.campaign.end_date <= SiteStats.today() if a.campaign.end_date else True), ad_groups)
-    logging.warning("removed non running campaigns, now: %s" % ad_groups)
+    logging.debug("removed non running campaigns, now: %s" % ad_groups)
     
+    logging.debug("adgroup keywords: %s, query keywords: %s"%(a.keywords,keywords))
     # ad group request-based targeting exclusions
     ad_groups = [a for a in ad_groups 
                     if not a.keywords or set(keywords).intersection(a.keywords) > set()]
     # filter(lambda a: len(a.keywords) == 0 or set(keywords).intersection(a.keywords) > set(), ad_groups)
     
-    logging.warning("removed keyword non-matches, now: %s" % ad_groups)
+    logging.debug("removed keyword non-matches, now: %s" % ad_groups)
     ad_groups = filter(lambda a: set(geo_predicates).intersection(a.geo_predicates) > set(), ad_groups)
     ad_groups = [a for a in ad_groups
                     if set(geo_predicates).intersection(a.geographic_predicates) > set()]
-    logging.warning("removed geo non-matches, now: %s" % ad_groups)
+    logging.debug("removed geo non-matches, now: %s" % ad_groups)
     ad_groups = filter(lambda a: set(device_predicates).intersection(a.device_predicates) > set(), ad_groups)
-    logging.warning("removed device non-matches, now: %s" % ad_groups)
+    logging.debug("removed device non-matches, now: %s" % ad_groups)
     
     # TODO: frequency capping and other user / request based randomizations
     udid = kw["udid"]
@@ -138,21 +143,21 @@ class AdAuction(object):
           
           while players:
             winning_ecpm = max(c.e_cpm() for c in players) if len(players) > 0 else 0
-            logging.warning("auction at priority=%d: %s, max eCPM=%.2f" % (p, players, winning_ecpm))
+            logging.debug("auction at priority=%d: %s, max eCPM=%.2f" % (p, players, winning_ecpm))
       
             # if the winning creative exceeds the ad unit's threshold cpm for the
             # priority level, then we have a winner
             if winning_ecpm >= site.threshold_cpm(p):
               # retain all creatives with comparable eCPM and randomize among them
               winners = filter(lambda x: x.e_cpm() >= winning_ecpm, players)
-              logging.warning("%02d winners: %s"%(len(winners),winners))
+              logging.debug("%02d winners: %s"%(len(winners),winners))
               
               campaigns = set([c.ad_group.campaign for c in winners if not c.ad_group.deleted and not c.ad_group.campaign.deleted])
-              logging.warning("campaigns: %s"%campaigns)
+              logging.debug("campaigns: %s"%campaigns)
               
               # find out which ad groups are eligible
               ad_groups = set([c.ad_group for c in winners])
-              logging.warning("eligible ad_groups: %s" % ad_groups)
+              logging.debug("eligible ad_groups: %s" % ad_groups)
                             
               creatives = [c for c in all_creatives if c.ad_group.key() in [a.key() for a in ad_groups]]
             
@@ -164,7 +169,7 @@ class AdAuction(object):
             
               # calculate the user experiment bucket
               user_bucket = hash(udid+','.join([str(c.ad_group.key()) for ad_group in ad_groups])) % 100 # user gets assigned a number between 0-99 inclusive
-              logging.warning("the user bucket is: #%d",user_bucket)
+              logging.debug("the user bucket is: #%d",user_bucket)
           
               # determine in which ad group the user falls into to
               # otherwise give creatives in the other adgroups a shot
@@ -202,7 +207,7 @@ class AdAuction(object):
                 frequency_cap_dict = {}
               
               winning_ad_groups_new = []
-              logging.warning("winning ad groups: %s"%winning_ad_groups)
+              logging.debug("winning ad groups: %s"%winning_ad_groups)
               for adgroup in winning_ad_groups:
                 user_adgroup_daily_key = memcache_key_for_date(udid,now,adgroup.key())
                 user_adgroup_hourly_key = memcache_key_for_hour(udid,now,adgroup.key())
@@ -221,8 +226,8 @@ class AdAuction(object):
                 else:
                   hourly_impression_cnt = 0  
                   
-                logging.warning("daily imps:%d freq cap: %d"%(daily_impression_cnt,daily_frequency_cap))
-                logging.warning("hourly imps:%d freq cap: %d"%(hourly_impression_cnt,hourly_frequency_cap))
+                logging.debug("daily imps:%d freq cap: %d"%(daily_impression_cnt,daily_frequency_cap))
+                logging.debug("hourly imps:%d freq cap: %d"%(hourly_impression_cnt,hourly_frequency_cap))
                   
                   
                 if (not daily_frequency_cap or daily_impression_cnt < daily_frequency_cap) and \
@@ -230,11 +235,11 @@ class AdAuction(object):
                   winning_ad_groups_new.append(adgroup)
                   
               winning_ad_groups = winning_ad_groups_new
-              logging.warning("winning ad groups after frequency capping: %s"%winning_ad_groups)
+              logging.debug("winning ad groups after frequency capping: %s"%winning_ad_groups)
 
               # if there is a winning/eligible adgroup find the appropriate creative for it
               if winning_ad_groups:
-                logging.warning("winner ad_groups: %s"%winning_ad_groups)
+                logging.debug("winner ad_groups: %s"%winning_ad_groups)
               
                 if winning_ad_groups:
                   winners = [winner for winner in winners if winner.ad_group in winning_ad_groups]
@@ -246,19 +251,19 @@ class AdAuction(object):
           
                   # winner
                   winner = winners[0]
-                  logging.warning("winning creative = %s" % winner)
+                  logging.debug("winning creative = %s" % winner)
                   return winner
                 else:
-                  logging.warning('taking away some players not in %s'%ad_groups)
-                  logging.warning('current players: %s'%players)
+                  logging.debug('taking away some players not in %s'%ad_groups)
+                  logging.debug('current players: %s'%players)
                   players = [c for c in players if not c.ad_group in ad_groups]  
-                  logging.warning('remaining players %s'%players)
+                  logging.debug('remaining players %s'%players)
                   
               else:
-                logging.warning('taking away some players not in %s'%ad_groups)
-                logging.warning('current players: %s'%players)
+                logging.debug('taking away some players not in %s'%ad_groups)
+                logging.debug('current players: %s'%players)
                 players = [c for c in players if not c.ad_group in ad_groups]  
-                logging.warning('remaining players %s'%players)
+                logging.debug('remaining players %s'%players)
                 
 
     # nothing... failed auction
@@ -337,21 +342,22 @@ class AdHandler(webapp.RequestHandler):
     if self.request.get("q"):
       keywords += self.request.get("q").lower().split(',')
     q = keywords
-    logging.warning("keywords are %s" % keywords)
+    logging.debug("keywords are %s" % keywords)
 
     # get format
-    f = self.request.get("f") or "320x50"
+    # f = self.request.get("f") or "320x50" # TODO: remove this default
+    f = "%dx%d"%(int(site.width),int(site.height))
     format = self.FORMAT_SIZES.get(f)
     logging.debug("format is %s (requested '%s')" % (format, f))
     
     # look up lat/lon
     addr = self.rgeocode(self.request.get("ll")) if self.request.get("ll") else ()      
-    logging.warning("geo is %s (requested '%s')" % (addr, self.request.get("ll")))
+    logging.debug("geo is %s (requested '%s')" % (addr, self.request.get("ll")))
     
     # get creative exclusions usually used to exclude iAd because it has already failed
     excluded_creatives = self.request.get("exclude")
     
-    #get udid we should hash it if its not already hashed
+    # TODO: get udid we should hash it if its not already hashed
     udid = self.request.get("udid")
     
     # create a unique request id, but only log this line if the user agent is real
@@ -368,11 +374,12 @@ class AdHandler(webapp.RequestHandler):
     if c:
       user_adgroup_daily_key = memcache_key_for_date(udid,now,c.ad_group.key())
       user_adgroup_hourly_key = memcache_key_for_hour(udid,now,c.ad_group.key())
-      logging.warning("user_adgroup_daily_key: %s"%user_adgroup_daily_key)
-      logging.warning("user_adgroup_hourly_key: %s"%user_adgroup_hourly_key)
+      logging.debug("user_adgroup_daily_key: %s"%user_adgroup_daily_key)
+      logging.debug("user_adgroup_hourly_key: %s"%user_adgroup_hourly_key)
       memcache.offset_multi({user_adgroup_daily_key:1,user_adgroup_hourly_key:1}, key_prefix='', namespace=None, initial_value=0)
       
-      logging.info('OLP ad-auction {"id": "%s", "c": "%s", "request_id": "%s", "udid": "%s"}' % (id, c.key(), request_id, udid))
+      if str(self.request.headers['User-Agent']) not in CRAWLERS:
+        logging.info('OLP ad-auction {"id": "%s", "c": "%s", "request_id": "%s", "udid": "%s"}' % (id, c.key(), request_id, udid))
 
       # create an ad clickthrough URL
       ad_click_url = "http://%s/m/aclk?id=%s&c=%s&req=%s" % (DOMAIN,id, c.key(), request_id)
@@ -397,7 +404,7 @@ class AdHandler(webapp.RequestHandler):
                               </script>
                             </head>
                             <body style="margin: 0;width:${w}px;height:${h}px;" >
-                              <script type="text/javascript">window.googleAfmcRequest = {client: '$client',ad_type: 'text_image', output: 'html', channel: '',format: '$adsense_format',oe: 'utf8',color_border: '336699',color_bg: 'FFFFFF',color_link: '0000FF',color_text: '000000',color_url: '008000',};</script> 
+                              <script type="text/javascript">window.googleAfmcRequest = {client: '$client',ad_type: 'text_image', output: 'html', channel: '$channel_id',format: '$adsense_format',oe: 'utf8',color_border: '336699',color_bg: 'FFFFFF',color_link: '0000FF',color_text: '000000',color_url: '008000',};</script> 
                               <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_afmc_ads.js"></script>  
                               $trackingPixel
                             </body>
@@ -465,9 +472,9 @@ class AdHandler(webapp.RequestHandler):
 
       params = kwargs
       params.update(c.__dict__.get("_entity"))
-
       if c.ad_type == "adsense":
         params.update({"title": ','.join(kwargs["q"]), "adsense_format": format[2], "w": format[0], "h": format[1], "client": kwargs["site"].account.adsense_pub_id})
+        params.update(channel_id=kwargs["site"].adsense_channel_id or '')
         # self.response.headers.add_header("X-Launchpage","http://googleads.g.doubleclick.net")
       elif c.ad_type == "admob":
         params.update({"title": ','.join(kwargs["q"]), "w": format[0], "h": format[1], "client": kwargs["site"].account.admob_pub_id})

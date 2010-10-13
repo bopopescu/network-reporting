@@ -64,8 +64,8 @@ def gen_pie_chart_url(series, title):
   chart_url = "http://chart.apis.google.com/chart?cht=p&chtt=%s&chs=200x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chl=&chdlp=b&chdl=%s" % (
     title,
     ','.join(map(lambda x: str(x["total"]), series)),
-    max(map(lambda x: x.stats.impression_count, [s["app"] for s in series])) * 1.5,
-    max(map(lambda x: x.stats.impression_count, [s["app"] for s in series])) * 1.5,
+    max(map(lambda x: x.stats.request_count, [s["app"] for s in series])) * 1.5,
+    max(map(lambda x: x.stats.request_count, [s["app"] for s in series])) * 1.5,
     '|'.join(map(lambda x: x["app"].name, series[0:2])))
   
   return chart_url
@@ -117,8 +117,8 @@ class AppIndexHandler(RequestHandler):
 
     chart_urls = {}
     # make a line graph showing impressions
-    impressions = [s.impression_count for s in totals]
-    chart_urls['imp'] = gen_chart_url(impressions, days, "Total+Daily+Impressions")
+    impressions = [s.request_count for s in totals]
+    chart_urls['imp'] = gen_chart_url(impressions, days, "Total+Daily+Requests")
     
     # make a line graph showing clicks
     clicks = [s.click_count for s in totals]
@@ -138,7 +138,7 @@ class AppIndexHandler(RequestHandler):
     users_by_app = []
     pie_chart_urls = {}
     for a in apps:
-      impressions_by_app.append({"app": a, "total": a.stats.impression_count})
+      impressions_by_app.append({"app": a, "total": a.stats.request_count})
       clicks_by_app.append({"app": a, "total": a.stats.click_count})
       users_by_app.append({"app": a, "total": a.stats.unique_user_count})
     impressions_by_app.sort(lambda x,y: cmp(y["total"], x["total"])) 
@@ -299,7 +299,7 @@ class ShowAppHandler(RequestHandler):
         
     chart_urls = {}
     # make a line graph showing impressions
-    impressions = [s.impression_count for s in totals]
+    impressions = [s.request_count for s in totals]
     chart_urls['imp'] = gen_chart_url(impressions, days, "Total+Daily+Impressions")
   
     # make a line graph showing clicks
@@ -322,7 +322,7 @@ class ShowAppHandler(RequestHandler):
       clicks_by_site = []
       users_by_site = []
       for s in a.sites:
-        impressions_by_site.append({"app": s, "total": s.stats.impression_count})
+        impressions_by_site.append({"app": s, "total": s.stats.request_count})
         clicks_by_site.append({"app": s, "total": s.stats.click_count})
         users_by_site.append({"app": a, "total": s.stats.unique_user_count})
       impressions_by_site.sort(lambda x,y: cmp(y["total"], x["total"])) 
@@ -387,8 +387,8 @@ class ShowHandler(RequestHandler):
     # chart
     chart_urls = {}
     
-    impressions = [s.impression_count for s in site.all_stats]
-    chart_urls['imp'] = gen_chart_url(impressions, days, "Total+Daily+Impressions")
+    impressions = [s.request_count for s in site.all_stats]
+    chart_urls['imp'] = gen_chart_url(impressions, days, "Total+Daily+Requests")
     
     # make a line graph showing clicks
     clicks = [s.click_count for s in site.all_stats]
@@ -413,7 +413,7 @@ class ShowHandler(RequestHandler):
       clicks_by_ag = []
       users_by_ag = []
       for ag in site.adgroups:
-        impressions_by_ag.append({"app": ag, "total": ag.stats.impression_count})
+        impressions_by_ag.append({"app": ag, "total": ag.stats.request_count})
         clicks_by_ag.append({"app": ag, "total": ag.stats.click_count})
         users_by_ag.append({"app": ag, "total": ag.stats.unique_user_count})
       impressions_by_ag.sort(lambda x,y: cmp(y["total"], x["total"])) 
@@ -460,7 +460,7 @@ class AppUpdateHandler(RequestHandler):
 def app_update(request,*args,**kwargs):
   return AppUpdateHandler()(request,*args,**kwargs)   
 
-class UpdateHandler(RequestHandler):
+class UpdateAdUnitHandler(RequestHandler):
   def get(self):
     c = Site.get(self.request.GET.get("id"))
     f = SiteForm(instance=c)
@@ -476,7 +476,7 @@ class UpdateHandler(RequestHandler):
   
 @whitelist_login_required
 def update(request,*args,**kwargs):
-  return UpdateHandler()(request,*args,**kwargs)   
+  return UpdateAdUnitHandler()(request,*args,**kwargs)   
 
 class GetArtworkHandler(RequestHandler):
   def get(self):

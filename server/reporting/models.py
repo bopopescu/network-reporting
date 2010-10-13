@@ -51,6 +51,31 @@ class SiteStats(db.Model):
   # conversion information
   converted_clicks = db.IntegerProperty()
   conversions = db.IntegerProperty()
+
+  _geo_requests_json = db.StringProperty()
+  _geo_impressions_json = db.StringProperty()
+  _geo_clicks_json = db.StringProperty()
+  _geo_revenues_json = db.StringProperty()
+  _geo_users_json = db.StringProperty()
+  
+  @property
+  def geo_requests(self):
+    from django.utils import simplejson
+    return simplejson.loads(self._geo_requests_json)
+  
+  @property  
+  def geo_request_dict(self):
+    if not hasattr(self,'_geo_request_dict'):
+      if self._geo_requests_json:
+        self._geo_request_dict = self.geo_requests
+      else:
+        self._geo_request_dict = {}
+    return self._geo_request_dict
+
+  def put(self,*arg,**kwargs):
+    from django.utils import simplejson
+    self._geo_requests_json = simplejson.dumps(getattr(self,'_geo_request_dict'),{})
+    return super(SiteStats,self).put(*args,**kwargs)
     
   @classmethod
   def today(c):
@@ -158,7 +183,9 @@ class SiteStats(db.Model):
       conversions = self.conversions + s.conversions if self.conversions and s.conversions else None )
 
   def __repr__(self):
-    return "SiteStats{site=%s, owner=%s(%s), R=%d/I=%d/C=%d/R=%.2f, users=%d}" % (self.site.key() if self.site else "None", self.owner.__class__.__name__ if self.owner else '',self.owner.key() if self.owner else "None", self.request_count, self.impression_count, self.click_count, self.revenue, self.unique_user_count)
+    from django.utils import simplejson
+    self._geo_requests_json = simplejson.dumps(getattr(self,'_geo_request_dict'),{})
+    return "SiteStats{site=%s, owner=%s(%s), R=%d/I=%d/C=%d/R=%.2f, users=%d, geo=%s}" % (self.site.key() if self.site else "None", self.owner.__class__.__name__ if self.owner else '',self.owner.key() if self.owner else "None", self.request_count, self.impression_count, self.click_count, self.revenue, self.unique_user_count,self._geo_requests_json)
 
     
 #

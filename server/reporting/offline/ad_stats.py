@@ -11,6 +11,21 @@ sys.path.append("/home/ubuntu/google_appengine/lib/webob")
 sys.path.append("/home/ubuntu/google_appengine/lib/yaml/lib")
 sys.path.append("/home/ubuntu/google_appengine/lib/fancy_urllib")
 
+
+sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine")
+sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/webob")
+sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/yaml/lib")
+sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/fancy_urllib")
+sys.path.append("/Users/njamal/programs/mopub/server")
+from appengine_django import LoadDjango
+LoadDjango()
+
+import os
+from django.conf import settings
+os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+# Force Django to reload its settings.
+settings._target = None
+
 import wsgiref.handlers, cgi, logging, os, re, datetime, hashlib, traceback, fileinput, urlparse
 from django.utils import simplejson
 from urllib import urlencode
@@ -54,14 +69,20 @@ class AdStats:
       if logline_dict and str(logline_dict['client']) not in self.CRAWLERS:
         for proc, regex in props.items():
           if re.compile(regex).match(logline_dict["path"]) != None:
-            globals()[proc]().process(logline_dict)
+            try:
+              globals()[proc]().process(logline_dict)
+            except Exception, e:
+              print e  
             
       # if this is an OLP info log
       olp_dict = self.parse_olp(line)
       if olp_dict:
         for proc, regex in props.items():
           if re.compile(regex).match(olp_dict["event"]) != None:
-            globals()[proc]().process(olp_dict)
+            try:
+              globals()[proc]().process(olp_dict)
+            except Exception, e:
+              print e  
   
   # takes a log line and parses it, detecting UserAgent, query parameters, origin IP and other information
   #
@@ -251,8 +272,6 @@ class AppClickCounter(StatsCounter):
       except Exception, e:
         print e
         return
-      ad_unit = AdUnitCache.get(ad_unit_key)
-      app_key = ad_unit.app_key.key()
         
       stats = self.get_qualifier_stats(app_key)
       if stats:
@@ -272,6 +291,13 @@ class PubRequestCounter(StatsCounter):
       if 'udid' in d["params"]:
         udid = d["params"]["udid"]
         stats.add_user(udid)
+
+class PubGeoRequestCounter(StatsCounter):
+  def process(self, d):
+    stats = self.get_site_stats(self.get_id_for_dict(d))
+    if stats:
+      stats.geo_request_dict.update(us=stats.geo_request_dict.get("us",0)+1)
+
   
 # class PubUniqueUserCounter(StatsCounter):
 #   def process(self,d):
@@ -352,8 +378,6 @@ class PubClickRevenueCounter(StatsCounter):
 #
 class CampaignImpressionCounter(StatsCounter):
   def process(self, d):
-    print d
-    asdf
     creative_key_string = d["params"].get("c",None)
     if creative_key_string:
       creative_key = db.Key(creative_key_string)
@@ -519,8 +543,8 @@ def main(logfile="/tmp/logfile",app_id="mopub-inc",host="34-stats.latest.mopub-i
   cnt = 0
   while cnt < all_object_count:
     sub_objs = all_objects[cnt:cnt+BULK_NUMBER]
-    print sub_objs
-    # db.put(sub_objs)
+    # print sub_objs
+    db.put(sub_objs)
     cnt += BULK_NUMBER  
 
 if __name__ == '__main__':

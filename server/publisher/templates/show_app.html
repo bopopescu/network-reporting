@@ -18,7 +18,7 @@
 	</h3>
   <table class="rollups">
     <tr>
-      <td class="rollup rollup_selected" onClick="show_graph_imp(this);"><b>Impressions</b><br/><div class="data_today">{{today.impression_count|withsep}}</div><div class="data_yesterday" style="display:none;">{{yesterday.impression_count|withsep}}</div></td>
+      <td class="rollup rollup_selected" onClick="show_graph_imp(this);"><b>Requests</b><br/><div class="data_today">{{today.request_count|withsep}}</div><div class="data_yesterday" style="display:none;">{{yesterday.impression_count|withsep}}</div></td>
       <td class="rollup" onClick="show_graph_clk(this);"><b>Clicks</b><br/><div class="data_today">{{today.click_count|withsep}} ({{today.ctr|percentage}})</div><div class="data_yesterday" style="display:none;">{{yesterday.click_count|withsep}} ({{yesterday.ctr|percentage}})</div></td>      	
 	    <td class="rollup" onClick="show_graph_rev(this);"><b>Revenue (est.)</b><br/><div class="data_today">{{today.revenue|currency}}</div><div class="data_yesterday" style="display:none;">{{yesterday.revenue|currency}}</div></td>
 	    <td class="rollup" onClick="show_graph_users(this);"><b>Users</b><br/><div class="data_today">{{today.unique_user_count|withsep}}</div><div class="data_yesterday" style="display:none;">{{yesterday.unique_user_count|withsep}}</div></td>
@@ -50,7 +50,41 @@
 				<th>Name</th><td><input type='text' name="name" size="30" placeholder="My Ad Unit"/></td>
 			</tr>
 			<tr><th>Description</th>
-				<td><textarea rows="4" cols="40" name="description" placeholder="Top of main page, 320x50"></textarea></td></tr>
+				<td><textarea rows="4" cols="40" name="description" placeholder="Top of main page, 320x50"></textarea></td>
+			</tr>
+			<tr><th>Format</th>
+				<script> 
+					function selectSize(e){ 
+						var adUnitFormat = $F('adUnitFormat'); 
+						var width = 0.0; 
+						var height = 0.0; 
+						if (adUnitFormat == 'banner'){ 
+							width = 320.0; 
+							height = 50.0; 
+						} 
+						else if (adUnitFormat == 'mrect'){ 
+							width = 300.0; 
+							height = 250.0; 
+						} 
+						else if (adUnitFormat == 'fullscreen'){ 
+							width = 320.0; 
+							height = 480.0; 
+						} 
+						$('width').value = width; 
+						$('height').value = height; 
+					} 
+					selectSize(1); 
+				</script> 
+				<td>
+					<select id="adUnitFormat" name="format" onchange="selectSize(this)">
+						<option value="banner">Banner (320x50)</option>
+						<option value="mrect">Medium Rectable (300x250)</option>						
+						<option value="fullscreen">Fullscreen Interstitial (320x480)</option>
+					</select>	
+					<input type="hidden" id="width" name="width" value="320"/>
+					<input type="hidden" id="height" name="height" value="50"/>				
+				</td>
+			</tr>
 			<tr><td colspan="2"><h4>Ad Properties</h4></td></tr>
 				<th>Preferred Ad Type</th><td><select name='ad_type'><option value="image">Text and image</option><option value="text">Text only</option></select></td>
 			<tr><th>Default keywords</th>
@@ -68,7 +102,7 @@
 					<th></th>
 					<th>Name</th>
 					<th class="numeric">Max Bid</th>
-					<th class="numeric">Impr.</th>
+					<th class="numeric">Req.</th>
 					<th class="numeric">Clicks</th>
 					<th class="numeric">Revenue</th>
 				</thead>
@@ -77,7 +111,7 @@
 					<td><input type="checkbox" name="id" value="{{s.key}}"/></td>
 					<td><a href="{% url publisher_show %}?id={{ s.key }} %}">{{s.name}}</a><br><span style="color:#888888"> &nbsp; ID: {{s.key}}</span></td>
 					<td class="numeric">{{s.bid|currency}}</td>
-					<td class="numeric">{{s.stats.impression_count}}</td>
+					<td class="numeric">{{s.stats.request_count}}</td>
 					<td class="numeric">{{s.stats.click_count}} ({{s.stats.ctr|percentage}})</td>
 					<td class="numeric">{{s.stats.revenue|currency}}</td>
 				</tr>

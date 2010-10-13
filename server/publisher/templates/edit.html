@@ -17,6 +17,39 @@
 			<tr>
 				<th>Description</th><td><textarea name="description" cols="50" rows="3">{{site.description|default_if_none:""}}</textarea></td>
 			</tr>
+			<tr><th>Format</th>
+				<script> 
+					function selectSize(e){ 
+						var adUnitFormat = $F('adUnitFormat'); 
+						var width = 0.0; 
+						var height = 0.0; 
+						if (adUnitFormat == 'banner'){ 
+							width = 320.0; 
+							height = 50.0; 
+						} 
+						else if (adUnitFormat == 'mrect'){ 
+							width = 300.0; 
+							height = 250.0; 
+						} 
+						else if (adUnitFormat == 'fullscreen'){ 
+							width = 320.0; 
+							height = 480.0; 
+						} 
+						$('width').value = width; 
+						$('height').value = height; 
+					} 
+				</script> 
+				<td>
+					<select id="adUnitFormat" name="format" onchange="selectSize(this)">
+						<option value="banner" {% ifequal site.format 'banner'%}selected="selected"{% endifequal %}>Banner (320x50)</option>
+						<option value="mrect" {% ifequal site.format 'mrect'%}selected="selected"{% endifequal %}>Medium Rectangle (300x250)</option>						
+						<option value="fullscreen" {% ifequal site.format 'fullscreen'%}selected="selected"{% endifequal %}>Fullscreen Interstitial (320x480)</option>
+					</select>						
+					<input type="hidden" id="width" name="width" value="{{site.width}}"/>
+					<input type="hidden" id="height" name="height" value="{{site.height}}"/>				
+				</td>
+			</tr>
+			
 		
 			<tr><td colspan="2"><h4>Ad Properties</h4></td></tr>
 			<tr>

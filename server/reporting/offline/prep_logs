@@ -1,3 +1,4 @@
 #!/bin/bash
 cat /tmp/request-logfile-1 /tmp/request-logfile-2 > /tmp/logfile
 cat /tmp/info-logfile-1 /tmp/info-logfile-2 | grep OLP >> /tmp/logfile
+

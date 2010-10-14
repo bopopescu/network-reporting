@@ -1,8 +1,8 @@
 #!/bin/bash
 PATH=$PATH:~/google_appengine
 
-echo N47935 | appcfg.py --version=$1 --no_cookies --email=olp@mopub.com --passin --append request_logs ~/mopub/server /tmp/request-logfile-1
-echo N47935 | appcfg.py --version=$1 --no_cookies --email=olp@mopub.com --passin --append --severity=1 request_logs ~/mopub/server /tmp/info-logfile-1
+echo N47935 | appcfg.py --version=$1 --no_cookies --email=olp@mopub.com --passin --append --num_days=1 request_logs ~/mopub/server /tmp/request-logfile-1
+echo N47935 | appcfg.py --version=$1 --no_cookies --email=olp@mopub.com --passin --append --num_days=1 --severity=1 request_logs ~/mopub/server /tmp/info-logfile-1
 
-echo N47935 | appcfg.py --version=$2 --no_cookies --email=olp@mopub.com --passin --append request_logs ~/mopub/server /tmp/request-logfile-2
-echo N47935 | appcfg.py --version=$2 --no_cookies --email=olp@mopub.com --passin --append --severity=1 request_logs ~/mopub/server /tmp/info-logfile-2
+echo N47935 | appcfg.py --version=$2 --no_cookies --email=olp@mopub.com --passin --append --num_days=1 request_logs ~/mopub/server /tmp/request-logfile-2
+echo N47935 | appcfg.py --version=$2 --no_cookies --email=olp@mopub.com --passin --append --num_days=1 --severity=1 request_logs ~/mopub/server /tmp/info-logfile-2

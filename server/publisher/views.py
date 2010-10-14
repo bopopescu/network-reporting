@@ -413,7 +413,7 @@ class ShowHandler(RequestHandler):
       clicks_by_ag = []
       users_by_ag = []
       for ag in site.adgroups:
-        impressions_by_ag.append({"app": ag, "total": ag.stats.request_count})
+        impressions_by_ag.append({"app": ag, "total": ag.stats.impression_count})
         clicks_by_ag.append({"app": ag, "total": ag.stats.click_count})
         users_by_ag.append({"app": ag, "total": ag.stats.unique_user_count})
       impressions_by_ag.sort(lambda x,y: cmp(y["total"], x["total"])) 

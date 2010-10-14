@@ -228,20 +228,17 @@ class AppRequestCounter(StatsCounter):
   def process(self, d):
     ad_unit_key_string = self.get_id_for_dict(d)
     if ad_unit_key_string:
-      try:
-        ad_unit_key = db.Key(ad_unit_key_string)
-        ad_unit = AdUnitCache.get(ad_unit_key)
+      ad_unit_key = db.Key(ad_unit_key_string)
+      ad_unit = AdUnitCache.get(ad_unit_key)
+      if ad_unit:
         app_key = ad_unit.app_key.key()
-      except Exception, e:
-        print e
-        return
         
-      stats = self.get_qualifier_stats(app_key)
-      if stats:
-        stats.request_count += 1
-        if 'udid' in d["params"]:
-          udid = d["params"]["udid"]
-          stats.add_user(udid)
+        stats = self.get_qualifier_stats(app_key)
+        if stats:
+          stats.request_count += 1
+          if 'udid' in d["params"]:
+            udid = d["params"]["udid"]
+            stats.add_user(udid)
 
 class AppImpressionCounter(StatsCounter):          
   def process(self, d):
@@ -260,12 +257,7 @@ class AppClickCounter(StatsCounter):
   def process(self, d):
     ad_unit_key_string = self.get_id_for_dict(d)
     if ad_unit_key_string:
-      try:
-        ad_unit_key = db.Key(ad_unit_key_string)
-      except Exception, e:
-        print e
-        return
-
+      ad_unit_key = db.Key(ad_unit_key_string)
       ad_unit = AdUnitCache.get(ad_unit_key)
       if ad_unit:
         app_key = ad_unit.app_key.key()
@@ -493,8 +485,6 @@ class CampaignClickCounter(StatsCounter):
         stats_q.click_count += 1
         adgroup_stats_q.click_count += 1
         campaign_stats_q.click_count += 1
-      
-        print stats,adgroup_stats,campaign_stats,stats_q,adgroup_stats_q,campaign_stats_q
             
 class CampaignClickSpendCounter(StatsCounter):
   def process(self, d):
@@ -542,7 +532,7 @@ class UserInfoAccumulator(StatsCounter):
 def auth_func():
   return "olp@mopub.com", "N47935"
 
-def main(logfile="/tmp/logfile",app_id="mopub-inc",host="34-stats.latest.mopub-inc.appspot.com"):
+def main(logfile="/tmp/logfile",app_id="mopub-inc",host="mopub-inc.appspot.com"):
 
   # connect to google datastore
   remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', auth_func, host)
@@ -563,8 +553,7 @@ def main(logfile="/tmp/logfile",app_id="mopub-inc",host="34-stats.latest.mopub-i
   cnt = 0
   while cnt < all_object_count:
     sub_objs = all_objects[cnt:cnt+BULK_NUMBER]
-    print sub_objs
-    # db.put(sub_objs)
+    db.put(sub_objs)
     cnt += BULK_NUMBER  
 
 if __name__ == '__main__':

@@ -24,7 +24,7 @@ class Site(db.Model):
   
   # TODO: figure out how to expose this
   adsense_channel_id = db.StringProperty()
-  
+  millennial_placement_id = db.StringProperty()
   
   name = db.StringProperty(required=True)
   url = db.StringProperty()

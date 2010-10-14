@@ -311,7 +311,9 @@ class PubGeoRequestCounter(StatsCounter):
         match = pat.search(d['client'])
         if match:
           country_code = match.group(1).split('-')[1].lower()
-        
+
+    if not country_code:
+      country_code = "unknown"        
     if country_code: 
       stats.geo_request_dict.update({country_code:stats.geo_request_dict.get(country_code,0)+1})
         

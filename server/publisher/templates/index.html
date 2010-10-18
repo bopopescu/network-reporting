@@ -9,6 +9,7 @@
 		Apps
 		<div class="toolbar">
       <button onClick="location.href='{% url publisher_app_create %}'" class="btn"><span><span>+ New App</span></span></button>
+      &nbsp; &nbsp; &nbsp; &nbsp;<a href="{% url publisher_index_geo %}">Heat Map</a>
     <div class="graphselect">
       <button class="btn btn_active pill-l" onClick="show_today(this);"><span><span>Today</span></span></button>
       <button class="btn pill-r" onClick="show_yesterday(this);"><span><span>Yesterday</span></span></button>
@@ -33,11 +34,9 @@
   </table> 
 	<img id="chart_img" src="{{chart_urls.imp}}" width=580 height=200 style="padding: 5px 0 10px 0;"/>
 	<img id="pie_chart_img" src="{{pie_chart_urls.imp}}" width=200 height=200 style="padding: 5px 0 10px 0; float:right;"/>
-
   <div style="padding:12px;position:relative">
   {% include "range_select.html" %}
-  </div>
-  
+  </div>  
 	<table class="wide">
 		<thead>
 			<tr>

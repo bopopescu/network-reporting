@@ -3,6 +3,7 @@ import logging, os, re, datetime, hashlib
 import urllib
 urllib.getproxies_macosx_sysconf = lambda: {}
 from urllib import urlencode
+from operator import itemgetter
 
 from google.appengine.api import users, memcache
 from google.appengine.api.urlfetch import fetch
@@ -185,6 +186,7 @@ class AppIndexGeoHandler(RequestHandler):
             #geo_clk = dict( (n, geo_clk.get(n,0)+stats.geo_clk.get(n,0)) for n in set(geo_clk)|set(stats.geo_clk) )
             #geo_rev = dict( (n, geo_rev.get(n,0)+stats.geo_rev.get(n,0)) for n in set(geo_rev)|set(stats.geo_rev) )
 
+    geo_req = sorted(geo_req.items(), key=itemgetter(1), reverse=True)
     return render_to_response(self.request,'publisher/index_geo.html', 
       {'geo_imp': geo_imp,    
        'geo_clk': geo_clk,

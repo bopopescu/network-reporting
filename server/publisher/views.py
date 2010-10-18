@@ -380,6 +380,7 @@ class ShowHandler(RequestHandler):
     
     # Get all of the ad groups for this site
     site.adgroups = AdGroup.gql("where site_keys = :1", site.key()).fetch(50)
+    site.adgroups = sorted(site.adgroups, lambda x,y: cmp(y.bid, x.bid))
     for ag in site.adgroups:
       ag.all_stats = SiteStats.stats_for_days(ag, days)
       ag.stats = reduce(lambda x, y: x+y, ag.all_stats[r_start:r_end], SiteStats())

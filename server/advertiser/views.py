@@ -117,6 +117,7 @@ class AdGroupIndexHandler(RequestHandler):
       adgroups = AdGroup.gql("where campaign in :1 and deleted = :2", [x.key() for x in campaigns], False).fetch(100)
     else:
       adgroups = []
+    adgroups = sorted(adgroups, lambda x,y: cmp(y.bid, x.bid))
     logging.info(campaigns)
     
     today = SiteStats()

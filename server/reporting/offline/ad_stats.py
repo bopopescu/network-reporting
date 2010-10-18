@@ -538,7 +538,10 @@ def main(logfile="/tmp/logfile",app_id="mopub-inc",host="mopub-inc.appspot.com")
   
   for s in StatsCounter.all_stats().values():
     print repr(s)
-    db.put(s)
+    try:
+      db.put(s)
+    except Exception, e:
+      print e
 
 
 if __name__ == '__main__':

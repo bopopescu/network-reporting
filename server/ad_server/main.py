@@ -524,8 +524,8 @@ class AdHandler(webapp.RequestHandler):
                         </script>
                         <script type="text/javascript" src="http://mmv.admob.com/static/iphone/iadmob.js"></script>                        
                         </body>$trackingPixel</html>"""),
-    "html":Template("""<html><title>$title</title><head>     
-                        $finishLoad               
+    "html":Template("""<html><title>$title</title><head>
+                        $finishLoad                  
                         <script>
                           function webviewDidClose(){} 
                           function webviewDidAppear(){} 

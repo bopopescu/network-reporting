@@ -382,8 +382,8 @@ class ShowHandler(RequestHandler):
     site.adgroups = AdGroup.gql("where site_keys = :1", site.key()).fetch(50)
     site.adgroups = sorted(site.adgroups, lambda x,y: cmp(y.bid, x.bid))
     for ag in site.adgroups:
-      ag.all_stats = SiteStats.stats_for_days(ag, days)
-      ag.stats = reduce(lambda x, y: x+y, ag.all_stats[r_start:r_end], SiteStats())
+      ag.all_stats = SiteStats.stats_for_days_with_qualifier(ag, site, days[r_start:r_end])
+      ag.stats = reduce(lambda x, y: x+y, ag.all_stats, SiteStats())
       
     # chart
     chart_urls = {}

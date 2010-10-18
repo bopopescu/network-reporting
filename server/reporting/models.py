@@ -190,8 +190,10 @@ class SiteStats(db.Model):
   def __repr__(self):
     from django.utils import simplejson
     self._geo_requests_json = simplejson.dumps(getattr(self,'_geo_request_dict',{}))
-    return "SiteStats{site=%s, owner=%s(%s), R=%d/I=%d/C=%d/R=%.2f, users=%d, geo=%s}" % (self.site.key() if self.site else "None", self.owner.__class__.__name__ if self.owner else '',self.owner.key() if self.owner else "None", self.request_count, self.impression_count, self.click_count, self.revenue, self.unique_user_count,self._geo_requests_json)
-
+    try:
+      return "SiteStats{site=%s, owner=%s(%s), R=%d/I=%d/C=%d/R=%.2f, users=%d, geo=%s}" % (self.site.key() if self.site else "None", self.owner.__class__.__name__ if self.owner else '',self.owner.key() if self.owner else "None", self.request_count, self.impression_count, self.click_count, self.revenue, self.unique_user_count,self._geo_requests_json)
+    except:
+      return "SiteStats{broken!}"
     
 #
 # This contains information about a particular user 

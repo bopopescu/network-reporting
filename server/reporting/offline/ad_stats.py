@@ -3,6 +3,7 @@
 import code
 import getpass
 import sys
+
 sys.path.append("/home/ubuntu/mopub/server")
 sys.path.append("/home/ubuntu/mopub/server/reporting")
 sys.path.append("/home/ubuntu/google_appengine")
@@ -11,20 +12,12 @@ sys.path.append("/home/ubuntu/google_appengine/lib/webob")
 sys.path.append("/home/ubuntu/google_appengine/lib/yaml/lib")
 sys.path.append("/home/ubuntu/google_appengine/lib/fancy_urllib")
 
-
+sys.path.append("../..")
 sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine")
+sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/django")
 sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/webob")
 sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/yaml/lib")
 sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/fancy_urllib")
-sys.path.append("/Users/njamal/programs/mopub/server")
-from appengine_django import LoadDjango
-LoadDjango()
-
-import os
-from django.conf import settings
-os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
-# Force Django to reload its settings.
-settings._target = None
 
 import wsgiref.handlers, cgi, logging, os, re, datetime, hashlib, traceback, fileinput, urlparse
 from django.utils import simplejson
@@ -195,7 +188,6 @@ class StatsCounter(object):
     except Exception, e:
       print 'StatsCounter.get_site_stats_with_qualifier()',e
       return None
-
 
   def get_user_stats(self, device_id):
     key = device_id
@@ -540,21 +532,12 @@ def main(logfile="/tmp/logfile",app_id="mopub-inc",host="mopub-inc.appspot.com")
   # process the logfile .... 
   AdStats().process(logfile)
   
-  print 'DONE PROCESSING'  
+  print 'DONE PROCESSING, writing %d stats values' % len(StatsCounter.all_stats().values())   
   
-  # for s in StatsCounter.all_stats().values():
-  #   print repr(s)
-    
-  # store into database
-  all_objects = StatsCounter.all_stats().values()
-  all_object_count = len(all_objects)
-  BULK_NUMBER = 100
-  
-  cnt = 0
-  while cnt < all_object_count:
-    sub_objs = all_objects[cnt:cnt+BULK_NUMBER]
-    db.put(sub_objs)
-    cnt += BULK_NUMBER  
+  for s in StatsCounter.all_stats().values():
+    print repr(s)
+    db.put(s)
+
 
 if __name__ == '__main__':
   if len(sys.argv) < 3:

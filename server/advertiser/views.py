@@ -203,7 +203,8 @@ class CreateAdGroupHandler(RequestHandler):
       site.checked = site.key() in adgroup.site_keys
       site.app = App.get(site.app_key.key())
 			
-    networks = [["adsense","Google AdSense",False],["iAd","Apple iAd",False],["admob","AdMob",False],["custom","Custom",False]]
+		# TODO: Clean up this hacked shit	
+    networks = [["adsense","Google AdSense",False],["iAd","Apple iAd",False],["admob","AdMob",False],["millennial","Millennial Media",False],["custom","Custom",False]]
     for n in networks:
       if adgroup.network_type == n[0]:
         n[2] = True

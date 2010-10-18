@@ -3,3 +3,4 @@ truncate -s 0 /tmp/request-logfile-1
 truncate -s 0 /tmp/info-logfile-1
 truncate -s 0 /tmp/request-logfile-2
 truncate -s 0 /tmp/info-logfile-2
+cp /tmp/logfile /tmp/logfile-`date +"%Y%m%d"`

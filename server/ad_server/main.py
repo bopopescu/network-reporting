@@ -312,7 +312,10 @@ class AdAuction(object):
                             if result.status_code == 200:
                                 response = rpc.serverside.html_for_response(result)
                                 winning_creative = winner
+                                logging.warning("HERE HERE")
+                                logging.warning('response: %s',response)
                                 winning_creative.html_data = response
+                                winning_creative.html_data = "<a href='http://www.google.com/'>HELLO</a>"
                                 return winning_creative
                         except urlfetch.DownloadError:
                           pass
@@ -387,7 +390,7 @@ class AdHandler(webapp.RequestHandler):
     "320x50": (320, 50, "320x50_mb", 1),
     "728x90": (728, 90, "728x90_as", 2),
     "468x60": (468, 60, "468x60_as", 1),
-    "320x480": (320, 480, "300x250_as", 1),
+    "320x480": (300, 250, "300x250_as", 1),
   }
   
   def get(self):
@@ -524,7 +527,8 @@ class AdHandler(webapp.RequestHandler):
                         </script>
                         <script type="text/javascript" src="http://mmv.admob.com/static/iphone/iadmob.js"></script>                        
                         </body>$trackingPixel</html>"""),
-    "html":Template("""<html><title>$title</title><head>                    
+    "html":Template("""<html><title>$title</title><head>     
+                        $finishLoad               
                         <script>
                           function webviewDidClose(){} 
                           function webviewDidAppear(){} 
@@ -575,13 +579,40 @@ class AdHandler(webapp.RequestHandler):
         self.response.headers.add_header("X-Failurl",self.request.url+'&exclude='+str(c.ad_type))
         
       if str(c.ad_type) == "adsense":
+        logging.warning('pub id:%s'%kwargs["site"].account.adsense_pub_id)
+        header_dict = {
+          "Gclientid":str(kwargs["site"].account.adsense_pub_id),
+  				"Gcompanyname":"Company Name",
+  				"Gappname":"App Name",
+  				"Gappid":"0",
+  				"Gkeywords":"",
+  				"Gtestadrequest":"1",
+          "Gchannelids":str(kwargs["site"].adsense_channel_id) or '',        
+        # "Gappwebcontenturl":,
+          "Gadtype":"GADAdSenseTextImageAdType", #GADAdSenseTextAdType,GADAdSenseImageAdType,GADAdSenseTextImageAdType
+        # "Ghostid":,
+        # "Gbackgroundcolor":"00FF00",
+        # "Gadtopbackgroundcolor":"FF0000",
+        # "Gadbordercolor":"0000FF",
+        # "Gadlinkcolor":,
+        # "Gadtextcolor":,
+        # "Gadurlolor":,
+        # "Gexpandirection":,
+        # "Galternateadcolor":,
+        # "Galternateadurl":, # This could be interesting we can know if Adsense 'fails' and is about to show a PSA.
+        # "Gallowadsafemedium":,
+        }
+        for key,value in header_dict.iteritems():
+          self.response.headers.add_header("X-"+key,value)
+        
+        # add some extra  
         self.response.headers.add_header("X-Failurl",self.request.url+'&exclude='+str(c.ad_type))
-        self.response.headers.add_header("X-Keywords",str(','.join(kwargs["q"])))
         self.response.headers.add_header("X-Format",format[2])
         self.response.headers.add_header("X-Width",str(format[0]))
         self.response.headers.add_header("X-Height",str(format[1]))
-        self.response.headers.add_header("X-Channelid",kwargs["site"].adsense_channel_id or '')        
       
+        self.response.headers.add_header("X-Backgroundcolor","0000FF")
+        
       # render the HTML body
       self.response.out.write(self.TEMPLATES[c.ad_type].safe_substitute(params))
     else:

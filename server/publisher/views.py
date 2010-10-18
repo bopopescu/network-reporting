@@ -88,9 +88,6 @@ class AppIndexHandler(RequestHandler):
     if len(apps) == 0:
       return HttpResponseRedirect(reverse('publisher_app_create'))
     
-    # Test querying all apps
-    # site = Site.gql("where app_key IN :1 and deleted = :2", apps, False).fetch(50)
-    
     for a in apps:
       a.stats = SiteStats()
       a.sites = Site.gql("where app_key = :1 and deleted = :2", a, False).fetch(50)   
@@ -416,7 +413,7 @@ class ShowHandler(RequestHandler):
       clicks_by_ag = []
       users_by_ag = []
       for ag in site.adgroups:
-        impressions_by_ag.append({"app": ag, "total": ag.stats.request_count})
+        impressions_by_ag.append({"app": ag, "total": ag.stats.impression_count})
         clicks_by_ag.append({"app": ag, "total": ag.stats.click_count})
         users_by_ag.append({"app": ag, "total": ag.stats.unique_user_count})
       impressions_by_ag.sort(lambda x,y: cmp(y["total"], x["total"])) 

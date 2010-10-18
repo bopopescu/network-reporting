@@ -380,6 +380,7 @@ class ShowHandler(RequestHandler):
     
     # Get all of the ad groups for this site
     site.adgroups = AdGroup.gql("where site_keys = :1", site.key()).fetch(50)
+    site.adgroups = sorted(site.adgroups, lambda x,y: cmp(y.bid, x.bid))
     for ag in site.adgroups:
       ag.all_stats = SiteStats.stats_for_days(ag, days)
       ag.stats = reduce(lambda x, y: x+y, ag.all_stats[r_start:r_end], SiteStats())
@@ -413,7 +414,7 @@ class ShowHandler(RequestHandler):
       clicks_by_ag = []
       users_by_ag = []
       for ag in site.adgroups:
-        impressions_by_ag.append({"app": ag, "total": ag.stats.request_count})
+        impressions_by_ag.append({"app": ag, "total": ag.stats.impression_count})
         clicks_by_ag.append({"app": ag, "total": ag.stats.click_count})
         users_by_ag.append({"app": ag, "total": ag.stats.unique_user_count})
       impressions_by_ag.sort(lambda x,y: cmp(y["total"], x["total"])) 

@@ -18,7 +18,8 @@
 	</h3>
   <table class="rollups">
     <tr>
-      <td class="rollup rollup_selected" onClick="show_graph_imp(this);"><b>Requests</b><br/><div class="data_today">{{today.request_count|withsep}}</div><div class="data_yesterday" style="display:none;">{{yesterday.impression_count|withsep}}</div></td>
+      <td class="rollup rollup_selected" onClick="show_graph_imp(this);"><b>Requests</b><br/><div class="data_today">{{today.request_count|withsep}}</div><div class="data_yesterday" style="display:none;">{{yesterday.request_count|withsep}}</div></td>
+      <td class="rollup" onClick="show_graph_imp(this);"><b>Impressions</b><br/><div class="data_today">{{today.impression_count|withsep}}</div><div class="data_yesterday" style="display:none;">{{yesterday.impression_count|withsep}}</div></td>
       <td class="rollup" onClick="show_graph_clk(this);"><b>Clicks</b><br/><div class="data_today">{{today.click_count|withsep}} ({{today.ctr|percentage}})</div><div class="data_yesterday" style="display:none;">{{yesterday.click_count|withsep}} ({{yesterday.ctr|percentage}})</div></td>      	
 	    <td class="rollup" onClick="show_graph_rev(this);"><b>Revenue (est.)</b><br/><div class="data_today">{{today.revenue|currency}}</div><div class="data_yesterday" style="display:none;">{{yesterday.revenue|currency}}</div></td>
 	    <td class="rollup" onClick="show_graph_users(this);"><b>Users</b><br/><div class="data_today">{{today.unique_user_count|withsep}}</div><div class="data_yesterday" style="display:none;">{{yesterday.unique_user_count|withsep}}</div></td>

@@ -137,33 +137,27 @@ class AdAuction(object):
     ad_groups = [a for a in ad_groups 
                       if a.campaign.budget is None or 
                       SiteStats.stats_for_day(a.campaign, SiteStats.today()).revenue < a.budget]
-
     logging.debug("removed over budget, now: %s" % ad_groups)
+    
     ad_groups = [a for a in ad_groups 
                       if a.campaign.active and 
                         (a.campaign.start_date >= SiteStats.today() if a.campaign.start_date else True) 
                         and (a.campaign.end_date <= SiteStats.today() if a.campaign.end_date else True)]
-
     logging.debug("removed non running campaigns, now: %s" % ad_groups)
     
-    # logging.debug("adgroup keywords: %s, query keywords: %s"%(a.keywords,keywords))
     # ad group request-based targeting exclusions
     ad_groups = [a for a in ad_groups 
                     if not a.keywords or set(keywords).intersection(a.keywords) > set()]
-    # filter(lambda a: len(a.keywords) == 0 or set(keywords).intersection(a.keywords) > set(), ad_groups)
-    
     logging.debug("removed keyword non-matches, now: %s" % ad_groups)
     
-
     ad_groups = [a for a in ad_groups
                     if set(geo_predicates).intersection(a.geographic_predicates) > set()]
     logging.debug("removed geo non-matches, now: %s" % ad_groups)
-    # ad_groups = filter(lambda a: set(device_predicates).intersection(a.device_predicates) > set(), ad_groups)
     ad_groups = [a for a in ad_groups
                     if set(device_predicates).intersection(a.device_predicates) > set()]
     logging.debug("removed device non-matches, now: %s" % ad_groups)
     
-    # TODO: frequency capping and other user / request based randomizations
+    # frequency capping and other user / request based randomizations
     udid = kw["udid"]
         
     # if any ad groups were returned, find the creatives that match the requested format in all candidates
@@ -601,9 +595,6 @@ class AdHandler(webapp.RequestHandler):
         }
         json_string_pairs = []
         for key,value in header_dict.iteritems():
-          # self.response.headers.add_header("X-"+key,value)
-          if key == "Gchannelids":
-            value = ['value','value']
           json_string_pairs.append('"%s":"%s"'%(key,value))
         json_string = '{'+','.join(json_string_pairs)+'}'
         self.response.headers.add_header("X-Nativeparams",json_string)

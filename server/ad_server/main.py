@@ -661,11 +661,14 @@ class AdClickHandler(webapp.RequestHandler):
     # BROKEN
     # url = self.request.get("r")
     sz = self.request.query_string
-    url = sz[(sz.rfind("r=") + 2):]
-    url = unquote(url)
-    
-    # forward on to the click URL
-    self.redirect(url)
+    r = sz.rfind("r=")
+    if r > 0:
+      url = sz[(r + 2):]
+      url = unquote(url)
+      # forward on to the click URL
+      self.redirect(url)
+    else:
+      self.response.out.write("OK")
 
 # TODO: Process this on the logs processor 
 class AppOpenHandler(webapp.RequestHandler):

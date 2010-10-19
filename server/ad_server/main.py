@@ -579,10 +579,10 @@ class AdHandler(webapp.RequestHandler):
         logging.debug('pub id:%s'%kwargs["site"].account.adsense_pub_id)
         header_dict = {
           "Gclientid":str(kwargs["site"].account.adsense_pub_id),
-  				"Gcompanyname":"Company Name",
-  				"Gappname":"App Name",
+  				"Gcompanyname":str(kwargs["site"].account.adsense_company_name),
+  				"Gappname":str(kwargs["site"].app_key.adsense_app_name),
   				"Gappid":"0",
-  				"Gkeywords":"",
+  				"Gkeywords":str(kwargs["site"].keywords),
   				"Gtestadrequest":"1",
           "Gchannelids":str(kwargs["site"].adsense_channel_id) or '',        
         # "Gappwebcontenturl":,

@@ -606,7 +606,7 @@ class AdHandler(webapp.RequestHandler):
             value = ['value','value']
           json_string_pairs.append('"%s":"%s"'%(key,value))
         json_string = '{'+','.join(json_string_pairs)+'}'
-        self.response.headers.add_header("X-Adsenseparams",json_string)
+        self.response.headers.add_header("X-Nativeparams",json_string)
         
         # add some extra  
         self.response.headers.add_header("X-Failurl",self.request.url+'&exclude='+str(c.ad_type))
@@ -664,11 +664,14 @@ class AdClickHandler(webapp.RequestHandler):
     # BROKEN
     # url = self.request.get("r")
     sz = self.request.query_string
-    url = sz[(sz.rfind("r=") + 2):]
-    url = unquote(url)
-    
-    # forward on to the click URL
-    self.redirect(url)
+    r = sz.rfind("r=")
+    if r > 0:
+      url = sz[(r + 2):]
+      url = unquote(url)
+      # forward on to the click URL
+      self.redirect(url)
+    else:
+      self.response.out.write("OK")
 
 # TODO: Process this on the logs processor 
 class AppOpenHandler(webapp.RequestHandler):

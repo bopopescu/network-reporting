@@ -8,19 +8,15 @@
 	<h3>		
 		Apps
 		<div class="toolbar">
-      <button onClick="location.href='{% url publisher_app_create %}'" class="btn"><span><span>+ New App</span></span></button>
+<!--
     <div class="graphselect">
       <button class="btn btn_active pill-l" onClick="show_today(this);"><span><span>Today</span></span></button>
       <button class="btn pill-r" onClick="show_yesterday(this);"><span><span>Yesterday</span></span></button>
     </div>
+-->
 		</div>
 	</h3>
-  {% if not apps %}
-	<p>
-		<b>Apps</b> are your individual applications.  You can create <b>Ad Units</b> are used to organize your mobile inventory. Each ad unit should be a single ad slot in your app.<br/> 
-	</p> 
-  {% endif %}
-		
+<!--		
   <table class="rollups">
     <tr>
       <td class="rollup rollup_selected" onClick="show_graph_imp(this);"><b>Impressions</b><br/><div class="data_today">{{today.impression_count|withsep}}</div><div class="data_yesterday" style="display:none;">{{yesterday.impression_count|withsep}}</div></td>
@@ -30,6 +26,7 @@
 	
     </tr>
   </table> 
+-->
   <div id="map_canvas" style="margin-top:10px"></div>
 <script type='text/javascript' src='http://www.google.com/jsapi'></script>
 <script type='text/javascript'>
@@ -64,7 +61,7 @@
     data_req.addColumn('string', 'Country');
     data_req.addColumn('number', 'Requests');
     data_req.addColumn('string', 'Title');
-    {% for key, value in geo_req.iteritems %}
+    {% for key, value in geo_req %}
     data_req.setValue({{ forloop.counter0 }}, 0, '{{ key }}');
     data_req.setValue({{ forloop.counter0 }}, 1, {{ value }});
     data_req.setValue({{ forloop.counter0 }}, 2, '{{ key|print_country }}');
@@ -99,7 +96,7 @@
 		<th class="numeric">Requests</th>
 		</tr>
 	</thead>
-	{% for key, value in geo_req.iteritems %}
+	{% for key, value in geo_req %}
 		<tr>
 			<td>{{key|print_country}}</td>
 			<td class="numeric">{{value|withsep}}</td>

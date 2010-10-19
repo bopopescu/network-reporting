@@ -1,5 +1,5 @@
 application: mopub-inc
-version: 36-live
+version: 36-staging
 runtime: python
 api_version: 1
 # default_expiration: "10d"

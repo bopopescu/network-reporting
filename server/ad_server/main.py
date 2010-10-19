@@ -43,7 +43,7 @@ from google.appengine.api import users
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.ext import db
-from google.appengine.api.urlfetch import fetch
+from google.appengine.api import urlfetch
 from google.appengine.api import memcache
 from google.appengine.api import users
 from google.appengine.api.labs import taskqueue
@@ -57,6 +57,9 @@ from reporting.models import *
 CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gzip(gfe)"]
 MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7PnE6cH9_PX7OoeIIr5FjnTA'
 DOMAIN = 'ads.mopub.com'
+
+import urllib
+urllib.getproxies_macosx_sysconf = lambda: {}
 
 
 # TODO: Logging is fucked up with unicode characters
@@ -76,12 +79,41 @@ def memcache_key_for_hour(udid,datetime,db_key):
 class AdAuction(object):
   MAX_ADGROUPS = 30
 
+  @classmethod
+  def request_third_party_server(cls,request,adunit,adgroups):
+    # TODO: note adunit is actually a "Site"
+    rpcs = []
+    for adgroup in adgroups:
+      if adgroup.network_type == "millennial":
+        from ad_server.networks.millennial import MillennialServerSide
+        mmServerSide = MillennialServerSide(request,adunit.millennial_placement_id)
+        logging.debug(mmServerSide.url)   
+
+        rpc = urlfetch.create_rpc(.200) # maximum delay we are willing to accept is 200 ms
+        urlfetch.make_fetch_call(rpc, mmServerSide.url)
+        # attaching the adgroup to the rpc
+        rpc.adgroup = adgroup
+        rpc.serverside = mmServerSide
+        rpcs.append(rpc)
+    return rpcs    
+      # 
+      # # ... do other things ...
+      # 
+      # try:
+      #     result = rpc.get_result()
+      #     if result.status_code == 200:
+      #         response = mmServerSide.html_for_response(result)
+      #         self.response.out.write("%s<br/> %s"%(mmServerSide.url,response))
+      # except urlfetch.DownloadError:
+      #   self.response.out.write("%s<br/> %s"%(mmServerSide.url,"response not fast enough"))
+
   # Runs the auction itself.  Returns the winning creative, or None if no creative matched
   @classmethod
   def run(cls, **kw):
     now = kw["now"]
     site = kw["site"]
-
+    request = kw["request"]
+    
     keywords = kw["q"]
     geo_predicates = AdAuction.geo_predicates_for_rgeocode(kw["addr"])
     device_predicates = AdAuction.device_predicates_for_request(kw["request"])
@@ -96,6 +128,9 @@ class AdAuction(object):
     # 3) throw out ad groups that restrict by keywords and do not match the keywords
     # 4) throw out ad groups that do not match device and geo predicates
     ad_groups = AdGroup.gql("where site_keys = :1 and active = :2 and deleted = :3", site.key(), True, False).fetch(AdAuction.MAX_ADGROUPS)
+    
+    rpcs = AdAuction.request_third_party_server(request,site,ad_groups)
+    
     logging.debug("ad groups: %s" % ad_groups)
     
     # campaign exclusions... budget + time
@@ -115,12 +150,11 @@ class AdAuction(object):
                     if not a.keywords or set(keywords).intersection(a.keywords) > set()]
     logging.debug("removed keyword non-matches, now: %s" % ad_groups)
     
-    ad_groups = filter(lambda a: set(geo_predicates).intersection(a.geo_predicates) > set(), ad_groups)
     ad_groups = [a for a in ad_groups
                     if set(geo_predicates).intersection(a.geographic_predicates) > set()]
     logging.debug("removed geo non-matches, now: %s" % ad_groups)
-    
-    ad_groups = filter(lambda a: set(device_predicates).intersection(a.device_predicates) > set(), ad_groups)
+    ad_groups = [a for a in ad_groups
+                    if set(device_predicates).intersection(a.device_predicates) > set()]
     logging.debug("removed device non-matches, now: %s" % ad_groups)
     
     # frequency capping and other user / request based randomizations
@@ -161,6 +195,7 @@ class AdAuction(object):
             
               # exclude according to the exclude parameter must do this after determining adgroups
               # so that we maintain the correct order for user bucketing
+              # TODO: we should exclude based on creative id not ad type :)
               logging.debug("eligible creatives: %s %s" % (winners,exclude_params))
               winners = [c for c in winners if not (c.ad_type in exclude_params)]  
               logging.debug("eligible creatives after exclusions: %s" % winners)
@@ -189,7 +224,7 @@ class AdAuction(object):
                 start_bucket += percent_users
                 start_bucket = start_bucket % 100 
                                 
-              # TODO: user based frequency caps
+              # TODO: user based frequency caps (need to add other levels)
               user_keys = []
               for adgroup in winning_ad_groups:
                 if adgroup.daily_frequency_cap:
@@ -236,6 +271,7 @@ class AdAuction(object):
               logging.debug("winning ad groups after frequency capping: %s"%winning_ad_groups)
 
               # if there is a winning/eligible adgroup find the appropriate creative for it
+              winning_creative = None
               if winning_ad_groups:
                 logging.debug("winner ad_groups: %s"%winning_ad_groups)
               
@@ -243,26 +279,54 @@ class AdAuction(object):
                   winners = [winner for winner in winners if winner.ad_group in winning_ad_groups]
 
                 if winners:
-                  logging.debug('winners %s'%winners)
+                  logging.debug('winners %s'%[w.ad_group for w in winners])
                   random.shuffle(winners)
                   logging.debug('random winners %s'%winners)
           
-                  # winner
-                  winner = winners[0]
-                  logging.debug("winning creative = %s" % winner)
-                  return winner
-                else:
-                  logging.debug('taking away some players not in %s'%ad_groups)
-                  logging.debug('current players: %s'%players)
-                  players = [c for c in players if not c.ad_group in ad_groups]  
-                  logging.debug('remaining players %s'%players)
-                  
-              else:
+                  # find the actual winner among all the eligble ones
+                  actual_winner = None
+                  # loop through each of the randomized winners making sure that the data is ready to display
+                  for winner in winners:
+                    if not rpcs:
+                      winning_creative = winner
+                      return winning_creative
+                    else:
+                      rpc = None                      
+                      if winner.ad_group.key() in [r.adgroup.key() for r in rpcs]:
+                        for rpc in rpcs:
+                          if rpc.adgroup.key() == winner.ad_group.key():
+                            logging.debug("rpc.adgroup %s"%rpc.adgroup)
+                            break # This pulls out the rpc that matters there should be one always
+
+                      # if the winning creative relies on a rpc to get the actual data to display
+                      # go out and get the data and paste in the data to the creative      
+                      if rpc:      
+                        try:
+                            result = rpc.get_result()
+                            if result.status_code == 200:
+                                response = rpc.serverside.html_for_response(result)
+                                winning_creative = winner
+                                winning_creative.html_data = response
+                                return winning_creative
+                        except urlfetch.DownloadError:
+                          pass
+                      else:
+                        winning_creative = winner
+                        return winning_creative
+                        
+              #   else:
+              #     logging.debug('taking away some players not in %s'%ad_groups)
+              #     logging.debug('current players: %s'%players)
+              #     players = [c for c in players if not c.ad_group in ad_groups]  
+              #     logging.debug('remaining players %s'%players)
+              #     
+              # else:
+              if not winning_creative:
                 logging.debug('taking away some players not in %s'%ad_groups)
                 logging.debug('current players: %s'%players)
                 players = [c for c in players if not c.ad_group in ad_groups]  
                 logging.debug('remaining players %s'%players)
-                
+             # try at a new priority level   
 
     # nothing... failed auction
     logging.debug("auction failed, returning None")
@@ -317,7 +381,7 @@ class AdHandler(webapp.RequestHandler):
     "320x50": (320, 50, "320x50_mb", 1),
     "728x90": (728, 90, "728x90_as", 2),
     "468x60": (468, 60, "468x60_as", 1),
-    "320x480": (320, 480, "300x250_as", 1),
+    "320x480": (300, 250, "300x250_as", 1),
   }
   
   def get(self):
@@ -362,8 +426,6 @@ class AdHandler(webapp.RequestHandler):
     request_id = hashlib.md5("%s:%s" % (self.request.query_string, time.time())).hexdigest()
     if str(self.request.headers['User-Agent']) not in CRAWLERS:
       logging.info('OLP ad-request {"request_id": "%s", "remote_addr": "%s", "q": "%s", "user_agent": "%s", "udid":"%s" }' % (request_id, self.request.remote_addr, self.request.query_string, self.request.headers["User-Agent"], udid))
-
-
 
     # get winning creative
     c = AdAuction.run(request=self.request, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, udid=udid, request_id=request_id, now=now)
@@ -481,6 +543,7 @@ class AdHandler(webapp.RequestHandler):
       elif c.ad_type == "image":
         params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
       elif c.ad_type == "html":
+        params.update(html_data=c.html_data)
         params.update({"html_data": kwargs["html_data"], "w": format[0], "h": format[1]})
         
       if kwargs["q"] or kwargs["addr"]:
@@ -505,7 +568,45 @@ class AdHandler(webapp.RequestHandler):
       
       if str(c.ad_type) == "iAd":
         self.response.headers.add_header("X-Failurl",self.request.url+'&exclude='+str(c.ad_type))
+        
+      if str(c.ad_type) == "adsense":
+        logging.debug('pub id:%s'%kwargs["site"].account.adsense_pub_id)
+        header_dict = {
+          "Gclientid":str(kwargs["site"].account.adsense_pub_id),
+  				"Gcompanyname":"Company Name",
+  				"Gappname":"App Name",
+  				"Gappid":"0",
+  				"Gkeywords":"",
+  				"Gtestadrequest":"1",
+          "Gchannelids":str(kwargs["site"].adsense_channel_id) or '',        
+        # "Gappwebcontenturl":,
+          "Gadtype":"GADAdSenseTextImageAdType", #GADAdSenseTextAdType,GADAdSenseImageAdType,GADAdSenseTextImageAdType
+        # "Ghostid":,
+        # "Gbackgroundcolor":"00FF00",
+        # "Gadtopbackgroundcolor":"FF0000",
+        # "Gadbordercolor":"0000FF",
+        # "Gadlinkcolor":,
+        # "Gadtextcolor":,
+        # "Gadurlolor":,
+        # "Gexpandirection":,
+        # "Galternateadcolor":,
+        # "Galternateadurl":, # This could be interesting we can know if Adsense 'fails' and is about to show a PSA.
+        # "Gallowadsafemedium":,
+        }
+        json_string_pairs = []
+        for key,value in header_dict.iteritems():
+          json_string_pairs.append('"%s":"%s"'%(key,value))
+        json_string = '{'+','.join(json_string_pairs)+'}'
+        self.response.headers.add_header("X-Nativeparams",json_string)
+        
+        # add some extra  
+        self.response.headers.add_header("X-Failurl",self.request.url+'&exclude='+str(c.ad_type))
+        self.response.headers.add_header("X-Format",format[2])
+        self.response.headers.add_header("X-Width",str(format[0]))
+        self.response.headers.add_header("X-Height",str(format[1]))
       
+        self.response.headers.add_header("X-Backgroundcolor","0000FF")
+        
       # render the HTML body
       self.response.out.write(self.TEMPLATES[c.ad_type].safe_substitute(params))
     else:
@@ -520,7 +621,7 @@ class AdHandler(webapp.RequestHandler):
       "key": MAPS_API_KEY, 
       "sensor": "false", 
       "output": "json"})
-    json = fetch(url).content
+    json = urlfetch.fetch(url).content
     try:
       geocode = simplejson.loads(json)
 
@@ -554,23 +655,47 @@ class AdClickHandler(webapp.RequestHandler):
     # BROKEN
     # url = self.request.get("r")
     sz = self.request.query_string
-    url = sz[(sz.rfind("r=") + 2):]
-    url = unquote(url)
-    
-    # forward on to the click URL
-    self.redirect(url)
+    r = sz.rfind("r=")
+    if r > 0:
+      url = sz[(r + 2):]
+      url = unquote(url)
+      # forward on to the click URL
+      self.redirect(url)
+    else:
+      self.response.out.write("OK")
 
 # TODO: Process this on the logs processor 
 class AppOpenHandler(webapp.RequestHandler):
   # /m/open?v=1&udid=26a85bc239152e5fbc221fe5510e6841896dd9f8&q=Hotels:%20Hotel%20Utah%20Saloon%20&id=agltb3B1Yi1pbmNyDAsSBFNpdGUY6ckDDA&r=http://googleads.g.doubleclick.net/aclk?sa=l&ai=BN4FhRH6hTIPcK5TUjQT8o9DTA7qsucAB0vDF6hXAjbcB4KhlEAEYASDgr4IdOABQrJON3ARgyfb4hsijoBmgAbqxif8DsgERYWRzLm1vcHViLWluYy5jb226AQkzMjB4NTBfbWLIAQHaAbwBaHR0cDovL2Fkcy5tb3B1Yi1pbmMuY29tL20vYWQ_dj0xJmY9MzIweDUwJnVkaWQ9MjZhODViYzIzOTE1MmU1ZmJjMjIxZmU1NTEwZTY4NDE4OTZkZDlmOCZsbD0zNy43ODM1NjgsLTEyMi4zOTE3ODcmcT1Ib3RlbHM6JTIwSG90ZWwlMjBVdGFoJTIwU2Fsb29uJTIwJmlkPWFnbHRiM0IxWWkxcGJtTnlEQXNTQkZOcGRHVVk2Y2tEREGAAgGoAwHoA5Ep6AOzAfUDAAAAxA&num=1&sig=AGiWqtx2KR1yHomcTK3f4HJy5kk28bBsNA&client=ca-mb-pub-5592664190023354&adurl=http://www.sanfranciscoluxuryhotels.com/
   def get(self):
     self.response.out.write("OK") 
+
+class TestHandler(webapp.RequestHandler):
+  # /m/open?v=1&udid=26a85bc239152e5fbc221fe5510e6841896dd9f8&q=Hotels:%20Hotel%20Utah%20Saloon%20&id=agltb3B1Yi1pbmNyDAsSBFNpdGUY6ckDDA&r=http://googleads.g.doubleclick.net/aclk?sa=l&ai=BN4FhRH6hTIPcK5TUjQT8o9DTA7qsucAB0vDF6hXAjbcB4KhlEAEYASDgr4IdOABQrJON3ARgyfb4hsijoBmgAbqxif8DsgERYWRzLm1vcHViLWluYy5jb226AQkzMjB4NTBfbWLIAQHaAbwBaHR0cDovL2Fkcy5tb3B1Yi1pbmMuY29tL20vYWQ_dj0xJmY9MzIweDUwJnVkaWQ9MjZhODViYzIzOTE1MmU1ZmJjMjIxZmU1NTEwZTY4NDE4OTZkZDlmOCZsbD0zNy43ODM1NjgsLTEyMi4zOTE3ODcmcT1Ib3RlbHM6JTIwSG90ZWwlMjBVdGFoJTIwU2Fsb29uJTIwJmlkPWFnbHRiM0IxWWkxcGJtTnlEQXNTQkZOcGRHVVk2Y2tEREGAAgGoAwHoA5Ep6AOzAfUDAAAAxA&num=1&sig=AGiWqtx2KR1yHomcTK3f4HJy5kk28bBsNA&client=ca-mb-pub-5592664190023354&adurl=http://www.sanfranciscoluxuryhotels.com/
+  def get(self):
+    from ad_server.networks.millennial import MillennialServerSide
+    mmServerSide = MillennialServerSide(self.request,357)
+    logging.debug(mmServerSide.url)   
     
+    rpc = urlfetch.create_rpc(.200) # maximum delay we are willing to accept is 200 ms
+    urlfetch.make_fetch_call(rpc, mmServerSide.url)
+
+    # ... do other things ...
+
+    try:
+        result = rpc.get_result()
+        if result.status_code == 200:
+            response = mmServerSide.html_for_response(result)
+            self.response.out.write("%s<br/> %s"%(mmServerSide.url,response))
+    except urlfetch.DownloadError:
+      self.response.out.write("%s<br/> %s"%(mmServerSide.url,"response not fast enough"))
+
 
 def main():
   application = webapp.WSGIApplication([('/m/ad', AdHandler), 
                                         ('/m/aclk', AdClickHandler),
-                                        ('/m/open',AppOpenHandler)], 
+                                        ('/m/open',AppOpenHandler),
+                                        ('/m/test',TestHandler),], 
                                         debug=True)
   wsgiref.handlers.CGIHandler().run(application)
 

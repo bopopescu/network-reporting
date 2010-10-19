@@ -250,6 +250,9 @@ cc = {"ad":"Andorra",
 "zw":"Zimbabwe"}
 
 def print_country(value):
-  return cc[value]
+  try:
+    return cc[value]
+  except:
+    return "unknown"
 
 register.filter(print_country)

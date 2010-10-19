@@ -4,7 +4,7 @@ from publisher.models import Site, App
 class AppForm(forms.ModelForm):
 	class Meta:
 		model = App
-		fields = ('name', 'app_type', 'url', 'description')
+		fields = ('name', 'app_type', 'url', 'description', 'adsense_app_name')
 
 class SiteForm(forms.ModelForm):
 	class Meta:

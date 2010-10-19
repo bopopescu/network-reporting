@@ -7,6 +7,7 @@ import logging
 #
 class Account(db.Model):
   adsense_pub_id = db.StringProperty()
+  adsense_company_name = db.StringProperty()
   admob_pub_id = db.StringProperty()
   user = db.UserProperty()
   date_added = db.DateTimeProperty(auto_now_add=True)

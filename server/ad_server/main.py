@@ -601,12 +601,9 @@ class AdHandler(webapp.RequestHandler):
         }
         json_string_pairs = []
         for key,value in header_dict.iteritems():
-          # self.response.headers.add_header("X-"+key,value)
-          if key == "Gchannelids":
-            value = ['value','value']
           json_string_pairs.append('"%s":"%s"'%(key,value))
         json_string = '{'+','.join(json_string_pairs)+'}'
-        self.response.headers.add_header("X-Adsenseparams",json_string)
+        self.response.headers.add_header("X-Nativeparams",json_string)
         
         # add some extra  
         self.response.headers.add_header("X-Failurl",self.request.url+'&exclude='+str(c.ad_type))

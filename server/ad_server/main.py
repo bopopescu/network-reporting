@@ -518,13 +518,13 @@ class AdHandler(webapp.RequestHandler):
                         </script>
                         <script type="text/javascript" src="http://mmv.admob.com/static/iphone/iadmob.js"></script>                        
                         </body>$trackingPixel</html>"""),
-    "html":Template("""<html><title>$title</title><head>
+    "html":Template("""<html><head><title>$title</title>
                         $finishLoad                  
                         <script>
                           function webviewDidClose(){} 
                           function webviewDidAppear(){} 
                         </script></head>
-                        <body style="margin:0;padding:0;width:${w}px">${html_data}$trackingPixel</body></html>"""),
+                        <body style="margin:0;padding:0;width:${w}px;background:white">${html_data}$trackingPixel</body></html>"""),
   }
   def render_creative(self, c, **kwargs):
     if c:
@@ -551,7 +551,7 @@ class AdHandler(webapp.RequestHandler):
       else:
         params.update(title='')
         
-      if kwargs["v"] >= 2:  
+      if kwargs["v"] >= 2 and "iPhone" in self.request.headers["User-Agent"]:  
         params.update(finishLoad='<script>function finishLoad(){window.location="mopub://finishLoad";} window.onload = function(){finishLoad();} </script>')
       else:
         params.update(finishLoad='')  
@@ -576,9 +576,9 @@ class AdHandler(webapp.RequestHandler):
   				"Gcompanyname":str(kwargs["site"].account.adsense_company_name),
   				"Gappname":str(kwargs["site"].app_key.adsense_app_name),
   				"Gappid":"0",
-  				"Gkeywords":str(kwargs["site"].keywords),
+  				"Gkeywords":str(kwargs["site"].keywords or ''),
   				"Gtestadrequest":"1",
-          "Gchannelids":str(kwargs["site"].adsense_channel_id) or '',        
+          "Gchannelids":str(kwargs["site"].adsense_channel_id or ''),        
         # "Gappwebcontenturl":,
           "Gadtype":"GADAdSenseTextImageAdType", #GADAdSenseTextAdType,GADAdSenseImageAdType,GADAdSenseTextImageAdType
         # "Ghostid":,

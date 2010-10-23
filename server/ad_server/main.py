@@ -551,7 +551,7 @@ class AdHandler(webapp.RequestHandler):
       else:
         params.update(title='')
         
-      if kwargs["v"] >= 2 and "iPhone" in self.request.headers["User-Agent"]:  
+      if kwargs["v"] >= 2 and not "Android" in self.request.headers["User-Agent"]:  
         params.update(finishLoad='<script>function finishLoad(){window.location="mopub://finishLoad";} window.onload = function(){finishLoad();} </script>')
       else:
         params.update(finishLoad='')  

@@ -40,15 +40,13 @@
 			<th>Account</th>
 			<th width="75px">Requests</th>
 			<th width="75px">Clicks</th>
-			<th width="75px">CTR</th>
 		</thead>
 		{% for p in placements %}
 		<tr>
-			<td>{{p.name}}</td>
-			<td><a href="mailto:{{p.account.user.email}}">{{p.account.user.email}}</a></td>
-			<td class="numeric">{{p.stats.request_count}}</td>
-			<td class="numeric">{{p.stats.click_count}}</td>
-			<td class="numeric">{{p.stats.ctr}}</td>
+			<td>{{p.site.name}}</td>
+			<td><a href="mailto:{{p.site.account.user.email}}">{{p.site.account.user.email}}</a></td>
+			<td class="numeric">{{p.request_count}}</td>
+			<td class="numeric">{{p.click_count}}</td>
 		</tr>
 		{% endfor %}
 	</table>

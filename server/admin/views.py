@@ -56,14 +56,21 @@ def dashboard(request, *args, **kwargs):
   # go and do it
   for s in stats:
     try:
-      if s.site:
+      if s.site and not s.owner:
         # add this site stats to the total for the day
         a = totals.get(str(s.date)) or SiteStats(date=s.date)
         totals[str(s.date)] = a + s
     
         # add a hash key for the site key and account key to calculate uniques
-        # unique_placements[s.site.key()] = s.site
         unique_accounts[s.site.account.key()] = s.site.account
+        
+        # ad unit stats
+        stats_agg = unique_placements.get(s.site.key())
+        if stats_agg:
+          stats_agg = stats_agg + s
+        else:
+          unique_placements[s.site.key()] = s
+        
     except Exception, e:
       logging.debug(e)
     
@@ -78,13 +85,9 @@ def dashboard(request, *args, **kwargs):
      max(map(lambda x: x.request_count, total_stats)) * 1.5,
      '|'.join(map(lambda x: x.date.strftime("%m/%d"), total_stats)))
     
-  # organize placements
+  # sort placements by impression count
   placements = unique_placements.values()
-  for p in placements:
-    p.stats = SiteStats(site=p)
-    p.stats.impression_count = sum(map(lambda x: x.impression_count, filter(lambda x: x.site and x.site.key() == p.key(), stats)))
-    p.stats.click_count = sum(map(lambda x: x.click_count, filter(lambda x: x.site and x.site.key() == p.key(), stats)))
-  placements.sort(lambda x,y: cmp(y.stats.impression_count, x.stats.impression_count))
+  placements.sort(lambda x,y: cmp(y.request_count, x.request_count))
   
   # thanks
   return render_to_response(request, 

@@ -140,33 +140,26 @@ class AdAuction(object):
     ad_groups = [a for a in ad_groups 
                       if a.campaign.budget is None or 
                       SiteStats.stats_for_day(a.campaign, SiteStats.today()).revenue < a.budget]
-
-    logging.warning("removed over budget, now: %s" % ad_groups)
+    logging.debug("removed over budget, now: %s" % ad_groups)
     ad_groups = [a for a in ad_groups 
                       if a.campaign.active and 
                         (a.campaign.start_date >= SiteStats.today() if a.campaign.start_date else True) 
                         and (a.campaign.end_date <= SiteStats.today() if a.campaign.end_date else True)]
-
-    logging.warning("removed non running campaigns, now: %s" % ad_groups)
+    logging.debug("removed non running campaigns, now: %s" % ad_groups)
     
-    # logging.warning("adgroup keywords: %s, query keywords: %s"%(a.keywords,keywords))
     # ad group request-based targeting exclusions
     ad_groups = [a for a in ad_groups 
                     if not a.keywords or set(keywords).intersection(a.keywords) > set()]
-    # filter(lambda a: len(a.keywords) == 0 or set(keywords).intersection(a.keywords) > set(), ad_groups)
+    logging.debug("removed keyword non-matches, now: %s" % ad_groups)
     
-    logging.warning("removed keyword non-matches, now: %s" % ad_groups)
-    
-
     ad_groups = [a for a in ad_groups
                     if set(geo_predicates).intersection(a.geographic_predicates) > set()]
-    logging.warning("removed geo non-matches, now: %s" % ad_groups)
-    # ad_groups = filter(lambda a: set(device_predicates).intersection(a.device_predicates) > set(), ad_groups)
+    logging.debug("removed geo non-matches, now: %s" % ad_groups)
     ad_groups = [a for a in ad_groups
                     if set(device_predicates).intersection(a.device_predicates) > set()]
     logging.warning("removed device non-matches, now: %s" % ad_groups)
     
-    # TODO: frequency capping and other user / request based randomizations
+    # frequency capping and other user / request based randomizations
     udid = kw["udid"]
         
     # if any ad groups were returned, find the creatives that match the requested format in all candidates
@@ -535,7 +528,7 @@ class AdHandler(webapp.RequestHandler):
                           function webviewDidClose(){} 
                           function webviewDidAppear(){} 
                         </script></head>
-                        <body style="margin:0;padding:0;width:${w}px">${html_data}$trackingPixel</body></html>"""),
+                        <body style="margin:0;padding:0;width:${w}px;background:white">${html_data}$trackingPixel</body></html>"""),
   }
   def render_creative(self, c, **kwargs):
     if c:
@@ -562,7 +555,7 @@ class AdHandler(webapp.RequestHandler):
       else:
         params.update(title='')
         
-      if kwargs["v"] >= 2:  
+      if kwargs["v"] >= 2 and not "Android" in self.request.headers["User-Agent"]:  
         params.update(finishLoad='<script>function finishLoad(){window.location="mopub://finishLoad";} window.onload = function(){finishLoad();} </script>')
       else:
         params.update(finishLoad='')  
@@ -582,16 +575,18 @@ class AdHandler(webapp.RequestHandler):
         
       if str(c.ad_type) == "adsense":
         logging.warning('pub id:%s'%kwargs["site"].account.adsense_pub_id)
+        site = kwargs["site"]
         header_dict = {
           "Gclientid":str(kwargs["site"].account.adsense_pub_id),
-  				"Gcompanyname":"Company Name",
-  				"Gappname":"App Name",
+  				"Gcompanyname":str(kwargs["site"].account.adsense_company_name),
+  				"Gappname":str(kwargs["site"].app_key.adsense_app_name),
   				"Gappid":"0",
-  				"Gkeywords":"",
-  				"Gtestadrequest":"1",
-          "Gchannelids":str(kwargs["site"].adsense_channel_id) or '',        
+  				"Gkeywords":str(kwargs["site"].keywords or ''),
+  				"Gtestadrequest":"0",
+          "Gchannelids":str(kwargs["site"].adsense_channel_id or ''),        
         # "Gappwebcontenturl":,
           "Gadtype":"GADAdSenseTextImageAdType", #GADAdSenseTextAdType,GADAdSenseImageAdType,GADAdSenseTextImageAdType
+          "Gtestadrequest":"1" if site.account.adsense_test_mode else "0",
         # "Ghostid":,
         # "Gbackgroundcolor":"00FF00",
         # "Gadtopbackgroundcolor":"FF0000",

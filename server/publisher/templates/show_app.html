@@ -35,6 +35,9 @@
 		<tr><th>Name</th><td>{{app.name}}</td></tr>
 		<tr><th>Platform</th><td>{{app.app_type}}</td></tr>
 		<tr><th>URL</th><td>{{app.url}}</td></tr>
+		{% if app.adsense_app_name %}
+		<tr><th>AdSense App Name</th><td>{{app.adsense_app_name}}</td></tr>
+		{% endif %}
 	</table>
 	
 	<h3>

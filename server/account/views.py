@@ -51,6 +51,7 @@ class AccountHandler(RequestHandler):
     a = self.account
     a.adsense_pub_id = self.request.POST.get("adsense_pub_id")
     a.admob_pub_id = self.request.POST.get("admob_pub_id")
+    a.adsense_company_name = self.request.POST.get("adsense_company_name")
     a.put()
     return HttpResponseRedirect("/account")
 

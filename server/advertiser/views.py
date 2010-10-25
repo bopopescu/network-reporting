@@ -204,7 +204,7 @@ class CreateAdGroupHandler(RequestHandler):
       site.app = App.get(site.app_key.key())
 			
 		# TODO: Clean up this hacked shit	
-    networks = [["adsense","Google AdSense",False],["iAd","Apple iAd",False],["admob","AdMob",False],["millennial","Millennial Media",False],["custom","Custom",False]]
+    networks = [["adsense","Google AdSense",False],["iAd","Apple iAd",False],["admob","AdMob",False],["millennial","Millennial Media",False],["appnexus","App Nexus",False],["custom","Custom",False]]
     for n in networks:
       if adgroup.network_type == n[0]:
         n[2] = True
@@ -231,7 +231,7 @@ class CreateAdGroupHandler(RequestHandler):
         creative.put()
       else:
         creative = Creative.all().filter("ad_group =",adgroup.key()) .get()
-        creative.ad_type = adgroup.network_type
+        creative.ad_type = 'html' if adgroup.network_type in ['millenial','appnexus'] else adgroup.network_type #TODO: Broken
         creative.put()
         
       return HttpResponseRedirect(reverse('advertiser_campaign',kwargs={}))

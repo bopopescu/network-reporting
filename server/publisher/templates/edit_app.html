@@ -23,11 +23,15 @@
           </td>
       </tr>
 			<tr>
-				<th>iTunes/Android Market URL</th><td><input type='text' name="url" size="50" placeholder="http://itunes.apple.com/xyz"/ value="{{app.url|default_if_none:""}}"></td>
+				<th>iTunes/Android Market URL</th><td><input type='text' name="url" size="50" placeholder="http://itunes.apple.com/xyz"  value="{{app.url|default_if_none:""}}"></td>
 			</tr>
 			<tr>
 				<th>Description</th><td><textarea name="description" cols="50" rows="3">{{app.description|default_if_none:""}}</textarea></td>
 			</tr>
+			<tr>
+				<th>AdSense App Name</th><td><input type='text' name="adsense_app_name" size="30" value="{{app.adsense_app_name|default_if_none:""}}"/></td>
+			</tr>
+			
 		
 		</table>
 		<p>

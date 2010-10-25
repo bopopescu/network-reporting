@@ -43,7 +43,7 @@ class AdGroup(db.Model):
 
   # the priority level at which this ad group should be auctioned
   priority_level = db.IntegerProperty(default=1)
-  network_type = db.StringProperty(choices=["adsense", "iAd", "admob","millennial"])
+  network_type = db.StringProperty(choices=["adsense", "iAd", "admob","millennial","appnexus"])
 
   bid = db.FloatProperty()
   bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpm")
@@ -141,7 +141,8 @@ class AdGroup(db.Model):
     if self.network_type == 'adsense': c = AdSenseCreative(ad_type="adsense", format_predicates=["format=*"])
     elif self.network_type == 'iAd': c = iAdCreative(ad_type="iAd", format_predicates=["format=320x50"])
     elif self.network_type == 'admob': c = AdMobCreative(ad_type="admob", format_predicates=["format=320x50"])
-    elif self.network_type == 'millennial': c = MillennialCreative(ad_type="html_data",format_predicates=["format=320x50"]) # TODO: make sure formats are right
+    elif self.network_type == 'millennial': c = MillennialCreative(ad_type="html",format_predicates=["format=320x50"]) # TODO: make sure formats are right
+    elif self.network_type == 'appnexus': c = AppNexusCreative(ad_type="html",format_predicates=["format=300x250"])
     
     if c: c.ad_group = self
     return c
@@ -160,7 +161,7 @@ class Creative(polymodel.PolyModel):
   deleted = db.BooleanProperty(default=False)
 
   # the creative type helps the ad server render the right thing if the creative wins the auction
-  ad_type = db.StringProperty(choices=["text", "image", "iAd", "adsense", "admob", "millennial","html", "clear"], default="text")
+  ad_type = db.StringProperty(choices=["text", "image", "iAd", "adsense", "admob", "html", "clear"], default="text")
 
   # tracking pixel
   tracking_url = db.StringProperty()
@@ -239,6 +240,9 @@ class AdMobCreative(Creative):
 
 class MillennialCreative(Creative):
   pass
+  
+class AppNexusCreative(Creative):
+  pass  
     
 class NullCreative(Creative):
   pass

@@ -90,10 +90,10 @@ class AdAuction(object):
       if adgroup.network_type in server_side_dict:
         KlassServerSide = server_side_dict[adgroup.network_type]
         # TODO fix this, only millenial needs extra parameters
-        server_side = KlassServerSide(request,adunit.millennial_placement_id) 
+        server_side = KlassServerSide(request,adunit.app_key.millennial_placement_id) 
         logging.warning(server_side.url)   
 
-        rpc = urlfetch.create_rpc(.200) # maximum delay we are willing to accept is 200 ms
+        rpc = urlfetch.create_rpc(1) # maximum delay we are willing to accept is 200 ms
         urlfetch.make_fetch_call(rpc, server_side.url)
         # attaching the adgroup to the rpc
         rpc.adgroup = adgroup
@@ -390,6 +390,7 @@ class AdHandler(webapp.RequestHandler):
   }
   
   def get(self):
+    logging.warning(self.request.headers['User-Agent'] )
     id = self.request.get("id")
     site = Site.site_by_id(id) if id else None
     now = datetime.datetime.now()

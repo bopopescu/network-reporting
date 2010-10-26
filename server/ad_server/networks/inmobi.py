@@ -12,13 +12,16 @@ class InMobiServerSide(ServerSide):
     
   @property
   def headers(self):
+    # TODO: Replace with self.get_appid()
     return {'X-mKhoj-SiteId': '4028cb962b75ff06012b792b39b30044'}
 
   @property  
   def payload(self):
     import urllib
+    # TODO: Replace with self.get_appid()
     data = {'mk-siteid': '4028cb962b75ff06012b792b39b30044',
             'mk-version': 'el-QEQE-CTATE-20090805',
+            # TODO: Replace with self.get_ip()
             'mk-carrier': '208.54.5.79',
             'h-user-agent': self.get_user_agent()}
     return urllib.urlencode(data)

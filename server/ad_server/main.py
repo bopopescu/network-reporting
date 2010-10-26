@@ -53,6 +53,9 @@ from publisher.models import *
 from advertiser.models import *
 from reporting.models import *
 
+from ad_server.networks.millennial import MillennialServerSide
+from ad_server.networks.appnexus import AppNexusServerSide
+from ad_server.networks.inmobi import InMobiServerSide
 
 CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gzip(gfe)"]
 MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7PnE6cH9_PX7OoeIIr5FjnTA'
@@ -84,16 +87,18 @@ class AdAuction(object):
     # TODO: note adunit is actually a "Site"
     rpcs = []
     for adgroup in adgroups:
-      from ad_server.networks.millennial import MillennialServerSide
-      from ad_server.networks.appnexus import AppNexusServerSide
-      server_side_dict = {"millennial":MillennialServerSide,"appnexus":AppNexusServerSide}
+      server_side_dict = {"millennial":MillennialServerSide,"appnexus":AppNexusServerSide,"inmobi":InMobiServerSide}
       if adgroup.network_type in server_side_dict:
         KlassServerSide = server_side_dict[adgroup.network_type]
         server_side = KlassServerSide(request,357) # TODO fix this
         logging.warning(server_side.url)   
 
-        rpc = urlfetch.create_rpc(.200) # maximum delay we are willing to accept is 200 ms
-        urlfetch.make_fetch_call(rpc, server_side.url)
+        rpc = urlfetch.create_rpc(1) # maximum delay we are willing to accept is 200 ms
+        payload = server_side.payload
+        if payload == None:
+          urlfetch.make_fetch_call(rpc, server_side.url, headers=server_side.headers)
+        else:
+          urlfetch.make_fetch_call(rpc, server_side.url, headers=server_side.headers, method=urlfetch.POST, payload=payload)
         # attaching the adgroup to the rpc
         rpc.adgroup = adgroup
         rpc.serverside = server_side
@@ -312,8 +317,8 @@ class AdAuction(object):
                                 winning_creative = winner
                                 winning_creative.html_data = response
                                 return winning_creative
-                        except urlfetch.DownloadError:
-                          pass
+                        except Exception,e:
+                          logging.warning(e)
                       else:
                         winning_creative = winner
                         return winning_creative

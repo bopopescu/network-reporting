@@ -20,6 +20,14 @@ class MillennialServerSide(ServerSide):
   def url(self):
     return self.base_url + '?' + self.get_query_string()
     
+  @property
+  def headers(self):
+    return {}
+    
+  @property  
+  def payload(self):
+    return None
+    
   def get_response(self):
     import urllib2
     req = urllib2.Request(self.url)

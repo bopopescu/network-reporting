@@ -14,7 +14,13 @@ class ServerSide(object):
     return self.app_id
     
   def get_user_agent(self):
-    return self.request.headers['User-Agent']  
+    ua =  self.request.headers.get('User_Agent',None) 
+    if not ua:
+      ua = self.request.headers['User-Agent']
+    return ua
+  @property
+  def headers(self):
+    return {}  
 
   def bid_and_html_for_response(self,response):
     return 0.0,"<html>BLAH</html>"  

@@ -231,7 +231,7 @@ class CreateAdGroupHandler(RequestHandler):
         creative.put()
       else:
         creative = Creative.all().filter("ad_group =",adgroup.key()) .get()
-        creative.ad_type = 'html' if adgroup.network_type in ['millenial','inmobi','appnexus'] else adgroup.network_type #TODO: Broken
+        creative.ad_type = 'html' if adgroup.network_type in ['millennial','inmobi','appnexus'] else adgroup.network_type #TODO: Broken
         creative.put()
         
       return HttpResponseRedirect(reverse('advertiser_campaign',kwargs={}))

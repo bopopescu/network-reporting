@@ -60,9 +60,12 @@ class Site(db.Model):
   def threshold_cpm(self, priority_level):
     return 0
   
-  @property
-  def app(self):
-    return self.app_key
+  def _get_app(self):
+      return self.app_key
+  def _set_app(self, value):
+      self.app_key = value
+  app = property(_get_app, _set_app)
+    
     
   @classmethod
   def site_by_id(c, id):

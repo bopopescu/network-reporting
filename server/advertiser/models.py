@@ -43,7 +43,7 @@ class AdGroup(db.Model):
 
   # the priority level at which this ad group should be auctioned
   priority_level = db.IntegerProperty(default=1)
-  network_type = db.StringProperty(choices=["adsense", "iAd", "admob","millennial","appnexus"])
+  network_type = db.StringProperty(choices=["adsense", "iAd", "admob","millennial","appnexus","inmobi"])
 
   bid = db.FloatProperty()
   bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpm")
@@ -142,6 +142,7 @@ class AdGroup(db.Model):
     elif self.network_type == 'iAd': c = iAdCreative(ad_type="iAd", format_predicates=["format=320x50"])
     elif self.network_type == 'admob': c = AdMobCreative(ad_type="admob", format_predicates=["format=320x50"])
     elif self.network_type == 'millennial': c = MillennialCreative(ad_type="html",format_predicates=["format=320x50"]) # TODO: make sure formats are right
+    elif self.network_type == 'inmobi': c = InMobiCreative(ad_type="html",format_predicates=["format=320x50"]) # TODO: make sure formats are right
     elif self.network_type == 'appnexus': c = AppNexusCreative(ad_type="html",format_predicates=["format=300x250"])
     
     if c: c.ad_group = self
@@ -239,6 +240,9 @@ class AdMobCreative(Creative):
   pass
 
 class MillennialCreative(Creative):
+  pass
+
+class InMobiCreative(Creative):
   pass
   
 class AppNexusCreative(Creative):

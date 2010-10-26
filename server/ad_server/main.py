@@ -89,7 +89,8 @@ class AdAuction(object):
       server_side_dict = {"millennial":MillennialServerSide,"appnexus":AppNexusServerSide}
       if adgroup.network_type in server_side_dict:
         KlassServerSide = server_side_dict[adgroup.network_type]
-        server_side = KlassServerSide(request,357) # TODO fix this
+        # TODO fix this, only millenial needs extra parameters
+        server_side = KlassServerSide(request,adunit.millennial_placement_id) 
         logging.warning(server_side.url)   
 
         rpc = urlfetch.create_rpc(.200) # maximum delay we are willing to accept is 200 ms

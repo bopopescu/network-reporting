@@ -1,5 +1,6 @@
 from ad_server.networks.server_side import ServerSide
 import logging
+import re
 
 class InMobiServerSide(ServerSide):
   base_url = "http://w.mkhoj.com/showad.asm"
@@ -33,6 +34,9 @@ class InMobiServerSide(ServerSide):
     return response.read()
     
   def bid_and_html_for_response(self,response):
-    # TODO: do any sort of manipulation here that we want, like resizing the image, LAME
-    return 0.0,response.content
+    if re.match("<!--.*--\>$", response.content) == None:
+      # TODO: do any sort of manipulation here that we want, like resizing the image, LAME
+      return 0.0,response.content
+    else:
+      raise Exception("InMobi ad is empty")
     

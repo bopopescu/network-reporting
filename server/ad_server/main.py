@@ -56,6 +56,7 @@ from reporting.models import *
 from ad_server.networks.millennial import MillennialServerSide
 from ad_server.networks.appnexus import AppNexusServerSide
 from ad_server.networks.inmobi import InMobiServerSide
+from ad_server.networks.brightroll import BrightRollServerSide
 
 CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gzip(gfe)"]
 MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7PnE6cH9_PX7OoeIIr5FjnTA'
@@ -87,7 +88,7 @@ class AdAuction(object):
     # TODO: note adunit is actually a "Site"
     rpcs = []
     for adgroup in adgroups:
-      server_side_dict = {"millennial":MillennialServerSide,"appnexus":AppNexusServerSide,"inmobi":InMobiServerSide}
+      server_side_dict = {"millennial":MillennialServerSide,"appnexus":AppNexusServerSide,"inmobi":InMobiServerSide,"brightroll":BrightRollServerSide}
       if adgroup.network_type in server_side_dict:
         KlassServerSide = server_side_dict[adgroup.network_type]
         server_side = KlassServerSide(request,357) # TODO fix this
@@ -534,6 +535,7 @@ class AdHandler(webapp.RequestHandler):
                           function webviewDidAppear(){} 
                         </script></head>
                         <body style="margin:0;padding:0;width:${w}px;background:white">${html_data}$trackingPixel</body></html>"""),
+    "html_full":Template("$html_data")
   }
   def render_creative(self, c, **kwargs):
     if c:
@@ -554,6 +556,9 @@ class AdHandler(webapp.RequestHandler):
       elif c.ad_type == "html":
         params.update(html_data=c.html_data)
         params.update({"html_data": kwargs["html_data"], "w": format[0], "h": format[1]})
+      elif c.ad_type == "html_full":
+        params.update(html_data=c.html_data)
+        params.update({"html_data": kwargs["html_data"]})
         
       if kwargs["q"] or kwargs["addr"]:
         params.update(title=','.join(kwargs["q"]+list(kwargs["addr"])))

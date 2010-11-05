@@ -204,7 +204,7 @@ class CreateAdGroupHandler(RequestHandler):
       site.app = App.get(site.app_key.key())
 			
 		# TODO: Clean up this hacked shit	
-    networks = [["adsense","Google AdSense",False],["iAd","Apple iAd",False],["admob","AdMob",False],["millennial","Millennial Media",False],["inmobi","InMobi",False],["appnexus","App Nexus",False],["custom","Custom",False]]
+    networks = [["adsense","Google AdSense",False],["iAd","Apple iAd",False],["admob","AdMob",False],["millennial","Millennial Media",False],["inmobi","InMobi",False],["appnexus","App Nexus",False],["brightroll","BrightRoll",False],["custom","Custom",False]]
     for n in networks:
       if adgroup.network_type == n[0]:
         n[2] = True

@@ -1,6 +1,8 @@
 from ad_server.networks.server_side import ServerSide
 import logging
 import re
+import urllib
+import urllib2
 
 class InMobiServerSide(ServerSide):
   base_url = "http://w.mkhoj.com/showad.asm"
@@ -18,7 +20,6 @@ class InMobiServerSide(ServerSide):
 
   @property  
   def payload(self):
-    import urllib
     # TODO: Replace with self.get_appid()
     data = {'mk-siteid': '4028cb962b75ff06012b792b39b30044',
             'mk-version': 'el-QEQE-CTATE-20090805',
@@ -28,7 +29,6 @@ class InMobiServerSide(ServerSide):
     return urllib.urlencode(data)
     
   def get_response(self):
-    import urllib2
     req = urllib2.Request(self.url)
     response = urllib2.urlopen(req)  
     return response.read()

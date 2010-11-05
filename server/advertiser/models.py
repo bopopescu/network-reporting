@@ -43,7 +43,7 @@ class AdGroup(db.Model):
 
   # the priority level at which this ad group should be auctioned
   priority_level = db.IntegerProperty(default=1)
-  network_type = db.StringProperty(choices=["adsense", "iAd", "admob","millennial","appnexus","inmobi"])
+  network_type = db.StringProperty(choices=["adsense", "iAd", "admob","millennial","appnexus","inmobi","brightroll"])
 
   bid = db.FloatProperty()
   bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpm")
@@ -141,6 +141,7 @@ class AdGroup(db.Model):
     if self.network_type == 'adsense': c = AdSenseCreative(ad_type="adsense", format_predicates=["format=*"])
     elif self.network_type == 'iAd': c = iAdCreative(ad_type="iAd", format_predicates=["format=320x50"])
     elif self.network_type == 'admob': c = AdMobCreative(ad_type="admob", format_predicates=["format=320x50"])
+    elif self.network_type == 'brightroll': c = BrightRollCreative(ad_type="html_full", format_predicates=["format=*"])
     elif self.network_type == 'millennial': c = MillennialCreative(ad_type="html",format_predicates=["format=320x50"]) # TODO: make sure formats are right
     elif self.network_type == 'inmobi': c = InMobiCreative(ad_type="html",format_predicates=["format=320x50"]) # TODO: make sure formats are right
     elif self.network_type == 'appnexus': c = AppNexusCreative(ad_type="html",format_predicates=["format=300x250"])
@@ -162,7 +163,7 @@ class Creative(polymodel.PolyModel):
   deleted = db.BooleanProperty(default=False)
 
   # the creative type helps the ad server render the right thing if the creative wins the auction
-  ad_type = db.StringProperty(choices=["text", "image", "iAd", "adsense", "admob", "html", "clear"], default="text")
+  ad_type = db.StringProperty(choices=["text", "image", "iAd", "adsense", "admob", "html", "html_full", "clear"], default="text")
 
   # tracking pixel
   tracking_url = db.StringProperty()
@@ -212,7 +213,7 @@ class TextCreative(Creative):
 class HtmlCreative(Creative):
   # html ad properties
   html_name = db.StringProperty(required=True, default="Demo HTML Creative")
-  html_data = db.TextProperty(default="<style type=\"text/css\">body {font-size: 12px;font-family:helvetica,arial,sans-serif;margin:0;padding:0;text-align:center} .creative_headline {font-size: 18px;} .creative_promo {color: green;text-decoration: none;}</style><div class=\"creative_headline\">Welcome to mopub!</div><div class=\"creative_promo\">This is a test ad</div><div>You can now set up a new campaign to serve other ads.</div>")
+  html_data = db.TextProperty(default="<style type=\"text/css\">body {font-size: 12px;font-family:helvetica,arial,sans-serif;margin:0;padding:0;text-align:center} .creative_headline {font-size: 18px;} .creative_promo {color: green;text-decoration: none;}</style><div class=\"creative_headline\">Welcome to mopub!</div><div class=\"creative_promo\"><a href=\"http://www.mopub.com\">Click here to test ad</a></div><div>You can now set up a new campaign to serve other ads.</div>")
 
 class ImageCreative(Creative):
   # image properties
@@ -247,7 +248,10 @@ class InMobiCreative(Creative):
   
 class AppNexusCreative(Creative):
   pass  
-    
+
+class BrightRollCreative(Creative):
+  pass
+  
 class NullCreative(Creative):
   pass
   

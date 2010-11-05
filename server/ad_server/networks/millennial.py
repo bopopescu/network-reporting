@@ -1,4 +1,6 @@
 from ad_server.networks.server_side import ServerSide
+import urllib2
+import urllib
 
 class MillennialServerSide(ServerSide):
   base_url = "http://ads.mp.mydas.mobi/getAd.php5"
@@ -12,7 +14,6 @@ class MillennialServerSide(ServerSide):
             'ua':self.get_user_agent()}
     
   def get_query_string(self):
-    import urllib
     query_string = urllib.urlencode(self.get_key_values())       
     return query_string
   
@@ -28,7 +29,6 @@ class MillennialServerSide(ServerSide):
   #   return "Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_0 like Mac OS X; en-us) AppleWebKit/532.9 (KHTML, like Gecko) Version/4.0.5 Mobile/8A293 Safari/6531.22.7"
     
   def get_response(self):
-    import urllib2
     req = urllib2.Request(self.url)
     response = urllib2.urlopen(req)  
     return response.read()

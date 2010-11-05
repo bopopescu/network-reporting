@@ -14,10 +14,8 @@ class ServerSide(object):
     return self.app_id
     
   def get_user_agent(self):
-    ua =  self.request.headers.get('User_Agent',None) 
-    if not ua:
-      ua = self.request.headers['User-Agent']
-    return ua
+    return self.request.headers['User-Agent']
+
   @property
   def headers(self):
     return {}  

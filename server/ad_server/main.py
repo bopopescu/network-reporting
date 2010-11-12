@@ -579,13 +579,17 @@ class AdHandler(webapp.RequestHandler):
         params.update(trackingPixel='')  
       
       # indicate to the client the winning creative type, in case it is natively implemented (iad, clear)
-      self.response.headers.add_header("X-Adtype", str(c.ad_type))
-      self.response.headers.add_header("X-Backfill", str(c.ad_type))
       
       if str(c.ad_type) == "iAd":
+        self.response.headers.add_header("X-Adtype", str(c.ad_type))
+        self.response.headers.add_header("X-Backfill", str(c.ad_type))
+        
         self.response.headers.add_header("X-Failurl",self.request.url+'&exclude='+str(c.ad_type))
         
       if str(c.ad_type) == "adsense":
+        self.response.headers.add_header("X-Adtype", str(c.ad_type))
+        self.response.headers.add_header("X-Backfill", str(c.ad_type))
+        
         logging.warning('pub id:%s'%kwargs["site"].account.adsense_pub_id)
         site = kwargs["site"]
         header_dict = {

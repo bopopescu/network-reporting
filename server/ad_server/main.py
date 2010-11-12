@@ -580,6 +580,9 @@ class AdHandler(webapp.RequestHandler):
       
       # indicate to the client the winning creative type, in case it is natively implemented (iad, clear)
       
+      self.response.headers.add_header("X-Adtype", str('html'))
+      
+      
       if str(c.ad_type) == "iAd":
         self.response.headers.add_header("X-Adtype", str(c.ad_type))
         self.response.headers.add_header("X-Backfill", str(c.ad_type))

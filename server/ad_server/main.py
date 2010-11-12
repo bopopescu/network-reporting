@@ -679,7 +679,7 @@ class AdClickHandler(webapp.RequestHandler):
     sz = self.request.query_string
     r = sz.rfind("&r=")
     if r > 0:
-      url = sz[(r + 2):]
+      url = sz[(r + 3):]
       url = unquote(url)
       # forward on to the click URL
       self.redirect(url)

@@ -91,7 +91,8 @@ class AdAuction(object):
       server_side_dict = {"millennial":MillennialServerSide,"appnexus":AppNexusServerSide,"inmobi":InMobiServerSide,"brightroll":BrightRollServerSide}
       if adgroup.network_type in server_side_dict:
         KlassServerSide = server_side_dict[adgroup.network_type]
-        server_side = KlassServerSide(request,357) # TODO fix this
+        # TODO fix this, only millenial needs extra parameters
+        server_side = KlassServerSide(request,adunit.app_key.millennial_placement_id) 
         logging.warning(server_side.url)   
 
         rpc = urlfetch.create_rpc(1) # maximum delay we are willing to accept is 200 ms
@@ -395,6 +396,7 @@ class AdHandler(webapp.RequestHandler):
   }
   
   def get(self):
+    logging.warning(self.request.headers['User-Agent'] )
     id = self.request.get("id")
     site = Site.site_by_id(id) if id else None
     now = datetime.datetime.now()
@@ -577,13 +579,17 @@ class AdHandler(webapp.RequestHandler):
         params.update(trackingPixel='')  
       
       # indicate to the client the winning creative type, in case it is natively implemented (iad, clear)
-      self.response.headers.add_header("X-Adtype", str(c.ad_type))
-      self.response.headers.add_header("X-Backfill", str(c.ad_type))
       
       if str(c.ad_type) == "iAd":
+        self.response.headers.add_header("X-Adtype", str(c.ad_type))
+        self.response.headers.add_header("X-Backfill", str(c.ad_type))
+        
         self.response.headers.add_header("X-Failurl",self.request.url+'&exclude='+str(c.ad_type))
         
       if str(c.ad_type) == "adsense":
+        self.response.headers.add_header("X-Adtype", str(c.ad_type))
+        self.response.headers.add_header("X-Backfill", str(c.ad_type))
+        
         logging.warning('pub id:%s'%kwargs["site"].account.adsense_pub_id)
         site = kwargs["site"]
         header_dict = {
@@ -671,7 +677,7 @@ class AdClickHandler(webapp.RequestHandler):
     # BROKEN
     # url = self.request.get("r")
     sz = self.request.query_string
-    r = sz.rfind("r=")
+    r = sz.rfind("&r=")
     if r > 0:
       url = sz[(r + 2):]
       url = unquote(url)

@@ -20,14 +20,13 @@ class MillennialServerSide(ServerSide):
   @property
   def url(self):
     return self.base_url + '?' + self.get_query_string()
-    
-  @property
-  def headers(self):
-    return {}
-    
+        
   @property  
   def payload(self):
     return None
+  
+  # def get_user_agent(self):
+  #   return "Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_0 like Mac OS X; en-us) AppleWebKit/532.9 (KHTML, like Gecko) Version/4.0.5 Mobile/8A293 Safari/6531.22.7"
     
   def get_response(self):
     req = urllib2.Request(self.url)

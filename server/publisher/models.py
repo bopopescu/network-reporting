@@ -11,6 +11,8 @@ class App(db.Model):
 
   name = db.StringProperty(required=True)
   adsense_app_name = db.StringProperty()
+  millennial_placement_id = db.StringProperty()
+  
   app_type = db.StringProperty(required=True, default="iphone", choices=["iphone", "android", "ipad"])
   description = db.TextProperty()
   url = db.StringProperty()
@@ -25,7 +27,6 @@ class Site(db.Model):
   
   # TODO: figure out how to expose this
   adsense_channel_id = db.StringProperty()
-  millennial_placement_id = db.StringProperty()
   
   name = db.StringProperty(required=True)
   url = db.StringProperty()
@@ -59,6 +60,13 @@ class Site(db.Model):
   def threshold_cpm(self, priority_level):
     return 0
   
+  def _get_app(self):
+      return self.app_key
+  def _set_app(self, value):
+      self.app_key = value
+  app = property(_get_app, _set_app)
+    
+    
   @classmethod
   def site_by_id(c, id):
     if id.startswith("ca"):

@@ -580,16 +580,13 @@ class AdHandler(webapp.RequestHandler):
       
       # indicate to the client the winning creative type, in case it is natively implemented (iad, clear)
       
-      self.response.headers.add_header("X-Adtype", str('html'))
-      
-      
-      if str(c.ad_type) == "iAd":
+      elif str(c.ad_type) == "iAd":
         self.response.headers.add_header("X-Adtype", str(c.ad_type))
         self.response.headers.add_header("X-Backfill", str(c.ad_type))
         
         self.response.headers.add_header("X-Failurl",self.request.url+'&exclude='+str(c.ad_type))
         
-      if str(c.ad_type) == "adsense":
+      elif str(c.ad_type) == "adsense":
         self.response.headers.add_header("X-Adtype", str(c.ad_type))
         self.response.headers.add_header("X-Backfill", str(c.ad_type))
         
@@ -631,6 +628,9 @@ class AdHandler(webapp.RequestHandler):
         self.response.headers.add_header("X-Height",str(format[1]))
       
         self.response.headers.add_header("X-Backgroundcolor","0000FF")
+      else:  
+        self.response.headers.add_header("X-Adtype", str('html'))
+        
         
       # render the HTML body
       self.response.out.write(self.TEMPLATES[c.ad_type].safe_substitute(params))

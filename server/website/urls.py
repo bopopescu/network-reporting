@@ -6,10 +6,8 @@ from django.views.generic.simple import direct_to_template
 urlpatterns = patterns('website.views',
   url(r'^main$', direct_to_template,{'template': 'website/index.html'},name='website_main'),
   url(r'^welcome$', direct_to_template,{'template': 'website/welcome.html'},name='website_welcome'),
-  url(r'^about$',direct_to_template,{'template': 'website/about.html'},name='website_about'),
-  url(r'^$', 'website_splash2', name='website_splash2'),
-  url(r'^splash$', 'website_splash', name='website_splash'),
-  url(r'^splash2$', 'website_splash2', name='website_splash2'),
+  url(r'^about$', direct_to_template,{'template': 'website/about.html'},name='website_about'),
+  url(r'^$', 'website_root', name='website_root'),
   url(r'^splash/join/$', 'website_join', name='website_join'),
   url(r'^pending/$', 'website_pending', name='website_pending'),
 )

@@ -67,57 +67,26 @@ def logout(request,*args,**kwargs):
   return LogoutHandler()(request,*args,**kwargs)
   
 def test(request,*args,**kwargs):
-  import time
-  asdf
-  time.sleep(2)
-  html = """<html> 
-  	<head>
-  		<title></title>
-  	</head> 
-  	<body style="margin: 0;width:320px;height:480px;" > 
-    	<script>
-  		  function finishLoad(){window.location="mopub://finishLoad";} 
-  		  window.onload = function(){
-  		    finishLoad();
-  		  }
-  		</script>
-  		<script type="text/javascript">
-  			function webviewDidClose(){var img = new Image(); img.src="/hellothereimclosing/"} 
-  			function webviewDidAppear(){var img = new Image(); img.src="/hellothereimopening/"} 
-        function showImage(){var img = document.createElement("img"); img.setAttribute('src','/images/yelp.png'); document.body.appendChild(img);}
-        setTimeout("showImage()",100);
-  			function close(){window.location = "mopub://close"};
-  			//setTimeout("close()",10000);
-  		</script>
-  	</body>
-  </html>
-  """
-  response = HttpResponse(html) 
-  # response['X-Closebutton'] = 'Next'
+  from common.utils.cachedquerymanager import CachedQueryManager
+  key = request.GET.get('key')
+  response = CachedQueryManager().get([key])
   return response
 
 def test2(request,*args,**kwargs):
-  raise Http404
-  html = """<html> 
-  	<head>
-  		<title></title>
-  	</head> 
-  	<body style="margin: 0;width:320px;height:480px;" > 
-  		<script type="text/javascript">
-  			function webviewDidClose(){var img = new Image(); img.src="/hellothereimclosing/"} 
-  			function webviewDidAppear(){var img = new Image(); img.src="/hellothereimopening/"} 
-  			function close(){window.location="mopub://finishLoad?query=imthequery";} 
-  			setTimeout("finish()",5000);
+  from publisher.query_managers import AdUnitQueryManager
+  key = request.GET.get('key')
+  manager = AdUnitQueryManager(key)
+  adunit = manager.get_adunit()
+  adgroups = manager.get_adgroups()
 
-  			function showImage(){var img = document.createElement("img"); img.setAttribute('src','/images/yelp.png'); document.body.appendChild(img);}
-  			setTimeout("showImage()",3000);
-  		</script>
-  	</body>
-  </html>
-  """
-  response = HttpResponse(html) 
-  response['X-CloseButton'] = 'None'
-  return response  
+  adgroups = [a for a in adgroups 
+                    if a.campaign.active and 
+                      (a.campaign.start_date >= SiteStats.today() if a.campaign.start_date else True) 
+                      and (a.campaign.end_date <= SiteStats.today() if a.campaign.end_date else True)]
+  
+  creatives = manager.get_creatives_for_adgroups(adgroups)
+  
+  return HttpResponse("adgroups: %s <br>creatives: %s"%(adgroups,creatives))
   
   
   

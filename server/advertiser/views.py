@@ -17,12 +17,14 @@ from common.ragendja.template import render_to_response, JSONResponse
 # from common.ragendja.auth.decorators import google_login_required as login_required
 from common.utils.decorators import whitelist_login_required
 
-
 from advertiser.models import *
 from advertiser.forms import CampaignForm, AdGroupForm
 
 from publisher.models import Site, Account, App
 from reporting.models import SiteStats
+
+from common.utils.cachedquerymanager import CachedQueryManager
+
 
 class RequestHandler(object):
     def __call__(self,request,*args,**kwargs):
@@ -204,7 +206,7 @@ class CreateAdGroupHandler(RequestHandler):
       site.app = App.get(site.app_key.key())
 			
 		# TODO: Clean up this hacked shit	
-    networks = [["adsense","Google AdSense",False],["iAd","Apple iAd",False],["admob","AdMob",False],["millennial","Millennial Media",False],["inmobi","InMobi",False],["appnexus","App Nexus",False],["brightroll","BrightRoll",False],["custom","Custom",False]]
+    networks = [["adsense","Google AdSense",False],["iAd","Apple iAd",False],["admob","AdMob",False],["millennial","Millennial Media",False],["inmobi","InMobi",False],["greystripe","GreyStripe",False],["appnexus","App Nexus",False],["brightroll","BrightRoll",False],["custom","Custom",False]]
     for n in networks:
       if adgroup.network_type == n[0]:
         n[2] = True
@@ -216,12 +218,23 @@ class CreateAdGroupHandler(RequestHandler):
       adgroup = AdGroup.get(db.Key(adgroup_key))
     else:
       adgroup = None  
+    
+    orig_site_keys = set(adgroup.site_keys) if adgroup else set()
+      
     f = AdGroupForm(data=self.request.POST,instance=adgroup)
+    
+    
     adgroup = f.save(commit=False)
     adgroup.campaign = Campaign.get(db.Key(self.request.POST.get("id")))
     adgroup.keywords = filter(lambda k: len(k) > 0, self.request.POST.get('keywords').lower().replace('\r','\n').split('\n'))
     adgroup.site_keys = map(lambda x: db.Key(x), self.request.POST.getlist('sites'))
     adgroup.put()
+    
+    updated_site_keys = orig_site_keys.union(set(adgroup.site_keys))
+    
+    # update cache
+    adunits = Site.get(list(updated_site_keys))
+    CachedQueryManager().cache_delete(adunits)
      
     # if the campaign is a network type, automatically populate the right creative and go back to
     # campaign page
@@ -231,7 +244,7 @@ class CreateAdGroupHandler(RequestHandler):
         creative.put()
       else:
         creative = Creative.all().filter("ad_group =",adgroup.key()) .get()
-        if adgroup.network_type in ['millenial','inmobi','appnexus']:
+        if adgroup.network_type in ['millenial','inmobi','appnexus','greystripe']:
           creative.ad_type = 'html'
         elif adgroup.network_type in ['brightroll']:
           creative.ad_type = "html_full"
@@ -328,9 +341,12 @@ def campaign_edit(request,*args,**kwargs):
 
 class PauseHandler(RequestHandler):
   def post(self):
+    asf
     action = self.request.POST.get("action", "pause")
+    updated_campaigns = []
     for id in self.request.POST.getlist('id') or []:
       c = Campaign.get(id)
+      updated_campaigns.append(c)
       update_objs = []
       if c != None and c.u == self.account.user:
         if action == "pause":
@@ -352,8 +368,15 @@ class PauseHandler(RequestHandler):
             for creative in adgroup.creatives:
               creative.deleted = True
               update_objs.append(creative)
-      if update_objs:        
-        db.put(update_objs)    
+      if update_objs: 
+        db.put(update_objs)   
+        adgroups = AdGroup.gql("where campaign in :1 and deleted = :2", [c.key() for c in updated_campaigns], False).fetch(100) 
+        adunits = []
+        for adgroup in adgroups:
+          adunits.extend(adgroups.site_keys)
+        adunits = Site.get(adunits)  
+        logging.info("HHHHHH update: %s"%adunits)
+        CachedQueryManager().put(adunits)
     return HttpResponseRedirect(reverse('advertiser_campaign',kwargs={}))
   
 @whitelist_login_required
@@ -413,8 +436,10 @@ def campaign_adgroup_show(request,*args,**kwargs):
 class PauseAdGroupHandler(RequestHandler):
   def post(self):
     action = self.request.POST.get("action", "pause")
+    adgroups = []
     for id in self.request.POST.getlist('id') or []:
       a = AdGroup.get(id)
+      adgroups.append(a)
       update_objs = []
       if a != None and a.campaign.u == self.account.user:
         if action == "pause":
@@ -433,7 +458,13 @@ class PauseAdGroupHandler(RequestHandler):
             creative.deleted = True
             update_objs.append(creative)
       if update_objs:
-        db.put(update_objs)      
+        db.put(update_objs)     
+        adunits = []
+        for adgroup in adgroups:
+          adunits.extend(adgroup.site_keys)
+        adunits = Site.get(adunits)  
+        CachedQueryManager().cache_delete(adunits)
+         
     return HttpResponseRedirect(reverse('advertiser_campaign', kwargs={}))
 
 @whitelist_login_required
@@ -475,6 +506,11 @@ class AddCreativeHandler(RequestHandler):
         html_data=self.request.POST.get('html_data'),
         tracking_url=self.request.POST.get('tracking_url'))
       creative.put()
+    
+    # update cache
+    adunits = Site.get(ad_group.site_keys)
+    CachedQueryManager().cache_delete(adunits)
+      
     return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':ad_group.key()}))
   
 @whitelist_login_required
@@ -499,11 +535,21 @@ def creative_html(request,*args,**kwargs):
 class RemoveCreativeHandler(RequestHandler):
   def post(self):
     ids = self.request.POST.getlist('id')
+    update_objs = []
     for creative_key in ids:
       c = Creative.get(creative_key)
       if c != None and c.ad_group.campaign.u == self.account.user:
         c.deleted = True
-        c.put()
+        update_objs.append(c)
+        
+        
+    if update_objs:
+      db.put(update_objs)
+    
+      # update cache
+      adunits = Site.get(c.ad_group.site_keys)
+      CachedQueryManager().cache_delete(adunits)
+        
     return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':c.ad_group.key()}))
 
 @whitelist_login_required  

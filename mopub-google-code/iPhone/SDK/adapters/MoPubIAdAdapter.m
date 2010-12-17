@@ -6,6 +6,7 @@
 //  Copyright 2010 Stanford. All rights reserved.
 //
 
+#import <UIKit/UIKit.h>
 #import "MoPubIAdAdapter.h"
 #import "MoPubNativeSDKRegistry.h"
 #import "AdController.h"
@@ -57,6 +58,24 @@
 - (BOOL)bannerViewActionShouldBegin:(ADBannerView *)banner willLeaveApplication:(BOOL)willLeave {	
 	[self.adController nativeAdTrackAdClick];
 	return YES;
+}
+
+- (void)rotateToOrientation:(UIInterfaceOrientation)orientation {
+	ADBannerView *iAdView = (ADBannerView *)self.adController.nativeAdView;
+	if (iAdView == nil) return;
+	if (UIInterfaceOrientationIsLandscape(orientation)) {
+		iAdView.currentContentSizeIdentifier = ADBannerContentSizeIdentifier480x32;
+	}
+	else {
+		iAdView.currentContentSizeIdentifier = ADBannerContentSizeIdentifier320x50;
+	}
+	// ADBanner positions itself in the center of the super view, which we do not
+	// want, since we rely on publishers to resize the container view.
+	// position back to 0,0
+	iAdView.frame = CGRectMake(0.0, 
+							   0.0, 
+							   iAdView.frame.size.width, 
+							   iAdView.frame.size.height);
 }
 
 - (void)dealloc{

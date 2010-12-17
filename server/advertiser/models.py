@@ -43,7 +43,7 @@ class AdGroup(db.Model):
 
   # the priority level at which this ad group should be auctioned
   priority_level = db.IntegerProperty(default=1)
-  network_type = db.StringProperty(choices=["adsense", "iAd", "admob","millennial","appnexus","inmobi","brightroll"])
+  network_type = db.StringProperty(choices=["adsense", "iAd", "admob","millennial","appnexus","inmobi","brightroll","greystripe"])
 
   bid = db.FloatProperty()
   bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpm")
@@ -144,6 +144,7 @@ class AdGroup(db.Model):
     elif self.network_type == 'brightroll': c = BrightRollCreative(ad_type="html_full", format_predicates=["format=*"])
     elif self.network_type == 'millennial': c = MillennialCreative(ad_type="html",format_predicates=["format=320x50"]) # TODO: make sure formats are right
     elif self.network_type == 'inmobi': c = InMobiCreative(ad_type="html",format_predicates=["format=320x50"]) # TODO: make sure formats are right
+    elif self.network_type == 'greystripe' : c = GreyStripeCreative(ad_type="greystripe", format_predicates=["format=*"]) # TODO: only formats 320x320, 320x48, 300x250
     elif self.network_type == 'appnexus': c = AppNexusCreative(ad_type="html",format_predicates=["format=300x250"])
     
     if c: c.ad_group = self
@@ -163,7 +164,7 @@ class Creative(polymodel.PolyModel):
   deleted = db.BooleanProperty(default=False)
 
   # the creative type helps the ad server render the right thing if the creative wins the auction
-  ad_type = db.StringProperty(choices=["text", "image", "iAd", "adsense", "admob", "html", "html_full", "clear"], default="text")
+  ad_type = db.StringProperty(choices=["text", "image", "iAd", "adsense", "admob", "greystripe", "html", "html_full", "clear"], default="text")
 
   # tracking pixel
   tracking_url = db.StringProperty()
@@ -199,7 +200,7 @@ class Creative(polymodel.PolyModel):
   #   asdf  
           
   def __repr__(self):
-    return "Creative{ad_type=%s, eCPM=%.02f ,key_name=%s}" % (self.ad_type, self.e_cpm(),self.key().id_or_name())
+    return "Creative{ad_type=%s, eCPM=%.02f ,key_name=%s}" % (self.ad_type, 0.0,self.key().id_or_name())
 
 class TextCreative(Creative):
   # text ad properties
@@ -251,6 +252,9 @@ class AppNexusCreative(Creative):
 
 class BrightRollCreative(Creative):
   pass
+  
+class GreyStripeCreative(Creative):
+  pass  
   
 class NullCreative(Creative):
   pass

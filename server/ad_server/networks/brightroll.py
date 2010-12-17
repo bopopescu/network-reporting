@@ -28,8 +28,14 @@ class BrightRollServerSide(ServerSide):
     return response.read()
     
   def bid_and_html_for_response(self,response):
-    return 0.0,string.replace(response.content,"<head>","<head><script type=\"text/javascript\">\nwindow.addEventListener(\"load\", function() { window.location=\"mopub://finishLoad\";}, false);function webviewDidAppear(){playAdVideo();}\n</script>",1)
-    #return 0.0,string.replace(response.content,"<head>","<head><script type=\"text/javascript\">\nwindow.addEventListener(\"load\", function() { loadAdVideo();playAdVideo();}, false);function webviewDidAppear(){playAdVideo();}\n</script>",1)
+    scripts = """
+    <script type="text/javascript">
+      window.addEventListener("load", function() { window.location="mopub://finishLoad";}, false);
+      function webviewDidAppear(){playAdVideo();}
+    </script>
+    """
+    return 0.0,string.replace(response.content,'<head id="head">','<head id="head">'+scripts,1) #.replace("goToLanding();","alert('here'); goToLanding(); //setTimeout('goToLanding();',100);")
+    # return 0.0,string.replace(response.content,"<head>","<head><script type=\"text/javascript\">\nwindow.addEventListener(\"load\", function() { loadAdVideo();playAdVideo();}, false);function webviewDidAppear(){playAdVideo();}\n</script>",1)
     #return 0.0, "<html><body>hi</body></html>"
     #return 0.0,response.content
     

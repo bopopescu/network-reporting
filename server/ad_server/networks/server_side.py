@@ -20,6 +20,10 @@ class ServerSide(object):
   def headers(self):
     return {}  
 
+  @property  
+  def payload(self):
+    return None
+
+
   def bid_and_html_for_response(self,response):
     return 0.0,"<html>BLAH</html>"  
-  

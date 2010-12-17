@@ -27,6 +27,8 @@ from publisher.forms import SiteForm, AppForm
 from advertiser.models import Campaign, AdGroup, HtmlCreative
 from reporting.models import SiteStats
 
+from common.utils.cachedquerymanager import CachedQueryManager
+
 class RequestHandler(object):
     def __call__(self,request,*args,**kwargs):
         self.params = request.POST or request.GET
@@ -225,7 +227,14 @@ class CreateAdUnitHandler(RequestHandler):
       site = f.save(commit=False)
       site.account = self.account
       site.app_key = a
+      
+      # update the database
       site.put()
+      
+      # update the cache as necessary 
+      # replace=True means don't do anything if not already in the cache
+      CachedQueryManager().cache_delete(site)
+      
       # Check if this is the first ad unit for this account
       if Site.gql("where account = :1 limit 2", self.account).count() == 1:
         add_demo_campaign(site)
@@ -474,6 +483,14 @@ class UpdateAdUnitHandler(RequestHandler):
     f = SiteForm(data=self.request.POST, instance=s)
     if s.account.user == self.account.user:
       f.save(commit=False)
+
+      # update the database
+      s.put()
+      
+      # update the cache as necessary 
+      # replace=True means don't do anything if not already in the cache
+      CachedQueryManager().cache_delete(s)
+      
       s.put()
     return HttpResponseRedirect(reverse('publisher_show')+'?id=%s'%s.key())
   
@@ -524,6 +541,8 @@ class RemoveAdUnitHandler(RequestHandler):
       if a != None and a.app_key.account == self.account:
         a.deleted = True
         a.put()
+        # delete from cache
+        CachedQueryManager().cache_delete(a)
     return HttpResponseRedirect(reverse('publisher_app_show') + '?id=%s' % a.app_key.key())
  
 @whitelist_login_required

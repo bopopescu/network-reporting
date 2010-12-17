@@ -81,12 +81,17 @@ function selectArtwork(index) {
 		<a href="{% url publisher_app_show %}?id={{app.key}}">{{app.name}}</a>
 	</h3>
 
+  <script type="text/javascript">
+  function TogglePlatform() {
+    $('iphone_search').toggle();
+  }
+  </script>
 	<form id='app_form' method="post" action="">
 		<table>
       <tr>
         <th>Platform</th>
           <td>
-            <select name="app_type">
+            <select name="app_type" onChange="TogglePlatform();">
               <option value="iphone" {% ifequal app.app_type "iphone" %}selected{% endifequal %}>iPhone</option>
               <option value="android" {% ifequal app.app_type "android" %}selected{% endifequal %}>Android</option>
             <select>
@@ -98,7 +103,7 @@ function selectArtwork(index) {
 			<tr>
 			  <td></td>
 				<td>
-          <button onClick="getArtwork();" type="button" class="btn"><span><span>Search Marketplace</span></span></button>
+          <button id='iphone_search' onClick="getArtwork();" type="button" class="btn" {% ifequal app.app_type "android" %}style="display:none;"{% endifequal %}><span><span>Search Marketplace</span></span></button>
           &nbsp;&nbsp;&nbsp;<img id="loading_img" style="display:none;" src="/images/loading.gif"/>
           <div id="results"></div>
         </td>

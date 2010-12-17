@@ -71,6 +71,12 @@ function selectArtwork(index) {
                     +'left:-1px;top:0px;z-index:1;height:42px;width:41px;')
   $('icon_holder').appendChild(span);
 }
+function showImageUpload() {
+  $('change_icon_link').hide();
+  $('upload_icon').show();
+  var form = $('app_form');
+  form['img_url'].setValue('');
+}
 </script>
 
 	<h3><a href="{% url publisher_index %}">Apps</a> &gt; Add an App</h3>
@@ -84,10 +90,11 @@ function selectArtwork(index) {
 <script type="text/javascript">
 function TogglePlatform() {
   $('iphone_text').toggle();
+  $('iphone_search').toggle();
   $('android_text').toggle();
 }
 </script>
-	<form id='app_form' method="post" action="">
+	<form id='app_form' method="post" action="" enctype="multipart/form-data">
 		<table>
       <tr>
         <th style="width:120px;">Platform</th>
@@ -103,7 +110,7 @@ function TogglePlatform() {
 			<tr>
 			  <td></td>
 				<td>
-          <button onClick="getArtwork();" type="button" class="btn"><span><span>Search Marketplace</span></span></button>
+          <button id='iphone_search' onClick="getArtwork();" type="button" class="btn"><span><span>Search Marketplace</span></span></button>
           &nbsp;&nbsp;&nbsp;<img id="loading_img" style="display:none;" src="/images/loading.gif"/>
           <div id="results"></div>
         </td>
@@ -123,8 +130,14 @@ http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/wa/wsLookup?id=3796814
         <td><input id='url' type='text' name="url" size="50" placeholder="http://itunes.apple.com/xyz or com.example.myapp"/></td>
 			</tr>
 			<tr>
-			  <th>Icon</th><td><div id="icon_holder" style="position:relative;"></div></td>
+			  <th>Icon</th><td><div id="icon_holder" style="position:relative;">
+			    <img height="40px" width="40px" src="/images/noicon.png"/>
+    		  <span style="background:url(/images/mask40.png);display:block;position:absolute; left:-1px;top:0px;z-index:1;height:42px;width:41px;')"</span>
+			  </div>
+			  <a id="change_icon_link" href="#" onclick="showImageUpload();return false;">Change icon</a>
+			  <input id="upload_icon" type="file" name="img_file" style="display:none;">
 			  <input type="hidden" name="img_url" value="">
+		    </td>
 			</tr>
 			<tr>
 				<th>Description (optional)</th><td><textarea name="description" cols="50" rows="3" placeholder=""></textarea></td>

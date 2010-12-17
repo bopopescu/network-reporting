@@ -12,6 +12,7 @@ from google.appengine.ext import db
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.ext.db import djangoforms
+from google.appengine.api import images
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect, Http404
@@ -212,7 +213,8 @@ class AppCreateHandler(RequestHandler):
       app.put()
       
       # Store the image
-      if self.request.POST.get("img_url"):
+      if not self.request.POST.get("img_url") == "":
+        logging.info("got img_url")
         try:
           response = urllib.urlopen(self.request.POST.get("img_url"))
           img = response.read()
@@ -220,6 +222,11 @@ class AppCreateHandler(RequestHandler):
           app.put()
         except:
           pass
+      elif self.request.FILES.get("img_file"):
+        logging.info("got img_file")
+        icon = images.resize(self.request.FILES.get("img_file").read(), 60, 60)
+        app.icon = db.Blob(icon)
+        app.put()
         
       return HttpResponseRedirect(reverse('publisher_app_show')+'?id=%s'%app.key())
     else:

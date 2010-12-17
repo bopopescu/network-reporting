@@ -2,6 +2,7 @@ from google.appengine.ext import db
 from google.appengine.api import users
 
 from account.models import Account
+from advertiser.models import Creative
 
 # 
 # A mobile app, which can have multiple Sites on which ads can be displayed
@@ -17,9 +18,13 @@ class App(db.Model):
   description = db.TextProperty()
   url = db.StringProperty()
   
+  icon = db.BlobProperty()
+  
   deleted = db.BooleanProperty(default=False)
 
   t = db.DateTimeProperty(auto_now_add=True)
+  
+  exchange_creative = db.ReferenceProperty(Creative)
 
 class Site(db.Model):
   app_key = db.ReferenceProperty(App)

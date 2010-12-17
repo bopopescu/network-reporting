@@ -35,6 +35,12 @@
 		<tr><th>Name</th><td>{{app.name}}</td></tr>
 		<tr><th>Platform</th><td>{{app.app_type}}</td></tr>
 		<tr><th>URL</th><td>{{app.url}}</td></tr>
+		<tr><th>Icon</th><td>
+		  <div style="position:relative;">
+		  <img height="40px" width="40px" src="{% if app.icon_url %}{{app.icon_url}}{% else %}/images/noicon.png{% endif %}" width=$w height=$h/>
+		  <span style="background:url(/images/mask40.png);display:block;position:absolute; left:-1px;top:0px;z-index:1;height:42px;width:41px;')"</span>
+		  </div>
+		</td></tr>
 		{% if app.adsense_app_name %}
 		<tr><th>AdSense App Name</th><td>{{app.adsense_app_name}}</td></tr>
 		{% endif %}

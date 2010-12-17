@@ -4,6 +4,7 @@ import urllib
 urllib.getproxies_macosx_sysconf = lambda: {}
 from urllib import urlencode
 from operator import itemgetter
+import base64, binascii
 
 from google.appengine.api import users, memcache
 from google.appengine.api.urlfetch import fetch
@@ -209,6 +210,17 @@ class AppCreateHandler(RequestHandler):
       app = f.save(commit=False)
       app.account = self.account
       app.put()
+      
+      # Store the image
+      if self.request.POST.get("img_url"):
+        try:
+          response = urllib.urlopen(self.request.POST.get("img_url"))
+          img = response.read()
+          app.icon = db.Blob(img)
+          app.put()
+        except:
+          pass
+        
       return HttpResponseRedirect(reverse('publisher_app_show')+'?id=%s'%app.key())
     else:
       return render_to_response(self.request,'publisher/new_app.html', {"f": f})
@@ -338,6 +350,9 @@ class ShowAppHandler(RequestHandler):
       pie_chart_urls['clk'] = ""
 
     help_text = 'Create an Ad Unit below' if len(a.sites) == 0 else None
+    
+    if a.icon:
+      a.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(a.icon)
 
     return render_to_response(self.request,'publisher/show_app.html', 
         {'app': a,    
@@ -456,6 +471,17 @@ class AppUpdateHandler(RequestHandler):
     if a.account.user == self.account.user:
       f.save(commit=False)
       a.put()
+      
+      # Store the image
+      if self.request.POST.get("img_url"):
+        try:
+          response = urllib.urlopen(self.request.POST.get("img_url"))
+          img = response.read()
+          a.icon = db.Blob(img)
+          a.put()
+        except:
+          pass
+      
     return HttpResponseRedirect(reverse('publisher_app_show')+'?id=%s'%a.key())
   
 

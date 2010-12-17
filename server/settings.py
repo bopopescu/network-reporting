@@ -129,6 +129,7 @@ INSTALLED_APPS = (
      'website',
      # 'bizops',
      'admin',
+     'exchange',
 )
 
 IGNORE_APP_URLSAUTO = ('website')

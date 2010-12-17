@@ -1,0 +1,103 @@
+
+{% extends "publisher/base.html" %}
+
+{% load filters %}
+
+
+{% block content %}
+<script type="text/javascript">
+function updateLine1() {$('line1sample').innerHTML = $('line1').value;}
+function updateLine2() {$('line2sample').innerHTML = $('line2').value;}        
+function showCreativeForm() {$('changelink').hide();$('creativeform').show();}
+$(document).ready(function(){
+	var thumb = $('img#thumb');	
+
+	new AjaxUpload('imageUpload', {
+		action: $('form#newHotnessForm').attr('action'),
+		name: 'image',
+		onSubmit: function(file, extension) {
+			$('div.preview').addClass('loading');
+		},
+		onComplete: function(file, response) {
+			thumb.load(function(){
+				$('div.preview').removeClass('loading');
+				thumb.unbind();
+			});
+			thumb.attr('src', response);
+		}
+	});
+});
+</script>
+
+	<h3>		
+		Schedule a Link Exchange Campaign
+	</h3>
+  {% if not apps %}
+	<p>
+		A <b>Link Exchange Campaign</b> can be scheduled to advertise your app across the MoPub Exchange.  In return, a portion of your inventory will be assigned to show other ads in the Exchange</b>
+	</p> 
+  {% endif %}
+		
+  <form id='app_form' method="post" action="">
+    <input type="hidden" name="id" value="{{app.key}}"/>
+    <table>
+      <tr>
+        <th style="width:120px;">App</th>
+          <td>
+            <select name="app_name" onChange="TogglePlatform();">
+            {% for a in apps %}
+              <option value="iphone">{{a.name}}</option>
+        		{% endfor %}
+          </td>
+      </tr>
+      <tr>
+        <th><div id="iphone_text">Date</div></th>
+        <td><input id='start_date' type='text' name="date" size="20"/></td>
+      </tr>
+      <tr></tr>
+      <tr>
+        <td></td>
+        <!--td>
+          <button onClick="getArtwork();" type="button" class="btn"><span><span>Get Details</span></span></button>
+          &nbsp;&nbsp;&nbsp;<img id="loading_img" style="display:none;" src="/images/loading.gif"/>
+        </td-->
+      </tr>
+    </table>
+
+    <h3>Banner Ad Creative</h3>
+    <div id="creativeform" class="special_notice" {% if app.creative %}style="display:none;"{% endif %}>
+  		<input type="hidden" name="id" value="{{app.key}}"/>
+  		<table>
+				<th>Ad Type</th><td><select name='ad_type'><option value="image">Text and Image Tile</option><option value="text">Image Ad</option></select></td>
+  			<tr><th>Line 1</th>
+  				<td><input id='line1' type='text' name="line1" size="45" onkeyup='updateLine1();' value='{{app.creative.line1}}'/> (40 characters)</td>
+  			</tr>
+  			<tr><th>Line 2</th>
+  				<td><input id='line2' type='text' name="line2" size="45" onkeyup='updateLine2();' value='{{app.creative.line2}}'/> (40 characters)</td>
+  			</tr>
+  			<tr><th>Image File<br/><div style="font-size:smaller;margin-left:5px;">(40 x 40)</div></th>
+  				<td>
+  				  <form id="thumbnailform" action="/playground/ajax_upload">
+  				    <input type='file' id="imageUpload" size="40"/>
+  				  </form>
+  				</td>
+  			</tr>
+  		</table>
+  	</div>
+  	<table><tr><td>   
+    <div style="width:320px;height:50px;border:1px solid black;background-color:#404040;">
+      <div style="margin:5px;width:40px;height:40px;float:left"><img id="thumb" src="/images/mopub-tile.png"/></div>
+      <p id="line1sample" style="color:white;font-weight:bold;margin:5px 0 0 60px;">{{app.creative.line1}}</p>
+      <p id="line2sample" style="color:white;margin-top:5px;margin:5px 0 0 60px;">{{app.creative.line2}}</p>
+    </div>
+    </td>
+    <td><div id="changelink" style="margin:10px;"><a href="#" onClick="showCreativeForm();">Change</a></div></td></tr></table>
+  	
+    <p>
+      <button type="submit" class="btn primary"><span><span>Schedule Campaign</span></span></button>&nbsp;&nbsp;&nbsp;
+      <button class="btn" onclick="window.location={% url exchange_index %};"><span><span>Cancel</span></span></button>
+    </p>
+  </form>
+
+	
+{% endblock %}

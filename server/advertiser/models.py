@@ -210,6 +210,13 @@ class TextCreative(Creative):
   def __repr__(self):
     return "'%s'" % (self.headline,)
 
+class TextAndTileCreative(Creative):
+  line1 = db.StringProperty()
+  line2 = db.StringProperty()
+  image = db.BlobProperty()
+  image_width = db.IntegerProperty()
+  image_height = db.IntegerProperty()
+  
 class HtmlCreative(Creative):
   # html ad properties
   html_name = db.StringProperty(required=True, default="Demo HTML Creative")

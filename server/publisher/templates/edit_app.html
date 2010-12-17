@@ -74,6 +74,12 @@ function selectArtwork(index) {
                     +'left:-1px;top:0px;z-index:1;height:42px;width:41px;')
   $('icon_holder').appendChild(span);
 }
+function showImageUpload() {
+  $('change_icon_link').hide();
+  $('upload_icon').show();
+  var form = $('app_form');
+  form['img_url'].setValue('');
+}
 </script>
 
 	<h3>
@@ -86,7 +92,7 @@ function selectArtwork(index) {
     $('iphone_search').toggle();
   }
   </script>
-	<form id='app_form' method="post" action="">
+	<form id='app_form' method="post" action="" enctype="multipart/form-data">
 		<table>
       <tr>
         <th>Platform</th>
@@ -119,6 +125,8 @@ function selectArtwork(index) {
     		  <img height="40px" width="40px" src="{% if app.icon_url %}{{app.icon_url}}{% else %}/images/noicon.png{% endif %}" width=$w height=$h/>
   		  <span style="background:url(/images/mask40.png);display:block;position:absolute; left:-1px;top:0px;z-index:1;height:42px;width:41px;')"</span>
   		  </div>
+			  <a id="change_icon_link" href="#" onclick="showImageUpload();return false;">Change icon</a>
+			  <input id="upload_icon" type="file" name="img_file" style="display:none;">
 			  <input type="hidden" name="img_url" value="">
 			  </td>
 			</tr>

@@ -214,7 +214,6 @@ class AppCreateHandler(RequestHandler):
       
       # Store the image
       if not self.request.POST.get("img_url") == "":
-        logging.info("got img_url")
         try:
           response = urllib.urlopen(self.request.POST.get("img_url"))
           img = response.read()
@@ -223,11 +222,13 @@ class AppCreateHandler(RequestHandler):
         except:
           pass
       elif self.request.FILES.get("img_file"):
-        logging.info("got img_file")
-        icon = images.resize(self.request.FILES.get("img_file").read(), 60, 60)
-        app.icon = db.Blob(icon)
-        app.put()
-        
+        try:
+          icon = images.resize(self.request.FILES.get("img_file").read(), 60, 60)
+          app.icon = db.Blob(icon)
+          app.put()
+        except:
+          pass
+          
       return HttpResponseRedirect(reverse('publisher_app_show')+'?id=%s'%app.key())
     else:
       return render_to_response(self.request,'publisher/new_app.html', {"f": f})
@@ -470,6 +471,10 @@ class AppUpdateHandler(RequestHandler):
   def get(self):
     a = App.get(self.request.GET.get("id"))
     f = AppForm(instance=a)
+    
+    if a.icon:
+      a.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(a.icon)
+    
     return render_to_response(self.request,'publisher/edit_app.html', {"f": f, "app": a})
 
   def post(self):
@@ -480,7 +485,7 @@ class AppUpdateHandler(RequestHandler):
       a.put()
       
       # Store the image
-      if self.request.POST.get("img_url"):
+      if not self.request.POST.get("img_url") == "":
         try:
           response = urllib.urlopen(self.request.POST.get("img_url"))
           img = response.read()
@@ -488,7 +493,14 @@ class AppUpdateHandler(RequestHandler):
           a.put()
         except:
           pass
-      
+      elif self.request.FILES.get("img_file"):
+        try:
+          icon = images.resize(self.request.FILES.get("img_file").read(), 60, 60)
+          a.icon = db.Blob(icon)
+          a.put()
+        except:
+          pass
+          
     return HttpResponseRedirect(reverse('publisher_app_show')+'?id=%s'%a.key())
   
 

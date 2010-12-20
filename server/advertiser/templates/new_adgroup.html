@@ -28,9 +28,9 @@
 				<tr>
 					<th>Bidding Strategy</th>
 					<td><select name="bid_strategy">
-								<option value="cpm">By impression (CPM)</option>
-								<option value="cpc">By click (CPC)</option>
-								<!--><option value="cpa">By conversion (CPA)</option>-->
+								<option value="cpm" {% ifequal f.instance.bid_strategy "cpm"%}selected="selected"{% endifequal %}>By impression (CPM)</option>
+								<option value="cpc" {% ifequal f.instance.bid_strategy "cpc"%}selected="selected"{% endifequal %}>By click (CPC)</option>
+								<!--<option value="cpa">By conversion (CPA)</option>-->
 							</select>
 					</td>
 				</tr>
@@ -41,9 +41,9 @@
 				<tr>
 					<th>Bidding Strategy</th>
 					<td><select name="bid_strategy">
-								<option value="cpm">By impression (CPM)</option>
-								<option value="cpc">By click (CPC)</option>
-								<!--><option value="cpa">By conversion (CPA)</option>-->
+								<option value="cpm" {% ifequal f.instance.bid_strategy "cpm"%}selected="selected"{% endifequal %}>By impression (CPM)</option>
+								<option value="cpc" {% ifequal f.instance.bid_strategy "cpc"%}selected="selected"{% endifequal %}>By click (CPC)</option>
+								<!--<option value="cpa">By conversion (CPA)</option>-->
 							</select>
 					</td>
 				</tr>

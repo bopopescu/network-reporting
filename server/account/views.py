@@ -15,10 +15,11 @@ from django.core.urlresolvers import reverse
 from common.ragendja.template import render_to_response, JSONResponse
 
 from common.utils.decorators import whitelist_login_required
-
+from common.utils.cachedquerymanager import CachedQueryManager
 # from common.ragendja.auth.decorators import google_login_required as login_required
 
 from account.models import Account
+from publisher.models import Site
 
 class RequestHandler(object):
     def __call__(self,request,*args,**kwargs):
@@ -53,6 +54,10 @@ class AccountHandler(RequestHandler):
     a.admob_pub_id = self.request.POST.get("admob_pub_id")
     a.adsense_company_name = self.request.POST.get("adsense_company_name")
     a.put()
+    
+    adunits = Site.all().filter("account =",a).fetch(300)
+    CachedQueryManager().cache_delete(adunits)
+    
     return HttpResponseRedirect("/account")
 
 @whitelist_login_required     

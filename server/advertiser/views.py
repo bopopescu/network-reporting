@@ -196,7 +196,7 @@ class CreateAdGroupHandler(RequestHandler):
       c = adgroup.campaign
       if not adgroup:
         raise Http404("AdGroup does not exist")  
-    adgroup.budget = adgroup.budget or c.budget
+    adgroup.budget = adgroup.budget or c.budget # take budget from campaign for the time being
     f = AdGroupForm(instance=adgroup)
     sites = Site.gql('where account=:1', self.account).fetch(100)    
     

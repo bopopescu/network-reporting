@@ -60,6 +60,8 @@ from ad_server.networks.brightroll import BrightRollServerSide
 from ad_server.networks.greystripe import GreyStripeServerSide
 
 from publisher.query_managers import AdUnitQueryManager
+from advertiser.query_managers import CampaignStatsCounter
+
 
 CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gzip(gfe)"]
 MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7PnE6cH9_PX7OoeIIr5FjnTA'
@@ -152,24 +154,31 @@ class AdAuction(object):
     logging.warning("ad groups: %s" % all_ad_groups)
     
     # # campaign exclusions... budget + time
-    # ad_groups = [a for a in ad_groups 
-    #                   if a.campaign.budget is None or 
-    #                   SiteStats.stats_for_day(a.campaign, SiteStats.today()).revenue < a.budget]
-    # logging.debug("removed over budget, now: %s" % ad_groups)
+    
+    
+    for a in all_ad_groups:
+      logging.info("%s of %s"%(a.campaign.delivery_counter.count,a.budget))
+    
+    # NOTE: The budgets are in the adgroup when they should be in the campaign
+    all_ad_groups = [a for a in all_ad_groups 
+                      if a.budget is None or 
+                      a.campaign.delivery_counter.count < a.budget]
+    logging.warning("removed over budget, now: %s" % all_ad_groups)
     all_ad_groups = [a for a in all_ad_groups 
                       if a.campaign.active and 
                         (a.campaign.start_date >= SiteStats.today() if a.campaign.start_date else True) 
                         and (a.campaign.end_date <= SiteStats.today() if a.campaign.end_date else True)]
-    logging.debug("removed non running campaigns, now: %s" % all_ad_groups)
+    logging.warning("removed non running campaigns, now: %s" % all_ad_groups)
     
     # ad group request-based targeting exclusions
     all_ad_groups = [a for a in all_ad_groups 
                     if not a.keywords or set(keywords).intersection(a.keywords) > set()]
-    logging.debug("removed keyword non-matches, now: %s" % all_ad_groups)
+    logging.warning("removed keyword non-matches, now: %s" % all_ad_groups)
     
+    logging.warning("%s::%s"%(geo_predicates,a.geo_predicates))
     all_ad_groups = [a for a in all_ad_groups
                     if set(geo_predicates).intersection(a.geographic_predicates) > set()]
-    logging.debug("removed geo non-matches, now: %s" % all_ad_groups)
+    logging.warning("removed geo non-matches, now: %s" % all_ad_groups)
     all_ad_groups = [a for a in all_ad_groups
                     if set(device_predicates).intersection(a.device_predicates) > set()]
     logging.warning("removed device non-matches, now: %s" % all_ad_groups)
@@ -199,8 +208,9 @@ class AdAuction(object):
           players.sort(lambda x,y: cmp(y.e_cpm(), x.e_cpm()))
           
           while players:
-            winning_ecpm = max(c.e_cpm() for c in players) if len(players) > 0 else 0
-            logging.warning("auction at priority=%d: %s, max eCPM=%.2f" % (p, players, winning_ecpm))
+            logging.warning("players: %s"%players)
+            winning_ecpm = max(c.e_cpm() for c in players) if len(players) > 0 else 0.0
+            logging.warning("auction at priority=%d: %s, max eCPM=%s" % (p, players, winning_ecpm))
       
             # if the winning creative exceeds the ad unit's threshold cpm for the
             # priority level, then we have a winner
@@ -359,8 +369,10 @@ class AdAuction(object):
     
   @classmethod
   def geo_predicates_for_rgeocode(c, r):
+    # TODO: DEFAULT COUNTRY SHOULD NOT BE US!!!!!!!
+    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     if len(r) == 0:
-      return ["country_name=*"]
+      return ["country_name=US","country_name=*"]
     elif len(r) == 2:
       return ["region_name=%s,country_name=%s" % (r[0], r[1]),
               "country_name=%s" % r[1],
@@ -475,6 +487,11 @@ class AdHandler(webapp.RequestHandler):
       # create an ad clickthrough URL
       ad_click_url = "http://%s/m/aclk?id=%s&c=%s&req=%s" % (DOMAIN,id, c.key(), request_id)
       self.response.headers.add_header("X-Clickthrough", str(ad_click_url))
+      
+      
+      # add to the campaign counter
+      logging.info("adding to delivery: %s"%c.ad_group.bid)
+      c.ad_group.campaign.delivery_counter.increment(dollars=c.ad_group.bid)
       
       # render the creative 
       self.response.out.write(self.render_creative(c, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, request_id=request_id, v=int(self.request.get('v') or 0)))
@@ -616,14 +633,14 @@ class AdHandler(webapp.RequestHandler):
       # indicate to the client the winning creative type, in case it is natively implemented (iad, clear)
       
       if str(c.ad_type) == "iAd":
-        self.response.headers.add_header("X-Adtype","alert")
-        self.response.headers.add_header("X-Backfill","alert")
-        self.response.headers.add_header("X-Nativeparams",'{"title":"MoPub Alert View","cancelButtonTitle":"No Thanks","message":"We\'ve noticed you\'ve enjoyed playing Angry Birds.","otherButtonTitle":"Rank","clickURL":"mopub://inapp?id=pixel_001"}')
+        # self.response.headers.add_header("X-Adtype","alert")
+        # self.response.headers.add_header("X-Backfill","alert")
+        # self.response.headers.add_header("X-Nativeparams",'{"title":"MoPub Alert View","cancelButtonTitle":"No Thanks","message":"We\'ve noticed you\'ve enjoyed playing Angry Birds.","otherButtonTitle":"Rank","clickURL":"mopub://inapp?id=pixel_001"}')
         
-        # self.response.headers.add_header("X-Adtype", str(c.ad_type))
-        # self.response.headers.add_header("X-Backfill", str(c.ad_type))
-        # 
-        # self.response.headers.add_header("X-Failurl",self.request.url+'&exclude='+str(c.ad_type))
+        self.response.headers.add_header("X-Adtype", str(c.ad_type))
+        self.response.headers.add_header("X-Backfill", str(c.ad_type))
+        
+        self.response.headers.add_header("X-Failurl",self.request.url+'&exclude='+str(c.ad_type))
         
       elif str(c.ad_type) == "adsense":
         self.response.headers.add_header("X-Adtype", str(c.ad_type))

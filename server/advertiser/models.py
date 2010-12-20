@@ -1,3 +1,5 @@
+import logging
+
 from google.appengine.ext import db
 from google.appengine.ext.db import polymodel
 from account.models import Account
@@ -27,6 +29,16 @@ class Campaign(db.Model):
   def delivery(self):
     if self.stats: return self.stats.revenue / self.budget
     else: return 1
+  
+  @property
+  def _estimated_qps(self):
+    return 0
+  
+  @property
+  def counter_shards(self):
+    #TODO: this should be a function of estimated qps
+    return 5
+    
     
 class AdGroup(db.Model):
   campaign = db.ReferenceProperty(Campaign,collection_name="adgroups")
@@ -186,10 +198,11 @@ class Creative(polymodel.PolyModel):
   # the CPM bid for the ad group or the CPC bid for the ad group and the predicted CTR for this
   # creative
   def e_cpm(self):
+    logging.warning("bid strategy: %s %s"%(self.ad_group,self.ad_group.bid_strategy))
     if self.ad_group.bid_strategy == 'cpc':
-      return self.p_ctr() * self.ad_group.bid * 1000
+      return float(self.p_ctr() * self.ad_group.bid * 1000)
     elif self.ad_group.bid_strategy == 'cpm':
-      return self.ad_group.bid
+      return float(self.ad_group.bid)
 
   # predicts a CTR for this ad.  We use 1% for now.
   # TODO: implement this in a better way
@@ -200,7 +213,8 @@ class Creative(polymodel.PolyModel):
   #   asdf  
           
   def __repr__(self):
-    return "Creative{ad_type=%s, eCPM=%.02f ,key_name=%s}" % (self.ad_type, 0.0,self.key().id_or_name())
+    logging.warning("!!! ecpm: %s"%self.e_cpm())
+    return "Creative{ad_type=%s, eCPM=%.02f ,key_name=%s}" % (self.ad_type, self.e_cpm(),self.key().id_or_name())
 
 class TextCreative(Creative):
   # text ad properties

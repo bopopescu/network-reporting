@@ -111,14 +111,29 @@ def index(request,*args,**kwargs):
 class AdGroupIndexHandler(RequestHandler):
   def get(self):
     days = SiteStats.lastdays(14)
+    all_apps = App.gql("where account = :1 and deleted = :2", self.account, False).fetch(50)
+    sites = []
+    all_sites = []
+    
+    site = self.request.GET.get("site")
+    app = self.request.GET.get("app")
+    if app:
+      sites = Site.gql("where app_key = :1 and deleted = :2", db.Key(app), False).fetch(50)
+      all_sites = sites
+    elif site:
+      sites = [ Site.get(site) ]
+      app = str(sites[0].app_key.key())
+      all_sites = Site.gql("where app_key = :1 and deleted = :2", db.Key(app), False).fetch(50)
 
     campaigns = Campaign.gql("where u = :1 and deleted = :2", self.account.user, False).fetch(100)
-    if campaigns:
-      adgroups = AdGroup.gql("where campaign in :1 and deleted = :2", [x.key() for x in campaigns], False).fetch(100)
+    if (site or app):
+      if len(sites):
+        adgroups = AdGroup.gql("where campaign in :1 and site_keys in :2 and deleted = :3", [x.key() for x in campaigns], [y.key() for y in sites], False).fetch(100)
+      else:
+        adgroups = []
     else:
-      adgroups = []
+      adgroups = AdGroup.gql("where campaign in :1 and deleted = :2", [x.key() for x in campaigns], False).fetch(100)
     adgroups = sorted(adgroups, lambda x,y: cmp(y.bid, x.bid))
-    logging.info(campaigns)
     
     today = SiteStats()
     for c in adgroups:
@@ -153,7 +168,11 @@ class AdGroupIndexHandler(RequestHandler):
 
     return render_to_response(self.request, 
       'advertiser/adgroups.html', 
-      {'adgroups':adgroups, 
+      {'adgroups':adgroups,
+       'app' : app,
+       'all_apps' : all_apps,
+       'site' : site,
+       'all_sites' : all_sites,
        'today': today,
        'chart_urls': chart_urls,
        'gtee': guarantee_campaigns,

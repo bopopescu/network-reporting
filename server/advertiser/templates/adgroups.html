@@ -63,7 +63,7 @@ function togglePaused() {
 			{% for c in gtee %}
 				<tr {%if not c.active %}class="paused"{% endif %}>
 					<td><input type="checkbox" name="id" value="{{c.key}}"/> <a href="{% url advertiser_adgroup_show adgroup_key=c.key%}">{{c.name}}</a></td>
-					<td class="numeric">{{c.bid|currency}}</td>
+					<td>{{c.bid|currency}}</td>
 					<td>
 						{% if c.deleted %}
 							<img src="/images/deleted.gif" width=9 height=9/>

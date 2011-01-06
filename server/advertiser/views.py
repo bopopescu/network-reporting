@@ -125,13 +125,13 @@ class AdGroupIndexHandler(RequestHandler):
       app = str(sites[0].app_key.key())
       all_sites = Site.gql("where app_key = :1 and deleted = :2", db.Key(app), False).fetch(50)
 
-    campaigns = Campaign.gql("where u = :1 and deleted = :2", self.account.user, False).fetch(100)
     if (site or app):
       if len(sites):
-        adgroups = AdGroup.gql("where campaign in :1 and site_keys in :2 and deleted = :3", [x.key() for x in campaigns], [y.key() for y in sites], False).fetch(100)
+        adgroups = AdGroup.gql("where site_keys in :1 and deleted = :2", [x.key() for x in sites], False).fetch(100)
       else:
         adgroups = []
     else:
+      campaigns = Campaign.gql("where u = :1 and deleted = :2", self.account.user, False).fetch(100)
       adgroups = AdGroup.gql("where campaign in :1 and deleted = :2", [x.key() for x in campaigns], False).fetch(100)
     adgroups = sorted(adgroups, lambda x,y: cmp(y.bid, x.bid))
     

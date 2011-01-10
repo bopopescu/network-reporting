@@ -123,9 +123,9 @@ class AdGroupIndexHandler(RequestHandler):
     if campaigns:
       adgroups = AdGroupQueryManager().get_adgroups(campaigns=campaigns)
     else:
-      adgroups = []
+      campaigns = Campaign.gql("where u = :1 and deleted = :2", self.account.user, False).fetch(100)
+      adgroups = AdGroup.gql("where campaign in :1 and deleted = :2", [x.key() for x in campaigns], False).fetch(100)
     adgroups = sorted(adgroups, lambda x,y: cmp(y.bid, x.bid))
-    logging.info(campaigns)
     
     today = SiteStats()
     for c in adgroups:
@@ -160,7 +160,11 @@ class AdGroupIndexHandler(RequestHandler):
 
     return render_to_response(self.request, 
       'advertiser/adgroups.html', 
-      {'adgroups':adgroups, 
+      {'adgroups':adgroups,
+       'app' : app,
+       'all_apps' : all_apps,
+       'site' : site,
+       'all_sites' : all_sites,
        'today': today,
        'chart_urls': chart_urls,
        'gtee': guarantee_campaigns,

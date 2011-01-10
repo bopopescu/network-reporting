@@ -61,7 +61,7 @@ def all_user_dropdown(request,value=200):
   from google.appengine.ext import db
   value = int(value)
   htmls = []
-  for account in Account.all().fetch(value):
+  for account in Account.all().order("user").fetch(value):
     htmls.append('<option value="%s">%s</option>'%(account.key().name(),account.user.email()))
   return mark_safe('\n'.join(htmls))
 

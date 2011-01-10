@@ -4,6 +4,13 @@
 
 
 {% block content %}
+<script type="text/javascript">
+function togglePaused() {
+  $A($$('tr.paused')).each(Element.toggle);
+  $('hide_button').toggle();
+  $('show_button').toggle();
+}
+</script>
 	<h3>
 		Campaigns
 		<div class="toolbar">
@@ -19,7 +26,25 @@
 	</table>
 	
 	<img id='chart_img' src="{{chart_urls.imp}}" width=780 height=200 style="padding: 5px 0 10px 0;"/>
-	
+
+  <button onClick="togglePaused();return false;" class="btn"><span><span id="hide_button">Hide Paused</span><span id="show_button" style="display:none;">Show Paused</span></span></a></button>
+  <select id='app_select' name="app" style="margin-left:10px;" onchange='var app=$("app_select").getValue();var param=(app)?"?app="+app:"";window.location="{% url advertiser_campaign %}"+param'>
+    <option value="">All Apps</option>
+    {% for a in all_apps %}
+    <option value="{{a.key}}" {% ifequal app a.key|stringformat:"s" %}selected{% endifequal %}>{{a.name}}</option>
+    {% endfor %}
+  </select>
+  {% if all_sites %}
+  <select id="site_select" name="site" style="margin-left:10px;" onchange='var site=$("site_select").getValue();var param=(site)?"?site="+site:"?app="+$("app_select").getValue();window.location="{% url advertiser_campaign %}"+param'>
+    <option value="">All Ad Units</option>
+    {% for s in all_sites %}
+    <option value="{{s.key}}" {% ifequal site s.key|stringformat:"s" %}selected{% endifequal %}>{{s.name}}</option>
+    {% endfor %}
+  </select>
+  {% endif %}
+  
+  <br/>
+  
 	<form method="post" action="{% url advertiser_bid_pause %}">
 		<input type="hidden" name="action"/>
 		<h4>
@@ -36,9 +61,9 @@
 				<th class="numeric">Delivery%</th>
 			</thead>
 			{% for c in gtee %}
-				<tr>
+				<tr {%if not c.active %}class="paused"{% endif %}>
 					<td><input type="checkbox" name="id" value="{{c.key}}"/> <a href="{% url advertiser_adgroup_show adgroup_key=c.key%}">{{c.name}}</a></td>
-					<td class="numeric">{{c.bid|currency}}</td>
+					<td>{{c.bid|currency}}</td>
 					<td>
 						{% if c.deleted %}
 							<img src="/images/deleted.gif" width=9 height=9/>
@@ -73,7 +98,7 @@
 				<th class="numeric">Delivery%</th>
 			</thead>
 			{% for c in promo %}
-				<tr>
+				<tr {%if not c.active %}class="paused"{% endif %}>
 					<td><input type="checkbox" name="id" value="{{c.key}}"/> <a href="{% url advertiser_adgroup_show adgroup_key=c.key%}">{{c.name}}</a></td>
 					<td>{{c.bid|currency}}</td>
 					<td>
@@ -111,7 +136,7 @@
 				<th class="numeric">Revenue</th>
 			</thead>
 			{% for c in network %}
-				<tr>
+				<tr {%if not c.active %}class="paused"{% endif %}>
 					<td><input type="checkbox" name="id" value="{{c.key}}"/> <a href="{% url advertiser_adgroup_show adgroup_key=c.key%}">{{c.name}}</a></td>
 					<td>{{c.bid|currency}}</td>
 					<td>

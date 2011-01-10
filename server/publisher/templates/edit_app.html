@@ -5,7 +5,7 @@
 {% block content %}
 	<h3>
 		<a href="{% url publisher_index %}">Apps</a> &gt; 
-		<a href="{% url publisher_app_show %}?id={{app.key}}">{{app.name}}</a>
+		<a href="{% url publisher_app_show app_key=app.key %}">{{app.name}}</a>
 	</h3>
 
 	<form method="post" action="">

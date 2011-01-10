@@ -7,7 +7,7 @@
 	<h3>
 		<a href="{% url advertiser_campaign %}">Campaigns</a> &gt; {{campaign.name}}
 		<div class="toolbar">
-			<a href="{% url advertiser_campaign_edit %}?id={{campaign.key}}" onclick="javascript:Toggle.display('edit_box');return false;">
+			<a href="{% url advertiser_campaign_edit campaign_key=campaign.key %}" onclick="javascript:Toggle.display('edit_box');return false;">
 				Edit Campaign
 			</a>
 		</div>

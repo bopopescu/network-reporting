@@ -5,8 +5,8 @@
 {% block content %}
 	<h3>
 		<a href="{% url publisher_index %}">Apps</a> &gt; 
-		<a href="{% url publisher_app_show %}?id={{site.app_key.key}}">{{site.app_key.name}}</a> &gt; 
-		<a href="{% url publisher_show %}?id={{site.key}}">{{site.name}}</a> &gt;		
+		<a href="{% url publisher_app_show app_key=site.app_key.key %}">{{site.app_key.name}}</a> &gt; 
+		<a href="{% url publisher_adunit_show adunit_key=site.key %}">{{site.name}}</a> &gt;		
 		Code Snippet
 	</h3>
 	
@@ -65,7 +65,7 @@ mpv.loadAd();</pre>
 		</li>
 	</ol>
 
-	<form method="get" action="{% url publisher_app_show %}">
+	<form method="get" action="{% url publisher_app_show app_key=site.app_key.key %}">
 		<input type="hidden" name="id" value="{{site.app_key.key}}"/>
 		<p>
       <button type="submit" class="btn"><span><span>Finish Integration</span></span></button>&nbsp;&nbsp;&nbsp;

@@ -49,18 +49,18 @@
 		</thead>
 		{% for a in apps %}
 			<tr class="highlighted">
-				<td colspan="2"><a href="{% url publisher_app_show %}?id={{a.key}}"><b>{{a.name}}</b></a> ({{a.app_type}})</td>
+				<td colspan="2"><a href="{% url publisher_app_show app_key=a.key %}"><b>{{a.name}}</b></a> ({{a.app_type}})</td>
 				<td class="numeric"><strong>{{a.stats.request_count|withsep}}</strong></td>
 				<td class="numeric"><strong>{{a.stats.click_count|withsep}}</strong></td>
 				<td class="numeric"><strong>{{a.stats.ctr|percentage}}</strong></td>
 			</tr>
-		  {% for s in a.sites %}
+		  {% for au in a.adunits %}
 			<tr>
         <td></td>
-				<td><a href="{% url publisher_show %}?id={{s.key}}">{{s.name}}</a></td>
-				<td class="numeric">{{s.stats.request_count|withsep}}</td>
-				<td class="numeric">{{s.stats.click_count|withsep}}</td>
-				<td class="numeric">{{s.stats.ctr|percentage}}</td>
+				<td><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a></td>
+				<td class="numeric">{{au.stats.request_count|withsep}}</td>
+				<td class="numeric">{{au.stats.click_count|withsep}}</td>
+				<td class="numeric">{{au.stats.ctr|percentage}}</td>
 			</tr>
 		  {% endfor %}
 		{% endfor %}

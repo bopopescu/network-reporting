@@ -175,7 +175,6 @@ class AdAuction(object):
                     if not a.keywords or set(keywords).intersection(a.keywords) > set()]
     logging.warning("removed keyword non-matches, now: %s" % all_ad_groups)
     
-    logging.warning("%s::%s"%(geo_predicates,a.geo_predicates))
     all_ad_groups = [a for a in all_ad_groups
                     if set(geo_predicates).intersection(a.geographic_predicates) > set()]
     logging.warning("removed geo non-matches, now: %s" % all_ad_groups)
@@ -534,7 +533,7 @@ class AdHandler(webapp.RequestHandler):
                           <div class="creative"><div style="padding: 5px 10px;"><a href="$url" class="creative_headline">$headline</a><br/>$line1 $line2<br/><span class="creative_url"><a href="$url">$display_url</a></span></div></div>\
                           $trackingPixel
                         </body> </html> """),
-    "image":Template("""<html>\
+    "image":Template("""<html>
                         <head>
                           <style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: ${w}px;height: ${h}px;}.creative_headline {font-size: 20px;}.creative .creative_url a {color: green;text-decoration: none;}
                           </style>
@@ -605,6 +604,11 @@ class AdHandler(webapp.RequestHandler):
       elif c.ad_type == "html":
         params.update(html_data=c.html_data)
         params.update({"html_data": kwargs["html_data"], "w": format[0], "h": format[1]})
+        
+        # HACK FOR RUSSEL's INTERSTITIAL
+        # if str(c.key()) == "agltb3B1Yi1pbmNyEAsSCENyZWF0aXZlGPmNGAw":
+        #   self.response.headers.add_header("X-Closebutton","None")
+        
       elif c.ad_type == "html_full":
         params.update(html_data=c.html_data)
         params.update({"html_data": kwargs["html_data"]})
@@ -755,8 +759,9 @@ class TestHandler(webapp.RequestHandler):
   def get(self):
     from ad_server.networks.greystripe import GreyStripeServerSide
     from ad_server.networks.millennial import MillennialServerSide
+    from ad_server.networks.brightroll import BrightRollServerSide
     
-    server_side = GreyStripeServerSide(self.request,357)
+    server_side = BrightRollServerSide(self.request,357)
     logging.warning("%s, %s"%(server_side.url,server_side.payload))
     
     rpc = urlfetch.create_rpc(1) # maximum delay we are willing to accept is 1000 ms
@@ -774,7 +779,7 @@ class TestHandler(webapp.RequestHandler):
         result = rpc.get_result()
         if result.status_code == 200:
             bid,response = server_side.bid_and_html_for_response(result)
-            self.response.out.write("%s<br/> %s %s"%(server_side.url+'?'+payload,bid,response))
+            self.response.out.write("%s<br/> %s %s"%(server_side.url+'?'+payload if payload else '',bid,response))
     except urlfetch.DownloadError:
       self.response.out.write("%s<br/> %s"%(server_side.url,"response not fast enough"))
       

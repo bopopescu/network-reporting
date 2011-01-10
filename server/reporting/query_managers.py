@@ -1,0 +1,21 @@
+import logging
+
+from common.utils.cachedquerymanager import CachedQueryManager
+from advertiser.query_managers import CampaignStatsCounter
+
+from google.appengine.ext import db
+
+from reporting.models import SiteStats
+
+class SiteStatsQueryManager(CachedQueryManager):
+    def get_sitestats_for_days(self, site=None, owner=None, days=[]):
+        if isinstance(site,db.Model):
+            site_key = site.key()
+        elif isinstance(site,db.Key):
+            site_key = site    
+        else:
+            site_key = site    
+        keys = [SiteStats.get_key(site_key, owner, d) for d in days]
+        stats = SiteStats.get(keys) # db get
+        stats = [s or SiteStats() for s in stats]
+        return stats

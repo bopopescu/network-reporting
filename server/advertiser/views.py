@@ -25,6 +25,11 @@ from reporting.models import SiteStats
 
 from common.utils.cachedquerymanager import CachedQueryManager
 
+from account.query_managers import AccountQueryManager
+from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager, \
+                                      CreativeQueryManager
+from publisher.query_managers import AdUnitQueryManager
+from reporting.query_managers import SiteStatsQueryManager
 
 class RequestHandler(object):
     def __call__(self,request,*args,**kwargs):
@@ -36,10 +41,9 @@ class RequestHandler(object):
           if users.is_current_user_admin():
             account_key_name = request.COOKIES.get("account_impersonation",None)
             if account_key_name:
-              self.account = Account.get_by_key_name(account_key_name)
+              self.account = AccountQueryManager().get_by_key_name(account_key_name)
         if not self.account:  
           self.account = Account.current_account()
-          
           
         if request.method == "GET":
             return self.get(*args,**kwargs)
@@ -48,7 +52,8 @@ class RequestHandler(object):
     def get(self):
         pass
     def put(self):
-        pass
+        pass  
+
         
 def gen_graph_url(series, days, title):
   chart_url = "http://chart.apis.google.com/chart?cht=lc&chtt=%s&chs=780x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
@@ -64,10 +69,10 @@ class IndexHandler(RequestHandler):
   def get(self):
     days = SiteStats.lastdays(14)
 
-    campaigns = Campaign.gql("where u = :1 and deleted = :2", self.account.user, False).fetch(100)
+    campaigns = CampaignQueryManager().get_campaigns(account=self.account)
     today = SiteStats()
     for c in campaigns:
-      c.all_stats = SiteStats.stats_for_days(c, days)      
+      c.all_stats = SiteStatsQueryManager.get_sitestats_for_days(owner=c, days=days)      
       c.stats = reduce(lambda x, y: x+y, c.all_stats, SiteStats())
       today += c.all_stats[-1]
             
@@ -114,9 +119,9 @@ class AdGroupIndexHandler(RequestHandler):
   def get(self):
     days = SiteStats.lastdays(14)
 
-    campaigns = Campaign.gql("where u = :1 and deleted = :2", self.account.user, False).fetch(100)
+    campaigns = CampaignQueryManager().get_campaigns(account=self.account)
     if campaigns:
-      adgroups = AdGroup.gql("where campaign in :1 and deleted = :2", [x.key() for x in campaigns], False).fetch(100)
+      adgroups = AdGroupQueryManager().get_adgroups(campaigns=campaigns)
     else:
       adgroups = []
     adgroups = sorted(adgroups, lambda x,y: cmp(y.bid, x.bid))
@@ -124,7 +129,7 @@ class AdGroupIndexHandler(RequestHandler):
     
     today = SiteStats()
     for c in adgroups:
-      c.all_stats = SiteStats.stats_for_days(c, days)      
+      c.all_stats = SiteStatsQueryManager().get_sitestats_for_days(owner=c, days=days)      
       c.stats = reduce(lambda x, y: x+y, c.all_stats, SiteStats())
       today += c.all_stats[-1]
 
@@ -177,7 +182,7 @@ class CreateHandler(RequestHandler):
     if f.is_valid():
       campaign = f.save(commit=False)
       campaign.u = self.account.user
-      campaign.put()
+      CampaignQueryManager().put_campaigns(campaign)
       return HttpResponseRedirect(reverse('campaign_adgroup_new', kwargs={'campaign_key':campaign.key()}))
     else:
       return render_to_response(self.request,'advertiser/new.html', {"f": f})
@@ -189,21 +194,21 @@ def campaign_create(request,*args,**kwargs):
 class CreateAdGroupHandler(RequestHandler):
   def get(self, campaign_key=None, adgroup_key=None, edit=False, title="Create an Ad Group"):
     if campaign_key:
-      c = Campaign.get(campaign_key)
+      c = CampaignQueryManager().get_by_key(campaign_key)
       adgroup = AdGroup(name="%s Ad Group" % c.name, campaign=c, bid_strategy="cpm", bid=10.0, percent_users=100.0)
     if adgroup_key:
-      adgroup = AdGroup.get(db.Key(adgroup_key))
+      adgroup = AdGroupQueryManager().get_by_key(adgroup_key)
       c = adgroup.campaign
       if not adgroup:
         raise Http404("AdGroup does not exist")  
     adgroup.budget = adgroup.budget or c.budget # take budget from campaign for the time being
     f = AdGroupForm(instance=adgroup)
-    sites = Site.gql('where account=:1', self.account).fetch(100)    
+    adunits = AdUnitQueryManager().get_adunits(account=self.account)
     
     # allow the correct sites to be checked
-    for site in sites:
-      site.checked = site.key() in adgroup.site_keys
-      site.app = App.get(site.app_key.key())
+    for adunit in adunits:
+      adunit.checked = adunit.key() in adgroup.site_keys
+      adunit.app = App.get(adunit.app_key.key())
 			
 		# TODO: Clean up this hacked shit	
     networks = [["adsense","Google AdSense",False],["iAd","Apple iAd",False],["admob","AdMob",False],["millennial","Millennial Media",False],["inmobi","InMobi",False],["greystripe","GreyStripe",False],["appnexus","App Nexus",False],["brightroll","BrightRoll",False],["custom","Custom",False]]
@@ -211,11 +216,11 @@ class CreateAdGroupHandler(RequestHandler):
       if adgroup.network_type == n[0]:
         n[2] = True
 
-    return render_to_response(self.request,'advertiser/new_adgroup.html', {"f": f, "c": c, "sites": sites, "title": title, "networks":networks})
+    return render_to_response(self.request,'advertiser/new_adgroup.html', {"f": f, "c": c, "sites": adunits, "title": title, "networks":networks})
 
   def post(self, campaign_key=None,adgroup_key=None, edit=False, title="Create an Ad Group"):
     if adgroup_key:
-      adgroup = AdGroup.get(db.Key(adgroup_key))
+      adgroup = AdGroupQueryManager().get_by_key(adgroup_key)
     else:
       adgroup = None  
     
@@ -225,15 +230,15 @@ class CreateAdGroupHandler(RequestHandler):
     
     
     adgroup = f.save(commit=False)
-    adgroup.campaign = Campaign.get(db.Key(self.request.POST.get("id")))
+    adgroup.campaign = CampaignQueryManager().get_by_key(self.request.POST.get("id"))
     adgroup.keywords = filter(lambda k: len(k) > 0, self.request.POST.get('keywords').lower().replace('\r','\n').split('\n'))
     adgroup.site_keys = map(lambda x: db.Key(x), self.request.POST.getlist('sites'))
-    adgroup.put()
+    AdGroupQueryManager().put_adgroups(adgroup)
     
     updated_site_keys = orig_site_keys.union(set(adgroup.site_keys))
     
     # update cache
-    adunits = Site.get(list(updated_site_keys))
+    adunits = AdUnitQueryManager().get_by_key(list(updated_site_keys))
     CachedQueryManager().cache_delete(adunits)
      
     # if the campaign is a network type, automatically populate the right creative and go back to
@@ -241,7 +246,7 @@ class CreateAdGroupHandler(RequestHandler):
     if adgroup.campaign.campaign_type == "network":
       if not edit:
         creative = adgroup.default_creative()
-        creative.put()
+        CreativeQueryManager().put_creatives(creative)
       else:
         creative = Creative.all().filter("ad_group =",adgroup.key()) .get()
         if adgroup.network_type in ['millenial','inmobi','appnexus','greystripe']:
@@ -250,7 +255,7 @@ class CreateAdGroupHandler(RequestHandler):
           creative.ad_type = "html_full"
         else:
           creative.ad_type = adgroup.network_type
-        creative.put()
+        CreativeQueryManager().put_creatives(creative)
         
       return HttpResponseRedirect(reverse('advertiser_campaign',kwargs={}))
     else:
@@ -272,13 +277,13 @@ class ShowHandler(RequestHandler):
     days = SiteStats.lastdays(14)
 
     # load the campaign
-    campaign = Campaign.get(campaign_key)
+    campaign = CampaignQueryManager.get_by_key(campaign_key)
     
     # load the adgroups
-    bids = AdGroup.gql("where campaign=:1 and deleted = :2", campaign, False).fetch(100)
+    bids = AdGroupQueryManager().get_campaigns(campaign=campaign)
     bids.sort(lambda x,y:cmp(x.priority_level, y.priority_level))
     for b in bids:
-      b.all_stats = SiteStats.stats_for_days(b, days)      
+      b.all_stats = SiteStatsQueryManager.get_sitestats_for_days(owner=b, days=days)      
       b.stats = reduce(lambda x, y: x+y, b.all_stats, SiteStats())
 
     # no ad groups?
@@ -322,17 +327,17 @@ def campaign_show(request,*args,**kwargs):
  return ShowHandler()(request,*args,**kwargs) 
 
 class EditHandler(RequestHandler):
-  def get(self):
-    c = Campaign.get(self.request.GET.get("id"))
+  def get(self,campaign_key):
+    c = CampaignQueryManager().get_by_key(campaign_key)
     f = CampaignForm(instance=c)
     return render_to_response(self.request,'advertiser/edit.html', {"f": f, "campaign": c})
 
   def post(self):
-    c = Campaign.get(self.request.POST.get('id'))
+    c = CampaignQueryManager().get_by_key(self.request.POST.get('id'))
     f = CampaignForm(data=self.request.POST, instance=c)
     if c.u == self.account.user:
       f.save(commit=False)
-      c.put()
+      CampaignQueryManager().put_campaigns(c)
       return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':c.key()}))
 
 @whitelist_login_required  
@@ -344,8 +349,8 @@ class PauseHandler(RequestHandler):
     asf
     action = self.request.POST.get("action", "pause")
     updated_campaigns = []
-    for id in self.request.POST.getlist('id') or []:
-      c = Campaign.get(id)
+    for id_ in self.request.POST.getlist('id') or []:
+      c = CampaignQueryManager().get_by_key(id_)
       updated_campaigns.append(c)
       update_objs = []
       if c != None and c.u == self.account.user:
@@ -370,11 +375,11 @@ class PauseHandler(RequestHandler):
               update_objs.append(creative)
       if update_objs: 
         db.put(update_objs)   
-        adgroups = AdGroup.gql("where campaign in :1 and deleted = :2", [c.key() for c in updated_campaigns], False).fetch(100) 
+        adgroups = AdGroupQueryManager().get_adgroups(campaigns=updated_campaigns)
         adunits = []
         for adgroup in adgroups:
           adunits.extend(adgroups.site_keys)
-        adunits = Site.get(adunits)  
+        adunits = AdUnitQueryManager().get_by_key(adunits)  
         logging.info("HHHHHH update: %s"%adunits)
         CachedQueryManager().put(adunits)
     return HttpResponseRedirect(reverse('advertiser_campaign',kwargs={}))
@@ -387,20 +392,21 @@ class ShowAdGroupHandler(RequestHandler):
   def get(self, adgroup_key):
     days = SiteStats.lastdays(14)
 
-    adgroup = AdGroup.get(adgroup_key)
-    creatives = Creative.gql('where ad_group = :1 and deleted = :2 and ad_type in :3', adgroup, False, ["text", "image", "html"]).fetch(50)
+    adgroup = AdGroupQueryManager().get_by_key(adgroup_key)
+    # creatives = Creative.gql('where ad_group = :1 and deleted = :2 and ad_type in :3', adgroup, False, ["text", "image", "html"]).fetch(50)
+    creatives = CreativeQueryManager().get_creatives(adgroup=adgroup)
     for c in creatives:
-      c.all_stats = SiteStats.stats_for_days(c, days)
+      c.all_stats = SiteStatsQueryManager().get_sitestats_for_days(owner=c, days=days)
       c.stats = reduce(lambda x, y: x+y, c.all_stats, SiteStats())
       
     sites = map(lambda x: Site.get(x), adgroup.site_keys)
     for s in sites:
-      s.all_stats = SiteStats.stats_for_days_with_qualifier(adgroup, s, days)
+      s.all_stats = SiteStatsQueryManager().get_sitestats_for_days(site=s,owner=adgroup, days=days)
       s.stats = reduce(lambda x, y: x+y, s.all_stats, SiteStats())
       s.app = App.get(s.app_key.key())
 
     # compute rollups to display at the top
-    today = SiteStats.stats_for_day(adgroup, SiteStats.today())
+    today = SiteStatsQueryManager().get_sitestats_for_days(owner=adgroup, days=[SiteStats.today()])[0]
     if len(sites) > 0:
       totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[s.all_stats for s in sites])]
     else:
@@ -437,8 +443,8 @@ class PauseAdGroupHandler(RequestHandler):
   def post(self):
     action = self.request.POST.get("action", "pause")
     adgroups = []
-    for id in self.request.POST.getlist('id') or []:
-      a = AdGroup.get(id)
+    for id_ in self.request.POST.getlist('id') or []:
+      a = AdGroupQueryManager().get_by_key(id_)
       adgroups.append(a)
       update_objs = []
       if a != None and a.campaign.u == self.account.user:
@@ -458,7 +464,8 @@ class PauseAdGroupHandler(RequestHandler):
             creative.deleted = True
             update_objs.append(creative)
       if update_objs:
-        db.put(update_objs)     
+        # db.put(update_objs)     
+        AdGroupQueryManager().put_adgroups(update_objs)
         adunits = []
         for adgroup in adgroups:
           adunits.extend(adgroup.site_keys)
@@ -475,7 +482,8 @@ def bid_pause(request,*args,**kwargs):
 #
 class AddCreativeHandler(RequestHandler):
   def post(self):
-    ad_group = AdGroup.get(self.request.POST.get('id'))
+    ad_group = AdGroupQueryManager().get_by_key(self.request.POST.get('id'))
+    creative = None
     if self.request.POST.get("headline"):
       creative = TextCreative(ad_group=ad_group,
       headline=self.request.POST.get('headline'),
@@ -484,7 +492,6 @@ class AddCreativeHandler(RequestHandler):
       url=self.request.POST.get('url'),
       display_url=self.request.POST.get('display_url'),
       tracking_url=self.request.POST.get('tracking_url'))
-      creative.put()
     elif self.request.FILES.get("image"):
       img = images.Image(self.request.FILES.get("image").read())
       fp = ImageCreative.get_format_predicates_for_image(img)
@@ -498,17 +505,16 @@ class AddCreativeHandler(RequestHandler):
                                   image_width=img.width,
                                   image_height=img.height,
                                   tracking_url=self.request.POST.get('tracking_url'))
-        creative.put()
     elif self.request.POST.get("html_name"):
       creative = HtmlCreative(ad_group=ad_group,
         ad_type="html",
         html_name=self.request.POST.get('html_name'),
         html_data=self.request.POST.get('html_data'),
         tracking_url=self.request.POST.get('tracking_url'))
-      creative.put()
-    
+    if creative:  
+        CreativeQueryManager().put_creatives(creative)
     # update cache
-    adunits = Site.get(ad_group.site_keys)
+    adunits = AdUnitQueryManager().get_by_key(ad_group.site_keys)
     CachedQueryManager().cache_delete(adunits)
       
     return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':ad_group.key()}))
@@ -519,7 +525,7 @@ def creative_create(request,*args,**kwargs):
 
 class DisplayCreativeHandler(RequestHandler):
   def get(self, creative_key):
-    c = Creative.get(creative_key)
+    c = CreativeQueryManager().get_by_key(creative_key)
     if c and c.ad_type == "image" and c.image:
       return HttpResponse(c.image,content_type='image/png')
     if c and c.ad_type == "html":
@@ -537,17 +543,18 @@ class RemoveCreativeHandler(RequestHandler):
     ids = self.request.POST.getlist('id')
     update_objs = []
     for creative_key in ids:
-      c = Creative.get(creative_key)
+      c = CreativeQueryManager().get_by_key(creative_key)
       if c != None and c.ad_group.campaign.u == self.account.user:
         c.deleted = True
         update_objs.append(c)
         
         
     if update_objs:
-      db.put(update_objs)
-    
+      # db.put(update_objs)
+      CreativeQueryManager().put_creatives(update_objs)
+      
       # update cache
-      adunits = Site.get(c.ad_group.site_keys)
+      adunits = AdUnitQueryManager().get_by_key(c.ad_group.site_keys)
       CachedQueryManager().cache_delete(adunits)
         
     return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':c.ad_group.key()}))

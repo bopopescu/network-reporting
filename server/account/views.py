@@ -21,6 +21,9 @@ from common.utils.cachedquerymanager import CachedQueryManager
 from account.models import Account
 from publisher.models import Site
 
+from account.query_managers import AccountQueryManager
+from publisher.query_managers import AdUnitQueryManager
+
 class RequestHandler(object):
     def __call__(self,request,*args,**kwargs):
         self.params = request.POST or request.GET
@@ -31,7 +34,7 @@ class RequestHandler(object):
           if users.is_current_user_admin():
             account_key_name = request.COOKIES.get("account_impersonation",None)
             if account_key_name:
-              self.account = Account.get_by_key_name(account_key_name)
+              self.account = AccountQueryManager().get_by_key_name(account_key_name)
         if not self.account:  
           self.account = Account.current_account()
           
@@ -42,7 +45,8 @@ class RequestHandler(object):
     def get(self):
         pass
     def put(self):
-        pass
+        pass  
+
 
 class AccountHandler(RequestHandler):
   def get(self):
@@ -55,7 +59,7 @@ class AccountHandler(RequestHandler):
     a.adsense_company_name = self.request.POST.get("adsense_company_name")
     a.put()
     
-    adunits = Site.all().filter("account =",a).fetch(300)
+    adunits = AdUnitQueryManager().get_adunits(account=a)
     CachedQueryManager().cache_delete(adunits)
     
     return HttpResponseRedirect("/account")

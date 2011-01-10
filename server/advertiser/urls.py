@@ -3,7 +3,7 @@ from django.conf.urls.defaults import *
 
 urlpatterns = patterns('advertiser.views',
   url(r'^create/$','campaign_create',name='advertiser_campaign_create'),
-  url(r'^edit/$','campaign_edit',name='advertiser_campaign_edit'),
+  url(r'^edit/(?P<campaign_key>[\w\.]+)/$','campaign_edit',name='advertiser_campaign_edit'),
   url(r'^pause/$','campaign_pause',name='advertiser_campaign_pause'),
   url(r'^show/(?P<campaign_key>[-\w\.]+)$','campaign_show',name='advertiser_campaign_show'),
   url(r'^creative/create/$','creative_create',name='advertiser_creative_create'),

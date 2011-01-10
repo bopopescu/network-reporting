@@ -163,7 +163,7 @@ class Creative(polymodel.PolyModel):
   deleted = db.BooleanProperty(default=False)
 
   # the creative type helps the ad server render the right thing if the creative wins the auction
-  ad_type = db.StringProperty(choices=["text", "image", "iAd", "adsense", "admob", "html", "html_full", "clear"], default="text")
+  ad_type = db.StringProperty(choices=["text", "text_icon", "image", "iAd", "adsense", "admob", "html", "html_full", "clear"], default="text")
 
   # tracking pixel
   tracking_url = db.StringProperty()
@@ -214,8 +214,6 @@ class TextAndTileCreative(Creative):
   line1 = db.StringProperty()
   line2 = db.StringProperty()
   image = db.BlobProperty()
-  image_width = db.IntegerProperty()
-  image_height = db.IntegerProperty()
   
 class HtmlCreative(Creative):
   # html ad properties
@@ -261,4 +259,7 @@ class BrightRollCreative(Creative):
   
 class NullCreative(Creative):
   pass
-  
+
+class TempImage(db.Model):
+  image = db.BlobProperty()
+

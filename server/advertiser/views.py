@@ -384,7 +384,7 @@ class ShowAdGroupHandler(RequestHandler):
     days = SiteStats.lastdays(14)
 
     adgroup = AdGroup.get(adgroup_key)
-    creatives = Creative.gql('where ad_group = :1 and deleted = :2 and ad_type in :3', adgroup, False, ["text", "image", "html"]).fetch(50)
+    creatives = Creative.gql('where ad_group = :1 and deleted = :2 and ad_type in :3', adgroup, False, ["text", "text_icon", "image", "html"]).fetch(50)
     for c in creatives:
       c.all_stats = SiteStats.stats_for_days(c, days)
       c.stats = reduce(lambda x, y: x+y, c.all_stats, SiteStats())
@@ -464,6 +464,7 @@ def bid_pause(request,*args,**kwargs):
 class AddCreativeHandler(RequestHandler):
   def post(self):
     ad_group = AdGroup.get(self.request.POST.get('id'))
+    
     if self.request.POST.get("headline"):
       creative = TextCreative(ad_group=ad_group,
       headline=self.request.POST.get('headline'),
@@ -472,6 +473,16 @@ class AddCreativeHandler(RequestHandler):
       url=self.request.POST.get('url'),
       display_url=self.request.POST.get('display_url'),
       tracking_url=self.request.POST.get('tracking_url'))
+      creative.put()
+    elif self.request.POST.get("line1"):
+      creative = TextAndTileCreative()
+      creative.ad_group=ad_group
+      creative.ad_type="text_icon"
+      creative.line1=self.request.POST.get('line1')
+      creative.line2=self.request.POST.get('line2')
+      creative.url=self.request.POST.get('url')
+      img=images.resize(self.request.FILES.get("image").read(), 40, 40)
+      creative.image=db.Blob(img)
       creative.put()
     elif self.request.FILES.get("image"):
       img = images.Image(self.request.FILES.get("image").read())
@@ -503,10 +514,13 @@ def creative_create(request,*args,**kwargs):
 class DisplayCreativeHandler(RequestHandler):
   def get(self, creative_key):
     c = Creative.get(creative_key)
-    if c and c.ad_type == "image" and c.image:
-      return HttpResponse(c.image,content_type='image/png')
-    if c and c.ad_type == "html":
-      return HttpResponse("<html><body>"+c.html_data+"</body></html");
+    if c:
+      if c.ad_type == "image" and c.image:
+        return HttpResponse(c.image,content_type='image/png')
+      elif c.ad_type == "text_icon" and c.image:
+        return HttpResponse(c.image,content_type='image/png')
+      elif c.ad_type == "html":
+        return HttpResponse("<html><body>"+c.html_data+"</body></html");
     return HttpResponse('NOOOOOOOOOOOO IMAGE')
 
 def creative_image(request,*args,**kwargs):

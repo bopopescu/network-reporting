@@ -291,13 +291,14 @@ header nav a, header nav a:active, header nav a:visited {
 
 header nav a:hover {
   color: #fff;
+  text-shadow: #000 0 1px 0;
   background: #1a1a1a;
   text-decoration: none;
 }
 
 header nav .active a {
   color: #fff;
-  text-shadow: #121212 0 -1px 0;
+  text-shadow: #000 0 -1px 0;
   background: none;
 }
 
@@ -362,17 +363,27 @@ header nav .active a {
 
 #titlebar-center {
   position: absolute;
-  top: 0;
+  top: 5px;
   width: 100%;
   text-align: center;
 }
 
 #titlebar-right {
   position: absolute;
-  top: 0;
+  top: 5px;
   right: 0;
   text-align: right;
   font-size: 14px;
+}
+
+#titlebar .buttonset {
+  display: inline-block;
+  margin: 2px 0 0 0;
+}
+
+.titlebar-link {
+  display: inline-block;
+  margin: 8px 0 0 0;
 }
 
 /* Content */
@@ -456,6 +467,60 @@ a:hover {
   padding: 0 3px;
   color: #ccc;
 }
+
+/*---------------------------------------/
+/ Modules
+/---------------------------------------*/
+
+/* Link with icon */
+
+a.linkIcon .ui-icon {
+  display: inline-block;
+  vertical-align: -3px;
+}
+
+.ie7 a.linkIcon .ui-icon,
+.ie6 a.linkIcon .ui-icon {
+  vertical-align: 0;
+}
+
+a.linkIcon:hover .ui-icon {
+  background-image: url(../images/ui/ui-icons-hover.png);
+}
+
+a.linkIcon .ui-icon-triangle-1-e,
+a.linkIcon .ui-icon-triangle-1-w  {
+  width: 6px;
+}
+
+a.linkIcon .ui-icon-triangle-1-e { background-position: -38px -15px; }
+a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
+
+/*---------------------------------------/
+/ jQuery UI Overrides
+/---------------------------------------*/
+
+/* button sets (fix issue with double internal borders) */
+.ui-buttonset .ui-button { border-right-width: 0; } 
+.ui-buttonset .ui-corner-right { border-right-width: 1px; }
+
+/* Component containers */
+.ui-widget { font-family: "myriad-pro-1","myriad-pro-2", helvetica, arial, sans-serif; }
+.ui-widget input, .ui-widget select, .ui-widget textarea, .ui-widget button { font-family: "myriad-pro-1","myriad-pro-2", helvetica, arial, sans-serif; }
+
+/*button text element */
+.ui-button .ui-button-text { line-height: 1.1; }
+.ui-button-text-only .ui-button-text { padding: 3px 12px 5px 12px; }
+.ui-button-icon-only .ui-button-text, .ui-button-icons-only .ui-button-text { padding: 4px 5px 5px 5px; }
+.ui-button-text-icon-primary .ui-button-text, .ui-button-text-icons .ui-button-text { padding: 4px 12px 5px 25px; }
+.ui-button-text-icon-secondary .ui-button-text, .ui-button-text-icons .ui-button-text { padding: 4px 25px 5px 12px; }
+.ui-button-text-icons .ui-button-text { padding-left: 25px; padding-right: 25px; }
+input.ui-button { padding: 4px 12px 5px 12px; }
+
+/* Interaction states */
+.ui-state-default, .ui-widget-content .ui-state-default, .ui-widget-header .ui-state-default { background-image: url(../images/ui/ui-button-default.png); text-shadow: #fff 0 1px 0; }
+.ui-state-hover, .ui-widget-content .ui-state-hover, .ui-widget-header .ui-state-hover, .ui-state-focus, .ui-widget-content .ui-state-focus, .ui-widget-header .ui-state-focus { background-image: url(../images/ui/ui-button-hover.png); text-shadow: #994000 0 -1px 0; }
+.ui-state-active, .ui-widget-content .ui-state-active, .ui-widget-header .ui-state-active { background-image: url(../images/ui/ui-button-active.png); text-shadow: #444 0 1px 0; border-left: 1px solid #666; border-right: 1px solid #666; }
 
 /*---------------------------------------/
 / Miscellaneous

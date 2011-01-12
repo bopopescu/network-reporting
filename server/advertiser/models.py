@@ -214,6 +214,10 @@ class TextAndTileCreative(Creative):
   line1 = db.StringProperty()
   line2 = db.StringProperty()
   image = db.BlobProperty()
+  action_icon = db.StringProperty(choices=["download_arrow4", "access_arrow", "none"], default="download_arrow4")
+  color = db.StringProperty(default="000000")
+  font_color = db.StringProperty(default="FFFFFF")
+  gradient = db.BooleanProperty(default=False)
   
 class HtmlCreative(Creative):
   # html ad properties

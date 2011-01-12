@@ -4,7 +4,34 @@
 
 {% block title %}{{campaign.name}}{% endblock %}
 {% block content %}
-
+<style type="text/css">
+#highlight.gradient {
+  background: -webkit-gradient(linear, left top, left bottom, from(rgba(255,255,255,0.35)),
+    to(rgba(255,255,255,0.06))); -webkit-background-origin: padding-box; -webkit-background-clip: content-box;
+  background: -moz-linear-gradient(rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0.06) 95%);
+}
+</style>
+<script type="text/javascript">
+function updateLine1() {$('line1sample').innerHTML = $('line1').value;}
+function updateLine2() {$('line2sample').innerHTML = $('line2').value;}
+function updateColor() {color=$('color').value;if (color.match(/^[0-9a-f]{6}$/i)) $('preview').style.backgroundColor='#'+color;}
+function updateFontColor() {color=$('font_color').value;if (color.match(/^[0-9a-f]{6}$/i)){$('line1sample').style.color='#'+color; $('line2sample').style.color='#'+color;}} 
+function updateGradient() {$('highlight').toggleClassName('gradient');}
+function changeIcon() {$('app_img').value='';$('image_input').show();$('image_input_change').hide();
+}
+function setAction(icon) {if (icon=="none"){$('action_icon').hide();return;}$('action_icon').show();$('action_icon').src = '/images/'+icon+'.png';}
+function setApp(name,url,key) {
+  $('image_input_div').innerHTML = $('image_input_div').innerHTML;
+  $('line1').value = name;
+  $('line1sample').innerHTML = name;
+  $('line2sample').innerHTML = '';
+  $('url').value = url;
+  $('thumb').src = (key) ? '/inventory/app/icon/'+key : '/images/noicon.png';
+  $('image_input').hide();
+  $('image_input_change').show();
+  $('app_img').value = key;
+}
+</script>
 	<h3>
 		<a href="{% url advertiser_campaign %}">Campaigns</a> &gt; 
 		<!--<a href="{% url advertiser_campaign_show campaign_key=campaign.key %}">{{campaign.name}}</a> &gt;-->
@@ -91,12 +118,12 @@
 		<h3>
 			Ad Creatives
 			<div class="toolbar">
-				<a href="#" onclick="javascript:Toggle.display('add_creative_box');return false;">
-					Create Text Ad
-				</a>
-				|
 				<a href="#" onclick="javascript:Toggle.display('add_text_image_creative_box');return false;">
 					Create Text and Icon Ad
+				</a>
+				|
+				<a href="#" onclick="javascript:Toggle.display('add_creative_box');return false;">
+					Create Text Ad
 				</a>
 				|
 				<a href="#" onclick="javascript:Toggle.display('add_image_creative_box');return false;">
@@ -121,18 +148,57 @@
 				<tr><th></th><td><input type='submit' value="Create Ad &raquo;"/></td></tr>
 			</table>
 		</form>
+		
 		<form method="post" action="{% url advertiser_creative_create %}" enctype="multipart/form-data"
 			id="add_text_image_creative_box" style="display:none;" class="special_notice">		
 			<input type="hidden" name="id" value="{{adgroup.key}}"/>
+			<table><tr><td>
 			<table>
-				<tr><th>Line 1</th><td><input id='line1' type='text' name="line1" size="30"/></td></tr>
-				<tr><th>Line 2</th><td><input id='line2' type='text' name="line2" size="30"/></td></tr>
-				<tr><th>Image File<br/><span style="font-size:smaller;margin-left:5px;">(40 x 40)</span></th><td><input type='file' name="image" size="40"/></td></tr>
-				<tr><th>URL</th><td><input type='text' name="url" size="50"/></td></tr>
+				<tr><th>Line 1</th><td><input id='line1' type='text' name="line1" size="30" onkeyup='updateLine1();'/></td></tr>
+				<tr><th>Line 2</th><td><input id='line2' type='text' name="line2" size="30" onkeyup='updateLine2();'/></td></tr>
+				<tr><th>Image File<br/><span style="font-size:smaller;margin-left:5px;">(40 x 40)</span></th><td><div id='image_input_div'><input id='image_input' type='file' name="image" size="40"/></div><div id='image_input_change' style='display:none;'><a href="#" onclick="changeIcon();return false;">Change</a></div></td></tr>
+				<input type="hidden" id="app_img" name="app_img"/>
+				<tr><th>URL</th><td><input type='text' id='url' name="url" size="50"/></td></tr>
+				<tr><th>Action Icon</th><td>
+				    <input type="radio" name="action_icon" value="download_arrow4" onclick="setAction('download_arrow4');" checked/><img src="/images/download_arrow4.png"/>
+				    <input type="radio" name="action_icon" value="access_arrow" onclick="setAction('access_arrow');"/><img src="/images/access_arrow.png"/>
+				    <input type="radio" name="action_icon" value="none" onclick="setAction('none');"/> None
+				    <input type="radio" name="action_icon" value="custom" onclick="setAction('custom');" disabled/> Custom
+				</td>
+				<tr><th>Color</th><td><input type='text' id='color' name="color" size="8" value="000000" onkeyup='updateColor();'/></td></tr>
+				<tr><th>Font Color</th><td><input type='text' id='font_color' name="font_color" size="8" value="FFFFFF" onkeyup='updateFontColor();'/></td></tr>
+				<tr><th>Gradient</th><td><input type='checkbox' id='gradient' name="gradient" checked onchange='updateGradient()'/></td></tr>
 			</table>
-      <br/>
+			</td><td valign="top">
+			  <table><tr><td>
+			    <div>
+			      <strong>Or create an ad for an existing App</strong><br />
+			      {% for a in apps %}
+        		<div style="position:relative;">
+      		  <img height="40px" width="40px" src="{% if a.icon_url %}{{a.icon_url}}{% else %}/images/noicon.png{% endif %}" width=$w height=$h/>
+      		  <a href="#" onclick="setApp('{{a.name}}','{{a.url}}',{% if a.icon_url %}'{{a.key}}'{% else %}null{% endif %});return false;">{{a.name}}</a>
+      		  <span style="background:url(/images/mask40.png);display:block;position:absolute; left:-1px;top:0px;z-index:1;height:42px;width:41px;')"</span>
+      		  </div>
+			      {% endfor %}
+			    </div>
+			    </td></tr></table>
+			</td></tr>
+			</table>
+      <strong>Preview</strong>
+      <div id='preview' style="width:320px;border:1px solid black;background-color:#000000;">
+        <div id='highlight' class="gradient" style="height:50px;">
+        <div style="margin:5px;width:40px;height:40px;float:left"><img id="thumb" src="/images/noicon.png" width=40 height=40/></div>
+        <div style="float:left;width:230px;height:10px">
+          <div id="line1sample" style="color:white;font-weight:bold;margin:5px 0 0 5px;"></div>
+          <div id="line2sample" style="color:white;margin-top:5px;margin:5px 0 0 5px;"></div>
+        </div>
+        <div style="padding-top:5px;"><a href="$url"><img id="action_icon" src="/images/download_arrow4.png" width=40 height=40/></a></div>
+      </div>
+      </div>
+      <br />
       <input type='submit' value="Create Ad &raquo;"/>
 		</form>
+		
 		<form method="post" action="{% url advertiser_creative_create %}" enctype="multipart/form-data"
 			id="add_image_creative_box" style="display:none;" class="special_notice">		
 			<input type="hidden" name="id" value="{{adgroup.key}}"/>
@@ -179,13 +245,23 @@
 					</div>
 					{% endifequal %}
 					{% ifequal c.ad_type "text_icon" %}
-					<div style="width:320px;height:50px;border:1px solid black;background-color:#404040;">
+					<div style="width:320px;border:1px solid black;background-color:#{% if c.color %}{{c.color}}{% else %}000000{% endif %};">
+					  <div id='highlight' style="position:relative;height:50px;" {% if c.gradient %}class="gradient"{% endif %}>
+            {% if c.image %}
             <div id="img_preview" style="margin:5px;width:40px;height:40px;float:left">
               <img width="40" height="40" id="thumb" src="{% url advertiser_creative_image creative_key=c.key %}"/>
             </div>
-            <p id="line1sample" style="color:white;font-weight:bold;margin:5px 0 0 60px;">{{c.line1}}</p>
-            <p id="line2sample" style="color:white;margin-top:5px;margin:5px 0 0 60px;">{{c.line2}}</p>
+            {% endif %}
+            <div style="float:left;width:230px;height:10px">
+              <div id="line1sample" style="color:white;font-weight:bold;margin:5px 0 0 5px;">{{c.line1}}</div>
+              <div id="line2sample" style="color:white;margin-top:5px;margin:5px 0 0 5px;">{{c.line2}}</div>
+            </div>
+            {% ifnotequal c.action_icon "none" %}
+            <div style="padding-top:5px;position:absolute;top:0;right:0;"><a href="$url"><img id="action_icon" src="/images/{{c.action_icon}}.png" width=40 height=40/></a></div>
+            {% endifnotequal %}
+            </div>
           </div>
+          <span style="font-size:smaller;color:grey;">URL: {{c.url}}</span>
 					{% endifequal %}
 					{% ifequal c.ad_type "image" %}
 					<div class="creative">

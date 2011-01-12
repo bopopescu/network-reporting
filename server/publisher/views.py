@@ -524,26 +524,21 @@ class UpdateAdUnitHandler(RequestHandler):
   
 @whitelist_login_required
 def update(request,*args,**kwargs):
-  return UpdateAdUnitHandler()(request,*args,**kwargs)   
+  return UpdateAdUnitHandler()(request,*args,**kwargs)      
 
-class GetArtworkHandler(RequestHandler):
-  def get(self):
-    p = self.request.GET.get("app_type")
-    url = self.request.GET.get("url")
-    if (p == "iphone"):
-      m = re.search('itunes.apple.com/.*/id(\d+)', url)
-      if m:
-        id = m.group(1)
-        itunes_url = "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/wa/wsLookup?id=" + id
-        response = urllib.urlopen(itunes_url)
-        return HttpResponse(response.read())
+class AppIconHandler(RequestHandler):
+  def get(self, app_key):
+    a = App.get(app_key)
+    if a.icon:
+      response = HttpResponse(a.icon)
+      response['Content-Type'] = 'image/png'
+      return response
+    else:
+      HttpResponseRedirect('/images/noicon.png')
 
-    return HttpResponse()
-
-@whitelist_login_required
-def getartwork(request,*args,**kwargs):
-  return GetArtworkHandler()(request,*args,**kwargs)   
-  
+def app_icon(request,*args,**kwargs):
+  return AppIconHandler()(request,*args,**kwargs)
+    
 # Set up a new user with a default campaign
 class GetStartedHandler(RequestHandler):
   def get(self):

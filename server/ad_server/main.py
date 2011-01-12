@@ -483,7 +483,7 @@ class AdHandler(webapp.RequestHandler):
                           </html> """),
     "iAd": Template("iAd"),
     "clear": Template(""),
-    "text": Template("""<html>\
+    "text": Template("""<html>
                         <head>
                           <style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: ${w}px;height: ${h}px;}.creative_headline {font-size: 14px;}.creative .creative_url a {color: green;text-decoration: none;}
                           </style>
@@ -493,12 +493,35 @@ class AdHandler(webapp.RequestHandler):
                             function webviewDidAppear(){} 
                           </script>
                           <title>$title</title>
-                        </head>\
-                        <body style="margin: 0;width:${w}px;height:${h}px;padding:0;">\
+                        </head>
+                        <body style="margin: 0;width:${w}px;height:${h}px;padding:0;">
                           <div class="creative"><div style="padding: 5px 10px;"><a href="$url" class="creative_headline">$headline</a><br/>$line1 $line2<br/><span class="creative_url"><a href="$url">$display_url</a></span></div></div>\
                           $trackingPixel
                         </body> </html> """),
-    "image":Template("""<html>\
+    "text_icon": Template(
+"""<html>
+  <head>
+    $finishLoad
+    <script>
+      function webviewDidClose(){}
+      function webviewDidAppear(){}
+    </script>
+    <title></title>
+  </head>
+  <body style="top-margin:0;margin:0;width:320px;padding:0;background-color:#$color;font-size:12px;font-family:Arial,sans-serif;">
+  <div id='highlight' style="position:relative;height:50px;background:-webkit-gradient(linear, left top, left bottom, from(rgba(255,255,255,0.35)),
+    to(rgba(255,255,255,0.06))); -webkit-background-origin: padding-box; -webkit-background-clip: content-box;">
+    <div style="margin:5px;width:40px;height:40px;float:left"><img id="thumb" src="$image_url" width=40 height=40/></div>
+    <div style="float:left;width:230">
+      <div id="line1sample" style="color:white;font-weight:bold;margin:0px 0 0 5px;padding-top:8;">$line1</div>
+      <div id="line2sample" style="color:white;margin-top:6px;margin:5px 0 0 5px;">$line2</div>
+    </div>
+    <div style="padding-top:5px;position:absolute;top:0;right:0;"><a href="$url"><img src="/images/$action_icon.png" width=40 height=40/></a></div>
+    $trackingPixel
+  </div>
+  </body>
+</html>"""),
+    "image":Template("""<html>
                         <head>
                           <style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: ${w}px;height: ${h}px;}.creative_headline {font-size: 20px;}.creative .creative_url a {color: green;text-decoration: none;}
                           </style>
@@ -553,6 +576,10 @@ class AdHandler(webapp.RequestHandler):
       elif c.ad_type == "admob":
         params.update({"title": ','.join(kwargs["q"]), "w": format[0], "h": format[1], "client": kwargs["site"].account.admob_pub_id})
         self.response.headers.add_header("X-Launchpage","http://c.admob.com/")
+      elif c.ad_type == "text_icon":
+        if c.image:
+          params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
+        self.response.headers.add_header("X-Adtype", str('html'))
       elif c.ad_type == "image":
         params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
       elif c.ad_type == "html":
@@ -561,23 +588,6 @@ class AdHandler(webapp.RequestHandler):
       elif c.ad_type == "html_full":
         params.update(html_data=c.html_data)
         params.update({"html_data": kwargs["html_data"]})
-        
-      if kwargs["q"] or kwargs["addr"]:
-        params.update(title=','.join(kwargs["q"]+list(kwargs["addr"])))
-      else:
-        params.update(title='')
-        
-      if kwargs["v"] >= 2 and not "Android" in self.request.headers["User-Agent"]:  
-        params.update(finishLoad='<script>function finishLoad(){window.location="mopub://finishLoad";} window.onload = function(){finishLoad();} </script>')
-      else:
-        params.update(finishLoad='')  
-      
-      
-      if c.tracking_url:
-        params.update(trackingPixel='<span style="display:none;"><img src="%s"/></span>'%c.tracking_url)
-      else:
-        params.update(trackingPixel='')  
-      
       # indicate to the client the winning creative type, in case it is natively implemented (iad, clear)
       
       elif str(c.ad_type) == "iAd":
@@ -631,7 +641,21 @@ class AdHandler(webapp.RequestHandler):
       else:  
         self.response.headers.add_header("X-Adtype", str('html'))
         
-        
+      if kwargs["q"] or kwargs["addr"]:
+        params.update(title=','.join(kwargs["q"]+list(kwargs["addr"])))
+      else:
+        params.update(title='')
+      
+      if kwargs["v"] >= 2 and not "Android" in self.request.headers["User-Agent"]:  
+        params.update(finishLoad='<script>function finishLoad(){window.location="mopub://finishLoad";} window.onload = function(){finishLoad();} </script>')
+      else:
+        params.update(finishLoad='')
+
+      if c.tracking_url:
+        params.update(trackingPixel='<span style="display:none;"><img src="%s"/></span>'%c.tracking_url)
+      else:
+        params.update(trackingPixel='')
+
       # render the HTML body
       self.response.out.write(self.TEMPLATES[c.ad_type].safe_substitute(params))
     else:

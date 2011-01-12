@@ -2,6 +2,7 @@ import logging, os, re, datetime, hashlib
 
 from urllib import urlencode
 
+import base64, binascii
 from google.appengine.api import users, memcache, images
 from google.appengine.api.urlfetch import fetch
 from google.appengine.ext import db
@@ -388,7 +389,12 @@ class ShowAdGroupHandler(RequestHandler):
     for c in creatives:
       c.all_stats = SiteStats.stats_for_days(c, days)
       c.stats = reduce(lambda x, y: x+y, c.all_stats, SiteStats())
-      
+    
+    apps = App.gql("where account = :1 and deleted = :2", self.account, False).fetch(50)
+    for a in apps:
+      if a.icon:
+        a.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(a.icon)
+
     sites = map(lambda x: Site.get(x), adgroup.site_keys)
     for s in sites:
       s.all_stats = SiteStats.stats_for_days_with_qualifier(adgroup, s, days)
@@ -417,6 +423,7 @@ class ShowAdGroupHandler(RequestHandler):
 
     return render_to_response(self.request,'advertiser/adgroup.html', 
                               {'campaign': adgroup.campaign,
+                              'apps': apps,
                               'adgroup': adgroup, 
                               'creatives': creatives,
                               'today': today,
@@ -481,8 +488,17 @@ class AddCreativeHandler(RequestHandler):
       creative.line1=self.request.POST.get('line1')
       creative.line2=self.request.POST.get('line2')
       creative.url=self.request.POST.get('url')
-      img=images.resize(self.request.FILES.get("image").read(), 40, 40)
-      creative.image=db.Blob(img)
+      if self.request.FILES.get('image'):
+        img=images.resize(self.request.FILES.get("image").read(), 40, 40)
+        creative.image=db.Blob(img)
+      elif self.request.POST.get('app_img'):
+        a=App.get(self.request.POST.get('app_img'))
+        creative.image=a.icon
+      creative.action_icon=self.request.POST.get('action_icon')
+      creative.color=self.request.POST.get('color')
+      creative.font_color=self.request.POST.get('font_color')
+      if self.request.POST.get('gradient'):
+        creative.gradient=True
       creative.put()
     elif self.request.FILES.get("image"):
       img = images.Image(self.request.FILES.get("image").read())

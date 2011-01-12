@@ -1,7 +1,9 @@
 import logging, os, re, datetime, hashlib
 
 import urllib
+# hack to get urllib to work on snow leopard
 urllib.getproxies_macosx_sysconf = lambda: {}
+
 from urllib import urlencode
 from operator import itemgetter
 import base64, binascii
@@ -29,6 +31,13 @@ from publisher.forms import SiteForm, AppForm
 from advertiser.models import Campaign, AdGroup, HtmlCreative
 from reporting.models import SiteStats
 
+from common.utils.cachedquerymanager import CachedQueryManager
+from account.query_managers import AccountQueryManager
+from publisher.query_managers import AppQueryManager, AdUnitQueryManager
+from reporting.query_managers import SiteStatsQueryManager
+from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager, \
+                                      CreativeQueryManager
+
 class RequestHandler(object):
     def __call__(self,request,*args,**kwargs):
         self.params = request.POST or request.GET
@@ -39,7 +48,7 @@ class RequestHandler(object):
           if users.is_current_user_admin():
             account_key_name = request.COOKIES.get("account_impersonation",None)
             if account_key_name:
-              self.account = Account.get_by_key_name(account_key_name)
+              self.account = AccountQueryManager().get_by_key_name(account_key_name)
         if not self.account:  
           self.account = Account.current_account()
           
@@ -86,26 +95,31 @@ class AppIndexHandler(RequestHandler):
       r_start = 0
       r_end = 14
 
-    apps = App.gql("where account = :1 and deleted = :2", self.account, False).fetch(50)
+    # apps = App.gql("where account = :1 and deleted = :2", self.account, False).fetch(50)
+    apps = AppQueryManager().get_apps(self.account)
     today = SiteStats()
     if len(apps) == 0:
       return HttpResponseRedirect(reverse('publisher_app_create'))
     
     for a in apps:
       a.stats = SiteStats()
-      a.sites = Site.gql("where app_key = :1 and deleted = :2", a, False).fetch(50)   
+      # attaching adunits onto the app object
+      # a.sites = Site.gql("where app_key = :1 and deleted = :2", a, False).fetch(50)   
+      a.adunits = AdUnitQueryManager().get_adunits(app=a)
+      # a.sites = a.adunits
       
       # organize impressions by days
-      if len(a.sites) > 0:
-        for s in a.sites:
-          s.all_stats = SiteStats.sitestats_for_days(s, days)
-          s.stats = reduce(lambda x, y: x+y, s.all_stats[r_start:r_end], SiteStats())
-          a.stats = reduce(lambda x, y: x+y, s.all_stats[r_start:r_end], a.stats)
-        a.totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[s.all_stats for s in a.sites])]
+      if len(a.adunits) > 0:
+        for adunit in a.adunits:
+          # s.all_stats = SiteStats.sitestats_for_days(s, days)
+          adunit.all_stats = SiteStatsQueryManager().get_sitestats_for_days(site=adunit,days=days)
+          adunit.stats = reduce(lambda x, y: x+y, adunit.all_stats[r_start:r_end], SiteStats())
+          a.stats = reduce(lambda x, y: x+y, adunit.all_stats[r_start:r_end], a.stats)
+        a.totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[au.all_stats for au in a.adunits])]
       else:
         a.totals = [SiteStats() for d in days]
     
-      app_stats = SiteStats.stats_for_days(a,days)
+      app_stats = SiteStatsQueryManager().get_sitestats_for_days(owner=a,days=days)
       # TODO: Dedupe this by having an account level rollup
       ## assigns the user count of the app from the app stat rollup
       for stat,app_stat in zip(a.totals,app_stats):
@@ -158,7 +172,6 @@ class AppIndexHandler(RequestHandler):
 
 @whitelist_login_required     
 def index(request,*args,**kwargs):
-  # return HttpResponseRedirect(reverse('publisher_create'))
   return AppIndexHandler()(request,*args,**kwargs)     
 
 class AppIndexGeoHandler(RequestHandler):
@@ -166,7 +179,8 @@ class AppIndexGeoHandler(RequestHandler):
     # compute start times; start day before today so incomplete days don't mess up graphs
     days = SiteStats.lastdays(14)
     
-    apps = App.gql("where account = :1 and deleted = :2", self.account, False).fetch(50)
+    apps = AppQueryManager().get_apps(self.account)
+    
     if len(apps) == 0:
       return HttpResponseRedirect(reverse('publisher_app_create'))
 
@@ -175,11 +189,11 @@ class AppIndexGeoHandler(RequestHandler):
     geo_clk = {}
     geo_rev = {}
     for a in apps:
-      a.sites = Site.gql("where app_key = :1 and deleted = :2", a, False).fetch(50)       
-      if len(a.sites) > 0:
-        for s in a.sites:
-          s.all_stats = SiteStats.sitestats_for_days(s, days)
-          for stats in s.all_stats:
+      a.adunits = AdUnitQueryManager().get_adunits(app=a)
+      if len(a.adunits) > 0:
+        for adunit in a.adunits:
+          adunit.all_stats = SiteStatsQueryManager().get_sitestats_for_days(site=adunit, days=days)
+          for stats in adunit.all_stats:
             #stats.geo_imp = simplejson.loads(stats.geo_impressions)
             #stats.geo_clk = simplejson.loads(stats.geo_clicks)
             #stats.geo_rev = simplejson.loads(stats.geo_revenue)
@@ -210,7 +224,7 @@ class AppCreateHandler(RequestHandler):
     if f.is_valid():
       app = f.save(commit=False)
       app.account = self.account
-      app.put()
+      AppQueryManager().put_apps(app)
       
       # Store the image
       if not self.request.POST.get("img_url") == "":
@@ -240,21 +254,29 @@ def app_create(request,*args,**kwargs):
 class CreateAdUnitHandler(RequestHandler):
  def post(self):
     f = SiteForm(data=self.request.POST)
-    a = App.get(self.request.POST.get('id'))
+    a = AppQueryManager().get_by_key(self.request.POST.get('id'))
     if f.is_valid():
-      site = f.save(commit=False)
-      site.account = self.account
-      site.app_key = a
-      site.put()
+      adunit = f.save(commit=False)
+      adunit.account = self.account
+      adunit.app_key = a
+      
+      # update the database
+      AdUnitQueryManager().put_adunits(adunit)
+      
+      # update the cache as necessary 
+      # replace=True means don't do anything if not already in the cache
+      CachedQueryManager().cache_delete(adunit)
+      
       # Check if this is the first ad unit for this account
-      if Site.gql("where account = :1 limit 2", self.account).count() == 1:
-        add_demo_campaign(site)
-      return HttpResponseRedirect(reverse('publisher_generate')+'?id=%s'%site.key())
+      # if Site.gql("where account = :1 limit 2", self.account).count() == 1:
+      if len(AdUnitQueryManager().get_adunits(account=self.account,limit=2)) == 1:      
+        add_demo_campaign(adunit)
+      return HttpResponseRedirect(reverse('publisher_generate',kwargs={'adunit_key':adunit.key()}))
     else:
       print f.errors
 
 @whitelist_login_required  
-def create(request,*args,**kwargs):
+def adunit_create(request,*args,**kwargs):
   return CreateAdUnitHandler()(request,*args,**kwargs)   
 
 def add_demo_campaign(site):
@@ -263,7 +285,7 @@ def add_demo_campaign(site):
                u=site.account.user,
                campaign_type="promo",
                description="Demo campaign for checking that MoPub works for your application")
-  c.put()
+  CampaignQueryManager().put_campaigns(c)
 
   # Set up a test ad group for this campaign
   ag = AdGroup(name="MoPub Demo Campaign",
@@ -271,14 +293,14 @@ def add_demo_campaign(site):
                priority_level=3,
                bid=1.0,
                site_keys=[site.key()])
-  ag.put()
+  AdGroupQueryManager().put_adgroups(ag)
 
   # And set up a default creative
   h = HtmlCreative(ad_type="html", ad_group=ag)
-  h.put()
+  CreativeQueryManager().put_creatives(h)
   
 class ShowAppHandler(RequestHandler):
-  def get(self):
+  def get(self,app_key):
     days = SiteStats.lastdays(14)
     # Set the range of days that we sum for the list view
     try:
@@ -290,7 +312,7 @@ class ShowAppHandler(RequestHandler):
       r_end = 14
    
     # load the site
-    a = App.get(self.request.GET.get('id'))
+    a = AppQueryManager().get_by_key(app_key)
     if a.account.key() != self.account.key():
       raise Http404
 
@@ -298,19 +320,22 @@ class ShowAppHandler(RequestHandler):
     # TODO: This is duplicate code, move to separate function
     a.stats = SiteStats()
     today = SiteStats()
-    a.sites = Site.gql("where app_key = :1 and deleted = :2", a, False).fetch(50)
+    # a.sites = Site.gql("where app_key = :1 and deleted = :2", a, False).fetch(50)
+    a.adunits = AdUnitQueryManager().get_adunits(app=a)
     
     # organize impressions by days
-    if len(a.sites) > 0:
-      for s in a.sites:
-        s.all_stats = SiteStats.sitestats_for_days(s, days)
-        s.stats = reduce(lambda x, y: x+y, s.all_stats[r_start:r_end], SiteStats())
-        a.stats = reduce(lambda x, y: x+y, s.all_stats[r_start:r_end], a.stats)
-      totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[s.all_stats for s in a.sites])]
+    if len(a.adunits) > 0:
+      for adunit in a.adunits:
+        # s.all_stats = SiteStats.sitestats_for_days(s, days)
+        adunit.all_stats = SiteStatsQueryManager().get_sitestats_for_days(site=adunit,days=days)
+        adunit.stats = reduce(lambda x, y: x+y, adunit.all_stats[r_start:r_end], SiteStats())
+        a.stats = reduce(lambda x, y: x+y, adunit.all_stats[r_start:r_end], a.stats)
+      totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[au.all_stats for au in a.adunits])]
     else:
       totals = [SiteStats() for d in days]
       
-    app_stats = SiteStats.stats_for_days(a,days)
+    # app_stats = SiteStats.stats_for_days(a,days)
+    app_stats = SiteStatsQueryManager().get_sitestats_for_days(owner=a,days=days)
     # set the apps unique user count from the app stats rollup
     for stat,app_stat in zip(totals,app_stats):
       stat.unique_user_count = app_stat.unique_user_count
@@ -339,14 +364,14 @@ class ShowAppHandler(RequestHandler):
 
     # do a bar graph showing contribution of each site to impression count
     pie_chart_urls = {}
-    if len(a.sites) > 0:
+    if len(a.adunits) > 0:
       impressions_by_site = []
       clicks_by_site = []
       users_by_site = []
-      for s in a.sites:
-        impressions_by_site.append({"app": s, "total": s.stats.request_count})
-        clicks_by_site.append({"app": s, "total": s.stats.click_count})
-        users_by_site.append({"app": a, "total": s.stats.unique_user_count})
+      for adunit in a.adunits:
+        impressions_by_site.append({"app": adunit, "total": adunit.stats.request_count})
+        clicks_by_site.append({"app": adunit, "total": adunit.stats.click_count})
+        users_by_site.append({"app": adunit, "total": adunit.stats.unique_user_count})
       impressions_by_site.sort(lambda x,y: cmp(y["total"], x["total"])) 
       clicks_by_site.sort(lambda x,y: cmp(y["total"], x["total"])) 
       users_by_site.sort(lambda x,y: cmp(y["total"], x["total"])) 
@@ -379,11 +404,11 @@ class ShowAppHandler(RequestHandler):
 def app_show(request,*args,**kwargs):
   return ShowAppHandler()(request,*args,**kwargs)   
 
-class ShowHandler(RequestHandler):
-  def get(self):
+class AdUnitShowHandler(RequestHandler):
+  def get(self,adunit_key):
     # load the site
-    site = Site.get(self.request.GET.get('id'))
-    if site.account.key() != self.account.key():
+    adunit = AdUnitQueryManager().get_by_key(adunit_key)
+    if adunit.account.key() != adunit.account.key():
       raise Http404
 
     # do all days requested
@@ -397,48 +422,50 @@ class ShowHandler(RequestHandler):
       r_start = 0
       r_end = 14
       
-    site.all_stats = SiteStats.sitestats_for_days(site, days)
+    # site.all_stats = SiteStats.sitestats_for_days(site, days)
+    adunit.all_stats = SiteStatsQueryManager().get_sitestats_for_days(site=adunit,days=days)
     for i in range(len(days)):
-      site.all_stats[i].date = days[i]
+      adunit.all_stats[i].date = days[i]
 
-    site.stats = reduce(lambda x, y: x+y, site.all_stats, SiteStats())
+    adunit.stats = reduce(lambda x, y: x+y, adunit.all_stats, SiteStats())
     
     # Get all of the ad groups for this site
-    site.adgroups = AdGroup.gql("where site_keys = :1", site.key()).fetch(50)
-    site.adgroups = sorted(site.adgroups, lambda x,y: cmp(y.bid, x.bid))
-    for ag in site.adgroups:
-      ag.all_stats = SiteStats.stats_for_days_with_qualifier(ag, site, days[r_start:r_end])
+    adunit.adgroups = AdGroupQueryManager().get_adgroups(adunit=adunit)
+    adunit.adgroups = sorted(adunit.adgroups, lambda x,y: cmp(y.bid, x.bid))
+    for ag in adunit.adgroups:
+      # ag.all_stats = SiteStats.stats_for_days_with_qualifier(ag, site, days[r_start:r_end])
+      ag.all_stats = SiteStatsQueryManager().get_sitestats_for_days(site=adunit,owner=ag,days=days[r_start:r_end])
       ag.stats = reduce(lambda x, y: x+y, ag.all_stats, SiteStats())
       
     # chart
     chart_urls = {}
     
-    impressions = [s.request_count for s in site.all_stats]
+    impressions = [s.request_count for s in adunit.all_stats]
     chart_urls['imp'] = gen_chart_url(impressions, days, "Total+Daily+Requests")
     
     # make a line graph showing clicks
-    clicks = [s.click_count for s in site.all_stats]
+    clicks = [s.click_count for s in adunit.all_stats]
     chart_urls['clk'] = gen_chart_url(clicks, days, "Total+Daily+Clicks")
 
     # make a line graph showing revenue
-    revenue = [s.revenue for s in site.all_stats]
+    revenue = [s.revenue for s in adunit.all_stats]
     chart_urls['rev'] = gen_chart_url(revenue, days, "Total+Revenue")
     
     # make a line graph showing users
-    unique_users = [s.unique_user_count for s in site.all_stats]
+    unique_users = [s.unique_user_count for s in adunit.all_stats]
     chart_urls['users'] = gen_chart_url(unique_users, days, "Total+Unique Users")
 
     # totals
-    today = site.all_stats[-1]
-    yesterday = site.all_stats[-2]
+    today = adunit.all_stats[-1]
+    yesterday = adunit.all_stats[-2]
     
     # do a bar graph showing contribution of each site to impression count
     pie_chart_urls = {}
-    if len(site.adgroups) > 0:
+    if len(adunit.adgroups) > 0:
       impressions_by_ag = []
       clicks_by_ag = []
       users_by_ag = []
-      for ag in site.adgroups:
+      for ag in adunit.adgroups:
         impressions_by_ag.append({"app": ag, "total": ag.stats.impression_count})
         clicks_by_ag.append({"app": ag, "total": ag.stats.click_count})
         users_by_ag.append({"app": ag, "total": ag.stats.unique_user_count})
@@ -455,7 +482,7 @@ class ShowHandler(RequestHandler):
     
     # write response
     return render_to_response(self.request,'publisher/show.html', 
-        {'site':site,
+        {'site':adunit,
          'today': today,
          'yesterday': yesterday,
          'account':self.account, 
@@ -464,12 +491,12 @@ class ShowHandler(RequestHandler):
          'days': days})
   
 @whitelist_login_required
-def show(request,*args,**kwargs):
-  return ShowHandler()(request,*args,**kwargs)   
+def adunit_show(request,*args,**kwargs):
+  return AdUnitShowHandler()(request,*args,**kwargs)   
 
 class AppUpdateHandler(RequestHandler):
-  def get(self):
-    a = App.get(self.request.GET.get("id"))
+  def get(self,app_key):
+    a = AppQueryManager().get_by_key(app_key)
     f = AppForm(instance=a)
     
     if a.icon:
@@ -477,12 +504,13 @@ class AppUpdateHandler(RequestHandler):
     
     return render_to_response(self.request,'publisher/edit_app.html', {"f": f, "app": a})
 
-  def post(self):
-    a = App.get(self.request.GET.get('id'))
+  def post(self,app_key):
+    a = AppQueryManager().get_by_key(app_key)
     f = AppForm(data=self.request.POST, instance=a)
     if a.account.user == self.account.user:
       f.save(commit=False)
-      a.put()
+
+      AppQueryManager().put_apps(a)
       
       # Store the image
       if not self.request.POST.get("img_url") == "":
@@ -509,22 +537,29 @@ def app_update(request,*args,**kwargs):
   return AppUpdateHandler()(request,*args,**kwargs)   
 
 class UpdateAdUnitHandler(RequestHandler):
-  def get(self):
-    c = Site.get(self.request.GET.get("id"))
-    f = SiteForm(instance=c)
-    return render_to_response(self.request,'publisher/edit.html', {"f": f, "site": c})
+  def get(self,adunit_key):
+    adunit = AdUnitQueryManager().get_by_key(adunit_key)
+    f = SiteForm(instance=adunit)
+    return render_to_response(self.request,'publisher/edit.html', {"f": f, "site": adunit})
 
-  def post(self):
-    s = Site.get(self.request.GET.get('id'))
-    f = SiteForm(data=self.request.POST, instance=s)
-    if s.account.user == self.account.user:
+  def post(self,adunit_key):
+    adunit = AdUnitQueryManager().get_by_key(adunit_key)
+    f = SiteForm(data=self.request.POST, instance=adunit)
+    if adunit.account.user == self.account.user:
       f.save(commit=False)
-      s.put()
-    return HttpResponseRedirect(reverse('publisher_show')+'?id=%s'%s.key())
+
+      # update the database
+      AdUnitQueryManager().put_adunits(adunit)
+      
+      # update the cache as necessary 
+      # replace=True means don't do anything if not already in the cache
+      CachedQueryManager().cache_delete(adunit)
+      
+    return HttpResponseRedirect(reverse('publisher_adunit_show',kwargs={'adunit_key':adunit.key()}))
   
 @whitelist_login_required
-def update(request,*args,**kwargs):
-  return UpdateAdUnitHandler()(request,*args,**kwargs)      
+def adunit_update(request,*args,**kwargs):
+  return UpdateAdUnitHandler()(request,*args,**kwargs)   
 
 class AppIconHandler(RequestHandler):
   def get(self, app_key):
@@ -545,10 +580,10 @@ class GetStartedHandler(RequestHandler):
     # Check if the user is in the data store and create it if not
 
     user = self.account.user
-    u = Account.get_by_key_name(user.user_id())
-    if not u:
-      u = Account(key_name=user.user_id(),user=user)
-      u.put()
+    account = Account.get_by_key_name(user.user_id())
+    if not account:
+      account = Account(key_name=user.user_id(),user=user)
+      AccountQueryManager.put_accounts(account)
       
     return HttpResponseRedirect(reverse('publisher_index'))
 
@@ -560,21 +595,22 @@ class RemoveAdUnitHandler(RequestHandler):
   def post(self):
     ids = self.request.POST.getlist('id')
     for adunit_key in ids:
-      a = Site.get(adunit_key)
+      a = AdUnitQueryManager().get_by_key(adunit_key)
       if a != None and a.app_key.account == self.account:
         a.deleted = True
-        a.put()
-    return HttpResponseRedirect(reverse('publisher_app_show') + '?id=%s' % a.app_key.key())
+        AdUnitQueryManager().put_adunits(a)
+        # delete from cache
+        CachedQueryManager().cache_delete(a)
+    return HttpResponseRedirect(reverse('publisher_app_show',app_key,a.app_key.key()))
  
 @whitelist_login_required
 def adunit_delete(request,*args,**kwargs):
   return RemoveAdUnitHandler()(request,*args,**kwargs)
-    
 
 class GenerateHandler(RequestHandler):
-  def get(self):
-    site = Site.get(self.request.GET.get('id'))
-    return render_to_response(self.request,'publisher/code.html', {'site': site})
+  def get(self,adunit_key):
+    adunit = AdUnitQueryManager().get_by_key(adunit_key)
+    return render_to_response(self.request,'publisher/code.html', {'site': adunit})
   
 @whitelist_login_required
 def generate(request,*args,**kwargs):

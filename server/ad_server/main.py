@@ -57,6 +57,11 @@ from ad_server.networks.millennial import MillennialServerSide
 from ad_server.networks.appnexus import AppNexusServerSide
 from ad_server.networks.inmobi import InMobiServerSide
 from ad_server.networks.brightroll import BrightRollServerSide
+from ad_server.networks.greystripe import GreyStripeServerSide
+
+from publisher.query_managers import AdUnitQueryManager
+from advertiser.query_managers import CampaignStatsCounter
+
 
 CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gzip(gfe)"]
 MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7PnE6cH9_PX7OoeIIr5FjnTA'
@@ -88,7 +93,11 @@ class AdAuction(object):
     # TODO: note adunit is actually a "Site"
     rpcs = []
     for adgroup in adgroups:
-      server_side_dict = {"millennial":MillennialServerSide,"appnexus":AppNexusServerSide,"inmobi":InMobiServerSide,"brightroll":BrightRollServerSide}
+      server_side_dict = {"millennial":MillennialServerSide,
+                          "appnexus":AppNexusServerSide,
+                          "inmobi":InMobiServerSide,
+                          "brightroll":BrightRollServerSide,
+                          "greystripe":GreyStripeServerSide}
       if adgroup.network_type in server_side_dict:
         KlassServerSide = server_side_dict[adgroup.network_type]
         # TODO fix this, only millenial needs extra parameters
@@ -122,6 +131,7 @@ class AdAuction(object):
   def run(cls, **kw):
     now = kw["now"]
     site = kw["site"]
+    manager = kw["manager"]
     request = kw["request"]
     
     keywords = kw["q"]
@@ -137,56 +147,69 @@ class AdAuction(object):
     # 2) throw out ad groups owned by campaigns that have exceeded budget or are paused
     # 3) throw out ad groups that restrict by keywords and do not match the keywords
     # 4) throw out ad groups that do not match device and geo predicates
-    ad_groups = AdGroup.gql("where site_keys = :1 and active = :2 and deleted = :3", site.key(), True, False).fetch(AdAuction.MAX_ADGROUPS)
+    all_ad_groups = manager.get_adgroups() #AdGroup.gql("where site_keys = :1 and active = :2 and deleted = :3", site.key(), True, False).fetch(AdAuction.MAX_ADGROUPS)
     
-    rpcs = AdAuction.request_third_party_server(request,site,ad_groups)
+    rpcs = AdAuction.request_third_party_server(request,site,all_ad_groups)
     
-    logging.warning("ad groups: %s" % ad_groups)
+    logging.warning("ad groups: %s" % all_ad_groups)
     
-    # campaign exclusions... budget + time
-    ad_groups = [a for a in ad_groups 
-                      if a.campaign.budget is None or 
-                      SiteStats.stats_for_day(a.campaign, SiteStats.today()).revenue < a.budget]
-    logging.debug("removed over budget, now: %s" % ad_groups)
-    ad_groups = [a for a in ad_groups 
+    # # campaign exclusions... budget + time
+    
+    
+    for a in all_ad_groups:
+      logging.info("%s of %s"%(a.campaign.delivery_counter.count,a.budget))
+    
+    # NOTE: The budgets are in the adgroup when they should be in the campaign
+    all_ad_groups = [a for a in all_ad_groups 
+                      if a.budget is None or 
+                      a.campaign.delivery_counter.count < a.budget]
+    logging.warning("removed over budget, now: %s" % all_ad_groups)
+    all_ad_groups = [a for a in all_ad_groups 
                       if a.campaign.active and 
                         (a.campaign.start_date >= SiteStats.today() if a.campaign.start_date else True) 
                         and (a.campaign.end_date <= SiteStats.today() if a.campaign.end_date else True)]
-    logging.debug("removed non running campaigns, now: %s" % ad_groups)
+    logging.warning("removed non running campaigns, now: %s" % all_ad_groups)
     
     # ad group request-based targeting exclusions
-    ad_groups = [a for a in ad_groups 
+    all_ad_groups = [a for a in all_ad_groups 
                     if not a.keywords or set(keywords).intersection(a.keywords) > set()]
-    logging.debug("removed keyword non-matches, now: %s" % ad_groups)
+    logging.warning("removed keyword non-matches, now: %s" % all_ad_groups)
     
-    ad_groups = [a for a in ad_groups
+    all_ad_groups = [a for a in all_ad_groups
                     if set(geo_predicates).intersection(a.geographic_predicates) > set()]
-    logging.debug("removed geo non-matches, now: %s" % ad_groups)
-    ad_groups = [a for a in ad_groups
+    logging.warning("removed geo non-matches, now: %s" % all_ad_groups)
+    all_ad_groups = [a for a in all_ad_groups
                     if set(device_predicates).intersection(a.device_predicates) > set()]
-    logging.warning("removed device non-matches, now: %s" % ad_groups)
+    logging.warning("removed device non-matches, now: %s" % all_ad_groups)
     
     # frequency capping and other user / request based randomizations
     udid = kw["udid"]
         
     # if any ad groups were returned, find the creatives that match the requested format in all candidates
-    if len(ad_groups) > 0:
-      logging.warning("ad_group: %s"%ad_groups)
+    if len(all_ad_groups) > 0:
+      logging.warning("ad_group: %s"%all_ad_groups)
       
-      all_creatives = Creative.gql("where ad_group in :1 and format_predicates in :2 and active = :3 and deleted = :4", 
-        map(lambda x: x.key(), ad_groups), format_predicates, True, False).fetch(AdAuction.MAX_ADGROUPS)
-      logging.warning("creatives: %s"%all_creatives)
+      all_creatives = manager.get_creatives_for_adgroups(all_ad_groups)
+      # all_creatives = Creative.gql("where ad_group in :1 and format_predicates in :2 and active = :3 and deleted = :4", 
+      #   map(lambda x: x.key(), ad_groups), format_predicates, True, False).fetch(AdAuction.MAX_ADGROUPS)
+      max_priority = max(ad_group.priority_level for ad_group in all_ad_groups)
+      
+      logging.warning("creatives (max priority: %d): %s"%(max_priority,all_creatives))
 
       if len(all_creatives) > 0:
         # for each priority_level, perform an auction among the various creatives 
-        max_priority = max(c.ad_group.priority_level for c in all_creatives)
         for p in range(max_priority + 1):
-          players = filter(lambda c: c.ad_group.priority_level == p, all_creatives)
+          # players = filter(lambda c: c.ad_group.priority_level == p, all_creatives)
+          logging.warning("priority level: %d"%p)
+          eligible_adgroups = [a for a in all_ad_groups if a.priority_level == p]
+          logging.warning("eligible_adgroups: %s"%eligible_adgroups)
+          players = manager.get_creatives_for_adgroups(eligible_adgroups)
           players.sort(lambda x,y: cmp(y.e_cpm(), x.e_cpm()))
           
           while players:
-            winning_ecpm = max(c.e_cpm() for c in players) if len(players) > 0 else 0
-            logging.warning("auction at priority=%d: %s, max eCPM=%.2f" % (p, players, winning_ecpm))
+            logging.warning("players: %s"%players)
+            winning_ecpm = max(c.e_cpm() for c in players) if len(players) > 0 else 0.0
+            logging.warning("auction at priority=%d: %s, max eCPM=%s" % (p, players, winning_ecpm))
       
             # if the winning creative exceeds the ad unit's threshold cpm for the
             # priority level, then we have a winner
@@ -195,8 +218,8 @@ class AdAuction(object):
               winners = filter(lambda x: x.e_cpm() >= winning_ecpm, players)
               logging.warning("%02d winners: %s"%(len(winners),winners))
               
-              campaigns = set([c.ad_group.campaign for c in winners if not c.ad_group.deleted and not c.ad_group.campaign.deleted])
-              logging.warning("campaigns: %s"%campaigns)
+              # campaigns = set([c.ad_group.campaign for c in winners if not c.ad_group.deleted and not c.ad_group.campaign.deleted])
+              # logging.warning("campaigns: %s"%campaigns)
               
               # find out which ad groups are eligible
               ad_groups = set([c.ad_group for c in winners])
@@ -345,8 +368,10 @@ class AdAuction(object):
     
   @classmethod
   def geo_predicates_for_rgeocode(c, r):
+    # TODO: DEFAULT COUNTRY SHOULD NOT BE US!!!!!!!
+    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     if len(r) == 0:
-      return ["country_name=*"]
+      return ["country_name=US","country_name=*"]
     elif len(r) == 2:
       return ["region_name=%s,country_name=%s" % (r[0], r[1]),
               "country_name=%s" % r[1],
@@ -398,7 +423,12 @@ class AdHandler(webapp.RequestHandler):
   def get(self):
     logging.warning(self.request.headers['User-Agent'] )
     id = self.request.get("id")
-    site = Site.site_by_id(id) if id else None
+    manager = AdUnitQueryManager(id)
+    # site = manager.get_by_key(key)#Site.site_by_id(id) if id else None
+    adunit = manager.get_adunit()
+    logging.info("!!!!!!!!adunit: %s"%adunit)
+    site = adunit
+    
     now = datetime.datetime.now()
     
     
@@ -440,7 +470,7 @@ class AdHandler(webapp.RequestHandler):
       logging.info('OLP ad-request {"request_id": "%s", "remote_addr": "%s", "q": "%s", "user_agent": "%s", "udid":"%s" }' % (request_id, self.request.remote_addr, self.request.query_string, self.request.headers["User-Agent"], udid))
 
     # get winning creative
-    c = AdAuction.run(request=self.request, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, udid=udid, request_id=request_id, now=now)
+    c = AdAuction.run(request=self.request, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, udid=udid, request_id=request_id, now=now,manager=manager)
     
     # output the request_id and the winning creative_id if an impression happened
     if c:
@@ -456,6 +486,11 @@ class AdHandler(webapp.RequestHandler):
       # create an ad clickthrough URL
       ad_click_url = "http://%s/m/aclk?id=%s&c=%s&req=%s" % (DOMAIN,id, c.key(), request_id)
       self.response.headers.add_header("X-Clickthrough", str(ad_click_url))
+      
+      
+      # add to the campaign counter
+      logging.info("adding to delivery: %s"%c.ad_group.bid)
+      c.ad_group.campaign.delivery_counter.increment(dollars=c.ad_group.bid)
       
       # render the creative 
       self.response.out.write(self.render_creative(c, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, request_id=request_id, v=int(self.request.get('v') or 0)))
@@ -539,9 +574,11 @@ class AdHandler(webapp.RequestHandler):
                         <script type="text/javascript">
                           function webviewDidClose(){} 
                           function webviewDidAppear(){} 
+                          window.innerWidth = $w;
+                          window.innerHeight = $h;
                         </script>
                         <title>$title</title>
-                        </head><body style="margin: 0;padding:0;">
+                        </head><body style="margin: 0;width:${w}px;height:${h}px;padding:0;">
                         <script type="text/javascript">
                         var admob_vars = {
                          pubid: '$client', // publisher id
@@ -566,7 +603,10 @@ class AdHandler(webapp.RequestHandler):
     if c:
       logging.warning("rendering: %s" % c.ad_type)
       format = kwargs["format"]
+      site = kwargs["site"]
 
+      template_name = c.ad_type
+      
       params = kwargs
       params.update(c.__dict__.get("_entity"))
       if c.ad_type == "adsense":
@@ -580,17 +620,54 @@ class AdHandler(webapp.RequestHandler):
         if c.image:
           params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
         self.response.headers.add_header("X-Adtype", str('html'))
+      elif c.ad_type == "greystripe":
+        params.update(html_data=c.html_data)
+        # TODO: Why is html data here twice?
+        params.update({"html_data": kwargs["html_data"], "w": format[0], "h": format[1]})
+        self.response.headers.add_header("X-Launchpage","http://adsx.greystripe.com/openx/www/delivery/ck.php")
+        template_name = "html"
       elif c.ad_type == "image":
         params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
       elif c.ad_type == "html":
         params.update(html_data=c.html_data)
         params.update({"html_data": kwargs["html_data"], "w": format[0], "h": format[1]})
+        
+        # HACK FOR RUSSEL's INTERSTITIAL
+        # if str(c.key()) == "agltb3B1Yi1pbmNyEAsSCENyZWF0aXZlGPmNGAw":
+        #   self.response.headers.add_header("X-Closebutton","None")
+        
       elif c.ad_type == "html_full":
         params.update(html_data=c.html_data)
         params.update({"html_data": kwargs["html_data"]})
+        self.response.headers.add_header("X-Scrollable","1")
+        self.response.headers.add_header("X-Interceptlinks","0")
+      elif c.ad_type == "text":  
+        self.response.headers.add_header("X-Productid","pixel_001")
+        
+        
+      if kwargs["q"] or kwargs["addr"]:
+        params.update(title=','.join(kwargs["q"]+list(kwargs["addr"])))
+      else:
+        params.update(title='')
+        
+      if kwargs["v"] >= 2 and not "Android" in self.request.headers["User-Agent"]:  
+        params.update(finishLoad='<script>function finishLoad(){window.location="mopub://finishLoad";} window.onload = function(){finishLoad();} </script>')
+      else:
+        params.update(finishLoad='')  
+      
+      
+      if c.tracking_url:
+        params.update(trackingPixel='<span style="display:none;"><img src="%s"/></span>'%c.tracking_url)
+      else:
+        params.update(trackingPixel='')  
+      
       # indicate to the client the winning creative type, in case it is natively implemented (iad, clear)
       
-      elif str(c.ad_type) == "iAd":
+      if str(c.ad_type) == "iAd":
+        # self.response.headers.add_header("X-Adtype","alert")
+        # self.response.headers.add_header("X-Backfill","alert")
+        # self.response.headers.add_header("X-Nativeparams",'{"title":"MoPub Alert View","cancelButtonTitle":"No Thanks","message":"We\'ve noticed you\'ve enjoyed playing Angry Birds.","otherButtonTitle":"Rank","clickURL":"mopub://inapp?id=pixel_001"}')
+        
         self.response.headers.add_header("X-Adtype", str(c.ad_type))
         self.response.headers.add_header("X-Backfill", str(c.ad_type))
         
@@ -601,7 +678,6 @@ class AdHandler(webapp.RequestHandler):
         self.response.headers.add_header("X-Backfill", str(c.ad_type))
         
         logging.warning('pub id:%s'%kwargs["site"].account.adsense_pub_id)
-        site = kwargs["site"]
         header_dict = {
           "Gclientid":str(kwargs["site"].account.adsense_pub_id),
   				"Gcompanyname":str(kwargs["site"].account.adsense_company_name),
@@ -656,8 +732,10 @@ class AdHandler(webapp.RequestHandler):
       else:
         params.update(trackingPixel='')
 
+      self.response.headers.add_header("X-Backfill", str('html'))
+
       # render the HTML body
-      self.response.out.write(self.TEMPLATES[c.ad_type].safe_substitute(params))
+      self.response.out.write(self.TEMPLATES[template_name].safe_substitute(params))
     else:
       self.response.headers.add_header("X-Adtype", "clear")
       self.response.headers.add_header("X-Backfill", "clear")
@@ -722,22 +800,35 @@ class AppOpenHandler(webapp.RequestHandler):
 class TestHandler(webapp.RequestHandler):
   # /m/open?v=1&udid=26a85bc239152e5fbc221fe5510e6841896dd9f8&q=Hotels:%20Hotel%20Utah%20Saloon%20&id=agltb3B1Yi1pbmNyDAsSBFNpdGUY6ckDDA&r=http://googleads.g.doubleclick.net/aclk?sa=l&ai=BN4FhRH6hTIPcK5TUjQT8o9DTA7qsucAB0vDF6hXAjbcB4KhlEAEYASDgr4IdOABQrJON3ARgyfb4hsijoBmgAbqxif8DsgERYWRzLm1vcHViLWluYy5jb226AQkzMjB4NTBfbWLIAQHaAbwBaHR0cDovL2Fkcy5tb3B1Yi1pbmMuY29tL20vYWQ_dj0xJmY9MzIweDUwJnVkaWQ9MjZhODViYzIzOTE1MmU1ZmJjMjIxZmU1NTEwZTY4NDE4OTZkZDlmOCZsbD0zNy43ODM1NjgsLTEyMi4zOTE3ODcmcT1Ib3RlbHM6JTIwSG90ZWwlMjBVdGFoJTIwU2Fsb29uJTIwJmlkPWFnbHRiM0IxWWkxcGJtTnlEQXNTQkZOcGRHVVk2Y2tEREGAAgGoAwHoA5Ep6AOzAfUDAAAAxA&num=1&sig=AGiWqtx2KR1yHomcTK3f4HJy5kk28bBsNA&client=ca-mb-pub-5592664190023354&adurl=http://www.sanfranciscoluxuryhotels.com/
   def get(self):
-    from ad_server.networks.appnexus import AppNexusServerSide
-    anServerSide = AppNexusServerSide(self.request,357)
-    logging.warning(anServerSide.url)   
+    from ad_server.networks.greystripe import GreyStripeServerSide
+    from ad_server.networks.millennial import MillennialServerSide
+    from ad_server.networks.brightroll import BrightRollServerSide
     
-    rpc = urlfetch.create_rpc(.200) # maximum delay we are willing to accept is 200 ms
-    urlfetch.make_fetch_call(rpc, anServerSide.url)
+    server_side = BrightRollServerSide(self.request,357)
+    logging.warning("%s, %s"%(server_side.url,server_side.payload))
+    
+    rpc = urlfetch.create_rpc(1) # maximum delay we are willing to accept is 1000 ms
+
+    payload = server_side.payload
+    if payload == None:
+      urlfetch.make_fetch_call(rpc, server_side.url, headers=server_side.headers)
+    else:
+      urlfetch.make_fetch_call(rpc, server_side.url, headers=server_side.headers, method=urlfetch.POST, payload=payload)
+
 
     # ... do other things ...
 
     try:
         result = rpc.get_result()
         if result.status_code == 200:
-            bid,response = anServerSide.bid_and_html_for_response(result)
-            self.response.out.write("%s<br/> %s"%(anServerSide.url,response))
+            bid,response = server_side.bid_and_html_for_response(result)
+            self.response.out.write("%s<br/> %s %s"%(server_side.url+'?'+payload if payload else '',bid,response))
     except urlfetch.DownloadError:
-      self.response.out.write("%s<br/> %s"%(anServerSide.url,"response not fast enough"))
+      self.response.out.write("%s<br/> %s"%(server_side.url,"response not fast enough"))
+      
+  def post(self):
+    logging.info("%s"%self.request.headers["User-Agent"])  
+    self.response.out.write("hello world")
 
 
 def main():
@@ -746,7 +837,8 @@ def main():
                                         ('/m/open',AppOpenHandler),
                                         ('/m/test',TestHandler),], 
                                         debug=True)
-  wsgiref.handlers.CGIHandler().run(application)
+  run_wsgi_app(application)
+  # wsgiref.handlers.CGIHandler().run(application)
 
 # webapp.template.register_template_library('filters')
 if __name__ == '__main__':

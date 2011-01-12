@@ -84,7 +84,7 @@ function showImageUpload() {
 
 	<h3>
 		<a href="{% url publisher_index %}">Apps</a> &gt; 
-		<a href="{% url publisher_app_show %}?id={{app.key}}">{{app.name}}</a>
+		<a href="{% url publisher_app_show app_key=app.key %}">{{app.name}}</a>
 	</h3>
 
   <script type="text/javascript">

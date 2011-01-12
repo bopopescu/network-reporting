@@ -7,7 +7,7 @@
 	<h3>
 		<a href="{% url publisher_index %}">Apps</a> &gt; {{app.name}}
 		<div class="toolbar">
-			<a href="{% url publisher_app_update %}?id={{app.key}}">
+			<a href="{% url publisher_app_update app_key=app.key %}">
 				Edit App
 			</a>
     <div class="graphselect">
@@ -53,7 +53,7 @@
       {% include "range_select.html" %}
 		</div>
 	</h3>
-	<form method="post" action="{% url publisher_create %}" id="add_adunit_box" style="display:none;" class="special_notice">
+	<form method="post" action="{% url publisher_adunit_create %}" id="add_adunit_box" style="display:none;" class="special_notice">
 		<input type="hidden" name="id" value="{{app.key}}"/>
 		<table>
 			<tr>
@@ -107,7 +107,7 @@
 	
 	<table class="wide">
 		<form method="post" action="{% url publisher_delete %}">
-			{% if app.sites %}
+			{% if app.adunits %}
 				<thead>
 					<th></th>
 					<th>Name</th>
@@ -116,14 +116,14 @@
 					<th class="numeric">Clicks</th>
 					<th class="numeric">Revenue</th>
 				</thead>
-			  {% for s in app.sites %}
+			  {% for adunit in app.adunits %}
 				<tr>
-					<td><input type="checkbox" name="id" value="{{s.key}}"/></td>
-					<td><a href="{% url publisher_show %}?id={{ s.key }}">{{s.name}}</a><br><span style="color:#888888"> &nbsp; ID: {{s.key}}</span></td>
-					<td class="numeric">{{s.bid|currency}}</td>
-					<td class="numeric">{{s.stats.request_count}}</td>
-					<td class="numeric">{{s.stats.click_count}} ({{s.stats.ctr|percentage}})</td>
-					<td class="numeric">{{s.stats.revenue|currency}}</td>
+					<td><input type="checkbox" name="id" value="{{adunit.key}}"/></td>
+					<td><a href="{% url publisher_adunit_show adunit_key=adunit.key %}">{{adunit.name}}</a><br><span style="color:#888888"> &nbsp; ID: {{adunit.key}}</span></td>
+					<td class="numeric">{{adunit.bid|currency}}</td>
+					<td class="numeric">{{adunit.stats.request_count}}</td>
+					<td class="numeric">{{adunit.stats.click_count}} ({{adunit.stats.ctr|percentage}})</td>
+					<td class="numeric">{{adunit.stats.revenue|currency}}</td>
 				</tr>
 			  {% endfor %}
 				<tr>

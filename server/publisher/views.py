@@ -382,7 +382,7 @@ class ShowAppHandler(RequestHandler):
       pie_chart_urls['imp'] = ""
       pie_chart_urls['clk'] = ""
 
-    help_text = 'Create an Ad Unit below' if len(a.sites) == 0 else None
+    help_text = 'Create an Ad Unit below' if len(a.adunits) == 0 else None
     
     if a.icon:
       a.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(a.icon)
@@ -601,7 +601,7 @@ class RemoveAdUnitHandler(RequestHandler):
         AdUnitQueryManager().put_adunits(a)
         # delete from cache
         CachedQueryManager().cache_delete(a)
-    return HttpResponseRedirect(reverse('publisher_app_show',app_key,a.app_key.key()))
+    return HttpResponseRedirect(reverse('publisher_app_show','app_key',a.app_key.key()))
  
 @whitelist_login_required
 def adunit_delete(request,*args,**kwargs):

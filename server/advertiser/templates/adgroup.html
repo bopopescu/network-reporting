@@ -104,7 +104,7 @@ function setApp(name,url,key) {
 		{% endif %}
 		{% for s in sites %}
 			<tr>
-				<td>{{s.app.name}} > <a href="/inventory/adunit?id={{s.key}}">{{s.name}}</a></td>
+				<td>{{s.app.name}} > <a href="{% url publisher_adunit_show adunit_key=s.key %}">{{s.name}}</a></td>
 				<td class="numeric">{{s.stats.impression_count}}</td>
 				<td class="numeric">{{s.stats.click_count}} ({{s.stats.ctr|percentage}})</td>
 				<td class="numeric">{{s.stats.revenue|currency}}</td>
@@ -187,7 +187,7 @@ function setApp(name,url,key) {
       <strong>Preview</strong>
       <div id='preview' style="width:320px;border:1px solid black;background-color:#000000;">
         <div id='highlight' class="gradient" style="height:50px;">
-        <div style="margin:5px;width:40px;height:40px;float:left"><img id="thumb" src="/images/noicon.png" width=40 height=40/></div>
+        <div style="margin:5px;width:40px;height:40px;float:left"><img id="thumb" src="/images/noicon.png" style="-webkit-border-radius:6px;-moz-border-radius:6px" width=40 height=40/></div>
         <div style="float:left;width:230px;height:10px">
           <div id="line1sample" style="color:white;font-weight:bold;margin:5px 0 0 5px;"></div>
           <div id="line2sample" style="color:white;margin-top:5px;margin:5px 0 0 5px;"></div>
@@ -249,7 +249,7 @@ function setApp(name,url,key) {
 					  <div id='highlight' style="position:relative;height:50px;" {% if c.gradient %}class="gradient"{% endif %}>
             {% if c.image %}
             <div id="img_preview" style="margin:5px;width:40px;height:40px;float:left">
-              <img width="40" height="40" id="thumb" src="{% url advertiser_creative_image creative_key=c.key %}"/>
+              <img width="40" height="40" id="thumb" style="-webkit-border-radius:6px;-moz-border-radius:6px" src="{% url advertiser_creative_image creative_key=c.key %}"/>
             </div>
             {% endif %}
             <div style="float:left;width:230px;height:10px">

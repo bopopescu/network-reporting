@@ -29,7 +29,7 @@ from common.utils.cachedquerymanager import CachedQueryManager
 from account.query_managers import AccountQueryManager
 from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager, \
                                       CreativeQueryManager
-from publisher.query_managers import AdUnitQueryManager
+from publisher.query_managers import AdUnitQueryManager, AppQueryManager
 from reporting.query_managers import SiteStatsQueryManager
 
 class RequestHandler(object):
@@ -120,6 +120,10 @@ class AdGroupIndexHandler(RequestHandler):
   def get(self):
     days = SiteStats.lastdays(14)
 
+    app = AppQueryManager().get_apps(account=self.account)
+    all_apps = None
+    site = None
+    all_sites = None
     campaigns = CampaignQueryManager().get_campaigns(account=self.account)
     if campaigns:
       adgroups = AdGroupQueryManager().get_adgroups(campaigns=campaigns)
@@ -243,8 +247,9 @@ class CreateAdGroupHandler(RequestHandler):
     updated_site_keys = orig_site_keys.union(set(adgroup.site_keys))
     
     # update cache
-    adunits = AdUnitQueryManager().get_by_key(list(updated_site_keys))
-    CachedQueryManager().cache_delete(adunits)
+    if updated_site_keys:
+      adunits = AdUnitQueryManager().get_by_key(list(updated_site_keys))
+      CachedQueryManager().cache_delete(adunits)
      
     # if the campaign is a network type, automatically populate the right creative and go back to
     # campaign page
@@ -253,7 +258,8 @@ class CreateAdGroupHandler(RequestHandler):
         creative = adgroup.default_creative()
         CreativeQueryManager().put_creatives(creative)
       else:
-        creative = Creative.all().filter("ad_group =",adgroup.key()) .get()
+        creatives = CreativeQueryManager().get_creatives(adgroup=adgroup)
+        creative = creatives[0]
         if adgroup.network_type in ['millenial','inmobi','appnexus','greystripe']:
           creative.ad_type = 'html'
         elif adgroup.network_type in ['brightroll']:

@@ -396,6 +396,20 @@ section {
   margin: 0 0 30px 0;
 }
 
+.separated {
+  margin-bottom: 29px;
+  padding-bottom: 29px;
+  border-bottom: 2px solid #f5f5f5;
+}
+
+.offset {
+  padding: 25px;
+  background: #f7f7f7;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  border-radius: 10px;
+}
+
 /* Footer */
 
 footer {
@@ -487,6 +501,14 @@ a.mutedLink:hover {
   color: #ccc;
 }
 
+.nomargin {
+  margin: 0 !important;
+}
+
+.clear {
+  clear: both;
+}
+
 /*---------------------------------------/
 / Modules
 /---------------------------------------*/
@@ -495,9 +517,7 @@ a.mutedLink:hover {
 
 #messageCenter {
   overflow: hidden;
-  margin-bottom: 28px;
   padding-bottom: 20px;
-  border-bottom: 2px solid #f5f5f5;
 }
 
 #messageCenter-messages {
@@ -553,6 +573,78 @@ a.mutedLink:hover {
 
 .messageCenter-message-moreInfo {
   display: none;
+}
+
+/* Stats */
+
+.stats {
+  position: relative;
+  width: 100%;
+}
+
+.stats-breakdown {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 205px;
+}
+
+.stats-breakdown th,
+.stats-breakdown td {
+  padding: 0;
+  font-size: 18px;
+  line-height: 20px;
+  color: #595959;
+  cursor: pointer;
+  background-color: #f7f7f7;
+}
+
+.stats-breakdown td.stats-breakdown-value {
+  font-weight: 600;
+  text-align: right;
+}
+
+.stats-breakdown td.stats-breakdown-value .inner {
+  padding: 9px 8px 0 10px;
+  height: 31px;
+  -webkit-border-top-left-radius: 5px;
+  -webkit-border-bottom-left-radius: 5px;
+  -moz-border-radius-topleft: 5px;
+  -moz-border-radius-bottomleft: 5px;
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+}
+
+.stats-breakdown th.stats-breakdown-name {
+  font-weight: 400;
+  text-align: left;
+}
+
+.stats-breakdown th.stats-breakdown-name .inner {
+  padding: 9px 10px 0 0;
+  height: 31px;
+  background: url(../images/layout/stats-breakdown-pointer.png) no-repeat top right;
+}
+
+.stats-breakdown tr:hover td.stats-breakdown-value .inner,
+.stats-breakdown tr:hover th.stats-breakdown-name .inner {
+  background-color: #faede1;
+  color: #e57300;
+}
+
+.stats-breakdown tr.active td.stats-breakdown-value .inner,
+.stats-breakdown tr.active th.stats-breakdown-name .inner,
+.stats-breakdown tr.active:hover td.stats-breakdown-value .inner,
+.stats-breakdown tr.active:hover th.stats-breakdown-name .inner {
+  background-color: #4d4d4d;
+  color: #fff;
+}
+
+.stats-chart {
+  margin-left: 205px;
+  width: 695px;
+  height: 200px;
+  background: #999;
 }
 
 /* Link with icon */
@@ -634,6 +726,17 @@ input.ui-button { padding: 4px 12px 5px 12px; }
   text-decoration: underline;
 }
 
+/*---------------------------------------/
+/ Page-specific Styles
+/---------------------------------------*/
+
+/* Dashboard */
+
+#mopub-dashboard #messageCenter {
+  padding-bottom: 0;
+  border-bottom: none;
+  margin-bottom: 25px;
+}
 
 /****************************************
  * Media Queries

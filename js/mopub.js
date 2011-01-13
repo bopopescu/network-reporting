@@ -68,5 +68,18 @@
 			// TODO: tell server that message.attr('id') has been hidden
 		});
 		
+		/*---------------------------------------/
+		/ Stats Breakdown
+		/---------------------------------------*/
+
+		$('.stats-breakdown tr').click(function(e) {
+			var row = $(this);
+			if(!row.hasClass('active')) {
+				var table = row.parents('table');
+				$('tr.active', table).removeClass('active');
+				row.addClass('active');
+			}
+		});
+		
 	});
 })(this.jQuery);

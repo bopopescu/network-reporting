@@ -27,7 +27,7 @@
   <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
 </head>
 
-<body>
+<body id="mopub-dashboard">
   <div id="container">
     <a class="visuallyhidden" href="#main">Skip navigation</a>
     <div id="jsnotice">
@@ -86,7 +86,7 @@
       </div>
       <div id="content">
         <div class="pageWidth">
-          <section id="messageCenter">
+          <section class="separated" id="messageCenter">
             <table id="messageCenter-messages" cellspacing="0">
               <tbody>
                 <tr class="messageCenter-message messageCenter-error" id="messageCenter-message-0">
@@ -131,11 +131,40 @@
             </table>
           </section>
           
-          <section>
-            <p>
-              Lorem ipsum <strong>dolor sit amet</strong>, <a href="#">consectetur adipisicing elit</a>, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-            </p>
-          </section>
+          <div class="separated">
+            <section class="offset nomargin">
+              <div class="stats" id="dashboard-stats">
+                <table cellpadding="0" class="stats-breakdown">
+                  <tbody>
+                    <tr class="active" id="stats-breakdown-revenue">
+                      <td class="stats-breakdown-value"><div class="inner">$123</div></td>
+                      <th class="stats-breakdown-name"><div class="inner">Revenue (est.)</div></th>
+                    </tr>
+                    <tr id="stats-breakdown-requests">
+                      <td class="stats-breakdown-value"><div class="inner">4,567</div></td>
+                      <th class="stats-breakdown-name"><div class="inner">Requests</div></th>
+                    </tr>
+                    <tr id="stats-breakdown-impressions">
+                      <td class="stats-breakdown-value"><div class="inner">3,108</div></td>
+                      <th class="stats-breakdown-name"><div class="inner">Impressions</div></th>
+                    </tr>
+                    <tr id="stats-breakdown-clicks">
+                      <td class="stats-breakdown-value"><div class="inner">298</div></td>
+                      <th class="stats-breakdown-name"><div class="inner">Clicks (0.1%)</div></th>
+                    </tr>
+                    <tr id="stats-breakdown-users">
+                      <td class="stats-breakdown-value"><div class="inner">482</div></td>
+                      <th class="stats-breakdown-name"><div class="inner">Users</div></th>
+                    </tr>
+                  </tbody>
+                </table>
+                <div class="stats-chart">
+                  Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+                </div>
+              </div>
+              <div class="clear"></div>
+            </section>
+          </div>
         </div>
       </div>
     </div>

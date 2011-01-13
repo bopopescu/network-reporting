@@ -292,7 +292,9 @@
 
 /* Overlays */
 .ui-widget-overlay { background: #1a1a1a url(images/ui-bg_fine-grain_15_1a1a1a_60x60.png) 50% 50% repeat; opacity: .85;filter:Alpha(Opacity=85); }
-.ui-widget-shadow { margin: -5px 0 0 -5px; padding: 5px; background: #bfeaff url(images/ui-bg_flat_0_bfeaff_40x100.png) 50% 50% repeat-x; opacity: .20;filter:Alpha(Opacity=20); -moz-border-radius: 10px; -webkit-border-radius: 10px; border-radius: 10px; }/*
+.ui-widget-shadow { margin: -5px 0 0 -5px; padding: 5px; background: #bfeaff url(images/ui-bg_flat_0_bfeaff_40x100.png) 50% 50% repeat-x; opacity: .20;filter:Alpha(Opacity=20); -moz-border-radius: 10px; -webkit-border-radius: 10px; border-radius: 10px; }
+
+/*
  * jQuery UI Button 1.8.7
  *
  * Copyright 2010, AUTHORS.txt (http://jqueryui.com/about)

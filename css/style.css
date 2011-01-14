@@ -802,9 +802,11 @@ input.ui-button { padding: 4px 12px 5px 12px; }
 
 /* Interaction states */
 .ui-state-default,a.ui-state-default,.ui-widget-content .ui-state-default,.ui-widget-header .ui-state-default{background-image:url(../images/ui/ui-button-default.png);text-shadow:#fff 0 1px 0;color:#595959;}
-.ui-state-hover,a.ui-state-hover,.ui-widget-content .ui-state-hover,.ui-widget-header .ui-state-hover{background-image:url(../images/ui/ui-button-hover.png);text-shadow:#994000 0 -1px 0;color:#fff;}
+.ui-state-hover,a.ui-state-hover,.ui-widget-content .ui-state-hover,.ui-widget-header .ui-state-hover{border:1px solid #e5c4ac;background-image:url(../images/ui/ui-button-hover.png);text-shadow:#fff 0 1px 0;color:#e57300;}
+.ui-state-hover a,.ui-state-hover a:hover{color:#e57300;text-decoration:none;}
 .ui-state-focus,a.ui-state-focus,.ui-widget-content .ui-state-focus,.ui-widget-header .ui-state-focus{border:1px solid #999;background:#f3f3f3 url(../images/ui/ui-button-default.png) 50% 50% repeat-x;text-shadow:#fff 0 1px 0;color:#444;}
 .ui-state-active,a.ui-state-active,.ui-widget-content .ui-state-active,.ui-widget-header .ui-state-active{background:#595959 url(../images/ui/ui-button-active.png) 50% 50% repeat-x;text-shadow:#444 0 1px 0;border:1px solid #999999;border-left:1px solid #666;border-right:1px solid #666;font-weight:normal;color:#ffffff;}
+.ui-state-hover .ui-icon {background-image: url(../images/ui/ui-icons-hover.png); }
 .ui-state-focus .ui-icon{background-image:url(../images/ui/ui-icons-focus.png);}
 .ui-state-active .ui-icon{background-image:url(../images/ui/ui-icons-active.png);}
 .ui-widget{outline:0 !important;}

@@ -10,6 +10,9 @@
 		/ UI Stuff
 		/---------------------------------------*/
 		
+		// set up buttons
+		$('.button').button();
+		
 		// set up buttonsets
 		$('.buttonset').buttonset();
 		

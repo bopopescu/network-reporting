@@ -659,7 +659,6 @@ a.mutedLink:hover {
   margin-left: 205px;
   width: 695px;
   height: 200px;
-  background: #999;
 }
 
 /* Button bank */
@@ -772,6 +771,70 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
   background: url(../images/layout/hr-dots.png) repeat-x top left;
 }
 
+/* Chart */
+
+.chart {
+  /* outline: 1px dotted #f00; */
+}
+
+.chart-loading, .chart-error {
+  position: relative;
+  border: 2px dashed #ddd;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;  
+  background: #f2f2f2;
+  color: #bbb;
+}
+
+.chart-loading-text, .chart-error-text {
+  display: none;
+  position: absolute;
+  top: 44%;
+  width: 100%;
+  text-align: center;
+  font-size: 24px;
+  font-weight: 300;
+}
+
+.chart-loading .chart-loading-text,
+.chart-error .chart-error-text {
+  display: block;
+}
+
+.chart-error {
+  border-color: #e6a1a1;
+  color: #cc2929;
+  background: #fff2f2;
+}
+
+/* Date options */
+
+#dashboard-dateOptions-custom-modal {
+  display: none;
+}
+
+#dashboard-dateOptions-custom-from {
+  float: left;
+  padding-right: 16px;
+  border-right: 1px solid #ddd;
+}
+
+#dashboard-dateOptions-custom-to {
+  float: left;
+  padding-left: 16px;
+  border-left: 1px solid #ddd;
+  margin: 0 0 0 -1px;
+}
+
+#dashboard-dateOptions-custom-from h4,
+#dashboard-dateOptions-custom-to h4 {
+  margin: 0 0 10px 0;
+  font-size: 22px;
+  font-weight: 300;
+  text-align: center;
+}
+
 /*---------------------------------------/
 / jQuery UI Overrides
 /---------------------------------------*/
@@ -783,6 +846,7 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
 /* Component containers */
 .ui-widget { font-family: "myriad-pro-1","myriad-pro-2", helvetica, arial, sans-serif; }
 .ui-widget input, .ui-widget select, .ui-widget textarea, .ui-widget button { font-family: "myriad-pro-1","myriad-pro-2", helvetica, arial, sans-serif; }
+.ui-widget-header { font-weight: 600; }
 
 /*button text element */
 .ui-button .ui-button-text { line-height: 1.1; }
@@ -802,12 +866,12 @@ input.ui-button { padding: 4px 12px 5px 12px; }
 
 /* Interaction states */
 .ui-state-default,a.ui-state-default,.ui-widget-content .ui-state-default,.ui-widget-header .ui-state-default{background-image:url(../images/ui/ui-button-default.png);text-shadow:#fff 0 1px 0;color:#595959;}
-.ui-state-hover,a.ui-state-hover,.ui-widget-content .ui-state-hover,.ui-widget-header .ui-state-hover{border:1px solid #e5c4ac;background-image:url(../images/ui/ui-button-hover.png);text-shadow:#fff 0 1px 0;color:#e57300;}
-.ui-state-hover a,.ui-state-hover a:hover{color:#e57300;text-decoration:none;}
 .ui-state-focus,a.ui-state-focus,.ui-widget-content .ui-state-focus,.ui-widget-header .ui-state-focus{border:1px solid #999;background:#f3f3f3 url(../images/ui/ui-button-default.png) 50% 50% repeat-x;text-shadow:#fff 0 1px 0;color:#444;}
+.ui-state-hover,a.ui-state-hover,.ui-widget-content .ui-state-hover,.ui-widget-header .ui-state-hover{border:1px solid #e5c4ac;background-image:url(../images/ui/ui-button-hover.png);text-shadow:#fff 0 1px 0;color:#cc6600;}
+.ui-state-hover a,.ui-state-hover a:hover{color:#cc6600;text-decoration:none;}
 .ui-state-active,a.ui-state-active,.ui-widget-content .ui-state-active,.ui-widget-header .ui-state-active{background:#595959 url(../images/ui/ui-button-active.png) 50% 50% repeat-x;text-shadow:#444 0 1px 0;border:1px solid #999999;border-left:1px solid #666;border-right:1px solid #666;font-weight:normal;color:#ffffff;}
-.ui-state-hover .ui-icon {background-image: url(../images/ui/ui-icons-hover.png); }
 .ui-state-focus .ui-icon{background-image:url(../images/ui/ui-icons-focus.png);}
+.ui-state-hover .ui-icon {background-image: url(../images/ui/ui-icons-hover.png); }
 .ui-state-active .ui-icon{background-image:url(../images/ui/ui-icons-active.png);}
 .ui-widget{outline:0 !important;}
 
@@ -817,6 +881,10 @@ input.ui-button { padding: 4px 12px 5px 12px; }
 .ui-dialog .ui-dialog-content{padding:20px;background:#fff;font-size:14px;-webkit-border-radius:5px;-moz-border-radius:5px;border-radius:5px;}
 .ui-dialog .ui-dialog-buttonpane{border-width:0;margin:-5px 0 0 0;padding:5px 20px 20px 20px;-webkit-border-bottom-right-radius:5px;-webkit-border-bottom-left-radius:5px;-moz-border-radius-bottomright:5px;-moz-border-radius-bottomleft:5px;border-bottom-right-radius:5px;border-bottom-left-radius:5px;}
 .ui-dialog .ui-dialog-buttonpane button{margin:0 0 0 5px;}
+
+/* Datepicker */
+.ui-datepicker th { font-weight: 300; padding: 3px 0;  }
+.ui-datepicker .ui-datepicker-title { line-height: 1.7em; }
 
 /*---------------------------------------/
 / Miscellaneous
@@ -850,6 +918,14 @@ input.ui-button { padding: 4px 12px 5px 12px; }
   padding-bottom: 0;
   border-bottom: none;
   margin-bottom: 25px;
+}
+
+#dashboard-stats {
+  padding-bottom: 15px;
+}
+
+#dashboard-stats-chart {
+  height: 210px;
 }
 
 /****************************************

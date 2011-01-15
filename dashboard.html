@@ -25,6 +25,24 @@
   <!-- TypeKit -->
   <script type="text/javascript" src="http://use.typekit.com/qhz7iwb.js"></script>
   <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+  
+  <!-- jQuery and jQuery UI -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="js/mylibs/jquery-1.4.4.min.js"%3E%3C/script%3E'))</script>
+  <script src="js/mylibs/jquery-ui-1.8.7.custom/js/jquery-ui-1.8.7.custom.min.js"></script>
+  
+  <!-- Highcharts -->
+  <script src="js/mylibs/highcharts/highcharts.js"></script>
+  
+  <!-- MoPub -->
+  <script src="js/plugins.js"></script>
+  <script src="js/mopub.js"></script>
+  <script src="js/mopub-dashboard.js"></script>
+  
+  <!--[if lt IE 7 ]>
+    <script src="js/libs/dd_belatedpng.js"></script>
+    <script> DD_belatedPNG.fix('img, .png_bg'); </script>
+  <![endif]-->
 </head>
 
 <body id="mopub-dashboard">
@@ -62,7 +80,7 @@
         <div class="pageWidth">
           <h1>Dashboard</h1>
           <div id="titlebar-center">
-            <span class="buttonset dateOptions" id="dashboard-dateOptions">
+            <span class="buttonset" id="dashboard-dateOptions">
               <input type="radio" name="dashboard-dateOptions-option" value="0" id="dashboard-dateOptions-option-0" />
               <label for="dashboard-dateOptions-option-0">Today</label>
               <input type="radio" name="dashboard-dateOptions-option" value="1" id="dashboard-dateOptions-option-1" />
@@ -74,8 +92,12 @@
               <input type="radio" name="dashboard-dateOptions-option" value="30" id="dashboard-dateOptions-option-30" />
               <label for="dashboard-dateOptions-option-30">30 days</label>
               <input type="radio" name="dashboard-dateOptions-option" value="custom" id="dashboard-dateOptions-option-custom" />
-              <label for="dashboard-dateOptions-option-custom">Custom...</label>
+              <label for="dashboard-dateOptions-option-custom">Custom ...</label>
             </span>
+            <div id="dashboard-dateOptions-custom-modal">
+              <div id="dashboard-dateOptions-custom-from"><h4>Start date:</h4></div>
+              <div id="dashboard-dateOptions-custom-to"><h4>End date:</h4></div>
+            </div>
           </div>
           <div id="titlebar-right">
             <span class="titlebar-link">
@@ -132,8 +154,8 @@
           </section>
           
           <div class="separated">
-            <section class="offset nomargin">
-              <div class="stats" id="dashboard-stats">
+            <section class="offset nomargin" id="dashboard-stats">
+              <div class="stats">
                 <table class="stats-breakdown">
                   <tbody>
                     <tr class="active" id="stats-breakdown-revenue">
@@ -158,8 +180,46 @@
                     </tr>
                   </tbody>
                 </table>
-                <div class="stats-chart">
-                  don't forget pagination!
+                <div class="chart chart-loading stats-chart" id="dashboard-stats-chart">
+                  <div class="chart-loading-text">Loading ...</div>
+                  <div class="chart-error-text">Could not load chart</div>
+                  <script type="text/javascript">
+                    // chart data
+                    mopub.dashboardStatsChartData = {
+                      pointStart: 1294963200000,
+                      pointInterval: 86400000,
+                      'revenue': [
+                        { 'SimpleAds': [10, 11, 20, 29, 32, 44, 49, 59, 72, 86, 105, 120, 139, 147] },
+                        { 'SimpleAds Android': [1, 6, 7, 10, 11, 13, 17, 22, 23, 28, 31, 33, 35, 38] },
+                        { 'Paranoid Android': [2, 3, 6, 10, 12, 17, 21, 22, 24, 25, 27, 32, 37, 41] },
+                        { 'Others': [0, 0, 0, 3, 4, 4, 4, 5, 5, 7, 9, 10, 10, 12] }
+                      ],
+                      'requests': [
+                        { 'SimpleAds': [10, 20, 32, 49, 65, 72, 91, 105, 122, 133, 143, 155, 161, 178] },
+                        { 'SimpleAds Android': [1, 6, 10, 12, 17, 18, 21, 24, 25, 27, 31, 36, 38, 41] },
+                        { 'Paranoid Android': [2, 5, 7, 8, 11, 15, 18, 23, 28, 31, 33, 37, 42, 44] },
+                        { 'Others': [0, 1, 3, 3, 6, 6, 7, 9, 10, 10, 12, 15, 17, 17] }
+                      ],
+                      'impressions': [
+                        { 'SimpleAds': [10, 16, 32, 48, 60, 64, 84, 103, 113, 129, 144, 145, 164, 171] },
+                        { 'SimpleAds Android': [1, 4, 8, 11, 14, 17, 19, 23, 28, 29, 31, 33, 36, 41] },
+                        { 'Paranoid Android': [2, 4, 9, 13, 14, 19, 22, 25, 30, 34, 39, 41, 46, 50] },
+                        { 'Others': [0, 1, 2, 2, 3, 5, 5, 6, 8, 9, 11, 11, 13, 13] }
+                      ],
+                      'clicks': [
+                        { 'SimpleAds': [10, 15, 33, 47, 59, 77, 92, 106, 108, 121, 128, 142, 146, 150] },
+                        { 'SimpleAds Android': [1, 5, 9, 11, 12, 16, 20, 24, 27, 29, 30, 34, 35, 37] },
+                        { 'Paranoid Android': [2, 3, 4, 7, 11, 13, 18, 21, 24, 25, 27, 30, 35, 40] },
+                        { 'Others': [0, 1, 4, 4, 4, 6, 7, 9, 9, 11, 12, 12, 12, 13] }
+                      ],
+                      'users': [
+                        { 'SimpleAds': [10, 27, 40, 56, 72, 73, 75, 85, 102, 116, 122, 135, 137, 139] },
+                        { 'SimpleAds Android': [1, 2, 4, 5, 9, 13, 15, 17, 21, 24, 27, 30, 32, 33] },
+                        { 'Paranoid Android': [2, 5, 6, 7, 11, 14, 16, 17, 21, 23, 24, 27, 29, 32] },
+                        { 'Others': [0, 3, 4, 5, 7, 10, 13, 16, 17, 18, 19, 21, 22, 24] }
+                      ]
+                    };
+                  </script>
                 </div>
               </div>
               <div class="clear"></div>
@@ -341,6 +401,59 @@
                 <a class="button smallButton appData-details-toggleButton" href="#">Show details</a>
               </div>
             </div>
+            <div class="appData appData-alt" id="dashboard-app-3">
+              <table class="dataTable appData-main" id="dashboard-app-3-main">
+                <tbody>
+                  <tr>
+                    <td class="appData-icon"><a href="app.html"><img src="placeholders/image.gif" alt="Icon" width="45" height="45" /></a></td>
+                    <th class="dataTable-name"><a href="app.html">SimpleAds iPad</a> <span class="muted unbold">(iOS)</span></th>
+                    <td class="dataTable-data">34</td>
+                    <td class="dataTable-data">9</td>
+                    <td class="dataTable-data">2</td>
+                    <td class="dataTable-data">2.2%</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="appData-details" id="dashboard-app-3-details">
+                <div class="appData-details-inner hide">
+                  <table class="dataTable">
+                    <tbody>
+                      <tr>
+                        <th class="dataTable-name"><a href="ad.html">Top Banner</a></th>
+                        <td class="dataTable-data">165</td>
+                        <td class="dataTable-data">89</td>
+                        <td class="dataTable-data">21</td>
+                        <td class="dataTable-data">12.6%</td>
+                      </tr>
+                      <tr>
+                        <th class="dataTable-name"><a href="ad.html">MRect</a></th>
+                        <td class="dataTable-data">141</td>
+                        <td class="dataTable-data">123</td>
+                        <td class="dataTable-data">0</td>
+                        <td class="dataTable-data">0.0%</td>
+                      </tr>
+                      <tr>
+                        <th class="dataTable-name"><a href="ad.html">Interstitial</a></th>
+                        <td class="dataTable-data">54</td>
+                        <td class="dataTable-data">34</td>
+                        <td class="dataTable-data">12</td>
+                        <td class="dataTable-data">22.6%</td>
+                      </tr>
+                      <tr>
+                        <th class="dataTable-name"><a href="ad.html">Navigational Interstitial</a></th>
+                        <td class="dataTable-data">3</td>
+                        <td class="dataTable-data">1</td>
+                        <td class="dataTable-data">0</td>
+                        <td class="dataTable-data">0.0%</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <a class="button smallButton appData-details-toggleButton" href="#">Show details</a>
+              </div>
+            </div>
+
+            
           </section>
         </div>
       </div>
@@ -373,23 +486,6 @@
       </div>
     </footer>
   </div> <!-- end of #container -->
-
-
-  <!-- jQuery and jQuery UI -->
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
-  <script>!window.jQuery && document.write(unescape('%3Cscript src="js/mylibs/jquery-1.4.4.min.js"%3E%3C/script%3E'))</script>
-  <script src="js/mylibs/jquery-ui-1.8.7.custom/js/jquery-ui-1.8.7.custom.min.js"></script>
   
-  <!-- scripts concatenated and minified via ant build script-->
-  <script src="js/plugins.js"></script>
-  <script src="js/mopub.js"></script>
-  <script src="js/mopub-dashboard.js"></script>
-  <!-- end concatenated and minified scripts-->
-  
-  <!--[if lt IE 7 ]>
-    <script src="js/libs/dd_belatedpng.js"></script>
-    <script> DD_belatedPNG.fix('img, .png_bg'); </script>
-  <![endif]-->
-
 </body>
 </html>

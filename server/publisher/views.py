@@ -84,6 +84,8 @@ def gen_pie_chart_url(series, title):
 
 class AppIndexHandler(RequestHandler):
   def get(self):
+    report = self.request.POST.get('report')
+    
     # compute start times; start day before today so incomplete days don't mess up graphs
     days = SiteStats.lastdays(14)
     # Set the range of days that we sum for the list view
@@ -102,11 +104,12 @@ class AppIndexHandler(RequestHandler):
       return HttpResponseRedirect(reverse('publisher_app_create'))
     
     for a in apps:
+      if a.icon:
+        a.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(a.icon)
+      
       a.stats = SiteStats()
       # attaching adunits onto the app object
-      # a.sites = Site.gql("where app_key = :1 and deleted = :2", a, False).fetch(50)   
       a.adunits = AdUnitQueryManager().get_adunits(app=a)
-      # a.sites = a.adunits
       
       # organize impressions by days
       if len(a.adunits) > 0:
@@ -114,7 +117,7 @@ class AppIndexHandler(RequestHandler):
           # s.all_stats = SiteStats.sitestats_for_days(s, days)
           adunit.all_stats = SiteStatsQueryManager().get_sitestats_for_days(site=adunit,days=days)
           adunit.stats = reduce(lambda x, y: x+y, adunit.all_stats[r_start:r_end], SiteStats())
-          a.stats = reduce(lambda x, y: x+y, adunit.all_stats[r_start:r_end], a.stats)
+          a.stats += adunit.stats
         a.totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[au.all_stats for au in a.adunits])]
       else:
         a.totals = [SiteStats() for d in days]
@@ -243,7 +246,7 @@ class AppCreateHandler(RequestHandler):
         except:
           pass
           
-      return HttpResponseRedirect(reverse('publisher_app_show')+'?id=%s'%app.key())
+      return HttpResponseRedirect(reverse('publisher_app_show',kwargs={'app_key':app.key()}))
     else:
       return render_to_response(self.request,'publisher/new_app.html', {"f": f})
 
@@ -329,7 +332,7 @@ class ShowAppHandler(RequestHandler):
         # s.all_stats = SiteStats.sitestats_for_days(s, days)
         adunit.all_stats = SiteStatsQueryManager().get_sitestats_for_days(site=adunit,days=days)
         adunit.stats = reduce(lambda x, y: x+y, adunit.all_stats[r_start:r_end], SiteStats())
-        a.stats = reduce(lambda x, y: x+y, adunit.all_stats[r_start:r_end], a.stats)
+        a.stats += adunit.stats
       totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[au.all_stats for au in a.adunits])]
     else:
       totals = [SiteStats() for d in days]

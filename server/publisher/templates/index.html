@@ -5,6 +5,9 @@
 
 
 {% block content %}
+<script type="text/javascript">
+function showDaily() {$A($$('.daily_stats')).each(Element.toggle);$('date_header').toggle();}
+</script>
 	<h3>		
 		Apps
 		<div class="toolbar">
@@ -34,14 +37,16 @@
   </table> 
 	<img id="chart_img" src="{{chart_urls.imp}}" width=580 height=200 style="padding: 5px 0 10px 0;"/>
 	<img id="pie_chart_img" src="{{pie_chart_urls.imp}}" width=200 height=200 style="padding: 5px 0 10px 0; float:right;"/>
-  <div style="padding:12px;position:relative">
+  <div style="padding-bottom:10px;position:relative">
+    <button onClick="showDaily();" class="btn"><span><span>Toggle daily stats</span></span></button>
   {% include "range_select.html" %}
-  </div>  
+  </div>
 	<table class="wide">
 		<thead>
 			<tr>
 			<th width="50px">App</th>
-			<th>Ad Unit</th>
+			<th width="70px">Ad Unit</th>
+			<th><span id="date_header" style="display:none;">Date</span></th>
 			<th class="numeric">Requests</th>
 			<th class="numeric">Clicks</th>
 			<th class="numeric">CTR</th>
@@ -49,7 +54,7 @@
 		</thead>
 		{% for a in apps %}
 			<tr class="highlighted">
-				<td colspan="2"><a href="{% url publisher_app_show app_key=a.key %}"><b>{{a.name}}</b></a> ({{a.app_type}})</td>
+				<td colspan="3"><a href="{% url publisher_app_show app_key=a.key %}"><b>{{a.name}}</b></a> ({{a.app_type}})</td>
 				<td class="numeric"><strong>{{a.stats.request_count|withsep}}</strong></td>
 				<td class="numeric"><strong>{{a.stats.click_count|withsep}}</strong></td>
 				<td class="numeric"><strong>{{a.stats.ctr|percentage}}</strong></td>
@@ -57,11 +62,23 @@
 		  {% for au in a.adunits %}
 			<tr>
         <td></td>
-				<td><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a></td>
+				<td colspan="2"><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a></td>
 				<td class="numeric">{{au.stats.request_count|withsep}}</td>
 				<td class="numeric">{{au.stats.click_count|withsep}}</td>
 				<td class="numeric">{{au.stats.ctr|percentage}}</td>
 			</tr>
+			  {% for stats in au.all_stats %}
+			  {% if stats.date %}
+			  <tr style="color:grey;font-style:italic;display:none" class="daily_stats">
+          <td></td>
+          <td></td>
+				  <td>{{stats.date}}</td>
+				  <td class="numeric">{{stats.request_count|withsep}}</td>
+				  <td class="numeric">{{stats.click_count|withsep}}</td>
+				  <td class="numeric">{{stats.ctr|percentage}}</td>
+			  </tr>
+			  {% endif %}
+		    {% endfor %}
 		  {% endfor %}
 		{% endfor %}
 	</table>

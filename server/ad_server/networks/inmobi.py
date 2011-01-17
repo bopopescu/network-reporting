@@ -5,7 +5,8 @@ import urllib
 import urllib2
 
 class InMobiServerSide(ServerSide):
-  base_url = "http://w.mkhoj.com/showad.asm"
+  base_url = "http://w.mkhoj.com/showad.asm" # live
+  #base_url = "http://w.sandbox.mkhoj.com/showad.asm" # testing
   def __init__(self,request,app_id,*args,**kwargs):
     return super(InMobiServerSide,self).__init__(request,app_id,*args,**kwargs)
   
@@ -24,7 +25,7 @@ class InMobiServerSide(ServerSide):
     data = {'mk-siteid': '4028cb962b75ff06012b792b39b30044',
             'mk-version': 'el-QEQE-CTATE-20090805',
             # TODO: Replace with self.get_ip()
-            'mk-carrier': '208.54.5.79',
+            'mk-carrier': self.get_ip(),
             'h-user-agent': self.get_user_agent()}
     return urllib.urlencode(data)
     

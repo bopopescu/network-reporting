@@ -104,7 +104,7 @@ class AdAuction(object):
         server_side = KlassServerSide(request,adunit.app_key.millennial_placement_id) 
         logging.warning(server_side.url)   
 
-        rpc = urlfetch.create_rpc(1) # maximum delay we are willing to accept is 200 ms
+        rpc = urlfetch.create_rpc(2) # maximum delay we are willing to accept is 1000 ms
         payload = server_side.payload
         if payload == None:
           urlfetch.make_fetch_call(rpc, server_side.url, headers=server_side.headers)
@@ -804,10 +804,11 @@ class TestHandler(webapp.RequestHandler):
     from ad_server.networks.millennial import MillennialServerSide
     from ad_server.networks.brightroll import BrightRollServerSide
     
-    server_side = BrightRollServerSide(self.request,357)
+   # server_side = BrightRollServerSide(self.request,357)
+    server_side = InMobiServerSide(self.request,357)
     logging.warning("%s, %s"%(server_side.url,server_side.payload))
     
-    rpc = urlfetch.create_rpc(1) # maximum delay we are willing to accept is 1000 ms
+    rpc = urlfetch.create_rpc(5) # maximum delay we are willing to accept is 1000 ms
 
     payload = server_side.payload
     if payload == None:

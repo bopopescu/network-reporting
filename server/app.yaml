@@ -16,14 +16,20 @@ handlers:
 - url: /images
   static_dir: public/images    
 
+- url: /css
+  static_dir: public/css
+
+- url: /js
+  static_dir: public/js
+
+- url: /placeholders
+  static_dir: public/placeholders
+
 - url: /stylesheets
   static_dir: public/stylesheets
 
 - url: /iblogpro
   static_dir: public/iblogpro
-
-- url: /js
-  static_dir: public/javascripts
 
 - url: /media
   static_dir: public/media

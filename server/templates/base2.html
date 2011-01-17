@@ -1,0 +1,195 @@
+{% load filters %}
+{% load googletags %}
+<!doctype html>  
+
+<!--[if lt IE 7 ]> <html lang="en" class="no-js ie6"> <![endif]-->
+<!--[if IE 7 ]>    <html lang="en" class="no-js ie7"> <![endif]-->
+<!--[if IE 8 ]>    <html lang="en" class="no-js ie8"> <![endif]-->
+<!--[if IE 9 ]>    <html lang="en" class="no-js ie9"> <![endif]-->
+<!--[if (gt IE 9)|!(IE)]><!--> <html lang="en" class="no-js"> <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+
+  <title>MoPub</title>
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <link rel="shortcut icon" href="favicon.ico">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/js/mylibs/jquery-ui-1.8.7.custom/css/mopub/jquery-ui-1.8.7.custom.css" />  
+  <link rel="stylesheet" href="/css/style.css?v=2">
+  
+  <!-- modernizr -->
+  <script src="/js/libs/modernizr-1.6.min.js"></script>
+  
+  <!-- TypeKit -->
+  <script type="text/javascript" src="http://use.typekit.com/qhz7iwb.js"></script>
+  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+  
+  <!-- jQuery and jQuery UI -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/js/mylibs/jquery-1.4.4.min.js"%3E%3C/script%3E'))</script>
+  <script src="/js/mylibs/jquery-ui-1.8.7.custom/js/jquery-ui-1.8.7.custom.min.js"></script>
+  
+  <!-- Highcharts -->
+  <script src="/js/mylibs/highcharts/highcharts.js"></script>
+  
+  <!-- MoPub -->
+  <script src="/js/plugins.js"></script>
+  <script src="/js/mopub.js"></script>
+  <script src="/js/mopub-dashboard.js"></script>
+  
+  <!--[if lt IE 7 ]>
+    <script src="/js/libs/dd_belatedpng.js"></script>
+    <script> DD_belatedPNG.fix('img, .png_bg'); </script>
+  <![endif]-->
+</head>
+
+<body id="mopub-dashboard">
+  <div id="container">
+    <a class="visuallyhidden" href="#main">Skip navigation</a>
+    <div id="jsnotice">
+      Javascript is currently disabled. This site requires Javascript to function correctly.
+      Please <a href="http://enable-javascript.com/"> enable Javascript in your browser</a>!
+    </div>
+    
+    <header>
+      <div class="pageWidth">
+        <div id="logo"><a class="ir" href="/">MoPub</a></div>
+        
+        <nav id="nav1">
+          <ul>
+            <li class="active"><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="campaigns.html">Campaigns</a></li>
+            <li><a href="bursts.html">Bursts</a></li>
+          </ul>
+        </nav>
+        
+        <nav id="nav2">
+          <ul>
+            <li><a href="account.html">Your account</a></li>
+            <li><a href="help.html">Help</a></li>
+            <li><a href="login.html">Log out</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+    
+    <div id="main">
+      <div id="titlebar">
+        <div class="pageWidth">
+          <h1>Dashboard</h1>
+          <div id="titlebar-center">
+            <span class="buttonset" id="dashboard-dateOptions">
+              <input type="radio" name="dashboard-dateOptions-option" value="0" id="dashboard-dateOptions-option-0" />
+              <label for="dashboard-dateOptions-option-0">Today</label>
+              <input type="radio" name="dashboard-dateOptions-option" value="1" id="dashboard-dateOptions-option-1" />
+              <label for="dashboard-dateOptions-option-1">Yesterday</label>
+              <input type="radio" name="dashboard-dateOptions-option" value="7" id="dashboard-dateOptions-option-7" />
+              <label for="dashboard-dateOptions-option-7">7 days</label>
+              <input type="radio" name="dashboard-dateOptions-option" value="14" id="dashboard-dateOptions-option-14" checked="checked" />
+              <label for="dashboard-dateOptions-option-14">14 days</label>
+              <input type="radio" name="dashboard-dateOptions-option" value="30" id="dashboard-dateOptions-option-30" />
+              <label for="dashboard-dateOptions-option-30">30 days</label>
+              <input type="radio" name="dashboard-dateOptions-option" value="custom" id="dashboard-dateOptions-option-custom" />
+              <label for="dashboard-dateOptions-option-custom">Custom ...</label>
+            </span>
+            <div id="dashboard-dateOptions-custom-modal">
+              <div id="dashboard-dateOptions-custom-from"><h4>Start date:</h4></div>
+              <div id="dashboard-dateOptions-custom-to"><h4>End date:</h4></div>
+            </div>
+          </div>
+          <div id="titlebar-right">
+            <span class="titlebar-link">
+              <a class="linkIcon" href="region.html">Ad performance by region <span class="ui-icon ui-icon-triangle-1-e"></span></a>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div id="content">
+        <div class="pageWidth">
+{% block messageCenter %}
+          <section class="separated" id="messageCenter">
+            <table id="messageCenter-messages">
+              <tbody>
+                <tr class="messageCenter-message messageCenter-error" id="messageCenter-message-0">
+                  <td class="messageCenter-message-date">Jan 12, 2011</td>
+                  <td class="messageCenter-message-text">
+                    Lorem ipsum dolor sit amet, consectetur adipisicing elit.
+                    <div class="messageCenter-message-moreInfo">
+                      <h3>Lorem ipsum!</h3>
+                      Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+                    </div>
+                  </td>
+                  <td class="messageCenter-message-links">
+                    <a class="messageCenter-message-moreInfoLink" href="#">More info</a>
+                    <span class="sep">&middot;</span>
+                    <a class="messageCenter-message-hide mutedLink" href="#">Hide this</a>
+                  </td>
+                </tr>
+                <tr class="messageCenter-message messageCenter-warning" id="messageCenter-message-1">
+                  <td class="messageCenter-message-date">Jan 11, 2011</td>
+                  <td class="messageCenter-message-text">
+                    Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+                  </td>
+                  <td class="messageCenter-message-links">
+                    <a class="messageCenter-message-hide mutedLink" href="#">Hide this</a>
+                  </td>
+                </tr>
+                <tr class="messageCenter-message messageCenter-info" id="messageCenter-message-2">
+                  <td class="messageCenter-message-date">Jan 10, 2011</td>
+                  <td class="messageCenter-message-text">
+                    Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia.
+                    <div class="messageCenter-message-moreInfo">
+                      Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+                    </div>
+                  </td>
+                  <td class="messageCenter-message-links">
+                    <a class="messageCenter-message-moreInfoLink" href="#">More info</a>
+                    <span class="sep">&middot;</span>
+                    <a class="messageCenter-message-hide mutedLink" href="#">Hide this</a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+{% endblock messageCenter %}
+          
+{% block content %}
+{% endblock content %}
+        </div>
+      </div>
+    </div>
+    
+    <footer>
+      <div id="footer-inner">
+        <div class="pageWidth">
+          <div id="footer-links">
+            <ul>
+              <li>&copy; 2010 MoPub Inc.</li>
+              <li><a href="privacy.html">Privacy policy</a></li>
+              <li><a href="privacy.html">Privacy - ad serving</a></li>
+              <li><a href="terms.html">Terms of use</a></li>
+            </ul>
+            <ul>
+              <li><a href="about.html">About us</a></li>
+              <li><a href="blog.html">MoPub blog</a></li>
+              <li><a href="http://twitter.com/mopub">Twitter updates</a></li>
+              <li><a href="careers.html">Careers</a></li>
+              <li><a href="contact.html">Contact us</a></li>
+            </ul>
+          </div>
+          <div id="footer-account">
+            Logged in as <a href="account.html">jpayne@mopub.com</a>
+            <span class="sep">&middot;</span>
+            <a href="login.html">Log out</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div> <!-- end of #container -->
+  
+</body>
+</html>

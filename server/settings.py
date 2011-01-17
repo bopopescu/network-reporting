@@ -16,6 +16,8 @@
 
 from common.ragendja.settings_pre import *
 
+NEW_UI = False
+
 DEFAULT_FROM_EMAIL = 'olp@mopub.com'
 SERVER_EMAIL = 'olp@mopub.com'
 
@@ -110,7 +112,7 @@ ROOT_URLCONF = 'urls'
 
 ROOT_PATH = os.path.dirname(__file__)
 TEMPLATE_DIRS = (
-    os.path.join(ROOT_PATH, 'templates')
+    os.path.join(ROOT_PATH, 'templates'),
 )
 
 INSTALLED_APPS = (

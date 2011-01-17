@@ -87,4 +87,7 @@ def TextResponse(string=''):
         content_type='text/plain; charset=%s' % settings.DEFAULT_CHARSET)
 
 # This is needed by app_prefixed_loader.
-app_template_dirs = get_app_dirs('templates')
+if settings.NEW_UI:
+    app_template_dirs = get_app_dirs('templates2')
+else:
+    app_template_dirs = get_app_dirs('templates')

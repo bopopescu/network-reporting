@@ -260,7 +260,7 @@ class CreateAdGroupHandler(RequestHandler):
       else:
         creatives = CreativeQueryManager().get_creatives(adgroup=adgroup)
         creative = creatives[0]
-        if adgroup.network_type in ['millenial','inmobi','appnexus','greystripe']:
+        if adgroup.network_type in ['millenial','inmobi','appnexus']:
           creative.ad_type = 'html'
         elif adgroup.network_type in ['brightroll']:
           creative.ad_type = "html_full"

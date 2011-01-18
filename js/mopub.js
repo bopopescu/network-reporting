@@ -13,6 +13,15 @@ var mopub = mopub || {};
 		/ UI Stuff
 		/---------------------------------------*/
 		
+		// replace <legend> with <h2>
+		$('legend').each(function() {
+			var legend = $(this);
+			var h2 = $('<h2>'+legend.html()+'</h2>');
+			h2.attr('class', legend.attr('class'));
+			h2.attr('id', legend.attr('id'));
+			legend.replaceWith(h2);
+		});
+		
 		// set up buttons
 		$('.button').button();
 		

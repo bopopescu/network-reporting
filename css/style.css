@@ -358,7 +358,7 @@ header nav .active a {
   margin: -6px 0 0 0;
   font-size: 30px;
   font-weight: 300;
-  color: #4c4c4c;
+  color: #444;
 }
 
 #titlebar-center {
@@ -408,6 +408,10 @@ section {
   -webkit-border-radius: 10px;
   -moz-border-radius: 10px;
   border-radius: 10px;
+}
+
+.content-main {
+  width: 720px;
 }
 
 /* Footer */
@@ -467,6 +471,13 @@ footer .sep {
 / Content Formatting
 /---------------------------------------*/
 
+/* Text */
+
+p {
+  line-height: 1.33em;
+  margin: 0 0 20px 0;
+}
+
 /* Headings */
 
 h2 {
@@ -523,6 +534,139 @@ a.mutedLink:hover {
 }
 
 /*---------------------------------------/
+/ Forms
+/---------------------------------------*/
+
+/* Form controls */
+
+.radios input {
+  margin: 0 2px 0 0;
+  vertical-align: baseline;
+}
+
+.ie8 .radios input, .ie7 .radios input, .ie6 .radios input {
+  margin: 0;
+}
+
+.radios label {
+  margin: 0 15px 0 0;
+}
+
+.input-text, textarea {
+  padding: 1px 4px 4px 4px;
+  border: 1px solid #eaeaea;
+  border-top-color: #b9b9b9;
+  background: #fafafa;
+  font-size: 18px;
+  line-height: 20px;
+  width: 290px;
+}
+
+.input-text:focus, textarea:focus {
+  outline: none;
+  background: #fff;
+  border-color: #0090d9;
+  box-shadow: 0 0 5px #0090d9;
+  -webkit-box-shadow: 0 0 5px #0090d9; 
+  -moz-box-shadow: 0 0 5px #0090d9; 
+}
+
+input::-webkit-input-placeholder, 
+textarea::-webkit-input-placeholder {
+  color: #999;
+  font-weight: 400;
+}
+
+input.placeholder,
+textarea.placeholder {
+  color: #999;
+  font-weight: 400;
+}
+
+/* Forms */
+
+fieldset {
+  padding: 37px 25px 25px 25px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  font-size: 14px;
+}
+
+fieldset.alt {
+  background: #f7f7f7;
+}
+
+legend {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+legend .inner {
+  display: block;
+  position: relative;
+  top: 27px;
+}
+
+.ie8 legend .inner, .ie7 legend .inner, .ie6 legend .inner {
+  margin-top: -5px;
+  top: -10px;
+}
+
+dl.formFields {
+  float: left;
+  margin: -20px 0 0 0;
+  width: 670px;
+}
+
+.formFields dt {
+  float: left;
+  clear: both;
+  margin: 15px 15px 0 0;
+  padding: 5px 0;
+  width: 175px;
+  font-size: 18px;
+  font-weight: 300;
+  line-height: 20px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.formFields dd {
+  clear: right;
+  float: right;
+  margin: 15px 0 0 0;
+  padding: 5px 0;
+  width: 480px;
+}
+
+.formFields .radios {
+  font-size: 18px;
+}
+
+.formFields .input-text,
+.formFields textarea {
+  margin: -5px 0;
+}
+
+.formFields-field-help {
+  display: inline-block;
+  margin: 1px 0 0 8px;
+}
+
+.ie7 .formFields-field-help, .ie6 .formFields-field-help {
+  display: inline;
+}
+
+.formFields-field-help-link {
+  
+}
+
+.formFields-field-help-text {
+  display: none;
+}
+
+/*---------------------------------------/
 / Modules
 /---------------------------------------*/
 
@@ -572,16 +716,16 @@ a.mutedLink:hover {
 
 .messageCenter-error td.messageCenter-message-text {
   color: #cc2929;
-  background-image: url(../images/icons/199_16x16.png);
+  background-image: url(../images/icons-custom/x-red-16.png);
 }
 
 .messageCenter-warning td.messageCenter-message-text {
   color: #ff7f00;
-  background-image: url(../images/icons/57_16x16.png);
+  background-image: url(../images/icons-custom/alert-16.png);
 }
 
 .messageCenter-info td.messageCenter-message-text {
-  background-image: url(../images/icons-alt/128_16x16.png);
+  background-image: url(../images/icons-custom/info-16.png);
 }
 
 .messageCenter-message-moreInfo {
@@ -835,6 +979,28 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
   text-align: center;
 }
 
+/* Step progress */
+
+.stepProgress {
+  font-size: 13px;
+}
+
+#titlebar-right .stepProgress {
+  margin-top: 10px;
+  color: #7a8c99;
+}
+
+.stepProgress-active {
+  font-weight: 600;
+  color: #444;
+}
+
+.stepProgress .ui-icon { 
+  display: inline-block;
+  vertical-align: -3px;
+  background-image: url(../images/ui/ui-icons-progress.png); 
+}
+
 /*---------------------------------------/
 / jQuery UI Overrides
 /---------------------------------------*/
@@ -887,6 +1053,16 @@ input.ui-button { padding: 4px 12px 5px 12px; }
 .ui-datepicker .ui-datepicker-title { line-height: 1.7em; }
 
 /*---------------------------------------/
+/ Other Plugins
+/---------------------------------------*/
+
+/* qTip tooltips */
+
+.qtip-content {
+  font-size: 13px;
+}
+
+/*---------------------------------------/
 / Miscellaneous
 /---------------------------------------*/
 
@@ -926,6 +1102,13 @@ input.ui-button { padding: 4px 12px 5px 12px; }
 
 #dashboard-stats-chart {
   height: 210px;
+}
+
+/* App setup */
+
+.ios .android, 
+.android .ios {
+  display: none;
 }
 
 /****************************************

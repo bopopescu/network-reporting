@@ -85,28 +85,42 @@ def gen_pie_chart_url(series, title):
 class AppIndexHandler(RequestHandler):
   def get(self):
     report = self.request.POST.get('report')
-    
-    # compute start times; start day before today so incomplete days don't mess up graphs
-    days = SiteStats.lastdays(14)
-    # Set the range of days that we sum for the list view
+
+    # Get the date range passed in
+    # TODO: Handle 'today' and 'yesterday' as 0 and 1 respectively
     try:
-      r = self.request.GET.get('range').partition(':')
-      r_end = int(r[2])
-      r_start = int(r[0])
+      # Limit date range to 31 days, otherwise too heavy
+      r = min(int(self.request.GET.get('r')),31)  # date range
+    except:
+      r = 14
+
+    # Set start date if passed in, otherwise get most recent days
+    try:
+      s = self.request.GET.get('s').split('-')
+      days = SiteStats.get_days(datetime.date(int(s[0]),int(s[1]),int(s[2])), r)
+    except:
+      days = SiteStats.lastdays(r)
+
+    # Set the range of days that we sum for the list view
+    # TODO: Remove this once we move to the new UI completely
+    try:
+      rng = self.request.GET.get('range').partition(':')
+      r_end = int(rng[2])
+      r_start = int(rng[0])
     except:
       r_start = 0
-      r_end = 14
+      r_end = r
 
     # apps = App.gql("where account = :1 and deleted = :2", self.account, False).fetch(50)
     apps = AppQueryManager().get_apps(self.account)
     today = SiteStats()
     if len(apps) == 0:
       return HttpResponseRedirect(reverse('publisher_app_create'))
-    
+
     for a in apps:
       if a.icon:
         a.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(a.icon)
-      
+
       a.stats = SiteStats()
       # attaching adunits onto the app object
       a.adunits = AdUnitQueryManager().get_adunits(app=a)
@@ -114,7 +128,6 @@ class AppIndexHandler(RequestHandler):
       # organize impressions by days
       if len(a.adunits) > 0:
         for adunit in a.adunits:
-          # s.all_stats = SiteStats.sitestats_for_days(s, days)
           adunit.all_stats = SiteStatsQueryManager().get_sitestats_for_days(site=adunit,days=days)
           adunit.stats = reduce(lambda x, y: x+y, adunit.all_stats[r_start:r_end], SiteStats())
           a.stats += adunit.stats
@@ -128,25 +141,27 @@ class AppIndexHandler(RequestHandler):
       for stat,app_stat in zip(a.totals,app_stats):
         stat.unique_user_count = app_stat.unique_user_count        
         
-    totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[a.totals for a in apps])]
-    today = totals[-1]
-    yesterday = totals[-2]
+    daily_totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[a.totals for a in apps])]
+    today = daily_totals[-1]
+    yesterday = daily_totals[-2]
+    
+    totals = reduce(lambda x, y: x+y, daily_totals, SiteStats())
 
     chart_urls = {}
     # make a line graph showing impressions
-    impressions = [s.request_count for s in totals]
+    impressions = [s.request_count for s in daily_totals]
     chart_urls['imp'] = gen_chart_url(impressions, days, "Total+Daily+Requests")
     
     # make a line graph showing clicks
-    clicks = [s.click_count for s in totals]
+    clicks = [s.click_count for s in daily_totals]
     chart_urls['clk'] = gen_chart_url(clicks, days, "Total+Daily+Clicks")
 
     # make a line graph showing revenue
-    revenue = [s.revenue for s in totals]
+    revenue = [s.revenue for s in daily_totals]
     chart_urls['rev'] = gen_chart_url(revenue, days, "Total+Revenue")
     
     # make a line graph showing users
-    unique_users = [s.unique_user_count for s in totals]
+    unique_users = [s.unique_user_count for s in daily_totals]
     chart_urls['users'] = gen_chart_url(unique_users, days, "Total+Unique Users")
 
     # do a bar graph showing contribution of each site to impression count
@@ -166,7 +181,10 @@ class AppIndexHandler(RequestHandler):
     pie_chart_urls['users'] = gen_pie_chart_url(users_by_app, "Contribution+by+App")
 
     return render_to_response(self.request,'publisher/index.html', 
-      {'apps': apps,    
+      {'apps': sorted(apps, key=lambda app: app.stats.request_count, reverse=True),
+       'start_date': days[0],
+       'date_range': r,
+       'totals': totals,
        'today': today,
        'yesterday': yesterday,
        'chart_urls': chart_urls,

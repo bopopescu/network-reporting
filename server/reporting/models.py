@@ -96,6 +96,14 @@ class SiteStats(db.Model):
     days = [today - datetime.timedelta(days=x) for x in range(0, n)]
     days.reverse()
     return days
+  
+  @classmethod
+  def get_days(c, start, n=7):
+    try:
+      days = [start + datetime.timedelta(days=x) for x in range(0,n)]
+      return days
+    except:
+      return c.lastdays(n)
 
   @classmethod
   def sitestats_for_today(c, site):

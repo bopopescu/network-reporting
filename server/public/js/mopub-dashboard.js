@@ -134,8 +134,16 @@ var mopub = mopub || {};
 							text: 'Set dates',
 							css: { fontWeight: '600' },
 							click: function() {
-								// TODO: tell server about custom dates to get new data
+								var from_date=$('#dashboard-dateOptions-custom-from').datepicker("getDate");
+								var to_date=$('#dashboard-dateOptions-custom-to').datepicker("getDate");
+								var num_days=Math.ceil((to_date.getTime()-from_date.getTime())/(86400000)) + 1;
+								
+								var from_day=from_date.getDate();
+								var from_month=from_date.getMonth()+1;
+								var from_year=from_date.getFullYear();
+								
 								$(this).dialog("close");
+								document.location.href = '/inventory/?r='+num_days+'&s='+from_year+"-"+from_month+"-"+from_day;
 							}
 						},
 						{
@@ -148,7 +156,8 @@ var mopub = mopub || {};
 				});
 			}
 			else {
-				// TODO: tell server about selected option to get new data
+				// Tell server about selected option to get new data
+				document.location.href = '/inventory/?r=' + option;
 			}
 		});
 		

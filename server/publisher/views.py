@@ -43,6 +43,19 @@ class RequestHandler(object):
         self.params = request.POST or request.GET
         self.request = request
         self.account = None
+        
+        try:
+          # Limit date range to 31 days, otherwise too heavy
+          self.date_range = min(int(self.params.get('r')),31)  # date range
+        except:
+          self.date_range = 14
+          
+        try:
+          s = self.request.GET.get('s').split('-')
+          self.start_date = datetime.date(int(s[0]),int(s[1]),int(s[2]))
+        except:
+          self.start_date = None
+
         user = users.get_current_user()
         if user:
           if users.is_current_user_admin():
@@ -86,20 +99,11 @@ class AppIndexHandler(RequestHandler):
   def get(self):
     report = self.request.POST.get('report')
 
-    # Get the date range passed in
-    # TODO: Handle 'today' and 'yesterday' as 0 and 1 respectively
-    try:
-      # Limit date range to 31 days, otherwise too heavy
-      r = min(int(self.request.GET.get('r')),31)  # date range
-    except:
-      r = 14
-
     # Set start date if passed in, otherwise get most recent days
-    try:
-      s = self.request.GET.get('s').split('-')
-      days = SiteStats.get_days(datetime.date(int(s[0]),int(s[1]),int(s[2])), r)
-    except:
-      days = SiteStats.lastdays(r)
+    if self.start_date:
+      days = SiteStats.get_days(self.start_date, self.date_range)
+    else:
+      days = SiteStats.lastdays(self.date_range)
 
     # Set the range of days that we sum for the list view
     # TODO: Remove this once we move to the new UI completely
@@ -109,7 +113,7 @@ class AppIndexHandler(RequestHandler):
       r_start = int(rng[0])
     except:
       r_start = 0
-      r_end = r
+      r_end = self.date_range
 
     # apps = App.gql("where account = :1 and deleted = :2", self.account, False).fetch(50)
     apps = AppQueryManager().get_apps(self.account)
@@ -132,6 +136,7 @@ class AppIndexHandler(RequestHandler):
           adunit.stats = reduce(lambda x, y: x+y, adunit.all_stats[r_start:r_end], SiteStats())
           a.stats += adunit.stats
         a.totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[au.all_stats for au in a.adunits])]
+        a.adunits = sorted(a.adunits, key=lambda adunit: adunit.stats.request_count, reverse=True)
       else:
         a.totals = [SiteStats() for d in days]
     
@@ -183,7 +188,7 @@ class AppIndexHandler(RequestHandler):
     return render_to_response(self.request,'publisher/index.html', 
       {'apps': sorted(apps, key=lambda app: app.stats.request_count, reverse=True),
        'start_date': days[0],
-       'date_range': r,
+       'date_range': self.date_range,
        'totals': totals,
        'today': today,
        'yesterday': yesterday,
@@ -263,7 +268,7 @@ class AppCreateHandler(RequestHandler):
           app.put()
         except:
           pass
-          
+
       return HttpResponseRedirect(reverse('publisher_app_show',kwargs={'app_key':app.key()}))
     else:
       return render_to_response(self.request,'publisher/new_app.html', {"f": f})
@@ -322,15 +327,20 @@ def add_demo_campaign(site):
   
 class ShowAppHandler(RequestHandler):
   def get(self,app_key):
-    days = SiteStats.lastdays(14)
+    # Set start date if passed in, otherwise get most recent days
+    if self.start_date:
+      days = SiteStats.get_days(self.start_date, self.date_range)
+    else:
+      days = SiteStats.lastdays(self.date_range)
+    
     # Set the range of days that we sum for the list view
     try:
-      r = self.request.GET.get('range').partition(':')
-      r_end = int(r[2])
-      r_start = int(r[0])
+      rng = self.request.GET.get('range').partition(':')
+      r_end = int(rng[2])
+      r_start = int(rng[0])
     except:
       r_start = 0
-      r_end = 14
+      r_end = self.date_range
    
     # load the site
     a = AppQueryManager().get_by_key(app_key)
@@ -354,6 +364,8 @@ class ShowAppHandler(RequestHandler):
       totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[au.all_stats for au in a.adunits])]
     else:
       totals = [SiteStats() for d in days]
+      
+    a.adunits = sorted(a.adunits, key=lambda adunit: adunit.stats.request_count, reverse=True)
       
     # app_stats = SiteStats.stats_for_days(a,days)
     app_stats = SiteStatsQueryManager().get_sitestats_for_days(owner=a,days=days)
@@ -410,6 +422,8 @@ class ShowAppHandler(RequestHandler):
 
     return render_to_response(self.request,'publisher/show_app.html', 
         {'app': a,    
+         'start_date': days[0],
+         'date_range': self.date_range,
          'today': today,
          'yesterday': yesterday,
          'chart_urls': chart_urls,
@@ -432,8 +446,12 @@ class AdUnitShowHandler(RequestHandler):
     if adunit.account.key() != adunit.account.key():
       raise Http404
 
-    # do all days requested
-    days = SiteStats.lastdays(14)
+    # Set start date if passed in, otherwise get most recent days
+    if self.start_date:
+      days = SiteStats.get_days(self.start_date, self.date_range)
+    else:
+      days = SiteStats.lastdays(self.date_range)
+
     # Set the range of days that we sum for the list view
     try:
       r = self.request.GET.get('range').partition(':')
@@ -441,7 +459,7 @@ class AdUnitShowHandler(RequestHandler):
       r_start = int(r[0])
     except:
       r_start = 0
-      r_end = 14
+      r_end = self.date_range
       
     # site.all_stats = SiteStats.sitestats_for_days(site, days)
     adunit.all_stats = SiteStatsQueryManager().get_sitestats_for_days(site=adunit,days=days)
@@ -504,6 +522,8 @@ class AdUnitShowHandler(RequestHandler):
     # write response
     return render_to_response(self.request,'publisher/show.html', 
         {'site':adunit,
+         'start_date': days[0],
+         'date_range': self.date_range,
          'today': today,
          'yesterday': yesterday,
          'account':self.account, 

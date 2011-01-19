@@ -1,8 +1,5 @@
-{% extends 'publisher/base.html' %}
-{% load filters %}
-{% block navLinks %}
-            <li class="active"><a href="/inventory">Dashboard</a></li>
-            <li><a href="campaigns.html">Campaigns</a></li>{% endblock navLinks %}
+{% extends 'publisher/base.html' %}{% load filters %}
+{% block pageTitle %}{{app.name}}{% endblock pageTitle %}
 {% block messageCenter %}{% endblock messageCenter %}
 
 {% block content %}
@@ -12,23 +9,23 @@
                 <table class="stats-breakdown">
                   <tbody>
                     <tr class="active" id="stats-breakdown-revenue">
-                      <td class="stats-breakdown-value"><span class="inner">{{totals.revenue|currency}}</span></td>
+                      <td class="stats-breakdown-value"><span class="inner">{{app.stats.revenue|currency}}</span></td>
                       <th class="stats-breakdown-name"><span class="inner">Revenue (est.)</span></th>
                     </tr>
                     <tr id="stats-breakdown-requests">
-                      <td class="stats-breakdown-value"><span class="inner">{{totals.request_count|withsep}}</span></td>
+                      <td class="stats-breakdown-value"><span class="inner">{{app.stats.request_count|withsep}}</span></td>
                       <th class="stats-breakdown-name"><span class="inner">Requests</span></th>
                     </tr>
                     <tr id="stats-breakdown-impressions">
-                      <td class="stats-breakdown-value"><span class="inner">{{totals.impression_count|withsep}}</span></td>
+                      <td class="stats-breakdown-value"><span class="inner">{{app.stats.impression_count|withsep}}</span></td>
                       <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
                     </tr>
                     <tr id="stats-breakdown-clicks">
-                      <td class="stats-breakdown-value"><span class="inner">{{totals.click_count|withsep}}</span></td>
+                      <td class="stats-breakdown-value"><span class="inner">{{app.stats.click_count|withsep}}</span></td>
                       <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
                     </tr>
                     <tr id="stats-breakdown-users">
-                      <td class="stats-breakdown-value"><span class="inner">{{totals.unique_user_count|withsep}}</span></td>
+                      <td class="stats-breakdown-value"><span class="inner">{{app.stats.unique_user_count|withsep}}</span></td>
                       <th class="stats-breakdown-name"><span class="inner">Users</span></th>
                     </tr>
                   </tbody>
@@ -42,20 +39,20 @@
                       //pointStart: 1294963200000,
                       pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
                       pointInterval: 86400000,
-                      'revenue': [{% for a in apps %}
-                        { '{{a.name}}': [{% for t in a.totals %}{{t.revenue}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                      'revenue': [{% for au in app.adunits %}
+                        { '{{au.name}}': [{% for t in au.all_stats %}{{t.revenue}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                       ],
-                      'requests': [{% for a in apps %}
-                        { '{{a.name}}': [{% for t in a.totals %}{{t.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                      'requests': [{% for au in app.adunits %}
+                        { '{{au.name}}': [{% for t in au.all_stats %}{{t.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                       ],
-                      'impressions': [{% for a in apps %}
-                        { '{{a.name}}': [{% for t in a.totals %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                      'impressions': [{% for au in app.adunits %}
+                        { '{{au.name}}': [{% for t in au.all_stats %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                       ],
-                      'clicks': [{% for a in apps %}
-                        { '{{a.name}}': [{% for t in a.totals %}{{t.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                      'clicks': [{% for au in app.adunits %}
+                        { '{{au.name}}': [{% for t in au.all_stats %}{{t.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                       ],
-                      'users': [{% for a in apps %}
-                        { '{{a.name}}': [{% for t in a.totals %}{{t.unique_user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                      'users': [{% for au in app.adunits %}
+                        { '{{au.name}}': [{% for t in au.all_stats %}{{t.unique_user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                       ]
                     };
                   </script>
@@ -64,13 +61,13 @@
               <div class="clear"></div>
             </section>
           </div>
-
+          
           <section id="dashboard-apps">
             <div class="buttonBank buttonBank-right">
-              <a class="button" id="dashboard-apps-toggleAllButton" href="#">Show/hide all details</a>
-              <a class="button" id="dashboard-apps-addAppButton" href="{% url publisher_app_create %}">Add an app</a>
+              <a class="button" id="dashboard-apps-editAppButton" href="create.html">Add an ad unit</a>
+              <a class="button" id="dashboard-apps-addAppButton" href="create.html">Edit app settings</a>
             </div>
-            <h2>Your Apps</h2>
+            <h2>Ad Units</h2>
             
             <div class="appData-columnHeaders">
               <table class="dataTable" id="dashboard-apps-columnHeaders">
@@ -86,25 +83,25 @@
                 </thead>
               </table>
             </div>
-            {% for a in apps %}
-            <div class="appData" id="dashboard-app-{{forloop.counter0}}">
-              <table class="dataTable appData-main" id="dashboard-app-{{forloop.counter0}}-main">
+            <div class="appData" id="dashboard-app-0">
+              <table class="dataTable appData-main" id="dashboard-app-0-main">
                 <tbody>
                   <tr>
-                    <td class="appData-icon"><a href="{% url publisher_app_show app_key=a.key %}"><img src="{% if a.icon_url %}{{a.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" /></a></td>
-                    <th class="dataTable-name"><a href="{% url publisher_app_show app_key=a.key %}">{{a.name}}</a> <span class="muted unbold">({% ifequal a.app_type "iphone" %}iOS{% endifequal %}{% ifequal a.app_type "android" %}Android{% endifequal %})</span></th>
-                    <td class="dataTable-data">{{a.stats.request_count}}</td>
-                    <td class="dataTable-data">{{a.stats.impression_count}}</td>
-                    <td class="dataTable-data">{{a.stats.click_count}}</td>
-                    <td class="dataTable-data">{{a.stats.ctr|percentage}}</td>
+                    <td class="appData-icon"><a href="#"><img src="{% if a.icon_url %}{{a.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" /></a></td>
+                    <th class="dataTable-name">Totals</th>
+                    <td class="dataTable-data">{{app.stats.request_count}}</td>
+                    <td class="dataTable-data">{{app.stats.impression_count}}</td>
+                    <td class="dataTable-data">{{app.stats.click_count}}</td>
+                    <td class="dataTable-data">{{app.stats.ctr|percentage}}</td>
                   </tr>
                 </tbody>
               </table>
-              <div class="appData-details" id="dashboard-app-{{forloop.counter0}}-details">
+              <div class="appData-details" id="dashboard-app-0-details">
                 <div class="appData-details-inner show">
                   <table class="dataTable">
                     <tbody>
-                      {% for au in a.adunits %}<tr>
+                      {% for au in app.adunits %}
+                      <tr>
                         <th class="dataTable-name"><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a></th>
                         <td class="dataTable-data">{{au.stats.request_count}}</td>
                         <td class="dataTable-data">{{au.stats.impression_count}}</td>
@@ -115,8 +112,7 @@
                     </tbody>
                   </table>
                 </div>
-                <a class="button smallButton appData-details-toggleButton" href="#">Hide details</a>
               </div>
             </div>
-          {% endfor %}</section>
+          </section>
 {% endblock content %}

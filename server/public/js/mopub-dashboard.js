@@ -143,7 +143,8 @@ var mopub = mopub || {};
 								var from_year=from_date.getFullYear();
 								
 								$(this).dialog("close");
-								document.location.href = '/inventory/?r='+num_days+'&s='+from_year+"-"+from_month+"-"+from_day;
+								var location = document.location.href.replace(/\?.*/,'');
+								document.location.href = location+'?r='+num_days+'&s='+from_year+"-"+from_month+"-"+from_day;
 							}
 						},
 						{
@@ -157,7 +158,8 @@ var mopub = mopub || {};
 			}
 			else {
 				// Tell server about selected option to get new data
-				document.location.href = '/inventory/?r=' + option;
+				var location = document.location.href.replace(/\?.*/,'');
+				document.location.href = location+'?r=' + option;
 			}
 		});
 		
@@ -185,6 +187,7 @@ var mopub = mopub || {};
 		
 		// set up buttons
 		$('#dashboard-apps-addAppButton').button({ icons: { primary: "ui-icon-circle-plus" } });
+		$('#dashboard-apps-editAppButton').button({ icons: { primary: "ui-icon-wrench" } });
 		$('#dashboard-apps-toggleAllButton')
 			.button({ 
 				icons: { primary: "ui-icon-triangle-2-n-s" } 

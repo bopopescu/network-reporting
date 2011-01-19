@@ -13,6 +13,15 @@ var mopub = mopub || {};
 		/ UI Stuff
 		/---------------------------------------*/
 		
+		// replace <legend> with <h2>
+		$('legend').each(function() {
+			var legend = $(this);
+			var h2 = $('<h2>'+legend.html()+'</h2>');
+			h2.attr('class', legend.attr('class'));
+			h2.attr('id', legend.attr('id'));
+			legend.replaceWith(h2);
+		});
+		
 		// set up buttons
 		$('.button').button();
 		
@@ -31,6 +40,31 @@ var mopub = mopub || {};
 		$.datepicker.setDefaults({
 			dayNamesMin: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 		});
+		
+		// set up form placeholders
+		$('input[placeholder], textarea[placeholder]').placeholder({ preventRefreshIssues: true });
+		
+		/*---------------------------------------/
+		/ Tooltips
+		/---------------------------------------*/
+
+		$.fn.qtip.styles.mopub = { 
+			background: '#303030',
+			color: '#ffffff',
+			border: {
+				radius: 5
+			},
+			tip: {
+				size: {
+					x: 10,
+					y: 10
+				}
+			},
+			name: 'dark' // Inherit the rest of the attributes from the preset dark style
+		};
+
+		$('a[title]').qtip({ style: { name: 'mopub', tip: true } });
+		$('.formFields-field-help-link[title]').click(function(e) { e.preventDefault(); });
 		
 		/*---------------------------------------/
 		/ Message Center

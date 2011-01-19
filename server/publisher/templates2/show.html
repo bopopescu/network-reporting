@@ -1,0 +1,117 @@
+{% extends 'publisher/base.html' %}{% load filters %}
+{% block pageTitle %}{{site.name}}{% endblock pageTitle %}
+{% block messageCenter %}{% endblock messageCenter %}
+
+{% block content %}
+          <div class="separated">
+            <section class="offset nomargin" id="dashboard-stats">
+              <div class="stats">
+                <table class="stats-breakdown">
+                  <tbody>
+                    <tr class="active" id="stats-breakdown-revenue">
+                      <td class="stats-breakdown-value"><span class="inner">{{site.stats.revenue|currency}}</span></td>
+                      <th class="stats-breakdown-name"><span class="inner">Revenue (est.)</span></th>
+                    </tr>
+                    <tr id="stats-breakdown-requests">
+                      <td class="stats-breakdown-value"><span class="inner">{{site.stats.request_count|withsep}}</span></td>
+                      <th class="stats-breakdown-name"><span class="inner">Requests</span></th>
+                    </tr>
+                    <tr id="stats-breakdown-impressions">
+                      <td class="stats-breakdown-value"><span class="inner">{{site.stats.impression_count|withsep}}</span></td>
+                      <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
+                    </tr>
+                    <tr id="stats-breakdown-clicks">
+                      <td class="stats-breakdown-value"><span class="inner">{{site.stats.click_count|withsep}}</span></td>
+                      <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
+                    </tr>
+                    <tr id="stats-breakdown-users">
+                      <td class="stats-breakdown-value"><span class="inner">{{site.stats.unique_user_count|withsep}}</span></td>
+                      <th class="stats-breakdown-name"><span class="inner">Users</span></th>
+                    </tr>
+                  </tbody>
+                </table>
+                <div class="chart chart-loading stats-chart" id="dashboard-stats-chart">
+                  <div class="chart-loading-text">Loading ...</div>
+                  <div class="chart-error-text">Could not load chart</div>
+                  <script type="text/javascript">
+                    // chart data
+                    mopub.dashboardStatsChartData = {
+                      //pointStart: 1294963200000,
+                      pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
+                      pointInterval: 86400000,
+                      'revenue': [
+                        { '{{site.name}}': [{% for t in site.all_stats %}{{t.revenue}}{% if not forloop.last %},{% endif %} {% endfor %}] }
+                      ],
+                      'requests': [
+                        { '{{site.name}}': [{% for t in site.all_stats %}{{t.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
+                      ],
+                      'impressions': [
+                        { '{{site.name}}': [{% for t in site.all_stats %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
+                      ],
+                      'clicks': [
+                        { '{{site.name}}': [{% for t in site.all_stats %}{{t.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
+                      ],
+                      'users': [
+                        { '{{site.name}}': [{% for t in site.all_stats %}{{t.unique_user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
+                      ]
+                    };
+                  </script>
+                </div>
+              </div>
+              <div class="clear"></div>
+            </section>
+          </div>
+
+          <section id="dashboard-apps">
+            <div class="buttonBank buttonBank-right">
+              <a class="button" id="dashboard-apps-toggleAllButton" href="#">Show/hide all details</a>
+            </div>
+            <h2>Daily Counts</h2>
+            
+            <div class="appData-columnHeaders">
+              <table class="dataTable" id="dashboard-apps-columnHeaders">
+                <thead>
+                  <tr>
+                    <th class="appData-icon"></th>
+                    <th class="dataTable-name"></th>
+                    <th class="dataTable-data">Requests</th>
+                    <th class="dataTable-data">Impressions</th>
+                    <th class="dataTable-data">Clicks</th>
+                    <th class="dataTable-data">CTR</th>
+                  </tr>
+                </thead>
+              </table>
+            </div>
+            <div class="appData" id="dashboard-app-0">
+              <table class="dataTable appData-main" id="dashboard-app-0-main">
+                <tbody>
+                  <tr>
+                    <td class="appData-icon"><a href="#"><img src="{% if a.icon_url %}{{a.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" /></a></td>
+                    <th class="dataTable-name">Totals</th>
+                    <td class="dataTable-data">{{site.stats.request_count}}</td>
+                    <td class="dataTable-data">{{site.stats.impression_count}}</td>
+                    <td class="dataTable-data">{{site.stats.click_count}}</td>
+                    <td class="dataTable-data">{{site.stats.ctr|percentage}}</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="appData-details" id="dashboard-app-0-details">
+                <div class="appData-details-inner show">
+                  <table class="dataTable">
+                    <tbody>
+                      {% for s in site.all_stats %}<tr>
+                        <th class="dataTable-name">{{s.date|format_date}}</th>
+                        <td class="dataTable-data">{{s.request_count}}</td>
+                        <td class="dataTable-data">{{s.impression_count}}</td>
+                        <td class="dataTable-data">{{s.click_count}}</td>
+                        <td class="dataTable-data">{{s.ctr|percentage}}</td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+                <a class="button smallButton appData-details-toggleButton" href="#">Hide details</a>
+              </div>
+            </div>
+          </section>
+{% endblock content %}

@@ -10,7 +10,7 @@
 {% block content %}
           <section id="dashboard-adunitEditForm">
             <div>
-              <form action="" method="POST" accept-charset="utf-8" id="appForm">
+              <form action="{% url publisher_app_update app_key=app.key %}" method="POST" accept-charset="utf-8" id="appForm">
                 <fieldset id="appForm-details" class="alt">
                   <dl class="formFields"> 
                     <dt>Platform:</dt> 

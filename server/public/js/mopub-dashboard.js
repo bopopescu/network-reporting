@@ -307,20 +307,37 @@ var mopub = mopub || {};
 			}
 		});
 
-		// Search button
-		$('#appForm-search')
-			.button({ icons: { primary: "ui-icon-search" }, disabled: true})
-			.click(function(e) {
-				e.preventDefault();
-				if ($(this).button( "option", "disabled" ))
-				  return;
-				var name = $('#appForm input[name="name"]').val();
-				var script = document.createElement("script");
-				script.src = 'http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/wa/wsSearch?'				
-											 + 'entity=software&limit=10&callback=loadedArtwork&term='+name;
-				var head = document.getElementsByTagName("head")[0];
-				(head || document.body).appendChild( script );
-		});
+    // Search button
+    $('#appForm-search')
+      .button({ icons: { primary: "ui-icon-search" }})
+      .click(function(e) {
+        e.preventDefault();
+        if ($(this).button( "option", "disabled" ))
+          return;
+        $('#searchAppStore-results').append("<img src='/images/loading2.gif' />")
+          .append("Loading results...");
+
+        $('#dashboard-searchAppStore-custom-modal').dialog({
+          buttons: [
+            {
+              text: 'Cancel', 
+              click: function() {
+                $('#searchAppStore-results').html('');
+                $(this).dialog("close");
+              }
+            }
+          ]
+        });
+        var name = $('#appForm input[name="name"]').val();
+        var script = document.createElement("script");
+        script.src = 'http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/wa/wsSearch?'       
+                       + 'entity=software&limit=10&callback=loadedArtwork&term='+name;
+        var head = document.getElementsByTagName("head")[0];
+        (head || document.body).appendChild( script );
+    });
+		if ($('#appForm-name').val() == '') {
+		  $('#appForm-search').button("disable");
+		}
 		$('#appForm-name').keyup(function() {
 			// Show/hide the app search button
 			var name = $.trim($(this).val());
@@ -365,11 +382,22 @@ var mopub = mopub || {};
 	});
 })(this.jQuery);
 
+
 var artwork_json;
 
 function loadedArtwork(json) {
+  if (!$('#dashboard-searchAppStore-custom-modal').dialog("isOpen"))
+    return;
+
+  $('#searchAppStore-results').html('');
+
   artwork_json = json;
   var resultCount = json['resultCount'];
+  if (resultCount == 0) {
+    $('#searchAppStore-results').append("<div class='adForm-appSearch-text' />")
+      .append("No results found");
+    return;
+  }
   for (var i=0;i<resultCount;i++) {
     var app = json['results'][i];
     
@@ -391,18 +419,9 @@ function loadedArtwork(json) {
       .append($("<div class='clear' />"))
     )
   }
-  $('#dashboard-searchAppStore-custom-modal').dialog({
-    buttons: [
-			{
-				text: 'Cancel', 
-				click: function() {
-				  $('#searchAppStore-results').html('');
-					$(this).dialog("close");
-				}
-			}
-		],
-		maxHeight: 200
-	});
+  
+  $('#dashboard-searchAppStore-custom-modal').dialog("close");
+  $('#dashboard-searchAppStore-custom-modal').dialog("open");
 }
 
 function selectArtwork(index) {

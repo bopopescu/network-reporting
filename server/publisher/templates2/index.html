@@ -87,7 +87,7 @@
               </table>
             </div>
             {% for a in apps %}
-            <div class="appData" id="dashboard-app-{{forloop.counter0}}">
+            <div class="appData {% if forloop.counter|divisibleby:"2" %}appData-alt{% endif %}" id="dashboard-app-{{forloop.counter0}}">
               <table class="dataTable appData-main" id="dashboard-app-{{forloop.counter0}}-main">
                 <tbody>
                   <tr>

@@ -261,6 +261,22 @@ header {
   background: url(../images/mopub-logo.png) no-repeat top left;
 }
 
+.mopub-public header {
+  height: 90px;
+  background-image: url(../images/layout/header-bg-public.gif);
+}
+
+.mopub-public #logo  {
+  top: 5px;
+  left: -20px;
+}
+
+.mopub-public #logo a {
+  width: 179px;
+  height: 86px;
+  background-image: url(../images/mopub-logo-public.png);
+}
+
 /* Navs */
 
 header nav ul {
@@ -322,6 +338,23 @@ header nav .active a {
   height: 27px;
 }
 
+.mopub-public #nav1 li {
+  padding: 0 2px;
+  height: 90px;
+}
+
+#mopub-home #nav1 li.active {
+  background-image: url(../images/layout/header-pointer-home.gif);
+}
+
+.mopub-public #nav1 a {
+  margin: 33px 0 0 0;
+  padding: 7px 14px 0 14px;
+  height: 33px;
+  font-size: 22px;
+  font-weight: 300;
+}
+
 #nav2 {
   position: absolute;
   top: 18px;
@@ -335,6 +368,27 @@ header nav .active a {
 
 #nav2 a {
   padding: 3px 7px 4px 7px;
+}
+
+.mopub-public #nav2 {
+  top: 30px;
+}
+
+#nav2 #header-icons a {
+  float: left;
+  margin: 0 0 0 5px;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  background: url(../images/layout/header-icons.png) no-repeat top left;
+}
+
+#nav2 #header-icons a#header-icons-rss {
+  background-position: 0 0;
+}
+
+#nav2 #header-icons a#header-icons-twitter {
+  background-position: 0 -30px;
 }
 
 /*---------------------------------------/

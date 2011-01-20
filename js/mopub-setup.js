@@ -1,5 +1,5 @@
 /*
-	MoPub Dashboard JS
+	MoPub Setup Pages JS
 */
 
 // global mopub object

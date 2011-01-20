@@ -9,8 +9,6 @@ sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/Go
 sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/yaml/lib")
 sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/fancy_urllib")
 
-
-
 from google.appengine.ext.remote_api import remote_api_stub
 from google.appengine.ext import db
 

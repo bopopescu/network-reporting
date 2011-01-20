@@ -1,33 +1,4 @@
 {% extends 'base2.html' %} 
 {% load filters %}
 
-{% block adminSelect %}
-{% if user.is_admin %}
-            <div style="float:right;padding-left:10px">
-              <form id="admin_user_switch" action="{% url admin_switch_user %}" method="POST">
-                <select name="user_key" id="admin_user_switch_select" onchange='$("#admin_user_switch").submit()'>
-                  {{ request|all_user_dropdown }}
-                </select>
-              </form>
-            </div>
-            <script type="text/javascript">
-            function getCookie(c_name) {
-              if (document.cookie.length>0) {
-                c_start=document.cookie.indexOf(c_name + "=");
-                if (c_start!=-1) {
-                  c_start=c_start + c_name.length+1;
-                  c_end=document.cookie.indexOf(";",c_start);
-                  if (c_end==-1) c_end=document.cookie.length;
-                  return unescape(document.cookie.substring(c_start,c_end));
-                }
-              }
-              return "";
-            }
-            var user_key_name = getCookie('account_impersonation');
-            var options = $('select#admin_user_switch_select option');
-            var len = options.length;
-            for (var i = 0; i < len; i++) {
-              if (options[i].value == user_key_name)
-              options[i].selected = true;
-            }
-            </script>{% endif %}{% endblock adminSelect %}
+

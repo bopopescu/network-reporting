@@ -128,6 +128,7 @@ class AdGroupIndexHandler(RequestHandler):
     if campaigns:
       adgroups = AdGroupQueryManager().get_adgroups(campaigns=campaigns)
     else:
+      # TODO: Convert to QueryManager, why is this here anyway?
       campaigns = Campaign.gql("where u = :1 and deleted = :2", self.account.user, False).fetch(100)
       adgroups = AdGroup.gql("where campaign in :1 and deleted = :2", [x.key() for x in campaigns], False).fetch(100)
     adgroups = sorted(adgroups, lambda x,y: cmp(y.bid, x.bid))
@@ -139,25 +140,26 @@ class AdGroupIndexHandler(RequestHandler):
       today += c.all_stats[-1]
 
     # compute rollups to display at the top
-    totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[c.all_stats for c in adgroups])]
+    daily_totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[c.all_stats for c in adgroups])]
+    totals = reduce(lambda x,y: x+y, daily_totals, SiteStats())
 
     chart_urls = {}
     # make a line graph showing impressions
-    impressions = [s.impression_count for s in totals]
+    impressions = [s.impression_count for s in daily_totals]
     chart_urls['imp'] = gen_graph_url(impressions, days, "Total+Daily+Impressions")
 
     # make a line graph showing clicks
-    clicks = [s.click_count for s in totals]
+    clicks = [s.click_count for s in daily_totals]
     chart_urls['clk'] = gen_graph_url(clicks, days, "Total+Daily+Clicks")
 
     # make a line graph showing revenue
-    revenue = [s.revenue for s in totals]
+    revenue = [s.revenue for s in daily_totals]
     chart_urls['rev'] = gen_graph_url(revenue, days, "Total+Revenue")
 
     promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], adgroups)
     guarantee_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee'], adgroups)
     network_campaigns = filter(lambda x: x.campaign.campaign_type in ['network'], adgroups)
-
+    
     help_text = None
     if network_campaigns:
       if not (self.account.adsense_pub_id or self.account.admob_pub_id):
@@ -166,12 +168,14 @@ class AdGroupIndexHandler(RequestHandler):
     return render_to_response(self.request, 
       'advertiser/adgroups.html', 
       {'adgroups':adgroups,
+       'start_date': days[0],
        'app' : app,
        'all_apps' : all_apps,
        'site' : site,
        'all_sites' : all_sites,
        'today': today,
        'chart_urls': chart_urls,
+       'totals':totals,
        'gtee': guarantee_campaigns,
        'promo': promo_campaigns,
        'network': network_campaigns,
@@ -357,7 +361,6 @@ def campaign_edit(request,*args,**kwargs):
 
 class PauseHandler(RequestHandler):
   def post(self):
-    asf
     action = self.request.POST.get("action", "pause")
     updated_campaigns = []
     for id_ in self.request.POST.getlist('id') or []:
@@ -406,6 +409,7 @@ class ShowAdGroupHandler(RequestHandler):
     adgroup = AdGroupQueryManager().get_by_key(adgroup_key)
     # creatives = Creative.gql('where ad_group = :1 and deleted = :2 and ad_type in :3', adgroup, False, ["text", "image", "html"]).fetch(50)
     creatives = CreativeQueryManager().get_creatives(adgroup=adgroup)
+    creatives = list(creatives)
     for c in creatives:
       c.all_stats = SiteStatsQueryManager().get_sitestats_for_days(owner=c, days=days)
       c.stats = reduce(lambda x, y: x+y, c.all_stats, SiteStats())
@@ -424,21 +428,23 @@ class ShowAdGroupHandler(RequestHandler):
     # compute rollups to display at the top
     today = SiteStatsQueryManager().get_sitestats_for_days(owner=adgroup, days=[SiteStats.today()])[0]
     if len(sites) > 0:
-      totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[s.all_stats for s in sites])]
+      all_totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[s.all_stats for s in sites])]
     else:
-      totals = [SiteStats() for d in days]
+      all_totals = [SiteStats() for d in days]
+
+    totals = reduce(lambda x,y: x+y, all_totals, SiteStats())
 
     chart_urls = {}
     # make a line graph showing impressions
-    impressions = [s.impression_count for s in totals]
+    impressions = [s.impression_count for s in all_totals]
     chart_urls['imp'] = gen_graph_url(impressions, days, "Total+Daily+Impressions")
 
     # make a line graph showing clicks
-    clicks = [s.click_count for s in totals]
+    clicks = [s.click_count for s in all_totals]
     chart_urls['clk'] = gen_graph_url(clicks, days, "Total+Daily+Clicks")
 
     # make a line graph showing revenue
-    revenue = [s.revenue for s in totals]
+    revenue = [s.revenue for s in all_totals]
     chart_urls['rev'] = gen_graph_url(revenue, days, "Total+Revenue")
 
     return render_to_response(self.request,'advertiser/adgroup.html', 
@@ -449,7 +455,9 @@ class ShowAdGroupHandler(RequestHandler):
                               'today': today,
                               'totals': totals,
                               'chart_urls': chart_urls,
-                              'sites': sites})
+                              'sites': sites, 
+                              'adunits' : sites, # TODO: migrate over to adunit instead of site
+                              'start_date': days[0]})
     
 @whitelist_login_required   
 def campaign_adgroup_show(request,*args,**kwargs):    

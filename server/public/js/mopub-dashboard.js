@@ -307,6 +307,29 @@ var mopub = mopub || {};
 			}
 		});
 
+		// Search button
+		$('#appForm-search')
+			.button({ icons: { primary: "ui-icon-search" }, disabled: true})
+			.click(function(e) {
+				e.preventDefault();
+				if ($(this).button( "option", "disabled" ))
+				  return;
+				var name = $('#appForm input[name="name"]').val();
+				var script = document.createElement("script");
+				script.src = 'http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/wa/wsSearch?'				
+											 + 'entity=software&limit=10&callback=loadedArtwork&term='+name;
+				var head = document.getElementsByTagName("head")[0];
+				(head || document.body).appendChild( script );
+		});
+		$('#appForm-name').keyup(function() {
+			// Show/hide the app search button
+			var name = $.trim($(this).val());
+			if (name.length)
+				$('#appForm-search').button("enable");
+			else
+				$('#appForm-search').button("disable");
+		});
+
 		/*---------------------------------------/
 		/ Ad Unit Form
 		/---------------------------------------*/
@@ -341,3 +364,64 @@ var mopub = mopub || {};
 
 	});
 })(this.jQuery);
+
+var artwork_json;
+
+function loadedArtwork(json) {
+  artwork_json = json;
+  var resultCount = json['resultCount'];
+  for (var i=0;i<resultCount;i++) {
+    var app = json['results'][i];
+    
+    $('#searchAppStore-results').append($("<div class='adForm-appSearch' />")
+      .append($("<div class='adForm-appSearch-img' />")
+        .append($("<img />")
+          .attr("src",app['artworkUrl60'])
+          .width(40)
+          .height(40)
+        )
+        .append($("<span />"))
+      )
+      .append($("<div class='adForm-appSearch-text' />")
+        .append($("<span />")
+          .append($("<a href=\"#\" onclick=\"selectArtwork("+i+");return false\";>"+app['trackName']+"</a>"))
+          .append("<br />"+app['artistName'])
+        )
+      )
+      .append($("<div class='clear' />"))
+    )
+  }
+  $('#dashboard-searchAppStore-custom-modal').dialog({
+    buttons: [
+			{
+				text: 'Cancel', 
+				click: function() {
+				  $('#searchAppStore-results').html('');
+					$(this).dialog("close");
+				}
+			}
+		],
+		maxHeight: 200
+	});
+}
+
+function selectArtwork(index) {
+  $('#searchAppStore-results').html('');
+  $('#appForm-icon').html('');
+  $('#dashboard-searchAppStore-custom-modal').dialog("close");
+
+  var app = artwork_json['results'][index];
+
+  var form = $('app_form');
+  $('#appForm input[name="name"]').val(app['trackName'])
+  $('#appForm input[name="description"]').val(app['description'])
+  $('#appForm input[name="url"]').val(app['trackViewUrl'])
+  $('#appForm input[name="img_url"]').val(app['artworkUrl60'])
+  
+  $('#appForm-icon').append($("<img />")
+    .attr("src",app['artworkUrl60'])
+    .width(40)
+    .height(40)
+    .append($("<span />"))
+  )
+}

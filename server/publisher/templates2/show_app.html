@@ -23,7 +23,11 @@
                     <dt><label for="appForm-name">App name:</label></dt> 
                     <dd> 
                       <input type="text" class="input-text" name="name" value="{{app.name}}" id="appForm-name" />
-                      <span class="buttonWrap"><a href="#" class="button" id="appForm-search">Search AppStore</a></span> 
+                      <span class="buttonWrap"><a href="#" class="button" id="appForm-search">Search AppStore</a></span>
+                      <div id="dashboard-searchAppStore-custom-modal">
+                        <h2>Search Results</h2>
+                        <div id="searchAppStore-results"></div>
+                      </div>
                     </dd> 
                     <dt class="appForm-platformDependent iphone"> 
                       <label class="iphone" for="appForm-url">iTunes URL:</label> 
@@ -32,6 +36,15 @@
                     <dd class="appForm-platformDependent iphone"> 
                       <input type="url" class="input-text iphone" name="url" value="{{app.url}}" id="appForm-url" placeholder="http://itunes.apple.com/yourapp" /> 
                       <input type="text" class="input-text android" name="package" value="{{app.package}}" id="appForm-package" placeholder="com.company.appname" /> 
+                    </dd>
+                    <dt><label for="appForm-icon">Icon:</label></dt> 
+                    <dd> 
+                      <div id="appForm-icon" class="appData-icon">
+                        <img height="40px" width="40px" src="{% if app.icon_url %}{{app.icon_url}}{% else %}/images/noicon.png{% endif %}"/>
+                      </div>
+                      <a id="appForm-icon-change" href="#">Change</a>
+                      <input id="appForm-icon-upload" type="file" name="img_file" style="display:none;" />
+                      <input type="hidden" name="img_url" value="" />
                     </dd>
                   </dl>
                   <div class="clear" />

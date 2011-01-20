@@ -61,6 +61,13 @@ var mopub = mopub || {};
 				$('#appForm-search').button("disable");
 		});
 		
+		$('#appForm-icon-change').click(function (e) {
+		  e.preventDefault();
+		  $(this).hide();
+      $('#appForm-icon-upload').show();
+      $('#appForm input[name="img_url"]').val('');
+		});
+		
 		/*---------------------------------------/
 		/ Ad Unit Form
 		/---------------------------------------*/
@@ -154,16 +161,4 @@ function selectArtwork(index) {
     .height(40)
     .append($("<span />"))
   )
-/*  
-  var img = document.createElement("img");
-  img.src = app['artworkUrl60'];
-  img.setAttribute('width','40px');
-  img.setAttribute('height','40px');
-  $('icon_holder').appendChild(img);
-  
-  var span = document.createElement("span");
-  span.setAttribute('style','background:url(/images/mask40.png);display:block;position:absolute;'       
-                    +'left:-1px;top:0px;z-index:1;height:42px;width:41px;')
-  $('icon_holder').appendChild(span);
-  */
 }

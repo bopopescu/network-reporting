@@ -246,30 +246,60 @@ class AppCreateHandler(RequestHandler):
     return render_to_response(self.request,'publisher/new_app.html', {"f": f})
 
   def post(self):
-    f = AppForm(data=self.request.POST)
+    app = None
+    if self.request.POST.get("app_key"):
+      app = AppQueryManager().get_by_key(self.request.POST.get("app_key"))
+      f = AppForm(data=self.request.POST, instance=app)
+    else:
+      f = AppForm(data=self.request.POST)
+      
     if f.is_valid():
       app = f.save(commit=False)
       app.account = self.account
-      AppQueryManager().put_apps(app)
-      
       # Store the image
       if not self.request.POST.get("img_url") == "":
         try:
           response = urllib.urlopen(self.request.POST.get("img_url"))
           img = response.read()
           app.icon = db.Blob(img)
-          app.put()
         except:
           pass
       elif self.request.FILES.get("img_file"):
         try:
           icon = images.resize(self.request.FILES.get("img_file").read(), 60, 60)
           app.icon = db.Blob(icon)
-          app.put()
         except:
           pass
 
-      return HttpResponseRedirect(reverse('publisher_app_show',kwargs={'app_key':app.key()}))
+      AppQueryManager().put_apps(app)
+
+      # If we get the adunit information, try to create that too
+      if not self.request.POST.get("adunit_name"):
+        return HttpResponseRedirect(reverse('publisher_app_show',kwargs={'app_key':app.key()}))
+      
+      data = self.request.POST.copy()
+      data['name'] = self.request.POST.get("adunit_name")
+      data['adunit_description'] = self.request.POST.get("adunit_description")
+      sf = SiteForm(data=data)
+      if sf.is_valid():
+        adunit = sf.save(commit=False)
+        adunit.account = self.account
+        adunit.app_key = app
+
+        # update the database
+        AdUnitQueryManager().put_adunits(adunit)
+
+        # update the cache as necessary 
+        # replace=True means don't do anything if not already in the cache
+        CachedQueryManager().cache_delete(adunit)
+
+        # Check if this is the first ad unit for this account
+        # if Site.gql("where account = :1 limit 2", self.account).count() == 1:
+        if len(AdUnitQueryManager().get_adunits(account=self.account,limit=2)) == 1:      
+          add_demo_campaign(adunit)
+        return HttpResponseRedirect(reverse('publisher_generate',kwargs={'adunit_key':adunit.key()}))
+      else:
+        return render_to_response(self.request,'publisher/new_app.html', {"f": f, "app": app, "app_key":app.key()})
     else:
       return render_to_response(self.request,'publisher/new_app.html', {"f": f})
 

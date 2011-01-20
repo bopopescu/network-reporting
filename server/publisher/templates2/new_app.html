@@ -31,7 +31,8 @@
     </div> 
     -->
     
-    <form action="" method="POST" accept-charset="utf-8" id="appForm"> 
+    <form action="" method="POST" accept-charset="utf-8" id="appForm">
+      {% if app_key %}<input type="hidden" name="app_key" value="{{app_key}}"/>{% endif %}
       <fieldset id="appForm-details" class="alt"> 
         <legend>App Details</legend> 
         <p> 
@@ -42,16 +43,18 @@
           <dt>Platform:</dt> 
           <dd> 
             <span class="radios"> 
-              <input type="radio" class="input-radio" name="app_type" value="iphone" id="appForm-platform-iphone" checked="checked" /> <label for="appForm-platform-iphone">iOS</label> 
-              <input type="radio" class="input-radio" name="app_type" value="android" id="appForm-platform-android" /> <label for="appForm-platform-android">Android</label> 
+              <input type="radio" class="input-radio" name="app_type" value="iphone" id="appForm-platform-iphone" {% ifequal f.cleaned_data.app_type 'iphone' %}checked="checked"{% endifequal %}{% if not f.cleaned_data.app_type %}checked="checked"{% endif %} /> <label for="appForm-platform-iphone">iOS</label> 
+              <input type="radio" class="input-radio" name="app_type" value="android" id="appForm-platform-android" {% ifequal f.cleaned_data.app_type 'android' %}checked="checked"{% endifequal %}/> <label for="appForm-platform-android">Android</label> 
             </span> 
           </dd>
-          
           <dt><label for="appForm-name">App name:</label></dt> 
-          <dd> 
-            <input type="text" class="input-text form-error" name="name" value="" id="appForm-name" />
-            <span class="buttonWrap"><a href="#" class="button" id="appForm-search">Search AppStore</a></span> 
-            <div class="form-error-text">Please enter the name of your app.</div> 
+          <dd class="appForm-platformDependent iphone"> 
+            <input type="text" class="input-text" name="name" value="{{f.cleaned_data.name}}" id="appForm-name" />
+            <span class="buttonWrap iphone"><a href="#" class="button" id="appForm-search">Search AppStore</a></span>
+            <div id="dashboard-searchAppStore-custom-modal">
+              <h2>Search Results</h2>
+              <div id="searchAppStore-results"></div>
+            </div>
           </dd> 
           
           <dt class="appForm-platformDependent iphone"> 
@@ -59,8 +62,17 @@
             <label class="android" for="appForm-package">Package name:</label> 
           </dt> 
           <dd class="appForm-platformDependent iphone"> 
-            <input type="url" class="input-text iphone" name="url" value="" id="appForm-url" placeholder="http://itunes.apple.com/yourapp" /> 
-            <input type="text" class="input-text android" name="package" value="" id="appForm-package" placeholder="com.company.appname" /> 
+            <input type="url" class="input-text iphone" name="url" value="{{f.cleaned_data.url}}" id="appForm-url" placeholder="http://itunes.apple.com/yourapp" /> 
+            <input type="text" class="input-text android" name="package" value="{{f.cleaned_data.package}}" id="appForm-package" placeholder="com.company.appname" /> 
+          </dd>
+          
+          <dt><label for="appForm-icon">Icon:</label></dt> 
+          <dd> 
+            <div id="appForm-icon" class="appData-icon">
+              <img height="40px" width="40px" src="/images/noicon.png"/>
+              <div><a href="#">Change</a></div>
+            </div>
+            <input type="hidden" name="img_url" value="">
           </dd>
           
         </dl> 

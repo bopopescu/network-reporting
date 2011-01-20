@@ -187,7 +187,22 @@ var mopub = mopub || {};
 		
 		// set up buttons
 		$('#dashboard-apps-addAppButton').button({ icons: { primary: "ui-icon-circle-plus" } });
-		$('#dashboard-apps-editAppButton').button({ icons: { primary: "ui-icon-wrench" } });
+		$('#dashboard-apps-editAppButton')
+			.button({ icons: { primary: "ui-icon-wrench" } })
+			.click(function(e) {
+				e.preventDefault();
+				$('#dashboard-adunitEditForm').slideDown('fast');
+				$(this).hide();
+		});
+		$('#dashboard-apps-addAdUnitButton')
+			.button({ icons: { primary: "ui-icon-circle-plus" } })
+			.click(function(e) {
+				e.preventDefault();
+				$('#dashboard-adunitAddForm').slideDown('fast', function() {
+				  $('#dashboard-apps-addAdUnitButton').hide();
+				});
+				
+		});
 		$('#dashboard-apps-toggleAllButton')
 			.button({ 
 				icons: { primary: "ui-icon-triangle-2-n-s" } 
@@ -196,6 +211,38 @@ var mopub = mopub || {};
 				e.preventDefault();
 		});
 		
+		$('#adunitEditForm-submit')
+			.button({ 
+				icons: { secondary: "ui-icon-circle-triangle-e" } 
+			})
+			.click(function(e) {
+				e.preventDefault();
+				$('#appForm').submit();
+		});
+		$('#adunitEditForm-cancel')
+			.click(function(e) {
+				e.preventDefault();
+				$('#dashboard-adunitEditForm').slideUp('fast', function() {
+				  $('#dashboard-apps-editAppButton').show();
+				});
+		});
+		
+		$('#adunitAddForm-submit')
+			.button({ 
+				icons: { secondary: "ui-icon-circle-triangle-e" } 
+			})
+			.click(function(e) {
+				e.preventDefault();
+				$('#adunitAddForm').submit();
+		});
+		$('#adunitAddForm-cancel')
+			.click(function(e) {
+				e.preventDefault();
+				$('#dashboard-adunitAddForm').slideUp('fast', function() {
+				  $('#dashboard-apps-addAdUnitButton').show();
+				});
+		});
+
 		// set up showing/hiding of app details
 		$('.appData-details').each(function() {
 			var details = $(this);
@@ -258,6 +305,38 @@ var mopub = mopub || {};
 					$('.appData-details-toggleButton', $(this)).click();
 				});
 			}
+		});
+
+		/*---------------------------------------/
+		/ Ad Unit Form
+		/---------------------------------------*/
+		
+		// Set up format selection UI
+		$('.adForm-formats').each(function() {
+			var container = $(this);
+			$('input[type="radio"]', container).click(function(e) {
+				var radio = $(this);
+				var formatContainer = radio.parents('.adForm-format');
+				
+				$('.adForm-format-image', container).css({ opacity: 0.5 });
+				$('.adForm-format-image', formatContainer).css({ opacity: 1 });
+				
+				if(radio.val() == 'custom') {
+					// $('.adForm-format-details input[type="text"]:first', formatContainer).focus();
+				}
+			}).filter(':checked').click();
+			
+			$('.adForm-format-image', container).click(function(e) {
+				var image = $(this);
+				var formatContainer = image.parents('.adForm-format');
+				$('input[type="radio"]', formatContainer).click();
+			});
+			
+			$('.adForm-format-details input[type="text"]', container).focus(function() {
+				var input = $(this);
+				var formatContainer = input.parents('.adForm-format');
+				$('input[type="radio"]', formatContainer).click();
+			});
 		});
 
 	});

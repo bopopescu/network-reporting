@@ -128,7 +128,7 @@ sub { vertical-align: sub; font-size: smaller; }
 sup { vertical-align: super; font-size: smaller; }
 
 pre { 
-  padding: 15px; 
+  /* padding: 15px; */
   /* www.pathf.com/blogs/2008/05/formatting-quoted-code-in-blog-posts-css21-white-space-pre-wrap/ */
   white-space: pre; /* CSS2 */
   white-space: pre-wrap; /* CSS 2.1 */
@@ -1073,6 +1073,15 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
   text-align: center;
 }
 
+/* Edit options */
+
+#dashboard-searchAppStore-custom-modal,
+#dashboard-adunitEditForm,
+#dashboard-adunitAddForm {
+  display:none;
+}
+
+
 /* Step progress */
 
 .stepProgress {
@@ -1261,6 +1270,34 @@ input.ui-button { padding: 4px 12px 5px 12px; }
 
 .adForm-format-custom .adForm-format-details {
   margin: 5px 0 0 0;
+}
+
+.adForm-appSearch {
+  margin: 10px;
+}
+
+.adForm-appSearch-img {
+  float:left;
+  position:relative;
+}
+
+.adForm-appSearch-img span {
+  background:url(/images/mask40.png);
+  display:block;position:absolute;
+  left:-1px;
+  top:0px;
+  z-index:1;
+  height:42px;
+  width:41px;
+}
+
+.adForm-appSearch-text {
+  margin-left:50px;
+  margin-top:10px;
+}
+
+.adForm-appSearch-text span {
+  font-size:larger;
 }
 
 /****************************************

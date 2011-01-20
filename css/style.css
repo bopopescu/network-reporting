@@ -343,10 +343,6 @@ header nav .active a {
   height: 90px;
 }
 
-#mopub-home #nav1 li.active {
-  background-image: url(../images/layout/header-pointer-home.gif);
-}
-
 .mopub-public #nav1 a {
   margin: 33px 0 0 0;
   padding: 7px 14px 0 14px;
@@ -1129,6 +1125,31 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
   background-image: url(../images/ui/ui-icons-progress.png); 
 }
 
+/* Horizontal rule */
+
+.hr {
+  clear: both;
+  margin: 30px 0 0 0;
+  padding: 30px 0 0 0;
+  border-top: 2px solid #f5f5f5;
+}
+
+/* Public pages call to action */
+
+#mopub-public-cta {
+  margin: 5px 0 15px 0;
+  border-top: 2px solid #f5f5f5;
+  padding: 40px 0 0 0;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+}
+
+#mopub-public-cta .sep {
+  padding: 0 7px 0 9px;
+  font-weight: 800;
+}
+
 /*---------------------------------------/
 / jQuery UI Overrides
 /---------------------------------------*/
@@ -1151,11 +1172,17 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
 .ui-button-text-icons .ui-button-text { padding-left: 25px; padding-right: 25px; }
 input.ui-button { padding: 4px 12px 5px 12px; }
 
-/* Small button (custom) */
-.smallButton .ui-button-text {
+/* Small and big buttons (custom) */
+.button-small .ui-button-text {
   font-size: 11px;
   padding-top: 2px;
   padding-bottom: 3px;
+}
+
+.button-big .ui-button-text {
+  font-size: 18px;
+  font-weight: 600;
+  padding: 7px 15px 11px 15px;
 }
 
 /* Interaction states */
@@ -1295,6 +1322,142 @@ input.ui-button { padding: 4px 12px 5px 12px; }
 
 .adForm-format-custom .adForm-format-details {
   margin: 5px 0 0 0;
+}
+
+/* Homepage */
+
+#mopub-home #nav1 li.active {
+  background-image: url(../images/layout/header-pointer-home.gif);
+}
+
+#mopub-home #titlebar {
+  position: relative;
+  border-bottom: 4px solid #e1edf5;
+  background: #ebf3f9 url(../images/home/home-titlebar-bg.png) repeat-x top left;
+  padding: 50px 0 65px 0;
+  height: auto;
+}
+
+#mopub-home h1#home-headline {
+  margin: 0 0 30px 0;
+  padding: 0 0 30px 0;
+  font-size: 44px;
+  font-weight: 700;
+  font-style: italic;
+  color: #61a600;
+  text-align: center;
+  text-shadow: #fff 0 1px 0;
+  background: url(../images/home/home-titlebar-sep.png) no-repeat bottom left;
+}
+
+#mopub-home #home-intro {
+  width: 620px;
+  color: #6c7980;
+  font-size: 18px;
+  font-weight: 300;
+  line-height: 24px;
+}
+
+#mopub-home #home-intro p {
+  margin: 0;
+  line-height: 24px;
+}
+
+#mopub-home #home-intro strong {
+  font-weight: 400;
+  color: #5c6b73;
+}
+
+#mopub-home #home-cta {
+  float: right;
+  padding: 25px 0 0 25px;
+  width: 265px;
+  height: 65px;
+  background: #e9f1f7 url(../images/home/home-cta-bg.png) no-repeat top left;
+  -webkit-border-radius: 15px;
+  -moz-border-radius: 15px;
+  border-radius: 15px;
+  font-size: 18px;
+}
+
+#mopub-home #home-cta .buttonWrap {
+  margin-right: 15px;
+  background: #dceaf2;
+}
+
+#home-banner {
+  position: absolute;
+  bottom: -15px;
+  left: 0;
+  width: 100%;
+  font-size: 17px;
+  line-height: 17px;
+  font-weight: 400;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: #d97e00 0 1px 0;
+  text-align: center;
+}
+
+#home-banner .inner1 {
+  display: inline-block;
+  padding: 0 0 0 15px;
+  background: url(../images/home/home-sticker-bg.png) no-repeat 0 0;
+}
+
+#home-banner .inner2 {
+  display: inline-block;
+  padding: 0 15px 0 0;
+  background: url(../images/home/home-sticker-bg.png) no-repeat 100% -74px;
+}
+
+#home-banner .inner3 {
+  display: inline-block;
+  padding: 9px 10px 0 10px;
+  height: 28px;
+  background: url(../images/home/home-sticker-bg.png) repeat-x 0 -37px;
+}
+
+#mopub-home #content {
+  padding-top: 45px;
+}
+
+#home-features {
+  float: left;
+}
+
+.home-feature {
+  float: left;
+  margin: 0 40px 0 0;
+  width: 290px;
+  color: #555;
+}
+
+#home-feature-3 {
+  margin: 0;
+}
+
+.home-feature-graphic {
+  display: block;
+  margin: 0 0 20px 0;
+}
+
+.home-feature h3 {
+  margin: 0 0 7px 0;
+  color: #444;
+}
+
+.home-feature p {
+  margin: 0 0 10px 0;
+}
+
+.home-feature ul {
+  margin: 0;
+  padding: 0 0 0 1em;
+}
+
+.home-feature li {
+  margin: 0 0 5px 0;
 }
 
 /****************************************

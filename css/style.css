@@ -282,6 +282,7 @@ header {
 header nav ul {
   display: inline;
   margin: 0;
+  padding: 0;
 }
 
 header nav ul li {
@@ -440,10 +441,14 @@ header nav .active a {
 
 #content {
   padding: 35px 0 235px 0;
+  float: left;
+  width: 100%;
 }
 
 section {
+  float: left;
   margin: 0 0 30px 0;
+  width: 100%;
 }
 
 .separated {
@@ -460,8 +465,32 @@ section {
   border-radius: 10px;
 }
 
+section.offset {
+  width: 900px;
+}
+
 .content-main {
-  width: 720px;
+  float: left;
+  width: 680px;
+}
+
+.content-main section {
+  float: none;
+  width: auto;
+}
+
+aside {
+  clear: right;
+  float: right;
+  margin: 0 0 30px 0;
+  padding: 20px;
+  width: 195px;
+  background: #f7f7f7;
+  color: #737373;
+  font-size: 13px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
 }
 
 /* Footer */
@@ -524,8 +553,30 @@ footer .sep {
 /* Text */
 
 p {
+  margin: 0 0 1.33em 0;
   line-height: 1.33em;
-  margin: 0 0 20px 0;
+}
+
+ul, ol {
+  margin: 0 0 1.33em 0;
+  line-height: 1.33em;
+  padding: 0 0 0 30px;
+}
+
+li {
+  margin: 0 0 10px 0;
+}
+
+blockquote {
+  margin: 30px;
+}
+
+aside ul, aside ol {
+  padding-left: 20px;
+}
+
+aside li {
+  margin: 0 0 7px 0;
 }
 
 /* Headings */
@@ -538,6 +589,16 @@ h2 {
 h3 {
   margin: 0 0 15px 0;
   font-size: 18px;
+}
+
+h4 {
+  margin: 0 0 15px 0;
+  font-size: 16px;
+}
+
+h5 {
+  margin: 0 0 10px 0;
+  font-size: 14px;
 }
 
 /* Links */
@@ -558,6 +619,29 @@ a.mutedLink, a.mutedLink:active, a.mutedLink:visited {
 
 a.mutedLink:hover {
   color: #e57300;
+}
+
+/* Simple table */
+
+.simpleTable {
+  margin: 0 0 15px 0;
+}
+
+.simpleTable th, .simpleTable td {
+  padding: 5px 10px 5px 5px;
+  text-align: top;
+}
+
+.simpleTable thead th {
+  font-size: 10px;
+  font-weight: 300;
+  text-transform: uppercase;
+  color: #555;
+  vertical-align: bottom;
+}
+
+.simpleTable tbody th {
+  text-align: right;
 }
 
 /* Other */
@@ -680,7 +764,7 @@ fieldset h2 {
 dl.formFields {
   float: left;
   margin: -15px 0 0 0;
-  width: 670px;
+  width: 630px;
 }
 
 .formFields dt {
@@ -700,7 +784,7 @@ dl.formFields {
   display: inline-block;
   margin: 15px 0 0 0;
   padding: 5px 0;
-  width: 480px;
+  width: 440px;
 }
 
 .formFields .radios {
@@ -1259,6 +1343,10 @@ input.ui-button { padding: 4px 12px 5px 12px; }
   height: 210px;
 }
 
+#dashboard-apps h2 {
+  margin: 0;
+}
+
 /* App and ad setup forms */
 
 .ios .android, 
@@ -1373,7 +1461,7 @@ input.ui-button { padding: 4px 12px 5px 12px; }
   padding: 25px 0 0 25px;
   width: 265px;
   height: 65px;
-  background: #e9f1f7 url(../images/home/home-cta-bg.png) no-repeat top left;
+  background: #e9f1f7 url(../images/home/home-cta-bg.png) repeat-x top left;
   -webkit-border-radius: 15px;
   -moz-border-radius: 15px;
   border-radius: 15px;

@@ -187,7 +187,22 @@ var mopub = mopub || {};
 		
 		// set up buttons
 		$('#dashboard-apps-addAppButton').button({ icons: { primary: "ui-icon-circle-plus" } });
-		$('#dashboard-apps-editAppButton').button({ icons: { primary: "ui-icon-wrench" } });
+		$('#dashboard-apps-editAppButton')
+			.button({ icons: { primary: "ui-icon-wrench" } })
+			.click(function(e) {
+				e.preventDefault();
+				$('#dashboard-adunitEditForm').slideDown('fast');
+				$(this).hide();
+		});
+		$('#dashboard-apps-addAdUnitButton')
+			.button({ icons: { primary: "ui-icon-circle-plus" } })
+			.click(function(e) {
+				e.preventDefault();
+				$('#dashboard-adunitAddForm').slideDown('fast', function() {
+				  $('#dashboard-apps-addAdUnitButton').hide();
+				});
+				
+		});
 		$('#dashboard-apps-toggleAllButton')
 			.button({ 
 				icons: { primary: "ui-icon-triangle-2-n-s" } 
@@ -196,6 +211,38 @@ var mopub = mopub || {};
 				e.preventDefault();
 		});
 		
+		$('#adunitEditForm-submit')
+			.button({ 
+				icons: { secondary: "ui-icon-circle-triangle-e" } 
+			})
+			.click(function(e) {
+				e.preventDefault();
+				$('#appForm').submit();
+		});
+		$('#adunitEditForm-cancel')
+			.click(function(e) {
+				e.preventDefault();
+				$('#dashboard-adunitEditForm').slideUp('fast', function() {
+				  $('#dashboard-apps-editAppButton').show();
+				});
+		});
+		
+		$('#adunitAddForm-submit')
+			.button({ 
+				icons: { secondary: "ui-icon-circle-triangle-e" } 
+			})
+			.click(function(e) {
+				e.preventDefault();
+				$('#adunitAddForm').submit();
+		});
+		$('#adunitAddForm-cancel')
+			.click(function(e) {
+				e.preventDefault();
+				$('#dashboard-adunitAddForm').slideUp('fast', function() {
+				  $('#dashboard-apps-addAdUnitButton').show();
+				});
+		});
+
 		// set up showing/hiding of app details
 		$('.appData-details').each(function() {
 			var details = $(this);
@@ -260,5 +307,140 @@ var mopub = mopub || {};
 			}
 		});
 
+    // Search button
+    $('#appForm-search')
+      .button({ icons: { primary: "ui-icon-search" }})
+      .click(function(e) {
+        e.preventDefault();
+        if ($(this).button( "option", "disabled" ))
+          return;
+        $('#searchAppStore-results').append("<img src='/images/loading2.gif' />")
+          .append("Loading results...");
+
+        $('#dashboard-searchAppStore-custom-modal').dialog({
+          buttons: [
+            {
+              text: 'Cancel', 
+              click: function() {
+                $('#searchAppStore-results').html('');
+                $(this).dialog("close");
+              }
+            }
+          ]
+        });
+        var name = $('#appForm input[name="name"]').val();
+        var script = document.createElement("script");
+        script.src = 'http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/wa/wsSearch?'       
+                       + 'entity=software&limit=10&callback=loadedArtwork&term='+name;
+        var head = document.getElementsByTagName("head")[0];
+        (head || document.body).appendChild( script );
+    });
+		if ($('#appForm-name').val() == '') {
+		  $('#appForm-search').button("disable");
+		}
+		$('#appForm-name').keyup(function() {
+			// Show/hide the app search button
+			var name = $.trim($(this).val());
+			if (name.length)
+				$('#appForm-search').button("enable");
+			else
+				$('#appForm-search').button("disable");
+		});
+
+		/*---------------------------------------/
+		/ Ad Unit Form
+		/---------------------------------------*/
+		
+		// Set up format selection UI
+		$('.adForm-formats').each(function() {
+			var container = $(this);
+			$('input[type="radio"]', container).click(function(e) {
+				var radio = $(this);
+				var formatContainer = radio.parents('.adForm-format');
+				
+				$('.adForm-format-image', container).css({ opacity: 0.5 });
+				$('.adForm-format-image', formatContainer).css({ opacity: 1 });
+				
+				if(radio.val() == 'custom') {
+					// $('.adForm-format-details input[type="text"]:first', formatContainer).focus();
+				}
+			}).filter(':checked').click();
+			
+			$('.adForm-format-image', container).click(function(e) {
+				var image = $(this);
+				var formatContainer = image.parents('.adForm-format');
+				$('input[type="radio"]', formatContainer).click();
+			});
+			
+			$('.adForm-format-details input[type="text"]', container).focus(function() {
+				var input = $(this);
+				var formatContainer = input.parents('.adForm-format');
+				$('input[type="radio"]', formatContainer).click();
+			});
+		});
+
 	});
 })(this.jQuery);
+
+
+var artwork_json;
+
+function loadedArtwork(json) {
+  if (!$('#dashboard-searchAppStore-custom-modal').dialog("isOpen"))
+    return;
+
+  $('#searchAppStore-results').html('');
+
+  artwork_json = json;
+  var resultCount = json['resultCount'];
+  if (resultCount == 0) {
+    $('#searchAppStore-results').append("<div class='adForm-appSearch-text' />")
+      .append("No results found");
+    return;
+  }
+  for (var i=0;i<resultCount;i++) {
+    var app = json['results'][i];
+    
+    $('#searchAppStore-results').append($("<div class='adForm-appSearch' />")
+      .append($("<div class='adForm-appSearch-img' />")
+        .append($("<img />")
+          .attr("src",app['artworkUrl60'])
+          .width(40)
+          .height(40)
+        )
+        .append($("<span />"))
+      )
+      .append($("<div class='adForm-appSearch-text' />")
+        .append($("<span />")
+          .append($("<a href=\"#\" onclick=\"selectArtwork("+i+");return false\";>"+app['trackName']+"</a>"))
+          .append("<br />"+app['artistName'])
+        )
+      )
+      .append($("<div class='clear' />"))
+    )
+  }
+  
+  $('#dashboard-searchAppStore-custom-modal').dialog("close");
+  $('#dashboard-searchAppStore-custom-modal').dialog("open");
+}
+
+function selectArtwork(index) {
+  $('#searchAppStore-results').html('');
+  $('#appForm-icon').html('');
+  $('#dashboard-searchAppStore-custom-modal').dialog("close");
+
+  var app = artwork_json['results'][index];
+
+  var form = $('app_form');
+  $('#appForm input[name="name"]').val(app['trackName'])
+  $('#appForm input[name="description"]').val(app['description'])
+  $('#appForm input[name="url"]').val(app['trackViewUrl'])
+  $('#appForm input[name="img_url"]').val(app['artworkUrl60'])
+  
+  $('#appForm-icon').append($("<img />")
+    .attr("src",app['artworkUrl60'])
+    .width(40)
+    .height(40)
+    .append($("<span />"))
+  )
+}

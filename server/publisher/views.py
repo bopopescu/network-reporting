@@ -105,19 +105,7 @@ class AppIndexHandler(RequestHandler):
     else:
       days = SiteStats.lastdays(self.date_range)
 
-    # Set the range of days that we sum for the list view
-    # TODO: Remove this once we move to the new UI completely
-    try:
-      rng = self.request.GET.get('range').partition(':')
-      r_end = int(rng[2])
-      r_start = int(rng[0])
-    except:
-      r_start = 0
-      r_end = self.date_range
-
-    # apps = App.gql("where account = :1 and deleted = :2", self.account, False).fetch(50)
     apps = AppQueryManager().get_apps(self.account)
-    today = SiteStats()
     if len(apps) == 0:
       return HttpResponseRedirect(reverse('publisher_app_create'))
 
@@ -133,67 +121,25 @@ class AppIndexHandler(RequestHandler):
       if len(a.adunits) > 0:
         for adunit in a.adunits:
           adunit.all_stats = SiteStatsQueryManager().get_sitestats_for_days(site=adunit,days=days)
-          adunit.stats = reduce(lambda x, y: x+y, adunit.all_stats[r_start:r_end], SiteStats())
+          adunit.stats = reduce(lambda x, y: x+y, adunit.all_stats, SiteStats())
           a.stats += adunit.stats
         a.totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[au.all_stats for au in a.adunits])]
         a.adunits = sorted(a.adunits, key=lambda adunit: adunit.stats.request_count, reverse=True)
       else:
         a.totals = [SiteStats() for d in days]
     
+      # TODO: This seems broken.  Plus, we are calculating app_stats above manually.
+      # Should probably remove the above calculation and just use this
       app_stats = SiteStatsQueryManager().get_sitestats_for_days(owner=a,days=days)
       # TODO: Dedupe this by having an account level rollup
       ## assigns the user count of the app from the app stat rollup
       for stat,app_stat in zip(a.totals,app_stats):
-        stat.unique_user_count = app_stat.unique_user_count        
-        
-    daily_totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[a.totals for a in apps])]
-    today = daily_totals[-1]
-    yesterday = daily_totals[-2]
-    
-    totals = reduce(lambda x, y: x+y, daily_totals, SiteStats())
-
-    chart_urls = {}
-    # make a line graph showing impressions
-    impressions = [s.request_count for s in daily_totals]
-    chart_urls['imp'] = gen_chart_url(impressions, days, "Total+Daily+Requests")
-    
-    # make a line graph showing clicks
-    clicks = [s.click_count for s in daily_totals]
-    chart_urls['clk'] = gen_chart_url(clicks, days, "Total+Daily+Clicks")
-
-    # make a line graph showing revenue
-    revenue = [s.revenue for s in daily_totals]
-    chart_urls['rev'] = gen_chart_url(revenue, days, "Total+Revenue")
-    
-    # make a line graph showing users
-    unique_users = [s.unique_user_count for s in daily_totals]
-    chart_urls['users'] = gen_chart_url(unique_users, days, "Total+Unique Users")
-
-    # do a bar graph showing contribution of each site to impression count
-    impressions_by_app = []
-    clicks_by_app = []
-    users_by_app = []
-    pie_chart_urls = {}
-    for a in apps:
-      impressions_by_app.append({"app": a, "total": a.stats.request_count})
-      clicks_by_app.append({"app": a, "total": a.stats.click_count})
-      users_by_app.append({"app": a, "total": a.stats.unique_user_count})
-    impressions_by_app.sort(lambda x,y: cmp(y["total"], x["total"])) 
-    clicks_by_app.sort(lambda x,y: cmp(y["total"], x["total"])) 
-    users_by_app.sort(lambda x,y: cmp(y["total"], x["total"])) 
-    pie_chart_urls['imp'] = gen_pie_chart_url(impressions_by_app, "Contribution+by+App")
-    pie_chart_urls['clk'] = gen_pie_chart_url(clicks_by_app, "Contribution+by+App")
-    pie_chart_urls['users'] = gen_pie_chart_url(users_by_app, "Contribution+by+App")
+        stat.unique_user_count = app_stat.unique_user_count
 
     return render_to_response(self.request,'publisher/index.html', 
       {'apps': sorted(apps, key=lambda app: app.stats.request_count, reverse=True),
        'start_date': days[0],
-       'date_range': self.date_range,
-       'totals': totals,
-       'today': today,
-       'yesterday': yesterday,
-       'chart_urls': chart_urls,
-       'pie_chart_urls': pie_chart_urls,
+       'totals': reduce(lambda x, y: x+y.stats, apps, SiteStats()),
        'account': self.account})
 
 @whitelist_login_required     
@@ -246,30 +192,60 @@ class AppCreateHandler(RequestHandler):
     return render_to_response(self.request,'publisher/new_app.html', {"f": f})
 
   def post(self):
-    f = AppForm(data=self.request.POST)
+    app = None
+    if self.request.POST.get("app_key"):
+      app = AppQueryManager().get_by_key(self.request.POST.get("app_key"))
+      f = AppForm(data=self.request.POST, instance=app)
+    else:
+      f = AppForm(data=self.request.POST)
+      
     if f.is_valid():
       app = f.save(commit=False)
       app.account = self.account
-      AppQueryManager().put_apps(app)
-      
       # Store the image
       if not self.request.POST.get("img_url") == "":
         try:
           response = urllib.urlopen(self.request.POST.get("img_url"))
           img = response.read()
           app.icon = db.Blob(img)
-          app.put()
         except:
           pass
       elif self.request.FILES.get("img_file"):
         try:
           icon = images.resize(self.request.FILES.get("img_file").read(), 60, 60)
           app.icon = db.Blob(icon)
-          app.put()
         except:
           pass
 
-      return HttpResponseRedirect(reverse('publisher_app_show',kwargs={'app_key':app.key()}))
+      AppQueryManager().put_apps(app)
+
+      # If we get the adunit information, try to create that too
+      if not self.request.POST.get("adunit_name"):
+        return HttpResponseRedirect(reverse('publisher_app_show',kwargs={'app_key':app.key()}))
+      
+      data = self.request.POST.copy()
+      data['name'] = self.request.POST.get("adunit_name")
+      data['adunit_description'] = self.request.POST.get("adunit_description")
+      sf = SiteForm(data=data)
+      if sf.is_valid():
+        adunit = sf.save(commit=False)
+        adunit.account = self.account
+        adunit.app_key = app
+
+        # update the database
+        AdUnitQueryManager().put_adunits(adunit)
+
+        # update the cache as necessary 
+        # replace=True means don't do anything if not already in the cache
+        CachedQueryManager().cache_delete(adunit)
+
+        # Check if this is the first ad unit for this account
+        # if Site.gql("where account = :1 limit 2", self.account).count() == 1:
+        if len(AdUnitQueryManager().get_adunits(account=self.account,limit=2)) == 1:      
+          add_demo_campaign(adunit)
+        return HttpResponseRedirect(reverse('publisher_generate',kwargs={'adunit_key':adunit.key()}))
+      else:
+        return render_to_response(self.request,'publisher/new_app.html', {"f": f, "app": app, "app_key":app.key()})
     else:
       return render_to_response(self.request,'publisher/new_app.html', {"f": f})
 
@@ -332,34 +308,20 @@ class ShowAppHandler(RequestHandler):
       days = SiteStats.get_days(self.start_date, self.date_range)
     else:
       days = SiteStats.lastdays(self.date_range)
-    
-    # Set the range of days that we sum for the list view
-    try:
-      rng = self.request.GET.get('range').partition(':')
-      r_end = int(rng[2])
-      r_start = int(rng[0])
-    except:
-      r_start = 0
-      r_end = self.date_range
-   
+
     # load the site
     a = AppQueryManager().get_by_key(app_key)
     if a.account.key() != self.account.key():
       raise Http404
 
-    # load the ad units
-    # TODO: This is duplicate code, move to separate function
     a.stats = SiteStats()
-    today = SiteStats()
-    # a.sites = Site.gql("where app_key = :1 and deleted = :2", a, False).fetch(50)
     a.adunits = AdUnitQueryManager().get_adunits(app=a)
     
     # organize impressions by days
     if len(a.adunits) > 0:
       for adunit in a.adunits:
-        # s.all_stats = SiteStats.sitestats_for_days(s, days)
         adunit.all_stats = SiteStatsQueryManager().get_sitestats_for_days(site=adunit,days=days)
-        adunit.stats = reduce(lambda x, y: x+y, adunit.all_stats[r_start:r_end], SiteStats())
+        adunit.stats = reduce(lambda x, y: x+y, adunit.all_stats, SiteStats())
         a.stats += adunit.stats
       totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[au.all_stats for au in a.adunits])]
     else:
@@ -367,53 +329,11 @@ class ShowAppHandler(RequestHandler):
       
     a.adunits = sorted(a.adunits, key=lambda adunit: adunit.stats.request_count, reverse=True)
       
-    # app_stats = SiteStats.stats_for_days(a,days)
+    # TODO: We are calculating app-level totals twice
     app_stats = SiteStatsQueryManager().get_sitestats_for_days(owner=a,days=days)
     # set the apps unique user count from the app stats rollup
     for stat,app_stat in zip(totals,app_stats):
       stat.unique_user_count = app_stat.unique_user_count
-      
-    # today is the latest day  
-    today = totals[-1] 
-    yesterday = totals[-2] 
-        
-    chart_urls = {}
-    # make a line graph showing impressions
-    impressions = [s.request_count for s in totals]
-    chart_urls['imp'] = gen_chart_url(impressions, days, "Total+Daily+Impressions")
-  
-    # make a line graph showing clicks
-    clicks = [s.click_count for s in totals]
-    chart_urls['clk'] = gen_chart_url(clicks, days, "Total+Daily+Clicks")
-  
-    # make a line graph showing revenue
-    revenue = [s.revenue for s in totals]
-    chart_urls['rev'] = gen_chart_url(revenue, days, "Total+Revenue")
-    
-    # make a line graph showing users
-    unique_users = [s.unique_user_count for s in totals]
-    chart_urls['users'] = gen_chart_url(unique_users, days, "Total+Unique Users")
-    
-
-    # do a bar graph showing contribution of each site to impression count
-    pie_chart_urls = {}
-    if len(a.adunits) > 0:
-      impressions_by_site = []
-      clicks_by_site = []
-      users_by_site = []
-      for adunit in a.adunits:
-        impressions_by_site.append({"app": adunit, "total": adunit.stats.request_count})
-        clicks_by_site.append({"app": adunit, "total": adunit.stats.click_count})
-        users_by_site.append({"app": adunit, "total": adunit.stats.unique_user_count})
-      impressions_by_site.sort(lambda x,y: cmp(y["total"], x["total"])) 
-      clicks_by_site.sort(lambda x,y: cmp(y["total"], x["total"])) 
-      users_by_site.sort(lambda x,y: cmp(y["total"], x["total"])) 
-      pie_chart_urls['imp'] = gen_pie_chart_url(impressions_by_site, "Contribution+by+Ad+Unit")
-      pie_chart_urls['clk'] = gen_pie_chart_url(clicks_by_site, "Contribution+by+Ad+Unit")
-      pie_chart_urls['users'] = gen_pie_chart_url(users_by_site, "Contribution+by+Ad+Unit")
-    else:
-      pie_chart_urls['imp'] = ""
-      pie_chart_urls['clk'] = ""
 
     help_text = 'Create an Ad Unit below' if len(a.adunits) == 0 else None
     
@@ -423,17 +343,14 @@ class ShowAppHandler(RequestHandler):
     return render_to_response(self.request,'publisher/show_app.html', 
         {'app': a,    
          'start_date': days[0],
-         'date_range': self.date_range,
-         'today': today,
-         'yesterday': yesterday,
-         'chart_urls': chart_urls,
-         'pie_chart_urls': pie_chart_urls,
          'account': self.account,
          'helptext': help_text})
 
     # write response
-    return render_to_response(self.request,'publisher/show_app.html', {'app':app, 'sites':sites,
-      'account':self.account})
+    return render_to_response(self.request,'publisher/show_app.html',
+      {'app':app,
+       'sites':sites,
+       'account':self.account})
   
 @whitelist_login_required
 def app_show(request,*args,**kwargs):
@@ -452,83 +369,24 @@ class AdUnitShowHandler(RequestHandler):
     else:
       days = SiteStats.lastdays(self.date_range)
 
-    # Set the range of days that we sum for the list view
-    try:
-      r = self.request.GET.get('range').partition(':')
-      r_end = int(r[2])
-      r_start = int(r[0])
-    except:
-      r_start = 0
-      r_end = self.date_range
-      
-    # site.all_stats = SiteStats.sitestats_for_days(site, days)
     adunit.all_stats = SiteStatsQueryManager().get_sitestats_for_days(site=adunit,days=days)
     for i in range(len(days)):
       adunit.all_stats[i].date = days[i]
 
     adunit.stats = reduce(lambda x, y: x+y, adunit.all_stats, SiteStats())
-    
+
     # Get all of the ad groups for this site
     adunit.adgroups = AdGroupQueryManager().get_adgroups(adunit=adunit)
     adunit.adgroups = sorted(adunit.adgroups, lambda x,y: cmp(y.bid, x.bid))
     for ag in adunit.adgroups:
-      # ag.all_stats = SiteStats.stats_for_days_with_qualifier(ag, site, days[r_start:r_end])
-      ag.all_stats = SiteStatsQueryManager().get_sitestats_for_days(site=adunit,owner=ag,days=days[r_start:r_end])
+      ag.all_stats = SiteStatsQueryManager().get_sitestats_for_days(site=adunit,owner=ag,days=days)
       ag.stats = reduce(lambda x, y: x+y, ag.all_stats, SiteStats())
       
-    # chart
-    chart_urls = {}
-    
-    impressions = [s.request_count for s in adunit.all_stats]
-    chart_urls['imp'] = gen_chart_url(impressions, days, "Total+Daily+Requests")
-    
-    # make a line graph showing clicks
-    clicks = [s.click_count for s in adunit.all_stats]
-    chart_urls['clk'] = gen_chart_url(clicks, days, "Total+Daily+Clicks")
-
-    # make a line graph showing revenue
-    revenue = [s.revenue for s in adunit.all_stats]
-    chart_urls['rev'] = gen_chart_url(revenue, days, "Total+Revenue")
-    
-    # make a line graph showing users
-    unique_users = [s.unique_user_count for s in adunit.all_stats]
-    chart_urls['users'] = gen_chart_url(unique_users, days, "Total+Unique Users")
-
-    # totals
-    today = adunit.all_stats[-1]
-    yesterday = adunit.all_stats[-2]
-    
-    # do a bar graph showing contribution of each site to impression count
-    pie_chart_urls = {}
-    if len(adunit.adgroups) > 0:
-      impressions_by_ag = []
-      clicks_by_ag = []
-      users_by_ag = []
-      for ag in adunit.adgroups:
-        impressions_by_ag.append({"app": ag, "total": ag.stats.impression_count})
-        clicks_by_ag.append({"app": ag, "total": ag.stats.click_count})
-        users_by_ag.append({"app": ag, "total": ag.stats.unique_user_count})
-      impressions_by_ag.sort(lambda x,y: cmp(y["total"], x["total"])) 
-      clicks_by_ag.sort(lambda x,y: cmp(y["total"], x["total"])) 
-      users_by_ag.sort(lambda x,y: cmp(y["total"], x["total"])) 
-      pie_chart_urls['imp'] = gen_pie_chart_url(impressions_by_ag, "Contribution+by+Ad+Group")
-      pie_chart_urls['clk'] = gen_pie_chart_url(clicks_by_ag, "Contribution+by+Ad+Group")
-      pie_chart_urls['users'] = gen_pie_chart_url(users_by_ag, "Contribution+by+Ad+Group")
-    else:
-      pie_chart_urls['imp'] = ""
-      pie_chart_urls['clk'] = ""
-      pie_chart_urls['users'] = ""
-    
     # write response
     return render_to_response(self.request,'publisher/show.html', 
         {'site':adunit,
          'start_date': days[0],
-         'date_range': self.date_range,
-         'today': today,
-         'yesterday': yesterday,
          'account':self.account, 
-         'chart_urls': chart_urls,
-         'pie_chart_urls': pie_chart_urls,
          'days': days})
   
 @whitelist_login_required
@@ -551,27 +409,24 @@ class AppUpdateHandler(RequestHandler):
     if a.account.user == self.account.user:
       f.save(commit=False)
 
-      AppQueryManager().put_apps(a)
-      
       # Store the image
       if not self.request.POST.get("img_url") == "":
         try:
           response = urllib.urlopen(self.request.POST.get("img_url"))
           img = response.read()
           a.icon = db.Blob(img)
-          a.put()
         except:
           pass
       elif self.request.FILES.get("img_file"):
         try:
           icon = images.resize(self.request.FILES.get("img_file").read(), 60, 60)
           a.icon = db.Blob(icon)
-          a.put()
         except:
           pass
-          
-    return HttpResponseRedirect(reverse('publisher_app_show')+'?id=%s'%a.key())
-  
+
+      AppQueryManager().put_apps(a)
+
+    return HttpResponseRedirect(reverse('publisher_app_show',kwargs={'app_key':a.key()}))
 
 @whitelist_login_required
 def app_update(request,*args,**kwargs):

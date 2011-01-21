@@ -17,6 +17,7 @@ class App(db.Model):
   app_type = db.StringProperty(required=True, default="iphone", choices=["iphone", "android", "ipad"])
   description = db.TextProperty()
   url = db.StringProperty()
+  package = db.StringProperty()
   
   icon = db.BlobProperty()
   

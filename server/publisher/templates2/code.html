@@ -1,0 +1,85 @@
+{% extends 'publisher/base.html' %}
+{% load filters %}
+{% block extraScripts %}<script src="/js/mopub-setup.js"></script>{% endblock extraScripts %}
+{% block pageTitle %}<a href="{% url publisher_adunit_show adunit_key=site.key %}">{{site.name}}</a> code snippet{% endblock pageTitle %}{% block dateButtons %}{% endblock dateButtons %}
+{% block titleBarRight %}{% endblock titleBarRight %}
+{% block messageCenter %}{% endblock messageCenter %}
+
+{% block content %}
+<section> 
+  <div class="content-main"> 
+    <h2>Ad Unit ID</h2>
+    <div class="alertMessage">
+      <code>
+        <pre>
+          {{site.key}}
+        </pre>
+      </code>
+    </div>  
+    <h2>Code Integration</h2>
+    <ol>
+      <li>
+        <p>
+          You will need to install the MoPub SDK first. If you have not done so, see the <a href="http://code.google.com/p/mopub/wiki/GettingStarted">MoPub Getting Started instructions</a> on Google Code.
+        </p>
+      </li>
+{% ifequal site.app_key.app_type "iphone" %}
+      <li>
+        <p>
+          Add the following code to your view's <code>viewDidLoad</code> method (or another suitable place):
+        </p>
+        <div class="alertMessage">
+          <code>
+            <pre>
+              AdController* adC = [[AdController alloc] initWithFormat:AdControllerFormat320x50 
+                                                              adUnitId:@"<b>{{site.key}}</b>" 
+                                                  parentViewController:self];
+              adC.keywords = @"<i>keywords</i>";	// optional keywords
+              [self.view addSubview:adC.view];
+            </pre>
+          </code>
+        </div>
+      </li>
+{% endifequal %}
+{% ifequal site.app_key.app_type "android" %}
+      <li>
+        <p>
+          Add the following XML block to your layout definition (eg. main.xml):
+        </p>
+        <div class="alertMessage">
+          <code>
+            <pre>
+            &lt;com.mopub.mobileads.MoPubView
+              android:id="@+id/adview"
+              android:layout_width="fill_parent"
+              android:layout_height="50px"/>
+            </pre>
+          </code>
+        </div>
+      </li>
+      <li>
+        <p>
+          Add the following code snippet in your Activity's onCreate() instance (or another suitable place):
+        </p>
+        <div class="alertMessage">
+          <code>
+            <pre>
+              MoPubView mpv = (MoPubView) findViewById(R.id.adview);
+              mpv.setAdUnitId("{{site.key}}");
+              mpv.loadAd();
+            </pre>
+          </code>
+        </div>
+      </li>
+{% endifequal %}
+      <li>
+        <p>
+          For more options, or if you have trouble, see the <a href="http://code.google.com/p/mopub/">MoPub Google Code project</a>.
+        </p>
+      </li>  
+    </ol>
+    <div class="form-submit">
+      <span class="buttonWrap"><a href="{% url publisher_app_show app_key=site.app_key.key %}" class="button">Continue</a></span>
+    </div>
+  </div> 
+</section>{% endblock content %}

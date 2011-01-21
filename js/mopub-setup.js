@@ -81,6 +81,14 @@ var mopub = mopub || {};
         $('#appForm-search-button').click();
       }
     });
+
+		// Change icon
+    $('#appForm-changeIcon-link').click(function (e) {
+      e.preventDefault();
+      $(this).hide();
+      $('#appForm-icon-upload').show();
+      $('#appForm input[name="img_url"]').val('');
+    });
 		
 		/*---------------------------------------/
 		/ Ad Unit Form

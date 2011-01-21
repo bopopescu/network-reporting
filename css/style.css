@@ -1398,6 +1398,14 @@ input.ui-button { padding: 4px 12px 5px 12px; }
   white-space: nowrap;
 }
 
+#appForm-icon {
+  float: left;
+}
+
+#appForm-changeIcon .sep {
+  padding: 0 5px 0 10px;
+}
+
 .adForm-formats {
   float: left;
   width: 505px;

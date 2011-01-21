@@ -148,7 +148,21 @@
                       <input type="url" class="input-text ios" name="appForm-url" value="" id="appForm-url" placeholder="http://itunes.apple.com/yourapp" />
                       <input type="text" class="input-text android" name="appForm-package" value="" id="appForm-package" placeholder="com.company.appname" />
                     </dd>
-
+                    
+                    <dt>Icon:</dt> 
+                    <dd> 
+                      <div id="appForm-icon" class="appData-icon">
+                        <img src="images/misc/appicon-missing.png" alt="No icon" />
+                      </div>
+                      <div id="appForm-changeIcon">
+                        <span class="sep">&middot;</span>
+                        <a id="appForm-changeIcon-link" href="#">Upload an app icon ...</a>
+                        <input id="appForm-icon-upload" type="file" name="img_file" style="display:none;" />
+                        <input type="hidden" name="img_url" value="" />
+                      </div>
+                    </dd>
+                    
+                    <!--
                     <dt><label for="appForm-adsense">AdSense app name:</label></dt>
                     <dd>
                       <input type="text" class="input-text" name="appForm-adsense" value="" id="appForm-adsense" />
@@ -156,6 +170,7 @@
                         <a class="formFields-field-help-link mutedLink" href="#" title="Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.">What's this?</a>
                       </div>
                     </dd>
+                    -->
 
                   </dl>
                   <div class="clear"></div>

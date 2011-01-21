@@ -1075,6 +1075,10 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
 
 /* Edit options */
 
+#advertiser-creativeAddForm,
+#creativeCreate-text,
+#creativeCreate-image,
+#creativeCreate-html,
 #dashboard-searchAppStore-custom-modal,
 #dashboard-adunitEditForm,
 #dashboard-adunitAddForm {

@@ -10,6 +10,27 @@ var mopub = mopub || {};
 	$(document).ready(function() {
 		
 		// Submit button
+		$('#creativeForm-pause')
+			.click(function(e) {
+			  alert("Only Deleting works so far");
+				e.preventDefault();
+        // $('#creativeForm').find("#action").attr("value","pause").end().submit();
+		});
+
+		$('#creativeForm-resume')
+			.click(function(e) {
+			  alert("Only Deleting works so far");
+				e.preventDefault();
+        // $('#creativeForm').find("#action").attr("value","resume").end().submit();
+		});
+
+		$('#creativeForm-delete')
+			.click(function(e) {
+				e.preventDefault();
+				$('#creativeForm').find("#action").attr("value","delete").end().submit();
+		});
+		
+		
 		$('#campaignForm-pause')
 			.click(function(e) {
 				e.preventDefault();
@@ -27,6 +48,40 @@ var mopub = mopub || {};
 				e.preventDefault();
 				$('#campaignForm').find("#action").attr("value","delete").end().submit();
 		});
+		
+    $('#creativeAddForm-submit')
+      .button()
+      .click(function(e) {
+        e.preventDefault();
+        $('#creativeAddForm').submit();
+    });
+
+    $('#creativeAddForm input[name="creative_type"]').click(function(e) {
+      $('#creativeCreate-text').hide();
+      $('#creativeCreate-image').hide();
+      $('#creativeCreate-html').hide();
+      $('#creativeCreate-'+$(this).val()).show();
+    }).filter(':checked').click(); // make sure we're in sync when the page loads
+    
+		
+		$('#advertiser-adgroups-addCreativeButton')
+    		.button()
+			  .click(function(e){
+		    e.preventDefault();
+		    $('#advertiser-creativeAddForm').slideDown('fast', function() {
+				  $('#advertiser-adgroups-addCreativeButton').hide();
+				});
+				
+		  });
+
+		$('#creativeAddForm-cancel')
+		  .button()
+		  .click(function(e){
+		    e.preventDefault();
+		    $('#advertiser-creativeAddForm').slideUp('fast', function() {
+				  $('#advertiser-adgroups-addCreativeButton').show();
+				});
+		  });
 
 		
 		/*---------------------------------------/

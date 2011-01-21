@@ -121,11 +121,75 @@
            	</section>
 						<section>
 							<div class="buttonBank buttonBank-right">
-	              <a class="button" id="dashboard-apps-toggleAllButton" href="#">Show/hide all creatives</a>
-	              <a class="button" id="dashboard-apps-addAppButton" href="{% url publisher_app_create %}">Add a creative</a>
+	              <a class="button" id="advertiser-adgroups-toggleCreativeButton" href="#">Show/hide all creatives</a>
+	              <a class="button" id="advertiser-adgroups-addCreativeButton" href="{% url publisher_app_create %}">Add a creative</a>
 	            </div>
 	            
 							<h2>Ad Creatives</h2>
+							
+							<section id="advertiser-creativeAddForm">
+	              <div>
+	                <form action="{% url advertiser_creative_create %}" method="POST" accept-charset="utf-8" id="creativeAddForm">
+	                  <input type="hidden" name="id" value="{{adgroup.key}}"/>
+	                  <fieldset id="creativeAddForm-details" class="alt">
+	                    <dl class="formFields"> 
+		
+							          <dt>Creative Type:</dt> 
+							          <dd> 
+							            <span class="radios"> 
+							              <input type="radio" class="input-radio" name="creative_type" value="text" id="creativeType-text" checked="checked"/> <label for="creativeType-text">Text</label> 
+							              <input type="radio" class="input-radio" name="creative_type" value="image" id="creativeType-image"/> <label for="creativeType-image">Image</label> 
+							              <input type="radio" class="input-radio" name="creative_type" value="html" id="creativeType-html"/> <label for="creativeType-html">HTML</label> 
+							            </span> 
+							          </dd>
+												
+												<div id="creativeCreate-text">	
+													<dt><label for="html_name">Creative Name:</label></dt>
+													<dd><input type='text' name="name" class="input-text"/></dd>
+													<dt><label for="headline">Headline:</label></dt>
+													<dd><input type='text' name="headline" class="input-text"/></dd>
+													<dt><label for="line1">Line 1:</label></dt>
+													<dd><input type ='text' name="line1" class="input-text"/></dd>
+													<dt><label for="line2">Line 2:</label></dt>
+													<dd><input type='text' name="line2" class="input-text"/></dd>
+													<dt><label for="display_url">Display URL:</label></dt>
+													<dd><input type='text' name="display_url" class="input-text"/></dd>
+													<dt><label for="url">URL</label></dt>
+													<dd><input type='text' name="url" class="input-text"/></dd>
+													<dt><label for="tracking_url">Impression Tracking Pixel:</label></dt>
+													<dd><input type='text' name="tracking_url" class="input-text"/></dd>
+												</div>	
+												<div id="creativeCreate-image">
+													<dt><label for="html_name">Creative Name:</label></dt>
+													<dd><input type='text' name="name" class="input-text"/></dd>
+													<dt><label for="">Image File</label></dt>
+													<dd><input type="file" name="image" size="40"/></dd>
+													<dt><label for="url">URL</label></dt>
+													<dd><input type='text' name="url" class="input-text"/></dd>
+													<dt><label for="tracking_url">Impression Tracking Pixel:</label></dt>
+													<dd><input type='text' name="tracking_url" class="input-text"/></dd>
+												</div>
+												<div id="creativeCreate-html">
+													<dt><label for="html_name">Creative Name:</label></dt>
+													<dd><input type='text' name="html_name" class="input-text"/></dd>
+								          <dt><label for="html_data">HTML Body:</label></dt> 
+								          <dd> 
+								            <textarea name="html_data" rows="3" cols="40">HTML Body Content</textarea> 
+								          </dd> 
+													<dt><label for="tracking_url">Impression Tracking Pixel:</label></dt>
+													<dd><input type='text' name="tracking_url" class="input-text"/></dd>
+	                    </dl>
+	                    <div class="clear" />
+	                    <div class="form-submit"> 
+	                      <span class="buttonWrap"><a href="#" class="button" id="creativeAddForm-submit">Save</a></span> 
+	                      <span class="buttonWrap"><a href="#" class="button" id="creativeAddForm-cancel">Cancel</a></span> 
+	                    </div> 
+	                  </fieldset>
+	                </form>
+	              </div>
+	            </section>
+	            
+							
 							<div class="appData-columnHeaders">
 	              <table class="dataTable" id="dashboard-apps2-columnHeaders">
 	                <thead>
@@ -140,44 +204,47 @@
 	                </thead>
 	              </table>
 	            </div>
-							<form>
+							<form method="post" action="{% url advertiser_creative_delete %}" id="creativeForm">
 		            {% for c in creatives %}
 		            <div class="appData" id="dashboard-app2-{{forloop.counter0}}">
-			            <table class="dataTable" id="dashboard-apps2-columnHeaders">
-		                <tbody>
-		                  <tr>
-												<td class="appData-icon"><input type="checkbox" name="id" value="{{c.key}}"/></td>
-		                    <th class="dataTable-name">
-													{{c.html_name}}
-													<div class="creative">
-													  <iframe src="{% url advertiser_creative_html creative_key=c.key %}" frameborder="0" scrolling="no" width="100%" height="50">
-								              <p>Your browser does not support iframes.</p>
-								            </iframe>
-													</div>
-													<div class="clearall"></div>
-												</th>
-		                    <th class="dataTable-data">
-													{% if c.deleted %} 
-														<img src="/images/deleted.gif" width="9" height="9"/> 
-													{% endif %} 
-													{% if c.active and not c.deleted %} 
-														<img src="/images/active.gif" width="9" height="9"/> 
-													{% endif %} 
-													{% if not c.active and not c.deleted %} 
-														<img src="/images/paused.gif" width="9" height="9"/> 
-													{% endif %} 
-												</th>
-		                    <th class="dataTable-data">{{c.stats.impression_count|withsep}}</th>
-		                    <th class="dataTable-data">{{c.stats.click_count|withsep}}</th>
-		                    <th class="dataTable-data">{{c.stats.revenue|currency}}</th>
-		                  </tr>
-		                </tbody>
-		              </table>
+										<input id="action" type="hidden" name="action" value=""/>
+				            <table class="dataTable" id="dashboard-apps2-columnHeaders">
+			                <tbody>
+			                  <tr>
+													<td class="appData-icon">
+														<input type="checkbox" name="id" value="{{c.key}}"/>
+													</td>
+			                    <th class="dataTable-name">
+														{{c.html_name}}
+														<div class="creative">
+														  <iframe src="{% url advertiser_creative_html creative_key=c.key %}" frameborder="0" scrolling="no" width="100%" height="50">
+									              <p>Your browser does not support iframes.</p>
+									            </iframe>
+														</div>
+														<div class="clearall"></div>
+													</th>
+			                    <th class="dataTable-data">
+														{% if c.deleted %} 
+															<img src="/images/deleted.gif" width="9" height="9"/> 
+														{% endif %} 
+														{% if c.active and not c.deleted %} 
+															<img src="/images/active.gif" width="9" height="9"/> 
+														{% endif %} 
+														{% if not c.active and not c.deleted %} 
+															<img src="/images/paused.gif" width="9" height="9"/> 
+														{% endif %} 
+													</th>
+			                    <th class="dataTable-data">{{c.stats.impression_count|withsep}}</th>
+			                    <th class="dataTable-data">{{c.stats.click_count|withsep}}</th>
+			                    <th class="dataTable-data">{{c.stats.revenue|currency}}</th>
+			                  </tr>
+			                </tbody>
+			              </table>
 		            </div>
 		          	{% endfor %}
-								<a class="button" id="campaignForm-pause">Pause</a>
-								<a class="button" id="campaignForm-resume">Resume</a>
-								<a class="button" id="campaignForm-delete">Delete</a>
+								<a class="button" id="creativeForm-pause">Pause</a>
+								<a class="button" id="creativeForm-resume">Resume</a>
+								<a class="button" id="creativeForm-delete">Delete</a>
 							</form>	
 	            
 						</section>	

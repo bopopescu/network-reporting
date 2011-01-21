@@ -176,6 +176,13 @@ var mopub = mopub || {};
 		
 		// set up buttons
 		$('#dashboard-apps-addAppButton').button({ icons: { primary: "ui-icon-circle-plus" } });
+		$('#dashboard-apps-editAppButton')
+			.button({ icons: { primary: "ui-icon-wrench" } })
+			.click(function(e) {
+				e.preventDefault();
+				$('#dashboard-adunitEditForm').slideDown('fast');
+				$(this).hide();
+		});
 		$('#dashboard-apps-toggleAllButton')
 			.button({ 
 				icons: { primary: "ui-icon-triangle-2-n-s" } 

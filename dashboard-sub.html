@@ -81,13 +81,18 @@
     <div id="main">
       <div id="titlebar">
         <div class="pageWidth">
-          <h1>Dashboard</h1>
+          <div class="breadcrumb">
+            <a class="linkIcon breadcrumb-back" href="dashboard.html"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Dashboard</a>
+            <h1>An extremely, incredibly long app or ad unit name</h1>
+          </div>
           <div id="titlebar-center">
             <span class="buttonset" id="dashboard-dateOptions">
+              <!--
               <input type="radio" name="dashboard-dateOptions-option" value="0" id="dashboard-dateOptions-option-0" />
               <label for="dashboard-dateOptions-option-0">Today</label>
               <input type="radio" name="dashboard-dateOptions-option" value="1" id="dashboard-dateOptions-option-1" />
               <label for="dashboard-dateOptions-option-1">Yesterday</label>
+              -->
               <input type="radio" name="dashboard-dateOptions-option" value="7" id="dashboard-dateOptions-option-7" />
               <label for="dashboard-dateOptions-option-7">7 days</label>
               <input type="radio" name="dashboard-dateOptions-option" value="14" id="dashboard-dateOptions-option-14" checked="checked" />
@@ -103,57 +108,13 @@
             </div>
           </div>
           <div id="titlebar-right">
-            <span class="titlebar-link">
-              <a class="linkIcon" href="region.html">Ad performance by region <span class="ui-icon ui-icon-triangle-1-e"></span></a>
-            </span>
+            <a class="button" id="dashboard-apps-editAppButton" href="#">Edit app settings</a>
           </div>
         </div>
       </div>
       <div id="content">
         <div class="pageWidth">
           <section class="separated" id="messageCenter">
-            <table id="messageCenter-messages">
-              <tbody>
-                <tr class="messageCenter-message messageCenter-error" id="messageCenter-message-0">
-                  <td class="messageCenter-message-date">Jan 12, 2011</td>
-                  <td class="messageCenter-message-text">
-                    Lorem ipsum dolor sit amet, consectetur adipisicing elit.
-                    <div class="messageCenter-message-moreInfo">
-                      <h3>Lorem ipsum!</h3>
-                      Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-                    </div>
-                  </td>
-                  <td class="messageCenter-message-links">
-                    <a class="messageCenter-message-moreInfoLink" href="#">More info</a>
-                    <span class="sep">&middot;</span>
-                    <a class="messageCenter-message-hide mutedLink" href="#">Hide this</a>
-                  </td>
-                </tr>
-                <tr class="messageCenter-message messageCenter-warning" id="messageCenter-message-1">
-                  <td class="messageCenter-message-date">Jan 11, 2011</td>
-                  <td class="messageCenter-message-text">
-                    Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
-                  </td>
-                  <td class="messageCenter-message-links">
-                    <a class="messageCenter-message-hide mutedLink" href="#">Hide this</a>
-                  </td>
-                </tr>
-                <tr class="messageCenter-message messageCenter-info" id="messageCenter-message-2">
-                  <td class="messageCenter-message-date">Jan 10, 2011</td>
-                  <td class="messageCenter-message-text">
-                    Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia.
-                    <div class="messageCenter-message-moreInfo">
-                      Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-                    </div>
-                  </td>
-                  <td class="messageCenter-message-links">
-                    <a class="messageCenter-message-moreInfoLink" href="#">More info</a>
-                    <span class="sep">&middot;</span>
-                    <a class="messageCenter-message-hide mutedLink" href="#">Hide this</a>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
           </section>
           
           <section class="offset nomargin" id="dashboard-stats">

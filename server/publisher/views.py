@@ -199,8 +199,9 @@ def index_geo(request,*args,**kwargs):
 
 class AppCreateHandler(RequestHandler):
   def get(self):
+    apps = AppQueryManager().get_apps(self.account,limit=1)
     f = AppForm()
-    return render_to_response(self.request,'publisher/new_app.html', {"f": f})
+    return render_to_response(self.request,'publisher/new_app.html', {"f": f, "has_app": len(apps)})
 
   def post(self):
     app = None

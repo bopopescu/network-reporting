@@ -66,13 +66,16 @@ var mopub = mopub || {};
       $('#appForm-adUnitName').val(name + ' banner ad');
     });
 
-    $('#appForm-name').keyup(function() {
+    $('#appForm-name').keyup(function(e) {
       // Show/hide the app search button
       var name = $.trim($(this).val());
       if (name.length)
         $('#appForm-search').button("enable");
       else
         $('#appForm-search').button("disable");
+      if (e.keyCode == 13) {
+        $('#appForm-search').click();
+      }
     });
     
     $('#appForm-icon-change').click(function (e) {

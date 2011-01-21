@@ -338,13 +338,16 @@ var mopub = mopub || {};
 		if ($('#appForm-name').val() == '') {
 		  $('#appForm-search').button("disable");
 		}
-		$('#appForm-name').keyup(function() {
+		$('#appForm-name').keyup(function(e) {
 			// Show/hide the app search button
 			var name = $.trim($(this).val());
 			if (name.length)
 				$('#appForm-search').button("enable");
 			else
 				$('#appForm-search').button("disable");
+      if (e.keyCode == 13) {
+        $('#appForm-search').click();
+      }
 		});
 
 		/*---------------------------------------/

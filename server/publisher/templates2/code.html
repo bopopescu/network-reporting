@@ -1,8 +1,14 @@
 {% extends 'publisher/base.html' %}
 {% load filters %}
 {% block extraScripts %}<script src="/js/mopub-setup.js"></script>{% endblock extraScripts %}
-{% block pageTitle %}<a href="{% url publisher_adunit_show adunit_key=site.key %}">{{site.name}}</a> code snippet{% endblock pageTitle %}{% block dateButtons %}{% endblock dateButtons %}
-{% block titleBarRight %}{% endblock titleBarRight %}
+{% block pageTitle %}{% if blah %}Step 2: Integrate the code{% else %}<a href="{% url publisher_adunit_show adunit_key=site.key %}">{{site.name}}</a> code snippet{% endif %}{% endblock pageTitle %}{% block dateButtons %}{% endblock dateButtons %}
+{% block titleBarRight %}            <div class="stepProgress"> 
+              <span class="stepProgress-step">Step 1: Add app</span> 
+              <span class="ui-icon ui-icon-arrow-1-e"></span> 
+              <span class="stepProgress-step stepProgress-active">Step 2: Integrate</span> 
+              <span class="ui-icon ui-icon-arrow-1-e"></span> 
+              <span class="stepProgress-step">Step 3: Add campaigns</span> 
+            </div>{% endblock titleBarRight %}
 {% block messageCenter %}{% endblock messageCenter %}
 
 {% block content %}

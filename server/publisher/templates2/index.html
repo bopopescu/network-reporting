@@ -42,19 +42,19 @@
                       //pointStart: 1294963200000,
                       pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
                       pointInterval: 86400000,
-                      'revenue': [{% for a in apps %}
+                      'revenue': [{% for a in graph_apps %}
                         { '{{a.name}}': [{% for t in a.totals %}{{t.revenue}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                       ],
-                      'requests': [{% for a in apps %}
+                      'requests': [{% for a in graph_apps %}
                         { '{{a.name}}': [{% for t in a.totals %}{{t.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                       ],
-                      'impressions': [{% for a in apps %}
+                      'impressions': [{% for a in graph_apps %}
                         { '{{a.name}}': [{% for t in a.totals %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                       ],
-                      'clicks': [{% for a in apps %}
+                      'clicks': [{% for a in graph_apps %}
                         { '{{a.name}}': [{% for t in a.totals %}{{t.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                       ],
-                      'users': [{% for a in apps %}
+                      'users': [{% for a in graph_apps %}
                         { '{{a.name}}': [{% for t in a.totals %}{{t.unique_user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                       ]
                     };
@@ -87,7 +87,7 @@
               </table>
             </div>
             {% for a in apps %}
-            <div class="appData {% if forloop.counter|divisibleby:"2" %}appData-alt{% endif %}" id="dashboard-app-{{forloop.counter0}}">
+            <div class="{% cycle 'appData' 'appData appData-alt' %}" id="dashboard-app-{{forloop.counter0}}">
               <table class="dataTable appData-main" id="dashboard-app-{{forloop.counter0}}-main">
                 <tbody>
                   <tr>

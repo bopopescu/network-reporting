@@ -93,19 +93,19 @@
                       //pointStart: 1294963200000,
                       pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
                       pointInterval: 86400000,
-                      'revenue': [{% for au in app.adunits %}
+                      'revenue': [{% for au in app.graph_adunits %}
                         { '{{au.name}}': [{% for t in au.all_stats %}{{t.revenue}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                       ],
-                      'requests': [{% for au in app.adunits %}
+                      'requests': [{% for au in app.graph_adunits %}
                         { '{{au.name}}': [{% for t in au.all_stats %}{{t.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                       ],
-                      'impressions': [{% for au in app.adunits %}
+                      'impressions': [{% for au in app.graph_adunits %}
                         { '{{au.name}}': [{% for t in au.all_stats %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                       ],
-                      'clicks': [{% for au in app.adunits %}
+                      'clicks': [{% for au in app.graph_adunits %}
                         { '{{au.name}}': [{% for t in au.all_stats %}{{t.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                       ],
-                      'users': [{% for au in app.adunits %}
+                      'users': [{% for au in app.graph_adunits %}
                         { '{{au.name}}': [{% for t in au.all_stats %}{{t.unique_user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                       ]
                     };

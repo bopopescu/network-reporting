@@ -136,9 +136,20 @@ class AppIndexHandler(RequestHandler):
       for stat,app_stat in zip(a.totals,app_stats):
         stat.unique_user_count = app_stat.unique_user_count
 
+    apps = sorted(apps, key=lambda app: app.stats.request_count, reverse=True)
+
+    # In the graph, only show the top 3 apps and bundle the rest if there are more than 4
+    graph_apps = apps[0:4]
+    if len(apps) > 4:
+      graph_apps[3] = {'name': 'Others',
+                       'totals': [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[a.totals for a in apps[3:]])]
+                       }
+
     return render_to_response(self.request,'publisher/index.html', 
-      {'apps': sorted(apps, key=lambda app: app.stats.request_count, reverse=True),
+      {'apps': apps,
+       'graph_apps': graph_apps,
        'start_date': days[0],
+       'date_range': self.date_range,
        'totals': reduce(lambda x, y: x+y.stats, apps, SiteStats()),
        'account': self.account})
 
@@ -340,18 +351,20 @@ class ShowAppHandler(RequestHandler):
     if a.icon:
       a.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(a.icon)
 
+    # In the graph, only show the top 3 ad units and bundle the rest if there are more than 4
+    a.graph_adunits = a.adunits[0:4]
+    if len(a.adunits) > 4:
+      a.graph_adunits[3] = {'name': 'Others',
+                            'all_stats': [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[au.all_stats for au in a.adunits[3:]])]
+                           }
+
     return render_to_response(self.request,'publisher/show_app.html', 
         {'app': a,    
          'start_date': days[0],
+         'date_range': self.date_range,
          'account': self.account,
          'helptext': help_text})
 
-    # write response
-    return render_to_response(self.request,'publisher/show_app.html',
-      {'app':app,
-       'sites':sites,
-       'account':self.account})
-  
 @whitelist_login_required
 def app_show(request,*args,**kwargs):
   return ShowAppHandler()(request,*args,**kwargs)   
@@ -386,6 +399,7 @@ class AdUnitShowHandler(RequestHandler):
     return render_to_response(self.request,'publisher/show.html', 
         {'site':adunit,
          'start_date': days[0],
+         'date_range': self.date_range,
          'account':self.account, 
          'days': days})
   

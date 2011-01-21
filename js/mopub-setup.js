@@ -19,6 +19,38 @@ var mopub = mopub || {};
 				$('#appForm').submit();
 		});
 		
+		// Search button
+    $('#appForm-search-button')
+      .button({ icons: { primary: "ui-icon-search" }, disabled: true})
+      .click(function(e) {
+        e.preventDefault();
+        if ($(this).button( "option", "disabled" ))
+          return;
+
+				/*
+        $('#searchAppStore-results').append("<img src='/images/loading2.gif' />")
+          .append("Loading results...");
+
+        $('#dashboard-searchAppStore-custom-modal').dialog({
+          buttons: [
+            {
+              text: 'Cancel', 
+              click: function() {
+                $('#searchAppStore-results').html('');
+                $(this).dialog("close");
+              }
+            }
+          ]
+        });
+        var name = $('#appForm input[name="name"]').val();
+        var script = document.createElement("script");
+        script.src = 'http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/wa/wsSearch?'       
+                       + 'entity=software&limit=10&callback=loadedArtwork&term='+name;
+        var head = document.getElementsByTagName("head")[0];
+        (head || document.body).appendChild( script );
+				*/
+    });
+		
 		/*---------------------------------------/
 		/ App Details Form
 		/---------------------------------------*/
@@ -32,10 +64,23 @@ var mopub = mopub || {};
 		}).filter(':checked').click(); // make sure we're in sync when the page loads
 
 		// Populate ad unit name based on app name
-		$('#appForm-name').change(function() {
+		$('input[name="appForm-name"]').change(function() {
 			var name = $.trim($(this).val());
 			$('#appForm-adUnitName').val(name + ' banner ad');
 		});
+		
+		// Toggle enabled/disabled state of search button when app name changes
+		$('#appForm-name-ios').keyup(function(e) {
+      // Show/hide the app search button
+      var name = $.trim($(this).val());
+      if (name.length)
+        $('#appForm-search-button').button("enable");
+      else
+        $('#appForm-search-button').button("disable");
+      if (e.keyCode == 13) {
+        $('#appForm-search-button').click();
+      }
+    });
 		
 		/*---------------------------------------/
 		/ Ad Unit Form

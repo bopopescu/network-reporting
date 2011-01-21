@@ -130,6 +130,16 @@
                       </span>
                     </dd>
 
+                    <dt><label for="appForm-name">App name:</label></dt>
+                    <dd class="appForm-platformDependent ios">
+                      <input type="text" class="input-text android form-error" name="appForm-name" value="" id="appForm-name-android" />
+                      <input type="text" class="input-text ios form-error" name="appForm-name" value="" id="appForm-name-ios" />
+                      <div class="formFields-field-help ios" id="appForm-search">
+                        <a href="#" class="button" id="appForm-search-button">Search App Store</a>
+                      </div>
+                      <div class="form-error-text">Please enter the name of your app.</div>
+                    </dd>
+
                     <dt class="appForm-platformDependent ios">
                       <label class="ios" for="appForm-url">iTunes URL:</label>
                       <label class="android" for="appForm-package">Package name:</label>
@@ -137,12 +147,6 @@
                     <dd class="appForm-platformDependent ios">
                       <input type="url" class="input-text ios" name="appForm-url" value="" id="appForm-url" placeholder="http://itunes.apple.com/yourapp" />
                       <input type="text" class="input-text android" name="appForm-package" value="" id="appForm-package" placeholder="com.company.appname" />
-                    </dd>
-
-                    <dt><label for="appForm-name">App name:</label></dt>
-                    <dd>
-                      <input type="text" class="input-text form-error" name="appForm-name" value="" id="appForm-name" />
-                      <div class="form-error-text">Please enter the name of your app.</div>
                     </dd>
 
                     <dt><label for="appForm-adsense">AdSense app name:</label></dt>

@@ -1304,6 +1304,8 @@ input.ui-button { padding: 4px 12px 5px 12px; }
 .ui-state-hover .ui-icon {background-image: url(../images/ui/ui-icons-hover.png); }
 .ui-state-active .ui-icon{background-image:url(../images/ui/ui-icons-active.png);}
 .ui-widget{outline:0 !important;}
+.ui-state-disabled, .ui-widget-content .ui-state-disabled, .ui-widget-header .ui-state-disabled { opacity: .50; filter:Alpha(Opacity=50); }
+.ui-state-disabled .ui-icon{background-image:url(../images/ui/ui-icons-focus.png);}
 
 /* Dialog */
 .ui-dialog { padding: 5px; background: transparent url(../images/ui/ui-dialog-shadow.png) repeat top left; border: none; -webkit-border-radius:10px;-moz-border-radius:10px;border-radius:10px; }
@@ -1377,6 +1379,23 @@ input.ui-button { padding: 4px 12px 5px 12px; }
 .ios .android, 
 .android .ios {
   display: none;
+}
+
+#appForm-name-ios {
+  width: 220px;
+}
+
+#appForm-search {
+  margin: 0;
+  position: relative;
+}
+
+#appForm-search-button {
+  margin: 0;
+  position: absolute;
+  top: -16px;
+  left: 4px;
+  white-space: nowrap;
 }
 
 .adForm-formats {

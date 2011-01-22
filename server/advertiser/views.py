@@ -236,46 +236,42 @@ class CreateAdGroupHandler(RequestHandler):
       adgroup = AdGroupQueryManager().get_by_key(adgroup_key)
     else:
       adgroup = None  
-    
     orig_site_keys = set(adgroup.site_keys) if adgroup else set()
-      
     f = AdGroupForm(data=self.request.POST,instance=adgroup)
+    if f.is_valid():
+      adgroup = f.save(commit=False)
+      adgroup.campaign = CampaignQueryManager().get_by_key(self.request.POST.get("id"))
+      adgroup.keywords = filter(lambda k: len(k) > 0, self.request.POST.get('keywords').lower().replace('\r','\n').split('\n'))
+      adgroup.site_keys = map(lambda x: db.Key(x), self.request.POST.getlist('sites'))
+      AdGroupQueryManager().put_adgroups(adgroup)
     
+      updated_site_keys = orig_site_keys.union(set(adgroup.site_keys))
     
-    adgroup = f.save(commit=False)
-    adgroup.campaign = CampaignQueryManager().get_by_key(self.request.POST.get("id"))
-    adgroup.keywords = filter(lambda k: len(k) > 0, self.request.POST.get('keywords').lower().replace('\r','\n').split('\n'))
-    adgroup.site_keys = map(lambda x: db.Key(x), self.request.POST.getlist('sites'))
-    AdGroupQueryManager().put_adgroups(adgroup)
-    
-    updated_site_keys = orig_site_keys.union(set(adgroup.site_keys))
-    
-    # update cache
-    if updated_site_keys:
-      adunits = AdUnitQueryManager().get_by_key(list(updated_site_keys))
-      CachedQueryManager().cache_delete(adunits)
+      # update cache
+      if updated_site_keys:
+        adunits = AdUnitQueryManager().get_by_key(list(updated_site_keys))
+        CachedQueryManager().cache_delete(adunits)
      
-    # if the campaign is a network type, automatically populate the right creative and go back to
-    # campaign page
-    if adgroup.campaign.campaign_type == "network":
-      if not edit:
-        creative = adgroup.default_creative()
-        CreativeQueryManager().put_creatives(creative)
-      else:
-        creatives = CreativeQueryManager().get_creatives(adgroup=adgroup)
-        creative = creatives[0]
-        if adgroup.network_type in ['millenial','inmobi','appnexus']:
-          creative.ad_type = 'html'
-        elif adgroup.network_type in ['brightroll']:
-          creative.ad_type = "html_full"
+      # if the campaign is a network type, automatically populate the right creative and go back to
+      # campaign page
+      if adgroup.campaign.campaign_type == "network":
+        if not edit:
+          creative = adgroup.default_creative()
+          CreativeQueryManager().put_creatives(creative)
         else:
-          creative.ad_type = adgroup.network_type
-        CreativeQueryManager().put_creatives(creative)
-        
-      return HttpResponseRedirect(reverse('advertiser_campaign',kwargs={}))
+          creatives = CreativeQueryManager().get_creatives(adgroup=adgroup)
+          creative = creatives[0]
+          if adgroup.network_type in ['millenial','inmobi','appnexus']:
+            creative.ad_type = 'html'
+          elif adgroup.network_type in ['brightroll']:
+            creative.ad_type = "html_full"
+          else:
+            creative.ad_type = adgroup.network_type
+          CreativeQueryManager().put_creatives(creative)
     else:
-      return HttpResponseRedirect(reverse('advertiser_campaign',kwargs={}))
-  
+      logging.info("errors: %s"%f.errors)
+      asdf1234    
+    return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':str(adgroup.key())}))
        
 @whitelist_login_required     
 def campaign_adgroup_new(request,*args,**kwargs):
@@ -394,7 +390,6 @@ class PauseHandler(RequestHandler):
         for adgroup in adgroups:
           adunits.extend(adgroups.site_keys)
         adunits = AdUnitQueryManager().get_by_key(adunits)  
-        logging.info("HHHHHH update: %s"%adunits)
         CachedQueryManager().put(adunits)
     return HttpResponseRedirect(reverse('advertiser_campaign',kwargs={}))
   
@@ -407,6 +402,9 @@ class ShowAdGroupHandler(RequestHandler):
     days = SiteStats.lastdays(14)
 
     adgroup = AdGroupQueryManager().get_by_key(adgroup_key)
+    
+    logging.info("adgroup: %s"%adgroup.priority_level)
+    
     # creatives = Creative.gql('where ad_group = :1 and deleted = :2 and ad_type in :3', adgroup, False, ["text", "image", "html"]).fetch(50)
     creatives = CreativeQueryManager().get_creatives(adgroup=adgroup)
     creatives = list(creatives)
@@ -447,6 +445,16 @@ class ShowAdGroupHandler(RequestHandler):
     revenue = [s.revenue for s in all_totals]
     chart_urls['rev'] = gen_graph_url(revenue, days, "Total+Revenue")
 
+    
+    # In order to make the edit page
+    f = AdGroupForm(instance=adgroup)
+    all_adunits = AdUnitQueryManager().get_adunits(account=self.account)
+    
+    # allow the correct sites to be checked
+    for adunit in all_adunits:
+      adunit.checked = adunit.key() in adgroup.site_keys
+      adunit.app = App.get(adunit.app_key.key())
+    
     return render_to_response(self.request,'advertiser/adgroup.html', 
                               {'campaign': adgroup.campaign,
                               'apps': apps,
@@ -457,7 +465,9 @@ class ShowAdGroupHandler(RequestHandler):
                               'chart_urls': chart_urls,
                               'sites': sites, 
                               'adunits' : sites, # TODO: migrate over to adunit instead of site
-                              'start_date': days[0]})
+                              'all_adunits' : all_adunits,
+                              'start_date': days[0],
+                              'f':f})
     
 @whitelist_login_required   
 def campaign_adgroup_show(request,*args,**kwargs):    

@@ -10,6 +10,28 @@ var mopub = mopub || {};
 	$(document).ready(function() {
 		
 		// Submit button
+		
+		$('#advertisers-adgroups-editAdGroupButton')
+		  .button({ icons: { primary: "ui-icon-wrench" } })
+		  .click(function(e){
+		    $('#advertiser-agroupEditForm').slideDown('fast',function(){
+		      $('#advertisers-adgroups-editAdGroupButton').hide();
+		    });
+		  });
+		
+		$('#agroupEditForm-cancel')
+		  .click(function(e){
+		    $('#advertiser-agroupEditForm').slideUp('fast',function(){
+		      $('#advertisers-adgroups-editAdGroupButton').show();
+		    });
+		  });
+		  
+		$('#agroupEditForm-submit')
+		  .click(function(e){
+		    e.preventDefault();
+		    $('#agroupEditForm').submit()
+		  });
+		
 		$('#creativeForm-pause')
 			.click(function(e) {
 			  alert("Only Deleting works so far");

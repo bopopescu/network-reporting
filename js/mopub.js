@@ -45,7 +45,7 @@ var mopub = mopub || {};
 		$('.button').button();
 		
 		// set up buttonsets
-		$('.buttonset').buttonset();
+		$('.buttonset').buttonset().css({ visibility: 'visible' });
 		
 		// override default jQuery UI dialog options
 		$.extend($.ui.dialog.prototype.options, {

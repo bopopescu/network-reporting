@@ -113,9 +113,9 @@ var mopub = mopub || {};
 		
 		// Use breakdown to switch charts
 		$('.stats-breakdown tr').click(function(e) {
-			$('#dashboard-stats-chart').fadeOut('fast', function() {
+			$('#dashboard-stats-chart').fadeOut(100, function() {
 				setupDashboardStatsChart();
-				$(this).fadeIn('fast');
+				$(this).show();
 			});
 		});
 		

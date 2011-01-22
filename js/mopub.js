@@ -42,7 +42,7 @@ var mopub = mopub || {};
 		});
 		
 		// set up buttons
-		$('.button').button();
+		$('.button').button().css({ visibility: 'visible' });
 		
 		// set up buttonsets
 		$('.buttonset').buttonset().css({ visibility: 'visible' });

@@ -1052,7 +1052,7 @@ dl.formFields {
   margin: 0 0 0 5px;
 }
 
-.buttonset {
+.button, .buttonset {
   visibility: hidden; /* shown by once rendered */
 }
 
@@ -1454,6 +1454,18 @@ input.ui-button { padding: 4px 12px 5px 12px; }
   white-space: nowrap;
 }
 
+#searchAppStore-loading {
+  margin: 20px 0 0 0;
+  font-size: 16px;
+  color: #666;
+  text-align: center;
+}
+
+#searchAppStore-loading img {
+  margin: 0 4px 0 0;
+  vertical-align: -3px;
+}
+
 #appForm-icon {
   float: left;
 }
@@ -1518,6 +1530,41 @@ input.ui-button { padding: 4px 12px 5px 12px; }
 
 .adForm-format-custom .adForm-format-details {
   margin: 5px 0 0 0;
+}
+
+.adForm-appSearch {
+  margin: 15px 0 0 0;
+}
+
+.adForm-appSearch-img {
+  float:left;
+  position:relative;
+}
+
+.adForm-appSearch-img span {
+  background:url(../images/layout/mask40.png);
+  display:block;
+  position:absolute;
+  left:-1px;
+  top:0px;
+  z-index:1;
+  height:42px;
+  width:41px;
+}
+
+.adForm-appSearch-text {
+  margin-left:50px;
+  margin-top:10px;
+}
+
+.adForm-appSearch-text span {
+  color: #999;
+  font-size: 13px;
+}
+
+.adForm-appSearch-text span a {
+  font-weight: 600;
+  font-size: 15px;
 }
 
 /* Homepage */

@@ -63,8 +63,8 @@ var mopub = mopub || {};
 		// set up form placeholders
 		$('input[placeholder], textarea[placeholder]').placeholder({ preventRefreshIssues: true });
 		
-		// set up title text overflow
-		$('#titlebar .breadcrumb h1').textOverflow(' &hellip;');
+		// set up text overflow elements
+		$('#titlebar .breadcrumb h1, .dataTable-name .inner').textOverflow(' &hellip;');
 		
 		/*---------------------------------------/
 		/ Tooltips

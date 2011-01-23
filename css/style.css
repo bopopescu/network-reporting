@@ -1569,11 +1569,11 @@ input.ui-button { padding: 4px 12px 5px 12px; }
 
 /* Homepage */
 
-#mopub-home #nav1 li.active {
+.mopub-home #nav1 li.active {
   background-image: url(../images/layout/header-pointer-home.gif);
 }
 
-#mopub-home #titlebar {
+.mopub-home #titlebar {
   position: relative;
   border-bottom: 4px solid #e1edf5;
   background: #ebf3f9 url(../images/home/home-titlebar-bg.png) repeat-x top left;
@@ -1581,11 +1581,11 @@ input.ui-button { padding: 4px 12px 5px 12px; }
   height: auto;
 }
 
-#mopub-home #titlebar .ui-button {
+.mopub-home #titlebar .ui-button {
   margin-top: 0;
 }
 
-#mopub-home h1#home-headline {
+.mopub-home h1#home-headline {
   margin: 0 0 30px 0;
   padding: 0 0 30px 0;
   font-size: 44px;
@@ -1597,7 +1597,7 @@ input.ui-button { padding: 4px 12px 5px 12px; }
   background: url(../images/home/home-titlebar-sep.png) no-repeat bottom left;
 }
 
-#mopub-home #home-intro {
+.mopub-home #home-intro {
   width: 620px;
   color: #6c7980;
   font-size: 18px;
@@ -1605,17 +1605,17 @@ input.ui-button { padding: 4px 12px 5px 12px; }
   line-height: 24px;
 }
 
-#mopub-home #home-intro p {
+.mopub-home #home-intro p {
   margin: 0;
   line-height: 24px;
 }
 
-#mopub-home #home-intro strong {
+.mopub-home #home-intro strong {
   font-weight: 400;
   color: #5c6b73;
 }
 
-#mopub-home #home-cta {
+.mopub-home #home-cta {
   float: right;
   padding: 25px 0 0 25px;
   width: 265px;
@@ -1627,7 +1627,7 @@ input.ui-button { padding: 4px 12px 5px 12px; }
   font-size: 18px;
 }
 
-#mopub-home #home-cta .buttonWrap {
+.mopub-home #home-cta .buttonWrap {
   margin-right: 15px;
   background: #dceaf2;
 }
@@ -1665,7 +1665,7 @@ input.ui-button { padding: 4px 12px 5px 12px; }
   background: url(../images/home/home-sticker-bg.png) repeat-x 0 -37px;
 }
 
-#mopub-home #content {
+.mopub-home #content {
   padding-top: 45px;
 }
 
@@ -1706,6 +1706,90 @@ input.ui-button { padding: 4px 12px 5px 12px; }
 .home-feature li {
   margin: 0 0 5px 0;
 }
+
+/* Homepage alternate 1 */
+
+#mopub-home-alt1 #titlebar {
+  padding: 35px 0 0 0;
+  height: 321px;
+}
+
+#mopub-home-alt1 #home-graphic {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+#mopub-home-alt1 #home-intro {
+  width: 430px;
+}
+
+#mopub-home-alt1 #home-headline {
+  margin: 0 0 20px 0;
+  padding: 25px 0 0 0;
+  font-size: 30px;
+  font-weight: 300;
+  font-style: normal;
+  text-align: left;
+  background: none;
+}
+
+#mopub-home-alt1 #home-cta {
+  float: none;
+  margin: 30px 0 0 0;
+  padding: 0;
+  width: auto;
+  height: auto;
+  background: none;
+}
+
+#mopub-home-alt1 #home-cta .buttonWrap {
+  margin-right: -3px;
+  background: #e1edf5;
+}
+
+#mopub-home-alt1 #home-cta .sep {
+  padding: 0 7px 0 9px;
+  font-weight: 800;
+}
+
+/* Homepage alternate 2 */
+
+#mopub-home-alt2 #titlebar {
+  padding: 50px 0 0 0;
+  height: 90px;
+}
+
+#mopub-home-alt2 #home-headline {
+  margin: 0 0 20px 0;
+  font-size: 35px;
+  font-weight: 600;
+  font-style: normal;
+  text-align: left;
+  background: none;
+}
+
+#mopub-home-alt2 #home-banner {
+  bottom: -25px;
+}
+
+#mopub-home-alt2 #home-cta {
+  float: right;
+  margin: -15px 0 0 0;
+  padding: 15px;
+  height: auto;
+}
+
+#mopub-home-alt2 #home-cta .buttonWrap {
+  margin-right: -3px;
+  background: #e1edf5;
+}
+
+#mopub-home-alt2 #home-cta .sep {
+  padding: 0 7px 0 9px;
+  font-weight: 800;
+}
+
 
 /****************************************
  * Media Queries

@@ -7,7 +7,7 @@ Template Name: Features
 
   <div id="titlebar">
     <div class="pageWidth">
-      <h1><?php the_title(); ?></h1>
+      <h1><?php if (is_child(172)) { echo '<a href="/features">Features</a> &raquo;'; }?> <?php the_title(); ?></h1>
     </div>
   </div>
 
@@ -32,9 +32,8 @@ Template Name: Features
 			<?php endif; ?>			
 		</div>
 		<aside>
-			<h5>In-Depth</h5>  
+			<h5>MoPub In-Depth</h5>  
 			<ul>
-			  <li><a href="/features">Summary</a></li>
 			  <?php
 			  global $id;
 			  wp_list_pages("title_li=&child_of=172&show_date=modified&date_format=$date_format"); ?>

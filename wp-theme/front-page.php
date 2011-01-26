@@ -62,6 +62,10 @@
 			              <p>
 			                <?php the_excerpt(); ?>
 			              </p>
+				          <section>
+				            <a href="<?php echo get_post_meta($post->ID, 'more', true)?>">Learn more &raquo;</a>
+				          </section>
+
 			            </div>
 
 				<?php				
@@ -71,12 +75,6 @@
 				
           </section>
 
-          <div class="clear"></div>
-          <section id="mopub-public-cta">
-            <span class="buttonWrap"><a class="button button-big" href="http://ads.mopub.com/inventory">Sign up now</a></span>
-            <span class="sep">&middot;</span>
-            <a href="/features">Learn more</a>
-          </section>
         </div>
       </div>
     

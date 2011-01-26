@@ -198,7 +198,6 @@ class Creative(polymodel.PolyModel):
   # the CPM bid for the ad group or the CPC bid for the ad group and the predicted CTR for this
   # creative
   def e_cpm(self):
-    logging.warning("bid strategy: %s %s"%(self.ad_group,self.ad_group.bid_strategy))
     if self.ad_group.bid_strategy == 'cpc':
       return float(self.p_ctr() * self.ad_group.bid * 1000)
     elif self.ad_group.bid_strategy == 'cpm':
@@ -213,7 +212,6 @@ class Creative(polymodel.PolyModel):
   #   asdf  
           
   def __repr__(self):
-    logging.warning("!!! ecpm: %s"%self.e_cpm())
     return "Creative{ad_type=%s, eCPM=%.02f ,key_name=%s}" % (self.ad_type, self.e_cpm(),self.key().id_or_name())
 
 class TextCreative(Creative):

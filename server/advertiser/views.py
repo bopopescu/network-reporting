@@ -54,7 +54,6 @@ class RequestHandler(object):
         pass
     def put(self):
         pass  
-
         
 def gen_graph_url(series, days, title):
   chart_url = "http://chart.apis.google.com/chart?cht=lc&chtt=%s&chs=780x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
@@ -128,6 +127,7 @@ class AdGroupIndexHandler(RequestHandler):
     if campaigns:
       adgroups = AdGroupQueryManager().get_adgroups(campaigns=campaigns)
     else:
+      # TODO: Convert to QueryManager, why is this here anyway?
       campaigns = Campaign.gql("where u = :1 and deleted = :2", self.account.user, False).fetch(100)
       adgroups = AdGroup.gql("where campaign in :1 and deleted = :2", [x.key() for x in campaigns], False).fetch(100)
     adgroups = sorted(adgroups, lambda x,y: cmp(y.bid, x.bid))
@@ -139,25 +139,26 @@ class AdGroupIndexHandler(RequestHandler):
       today += c.all_stats[-1]
 
     # compute rollups to display at the top
-    totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[c.all_stats for c in adgroups])]
+    daily_totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[c.all_stats for c in adgroups])]
+    totals = reduce(lambda x,y: x+y, daily_totals, SiteStats())
 
     chart_urls = {}
     # make a line graph showing impressions
-    impressions = [s.impression_count for s in totals]
+    impressions = [s.impression_count for s in daily_totals]
     chart_urls['imp'] = gen_graph_url(impressions, days, "Total+Daily+Impressions")
 
     # make a line graph showing clicks
-    clicks = [s.click_count for s in totals]
+    clicks = [s.click_count for s in daily_totals]
     chart_urls['clk'] = gen_graph_url(clicks, days, "Total+Daily+Clicks")
 
     # make a line graph showing revenue
-    revenue = [s.revenue for s in totals]
+    revenue = [s.revenue for s in daily_totals]
     chart_urls['rev'] = gen_graph_url(revenue, days, "Total+Revenue")
 
     promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], adgroups)
     guarantee_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee'], adgroups)
     network_campaigns = filter(lambda x: x.campaign.campaign_type in ['network'], adgroups)
-
+    
     help_text = None
     if network_campaigns:
       if not (self.account.adsense_pub_id or self.account.admob_pub_id):
@@ -166,12 +167,14 @@ class AdGroupIndexHandler(RequestHandler):
     return render_to_response(self.request, 
       'advertiser/adgroups.html', 
       {'adgroups':adgroups,
+       'start_date': days[0],
        'app' : app,
        'all_apps' : all_apps,
        'site' : site,
        'all_sites' : all_sites,
        'today': today,
        'chart_urls': chart_urls,
+       'totals':totals,
        'gtee': guarantee_campaigns,
        'promo': promo_campaigns,
        'network': network_campaigns,
@@ -182,22 +185,27 @@ def adgroups(request,*args,**kwargs):
     return AdGroupIndexHandler()(request,*args,**kwargs)
 
 class CreateHandler(RequestHandler):
-  def get(self):
-    f = CampaignForm()
-    return render_to_response(self.request,'advertiser/new.html', {"f": f})
+  def get(self,campaign_form=None):
+    campaign_form = campaign_form or CampaignForm()
+    networks = [["adsense","Google AdSense",False],["iAd","Apple iAd",False],["admob","AdMob",False],["millennial","Millennial Media",False],["inmobi","InMobi",False],["greystripe","GreyStripe",False],["appnexus","App Nexus",False],["brightroll","BrightRoll",False],["custom","Custom",False]]
+    all_adunits = AdUnitQueryManager().get_adunits(account=self.account)
+
+    return render_to_response(self.request,'advertiser/new.html', {"f": campaign_form, 
+                                                                   "networks": networks,
+                                                                   "all_adunits": all_adunits})
 
   def post(self):
-    f = CampaignForm(data=self.request.POST)
-    if f.is_valid():
-      campaign = f.save(commit=False)
+    campaign_form = CampaignForm(data=self.request.POST)
+    if campaign_form.is_valid():
+      campaign = campaign_form.save(commit=False)
       campaign.u = self.account.user
       CampaignQueryManager().put_campaigns(campaign)
-      return HttpResponseRedirect(reverse('campaign_adgroup_new', kwargs={'campaign_key':campaign.key()}))
+      return HttpResponseRedirect(reverse('advertiser_adgroup_new', kwargs={'campaign_key':campaign.key()}))
     else:
-      return render_to_response(self.request,'advertiser/new.html', {"f": f})
+      return self.get(campaign_form)
 
 @whitelist_login_required     
-def campaign_create(request,*args,**kwargs):
+def campaign_adgroup_create(request,*args,**kwargs):
   return CreateHandler()(request,*args,**kwargs)      
 
 class CreateAdGroupHandler(RequestHandler):
@@ -232,46 +240,42 @@ class CreateAdGroupHandler(RequestHandler):
       adgroup = AdGroupQueryManager().get_by_key(adgroup_key)
     else:
       adgroup = None  
-    
     orig_site_keys = set(adgroup.site_keys) if adgroup else set()
-      
     f = AdGroupForm(data=self.request.POST,instance=adgroup)
+    if f.is_valid():
+      adgroup = f.save(commit=False)
+      adgroup.campaign = CampaignQueryManager().get_by_key(self.request.POST.get("id"))
+      adgroup.keywords = filter(lambda k: len(k) > 0, self.request.POST.get('keywords').lower().replace('\r','\n').split('\n'))
+      adgroup.site_keys = map(lambda x: db.Key(x), self.request.POST.getlist('sites'))
+      AdGroupQueryManager().put_adgroups(adgroup)
     
+      updated_site_keys = orig_site_keys.union(set(adgroup.site_keys))
     
-    adgroup = f.save(commit=False)
-    adgroup.campaign = CampaignQueryManager().get_by_key(self.request.POST.get("id"))
-    adgroup.keywords = filter(lambda k: len(k) > 0, self.request.POST.get('keywords').lower().replace('\r','\n').split('\n'))
-    adgroup.site_keys = map(lambda x: db.Key(x), self.request.POST.getlist('sites'))
-    AdGroupQueryManager().put_adgroups(adgroup)
-    
-    updated_site_keys = orig_site_keys.union(set(adgroup.site_keys))
-    
-    # update cache
-    if updated_site_keys:
-      adunits = AdUnitQueryManager().get_by_key(list(updated_site_keys))
-      CachedQueryManager().cache_delete(adunits)
+      # update cache
+      if updated_site_keys:
+        adunits = AdUnitQueryManager().get_by_key(list(updated_site_keys))
+        CachedQueryManager().cache_delete(adunits)
      
-    # if the campaign is a network type, automatically populate the right creative and go back to
-    # campaign page
-    if adgroup.campaign.campaign_type == "network":
-      if not edit:
-        creative = adgroup.default_creative()
-        CreativeQueryManager().put_creatives(creative)
-      else:
-        creatives = CreativeQueryManager().get_creatives(adgroup=adgroup)
-        creative = creatives[0]
-        if adgroup.network_type in ['millenial','inmobi','appnexus']:
-          creative.ad_type = 'html'
-        elif adgroup.network_type in ['brightroll']:
-          creative.ad_type = "html_full"
+      # if the campaign is a network type, automatically populate the right creative and go back to
+      # campaign page
+      if adgroup.campaign.campaign_type == "network":
+        if not edit:
+          creative = adgroup.default_creative()
+          CreativeQueryManager().put_creatives(creative)
         else:
-          creative.ad_type = adgroup.network_type
-        CreativeQueryManager().put_creatives(creative)
-        
-      return HttpResponseRedirect(reverse('advertiser_campaign',kwargs={}))
+          creatives = CreativeQueryManager().get_creatives(adgroup=adgroup)
+          creative = creatives[0]
+          if adgroup.network_type in ['millenial','inmobi','appnexus']:
+            creative.ad_type = 'html'
+          elif adgroup.network_type in ['brightroll']:
+            creative.ad_type = "html_full"
+          else:
+            creative.ad_type = adgroup.network_type
+          CreativeQueryManager().put_creatives(creative)
     else:
-      return HttpResponseRedirect(reverse('advertiser_campaign',kwargs={}))
-  
+      logging.info("errors: %s"%f.errors)
+      asdf1234    
+    return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':str(adgroup.key())}))
        
 @whitelist_login_required     
 def campaign_adgroup_new(request,*args,**kwargs):
@@ -299,7 +303,7 @@ class ShowHandler(RequestHandler):
 
     # no ad groups?
     if len(bids) == 0:
-      return HttpResponseRedirect(reverse('campaign_adgroup_new', kwargs={'campaign_key': campaign.key()}))
+      return HttpResponseRedirect(reverse('advertiser_adgroup_new', kwargs={'campaign_key': campaign.key()}))
     else:
       # compute rollups to display at the top
       today = SiteStats.rollup_for_day(bids, SiteStats.today())
@@ -357,7 +361,6 @@ def campaign_edit(request,*args,**kwargs):
 
 class PauseHandler(RequestHandler):
   def post(self):
-    asf
     action = self.request.POST.get("action", "pause")
     updated_campaigns = []
     for id_ in self.request.POST.getlist('id') or []:
@@ -391,7 +394,6 @@ class PauseHandler(RequestHandler):
         for adgroup in adgroups:
           adunits.extend(adgroups.site_keys)
         adunits = AdUnitQueryManager().get_by_key(adunits)  
-        logging.info("HHHHHH update: %s"%adunits)
         CachedQueryManager().put(adunits)
     return HttpResponseRedirect(reverse('advertiser_campaign',kwargs={}))
   
@@ -404,8 +406,12 @@ class ShowAdGroupHandler(RequestHandler):
     days = SiteStats.lastdays(14)
 
     adgroup = AdGroupQueryManager().get_by_key(adgroup_key)
+    
+    logging.info("adgroup: %s"%adgroup.priority_level)
+    
     # creatives = Creative.gql('where ad_group = :1 and deleted = :2 and ad_type in :3', adgroup, False, ["text", "image", "html"]).fetch(50)
     creatives = CreativeQueryManager().get_creatives(adgroup=adgroup)
+    creatives = list(creatives)
     for c in creatives:
       c.all_stats = SiteStatsQueryManager().get_sitestats_for_days(owner=c, days=days)
       c.stats = reduce(lambda x, y: x+y, c.all_stats, SiteStats())
@@ -424,23 +430,35 @@ class ShowAdGroupHandler(RequestHandler):
     # compute rollups to display at the top
     today = SiteStatsQueryManager().get_sitestats_for_days(owner=adgroup, days=[SiteStats.today()])[0]
     if len(sites) > 0:
-      totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[s.all_stats for s in sites])]
+      all_totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[s.all_stats for s in sites])]
     else:
-      totals = [SiteStats() for d in days]
+      all_totals = [SiteStats() for d in days]
+
+    totals = reduce(lambda x,y: x+y, all_totals, SiteStats())
 
     chart_urls = {}
     # make a line graph showing impressions
-    impressions = [s.impression_count for s in totals]
+    impressions = [s.impression_count for s in all_totals]
     chart_urls['imp'] = gen_graph_url(impressions, days, "Total+Daily+Impressions")
 
     # make a line graph showing clicks
-    clicks = [s.click_count for s in totals]
+    clicks = [s.click_count for s in all_totals]
     chart_urls['clk'] = gen_graph_url(clicks, days, "Total+Daily+Clicks")
 
     # make a line graph showing revenue
-    revenue = [s.revenue for s in totals]
+    revenue = [s.revenue for s in all_totals]
     chart_urls['rev'] = gen_graph_url(revenue, days, "Total+Revenue")
 
+    
+    # In order to make the edit page
+    f = AdGroupForm(instance=adgroup)
+    all_adunits = AdUnitQueryManager().get_adunits(account=self.account)
+    
+    # allow the correct sites to be checked
+    for adunit in all_adunits:
+      adunit.checked = adunit.key() in adgroup.site_keys
+      adunit.app = App.get(adunit.app_key.key())
+    
     return render_to_response(self.request,'advertiser/adgroup.html', 
                               {'campaign': adgroup.campaign,
                               'apps': apps,
@@ -449,7 +467,11 @@ class ShowAdGroupHandler(RequestHandler):
                               'today': today,
                               'totals': totals,
                               'chart_urls': chart_urls,
-                              'sites': sites})
+                              'sites': sites, 
+                              'adunits' : sites, # TODO: migrate over to adunit instead of site
+                              'all_adunits' : all_adunits,
+                              'start_date': days[0],
+                              'f':f})
     
 @whitelist_login_required   
 def campaign_adgroup_show(request,*args,**kwargs):    

@@ -1,0 +1,224 @@
+{% extends 'advertiser/base.html' %}
+{% load filters %}
+{% block navLinks %}
+            <li><a href="/inventory">Dashboard</a></li>
+            <li class="active"><a href="campaigns.html">Campaigns</a></li>
+{% endblock navLinks %}
+{% block messageCenter %}{% endblock messageCenter %}
+
+{% block content %}
+          <div class="separated">
+            <section class="offset nomargin" id="dashboard-stats">
+              <div class="stats">
+                <table class="stats-breakdown">
+                  <tbody>
+                    <tr class="active" id="stats-breakdown-revenue">
+                      <td class="stats-breakdown-value"><span class="inner">{{totals.revenue|currency}}</span></td>
+                      <th class="stats-breakdown-name"><span class="inner">Revenue (est.)</span></th>
+                    </tr>
+                    <tr id="stats-breakdown-impressions">
+                      <td class="stats-breakdown-value"><span class="inner">{{totals.impression_count|withsep}}</span></td>
+                      <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
+                    </tr>
+                    <tr id="stats-breakdown-clicks">
+                      <td class="stats-breakdown-value"><span class="inner">{{totals.click_count|withsep}}</span></td>
+                      <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
+                    </tr>
+                    <tr id="stats-breakdown-users">
+                      <td class="stats-breakdown-value"><span class="inner">{{totals.unique_user_count|withsep}}</span></td>
+                      <th class="stats-breakdown-name"><span class="inner">Users</span></th>
+                    </tr>
+                  </tbody>
+                </table>
+                <div class="chart chart-loading stats-chart" id="dashboard-stats-chart">
+                  <div class="chart-loading-text">Loading ...</div>
+                  <div class="chart-error-text">Could not load chart</div>
+                  <script type="text/javascript">
+                    // chart data
+                    mopub.dashboardStatsChartData = {
+                      //pointStart: 1294963200000,
+                      pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
+                      pointInterval: 86400000,
+                      'revenue': [{% for a in adgroups %}
+                        { '{{a.name}}': [{% for stat in a.all_stats %}{{stat.revenue}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                      ],
+                      'impressions': [{% for a in adgroups %}
+                        { '{{a.name}}': [{% for stat in a.all_stats %}{{stat.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                      ],
+                      'clicks': [{% for a in adgroups %}
+                        { '{{a.name}}': [{% for stat in a.all_stats %}{{stat.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                      ],
+                      'users': [{% for a in adgroups %}
+                        { '{{a.name}}': [{% for stat in a.all_stats %}{{stat.unique_user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                      ]
+                    };
+                  </script>
+                </div>
+              </div>
+              <div class="clear"></div>
+            </section>
+          </div>
+
+          <section id="dashboard-apps">
+	          <div class="buttonBank buttonBank-right">
+              {# <a class="button" id="dashboard-apps-toggleAllButton" href="#">Show/hide all details</a> #}
+              <a class="button" id="advertisers-addCampaign" href="{% url advertiser_campaign_create %}">Add a campaign</a>
+            </div>
+  
+						<form method="post" action="{% url advertiser_bid_pause %}" id="campaignForm">
+							<input type="hidden" name="action" id="action"/>
+
+	            <h2>Guaranteed</h2>
+            
+	            <div class="appData-columnHeaders">
+	              <table class="dataTable" id="dashboard-apps-columnHeaders">
+	                <thead>
+	                  <tr>
+	                    <th class="appData-icon"></th>
+	                    <th class="dataTable-name">Campaigns</th>
+	                    <th class="dataTable-data">CPM</th>
+	                    <th class="dataTable-data">Status</th>
+	                    <th class="dataTable-data"></th>
+	                    <th class="dataTable-data">Impressions</th>
+	                    <th class="dataTable-data">Clicks</th>
+	                    <th class="dataTable-data">CTR</th>
+	                  </tr>
+	                </thead>
+	              </table>
+	            </div>
+	            {% for c in gtee %}
+	            <div class="appData" id="dashboard-app-{{forloop.counter0}}">
+	              <table class="dataTable appData-main" id="dashboard-app-{{forloop.counter0}}-main">
+	                <tbody>
+	                  <tr>
+	                    <td class="appData-icon">
+	                    	<input type="checkbox" name="id" value="{{c.key}}"/>
+	                    </td> 
+	                    <th class="dataTable-name"><a href="{% url advertiser_adgroup_show adgroup_key=c.key %}">{{c.name}}</a> <span class="muted unbold"></span></th>
+	                    <td class="dataTable-data">{{c.bid|currency}}</td>
+	                    <td class="dataTable-data">                    	
+												{% if c.deleted %}
+													<img src="/images/deleted.gif" width=9 height=9/>
+												{% endif %}
+												{% if c.active and not c.deleted %}
+													<img src="/images/active.gif" width=9 height=9/>
+												{% endif %}
+												{% if not c.active and not c.deleted %}
+													<img src="/images/paused.gif" width=9 height=9/>
+												{% endif %}
+	                    </td>
+	                    <td class="dataTable-data"></td>
+	                    <td class="dataTable-data">{{c.stats.impression_count|withsep}}</td>
+	                    <td class="dataTable-data">{{c.stats.click_count|withsep}}</td>
+	                    <td class="dataTable-data">{{c.stats.ctr|percentage|withsep}}</td>
+	                  </tr>
+	                </tbody>
+	              </table>
+	            </div>
+	          	{% endfor %}
+						
+							<br/> {# TODO: FIX THIS #}
+							<h2>Promotional</h2>
+            
+	            <div class="appData-columnHeaders">
+	              <table class="dataTable" id="dashboard-apps-columnHeaders">
+	                <thead>
+	                  <tr>
+	                    <th class="appData-icon"></th>
+	                    <th class="dataTable-name">Campaigns</th>
+	                    <th class="dataTable-data">CPM</th>
+	                    <th class="dataTable-data">Status</th>
+	                    <th class="dataTable-data"></th>
+	                    <th class="dataTable-data">Impressions</th>
+	                    <th class="dataTable-data">Clicks</th>
+	                    <th class="dataTable-data">CTR</th>
+	                  </tr>
+	                </thead>
+	              </table>
+	            </div>
+	            {% for c in promo %}
+	            <div class="appData" id="dashboard-app-{{forloop.counter0}}">
+	              <table class="dataTable appData-main" id="dashboard-app-{{forloop.counter0}}-main">
+	                <tbody>
+	                  <tr>
+	                    <td class="appData-icon">
+												<input type="checkbox" name="id" value="{{c.key}}"/>
+	                   	</td> 
+	                    <th class="dataTable-name"><a href="{% url advertiser_adgroup_show adgroup_key=c.key %}">{{c.name}}</a> <span class="muted unbold"></span></th>
+	                    <td class="dataTable-data">{{c.bid|currency}}</td>
+	                    <td class="dataTable-data">                    	
+												{% if c.deleted %}
+													<img src="/images/deleted.gif" width=9 height=9/>
+												{% endif %}
+												{% if c.active and not c.deleted %}
+													<img src="/images/active.gif" width=9 height=9/>
+												{% endif %}
+												{% if not c.active and not c.deleted %}
+													<img src="/images/paused.gif" width=9 height=9/>
+												{% endif %}
+	                    </td>
+	                    <td class="dataTable-data"></td>
+	                    <td class="dataTable-data">{{c.stats.impression_count|withsep}}</td>
+	                    <td class="dataTable-data">{{c.stats.click_count|withsep}}</td>
+	                    <td class="dataTable-data">{{c.stats.ctr|percentage|withsep}}</td>                  </tr>
+	                </tbody>
+	              </table>
+	            </div>
+	          	{% endfor %}
+						
+							<br/> {# TODO: FIX THIS #}
+							<h2>Network</h2>
+            
+	            <div class="appData-columnHeaders">
+	              <table class="dataTable" id="dashboard-apps-columnHeaders">
+	                <thead>
+	                  <tr>
+	                    <th class="appData-icon"></th>
+	                    <th class="dataTable-name">Campaigns</th>
+	                    <th class="dataTable-data">CPM</th>
+	                    <th class="dataTable-data">Status</th>
+	                    <th class="dataTable-data">Requests</th>
+	                    <th class="dataTable-data">Impressions</th>
+	                    <th class="dataTable-data">Clicks</th>
+	                    <th class="dataTable-data">CTR</th>
+	                  </tr>
+	                </thead>
+	              </table>
+	            </div>
+	            {% for c in network %}
+	            <div class="appData" id="dashboard-app-{{forloop.counter0}}">
+	              <table class="dataTable appData-main" id="dashboard-app-{{forloop.counter0}}-main">
+	                <tbody>
+	                  <tr>
+	                    <td class="appData-icon">
+												<input type="checkbox" name="id" value="{{c.key}}"/>
+											</td> 
+	                    <th class="dataTable-name"><a href="{% url advertiser_adgroup_show adgroup_key=c.key %}">{{c.name}}</a> <span class="muted unbold"></span></th>
+	                    <td class="dataTable-data">{{c.bid|currency}}</td>
+	                    <td class="dataTable-data">                    	
+												{% if c.deleted %}
+													<img src="/images/deleted.gif" width=9 height=9/>
+												{% endif %}
+												{% if c.active and not c.deleted %}
+													<img src="/images/active.gif" width=9 height=9/>
+												{% endif %}
+												{% if not c.active and not c.deleted %}
+													<img src="/images/paused.gif" width=9 height=9/>
+												{% endif %}
+	                    </td>
+	                    <td class="dataTable-data">{{c.stats.request_count|withsep}}</td> 
+	                    <td class="dataTable-data">{{c.stats.impression_count|withsep}}</td>
+	                    <td class="dataTable-data">{{c.stats.click_count|withsep}}</td>
+	                    <td class="dataTable-data">{{c.stats.ctr|percentage|withsep}}</td>
+	                  </tr>
+	                </tbody>
+	              </table>
+	            </div>
+	          	{% endfor %}
+            
+							<a class="button" id="campaignForm-pause">Pause</a>
+							<a class="button" id="campaignForm-resume">Resume</a>
+							<a class="button" id="campaignForm-delete">Delete</a>
+						</form>	
+					</section>
+{% endblock content %}

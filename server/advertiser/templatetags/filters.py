@@ -2,6 +2,7 @@ import re
 import time
 from datetime import datetime
 from django import template
+import base64, binascii
 
 register = template.Library()
 
@@ -65,6 +66,9 @@ def all_user_dropdown(request,value=200):
     htmls.append('<option value="%s">%s</option>'%(account.key().name(),account.user.email()))
   return mark_safe('\n'.join(htmls))
 
+@register.filter
+def binary_data(data):
+  return "data:image/png;base64,%s" % binascii.b2a_base64(data)
   
 register.filter(currency)
 register.filter(currency_no_symbol)

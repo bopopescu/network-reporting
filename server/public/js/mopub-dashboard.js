@@ -113,9 +113,9 @@ var mopub = mopub || {};
 		
 		// Use breakdown to switch charts
 		$('.stats-breakdown tr').click(function(e) {
-			$('#dashboard-stats-chart').fadeOut('fast', function() {
+			$('#dashboard-stats-chart').fadeOut(100, function() {
 				setupDashboardStatsChart();
-				$(this).fadeIn('fast');
+				$(this).show();
 			});
 		});
 		
@@ -191,17 +191,28 @@ var mopub = mopub || {};
 			.button({ icons: { primary: "ui-icon-wrench" } })
 			.click(function(e) {
 				e.preventDefault();
-				$('#dashboard-adunitEditForm').slideDown('fast');
-				$(this).hide();
+				if ($('#dashboard-appEditForm').is(':visible'))
+				  $('#dashboard-appEditForm').slideUp('fast');
+				else
+				  $('#dashboard-appEditForm').slideDown('fast');
 		});
 		$('#dashboard-apps-addAdUnitButton')
 			.button({ icons: { primary: "ui-icon-circle-plus" } })
 			.click(function(e) {
 				e.preventDefault();
-				$('#dashboard-adunitAddForm').slideDown('fast', function() {
-				  $('#dashboard-apps-addAdUnitButton').hide();
-				});
-				
+				if ($('#dashboard-adunitAddForm').is(':visible'))
+				  $('#dashboard-adunitAddForm').slideUp('fast');
+				else
+				  $('#dashboard-adunitAddForm').slideDown('fast');
+		});
+		$('#dashboard-apps-editAdUnitButton')
+			.button({ icons: { primary: "ui-icon-wrench" } })
+			.click(function(e) {
+				e.preventDefault();
+				if ($('#dashboard-adunitEditForm').is(':visible'))
+				  $('#dashboard-adunitEditForm').slideUp('fast');
+				else
+			    $('#dashboard-adunitEditForm').slideDown('fast');
 		});
 		$('#dashboard-apps-toggleAllButton')
 			.button({ 
@@ -211,7 +222,7 @@ var mopub = mopub || {};
 				e.preventDefault();
 		});
 		
-		$('#adunitEditForm-submit')
+		$('#appEditForm-submit')
 			.button({ 
 				icons: { secondary: "ui-icon-circle-triangle-e" } 
 			})
@@ -219,12 +230,10 @@ var mopub = mopub || {};
 				e.preventDefault();
 				$('#appForm').submit();
 		});
-		$('#adunitEditForm-cancel')
+		$('#appEditForm-cancel')
 			.click(function(e) {
 				e.preventDefault();
-				$('#dashboard-adunitEditForm').slideUp('fast', function() {
-				  $('#dashboard-apps-editAppButton').show();
-				});
+				$('#dashboard-appEditForm').slideUp('fast');
 		});
 		
 		$('#adunitAddForm-submit')
@@ -241,6 +250,19 @@ var mopub = mopub || {};
 				$('#dashboard-adunitAddForm').slideUp('fast', function() {
 				  $('#dashboard-apps-addAdUnitButton').show();
 				});
+		});
+		$('#adunitEditForm-submit')
+			.button({ 
+				icons: { secondary: "ui-icon-circle-triangle-e" } 
+			})
+			.click(function(e) {
+				e.preventDefault();
+				$('#adunitEditForm').submit();
+		});
+		$('#adunitEditForm-cancel')
+			.click(function(e) {
+				e.preventDefault();
+				$('#dashboard-adunitEditForm').slideUp('fast');
 		});
 
 		// set up showing/hiding of app details
@@ -307,15 +329,27 @@ var mopub = mopub || {};
 			}
 		});
 
+		/*---------------------------------------/
+		/ App Details Form
+		/---------------------------------------*/
+		
+		// Platform-dependent URL/package name switching
+		$('#appForm input[name="app_type"]').click(function(e) {
+			$('#appForm .appForm-platformDependent')
+				.removeClass('iphone')
+				.removeClass('android')
+				.addClass($(this).val());
+		}).filter(':checked').click(); // make sure we're in sync when the page loads
+
     // Search button
-    $('#appForm-search')
+    $('#appForm-search-button')
       .button({ icons: { primary: "ui-icon-search" }})
       .click(function(e) {
         e.preventDefault();
-        if ($(this).button( "option", "disabled" ))
-          return;
-        $('#searchAppStore-results').append("<img src='/images/loading2.gif' />")
-          .append("Loading results...");
+//        if ($(this).button( "option", "disabled" ))
+  //        return;
+
+        $('#searchAppStore-loading').show();
 
         $('#dashboard-searchAppStore-custom-modal').dialog({
           buttons: [
@@ -338,14 +372,25 @@ var mopub = mopub || {};
 		if ($('#appForm-name').val() == '') {
 		  $('#appForm-search').button("disable");
 		}
-		$('#appForm-name').keyup(function() {
+		$('#appForm-name').keyup(function(e) {
 			// Show/hide the app search button
 			var name = $.trim($(this).val());
 			if (name.length)
-				$('#appForm-search').button("enable");
+				$('#appForm-search-button').button("enable");
 			else
-				$('#appForm-search').button("disable");
+				$('#appForm-search-button').button("disable");
+      if (e.keyCode == 13) {
+        $('#appForm-search').click();
+      }
 		});
+
+		// Change icon
+    $('#appForm-changeIcon-link').click(function (e) {
+      e.preventDefault();
+      $(this).hide();
+      $('#appForm-icon-upload').show();
+      $('#appForm input[name="img_url"]').val('');
+    });
 
 		/*---------------------------------------/
 		/ Ad Unit Form
@@ -390,6 +435,8 @@ function loadedArtwork(json) {
     return;
 
   $('#searchAppStore-results').html('');
+  $('#searchAppStore-loading').hide();
+  $('#dashboard-searchAppStore-custom-modal').dialog("close");
 
   artwork_json = json;
   var resultCount = json['resultCount'];
@@ -420,7 +467,6 @@ function loadedArtwork(json) {
     )
   }
   
-  $('#dashboard-searchAppStore-custom-modal').dialog("close");
   $('#dashboard-searchAppStore-custom-modal').dialog("open");
 }
 

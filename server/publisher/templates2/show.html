@@ -1,73 +1,139 @@
 {% extends 'publisher/base.html' %}{% load filters %}
-{% block pageTitle %}{{site.name}}{% endblock pageTitle %}
+{% block pageTitle %}
+          <div class="breadcrumb">
+            <a class="linkIcon breadcrumb-back" href="{% url publisher_index %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to App</a>
+            <h1>{{site.name}}</h1>
+          </div>{% endblock pageTitle %}
 {% block titleBarRight %}
-            <span class="titlebar-link">
+            <span class="titlebar-right">
+              <a class="button" id="dashboard-apps-editAdUnitButton" href="#">Edit ad unit settings</a>
               <a class="linkIcon" href="{% url publisher_generate adunit_key=site.key %}">Get code snippet <span class="ui-icon ui-icon-triangle-1-e"></span></a>
             </span>
 {% endblock titleBarRight %}
 {% block messageCenter %}{% endblock messageCenter %}
 
 {% block content %}
-          <div class="separated">
-            <section class="offset nomargin" id="dashboard-stats">
-              <div class="stats">
-                <table class="stats-breakdown">
-                  <tbody>
-                    <tr class="active" id="stats-breakdown-revenue">
-                      <td class="stats-breakdown-value"><span class="inner">{{site.stats.revenue|currency}}</span></td>
-                      <th class="stats-breakdown-name"><span class="inner">Revenue (est.)</span></th>
-                    </tr>
-                    <tr id="stats-breakdown-requests">
-                      <td class="stats-breakdown-value"><span class="inner">{{site.stats.request_count|withsep}}</span></td>
-                      <th class="stats-breakdown-name"><span class="inner">Requests</span></th>
-                    </tr>
-                    <tr id="stats-breakdown-impressions">
-                      <td class="stats-breakdown-value"><span class="inner">{{site.stats.impression_count|withsep}}</span></td>
-                      <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
-                    </tr>
-                    <tr id="stats-breakdown-clicks">
-                      <td class="stats-breakdown-value"><span class="inner">{{site.stats.click_count|withsep}}</span></td>
-                      <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
-                    </tr>
-                  </tbody>
-                </table>
-                <div class="chart chart-loading stats-chart" id="dashboard-stats-chart">
-                  <div class="chart-loading-text">Loading ...</div>
-                  <div class="chart-error-text">Could not load chart</div>
-                  <script type="text/javascript">
-                    // chart data
-                    mopub.dashboardStatsChartData = {
-                      //pointStart: 1294963200000,
-                      pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
-                      pointInterval: 86400000,
-                      'revenue': [
-                        { '{{site.name}}': [{% for t in site.all_stats %}{{t.revenue}}{% if not forloop.last %},{% endif %} {% endfor %}] }
-                      ],
-                      'requests': [
-                        { '{{site.name}}': [{% for t in site.all_stats %}{{t.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
-                      ],
-                      'impressions': [
-                        { '{{site.name}}': [{% for t in site.all_stats %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
-                      ],
-                      'clicks': [
-                        { '{{site.name}}': [{% for t in site.all_stats %}{{t.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
-                      ]
-                    };
-                  </script>
-                </div>
-              </div>
-              <div class="clear"></div>
-            </section>
-          </div>
+          <section id="dashboard-adunitEditForm" class="hidden">
+            <div>
+              <form action="{% url publisher_adunit_update adunit_key=site.key %}" method="POST" accept-charset="utf-8" id="adunitEditForm">
+                <fieldset id="appForm-details" class="alt">
+                  <dl class="formFields"> 
+                    <dt><label for="appForm-adUnitName">Ad unit name:</label></dt> 
+                    <dd><input type="text" class="input-text" name="name" value="{{site.name}}" id="appForm-adUnitName" /></dd> 
+                    
+                    <dt><label for="appForm-adUnitDescription">Description:</label></dt> 
+                    <dd> 
+                      <textarea name="description" id="description" rows="3" cols="40">{{site.description|default_if_none:""}}</textarea> 
+                    </dd> 
 
-          <section>
+                    <dt>Format:</dt> 
+                    <dd> 
+                      <div class="adForm-formats clearfix"> 
+                        <div class="adForm-format"> 
+                          <div class="adForm-format-name"> 
+                            <input type="radio" class="input-radio" name="appForm-adUnitFormat" value="banner" id="appForm-adUnitFormat-banner" checked="checked" /> 
+                            <label for="appForm-adUnitFormat-banner">Banner</label> 
+                            <div class="adForm-format-details">320 &times; 50</div> 
+                          </div> 
+                          <img class="adForm-format-image" src="/images/setup/ad-format-banner.png" alt="Banner ad" /> 
+                        </div> 
+                        <div class="adForm-format"> 
+                          <div class="adForm-format-name"> 
+                            <input type="radio" class="input-radio" name="appForm-adUnitFormat" value="medium" id="appForm-adUnitFormat-medium" /> 
+                            <label for="appForm-adUnitFormat-medium">Medium</label> 
+                            <div class="adForm-format-details">300 &times; 250</div> 
+                          </div> 
+                          <img class="adForm-format-image" src="/images/setup/ad-format-medium.png" alt="Medium ad" /> 
+                        </div> 
+                        <div class="adForm-format"> 
+                          <div class="adForm-format-name"> 
+                            <input type="radio" class="input-radio" name="appForm-adUnitFormat" value="full" id="appForm-adUnitFormat-full" /> 
+                            <label for="appForm-adUnitFormat-full">Fullscreen</label> 
+                            <div class="adForm-format-details">320 &times; 480</div> 
+                          </div> 
+                          <img class="adForm-format-image" src="/images/setup/ad-format-full.png" alt="Fullscreen ad" /> 
+                        </div> 
+                        <div class="adForm-format adForm-format-custom"> 
+                          <div class="adForm-format-name"> 
+                            <input type="radio" class="input-radio" name="appForm-adUnitFormat" value="custom" id="appForm-adUnitFormat-custom" /> 
+                            <label for="appForm-adUnitFormat-custom">Custom</label> 
+                            <div class="adForm-format-details"> 
+                              <input type="text" class="input-text input-text-small" name="appForm-adUnitFormatCustomWidth" value="" id="appForm-adUnitFormatCustomWidth" placeholder="width" /> 
+                              &times;
+                              <input type="text" class="input-text input-text-small" name="appForm-adUnitFormatCustomHeight" value="" id="appForm-adUnitFormatCustomHeight" placeholder="height" /> 
+                            </div> 
+                          </div> 
+                        </div> 
+                      </div> 
+                    </dd> 
+                    <dt><label for="appForm-adUnitKeywords">Default keywords:</label></dt> 
+                    <dd> 
+                      <textarea name="keywords" id="appForm-adUnitKeywords" rows="3" cols="40" placeholder="e.g. coffee, espresso, cafe, iced tea">{{site.keywords|default_if_none:""}}</textarea> 
+                    </dd> 
+                    
+                  </dl>
+                  <div class="clear" />
+                  <div class="form-submit"> 
+                    <span class="buttonWrap"><a href="#" class="button" id="adunitEditForm-submit">Save</a></span> 
+                    <span class="buttonWrap"><a href="#" class="button" id="adunitEditForm-cancel">Cancel</a></span> 
+                  </div> 
+                </fieldset>
+              </form>
+            </div>
+          </section>
+          <section class="offset nomargin" id="dashboard-stats">
+            <div class="stats">
+              <table class="stats-breakdown">
+                <tbody>
+                  <tr class="active" id="stats-breakdown-requests">
+                    <td class="stats-breakdown-value"><span class="inner">{{site.stats.request_count|withsep}}</span></td>
+                    <th class="stats-breakdown-name"><span class="inner">Requests</span></th>
+                  </tr>
+                  <tr id="stats-breakdown-impressions">
+                    <td class="stats-breakdown-value"><span class="inner">{{site.stats.impression_count|withsep}}</span></td>
+                    <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
+                  </tr>
+                  <tr id="stats-breakdown-clicks">
+                    <td class="stats-breakdown-value"><span class="inner">{{site.stats.click_count|withsep}}</span></td>
+                    <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="chart chart-loading stats-chart" id="dashboard-stats-chart">
+                <div class="chart-loading-text">Loading ...</div>
+                <div class="chart-error-text">Could not load chart</div>
+                <script type="text/javascript">
+                  // chart data
+                  mopub.dashboardStatsChartData = {
+                    //pointStart: 1294963200000,
+                    pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
+                    pointInterval: 86400000,
+                    'requests': [
+                      { '{{site.name}}': [{% for t in site.all_stats %}{{t.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
+                    ],
+                    'impressions': [
+                      { '{{site.name}}': [{% for t in site.all_stats %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
+                    ],
+                    'clicks': [
+                      { '{{site.name}}': [{% for t in site.all_stats %}{{t.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
+                    ]
+                  };
+                </script>
+              </div>
+            </div>
+            <div class="clear"></div>
+          </section>
+
+          <div class="clear"></div>
+
+          <section id="dashboard-apps">
             <h2>Campaigns</h2>
             <div class="appData-columnHeaders">
               <table class="dataTable" id="dashboard-campaigns-columnHeaders">
                 <thead>
                   <tr>
                     <th class="appData-icon"></th>
-                    <th class="dataTable-name"></th>
+                    <th class="dataTable-name">&nbsp;</th>
                     <th class="dataTable-data">Revenue</th>
                     <th class="dataTable-data">Impressions</th>
                     <th class="dataTable-data">Clicks</th>
@@ -94,7 +160,7 @@
                   <table class="dataTable">
                     <tbody>
                       {% for ag in site.adgroups %}<tr>
-                        <th class="dataTable-name"><a href="{% url advertiser_adgroup_show adgroup_key=ag.key %}">{{ag.name}}</a></th>
+                        <th class="dataTable-name"><span class="inner"><a href="{% url advertiser_adgroup_show adgroup_key=ag.key %}">{{ag.name}}</a></span></th>
                         <td class="dataTable-data">{{ag.stats.revenue|currency}}</td>
                         <td class="dataTable-data">{{ag.stats.impression_count|withsep}}</td>
                         <td class="dataTable-data">{{ag.stats.click_count|withsep}}</td>
@@ -104,23 +170,20 @@
                     </tbody>
                   </table>
                 </div>
-                <a class="button smallButton appData-details-toggleButton" href="#">Hide details</a>
+                <a class="button button-small appData-details-toggleButton" href="#">Hide details</a>
               </div>
             </div>
             
           </section>
 
           <section id="dashboard-apps">
-            <div class="buttonBank buttonBank-right">
-              <a class="button" id="dashboard-apps-toggleAllButton" href="#">Show/hide all details</a>
-            </div>
             <h2>Daily Counts</h2>            
             <div class="appData-columnHeaders">
               <table class="dataTable" id="dashboard-apps-columnHeaders">
                 <thead>
                   <tr>
                     <th class="appData-icon"></th>
-                    <th class="dataTable-name"></th>
+                    <th class="dataTable-name">&nbsp;</th>
                     <th class="dataTable-data">Requests</th>
                     <th class="dataTable-data">Impressions</th>
                     <th class="dataTable-data">Clicks</th>
@@ -157,7 +220,7 @@
                     </tbody>
                   </table>
                 </div>
-                <a class="button smallButton appData-details-toggleButton" href="#">Hide details</a>
+                <a class="button button-small appData-details-toggleButton" href="#">Hide details</a>
               </div>
             </div>
           </section>

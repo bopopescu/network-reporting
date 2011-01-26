@@ -52,6 +52,5 @@ handlers:
 - url: /.*
   script: main.py
 
-skip_files: 
-- django\.zip 
-
+skip_files:  
+- django\.zip  

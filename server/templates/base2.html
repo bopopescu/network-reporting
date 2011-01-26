@@ -32,14 +32,15 @@
   <script src="/js/mylibs/jquery-ui-1.8.7.custom/js/jquery-ui-1.8.7.custom.min.js"></script>
   <script src="/js/mylibs/jquery.placeholder.js"></script> 
   <script src="/js/mylibs/jquery.qtip-1.0.0-rc3.min.js"></script> 
-  
+  <script src="/js/mylibs/jquery.text-overflow.min.js"></script  
+
   <!-- Highcharts -->
   <script src="/js/mylibs/highcharts/highcharts.js"></script>
   
   <!-- MoPub -->
   <script src="/js/plugins.js"></script>
-  <script src="/js/mopub.js"></script>
-  {% block extraScripts %}<script src="/js/mopub-dashboard.js"></script>{% endblock extraScripts %}
+  <script src="/js/mopub.js?v=blah"></script>
+  {% block extraScripts %}<script src="/js/mopub-dashboard.js?v=blah3"></script>{% endblock extraScripts %}
   
   <!--[if lt IE 7 ]>
     <script src="/js/libs/dd_belatedpng.js"></script>
@@ -51,8 +52,8 @@
   <div id="container">
     <a class="visuallyhidden" href="#main">Skip navigation</a>
     <div id="jsnotice">
-      Javascript is currently disabled. This site requires Javascript to function correctly.
-      Please <a href="http://enable-javascript.com/"> enable Javascript in your browser</a>!
+      JavaScript is currently disabled. This site requires JavaScript to function correctly.
+      Please <a href="http://enable-javascript.com/"> enable JavaScript in your browser</a>!
     </div>
     
     <header>
@@ -81,7 +82,7 @@
     <div id="main">
       <div id="titlebar">
         <div class="pageWidth">
-          <h1>{% block pageTitle %}Dashboard{% endblock pageTitle %}</h1>
+          {% block pageTitle %}<h1>Dashboard</h1>{% endblock pageTitle %}
 {% block dateButtons %}
           <div id="titlebar-center">
             <span class="buttonset" id="dashboard-dateOptions">
@@ -165,6 +166,7 @@
         </div>
       </div>
     </div>
+    <div class="clear"></div>
     
     <footer>
       <div id="footer-inner">

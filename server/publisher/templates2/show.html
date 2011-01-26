@@ -85,10 +85,6 @@
             <div class="stats">
               <table class="stats-breakdown">
                 <tbody>
-                  <tr class="active" id="stats-breakdown-revenue">
-                    <td class="stats-breakdown-value"><span class="inner">{{site.stats.revenue|currency}}</span></td>
-                    <th class="stats-breakdown-name"><span class="inner">Revenue (est.)</span></th>
-                  </tr>
                   <tr id="stats-breakdown-requests">
                     <td class="stats-breakdown-value"><span class="inner">{{site.stats.request_count|withsep}}</span></td>
                     <th class="stats-breakdown-name"><span class="inner">Requests</span></th>
@@ -112,9 +108,6 @@
                     //pointStart: 1294963200000,
                     pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
                     pointInterval: 86400000,
-                    'revenue': [
-                      { '{{site.name}}': [{% for t in site.all_stats %}{{t.revenue}}{% if not forloop.last %},{% endif %} {% endfor %}] }
-                    ],
                     'requests': [
                       { '{{site.name}}': [{% for t in site.all_stats %}{{t.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
                     ],

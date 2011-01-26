@@ -1,14 +1,18 @@
 {% extends 'publisher/base.html' %}{% load filters %}
-{% block pageTitle %}{{app.name}}{% endblock pageTitle %}
+{% block pageTitle %}
+          <div class="breadcrumb">
+            <a class="linkIcon breadcrumb-back" href="{% url publisher_index %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Dashboard</a>
+            <h1>{{app.name}}</h1>
+          </div>{% endblock pageTitle %}
 {% block messageCenter %}{% endblock messageCenter %}
 {% block titleBarRight %}
-            <span class="titlebar-link">
+            <span class="titlebar-right">
               <a class="button" id="dashboard-apps-editAppButton" href="#">Edit app settings</a>
             </span>
 {% endblock titleBarRight %}
 
 {% block content %}
-          <section id="dashboard-adunitEditForm">
+          <section id="dashboard-appEditForm" class="hidden">
             <div>
               <form action="{% url publisher_app_update app_key=app.key %}" method="POST" accept-charset="utf-8" id="appForm">
                 <fieldset id="appForm-details" class="alt">
@@ -21,13 +25,18 @@
                       </span> 
                     </dd>
                     <dt><label for="appForm-name">App name:</label></dt> 
-                    <dd> 
+                    <dd class="appForm-platformDependent iphone"> 
                       <input type="text" class="input-text" name="name" value="{{app.name}}" id="appForm-name" />
-                      <span class="buttonWrap"><a href="#" class="button" id="appForm-search">Search AppStore</a></span>
-                      <div id="dashboard-searchAppStore-custom-modal">
-                        <h2>Search Results</h2>
-                        <div id="searchAppStore-results"></div>
-                      </div>
+                      <div class="formFields-field-help iphone" id="appForm-search"> 
+                        <a href="#" class="button" id="appForm-search-button">Search App Store</a> 
+                        <div id="dashboard-searchAppStore-custom-modal" class="hidden"> 
+                          <h3>Search Results</h3> 
+                          <div class="loading" id="searchAppStore-loading"> 
+                            <img src="/images/icons-custom/spinner-16.gif" alt="Loading" /> Please wait ...
+                          </div> 
+                          <div id="searchAppStore-results"></div> 
+                        </div> 
+                      </div> 
                     </dd> 
                     <dt class="appForm-platformDependent iphone"> 
                       <label class="iphone" for="appForm-url">iTunes URL:</label> 
@@ -39,82 +48,85 @@
                     </dd>
                     <dt><label for="appForm-icon">Icon:</label></dt> 
                     <dd> 
-                      <div id="appForm-icon" class="appData-icon">
-                        <img height="40px" width="40px" src="{% if app.icon_url %}{{app.icon_url}}{% else %}/images/noicon.png{% endif %}"/>
+                       <div id="appForm-icon" class="appData-icon">
+                         <img src="/images/misc/appicon-missing.png" alt="No icon" />
+                       </div>
+                       <div id="appForm-changeIcon">
+                         <span class="sep">&middot;</span>
+                         <a id="appForm-changeIcon-link" href="#">Upload an app icon ...</a>
+                        <input id="appForm-icon-upload" type="file" name="img_file" class="hidden" />
+                        <input type="hidden" name="img_url" value="" />
                       </div>
-                      <a id="appForm-icon-change" href="#">Change</a>
-                      <input id="appForm-icon-upload" type="file" name="img_file" style="display:none;" />
-                      <input type="hidden" name="img_url" value="" />
                     </dd>
                   </dl>
                   <div class="clear" />
                   <div class="form-submit"> 
-                    <span class="buttonWrap"><a href="#" class="button" id="adunitEditForm-submit">Save</a></span> 
-                    <span class="buttonWrap"><a href="#" class="button" id="adunitEditForm-cancel">Cancel</a></span> 
+                    <span class="buttonWrap"><a href="#" class="button" id="appEditForm-submit">Save</a></span> 
+                    <span class="buttonWrap"><a href="#" class="button" id="appEditForm-cancel">Cancel</a></span> 
                   </div> 
                 </fieldset>
               </form>
             </div>
           </section>
           
-          <div class="separated">            
-            <section class="offset nomargin" id="dashboard-stats">
-              <div class="stats">
-                <table class="stats-breakdown">
-                  <tbody>
-                    <tr class="active" id="stats-breakdown-revenue">
-                      <td class="stats-breakdown-value"><span class="inner">{{app.stats.revenue|currency}}</span></td>
-                      <th class="stats-breakdown-name"><span class="inner">Revenue (est.)</span></th>
-                    </tr>
-                    <tr id="stats-breakdown-requests">
-                      <td class="stats-breakdown-value"><span class="inner">{{app.stats.request_count|withsep}}</span></td>
-                      <th class="stats-breakdown-name"><span class="inner">Requests</span></th>
-                    </tr>
-                    <tr id="stats-breakdown-impressions">
-                      <td class="stats-breakdown-value"><span class="inner">{{app.stats.impression_count|withsep}}</span></td>
-                      <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
-                    </tr>
-                    <tr id="stats-breakdown-clicks">
-                      <td class="stats-breakdown-value"><span class="inner">{{app.stats.click_count|withsep}}</span></td>
-                      <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
-                    </tr>
-                    <tr id="stats-breakdown-users">
-                      <td class="stats-breakdown-value"><span class="inner">{{app.stats.unique_user_count|withsep}}</span></td>
-                      <th class="stats-breakdown-name"><span class="inner">Users</span></th>
-                    </tr>
-                  </tbody>
-                </table>
-                <div class="chart chart-loading stats-chart" id="dashboard-stats-chart">
-                  <div class="chart-loading-text">Loading ...</div>
-                  <div class="chart-error-text">Could not load chart</div>
-                  <script type="text/javascript">
-                    // chart data
-                    mopub.dashboardStatsChartData = {
-                      //pointStart: 1294963200000,
-                      pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
-                      pointInterval: 86400000,
-                      'revenue': [{% for au in app.graph_adunits %}
-                        { '{{au.name}}': [{% for t in au.all_stats %}{{t.revenue}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                      ],
-                      'requests': [{% for au in app.graph_adunits %}
-                        { '{{au.name}}': [{% for t in au.all_stats %}{{t.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                      ],
-                      'impressions': [{% for au in app.graph_adunits %}
-                        { '{{au.name}}': [{% for t in au.all_stats %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                      ],
-                      'clicks': [{% for au in app.graph_adunits %}
-                        { '{{au.name}}': [{% for t in au.all_stats %}{{t.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                      ],
-                      'users': [{% for au in app.graph_adunits %}
-                        { '{{au.name}}': [{% for t in au.all_stats %}{{t.unique_user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                      ]
-                    };
-                  </script>
-                </div>
+          <section class="offset nomargin" id="dashboard-stats">
+            <div class="stats">
+              <table class="stats-breakdown">
+                <tbody>
+                  <tr class="active" id="stats-breakdown-revenue">
+                    <td class="stats-breakdown-value"><span class="inner">{{app.stats.revenue|currency}}</span></td>
+                    <th class="stats-breakdown-name"><span class="inner">Revenue (est.)</span></th>
+                  </tr>
+                  <tr id="stats-breakdown-requests">
+                    <td class="stats-breakdown-value"><span class="inner">{{app.stats.request_count|withsep}}</span></td>
+                    <th class="stats-breakdown-name"><span class="inner">Requests</span></th>
+                  </tr>
+                  <tr id="stats-breakdown-impressions">
+                    <td class="stats-breakdown-value"><span class="inner">{{app.stats.impression_count|withsep}}</span></td>
+                    <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
+                  </tr>
+                  <tr id="stats-breakdown-clicks">
+                    <td class="stats-breakdown-value"><span class="inner">{{app.stats.click_count|withsep}}</span></td>
+                    <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
+                  </tr>
+                  <tr id="stats-breakdown-users">
+                    <td class="stats-breakdown-value"><span class="inner">{{app.stats.unique_user_count|withsep}}</span></td>
+                    <th class="stats-breakdown-name"><span class="inner">Users</span></th>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="chart chart-loading stats-chart" id="dashboard-stats-chart">
+                <div class="chart-loading-text">Loading ...</div>
+                <div class="chart-error-text">Could not load chart</div>
+                <script type="text/javascript">
+                  // chart data
+                  mopub.dashboardStatsChartData = {
+                    //pointStart: 1294963200000,
+                    pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
+                    pointInterval: 86400000,
+                    'revenue': [{% for au in app.graph_adunits %}
+                      { '{{au.name}}': [{% for t in au.all_stats %}{{t.revenue}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                    ],
+                    'requests': [{% for au in app.graph_adunits %}
+                      { '{{au.name}}': [{% for t in au.all_stats %}{{t.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                    ],
+                    'impressions': [{% for au in app.graph_adunits %}
+                      { '{{au.name}}': [{% for t in au.all_stats %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                    ],
+                    'clicks': [{% for au in app.graph_adunits %}
+                      { '{{au.name}}': [{% for t in au.all_stats %}{{t.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                    ],
+                    'users': [{% for au in app.graph_adunits %}
+                      { '{{au.name}}': [{% for t in au.all_stats %}{{t.unique_user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                    ]
+                  };
+                </script>
               </div>
-              <div class="clear"></div>
-            </section>
-          </div>
+            </div>
+            <div class="clear"></div>
+          </section>
+          
+          <div class="clear"></div>
           
           <section id="dashboard-apps">
             <div class="buttonBank buttonBank-right">
@@ -122,7 +134,7 @@
             </div>
             <h2>Ad Units</h2>
             
-            <section id="dashboard-adunitAddForm">
+            <section id="dashboard-adunitAddForm" class="hidden">
               <div>
                 <form action="{% url publisher_adunit_create %}" method="POST" accept-charset="utf-8" id="adunitAddForm">
                   <input type="hidden" name="id" value="{{app.key}}"/>
@@ -175,16 +187,7 @@
                             </div> 
                           </div> 
                         </div> 
-                      </dd> 
-
-                      <dt><label for="appForm-adUnitType">Preferred ad type:</label></dt> 
-                      <dd> 
-                        <select name="ad_type" id="appForm-adUnitType"> 
-                          <option value="image" selected="selected">Text and image</option> 
-                          <option value="text">Text only</option> 
-                        </select> 
-                      </dd> 
-
+                      </dd>
                       <dt><label for="appForm-adUnitKeywords">Default keywords:</label></dt> 
                       <dd> 
                         <textarea name="keywords" id="appForm-adUnitKeywords" rows="3" cols="40" placeholder="e.g. coffee, espresso, cafe, iced tea"></textarea> 
@@ -206,7 +209,7 @@
                 <thead>
                   <tr>
                     <th class="appData-icon"></th>
-                    <th class="dataTable-name"></th>
+                    <th class="dataTable-name">&nbsp;</th>
                     <th class="dataTable-data">Requests</th>
                     <th class="dataTable-data">Impressions</th>
                     <th class="dataTable-data">Clicks</th>
@@ -234,7 +237,7 @@
                     <tbody>
                       {% for au in app.adunits %}
                       <tr>
-                        <th class="dataTable-name"><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a></th>
+                        <th class="dataTable-name"><span class="inner"><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a></span></th>
                         <td class="dataTable-data">{{au.stats.request_count}}</td>
                         <td class="dataTable-data">{{au.stats.impression_count}}</td>
                         <td class="dataTable-data">{{au.stats.click_count}}</td>

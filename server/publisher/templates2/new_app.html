@@ -1,7 +1,7 @@
 {% extends 'publisher/base.html' %}
 {% load filters %}
 {% block extraScripts %}<script src="/js/mopub-setup.js"></script>{% endblock extraScripts %}
-{% block pageTitle %}{% if has_app %}Add an app{% else %}Step 1: Set up your first app{% endif %}{% endblock pageTitle %}{% block dateButtons %}{% endblock dateButtons %}
+{% block pageTitle %}<h1>{% if has_app %}Add an app{% else %}Step 1: Set up your first app{% endif %}</h1>{% endblock pageTitle %}{% block dateButtons %}{% endblock dateButtons %}
 {% block titleBarRight %}{% if not has_app %}            <div class="stepProgress"> 
               <span class="stepProgress-step stepProgress-active">Step 1: Add app</span> 
               <span class="ui-icon ui-icon-arrow-1-e"></span> 
@@ -31,11 +31,16 @@
                     <dt><label for="appForm-name">App name:</label></dt> 
                     <dd class="appForm-platformDependent iphone"> 
                       <input type="text" class="input-text" name="name" value="{{f.cleaned_data.name}}" id="appForm-name" />
-                      <span class="buttonWrap iphone"><a href="#" class="button" id="appForm-search">Search AppStore</a></span>
-                      <div id="dashboard-searchAppStore-custom-modal">
-                        <h2>Search Results</h2>
-                        <div id="searchAppStore-results"></div>
-                      </div>
+                      <div class="formFields-field-help iphone" id="appForm-search"> 
+                        <a href="#" class="button" id="appForm-search-button">Search App Store</a> 
+                        <div id="dashboard-searchAppStore-custom-modal" class="hidden"> 
+                          <h3>Search Results</h3> 
+                          <div class="loading" id="searchAppStore-loading"> 
+                            <img src="/images/icons-custom/spinner-16.gif" alt="Loading" /> Please wait ...
+                          </div> 
+                          <div id="searchAppStore-results"></div> 
+                        </div> 
+                      </div> 
                     </dd> 
           
                     <dt class="appForm-platformDependent iphone"> 
@@ -50,11 +55,14 @@
                     <dt><label for="appForm-icon">Icon:</label></dt> 
                     <dd> 
                       <div id="appForm-icon" class="appData-icon">
-                        <img height="40px" width="40px" src="/images/noicon.png"/>
+                        <img src="/images/misc/appicon-missing.png" alt="No icon" />
                       </div>
-                      <a id="appForm-icon-change" href="#">Change</a>
-                      <input id="appForm-icon-upload" type="file" name="img_file" style="display:none;" />
-                      <input type="hidden" name="img_url" value="" />
+                      <div id="appForm-changeIcon">
+                        <span class="sep">&middot;</span>
+                        <a id="appForm-changeIcon-link" href="#">Upload an app icon ...</a>
+                       <input id="appForm-icon-upload" type="file" name="img_file" style="display:none;" />
+                       <input type="hidden" name="img_url" value="" />
+                     </div>
                     </dd>
           
                   </dl> 
@@ -110,20 +118,11 @@
                               <input type="text" class="input-text input-text-small" name="appForm-adUnitFormatCustomWidth" value="" id="appForm-adUnitFormatCustomWidth" placeholder="width" /> 
                               &times;
                               <input type="text" class="input-text input-text-small" name="appForm-adUnitFormatCustomHeight" value="" id="appForm-adUnitFormatCustomHeight" placeholder="height" /> 
-                            </div> 
-                          </div> 
-                        </div> 
-                      </div> 
-                    </dd> 
-          
-                    <dt><label for="appForm-adUnitType">Preferred ad type:</label></dt> 
-                    <dd> 
-                      <select name="ad_type" id="appForm-adUnitType"> 
-                        <option value="image" selected="selected">Text and image</option> 
-                        <option value="text">Text only</option> 
-                      </select> 
-                    </dd> 
-          
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </dd>
                     <dt><label for="appForm-adUnitKeywords">Default keywords:</label></dt> 
                     <dd> 
                       <textarea name="keywords" id="appForm-adUnitKeywords" rows="3" cols="40" placeholder="e.g. coffee, espresso, cafe, iced tea"></textarea> 

@@ -6,64 +6,64 @@
 {% block messageCenter %}{% endblock messageCenter %}
 
 {% block content %}
-          <div class="separated">
-            <section class="offset nomargin" id="dashboard-stats">
-              <div class="stats">
-                <table class="stats-breakdown">
-                  <tbody>
-                    <tr class="active" id="stats-breakdown-revenue">
-                      <td class="stats-breakdown-value"><span class="inner">{{totals.revenue|currency}}</span></td>
-                      <th class="stats-breakdown-name"><span class="inner">Revenue (est.)</span></th>
-                    </tr>
-                    <tr id="stats-breakdown-requests">
-                      <td class="stats-breakdown-value"><span class="inner">{{totals.request_count|withsep}}</span></td>
-                      <th class="stats-breakdown-name"><span class="inner">Requests</span></th>
-                    </tr>
-                    <tr id="stats-breakdown-impressions">
-                      <td class="stats-breakdown-value"><span class="inner">{{totals.impression_count|withsep}}</span></td>
-                      <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
-                    </tr>
-                    <tr id="stats-breakdown-clicks">
-                      <td class="stats-breakdown-value"><span class="inner">{{totals.click_count|withsep}}</span></td>
-                      <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
-                    </tr>
-                    <tr id="stats-breakdown-users">
-                      <td class="stats-breakdown-value"><span class="inner">{{totals.unique_user_count|withsep}}</span></td>
-                      <th class="stats-breakdown-name"><span class="inner">Users</span></th>
-                    </tr>
-                  </tbody>
-                </table>
-                <div class="chart chart-loading stats-chart" id="dashboard-stats-chart">
-                  <div class="chart-loading-text">Loading ...</div>
-                  <div class="chart-error-text">Could not load chart</div>
-                  <script type="text/javascript">
-                    // chart data
-                    mopub.dashboardStatsChartData = {
-                      //pointStart: 1294963200000,
-                      pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
-                      pointInterval: 86400000,
-                      'revenue': [{% for a in graph_apps %}
-                        { '{{a.name}}': [{% for t in a.totals %}{{t.revenue}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                      ],
-                      'requests': [{% for a in graph_apps %}
-                        { '{{a.name}}': [{% for t in a.totals %}{{t.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                      ],
-                      'impressions': [{% for a in graph_apps %}
-                        { '{{a.name}}': [{% for t in a.totals %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                      ],
-                      'clicks': [{% for a in graph_apps %}
-                        { '{{a.name}}': [{% for t in a.totals %}{{t.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                      ],
-                      'users': [{% for a in graph_apps %}
-                        { '{{a.name}}': [{% for t in a.totals %}{{t.unique_user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                      ]
-                    };
-                  </script>
-                </div>
+          <section class="offset nomargin" id="dashboard-stats">
+            <div class="stats">
+              <table class="stats-breakdown">
+                <tbody>
+                  <tr class="active" id="stats-breakdown-revenue">
+                    <td class="stats-breakdown-value"><span class="inner">{{totals.revenue|currency}}</span></td>
+                    <th class="stats-breakdown-name"><span class="inner">Revenue (est.)</span></th>
+                  </tr>
+                  <tr id="stats-breakdown-requests">
+                    <td class="stats-breakdown-value"><span class="inner">{{totals.request_count|withsep}}</span></td>
+                    <th class="stats-breakdown-name"><span class="inner">Requests</span></th>
+                  </tr>
+                  <tr id="stats-breakdown-impressions">
+                    <td class="stats-breakdown-value"><span class="inner">{{totals.impression_count|withsep}}</span></td>
+                    <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
+                  </tr>
+                  <tr id="stats-breakdown-clicks">
+                    <td class="stats-breakdown-value"><span class="inner">{{totals.click_count|withsep}}</span></td>
+                    <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
+                  </tr>
+                  <tr id="stats-breakdown-users">
+                    <td class="stats-breakdown-value"><span class="inner">{{totals.unique_user_count|withsep}}</span></td>
+                    <th class="stats-breakdown-name"><span class="inner">Users</span></th>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="chart chart-loading stats-chart" id="dashboard-stats-chart">
+                <div class="chart-loading-text">Loading ...</div>
+                <div class="chart-error-text">Could not load chart</div>
+                <script type="text/javascript">
+                  // chart data
+                  mopub.dashboardStatsChartData = {
+                    //pointStart: 1294963200000,
+                    pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
+                    pointInterval: 86400000,
+                    'revenue': [{% for a in graph_apps %}
+                      { '{{a.name}}': [{% for t in a.totals %}{{t.revenue}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                    ],
+                    'requests': [{% for a in graph_apps %}
+                      { '{{a.name}}': [{% for t in a.totals %}{{t.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                    ],
+                    'impressions': [{% for a in graph_apps %}
+                      { '{{a.name}}': [{% for t in a.totals %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                    ],
+                    'clicks': [{% for a in graph_apps %}
+                      { '{{a.name}}': [{% for t in a.totals %}{{t.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                    ],
+                    'users': [{% for a in graph_apps %}
+                      { '{{a.name}}': [{% for t in a.totals %}{{t.unique_user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                    ]
+                  };
+                </script>
               </div>
-              <div class="clear"></div>
-            </section>
-          </div>
+            </div>
+            <div class="clear"></div>
+          </section>
+
+          <div class="clear"></div>
 
           <section id="dashboard-apps">
             <div class="buttonBank buttonBank-right">
@@ -77,7 +77,7 @@
                 <thead>
                   <tr>
                     <th class="appData-icon"></th>
-                    <th class="dataTable-name"></th>
+                    <th class="dataTable-name">&nbsp;</th>
                     <th class="dataTable-data">Requests</th>
                     <th class="dataTable-data">Impressions</th>
                     <th class="dataTable-data">Clicks</th>
@@ -92,7 +92,7 @@
                 <tbody>
                   <tr>
                     <td class="appData-icon"><a href="{% url publisher_app_show app_key=a.key %}"><img src="{% if a.icon_url %}{{a.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" /></a></td>
-                    <th class="dataTable-name"><a href="{% url publisher_app_show app_key=a.key %}">{{a.name}}</a> <span class="muted unbold">({% ifequal a.app_type "iphone" %}iOS{% endifequal %}{% ifequal a.app_type "android" %}Android{% endifequal %})</span></th>
+                    <th class="dataTable-name"><span class="inner"><a href="{% url publisher_app_show app_key=a.key %}">{{a.name}}</a> <span class="muted unbold">({% ifequal a.app_type "iphone" %}iOS{% endifequal %}{% ifequal a.app_type "android" %}Android{% endifequal %})</span></span></th>
                     <td class="dataTable-data">{{a.stats.request_count}}</td>
                     <td class="dataTable-data">{{a.stats.impression_count}}</td>
                     <td class="dataTable-data">{{a.stats.click_count}}</td>
@@ -105,7 +105,7 @@
                   <table class="dataTable">
                     <tbody>
                       {% for au in a.adunits %}<tr>
-                        <th class="dataTable-name"><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a></th>
+                        <th class="dataTable-name"><span class="inner"><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a></span></th>
                         <td class="dataTable-data">{{au.stats.request_count}}</td>
                         <td class="dataTable-data">{{au.stats.impression_count}}</td>
                         <td class="dataTable-data">{{au.stats.click_count}}</td>
@@ -115,8 +115,8 @@
                     </tbody>
                   </table>
                 </div>
-                <a class="button smallButton appData-details-toggleButton" href="#">Hide details</a>
+                <a class="button button-small appData-details-toggleButton" href="#">Hide details</a>
               </div>
             </div>
-          {% endfor %}</section>
+            {% endfor %}</section>
 {% endblock content %}

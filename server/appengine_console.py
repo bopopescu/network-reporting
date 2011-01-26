@@ -1,4 +1,9 @@
 #!/usr/bin/python
+
+from appengine_django import InstallAppengineHelperForDjango
+InstallAppengineHelperForDjango()
+
+
 import code
 import getpass
 import sys
@@ -12,6 +17,7 @@ sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/Go
 from google.appengine.ext.remote_api import remote_api_stub
 from google.appengine.ext import db
 
+    
 def auth_func():
     return raw_input('Username:'), getpass.getpass('Password:')
 

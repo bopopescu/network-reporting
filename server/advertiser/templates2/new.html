@@ -9,55 +9,28 @@
 {% block content %}
 <section id="advertiser-adgroupCreateForm">
   <div class="content-main"> 
-		{% if f.errors %}
-		<div class="alertMessage error">{{f.errors}}</div>
+		{% if campaign_form.errors or adgroup_form.errors %}
+		<div class="alertMessage error">{{campaign_form.errors}}{{adgroup_form.errors}} </div>
 		{% endif %}
 	
     <form action="" method="POST" accept-charset="utf-8" id="campaignAdgroupForm" class="">
 			<input type="hidden" name="id" value="{{campaign.key}}"/>
 			<input type="hidden" name="name" value="{{campaign.name}}"/>
 	
-			{{f.as_template}}
+			<fieldset id="appForm-details" class="alt">
+			  <legend>Campaign Details</legend> 
+			  <p> 
+					Campaigns allow you manage ads that will run on your mobile ad units.        
+				</p> 
+				{{campaign_form.as_template}}
+			</fieldset>	
 	
       <fieldset id="appForm-details">
 	      <legend>Targeting</legend> 
         <p> 
 					Campaigns allow you manage ads that will run on your mobile ad units.        
 				</p>
-        <dl class="formFields"> 
-					<dt><label for="TOOD5">Ad Units:</label></dt>
-					<dd> 
-						<ul style="overflow:auto; max-height:100px; list-style: none;border:1px solid #aaa; padding:5px 10px"> 
-						{% for adunit in all_adunits %}   
-								<li><input type="checkbox" name="sites" value="{{adunit.key}}"{% if adunit.checked %} checked="checked"{% endif %}> {{adunit.app.name}} &gt; {{adunit.name}} </input></li>   
-						{% endfor %}   
-						</ul>  
-					</dd>		 
-					
-					<dt><label for="TODO6">Goal:</label></dt>
-					<dd>
-						<input type="text" class="input-text" name="percent_users" value="{{f.percent_users.value}}"/> % of all <select name="budget_type"><option>Users</option><option>Requests</option></select>
-					</dd>
-
-					<dt><label for="TODO7">Frequency Caps:</label></dt>
-					<dd>
-							<input name="daily_frequency_cap" class="input-text" type="text" value="{{f.instance.daily_frequency_cap}}"/> daily impressions per user <br/><br/>
-							<input name="hourly_frequency_cap" class="input-text" type="text" value="{{f.instance.hourly_frequency_cap}}"/> hourly impressions per user
-					</dd>	
-					<dt><label for="TODO8">Keywords:</label></dt>
-					<dd><textarea cols="50" rows="3" name="keywords" placeholder="Keywords, one per line, e.g. coffee">{{f.instance.keywords|join:"&#10;"}}</textarea>
-					</dd>
-					<dt><label for="TODO9">Geo Predicates:</label></dt>
-					<dd>
-						<textarea name="geo_predicates">{% if f.instance.geo_predicates %}{{f.instance.geo_predicates|join:"&#10;"}}{% else %}country_name=*{% endif %}</textarea>
-						<div>country_name=X; region_name=X,country_name=X; city_name=X,region_name=X,country_name=X</div>
-					</dd>
-					<dt><label for="TODO10">Device Predicates:</label></dt> 
-					<dd> 
-						<textarea name="device_predicates">{% if f.instance.geo_predicates %}{{f.instance.device_predicates|join:"&#10;"}}{% else %}platform_name=*{% endif %}</textarea>					 
-						<div>platform_name=(*,android,iphone)</div> 
-					</dd> 
-        </dl>
+				{{adgroup_form.as_template}}		
         <div class="clear"></div>
         <div class="form-submit"> 
           <span class="buttonWrap"><a href="#" class="button" id="campaignAdgroupForm-submit">Continue</a></span> 

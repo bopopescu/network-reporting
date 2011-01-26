@@ -1,6 +1,9 @@
-{% extends 'base.html' %}
-{% block title %}Sorry this page does not exist{% endblock %} 
+{% extends 'base2.html' %}
+{% block pageTitle %}<h1>Whoops!</h1>{% endblock %} 
+{% block messageCenter %}{% endblock %}
+{% block dateButtons %}{% endblock %}
+{% block titleBarRight %}{% endblock %}
  
 {% block content %} 
-Sorry this page does not exist
+Sorry, this page doesn't exist.  Try going back to the <a href="{% url publisher_index %}">Dashboard</a>
 {% endblock %} 

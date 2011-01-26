@@ -1,8 +1,8 @@
 {% extends 'publisher/base.html' %}
 {% load filters %}
 {% block navLinks %}
-            <li class="active"><a href="/inventory">Dashboard</a></li>
-            <li><a href="campaigns.html">Campaigns</a></li>{% endblock navLinks %}
+            <li class="active"><a href="{% url publisher_index %}">Dashboard</a></li>
+            <li><a href="{% url advertiser_campaign %}">Campaigns</a></li>{% endblock navLinks %}
 {% block messageCenter %}{% endblock messageCenter %}
 
 {% block content %}

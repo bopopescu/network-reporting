@@ -8,7 +8,6 @@ from google.appengine.api.urlfetch import fetch
 from google.appengine.ext import db
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
-from google.appengine.ext.db import djangoforms
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect, Http404
@@ -185,24 +184,41 @@ def adgroups(request,*args,**kwargs):
     return AdGroupIndexHandler()(request,*args,**kwargs)
 
 class CreateHandler(RequestHandler):
-  def get(self,campaign_form=None):
+  def get(self,campaign_form=None, adgroup_form=None):
     campaign_form = campaign_form or CampaignForm()
+    adgroup_form = adgroup_form or AdGroupForm()
     networks = [["adsense","Google AdSense",False],["iAd","Apple iAd",False],["admob","AdMob",False],["millennial","Millennial Media",False],["inmobi","InMobi",False],["greystripe","GreyStripe",False],["appnexus","App Nexus",False],["brightroll","BrightRoll",False],["custom","Custom",False]]
     all_adunits = AdUnitQueryManager().get_adunits(account=self.account)
+    adgroup_form['site_keys'].queryset = all_adunits
 
-    return render_to_response(self.request,'advertiser/new.html', {"f": campaign_form, 
+    adunit_keys = adgroup_form['site_keys'].value or []
+    for adunit in all_adunits:
+      adunit.checked = unicode(adunit.key()) in adunit_keys
+      adunit.app = App.get(adunit.app_key.key())
+    logging.warning("bid: %s"%adgroup_form['bid'].value)
+    campaign_form.add_context(dict(networks=networks))
+    adgroup_form.add_context(dict(all_adunits=all_adunits))
+
+    return render_to_response(self.request,'advertiser/new.html', {"campaign_form": campaign_form, 
+                                                                   "adgroup_form": adgroup_form,
                                                                    "networks": networks,
                                                                    "all_adunits": all_adunits})
 
   def post(self):
     campaign_form = CampaignForm(data=self.request.POST)
+    adgroup_form = AdGroupForm(data=self.request.POST)
     if campaign_form.is_valid():
       campaign = campaign_form.save(commit=False)
       campaign.u = self.account.user
       CampaignQueryManager().put_campaigns(campaign)
-      return HttpResponseRedirect(reverse('advertiser_adgroup_new', kwargs={'campaign_key':campaign.key()}))
-    else:
-      return self.get(campaign_form)
+      
+      if adgroup_form.is_valid():
+        adgroup = adgroup_form.save(commit=False)
+        adgroup.campaign = campaign
+        AdGroupQueryManager().put_adgroups(adgroup)        
+        return HttpResponseRedirect(reverse('advertiser_adgroup_new', kwargs={'campaign_key':campaign.key()}))
+
+    return self.get(campaign_form,adgroup_form)
 
 @whitelist_login_required     
 def campaign_adgroup_create(request,*args,**kwargs):

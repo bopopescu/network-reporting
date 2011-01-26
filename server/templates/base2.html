@@ -60,9 +60,11 @@
         <div id="logo"><a class="ir" href="/">MoPub</a></div>
         
         <nav id="nav1">
-          <ul>{% block navLinks %}
+          <ul>
+						{% block navLinks %}
             <li><a href="{% url publisher_index %}">Dashboard</a></li>
-            <li><a href="{% url advertiser_campaign %}">Campaigns</a></li>{% endblock navLinks %}
+            <li><a href="{% url advertiser_campaign %}">Campaigns</a></li>
+						{% endblock navLinks %}
           </ul>
         </nav>
         

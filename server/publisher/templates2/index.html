@@ -38,16 +38,16 @@
                     pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
                     pointInterval: 86400000,
                     'requests': [{% for a in graph_apps %}
-                      { '{{a.name}}': [{% for t in a.totals %}{{t.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                      { '{{a.name}}': [{% for t in a.all_stats %}{{t.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                     ],
                     'impressions': [{% for a in graph_apps %}
-                      { '{{a.name}}': [{% for t in a.totals %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                      { '{{a.name}}': [{% for t in a.all_stats %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                     ],
                     'clicks': [{% for a in graph_apps %}
-                      { '{{a.name}}': [{% for t in a.totals %}{{t.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                      { '{{a.name}}': [{% for t in a.all_stats %}{{t.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                     ],
                     'users': [{% for a in graph_apps %}
-                      { '{{a.name}}': [{% for t in a.totals %}{{t.unique_user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                      { '{{a.name}}': [{% for t in a.all_stats %}{{t.unique_user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                     ]
                   };
                 </script>

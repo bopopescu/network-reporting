@@ -116,25 +116,17 @@ class AppIndexHandler(RequestHandler):
       a.stats = SiteStats()
       # attaching adunits onto the app object
       a.adunits = AdUnitQueryManager().get_adunits(app=a)
-      
+
       # organize impressions by days
-      if len(a.adunits) > 0:
-        for adunit in a.adunits:
-          adunit.all_stats = SiteStatsQueryManager().get_sitestats_for_days(site=adunit,days=days)
-          adunit.stats = reduce(lambda x, y: x+y, adunit.all_stats, SiteStats())
-          a.stats += adunit.stats
-        a.totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[au.all_stats for au in a.adunits])]
-        a.adunits = sorted(a.adunits, key=lambda adunit: adunit.stats.request_count, reverse=True)
-      else:
-        a.totals = [SiteStats() for d in days]
-    
-      # TODO: This seems broken.  Plus, we are calculating app_stats above manually.
-      # Should probably remove the above calculation and just use this
-      app_stats = SiteStatsQueryManager().get_sitestats_for_days(owner=a,days=days)
-      # TODO: Dedupe this by having an account level rollup
-      ## assigns the user count of the app from the app stat rollup
-      for stat,app_stat in zip(a.totals,app_stats):
-        stat.unique_user_count = app_stat.unique_user_count
+      for adunit in a.adunits:
+        adunit.all_stats = SiteStatsQueryManager().get_sitestats_for_days(site=adunit,days=days)
+        adunit.stats = reduce(lambda x, y: x+y, adunit.all_stats, SiteStats())
+
+      a.adunits = sorted(a.adunits, key=lambda adunit: adunit.stats.request_count, reverse=True)
+
+      # We have to read the datastore at the app level since we need to get the de-duped unique_user_count
+      a.all_stats = SiteStatsQueryManager().get_sitestats_for_days(owner=a,days=days)
+      a.stats = reduce(lambda x, y: x+y, a.all_stats, SiteStats())
 
     apps = sorted(apps, key=lambda app: app.stats.request_count, reverse=True)
 
@@ -142,7 +134,7 @@ class AppIndexHandler(RequestHandler):
     graph_apps = apps[0:4]
     if len(apps) > 4:
       graph_apps[3] = {'name': 'Others',
-                       'totals': [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[a.totals for a in apps[3:]])]
+                       'totals': [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[a.all_stats for a in apps[3:]])]
                        }
 
     return render_to_response(self.request,'publisher/index.html', 

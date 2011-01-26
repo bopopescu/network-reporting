@@ -46,7 +46,7 @@ class Site(db.Model):
   deleted = db.BooleanProperty(default=False)
   
   # what kind of ad is preferred here
-  ad_type = db.StringProperty(required=True, choices=["text", "image"], default="image")
+  ad_type = db.StringProperty(choices=["text", "image"], default="image")
   
   # additional keywords that are passed to the auction
   keywords = db.TextProperty()                          

@@ -189,7 +189,12 @@ class CreateHandler(RequestHandler):
     adgroup_form = adgroup_form or AdGroupForm()
     networks = [["adsense","Google AdSense",False],["iAd","Apple iAd",False],["admob","AdMob",False],["millennial","Millennial Media",False],["inmobi","InMobi",False],["greystripe","GreyStripe",False],["appnexus","App Nexus",False],["brightroll","BrightRoll",False],["custom","Custom",False]]
     all_adunits = AdUnitQueryManager().get_adunits(account=self.account)
-    adgroup_form['site_keys'].queryset = all_adunits
+    
+    adgroup_form['site_keys'].queryset = all_adunits # needed for validation TODO: doesn't actually work
+    
+    # TODO: Remove this hack to place the bidding info with the rest of campaign
+    campaign_form.bid  = adgroup_form['bid']
+    campaign_form.bid_strategy = adgroup_form['bid_strategy']
 
     adunit_keys = adgroup_form['site_keys'].value or []
     for adunit in all_adunits:
@@ -207,15 +212,24 @@ class CreateHandler(RequestHandler):
   def post(self):
     campaign_form = CampaignForm(data=self.request.POST)
     adgroup_form = AdGroupForm(data=self.request.POST)
+    
+    all_adunits = AdUnitQueryManager().get_adunits(account=self.account)
+    sk_field = adgroup_form.fields['site_keys']
+    logging.info("sk: %s"%sk_field.__class__)
+    logging.info("id: %s"%id(sk_field))
+    sk_field.queryset = all_adunits # TODO: doesn't work needed for validation
+    logging.info("sk qs: %s"%sk_field.queryset)
+
     if campaign_form.is_valid():
       campaign = campaign_form.save(commit=False)
       campaign.u = self.account.user
-      CampaignQueryManager().put_campaigns(campaign)
       
       if adgroup_form.is_valid():
         adgroup = adgroup_form.save(commit=False)
         adgroup.campaign = campaign
-        AdGroupQueryManager().put_adgroups(adgroup)        
+        # TODO: clean this up in case the campaign succeeds and the adgroup fails
+        CampaignQueryManager().put_campaigns(campaign)
+        AdGroupQueryManager().put_adgroups(adgroup)
         return HttpResponseRedirect(reverse('advertiser_adgroup_new', kwargs={'campaign_key':campaign.key()}))
 
     return self.get(campaign_form,adgroup_form)

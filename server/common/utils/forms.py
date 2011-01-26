@@ -91,6 +91,9 @@ class MPModelMultipleChoiceField(ModelChoiceField):
             return []
         if not isinstance(value, (list, tuple)):
             raise ValidationError(self.error_messages['list'])
+            
+        logging.info("queryset: %s"%self.queryset)    
+        logging.info("class: %s id: %s"%(self.__class__,id(self)))
         qs = self.queryset
         qs = [o for o in qs if force_unicode(o.key()) in value]
         keys = set([force_unicode(o.key()) for o in qs])

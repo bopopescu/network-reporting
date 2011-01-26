@@ -17,8 +17,9 @@ AdUnit.all()
 
 class AdGroupForm(mpforms.MPModelForm):
   TEMPLATE = 'advertiser/forms/adgroup_form.html'
-
-  site_keys = mpforms.MPModelMultipleChoiceField(None)
+  
+  # TODO: how can i make this dynamic
+  site_keys = mpforms.MPModelMultipleChoiceField(AdUnit.all().fetch(100),required=False)
   class Meta:
     model = AdGroup
     fields = ('name', 'network_type', 'priority_level', 
@@ -32,6 +33,6 @@ class AdGroupForm(mpforms.MPModelForm):
     return self.cleaned_data['site_keys']            
 
   def clean_keywords(self):     
-    keywords = self.cleaned_data   
-    keywords = [k for k in data.lower().replace('\r','\n').split('\n') if k] 
+    keywords = self.cleaned_data['keywords']   
+    keywords = [k for k in keywords.lower().replace('\r','\n').split('\n') if k] 
     return keywords 

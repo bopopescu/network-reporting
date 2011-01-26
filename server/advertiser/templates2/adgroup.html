@@ -71,20 +71,20 @@
 
 					<dt><label for="TODO7">Frequency Caps:</label></dt>
 					<dd>
-							<input name="daily_frequency_cap" class="input-text" type="text" value="{{f.instance.daily_frequency_cap}}"/> daily impressions per user <br/><br/>
-							<input name="hourly_frequency_cap" class="input-text" type="text" value="{{f.instance.hourly_frequency_cap}}"/> hourly impressions per user
+							<input name="{{f.daily_frequency_cap.name}}" class="input-text" type="text" value="{{f.daily_frequency_cap.value}}"/> daily impressions per user <br/><br/>
+							<input name="{{f.hourly_frequency_cap.name}}" class="input-text" type="text" value="{{f.hourly_frequency_cap.value}}"/> hourly impressions per user
 					</dd>	
 					<dt><label for="TODO8">Keywords:</label></dt>
-					<dd><textarea cols="50" rows="3" name="keywords" placeholder="Keywords, one per line, e.g. coffee">{{f.instance.keywords|join:"&#10;"}}</textarea>
+					<dd><textarea cols="50" rows="3" name="keywords" placeholder="Keywords, one per line, e.g. coffee">{{f.keywords.value|join:"&#10;"}}</textarea>
 					</dd>
 					<dt><label for="TODO9">Geo Predicates:</label></dt>
 					<dd>
-						<textarea name="geo_predicates">{% if f.instance.geo_predicates %}{{f.instance.geo_predicates|join:"&#10;"}}{% else %}country_name=*{% endif %}</textarea>
+						<textarea name="{{f.geo_predicates.name}}">{% if f.geo_predicates.value %}{{f.geo_predicates.value|join:"&#10;"}}{% else %}country_name=*{% endif %}</textarea>
 						<div>country_name=X; region_name=X,country_name=X; city_name=X,region_name=X,country_name=X</div>
 					</dd>
 					<dt><label for="TODO10">Device Predicates:</label></dt> 
 					<dd> 
-						<textarea name="device_predicates">{% if f.instance.geo_predicates %}{{f.instance.device_predicates|join:"&#10;"}}{% else %}platform_name=*{% endif %}</textarea>					 
+						<textarea name="{{f.device_predicates.name}}">{% if f.geo_predicates.value %}{{f.device_predicates.value|join:"&#10;"}}{% else %}platform_name=*{% endif %}</textarea>					 
 						<div>platform_name=(*,android,iphone)</div> 
 					</dd> 
         </dl>

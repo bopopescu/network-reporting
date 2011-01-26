@@ -36,7 +36,7 @@ Template Name: Features
 			<ul>
 			  <?php
 			  global $id;
-			  wp_list_pages("title_li=&child_of=172&show_date=modified&date_format=$date_format"); ?>
+			  wp_list_pages("title_li=&child_of=172&orderby=menu_order&order=desc&show_date=modified&date_format=$date_format"); ?>
 			</ul>	
 		</aside>
 		<?php get_sidebar(); ?>		

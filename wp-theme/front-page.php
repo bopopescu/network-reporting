@@ -31,9 +31,8 @@
 						
 				<?php
 					}
-				}?>				
-
-			<?php endforeach; ?>
+				}
+			endforeach; ?>
 
         </div>
         
@@ -49,15 +48,18 @@
 	
 			<?php
 			global $post;
-			$myposts = get_posts( array( 'numberposts' => 3, 'offset'=> 1, 'post_parent' => 189, 'post_type' => 'page', 'orderby' => 'menu_order', 'order' => 'ASC' ) );
+			$myposts = get_posts( array( 'numberposts' => 6, 'offset'=> 1, 'post_parent' => 189, 'post_type' => 'page', 'orderby' => 'menu_order', 'order' => 'ASC' ) );
 			foreach( $myposts as $post ) :	
 				setup_postdata($post); 
-				$attachments = get_posts(array( 'post_type' => 'attachment', 'numberposts' => -1, 'post_status' => null, 'post_parent' => $post->ID ));
-				if ($attachments) {
-					foreach ( $attachments as $attachment ) { ?>
+				$attachments = get_posts(array( 'post_type' => 'attachment', 'numberposts' => -1, 'post_status' => null, 'post_parent' => $post->ID ));?>
+			            <div class="home-feature" id="home-feature-<?php echo ($post->menu_order - 1) % 3 + 1?>">
+						
+						  <?php if ($attachments) {
+								foreach ( $attachments as $attachment ) { ?>
+			              			<img class="home-feature-graphic" src="<?php echo wp_get_attachment_url($attachment->ID); ?>" alt="" width=290 height=150 />
+						  <?php } 
+							} ?>
 
-			            <div class="home-feature" id="home-feature-<?php echo $post->menu_order?>">
-			              <img class="home-feature-graphic" src="<?php echo wp_get_attachment_url($attachment->ID); ?>" alt="" width=290 height=150 />
 			              <h3><?php the_title(); ?></h3>
 			              <p>
 			                <?php the_excerpt(); ?>
@@ -69,12 +71,9 @@
 			            </div>
 
 				<?php				
-					}
-				}
 			endforeach;	?>				
 				
           </section>
-
         </div>
       </div>
     

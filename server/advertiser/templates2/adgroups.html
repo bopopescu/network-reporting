@@ -60,6 +60,11 @@
           </div>
 
           <section id="dashboard-apps">
+	          <div class="buttonBank buttonBank-right">
+              {# <a class="button" id="dashboard-apps-toggleAllButton" href="#">Show/hide all details</a> #}
+              <a class="button" id="advertisers-addCampaign" href="{% url advertiser_campaign_create %}">Add a campaign</a>
+            </div>
+  
 						<form method="post" action="{% url advertiser_bid_pause %}" id="campaignForm">
 							<input type="hidden" name="action" id="action"/>
 

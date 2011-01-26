@@ -1,0 +1,68 @@
+<fieldset id="appForm-details" class="alt">
+  <legend>Campaign Details</legend> 
+  <p> 
+		Campaigns allow you manage ads that will run on your mobile ad units.        
+	</p> 
+
+  <dl class="formFields"> 
+		<dt>Campaign Type:</dt> 
+    <dd> 
+      <span class="radios"> 
+        <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="gtee" id="advertiser-CampaignType-gtee" checked="checked"/> <label for="advertiser-CampaignType-gtee">Guaranteed</label> 
+        <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="promo" id="advertiser-CampaignType-promo"/> <label for="advertiser-CampaignType-promo">Promotional</label> 
+        <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="network" id="advertiser-CampaignType-network"/> <label for="advertiser-CampaignType-network">Network</label> 
+      </span> 
+    </dd>
+
+    <dt><label for="name">Name:</label></dt> 
+    <dd> 
+      <input type="text" class="input-text {% if form.name.errors %}form-error{% endif %}" name="{{form.name.name}}" value="{{form.name.value}}" id="appForm-name" placeholder="Campaign Name" />
+			{% for error in form.name.errors %}
+			<div class="form-error-text">{{error}}</div> 
+			{% endfor %}
+    </dd>
+
+		<dt><label for="description">Description:</label></dt>
+		<dd>
+			<textarea name="{{form.description.name}}" cols="50" rows="3" placeholder="Campaign for My New App" class="{% if form.description.errors %}form-error{% endif %}">{{form.description.value}}</textarea>
+			{% for error in form.description.errors %}
+			<div class="form-error-text">{{error}}</div> 
+			{% endfor %}
+		</dd>
+		
+		<dt class="campaignDependent gtee promo"><label for="">Start Date:</label></dt>
+		<dd class="campaignDependent gtee promo"><input type='text' class="input-text" name="{{form.start_date.name}}" size="15" placeholder="11/1/2010" value="{{form.start_date.value}}" disabled="true"/></dd>
+		<dt class="campaignDependent gtee promo"><label for="">End Date:</label></dt>
+		<dd class="campaignDependent gtee promo"><input type='text' name="{{form.end_date.name}}" size="15" placeholder="11/6/2010" value="{{form.end_date.value}}" disabled="true"/></dd>
+		<dt class="campaignDependent gtee"><label for="TODO1">Delivery Budget:</label></dt>
+		<dd class="campaignDependent gtee">
+			<input type='text' name="{{form.budget.name}}" value="{{form.budget.value}}" placeholder="10" class="input-text {% if form.budget.errors %}form-error{% endif %}"/> USD / day
+			{% for error in form.budget.errors %}
+			<div class="form-error-text">{{error}}</div> 
+			{% endfor %}
+		</dd>
+		
+		{# Belong to AdGroup #}
+    <dt><label for="TODO2">Max Bid:</label></dt> 
+    <dd> 
+			<input type="text" class="input-text" name="bid" value="{{form.bid.value}}" id="id_bid" /> USD
+		</dd>
+		<dt><label for="TODO3">Bidding Strategy:</label></dt> 
+		<dd>
+			<select name="bid_strategy">
+						<option value="cpm" {% ifequal form.bid_strategy.value "cpm"%}selected="selected"{% endifequal %}>By impression (CPM)</option>
+						<option value="cpc" {% ifequal form.bid_strategy.value "cpc"%}selected="selected"{% endifequal %}>By click (CPC)</option>
+					</select>
+		</dd>	
+		{# End Belong to AdGroup #}
+		
+		<dt class="campaignDependent network"><label for="TODO4">Network Type:</label></dt>
+		<dd class="campaignDependent network">
+			<select name="network_type">
+					{% for network in networks %}
+					<option value="{{network.0}}" {% if network.2 %}selected="selected"{%endif%}>{{network.1}}</option>
+					{% endfor %}
+			</select>
+		</dd>			
+	</dl>
+</fieldset>

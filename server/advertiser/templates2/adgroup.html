@@ -38,13 +38,13 @@
           </dd>
           <dt><label for="TODO2">Max Bid:</label></dt> 
           <dd> 
-						<input type="text" class="input-text" name="bid" value="{{f.instance.bid}}" id="id_bid" /> USD         
+						<input type="text" class="input-text" name="bid" value="{{f.bid.value}}" id="id_bid" /> USD         
 					</dd>
 					<dt><label for="TODO3">Bidding Strategy:</label></dt> 
 					<dd>
 						<select name="bid_strategy">
-									<option value="cpm" {% ifequal f.instance.bid_strategy "cpm"%}selected="selected"{% endifequal %}>By impression (CPM)</option>
-									<option value="cpc" {% ifequal f.instance.bid_strategy "cpc"%}selected="selected"{% endifequal %}>By click (CPC)</option>
+									<option value="cpm" {% ifequal f.bid_strategy.value "cpm"%}selected="selected"{% endifequal %}>By impression (CPM)</option>
+									<option value="cpc" {% ifequal f.bid_strategy.value "cpc"%}selected="selected"{% endifequal %}>By click (CPC)</option>
 								</select>
 					</dd>	
 					{% ifequal campaign.campaign_type "network" %}
@@ -70,7 +70,7 @@
 					
 					<dt><label for="TODO6">Goal:</label></dt>
 					<dd>
-						<input type="text" class="input-text" name="percent_users" value="{{f.instance.percent_users}}"/> % of all <select name="budget_type"><option>Users</option><option>Requests</option></select>
+						<input type="text" class="input-text" name="percent_users" value="{{f.percent_users.value}}"/> % of all <select name="budget_type"><option>Users</option><option>Requests</option></select>
 					</dd>
 
 					<dt><label for="TODO7">Frequency Caps:</label></dt>

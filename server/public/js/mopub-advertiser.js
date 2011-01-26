@@ -8,8 +8,24 @@ var mopub = mopub || {};
 (function($){
 	// dom ready
 	$(document).ready(function() {
+	  
+	  $('#campaignAdgroupForm-submit')
+	    .button({ icons : {secondary : 'ui-icon-circle-triangle-e'} })
+	    .click(function(e){
+	      e.preventDefault();
+	      $('#campaignAdgroupForm').submit();
+	    });
 		
-		// Submit button
+		// TODO: WHY DOES THIS RERENDER SO SLOWLY?
+    $('#campaignAdgroupForm input[name="campaign_type"]').click(function(e) {
+      $('#campaignAdgroupForm')
+          .find('.campaignDependent').hide().end()
+          .find("."+$(this).val()).show().end();
+    }).filter(':checked').click(); // make sure we're in sync when the page loads
+
+		
+		$('#advertisers-addCampaign')
+		  .button({ icons : {primary : 'ui-icon-circle-plus'} })
 		
 		$('#advertisers-adgroups-editAdGroupButton')
 		  .button({ icons: { primary: "ui-icon-wrench" } })

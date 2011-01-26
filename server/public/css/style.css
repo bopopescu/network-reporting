@@ -1305,6 +1305,17 @@ input.ui-button { padding: 4px 12px 5px 12px; }
   font-size:larger;
 }
 
+/* Advertiser forms */
+
+.gtee .promo,
+.gtee .network,
+.promo .gtee,
+.promo .network,
+.network .gtee,
+.network .promo {
+  display: none;
+}
+
 /****************************************
  * Media Queries
  ****************************************/

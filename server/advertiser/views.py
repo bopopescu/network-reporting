@@ -54,7 +54,6 @@ class RequestHandler(object):
         pass
     def put(self):
         pass  
-
         
 def gen_graph_url(series, days, title):
   chart_url = "http://chart.apis.google.com/chart?cht=lc&chtt=%s&chs=780x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
@@ -186,22 +185,27 @@ def adgroups(request,*args,**kwargs):
     return AdGroupIndexHandler()(request,*args,**kwargs)
 
 class CreateHandler(RequestHandler):
-  def get(self):
-    f = CampaignForm()
-    return render_to_response(self.request,'advertiser/new.html', {"f": f})
+  def get(self,campaign_form=None):
+    campaign_form = campaign_form or CampaignForm()
+    networks = [["adsense","Google AdSense",False],["iAd","Apple iAd",False],["admob","AdMob",False],["millennial","Millennial Media",False],["inmobi","InMobi",False],["greystripe","GreyStripe",False],["appnexus","App Nexus",False],["brightroll","BrightRoll",False],["custom","Custom",False]]
+    all_adunits = AdUnitQueryManager().get_adunits(account=self.account)
+
+    return render_to_response(self.request,'advertiser/new.html', {"f": campaign_form, 
+                                                                   "networks": networks,
+                                                                   "all_adunits": all_adunits})
 
   def post(self):
-    f = CampaignForm(data=self.request.POST)
-    if f.is_valid():
-      campaign = f.save(commit=False)
+    campaign_form = CampaignForm(data=self.request.POST)
+    if campaign_form.is_valid():
+      campaign = campaign_form.save(commit=False)
       campaign.u = self.account.user
       CampaignQueryManager().put_campaigns(campaign)
-      return HttpResponseRedirect(reverse('campaign_adgroup_new', kwargs={'campaign_key':campaign.key()}))
+      return HttpResponseRedirect(reverse('advertiser_adgroup_new', kwargs={'campaign_key':campaign.key()}))
     else:
-      return render_to_response(self.request,'advertiser/new.html', {"f": f})
+      return self.get(campaign_form)
 
 @whitelist_login_required     
-def campaign_create(request,*args,**kwargs):
+def campaign_adgroup_create(request,*args,**kwargs):
   return CreateHandler()(request,*args,**kwargs)      
 
 class CreateAdGroupHandler(RequestHandler):
@@ -299,7 +303,7 @@ class ShowHandler(RequestHandler):
 
     # no ad groups?
     if len(bids) == 0:
-      return HttpResponseRedirect(reverse('campaign_adgroup_new', kwargs={'campaign_key': campaign.key()}))
+      return HttpResponseRedirect(reverse('advertiser_adgroup_new', kwargs={'campaign_key': campaign.key()}))
     else:
       # compute rollups to display at the top
       today = SiteStats.rollup_for_day(bids, SiteStats.today())

@@ -38,7 +38,7 @@
         
         <div id="home-banner">
           <span class="inner1"><span class="inner2"><span class="inner3">
-            <strong>1B+</strong> Impressions Served! Yeah!
+            <strong>1+</strong> Impressions Served! Yeah!
           </span></span></span>
         </div>
       </div>

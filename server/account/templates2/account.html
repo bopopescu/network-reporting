@@ -1,8 +1,23 @@
 {% extends "account/base.html" %}
+{% block pageTitle %}<h1>{% ifequal status 'welcome' %}Step 3: Set up ad networks{% else %}Account{% endifequal %}</h1>{% endblock pageTitle %}
+{% block titleBarRight %}{% ifequal status 'welcome' %}            <div class="stepProgress"> 
+              <span class="stepProgress-step">Step 1: Add app</span> 
+              <span class="ui-icon ui-icon-arrow-1-e"></span> 
+              <span class="stepProgress-step">Step 2: Integrate</span> 
+              <span class="ui-icon ui-icon-arrow-1-e"></span> 
+              <span class="stepProgress-step stepProgress-active">Step 3: Ad networks</span> 
+              <span class="ui-icon ui-icon-arrow-1-e"></span> 
+              <span class="stepProgress-step">Step 4: Ad campaigns</span> 
+            </div>{% endifequal %}{% endblock titleBarRight %}
 
 {% block content %}
           <section> 
             <div class="content-main">
+{% ifequal status 'welcome' %}
+              <div class="alertMessage">
+                Now set up any ad networks that you would like to use to serve ads into your inventory.  You may need to set up an account with the network provider first, then enter in the settings below.
+              </div>
+{% endifequal %}
               <h2>Ad Network Settings</h2>
               <p>
                 To enable an ad network, fill in the required fields for the network.
@@ -12,11 +27,12 @@
                   <div class="buttonBank buttonBank-right">
                     <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
                   </div>
-                  <legend>AdMob {% if account.admob_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Disabled){% endif %}</span></legend> 
+                  <legend>AdMob {% if account.admob_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Disabled){% endif %}</span></legend>
                   <dl class="formFields {% if account.admob_pub_id %}show{% endif %}"> 
                     <dt><label for="appForm-adUnitName">AdMob Publisher ID:</label></dt> 
                     <dd><input type="text" class="input-text" name="admob_pub_id" value="{{account.admob_pub_id|default_if_none:""}}" /></dd> 
-                  </dl> 
+                    <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.admob.com/" target="_blank">Go to AdMob<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
+                  </dl>
                 </fieldset> 
                 <fieldset class="adForm"> 
                   <div class="buttonBank buttonBank-right">
@@ -29,6 +45,7 @@
 
                     <dt><label for="appForm-adUnitName">Company Name:</label></dt> 
                     <dd><input type="text" class="input-text" name="adsense_company_name" value="{{account.adsense_company_name|default_if_none:""}}" placeholder="Optional" /></dd> 
+                    <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="https://www.google.com/adsense/" target="_blank">Go to AdSense<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
                   </dl> 
                 </fieldset> 
                 <fieldset class="adForm alt"> 
@@ -39,6 +56,7 @@
                   <dl class="formFields {% if account.brightroll_pub_id %}show{% endif %}"> 
                     <dt><label for="appForm-adUnitName">BrightRoll Publisher ID:</label></dt> 
                     <dd><input type="text" class="input-text" name="brightroll_pub_id" value="{{account.brightroll_pub_id|default_if_none:""}}" /></dd> 
+                    <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.brightroll.com/" target="_blank">Go to BrightRoll<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
                   </dl> 
                 </fieldset> 
                 <fieldset class="adForm"> 
@@ -49,6 +67,7 @@
                   <dl class="formFields {% if account.greystripe_pub_id %}show{% endif %}"> 
                     <dt><label for="appForm-adUnitName">Greystripe Publisher ID:</label></dt> 
                     <dd><input type="text" class="input-text" name="greystripe_pub_id" value="{{account.greystripe_pub_id|default_if_none:""}}" /></dd> 
+                    <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.greystripe.com/" target="_blank">Go to Greystripe<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
                   </dl> 
                 </fieldset> 
                 <fieldset class="adForm alt"> 
@@ -59,6 +78,7 @@
                   <dl class="formFields {% if account.inmobi_pub_id %}show{% endif %}"> 
                     <dt><label for="appForm-adUnitName">InMobi Publisher ID:</label></dt> 
                     <dd><input type="text" class="input-text" name="inmobi_pub_id" value="{{account.inmobi_pub_id|default_if_none:""}}" /></dd> 
+                    <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.inmobi.com/" target="_blank">Go to InMobi<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
                   </dl> 
                 </fieldset> 
                 <fieldset class="adForm"> 
@@ -69,9 +89,11 @@
                   <dl class="formFields {% if account.millenial_pub_id %}show{% endif %}"> 
                     <dt><label for="appForm-adUnitName">Millenial Publisher ID:</label></dt> 
                     <dd><input type="text" class="input-text" name="millenial_pub_id" value="{{account.millenial_pub_id|default_if_none:""}}" /></dd> 
+                    <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.millennialmedia.com" target="_blank">Go to Millennial Media<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
                   </dl> 
                 </fieldset> 
                 <div class="form-submit"> 
+                  <a class="button" id="accountForm-skip" href="{% url advertiser_campaign %}">Skip this step</a>
                   <span class="buttonWrap"><a href="#" class="button" id="accountForm-submit">Submit</a></span> 
                 </div> 
               </form> 

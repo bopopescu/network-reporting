@@ -50,7 +50,8 @@ class RequestHandler(object):
 
 class AccountHandler(RequestHandler):
   def get(self):
-    return render_to_response(self.request,'account/account.html', {'account': self.account})
+    status = self.params.get('status')
+    return render_to_response(self.request,'account/account.html', {'account': self.account, 'status': status})
 
   def post(self):
     a = self.account
@@ -61,7 +62,7 @@ class AccountHandler(RequestHandler):
       adunits = AdUnitQueryManager().get_adunits(account=a)
       CachedQueryManager().cache_delete(adunits)
     
-    return HttpResponseRedirect("/account")
+    return render_to_response(self.request,'account/account.html', {'account': self.account})
 
 @whitelist_login_required     
 def index(request,*args,**kwargs):

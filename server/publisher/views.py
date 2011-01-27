@@ -247,7 +247,12 @@ class AppCreateHandler(RequestHandler):
         # if Site.gql("where account = :1 limit 2", self.account).count() == 1:
         if len(AdUnitQueryManager().get_adunits(account=self.account,limit=2)) == 1:      
           add_demo_campaign(adunit)
-        return HttpResponseRedirect(reverse('publisher_generate',kwargs={'adunit_key':adunit.key()}))
+        # Check if this is the first app for this account
+        if len(AppQueryManager().get_apps(account=self.account,limit=2)) == 1:
+          status = 'welcome'
+        else:
+          status = 'success'
+        return HttpResponseRedirect(reverse('publisher_generate',kwargs={'adunit_key':adunit.key})+'?status='+status)
       else:
         return render_to_response(self.request,'publisher/new_app.html', {"f": f, "app": app, "app_key":app.key()})
     else:
@@ -277,7 +282,7 @@ class CreateAdUnitHandler(RequestHandler):
       # if Site.gql("where account = :1 limit 2", self.account).count() == 1:
       if len(AdUnitQueryManager().get_adunits(account=self.account,limit=2)) == 1:      
         add_demo_campaign(adunit)
-      return HttpResponseRedirect(reverse('publisher_generate',kwargs={'adunit_key':adunit.key()}))
+      return HttpResponseRedirect(reverse('publisher_generate',kwargs={'adunit_key':adunit.key()})+'?status=success')
     else:
       print f.errors
 
@@ -513,7 +518,8 @@ def adunit_delete(request,*args,**kwargs):
 class GenerateHandler(RequestHandler):
   def get(self,adunit_key):
     adunit = AdUnitQueryManager().get_by_key(adunit_key)
-    return render_to_response(self.request,'publisher/code.html', {'site': adunit})
+    status = self.params.get('status')
+    return render_to_response(self.request,'publisher/code.html', {'site': adunit, 'status': status})
   
 @whitelist_login_required
 def generate(request,*args,**kwargs):

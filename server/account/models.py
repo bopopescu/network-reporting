@@ -10,11 +10,14 @@ class Account(db.Model):
     date_added = db.DateTimeProperty(auto_now_add=True)
     active = db.BooleanProperty(default=False)
     
-    
+    admob_pub_id = db.StringProperty()
     adsense_pub_id = db.StringProperty()
     adsense_company_name = db.StringProperty()
     adsense_test_mode = db.BooleanProperty(default=False)
-    admob_pub_id = db.StringProperty()
+    brightroll_pub_id = db.StringProperty()
+    greystripe_pub_id = db.StringProperty()
+    inmobi_pub_id = db.StringProperty()
+    millenial_pub_id = db.StringProperty()
   
     @classmethod
     def current_account(cls,user=None):

@@ -2,22 +2,73 @@
 
 {% block content %}
           <section> 
-            <div class="content-main"> 
+            <div class="content-main">
+              <h2>Ad Network Settings</h2>
+              <p>
+                To enable an ad network, fill in the required fields for the network.
+              </p>
               <form action="" method="POST" accept-charset="utf-8" id="accountForm"> 
-                <fieldset class="adForm"> 
-                  <legend>Settings</legend> 
-                  <p> 
-                    Set up your ad networks.
-                  </p> 
-                  <dl class="formFields"> 
-                    <dt><label for="appForm-adUnitName">AdSense Publisher ID:</label></dt> 
-                    <dd><input type="text" class="input-text" name="adsense_pub_id" value="{{account.adsense_pub_id|default_if_none:""}}" id="appForm-adUnitName" /></dd> 
-
-                    <dt><label for="appForm-adUnitName">AdSense Company Name:</label></dt> 
-                    <dd><input type="text" class="input-text" name="adsense_company_name" value="{{account.adsense_company_name|default_if_none:""}}" id="appForm-adUnitName" /></dd> 
-
+                <fieldset class="adForm alt"> 
+                  <div class="buttonBank buttonBank-right">
+                    <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
+                  </div>
+                  <legend>AdMob {% if account.admob_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Disabled){% endif %}</span></legend> 
+                  <dl class="formFields {% if account.admob_pub_id %}show{% endif %}"> 
                     <dt><label for="appForm-adUnitName">AdMob Publisher ID:</label></dt> 
-                    <dd><input type="text" class="input-text" name="admob_pub_id" value="{{account.admob_pub_id|default_if_none:""}}" id="appForm-adUnitName" /></dd> 
+                    <dd><input type="text" class="input-text" name="admob_pub_id" value="{{account.admob_pub_id|default_if_none:""}}" /></dd> 
+                  </dl> 
+                </fieldset> 
+                <fieldset class="adForm"> 
+                  <div class="buttonBank buttonBank-right">
+                    <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
+                  </div>
+                  <legend>AdSense {% if account.adsense_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Disabled){% endif %}</span></legend>
+                  <dl class="formFields {% if account.adsense_pub_id %}show{% endif %}"> 
+                    <dt><label for="appForm-adUnitName">AdSense Publisher ID:</label></dt> 
+                    <dd><input type="text" class="input-text" name="adsense_pub_id" value="{{account.adsense_pub_id|default_if_none:""}}" /></dd> 
+
+                    <dt><label for="appForm-adUnitName">Company Name:</label></dt> 
+                    <dd><input type="text" class="input-text" name="adsense_company_name" value="{{account.adsense_company_name|default_if_none:""}}" placeholder="Optional" /></dd> 
+                  </dl> 
+                </fieldset> 
+                <fieldset class="adForm alt"> 
+                  <div class="buttonBank buttonBank-right">
+                    <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
+                  </div>
+                  <legend>BrightRoll {% if account.brightroll_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Disabled){% endif %}</span></legend> 
+                  <dl class="formFields {% if account.brightroll_pub_id %}show{% endif %}"> 
+                    <dt><label for="appForm-adUnitName">BrightRoll Publisher ID:</label></dt> 
+                    <dd><input type="text" class="input-text" name="brightroll_pub_id" value="{{account.brightroll_pub_id|default_if_none:""}}" /></dd> 
+                  </dl> 
+                </fieldset> 
+                <fieldset class="adForm"> 
+                  <div class="buttonBank buttonBank-right">
+                    <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
+                  </div>
+                  <legend>Greystripe {% if account.greystripe_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Disabled){% endif %}</span></legend> 
+                  <dl class="formFields {% if account.greystripe_pub_id %}show{% endif %}"> 
+                    <dt><label for="appForm-adUnitName">Greystripe Publisher ID:</label></dt> 
+                    <dd><input type="text" class="input-text" name="greystripe_pub_id" value="{{account.greystripe_pub_id|default_if_none:""}}" /></dd> 
+                  </dl> 
+                </fieldset> 
+                <fieldset class="adForm alt"> 
+                  <div class="buttonBank buttonBank-right">
+                    <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
+                  </div>
+                  <legend>InMobi {% if account.inmobi_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Disabled){% endif %}</span></legend> 
+                  <dl class="formFields {% if account.inmobi_pub_id %}show{% endif %}"> 
+                    <dt><label for="appForm-adUnitName">InMobi Publisher ID:</label></dt> 
+                    <dd><input type="text" class="input-text" name="inmobi_pub_id" value="{{account.inmobi_pub_id|default_if_none:""}}" /></dd> 
+                  </dl> 
+                </fieldset> 
+                <fieldset class="adForm"> 
+                  <div class="buttonBank buttonBank-right">
+                    <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
+                  </div>
+                  <legend>Millenial Media {% if account.millenial_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Disabled){% endif %}</span></legend> 
+                  <dl class="formFields {% if account.millenial_pub_id %}show{% endif %}"> 
+                    <dt><label for="appForm-adUnitName">Millenial Publisher ID:</label></dt> 
+                    <dd><input type="text" class="input-text" name="millenial_pub_id" value="{{account.millenial_pub_id|default_if_none:""}}" /></dd> 
                   </dl> 
                 </fieldset> 
                 <div class="form-submit"> 

@@ -43,7 +43,6 @@
       </div>
       <div id="content">
         <div class="pageWidth">
-		  <h2>Product Features</h2>
           <section id="home-features">	
 			<?php
 			global $post;

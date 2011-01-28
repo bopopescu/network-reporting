@@ -1291,7 +1291,7 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
   clear: both;
   margin: 30px 0 0 0;
   padding: 30px 0 0 0;
-  border-top: 2px solid #f5f5f5;
+  border-top: 2px solid #ddd;
 }
 
 /* Public pages call to action */
@@ -1669,7 +1669,7 @@ input.ui-button { padding: 4px 12px 5px 12px; }
   padding-top: 45px;
 }
 
-#home-features {
+#home-features, #home-features-2 {
   float: left;
 }
 

@@ -48,8 +48,8 @@
                   <code>
                     <pre>
 AdController* adC = [[AdController alloc] initWithFormat:AdControllerFormat320x50
-                                              adUnitId:@"<b>{{site.key}}</b>"
-                                  parentViewController:self];
+                                                adUnitId:@"<b>{{site.key}}</b>"
+                                    parentViewController:self];
 [self.view addSubview:adC.view];</pre>
                   </code>
                 </div>
@@ -90,6 +90,6 @@ mpv.loadAd();</pre>
               </li>  
             </ol>
             <div class="form-submit">
-              <span class="buttonWrap"><a href="{% url publisher_app_show app_key=site.app_key.key %}" class="button">Continue</a></span>
+              <span class="buttonWrap">{% ifequal status 'welcome' %}<a href="{% url account_index %}" class="button">Continue to Step 3</a>{% else %}<a href="{% url publisher_app_show app_key=site.app_key.key %}" class="button">Continue</a>{% endifequal %}</span>
             </div>
           </section>{% endblock content %}

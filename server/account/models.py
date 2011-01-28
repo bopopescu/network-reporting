@@ -9,6 +9,7 @@ class Account(db.Model):
     user = db.UserProperty()
     date_added = db.DateTimeProperty(auto_now_add=True)
     active = db.BooleanProperty(default=False)
+    status = db.StringProperty()  # Initially storing onboarding status
     
     admob_pub_id = db.StringProperty()
     adsense_pub_id = db.StringProperty()
@@ -23,7 +24,7 @@ class Account(db.Model):
     def current_account(cls,user=None):
         if not user:
             user = users.get_current_user()
-        return Account.get_or_insert(db.Key.from_path("User", user.user_id()).name(), user=user)
+        return Account.get_or_insert(db.Key.from_path("User", user.user_id()).name(), user=user, status="new")
 
     def is_admin():
         return users.is_current_user_admin()

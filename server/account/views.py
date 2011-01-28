@@ -50,8 +50,12 @@ class RequestHandler(object):
 
 class AccountHandler(RequestHandler):
   def get(self):
-    status = self.params.get('status')
-    return render_to_response(self.request,'account/account.html', {'account': self.account, 'status': status})
+    if self.params.get("skip"):
+      self.account.status = "step4"
+      AccountQueryManager().put_accounts(self.account)
+      return HttpResponseRedirect(reverse('advertiser_campaign'))
+
+    return render_to_response(self.request,'account/account.html', {'account': self.account})
 
   def post(self):
     a = self.account
@@ -61,7 +65,12 @@ class AccountHandler(RequestHandler):
       f.save()
       adunits = AdUnitQueryManager().get_adunits(account=a)
       CachedQueryManager().cache_delete(adunits)
-    
+      
+      if self.account.status == "step3":
+        self.account.status = "step4"
+        AccountQueryManager().put_accounts(self.account)
+        return HttpResponseRedirect(reverse('advertiser_campaign'))
+
     return render_to_response(self.request,'account/account.html', {'account': self.account})
 
 @whitelist_login_required     

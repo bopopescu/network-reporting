@@ -1,341 +1,309 @@
 {% extends 'advertiser/base.html' %}
 {% load filters %}
-{% block messageCenter %}{% endblock messageCenter %}
-
+{% block pageTitle %}<h1>{{ adgroup.name }}</h1>{% endblock pageTitle %}
 {% block titleBarRight %}
-            <span class="titlebar-link">
+            <span class="titlebar-right">
               <a class="button" id="advertisers-adgroups-editAdGroupButton" href="#">Edit adgroup settings</a>
             </span>
 {% endblock titleBarRight %}
-
+{% block messageCenter %}{% endblock messageCenter %}
 {% block content %}
-<section id="advertiser-agroupEditForm">
-  <div>
-    <form action="{% url advertiser_adgroup_edit adgroup_key=adgroup.key %}" method="POST" accept-charset="utf-8" id="agroupEditForm">
-			<input type="hidden" name="id" value="{{campaign.key}}"/>
-			<input type="hidden" name="name" value="{{campaign.name}}"/>
-	
-      <fieldset id="appForm-details" class="alt">
-        <dl class="formFields"> 
-          <dt><label for="name">Name:</label></dt> 
-          <dd> 
-            <input type="text" class="input-text" name="name" value="{{f.instance.name}}" id="appForm-name" />
-          </dd>
-					{% ifequal campaign.campaign_type "gtee" %} 
-          <dt> 
-            <label for="TODO1">Priority level:</label>
-          </dt> 
-          <dd class="appForm-platformDependent iphone"> 
-						<select name="priority_level">
-									<option value="1" {% ifequal f.instance.priority_level 1%}checked="checked"{% endifequal %}>Sponsorship</option>
-									<option value="2" {% ifequal f.instance.priority_level 2%}checked="checked"{% endifequal %}>Direct</option>
-						</select>
-					{% endifequal %}
-          </dd>
-          <dt><label for="TODO2">Max Bid:</label></dt> 
-          <dd> 
-						<input type="text" class="input-text" name="bid" value="{{f.bid.value}}" id="id_bid" /> USD         
-					</dd>
-					<dt><label for="TODO3">Bidding Strategy:</label></dt> 
-					<dd>
-						<select name="bid_strategy">
-									<option value="cpm" {% ifequal f.bid_strategy.value "cpm"%}selected="selected"{% endifequal %}>By impression (CPM)</option>
-									<option value="cpc" {% ifequal f.bid_strategy.value "cpc"%}selected="selected"{% endifequal %}>By click (CPC)</option>
-								</select>
-					</dd>	
-					{% ifequal campaign.campaign_type "network" %}
-					<input type="hidden" name="priority_level" value="4"/>
-					<input type="hidden" name="bid_strategy" value="cpm"/>
-					<dt><label for="TODO4">Network Type:</label></dt>
-					<dd>
-						<select name="network_type">
-								{% for network in networks %}
-								<option value="{{network.0}}" {% if network.2 %}selected="selected"{%endif%}>{{network.1}}</option>
-								{% endfor %}
-						</select>
-					</dd>			
-					{% endifequal %}
-					<dt><label for="TOOD5">Network Type:</label></dt>
-					<dd> 
-						<ul style="overflow:auto; max-height:100px; list-style: none;border:1px solid #aaa; padding:5px 10px"> 
-						{% for adunit in all_adunits %}   
-								<li><input type="checkbox" name="sites" value="{{adunit.key}}"{% if adunit.checked %} checked="checked"{% endif %}> {{adunit.app.name}} &gt; {{adunit.name}} </input></li>   
-						{% endfor %}   
-						</ul>  
-					</dd>		 
-					
-					<dt><label for="TODO6">Goal:</label></dt>
-					<dd>
-						<input type="text" class="input-text" name="percent_users" value="{{f.percent_users.value}}"/> % of all <select name="budget_type"><option>Users</option><option>Requests</option></select>
-					</dd>
+          <section id="advertiser-agroupEditForm" class="hidden">
+            <div>
+              <form action="{% url advertiser_adgroup_edit adgroup_key=adgroup.key %}" method="POST" accept-charset="utf-8" id="agroupEditForm">
+                <input type="hidden" name="id" value="{{campaign.key}}"/>
+                <input type="hidden" name="name" value="{{campaign.name}}"/>
+  
+                <fieldset id="appForm-details" class="alt">
+                  <dl class="formFields"> 
+                    <dt><label for="name">Name:</label></dt> 
+                    <dd> 
+                      <input type="text" class="input-text" name="name" value="{{f.instance.name}}" id="appForm-name" />
+                    </dd>
+                    {% ifequal campaign.campaign_type "gtee" %} 
+                    <dt> 
+                      <label for="TODO1">Priority level:</label>
+                    </dt> 
+                    <dd class="appForm-platformDependent iphone"> 
+                      <select name="priority_level">
+                        <option value="1" {% ifequal f.instance.priority_level 1%}checked="checked"{% endifequal %}>Sponsorship</option>
+                        <option value="2" {% ifequal f.instance.priority_level 2%}checked="checked"{% endifequal %}>Direct</option>
+                      </select>
+                    </dd>
+                    {% endifequal %}
+                    <dt><label for="TODO2">Max Bid:</label></dt> 
+                    <dd> 
+                      <input type="text" class="input-text input-text-number" name="bid" value="{{f.bid.value}}" id="id_bid" /> USD         
+                    </dd>
+                    <dt><label for="TODO3">Bidding Strategy:</label></dt> 
+                    <dd>
+                      <select name="bid_strategy">
+                        <option value="cpm" {% ifequal f.bid_strategy.value "cpm"%}selected="selected"{% endifequal %}>By impression (CPM)</option>
+                        <option value="cpc" {% ifequal f.bid_strategy.value "cpc"%}selected="selected"{% endifequal %}>By click (CPC)</option>
+                      </select>
+                    </dd> 
+                    {% ifequal campaign.campaign_type "network" %}
+                    <input type="hidden" name="priority_level" value="4"/>
+                    <input type="hidden" name="bid_strategy" value="cpm"/>
+                    <dt><label for="TODO4">Ad Units:</label></dt>
+                    <dd>
+                      <select name="network_type">
+                        {% for network in networks %}
+                        <option value="{{network.0}}" {% if network.2 %}selected="selected"{%endif%}>{{network.1}}</option>
+                        {% endfor %}
+                      </select>
+                    </dd>     
+                    {% endifequal %}
+                    <dt><label for="TOOD5">Ad Units:</label></dt>
+                    <dd> 
+                      <ul style="overflow:auto; max-height:100px; list-style: none;border:1px solid #aaa; padding:5px 10px"> 
+                        {% for adunit in all_adunits %}<li><input type="checkbox" name="sites" value="{{adunit.key}}"{% if adunit.checked %} checked="checked"{% endif %}> {{adunit.app.name}} &gt; {{adunit.name}} </input></li>
+                      {% endfor %}</ul>  
+                    </dd>    
+          
+                    <dt><label for="TODO6">Goal:</label></dt>
+                    <dd>
+                      <input type="text" class="input-text input-text-number" name="percent_users" value="{{f.percent_users.value}}"/> % of all <select name="budget_type"><option>Users</option><option>Requests</option></select>
+                    </dd>
 
-					<dt><label for="TODO7">Frequency Caps:</label></dt>
-					<dd>
-							<input name="daily_frequency_cap" class="input-text" type="text" value="{{f.instance.daily_frequency_cap}}"/> daily impressions per user <br/><br/>
-							<input name="hourly_frequency_cap" class="input-text" type="text" value="{{f.instance.hourly_frequency_cap}}"/> hourly impressions per user
-					</dd>	
-					<dt><label for="TODO8">Keywords:</label></dt>
-					<dd><textarea cols="50" rows="3" name="keywords" placeholder="Keywords, one per line, e.g. coffee">{{f.instance.keywords|join:"&#10;"}}</textarea>
-					</dd>
-					<dt><label for="TODO9">Geo Predicates:</label></dt>
-					<dd>
-						<textarea name="geo_predicates">{% if f.instance.geo_predicates %}{{f.instance.geo_predicates|join:"&#10;"}}{% else %}country_name=*{% endif %}</textarea>
-						<div>country_name=X; region_name=X,country_name=X; city_name=X,region_name=X,country_name=X</div>
-					</dd>
-					<dt><label for="TODO10">Device Predicates:</label></dt> 
-					<dd> 
-						<textarea name="device_predicates">{% if f.instance.geo_predicates %}{{f.instance.device_predicates|join:"&#10;"}}{% else %}platform_name=*{% endif %}</textarea>					 
-						<div>platform_name=(*,android,iphone)</div> 
-					</dd> 
-        </dl>
-        <div class="clear"></div>
-        <div class="form-submit"> 
-          <span class="buttonWrap"><a href="#" class="button" id="agroupEditForm-submit">Save</a></span> 
-          <span class="buttonWrap"><a href="#" class="button" id="agroupEditForm-cancel">Cancel</a></span> 
-        </div> 
-      </fieldset>
-    </form>
-  </div>
-</section>
+                    <dt><label for="TODO7">Frequency Caps:</label></dt>
+                    <dd>
+                      <input name="daily_frequency_cap" class="input-text input-text-number" type="text" value="{{f.instance.daily_frequency_cap}}"/> daily impressions per user <br/><br/>
+                      <input name="hourly_frequency_cap" class="input-text input-text-number" type="text" value="{{f.instance.hourly_frequency_cap}}"/> hourly impressions per user
+                    </dd> 
+                    <dt><label for="TODO8">Keywords:</label></dt>
+                    <dd><textarea cols="50" rows="3" name="keywords" placeholder="Keywords, one per line, e.g. coffee">{{f.instance.keywords|join:"&#10;"}}</textarea>
+                    </dd>
+                    <dt><label for="TODO9">Geo Targeting:</label></dt>
+                    <dd>
+                      <textarea name="geo_predicates">{% if f.instance.geo_predicates %}{{f.instance.geo_predicates|join:"&#10;"}}{% else %}country_name=*{% endif %}</textarea>
+                      <div>country_name=X; region_name=X,country_name=X; city_name=X,region_name=X,country_name=X</div>
+                    </dd>
+                    <dt><label for="TODO10">Device Targeting:</label></dt> 
+                    <dd> 
+                      <textarea name="device_predicates">{% if f.instance.geo_predicates %}{{f.instance.device_predicates|join:"&#10;"}}{% else %}platform_name=*{% endif %}</textarea>          
+                      <div>platform_name=(*,android,iphone)</div> 
+                    </dd> 
+                  </dl>
+                  <div class="clear"></div>
+                  <div class="form-submit"> 
+                    <span class="buttonWrap"><a href="#" class="button" id="agroupEditForm-submit">Save</a></span> 
+                    <span class="buttonWrap"><a href="#" class="button" id="agroupEditForm-cancel">Cancel</a></span> 
+                  </div> 
+                </fieldset>
+              </form>
+            </div>
+          </section>
 
-<div class="separated">
-  <section class="offset nomargin" id="dashboard-stats">
-    <div class="stats">
-      <table class="stats-breakdown">
-        <tbody>
-          <tr class="active" id="stats-breakdown-revenue">
-            <td class="stats-breakdown-value"><span class="inner">{{totals.revenue|currency}}</span></td>
-            <th class="stats-breakdown-name"><span class="inner">Revenue (est.)</span></th>
-          </tr>
-          <tr id="stats-breakdown-impressions">
-            <td class="stats-breakdown-value"><span class="inner">{{totals.impression_count|withsep}}</span></td>
-            <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
-          </tr>
-          <tr id="stats-breakdown-clicks">
-            <td class="stats-breakdown-value"><span class="inner">{{totals.click_count|withsep}}</span></td>
-            <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
-          </tr>
-          <tr id="stats-breakdown-users">
-            <td class="stats-breakdown-value"><span class="inner">{{totals.unique_user_count|withsep}}</span></td>
-            <th class="stats-breakdown-name"><span class="inner">Users</span></th>
-          </tr>
-        </tbody>
-      </table>
-      <div class="chart chart-loading stats-chart" id="dashboard-stats-chart">
-        <div class="chart-loading-text">Loading ...</div>
-        <div class="chart-error-text">Could not load chart</div>
-        <script type="text/javascript">
-          // chart data
-          mopub.dashboardStatsChartData = {
-            //pointStart: 1294963200000,
-            pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
-            pointInterval: 86400000,
-            'revenue': [{% for a in adunits %}
-              { '{{a.name}}': [{% for stat in a.all_stats %}{{stat.revenue}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-            ],
-            'impressions': [{% for a in adunits %}
-              { '{{a.name}}': [{% for stat in a.all_stats %}{{stat.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-            ],
-            'clicks': [{% for a in adunits %}
-              { '{{a.name}}': [{% for stat in a.all_stats %}{{stat.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-            ],
-            'users': [{% for a in adunits %}
-              { '{{a.name}}': [{% for stat in a.all_stats %}{{stat.unique_user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-            ]
-          };
-        </script>
-      </div>
-    </div>
-    <div class="clear"></div>
-  </section>
-</div>
-
-<div class="separated">
-      <section id="dashboard-apps">
-
-        <h2>Settings</h2>
-		<table>
-			<tr><th>Priority level</th>
-				<td class="numeric">
-					{% ifequal adgroup.priority_level 1 %}Sponsorship{% endifequal %}
-					{% ifequal adgroup.priority_level 2 %}Direct{% endifequal %}
-					{% ifequal adgroup.priority_level 3 %}Promotional{% endifequal %}
-					{% ifequal adgroup.priority_level 4 %}Network{% endifequal %}
-				</td></tr>
-				<tr><th>Max Bid</th><td class="numeric">{{adgroup.bid|currency}}</td></tr>
-				<tr><th>Bid strategy</th>
-					<td class="numeric">{% ifequal adgroup.bid_strategy "cpc" %}By click (CPC){% endifequal %}
-						{% ifequal adgroup.bid_strategy "cpm" %}By impression (CPM){% endifequal %}</td></tr>
-				<tr><th>Geo predicates</th><td class="numeric">{% for g in adgroup.geo_predicates %}{{g}}<br/>{% endfor %}</td></tr>
-				<tr><th>Device predicates</th><td class="numeric">{% for g in adgroup.device_predicates %}{{g}}<br/>{% endfor %}</td></tr>
-		</table>
-
-      	</section>
-      <section id="dashboard-apps2">
-        <h2>Ad Unit Targeting</h2>
-        <div class="appData-columnHeaders">
-          <table class="dataTable" id="dashboard-apps-columnHeaders">
-            <thead>
-              <tr>
-                <th class="appData-icon"></th>
-                <th class="dataTable-name">Name</th>
-                <th class="dataTable-data">Impressions</th>
-                <th class="dataTable-data">Clicks</th>
-                <th class="dataTable-data">Cost</th>
-              </tr>
-            </thead>
-          </table>
-        </div>
-        {% for adunit in adunits %}
-        <div class="appData" id="dashboard-app-{{forloop.counter0}}">
-          <table class="dataTable appData-main" id="dashboard-app-{{forloop.counter0}}-main">
-            <tbody>
-              <tr>
-                <td class="appData-icon">
-							{% if adunit.app.icon %}
-							<img src="{{adunit.app.icon|binary_data}}"/>
-							{% else %}
-							<img src="/images/noicon.png">
-							{% endif %}
-                </td> 
-                <th class="dataTable-name"> {{adunit.app.name}} &gt; <a href="{% url publisher_adunit_show adunit_key=adunit.key %}">{{adunit.name}}</a>
-						</th>
-                <td class="dataTable-data">{{adunit.stats.impression_count|withsep}}</td>
-                <td class="dataTable-data">{{adunit.stats.click_count|withsep}}</td>
-                <td class="dataTable-data">{{adunit.stats.revenue|currency}}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      	{% endfor %}
-      	</section>
-	<section>
-		<div class="buttonBank buttonBank-right">
-          <a class="button" id="advertiser-adgroups-toggleCreativeButton" href="#">Show/hide all creatives</a>
-          <a class="button" id="advertiser-adgroups-addCreativeButton" href="{% url publisher_app_create %}">Add a creative</a>
-        </div>
-        
-		<h2>Ad Creatives</h2>
-		
-		<section id="advertiser-creativeAddForm">
-          <div>
-            <form action="{% url advertiser_creative_create %}" method="POST" accept-charset="utf-8" id="creativeAddForm">
-              <input type="hidden" name="id" value="{{adgroup.key}}"/>
-              <fieldset id="creativeAddForm-details" class="alt">
-                <dl class="formFields"> 
-		          <dt>Creative Type:</dt> 
-		          <dd> 
-		            <span class="radios"> 
-		              <input type="radio" class="input-radio" name="creative_type" value="text" id="creativeType-text" checked="checked"/> <label for="creativeType-text">Text</label> 
-		              <input type="radio" class="input-radio" name="creative_type" value="image" id="creativeType-image"/> <label for="creativeType-image">Image</label> 
-		              <input type="radio" class="input-radio" name="creative_type" value="html" id="creativeType-html"/> <label for="creativeType-html">HTML</label> 
-		            </span> 
-		          </dd>
-							
-							<div id="creativeCreate-text">	
-								<dt><label for="html_name">Creative Name:</label></dt>
-								<dd><input type='text' name="name" class="input-text"/></dd>
-								<dt><label for="headline">Headline:</label></dt>
-								<dd><input type='text' name="headline" class="input-text"/></dd>
-								<dt><label for="line1">Line 1:</label></dt>
-								<dd><input type ='text' name="line1" class="input-text"/></dd>
-								<dt><label for="line2">Line 2:</label></dt>
-								<dd><input type='text' name="line2" class="input-text"/></dd>
-								<dt><label for="display_url">Display URL:</label></dt>
-								<dd><input type='text' name="display_url" class="input-text"/></dd>
-								<dt><label for="url">URL</label></dt>
-								<dd><input type='text' name="url" class="input-text"/></dd>
-								<dt><label for="tracking_url">Impression Tracking Pixel:</label></dt>
-								<dd><input type='text' name="tracking_url" class="input-text"/></dd>
-							</div>	
-							<div id="creativeCreate-image">
-								<dt><label for="html_name">Creative Name:</label></dt>
-								<dd><input type='text' name="name" class="input-text"/></dd>
-								<dt><label for="">Image File</label></dt>
-								<dd><input type="file" name="image" size="40"/></dd>
-								<dt><label for="url">URL</label></dt>
-								<dd><input type='text' name="url" class="input-text"/></dd>
-								<dt><label for="tracking_url">Impression Tracking Pixel:</label></dt>
-								<dd><input type='text' name="tracking_url" class="input-text"/></dd>
-							</div>
-							<div id="creativeCreate-html">
-								<dt><label for="html_name">Creative Name:</label></dt>
-								<dd><input type='text' name="html_name" class="input-text"/></dd>
-			          <dt><label for="html_data">HTML Body:</label></dt> 
-			          <dd> 
-			            <textarea name="html_data" rows="3" cols="40">HTML Body Content</textarea> 
-			          </dd> 
-								<dt><label for="tracking_url">Impression Tracking Pixel:</label></dt>
-								<dd><input type='text' name="tracking_url" class="input-text"/></dd>
-                </dl>
-                <div class="clear" />
-                <div class="form-submit"> 
-                  <span class="buttonWrap"><a href="#" class="button" id="creativeAddForm-submit">Save</a></span> 
-                  <span class="buttonWrap"><a href="#" class="button" id="creativeAddForm-cancel">Cancel</a></span> 
-                </div> 
-              </fieldset>
-            </form>
+          <div class="separated">
+            <section class="offset nomargin" id="dashboard-stats">
+              <div class="stats">
+                <table class="stats-breakdown">
+                  <tbody>
+                    <tr class="active" id="stats-breakdown-revenue">
+                      <td class="stats-breakdown-value"><span class="inner">{{totals.revenue|currency}}</span></td>
+                      <th class="stats-breakdown-name"><span class="inner">Revenue (est.)</span></th>
+                    </tr>
+                    <tr id="stats-breakdown-impressions">
+                      <td class="stats-breakdown-value"><span class="inner">{{totals.impression_count|withsep}}</span></td>
+                      <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
+                    </tr>
+                    <tr id="stats-breakdown-clicks">
+                      <td class="stats-breakdown-value"><span class="inner">{{totals.click_count|withsep}}</span></td>
+                      <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
+                    </tr>
+                    <tr id="stats-breakdown-users">
+                      <td class="stats-breakdown-value"><span class="inner">{{totals.unique_user_count|withsep}}</span></td>
+                      <th class="stats-breakdown-name"><span class="inner">Users</span></th>
+                    </tr>
+                  </tbody>
+                </table>
+                <div class="chart chart-loading stats-chart" id="dashboard-stats-chart">
+                  <div class="chart-loading-text">Loading ...</div>
+                  <div class="chart-error-text">Could not load chart</div>
+                  <script type="text/javascript">
+                    // chart data
+                    mopub.dashboardStatsChartData = {
+                      //pointStart: 1294963200000,
+                      pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
+                      pointInterval: 86400000,
+                      'revenue': [{% for a in adunits %}
+                        { '{{a.name}}': [{% for stat in a.all_stats %}{{stat.revenue}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                      ],
+                      'impressions': [{% for a in adunits %}
+                        { '{{a.name}}': [{% for stat in a.all_stats %}{{stat.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                      ],
+                      'clicks': [{% for a in adunits %}
+                        { '{{a.name}}': [{% for stat in a.all_stats %}{{stat.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                      ],
+                      'users': [{% for a in adunits %}
+                        { '{{a.name}}': [{% for stat in a.all_stats %}{{stat.unique_user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                      ]
+                    };
+                  </script>
+                </div>
+              </div>
+              <div class="clear"></div>
+            </section>
           </div>
-        </section>
-        
-		
-		<div class="appData-columnHeaders">
-          <table class="dataTable" id="dashboard-apps2-columnHeaders">
-            <thead>
-              <tr>
-                <th class="appData-icon"></th>	                    
-						<th class="dataTable-name">Creative</th>
-                <th class="dataTable-data">Status</th>
-                <th class="dataTable-data">Impressions</th>
-                <th class="dataTable-data">Clicks</th>
-                <th class="dataTable-data">Cost</th>
-              </tr>
-            </thead>
-          </table>
-        </div>
-		<form method="post" action="{% url advertiser_creative_delete %}" id="creativeForm">
-         {% for c in creatives %}
-         <div class="appData" id="dashboard-app2-{{forloop.counter0}}">
-					<input id="action" type="hidden" name="action" value=""/>
-           <table class="dataTable" id="dashboard-apps2-columnHeaders">
-              <tbody>
-                <tr>
-								<td class="appData-icon">
-									<input type="checkbox" name="id" value="{{c.key}}"/>
-								</td>
-                  <th class="dataTable-name">
-									{{c.html_name}}
-									<div class="creative">
-									  <iframe src="{% url advertiser_creative_html creative_key=c.key %}" frameborder="0" scrolling="no" width="100%" height="50">
-				              <p>Your browser does not support iframes.</p>
-				            </iframe>
-									</div>
-									<div class="clearall"></div>
-								</th>
-                  <th class="dataTable-data">
-									{% if c.deleted %} 
-										<img src="/images/deleted.gif" width="9" height="9"/> 
-									{% endif %} 
-									{% if c.active and not c.deleted %} 
-										<img src="/images/active.gif" width="9" height="9"/> 
-									{% endif %} 
-									{% if not c.active and not c.deleted %} 
-										<img src="/images/paused.gif" width="9" height="9"/> 
-									{% endif %} 
-								</th>
-                  <th class="dataTable-data">{{c.stats.impression_count|withsep}}</th>
-                  <th class="dataTable-data">{{c.stats.click_count|withsep}}</th>
-                  <th class="dataTable-data">{{c.stats.revenue|currency}}</th>
-                </tr>
-              </tbody>
-            </table>
-         </div>
-       	{% endfor %}
-			<a class="button" id="creativeForm-pause">Pause</a>
-			<a class="button" id="creativeForm-resume">Resume</a>
-			<a class="button" id="creativeForm-delete">Delete</a>
-		</form>	
-        
-	</section>	
-</div>	
+
+          <div class="separated">
+            <section id="dashboard-apps2">
+              <h2>Ad Unit Targeting</h2>
+              <div class="appData-columnHeaders">
+                <table class="dataTable" id="dashboard-apps-columnHeaders">
+                  <thead>
+                    <tr>
+                      <th class="appData-icon"></th>
+                      <th class="dataTable-name">Name</th>
+                      <th class="dataTable-data">Impressions</th>
+                      <th class="dataTable-data">Clicks</th>
+                      <th class="dataTable-data">Cost</th>
+                    </tr>
+                  </thead>
+                </table>
+              </div>
+              {% for adunit in adunits %}
+              <div class="appData" id="dashboard-app-{{forloop.counter0}}">
+                <table class="dataTable appData-main" id="dashboard-app-{{forloop.counter0}}-main">
+                  <tbody>
+                    <tr>
+                      <td class="appData-icon">
+                    {% if adunit.app.icon %}
+                    <img src="{{adunit.app.icon|binary_data}}"/>
+                    {% else %}
+                    <img src="/images/noicon.png">
+                    {% endif %}
+                      </td> 
+                      <th class="dataTable-name"> {{adunit.app.name}} &gt; <a href="{% url publisher_adunit_show adunit_key=adunit.key %}">{{adunit.name}}</a>
+                      </th>
+                      <td class="dataTable-data">{{adunit.stats.impression_count|withsep}}</td>
+                      <td class="dataTable-data">{{adunit.stats.click_count|withsep}}</td>
+                      <td class="dataTable-data">{{adunit.stats.revenue|currency}}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              {% endfor %}
+            </section>
+            <section>
+              <div class="buttonBank buttonBank-right">
+                <a class="button" id="advertiser-adgroups-toggleCreativeButton" href="#">Show/hide all creatives</a>
+                <a class="button" id="advertiser-adgroups-addCreativeButton" href="{% url publisher_app_create %}">Add a creative</a>
+              </div>
+              <h2>Ad Creatives</h2>
+              <section id="advertiser-creativeAddForm" class="hidden">
+                <div>
+                  <form action="{% url advertiser_creative_create %}" method="POST" accept-charset="utf-8" id="creativeAddForm">
+                    <input type="hidden" name="id" value="{{adgroup.key}}"/>
+                    <fieldset id="creativeAddForm-details" class="alt">
+                      <dl class="formFields"> 
+                    <dt>Creative Type:</dt> 
+                    <dd> 
+                      <span class="radios"> 
+                        <input type="radio" class="input-radio" name="creative_type" value="text" id="creativeType-text" checked="checked"/> <label for="creativeType-text">Text</label> 
+                        <input type="radio" class="input-radio" name="creative_type" value="image" id="creativeType-image"/> <label for="creativeType-image">Image</label> 
+                        <input type="radio" class="input-radio" name="creative_type" value="html" id="creativeType-html"/> <label for="creativeType-html">HTML</label> 
+                      </span> 
+                    </dd>
+          
+                    <div id="creativeCreate-text">  
+                      <dt><label for="html_name">Creative Name:</label></dt>
+                      <dd><input type='text' name="name" class="input-text"/></dd>
+                      <dt><label for="headline">Headline:</label></dt>
+                      <dd><input type='text' name="headline" class="input-text"/></dd>
+                      <dt><label for="line1">Line 1:</label></dt>
+                      <dd><input type ='text' name="line1" class="input-text"/></dd>
+                      <dt><label for="line2">Line 2:</label></dt>
+                      <dd><input type='text' name="line2" class="input-text"/></dd>
+                      <dt><label for="display_url">Display URL:</label></dt>
+                      <dd><input type='text' name="display_url" class="input-text"/></dd>
+                      <dt><label for="url">URL</label></dt>
+                      <dd><input type='text' name="url" class="input-text"/></dd>
+                      <dt><label for="tracking_url">Impression Tracking Pixel:</label></dt>
+                      <dd><input type='text' name="tracking_url" class="input-text"/></dd>
+                    </div>  
+                    <div id="creativeCreate-image">
+                      <dt><label for="html_name">Creative Name:</label></dt>
+                      <dd><input type='text' name="name" class="input-text"/></dd>
+                      <dt><label for="">Image File</label></dt>
+                      <dd><input type="file" name="image" size="40"/></dd>
+                      <dt><label for="url">URL</label></dt>
+                      <dd><input type='text' name="url" class="input-text"/></dd>
+                      <dt><label for="tracking_url">Impression Tracking Pixel:</label></dt>
+                      <dd><input type='text' name="tracking_url" class="input-text"/></dd>
+                    </div>
+                    <div id="creativeCreate-html">
+                      <dt><label for="html_name">Creative Name:</label></dt>
+                      <dd><input type='text' name="html_name" class="input-text"/></dd>
+                      <dt><label for="html_data">HTML Body:</label></dt> 
+                      <dd> 
+                        <textarea name="html_data" rows="3" cols="40">HTML Body Content</textarea> 
+                      </dd> 
+                      <dt><label for="tracking_url">Impression Tracking Pixel:</label></dt>
+                      <dd><input type='text' name="tracking_url" class="input-text"/></dd>
+                      </dl>
+                      <div class="clear" />
+                      <div class="form-submit"> 
+                        <span class="buttonWrap"><a href="#" class="button" id="creativeAddForm-submit">Save</a></span> 
+                        <span class="buttonWrap"><a href="#" class="button" id="creativeAddForm-cancel">Cancel</a></span> 
+                      </div> 
+                    </fieldset>
+                  </form>
+                </div>
+              </section>
+              <div class="appData-columnHeaders">
+                <table class="dataTable" id="dashboard-apps2-columnHeaders">
+                  <thead>
+                    <tr>
+                      <th class="appData-icon"></th>
+                      <th class="dataTable-name">Creative</th>
+                      <th class="dataTable-data">Status</th>
+                      <th class="dataTable-data">Impressions</th>
+                      <th class="dataTable-data">Clicks</th>
+                      <th class="dataTable-data">Cost</th>
+                    </tr>
+                  </thead>
+                </table>
+              </div>
+              <form method="post" action="{% url advertiser_creative_delete %}" id="creativeForm">
+                {% for c in creatives %}
+                <div class="appData" id="dashboard-app2-{{forloop.counter0}}">
+                  <input id="action" type="hidden" name="action" value=""/>
+                  <table class="dataTable" id="dashboard-apps2-columnHeaders">
+                    <tbody>
+                      <tr>
+                        <td class="appData-icon">
+                          <input type="checkbox" name="id" value="{{c.key}}"/>
+                        </td>
+                        <th class="dataTable-name">
+                          {{c.html_name}}
+                          <div class="creative">
+                            <iframe src="{% url advertiser_creative_html creative_key=c.key %}" frameborder="0" scrolling="no" width="100%" height="50">
+                              <p>Your browser does not support iframes.</p>
+                            </iframe>
+                          </div>
+                          <div class="clearall"></div>
+                        </th>
+                        <th class="dataTable-data">
+                          {% if c.deleted %}<img src="/images/deleted.gif" width="9" height="9"/>{% endif %}
+                          {% if c.active and not c.deleted %}<img src="/images/active.gif" width="9" height="9"/>{% endif %} 
+                          {% if not c.active and not c.deleted %}<img src="/images/paused.gif" width="9" height="9"/>{% endif %} 
+                        </th>
+                        <th class="dataTable-data">{{c.stats.impression_count|withsep}}</th>
+                        <th class="dataTable-data">{{c.stats.click_count|withsep}}</th>
+                        <th class="dataTable-data">{{c.stats.revenue|currency}}</th>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                {% endfor %}
+                <div class="form-submit-left"> 
+                  <span class="buttonWrap"><a class="button" id="creativeForm-pause">Pause</a>
+                  <a class="button" id="creativeForm-resume">Resume</a>
+                  <a class="button" id="creativeForm-delete">Delete</a></span> 
+                </div> 
+              </form>
+            </section> 
+          </div>
 {% endblock content %}

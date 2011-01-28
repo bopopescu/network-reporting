@@ -74,27 +74,6 @@ class RequestHandler(object):
     def put(self):
         pass  
 
-def gen_chart_url(series, days, title):
-  chart_url = "http://chart.apis.google.com/chart?cht=lc&chtt=%s&chs=580x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
-    title,
-    ','.join(map(lambda x: str(x), series)),
-    max(series) * 1.5,
-    max(series) * 1.5,
-    '|'.join(map(lambda x: x.strftime("%m/%d"), days)))
-
-  return chart_url
-  
-def gen_pie_chart_url(series, title):
-  #TODO: Shouldn't use 'app' as a key name since it also works for ad units
-  chart_url = "http://chart.apis.google.com/chart?cht=p&chtt=%s&chs=200x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chl=&chdlp=b&chdl=%s" % (
-    title,
-    ','.join(map(lambda x: str(x["total"]), series)),
-    max(map(lambda x: x.stats.request_count, [s["app"] for s in series])) * 1.5,
-    max(map(lambda x: x.stats.request_count, [s["app"] for s in series])) * 1.5,
-    '|'.join(map(lambda x: x["app"].name, series[0:2])))
-  
-  return chart_url
-
 class AppIndexHandler(RequestHandler):
   def get(self):
     report = self.request.POST.get('report')
@@ -191,9 +170,8 @@ def index_geo(request,*args,**kwargs):
 
 class AppCreateHandler(RequestHandler):
   def get(self):
-    apps = AppQueryManager().get_apps(self.account,limit=1)
     f = AppForm()
-    return render_to_response(self.request,'publisher/new_app.html', {"f": f, "has_app": len(apps)})
+    return render_to_response(self.request,'publisher/new_app.html', {"f": f, "account": self.account})
 
   def post(self):
     app = None
@@ -248,11 +226,12 @@ class AppCreateHandler(RequestHandler):
         if len(AdUnitQueryManager().get_adunits(account=self.account,limit=2)) == 1:      
           add_demo_campaign(adunit)
         # Check if this is the first app for this account
-        if len(AppQueryManager().get_apps(account=self.account,limit=2)) == 1:
-          status = 'welcome'
-        else:
-          status = 'success'
-        return HttpResponseRedirect(reverse('publisher_generate',kwargs={'adunit_key':adunit.key})+'?status='+status)
+        status = "success"
+        if self.account.status == "new":
+          self.account.status = "step3"  # skip setting 'step2' since the step 2 page is only displayed once
+          AccountQueryManager().put_accounts(self.account)
+          status = "welcome"
+        return HttpResponseRedirect(reverse('publisher_generate',kwargs={'adunit_key':adunit.key()})+'?status='+status)
       else:
         return render_to_response(self.request,'publisher/new_app.html', {"f": f, "app": app, "app_key":app.key()})
     else:
@@ -519,7 +498,7 @@ class GenerateHandler(RequestHandler):
   def get(self,adunit_key):
     adunit = AdUnitQueryManager().get_by_key(adunit_key)
     status = self.params.get('status')
-    return render_to_response(self.request,'publisher/code.html', {'site': adunit, 'status': status})
+    return render_to_response(self.request,'publisher/code.html', {'site': adunit, 'status': status, 'account': self.account})
   
 @whitelist_login_required
 def generate(request,*args,**kwargs):

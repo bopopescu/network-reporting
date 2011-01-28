@@ -53,16 +53,6 @@ class RequestHandler(object):
         pass
     def put(self):
         pass  
-        
-def gen_graph_url(series, days, title):
-  chart_url = "http://chart.apis.google.com/chart?cht=lc&chtt=%s&chs=780x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
-    title,
-    ','.join(map(lambda x: str(x), series)),
-    max(series) * 1.5 if series else 10,
-    max(series) * 1.5 if series else 10,
-    '|'.join(map(lambda x: x.strftime("%m/%d"), days)))
-
-  return chart_url
 
 class IndexHandler(RequestHandler):
   def get(self):
@@ -78,19 +68,6 @@ class IndexHandler(RequestHandler):
     # compute rollups to display at the top
     totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[c.all_stats for c in campaigns])]
     
-    chart_urls = {}
-    # make a line graph showing impressions
-    impressions = [s.impression_count for s in totals]
-    chart_urls['imp'] = gen_graph_url(impressions, days, "Total+Daily+Impressions")
-
-    # make a line graph showing clicks
-    clicks = [s.click_count for s in totals]
-    chart_urls['clk'] = gen_graph_url(clicks, days, "Total+Daily+Clicks")
-    
-    # make a line graph showing revenue
-    revenue = [s.revenue for s in totals]
-    chart_urls['rev'] = gen_graph_url(revenue, days, "Total+Revenue")
-
     promo_campaigns = filter(lambda x: x.campaign_type in ['promo'], campaigns)
     garauntee_campaigns = filter(lambda x: x.campaign_type in ['gtee'], campaigns)
     network_campaigns = filter(lambda x: x.campaign_type in ['network'], campaigns)
@@ -104,7 +81,6 @@ class IndexHandler(RequestHandler):
       'advertiser/index.html', 
       {'campaigns':campaigns, 
        'today': today,
-       'chart_urls': chart_urls,
        'gtee': garauntee_campaigns,
        'promo': promo_campaigns,
        'network': network_campaigns,
@@ -141,19 +117,6 @@ class AdGroupIndexHandler(RequestHandler):
     daily_totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[c.all_stats for c in adgroups])]
     totals = reduce(lambda x,y: x+y, daily_totals, SiteStats())
 
-    chart_urls = {}
-    # make a line graph showing impressions
-    impressions = [s.impression_count for s in daily_totals]
-    chart_urls['imp'] = gen_graph_url(impressions, days, "Total+Daily+Impressions")
-
-    # make a line graph showing clicks
-    clicks = [s.click_count for s in daily_totals]
-    chart_urls['clk'] = gen_graph_url(clicks, days, "Total+Daily+Clicks")
-
-    # make a line graph showing revenue
-    revenue = [s.revenue for s in daily_totals]
-    chart_urls['rev'] = gen_graph_url(revenue, days, "Total+Revenue")
-
     promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], adgroups)
     guarantee_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee'], adgroups)
     network_campaigns = filter(lambda x: x.campaign.campaign_type in ['network'], adgroups)
@@ -172,11 +135,11 @@ class AdGroupIndexHandler(RequestHandler):
        'site' : site,
        'all_sites' : all_sites,
        'today': today,
-       'chart_urls': chart_urls,
        'totals':totals,
        'gtee': guarantee_campaigns,
        'promo': promo_campaigns,
        'network': network_campaigns,
+       'account': self.account,
        'helptext':help_text })
 
 @whitelist_login_required     
@@ -324,19 +287,6 @@ class ShowHandler(RequestHandler):
       # compute rollups to display at the top
       today = SiteStats.rollup_for_day(bids, SiteStats.today())
       totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[b.all_stats for b in bids])]
-
-      chart_urls = {}
-      # make a line graph showing impressions
-      impressions = [s.impression_count for s in totals]
-      chart_urls['imp'] = gen_graph_url(impressions, days, "Total+Daily+Impressions")
-
-      # make a line graph showing clicks
-      clicks = [s.click_count for s in totals]
-      chart_urls['clk'] = gen_graph_url(clicks, days, "Total+Daily+Clicks")
-      
-      # make a line graph showing revenue
-      revenue = [s.revenue for s in totals]
-      chart_urls['rev'] = gen_graph_url(revenue, days, "Total+Revenue")
       
       help_text = None
       if campaign.campaign_type == 'network':
@@ -349,7 +299,6 @@ class ShowHandler(RequestHandler):
                                             {'campaign':campaign, 
                                             'bids': bids,
                                             'today': today,
-                                            'chart_urls': chart_urls,
                                             'user':self.account,
                                             'helptext':help_text})
 
@@ -452,20 +401,6 @@ class ShowAdGroupHandler(RequestHandler):
 
     totals = reduce(lambda x,y: x+y, all_totals, SiteStats())
 
-    chart_urls = {}
-    # make a line graph showing impressions
-    impressions = [s.impression_count for s in all_totals]
-    chart_urls['imp'] = gen_graph_url(impressions, days, "Total+Daily+Impressions")
-
-    # make a line graph showing clicks
-    clicks = [s.click_count for s in all_totals]
-    chart_urls['clk'] = gen_graph_url(clicks, days, "Total+Daily+Clicks")
-
-    # make a line graph showing revenue
-    revenue = [s.revenue for s in all_totals]
-    chart_urls['rev'] = gen_graph_url(revenue, days, "Total+Revenue")
-
-    
     # In order to make the edit page
     f = AdGroupForm(instance=adgroup)
     all_adunits = AdUnitQueryManager().get_adunits(account=self.account)
@@ -482,7 +417,6 @@ class ShowAdGroupHandler(RequestHandler):
                               'creatives': creatives,
                               'today': today,
                               'totals': totals,
-                              'chart_urls': chart_urls,
                               'sites': sites, 
                               'adunits' : sites, # TODO: migrate over to adunit instead of site
                               'all_adunits' : all_adunits,

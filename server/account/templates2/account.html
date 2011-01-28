@@ -1,6 +1,6 @@
 {% extends "account/base.html" %}
-{% block pageTitle %}<h1>{% ifequal status 'welcome' %}Step 3: Set up ad networks{% else %}Account{% endifequal %}</h1>{% endblock pageTitle %}
-{% block titleBarRight %}{% ifequal status 'welcome' %}            <div class="stepProgress"> 
+{% block pageTitle %}<h1>{% ifequal account.status 'step3' %}Step 3: Set up ad networks{% else %}Account{% endifequal %}</h1>{% endblock pageTitle %}
+{% block titleBarRight %}{% ifequal account.status 'step3' %}            <div class="stepProgress"> 
               <span class="stepProgress-step">Step 1: Add app</span> 
               <span class="ui-icon ui-icon-arrow-1-e"></span> 
               <span class="stepProgress-step">Step 2: Integrate</span> 
@@ -93,7 +93,9 @@
                   </dl> 
                 </fieldset> 
                 <div class="form-submit"> 
-                  <a class="button" id="accountForm-skip" href="{% url advertiser_campaign %}">Skip this step</a>
+{% ifequal account.status 'step3' %}
+                  <a class="button" id="accountForm-skip" href="{% url account_index %}?skip=true">Skip this step</a>
+{% endifequal %}
                   <span class="buttonWrap"><a href="#" class="button" id="accountForm-submit">Submit</a></span> 
                 </div> 
               </form> 

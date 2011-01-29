@@ -546,7 +546,7 @@ footer {
   margin: 0 0 7px 0;
 }
 
-#footer-account {
+#footer-account, #footer-copyright {
   float: right;
   width: 50%;
   text-align: right;
@@ -1669,7 +1669,7 @@ input.ui-button { padding: 4px 12px 5px 12px; }
   padding-top: 45px;
 }
 
-#home-features {
+.home-features {
   float: left;
 }
 
@@ -1716,8 +1716,8 @@ input.ui-button { padding: 4px 12px 5px 12px; }
 
 #mopub-home-alt1 #home-graphic {
   position: absolute;
-  top: 0;
-  right: 0;
+  top: -35px;
+  right: -30px;
 }
 
 #mopub-home-alt1 #home-intro {

@@ -1,6 +1,5 @@
 {% extends 'advertiser/base.html' %}
 {% load filters %}
-
 {% block pageTitle %}
           <div class="breadcrumb">
             <a class="linkIcon breadcrumb-back" href="{% url advertiser_campaign %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Campaigns</a>
@@ -30,20 +29,6 @@
           <span class="buttonWrap"><a href="#" class="button" id="agroupEditForm-cancel">Cancel</a></span> 
         </div> 
     </form>
-    
-		
-		{# <form action="{% url advertiser_adgroup_edit adgroup_key=adgroup.key %}" method="POST" accept-charset="utf-8" id="campaignAdgroupForm"> #}
-		{# 	<input type="hidden" name="id" value="{{campaign.key}}"/> #}
-		{# 	<input type="hidden" name="name" value="{{campaign.name}}"/> #}
-		{# 	<fieldset id="appForm-details" class="alt"> #}
-		{# 		{{campaign_create_form_fragment}} #}
-		{#         <div class="clear"></div> #}
-		{#         <div class="form-submit">  #}
-		{#           <span class="buttonWrap"><a href="#" class="button" id="agroupEditForm-submit">Save</a></span>  #}
-		{#           <span class="buttonWrap"><a href="#" class="button" id="agroupEditForm-cancel">Cancel</a></span>  #}
-		{#         </div>  #}
-		{#       </fieldset> #}
-		{#     </form> #}
   </div>
 </section>
 

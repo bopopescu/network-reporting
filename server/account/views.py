@@ -18,6 +18,7 @@ from common.utils.cachedquerymanager import CachedQueryManager
 # from common.ragendja.auth.decorators import google_login_required as login_required
 
 from account.models import Account
+from account.forms import AccountForm
 from publisher.models import Site
 
 from account.query_managers import AccountQueryManager
@@ -49,19 +50,28 @@ class RequestHandler(object):
 
 class AccountHandler(RequestHandler):
   def get(self):
+    if self.params.get("skip"):
+      self.account.status = "step4"
+      AccountQueryManager().put_accounts(self.account)
+      return HttpResponseRedirect(reverse('advertiser_campaign'))
+
     return render_to_response(self.request,'account/account.html', {'account': self.account})
 
   def post(self):
     a = self.account
-    a.adsense_pub_id = self.request.POST.get("adsense_pub_id")
-    a.admob_pub_id = self.request.POST.get("admob_pub_id")
-    a.adsense_company_name = self.request.POST.get("adsense_company_name")
-    a.put()
-    
-    adunits = AdUnitQueryManager().get_adunits(account=a)
-    CachedQueryManager().cache_delete(adunits)
-    
-    return HttpResponseRedirect("/account")
+    f = AccountForm(data=self.request.POST, instance=a)
+
+    if f.is_valid():
+      f.save()
+      adunits = AdUnitQueryManager().get_adunits(account=a)
+      CachedQueryManager().cache_delete(adunits)
+      
+      if self.account.status == "step3":
+        self.account.status = "step4"
+        AccountQueryManager().put_accounts(self.account)
+        return HttpResponseRedirect(reverse('advertiser_campaign'))
+
+    return render_to_response(self.request,'account/account.html', {'account': self.account})
 
 @whitelist_login_required     
 def index(request,*args,**kwargs):

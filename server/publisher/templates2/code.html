@@ -1,90 +1,95 @@
 {% extends 'publisher/base.html' %}
 {% load filters %}
 {% block extraScripts %}<script src="/js/mopub-setup.js"></script>{% endblock extraScripts %}
-{% block pageTitle %}{% if blah %}Step 2: Integrate the code{% else %}<a href="{% url publisher_adunit_show adunit_key=site.key %}">{{site.name}}</a> code snippet{% endif %}{% endblock pageTitle %}{% block dateButtons %}{% endblock dateButtons %}
-{% block titleBarRight %}            <div class="stepProgress"> 
+{% block pageTitle %}<h1>{% ifequal status 'welcome' %}Step 2: Integrate the code{% else %}<a href="{% url publisher_adunit_show adunit_key=site.key %}">{{site.name}}</a> code snippet{% endifequal %}</h1>{% endblock pageTitle %}{% block dateButtons %}{% endblock dateButtons %}
+{% block titleBarRight %}{% ifequal status 'welcome' %}            <div class="stepProgress"> 
               <span class="stepProgress-step">Step 1: Add app</span> 
               <span class="ui-icon ui-icon-arrow-1-e"></span> 
               <span class="stepProgress-step stepProgress-active">Step 2: Integrate</span> 
               <span class="ui-icon ui-icon-arrow-1-e"></span> 
-              <span class="stepProgress-step">Step 3: Add campaigns</span> 
-            </div>{% endblock titleBarRight %}
+              <span class="stepProgress-step">Step 3: Ad networks</span> 
+              <span class="ui-icon ui-icon-arrow-1-e"></span> 
+              <span class="stepProgress-step">Step 4: Ad campaigns</span> 
+            </div>{% endifequal %}{% endblock titleBarRight %}
 {% block messageCenter %}{% endblock messageCenter %}
 
 {% block content %}
-          <section> 
-            <div class="content-main"> 
-              <h2>Ad Unit ID</h2>
-              <div class="alertMessage">
-                <code>
-                  <pre>
-                    {{site.key}}
-                  </pre>
-                </code>
-              </div>  
-              <h2>Code Integration</h2>
-              <ol>
-                <li>
-                  <p>
-                    You will need to install the MoPub SDK first. If you have not done so, see the <a href="http://code.google.com/p/mopub/wiki/GettingStarted">MoPub Getting Started instructions</a> on Google Code.
-                  </p>
-                </li>
-                {% ifequal site.app_key.app_type "iphone" %}
-                <li>
-                  <p>
-                    Add the following code to your view's <code>viewDidLoad</code> method (or another suitable place):
-                  </p>
-                  <div class="alertMessage">
-                    <code>
-                      <pre>
-                        AdController* adC = [[AdController alloc] initWithFormat:AdControllerFormat320x50 
-                                                                        adUnitId:@"<b>{{site.key}}</b>" 
-                                                            parentViewController:self];
-                        adC.keywords = @"<i>keywords</i>";	// optional keywords
-                        [self.view addSubview:adC.view];
-                      </pre>
-                    </code>
-                  </div>
-                </li>{% endifequal %}
-                {% ifequal site.app_key.app_type "android" %}
-                <li>
-                  <p>
-                    Add the following XML block to your layout definition (eg. main.xml):
-                  </p>
-                  <div class="alertMessage">
-                    <code>
-                      <pre>
-                      &lt;com.mopub.mobileads.MoPubView
-                        android:id="@+id/adview"
-                        android:layout_width="fill_parent"
-                        android:layout_height="50px"/>
-                      </pre>
-                    </code>
-                  </div>
-                </li>
-                <li>
-                  <p>
-                    Add the following code snippet in your Activity's onCreate() instance (or another suitable place):
-                  </p>
-                  <div class="alertMessage">
-                    <code>
-                      <pre>
-                        MoPubView mpv = (MoPubView) findViewById(R.id.adview);
-                        mpv.setAdUnitId("{{site.key}}");
-                        mpv.loadAd();
-                      </pre>
-                    </code>
-                  </div>
-                </li>
-          {% endifequal %}
-                <li>
-                  <p>
-                    For more options, or if you have trouble, see the <a href="http://code.google.com/p/mopub/">MoPub Google Code project</a>.
-                  </p>
-                </li>  
-              </ol>
-              <div class="form-submit">
-                <span class="buttonWrap"><a href="{% url publisher_app_show app_key=site.app_key.key %}" class="button">Continue</a></span>
-              </div>
-            </div> 
+          <section>
+{% ifequal status 'welcome' %}
+            <div class="alertMessage">
+              The first app is now set up.  The next step is to add the SDK to your code and test that ads are serving correctly.  A sample ad campaign has been created and you should be able to see the test ad after you add the MoPub code snippet and run the emulator.
+            </div>
+{% endifequal %}
+{% ifequal status 'success' %}
+            <div class="alertMessage success">
+              The ad unit was created successfully.  To serve ads to this ad unit, you'll need to add the snippet of code below to your app.
+            </div>
+{% endifequal %}
+            <h2>Ad Unit ID</h2>
+            <div class="alertMessage">
+              <code>
+                <pre>
+{{site.key}}</pre>
+              </code>
+            </div>  
+            <h2>Code Integration</h2>
+            <ol>
+              <li>
+                <p>
+                  You will need to install the MoPub SDK first. If you have not done so, see the <a href="http://code.google.com/p/mopub/wiki/GettingStarted">MoPub Getting Started instructions</a> on Google Code.
+                </p>
+              </li>
+              {% ifequal site.app_key.app_type "iphone" %}
+              <li>
+                <p>
+                  Add the following code to your view's <code>viewDidLoad</code> method (or another suitable place):
+                </p>
+                <div class="alertMessage">
+                  <code>
+                    <pre>
+AdController* adC = [[AdController alloc] initWithFormat:AdControllerFormat320x50
+                                                adUnitId:@"<b>{{site.key}}</b>"
+                                    parentViewController:self];
+[self.view addSubview:adC.view];</pre>
+                  </code>
+                </div>
+              </li>{% endifequal %}
+              {% ifequal site.app_key.app_type "android" %}
+              <li>
+                <p>
+                  Add the following XML block to your layout definition (eg. main.xml):
+                </p>
+                <div class="alertMessage">
+                  <code>
+                    <pre>
+&lt;com.mopub.mobileads.MoPubView
+android:id="@+id/adview"
+android:layout_width="fill_parent"
+android:layout_height="50px"/></pre>
+                  </code>
+                </div>
+              </li>
+              <li>
+                <p>
+                  Add the following code snippet in your Activity's onCreate() instance (or another suitable place):
+                </p>
+                <div class="alertMessage">
+                  <code>
+                    <pre>
+MoPubView mpv = (MoPubView) findViewById(R.id.adview);
+mpv.setAdUnitId("{{site.key}}");
+mpv.loadAd();</pre>
+                  </code>
+                </div>
+              </li>
+        {% endifequal %}
+              <li>
+                <p>
+                  For more options, or if you have trouble, see the <a href="http://code.google.com/p/mopub/">MoPub Google Code project</a>.
+                </p>
+              </li>  
+            </ol>
+            <div class="form-submit">
+              <span class="buttonWrap">{% ifequal status 'welcome' %}<a href="{% url account_index %}" class="button">Continue to Step 3</a>{% else %}<a href="{% url publisher_app_show app_key=site.app_key.key %}" class="button">Continue</a>{% endifequal %}</span>
+            </div>
           </section>{% endblock content %}

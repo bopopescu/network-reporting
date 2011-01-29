@@ -4,15 +4,13 @@
 {% block extraScripts %}<script src="/js/mopub-advertiser.js"></script>{% endblock extraScripts %}
 
 {% block navLinks %}
-<li><a href="{% url publisher_index %}">Dashboard</a></li>
-<li class="active"><a href="{% url advertiser_campaign %}">Campaigns</a></li>
-{% endblock navLinks %}
+            <li><a href="{% url publisher_index %}">Dashboard</a></li>
+            <li class="active"><a href="{% url advertiser_campaign %}">Campaigns</a></li>{% endblock navLinks %}
+
 
 
 {% block pageTitle %}<h1>Campaigns</h1>{% endblock pageTitle %}
 
 {% block dateButtons %}{% endblock dateButtons %}
-
 {% block messageCenter %}{% endblock messageCenter %}
-
 {% block titleBarRight %}{% endblock titleBarRight %}

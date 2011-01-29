@@ -64,10 +64,10 @@
         
         <nav id="nav1">
           <ul>
-						{% block navLinks %}
+            {% block navLinks %}
             <li><a href="{% url publisher_index %}">Dashboard</a></li>
             <li><a href="{% url advertiser_campaign %}">Campaigns</a></li>
-						{% endblock navLinks %}
+            {% endblock navLinks %}
           </ul>
         </nav>
         
@@ -75,7 +75,7 @@
           <ul>
             <li><a href="{% url account_index %}">Your account</a></li>
             <li><a href="help.html">Help</a></li>
-            <li><a href="login.html">Log out</a></li>
+            <li><a href="{% google_logout_url %}">Log out</a></li>
           </ul>
         </nav>
       </div>
@@ -112,7 +112,7 @@
           <div id="titlebar-right">
 {% block titleBarRight %}
             <span class="titlebar-link">
-              <a class="linkIcon" href="region.html">Ad performance by region <span class="ui-icon ui-icon-triangle-1-e"></span></a>
+              <a class="linkIcon" href="{% url publisher_index_geo %}">Ad performance by region <span class="ui-icon ui-icon-triangle-1-e"></span></a>
             </span>
 {% endblock titleBarRight %}
           </div>
@@ -190,46 +190,41 @@
           </div>
           <div id="footer-account">
             Logged in as <a href="account.html">{{google_user}}</a>
-
-			{% block adminSelect %}
-			{% if user.is_admin %}
-			            <div style="float:right;padding-left:10px">
-			              <form id="admin_user_switch" action="{% url admin_switch_user %}" method="POST">
-			                <select name="user_key" id="admin_user_switch_select" onchange='$("#admin_user_switch").submit()'>
-			                  {{ request|all_user_dropdown }}
-			                </select>
-			              </form>
-			            </div>
-			            <script type="text/javascript">
-			            function getCookie(c_name) {
-			              if (document.cookie.length>0) {
-			                c_start=document.cookie.indexOf(c_name + "=");
-			                if (c_start!=-1) {
-			                  c_start=c_start + c_name.length+1;
-			                  c_end=document.cookie.indexOf(";",c_start);
-			                  if (c_end==-1) c_end=document.cookie.length;
-			                  return unescape(document.cookie.substring(c_start,c_end));
-			                }
-			              }
-			              return "";
-			            }
-			            var user_key_name = getCookie('account_impersonation');
-			            var options = $('select#admin_user_switch_select option');
-			            var len = options.length;
-			            for (var i = 0; i < len; i++) {
-			              if (options[i].value == user_key_name)
-			              options[i].selected = true;
-			            }
-			            </script>{% endif %}
-			{% endblock adminSelect %}
-
+{% block adminSelect %}{% if user.is_admin %}
+                  <div style="float:right;padding-left:10px">
+                    <form id="admin_user_switch" action="{% url admin_switch_user %}" method="POST">
+                      <select name="user_key" id="admin_user_switch_select" onchange='$("#admin_user_switch").submit()'>
+                        {{ request|all_user_dropdown }}
+                      </select>
+                    </form>
+                  </div>
+                  <script type="text/javascript">
+                  function getCookie(c_name) {
+                    if (document.cookie.length>0) {
+                      c_start=document.cookie.indexOf(c_name + "=");
+                      if (c_start!=-1) {
+                        c_start=c_start + c_name.length+1;
+                        c_end=document.cookie.indexOf(";",c_start);
+                        if (c_end==-1) c_end=document.cookie.length;
+                        return unescape(document.cookie.substring(c_start,c_end));
+                      }
+                    }
+                    return "";
+                  }
+                  var user_key_name = getCookie('account_impersonation');
+                  var options = $('select#admin_user_switch_select option');
+                  var len = options.length;
+                  for (var i = 0; i < len; i++) {
+                    if (options[i].value == user_key_name)
+                    options[i].selected = true;
+                  }
+                  </script>{% endif %}{% endblock adminSelect %}
             <span class="sep">&middot;</span>
-            <a href="login.html">Log out</a>
+            <a href="{% google_logout_url %}">Log out</a>
           </div>
         </div>
       </div>
     </footer>
   </div> <!-- end of #container -->
-  
 </body>
 </html>

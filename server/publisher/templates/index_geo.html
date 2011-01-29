@@ -56,6 +56,7 @@
     }
   }
   function initMap() {
+    /*
     data_req = new google.visualization.DataTable();
     data_req.addRows({{ geo_req|length }});
     data_req.addColumn('string', 'Country');
@@ -66,6 +67,7 @@
     data_req.setValue({{ forloop.counter0 }}, 1, {{ value }});
     data_req.setValue({{ forloop.counter0 }}, 2, '{{ key|print_country }}');
     {% endfor %}
+    */
     
     data_imp = new google.visualization.DataTable();
     data_imp.addRows(6);
@@ -86,7 +88,7 @@
 
     options = {'width':'800px','colors':[0xFFD78F, 0xFFC352, 0xFFAF02, 0xFF9A01]};
     geomap = new google.visualization.GeoMap($('map_canvas'));
-    drawMap('req');
+    drawMap('imp');
   }
 </script>
 <table class="wide">

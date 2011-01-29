@@ -80,7 +80,7 @@
         <nav id="nav1">
           <ul>
             <li <?php if (is_front_page()) { echo 'class="active"';}?>><a href="/">Home</a></li>
-            <li <?php if (is_page_template('features.php')) { echo 'class="active"';}?>><a href="/features">Features</a></li>
+            <li <?php if (is_page_template('features.php')) { echo 'class="active"';}?>><a href="/features">In-Depth</a></li>
             <li <?php if (is_page_template('archives.php') || is_category() || is_month() ) { echo 'class="active"';}?>><a href="/mopubblog">Blog</a></li>
             <li><a href="http://ads.mopub.com/welcome">Login</a></li>
           </ul>

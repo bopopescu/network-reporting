@@ -9,7 +9,7 @@
 			foreach( $myposts as $post ) :	setup_postdata($post); ?>
           		<div id="home-intro">
 					<h1 id="home-headline"><?php the_title(); ?></h1>
-					<p><?php the_excerpt(); ?></p>
+					<?php the_excerpt(); ?>
 
 		            <div id="home-cta">
 		              <span class="buttonWrap"><a class="button button-big" href="http://ads.mopub.com/inventory">Sign up now</a></span>
@@ -25,7 +25,7 @@
 					foreach ( $attachments as $attachment ) { ?>
 						
 						<div id="home-graphic">
-						  <img src="<?php echo wp_get_attachment_url($attachment->ID); ?>" alt="" width="475" height="270" />
+						  <img src="<?php echo wp_get_attachment_url($attachment->ID); ?>" alt="" width="535" height="300" />
 						</div>
 						
 				<?php
@@ -40,10 +40,11 @@
             <strong>NNN</strong> Impressions Served! Yeah!
           </span></span></span>
         </div-->
+
       </div>
       <div id="content">
         <div class="pageWidth">
-          <section id="home-features">	
+          <section class="home-features">
 			<?php
 			global $post;
 			$myposts = get_posts( array( 'numberposts' => 3, 'offset'=> 1, 'post_parent' => 189, 'post_type' => 'page', 'orderby' => 'menu_order', 'order' => 'ASC' ) );
@@ -74,7 +75,7 @@
 		  <div class="hr"></div>
 		
 		  <h2>Company News</h2>
-          <section id="home-features-2">	
+          <section class="home-features">
 			<?php
 			global $post;
 			$myposts = get_posts( array( 'numberposts' => 3, 'offset'=> 4, 'post_parent' => 189, 'post_type' => 'page', 'orderby' => 'menu_order', 'order' => 'ASC' ) );
@@ -104,7 +105,7 @@
 
           <div class="clear"></div>
           <section id="mopub-public-cta">
-            <span class="buttonWrap"><a class="button button-big" href="http://ads.mopub.com/inventory">Sign up now</a></span>
+            <span class="buttonWrap"><a class="button button-big" href="http://ads.mopub.com/welcome">Sign up now</a></span>
             <span class="sep">&middot;</span>
             <a href="/features">Learn more</a>
           </section>

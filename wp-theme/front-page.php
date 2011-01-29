@@ -12,7 +12,7 @@
 					<?php the_excerpt(); ?>
 
 		            <div id="home-cta">
-		              <span class="buttonWrap"><a class="button button-big" href="http://ads.mopub.com/inventory">Sign up now</a></span>
+		              <span class="buttonWrap"><a class="button button-big" href="http://www.mopub.com/start/">Sign up now</a></span>
 		              <span class="sep">&middot;</span>
 		              <a href="/features">Learn more</a>
 		            </div>
@@ -105,7 +105,7 @@
 
           <div class="clear"></div>
           <section id="mopub-public-cta">
-            <span class="buttonWrap"><a class="button button-big" href="http://ads.mopub.com/welcome">Sign up now</a></span>
+            <span class="buttonWrap"><a class="button button-big" href="http://www.mopub.com/start/">Sign up now</a></span>
             <span class="sep">&middot;</span>
             <a href="/features">Learn more</a>
           </section>

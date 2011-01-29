@@ -4,13 +4,13 @@ from google.appengine.ext import db
 
 from django import forms
 from django.forms.forms import BoundField
-from django.forms.fields import FileField
+from django.forms.fields import FileField, CharField
 from django.forms.models import ModelChoiceField
 from django.template import Context, loader
 from django.utils.encoding import smart_unicode, force_unicode
 from django.utils.translation import ugettext_lazy as _, ugettext
 from django.forms.util import ValidationError, ErrorList
-from django.forms.widgets import SelectMultiple
+from django.forms.widgets import SelectMultiple, Textarea
 
 
 class MPModelForm(forms.ModelForm):
@@ -35,6 +35,7 @@ class MPModelForm(forms.ModelForm):
         
     def as_template(self):
         "Helper function for fieldsting fields data from form."
+        import logging
         bound_fields = [BoundField(self, field, name) for name, field in self.fields.items()]
         context_dict = dict(form = self, bound_fields = bound_fields)
         if hasattr(self,'_extra_context'):
@@ -66,6 +67,14 @@ class MPBoundField(BoundField):
                 value = self.data
         return value or ''
         
+class MPTextAreaField(CharField):
+    widget = Textarea
+    
+    def clean(self,value):
+      super(MPTextAreaField,self).clean(value)
+      value = [v for v in value.lower().replace('\r','\n').split('\n') if v] 
+      return value
+        
 class MPModelMultipleChoiceField(ModelChoiceField):
     """A MultipleChoiceField whose choices are a model QuerySet."""
     widget = SelectMultiple
@@ -92,13 +101,10 @@ class MPModelMultipleChoiceField(ModelChoiceField):
         if not isinstance(value, (list, tuple)):
             raise ValidationError(self.error_messages['list'])
             
-        logging.info("queryset: %s"%self.queryset)    
-        logging.info("class: %s id: %s"%(self.__class__,id(self)))
         qs = self.queryset
         qs = [o for o in qs if force_unicode(o.key()) in value]
         keys = set([force_unicode(o.key()) for o in qs])
         for val in value:
             if force_unicode(val) not in keys:
                 raise ValidationError(self.error_messages['invalid_choice'] % val)
-        logging.warning("!!!!!!!"+str(qs)+"!!!!!!!")
         return [db.Key(k) for k in keys]

@@ -1,10 +1,12 @@
 {% extends 'advertiser/base.html' %}
 {% load filters %}
 {% block navLinks %}
-            <li><a href="/inventory">Dashboard</a></li>
-            <li class="active"><a href="campaigns.html">Campaigns</a></li>
+	<li><a href="{% url publisher_index %}">Dashboard</a></li>
+	<li  class="active"><a href="{% url advertiser_campaign %}">Campaigns</a></li>
 {% endblock navLinks %}
 {% block messageCenter %}{% endblock messageCenter %}
+{% block pageTitle %}<h1>Campaigns</h1>{% endblock pageTitle %}
+
 
 {% block content %}
           <div class="separated">

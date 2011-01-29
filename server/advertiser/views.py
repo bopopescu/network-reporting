@@ -12,13 +12,17 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
-from common.ragendja.template import render_to_response, JSONResponse
+from django.utils import simplejson
+from common.ragendja.template import render_to_response, render_to_string, JSONResponse
 
 # from common.ragendja.auth.decorators import google_login_required as login_required
 from common.utils.decorators import whitelist_login_required
 
 from advertiser.models import *
-from advertiser.forms import CampaignForm, AdGroupForm
+from advertiser.forms import CampaignForm, AdGroupForm, \
+                             BaseCreativeForm, TextCreativeForm, \
+                             ImageCreativeForm, TextAndTileCreativeForm, \
+                             HtmlCreativeForm
 
 from publisher.models import Site, Account, App
 from reporting.models import SiteStats
@@ -27,14 +31,31 @@ from common.utils.cachedquerymanager import CachedQueryManager
 
 from account.query_managers import AccountQueryManager
 from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager, \
-                                      CreativeQueryManager
+                                      CreativeQueryManager, TextCreativeQueryManager, \
+                                      ImageCreativeQueryManager, TextAndTileCreativeQueryManager, \
+                                      HtmlCreativeQueryManager
 from publisher.query_managers import AdUnitQueryManager, AppQueryManager
 from reporting.query_managers import SiteStatsQueryManager
 
 class RequestHandler(object):
+    def __init__(self,request=None):
+      if request:
+        self.request = request
+        self.account = None
+        user = users.get_current_user()
+        if user:
+          if users.is_current_user_admin():
+            account_key_name = request.COOKIES.get("account_impersonation",None)
+            if account_key_name:
+              self.account = AccountQueryManager().get_by_key_name(account_key_name)
+        if not self.account:  
+          self.account = Account.current_account()
+        
+      super(RequestHandler,self).__init__()  
+  
     def __call__(self,request,*args,**kwargs):
         self.params = request.POST or request.GET
-        self.request = request
+        self.request = request or self.request
         self.account = None
         user = users.get_current_user()
         if user:
@@ -183,11 +204,17 @@ class AdGroupIndexHandler(RequestHandler):
 def adgroups(request,*args,**kwargs):
     return AdGroupIndexHandler()(request,*args,**kwargs)
 
-class CreateHandler(RequestHandler):
-  def get(self,campaign_form=None, adgroup_form=None):
-    campaign_form = campaign_form or CampaignForm()
-    adgroup_form = adgroup_form or AdGroupForm()
+
+class CreateCampaignAJAXHander(RequestHandler):
+  TEMPLATE  = 'advertiser/forms/campaign_create_form.html'
+  def get(self,campaign_form=None,adgroup_form=None,
+               campaign=None,adgroup=None):
+    if adgroup:           
+      campaign = campaign or adgroup.campaign
+    campaign_form = campaign_form or CampaignForm(instance=campaign)
+    adgroup_form = adgroup_form or AdGroupForm(instance=adgroup)
     networks = [["adsense","Google AdSense",False],["iAd","Apple iAd",False],["admob","AdMob",False],["millennial","Millennial Media",False],["inmobi","InMobi",False],["greystripe","GreyStripe",False],["appnexus","App Nexus",False],["brightroll","BrightRoll",False],["custom","Custom",False]]
+    
     all_adunits = AdUnitQueryManager().get_adunits(account=self.account)
     
     adgroup_form['site_keys'].queryset = all_adunits # needed for validation TODO: doesn't actually work
@@ -197,46 +224,124 @@ class CreateHandler(RequestHandler):
     campaign_form.bid_strategy = adgroup_form['bid_strategy']
 
     adunit_keys = adgroup_form['site_keys'].value or []
+    adunit_str_keys = [unicode(k) for k in adunit_keys]
+    logging.info('adunit_keys: %s'%adunit_keys)
     for adunit in all_adunits:
-      adunit.checked = unicode(adunit.key()) in adunit_keys
+      adunit.checked = unicode(adunit.key()) in adunit_str_keys
       adunit.app = App.get(adunit.app_key.key())
-    logging.warning("bid: %s"%adgroup_form['bid'].value)
+      logging.info('checked: %s'%adunit.checked)
+      
     campaign_form.add_context(dict(networks=networks))
     adgroup_form.add_context(dict(all_adunits=all_adunits))
+    return self.render(campaign_form=campaign_form,adgroup_form=adgroup_form)
 
-    return render_to_response(self.request,'advertiser/new.html', {"campaign_form": campaign_form, 
-                                                                   "adgroup_form": adgroup_form,
-                                                                   "networks": networks,
-                                                                   "all_adunits": all_adunits})
+  def render(self,template=None,**kwargs):
+    template_name = template or self.TEMPLATE
+    return render_to_string(self.request,template_name=template_name,data=kwargs)
+
+  def json_response(self,json_dict):
+    return JSONResponse(json_dict)
 
   def post(self):
-    campaign_form = CampaignForm(data=self.request.POST)
-    adgroup_form = AdGroupForm(data=self.request.POST)
+    adgroup_key = self.request.POST.get('adgroup_key')
+    if adgroup_key:
+      adgroup = AdGroupQueryManager().get_by_key(adgroup_key)
+      campaign = adgroup.campaign
+    else:
+      adgroup = None
+      campaign = None
+    
+    campaign_form = CampaignForm(data=self.request.POST,instance=campaign)
+    adgroup_form = AdGroupForm(data=self.request.POST,instance=adgroup)
     
     all_adunits = AdUnitQueryManager().get_adunits(account=self.account)
     sk_field = adgroup_form.fields['site_keys']
-    logging.info("sk: %s"%sk_field.__class__)
-    logging.info("id: %s"%id(sk_field))
     sk_field.queryset = all_adunits # TODO: doesn't work needed for validation
-    logging.info("sk qs: %s"%sk_field.queryset)
-
+    
+    json_dict = {'success':False,'html':None}
+    
     if campaign_form.is_valid():
       campaign = campaign_form.save(commit=False)
       campaign.u = self.account.user
       
       if adgroup_form.is_valid():
         adgroup = adgroup_form.save(commit=False)
-        adgroup.campaign = campaign
+        
         # TODO: clean this up in case the campaign succeeds and the adgroup fails
         CampaignQueryManager().put_campaigns(campaign)
+        adgroup.campaign = campaign
         AdGroupQueryManager().put_adgroups(adgroup)
-        return HttpResponseRedirect(reverse('advertiser_adgroup_new', kwargs={'campaign_key':campaign.key()}))
+        logging.info('adgroup: %s'%adgroup.key())
+        
+        if campaign.campaign_type == "network":
+          creative = adgroup.default_creative()
+          CreativeQueryManager().put_creatives(creative)
+        json_dict.update(success=True,new_page=reverse('advertiser_adgroup_show',kwargs={'adgroup_key':str(adgroup.key())}))
+        return self.json_response(json_dict)
+          
+    new_html = self.get(campaign_form=campaign_form,
+                        adgroup_form=adgroup_form)
+    json_dict.update(success=False,html=new_html)    
+    return self.json_response(json_dict)  
+    
+@whitelist_login_required     
+def campaign_adgroup_create_ajax(request,*args,**kwargs):
+  return CreateCampaignAJAXHander()(request,*args,**kwargs)      
+
+
+class CreateCampaignHandler(RequestHandler):
+  def get(self,campaign_form=None, adgroup_form=None):
+    campaign_create_form_fragment = CreateCampaignAJAXHander(self.request).get()
+    
+    # campaign_form = campaign_form or CampaignForm()
+    # adgroup_form = adgroup_form or AdGroupForm()
+    # networks = [["adsense","Google AdSense",False],["iAd","Apple iAd",False],["admob","AdMob",False],["millennial","Millennial Media",False],["inmobi","InMobi",False],["greystripe","GreyStripe",False],["appnexus","App Nexus",False],["brightroll","BrightRoll",False],["custom","Custom",False]]
+    # all_adunits = AdUnitQueryManager().get_adunits(account=self.account)
+    # 
+    # adgroup_form['site_keys'].queryset = all_adunits # needed for validation TODO: doesn't actually work
+    # 
+    # # TODO: Remove this hack to place the bidding info with the rest of campaign
+    # campaign_form.bid  = adgroup_form['bid']
+    # campaign_form.bid_strategy = adgroup_form['bid_strategy']
+    # 
+    # adunit_keys = adgroup_form['site_keys'].value or []
+    # for adunit in all_adunits:
+    #   adunit.checked = unicode(adunit.key()) in adunit_keys
+    #   adunit.app = App.get(adunit.app_key.key())
+    # campaign_form.add_context(dict(networks=networks))
+    # adgroup_form.add_context(dict(all_adunits=all_adunits))
+
+    return render_to_response(self.request,'advertiser/new.html', {"campaign_create_form_fragment": campaign_create_form_fragment})
+    
+  def post(self):
+    campaign_form = CampaignForm(data=self.request.POST)
+    adgroup_form = AdGroupForm(data=self.request.POST)
+    
+    all_adunits = AdUnitQueryManager().get_adunits(account=self.account)
+    sk_field = adgroup_form.fields['site_keys']
+    sk_field.queryset = all_adunits # TODO: doesn't work needed for validation
+    if campaign_form.is_valid():
+      campaign = campaign_form.save(commit=False)
+      campaign.u = self.account.user
+      
+      if adgroup_form.is_valid():
+        adgroup = adgroup_form.save(commit=False)
+        
+        # TODO: clean this up in case the campaign succeeds and the adgroup fails
+        CampaignQueryManager().put_campaigns(campaign)
+        adgroup.campaign = campaign
+        AdGroupQueryManager().put_adgroups(adgroup)
+        if campaign.campaign_type == "network":
+          creative = adgroup.default_creative()
+          CreativeQueryManager().put_creatives(creative)
+        
+        return HttpResponseRedirect(reverse('advertiser_adgroup_show', kwargs={'adgroup_key':str(adgroup.key())}))
 
     return self.get(campaign_form,adgroup_form)
 
 @whitelist_login_required     
 def campaign_adgroup_create(request,*args,**kwargs):
-  return CreateHandler()(request,*args,**kwargs)      
+  return CreateCampaignHandler()(request,*args,**kwargs)      
 
 class CreateAdGroupHandler(RequestHandler):
   def get(self, campaign_key=None, adgroup_key=None, edit=False, title="Create an Ad Group"):
@@ -266,46 +371,26 @@ class CreateAdGroupHandler(RequestHandler):
     return render_to_response(self.request,'advertiser/new_adgroup.html', {"f": f, "c": c, "sites": adunits, "title": title, "networks":networks})
 
   def post(self, campaign_key=None,adgroup_key=None, edit=False, title="Create an Ad Group"):
-    if adgroup_key:
-      adgroup = AdGroupQueryManager().get_by_key(adgroup_key)
-    else:
-      adgroup = None  
-    orig_site_keys = set(adgroup.site_keys) if adgroup else set()
-    f = AdGroupForm(data=self.request.POST,instance=adgroup)
-    if f.is_valid():
-      adgroup = f.save(commit=False)
-      adgroup.campaign = CampaignQueryManager().get_by_key(self.request.POST.get("id"))
-      adgroup.keywords = filter(lambda k: len(k) > 0, self.request.POST.get('keywords').lower().replace('\r','\n').split('\n'))
-      adgroup.site_keys = map(lambda x: db.Key(x), self.request.POST.getlist('sites'))
-      AdGroupQueryManager().put_adgroups(adgroup)
+        
+    adgroup = AdGroupQueryManager().get_by_key(adgroup_key)
+    campaign = adgroup.campaign
     
-      updated_site_keys = orig_site_keys.union(set(adgroup.site_keys))
+    campaign_form = CampaignForm(data=self.request.POST,instance=campaign)
+    adgroup_form = AdGroupForm(data=self.request.POST,instance=adgroup)
     
-      # update cache
-      if updated_site_keys:
-        adunits = AdUnitQueryManager().get_by_key(list(updated_site_keys))
-        CachedQueryManager().cache_delete(adunits)
-     
-      # if the campaign is a network type, automatically populate the right creative and go back to
-      # campaign page
-      if adgroup.campaign.campaign_type == "network":
-        if not edit:
-          creative = adgroup.default_creative()
-          CreativeQueryManager().put_creatives(creative)
-        else:
-          creatives = CreativeQueryManager().get_creatives(adgroup=adgroup)
-          creative = creatives[0]
-          if adgroup.network_type in ['millenial','inmobi','appnexus']:
-            creative.ad_type = 'html'
-          elif adgroup.network_type in ['brightroll']:
-            creative.ad_type = "html_full"
-          else:
-            creative.ad_type = adgroup.network_type
-          CreativeQueryManager().put_creatives(creative)
-    else:
-      logging.info("errors: %s"%f.errors)
-      asdf1234    
-    return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':str(adgroup.key())}))
+    all_adunits = AdUnitQueryManager().get_adunits(account=self.account)
+
+    if campaign_form.is_valid():
+      campaign = campaign_form.save(commit=False)
+      campaign.u = self.account.user
+      
+      if adgroup_form.is_valid():
+        adgroup = adgroup_form.save(commit=False)
+        # TODO: clean this up in case the campaign succeeds and the adgroup fails
+        CampaignQueryManager().put_campaigns(campaign)
+        adgroup.campaign = campaign
+        AdGroupQueryManager().put_adgroups(adgroup)
+        return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':str(adgroup.key())}))
        
 @whitelist_login_required     
 def campaign_adgroup_new(request,*args,**kwargs):
@@ -437,8 +522,6 @@ class ShowAdGroupHandler(RequestHandler):
 
     adgroup = AdGroupQueryManager().get_by_key(adgroup_key)
     
-    logging.info("adgroup: %s"%adgroup.priority_level)
-    
     # creatives = Creative.gql('where ad_group = :1 and deleted = :2 and ad_type in :3', adgroup, False, ["text", "image", "html"]).fetch(50)
     creatives = CreativeQueryManager().get_creatives(adgroup=adgroup)
     creatives = list(creatives)
@@ -480,14 +563,16 @@ class ShowAdGroupHandler(RequestHandler):
     chart_urls['rev'] = gen_graph_url(revenue, days, "Total+Revenue")
 
     
-    # In order to make the edit page
-    f = AdGroupForm(instance=adgroup)
-    all_adunits = AdUnitQueryManager().get_adunits(account=self.account)
+    # In order to have add creative
+    creative_handler = AddCreativeHandler(self.request)
+    creative_fragment = creative_handler.get() # return the creative fragment
     
-    # allow the correct sites to be checked
-    for adunit in all_adunits:
-      adunit.checked = adunit.key() in adgroup.site_keys
-      adunit.app = App.get(adunit.app_key.key())
+    # In order to have each creative be editable
+    for c in creatives:
+      c.html_fragment = creative_handler.get(creative=c)
+    
+    # In order to make the edit page
+    campaign_create_form_fragment = CreateCampaignAJAXHander(self.request).get(adgroup=adgroup)
     
     return render_to_response(self.request,'advertiser/adgroup.html', 
                               {'campaign': adgroup.campaign,
@@ -499,9 +584,9 @@ class ShowAdGroupHandler(RequestHandler):
                               'chart_urls': chart_urls,
                               'sites': sites, 
                               'adunits' : sites, # TODO: migrate over to adunit instead of site
-                              'all_adunits' : all_adunits,
                               'start_date': days[0],
-                              'f':f})
+                              'creative_fragment':creative_fragment,
+                              'campaign_create_form_fragment':campaign_create_form_fragment})
     
 @whitelist_login_required   
 def campaign_adgroup_show(request,*args,**kwargs):    
@@ -547,66 +632,115 @@ class PauseAdGroupHandler(RequestHandler):
 def bid_pause(request,*args,**kwargs):
   return PauseAdGroupHandler()(request,*args,**kwargs)
   
-# Creative management
+# AJAX Creative Create/Edit
 #
 class AddCreativeHandler(RequestHandler):
-  def post(self):
-    ad_group = AdGroupQueryManager().get_by_key(self.request.POST.get('id'))
-    creative = None
-    if self.request.POST.get("headline"):
-      creative = TextCreative(ad_group=ad_group,
-      headline=self.request.POST.get('headline'),
-      line1=self.request.POST.get('line1'),
-      line2=self.request.POST.get('line2'),
-      url=self.request.POST.get('url'),
-      display_url=self.request.POST.get('display_url'),
-      tracking_url=self.request.POST.get('tracking_url'))
-      creative.put()
-    elif self.request.POST.get("line1"):
-      creative = TextAndTileCreative()
-      creative.ad_group=ad_group
-      creative.ad_type="text_icon"
-      creative.line1=self.request.POST.get('line1')
-      creative.line2=self.request.POST.get('line2')
-      creative.url=self.request.POST.get('url')
-      if self.request.FILES.get('image'):
-        img=images.resize(self.request.FILES.get("image").read(), 40, 40)
-        creative.image=db.Blob(img)
-      elif self.request.POST.get('app_img'):
-        a=App.get(self.request.POST.get('app_img'))
-        creative.image=a.icon
-      creative.action_icon=self.request.POST.get('action_icon')
-      creative.color=self.request.POST.get('color')
-      creative.font_color=self.request.POST.get('font_color')
-      if self.request.POST.get('gradient'):
-        creative.gradient=True
-      creative.put()
-    elif self.request.FILES.get("image"):
-      img = images.Image(self.request.FILES.get("image").read())
-      fp = ImageCreative.get_format_predicates_for_image(img)
-      if fp is not None:
-        img.im_feeling_lucky()
-        creative = ImageCreative(ad_group=ad_group,
-                                  ad_type="image",
-                                  format_predicates=fp,
-                                  url=self.request.POST.get('url'),
-                                  image=db.Blob(img.execute_transforms()),
-                                  image_width=img.width,
-                                  image_height=img.height,
-                                  tracking_url=self.request.POST.get('tracking_url'))
-    elif self.request.POST.get("html_name"):
-      creative = HtmlCreative(ad_group=ad_group,
-        ad_type="html",
-        html_name=self.request.POST.get('html_name'),
-        html_data=self.request.POST.get('html_data'),
-        tracking_url=self.request.POST.get('tracking_url'))
-    if creative:  
-        CreativeQueryManager().put_creatives(creative)
-    # update cache
-    adunits = AdUnitQueryManager().get_by_key(ad_group.site_keys)
-    CachedQueryManager().cache_delete(adunits)
+  TEMPLATE  = 'advertiser/forms/creative_form.html'
+  def get(self,base_creative_form=None,
+               text_creative_form=None,
+               image_creative_form=None,
+               text_tile_creative_form=None,
+               html_creative_form=None,
+               creative=None,
+               text_creative=None,
+               image_creative=None,
+               text_tile_creative=None,
+               html_creative=None):
+
+    # TODO: Shouldn't I be able to just cast???           
+    if creative:
+      if creative.ad_type == "text":
+        text_creative = TextCreativeQueryManager().get_by_key(creative.key())
+      elif creative.ad_type == "text_icon":
+        text_tile_creative = TextAndTileCreativeQueryManager().get_by_key(creative.key())
+      elif creative.ad_type == "image":
+        image_creative = ImageCreativeQueryManager().get_by_key(creative.key())
+      elif creative.ad_type == "html":
+        html_creative = HtmlCreativeQueryManager().get_by_key(creative.key())      
+    
+    # NOTE: creative is usually None so the default form is actually unbound           
+    base_creative_form = base_creative_form or BaseCreativeForm(instance=creative)
+    text_creative_form = text_creative_form or TextCreativeForm(instance=text_creative)
+    image_creative_form = image_creative_form or ImageCreativeForm(instance=image_creative)
+    text_tile_creative_form = text_tile_creative_form or TextAndTileCreativeForm(instance=text_tile_creative)
+    html_creative_form = html_creative_form or HtmlCreativeForm(instance=html_creative)
+
+    return self.render(base_creative_form=base_creative_form,
+                  text_creative_form=text_creative_form,
+                  image_creative_form=image_creative_form,
+                  text_tile_creative_form=text_tile_creative_form,
+                  html_creative_form=html_creative_form)
+  
+  def render(self,template=None,**kwargs):
+    template_name = template or self.TEMPLATE
+    return render_to_string(self.request,template_name=template_name,data=kwargs)
+  
+  def json_response(self,json_dict):
+    # if not self.request.FILES:
+    return JSONResponse(json_dict)
+    # else:
+    #   logging.info("responding with: %s"%('<textarea>'+simplejson.dumps(json_dict)+'</textarea>'))
+    #   return HttpResponse('<textarea>'+simplejson.dumps(json_dict)+'</textarea>',mimetype="text/plain")
       
-    return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':ad_group.key()}))
+  def post(self):
+    ad_group = AdGroupQueryManager().get_by_key(self.request.POST.get('adgroup_key'))
+    creative_key = self.request.POST.get('creative_key')
+    if creative_key:
+      creative = CreativeQueryManager().get_by_key(creative_key)
+    else:
+      creative = None
+
+    text_creative = None
+    image_creative = None
+    text_tile_creative = None
+    html_creative = None
+      
+    # TODO: Shouldn't I be able to just cast???           
+    if creative:
+      if creative.ad_type == "text":
+        text_creative = TextCreativeQueryManager().get_by_key(creative.key())
+      elif creative.ad_type == "text_icon":
+        text_tile_creative = TextAndTileCreativeQueryManager().get_by_key(creative.key())
+      elif creative.ad_type == "image":
+        image_creative = ImageCreativeQueryManager().get_by_key(creative.key())
+      elif creative.ad_type == "html":
+        html_creative = HtmlCreativeQueryManager().get_by_key(creative.key())      
+      
+      
+    logging.warning('creative_key: %s, creative: %s'%(creative_key,creative))  
+    base_creative_form = BaseCreativeForm(data=self.request.POST,instance=creative)
+    text_creative_form = TextCreativeForm(data=self.request.POST,instance=text_creative)
+    image_creative_form = ImageCreativeForm(data=self.request.POST,files=self.request.FILES,instance=image_creative)
+    text_tile_creative_form = TextAndTileCreativeForm(data=self.request.POST,files=self.request.FILES,instance=text_tile_creative)
+    html_creative_form = HtmlCreativeForm(data=self.request.POST,instance=html_creative)
+
+    jsonDict = {'success':False,'html':None}
+    if base_creative_form.is_valid():
+      base_creative = base_creative_form.save(commit=False)
+      ad_type = base_creative.ad_type
+      if ad_type == "text":
+        creative_form = text_creative_form
+      elif ad_type == "text_icon":
+        creative_form = text_tile_creative_form
+      elif ad_type == "image":
+        creative_form = image_creative_form
+      elif ad_type == "html":
+        creative_form = html_creative_form
+        
+      if creative_form.is_valid():
+        creative = creative_form.save(commit=False)
+        creative.ad_group = ad_group
+        CreativeQueryManager().put_creatives(creative)    
+        # update cache
+        adunits = AdUnitQueryManager().get_by_key(ad_group.site_keys)
+        CachedQueryManager().cache_delete(adunits)
+        jsonDict.update(success=True)
+        return self.json_response(jsonDict)
+    new_html = self.get(base_creative_form,text_creative_form,image_creative_form,\
+                        text_tile_creative_form,html_creative_form)
+    jsonDict.update(success=False,html=new_html)
+    return self.json_response(jsonDict)
+      
   
 @whitelist_login_required
 def creative_create(request,*args,**kwargs):
@@ -629,16 +763,27 @@ def creative_image(request,*args,**kwargs):
 def creative_html(request,*args,**kwargs):
   return DisplayCreativeHandler()(request,*args,**kwargs)
 
-class RemoveCreativeHandler(RequestHandler):
+class CreativeManagementHandler(RequestHandler):
   def post(self):
-    ids = self.request.POST.getlist('id')
+    keys = self.request.POST.getlist('key')
+    action = self.request.POST.get('action','pause')
     update_objs = []
-    for creative_key in ids:
+    # TODO: bulk get before for loop
+    for creative_key in keys:
       c = CreativeQueryManager().get_by_key(creative_key)
-      if c != None and c.ad_group.campaign.u == self.account.user:
-        c.deleted = True
-        update_objs.append(c)
-        
+      if c != None and c.ad_group.campaign.u == self.account.user: # TODO: clean up dereferences
+        if action == "pause":
+          c.deleted = False
+          c.active = False
+          update_objs.append(c)
+        elif action == "resume":
+          c.deleted = False
+          c.active = True
+          update_objs.append(c)
+        elif action == "delete":
+          c.deleted = True
+          c.active = False
+          update_objs.append(c)
         
     if update_objs:
       # db.put(update_objs)
@@ -651,5 +796,5 @@ class RemoveCreativeHandler(RequestHandler):
     return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':c.ad_group.key()}))
 
 @whitelist_login_required  
-def creative_delete(request,*args,**kwargs):
-  return RemoveCreativeHandler()(request,*args,**kwargs)
+def creative_manage(request,*args,**kwargs):
+  return CreativeManagementHandler()(request,*args,**kwargs)

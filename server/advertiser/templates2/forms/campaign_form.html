@@ -2,9 +2,9 @@
 	<dt>Campaign Type:</dt> 
    <dd> 
      <span class="radios"> 
-       <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="gtee" id="advertiser-CampaignType-gtee" checked="checked"/> <label for="advertiser-CampaignType-gtee">Guaranteed</label> 
-       <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="promo" id="advertiser-CampaignType-promo"/> <label for="advertiser-CampaignType-promo">Promotional</label> 
-       <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="network" id="advertiser-CampaignType-network"/> <label for="advertiser-CampaignType-network">Network</label> 
+       <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="gtee" id="advertiser-CampaignType-gtee" {% if not form.campaign_type.value %}checked="checked"{% endif %}{% ifequal form.campaign_type.value 'gtee' %}checked="checked"{% endifequal %}/> <label for="advertiser-CampaignType-gtee">Guaranteed</label> 
+       <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="promo" id="advertiser-CampaignType-promo" {% ifequal form.campaign_type.value "promo" %}checked="checked"{% endifequal %}/> <label for="advertiser-CampaignType-promo">Promotional</label> 
+       <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="network" id="advertiser-CampaignType-network" {% ifequal form.campaign_type.value "network" %}checked="checked"{% endifequal %}/> <label for="advertiser-CampaignType-network">Network</label> 
      </span> 
    </dd>
 
@@ -37,14 +37,14 @@
 	</dd>
 	
 	{# Belong to AdGroup #}
-   <dt><label for="TODO2">Max Bid:</label></dt> 
-   <dd> 
+  <dt class="campaignDependent gtee promo"><label for="TODO2">Max Bid:</label></dt> 
+  <dd class="campaignDependent gtee promo"> 
 		<input type="text" class="input-text" name="bid" value="{{form.bid.value}}" id="id_bid" /> USD
 	</dd>
-	<dt><label for="TODO3">Bidding Strategy:</label></dt> 
-	<dd>
-		<select name="bid_strategy">
-					<option value="cpm" {% ifequal form.bid_strategy.value "cpm"%}selected="selected"{% endifequal %}>By impression (CPM)</option>
+	<dt class="campaignDependent gtee promo"><label for="TODO3">Bidding Strategy:</label></dt> 
+	<dd class="campaignDependent gtee promo">
+		<select name="bid_strategy" id="bid_strategy">
+					<option value="cpm" id="bid_strategy-cpm"{% ifequal form.bid_strategy.value "cpm"%}selected="selected"{% endifequal %}>By impression (CPM)</option>
 					<option value="cpc" {% ifequal form.bid_strategy.value "cpc"%}selected="selected"{% endifequal %}>By click (CPC)</option>
 				</select>
 	</dd>	
@@ -57,5 +57,9 @@
 				<option value="{{network.0}}" {% if network.2 %}selected="selected"{%endif%}>{{network.1}}</option>
 				{% endfor %}
 		</select>
-	</dd>			
+	</dd>
+	<dt class="campaignDependent network"><label for="TODO2">Network eCPM:</label></dt> 
+  <dd class="campaignDependent network"> 
+		<input type="text" class="input-text" name="bid" value="{{form.bid.value}}" id="id_bid" /> USD
+	</dd>	
 </dl>

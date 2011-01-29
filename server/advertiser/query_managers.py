@@ -8,7 +8,10 @@ from common.utils.cachedquerymanager import CachedQueryManager
 
 from advertiser.models import Campaign
 from advertiser.models import AdGroup
-from advertiser.models import Creative
+from advertiser.models import Creative, TextCreative, \
+                              TextAndTileCreative, \
+                              HtmlCreative,\
+                              ImageCreative
 
 NAMESPACE = None
 
@@ -24,6 +27,8 @@ class CampaignQueryManager(CachedQueryManager):
         return campaigns.fetch(limit)        
 
     def put_campaigns(self,campaigns):
+        if isinstance(campaigns, db.Model):
+          return campaigns.put()
         return db.put(campaigns)
 
 class AdGroupQueryManager(CachedQueryManager):
@@ -48,23 +53,6 @@ class AdGroupQueryManager(CachedQueryManager):
   def put_adgroups(self,adgroups):
       return db.put(adgroups)
       
-class CreativeQueryManager(CachedQueryManager):
-    Model = Creative
-    
-    def get_creatives(self,adgroup=None,ad_type=None,ad_types=None,deleted=False,limit=None):
-        creatives = Creative.all()
-        if not (deleted == None):
-            creatives = creatives.filter("deleted =",deleted)
-        if adgroup:
-            creatives = creatives.filter("ad_group =",adgroup)
-        if ad_types:
-            creatives = creatives.filter("ad_types IN",ad_types)
-        if ad_type:
-            creatives = creatives.filter("ad_type =",ad_type)
-        return creatives            
-    def put_creatives(self,creatives):
-        return db.put(creatives)
-
 class CampaignStatsCounter(object):
   def __init__(self,campaign):
     self.campaign = campaign
@@ -96,3 +84,29 @@ class CampaignStatsCounter(object):
       salt = random.randint(0,self.number_of_shards-1)
       key = "cnt_%s_%s"%(str(self.campaign.key()),salt)
       return key
+      
+class CreativeQueryManager(CachedQueryManager):
+    Model = Creative
+
+    def get_creatives(self,adgroup=None,ad_type=None,ad_types=None,deleted=False,limit=None):
+        creatives = Creative.all()
+        if not (deleted == None):
+            creatives = creatives.filter("deleted =",deleted)
+        if adgroup:
+            creatives = creatives.filter("ad_group =",adgroup)
+        if ad_types:
+            creatives = creatives.filter("ad_types IN",ad_types)
+        if ad_type:
+            creatives = creatives.filter("ad_type =",ad_type)
+        return creatives            
+    def put_creatives(self,creatives):
+        return db.put(creatives)
+
+class TextCreativeQueryManager(CreativeQueryManager):
+  Model = TextCreative
+class TextAndTileCreativeQueryManager(CreativeQueryManager):
+  Model = TextAndTileCreative
+class HtmlCreativeQueryManager(CreativeQueryManager):
+  Model = HtmlCreative
+class ImageCreativeQueryManager(CreativeQueryManager):
+  Model = ImageCreative

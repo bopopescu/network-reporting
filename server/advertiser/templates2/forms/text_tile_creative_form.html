@@ -1,0 +1,44 @@
+<dt><label for="TODO1">Line 1</label></dt
+<dd>
+	<input id='line1' type='text' name="{{form.line1.name}}" size="30" onkeyup='updateLine1();' class="input-text {% if form.line1.errors %}form-error{% endif %}"/>
+	{% for error in form.line1.errors %}
+	<div class="form-error-text">{{error}}</div> 
+	{% endfor %}
+</dd>	
+<dt><label for="TODO2">Line 2</label></dt
+<dd>
+	<input id='line2' type='text' name="{{form.line2.name}}" size="30" onkeyup='updateLine1();' class="input-text {% if form.line2.errors %}form-error{% endif %}"/>
+	{% for error in form.line2.errors %}
+	<div class="form-error-text">{{error}}</div> 
+	{% endfor %}
+</dd>	
+<dt><label for="TODO2">Image File</label></dt>
+<dd>
+	<span style="font-size:smaller;margin-left:5px;">(40 x 40)</span></th><td><div id='image_input_div'><input id='image_input' type='file' name="image" size="40"/></div><div id='image_input_change' style='display:none;'><a href="#" onclick="changeIcon();return false;">Change</a></div></td></tr>
+	<input type="hidden" id="app_img" name="app_img"/>
+</dd>	
+<dt><label for="TODO3">Action Icon</label></dt>
+<dd>
+    <input type="radio" name="action_icon" value="download_arrow4" onclick="setAction('download_arrow4');" checked/><img src="/images/download_arrow4.png"/>
+    <input type="radio" name="action_icon" value="access_arrow" onclick="setAction('access_arrow');"/><img src="/images/access_arrow.png"/>
+    <input type="radio" name="action_icon" value="none" onclick="setAction('none');"/> None
+    <input type="radio" name="action_icon" value="custom" onclick="setAction('custom');" disabled/> Custom
+</dd>
+<dt><label for="TODO4">Color</label></dt>	
+<dd>
+	<input type='text' id='color' name="{{form.color.name}}" size="8" value="000000" onkeyup='updateColor();' class="input-text {% if form.color.errors %}form-error{% endif %}"/>
+	{% for error in form.color.errors %}
+	<div class="form-error-text">{{error}}</div> 
+	{% endfor %}
+</dd>
+<dt><label for="TODO5">Font Color</label></dt>
+<dd>
+	<input type='text' id='font_color' name="{{form.font_color.name}}" size="8" value="FFFFFF" onkeyup='updateFontColor();' class="input-text {% if form.font_color.errors %}form-error{% endif %}"/>
+	{% for error in form.font_color.errors %}
+	<div class="form-error-text">{{error}}</div> 
+	{% endfor %}
+</dd>	
+<dt><label>Gradient</label></dt>
+<dd>
+	<input type='checkbox' id='gradient' name="gradient" checked onchange='updateGradient()'/>
+</dd>

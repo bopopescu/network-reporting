@@ -1571,6 +1571,12 @@ input.ui-button { padding: 4px 12px 5px 12px; }
   font-size: 15px;
 }
 
+
+.advertiser-creativeEditForm {
+  border-width: 1px;
+  border-style: solid;
+}
+
 /* Homepage */
 
 .mopub-home #nav1 li.active {

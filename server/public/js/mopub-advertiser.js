@@ -9,6 +9,203 @@ var mopub = mopub || {};
 	// dom ready
 	$(document).ready(function() {
 	  
+	  //get info from page
+	if (typeof creatives=="undefined")
+	  creatives = false
+  
+   var options = { 
+	   data: { ajax: true },
+	   dataType : 'json',
+	    success:    function(jsonData, statusText, xhr, $form) {
+	       if (jsonData.success){
+	         $('#campaignAdgroupForm-success').show(); // show message
+	         console.log(jsonData.adgroup_key);
+            window.location = jsonData.new_page;
+	       }
+	       else{
+	         $('#campaignAdgroupForm-fragment').html(jsonData.html);
+	         // reimplement the onload event
+           $('#campaignAdgroupForm input[name="campaign_type"]').click(function(e) {
+             $('#campaignAdgroupForm')
+                 .find('.campaignDependent').hide().end()
+                 .find("."+$(this).val()).show().end();
+             if ($(this).val() == "network"){
+               $('#bid_strategy :selected').removeAttr('selected');
+               $('option#bid_strategy-cpm').attr('selected','selected'); // make the network bid cpm by default
+             }    
+           }).filter(':checked').click(); // make sure we're in sync when the page loads
+	        }
+	      } 
+    };
+	 $('#campaignAdgroupForm').ajaxForm(options);
+	  
+
+
+
+
+   function creativeMange(action){
+	    $('#creativeManagementForm-action').val(action);
+	    var $form = $('#creativeManagementForm');
+	    $form.find('input[name="key"]').remove();
+	    $('#advertiser-creativeData').find('input[name="creativeManagementForm-key"]:checked')
+       .each(function(i){
+         $(this).val() // key
+         $('<input></input>').attr('name','key').attr('type','hidden')
+           .val($(this).val())
+           .appendTo($form);
+       });
+     $form.submit();
+   }  
+	  
+	 $('#creativeManagementForm-pause')
+	  .click(function(e){
+	    e.preventDefault();
+	    creativeMange('pause');
+	  });
+	  
+ 	 $('#creativeManagementForm-resume')
+ 	  .click(function(e){
+	    e.preventDefault();
+	    creativeMange('resume');
+ 	  });
+
+	 $('#creativeManagementForm-delete')
+	  .click(function(e){
+	    e.preventDefault();
+	    creativeMange('delete');
+	  });
+
+   $('.creativeManagementForm-key')
+    .change(function(e){
+      $('#creativeManagementForm input[name="key"]').remove(); // remove all keys
+      $('.creativeManagementForm-key:checked')
+        .each(function(i){
+          $(this).val() // key
+          
+        })
+      $form = $('#creativeManagementForm');
+      
+    });
+	  
+   var options = { 
+   data: { ajax: true },
+   dataType : 'json',
+    success:    function(jsonData) { 
+       if (jsonData.success){
+         $('#creativeCreateForm-success').show(); // show message
+         $('#advertiser-creativeAddForm')
+           .slideUp('slow', function() {
+             $('#advertiser-adgroups-addCreativeButton').show();
+             $('#creativeCreateForm-success').hide(); // hide message
+             $('#creativeCreateForm').resetForm();
+             window.location.reload();
+           });
+       }
+       else{
+         $('#creativeAddForm-fragment').html(jsonData.html);
+         // reimplement the onload event
+         $('#creativeCreateForm input[name="ad_type"]')
+           .click(function(e){
+             $('#creativeCreateForm')
+               .find('.adTypeDependent').hide().end()
+               .find('.'+$(this).val()).show().end();
+           }).filter(':checked').click();
+        }
+      } 
+    };
+    $('#creativeCreateForm').ajaxForm(options);
+                 
+    $('.creativeEditForm').each(function(i){
+      var $this = $(this);
+      var options = {
+        data: { ajax : true , },
+        dataType : 'json',
+        success: function(jsonData, statusText, xhr, $form){
+          if (jsonData.success){
+            $form.find('.creativeCreateForm-success').show();
+            $form.parent()
+              .slideUp('slow',function() {
+                $form.find('.creativeCreateForm-success').hide();
+                window.location.reload();
+              });
+          }
+          else{
+            $form.find('.creativeEditForm-fragment').html(jsonData.html);
+            // re-implement onload
+            $('.creativeEditForm input[name="ad_type"]')
+        	    .click(function(e){
+        	      $(this).parents('form') // gets the form to which this belongs
+        	        .find('.adTypeDependent').hide().end()
+        	        .find('.'+$(this).val()).show().end();
+        	    }).filter(':checked').click();
+          }
+        }
+      }
+      $(this).ajaxForm(options);
+    });
+
+    $('.creativeEditForm-submit')
+      .button()
+      .click(function(e) {
+        e.preventDefault();
+        $(this).parents('form').submit();
+    });
+    
+    $('.creativeEditForm-cancel')
+      .button()
+      .click(function(e) {
+        e.preventDefault();
+        $(this).parents('.advertiser-creativeEditForm')
+          .slideUp('fast',function(){
+            
+          });
+    });
+
+	  $('.advertiser-inLineCreativeToggle')
+	    .button({ icons : { primary : 'ui-icon-wrench' }})
+	    .click(function(e){
+	      e.preventDefault()
+  	    var creative_key = $(this).attr("id");
+  	    $("#"+creative_key+"-edit")
+  	      .slideDown('fast',function(){
+  	        
+  	      });
+	    });
+	  
+	  $('#advertiser-adgroups-addCreativeButton')
+	    .button({ icons : { primary : 'ui-icon-circle-plus'} })
+      .click(function(e){
+          e.preventDefault();
+          $('#advertiser-creativeAddForm').slideDown('fast', function() {
+           $('#advertiser-adgroups-addCreativeButton').hide();
+         });
+        });
+        
+    if (!creatives){
+      $('#chartWrapper').hide();
+      $('#advertiser-creativeData').hide()
+      $('#advertiser-adgroups-addCreativeButton').click();
+    }
+	    
+	  $('#advertiser-adgroups-toggleCreativeButton')
+	    .button({ icons : { primary : 'ui-icon-triangle-2-n-s'} });
+	  
+	  $('#creativeCreateForm input[name="ad_type"]')
+	    .click(function(e){
+	      $('#creativeCreateForm')
+	        .find('.adTypeDependent').hide().end()
+	        .find('.'+$(this).val()).show().end();
+	    }).filter(':checked').click();
+
+
+	  $('.creativeEditForm input[name="ad_type"]')
+	    .click(function(e){
+	      $(this).parents('form') // gets the form to which this belongs
+	        .find('.adTypeDependent').hide().end()
+	        .find('.'+$(this).val()).show().end();
+	    }).filter(':checked').click();
+
+	  
 	  $('#campaignAdgroupForm-submit')
 	    .button({ icons : {secondary : 'ui-icon-circle-triangle-e'} })
 	    .click(function(e){
@@ -21,6 +218,10 @@ var mopub = mopub || {};
       $('#campaignAdgroupForm')
           .find('.campaignDependent').hide().end()
           .find("."+$(this).val()).show().end();
+      if ($(this).val() == "network"){
+        $('#bid_strategy :selected').removeAttr('selected');
+        $('option#bid_strategy-cpm').attr('selected','selected'); // make the network bid cpm by default
+      }    
     }).filter(':checked').click(); // make sure we're in sync when the page loads
 
 		
@@ -45,30 +246,9 @@ var mopub = mopub || {};
 		$('#agroupEditForm-submit')
 		  .click(function(e){
 		    e.preventDefault();
-		    $('#agroupEditForm').submit()
+		    $('#campaignAdgroupForm').submit()
 		  });
-		
-		$('#creativeForm-pause')
-			.click(function(e) {
-			  alert("Only Deleting works so far");
-				e.preventDefault();
-        // $('#creativeForm').find("#action").attr("value","pause").end().submit();
-		});
-
-		$('#creativeForm-resume')
-			.click(function(e) {
-			  alert("Only Deleting works so far");
-				e.preventDefault();
-        // $('#creativeForm').find("#action").attr("value","resume").end().submit();
-		});
-
-		$('#creativeForm-delete')
-			.click(function(e) {
-				e.preventDefault();
-				$('#creativeForm').find("#action").attr("value","delete").end().submit();
-		});
-		
-		
+				
 		$('#campaignForm-pause')
 			.click(function(e) {
 				e.preventDefault();
@@ -87,12 +267,23 @@ var mopub = mopub || {};
 				$('#campaignForm').find("#action").attr("value","delete").end().submit();
 		});
 		
-    $('#creativeAddForm-submit')
+    $('#creativeCreateForm-submit')
       .button()
       .click(function(e) {
         e.preventDefault();
-        $('#creativeAddForm').submit();
+        $('#creativeCreateForm').submit();
     });
+    
+    $('#creativeCreateForm-cancel')
+      .button()
+      .click(function(e) {
+        e.preventDefault();
+		    $('#advertiser-creativeAddForm').slideUp('fast', function() {
+				  $('#advertiser-adgroups-addCreativeButton').show();
+				});
+
+    });
+    
 
     $('#creativeAddForm input[name="creative_type"]').click(function(e) {
       $('#creativeCreate-text').hide();
@@ -102,15 +293,7 @@ var mopub = mopub || {};
     }).filter(':checked').click(); // make sure we're in sync when the page loads
     
 		
-		$('#advertiser-adgroups-addCreativeButton')
-    		.button()
-			  .click(function(e){
-		    e.preventDefault();
-		    $('#advertiser-creativeAddForm').slideDown('fast', function() {
-				  $('#advertiser-adgroups-addCreativeButton').hide();
-				});
-				
-		  });
+
 
 		$('#creativeAddForm-cancel')
 		  .button()
@@ -372,6 +555,9 @@ var mopub = mopub || {};
 				});
 			}
 		});
+		
+		
+		
 
-	});
+	});	
 })(this.jQuery);

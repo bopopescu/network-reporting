@@ -1,0 +1,54 @@
+<dl class="formFields"> 
+	<dt><label for="TOOD5">Ad Units:</label></dt>
+	<dd> 
+		<ul style="overflow:auto; max-height:100px; list-style: none;border:1px solid #aaa; padding:5px 10px" class="{% if form.site_keys.errors %}form-error{% endif %}"> 
+		{% for adunit in all_adunits %}   
+				<li><input type="checkbox" name="site_keys" value="{{adunit.key}}"{% if adunit.checked %} checked="checked"{% endif %}> {{adunit.app.name}} &gt; {{adunit.name}} </input></li>   
+		{% endfor %}   
+		</ul>  
+		{% for error in form.site_keys.errors %}
+		<div class="form-error-text">{{error}}</div> 
+		{% endfor %}
+	</dd>		 
+	<dt><label for="TODO6">Goal:</label></dt>
+	<dd>
+		<input type="text" class="input-text {% if form.percent_users.errors %}form-error{% endif %}" name="{{form.percent_users.name}}" value="{{form.percent_users.value}}"/> % of all <select name="TODO"><option>Users</option><option>Requests</option></select>
+		{% for error in form.percent_users.errors %}
+		<div class="form-error-text">{{error}}</div> 
+		{% endfor %}
+	</dd>
+	<dt><label for="TODO7">Frequency Caps:</label></dt>
+	<dd>
+			<input name="{{form.daily_frequency_cap.name}}" class="input-text {% if form.daily_frequency_cap.errors %}form-error{% endif %}" type="text" value="{{form.daily_frequency_cap.value}}"/> daily impressions per user <br/>
+			{% for error in form.daily_frequency_cap.errors %}
+			<div class="form-error-text">{{error}}</div> 
+			{% endfor %}
+			<br/>
+			<input name="{{form.hourly_frequency_cap.name}}" class="input-text {% if form.hourly_frequency_cap.errors %}form-error{% endif %}" type="text" value="{{form.hourly_frequency_cap.value}}"/> hourly impressions per user
+			{% for error in form.hourly_frequency_cap.errors %}
+			<div class="form-error-text">{{error}}</div> 
+			{% endfor %}
+	</dd>	
+	<dt><label for="TODO8">Keywords:</label></dt>
+	<dd><textarea cols="50" rows="3" name="{{form.keywords.name}}" class="{% if form.keywords.errors %}form-error{% endif %}" placeholder="Keywords, one per line, e.g. coffee">{{form.keywords.value}}</textarea>
+		{% for error in form.keywords.errors %}
+		<div class="form-error-text">{{error}}</div> 
+		{% endfor %}
+	</dd>
+	<dt><label for="TODO9">Geo Predicates:</label></dt>
+	<dd>
+		<textarea name="geo_predicates" class="{% if form.geo_predicates.errors %}form-error{% endif %}">{% if form.geo_predicates.value %}{{form.geo_predicates.value}}{% else %}country_name=*{% endif %}</textarea>
+		<div>country_name=X; region_name=X,country_name=X; city_name=X,region_name=X,country_name=X</div>
+		{% for error in form.geo_predicates.errors %}
+		<div class="form-error-text">{{error}}</div> 
+		{% endfor %}
+	</dd>
+	<dt><label for="TODO10">Device Predicates:</label></dt> 
+	<dd> 
+		<textarea name="device_predicates" class="{% if form.device_predicates.errors %}form-error{% endif %}">{% if form.geo_predicates.value %}{{form.device_predicates.value}}{% else %}platform_name=*{% endif %}</textarea>					 
+		<div>platform_name=(*,android,iphone)</div> 
+		{% for error in form.device_predicates.errors %}
+		<div class="form-error-text">{{error}}</div> 
+		{% endfor %}
+	</dd> 
+</dl>

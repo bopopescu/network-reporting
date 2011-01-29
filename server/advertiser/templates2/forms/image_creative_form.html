@@ -1,0 +1,7 @@
+<dt><label for="TODO1">Image File</label></dt>
+<dd>
+	<input type="file" name="{{form.image_file.name}}" size="40" class="{% if form.image_file.errors %}form-error{% endif %}"/>
+	{% for error in form.image_file.errors %}
+	<div class="form-error-text">{{error}}</div> 
+	{% endfor %}
+</dd>

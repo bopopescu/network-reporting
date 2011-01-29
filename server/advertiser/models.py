@@ -170,6 +170,8 @@ class AdGroup(db.Model):
     return self.geo_predicates
 
 class Creative(polymodel.PolyModel):
+  name = db.StringProperty(required=True, default="Demo HTML Creative")
+  
   ad_group = db.ReferenceProperty(AdGroup,collection_name="creatives")
 
   active = db.BooleanProperty(default=True)
@@ -180,7 +182,6 @@ class Creative(polymodel.PolyModel):
 
   # tracking pixel
   tracking_url = db.StringProperty()
-  
 
   # destination URLs
   url = db.StringProperty()

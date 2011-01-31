@@ -4,8 +4,18 @@
                         <span class="radios"> 
                           <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="gtee" id="advertiser-CampaignType-gtee" {% if not form.campaign_type.value %}checked="checked"{% endif %}{% ifequal form.campaign_type.value 'gtee' %}checked="checked"{% endifequal %}/> <label for="advertiser-CampaignType-gtee">Guaranteed</label> 
                           <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="promo" id="advertiser-CampaignType-promo" {% ifequal form.campaign_type.value "promo" %}checked="checked"{% endifequal %}/> <label for="advertiser-CampaignType-promo">Promotional</label> 
-                          <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="network" id="advertiser-CampaignType-network" {% ifequal form.campaign_type.value "network" %}checked="checked"{% endifequal %}/> <label for="advertiser-CampaignType-network">Network</label> 
-                        </span> 
+                          <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="network" id="advertiser-CampaignType-network" {% ifequal form.campaign_type.value "network" %}checked="checked"{% endifequal %}/> <label for="advertiser-CampaignType-network">Network</label>
+                        </span>
+                        <a href="#" id="campaignForm-type-helpLink">What's this?</a>
+                        <div id="campaignForm-type-helpContent" class="hidden"> 
+                          <h3>Campaign Type</h3>
+                          <h4>Guaranteed</h4>
+                          <p>A <strong>Guaranteed</strong> ad campaign is typically a direct sold campaign with a set CPM for a certain number of impressions and a start and end date.</p>
+                          <h4>Promotional</h4>
+                          <p>A <strong>Promotional</strong> campaign is for house ads like advertising another of your applications, ads for the paid version of your app or other functions like a "rate this app" campaign.</p>
+                          <h4>Network</h4>
+                          <p>A <strong>Network</strong> campaign is used for showing ads from an ad network like AdMob or iAd.</p>
+                        </div>
                       </dd>
                       <dt><label for="name">Name:</label></dt> 
                       <dd> 
@@ -21,43 +31,49 @@
                         <div class="form-error-text">{{error}}</div> 
                         {% endfor %}
                       </dd>
-                      <dt class="campaignDependent gtee promo"><label for="">Start Date:</label></dt>
-                      <dd class="campaignDependent gtee promo"><input type='text' class="input-text" name="{{form.start_date.name}}" size="15" placeholder="11/1/2010" value="{{form.start_date.value}}" disabled="true"/></dd>
-                      <dt class="campaignDependent gtee promo"><label for="">End Date:</label></dt>
-                      <dd class="campaignDependent gtee promo"><input type='text' class="input-text" name="{{form.end_date.name}}" size="15" placeholder="11/6/2010" value="{{form.end_date.value}}" disabled="true"/></dd>
-                      <dt class="campaignDependent gtee"><label for="TODO1">Delivery Budget:</label></dt>
-                      <dd class="campaignDependent gtee">
-                        <input type='text' name="{{form.budget.name}}" value="{{form.budget.value}}" placeholder="10" class="input-text {% if form.budget.errors %}form-error{% endif %}"/> USD / day
-                        {% for error in form.budget.errors %}
-                        <div class="form-error-text">{{error}}</div> 
-                        {% endfor %}
-                      </dd>
+                    </dl>
+                    <dl class="formFields campaignDependent gtee promo"> 
+                      <dt><label for="">Start Date:</label></dt>
+                      <dd><input type='text' class="input-text-number" name="{{form.start_date.name}}" size="15" placeholder="11/1/2010" value="{{form.start_date.value}}" disabled="true"/></dd>
+                      <dt><label for="">End Date:</label></dt>
+                      <dd><input type='text' class="input-text-number" name="{{form.end_date.name}}" size="15" placeholder="11/6/2010" value="{{form.end_date.value}}" disabled="true"/></dd>
                       {# Belong to AdGroup #}
-                      <dt class="campaignDependent gtee promo"><label for="TODO2">Max Bid:</label></dt> 
-                      <dd class="campaignDependent gtee promo"> 
-                        <input type="text" class="input-text {% if form.bid.errors %}form-error{% endif %}" name="bid" value="{{form.bid.value}}" id="bid-max" /> USD
-                        {% for error in form.bid.errors %}
-                        <div class="form-error-text">{{error}}</div> 
-                        {% endfor %}
-                      </dd>
-                      <dt class="campaignDependent gtee promo"><label for="TODO3">Bidding Strategy:</label></dt> 
-                      <dd class="campaignDependent gtee promo">
+                      <dt><label for="TODO3">Bidding Strategy:</label></dt> 
+                      <dd>
                         <select name="bid_strategy" id="bid_strategy">
                           <option value="cpm" id="bid_strategy-cpm"{% ifequal form.bid_strategy.value "cpm"%}selected="selected"{% endifequal %}>By impression (CPM)</option>
                           <option value="cpc" {% ifequal form.bid_strategy.value "cpc"%}selected="selected"{% endifequal %}>By click (CPC)</option>
                         </select>
                       </dd> 
+                      <dt><label for="TODO2">Rate:</label></dt> 
+                      <dd> 
+                        <input type="text" class="input-text-number {% if form.bid.errors %}form-error{% endif %}" name="bid" value="{{form.bid.value}}" id="bid-max" placeholder="1"/> USD
+                        {% for error in form.bid.errors %}
+                        <div class="form-error-text">{{error}}</div> 
+                        {% endfor %}
+                      </dd>
+                    </dl>
+                    <dl class="formFields campaignDependent gtee"> 
+                      <dt><label for="TODO1">Delivery Budget:</label></dt>
+                      <dd>
+                        <input type='text' name="{{form.budget.name}}" value="{{form.budget.value}}" placeholder="10" class="input-text-number {% if form.budget.errors %}form-error{% endif %}"/> USD / day
+                        {% for error in form.budget.errors %}
+                        <div class="form-error-text">{{error}}</div> 
+                        {% endfor %}
+                      </dd>
+                    </dl>
+                    <dl class="formFields campaignDependent network">
                       {# End Belong to AdGroup #}
-                      <dt class="campaignDependent network"><label for="TODO4">Network Type:</label></dt>
-                      <dd class="campaignDependent network">
+                      <dt><label for="TODO4">Network Type:</label></dt>
+                      <dd>
                         <select name="network_type">
                           {% for network in networks %}<option value="{{network.0}}" {% if network.2 %}selected="selected"{%endif%}>{{network.1}}</option>
                           {% endfor %}
                         </select>
                       </dd>
-                      <dt class="campaignDependent network"><label for="TODO2">Network eCPM:</label></dt> 
-                      <dd class="campaignDependent network"> 
-                        <input type="text" class="input-text {% if form.bid.errors %}form-error{% endif %}" name="bid" value="{{form.bid.value}}" id="bid-network" /> USD
+                      <dt><label for="TODO2">Network eCPM:</label></dt> 
+                      <dd> 
+                        <input type="text" class="input-text-number {% if form.bid.errors %}form-error{% endif %}" name="bid" value="{{form.bid.value}}" id="bid-network" /> USD
                         {% for error in form.bid.errors %}
                         <div class="form-error-text">{{error}}</div>
                         {% endfor %}

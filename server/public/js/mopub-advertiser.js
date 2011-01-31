@@ -231,19 +231,19 @@ var mopub = mopub || {};
 		$('#advertisers-adgroups-editAdGroupButton')
 		  .button({ icons: { primary: "ui-icon-wrench" } })
 		  .click(function(e){
-		    $('#advertiser-agroupEditForm').slideDown('fast',function(){
+		    $('#advertiser-adgroupEditForm').slideDown('fast',function(){
 		      $('#advertisers-adgroups-editAdGroupButton').hide();
 		    });
 		  });
 		
-		$('#agroupEditForm-cancel')
+		$('#adgroupEditForm-cancel')
 		  .click(function(e){
-		    $('#advertiser-agroupEditForm').slideUp('fast',function(){
+		    $('#advertiser-adgroupEditForm').slideUp('fast',function(){
 		      $('#advertisers-adgroups-editAdGroupButton').show();
 		    });
 		  });
 		  
-		$('#agroupEditForm-submit')
+		$('#adgroupEditForm-submit')
 		  .click(function(e){
 		    e.preventDefault();
 		    $('#campaignAdgroupForm').submit()

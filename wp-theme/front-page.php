@@ -9,7 +9,7 @@
 			foreach( $myposts as $post ) :	setup_postdata($post); ?>
           		<div id="home-intro">
 					<h1 id="home-headline"><?php the_title(); ?></h1>
-					<?php the_excerpt(); ?>
+					<?php the_content(); ?>
 
 		            <div id="home-cta">
 		              <span class="buttonWrap"><a class="button button-big" href="http://www.mopub.com/start/">Sign up now</a></span>
@@ -61,7 +61,7 @@
 
 			              <h3><?php the_title(); ?></h3>
 			              <p>
-			                <?php the_excerpt(); ?>
+			                <?php the_content(); ?>
 			              </p>
 				          <section>
 				            <a href="<?php echo get_post_meta($post->ID, 'more', true)?>">Learn more &raquo;</a>
@@ -92,7 +92,7 @@
 
 			              <h3><?php the_title(); ?></h3>
 			              <p>
-			                <?php the_excerpt(); ?>
+			                <?php the_content(); ?>
 			              </p>
 				          <section>
 				            <a href="<?php echo get_post_meta($post->ID, 'more', true)?>">Learn more &raquo;</a>

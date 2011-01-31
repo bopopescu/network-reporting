@@ -27,7 +27,7 @@ from common.utils.decorators import whitelist_login_required
 
 
 from publisher.models import Site, Account, App
-from publisher.forms import SiteForm, AppForm
+from publisher.forms import SiteForm, AppForm, AdUnitForm
 from advertiser.models import Campaign, AdGroup, HtmlCreative
 from reporting.models import SiteStats
 
@@ -169,52 +169,40 @@ def index_geo(request,*args,**kwargs):
   return AppIndexGeoHandler()(request,*args,**kwargs)     
 
 class AppCreateHandler(RequestHandler):
-  def get(self):
-    f = AppForm()
-    return render_to_response(self.request,'publisher/new_app.html', {"f": f, "account": self.account})
+  def get(self, app_form=None,adunit_form=None):
+    app_form = app_form or AppForm()
+    adunit_form = adunit_form or AdUnitForm()
+    return render_to_response(self.request,'publisher/new_app.html', {"app_form": app_form, 
+                                                                      "adunit_form":adunit_form,  
+                                                                      "account": self.account})
 
   def post(self):
     app = None
     if self.request.POST.get("app_key"):
       app = AppQueryManager().get_by_key(self.request.POST.get("app_key"))
-      f = AppForm(data=self.request.POST, instance=app)
+      app_form = AppForm(data=self.request.POST, instance=app)
     else:
-      f = AppForm(data=self.request.POST)
+      app_form = AppForm(data=self.request.POST)
       
-    if f.is_valid():
-      app = f.save(commit=False)
-      app.account = self.account
-      # Store the image
-      if not self.request.POST.get("img_url") == "":
-        try:
-          response = urllib.urlopen(self.request.POST.get("img_url"))
-          img = response.read()
-          app.icon = db.Blob(img)
-        except:
-          pass
-      elif self.request.FILES.get("img_file"):
-        try:
-          icon = images.resize(self.request.FILES.get("img_file").read(), 60, 60)
-          app.icon = db.Blob(icon)
-        except:
-          pass
+    adunit_form = AdUnitForm(data=self.request.POST)
+      
+    if app_form.is_valid():
+      app = app_form.save(commit=False)
+      app.account = self.account # attach account info
 
-      AppQueryManager().put_apps(app)
 
+      # Nafis: Took this away b/c this page both things need to be valid before continuing
       # If we get the adunit information, try to create that too
-      if not self.request.POST.get("adunit_name"):
-        return HttpResponseRedirect(reverse('publisher_app_show',kwargs={'app_key':app.key()}))
+      # if not self.request.POST.get("adunit_name"):
+      #   return HttpResponseRedirect(reverse('publisher_app_show',kwargs={'app_key':app.key()}))
       
-      data = self.request.POST.copy()
-      data['name'] = self.request.POST.get("adunit_name")
-      data['adunit_description'] = self.request.POST.get("adunit_description")
-      sf = SiteForm(data=data)
-      if sf.is_valid():
-        adunit = sf.save(commit=False)
+      if adunit_form.is_valid():
+        adunit = adunit_form.save(commit=False)
         adunit.account = self.account
-        adunit.app_key = app
+        adunit.app_key = app.key()
 
         # update the database
+        AppQueryManager().put_apps(app)
         AdUnitQueryManager().put_adunits(adunit)
 
         # update the cache as necessary 
@@ -232,10 +220,7 @@ class AppCreateHandler(RequestHandler):
           AccountQueryManager().put_accounts(self.account)
           status = "welcome"
         return HttpResponseRedirect(reverse('publisher_generate',kwargs={'adunit_key':adunit.key()})+'?status='+status)
-      else:
-        return render_to_response(self.request,'publisher/new_app.html', {"f": f, "app": app, "app_key":app.key()})
-    else:
-      return render_to_response(self.request,'publisher/new_app.html', {"f": f})
+    return self.get(app_form,adunit_form)
 
 @whitelist_login_required  
 def app_create(request,*args,**kwargs):

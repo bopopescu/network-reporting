@@ -12,6 +12,26 @@ var mopub = mopub || {};
 	  //get info from page
 	if (typeof creatives=="undefined")
 	  creatives = false
+	  
+	function campaignAdgroupFormOnLoad(){
+    $('#campaignAdgroupForm input[name="campaign_type"]').click(function(e) {
+      $('#campaignAdgroupForm')
+          .find('.campaignDependent').hide().end()
+          .find("."+$(this).val()).show().end();
+      if ($(this).val() == "network"){
+        $('#bid_strategy :selected').removeAttr('selected');
+        $('option#bid_strategy-cpm').attr('selected','selected'); // make the network bid cpm by default
+        $('#bid-max').attr('name','bid-max'); // rename so we dont have duplicates
+        $('#bid-network').attr('name','bid');
+      }
+      else{
+        $('#bid-network').attr('name','bid-network'); // rename so we dont have duplicates
+        $('#bid-max').attr('name','bid');
+      }    
+    }).filter(':checked').click(); // make sure we're in sync when the page loads
+  }
+	 
+	 campaignAdgroupFormOnLoad(); 
   
    var options = { 
 	   data: { ajax: true },
@@ -25,15 +45,7 @@ var mopub = mopub || {};
 	       else{
 	         $('#campaignAdgroupForm-fragment').html(jsonData.html);
 	         // reimplement the onload event
-           $('#campaignAdgroupForm input[name="campaign_type"]').click(function(e) {
-             $('#campaignAdgroupForm')
-                 .find('.campaignDependent').hide().end()
-                 .find("."+$(this).val()).show().end();
-             if ($(this).val() == "network"){
-               $('#bid_strategy :selected').removeAttr('selected');
-               $('option#bid_strategy-cpm').attr('selected','selected'); // make the network bid cpm by default
-             }    
-           }).filter(':checked').click(); // make sure we're in sync when the page loads
+	         campaignAdgroupFormOnLoad();
 	        }
 	      } 
     };
@@ -212,18 +224,6 @@ var mopub = mopub || {};
 	      e.preventDefault();
 	      $('#campaignAdgroupForm').submit();
 	    });
-		
-		// TODO: WHY DOES THIS RERENDER SO SLOWLY?
-    $('#campaignAdgroupForm input[name="campaign_type"]').click(function(e) {
-      $('#campaignAdgroupForm')
-          .find('.campaignDependent').hide().end()
-          .find("."+$(this).val()).show().end();
-      if ($(this).val() == "network"){
-        $('#bid_strategy :selected').removeAttr('selected');
-        $('option#bid_strategy-cpm').attr('selected','selected'); // make the network bid cpm by default
-      }    
-    }).filter(':checked').click(); // make sure we're in sync when the page loads
-
 		
 		$('#advertisers-addCampaign')
 		  .button({ icons : {primary : 'ui-icon-circle-plus'} })

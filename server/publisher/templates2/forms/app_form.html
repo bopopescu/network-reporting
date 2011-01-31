@@ -1,0 +1,58 @@
+<dl class="formFields"> 
+  <dt>Platform:</dt> 
+  <dd> 
+    <span class="radios"> 
+      <input type="radio" class="input-radio" name="{{form.app_type.name}}" value="iphone" id="appForm-platform-iphone" {% ifequal form.app_type.value 'iphone' %}checked="checked"{% endifequal %}{% if not form.app_type.value %}checked="checked"{% endif %} /> <label for="appForm-platform-iphone">iOS</label> 
+      <input type="radio" class="input-radio" name="{{form.app_type.name}}" value="android" id="appForm-platform-android" {% ifequal form.app_type.value 'android' %}checked="checked"{% endifequal %}/> <label for="appForm-platform-android">Android</label> 
+    </span> 
+  </dd>
+  <dt><label for="appForm-name">App name:</label></dt> 
+  <dd class="appForm-platformDependent iphone"> 
+    <input type="text" class="input-text {% if form.name.errors %}form-error{% endif %}" name="name" value="{{form.name.value}}" id="appForm-name" />
+
+    <div class="formFields-field-help iphone" id="appForm-search"> 
+      <a href="#" class="button" id="appForm-search-button">Search App Store</a> 
+      <div id="dashboard-searchAppStore-custom-modal" class="hidden"> 
+        <h3>Search Results</h3> 
+        <div class="loading" id="searchAppStore-loading"> 
+          <img src="/images/icons-custom/spinner-16.gif" alt="Loading" /> Please wait ...
+        </div> 
+        <div id="searchAppStore-results"></div> 
+      </div> 
+    </div> 
+		{% for error in form.name.errors %}
+		<div class="form-error-text">{{error}}</div> 
+		{% endfor %}
+
+  </dd> 
+
+  <dt class="appForm-platformDependent iphone"> 
+    <label class="iphone" for="appForm-url">iTunes URL:</label> 
+    <label class="android" for="appForm-package">Package name:</label> 
+  </dt> 
+  <dd class="appForm-platformDependent iphone"> 
+    <input type="url" class="input-text iphone {% if form.url.errors %}form-error{% endif %}" name="{{form.url.name}}" value="{{form.url.value}}" id="appForm-url" placeholder="http://itunes.apple.com/yourapp" /> 
+		{% for error in form.url.errors %}
+		<div class="form-error-text">{{error}}</div> 
+		{% endfor %}
+    <input type="text" class="input-text android  {% if form.package.errors %}form-error{% endif %}" name="{{form.package.value}}" value="{{form.package.value}}" id="appForm-package" placeholder="com.company.appname" /> 
+		{% for error in form.package.errors %}
+		<div class="form-error-text">{{error}}</div> 
+		{% endfor %}
+  </dd>
+
+  <dt><label for="appForm-icon">Icon:</label></dt> 
+  <dd> 
+    <div id="appForm-icon" class="appData-icon">
+      <img src="{{form.img_url.value|default:'/images/misc/appicon-missing.png'}}" alt="No icon" width='40' height='40'/>
+    </div>
+    <div id="appForm-changeIcon">
+      <span class="sep">&middot;</span>
+      <a id="appForm-changeIcon-link" href="#">Upload an app icon ...</a>
+     <input id="appForm-icon-upload" type="file" name="img_file" style="display:none;" />
+     <input type="hidden" name="{{form.img_url.name}}" value="{{form.img_url.value}}" />
+   </div>
+  </dd>
+
+</dl> 
+<div class="clear"></div> 

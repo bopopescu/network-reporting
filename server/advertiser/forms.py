@@ -79,7 +79,7 @@ class ImageCreativeForm(mpforms.MPModelForm):
     fields = ('ad_type','name','tracking_url','url','display_url') 
     
   def save(self,commit=True):
-    obj = super(ImageCreativeForm,self).save(commit)  
+    obj = super(ImageCreativeForm,self).save(commit=False)  
     img = images.Image(self.files.get('image_file').read())
     img.im_feeling_lucky()
     obj.image = db.Blob(img.execute_transforms())

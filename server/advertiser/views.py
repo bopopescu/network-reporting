@@ -230,6 +230,8 @@ class CreateCampaignAJAXHander(RequestHandler):
       if adgroup_form.is_valid():
         adgroup = adgroup_form.save(commit=False)
         
+        logging.warning('form errors: %s'%adgroup_form.errors)
+        
         # TODO: clean this up in case the campaign succeeds and the adgroup fails
         CampaignQueryManager().put_campaigns(campaign)
         adgroup.campaign = campaign
@@ -241,7 +243,7 @@ class CreateCampaignAJAXHander(RequestHandler):
           CreativeQueryManager().put_creatives(creative)
         json_dict.update(success=True,new_page=reverse('advertiser_adgroup_show',kwargs={'adgroup_key':str(adgroup.key())}))
         return self.json_response(json_dict)
-          
+    logging.warning('adgroup form errors: %s'%adgroup_form.errors)      
     new_html = self.get(campaign_form=campaign_form,
                         adgroup_form=adgroup_form)
     json_dict.update(success=False,html=new_html)    

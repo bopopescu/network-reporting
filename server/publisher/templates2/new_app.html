@@ -20,119 +20,19 @@
                 <input type="hidden" name="app_key" value="{{app_key}}"/>{% endif %}
                 <fieldset id="appForm-details" class="alt"> 
                   <legend>App Details</legend> 
-                  <dl class="formFields"> 
-                    <dt>Platform:</dt> 
-                    <dd> 
-                      <span class="radios"> 
-                        <input type="radio" class="input-radio" name="app_type" value="iphone" id="appForm-platform-iphone" {% ifequal f.cleaned_data.app_type 'iphone' %}checked="checked"{% endifequal %}{% if not f.cleaned_data.app_type %}checked="checked"{% endif %} /> <label for="appForm-platform-iphone">iOS</label> 
-                        <input type="radio" class="input-radio" name="app_type" value="android" id="appForm-platform-android" {% ifequal f.cleaned_data.app_type 'android' %}checked="checked"{% endifequal %}/> <label for="appForm-platform-android">Android</label> 
-                      </span> 
-                    </dd>
-                    <dt><label for="appForm-name">App name:</label></dt> 
-                    <dd class="appForm-platformDependent iphone"> 
-                      <input type="text" class="input-text" name="name" value="{{f.cleaned_data.name}}" id="appForm-name" />
-                      <div class="formFields-field-help iphone" id="appForm-search"> 
-                        <a href="#" class="button" id="appForm-search-button">Search App Store</a> 
-                        <div id="dashboard-searchAppStore-custom-modal" class="hidden"> 
-                          <h3>Search Results</h3> 
-                          <div class="loading" id="searchAppStore-loading"> 
-                            <img src="/images/icons-custom/spinner-16.gif" alt="Loading" /> Please wait ...
-                          </div> 
-                          <div id="searchAppStore-results"></div> 
-                        </div> 
-                      </div> 
-                    </dd> 
-          
-                    <dt class="appForm-platformDependent iphone"> 
-                      <label class="iphone" for="appForm-url">iTunes URL:</label> 
-                      <label class="android" for="appForm-package">Package name:</label> 
-                    </dt> 
-                    <dd class="appForm-platformDependent iphone"> 
-                      <input type="url" class="input-text iphone" name="url" value="{{f.cleaned_data.url}}" id="appForm-url" placeholder="http://itunes.apple.com/yourapp" /> 
-                      <input type="text" class="input-text android" name="package" value="{{f.cleaned_data.package}}" id="appForm-package" placeholder="com.company.appname" /> 
-                    </dd>
-          
-                    <dt><label for="appForm-icon">Icon:</label></dt> 
-                    <dd> 
-                      <div id="appForm-icon" class="appData-icon">
-                        <img src="/images/misc/appicon-missing.png" alt="No icon" />
-                      </div>
-                      <div id="appForm-changeIcon">
-                        <span class="sep">&middot;</span>
-                        <a id="appForm-changeIcon-link" href="#">Upload an app icon ...</a>
-                       <input id="appForm-icon-upload" type="file" name="img_file" style="display:none;" />
-                       <input type="hidden" name="img_url" value="" />
-                     </div>
-                    </dd>
-          
-                  </dl> 
-                  <div class="clear"></div> 
+									{{app_form.as_template}}
                 </fieldset> 
                 <fieldset id="appForm-ad" class="adForm"> 
                   <legend>Ad Unit</legend> 
                   <p> 
                     An ad unit is a single place in your app where an ad of a specific size can appear. Your app can have any number of ad units. A first ad unit has been created for you below. Feel free to modify it or ignore it for now.
                   </p> 
-                  <dl class="formFields"> 
-          
-                    <dt><label for="appForm-adUnitName">Ad unit name:</label></dt> 
-                    <dd><input type="text" class="input-text" name="adunit_name" value="Banner ad" id="appForm-adUnitName" /></dd> 
-          
-                    <dt><label for="appForm-adUnitDescription">Description:</label></dt> 
-                    <dd> 
-                      <textarea name="adunit_description" id="adunit_description" rows="3" cols="40">General purpose banner ad</textarea> 
-                    </dd> 
-          
-                    <dt>Format:</dt> 
-                    <dd> 
-                      <div class="adForm-formats clearfix"> 
-                        <div class="adForm-format"> 
-                          <div class="adForm-format-name"> 
-                            <input type="radio" class="input-radio" name="appForm-adUnitFormat" value="banner" id="appForm-adUnitFormat-banner" checked="checked" /> 
-                            <label for="appForm-adUnitFormat-banner">Banner</label> 
-                            <div class="adForm-format-details">320 &times; 50</div> 
-                          </div> 
-                          <img class="adForm-format-image" src="/images/setup/ad-format-banner.png" alt="Banner ad" /> 
-                        </div> 
-                        <div class="adForm-format"> 
-                          <div class="adForm-format-name"> 
-                            <input type="radio" class="input-radio" name="appForm-adUnitFormat" value="medium" id="appForm-adUnitFormat-medium" /> 
-                            <label for="appForm-adUnitFormat-medium">Medium</label> 
-                            <div class="adForm-format-details">300 &times; 250</div> 
-                          </div> 
-                          <img class="adForm-format-image" src="/images/setup/ad-format-medium.png" alt="Medium ad" /> 
-                        </div> 
-                        <div class="adForm-format"> 
-                          <div class="adForm-format-name"> 
-                            <input type="radio" class="input-radio" name="appForm-adUnitFormat" value="full" id="appForm-adUnitFormat-full" /> 
-                            <label for="appForm-adUnitFormat-full">Fullscreen</label> 
-                            <div class="adForm-format-details">320 &times; 480</div> 
-                          </div> 
-                          <img class="adForm-format-image" src="/images/setup/ad-format-full.png" alt="Fullscreen ad" /> 
-                        </div> 
-                        <div class="adForm-format adForm-format-custom"> 
-                          <div class="adForm-format-name"> 
-                            <input type="radio" class="input-radio" name="appForm-adUnitFormat" value="custom" id="appForm-adUnitFormat-custom" /> 
-                            <label for="appForm-adUnitFormat-custom">Custom</label> 
-                            <div class="adForm-format-details"> 
-                              <input type="text" class="input-text input-text-small" name="appForm-adUnitFormatCustomWidth" value="" id="appForm-adUnitFormatCustomWidth" placeholder="width" /> 
-                              &times;
-                              <input type="text" class="input-text input-text-small" name="appForm-adUnitFormatCustomHeight" value="" id="appForm-adUnitFormatCustomHeight" placeholder="height" /> 
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </dd>
-                    <dt><label for="appForm-adUnitKeywords">Default keywords:</label></dt> 
-                    <dd> 
-                      <textarea name="keywords" id="appForm-adUnitKeywords" rows="3" cols="40" placeholder="e.g. coffee, espresso, cafe, iced tea"></textarea> 
-                    </dd> 
-          
-                  </dl> 
+									{{adunit_form.as_template}}	
                 </fieldset> 
                 <div class="form-submit"> 
                   <span class="buttonWrap"><a href="#" class="button" id="appForm-submit">Continue</a></span> 
                 </div> 
               </form> 
             </div> 
-          </section>{% endblock content %}
+          </section>
+{% endblock content %}

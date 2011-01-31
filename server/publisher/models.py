@@ -37,7 +37,6 @@ class Site(db.Model):
   name = db.StringProperty(required=True)
   url = db.StringProperty()
   description = db.TextProperty()
-
   width = db.FloatProperty()
   height = db.FloatProperty()
   
@@ -49,7 +48,8 @@ class Site(db.Model):
   ad_type = db.StringProperty(choices=["text", "image"], default="image")
   
   # additional keywords that are passed to the auction
-  keywords = db.TextProperty()                          
+  keywords = db.TextProperty() # TODO: make sure this doesn't break shit
+  # keywords = db.StringListProperty()                          
   
   # color scheme
   color_border = db.StringProperty(required=True, default='336699')

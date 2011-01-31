@@ -39,7 +39,10 @@
 	{# Belong to AdGroup #}
   <dt class="campaignDependent gtee promo"><label for="TODO2">Max Bid:</label></dt> 
   <dd class="campaignDependent gtee promo"> 
-		<input type="text" class="input-text" name="bid" value="{{form.bid.value}}" id="id_bid" /> USD
+		<input type="text" class="input-text {% if form.bid.errors %}form-error{% endif %}" name="bid" value="{{form.bid.value}}" id="bid-max" /> USD
+		{% for error in form.bid.errors %}
+		<div class="form-error-text">{{error}}</div> 
+		{% endfor %}
 	</dd>
 	<dt class="campaignDependent gtee promo"><label for="TODO3">Bidding Strategy:</label></dt> 
 	<dd class="campaignDependent gtee promo">
@@ -60,6 +63,9 @@
 	</dd>
 	<dt class="campaignDependent network"><label for="TODO2">Network eCPM:</label></dt> 
   <dd class="campaignDependent network"> 
-		<input type="text" class="input-text" name="bid" value="{{form.bid.value}}" id="id_bid" /> USD
+		<input type="text" class="input-text {% if form.bid.errors %}form-error{% endif %}" name="bid" value="{{form.bid.value}}" id="bid-network" /> USD
+		{% for error in form.bid.errors %}
+		<div class="form-error-text">{{error}}</div> 
+		{% endfor %}
 	</dd>	
 </dl>

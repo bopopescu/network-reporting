@@ -1,25 +1,25 @@
 /*
-	MoPub Setup Pages JS
+  MoPub Setup Pages JS
 */
 
 // global mopub object
 var mopub = mopub || {};
 
 (function($){
-	// dom ready
-	$(document).ready(function() {
-		
-		// Submit button
-		$('#appForm-submit')
-			.button({ 
-				icons: { secondary: "ui-icon-circle-triangle-e" } 
-			})
-			.click(function(e) {
-				e.preventDefault();
-				$('#appForm').submit();
-		});
-		
-		// Search button
+  // dom ready
+  $(document).ready(function() {
+    
+    // Submit button
+    $('#appForm-submit')
+      .button({ 
+        icons: { secondary: "ui-icon-circle-triangle-e" } 
+      })
+      .click(function(e) {
+        e.preventDefault();
+        $('#appForm').submit();
+    });
+    
+    // Search button
     $('#appForm-search-button')
       .button({ icons: { primary: "ui-icon-search" }, disabled: true})
       .click(function(e) {
@@ -48,26 +48,26 @@ var mopub = mopub || {};
         (head || document.body).appendChild( script );
     });
     
-		/*---------------------------------------/
-		/ App Details Form
-		/---------------------------------------*/
-		
-		// Platform-dependent URL/package name switching
-		$('#appForm input[name="app_type"]').click(function(e) {
-			$('#appForm .appForm-platformDependent')
-				.removeClass('iphone')
-				.removeClass('android')
-				.addClass($(this).val());
-		}).filter(':checked').click(); // make sure we're in sync when the page loads
+    /*---------------------------------------/
+    / App Details Form
+    /---------------------------------------*/
+    
+    // Platform-dependent URL/package name switching
+    $('#appForm input[name="app_type"]').click(function(e) {
+      $('#appForm .appForm-platformDependent')
+        .removeClass('iphone')
+        .removeClass('android')
+        .addClass($(this).val());
+    }).filter(':checked').click(); // make sure we're in sync when the page loads
 
-		// Populate ad unit name based on app name
-		$('input[name="name"]').change(function() {
-			var name = $.trim($(this).val());
-			$('#appForm-adUnitName').val(name + ' banner ad');
-		});
-		
-		// Toggle enabled/disabled state of search button when app name changes
-		$('#appForm-name').keyup(function(e) {
+    // Populate ad unit name based on app name
+    $('input[name="name"]').change(function() {
+      var name = $.trim($(this).val());
+      $('#appForm-adUnitName').val(name + ' banner ad');
+    });
+    
+    // Toggle enabled/disabled state of search button when app name changes
+    $('#appForm-name').keyup(function(e) {
       // Show/hide the app search button
       var name = $.trim($(this).val());
       if (name.length)
@@ -79,7 +79,7 @@ var mopub = mopub || {};
       }
     });
     
-		// Change icon
+    // Change icon
     $('#appForm-changeIcon-link').click(function (e) {
       e.preventDefault();
       $(this).hide();
@@ -87,38 +87,38 @@ var mopub = mopub || {};
       $('#appForm input[name="img_url"]').val('');
     });
     
-		/*---------------------------------------/
-		/ Ad Unit Form
-		/---------------------------------------*/
-		
-		// Set up format selection UI
-		$('.adForm-formats').each(function() {
-			var container = $(this);
-			$('input[type="radio"]', container).click(function(e) {
-				var radio = $(this);
-				var formatContainer = radio.parents('.adForm-format');
+    /*---------------------------------------/
+    / Ad Unit Form
+    /---------------------------------------*/
+    
+    // Set up format selection UI
+    $('.adForm-formats').each(function() {
+      var container = $(this);
+      $('input[type="radio"]', container).click(function(e) {
+        var radio = $(this);
+        var formatContainer = radio.parents('.adForm-format');
 
-				$('.adForm-format-image', container).css({ opacity: 0.5 });
-				$('.adForm-format-image', formatContainer).css({ opacity: 1 });
+        $('.adForm-format-image', container).css({ opacity: 0.5 });
+        $('.adForm-format-image', formatContainer).css({ opacity: 1 });
 
-				if(radio.val() == 'custom') {
-					// $('.adForm-format-details input[type="text"]:first', formatContainer).focus();
-				}
-			}).filter(':checked').click();
+        if(radio.val() == 'custom') {
+          // $('.adForm-format-details input[type="text"]:first', formatContainer).focus();
+        }
+      }).filter(':checked').click();
 
-			$('.adForm-format-image', container).click(function(e) {
-				var image = $(this);
-				var formatContainer = image.parents('.adForm-format');
-				$('input[type="radio"]', formatContainer).click();
-			});
+      $('.adForm-format-image', container).click(function(e) {
+        var image = $(this);
+        var formatContainer = image.parents('.adForm-format');
+        $('input[type="radio"]', formatContainer).click();
+      });
 
-			$('.adForm-format-details input[type="text"]', container).focus(function() {
-				var input = $(this);
-				var formatContainer = input.parents('.adForm-format');
-				$('input[type="radio"]', formatContainer).click();
-			});
-		});
-	});
+      $('.adForm-format-details input[type="text"]', container).focus(function() {
+        var input = $(this);
+        var formatContainer = input.parents('.adForm-format');
+        $('input[type="radio"]', formatContainer).click();
+      });
+    });
+  });
 })(this.jQuery);
 
 var artwork_json;

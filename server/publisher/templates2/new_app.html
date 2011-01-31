@@ -20,14 +20,14 @@
                 <input type="hidden" name="app_key" value="{{app_key}}"/>{% endif %}
                 <fieldset id="appForm-details" class="alt"> 
                   <legend>App Details</legend> 
-									{{app_form.as_template}}
+{{app_form.as_template}}
                 </fieldset> 
                 <fieldset id="appForm-ad" class="adForm"> 
                   <legend>Ad Unit</legend> 
                   <p> 
                     An ad unit is a single place in your app where an ad of a specific size can appear. Your app can have any number of ad units. A first ad unit has been created for you below. Feel free to modify it or ignore it for now.
                   </p> 
-									{{adunit_form.as_template}}	
+{{adunit_form.as_template}} 
                 </fieldset> 
                 <div class="form-submit"> 
                   <span class="buttonWrap"><a href="#" class="button" id="appForm-submit">Continue</a></span> 

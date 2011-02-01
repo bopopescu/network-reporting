@@ -127,10 +127,9 @@
             {% ifnotequal campaign.campaign_type "network" %}
             <section id="dashboard-campaigns">
               <div class="buttonBank buttonBank-right">
-                <a class="button" id="advertiser-adgroups-toggleCreativeButton" href="#">Show/hide all creatives</a>
                 <a class="button" id="advertiser-adgroups-addCreativeButton" href="#">Add a creative</a>
               </div>
-              <h2>Ad Creatives</h2>   
+              <h2>Creatives</h2>   
               <section id="advertiser-creativeAddForm" class="hidden">
                 <div>
                   <form action="{% url advertiser_creative_create %}" method="POST" accept-charset="utf-8" id="creativeCreateForm" enctype="multipart/form-data">
@@ -174,14 +173,20 @@
                         </td>
                         <th class="dataTable-name">
                           {{c.name}}
-                          <div class="creative">
-                            <iframe src="{% url advertiser_creative_html creative_key=c.key %}" frameborder="0" scrolling="no" width="100%" height="50">
-                              <p>Your browser does not support iframes.</p>
-                            </iframe>
+                          <div class="creative hidden" id="{{c.key}}-preview">
+                            <h3>{{c.name}}</h3>
+                            <div>
+                              <iframe src="{% url advertiser_creative_html creative_key=c.key %}" frameborder="0" scrolling="no" width="320" height="50">
+                                <p>Your browser does not support iframes.</p>
+                              </iframe>
+                            </div>
                           </div>
-                          <div class="clearall"></div>
+                          <div class="clear"></div>
                           <span class="buttonWrap">
                             <a class="button button-small advertiser-inLineCreativeToggle" href="#" id="{{c.key}}">Edit Creative</a>
+                          </span>                 
+                          <span class="buttonWrap">
+                            <a class="button button-small advertiser-inLineCreativePreview" href="#" id="{{c.key}}">Preview Creative</a>
                           </span>                 
                         </th>
                         <th class="dataTable-data">
@@ -221,19 +226,21 @@
                   <div class="clear"></div> 
                 </div>
                 {% endfor %}
-                <a class="button" id="creativeManagementForm-pause">Pause</a>
-                <a class="button" id="creativeManagementForm-resume">Resume</a>
-                <a class="button" id="creativeManagementForm-delete">Delete</a>
-                <form method="post" action="{% url advertiser_creative_manage %}" id="creativeManagementForm"> 
-                    <input type="hidden" id="creativeManagementForm-action" name="action" value="delete">
-                    {# TEMPLATE for input #}
-                    {# <input type="hidden" name="key" value=""> #}
-                </form>           
-              </section>  
-            </section>  
+                <div class="form-submit-left">
+                  <a class="button" id="creativeManagementForm-pause">Pause</a>
+                  <a class="button" id="creativeManagementForm-resume">Resume</a>
+                  <a class="button" id="creativeManagementForm-delete">Delete</a>
+                  <form method="post" action="{% url advertiser_creative_manage %}" id="creativeManagementForm"> 
+                      <input type="hidden" id="creativeManagementForm-action" name="action" value="delete">
+                      {# TEMPLATE for input #}
+                      {# <input type="hidden" name="key" value=""> #}
+                  </form>
+                </div>
+              </section>
+            </section>
             {% endifnotequal %} {# endifnotequal campaign.campaign_type "network" #}
-  
-          </div>  
+
+          </div>
 
 <script type="text/javascript">
   creatives = {% if creatives %}true{% else%}false{% endif %};

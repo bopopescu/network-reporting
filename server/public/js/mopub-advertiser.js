@@ -181,22 +181,48 @@ var mopub = mopub || {};
           .slideUp('fast');
     });
 
+    $('.advertiser-inLineCreativePreview')
+      .button({ icons : { primary : 'ui-icon-search' }})
+      .click(function(e){
+        e.preventDefault()
+        var creative_key = $(this).attr("id");
+        $("#"+creative_key+"-preview").dialog({
+          buttons: [
+            {
+              text: 'Close', 
+              click: function() {
+                $(this).dialog("close");
+              }
+            }
+          ]
+        });
+      });
+
     $('.advertiser-inLineCreativeToggle')
       .button({ icons : { primary : 'ui-icon-wrench' }})
       .click(function(e){
         e.preventDefault()
         var creative_key = $(this).attr("id");
-        $("#"+creative_key+"-edit")
-          .slideDown('fast');
+        var creative_form = $("#"+creative_key+"-edit");
+        if (creative_form.is(":hidden")) {
+          creative_form.slideDown('fast');
+        }
+        else {
+          creative_form.slideUp('fast');
+        }
       });
     
     $('#advertiser-adgroups-addCreativeButton')
       .button({ icons : { primary : 'ui-icon-circle-plus'} })
       .click(function(e){
           e.preventDefault();
-          $('#advertiser-creativeAddForm').slideDown('fast', function() {
-           $('#advertiser-adgroups-addCreativeButton').hide();
-         });
+          var creative_form = $('#advertiser-creativeAddForm');
+          if (creative_form.is(":hidden")) {
+            $('#advertiser-creativeAddForm').slideDown('fast');
+          }
+          else {
+            $('#advertiser-creativeAddForm').slideUp('fast');
+          }
         });
         
     if (!creatives) {
@@ -205,9 +231,6 @@ var mopub = mopub || {};
       $('#advertiser-adgroups-addCreativeButton').click();
     }
 
-    $('#advertiser-adgroups-toggleCreativeButton')
-      .button({ icons : { primary : 'ui-icon-triangle-2-n-s'} });
-    
     $('#creativeCreateForm input[name="ad_type"]')
       .click(function(e){
         $('#creativeCreateForm')
@@ -237,9 +260,13 @@ var mopub = mopub || {};
     $('#advertisers-adgroups-editAdGroupButton')
       .button({ icons: { primary: "ui-icon-wrench" } })
       .click(function(e){
-        $('#advertiser-adgroupEditForm').slideDown('fast',function(){
-          $('#advertisers-adgroups-editAdGroupButton').hide();
-        });
+        var form = $('#advertiser-adgroupEditForm');
+        if (form.is(":hidden")) {
+          $('#advertiser-adgroupEditForm').slideDown('fast');          
+        }
+        else {
+          $('#advertiser-adgroupEditForm').slideUp('fast');
+        }
       });
     
     $('#adgroupEditForm-cancel')

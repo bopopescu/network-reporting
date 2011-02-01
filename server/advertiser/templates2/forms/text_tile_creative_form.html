@@ -1,11 +1,11 @@
-                            <dt><label for="TODO1">Line 1</label></dt
+                            <dt><label for="TODO1">Line 1</label></dt>
                             <dd>
                               <input id='line1' type='text' name="{{form.line1.name}}" size="30" onkeyup='updateLine1();' class="input-text {% if form.line1.errors %}form-error{% endif %}"/>
                               {% for error in form.line1.errors %}
                               <div class="form-error-text">{{error}}</div> 
                               {% endfor %}
                             </dd> 
-                            <dt><label for="TODO2">Line 2</label></dt
+                            <dt><label for="TODO2">Line 2</label></dt>
                             <dd>
                               <input id='line2' type='text' name="{{form.line2.name}}" size="30" onkeyup='updateLine1();' class="input-text {% if form.line2.errors %}form-error{% endif %}"/>
                               {% for error in form.line2.errors %}
@@ -16,7 +16,12 @@
                             <dd>
                               <span style="font-size:smaller;margin-left:5px;">(40 x 40)</span></th><td><div id='image_input_div'><input id='image_input' type='file' name="image" size="40"/></div><div id='image_input_change' style='display:none;'><a href="#" onclick="changeIcon();return false;">Change</a></div></td></tr>
                               <input type="hidden" id="app_img" name="app_img"/>
-                            </dd> 
+                            </dd>
+                            <dt>
+                              <a class="button button-small" id="adgroupForm-advanced-toggleButton" href="#">More Options</a>             </dt>
+                            <dd></dd>
+                          </dl>
+                          <dl class="formFields"> 
                             <dt><label for="TODO3">Action Icon</label></dt>
                             <dd>
                               <input type="radio" name="action_icon" value="download_arrow4" onclick="setAction('download_arrow4');" checked/><img src="/images/download_arrow4.png"/>
@@ -42,3 +47,5 @@
                             <dd>
                               <input type='checkbox' id='gradient' name="gradient" checked onchange='updateGradient()'/>
                             </dd>
+                          </dl>
+                          <dl class="formFields"> 

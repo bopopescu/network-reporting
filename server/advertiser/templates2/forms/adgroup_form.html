@@ -1,7 +1,7 @@
                     <dl class="formFields"> 
                       <dt><label for="TOOD5">Ad Units:</label></dt>
                       <dd> 
-                        <ul style="overflow:auto; max-height:100px; list-style: none;border:1px solid #aaa; padding:5px 10px" class="{% if form.site_keys.errors %}form-error{% endif %}"> 
+                        <ul style="overflow:auto; max-height:100px; list-style: none;padding:5px 10px" class="{% if form.site_keys.errors %}form-error{% endif %}"> 
                         {% for adunit in all_adunits %}   
                           <li><input type="checkbox" name="site_keys" value="{{adunit.key}}"{% if adunit.checked %} checked="checked"{% endif %}> {{adunit.app.name}} &gt; {{adunit.name}} </input></li>   
                         {% endfor %}   

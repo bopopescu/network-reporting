@@ -20,13 +20,6 @@
                             <div class="form-error-text">{{error}}</div> 
                             {% endfor %}
                           </dd>
-                          <dt><label for="display_url">Display URL:</label></dt>
-                          <dd>
-                            <input type='text' name="{{form.display_url.name}}" class="input-text {% if form.display_url.errors %}form-error{% endif %}" value="{{form.display_url.value}}"/>
-                            {% for error in form.display_url.errors %}
-                            <div class="form-error-text">{{error}}</div> 
-                            {% endfor %}
-                          </dd>
                           <dt><label for="url">URL:</label></dt>
                           <dd>
                             <input type='text' name="{{form.url.name}}" class="input-text {% if form.url.errors %}form-error{% endif %}" value="{{form.url.value}}"/>

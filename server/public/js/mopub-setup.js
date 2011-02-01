@@ -136,28 +136,29 @@ function loadedArtwork(json) {
   if (resultCount == 0) {
     $('#searchAppStore-results').append("<div class='adForm-appSearch-text' />")
       .append("No results found");
-    return;
   }
-  for (var i=0;i<resultCount;i++) {
-    var app = json['results'][i];
+  else {
+    for (var i=0;i<resultCount;i++) {
+      var app = json['results'][i];
     
-    $('#searchAppStore-results').append($("<div class='adForm-appSearch' />")
-      .append($("<div class='adForm-appSearch-img' />")
-        .append($("<img />")
-          .attr("src",app['artworkUrl60'])
-          .width(40)
-          .height(40)
+      $('#searchAppStore-results').append($("<div class='adForm-appSearch' />")
+        .append($("<div class='adForm-appSearch-img' />")
+          .append($("<img />")
+            .attr("src",app['artworkUrl60'])
+            .width(40)
+            .height(40)
+          )
+          .append($("<span />"))
         )
-        .append($("<span />"))
-      )
-      .append($("<div class='adForm-appSearch-text' />")
-        .append($("<span />")
-          .append($("<a href=\"#\" onclick=\"selectArtwork("+i+");return false\";>"+app['trackName']+"</a>"))
-          .append("<br />"+app['artistName'])
+        .append($("<div class='adForm-appSearch-text' />")
+          .append($("<span />")
+            .append($("<a href=\"#\" onclick=\"selectArtwork("+i+");return false\";>"+app['trackName']+"</a>"))
+            .append("<br />"+app['artistName'])
+          )
         )
+        .append($("<div class='clear' />"))
       )
-      .append($("<div class='clear' />"))
-    )
+    }
   }
   
   $('#dashboard-searchAppStore-custom-modal').dialog("open");

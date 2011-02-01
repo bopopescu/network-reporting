@@ -9,6 +9,44 @@ var mopub = mopub || {};
 	// dom ready
 	$(document).ready(function() {
 		
+		
+		/*----------------------------------------/
+		/ TODO: Re-organize AJAX stuff            /
+		/----------------------------------------*/
+		var options = { 
+ 	   data: { ajax: true },
+ 	   dataType : 'json',
+ 	    success:    function(jsonData, statusText, xhr, $form) {
+ 	       if (jsonData.success){
+           window.location.reload();
+ 	       }
+ 	       else{
+ 	         $('#appForm-fragment').html(jsonData.html);
+ 	         // reimplement the onload event
+ 	         appFormOnload();
+ 	        }
+ 	      } 
+     };
+    // Added on a class to differenitate from the the app creation page 
+ 	  $('#appForm.appEditForm').ajaxForm(options);
+ 	  
+		var options = { 
+ 	   data: { ajax: true },
+ 	   dataType : 'json',
+ 	    success:    function(jsonData, statusText, xhr, $form) {
+ 	       if (jsonData.success){
+           window.location.reload();
+ 	       }
+ 	       else{
+ 	         $('#adunitForm-fragment').html(jsonData.html);
+ 	         // reimplement the onload event
+ 	         appFormOnload();
+ 	        }
+ 	      } 
+     };
+    $('#adunitAddForm').ajaxForm(options);
+    
+		
 		/*---------------------------------------/
 		/ Chart
 		/---------------------------------------*/
@@ -257,7 +295,7 @@ var mopub = mopub || {};
 			})
 			.click(function(e) {
 				e.preventDefault();
-				$('#adunitEditForm').submit();
+				$('#adunitAddForm').submit();
 		});
 		$('#adunitEditForm-cancel')
 			.click(function(e) {
@@ -334,64 +372,68 @@ var mopub = mopub || {};
 		/---------------------------------------*/
 		
 		// Platform-dependent URL/package name switching
-		$('#appForm input[name="app_type"]').click(function(e) {
-			$('#appForm .appForm-platformDependent')
-				.removeClass('iphone')
-				.removeClass('android')
-				.addClass($(this).val());
-		}).filter(':checked').click(); // make sure we're in sync when the page loads
+		function appFormOnload(){
+  		$('input[name="app_type"]').click(function(e) {
+  		  console.log('settings platform');
+  			$('#appForm .appForm-platformDependent')
+  				.removeClass('iphone')
+  				.removeClass('android')
+  				.addClass($(this).val());
+  		}).filter(':checked').click(); // make sure we're in sync when the page loads
 
-    // Search button
-    $('#appForm-search-button')
-      .button({ icons: { primary: "ui-icon-search" }})
-      .click(function(e) {
-        e.preventDefault();
-//        if ($(this).button( "option", "disabled" ))
-  //        return;
+      // Search button
+      $('#appForm-search-button')
+        .button({ icons: { primary: "ui-icon-search" }})
+        .click(function(e) {
+          e.preventDefault();
+  //        if ($(this).button( "option", "disabled" ))
+    //        return;
 
-        $('#searchAppStore-loading').show();
+          $('#searchAppStore-loading').show();
 
-        $('#dashboard-searchAppStore-custom-modal').dialog({
-          buttons: [
-            {
-              text: 'Cancel', 
-              click: function() {
-                $('#searchAppStore-results').html('');
-                $(this).dialog("close");
+          $('#dashboard-searchAppStore-custom-modal').dialog({
+            buttons: [
+              {
+                text: 'Cancel', 
+                click: function() {
+                  $('#searchAppStore-results').html('');
+                  $(this).dialog("close");
+                }
               }
-            }
-          ]
-        });
-        var name = $('#appForm input[name="name"]').val();
-        var script = document.createElement("script");
-        script.src = 'http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/wa/wsSearch?'       
-                       + 'entity=software&limit=10&callback=loadedArtwork&term='+name;
-        var head = document.getElementsByTagName("head")[0];
-        (head || document.body).appendChild( script );
-    });
-		if ($('#appForm-name').val() == '') {
-		  $('#appForm-search').button("disable");
-		}
-		$('#appForm-name').keyup(function(e) {
-			// Show/hide the app search button
-			var name = $.trim($(this).val());
-			if (name.length)
-				$('#appForm-search-button').button("enable");
-			else
-				$('#appForm-search-button').button("disable");
-      if (e.keyCode == 13) {
-        $('#appForm-search').click();
-      }
-		});
+            ]
+          });
+          var name = $('#appForm input[name="name"]').val();
+          var script = document.createElement("script");
+          script.src = 'http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/wa/wsSearch?'       
+                         + 'entity=software&limit=10&callback=loadedArtwork&term='+name;
+          var head = document.getElementsByTagName("head")[0];
+          (head || document.body).appendChild( script );
+      });
+  		if ($('#appForm-name').val() == '') {
+  		  $('#appForm-search').button("disable");
+  		}
+  		$('#appForm-name').keyup(function(e) {
+  			// Show/hide the app search button
+  			var name = $.trim($(this).val());
+  			if (name.length)
+  				$('#appForm-search-button').button("enable");
+  			else
+  				$('#appForm-search-button').button("disable");
+        if (e.keyCode == 13) {
+          $('#appForm-search').click();
+        }
+  		});
 
-		// Change icon
-    $('#appForm-changeIcon-link').click(function (e) {
-      e.preventDefault();
-      $(this).hide();
-      $('#appForm-icon-upload').show();
-      $('#appForm input[name="img_url"]').val('');
-    });
-
+  		// Change icon
+      $('#appForm-changeIcon-link').click(function (e) {
+        e.preventDefault();
+        $(this).hide();
+        $('#appForm-icon-upload').show();
+        $('#appForm input[name="img_url"]').val('');
+      });
+    }
+    
+    appFormOnload();
 		/*---------------------------------------/
 		/ Ad Unit Form
 		/---------------------------------------*/

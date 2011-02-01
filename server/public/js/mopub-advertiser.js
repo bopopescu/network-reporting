@@ -9,7 +9,7 @@ var mopub = mopub || {};
 	// dom ready
 	$(document).ready(function() {
 	  
-	  //get info from page
+	  // try get info from page
 	if (typeof creatives=="undefined")
 	  creatives = false
 	  
@@ -50,10 +50,6 @@ var mopub = mopub || {};
 	      } 
     };
 	 $('#campaignAdgroupForm').ajaxForm(options);
-	  
-
-
-
 
    function creativeMange(action){
 	    $('#creativeManagementForm-action').val(action);

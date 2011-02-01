@@ -18,7 +18,6 @@ var mopub = mopub || {};
       var campaign_type = $(this).val();
       $('.campaignDependent', '#campaignAdgroupForm').hide();
       $('.'+campaign_type+'.campaignDependent', '#campaignAdgroupForm').show();
-      /*
       $('#campaignAdgroupForm')
           .find('.campaignDependent').hide().end()
           .find("."+$(this).val()).show().end();
@@ -32,7 +31,6 @@ var mopub = mopub || {};
         $('#bid-network').attr('name','bid-network'); // rename so we dont have duplicates
         $('#bid-max').attr('name','bid');
       }    
-      */
     }).filter(':checked').click(); // make sure we're in sync when the page loads
   }
    
@@ -449,7 +447,7 @@ var mopub = mopub || {};
       
       $('#dashboard-stats-chart').removeClass('chart-loading');
     }
-    if ($('dashboard-stats').length)
+    if ($('#dashboard-stats').length)
       setupDashboardStatsChart();
     
     // Use breakdown to switch charts

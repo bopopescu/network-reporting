@@ -20,7 +20,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
 from django.utils import simplejson
-from common.ragendja.template import render_to_response, JSONResponse
+from common.ragendja.template import render_to_response, render_to_string, JSONResponse
 
 # from common.ragendja.auth.decorators import google_login_required as login_required
 from common.utils.decorators import whitelist_login_required
@@ -39,9 +39,24 @@ from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager,
                                       CreativeQueryManager
 
 class RequestHandler(object):
+    def __init__(self,request=None):
+      if request:
+        self.request = request
+        self.account = None
+        user = users.get_current_user()
+        if user:
+          if users.is_current_user_admin():
+            account_key_name = request.COOKIES.get("account_impersonation",None)
+            if account_key_name:
+              self.account = AccountQueryManager().get_by_key_name(account_key_name)
+        if not self.account:  
+          self.account = Account.current_account()
+
+      super(RequestHandler,self).__init__()  
+
     def __call__(self,request,*args,**kwargs):
         self.params = request.POST or request.GET
-        self.request = request
+        self.request = request or self.request
         self.account = None
         
         try:
@@ -55,7 +70,8 @@ class RequestHandler(object):
           self.start_date = datetime.date(int(s[0]),int(s[1]),int(s[2]))
         except:
           self.start_date = None
-
+        
+        
         user = users.get_current_user()
         if user:
           if users.is_current_user_admin():
@@ -64,7 +80,7 @@ class RequestHandler(object):
               self.account = AccountQueryManager().get_by_key_name(account_key_name)
         if not self.account:  
           self.account = Account.current_account()
-          
+
         if request.method == "GET":
             return self.get(*args,**kwargs)
         elif request.method == "POST":
@@ -199,10 +215,12 @@ class AppCreateHandler(RequestHandler):
       if adunit_form.is_valid():
         adunit = adunit_form.save(commit=False)
         adunit.account = self.account
-        adunit.app_key = app.key()
 
         # update the database
         AppQueryManager().put_apps(app)
+        
+        adunit.app_key = app
+        
         AdUnitQueryManager().put_adunits(adunit)
 
         # update the cache as necessary 
@@ -319,13 +337,22 @@ class ShowAppHandler(RequestHandler):
       a.graph_adunits[3] = {'name': 'Others',
                             'all_stats': [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[au.all_stats for au in a.adunits[3:]])]
                            }
+                           
+                           
+    # in order to make the app editable
+    app_form_fragment = AppUpdateAJAXHandler(self.request).get(app=a)
+    # in order to have a creat adunit form
+    adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(app=a)
 
     return render_to_response(self.request,'publisher/show_app.html', 
-        {'app': a,    
+        {'app': a,  
+         'app_form_fragment':app_form_fragment,
+         'adunit_form_fragment':adunit_form_fragment,
          'start_date': days[0],
          'date_range': self.date_range,
          'account': self.account,
          'helptext': help_text})
+         
 
 @whitelist_login_required
 def app_show(request,*args,**kwargs):
@@ -337,7 +364,7 @@ class AdUnitShowHandler(RequestHandler):
     adunit = AdUnitQueryManager().get_by_key(adunit_key)
     if adunit.account.key() != adunit.account.key():
       raise Http404
-
+      
     # Set start date if passed in, otherwise get most recent days
     if self.start_date:
       days = SiteStats.get_days(self.start_date, self.date_range)
@@ -356,18 +383,111 @@ class AdUnitShowHandler(RequestHandler):
     for ag in adunit.adgroups:
       ag.all_stats = SiteStatsQueryManager().get_sitestats_for_days(site=adunit,owner=ag,days=days)
       ag.stats = reduce(lambda x, y: x+y, ag.all_stats, SiteStats())
+    
+    # to allow the adunit to be edited
+    adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(adunit=adunit)
+    
       
     # write response
     return render_to_response(self.request,'publisher/show.html', 
         {'site':adunit,
+         'adunit':adunit,
          'start_date': days[0],
          'date_range': self.date_range,
          'account':self.account, 
-         'days': days})
+         'days': days,
+         'adunit_form_fragment':adunit_form_fragment})
   
 @whitelist_login_required
 def adunit_show(request,*args,**kwargs):
   return AdUnitShowHandler()(request,*args,**kwargs)   
+
+class AppUpdateAJAXHandler(RequestHandler):
+  TEMPLATE  = 'publisher/forms/app_form.html'
+  def get(self,app_form=None,app=None):
+    app_form = app_form or AppForm(instance=app)
+
+    return self.render(form=app_form)
+
+  def render(self,template=None,**kwargs):
+    template_name = template or self.TEMPLATE
+    return render_to_string(self.request,template_name=template_name,data=kwargs)
+
+  def json_response(self,json_dict):
+    return JSONResponse(json_dict)
+
+  def post(self,app_key=None):
+    logging.info("here in AppUpdateAJAXHandler")
+    app_key = app_key or self.request.POST.get('app_key')
+    if app_key:
+      app = AppQueryManager().get_by_key(app_key)
+    else:
+      app = None
+
+    app_form = AppForm(data=self.request.POST,instance=app)
+
+    json_dict = {'success':False,'html':None}
+
+    if app_form.is_valid():
+      app = app_form.save(commit=False)
+      app.account = self.account
+      AppQueryManager().put_apps(app)
+      json_dict.update(success=True)
+      return self.json_response(json_dict)
+    logging.info("errros: %s"%app_form.errors)
+    new_html = self.get(app_form=app_form)
+    json_dict.update(success=False,html=new_html)    
+    return self.json_response(json_dict)  
+
+@whitelist_login_required
+def app_update_ajax(request,*args,**kwargs):
+  return AppUpdateAJAXHandler()(request,*args,**kwargs)   
+
+class AdUnitUpdateAJAXHandler(RequestHandler):
+  TEMPLATE  = 'publisher/forms/adunit_form.html'
+  def get(self,adunit_form=None,adunit=None,app=None):
+    initial = {}
+    if app:
+      initial.update(app_key=app.key())
+    logging.info("adunit form: %s %s"%('adunit_form',adunit))
+    adunit_form = adunit_form or AdUnitForm(instance=adunit,initial=initial)
+    return self.render(form=adunit_form)
+
+  def render(self,template=None,**kwargs):
+    template_name = template or self.TEMPLATE
+    return render_to_string(self.request,template_name=template_name,data=kwargs)
+
+  def json_response(self,json_dict):
+    return JSONResponse(json_dict)
+
+  def post(self,adunit_key=None):
+    adunit_key = adunit_key or self.request.POST.get('adunit_key')
+    if adunit_key:
+      adunit = AdUnitQueryManager().get_by_key(adunit_key) # Note this gets things from the cache ?
+    else:
+      adunit = None
+
+    logging.info('VIEW name: %s %s description: %s'%(adunit.key(),adunit.name,adunit.description))
+    adunit_form = AdUnitForm(data=self.request.POST,instance=adunit)
+    json_dict = {'success':False,'html':None}
+
+    if adunit_form.is_valid():
+      adunit = adunit_form.save(commit=False)
+      adunit.account = self.account
+      AdUnitQueryManager().put_adunits(adunit)
+      
+      CachedQueryManager().cache_delete(adunit)
+      
+      
+      json_dict.update(success=True)
+      logging.info('VIEW name: %s %s description: %s'%(adunit.key(),adunit.name,adunit.description))
+      return self.json_response(json_dict)
+    new_html = self.get(adunit_form=adunit_form)
+    json_dict.update(success=False,html=new_html)    
+    return self.json_response(json_dict)  
+
+def adunit_update_ajax(request,*args,**kwargs):
+  return AdUnitUpdateAJAXHandler()(request,*args,**kwargs)
 
 class AppUpdateHandler(RequestHandler):
   def get(self,app_key):

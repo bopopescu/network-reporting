@@ -94,7 +94,7 @@
               <table class="dataTable appData-main">
                 <tbody>
                   <tr>
-                    <td class="appData-icon"><a href="#"><img src="{% if a.icon_url %}{{a.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" /></a></td>
+                    <td class="appData-icon-none"></td>
                     <th class="dataTable-name">Totals</th>
                     <td class="dataTable-data">{{adunit.stats.revenue|currency}}</td>
                     <td class="dataTable-data">{{adunit.stats.impression_count|withsep}}</td>
@@ -144,7 +144,7 @@
               <table class="dataTable appData-main" id="dashboard-app-0-main">
                 <tbody>
                   <tr>
-                    <td class="appData-icon"><a href="#"><img src="{% if a.icon_url %}{{a.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" /></a></td>
+                    <td class="appData-icon-none"></td>
                     <th class="dataTable-name">Totals</th>
                     <td class="dataTable-data">{{adunit.stats.request_count}}</td>
                     <td class="dataTable-data">{{adunit.stats.impression_count}}</td>

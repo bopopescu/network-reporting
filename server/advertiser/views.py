@@ -57,6 +57,19 @@ class RequestHandler(object):
         self.params = request.POST or request.GET
         self.request = request or self.request
         self.account = None
+
+        try:
+          # Limit date range to 31 days, otherwise too heavy
+          self.date_range = min(int(self.params.get('r')),31)  # date range
+        except:
+          self.date_range = 14
+          
+        try:
+          s = self.request.GET.get('s').split('-')
+          self.start_date = datetime.date(int(s[0]),int(s[1]),int(s[2]))
+        except:
+          self.start_date = None
+
         user = users.get_current_user()
         if user:
           if users.is_current_user_admin():
@@ -77,14 +90,16 @@ class RequestHandler(object):
 
 class IndexHandler(RequestHandler):
   def get(self):
-    days = SiteStats.lastdays(14)
+    # Set start date if passed in, otherwise get most recent days
+    if self.start_date:
+      days = SiteStats.get_days(self.start_date, self.date_range)
+    else:
+      days = SiteStats.lastdays(self.date_range)
 
     campaigns = CampaignQueryManager().get_campaigns(account=self.account)
-    today = SiteStats()
     for c in campaigns:
       c.all_stats = SiteStatsQueryManager.get_sitestats_for_days(owner=c, days=days)      
       c.stats = reduce(lambda x, y: x+y, c.all_stats, SiteStats())
-      today += c.all_stats[-1]
             
     # compute rollups to display at the top
     totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[c.all_stats for c in campaigns])]
@@ -101,7 +116,8 @@ class IndexHandler(RequestHandler):
     return render_to_response(self.request, 
       'advertiser/index.html', 
       {'campaigns':campaigns, 
-       'today': today,
+       'start_date': days[0],
+       'date_range': self.date_range,
        'gtee': garauntee_campaigns,
        'promo': promo_campaigns,
        'network': network_campaigns,
@@ -241,6 +257,12 @@ class CreateCampaignAJAXHander(RequestHandler):
         if campaign.campaign_type == "network":
           creative = adgroup.default_creative()
           CreativeQueryManager().put_creatives(creative)
+        
+        # Onboarding: user is done after they set up their first campaign
+        if self.account.status == "step4":
+          self.account.status = ""
+          AccountQueryManager().put_accounts(self.account)
+        
         json_dict.update(success=True,new_page=reverse('advertiser_adgroup_show',kwargs={'adgroup_key':str(adgroup.key())}))
         return self.json_response(json_dict)
     logging.warning('adgroup form errors: %s'%adgroup_form.errors)      

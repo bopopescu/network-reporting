@@ -9,7 +9,6 @@
   <dt><label for="appForm-name">App name:</label></dt> 
   <dd class="appForm-platformDependent iphone"> 
     <input type="text" class="input-text {% if form.name.errors %}form-error{% endif %}" name="name" value="{{form.name.value}}" id="appForm-name" />
-
     <div class="formFields-field-help iphone" id="appForm-search"> 
       <a href="#" class="button" id="appForm-search-button">Search App Store</a> 
       <div id="dashboard-searchAppStore-custom-modal" class="hidden"> 
@@ -20,10 +19,9 @@
         <div id="searchAppStore-results"></div> 
       </div> 
     </div> 
-		{% for error in form.name.errors %}
-		<div class="form-error-text">{{error}}</div> 
-		{% endfor %}
-
+    {% for error in form.name.errors %}
+    <div class="form-error-text">{{error}}</div> 
+    {% endfor %}
   </dd> 
 
   <dt class="appForm-platformDependent iphone"> 
@@ -32,13 +30,13 @@
   </dt> 
   <dd class="appForm-platformDependent iphone"> 
     <input type="url" class="input-text iphone {% if form.url.errors %}form-error{% endif %}" name="{{form.url.name}}" value="{{form.url.value}}" id="appForm-url" placeholder="http://itunes.apple.com/yourapp" /> 
-		{% for error in form.url.errors %}
-		<div class="form-error-text">{{error}}</div> 
-		{% endfor %}
+    {% for error in form.url.errors %}
+    <div class="form-error-text">{{error}}</div> 
+    {% endfor %}
     <input type="text" class="input-text android  {% if form.package.errors %}form-error{% endif %}" name="{{form.package.value}}" value="{{form.package.value}}" id="appForm-package" placeholder="com.company.appname" /> 
-		{% for error in form.package.errors %}
-		<div class="form-error-text">{{error}}</div> 
-		{% endfor %}
+    {% for error in form.package.errors %}
+    <div class="form-error-text">{{error}}</div> 
+    {% endfor %}
   </dd>
 
   <dt><label for="appForm-icon">Icon:</label></dt> 

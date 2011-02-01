@@ -1,23 +1,22 @@
-
 <input type="hidden" name="{{form.app_key.name}}" value="{{form.app_key.value}}"/>
 <dl class="formFields"> 
 
   <dt><label for="appForm-adUnitName">Ad unit name:</label></dt> 
   <dd>
-		<input type="text" class="input-text {% if form.adunit_name.errors %}form-error{% endif %}" name="{{form.adunit_name.name}}" value="{{form.adunit_name.value}}" id="appForm-adUnitName" />
-		{% for error in form.adunit_name.errors %}
-		<div class="form-error-text">{{error}}</div> 
-		{% endfor %}
-	</dd> 
+    <input type="text" class="input-text {% if form.adunit_name.errors %}form-error{% endif %}" name="{{form.adunit_name.name}}" value="{{form.adunit_name.value}}" id="appForm-adUnitName" />
+    {% for error in form.adunit_name.errors %}
+    <div class="form-error-text">{{error}}</div> 
+    {% endfor %}
+  </dd> 
 
   <dt>
-		<label for="appForm-adUnitDescription">Description:</label>
-	</dt> 
+    <label for="appForm-adUnitDescription">Description:</label>
+  </dt> 
   <dd> 
     <textarea name="{{form.adunit_description.name}}" id="adunit_description" rows="3" cols="40" class="{% if form.adunit_description.errors %}form-error{% endif %}">{{form.adunit_description.value}}</textarea> 
-		{% for error in form.adunit_description.errors %}
-		<div class="form-error-text">{{error}}</div> 
-		{% endfor %}
+    {% for error in form.adunit_description.errors %}
+    <div class="form-error-text">{{error}}</div> 
+    {% endfor %}
   </dd> 
 
   <dt>Format:</dt> 
@@ -55,12 +54,12 @@
             <input type="text" class="input-text input-text-small {% if form.width.errors %}form-error{% endif %}" name="{{form.width.name}}" value="{{form.width.value}}" id="appForm-adUnitFormatCustomWidth" placeholder="width" /> 
             &times;
             <input type="text" class="input-text input-text-small {% if form.height.errors %}form-error{% endif %}" name="{{form.height.name}}" value="{{form.height.value}}" id="appForm-adUnitFormatCustomHeight" placeholder="height" /> 
-						{% for error in form.width.errors %}
-						<div class="form-error-text">{{error}}</div> 
-						{% endfor %}
-						{% for error in form.height.errors %}
-						<div class="form-error-text">{{error}}</div> 
-						{% endfor %}
+            {% for error in form.width.errors %}
+            <div class="form-error-text">{{error}}</div> 
+            {% endfor %}
+            {% for error in form.height.errors %}
+            <div class="form-error-text">{{error}}</div> 
+            {% endfor %}
           </div>
         </div>
       </div>

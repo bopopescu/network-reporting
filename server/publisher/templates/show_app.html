@@ -7,156 +7,156 @@
 <script type="text/javascript">
 function showDaily() {$A($$('.daily_stats')).each(Element.toggle);}
 </script>
-	<h3>
-		<a href="{% url publisher_index %}">Apps</a> &gt; {{app.name}}
-		<div class="toolbar">
-			<a href="{% url publisher_app_update app_key=app.key %}">
-				Edit App
-			</a>
+  <h3>
+    <a href="{% url publisher_index %}">Apps</a> &gt; {{app.name}}
+    <div class="toolbar">
+      <a href="{% url publisher_app_update app_key=app.key %}">
+        Edit App
+      </a>
     <div class="graphselect">
       <button class="btn btn_active pill-l" onClick="show_today(this);"><span><span>Today</span></span></button>
       <button class="btn pill-r" onClick="show_yesterday(this);"><span><span>Yesterday</span></span></button>
     </div>
-		</div>
-	</h3>
+    </div>
+  </h3>
   <table class="rollups">
     <tr>
       <td class="rollup rollup_selected" onClick="show_graph_imp(this);"><b>Requests</b><br/><div class="data_today">{{today.request_count|withsep}}</div><div class="data_yesterday" style="display:none;">{{yesterday.request_count|withsep}}</div></td>
       <td class="rollup" onClick="show_graph_imp(this);"><b>Impressions</b><br/><div class="data_today">{{today.impression_count|withsep}}</div><div class="data_yesterday" style="display:none;">{{yesterday.impression_count|withsep}}</div></td>
-      <td class="rollup" onClick="show_graph_clk(this);"><b>Clicks</b><br/><div class="data_today">{{today.click_count|withsep}} ({{today.ctr|percentage}})</div><div class="data_yesterday" style="display:none;">{{yesterday.click_count|withsep}} ({{yesterday.ctr|percentage}})</div></td>      	
-	    <td class="rollup" onClick="show_graph_rev(this);"><b>Revenue (est.)</b><br/><div class="data_today">{{today.revenue|currency}}</div><div class="data_yesterday" style="display:none;">{{yesterday.revenue|currency}}</div></td>
-	    <td class="rollup" onClick="show_graph_users(this);"><b>Users</b><br/><div class="data_today">{{today.unique_user_count|withsep}}</div><div class="data_yesterday" style="display:none;">{{yesterday.unique_user_count|withsep}}</div></td>
+      <td class="rollup" onClick="show_graph_clk(this);"><b>Clicks</b><br/><div class="data_today">{{today.click_count|withsep}} ({{today.ctr|percentage}})</div><div class="data_yesterday" style="display:none;">{{yesterday.click_count|withsep}} ({{yesterday.ctr|percentage}})</div></td>        
+      <td class="rollup" onClick="show_graph_rev(this);"><b>Revenue (est.)</b><br/><div class="data_today">{{today.revenue|currency}}</div><div class="data_yesterday" style="display:none;">{{yesterday.revenue|currency}}</div></td>
+      <td class="rollup" onClick="show_graph_users(this);"><b>Users</b><br/><div class="data_today">{{today.unique_user_count|withsep}}</div><div class="data_yesterday" style="display:none;">{{yesterday.unique_user_count|withsep}}</div></td>
     </tr>
   </table>
-	<img id="chart_img" src="{{chart_urls.imp}}" width=580 height=200 style="padding: 5px 0 10px 0;"/>
-	{% if pie_chart_urls.imp %}
-	<img id="pie_chart_img" src="{{pie_chart_urls.imp}}" width=200 height=200 style="padding: 5px 0 10px 0; float:right;"/>
-	{% endif %}
+  <img id="chart_img" src="{{chart_urls.imp}}" width=580 height=200 style="padding: 5px 0 10px 0;"/>
+  {% if pie_chart_urls.imp %}
+  <img id="pie_chart_img" src="{{pie_chart_urls.imp}}" width=200 height=200 style="padding: 5px 0 10px 0; float:right;"/>
+  {% endif %}
 
   <h3>Settings</h3> 
-	<table>
-		<tr><th>Name</th><td>{{app.name}}</td></tr>
-		<tr><th>Platform</th><td>{{app.app_type}}</td></tr>
-		<tr><th>URL</th><td>{{app.url}}</td></tr>
-		<tr><th>Icon</th><td>
-		  <div style="position:relative;">
-		  <img height="40px" width="40px" src="{% if app.icon_url %}{{app.icon_url}}{% else %}/images/noicon.png{% endif %}" width=$w height=$h/>
-		  <span style="background:url(/images/mask40.png);display:block;position:absolute; left:-1px;top:0px;z-index:1;height:42px;width:41px;')"</span>
-		  </div>
-		</td></tr>
-		{% if app.adsense_app_name %}
-		<tr><th>AdSense App Name</th><td>{{app.adsense_app_name}}</td></tr>
-		{% endif %}
-	</table>
-	
-	<h3>
-		Ad Units
-		<div class="toolbar">
+  <table>
+    <tr><th>Name</th><td>{{app.name}}</td></tr>
+    <tr><th>Platform</th><td>{{app.app_type}}</td></tr>
+    <tr><th>URL</th><td>{{app.url}}</td></tr>
+    <tr><th>Icon</th><td>
+      <div style="position:relative;">
+      <img height="40px" width="40px" src="{% if app.icon_url %}{{app.icon_url}}{% else %}/images/noicon.png{% endif %}" width=$w height=$h/>
+      <span style="background:url(/images/mask40.png);display:block;position:absolute; left:-1px;top:0px;z-index:1;height:42px;width:41px;')"</span>
+      </div>
+    </td></tr>
+    {% if app.adsense_app_name %}
+    <tr><th>AdSense App Name</th><td>{{app.adsense_app_name}}</td></tr>
+    {% endif %}
+  </table>
+  
+  <h3>
+    Ad Units
+    <div class="toolbar">
       <button onClick="javascript:Toggle.display('add_adunit_box');return false;" class="btn"><span><span>+ New Ad Unit</span></span></button>
       {% if app.adunits %}
       &nbsp; &nbsp; &nbsp; &nbsp;
       <button onClick="showDaily();" class="btn"><span><span>Toggle daily stats</span></span></button>
       {% endif %}
       {% include "range_select.html" %}
-		</div>
-	</h3>
-	<form method="post" action="{% url publisher_adunit_create %}" id="add_adunit_box" style="display:none;" class="special_notice">
-		<input type="hidden" name="id" value="{{app.key}}"/>
-		<table>
-			<tr>
-				<th>Name</th><td><input type='text' name="name" size="30" placeholder="My Ad Unit"/></td>
-			</tr>
-			<tr><th>Description</th>
-				<td><textarea rows="4" cols="40" name="description" placeholder="Top of main page, 320x50"></textarea></td>
-			</tr>
-			<tr><th>Format</th>
-				<script> 
-					function selectSize(e){ 
-						var adUnitFormat = $F('adUnitFormat'); 
-						var width = 0.0; 
-						var height = 0.0; 
-						if (adUnitFormat == 'banner'){ 
-							width = 320.0; 
-							height = 50.0; 
-						} 
-						else if (adUnitFormat == 'mrect'){ 
-							width = 300.0; 
-							height = 250.0; 
-						} 
-						else if (adUnitFormat == 'fullscreen'){ 
-							width = 320.0; 
-							height = 480.0; 
-						} 
-						$('width').value = width; 
-						$('height').value = height; 
-					} 
-					selectSize(1); 
-				</script> 
-				<td>
-					<select id="adUnitFormat" name="format" onchange="selectSize(this)">
-						<option value="banner">Banner (320x50)</option>
-						<option value="mrect">Medium Rectangle (300x250)</option>						
-						<option value="fullscreen">Fullscreen Interstitial (320x480)</option>
-					</select>	
-					<input type="hidden" id="width" name="width" value="320"/>
-					<input type="hidden" id="height" name="height" value="50"/>				
-				</td>
-			</tr>
-			<tr><td colspan="2"><h4>Ad Properties</h4></td></tr>
-				<th>Preferred Ad Type</th><td><select name='ad_type'><option value="image">Text and image</option><option value="text">Text only</option></select></td>
-			<tr><th>Default keywords</th>
-				<td><textarea rows="4" cols="40" name="keywords" placeholder="One per line, e.g. coffee"></textarea></td></tr>
-			
+    </div>
+  </h3>
+  <form method="post" action="{% url publisher_adunit_create %}" id="add_adunit_box" style="display:none;" class="special_notice">
+    <input type="hidden" name="id" value="{{app.key}}"/>
+    <table>
+      <tr>
+        <th>Name</th><td><input type='text' name="name" size="30" placeholder="My Ad Unit"/></td>
+      </tr>
+      <tr><th>Description</th>
+        <td><textarea rows="4" cols="40" name="description" placeholder="Top of main page, 320x50"></textarea></td>
+      </tr>
+      <tr><th>Format</th>
+        <script> 
+          function selectSize(e){ 
+            var adUnitFormat = $F('adUnitFormat'); 
+            var width = 0.0; 
+            var height = 0.0; 
+            if (adUnitFormat == 'banner'){ 
+              width = 320.0; 
+              height = 50.0; 
+            } 
+            else if (adUnitFormat == 'mrect'){ 
+              width = 300.0; 
+              height = 250.0; 
+            } 
+            else if (adUnitFormat == 'fullscreen'){ 
+              width = 320.0; 
+              height = 480.0; 
+            } 
+            $('width').value = width; 
+            $('height').value = height; 
+          } 
+          selectSize(1); 
+        </script> 
+        <td>
+          <select id="adUnitFormat" name="format" onchange="selectSize(this)">
+            <option value="banner">Banner (320x50)</option>
+            <option value="mrect">Medium Rectangle (300x250)</option>           
+            <option value="fullscreen">Fullscreen Interstitial (320x480)</option>
+          </select> 
+          <input type="hidden" id="width" name="width" value="320"/>
+          <input type="hidden" id="height" name="height" value="50"/>       
+        </td>
+      </tr>
+      <tr><td colspan="2"><h4>Ad Properties</h4></td></tr>
+        <th>Preferred Ad Type</th><td><select name='ad_type'><option value="image">Text and image</option><option value="text">Text only</option></select></td>
+      <tr><th>Default keywords</th>
+        <td><textarea rows="4" cols="40" name="keywords" placeholder="One per line, e.g. coffee"></textarea></td></tr>
+      
 
-			<tr><td></td><td><input type='submit' value="Add Ad Unit &raquo;"/></td></tr>
-		</table>
-	</form>
-	
-	<table class="wide">
-		<form method="post" action="{% url publisher_delete %}">
-			{% if app.adunits %}
-				<thead>
-					<th></th>
-					<th width="50px">Name</th>
-					<th>Date</th>
-					<th class="numeric">Max Bid</th>
-					<th class="numeric">Req.</th>
-					<th class="numeric">Clicks</th>
-					<th class="numeric">Revenue</th>
-				</thead>
-			  {% for au in app.adunits %}
-				<tr>
-					<td><input type="checkbox" name="id" value="{{adunit.key}}"/></td>
-					<td colspan="2"><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a><br><span style="color:#888888"> &nbsp; ID: {{au.key}}</span></td>
-					<td class="numeric">{{au.bid|currency}}</td>
-					<td class="numeric">{{au.stats.request_count}}</td>
-					<td class="numeric">{{au.stats.click_count}} ({{au.stats.ctr|percentage}})</td>
-					<td class="numeric">{{au.stats.revenue|currency}}</td>
-				</tr>
-  				{% for stats in au.all_stats %}
-  			  {% if stats.date %}
-  			  <tr style="color:grey;font-style:italic;display:none" class="daily_stats">
+      <tr><td></td><td><input type='submit' value="Add Ad Unit &raquo;"/></td></tr>
+    </table>
+  </form>
+  
+  <table class="wide">
+    <form method="post" action="{% url publisher_delete %}">
+      {% if app.adunits %}
+        <thead>
+          <th></th>
+          <th width="50px">Name</th>
+          <th>Date</th>
+          <th class="numeric">Max Bid</th>
+          <th class="numeric">Req.</th>
+          <th class="numeric">Clicks</th>
+          <th class="numeric">Revenue</th>
+        </thead>
+        {% for au in app.adunits %}
+        <tr>
+          <td><input type="checkbox" name="id" value="{{adunit.key}}"/></td>
+          <td colspan="2"><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a><br><span style="color:#888888"> &nbsp; ID: {{au.key}}</span></td>
+          <td class="numeric">{{au.bid|currency}}</td>
+          <td class="numeric">{{au.stats.request_count}}</td>
+          <td class="numeric">{{au.stats.click_count}} ({{au.stats.ctr|percentage}})</td>
+          <td class="numeric">{{au.stats.revenue|currency}}</td>
+        </tr>
+          {% for stats in au.all_stats %}
+          {% if stats.date %}
+          <tr style="color:grey;font-style:italic;display:none" class="daily_stats">
             <td></td>
             <td></td>
-  				  <td>{{stats.date}}</td>
+            <td>{{stats.date}}</td>
             <td></td>
-  				  <td class="numeric">{{stats.request_count|withsep}}</td>
-  				  <td class="numeric">{{stats.click_count|withsep}} ({{stats.ctr|percentage}})</td>
-  				  <td class="numeric">{{stats.revenue|currency}}</td>
-  			  </tr>
-  			  {% endif %}
-  		    {% endfor %}
-			  {% endfor %}
-				<tr>
-					<td colspan=8>
-						<p></p><input type='submit' name='delete' value='Hide Ad Units'/>
-					</td>
-				</tr>
-			{% else %}
-				<tr><td colspan=10>An <b>Ad Unit</b> is a single place in your app that contains an ad.  This might be a banner that shows on a search results page or an interstitial that shows after a task is complete.  Create an ad unit then target a set of campaigns to compete for placement in the ad unit.</td></tr>
-			{% endif %}
-		</form>
-	</table>
-	
-	
+            <td class="numeric">{{stats.request_count|withsep}}</td>
+            <td class="numeric">{{stats.click_count|withsep}} ({{stats.ctr|percentage}})</td>
+            <td class="numeric">{{stats.revenue|currency}}</td>
+          </tr>
+          {% endif %}
+          {% endfor %}
+        {% endfor %}
+        <tr>
+          <td colspan=8>
+            <p></p><input type='submit' name='delete' value='Hide Ad Units'/>
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan=10>An <b>Ad Unit</b> is a single place in your app that contains an ad.  This might be a banner that shows on a search results page or an interstitial that shows after a task is complete.  Create an ad unit then target a set of campaigns to compete for placement in the ad unit.</td></tr>
+      {% endif %}
+    </form>
+  </table>
+  
+  
 {% endblock %}

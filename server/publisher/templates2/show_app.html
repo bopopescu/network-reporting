@@ -17,9 +17,9 @@
             <div>
               <form action="{% url publisher_app_update_ajax app_key=app.key %}" method="POST" accept-charset="utf-8" id="appForm" class="appEditForm">
                 <fieldset id="appForm-details" class="alt">
-									<div id="appForm-fragment">
-										{{app_form_fragment}}
-									</div>
+                  <div id="appForm-fragment">
+{{app_form_fragment}}
+                  </div>
                   <div class="form-submit"> 
                     <span class="buttonWrap"><a href="#" class="button" id="appEditForm-submit">Save</a></span> 
                     <span class="buttonWrap"><a href="#" class="button" id="appEditForm-cancel">Cancel</a></span> 
@@ -61,16 +61,16 @@
                     pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
                     pointInterval: 86400000,
                     'requests': [{% for au in app.graph_adunits %}
-                      { '{{au.name}}': [{% for t in au.all_stats %}{{t.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                      { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                     ],
                     'impressions': [{% for au in app.graph_adunits %}
-                      { '{{au.name}}': [{% for t in au.all_stats %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                      { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                     ],
                     'clicks': [{% for au in app.graph_adunits %}
-                      { '{{au.name}}': [{% for t in au.all_stats %}{{t.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                      { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                     ],
                     'users': [{% for au in app.graph_adunits %}
-                      { '{{au.name}}': [{% for t in au.all_stats %}{{t.unique_user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                      { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.unique_user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                     ]
                   };
                 </script>

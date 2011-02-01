@@ -17,10 +17,10 @@
             <div>
               <form action="{% url publisher_adunit_update_ajax %}" method="POST" accept-charset="utf-8" id="adunitAddForm" class="adunitEditForm">
                 <fieldset id="appForm-details" class="alt">
-									<input type="hidden" name="adunit_key" value="{{adunit.key}}"/>
-									<div id="adunitForm-fragment">
-										{{adunit_form_fragment}}
-									</div>	
+                  <input type="hidden" name="adunit_key" value="{{adunit.key}}"/>
+                  <div id="adunitForm-fragment">
+{{adunit_form_fragment}}
+                  </div>  
                   <div class="form-submit"> 
                     <span class="buttonWrap"><a href="#" class="button" id="adunitEditForm-submit">Save</a></span> 
                     <span class="buttonWrap"><a href="#" class="button" id="adunitEditForm-cancel">Cancel</a></span> 
@@ -57,13 +57,13 @@
                     pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
                     pointInterval: 86400000,
                     'requests': [
-                      { '{{adunit.name}}': [{% for t in adunit.all_stats %}{{t.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
+                      { '{{adunit.name|safe|addslashes}}': [{% for t in adunit.all_stats %}{{t.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
                     ],
                     'impressions': [
-                      { '{{adunit.name}}': [{% for t in adunit.all_stats %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
+                      { '{{adunit.name|safe|addslashes}}': [{% for t in adunit.all_stats %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
                     ],
                     'clicks': [
-                      { '{{adunit.name}}': [{% for t in adunit.all_stats %}{{t.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
+                      { '{{adunit.name|safe|addslashes}}': [{% for t in adunit.all_stats %}{{t.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
                     ]
                   };
                 </script>

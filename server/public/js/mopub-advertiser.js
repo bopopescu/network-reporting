@@ -62,20 +62,22 @@ var mopub = mopub || {};
       });
     });
   
+  $('#campaignAdgroupForm input[name="start_date"]').datepicker({ minDate:0 });
+  $('#campaignAdgroupForm input[name="end_date"]').datepicker({ minDate:0 });
 
-   function creativeMange(action){
-      $('#creativeManagementForm-action').val(action);
-      var $form = $('#creativeManagementForm');
-      $form.find('input[name="key"]').remove();
-      $('#advertiser-creativeData').find('input[name="creativeManagementForm-key"]:checked')
-       .each(function(i){
-         $(this).val() // key
-         $('<input></input>').attr('name','key').attr('type','hidden')
-           .val($(this).val())
-           .appendTo($form);
-       });
-     $form.submit();
-   }  
+  function creativeMange(action){
+    $('#creativeManagementForm-action').val(action);
+    var $form = $('#creativeManagementForm');
+    $form.find('input[name="key"]').remove();
+    $('#advertiser-creativeData').find('input[name="creativeManagementForm-key"]:checked')
+      .each(function(i){
+        $(this).val() // key
+        $('<input></input>').attr('name','key').attr('type','hidden')
+          .val($(this).val())
+          .appendTo($form);
+      });
+    $form.submit();
+  }  
     
    $('#creativeManagementForm-pause')
     .click(function(e){

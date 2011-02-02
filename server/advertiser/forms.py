@@ -22,7 +22,7 @@ class AdGroupForm(mpforms.MPModelForm):
   TEMPLATE = 'advertiser/forms/adgroup_form.html'
   
   # TODO: how can i make this dynamic
-  site_keys = mpforms.MPModelMultipleChoiceField(AdUnit.all().fetch(100),required=False)
+  site_keys = mpforms.MPModelMultipleChoiceField(AdUnit,required=False)
   keywords = mpforms.MPTextAreaField(required=False)
   geo_predicates = mpforms.MPTextAreaField()
   device_predicates = mpforms.MPTextAreaField()
@@ -34,11 +34,7 @@ class AdGroupForm(mpforms.MPModelForm):
               'device_predicates', 'percent_users', 'site_keys',
               'hourly_frequency_cap','daily_frequency_cap',
               'budget')
-                
-  def clean_site_keys(self):
-    logging.info("!"*10+'site_keys%s'%self.cleaned_data['site_keys']+'!'*10)
-    return self.cleaned_data['site_keys']            
-
+              
 
 class BaseCreativeForm(mpforms.MPModelForm):
   TEMPLATE = 'advertiser/forms/base_creative_form.html'

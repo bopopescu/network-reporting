@@ -70,6 +70,7 @@ class BaseForm(StrAndUnicode):
     def __init__(self, data=None, files=None, auto_id='id_%s', prefix=None,
                  initial=None, error_class=ErrorList, label_suffix=':',
                  empty_permitted=False):
+
         self.is_bound = data is not None or files is not None
         self.data = data or {}
         self.files = files or {}
@@ -226,6 +227,7 @@ class BaseForm(StrAndUnicode):
         # changed from the initial data, short circuit any validation.
         if self.empty_permitted and not self.has_changed():
             return
+        
         for name, field in self.fields.items():
             # value_from_datadict() gets the data from the data dictionaries.
             # Each widget type knows how to retrieve its own data, because some

@@ -71,7 +71,6 @@ class RequestHandler(object):
         except:
           self.start_date = None
         
-        
         user = users.get_current_user()
         if user:
           if users.is_current_user_admin():

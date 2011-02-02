@@ -1151,6 +1151,12 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
   -webkit-border-radius:6px;-moz-border-radius:6px
 }
 
+.dataTable .appData-icon-none {
+  padding-right: 11px;
+  height:45px;
+  width: 45px;
+}
+
 .appData-main th, .appData-main td {
   padding-top: 0;
   font-size: 15px;

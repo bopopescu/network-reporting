@@ -205,6 +205,8 @@ class CreateCampaignAJAXHander(RequestHandler):
     # TODO: Remove this hack to place the bidding info with the rest of campaign
     campaign_form.bid  = adgroup_form['bid']
     campaign_form.bid_strategy = adgroup_form['bid_strategy']
+    
+    logging.warning("bid: %s %s"%("campaign_form['bid']",campaign_form.bid.value))
 
     adunit_keys = adgroup_form['site_keys'].value or []
     adunit_str_keys = [unicode(k) for k in adunit_keys]
@@ -235,6 +237,7 @@ class CreateCampaignAJAXHander(RequestHandler):
     campaign_form = CampaignForm(data=self.request.POST,instance=campaign)
     adgroup_form = AdGroupForm(data=self.request.POST,instance=adgroup)
     
+    
     all_adunits = AdUnitQueryManager().get_adunits(account=self.account)
     sk_field = adgroup_form.fields['site_keys']
     sk_field.choices = all_adunits # TODO: doesn't work needed for validation
@@ -264,7 +267,9 @@ class CreateCampaignAJAXHander(RequestHandler):
         
         json_dict.update(success=True,new_page=reverse('advertiser_adgroup_show',kwargs={'adgroup_key':str(adgroup.key())}))
         return self.json_response(json_dict)
-    logging.warning('adgroup form errors: %s'%adgroup_form.errors)      
+    logging.warning('adgroup form errors: %s'%adgroup_form.errors) 
+    logging.warning('adgroup form bid: %s'%adgroup_form['bid'].value)      
+         
     new_html = self.get(campaign_form=campaign_form,
                         adgroup_form=adgroup_form)
     json_dict.update(success=False,html=new_html)    

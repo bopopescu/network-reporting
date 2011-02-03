@@ -15,6 +15,7 @@
 {% block content %}
           <section id="dashboard-adunitEditForm" class="hidden">
             <div>
+              <a name="adunitForm" class="hidden">anchor</a>
               <form action="{% url publisher_adunit_update_ajax %}" method="POST" accept-charset="utf-8" id="adunitAddForm" class="adunitEditForm">
                 <fieldset id="appForm-details" class="alt">
                   <input type="hidden" name="adunit_key" value="{{adunit.key}}"/>
@@ -22,6 +23,7 @@
 {{adunit_form_fragment}}
                   </div>  
                   <div class="form-submit"> 
+                    <span class="hidden" id="adunitForm-loading"><img src="/images/loading2.gif"/></span>
                     <span class="buttonWrap"><a href="#" class="button" id="adunitEditForm-submit">Save</a></span> 
                     <span class="buttonWrap"><a href="#" class="button" id="adunitEditForm-cancel">Cancel</a></span> 
                   </div> 

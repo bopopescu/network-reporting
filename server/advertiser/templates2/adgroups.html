@@ -115,8 +115,6 @@
 							{% endif %} {% if not c.start_date and not c.end_date %}
 								No schedule.
 							{% endif %}
-							{% if c.start_date %}{{c.start_date|format_date_compact}}{% endif %}
-							
 							{% if c.budget %}{{c.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
 						</span>
 					</th>

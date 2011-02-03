@@ -19,5 +19,5 @@ class SiteStatsQueryManager(CachedQueryManager):
           owner_key = owner
         keys = (SiteStats.get_key(site_key, owner_key, d) for d in days)
         stats = SiteStats.get(keys) # db get
-        stats = (s or SiteStats() for s in stats)
+        stats = [s or SiteStats() for s in stats]
         return stats

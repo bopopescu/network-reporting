@@ -136,8 +136,8 @@ class AppIndexHandler(RequestHandler):
        'graph_apps': graph_apps,
        'start_date': days[0],
        'date_range': self.date_range,
-       'today': reduce(lambda x, y: x+y, [a.all_stats[-1] for a in graph_apps[0:1]], SiteStats()),
-       'yesterday': reduce(lambda x, y: x+y, [a.all_stats[-2] for a in graph_apps[0:1]], SiteStats()),
+       'today': reduce(lambda x, y: x+y, [a.all_stats[-1] for a in graph_apps], SiteStats()),
+       'yesterday': reduce(lambda x, y: x+y, [a.all_stats[-2] for a in graph_apps], SiteStats()),
        'totals': reduce(lambda x, y: x+y.stats, apps, SiteStats()),
        'account': self.account})
 

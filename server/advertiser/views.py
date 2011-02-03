@@ -57,6 +57,19 @@ class RequestHandler(object):
         self.params = request.POST or request.GET
         self.request = request or self.request
         self.account = None
+
+        try:
+          # Limit date range to 31 days, otherwise too heavy
+          self.date_range = min(int(self.params.get('r')),31)  # date range
+        except:
+          self.date_range = 14
+          
+        try:
+          s = self.request.GET.get('s').split('-')
+          self.start_date = datetime.date(int(s[0]),int(s[1]),int(s[2]))
+        except:
+          self.start_date = None
+
         user = users.get_current_user()
         if user:
           if users.is_current_user_admin():
@@ -77,14 +90,16 @@ class RequestHandler(object):
 
 class IndexHandler(RequestHandler):
   def get(self):
-    days = SiteStats.lastdays(14)
+    # Set start date if passed in, otherwise get most recent days
+    if self.start_date:
+      days = SiteStats.get_days(self.start_date, self.date_range)
+    else:
+      days = SiteStats.lastdays(self.date_range)
 
     campaigns = CampaignQueryManager().get_campaigns(account=self.account)
-    today = SiteStats()
     for c in campaigns:
       c.all_stats = SiteStatsQueryManager.get_sitestats_for_days(owner=c, days=days)      
       c.stats = reduce(lambda x, y: x+y, c.all_stats, SiteStats())
-      today += c.all_stats[-1]
             
     # compute rollups to display at the top
     totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[c.all_stats for c in campaigns])]
@@ -101,7 +116,8 @@ class IndexHandler(RequestHandler):
     return render_to_response(self.request, 
       'advertiser/index.html', 
       {'campaigns':campaigns, 
-       'today': today,
+       'start_date': days[0],
+       'date_range': self.date_range,
        'gtee': garauntee_campaigns,
        'promo': promo_campaigns,
        'network': network_campaigns,
@@ -113,7 +129,11 @@ def index(request,*args,**kwargs):
 
 class AdGroupIndexHandler(RequestHandler):
   def get(self):
-    days = SiteStats.lastdays(14)
+    # Set start date if passed in, otherwise get most recent days
+    if self.start_date:
+      days = SiteStats.get_days(self.start_date, self.date_range)
+    else:
+      days = SiteStats.lastdays(self.date_range)
 
     app = AppQueryManager().get_apps(account=self.account)
     all_apps = None
@@ -128,11 +148,9 @@ class AdGroupIndexHandler(RequestHandler):
       adgroups = AdGroup.gql("where campaign in :1 and deleted = :2", [x.key() for x in campaigns], False).fetch(100)
     adgroups = sorted(adgroups, lambda x,y: cmp(y.bid, x.bid))
     
-    today = SiteStats()
     for c in adgroups:
       c.all_stats = SiteStatsQueryManager().get_sitestats_for_days(owner=c, days=days)      
       c.stats = reduce(lambda x, y: x+y, c.all_stats, SiteStats())
-      today += c.all_stats[-1]
 
     # compute rollups to display at the top
     daily_totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[c.all_stats for c in adgroups])]
@@ -151,11 +169,11 @@ class AdGroupIndexHandler(RequestHandler):
       'advertiser/adgroups.html', 
       {'adgroups':adgroups,
        'start_date': days[0],
+       'date_range': self.date_range,
        'app' : app,
        'all_apps' : all_apps,
        'site' : site,
        'all_sites' : all_sites,
-       'today': today,
        'totals':totals,
        'gtee': guarantee_campaigns,
        'promo': promo_campaigns,
@@ -176,7 +194,7 @@ class CreateCampaignAJAXHander(RequestHandler):
       campaign = campaign or adgroup.campaign
     campaign_form = campaign_form or CampaignForm(instance=campaign)
     adgroup_form = adgroup_form or AdGroupForm(instance=adgroup)
-    networks = [["adsense","Google AdSense",False],["iAd","Apple iAd",False],["admob","AdMob",False],["millennial","Millennial Media",False],["inmobi","InMobi",False],["greystripe","GreyStripe",False],["appnexus","App Nexus",False],["brightroll","BrightRoll",False],["custom","Custom",False]]
+    networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["greystripe","GreyStripe",False],["iAd","iAd",False],["inmobi","InMobi",False],["millennial","Millennial Media",False]]
     
     all_adunits = AdUnitQueryManager().get_adunits(account=self.account)
     
@@ -241,6 +259,12 @@ class CreateCampaignAJAXHander(RequestHandler):
         if campaign.campaign_type == "network":
           creative = adgroup.default_creative()
           CreativeQueryManager().put_creatives(creative)
+        
+        # Onboarding: user is done after they set up their first campaign
+        if self.account.status == "step4":
+          self.account.status = ""
+          AccountQueryManager().put_accounts(self.account)
+        
         json_dict.update(success=True,new_page=reverse('advertiser_adgroup_show',kwargs={'adgroup_key':str(adgroup.key())}))
         return self.json_response(json_dict)
     logging.warning('adgroup form errors: %s'%adgroup_form.errors)      

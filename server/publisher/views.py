@@ -71,7 +71,6 @@ class RequestHandler(object):
         except:
           self.start_date = None
         
-        
         user = users.get_current_user()
         if user:
           if users.is_current_user_admin():
@@ -129,7 +128,7 @@ class AppIndexHandler(RequestHandler):
     graph_apps = apps[0:4]
     if len(apps) > 4:
       graph_apps[3] = {'name': 'Others',
-                       'totals': [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[a.all_stats for a in apps[3:]])]
+                       'all_stats': [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[a.all_stats for a in apps[3:]])]
                        }
 
     return render_to_response(self.request,'publisher/index.html', 
@@ -137,6 +136,8 @@ class AppIndexHandler(RequestHandler):
        'graph_apps': graph_apps,
        'start_date': days[0],
        'date_range': self.date_range,
+       'today': reduce(lambda x, y: x+y, [a.all_stats[-1] for a in graph_apps[0:1]], SiteStats()),
+       'yesterday': reduce(lambda x, y: x+y, [a.all_stats[-2] for a in graph_apps[0:1]], SiteStats()),
        'totals': reduce(lambda x, y: x+y.stats, apps, SiteStats()),
        'account': self.account})
 
@@ -337,8 +338,6 @@ class ShowAppHandler(RequestHandler):
       a.graph_adunits[3] = {'name': 'Others',
                             'all_stats': [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[au.all_stats for au in a.adunits[3:]])]
                            }
-                           
-                           
     # in order to make the app editable
     app_form_fragment = AppUpdateAJAXHandler(self.request).get(app=a)
     # in order to have a creat adunit form
@@ -350,6 +349,8 @@ class ShowAppHandler(RequestHandler):
          'adunit_form_fragment':adunit_form_fragment,
          'start_date': days[0],
          'date_range': self.date_range,
+         'today': totals[-1],
+         'yesterday': totals[-2],
          'account': self.account,
          'helptext': help_text})
          
@@ -392,6 +393,8 @@ class AdUnitShowHandler(RequestHandler):
     return render_to_response(self.request,'publisher/show.html', 
         {'site':adunit,
          'adunit':adunit,
+         'today': adunit.all_stats[-1],
+         'yesterday': adunit.all_stats[-2],
          'start_date': days[0],
          'date_range': self.date_range,
          'account':self.account, 

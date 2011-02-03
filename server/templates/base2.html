@@ -42,7 +42,7 @@
   <!-- MoPub -->
   <script src="/js/plugins.js"></script>
   <script src="/js/mopub.js?v=blah"></script>
-  {% block extraScripts %}<script src="/js/mopub-dashboard.js?v=blah4"></script>{% endblock extraScripts %}
+  {% block extraScripts %}<script src="/js/mopub-dashboard.js?v=blah5"></script>{% endblock extraScripts %}
   
   <!--[if lt IE 7 ]>
     <script src="/js/libs/dd_belatedpng.js"></script>
@@ -111,9 +111,11 @@
 {% endblock dateButtons %}
           <div id="titlebar-right">
 {% block titleBarRight %}
+<!-- Disable for now
             <span class="titlebar-link">
               <a class="linkIcon" href="{% url publisher_index_geo %}">Ad performance by region <span class="ui-icon ui-icon-triangle-1-e"></span></a>
             </span>
+-->
 {% endblock titleBarRight %}
           </div>
         </div>

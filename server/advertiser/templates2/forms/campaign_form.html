@@ -42,8 +42,8 @@
                       <dt><label for="TODO2">Rate:</label></dt> 
                       <dd> 
                         <select name="bid_strategy" id="bid_strategy">
-                          <option value="cpm" id="bid_strategy-cpm"{% ifequal form.bid_strategy.value "cpm"%}selected="selected"{% endifequal %}>CPM (1000 impressions)</option>
-                          <option value="cpc" {% ifequal form.bid_strategy.value "cpc"%}selected="selected"{% endifequal %}>CPC (1000 clicks)</option>
+                          <option value="cpm" id="bid_strategy-cpm"{% ifequal form.bid_strategy.value "cpm"%}selected="selected"{% endifequal %}>CPM</option>
+                          <option value="cpc" {% ifequal form.bid_strategy.value "cpc"%}selected="selected"{% endifequal %}>CPC</option>
                         </select>
                         @ <input type="text" class="input-text-number {% if form.bid.errors %}form-error{% endif %}" name="bid" value="{{form.bid.value}}" id="bid-max" placeholder="1"/> USD
                         {% for error in form.bid.errors %}
@@ -75,5 +75,10 @@
                         {% for error in form.bid.errors %}
                         <div class="form-error-text">{{error}}</div>
                         {% endfor %}
+                        <a href="#" id="campaignForm-bid-helpLink">What's this?</a>
+                        <div id="campaignForm-bid-helpContent" class="hidden"> 
+                          <h3>Network eCPM</h3>
+                          <p>MoPub uses the eCPM from the ad network to prioritize which network will get displayed.  To raise the priority of a network, increase the eCPM.</p>
+                        </div>
                       </dd> 
                     </dl>

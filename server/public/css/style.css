@@ -820,7 +820,7 @@ dl.formFields {
 }
 
 .formFields .input-text-number {
-  width: 65px;
+  width: 70px;
 }
 
 .formFields-field-help {
@@ -969,6 +969,9 @@ dl.formFields {
   position: absolute;
   top: 0;
   left: 0;
+}
+
+.stats-breakdown table {
   width: 205px;
 }
 
@@ -1024,6 +1027,19 @@ dl.formFields {
 .stats-breakdown tr.active:hover th.stats-breakdown-name .inner {
   background-color: #4d4d4d;
   color: #fff;
+}
+
+.stats-breakdown-value.yesterday,
+.stats-breakdown-value.all {
+  display:none;
+}
+
+.stats-breakdown-buttons {
+  padding: 0 0 10px 0;
+  position:absolute;
+  bottom:0;
+  text-align:center;
+  width:205px;
 }
 
 .stats-chart {
@@ -1151,10 +1167,21 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
   -webkit-border-radius:6px;-moz-border-radius:6px
 }
 
+.dataTable .appData-icon-none {
+  padding-right: 11px;
+  height:45px;
+  width: 45px;
+}
+
 .appData-main th, .appData-main td {
   padding-top: 0;
   font-size: 15px;
   font-weight: 600;
+}
+
+.appData-main th .smaller, .appData-main td .smaller {
+  font-size: 13px;
+  font-weight: normal;
 }
 
 .appData-details {

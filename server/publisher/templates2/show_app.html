@@ -17,9 +17,9 @@
             <div>
               <form action="{% url publisher_app_update_ajax app_key=app.key %}" method="POST" accept-charset="utf-8" id="appForm" class="appEditForm">
                 <fieldset id="appForm-details" class="alt">
-									<div id="appForm-fragment">
-										{{app_form_fragment}}
-									</div>
+                  <div id="appForm-fragment">
+{{app_form_fragment}}
+                  </div>
                   <div class="form-submit"> 
                     <span class="buttonWrap"><a href="#" class="button" id="appEditForm-submit">Save</a></span> 
                     <span class="buttonWrap"><a href="#" class="button" id="appEditForm-cancel">Cancel</a></span> 
@@ -31,26 +31,46 @@
           
           <section class="offset nomargin" id="dashboard-stats">
             <div class="stats">
-              <table class="stats-breakdown">
-                <tbody>
-                  <tr class="active" id="stats-breakdown-requests">
-                    <td class="stats-breakdown-value"><span class="inner">{{app.stats.request_count|withsep}}</span></td>
-                    <th class="stats-breakdown-name"><span class="inner">Requests</span></th>
-                  </tr>
-                  <tr id="stats-breakdown-impressions">
-                    <td class="stats-breakdown-value"><span class="inner">{{app.stats.impression_count|withsep}}</span></td>
-                    <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
-                  </tr>
-                  <tr id="stats-breakdown-clicks">
-                    <td class="stats-breakdown-value"><span class="inner">{{app.stats.click_count|withsep}}</span></td>
-                    <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
-                  </tr>
-                  <tr id="stats-breakdown-users">
-                    <td class="stats-breakdown-value"><span class="inner">{{app.stats.unique_user_count|withsep}}</span></td>
-                    <th class="stats-breakdown-name"><span class="inner">Users</span></th>
-                  </tr>
-                </tbody>
-              </table>
+              <div class="stats-breakdown">
+                <table>
+                  <tbody>
+                    <tr class="active" id="stats-breakdown-requests">
+                      <td class="stats-breakdown-value today"><span class="inner">{{today.request_count|withsep}}</span></td>
+                      <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.request_count|withsep}}</span></td>
+                      <td class="stats-breakdown-value all"><span class="inner">{{app.stats.request_count|withsep}}</span></td>
+                      <th class="stats-breakdown-name"><span class="inner">Requests</span></th>
+                    </tr>
+                    <tr id="stats-breakdown-impressions">
+                      <td class="stats-breakdown-value today"><span class="inner">{{today.impression_count|withsep}}</span></td>
+                      <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.impression_count|withsep}}</span></td>
+                      <td class="stats-breakdown-value all"><span class="inner">{{app.stats.impression_count|withsep}}</span></td>
+                      <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
+                    </tr>
+                    <tr id="stats-breakdown-clicks">
+                      <td class="stats-breakdown-value today"><span class="inner">{{today.click_count|withsep}}</span></td>
+                      <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.click_count|withsep}}</span></td>
+                      <td class="stats-breakdown-value all"><span class="inner">{{app.stats.click_count|withsep}}</span></td>
+                      <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
+                    </tr>
+                    <tr id="stats-breakdown-users">
+                      <td class="stats-breakdown-value today"><span class="inner">{{today.unique_user_count|withsep}}</span></td>
+                      <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.unique_user_count|withsep}}</span></td>
+                      <td class="stats-breakdown-value all"><span class="inner">{{app.stats.unique_user_count|withsep}}</span></td>
+                      <th class="stats-breakdown-name"><span class="inner">Users</span></th>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="stats-breakdown-buttons">
+                <span class="buttonset button-small" id="stats-breakdown-dateOptions">
+                  <input type="radio" name="stats-breakdown-dateOptions-option" value="today" id="stats-breakdown-dateOptions-option-0" checked="checked"/>
+                  <label for="stats-breakdown-dateOptions-option-0">Today</label>
+                  <input type="radio" name="stats-breakdown-dateOptions-option" value="yesterday" id="stats-breakdown-dateOptions-option-1"/>
+                  <label for="stats-breakdown-dateOptions-option-1">Yesterday</label>
+                  <input type="radio" name="stats-breakdown-dateOptions-option" value="all" id="stats-breakdown-dateOptions-option-2"/>
+                  <label for="stats-breakdown-dateOptions-option-2">All</label>
+                </span>
+              </div>
               <div class="chart chart-loading stats-chart" id="dashboard-stats-chart">
                 <div class="chart-loading-text">Loading ...</div>
                 <div class="chart-error-text">Could not load chart</div>
@@ -61,16 +81,16 @@
                     pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
                     pointInterval: 86400000,
                     'requests': [{% for au in app.graph_adunits %}
-                      { '{{au.name}}': [{% for t in au.all_stats %}{{t.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                      { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                     ],
                     'impressions': [{% for au in app.graph_adunits %}
-                      { '{{au.name}}': [{% for t in au.all_stats %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                      { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                     ],
                     'clicks': [{% for au in app.graph_adunits %}
-                      { '{{au.name}}': [{% for t in au.all_stats %}{{t.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                      { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                     ],
                     'users': [{% for au in app.graph_adunits %}
-                      { '{{au.name}}': [{% for t in au.all_stats %}{{t.unique_user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                      { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.unique_user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                     ]
                   };
                 </script>

@@ -34,33 +34,39 @@ var mopub = mopub || {};
     }).filter(':checked').click(); // make sure we're in sync when the page loads
   }
    
-   campaignAdgroupFormOnLoad(); 
+  campaignAdgroupFormOnLoad(); 
   
-   var options = { 
-     data: { ajax: true },
-     dataType : 'json',
-      success:    function(jsonData, statusText, xhr, $form) {
-         if (jsonData.success){
-           $('#campaignAdgroupForm-success').show(); // show message
-           console.log(jsonData.adgroup_key);
-            window.location = jsonData.new_page;
-         }
-         else{
-           $('#campaignAdgroupForm-fragment').html(jsonData.html);
-           // reimplement the onload event
-           campaignAdgroupFormOnLoad();
-          }
-        } 
-    };
-   $('#campaignAdgroupForm').ajaxForm(options);
+  var options = { 
+    data: { ajax: true },
+    dataType: 'json',
+    success:    function(jsonData, statusText, xhr, $form) {
+      if (jsonData.success){
+        $('#campaignAdgroupForm-success').show(); // show message
+        console.log(jsonData.adgroup_key);
+        window.location = jsonData.new_page;
+      }
+      else{
+        $('#campaignAdgroupForm-fragment').html(jsonData.html);
+        // reimplement the onload event
+        campaignAdgroupFormOnLoad();
+      }
+    }
+  };
+  $('#campaignAdgroupForm').ajaxForm(options);
 
-    // set up "Help" links
-    $('#campaignForm-type-helpLink').click(function(e) {
-      e.preventDefault();
-      $('#campaignForm-type-helpContent').dialog({ 
-        buttons: { "Close": function() { $(this).dialog("close"); } }
-      });
+  // set up "Help" links
+  $('#campaignForm-type-helpLink').click(function(e) {
+    e.preventDefault();
+    $('#campaignForm-type-helpContent').dialog({ 
+      buttons: { "Close": function() { $(this).dialog("close"); } }
     });
+  });
+  $('#campaignForm-bid-helpLink').click(function(e) {
+    e.preventDefault();
+    $('#campaignForm-bid-helpContent').dialog({ 
+      buttons: { "Close": function() { $(this).dialog("close"); } }
+    });
+  });
   
   $('#campaignAdgroupForm input[name="start_date"]').datepicker({ minDate:0 });
   $('#campaignAdgroupForm input[name="end_date"]').datepicker({ minDate:0 });
@@ -275,6 +281,9 @@ var mopub = mopub || {};
       });
       
     $('#adgroupEditForm-submit')
+      .button({ 
+        icons: { secondary: "ui-icon-circle-triangle-e" } 
+      })
       .click(function(e){
         e.preventDefault();
         $('#campaignAdgroupForm').submit()
@@ -314,7 +323,9 @@ var mopub = mopub || {};
     });
     
     $('#creativeCreateForm-submit')
-      .button()
+      .button({ 
+        icons: { secondary: "ui-icon-circle-triangle-e" } 
+      })
       .click(function(e) {
         e.preventDefault();
         $('#creativeCreateForm').submit();

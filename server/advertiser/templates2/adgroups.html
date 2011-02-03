@@ -28,7 +28,7 @@
                   <tbody>
                     <tr class="active" id="stats-breakdown-revenue">
                       <td class="stats-breakdown-value"><span class="inner">{{totals.revenue|currency}}</span></td>
-                      <th class="stats-breakdown-name"><span class="inner">Revenue (est.)</span></th>
+                      <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
                     </tr>
                     <tr id="stats-breakdown-impressions">
                       <td class="stats-breakdown-value"><span class="inner">{{totals.impression_count|withsep}}</span></td>
@@ -103,9 +103,23 @@
                       {% if c.active and not c.deleted %}<img src="/images/active.gif" height=9 width=9></img>{% endif %}
                       {% if not c.active and not c.deleted %}<img src="/images/paused.gif" height=9 width=9></img>{% endif %}
                     </th> 
-                    <th class="dataTable-name"><a href="{% url advertiser_adgroup_show adgroup_key=c.key %}">{{c.name}}</a></th>
+                    <th class="dataTable-name">
+						<a href="{% url advertiser_adgroup_show adgroup_key=c.key %}">{{c.name}}</a><br/>
+						<span class="muted">
+							{% if c.start_date and c.end_date %}
+								{{c.start_date|format_date_compact}}-{{c.end_date|format_date_compact}}.
+							{% endif %} {% if c.start_date and not c.end_date %}
+								Starts {{c.start_date|format_date_compact}}.
+							{% endif %} {% if not c.start_date and c.end_date %}
+								Ends {{c.start_date|format_date_compact}}.
+							{% endif %} {% if not c.start_date and not c.end_date %}
+								No schedule.
+							{% endif %}
+							{% if c.budget %}{{c.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
+						</span>
+					</th>
                     <td class="dataTable-data numeric">{{c.bid|currency}}</td>
-                    <td class="dataTable-data numeric">In-flight</td>
+                    <td class="dataTable-data numeric">{{c|campaign_status}}</td>
                     <td class="dataTable-data numeric">{{c.stats.impression_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{c.stats.click_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{c.stats.ctr|percentage|withsep}}</td>
@@ -152,9 +166,23 @@
                       {% if c.active and not c.deleted %}<img src="/images/active.gif" height=9 width=9></img>{% endif %}
                       {% if not c.active and not c.deleted %}<img src="/images/paused.gif" height=9 width=9></img>{% endif %}
                     </th> 
-                    <th class="dataTable-name"><a href="{% url advertiser_adgroup_show adgroup_key=c.key %}">{{c.name}}</a></th>
+                    <th class="dataTable-name">
+						<a href="{% url advertiser_adgroup_show adgroup_key=c.key %}">{{c.name}}</a><br/>
+						<span class="muted">
+							{% if c.start_date and c.end_date %}
+								{{c.start_date|format_date_compact}}-{{c.end_date|format_date_compact}}.
+							{% endif %} {% if c.start_date and not c.end_date %}
+								Starts {{c.start_date|format_date_compact}}.
+							{% endif %} {% if not c.start_date and c.end_date %}
+								Ends {{c.start_date|format_date_compact}}.
+							{% endif %} {% if not c.start_date and not c.end_date %}
+								No schedule.
+							{% endif %}
+							{% if c.budget %}{{c.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
+						</span>
+					</th>
                     <td class="dataTable-data numeric">{{c.bid|currency}}</td>
-					<td class="dataTable-data numeric">In-flight</td>
+					<td class="dataTable-data numeric">{{c|campaign_status}}</td>
                     <td class="dataTable-data numeric">{{c.stats.impression_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{c.stats.click_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{c.stats.ctr|percentage|withsep}}</td>
@@ -183,7 +211,7 @@
                   <tr>
                     <th class="campaignData-icon"></th>
                     <th class="dataTable-name">Name</th>
-                    <th class="dataTable-data numeric">CPM</th>
+                    <th class="dataTable-data numeric">eCPM</th>
                     <th class="dataTable-data numeric">Requests</th>
                     <th class="dataTable-data numeric">Impressions</th>
                     <th class="dataTable-data numeric">Clicks</th>
@@ -201,7 +229,10 @@
                       {% if c.active and not c.deleted %}<img src="/images/active.gif" height=9 width=9></img>{% endif %}
                       {% if not c.active and not c.deleted %}<img src="/images/paused.gif" height=9 width=9></img>{% endif %}
                     </th> 
-                    <th class="dataTable-name"><a href="{% url advertiser_adgroup_show adgroup_key=c.key %}">{{c.name}}</a></th>
+                    <th class="dataTable-name">
+						<a href="{% url advertiser_adgroup_show adgroup_key=c.key %}">{{c.name}}</a><br/>
+						<span class="muted">{{c.network_type}}</span>
+					</th>
                     <td class="dataTable-data numeric">{{c.bid|currency}}</td>
                     <td class="dataTable-data numeric">{{c.stats.request_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{c.stats.impression_count|withsep}}</td>

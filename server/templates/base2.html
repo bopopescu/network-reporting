@@ -88,12 +88,6 @@
 {% block dateButtons %}
           <div id="titlebar-center">
             <span class="buttonset" id="dashboard-dateOptions">
-              <!--
-              <input type="radio" name="dashboard-dateOptions-option" value="0" id="dashboard-dateOptions-option-0" {% ifequal date_range 0 %}checked="checked" {% endifequal %}/>
-              <label for="dashboard-dateOptions-option-0">Today</label>
-              <input type="radio" name="dashboard-dateOptions-option" value="1" id="dashboard-dateOptions-option-1" {% ifequal date_range 1 %}checked="checked" {% endifequal %}/>
-              <label for="dashboard-dateOptions-option-1">Yesterday</label>
-              -->
               <input type="radio" name="dashboard-dateOptions-option" value="7" id="dashboard-dateOptions-option-7" {% ifequal date_range 7 %}checked="checked" {% endifequal %}/>
               <label for="dashboard-dateOptions-option-7">7 days</label>
               <input type="radio" name="dashboard-dateOptions-option" value="14" id="dashboard-dateOptions-option-14" {% ifequal date_range 14 %}checked="checked" {% endifequal %}{% if not date_range %}checked="checked" {% endif %}/>

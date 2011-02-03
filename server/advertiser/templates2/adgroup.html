@@ -15,6 +15,11 @@
 {% endblock titleBarRight %}
 
 {% block content %}
+{% if not adunits %}
+          <div class="alertMessage error">
+            This campaign is not targeted at any <strong>Ad Units</strong>.  In order for this campaign to deliver, you will need to target at least one Ad Unit.
+          </div>
+{% endif %}
           <section id="advertiser-adgroupEditForm" class="hidden">
             <div>
               <form action="{% url advertiser_campaign_create_ajax %}" method="POST" accept-charset="utf-8" id="campaignAdgroupForm" class="">
@@ -31,11 +36,6 @@
               </form>
             </div>
           </section>
-{% if not adunits %}
-          <div class="alertMessage error">
-            This campaign is not targeted at any <strong>Ad Units</strong>.  In order for this campaign to deliver, you will need to target at least one Ad Unit.
-          </div>
-{% endif %}
           <div class="separated" id="chartWrapper">
             <section class="offset nomargin" id="dashboard-stats">
               <div class="stats">

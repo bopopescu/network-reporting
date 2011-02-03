@@ -20,6 +20,11 @@
             This campaign is not targeted at any <strong>Ad Units</strong>.  In order for this campaign to deliver, you will need to target at least one Ad Unit.
           </div>
 {% endif %}
+{% if not creatives %}
+          <div class="alertMessage error">
+            This campaign will need to have at least one <strong>Creative</strong> in order to serve.  Set up a creative below.
+          </div>
+{% endif %}
           <section id="advertiser-adgroupEditForm" class="hidden">
             <a name='adgroupEditForm' class="hidden">adgroupEditForm</a>
             <div>

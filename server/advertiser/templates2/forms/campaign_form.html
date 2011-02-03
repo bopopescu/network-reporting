@@ -17,7 +17,6 @@
                           <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="network" id="advertiser-CampaignType-network" {% ifequal form.campaign_type.value "network" %}checked="checked"{% endifequal %}/> <label for="advertiser-CampaignType-network">Network</label>
                           {% endif %}
                             
-                          <a href="#" id="campaignForm-type-helpLink">What's this?</a>
                           {% if form.instance %} 
                             {% ifequal form.campaign_type.value 'network' %}  
                           </div>
@@ -29,6 +28,7 @@
                           {% endifequal %}
                           {% endif %}
                         </span>
+                        <a href="#" id="campaignForm-type-helpLink">What's this?</a>
                         <div id="campaignForm-type-helpContent" class="hidden"> 
                           <h3>Campaign Type</h3>
                           <h4>Guaranteed</h4>

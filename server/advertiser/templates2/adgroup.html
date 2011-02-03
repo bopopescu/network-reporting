@@ -115,9 +115,9 @@
                       <th class="dataTable-name">
                       {{adunit.app.name}} &gt; <a href="{% url publisher_adunit_show adunit_key=adunit.key %}">{{adunit.name}}</a>
                       </th>
-                      <td class="dataTable-data">{{adunit.stats.impression_count|withsep}}</td>
-                      <td class="dataTable-data">{{adunit.stats.click_count|withsep}}</td>
-                      <td class="dataTable-data">{{adunit.stats.revenue|currency}}</td>
+                      <td class="dataTable-data numeric">{{adunit.stats.impression_count|withsep}}</td>
+                      <td class="dataTable-data numeric">{{adunit.stats.click_count|withsep}}</td>
+                      <td class="dataTable-data numeric">{{adunit.stats.revenue|currency}}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -200,9 +200,9 @@
                           <img src="/images/paused.gif" width="9" height="9"/> 
                           {% endif %} 
                         </th>
-                        <th class="dataTable-data">{{c.stats.impression_count|withsep}}</th>
-                        <th class="dataTable-data">{{c.stats.click_count|withsep}}</th>
-                        <th class="dataTable-data">{{c.stats.revenue|currency}}</th>
+                        <th class="dataTable-data numeric">{{c.stats.impression_count|withsep}}</th>
+                        <th class="dataTable-data numeric">{{c.stats.click_count|withsep}}</th>
+                        <th class="dataTable-data numeric">{{c.stats.revenue|currency}}</th>
                       </tr>
                     </tbody>
                   </table>

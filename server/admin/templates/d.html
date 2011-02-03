@@ -21,14 +21,14 @@
 		{% for s in stats %}
 		<tr>
 			<td>{{s.date}}</td>
-			<td class="numeric">{{s.request_count}}</td>
-			<td class="numeric">{{s.click_count}}</td>
+			<td class="numeric">{{s.request_count|withsep}}</td>
+			<td class="numeric">{{s.click_count|withsep}}</td>
 		</tr>
 		{% endfor %}
 		<tr>
 			<td><strong>Total</strong></td>
-			<td class="numeric">{{request_count}}</td>
-			<td class="numeric">{{click_count}}</td>
+			<td class="numeric">{{request_count|withsep}}</td>
+			<td class="numeric">{{click_count|withsep}}</td>
 		</tr>
 		
 	</table>
@@ -45,8 +45,8 @@
 		<tr>
 			<td>{{p.site.name}}</td>
 			<td><a href="mailto:{{p.site.account.user.email}}">{{p.site.account.user.email}}</a></td>
-			<td class="numeric">{{p.request_count}}</td>
-			<td class="numeric">{{p.click_count}}</td>
+			<td class="numeric">{{p.request_count|withsep}}</td>
+			<td class="numeric">{{p.click_count|withsep}}</td>
 		</tr>
 		{% endfor %}
 	</table>

@@ -8,21 +8,27 @@ register = template.Library()
 
 def currency(value):
   if value:
-    return "$%1.2f" % value
+    return "$%s%s" % (withsep(int(value)), ("%0.2f" % value)[-3:])
   else:
-    return "$0.00"
+    return ""
     
 def currency_no_symbol(value):
   if value:
-    return "%1.2f" % value
+    return "%s%s" % (withsep(int(value)), ("%0.2f" % value)[-3:])
   else:
     return ""
 
 def percentage(value):
-  return "%1.1f%%" % ((value or 0) * 100)
+  if value:
+  	return "%1.1f%%" % ((value or 0) * 100)
+  else:
+	return ""	
   
 def withsep(x):
-  return re.sub(r'(\d{3})(?=\d)', r'\1,', str(x)[::-1])[::-1] 
+  if x:
+  	return re.sub(r'(\d{3})(?=\d)', r'\1,', str(x)[::-1])[::-1] 
+  else:
+	return ""
   
 def format_date(value):
   return value.strftime("%a, %b %d, %Y")

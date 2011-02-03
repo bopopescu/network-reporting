@@ -105,8 +105,8 @@ function setApp(name,url,key) {
 		{% for s in sites %}
 			<tr>
 				<td>{{s.app.name}} > <a href="{% url publisher_adunit_show adunit_key=s.key %}">{{s.name}}</a></td>
-				<td class="numeric">{{s.stats.impression_count}}</td>
-				<td class="numeric">{{s.stats.click_count}} ({{s.stats.ctr|percentage}})</td>
+				<td class="numeric">{{s.stats.impression_count|withsep}}</td>
+				<td class="numeric">{{s.stats.click_count|withsep}} ({{s.stats.ctr|percentage}})</td>
 				<td class="numeric">{{s.stats.revenue|currency}}</td>
 			</tr>
 		{% empty %}
@@ -293,8 +293,8 @@ function setApp(name,url,key) {
 						{% endif %}
 					</b>
 				</td>
-				<td class="numeric">{{c.stats.impression_count}}</td>
-				<td class="numeric">{{c.stats.click_count}} ({{c.stats.ctr|percentage}})</td>
+				<td class="numeric">{{c.stats.impression_count|withsep}}</td>
+				<td class="numeric">{{c.stats.click_count|withsep}} ({{c.stats.ctr|percentage}})</td>
 				<td class="numeric">{{c.stats.revenue|currency}}</td>
 			</tr>
 		{% endfor %}

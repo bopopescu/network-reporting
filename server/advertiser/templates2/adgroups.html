@@ -34,22 +34,6 @@
           </div>
 {% endifnotequal %}{% endblock dateButtons %}
 
-{% block titleBarRight %}
-{% ifequal account.status 'step4' %}            
-<div class="stepProgress"> 
-  <span class="stepProgress-step">Step 1: Add app</span> 
-  <span class="ui-icon ui-icon-arrow-1-e"></span> 
-  <span class="stepProgress-step">Step 2: Integrate</span> 
-  <span class="ui-icon ui-icon-arrow-1-e"></span> 
-  <span class="stepProgress-step">Step 3: Ad networks</span> 
-  <span class="ui-icon ui-icon-arrow-1-e"></span> 
-  <span class="stepProgress-step stepProgress-active">Step 4: Ad campaigns</span> 
-</div>
-{% endifequal %}
-{% endblock titleBarRight %}
-
-{% block messageCenter %}{% endblock messageCenter %}
-
 {% block content %}
 {% ifequal account.status "step4" %}
 <div class="alertMessage">

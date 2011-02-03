@@ -32,12 +32,10 @@ var mopub = mopub || {};
         $('#bid-max').attr('name','bid');
       }    
     }).filter(':checked').click(); // make sure we're in sync when the page loads
-		
-		console.log($('#adgroupForm-advanced-toggleButton'));
+    
     $('#adgroupForm-advanced-toggleButton')
       .button('option', {icons: { primary: 'ui-icon-triangle-1-s' }})
       .click(function(e) {
-				console.log('button clicked');
         e.preventDefault();
         var buttonTextElem = $('.ui-button-text', this);
         if ($('.adgroupForm-advanced').is(':hidden')) {
@@ -140,7 +138,7 @@ var mopub = mopub || {};
    data: { ajax: true },
    dataType : 'json',
     success:    function(jsonData) { 
-			 $('#creativeCreateForm-loading').hide();
+       $('#creativeCreateForm-loading').hide();
        if (jsonData.success){
          $('#creativeCreateForm-success').show(); // show message
          $('#advertiser-creativeAddForm')
@@ -160,8 +158,8 @@ var mopub = mopub || {};
                .find('.adTypeDependent').hide().end()
                .find('.'+$(this).val()).show().end();
            }).filter(':checked').click();
-				 window.location.hash = '';	
-				 window.location.hash = 'advertiser-creativeAddForm';	
+         window.location.hash = ''; 
+         window.location.hash = 'advertiser-creativeAddForm'; 
         }
       } 
     };
@@ -173,7 +171,7 @@ var mopub = mopub || {};
         data: { ajax : true , },
         dataType : 'json',
         success: function(jsonData, statusText, xhr, $form){
-					$form.find('.creativeEditForm-loading').hide();
+          $form.find('.creativeEditForm-loading').hide();
           if (jsonData.success){
             $form.find('.creativeCreateForm-success').show();
             $form.parent()
@@ -191,9 +189,8 @@ var mopub = mopub || {};
                   .find('.adTypeDependent').hide().end()
                   .find('.'+$(this).val()).show().end();
               }).filter(':checked').click();
-						console.log($form.prev("a").attr('name'));
-						window.location.hash = '';		
-						window.location.hash = $form.prev("a").attr('name');
+            window.location.hash = '';    
+            window.location.hash = $form.prev("a").attr('name');
           }
         }
       }
@@ -203,8 +200,8 @@ var mopub = mopub || {};
     $('.creativeEditForm-submit')
       .button()
       .click(function(e) {
-	      e.preventDefault();
-				$(this).parents('form').find('.creativeEditForm-loading').show();
+        e.preventDefault();
+        $(this).parents('form').find('.creativeEditForm-loading').show();
         $(this).parents('form').submit();
     });
     
@@ -286,7 +283,7 @@ var mopub = mopub || {};
       .button({ icons : {secondary : 'ui-icon-circle-triangle-e'} })
       .click(function(e){
         e.preventDefault();
-				$('#campaignAdgroupForm-loading').show();
+        $('#campaignAdgroupForm-loading').show();
         $('#campaignAdgroupForm').submit();
       });
     
@@ -318,7 +315,7 @@ var mopub = mopub || {};
       })
       .click(function(e){
         e.preventDefault();
-				$('#campaignAdgroupForm-loading').show();
+        $('#campaignAdgroupForm-loading').show();
         $('#campaignAdgroupForm').submit()
       });
     $('#campaignForm-pause')
@@ -344,8 +341,8 @@ var mopub = mopub || {};
         icons: { secondary: "ui-icon-circle-triangle-e" } 
       })
       .click(function(e) {
-				e.preventDefault();
-				$('#creativeCreateForm-loading').show();
+        e.preventDefault();
+        $('#creativeCreateForm-loading').show();
         $('#creativeCreateForm').submit();
     });
     

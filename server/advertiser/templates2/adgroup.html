@@ -105,32 +105,34 @@
                     </tr>
                 </thead>
                 <tbody>
-	            {% for adunit in adunits %}
-                	<tr class="{% cycle 'campaignData' 'campaignData campaignData-alt' %}" id="adgroup-adunits-{{forloop.counter0}}">
-	                  <td class="campaignData-icon">
-						<a href="{% url publisher_app_show app_key=adunit.app.key %}">
-		                    {% if adunit.app.icon %}
-		                    <img src="{{adunit.app.icon|binary_data}}" alt="Icon" width="45" height="45"/>
-		                    {% else %}
-		                    <img src="/images/noicon.png">
-		                    {% endif %}
-						</a>
-	                  </td> 
-	                  <th class="dataTable-name">
-	                    <a href="{% url publisher_app_show app_key=adunit.app.key %}">{{adunit.app.name}}</a><br/>
-	                    <span class="smaller"><a href="{% url publisher_adunit_show adunit_key=adunit.key %}">{{adunit.name}}</a></span>
-	                  </th>
-	                  <td class="dataTable-data numeric"></td>
-	                  <td class="dataTable-data numeric"></td>
-	                  <td class="dataTable-data numeric"></td>
-	                  <td class="dataTable-data numeric"></td>
-	                  <td class="dataTable-data numeric">{{adunit.stats.impression_count|withsep}}</td>
-	                  <td class="dataTable-data numeric">{{adunit.stats.click_count|withsep}}</td>
-	                  <td class="dataTable-data numeric">{{adunit.stats.revenue|currency}}</td>
-	                </tr>
-	            {% endfor %}
-				</tbody>
-			  </table>
+              {% for adunit in adunits %}
+                  <tr class="{% cycle 'campaignData' 'campaignData campaignData-alt' %}" id="adgroup-adunits-{{forloop.counter0}}">
+                    <td class="campaignData-icon">
+                      <a href="{% url publisher_app_show app_key=adunit.app.key %}">
+                        {% if adunit.app.icon %}
+                        <img src="{{adunit.app.icon|binary_data}}" alt="Icon" width="45" height="45"/>
+                        {% else %}
+                        <img src="/images/noicon.png">
+                        {% endif %}
+                      </a>
+                    </td> 
+                    <th class="dataTable-name">
+                      <a href="{% url publisher_app_show app_key=adunit.app.key %}">{{adunit.app.name}}</a><br/>
+                      <span class="smaller"><a href="{% url publisher_adunit_show adunit_key=adunit.key %}">{{adunit.name}}</a></span>
+                    </th>
+                    <td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric">{{adunit.stats.impression_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{adunit.stats.click_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{adunit.stats.revenue|currency}}</td>
+                  </tr>
+              {% empty %}    
+                  
+              {% endfor %}
+        </tbody>
+        </table>
             </section>
 
             {% ifnotequal campaign.campaign_type "network" %}
@@ -160,8 +162,8 @@
                 </div>
               </section>
 
-			  {% for c in creatives %}
-				 <div id="{{c.key}}-edit" class="hidden advertiser-creativeEditForm">
+        {% for c in creatives %}
+         <div id="{{c.key}}-edit" class="hidden advertiser-creativeEditForm">
                  <form action="{% url advertiser_creative_create %}" method="POST" accept-charset="utf-8" id="creativeEditForm-{{forloop.counter0}}" enctype="multipart/form-data" class="creativeEditForm">
                    <input type="hidden" name="adgroup_key" value="{{adgroup.key}}"/>
                    <input type="hidden" name="creative_key" value="{{c.key}}"/>
@@ -178,66 +180,66 @@
                    </fieldset>
                  </form>
                </div>
-			  {% endfor %}
-			
+        {% endfor %}
+      
               <section id="advertiser-creativeData">
-	              <table class="campaignData-main dataTable" id="dashboard-apps2-columnHeaders">
-	                <thead>
-	                  <tr>
-	                    <th class="campaignData-icon"></th>                      
-	                    <th class="dataTable-name">Creative</th>
-	                    <th class="dataTable-data numeric"></th>
-	                    <th class="dataTable-data numeric"></th>
-	                    <th class="dataTable-data numeric"></th>
-	                    <th class="dataTable-data numeric"></th>
-	                    <th class="dataTable-data numeric">Impressions</th>
-	                    <th class="dataTable-data numeric">Clicks</th>
-	                    <th class="dataTable-data numeric">Cost</th>
-	                  </tr>
-	                </thead>
-					        <tbody>
-	               	{% for c in creatives %}
-	                     <tr class="{% cycle 'campaignData' 'campaignData campaignData-alt' %}" id="adgroup-creatives-{{forloop.counter0}}">
-	                       <td class="campaignData-icon">
-	                         <input type="checkbox" name="creativeManagementForm-key" value="{{c.key}}"/>
-	                         {% if c.deleted %} 
-	                         <img src="/images/deleted.gif" width="9" height="9"/> 
-	                         {% endif %} 
-	                         {% if c.active and not c.deleted %} 
-	                         <img src="/images/active.gif" width="9" height="9"/> 
-	                         {% endif %} 
-	                         {% if not c.active and not c.deleted %} 
-	                         <img src="/images/paused.gif" width="9" height="9"/> 
-	                         {% endif %}
-			               </td>
-	                       <th class="dataTable-name">
-	                         {{c.name}}
-		
-	                         <div class="creative hidden" id="{{c.key}}-preview">
-	                           <h3>{{c.name}}</h3>
-	                           <div>
-	                             <iframe src="{% url advertiser_creative_html creative_key=c.key %}" frameborder="0" scrolling="no" width="320" height="50">
-	                               <p>Your browser does not support iframes.</p>
-	                             </iframe>
-	                           </div>
-	                         </div>
-	                         <div class="clear"></div>
-	                         <span class="buttonWrap">
-	                           <a class="button button-small advertiser-inLineCreativeToggle" href="#" id="{{c.key}}">Edit Creative</a>
-	                         </span>                 
-	                         <span class="buttonWrap">
-	                           <a class="button button-small advertiser-inLineCreativePreview" href="#" id="{{c.key}}">Preview Creative</a>
-	                         </span>                 
-			               </th>
-	                       <td class="dataTable-data numeric"></td>
-	                       <td class="dataTable-data numeric"></td>
-	                       <td class="dataTable-data numeric"></td>
-	                       <td class="dataTable-data numeric"></td>
-	                       <td class="dataTable-data numeric">{{c.stats.impression_count|withsep}}</td>
-	                       <td class="dataTable-data numeric">{{c.stats.click_count|withsep}}</td>
-	                       <td class="dataTable-data numeric">{{c.stats.revenue|currency}}</td>
-	                     </tr>
-					{% endfor %}
+                <table class="campaignData-main dataTable" id="dashboard-apps2-columnHeaders">
+                  <thead>
+                    <tr>
+                      <th class="campaignData-icon"></th>                      
+                      <th class="dataTable-name">Creative</th>
+                      <th class="dataTable-data numeric"></th>
+                      <th class="dataTable-data numeric"></th>
+                      <th class="dataTable-data numeric"></th>
+                      <th class="dataTable-data numeric"></th>
+                      <th class="dataTable-data numeric">Impressions</th>
+                      <th class="dataTable-data numeric">Clicks</th>
+                      <th class="dataTable-data numeric">Cost</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  {% for c in creatives %}
+                       <tr class="{% cycle 'campaignData' 'campaignData campaignData-alt' %}" id="adgroup-creatives-{{forloop.counter0}}">
+                         <td class="campaignData-icon">
+                           <input type="checkbox" name="creativeManagementForm-key" value="{{c.key}}"/>
+                           {% if c.deleted %} 
+                           <img src="/images/deleted.gif" width="9" height="9"/> 
+                           {% endif %} 
+                           {% if c.active and not c.deleted %} 
+                           <img src="/images/active.gif" width="9" height="9"/> 
+                           {% endif %} 
+                           {% if not c.active and not c.deleted %} 
+                           <img src="/images/paused.gif" width="9" height="9"/> 
+                           {% endif %}
+                     </td>
+                         <th class="dataTable-name">
+                           {{c.name}}
+    
+                           <div class="creative hidden" id="{{c.key}}-preview">
+                             <h3>{{c.name}}</h3>
+                             <div>
+                               <iframe src="{% url advertiser_creative_html creative_key=c.key %}" frameborder="0" scrolling="no" width="320" height="50">
+                                 <p>Your browser does not support iframes.</p>
+                               </iframe>
+                             </div>
+                           </div>
+                           <div class="clear"></div>
+                           <span class="buttonWrap">
+                             <a class="button button-small advertiser-inLineCreativeToggle" href="#" id="{{c.key}}">Edit Creative</a>
+                           </span>                 
+                           <span class="buttonWrap">
+                             <a class="button button-small advertiser-inLineCreativePreview" href="#" id="{{c.key}}">Preview Creative</a>
+                           </span>                 
+                     </th>
+                         <td class="dataTable-data numeric"></td>
+                         <td class="dataTable-data numeric"></td>
+                         <td class="dataTable-data numeric"></td>
+                         <td class="dataTable-data numeric"></td>
+                         <td class="dataTable-data numeric">{{c.stats.impression_count|withsep}}</td>
+                         <td class="dataTable-data numeric">{{c.stats.click_count|withsep}}</td>
+                         <td class="dataTable-data numeric">{{c.stats.revenue|currency}}</td>
+                       </tr>
+          {% endfor %}
                    </tbody>
                  </table>
                 <div class="form-submit-left">

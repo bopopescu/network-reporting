@@ -1,0 +1,283 @@
+TSimpleAds
+v7
+r0
+t306451878.627899
+cCheck dependencies
+cProcessInfoPlistFile /Users/njamal/programs/mopub/client/iPhone/build/Debug-iphonesimulator/SimpleAds.app/Info.plist SimpleAds-Info.plist
+cCompileXIB /Users/njamal/programs/mopub/client/iPhone/Classes/MainWindow.xib
+cCompileXIB /Users/njamal/programs/mopub/client/iPhone/Classes/SimpleAdsViewController.xib
+cCompileXIB /Users/njamal/programs/mopub/client/iPhone/SDK/AdClickController.xib
+cProcessPCH /var/folders/Ny/NyTmLyDbEZqzR2JIsC-ybE+++TI/-Caches-/com.apple.Xcode.501/SharedPrecompiledHeaders/SimpleAds_Prefix-ekrrmihgtmhezfbymribisouknzr/SimpleAds_Prefix.pch.gch SimpleAds_Prefix.pch normal i386 objective-c com.apple.compilers.gcc.4_2
+
+N/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator4.0.sdk
+c000000004C5A11690000000000000132
+t1280971113
+s306
+
+N/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator4.0.sdk/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics
+c000000004BFDFE39000000000027C7D0
+t1274936889
+s2607056
+
+N/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator4.0.sdk/System/Library/Frameworks/CoreLocation.framework/Headers/CoreLocation.h
+c000000004BFF44B600000000000001D0
+t1275020470
+s464
+
+N/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator4.0.sdk/System/Library/Frameworks/Foundation.framework/Foundation
+c000000004BFDFE7C000000000029D5D0
+t1274936956
+s2741712
+
+N/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator4.0.sdk/System/Library/Frameworks/UIKit.framework/Headers/UIKit.h
+c000000004C0470BB00000000000009CD
+t1275359419
+s2509
+
+N/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator4.0.sdk/System/Library/Frameworks/UIKit.framework/UIKit
+c000000004C0471620000000001D47210
+t1275359586
+s30700048
+
+N/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator4.0.sdk/System/Library/Frameworks/iAd.framework/Headers/iAd.h
+c000000004C0473C80000000000000071
+t1275360200
+s113
+
+N/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator4.0.sdk/System/Library/Frameworks/iAd.framework/iAd
+c000000004C0473CB000000000004A930
+t1275360203
+s305456
+
+N/Users/njamal/programs/mopub/client/iPhone/Classes/MainWindow.xib
+c000000004C8E73BF000000000000266C
+t1284404159
+s9836
+
+N/Users/njamal/programs/mopub/client/iPhone/Classes/SimpleAdsAppDelegate.h
+c000000004C8E73BF00000000000001E0
+t1284404159
+s480
+i<UIKit/UIKit.h>
+
+N/Users/njamal/programs/mopub/client/iPhone/Classes/SimpleAdsAppDelegate.m
+c000000004C8E73BF00000000000002A2
+t1284404159
+s674
+i"SimpleAdsAppDelegate.h"
+i"SimpleAdsViewController.h"
+
+N/Users/njamal/programs/mopub/client/iPhone/Classes/SimpleAdsViewController.h
+c000000004C8E73BF00000000000002C4
+t1284404159
+s708
+i<UIKit/UIKit.h>
+i"AdController.h"
+
+N/Users/njamal/programs/mopub/client/iPhone/Classes/SimpleAdsViewController.m
+c000000004C8E73BF0000000000000BE6
+t1284404159
+s3046
+i"SimpleAdsViewController.h"
+i"AdController.h"
+i<iAd/iAd.h>
+
+N/Users/njamal/programs/mopub/client/iPhone/Classes/SimpleAdsViewController.xib
+c000000004C8E73BF0000000000005FCA
+t1284404159
+s24522
+
+N/Users/njamal/programs/mopub/client/iPhone/SDK/AdClickController.h
+c000000004C92B3AB00000000000005AD
+t1284682667
+s1453
+i<UIKit/UIKit.h>
+i"AdController.h"
+
+N/Users/njamal/programs/mopub/client/iPhone/SDK/AdClickController.m
+c000000004C8E73BF0000000000001765
+t1284404159
+s5989
+i"AdClickController.h"
+
+N/Users/njamal/programs/mopub/client/iPhone/SDK/AdClickController.xib
+c000000004C8E73BF0000000000007B87
+t1284404159
+s31623
+
+N/Users/njamal/programs/mopub/client/iPhone/SDK/AdController.h
+c000000004C92B3AB000000000000083E
+t1284682667
+s2110
+i<UIKit/UIKit.h>
+i<CoreLocation/CoreLocation.h>
+i<iAd/iAd.h>
+
+N/Users/njamal/programs/mopub/client/iPhone/SDK/AdController.m
+c000000004C8E73BF0000000000002D41
+t1284404159
+s11585
+i"AdController.h"
+i"AdClickController.h"
+i<CoreLocation/CoreLocation.h>
+i<iAd/iAd.h>
+
+N/Users/njamal/programs/mopub/client/iPhone/SimpleAds_Prefix.pch
+c00000000000000000000000000000000
+t2
+s0
+
+N/Users/njamal/programs/mopub/client/iPhone/build/Debug-iphonesimulator/SimpleAds.app
+t2
+s0
+
+N/Users/njamal/programs/mopub/client/iPhone/build/Debug-iphonesimulator/SimpleAds.app.dSYM
+t2
+s0
+
+N/Users/njamal/programs/mopub/client/iPhone/build/Debug-iphonesimulator/SimpleAds.app/AdClickController.nib
+t1284759078
+s2153
+
+N/Users/njamal/programs/mopub/client/iPhone/build/Debug-iphonesimulator/SimpleAds.app/Info.plist
+t1284759066
+s599
+
+N/Users/njamal/programs/mopub/client/iPhone/build/Debug-iphonesimulator/SimpleAds.app/MainWindow.nib
+t1284759077
+s1103
+
+N/Users/njamal/programs/mopub/client/iPhone/build/Debug-iphonesimulator/SimpleAds.app/PkgInfo
+t1284759066
+s8
+
+N/Users/njamal/programs/mopub/client/iPhone/build/Debug-iphonesimulator/SimpleAds.app/SimpleAds
+t2
+s0
+
+N/Users/njamal/programs/mopub/client/iPhone/build/Debug-iphonesimulator/SimpleAds.app/SimpleAdsViewController.nib
+t1284759077
+s2257
+
+N/Users/njamal/programs/mopub/client/iPhone/build/SimpleAds.build/Debug-iphonesimulator/SimpleAds.build/Objects-normal/i386/AdClickController.o
+t2
+s0
+
+N/Users/njamal/programs/mopub/client/iPhone/build/SimpleAds.build/Debug-iphonesimulator/SimpleAds.build/Objects-normal/i386/AdController.o
+t2
+s0
+
+N/Users/njamal/programs/mopub/client/iPhone/build/SimpleAds.build/Debug-iphonesimulator/SimpleAds.build/Objects-normal/i386/SimpleAds.LinkFileList
+c000000004C93DE1A00000000000002C2
+t1284759066
+s706
+
+N/Users/njamal/programs/mopub/client/iPhone/build/SimpleAds.build/Debug-iphonesimulator/SimpleAds.build/Objects-normal/i386/SimpleAdsAppDelegate.o
+t2
+s0
+
+N/Users/njamal/programs/mopub/client/iPhone/build/SimpleAds.build/Debug-iphonesimulator/SimpleAds.build/Objects-normal/i386/SimpleAdsViewController.o
+t2
+s0
+
+N/Users/njamal/programs/mopub/client/iPhone/build/SimpleAds.build/Debug-iphonesimulator/SimpleAds.build/Objects-normal/i386/main.o
+t2
+s0
+
+N/Users/njamal/programs/mopub/client/iPhone/main.m
+c000000004C8E73BF0000000000000160
+t1284404159
+s352
+i<UIKit/UIKit.h>
+
+N/var/folders/Ny/NyTmLyDbEZqzR2JIsC-ybE+++TI/-Caches-/com.apple.Xcode.501/SharedPrecompiledHeaders/SimpleAds_Prefix-ekrrmihgtmhezfbymribisouknzr/SimpleAds_Prefix.pch.gch
+t2
+s0
+
+NSimpleAds-Info.plist
+c000000004C8E73BF000000000000038D
+t1284404159
+s909
+
+CCheck dependencies
+r0
+lSLF07#2@18"Check dependencies306451865#306451866#0(0"0(0#1#0"3343187568374212096#0"0#
+
+CCompileC build/SimpleAds.build/Debug-iphonesimulator/SimpleAds.build/Objects-normal/i386/AdClickController.o /Users/njamal/programs/mopub/client/iPhone/SDK/AdClickController.m normal i386 objective-c com.apple.compilers.gcc.4_2
+r0
+
+CCompileC build/SimpleAds.build/Debug-iphonesimulator/SimpleAds.build/Objects-normal/i386/AdController.o /Users/njamal/programs/mopub/client/iPhone/SDK/AdController.m normal i386 objective-c com.apple.compilers.gcc.4_2
+r0
+
+CCompileC build/SimpleAds.build/Debug-iphonesimulator/SimpleAds.build/Objects-normal/i386/SimpleAdsAppDelegate.o /Users/njamal/programs/mopub/client/iPhone/Classes/SimpleAdsAppDelegate.m normal i386 objective-c com.apple.compilers.gcc.4_2
+r0
+
+CCompileC build/SimpleAds.build/Debug-iphonesimulator/SimpleAds.build/Objects-normal/i386/SimpleAdsViewController.o /Users/njamal/programs/mopub/client/iPhone/Classes/SimpleAdsViewController.m normal i386 objective-c com.apple.compilers.gcc.4_2
+r0
+
+CCompileC build/SimpleAds.build/Debug-iphonesimulator/SimpleAds.build/Objects-normal/i386/main.o /Users/njamal/programs/mopub/client/iPhone/main.m normal i386 objective-c com.apple.compilers.gcc.4_2
+r0
+
+CCompileXIB /Users/njamal/programs/mopub/client/iPhone/Classes/MainWindow.xib
+s306451866.940459
+e306451877.423562
+r1
+xCompileXIB
+x/Users/njamal/programs/mopub/client/iPhone/Classes/MainWindow.xib
+oCouldn't open shared capabilities memory GSCapabilities (No such file or directory)
+lSLF07#2@33"CompileXIB Classes/MainWindow.xib306451866#306451877#0(84"Couldn't open shared capabilities memory GSCapabilities (No such file or directory)0(0#0#65"/Users/njamal/programs/mopub/client/iPhone/Classes/MainWindow.xib8603052256#592"    cd /Users/njamal/programs/mopub/client/iPhone    setenv IBC_MINIMUM_COMPATIBILITY_VERSION 3.1    setenv PATH "/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/bin:/Developer/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin"    /Developer/usr/bin/ibtool --errors --warnings --notices --output-format human-readable-text --compile /Users/njamal/programs/mopub/client/iPhone/build/Debug-iphonesimulator/SimpleAds.app/MainWindow.nib /Users/njamal/programs/mopub/client/iPhone/Classes/MainWindow.xib --sdk /Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator4.0.sdk0#
+
+CCompileXIB /Users/njamal/programs/mopub/client/iPhone/Classes/SimpleAdsViewController.xib
+s306451866.991840
+e306451877.762208
+r1
+xCompileXIB
+x/Users/njamal/programs/mopub/client/iPhone/Classes/SimpleAdsViewController.xib
+oCouldn't open shared capabilities memory GSCapabilities (No such file or directory)
+lSLF07#2@46"CompileXIB Classes/SimpleAdsViewController.xib306451866#306451877#0(84"Couldn't open shared capabilities memory GSCapabilities (No such file or directory)0(0#0#78"/Users/njamal/programs/mopub/client/iPhone/Classes/SimpleAdsViewController.xib8602720000#618"    cd /Users/njamal/programs/mopub/client/iPhone    setenv IBC_MINIMUM_COMPATIBILITY_VERSION 3.1    setenv PATH "/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/bin:/Developer/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin"    /Developer/usr/bin/ibtool --errors --warnings --notices --output-format human-readable-text --compile /Users/njamal/programs/mopub/client/iPhone/build/Debug-iphonesimulator/SimpleAds.app/SimpleAdsViewController.nib /Users/njamal/programs/mopub/client/iPhone/Classes/SimpleAdsViewController.xib --sdk /Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator4.0.sdk0#
+
+CCompileXIB /Users/njamal/programs/mopub/client/iPhone/SDK/AdClickController.xib
+s306451877.423819
+e306451878.589915
+r1
+xCompileXIB
+x/Users/njamal/programs/mopub/client/iPhone/SDK/AdClickController.xib
+oCouldn't open shared capabilities memory GSCapabilities (No such file or directory)
+oCouldn't open shared capabilities memory GSCapabilities (No such file or directory)
+oCouldn't open shared capabilities memory GSCapabilities (No such file or directory)
+lSLF07#2@36"CompileXIB SDK/AdClickController.xib306451877#306451878#0(252"Couldn't open shared capabilities memory GSCapabilities (No such file or directory)Couldn't open shared capabilities memory GSCapabilities (No such file or directory)Couldn't open shared capabilities memory GSCapabilities (No such file or directory)0(0#0#68"/Users/njamal/programs/mopub/client/iPhone/SDK/AdClickController.xib8603405888#602"    cd /Users/njamal/programs/mopub/client/iPhone    setenv IBC_MINIMUM_COMPATIBILITY_VERSION 3.1    setenv PATH "/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/bin:/Developer/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin"    /Developer/usr/bin/ibtool --errors --warnings --notices --output-format human-readable-text --compile /Users/njamal/programs/mopub/client/iPhone/build/Debug-iphonesimulator/SimpleAds.app/AdClickController.nib /Users/njamal/programs/mopub/client/iPhone/SDK/AdClickController.xib --sdk /Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator4.0.sdk0#
+
+CGenerateDSYMFile /Users/njamal/programs/mopub/client/iPhone/build/Debug-iphonesimulator/SimpleAds.app.dSYM /Users/njamal/programs/mopub/client/iPhone/build/Debug-iphonesimulator/SimpleAds.app/SimpleAds
+r0
+
+CLd /Users/njamal/programs/mopub/client/iPhone/build/Debug-iphonesimulator/SimpleAds.app/SimpleAds normal i386
+r0
+
+CProcessInfoPlistFile /Users/njamal/programs/mopub/client/iPhone/build/Debug-iphonesimulator/SimpleAds.app/Info.plist SimpleAds-Info.plist
+s306451866.595557
+e306451866.940327
+r1
+xProcessInfoPlistFile
+x/Users/njamal/programs/mopub/client/iPhone/build/Debug-iphonesimulator/SimpleAds.app/Info.plist
+xSimpleAds-Info.plist
+lSLF07#2@28"Process SimpleAds-Info.plist306451866#306451866#0(0"0(0#0#63"/Users/njamal/programs/mopub/client/iPhone/SimpleAds-Info.plist12666816341278818#497"    cd /Users/njamal/programs/mopub/client/iPhone    setenv PATH "/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/bin:/Developer/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin"    builtin-infoPlistUtility SimpleAds-Info.plist -genpkginfo /Users/njamal/programs/mopub/client/iPhone/build/Debug-iphonesimulator/SimpleAds.app/PkgInfo -expandbuildsettings -format binary -platform iphonesimulator -o /Users/njamal/programs/mopub/client/iPhone/build/Debug-iphonesimulator/SimpleAds.app/Info.plist0#
+
+CProcessPCH /var/folders/Ny/NyTmLyDbEZqzR2JIsC-ybE+++TI/-Caches-/com.apple.Xcode.501/SharedPrecompiledHeaders/SimpleAds_Prefix-ekrrmihgtmhezfbymribisouknzr/SimpleAds_Prefix.pch.gch SimpleAds_Prefix.pch normal i386 objective-c com.apple.compilers.gcc.4_2
+s306451878.590104
+e306451878.627783
+r0
+xProcessPCH
+x/var/folders/Ny/NyTmLyDbEZqzR2JIsC-ybE+++TI/-Caches-/com.apple.Xcode.501/SharedPrecompiledHeaders/SimpleAds_Prefix-ekrrmihgtmhezfbymribisouknzr/SimpleAds_Prefix.pch.gch
+xSimpleAds_Prefix.pch
+xnormal
+xi386
+xobjective-c
+xcom.apple.compilers.gcc.4_2
+oi686-apple-darwin10-gcc-4.2.1: /Users/njamal/programs/mopub/client/iPhone/SimpleAds_Prefix.pch: No such file or directory
+oi686-apple-darwin10-gcc-4.2.1: warning: '-x objective-c-header' after last input file has no effect
+oi686-apple-darwin10-gcc-4.2.1: no input files
+lSLF07#2@31"Precompile SimpleAds_Prefix.pch306451878#306451878#0(372"i686-apple-darwin10-gcc-4.2.1: /Users/njamal/programs/mopub/client/iPhone/SimpleAds_Prefix.pch: No such file or directoryi686-apple-darwin10-gcc-4.2.1: warning: '-x objective-c-header' after last input file has no effecti686-apple-darwin10-gcc-4.2.1: no input filesCommand /Developer/Platforms/iPhoneSimulator.platform/Developer/usr/bin/gcc-4.2 failed with exit code 11(4@103"Command /Developer/Platforms/iPhoneSimulator.platform/Developer/usr/bin/gcc-4.2 failed with exit code 1306451878#18446744073709551615#0#0(1@0"0(0#0#63"/Users/njamal/programs/mopub/client/iPhone/SimpleAds_Prefix.pch8603250272#1871"    cd /Users/njamal/programs/mopub/client/iPhone    setenv LANG en_US.US-ASCII    setenv PATH "/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/bin:/Developer/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin"    /Developer/Platforms/iPhoneSimulator.platform/Developer/usr/bin/gcc-4.2 -x objective-c-header -arch i386 -fmessage-length=0 -pipe -std=c99 -Wno-trigraphs -fpascal-strings -fasm-blocks -O0 -Wreturn-type -Wunused-variable -D__IPHONE_OS_VERSION_MIN_REQUIRED=30200 -isysroot /Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator4.0.sdk -fvisibility=hidden -mmacosx-version-min=10.6 -gdwarf-2 -fobjc-abi-version=2 -fobjc-legacy-dispatch -iquote /Users/njamal/programs/mopub/client/iPhone/build/SimpleAds.build/Debug-iphonesimulator/SimpleAds.build/SimpleAds-generated-files.hmap -I/Users/njamal/programs/mopub/client/iPhone/build/SimpleAds.build/Debug-iphonesimulator/SimpleAds.build/SimpleAds-own-target-headers.hmap -I/Users/njamal/programs/mopub/client/iPhone/build/SimpleAds.build/Debug-iphonesimulator/SimpleAds.build/SimpleAds-all-target-headers.hmap -iquote /Users/njamal/programs/mopub/client/iPhone/build/SimpleAds.build/Debug-iphonesimulator/SimpleAds.build/SimpleAds-project-headers.hmap -F/Users/njamal/programs/mopub/client/iPhone/build/Debug-iphonesimulator -I/Users/njamal/programs/mopub/client/iPhone/build/Debug-iphonesimulator/include -I/Users/njamal/programs/mopub/client/iPhone/build/SimpleAds.build/Debug-iphonesimulator/SimpleAds.build/DerivedSources/i386 -I/Users/njamal/programs/mopub/client/iPhone/build/SimpleAds.build/Debug-iphonesimulator/SimpleAds.build/DerivedSources -c /Users/njamal/programs/mopub/client/iPhone/SimpleAds_Prefix.pch -o /var/folders/Ny/NyTmLyDbEZqzR2JIsC-ybE+++TI/-Caches-/com.apple.Xcode.501/SharedPrecompiledHeaders/SimpleAds_Prefix-ekrrmihgtmhezfbymribisouknzr/SimpleAds_Prefix.pch.gch1#
+
+CTouch /Users/njamal/programs/mopub/client/iPhone/build/Debug-iphonesimulator/SimpleAds.app
+r0
+

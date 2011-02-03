@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/!svn/ver/61/trunk/Android/SimpleAdsDemo/src/com/mopub/mobileads
+END
+AdView.java
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/61/trunk/Android/SimpleAdsDemo/src/com/mopub/mobileads/AdView.java
+END
+AdConversionTracker.java
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/!svn/ver/61/trunk/Android/SimpleAdsDemo/src/com/mopub/mobileads/AdConversionTracker.java
+END
+AdWebViewClient.java
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/!svn/ver/61/trunk/Android/SimpleAdsDemo/src/com/mopub/mobileads/AdWebViewClient.java
+END
+InterstitialAdActivity.java
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/61/trunk/Android/SimpleAdsDemo/src/com/mopub/mobileads/InterstitialAdActivity.java
+END

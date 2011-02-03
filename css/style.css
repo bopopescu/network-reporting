@@ -1,0 +1,1843 @@
+/* 
+  HTML5 ✰ Boilerplate 
+  
+  style.css contains a reset, font normalization and some base styles.
+  
+  credit is left where credit is due.
+  much inspiration was taken from these projects:
+    yui.yahooapis.com/2.8.1/build/base/base.css
+    camendesign.com/design/
+    praegnanz.de/weblog/htmlcssjs-kickstart
+*/
+
+/* 
+  html5doctor.com Reset Stylesheet (Eric Meyer's Reset Reloaded + HTML5 baseline)
+  v1.4 2009-07-27 | Authors: Eric Meyer & Richard Clark
+  html5doctor.com/html-5-reset-stylesheet/
+*/
+
+html, body, div, span, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+abbr, address, cite, code,
+del, dfn, em, img, ins, kbd, q, samp,
+small, strong, sub, sup, var,
+b, i,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section, summary,
+time, mark, audio, video {
+  margin:0;
+  padding:0;
+  border:0;
+  outline:0;
+  font-size:100%;
+  vertical-align:baseline;
+  background:transparent;
+}                  
+
+article, aside, details, figcaption, figure,
+footer, header, hgroup, menu, nav, section { 
+    display:block;
+}
+
+nav ul { list-style:none; }
+
+blockquote, q { quotes:none; }
+
+blockquote:before, blockquote:after,
+q:before, q:after { content:''; content:none; }
+
+a { margin:0; padding:0; font-size:100%; vertical-align:baseline; background:transparent; }
+
+ins { background-color:#ff9; color:#000; text-decoration:none; }
+
+mark { background-color:#ff9; color:#000; font-style:italic; font-weight:600; }
+
+del { text-decoration: line-through; }
+
+abbr[title], dfn[title] { border-bottom:1px dotted; cursor:help; }
+
+/* tables still need cellspacing="0" in the markup */
+table { border-collapse:collapse; border-spacing:0; }
+
+hr { display:block; height:1px; border:0; border-top:1px solid #ccc; margin:1em 0; padding:0; }
+
+input, select { vertical-align:middle; }
+
+/* END RESET CSS */
+
+
+/* fonts.css from the YUI Library: developer.yahoo.com/yui/
+   Refer to developer.yahoo.com/yui/3/cssfonts/ for font sizing percentages
+
+  There are three custom edits:
+   * remove arial, helvetica from explicit font stack
+   * we normalize monospace styles ourselves
+   * table font-size is reset in the HTML5 reset above so there is no need to repeat
+*/
+body { font:15px/1.231 sans-serif; *font-size:small; } /* hack retained to preserve specificity */
+
+select, input, textarea, button { font:99% sans-serif; }
+
+/* normalize monospace sizing 
+ * en.wikipedia.org/wiki/MediaWiki_talk:Common.css/Archive_11#Teletype_style_fix_for_Chrome
+ */
+pre, code, kbd, samp { font-family: monospace, sans-serif; }
+ 
+
+/* 
+ * minimal base styles 
+ */
+
+
+body, select, input, textarea { 
+  /* #444 looks better than black: twitter.com/H_FJ/statuses/11800719859 */ 
+  color: #444; 
+  /* set your base font here, to apply evenly */
+  font-family: "myriad-pro-1","myriad-pro-2", helvetica, arial, sans-serif;
+  font-weight: 400;
+}
+
+/* Headers (h1,h2,etc) have no default font-size or margin,
+   you'll want to define those yourself. */ 
+h1,h2,h3,h4,h5,h6 { font-weight: 600; }
+
+/* always force a scrollbar in non-IE */ 
+html { overflow-y: scroll; }
+ 
+/* Accessible focus treatment: people.opera.com/patrickl/experiments/keyboard/test */
+a:hover, a:active { outline: none; }
+
+a, a:active, a:visited { color: #607890; }
+a:hover { color: #036; }
+
+ul, ol { margin-left: 1.8em; }
+ol { list-style-type: decimal; }
+
+/* Remove margins for navigation lists */
+nav ul, nav li { margin: 0; } 
+
+small { font-size: 85%; }
+strong, th { font-weight: 600; }
+
+td, td img { vertical-align: top; } 
+
+sub { vertical-align: sub; font-size: smaller; }
+sup { vertical-align: super; font-size: smaller; }
+ 
+textarea { overflow: auto; } /* thnx ivannikolic! www.sitepoint.com/blogs/2010/08/20/ie-remove-textarea-scrollbars/ */
+
+.ie6 legend, .ie7 legend { margin-left: -7px; } /* thnx ivannikolic! */
+
+/* align checkboxes, radios, text inputs with their label
+   by: Thierry Koblentz tjkdesign.com/ez-css/css/base.css  */
+input[type="radio"] { vertical-align: text-bottom; }
+input[type="checkbox"] { vertical-align: bottom; }
+.ie7 input[type="checkbox"] { vertical-align: baseline; }
+.ie6 input { vertical-align: text-bottom; }
+
+/* hand cursor on clickable input elements */
+label, input[type=button], input[type=submit], button { cursor: pointer; }
+ 
+/* webkit browsers add a 2px margin outside the chrome of form elements */  
+button, input, select, textarea { margin: 0; }
+
+/* colors for form validity */
+input:valid, textarea:valid   {  }
+input:invalid, textarea:invalid { 
+      border-radius: 1px;
+    -moz-box-shadow: 0px 0px 5px red; 
+ -webkit-box-shadow: 0px 0px 5px red; 
+         box-shadow: 0px 0px 5px red;
+}
+.no-boxshadow input:invalid, 
+.no-boxshadow textarea:invalid { background-color: #f0dddd; }
+
+/* make buttons play nice in IE:    
+   www.viget.com/inspire/styling-the-button-element-in-internet-explorer/ */
+button {  width: auto; overflow: visible; }
+ 
+/* bicubic resizing for non-native sized IMG: 
+   code.flickr.com/blog/2008/11/12/on-ui-quality-the-little-things-client-side-image-resizing/ */
+.ie7 img { -ms-interpolation-mode: bicubic; }
+
+/* 
+ * Non-semantic helper classes 
+ */
+
+/* for image replacement */
+.ir { display: block; text-indent: -999em; overflow: hidden; background-repeat: no-repeat; text-align: left; direction: ltr; }
+
+/* Hide for both screenreaders and browsers
+   css-discuss.incutio.com/wiki/Screenreader_Visibility */
+.hidden { display: none; visibility: hidden; } 
+
+/* Hide only visually, but have it available for screenreaders 
+   www.webaim.org/techniques/css/invisiblecontent/  &  j.mp/visuallyhidden  */
+.visuallyhidden { position: absolute !important;    
+  clip: rect(1px 1px 1px 1px); /* IE6, IE7 */
+  clip: rect(1px, 1px, 1px, 1px); }
+
+/* Hide visually and from screenreaders, but maintain layout */
+.invisible { visibility: hidden; }
+
+/* >> The Magnificent CLEARFIX: Updated to prevent margin-collapsing on child elements << j.mp/bestclearfix */
+.clearfix:before, .clearfix:after {
+  content: "\0020"; display: block; height: 0; visibility: hidden;	
+} 
+
+.clearfix:after { clear: both; }
+/* Fix clearfix: blueprintcss.lighthouseapp.com/projects/15318/tickets/5-extra-margin-padding-bottom-of-page */
+.clearfix { zoom: 1; }
+
+
+
+/****************************************
+ * Primary Styles
+ ****************************************/
+
+/*---------------------------------------/
+/ General
+/---------------------------------------*/
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: #fff;
+}
+
+#container {
+  min-height: 100%;
+  position: relative;
+}
+
+.ie6 #container {
+  height: 100%;
+}
+
+.pageWidth {
+  position: relative;
+  margin: 0 auto;
+  width: 950px;
+}
+
+/* Hide page until TypeKit is loaded */
+
+html.wf-loading header *,
+html.wf-loading footer *,
+html.wf-loading #titlebar *,
+html.wf-loading #content * {
+  visibility: hidden;
+}
+ 
+/*---------------------------------------/
+/ Header
+/---------------------------------------*/
+
+header {
+  width: 100%;
+  height: 60px;
+  background: #444 url(../images/layout/header-bg.gif) repeat-x top left;
+}
+
+#logo {
+  position: absolute;
+  top: 4px;
+  left: -14px;
+}
+
+#logo a {
+  width: 120px;
+  height: 51px;
+  background: url(../images/mopub-logo.png) no-repeat top left;
+}
+
+.mopub-public header {
+  height: 90px;
+  background-image: url(../images/layout/header-bg-public.gif);
+}
+
+.mopub-public #logo  {
+  top: 5px;
+  left: -20px;
+}
+
+.mopub-public #logo a {
+  width: 179px;
+  height: 86px;
+  background-image: url(../images/mopub-logo-public.png);
+}
+
+/* Navs */
+
+header nav ul {
+  display: inline;
+  margin: 0;
+  padding: 0;
+}
+
+header nav ul li {
+  display: inline-block;
+  width: auto;  
+}
+
+.ie7 header nav ul li,
+.ie6 header nav ul li {
+  display: inline;
+}
+
+header nav a, header nav a:active, header nav a:visited {
+  display: inline-block;
+  color: #a6e1ff;
+  text-shadow: #121212 0 1px 0;
+  text-decoration: none;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  line-height: 1em;
+}
+
+header nav a:hover {
+  color: #fff;
+  text-shadow: #000 0 1px 0;
+  background: #1a1a1a;
+  text-decoration: none;
+}
+
+header nav .active a {
+  color: #fff;
+  text-shadow: #000 0 -1px 0;
+  background: none;
+}
+
+#nav1 {
+  text-align: center;
+}
+
+#nav1 li {
+  padding: 0 3px;
+  height: 60px;
+}
+
+#nav1 li.active {
+  background: url(../images/layout/header-pointer.gif) no-repeat 50% 100%;
+}
+
+#nav1 a {
+  margin: 13px 0 0 0;
+  padding: 6px 12px 0 12px;
+  font-size: 18px;
+  height: 27px;
+}
+
+.mopub-public #nav1 li {
+  padding: 0 2px;
+  height: 90px;
+}
+
+.mopub-public #nav1 a {
+  margin: 33px 0 0 0;
+  padding: 7px 14px 0 14px;
+  height: 33px;
+  font-size: 22px;
+  font-weight: 300;
+}
+
+#nav2 {
+  position: absolute;
+  top: 18px;
+  right: 0;
+  font-weight: 300;
+}
+
+#nav2 li {
+  padding: 0 0 0 3px;
+}
+
+#nav2 a {
+  padding: 3px 7px 4px 7px;
+}
+
+.mopub-public #nav2 {
+  top: 30px;
+}
+
+#nav2 #header-icons a {
+  float: left;
+  margin: 0 0 0 5px;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  background: url(../images/layout/header-icons.png) no-repeat top left;
+}
+
+#nav2 #header-icons a#header-icons-rss {
+  background-position: 0 0;
+}
+
+#nav2 #header-icons a#header-icons-twitter {
+  background-position: 0 -30px;
+}
+
+/*---------------------------------------/
+/ Main Content Layout
+/---------------------------------------*/
+
+/* Titlebar */
+
+#titlebar {
+  padding: 30px 0 0 0;
+  height: 46px;
+  border-bottom: 4px solid #ebf2f7;
+  background: #f5f9fc;
+}
+
+#titlebar .pageWidth {
+  position: relative;
+}
+
+#titlebar h1 {
+  margin: -6px 0 0 0;
+  font-size: 30px;
+  font-weight: 300;
+  color: #444;
+}
+
+#titlebar-center {
+  position: absolute;
+  top: 5px;
+  width: 100%;
+  text-align: center;
+}
+
+#titlebar-right {
+  position: absolute;
+  top: 5px;
+  right: 0;
+  text-align: right;
+  font-size: 14px;
+}
+
+#titlebar .buttonset {
+  display: inline-block;
+}
+
+#titlebar .ui-button {
+  margin-top: 2px;
+}
+
+.titlebar-link {
+  display: inline-block;
+  margin: 8px 0 0 0;
+}
+
+#titlebar .breadcrumb {
+  margin: -6px 0 0 0;
+  position: relative;
+  top: -9px;
+}
+
+#titlebar .breadcrumb-back {
+  display: inline-block;
+  margin: 0 0 0 -3px;
+  font-size: 11px;
+}
+
+#titlebar .breadcrumb h1 {
+  margin-top: 0;
+  font-size: 20px;
+  font-weight: 400;
+  width: 330px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Content */
+
+#content {
+  padding: 35px 0 235px 0;
+  float: left;
+  width: 100%;
+}
+
+section {
+  float: left;
+  margin: 0 0 30px 0;
+  width: 100%;
+}
+
+.separated {
+  margin-bottom: 29px;
+  padding-bottom: 29px;
+  border-bottom: 2px solid #f5f5f5;
+}
+
+.offset {
+  padding: 25px;
+  background: #f7f7f7;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  border-radius: 10px;
+}
+
+section.offset {
+  width: 900px;
+}
+
+.content-main {
+  float: left;
+  width: 680px;
+}
+
+.content-main section {
+  float: none;
+  width: auto;
+}
+
+aside {
+  clear: right;
+  float: right;
+  margin: 0 0 30px 0;
+  padding: 20px;
+  width: 195px;
+  background: #f7f7f7;
+  color: #737373;
+  font-size: 13px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+}
+
+/* Footer */
+
+footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 200px;
+  background: url(../images/layout/footer-bg.gif) repeat top left;
+  color: #bfbfbf;
+  font-size: 12px;
+  font-weight: 300;
+}
+
+#footer-inner {
+  padding-top: 25px;
+  background: url(../images/layout/footer-shadow.gif) repeat-x top left;
+}
+
+#footer-links {
+  float: left;
+  width: 50%;
+}
+
+#footer-links ul {
+  float: left;
+  margin: 0;
+  width: 180px;
+  list-style: none;
+}
+
+#footer-links li {
+  margin: 0 0 7px 0;
+}
+
+#footer-account, #footer-copyright {
+  float: right;
+  width: 50%;
+  text-align: right;
+}
+
+footer a, footer a:active, footer a:visited {
+  color: #8dbfd9;
+}
+
+footer a:hover {
+  color: #ffb266;
+}
+
+footer .sep {
+  color: #737373;
+  font-weight: 600;
+}
+
+/*---------------------------------------/
+/ Content Formatting
+/---------------------------------------*/
+
+/* Text */
+
+p {
+  margin: 0 0 1.33em 0;
+  line-height: 1.33em;
+}
+
+ul, ol {
+  margin: 0 0 1.33em 0;
+  line-height: 1.33em;
+  padding: 0 0 0 30px;
+}
+
+li {
+  margin: 0 0 10px 0;
+}
+
+blockquote {
+  margin: 30px;
+}
+
+aside ul, aside ol {
+  padding-left: 20px;
+}
+
+aside li {
+  margin: 0 0 7px 0;
+}
+
+/* Headings */
+
+h2 {
+  margin: 0 0 15px 0;
+  font-size: 24px;
+}
+
+h3 {
+  margin: 0 0 15px 0;
+  font-size: 18px;
+}
+
+h4 {
+  margin: 0 0 15px 0;
+  font-size: 16px;
+}
+
+h5 {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+}
+
+/* Links */
+
+a, a:active, a:visited {
+  color: #0090d9;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #e57300;
+  text-decoration: underline;
+}
+
+a.mutedLink, a.mutedLink:active, a.mutedLink:visited {
+  color: #67bbe5;
+}
+
+a.mutedLink:hover {
+  color: #e57300;
+}
+
+/* Simple table */
+
+.simpleTable {
+  margin: 0 0 15px 0;
+}
+
+.simpleTable th, .simpleTable td {
+  padding: 5px 10px 5px 5px;
+  text-align: top;
+}
+
+.simpleTable thead th {
+  font-size: 10px;
+  font-weight: 300;
+  text-transform: uppercase;
+  color: #555;
+  vertical-align: bottom;
+}
+
+.simpleTable tbody th {
+  text-align: right;
+}
+
+/* Other */
+
+.sep {
+  padding: 0 3px;
+  color: #ccc;
+}
+
+.nomargin {
+  margin: 0 !important;
+}
+
+.clear {
+  clear: both;
+}
+
+.muted {
+  color: #999;
+}
+
+.unbold {
+  font-weight: 400;
+}
+
+.success {
+  color: #5d8c00
+}
+
+.error, .critical {
+  color: #cc2929;
+}
+
+/*---------------------------------------/
+/ Forms
+/---------------------------------------*/
+
+/* Form controls */
+
+.radios input {
+  margin: 0 2px 0 0;
+  vertical-align: baseline;
+}
+
+.ie8 .radios input, .ie7 .radios input, .ie6 .radios input {
+  margin: 0;
+}
+
+.radios label {
+  margin: 0 15px 0 0;
+}
+
+.input-text, textarea {
+  padding: 1px 4px 4px 4px;
+  border: 1px solid #eaeaea;
+  border-top-color: #b9b9b9;
+  background: #fafafa;
+  font-size: 18px;
+  line-height: 20px;
+  width: 290px;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+}
+
+textarea {
+  padding-top: 4px;
+}
+
+.input-text:focus, textarea:focus {
+  outline: none;
+  background: #fff;
+  border-color: #0090d9;
+  box-shadow: 0 0 5px #0090d9;
+  -webkit-box-shadow: 0 0 5px #0090d9; 
+  -moz-box-shadow: 0 0 5px #0090d9; 
+}
+
+input::-webkit-input-placeholder, 
+textarea::-webkit-input-placeholder {
+  color: #999;
+  font-weight: 400;
+}
+
+input.placeholder,
+textarea.placeholder {
+  color: #999;
+  font-weight: 400;
+}
+
+.input-text-small {
+  padding: 1px 2px 2px 2px;
+  width: auto;
+  height: 15px;
+  font-size: 13px;
+  line-height: 13px;
+}
+
+/* Forms */
+
+fieldset {
+  padding: 20px 25px 25px 25px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  font-size: 14px;
+}
+
+fieldset.alt {
+  background: #f7f7f7;
+}
+
+fieldset h2 {
+  /* legend gets converted to h2 in JS */
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+dl.formFields {
+  float: left;
+  margin: -15px 0 0 0;
+  width: 630px;
+}
+
+.formFields dt {
+  float: left;
+  clear: both;
+  margin: 15px 15px 0 0;
+  padding: 5px 0;
+  width: 175px;
+  font-size: 18px;
+  font-weight: 300;
+  line-height: 20px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.formFields dd {
+  display: inline-block;
+  margin: 15px 0 0 0;
+  padding: 5px 0;
+  width: 440px;
+}
+
+.formFields .radios {
+  font-size: 18px;
+}
+
+.formFields .input-text,
+.formFields textarea {
+  margin: -5px 0;
+}
+
+.formFields .input-text-small {
+  margin: 0;
+}
+
+.formFields-field-help {
+  display: inline-block;
+  margin: 1px 0 0 8px;
+}
+
+.ie7 .formFields-field-help, .ie6 .formFields-field-help {
+  display: inline;
+}
+
+.formFields-field-help-link {
+  
+}
+
+.formFields-field-help-text {
+  display: none;
+}
+
+.form-submit {
+  border-top: 2px solid #f5f5f5;
+  padding: 18px 0 0 0;
+  text-align: right;
+}
+
+.form-error {
+  background: #fff2f2;
+  border-color: #e6a1a1;
+  border-top-color: #d98d8d;
+  color: #222;
+}
+
+.form-error-text {
+  margin: 10px 0 0 0;
+  color: #cc2929;
+}
+
+/*---------------------------------------/
+/ Modules
+/---------------------------------------*/
+
+/* Message center */
+
+#messageCenter {
+  overflow: hidden;
+  padding-bottom: 20px;
+}
+
+#messageCenter-messages {
+  margin: -10px 0 0 0;
+  width: 100%;
+  font-size: 16px;
+  line-height: 1.1em;
+}
+
+.messageCenter-message {
+  background: url(../images/layout/hr-dots.png) repeat-x top left;
+}
+
+.messageCenter-message td {
+  padding: 10px;
+}
+
+.messageCenter-message td.messageCenter-message-date {
+  padding: 12px 15px 0 0;
+  width: 65px;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #999;
+  white-space: nowrap;
+}
+
+.messageCenter-message td.messageCenter-message-text {
+  padding-left: 25px;
+  background-position: 1px 12px;
+  background-repeat: no-repeat;
+}
+
+.messageCenter-message td.messageCenter-message-links {
+  padding-right: 0;
+  width: 140px;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.messageCenter-error td.messageCenter-message-text {
+  color: #cc2929;
+  background-image: url(../images/icons-custom/x-red-16.png);
+}
+
+.messageCenter-warning td.messageCenter-message-text {
+  color: #ff7f00;
+  background-image: url(../images/icons-custom/alert-16.png);
+}
+
+.messageCenter-info td.messageCenter-message-text {
+  background-image: url(../images/icons-custom/info-16.png);
+}
+
+.messageCenter-message-moreInfo {
+  display: none;
+}
+
+/* Page alerts */
+
+.alertMessage {
+  margin: 0 0 30px 0;
+  padding: 14px 18px 18px 18px;
+  border: 1px solid #e6d2b8;
+  background: #fffdf2;
+  color: #664729;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+}
+
+.alertMessage.success {
+  color: #5d8c00;
+  background: #fbfff2;
+  border-color: #cee6ac;
+}
+
+.alertMessage.error {
+  color: #cc2929;
+  background: #fff2f2;
+  border-color: #e6a1a1;
+}
+
+/* Stats */
+
+.stats {
+  position: relative;
+  width: 100%;
+}
+
+.stats-breakdown {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 205px;
+}
+
+.stats-breakdown th,
+.stats-breakdown td {
+  padding: 0;
+  font-size: 18px;
+  line-height: 20px;
+  color: #595959;
+  cursor: pointer;
+  background-color: #f7f7f7;
+  white-space: nowrap;
+}
+
+.stats-breakdown td.stats-breakdown-value {
+  font-weight: 600;
+  text-align: right;
+}
+
+.stats-breakdown td.stats-breakdown-value .inner {
+  display: block;
+  padding: 9px 8px 0 10px;
+  height: 31px;
+  -webkit-border-top-left-radius: 5px;
+  -webkit-border-bottom-left-radius: 5px;
+  -moz-border-radius-topleft: 5px;
+  -moz-border-radius-bottomleft: 5px;
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+}
+
+.stats-breakdown th.stats-breakdown-name {
+  font-weight: 400;
+  text-align: left;
+}
+
+.stats-breakdown th.stats-breakdown-name .inner {
+  display: block;
+  padding: 9px 10px 0 0;
+  height: 31px;
+  background: url(../images/layout/stats-breakdown-pointer.png) no-repeat top right;
+}
+
+.stats-breakdown tr:hover td.stats-breakdown-value .inner,
+.stats-breakdown tr:hover th.stats-breakdown-name .inner {
+  background-color: #faede1;
+  color: #e57300;
+}
+
+.stats-breakdown tr.active td.stats-breakdown-value .inner,
+.stats-breakdown tr.active th.stats-breakdown-name .inner,
+.stats-breakdown tr.active:hover td.stats-breakdown-value .inner,
+.stats-breakdown tr.active:hover th.stats-breakdown-name .inner {
+  background-color: #4d4d4d;
+  color: #fff;
+}
+
+.stats-chart {
+  margin-left: 205px;
+  width: 695px;
+  height: 200px;
+}
+
+/* Buttons and button bank */
+
+.buttonWrap {
+  display: inline-block;
+  margin: -3px;
+  padding: 3px;
+  background: #f7f7f7;
+  -webkit-border-radius: 8px;
+  -moz-border-radius: 8px;
+  border-radius: 8px;
+}
+
+.buttonWrap .ui-button {
+  margin: 0;
+}
+
+.buttonBank {
+  float: left;
+}
+
+.buttonBank-right {
+  float: right;
+}
+
+.buttonBank .ui-button {
+  float: left;
+  margin: 0 5px 0 0;
+}
+
+.buttonBank-right .ui-button {
+  margin: 0 0 0 5px;
+}
+
+.button, .buttonset {
+  visibility: hidden; /* shown by once rendered */
+}
+
+/* Link with icon */
+
+a.linkIcon .ui-icon {
+  display: inline-block;
+  vertical-align: -3px;
+}
+
+.ie7 a.linkIcon .ui-icon,
+.ie6 a.linkIcon .ui-icon {
+  vertical-align: 0;
+}
+
+a.linkIcon:hover .ui-icon {
+  background-image: url(../images/ui/ui-icons-hover.png);
+}
+
+a.linkIcon .ui-icon-triangle-1-e,
+a.linkIcon .ui-icon-triangle-1-w  {
+  width: 6px;
+}
+
+a.linkIcon .ui-icon-triangle-1-e { background-position: -38px -15px; }
+a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
+
+/* Data table */
+
+.dataTable th, .dataTable td {
+  font-size: 14px;
+  text-align: left;
+  vertical-align: top;
+  padding: 8px 15px 7px 0;
+}
+
+.dataTable thead th {
+  font-size: 10px;
+  font-weight: 300;
+  text-transform: uppercase;
+  color: #555;
+  vertical-align: bottom;
+  padding: 0 15px 8px 0;
+}
+
+.dataTable-name {
+  width: 270px;
+}
+
+.dataTable-name .inner {
+  display: block;
+  width: 270px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.dataTable-data {
+  width: 75px;
+}
+
+/* App data */
+
+.appData {
+  padding: 10px 10px 12px 10px;
+  background: #f7f7f7;
+}
+
+.appData-alt {
+  background: #fff;
+}
+
+.appData-columnHeaders {
+  padding: 0 0 0 10px;
+}
+
+.dataTable .appData-icon {
+  padding-right: 11px;
+  width: 45px;
+}
+
+.appData-main th, .appData-main td {
+  padding-top: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.appData-details {
+  margin: -29px 0 0 56px;
+}
+
+.appData-details .dataTable {
+  margin: 0 0 7px 0;
+  background: url(../images/layout/hr-dots.png) repeat-x bottom left;
+}
+
+.appData-details .dataTable th,
+.appData-details .dataTable td {
+  padding-top: 4px;
+  padding-bottom: 4px;
+  font-size: 13px;
+  font-weight: normal;
+  background: url(../images/layout/hr-dots.png) repeat-x top left;
+}
+
+/*
+.appData {
+  padding: 15px;
+  background: #f7f7f7;
+}
+
+.appData-alt {
+  background: #fff;
+}
+
+.appData-columnHeaders {
+  padding: 0 0 0 15px;
+}
+
+.dataTable .appData-icon {
+  padding-right: 12px;
+  width: 45px;
+}
+
+.appData-main th, .appData-main td {
+  padding-top: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.appData-details {
+  margin: -28px 0 0 57px;
+}
+
+.appData-details .dataTable {
+  margin: 4px 0 7px 0;
+  background: url(../images/layout/hr-dots.png) repeat-x bottom left;
+}
+
+.appData-details .dataTable th,
+.appData-details .dataTable td {
+  font-weight: normal;
+  background: url(../images/layout/hr-dots.png) repeat-x top left;
+}
+*/
+
+/* Chart */
+
+.chart {
+  /* outline: 1px dotted #f00; */
+}
+
+.chart-loading, .chart-error {
+  position: relative;
+  border: 2px dashed #ddd;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;  
+  background: #f2f2f2;
+  color: #bbb;
+}
+
+.chart-loading-text, .chart-error-text {
+  display: none;
+  position: absolute;
+  top: 44%;
+  width: 100%;
+  text-align: center;
+  font-size: 24px;
+  font-weight: 300;
+}
+
+.chart-loading .chart-loading-text,
+.chart-error .chart-error-text {
+  display: block;
+}
+
+.chart-error {
+  border-color: #e6a1a1;
+  color: #cc2929;
+  background: #fff2f2;
+}
+
+/* Date options */
+
+#dashboard-dateOptions-custom-modal {
+  display: none;
+}
+
+#dashboard-dateOptions-custom-from {
+  float: left;
+  padding-right: 16px;
+  border-right: 1px solid #ddd;
+}
+
+#dashboard-dateOptions-custom-to {
+  float: left;
+  padding-left: 16px;
+  border-left: 1px solid #ddd;
+  margin: 0 0 0 -1px;
+}
+
+#dashboard-dateOptions-custom-from h4,
+#dashboard-dateOptions-custom-to h4 {
+  margin: 0 0 10px 0;
+  font-size: 22px;
+  font-weight: 300;
+  text-align: center;
+}
+
+/* Step progress */
+
+.stepProgress {
+  font-size: 13px;
+}
+
+#titlebar-right .stepProgress {
+  margin-top: 10px;
+  color: #7a8c99;
+}
+
+.stepProgress-active {
+  font-weight: 600;
+  color: #444;
+}
+
+.stepProgress .ui-icon { 
+  display: inline-block;
+  vertical-align: -3px;
+  background-image: url(../images/ui/ui-icons-progress.png); 
+}
+
+/* Horizontal rule */
+
+.hr {
+  clear: both;
+  margin: 30px 0 0 0;
+  padding: 30px 0 0 0;
+  border-top: 2px solid #f5f5f5;
+}
+
+/* Public pages call to action */
+
+#mopub-public-cta {
+  margin: 5px 0 15px 0;
+  border-top: 2px solid #f5f5f5;
+  padding: 40px 0 0 0;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+}
+
+#mopub-public-cta .sep {
+  padding: 0 7px 0 9px;
+  font-weight: 800;
+}
+
+/*---------------------------------------/
+/ jQuery UI Overrides
+/---------------------------------------*/
+
+/* button sets (fix issue with double internal borders) */
+.ui-buttonset .ui-button { border-right-width: 0; } 
+.ui-buttonset .ui-corner-right { border-right-width: 1px; }
+
+/* Component containers */
+.ui-widget { font-family: "myriad-pro-1","myriad-pro-2", helvetica, arial, sans-serif; }
+.ui-widget input, .ui-widget select, .ui-widget textarea, .ui-widget button { font-family: "myriad-pro-1","myriad-pro-2", helvetica, arial, sans-serif; }
+.ui-widget-header { font-weight: 600; }
+
+/*button text element */
+.ui-button .ui-button-text { line-height: 1.1; }
+.ui-button-text-only .ui-button-text { padding: 4px 12px 5px 12px; }
+.ui-button-icon-only .ui-button-text, .ui-button-icons-only .ui-button-text { padding: 4px 5px 5px 5px; }
+.ui-button-text-icon-primary .ui-button-text, .ui-button-text-icons .ui-button-text { padding: 4px 12px 5px 25px; }
+.ui-button-text-icon-secondary .ui-button-text, .ui-button-text-icons .ui-button-text { padding: 4px 25px 5px 12px; }
+.ui-button-text-icons .ui-button-text { padding-left: 25px; padding-right: 25px; }
+input.ui-button { padding: 4px 12px 5px 12px; }
+
+/* Small and big buttons (custom) */
+.button-small .ui-button-text {
+  font-size: 11px;
+  padding-top: 2px;
+  padding-bottom: 3px;
+}
+
+.button-big .ui-button-text {
+  font-size: 18px;
+  font-weight: 600;
+  padding: 7px 15px 11px 15px;
+}
+
+/* Interaction states */
+.ui-state-default,a.ui-state-default,.ui-widget-content .ui-state-default,.ui-widget-header .ui-state-default{background-image:url(../images/ui/ui-button-default.png);text-shadow:#fff 0 1px 0;color:#595959;}
+.ui-state-focus,a.ui-state-focus,.ui-widget-content .ui-state-focus,.ui-widget-header .ui-state-focus{border:1px solid #999;background:#f3f3f3 url(../images/ui/ui-button-default.png) 50% 50% repeat-x;text-shadow:#fff 0 1px 0;color:#444;}
+.ui-state-hover,a.ui-state-hover,.ui-widget-content .ui-state-hover,.ui-widget-header .ui-state-hover{border:1px solid #e5c4ac;background-image:url(../images/ui/ui-button-hover.png);text-shadow:#fff 0 1px 0;color:#cc6600;}
+.ui-state-hover a,.ui-state-hover a:hover{color:#cc6600;text-decoration:none;}
+.ui-state-active,a.ui-state-active,.ui-widget-content .ui-state-active,.ui-widget-header .ui-state-active{background:#595959 url(../images/ui/ui-button-active.png) 50% 50% repeat-x;text-shadow:#444 0 1px 0;border:1px solid #999999;border-left:1px solid #666;border-right:1px solid #666;font-weight:normal;color:#ffffff;}
+.ui-state-focus .ui-icon{background-image:url(../images/ui/ui-icons-focus.png);}
+.ui-state-hover .ui-icon {background-image: url(../images/ui/ui-icons-hover.png); }
+.ui-state-active .ui-icon{background-image:url(../images/ui/ui-icons-active.png);}
+.ui-widget{outline:0 !important;}
+.ui-state-disabled, .ui-widget-content .ui-state-disabled, .ui-widget-header .ui-state-disabled { opacity: .50; filter:Alpha(Opacity=50); }
+.ui-state-disabled .ui-icon{background-image:url(../images/ui/ui-icons-focus.png);}
+
+/* Dialog */
+.ui-dialog { padding: 5px; background: transparent url(../images/ui/ui-dialog-shadow.png) repeat top left; border: none; -webkit-border-radius:10px;-moz-border-radius:10px;border-radius:10px; }
+.ui-dialog .ui-dialog-titlebar{display:none;}
+.ui-dialog .ui-dialog-content{padding:20px;background:#fff;font-size:14px;-webkit-border-radius:5px;-moz-border-radius:5px;border-radius:5px;}
+.ui-dialog .ui-dialog-buttonpane{border-width:0;margin:-5px 0 0 0;padding:5px 20px 20px 20px;-webkit-border-bottom-right-radius:5px;-webkit-border-bottom-left-radius:5px;-moz-border-radius-bottomright:5px;-moz-border-radius-bottomleft:5px;border-bottom-right-radius:5px;border-bottom-left-radius:5px;}
+.ui-dialog .ui-dialog-buttonpane button{margin:0 0 0 5px;}
+
+/* Datepicker */
+.ui-datepicker th { font-weight: 300; padding: 3px 0;  }
+.ui-datepicker .ui-datepicker-title { line-height: 1.7em; }
+
+/*---------------------------------------/
+/ Other Plugins
+/---------------------------------------*/
+
+/* qTip tooltips */
+
+.qtip-content {
+  font-size: 13px;
+}
+
+/*---------------------------------------/
+/ Miscellaneous
+/---------------------------------------*/
+
+/* JavaScript warning */
+
+.js #jsnotice { display: none; }
+
+.no-js #jsnotice { 
+  display: block;
+  padding: 5px 0 4px 0;
+  background: #c00;
+  color: #fff;
+  font-size: 13px;
+  text-align: center;
+}
+
+.no-js #jsnotice a {
+  color: #fff;
+  text-decoration: underline;
+}
+
+/*---------------------------------------/
+/ Page-specific Styles
+/---------------------------------------*/
+
+/* Dashboard */
+
+#mopub-dashboard #messageCenter {
+  padding-bottom: 0;
+  border-bottom: none;
+  margin-bottom: 25px;
+}
+
+#dashboard-stats {
+  padding-bottom: 15px;
+}
+
+#dashboard-stats-chart {
+  height: 210px;
+}
+
+#dashboard-apps {
+  margin: 30px 0 0 0;
+}
+
+#dashboard-apps h2 {
+  font-size: 22px;
+  margin: 0;
+}
+
+/* App and ad setup forms */
+
+.ios .android, 
+.android .ios {
+  display: none;
+}
+
+#appForm-name-ios {
+  width: 220px;
+}
+
+#appForm-search {
+  margin: 0;
+  position: relative;
+}
+
+#appForm-search-button {
+  margin: 0;
+  position: absolute;
+  top: -16px;
+  left: 4px;
+  white-space: nowrap;
+}
+
+#searchAppStore-loading {
+  margin: 20px 0 0 0;
+  font-size: 16px;
+  color: #666;
+  text-align: center;
+}
+
+#searchAppStore-loading img {
+  margin: 0 4px 0 0;
+  vertical-align: -3px;
+}
+
+#appForm-icon {
+  float: left;
+}
+
+#appForm-changeIcon .sep {
+  padding: 0 5px 0 10px;
+}
+
+.adForm-formats {
+  float: left;
+  width: 505px;
+}
+
+.adForm-format {
+  float: left;
+  width: 120px;
+}
+
+.adForm-format-name {
+  position: relative;
+  height: 42px;
+  padding-left: 19px;
+}
+
+.adForm-format-name .input-radio {
+  position: absolute;
+  top: 5px;
+  left: 0;
+}
+
+.ie8 .adForm-format-name .input-radio,
+.ie7 .adForm-format-name .input-radio,
+.ie6 .adForm-format-name .input-radio {
+  top: 0;
+  left: -2px;
+}
+
+.adForm-format-name label {
+  font-size: 18px;
+  line-height: 20px;
+}
+
+.adForm-format-details {
+  font-size: 13px;
+  line-height: 16px;
+  color: #999;
+  font-weight: 300;
+}
+
+.adForm-format-image {
+  opacity: 0.5;
+  cursor: pointer;
+}
+
+.adForm-format-custom {
+  width: 145px;
+}
+
+.adForm-format-custom .adForm-format-details .input-text-small {
+  width: 41px;
+}
+
+.adForm-format-custom .adForm-format-details {
+  margin: 5px 0 0 0;
+}
+
+.adForm-appSearch {
+  margin: 15px 0 0 0;
+}
+
+.adForm-appSearch-img {
+  float:left;
+  position:relative;
+}
+
+.adForm-appSearch-img span {
+  background:url(../images/layout/mask40.png);
+  display:block;
+  position:absolute;
+  left:-1px;
+  top:0px;
+  z-index:1;
+  height:42px;
+  width:41px;
+}
+
+.adForm-appSearch-text {
+  margin-left:50px;
+  margin-top:10px;
+}
+
+.adForm-appSearch-text span {
+  color: #999;
+  font-size: 13px;
+}
+
+.adForm-appSearch-text span a {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+/* Homepage */
+
+.mopub-home #nav1 li.active {
+  background-image: url(../images/layout/header-pointer-home.gif);
+}
+
+.mopub-home #titlebar {
+  position: relative;
+  border-bottom: 4px solid #e1edf5;
+  background: #ebf3f9 url(../images/home/home-titlebar-bg.png) repeat-x top left;
+  padding: 50px 0 65px 0;
+  height: auto;
+}
+
+.mopub-home #titlebar .ui-button {
+  margin-top: 0;
+}
+
+.mopub-home h1#home-headline {
+  margin: 0 0 30px 0;
+  padding: 0 0 30px 0;
+  font-size: 44px;
+  font-weight: 700;
+  font-style: italic;
+  color: #61a600;
+  text-align: center;
+  text-shadow: #fff 0 1px 0;
+  background: url(../images/home/home-titlebar-sep.png) no-repeat bottom left;
+}
+
+.mopub-home #home-intro {
+  width: 620px;
+  color: #6c7980;
+  font-size: 18px;
+  font-weight: 300;
+  line-height: 24px;
+}
+
+.mopub-home #home-intro p {
+  margin: 0;
+  line-height: 24px;
+}
+
+.mopub-home #home-intro strong {
+  font-weight: 400;
+  color: #5c6b73;
+}
+
+.mopub-home #home-cta {
+  float: right;
+  padding: 25px 0 0 25px;
+  width: 265px;
+  height: 65px;
+  background: #e9f1f7 url(../images/home/home-cta-bg.png) repeat-x top left;
+  -webkit-border-radius: 15px;
+  -moz-border-radius: 15px;
+  border-radius: 15px;
+  font-size: 18px;
+}
+
+.mopub-home #home-cta .buttonWrap {
+  margin-right: 15px;
+  background: #dceaf2;
+}
+
+#home-banner {
+  position: absolute;
+  bottom: -15px;
+  left: 0;
+  width: 100%;
+  font-size: 17px;
+  line-height: 17px;
+  font-weight: 400;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: #d97e00 0 1px 0;
+  text-align: center;
+}
+
+#home-banner .inner1 {
+  display: inline-block;
+  padding: 0 0 0 15px;
+  background: url(../images/home/home-sticker-bg.png) no-repeat 0 0;
+}
+
+#home-banner .inner2 {
+  display: inline-block;
+  padding: 0 15px 0 0;
+  background: url(../images/home/home-sticker-bg.png) no-repeat 100% -74px;
+}
+
+#home-banner .inner3 {
+  display: inline-block;
+  padding: 9px 10px 0 10px;
+  height: 28px;
+  background: url(../images/home/home-sticker-bg.png) repeat-x 0 -37px;
+}
+
+.mopub-home #content {
+  padding-top: 45px;
+}
+
+.home-features {
+  float: left;
+}
+
+.home-feature {
+  float: left;
+  margin: 0 40px 0 0;
+  width: 290px;
+  color: #555;
+}
+
+#home-feature-3 {
+  margin: 0;
+}
+
+.home-feature-graphic {
+  display: block;
+  margin: 0 0 20px 0;
+}
+
+.home-feature h3 {
+  margin: 0 0 7px 0;
+  color: #444;
+}
+
+.home-feature p {
+  margin: 0 0 10px 0;
+}
+
+.home-feature ul {
+  margin: 0;
+  padding: 0 0 0 1em;
+}
+
+.home-feature li {
+  margin: 0 0 5px 0;
+}
+
+/* Homepage alternate 1 */
+
+#mopub-home-alt1 #titlebar {
+  padding: 35px 0 0 0;
+  height: 321px;
+}
+
+#mopub-home-alt1 #home-graphic {
+  position: absolute;
+  top: -35px;
+  right: -30px;
+}
+
+#mopub-home-alt1 #home-intro {
+  width: 430px;
+}
+
+#mopub-home-alt1 #home-headline {
+  margin: 0 0 20px 0;
+  padding: 25px 0 0 0;
+  font-size: 30px;
+  font-weight: 300;
+  font-style: normal;
+  text-align: left;
+  background: none;
+}
+
+#mopub-home-alt1 #home-cta {
+  float: none;
+  margin: 30px 0 0 0;
+  padding: 0;
+  width: auto;
+  height: auto;
+  background: none;
+}
+
+#mopub-home-alt1 #home-cta .buttonWrap {
+  margin-right: -3px;
+  background: #e1edf5;
+}
+
+#mopub-home-alt1 #home-cta .sep {
+  padding: 0 7px 0 9px;
+  font-weight: 800;
+}
+
+/* Homepage alternate 2 */
+
+#mopub-home-alt2 #titlebar {
+  padding: 50px 0 0 0;
+  height: 90px;
+}
+
+#mopub-home-alt2 #home-headline {
+  margin: 0 0 20px 0;
+  font-size: 35px;
+  font-weight: 600;
+  font-style: normal;
+  text-align: left;
+  background: none;
+}
+
+#mopub-home-alt2 #home-banner {
+  bottom: -25px;
+}
+
+#mopub-home-alt2 #home-cta {
+  float: right;
+  margin: -15px 0 0 0;
+  padding: 15px;
+  height: auto;
+}
+
+#mopub-home-alt2 #home-cta .buttonWrap {
+  margin-right: -3px;
+  background: #e1edf5;
+}
+
+#mopub-home-alt2 #home-cta .sep {
+  padding: 0 7px 0 9px;
+  font-weight: 800;
+}
+
+
+/****************************************
+ * Media Queries
+ ****************************************/
+
+/*
+ * Media queries for responsive design
+ * These follow after primary styles so they will successfully override. 
+ */
+
+@media all and (orientation:portrait) { 
+  /* Style adjustments for portrait mode goes here */
+  
+}
+
+@media all and (orientation:landscape) { 
+  /* Style adjustments for landscape mode goes here */
+  
+}
+
+/* Grade-A Mobile Browsers (Opera Mobile, iPhone Safari, Android Chrome)  
+   Consider this: www.cloudfour.com/css-media-query-for-mobile-is-fools-gold/ */
+@media screen and (max-device-width: 480px) {
+  
+  
+  /* Uncomment if you don't want iOS and WinMobile to mobile-optimize the text for you
+     j.mp/textsizeadjust 
+  html { -webkit-text-size-adjust:none; -ms-text-size-adjust:none; } */
+}
+
+/* 
+ * print styles
+ * inlined to avoid required HTTP connection www.phpied.com/delay-loading-your-print-css/ 
+ */
+@media print {
+  * { background: transparent !important; color: #444 !important; text-shadow: none !important; }
+  a, a:visited { color: #444 !important; text-decoration: underline; }
+  a:after { content: " (" attr(href) ")"; } 
+  abbr:after { content: " (" attr(title) ")"; }
+  .ir a:after { content: ""; }  /* Don't show links for images */
+  pre, blockquote { border: 1px solid #999; page-break-inside: avoid; }
+  thead { display: table-header-group; } /* css-discuss.incutio.com/wiki/Printing_Tables */ 
+  tr, img { page-break-inside: avoid; }
+  @page { margin: 0.5cm; }
+  p, h2, h3 { orphans: 3; widows: 3; }
+  h2, h3{ page-break-after: avoid; }
+
+  .visuallyhidden { display: none; }
+  #jsnotice { display: none; }
+}
+

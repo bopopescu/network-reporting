@@ -194,7 +194,7 @@ class CreateCampaignAJAXHander(RequestHandler):
       campaign = campaign or adgroup.campaign
     campaign_form = campaign_form or CampaignForm(instance=campaign)
     adgroup_form = adgroup_form or AdGroupForm(instance=adgroup)
-    networks = [["adsense","Google AdSense",False],["iAd","Apple iAd",False],["admob","AdMob",False],["millennial","Millennial Media",False],["inmobi","InMobi",False],["greystripe","GreyStripe",False],["appnexus","App Nexus",False],["brightroll","BrightRoll",False],["custom","Custom",False]]
+    networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["greystripe","GreyStripe",False],["iAd","iAd",False],["inmobi","InMobi",False],["millennial","Millennial Media",False]]
     
     all_adunits = AdUnitQueryManager().get_adunits(account=self.account)
     

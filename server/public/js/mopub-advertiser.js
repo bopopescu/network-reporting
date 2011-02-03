@@ -42,7 +42,6 @@ var mopub = mopub || {};
       success:    function(jsonData, statusText, xhr, $form) {
          if (jsonData.success){
            $('#campaignAdgroupForm-success').show(); // show message
-           console.log(jsonData.adgroup_key);
             window.location = jsonData.new_page;
          }
          else{

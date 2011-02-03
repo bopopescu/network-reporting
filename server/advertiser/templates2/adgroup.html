@@ -183,7 +183,7 @@
 	                    <th class="dataTable-data numeric"></th>
 	                    <th class="dataTable-data numeric"></th>
 	                    <th class="dataTable-data numeric"></th>
-	                    <th class="dataTable-data numeric">Status</th>
+	                    <th class="dataTable-data numeric"></th>
 	                    <th class="dataTable-data numeric">Impressions</th>
 	                    <th class="dataTable-data numeric">Clicks</th>
 	                    <th class="dataTable-data numeric">Cost</th>
@@ -194,7 +194,16 @@
 	                     <tr class="{% cycle 'campaignData' 'campaignData campaignData-alt' %}" id="adgroup-creatives-{{forloop.counter0}}">
 	                       <td class="campaignData-icon">
 	                         <input type="checkbox" name="creativeManagementForm-key" value="{{c.key}}"/>
-	                       </td>
+	                         {% if c.deleted %} 
+	                         <img src="/images/deleted.gif" width="9" height="9"/> 
+	                         {% endif %} 
+	                         {% if c.active and not c.deleted %} 
+	                         <img src="/images/active.gif" width="9" height="9"/> 
+	                         {% endif %} 
+	                         {% if not c.active and not c.deleted %} 
+	                         <img src="/images/paused.gif" width="9" height="9"/> 
+	                         {% endif %}
+			               </td>
 	                       <th class="dataTable-name">
 	                         {{c.name}}
 		
@@ -217,17 +226,7 @@
 	                       <td class="dataTable-data numeric"></td>
 	                       <td class="dataTable-data numeric"></td>
 	                       <td class="dataTable-data numeric"></td>
-	                       <td class="dataTable-data numeric">
-	                         {% if c.deleted %} 
-	                         <img src="/images/deleted.gif" width="9" height="9"/> 
-	                         {% endif %} 
-	                         {% if c.active and not c.deleted %} 
-	                         <img src="/images/active.gif" width="9" height="9"/> 
-	                         {% endif %} 
-	                         {% if not c.active and not c.deleted %} 
-	                         <img src="/images/paused.gif" width="9" height="9"/> 
-	                         {% endif %} 
-	                       </td>
+	                       <td class="dataTable-data numeric"></td>
 	                       <td class="dataTable-data numeric">{{c.stats.impression_count|withsep}}</td>
 	                       <td class="dataTable-data numeric">{{c.stats.click_count|withsep}}</td>
 	                       <td class="dataTable-data numeric">{{c.stats.revenue|currency}}</td>

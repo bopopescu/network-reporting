@@ -1,29 +1,15 @@
-                          <dt>Creative Type:</dt> 
-                          <dd> 
-                            <span class="radios"> 
-                              <input type="radio" class="input-radio" name="{{form.ad_type.name}}" value="text" id="creativeType-text" {% if not form.ad_type.value %}checked="checked"{% endif %}{% ifequal form.ad_type.value "text" %}checked="checked"{% endifequal %}/> <label for="creativeType-text">Text</label> 
-                              <input type="radio" class="input-radio" name="{{form.ad_type.name}}" value="image" id="creativeType-image" {% ifequal form.ad_type.value "image" %}checked="checked"{% endifequal %}/> <label for="creativeType-image">Image</label> 
-                              <input type="radio" class="input-radio" name="{{form.ad_type.name}}" value="html" id="creativeType-html" {% ifequal form.ad_type.value "html" %}checked="checked"{% endifequal %}/> <label for="creativeType-html">HTML</label> 
-                            </span> 
-                          </dd>
-                          <dt><label for="name">Creative Name:</label></dt>
-                          <dd>
-                            <input type='text' name="{{form.name.name}}" class="input-text {% if form.name.errors %}form-error{% endif %}" value="{{form.name.value}}"/>
-                            {% for error in form.name.errors %}
-                            <div class="form-error-text">{{error}}</div> 
-                            {% endfor %}
-                          </dd>
-                          <dt><label for="tracking_url">Impression Tracking Pixel:</label></dt>
-                          <dd>
-                            <input type='text' name="{{form.tracking_url.name}}" class="input-text {% if form.tracking_url.errors %}form-error{% endif %}" value="{{form.tracking_url.value}}"/>
-                            {% for error in form.tracking_url.errors %}
-                            <div class="form-error-text">{{error}}</div> 
-                            {% endfor %}
-                          </dd>
-                          <dt><label for="url">URL:</label></dt>
-                          <dd>
-                            <input type='text' name="{{form.url.name}}" class="input-text {% if form.url.errors %}form-error{% endif %}" value="{{form.url.value}}"/>
-                            {% for error in form.url.errors %}
-                            <div class="form-error-text">{{error}}</div> 
-                            {% endfor %}
-                          </dd>
+                            <dt>Creative Type:{{form.ad_type.value}}</dt> 
+                            <dd> 
+                              <span class="radios"> 
+                                <input type="radio" class="input-radio" name="{{form.ad_type.name}}" value="text_icon" id="creativeType-text_icon" {% if not form.ad_type.value %}checked="checked"{% endif %}{% ifequal form.ad_type.value "text_icon" %}checked="checked"{% endifequal %}/> <label for="creativeType-text_icon">Text and Tile</label> 
+                                <input type="radio" class="input-radio" name="{{form.ad_type.name}}" value="image" id="creativeType-image" {% ifequal form.ad_type.value "image" %}checked="checked"{% endifequal %}/> <label for="creativeType-image">Image</label> 
+                                <input type="radio" class="input-radio" name="{{form.ad_type.name}}" value="html" id="creativeType-html" {% ifequal form.ad_type.value "html" %}checked="checked"{% endifequal %}/> <label for="creativeType-html">HTML</label> 
+                              </span> 
+                            </dd>
+                            <dt><label for="name">Creative Name:</label></dt>
+                            <dd>
+                              <input type='text' name="{{form.name.name}}" class="input-text {% if form.name.errors %}form-error{% endif %}" value="{{form.name.value}}"/>
+                              {% for error in form.name.errors %}
+                              <div class="form-error-text">{{error}}</div> 
+                              {% endfor %}
+                            </dd>

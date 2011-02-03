@@ -31,7 +31,11 @@
               </form>
             </div>
           </section>
-
+{% if not adunits %}
+          <div class="alertMessage error">
+            This campaign is not targeted at any <strong>Ad Units</strong>.  In order for this campaign to deliver, you will need to target at least one Ad Unit.
+          </div>
+{% endif %}
           <div class="separated" id="chartWrapper">
             <section class="offset nomargin" id="dashboard-stats">
               <div class="stats">
@@ -100,7 +104,7 @@
                 </tr>
               </thead>
               <tbody>
-            {% for adunit in adunits %}
+                {% for adunit in adunits %}
                 <tr class="{% cycle 'campaignData' 'campaignData campaignData-alt' %}" id="adgroup-adunits-{{forloop.counter0}}">
                   <td class="campaignData-icon">
                     <a href="{% url publisher_app_show app_key=adunit.app.key %}">
@@ -119,7 +123,14 @@
                   <td class="dataTable-data numeric">{{adunit.stats.click_count|withsep}}</td>
                   <td class="dataTable-data numeric">{{adunit.stats.revenue|currency}}</td>
                 </tr>
-            {% endfor %}
+                {% empty %}
+                <tr class="campaignData" id="adgroup-adunits-0">
+                  <td class="campaignData-icon">
+                  </td>
+                  <th class="dataTable-name">
+                    <span class="muted">None</span>
+                  </th>
+                {% endfor %}
               </tbody>
             </table>
           </section>

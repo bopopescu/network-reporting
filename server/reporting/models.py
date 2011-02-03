@@ -56,7 +56,7 @@ class SiteStats(db.Model):
   _geo_clicks_json = db.StringProperty()
   _geo_revenues_json = db.StringProperty()
   _geo_users_json = db.StringProperty()
-  
+
   @property
   def geo_requests(self):
     if not hasattr(self,'_geo_requests'):

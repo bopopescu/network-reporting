@@ -86,11 +86,11 @@
                     <th class="campaignData-icon"></th>
                     <th class="dataTable-name">Name</th>
                     <th class="dataTable-data numeric">CPM</th>
+                    <th class="dataTable-data numeric">Status</th>
                     <th class="dataTable-data numeric">Impressions</th>
                     <th class="dataTable-data numeric">Clicks</th>
                     <th class="dataTable-data numeric">CTR</th>
                     <th class="dataTable-data numeric">Conv</th>
-                    <th class="dataTable-data numeric">Conv%</th>
                     <th class="dataTable-data numeric">CPA</th>
                   </tr>
                 </thead>
@@ -105,11 +105,11 @@
                     </th> 
                     <th class="dataTable-name"><a href="{% url advertiser_adgroup_show adgroup_key=c.key %}">{{c.name}}</a></th>
                     <td class="dataTable-data numeric">{{c.bid|currency}}</td>
+                    <td class="dataTable-data numeric">In-flight</td>
                     <td class="dataTable-data numeric">{{c.stats.impression_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{c.stats.click_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{c.stats.ctr|percentage|withsep}}</td>
-                    <td class="dataTable-data numeric">{{c.stats.conversion_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{c.stats.conv_rate|percentage}}</td>
+                    <td class="dataTable-data numeric">{{c.stats.conversion_count|withsep}} ({{c.stats.conv_rate|percentage}})</td>
                     <td class="dataTable-data numeric">{{c.stats.cpa|currency}}</td>
                   </tr>
               	  {% empty %}
@@ -135,11 +135,11 @@
                     <th class="campaignData-icon"></th>
                     <th class="dataTable-name">Name</th>
                     <th class="dataTable-data numeric">CPM</th>
+                    <th class="dataTable-data numeric">Status</th>
                     <th class="dataTable-data numeric">Impressions</th>
                     <th class="dataTable-data numeric">Clicks</th>
                     <th class="dataTable-data numeric">CTR</th>
                     <th class="dataTable-data numeric">Conv</th>
-                    <th class="dataTable-data numeric">Conv%</th>
                     <th class="dataTable-data numeric">CPA</th>
                   </tr>
                 </thead>
@@ -154,11 +154,11 @@
                     </th> 
                     <th class="dataTable-name"><a href="{% url advertiser_adgroup_show adgroup_key=c.key %}">{{c.name}}</a></th>
                     <td class="dataTable-data numeric">{{c.bid|currency}}</td>
+					<td class="dataTable-data numeric">In-flight</td>
                     <td class="dataTable-data numeric">{{c.stats.impression_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{c.stats.click_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{c.stats.ctr|percentage|withsep}}</td>
-                    <td class="dataTable-data numeric">{{c.stats.conversion_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{c.stats.conv_rate|percentage}}</td>
+                    <td class="dataTable-data numeric">{{c.stats.conversion_count|withsep}} ({{c.stats.conv_rate|percentage}})</td>
                     <td class="dataTable-data numeric">{{c.stats.cpa|currency}}</td>
                   </tr>
               	  {% empty %}
@@ -183,13 +183,13 @@
                   <tr>
                     <th class="campaignData-icon"></th>
                     <th class="dataTable-name">Name</th>
-                    <th class="dataTable-data numeric">&nbsp;</th>
-                    <th class="dataTable-data numeric">&nbsp;</th>
                     <th class="dataTable-data numeric">CPM</th>
                     <th class="dataTable-data numeric">Requests</th>
                     <th class="dataTable-data numeric">Impressions</th>
                     <th class="dataTable-data numeric">Clicks</th>
                     <th class="dataTable-data numeric">CTR</th>
+                    <th class="dataTable-data numeric">&nbsp;</th>
+                    <th class="dataTable-data numeric">&nbsp;</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -202,13 +202,13 @@
                       {% if not c.active and not c.deleted %}<img src="/images/paused.gif" height=9 width=9></img>{% endif %}
                     </th> 
                     <th class="dataTable-name"><a href="{% url advertiser_adgroup_show adgroup_key=c.key %}">{{c.name}}</a></th>
-					<td class="dataTable-data numeric"></td>
-					<td class="dataTable-data numeric"></td>
                     <td class="dataTable-data numeric">{{c.bid|currency}}</td>
                     <td class="dataTable-data numeric">{{c.stats.request_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{c.stats.impression_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{c.stats.click_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{c.stats.ctr|percentage|withsep}}</td>
+					<td class="dataTable-data numeric">&nbsp;</td>
+					<td class="dataTable-data numeric">&nbsp;</td>
                   </tr>
               	  {% empty %}
 				  <tr class="campaignData">

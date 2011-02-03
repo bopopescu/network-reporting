@@ -10,25 +10,25 @@ def currency(value):
   if value:
     return "$%s%s" % (withsep(int(value)), ("%0.2f" % value)[-3:])
   else:
-    return ""
+    return "$0.00"
     
 def currency_no_symbol(value):
   if value:
     return "%s%s" % (withsep(int(value)), ("%0.2f" % value)[-3:])
   else:
-    return ""
+    return "0.00"
 
 def percentage(value):
   if value:
   	return "%1.1f%%" % ((value or 0) * 100)
   else:
-	return ""	
+	return "0.0%"	
   
 def withsep(x):
   if x:
   	return re.sub(r'(\d{3})(?=\d)', r'\1,', str(x)[::-1])[::-1] 
   else:
-	return ""
+	return "0"
   
 def format_date(value):
   return value.strftime("%a, %b %d, %Y")

@@ -275,6 +275,9 @@ var mopub = mopub || {};
       });
       
     $('#adgroupEditForm-submit')
+      .button({ 
+        icons: { secondary: "ui-icon-circle-triangle-e" } 
+      })
       .click(function(e){
         e.preventDefault();
         $('#campaignAdgroupForm').submit()
@@ -314,7 +317,9 @@ var mopub = mopub || {};
     });
     
     $('#creativeCreateForm-submit')
-      .button()
+      .button({ 
+        icons: { secondary: "ui-icon-circle-triangle-e" } 
+      })
       .click(function(e) {
         e.preventDefault();
         $('#creativeCreateForm').submit();

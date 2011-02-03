@@ -67,7 +67,7 @@
                           <option value="cpm" id="bid_strategy-cpm"{% ifequal form.bid_strategy.value "cpm"%}selected="selected"{% endifequal %}>CPM</option>
                           <option value="cpc" {% ifequal form.bid_strategy.value "cpc"%}selected="selected"{% endifequal %}>CPC</option>
                         </select>
-                        @ <input type="text" class="input-text-number {% if form.bid.errors %}form-error{% endif %}" name="bid" value="{{form.bid.value|stringformat:'.02f'}}" id="bid-max" placeholder="1"/> USD
+                        @ <input type="text" class="input-text-number {% if form.bid.errors %}form-error{% endif %}" name="bid" value="{{form.bid.value}}" id="bid-max" placeholder="1"/> USD
                         {% for error in form.bid.errors %}
                         <div class="form-error-text">{{error}}</div> 
                         {% endfor %}

@@ -285,7 +285,8 @@ class CreateCampaignHandler(RequestHandler):
   def get(self,campaign_form=None, adgroup_form=None):
     campaign_create_form_fragment = CreateCampaignAJAXHander(self.request).get()
     return render_to_response(self.request,'advertiser/new.html', {"campaign_create_form_fragment": campaign_create_form_fragment})
-    
+  
+  # TODO: this should not get called  
   def post(self):
     campaign_form = CampaignForm(data=self.request.POST)
     adgroup_form = AdGroupForm(data=self.request.POST)

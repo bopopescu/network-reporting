@@ -32,6 +32,26 @@ var mopub = mopub || {};
         $('#bid-max').attr('name','bid');
       }    
     }).filter(':checked').click(); // make sure we're in sync when the page loads
+		
+		console.log($('#adgroupForm-advanced-toggleButton'));
+    $('#adgroupForm-advanced-toggleButton')
+      .button('option', {icons: { primary: 'ui-icon-triangle-1-s' }})
+      .click(function(e) {
+				console.log('button clicked');
+        e.preventDefault();
+        var buttonTextElem = $('.ui-button-text', this);
+        if ($('.adgroupForm-advanced').is(':hidden')) {
+          $('.adgroupForm-advanced').slideDown('fast');
+          buttonTextElem.text('Hide Advanced Details');
+          $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
+        }
+        else {
+          $('.adgroupForm-advanced').slideUp('fast');
+          buttonTextElem.text('Show Advanced Details');
+          $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
+        }
+      });
+
   }
    
    campaignAdgroupFormOnLoad(); 
@@ -291,22 +311,6 @@ var mopub = mopub || {};
         e.preventDefault();
 				$('#campaignAdgroupForm-loading').show();
         $('#campaignAdgroupForm').submit()
-      });
-    $('#adgroupForm-advanced-toggleButton')
-      .button('option', {icons: { primary: 'ui-icon-triangle-1-s' }})
-      .click(function(e) {
-        e.preventDefault();
-        var buttonTextElem = $('.ui-button-text', this);
-        if ($('.adgroupForm-advanced').is(':hidden')) {
-          $('.adgroupForm-advanced').slideDown('fast');
-          buttonTextElem.text('Hide Advanced Details');
-          $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
-        }
-        else {
-          $('.adgroupForm-advanced').slideUp('fast');
-          buttonTextElem.text('Show Advanced Details');
-          $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
-        }
       });
     $('#campaignForm-pause')
       .click(function(e) {

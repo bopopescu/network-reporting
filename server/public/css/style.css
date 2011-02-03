@@ -1931,13 +1931,12 @@ td.numeric, th.numeric, .numeric TD {
 }
 
 .campaignData-icon img {
-  padding-top: 4px;
-  padding-left: 4px;
+  margin: 4px 0 0 4px;
 }
 
 table.campaignData-main {
-	margin: 0 0 15px 0;
-	width: 100%;
+  margin: 0 0 15px 0;
+  width: 100%;
 }
 
 .campaignData-main th, .campaignData-main td {

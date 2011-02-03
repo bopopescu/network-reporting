@@ -107,13 +107,14 @@
                     <tr>
                       <td class="appData-icon">
                         {% if adunit.app.icon %}
-                        <img src="{{adunit.app.icon|binary_data}}"/>
+                        <img src="{{adunit.app.icon|binary_data}}" alt="Icon" width="45" height="45"/>
                         {% else %}
                         <img src="/images/noicon.png">
                         {% endif %}
                       </td> 
                       <th class="dataTable-name">
-                      {{adunit.app.name}} &gt; <a href="{% url publisher_adunit_show adunit_key=adunit.key %}">{{adunit.name}}</a>
+                        <a href="{% url publisher_app_show app_key=adunit.app.key %}">{{adunit.app.name}}</a><br/>
+                        <span class="smaller"><a href="{% url publisher_adunit_show adunit_key=adunit.key %}">{{adunit.name}}</a></span>
                       </th>
                       <td class="dataTable-data">{{adunit.stats.impression_count|withsep}}</td>
                       <td class="dataTable-data">{{adunit.stats.click_count|withsep}}</td>

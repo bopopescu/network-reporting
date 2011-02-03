@@ -1179,6 +1179,11 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
   font-weight: 600;
 }
 
+.appData-main th .smaller, .appData-main td .smaller {
+  font-size: 13px;
+  font-weight: normal;
+}
+
 .appData-details {
   margin: -29px 0 0 56px;
 }

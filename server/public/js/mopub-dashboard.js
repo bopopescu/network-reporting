@@ -17,6 +17,8 @@ var mopub = mopub || {};
      data: { ajax: true },
      dataType : 'json',
       success:    function(jsonData, statusText, xhr, $form) {
+				 $('#appEditForm-loading').hide();
+					
          if (jsonData.success){
            window.location.reload();
          }
@@ -24,6 +26,8 @@ var mopub = mopub || {};
            $('#appForm-fragment').html(jsonData.html);
            // reimplement the onload event
            appFormOnload();
+					 window.location.hash = '';
+					 window.location.hash = 'appForm'; 
           }
         } 
      };
@@ -34,6 +38,7 @@ var mopub = mopub || {};
      data: { ajax: true },
      dataType : 'json',
       success:    function(jsonData, statusText, xhr, $form) {
+				 $('#adunitForm-loading').hide();
          if (jsonData.success){
            window.location.reload();
          }
@@ -41,6 +46,8 @@ var mopub = mopub || {};
            $('#adunitForm-fragment').html(jsonData.html);
            // reimplement the onload event
            appFormOnload();
+					 window.location.hash = '';
+					 window.location.hash = 'adunitForm';
           }
         } 
      };
@@ -277,6 +284,7 @@ var mopub = mopub || {};
       })
       .click(function(e) {
         e.preventDefault();
+				$('#appEditForm-loading').show();
         $('#appForm').submit();
     });
     $('#appEditForm-cancel')
@@ -291,6 +299,7 @@ var mopub = mopub || {};
       })
       .click(function(e) {
         e.preventDefault();
+				$('#adunitForm-loading').show();
         $('#adunitAddForm').submit();
     });
     $('#adunitAddForm-cancel')
@@ -306,6 +315,7 @@ var mopub = mopub || {};
       })
       .click(function(e) {
         e.preventDefault();
+				$('#adunitForm-loading').show();
         $('#adunitAddForm').submit();
     });
     $('#adunitEditForm-cancel')

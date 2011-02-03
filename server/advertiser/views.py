@@ -207,23 +207,25 @@ class CreateCampaignAJAXHander(RequestHandler):
       campaign = campaign or adgroup.campaign
     campaign_form = campaign_form or CampaignForm(instance=campaign)
     adgroup_form = adgroup_form or AdGroupForm(instance=adgroup)
-    networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["greystripe","GreyStripe",False],["iAd","iAd",False],["inmobi","InMobi",False],["millennial","Millennial Media",False]]
+    networks = [["iAd","Apple iAd",False],["admob","AdMob",False],["millennial","Millennial Media",False],
+                ["inmobi","InMobi",False],["greystripe","GreyStripe",False],["brightroll","BrightRoll",False],
+                ["adsense","Google AdSense",False],["custom","Custom",False]]
     
     all_adunits = AdUnitQueryManager().get_adunits(account=self.account)
     
-    adgroup_form['site_keys'].queryset = all_adunits # needed for validation TODO: doesn't actually work
+    adgroup_form['site_keys'].choices = all_adunits # needed for validation TODO: doesn't actually work
     
     # TODO: Remove this hack to place the bidding info with the rest of campaign
     campaign_form.bid  = adgroup_form['bid']
     campaign_form.bid_strategy = adgroup_form['bid_strategy']
+    
+    logging.warning("bid: %s %s"%("campaign_form['bid']",campaign_form.bid.value))
 
     adunit_keys = adgroup_form['site_keys'].value or []
     adunit_str_keys = [unicode(k) for k in adunit_keys]
-    logging.info('adunit_keys: %s'%adunit_keys)
     for adunit in all_adunits:
       adunit.checked = unicode(adunit.key()) in adunit_str_keys
       adunit.app = App.get(adunit.app_key.key())
-      logging.info('checked: %s'%adunit.checked)
       
     campaign_form.add_context(dict(networks=networks))
     adgroup_form.add_context(dict(all_adunits=all_adunits))
@@ -248,9 +250,10 @@ class CreateCampaignAJAXHander(RequestHandler):
     campaign_form = CampaignForm(data=self.request.POST,instance=campaign)
     adgroup_form = AdGroupForm(data=self.request.POST,instance=adgroup)
     
+    
     all_adunits = AdUnitQueryManager().get_adunits(account=self.account)
     sk_field = adgroup_form.fields['site_keys']
-    sk_field.queryset = all_adunits # TODO: doesn't work needed for validation
+    sk_field.choices = all_adunits # TODO: doesn't work needed for validation
     
     json_dict = {'success':False,'html':None}
     
@@ -260,14 +263,11 @@ class CreateCampaignAJAXHander(RequestHandler):
       
       if adgroup_form.is_valid():
         adgroup = adgroup_form.save(commit=False)
-        
-        logging.warning('form errors: %s'%adgroup_form.errors)
-        
+                
         # TODO: clean this up in case the campaign succeeds and the adgroup fails
         CampaignQueryManager().put_campaigns(campaign)
         adgroup.campaign = campaign
         AdGroupQueryManager().put_adgroups(adgroup)
-        logging.info('adgroup: %s'%adgroup.key())
         
         if campaign.campaign_type == "network":
           creative = adgroup.default_creative()
@@ -280,7 +280,9 @@ class CreateCampaignAJAXHander(RequestHandler):
         
         json_dict.update(success=True,new_page=reverse('advertiser_adgroup_show',kwargs={'adgroup_key':str(adgroup.key())}))
         return self.json_response(json_dict)
-    logging.warning('adgroup form errors: %s'%adgroup_form.errors)      
+    logging.warning('adgroup form errors: %s'%adgroup_form.errors) 
+    logging.warning('adgroup form bid: %s'%adgroup_form['bid'].value)      
+         
     new_html = self.get(campaign_form=campaign_form,
                         adgroup_form=adgroup_form)
     json_dict.update(success=False,html=new_html)    
@@ -291,30 +293,13 @@ def campaign_adgroup_create_ajax(request,*args,**kwargs):
   return CreateCampaignAJAXHander()(request,*args,**kwargs)      
 
 
+# Wrapper for the AJAX handler
 class CreateCampaignHandler(RequestHandler):
   def get(self,campaign_form=None, adgroup_form=None):
     campaign_create_form_fragment = CreateCampaignAJAXHander(self.request).get()
-    
-    # campaign_form = campaign_form or CampaignForm()
-    # adgroup_form = adgroup_form or AdGroupForm()
-    # networks = [["adsense","Google AdSense",False],["iAd","Apple iAd",False],["admob","AdMob",False],["millennial","Millennial Media",False],["inmobi","InMobi",False],["greystripe","GreyStripe",False],["appnexus","App Nexus",False],["brightroll","BrightRoll",False],["custom","Custom",False]]
-    # all_adunits = AdUnitQueryManager().get_adunits(account=self.account)
-    # 
-    # adgroup_form['site_keys'].queryset = all_adunits # needed for validation TODO: doesn't actually work
-    # 
-    # # TODO: Remove this hack to place the bidding info with the rest of campaign
-    # campaign_form.bid  = adgroup_form['bid']
-    # campaign_form.bid_strategy = adgroup_form['bid_strategy']
-    # 
-    # adunit_keys = adgroup_form['site_keys'].value or []
-    # for adunit in all_adunits:
-    #   adunit.checked = unicode(adunit.key()) in adunit_keys
-    #   adunit.app = App.get(adunit.app_key.key())
-    # campaign_form.add_context(dict(networks=networks))
-    # adgroup_form.add_context(dict(all_adunits=all_adunits))
-
     return render_to_response(self.request,'advertiser/new.html', {"campaign_create_form_fragment": campaign_create_form_fragment})
-    
+  
+  # TODO: this should not get called  
   def post(self):
     campaign_form = CampaignForm(data=self.request.POST)
     adgroup_form = AdGroupForm(data=self.request.POST)
@@ -365,7 +350,7 @@ class CreateAdGroupHandler(RequestHandler):
       adunit.app = App.get(adunit.app_key.key())
 			
 		# TODO: Clean up this hacked shit	
-    networks = [["adsense","Google AdSense",False],["iAd","Apple iAd",False],["admob","AdMob",False],["millennial","Millennial Media",False],["inmobi","InMobi",False],["greystripe","GreyStripe",False],["appnexus","App Nexus",False],["brightroll","BrightRoll",False],["custom","Custom",False]]
+    networks = [["adsense","Google AdSense",False],["iAd","Apple iAd",False],["admob","AdMob",False],["millennial","Millennial Media",False],["inmobi","InMobi",False],["greystripe","GreyStripe",False],["brightroll","BrightRoll",False],["custom","Custom",False]]
     for n in networks:
       if adgroup.network_type == n[0]:
         n[2] = True
@@ -684,7 +669,6 @@ class AddCreativeHandler(RequestHandler):
         html_creative = HtmlCreativeQueryManager().get_by_key(creative.key())      
       
       
-    logging.warning('creative_key: %s, creative: %s'%(creative_key,creative))  
     base_creative_form = BaseCreativeForm(data=self.request.POST,instance=creative)
     text_creative_form = TextCreativeForm(data=self.request.POST,instance=text_creative)
     image_creative_form = ImageCreativeForm(data=self.request.POST,files=self.request.FILES,instance=image_creative)

@@ -16,6 +16,6 @@ class JSONResponse(HttpResponse):
     def __init__(self, pyobj, **kwargs):
         super(JSONResponse, self).__init__(
             simplejson.dumps(pyobj, cls=LazyEncoder),
-            content_type='application/json; charset=%s' %
+            content_type='text/plain; charset=%s' %
                             settings.DEFAULT_CHARSET,
             **kwargs)

@@ -2,12 +2,15 @@
 {% load filters %}
 {% block extraScripts %}<script src="/js/mopub-setup.js"></script>{% endblock extraScripts %}
 {% block pageTitle %}<h1>{% ifnotequal account.status "new" %}Add an app{% else %}Step 1: Set up your first app{% endifnotequal %}</h1>{% endblock pageTitle %}{% block dateButtons %}{% endblock dateButtons %}
-{% block titleBarRight %}{% ifequal account.status "new" %}            <div class="stepProgress"> 
+{% block titleBarRight %}{% ifequal account.status "new" %}
+            <div class="stepProgress"> 
               <span class="stepProgress-step stepProgress-active">Step 1: Add app</span> 
               <span class="ui-icon ui-icon-arrow-1-e"></span> 
               <span class="stepProgress-step">Step 2: Integrate</span> 
               <span class="ui-icon ui-icon-arrow-1-e"></span> 
-              <span class="stepProgress-step">Step 3: Add campaigns</span> 
+              <span class="stepProgress-step">Step 3: Ad networks</span> 
+              <span class="ui-icon ui-icon-arrow-1-e"></span> 
+              <span class="stepProgress-step">Step 4: Ad campaigns</span> 
             </div>{% endifequal %}{% endblock titleBarRight %}
 {% block messageCenter %}{% endblock messageCenter %}
 {% block content %}

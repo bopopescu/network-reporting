@@ -1907,10 +1907,6 @@ td.numeric, th.numeric, .numeric TD {
   text-align: right;
 }
 
-/* overrides graph spacing */
-.appData th.dataTable-name {
-  width: 490px;
-}
 
 .campaignData {
   padding: 10px 5px 6px 5px;

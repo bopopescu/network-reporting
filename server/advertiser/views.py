@@ -146,7 +146,6 @@ class AdGroupIndexHandler(RequestHandler):
       # TODO: Convert to QueryManager, why is this here anyway?
       campaigns = Campaign.gql("where u = :1 and deleted = :2", self.account.user, False).fetch(100)
       adgroups = AdGroup.gql("where campaign in :1 and deleted = :2", [x.key() for x in campaigns], False).fetch(100)
-    adgroups = sorted(adgroups, lambda x,y: cmp(y.bid, x.bid))
     
     for c in adgroups:
       c.all_stats = SiteStatsQueryManager().get_sitestats_for_days(owner=c, days=days)      
@@ -157,8 +156,15 @@ class AdGroupIndexHandler(RequestHandler):
     totals = reduce(lambda x,y: x+y, daily_totals, SiteStats())
 
     promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], adgroups)
+    promo_campaigns = sorted(promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
+    
     guarantee_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee'], adgroups)
+    guarantee_campaigns = sorted(guarantee_campaigns, lambda x,y: cmp(y.bid, x.bid))
+
     network_campaigns = filter(lambda x: x.campaign.campaign_type in ['network'], adgroups)
+    network_campaigns = sorted(network_campaigns, lambda x,y: cmp(y.bid, x.bid))
+    
+    adgroups = sorted(adgroups, key=lambda adgroup: adgroup.stats.impression_count, reverse=True)
     
     help_text = None
     if network_campaigns:

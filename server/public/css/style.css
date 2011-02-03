@@ -1163,7 +1163,7 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
   width: 45px;
 }
 
-.dataTable .appData-icon a img {
+.dataTable .appData-icon a img, .dataTable .campaignData-icon a img {
   -webkit-border-radius:6px;-moz-border-radius:6px
 }
 

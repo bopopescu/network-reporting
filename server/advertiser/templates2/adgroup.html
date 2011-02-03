@@ -39,7 +39,7 @@
                   <tbody>
                     <tr class="active" id="stats-breakdown-revenue">
                       <td class="stats-breakdown-value"><span class="inner">{{totals.revenue|currency}}</span></td>
-                      <th class="stats-breakdown-name"><span class="inner">Revenue (est.)</span></th>
+                      <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
                     </tr>
                     <tr id="stats-breakdown-impressions">
                       <td class="stats-breakdown-value"><span class="inner">{{totals.impression_count|withsep}}</span></td>
@@ -89,7 +89,7 @@
               <table class="dataTable campaignData-main">
                 <thead>
                     <tr>
-                    <th class="appData-icon"></th>
+                    <th class="campaignData-icon"></th>
                     <th class="dataTable-name">Name</th>
                     <th class="dataTable-data numeric">&nbsp;</th>
                     <th class="dataTable-data numeric">&nbsp;</th>
@@ -103,12 +103,14 @@
                 <tbody>
 	            {% for adunit in adunits %}
                 	<tr class="{% cycle 'campaignData' 'campaignData campaignData-alt' %}" id="adgroup-adunits-{{forloop.counter0}}">
-	                  <td class="appData-icon">
-	                    {% if adunit.app.icon %}
-	                    <img src="{{adunit.app.icon|binary_data}}" alt="Icon" width="45" height="45"/>
-	                    {% else %}
-	                    <img src="/images/noicon.png">
-	                    {% endif %}
+	                  <td class="campaignData-icon">
+						<a href="{% url publisher_app_show app_key=adunit.app.key %}">
+		                    {% if adunit.app.icon %}
+		                    <img src="{{adunit.app.icon|binary_data}}" alt="Icon" width="45" height="45"/>
+		                    {% else %}
+		                    <img src="/images/noicon.png">
+		                    {% endif %}
+						</a>
 	                  </td> 
 	                  <th class="dataTable-name">
 	                    <a href="{% url publisher_app_show app_key=adunit.app.key %}">{{adunit.app.name}}</a><br/>

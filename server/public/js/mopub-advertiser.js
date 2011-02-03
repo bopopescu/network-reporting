@@ -11,7 +11,7 @@ var mopub = mopub || {};
     
     //get info from page
   if (typeof creatives=="undefined")
-    creatives = false
+    creatives = false;
     
   function campaignAdgroupFormOnLoad(){
     $('#campaignAdgroupForm input[name="campaign_type"]').click(function(e) {
@@ -137,29 +137,29 @@ var mopub = mopub || {};
    var options = { 
    data: { ajax: true },
    dataType : 'json',
-    success:    function(jsonData) { 
-       $('#creativeCreateForm-loading').hide();
-       if (jsonData.success){
-         $('#creativeCreateForm-success').show(); // show message
-         $('#advertiser-creativeAddForm')
-           .slideUp('slow', function() {
-             $('#advertiser-adgroups-addCreativeButton').show();
-             $('#creativeCreateForm-success').hide(); // hide message
-             $('#creativeCreateForm').resetForm();
-             window.location.reload();
-           });
-       }
-       else{
-         $('#creativeAddForm-fragment').html(jsonData.html);
-         // reimplement the onload event
-         $('#creativeCreateForm input[name="ad_type"]')
-           .click(function(e){
-             $('#creativeCreateForm')
-               .find('.adTypeDependent').hide().end()
-               .find('.'+$(this).val()).show().end();
-           }).filter(':checked').click();
-         window.location.hash = ''; 
-         window.location.hash = 'advertiser-creativeAddForm'; 
+    success: function(jsonData) { 
+      $('#creativeCreateForm-loading').hide();
+        if (jsonData.success) {
+          $('#creativeCreateForm-success').show(); // show message
+          $('#advertiser-creativeAddForm')
+            .slideUp('slow', function() {
+              $('#advertiser-adgroups-addCreativeButton').show();
+              $('#creativeCreateForm-success').hide(); // hide message
+              $('#creativeCreateForm').resetForm();
+              window.location.reload();
+            });
+        }
+        else{
+          $('#creativeAddForm-fragment').html(jsonData.html);
+          // reimplement the onload event
+          $('#creativeCreateForm input[name="ad_type"]')
+            .click(function(e){
+              $('#creativeCreateForm')
+                .find('.adTypeDependent').hide().end()
+                .find('.'+$(this).val()).show().end();
+              }).filter(':checked').click();
+          window.location.hash = ''; 
+          window.location.hash = 'advertiser-creativeAddForm'; 
         }
       } 
     };
@@ -169,7 +169,7 @@ var mopub = mopub || {};
       var $this = $(this);
       var options = {
         data: { ajax : true , },
-        dataType : 'json',
+        dataType: 'json',
         success: function(jsonData, statusText, xhr, $form){
           $form.find('.creativeEditForm-loading').hide();
           if (jsonData.success){
@@ -216,7 +216,7 @@ var mopub = mopub || {};
     $('.advertiser-inLineCreativePreview')
       .button({ icons : { primary : 'ui-icon-search' }})
       .click(function(e){
-        e.preventDefault()
+        e.preventDefault();
         var creative_key = $(this).attr("id");
         $("#"+creative_key+"-preview").dialog({
           buttons: [
@@ -233,7 +233,7 @@ var mopub = mopub || {};
     $('.advertiser-inLineCreativeToggle')
       .button({ icons : { primary : 'ui-icon-wrench' }})
       .click(function(e){
-        e.preventDefault()
+        e.preventDefault();
         var creative_key = $(this).attr("id");
         var creative_form = $("#"+creative_key+"-edit");
         if (creative_form.is(":hidden")) {
@@ -265,6 +265,7 @@ var mopub = mopub || {};
 
     $('#creativeCreateForm input[name="ad_type"]')
       .click(function(e){
+        e.preventDefault();
         $('.adTypeDependent',"#creativeCreateForm").hide();
         $('.adTypeDependent.'+$(this).val(),"#creativeCreateForm").show();
       }).filter(':checked').click();
@@ -272,6 +273,7 @@ var mopub = mopub || {};
 
     $('.creativeEditForm input[name="ad_type"]')
       .click(function(e){
+        e.preventDefault();
         // gets the form to which this belongs
         var form = $(this).parents('form');
         $('.adTypeDependent',form).hide();
@@ -293,6 +295,7 @@ var mopub = mopub || {};
     $('#advertisers-adgroups-editAdGroupButton')
       .button({ icons: { primary: "ui-icon-wrench" } })
       .click(function(e){
+        e.preventDefault();
         var form = $('#advertiser-adgroupEditForm');
         if (form.is(":hidden")) {
           $('#advertiser-adgroupEditForm').slideDown('fast');          
@@ -304,6 +307,7 @@ var mopub = mopub || {};
     
     $('#adgroupEditForm-cancel')
       .click(function(e){
+        e.preventDefault();
         $('#advertiser-adgroupEditForm').slideUp('fast',function(){
           $('#advertisers-adgroups-editAdGroupButton').show();
         });

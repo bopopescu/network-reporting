@@ -207,9 +207,8 @@ class CreateCampaignAJAXHander(RequestHandler):
       campaign = campaign or adgroup.campaign
     campaign_form = campaign_form or CampaignForm(instance=campaign)
     adgroup_form = adgroup_form or AdGroupForm(instance=adgroup)
-    networks = [["iAd","Apple iAd",False],["admob","AdMob",False],["millennial","Millennial Media",False],
-                ["inmobi","InMobi",False],["greystripe","GreyStripe",False],["brightroll","BrightRoll",False],
-                ["adsense","Google AdSense",False],["custom","Custom",False]]
+    networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["greystripe","GreyStripe",False],\
+      ["iAd","iAd",False],["inmobi","InMobi",False],["millennial","Millennial Media",False]]
     
     all_adunits = AdUnitQueryManager().get_adunits(account=self.account)
     
@@ -348,9 +347,8 @@ class CreateAdGroupHandler(RequestHandler):
     for adunit in adunits:
       adunit.checked = adunit.key() in adgroup.site_keys
       adunit.app = App.get(adunit.app_key.key())
-			
-		# TODO: Clean up this hacked shit	
-    networks = [["adsense","Google AdSense",False],["iAd","Apple iAd",False],["admob","AdMob",False],["millennial","Millennial Media",False],["inmobi","InMobi",False],["greystripe","GreyStripe",False],["brightroll","BrightRoll",False],["custom","Custom",False]]
+    # TODO: Clean up this hacked shit	
+    networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["greystripe","GreyStripe",False],["iAd","iAd",False],["inmobi","InMobi",False],["millennial","Millennial Media",False]]
     for n in networks:
       if adgroup.network_type == n[0]:
         n[2] = True

@@ -78,158 +78,154 @@
             </div>
             <form method="post" action="{% url advertiser_bid_pause %}" id="campaignForm">
               <input type="hidden" name="action" id="action"/>
+
               <h2>Guaranteed</h2>
-              <div class="appData-columnHeaders">
-                <table class="dataTable" id="dashboard-campaigns-columnHeaders">
-                  <thead>
-                    <tr>
-                      <th class="appData-icon"></th>
-                      <th class="dataTable-name">Campaigns</th>
-                      <th class="dataTable-data">CPM</th>
-                      <th class="dataTable-data">Status</th>
-                      <th class="dataTable-data"></th>
-                      <th class="dataTable-data">Impressions</th>
-                      <th class="dataTable-data">Clicks</th>
-                      <th class="dataTable-data">CTR</th>
-                    </tr>
-                  </thead>
-                </table>
-              </div>
-              {% for c in gtee %}<div class="appData" id="dashboard-guaranteed-{{forloop.counter0}}">
-                <table class="dataTable appData-main" id="dashboard-guaranteed-{{forloop.counter0}}-main">
-                  <tbody>
-                    <tr>
-                      <td class="appData-icon">
-                        <input type="checkbox" name="id" value="{{c.key}}"/>
-                      </td> 
-                      <th class="dataTable-name"><a href="{% url advertiser_adgroup_show adgroup_key=c.key %}">{{c.name}}</a></th>
-                      <td class="dataTable-data">{{c.bid|currency}}</td>
-                      <td class="dataTable-data">                     
-                        {% if c.deleted %}<img src="/images/deleted.gif" width=9 height=9/>{% endif %}
-                        {% if c.active and not c.deleted %}<img src="/images/active.gif" width=9 height=9/>{% endif %}
-                        {% if not c.active and not c.deleted %}<img src="/images/paused.gif" width=9 height=9/>{% endif %}
-                      </td>
-                      <td class="dataTable-data"></td>
-                      <td class="dataTable-data">{{c.stats.impression_count|withsep}}</td>
-                      <td class="dataTable-data">{{c.stats.click_count|withsep}}</td>
-                      <td class="dataTable-data">{{c.stats.ctr|percentage|withsep}}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              {% empty %}<div class="appData" id="dashboard-guaranteed-0">
-                <table class="dataTable appData-main" id="dashboard-guaranteed-0-main">
-                  <tbody>
-                    <tr>
-                      <td class="appData-icon"></td> 
-                      <th class="dataTable-name"><span class="muted">None</span></th>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              {% endfor %}
-              <h2>Promotional</h2>
-              <div class="appData-columnHeaders">
-                <table class="dataTable" id="dashboard-promo-columnHeaders">
-                  <thead>
-                    <tr>
-                      <th class="appData-icon"></th>
-                      <th class="dataTable-name">Campaigns</th>
-                      <th class="dataTable-data">CPM</th>
-                      <th class="dataTable-data">Status</th>
-                      <th class="dataTable-data"></th>
-                      <th class="dataTable-data">Impressions</th>
-                      <th class="dataTable-data">Clicks</th>
-                      <th class="dataTable-data">CTR</th>
-                    </tr>
-                  </thead>
-                </table>
-              </div>
-              {% for c in promo %}
-              <div class="appData" id="dashboard-promo-{{forloop.counter0}}">
-                <table class="dataTable appData-main" id="dashboard-promo-{{forloop.counter0}}-main">
-                  <tbody>
-                    <tr>
-                      <td class="appData-icon">
-                        <input type="checkbox" name="id" value="{{c.key}}"/>
-                      </td> 
-                      <th class="dataTable-name"><a href="{% url advertiser_adgroup_show adgroup_key=c.key %}">{{c.name}}</a> <span class="muted unbold"></span></th>
-                      <td class="dataTable-data">{{c.bid|currency}}</td>
-                      <td class="dataTable-data">                     
-                        {% if c.deleted %}<img src="/images/deleted.gif" width=9 height=9/>{% endif %}
-                        {% if c.active and not c.deleted %}<img src="/images/active.gif" width=9 height=9/>{% endif %}
-                        {% if not c.active and not c.deleted %}<img src="/images/paused.gif" width=9 height=9/>{% endif %}
-                      </td>
-                      <td class="dataTable-data"></td>
-                      <td class="dataTable-data">{{c.stats.impression_count|withsep}}</td>
-                      <td class="dataTable-data">{{c.stats.click_count|withsep}}</td>
-                      <td class="dataTable-data">{{c.stats.ctr|percentage|withsep}}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              {% empty %}<div class="appData" id="dashboard-promo-0">
-                <table class="dataTable appData-main" id="dashboard-promo-0-main">
-                  <tbody>
-                    <tr>
-                      <td class="appData-icon"></td> 
-                      <th class="dataTable-name"><span class="muted">None</span></th>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              {% endfor %}
+              <table class="dataTable campaignData-main">
+                <thead>
+                  <tr>
+                    <th class="campaignData-icon"></th>
+                    <th class="dataTable-name">Name</th>
+                    <th class="dataTable-data numeric">CPM</th>
+                    <th class="dataTable-data numeric">Status</th>
+                    <th class="dataTable-data numeric">Impressions</th>
+                    <th class="dataTable-data numeric">Clicks</th>
+                    <th class="dataTable-data numeric">CTR</th>
+                    <th class="dataTable-data numeric">Conv</th>
+                    <th class="dataTable-data numeric">CPA</th>
+                  </tr>
+                </thead>
+                <tbody>
+              	  {% for c in gtee %}
+                  <tr class="{% cycle 'campaignData' 'campaignData campaignData-alt' %}" id="campaigns-guaranteed-{{forloop.counter0}}">
+                    <th class="campaignData-icon">
+                      <input type="checkbox" name="id" value="{{c.key}}"/>
+                      {% if c.deleted %}<img src="/images/deleted.gif" height=9 width=9></img>{% endif %}
+                      {% if c.active and not c.deleted %}<img src="/images/active.gif" height=9 width=9></img>{% endif %}
+                      {% if not c.active and not c.deleted %}<img src="/images/paused.gif" height=9 width=9></img>{% endif %}
+                    </th> 
+                    <th class="dataTable-name"><a href="{% url advertiser_adgroup_show adgroup_key=c.key %}">{{c.name}}</a></th>
+                    <td class="dataTable-data numeric">{{c.bid|currency}}</td>
+                    <td class="dataTable-data numeric">In-flight</td>
+                    <td class="dataTable-data numeric">{{c.stats.impression_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{c.stats.click_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{c.stats.ctr|percentage|withsep}}</td>
+                    <td class="dataTable-data numeric">{{c.stats.conversion_count|withsep}} ({{c.stats.conv_rate|percentage}})</td>
+                    <td class="dataTable-data numeric">{{c.stats.cpa|currency}}</td>
+                  </tr>
+              	  {% empty %}
+				  <tr class="campaignData">
+                    <th class="campaignData-icon"></th>
+                    <th class="dataTable-name"><span class="muted">None</span></th>
+					<td class="dataTable-data numeric"></td>
+					<td class="dataTable-data numeric"></td>
+					<td class="dataTable-data numeric"></td>
+					<td class="dataTable-data numeric"></td>
+					<td class="dataTable-data numeric"></td>
+					<td class="dataTable-data numeric"></td>
+					<td class="dataTable-data numeric"></td>
+                  </tr>
+              	  {% endfor %}
+				</tbody>
+			  </table>
+
+			  <h2>Promotional</h2>
+              <table class="dataTable campaignData-main">
+                <thead>
+                  <tr>
+                    <th class="campaignData-icon"></th>
+                    <th class="dataTable-name">Name</th>
+                    <th class="dataTable-data numeric">CPM</th>
+                    <th class="dataTable-data numeric">Status</th>
+                    <th class="dataTable-data numeric">Impressions</th>
+                    <th class="dataTable-data numeric">Clicks</th>
+                    <th class="dataTable-data numeric">CTR</th>
+                    <th class="dataTable-data numeric">Conv</th>
+                    <th class="dataTable-data numeric">CPA</th>
+                  </tr>
+                </thead>
+                <tbody>
+              	  {% for c in promo %}
+                  <tr class="{% cycle 'campaignData' 'campaignData campaignData-alt' %}" id="campaigns-promo-{{forloop.counter0}}">
+                    <th class="campaignData-icon">
+                      <input type="checkbox" name="id" value="{{c.key}}"/>
+                      {% if c.deleted %}<img src="/images/deleted.gif" height=9 width=9></img>{% endif %}
+                      {% if c.active and not c.deleted %}<img src="/images/active.gif" height=9 width=9></img>{% endif %}
+                      {% if not c.active and not c.deleted %}<img src="/images/paused.gif" height=9 width=9></img>{% endif %}
+                    </th> 
+                    <th class="dataTable-name"><a href="{% url advertiser_adgroup_show adgroup_key=c.key %}">{{c.name}}</a></th>
+                    <td class="dataTable-data numeric">{{c.bid|currency}}</td>
+					<td class="dataTable-data numeric">In-flight</td>
+                    <td class="dataTable-data numeric">{{c.stats.impression_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{c.stats.click_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{c.stats.ctr|percentage|withsep}}</td>
+                    <td class="dataTable-data numeric">{{c.stats.conversion_count|withsep}} ({{c.stats.conv_rate|percentage}})</td>
+                    <td class="dataTable-data numeric">{{c.stats.cpa|currency}}</td>
+                  </tr>
+              	  {% empty %}
+				  <tr class="campaignData">
+                    <th class="campaignData-icon"></th>
+                    <th class="dataTable-name"><span class="muted">None</span></th>
+					<td class="dataTable-data numeric"></td>
+					<td class="dataTable-data numeric"></td>
+					<td class="dataTable-data numeric"></td>
+					<td class="dataTable-data numeric"></td>
+					<td class="dataTable-data numeric"></td>
+					<td class="dataTable-data numeric"></td>
+					<td class="dataTable-data numeric"></td>
+                  </tr>
+               	  {% endfor %}
+				</tbody>
+			  </table>
+			
               <h2>Network</h2>
-              <div class="appData-columnHeaders">
-                <table class="dataTable" id="dashboard-network-columnHeaders">
-                  <thead>
-                    <tr>
-                      <th class="appData-icon"></th>
-                      <th class="dataTable-name">Campaigns</th>
-                      <th class="dataTable-data">CPM</th>
-                      <th class="dataTable-data">Status</th>
-                      <th class="dataTable-data">Requests</th>
-                      <th class="dataTable-data">Impressions</th>
-                      <th class="dataTable-data">Clicks</th>
-                      <th class="dataTable-data">CTR</th>
-                    </tr>
-                  </thead>
-                </table>
-              </div>
-              {% for c in network %}
-              <div class="appData" id="dashboard-network-{{forloop.counter0}}">
-                <table class="dataTable appData-main" id="dashboard-network-{{forloop.counter0}}-main">
-                  <tbody>
-                    <tr>
-                      <td class="appData-icon">
-                        <input type="checkbox" name="id" value="{{c.key}}"/>
-                      </td> 
-                      <th class="dataTable-name"><a href="{% url advertiser_adgroup_show adgroup_key=c.key %}">{{c.name}}</a> <span class="muted unbold"></span></th>
-                      <td class="dataTable-data">{{c.bid|currency}}</td>
-                      <td class="dataTable-data">                     
-                        {% if c.deleted %}<img src="/images/deleted.gif" width=9 height=9/>{% endif %}
-                        {% if c.active and not c.deleted %}<img src="/images/active.gif" width=9 height=9/>{% endif %}
-                        {% if not c.active and not c.deleted %}<img src="/images/paused.gif" width=9 height=9/>{% endif %}
-                      </td>
-                      <td class="dataTable-data">{{c.stats.request_count|withsep}}</td> 
-                      <td class="dataTable-data">{{c.stats.impression_count|withsep}}</td>
-                      <td class="dataTable-data">{{c.stats.click_count|withsep}}</td>
-                      <td class="dataTable-data">{{c.stats.ctr|percentage|withsep}}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              {% empty %}<div class="appData" id="dashboard-network-0">
-                <table class="dataTable appData-main" id="dashboard-network-0-main">
-                  <tbody>
-                    <tr>
-                      <td class="appData-icon"></td> 
-                      <th class="dataTable-name"><span class="muted">None</span></th>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              {% endfor %}
+              <table class="dataTable campaignData-main">
+                <thead>
+                  <tr>
+                    <th class="campaignData-icon"></th>
+                    <th class="dataTable-name">Name</th>
+                    <th class="dataTable-data numeric">CPM</th>
+                    <th class="dataTable-data numeric">Requests</th>
+                    <th class="dataTable-data numeric">Impressions</th>
+                    <th class="dataTable-data numeric">Clicks</th>
+                    <th class="dataTable-data numeric">CTR</th>
+                    <th class="dataTable-data numeric">&nbsp;</th>
+                    <th class="dataTable-data numeric">&nbsp;</th>
+                  </tr>
+                </thead>
+                <tbody>
+              	  {% for c in network %}
+                  <tr class="{% cycle 'campaignData' 'campaignData campaignData-alt' %}" id="campaigns-network-{{forloop.counter0}}">
+                    <th class="campaignData-icon">
+                      <input type="checkbox" name="id" value="{{c.key}}"/>
+                      {% if c.deleted %}<img src="/images/deleted.gif" height=9 width=9></img>{% endif %}
+                      {% if c.active and not c.deleted %}<img src="/images/active.gif" height=9 width=9></img>{% endif %}
+                      {% if not c.active and not c.deleted %}<img src="/images/paused.gif" height=9 width=9></img>{% endif %}
+                    </th> 
+                    <th class="dataTable-name"><a href="{% url advertiser_adgroup_show adgroup_key=c.key %}">{{c.name}}</a></th>
+                    <td class="dataTable-data numeric">{{c.bid|currency}}</td>
+                    <td class="dataTable-data numeric">{{c.stats.request_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{c.stats.impression_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{c.stats.click_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{c.stats.ctr|percentage|withsep}}</td>
+					<td class="dataTable-data numeric">&nbsp;</td>
+					<td class="dataTable-data numeric">&nbsp;</td>
+                  </tr>
+              	  {% empty %}
+				  <tr class="campaignData">
+                    <th class="campaignData-icon"></th>
+                    <th class="dataTable-name"><span class="muted">None</span></th>
+					<td class="dataTable-data numeric"></td>
+					<td class="dataTable-data numeric"></td>
+					<td class="dataTable-data numeric"></td>
+					<td class="dataTable-data numeric"></td>
+					<td class="dataTable-data numeric"></td>
+					<td class="dataTable-data numeric"></td>
+					<td class="dataTable-data numeric"></td>
+                  </tr>
+               	  {% endfor %}
+				</tbody>
+			  </table>
+			
               <div class="form-submit-left"> 
                 <span class="buttonWrap"><a class="button" id="campaignForm-pause">Pause</a>
                 <a class="button" id="campaignForm-resume">Resume</a>

@@ -27,15 +27,15 @@
 		{% for s in stats %}
 		<tr>
 			<td>{{s.date}}</td>
-			<td class="numeric">{{s.impression_count}}</td>
-			<td class="numeric">{{s.click_count}}</td>
+			<td class="numeric">{{s.impression_count|withsep}}</td>
+			<td class="numeric">{{s.click_count|withsep}}</td>
 			<td class="numeric">{{s.ctr|percentage}}</td>
 		</tr>
 		{% endfor %}
 		<tr>
 			<td><strong>Total</strong></td>
-			<td class="numeric">{{impression_count}}</td>
-			<td class="numeric">{{click_count}}</td>
+			<td class="numeric">{{impression_count|withsep}}</td>
+			<td class="numeric">{{click_count|withsep}}</td>
 			<td class="numeric">{{ctr|percentage}}</td>
 		</tr>
 		
@@ -54,8 +54,8 @@
 		<tr>
 			<td>{{p.name}}</td>
 			<td><a href="mailto:{{p.account.user.email}}">{{p.account.user.email}}</a></td>
-			<td class="numeric">{{p.stats.impression_count}}</td>
-			<td class="numeric">{{p.stats.click_count}}</td>
+			<td class="numeric">{{p.stats.impression_count|withsep}}</td>
+			<td class="numeric">{{p.stats.click_count|withsep}}</td>
 			<td class="numeric">{{p.stats.ctr|percentage}}</td>
 		</tr>
 		{% endfor %}

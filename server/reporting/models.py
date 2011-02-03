@@ -49,15 +49,14 @@ class SiteStats(db.Model):
   revenue = db.FloatProperty(default=float(0))
 
   # conversion information
-  converted_clicks = db.IntegerProperty()
-  conversions = db.IntegerProperty()
+  conversion_count = db.IntegerProperty()
 
   _geo_requests_json = db.StringProperty()
   _geo_impressions_json = db.StringProperty()
   _geo_clicks_json = db.StringProperty()
   _geo_revenues_json = db.StringProperty()
   _geo_users_json = db.StringProperty()
-  
+
   @property
   def geo_requests(self):
     if not hasattr(self,'_geo_requests'):
@@ -154,6 +153,12 @@ class SiteStats(db.Model):
     if self.impression_count > 0:
       return self.click_count / float(self.impression_count)
 
+  def conv_rate(self):
+	if self.click_count > 0 and self.conversion_count > 0:
+	  return self.conversion_count / float(self.click_count)
+	else:
+	  return None	
+
   def cpm(self):
     if self.impression_count > 0:
       return self.revenue * 1000 / float(self.impression_count)
@@ -161,6 +166,12 @@ class SiteStats(db.Model):
   def cpc(self):
     if self.click_count > 0:
       return self.revenue / float(self.click_count)
+
+  def cpa(self):
+	if self.conversion_count > 0:
+	  return self.revenue / float(self.conversion_count)
+	else:
+	  return None
 
   def add_impression(self):
     self.impression_count += 1
@@ -192,8 +203,7 @@ class SiteStats(db.Model):
       click_count = self.click_count + s.click_count,
       revenue = self.revenue + s.revenue,
       unique_user_count = self.unique_user_count + s.unique_user_count, # TODO: we need to de-dupe this!
-      converted_clicks = self.converted_clicks + s.converted_clicks if self.converted_clicks and s.converted_clicks else None,
-      conversions = self.conversions + s.conversions if self.conversions and s.conversions else None )
+      conversion_count = self.conversion_count + s.conversion_count if self.conversion_count and s.conversion_count else None )
 
   def __repr__(self):
     from django.utils import simplejson

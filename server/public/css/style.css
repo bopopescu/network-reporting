@@ -1155,7 +1155,7 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
 }
 
 .appData-columnHeaders {
-  padding: 0 0 0 10px;
+  padding: 10px 0 0 10px;
 }
 
 .dataTable .appData-icon {
@@ -1894,3 +1894,53 @@ input.ui-button { padding: 4px 12px 5px 12px; }
   #jsnotice { display: none; }
 }
 
+
+/******** 
+ * JP STYLES
+ ********/
+
+.numeric {
+  text-align: right;
+}
+
+td.numeric, th.numeric, .numeric TD {
+  text-align: right;
+}
+
+
+.campaignData {
+  padding: 10px 5px 6px 5px;
+  background: #f7f7f7;
+}
+
+.campaignData-alt {
+  background: #fff;
+}
+
+.campaignData th.dataTable-name {
+  width: 200px;
+}
+
+.campaignData-icon {
+  padding-right: 0;
+  width: 55px;
+}
+
+.campaignData-icon input {
+  margin-left: 5px;
+}
+
+.campaignData-icon img {
+  padding-top: 4px;
+  padding-left: 4px;
+}
+
+table.campaignData-main {
+	margin: 0 0 15px 0;
+	width: 100%;
+}
+
+.campaignData-main th, .campaignData-main td {
+  font-size: 14px;
+  font-weight: normal;
+}

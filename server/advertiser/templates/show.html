@@ -87,8 +87,8 @@
 						{% ifequal b.priority_level 4 %}Network ({{ b.network_type }}) {% endifequal %}
 					</td>
 					<td class="numeric">{{b.bid|currency}} {{b.bid_strategy}}</td>
-					<td class="numeric">{{b.stats.impression_count}}</td>
-					<td class="numeric">{{b.stats.click_count}} ({{b.stats.ctr|percentage}})</td>
+					<td class="numeric">{{b.stats.impression_count|withsep}}</td>
+					<td class="numeric">{{b.stats.click_count|withsep}} ({{b.stats.ctr|percentage}})</td>
 					<td class="numeric">{{b.stats.revenue|currency}}</td>
 				</tr>
 			{% endfor %}
@@ -98,8 +98,8 @@
 					<th><b>Totals</b></th>
 					<td></td>
 					<td></td>
-					<td class="numeric">{{campaign.stats.impression_count}}</td>
-					<td class="numeric">{{campaign.stats.click_count}} ({{campaign.stats.ctr|percentage}})</td>
+					<td class="numeric">{{campaign.stats.impression_count|withsep}}</td>
+					<td class="numeric">{{campaign.stats.click_count|withsep}} ({{campaign.stats.ctr|percentage}})</td>
 					<td class="numeric">{{campaign.stats.revenue|currency}}</td>
 					<td></td>
 				</tr>

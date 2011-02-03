@@ -1,1 +1,5 @@
+<<<<<<< HEAD:.gitignore
 .DS_Store
+=======
+*.pyc
+>>>>>>> 3f35a6c704fc10e286e6c80b5a68108a34709049:.gitignore

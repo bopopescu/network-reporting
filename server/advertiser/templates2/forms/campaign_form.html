@@ -104,5 +104,10 @@
                         {% for error in form.bid.errors %}
                         <div class="form-error-text">{{error}}</div>
                         {% endfor %}
+                        <a href="#" id="campaignForm-bid-helpLink">What's this?</a>
+                        <div id="campaignForm-bid-helpContent" class="hidden"> 
+                          <h3>Network eCPM</h3>
+                          <p>MoPub uses the eCPM from the ad network to prioritize which network will get displayed.  To raise the priority of a network, increase the eCPM.</p>
+                        </div>
                       </dd> 
                     </dl>

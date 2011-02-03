@@ -56,6 +56,7 @@ class TextAndTileCreativeForm(mpforms.MPModelForm):
   
   class Meta:
     model = TextAndTileCreative
+    fields = ('line1','line2', 'ad_type','name','tracking_url','url')
     
 class HtmlCreativeForm(mpforms.MPModelForm):
   TEMPLATE = 'advertiser/forms/html_creative_form.html'

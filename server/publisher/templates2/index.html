@@ -8,26 +8,46 @@
 {% block content %}
           <section class="offset nomargin" id="dashboard-stats">
             <div class="stats">
-              <table class="stats-breakdown">
-                <tbody>
-                  <tr class="active" id="stats-breakdown-requests">
-                    <td class="stats-breakdown-value"><span class="inner">{{totals.request_count|withsep}}</span></td>
-                    <th class="stats-breakdown-name"><span class="inner">Requests</span></th>
-                  </tr>
-                  <tr id="stats-breakdown-impressions">
-                    <td class="stats-breakdown-value"><span class="inner">{{totals.impression_count|withsep}}</span></td>
-                    <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
-                  </tr>
-                  <tr id="stats-breakdown-clicks">
-                    <td class="stats-breakdown-value"><span class="inner">{{totals.click_count|withsep}}</span></td>
-                    <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
-                  </tr>
-                  <tr id="stats-breakdown-users">
-                    <td class="stats-breakdown-value"><span class="inner">{{totals.unique_user_count|withsep}}</span></td>
-                    <th class="stats-breakdown-name"><span class="inner">Users</span></th>
-                  </tr>
-                </tbody>
-              </table>
+              <div class="stats-breakdown">
+                <table>
+                  <tbody>
+                    <tr class="active" id="stats-breakdown-requests">
+                      <td class="stats-breakdown-value today"><span class="inner">{{today.request_count|withsep}}</span></td>
+                      <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.request_count|withsep}}</span></td>
+                      <td class="stats-breakdown-value all"><span class="inner">{{totals.request_count|withsep}}</span></td>
+                      <th class="stats-breakdown-name"><span class="inner">Requests</span></th>
+                    </tr>
+                    <tr id="stats-breakdown-impressions">
+                      <td class="stats-breakdown-value today"><span class="inner">{{today.impression_count|withsep}}</span></td>
+                      <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.impression_count|withsep}}</span></td>
+                      <td class="stats-breakdown-value all"><span class="inner">{{totals.impression_count|withsep}}</span></td>
+                      <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
+                    </tr>
+                    <tr id="stats-breakdown-clicks">
+                      <td class="stats-breakdown-value today"><span class="inner">{{today.click_count|withsep}}</span></td>
+                      <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.click_count|withsep}}</span></td>
+                      <td class="stats-breakdown-value all"><span class="inner">{{totals.click_count|withsep}}</span></td>
+                      <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
+                    </tr>
+                    <tr id="stats-breakdown-users">
+                      <td class="stats-breakdown-value today"><span class="inner">{{today.unique_user_count|withsep}}</span></td>
+                      <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.unique_user_count|withsep}}</span></td>
+                      <td class="stats-breakdown-value all"><span class="inner">{{totals.unique_user_count|withsep}}</span></td>
+                      <th class="stats-breakdown-name"><span class="inner">Users</span></th>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="stats-breakdown-buttons">
+                <span class="buttonset button-small" id="stats-breakdown-dateOptions">
+                  <input type="radio" name="stats-breakdown-dateOptions-option" value="today" id="stats-breakdown-dateOptions-option-0" checked="checked"/>
+                  <label for="stats-breakdown-dateOptions-option-0">Today</label>
+                  <input type="radio" name="stats-breakdown-dateOptions-option" value="yesterday" id="stats-breakdown-dateOptions-option-1"/>
+                  <label for="stats-breakdown-dateOptions-option-1">Yesterday</label>
+                  <input type="radio" name="stats-breakdown-dateOptions-option" value="all" id="stats-breakdown-dateOptions-option-2"/>
+                  <label for="stats-breakdown-dateOptions-option-2">All</label>
+                </span>
+              </div>
               <div class="chart chart-loading stats-chart" id="dashboard-stats-chart">
                 <div class="chart-loading-text">Loading ...</div>
                 <div class="chart-error-text">Could not load chart</div>
@@ -71,10 +91,13 @@
                   <tr>
                     <th class="appData-icon"></th>
                     <th class="dataTable-name">&nbsp;</th>
-                    <th class="dataTable-data">Requests</th>
-                    <th class="dataTable-data">Impressions</th>
-                    <th class="dataTable-data">Clicks</th>
-                    <th class="dataTable-data">CTR</th>
+                    <th class="dataTable-data numeric"></th>
+                    <th class="dataTable-data numeric"></th>
+                    <th class="dataTable-data numeric"></th>
+                    <th class="dataTable-data numeric">Requests</th>
+                    <th class="dataTable-data numeric">Impressions</th>
+                    <th class="dataTable-data numeric">Clicks</th>
+                    <th class="dataTable-data numeric">CTR</th>
                   </tr>
                 </thead>
               </table>
@@ -86,10 +109,13 @@
                   <tr>
                     <td class="appData-icon"><a href="{% url publisher_app_show app_key=a.key %}"><img src="{% if a.icon_url %}{{a.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" /></a></td>
                     <th class="dataTable-name"><span class="inner"><a href="{% url publisher_app_show app_key=a.key %}">{{a.name}}</a> <span class="muted unbold">({% ifequal a.app_type "iphone" %}iOS{% endifequal %}{% ifequal a.app_type "android" %}Android{% endifequal %})</span></span></th>
-                    <td class="dataTable-data">{{a.stats.request_count}}</td>
-                    <td class="dataTable-data">{{a.stats.impression_count}}</td>
-                    <td class="dataTable-data">{{a.stats.click_count}}</td>
-                    <td class="dataTable-data">{{a.stats.ctr|percentage}}</td>
+                    <td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric">{{a.stats.request_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{a.stats.impression_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{a.stats.click_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{a.stats.ctr|percentage}}</td>
                   </tr>
                 </tbody>
               </table>
@@ -97,12 +123,16 @@
                 <div class="appData-details-inner show">
                   <table class="dataTable">
                     <tbody>
-                      {% for au in a.adunits %}<tr>
+                      {% for au in a.adunits %}
+            <tr>
                         <th class="dataTable-name"><span class="inner"><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a></span></th>
-                        <td class="dataTable-data">{{au.stats.request_count}}</td>
-                        <td class="dataTable-data">{{au.stats.impression_count}}</td>
-                        <td class="dataTable-data">{{au.stats.click_count}}</td>
-                        <td class="dataTable-data">{{au.stats.ctr|percentage}}</td>
+            <td class="dataTable-data numeric"></td>
+            <td class="dataTable-data numeric"></td>
+            <td class="dataTable-data numeric"></td>
+                        <td class="dataTable-data numeric">{{au.stats.request_count|withsep}}</td>
+                        <td class="dataTable-data numeric">{{au.stats.impression_count|withsep}}</td>
+                        <td class="dataTable-data numeric">{{au.stats.click_count|withsep}}</td>
+                        <td class="dataTable-data numeric">{{au.stats.ctr|percentage}}</td>
                       </tr>
                       {% endfor %}
                     </tbody>

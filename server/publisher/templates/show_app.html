@@ -129,8 +129,8 @@ function showDaily() {$A($$('.daily_stats')).each(Element.toggle);}
           <td><input type="checkbox" name="id" value="{{adunit.key}}"/></td>
           <td colspan="2"><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a><br><span style="color:#888888"> &nbsp; ID: {{au.key}}</span></td>
           <td class="numeric">{{au.bid|currency}}</td>
-          <td class="numeric">{{au.stats.request_count}}</td>
-          <td class="numeric">{{au.stats.click_count}} ({{au.stats.ctr|percentage}})</td>
+          <td class="numeric">{{au.stats.request_count|withsep}}</td>
+          <td class="numeric">{{au.stats.click_count|withsep}} ({{au.stats.ctr|percentage}})</td>
           <td class="numeric">{{au.stats.revenue|currency}}</td>
         </tr>
           {% for stats in au.all_stats %}

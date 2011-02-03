@@ -146,7 +146,6 @@ class AdGroupIndexHandler(RequestHandler):
       # TODO: Convert to QueryManager, why is this here anyway?
       campaigns = Campaign.gql("where u = :1 and deleted = :2", self.account.user, False).fetch(100)
       adgroups = AdGroup.gql("where campaign in :1 and deleted = :2", [x.key() for x in campaigns], False).fetch(100)
-    adgroups = sorted(adgroups, lambda x,y: cmp(y.bid, x.bid))
     
     for c in adgroups:
       c.all_stats = SiteStatsQueryManager().get_sitestats_for_days(owner=c, days=days)      
@@ -157,17 +156,31 @@ class AdGroupIndexHandler(RequestHandler):
     totals = reduce(lambda x,y: x+y, daily_totals, SiteStats())
 
     promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], adgroups)
+    promo_campaigns = sorted(promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
+    
     guarantee_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee'], adgroups)
+    guarantee_campaigns = sorted(guarantee_campaigns, lambda x,y: cmp(y.bid, x.bid))
+
     network_campaigns = filter(lambda x: x.campaign.campaign_type in ['network'], adgroups)
+    network_campaigns = sorted(network_campaigns, lambda x,y: cmp(y.bid, x.bid))
+    
+    adgroups = sorted(adgroups, key=lambda adgroup: adgroup.stats.impression_count, reverse=True)
     
     help_text = None
     if network_campaigns:
       if not (self.account.adsense_pub_id or self.account.admob_pub_id):
         help_text = 'Provide your ad network publisher IDs on the <a href="%s">account page</a>'%reverse('account_index')
 
+    graph_adgroups = adgroups[0:4]
+    if len(adgroups) > 4:
+      graph_adgroups[3] = {'name': 'Others',
+                           'all_stats': [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[c.all_stats for c in graph_adgroups[3:]])]
+                          }
+
     return render_to_response(self.request, 
       'advertiser/adgroups.html', 
       {'adgroups':adgroups,
+       'graph_adgroups': graph_adgroups,
        'start_date': days[0],
        'date_range': self.date_range,
        'app' : app,
@@ -494,20 +507,26 @@ class ShowAdGroupHandler(RequestHandler):
       if a.icon:
         a.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(a.icon)
 
-    sites = map(lambda x: Site.get(x), adgroup.site_keys)
-    for s in sites:
-      s.all_stats = SiteStatsQueryManager().get_sitestats_for_days(site=s,owner=adgroup, days=days)
-      s.stats = reduce(lambda x, y: x+y, s.all_stats, SiteStats())
-      s.app = App.get(s.app_key.key())
+    adunits = map(lambda x: Site.get(x), adgroup.site_keys)
+    for au in adunits:
+      au.all_stats = SiteStatsQueryManager().get_sitestats_for_days(site=au,owner=adgroup, days=days)
+      au.stats = reduce(lambda x, y: x+y, au.all_stats, SiteStats())
+      au.app = App.get(au.app_key.key())
 
-    # compute rollups to display at the top
-    today = SiteStatsQueryManager().get_sitestats_for_days(owner=adgroup, days=[SiteStats.today()])[0]
-    if len(sites) > 0:
-      all_totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[s.all_stats for s in sites])]
+    adunits = sorted(adunits, key=lambda adunit: adunit.stats.impression_count, reverse=True)
+
+    if len(adunits) > 0:
+      all_totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[au.all_stats for au in adunits])]
     else:
       all_totals = [SiteStats() for d in days]
 
     totals = reduce(lambda x,y: x+y, all_totals, SiteStats())
+
+    graph_adunits = adunits[0:4]
+    if len(adunits) > 4:
+      graph_adunits[3] = {'name': 'Others',
+                           'all_stats': [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[au.all_stats for au in graph_adunits[3:]])]
+                          }
 
     # In order to have add creative
     creative_handler = AddCreativeHandler(self.request)
@@ -525,10 +544,8 @@ class ShowAdGroupHandler(RequestHandler):
                               'apps': apps,
                               'adgroup': adgroup, 
                               'creatives': creatives,
-                              'today': today,
                               'totals': totals,
-                              'sites': sites, 
-                              'adunits' : sites, # TODO: migrate over to adunit instead of site
+                              'adunits' : adunits,
                               'start_date': days[0],
                               'creative_fragment':creative_fragment,
                               'campaign_create_form_fragment':campaign_create_form_fragment})
@@ -680,6 +697,7 @@ class AddCreativeHandler(RequestHandler):
         CachedQueryManager().cache_delete(adunits)
         jsonDict.update(success=True)
         return self.json_response(jsonDict)
+    logging.error(creative_form.errors)
     new_html = self.get(base_creative_form,text_creative_form,image_creative_form,\
                         text_tile_creative_form,html_creative_form)
     jsonDict.update(success=False,html=new_html)
@@ -695,8 +713,9 @@ class DisplayCreativeHandler(RequestHandler):
     c = CreativeQueryManager().get_by_key(creative_key)
     if c and c.ad_type == "image" and c.image:
       return HttpResponse(c.image,content_type='image/png')
-    if c and c.ad_type == "text_icon" and c.image:
-      return HttpResponse(c.image,content_type='image/png')
+    if c and c.ad_type == "text_icon":
+      return render_to_response(self.request, 'advertiser/text_tile.html', {'c':c})
+      #return HttpResponse(c.image,content_type='image/png')
     if c and c.ad_type == "html":
       return HttpResponse("<html><body>"+c.html_data+"</body></html");
     return HttpResponse('NOOOOOOOOOOOO IMAGE')

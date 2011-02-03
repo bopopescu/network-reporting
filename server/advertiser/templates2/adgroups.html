@@ -3,12 +3,36 @@
 
 {% block navLinks %}
 <li><a href="{% url publisher_index %}">Dashboard</a></li>
-<li class="active"><a href="{% url advertiser_campaign %}">Campaigns</a></li>
-{% endblock navLinks %}
-
-{% block pageTitle %}
-<h1>{% ifequal account.status 'step4' %}Step 4: Set up an ad campaign{% else %}Campaigns{% endifequal %}</h1>
-{% endblock pageTitle %}
+<li class="active"><a href="{% url advertiser_campaign %}">Campaigns</a></li>{% endblock navLinks %}
+{% block pageTitle %}<h1>{% ifequal account.status 'step4' %}Step 4: Set up an ad campaign{% else %}Campaigns{% endifequal %}</h1>{% endblock pageTitle %}
+{% block titleBarRight %}{% ifequal account.status 'step4' %}            <div class="stepProgress"> 
+  <span class="stepProgress-step">Step 1: Add app</span> 
+  <span class="ui-icon ui-icon-arrow-1-e"></span> 
+  <span class="stepProgress-step">Step 2: Integrate</span> 
+  <span class="ui-icon ui-icon-arrow-1-e"></span> 
+  <span class="stepProgress-step">Step 3: Ad networks</span> 
+  <span class="ui-icon ui-icon-arrow-1-e"></span> 
+  <span class="stepProgress-step stepProgress-active">Step 4: Ad campaigns</span> 
+</div>{% endifequal %}{% endblock titleBarRight %}
+{% block messageCenter %}{% endblock messageCenter %}
+{% block dateButtons %}{% ifnotequal account.status 'step4' %}
+          <div id="titlebar-center">
+            <span class="buttonset" id="dashboard-dateOptions">
+              <input type="radio" name="dashboard-dateOptions-option" value="7" id="dashboard-dateOptions-option-7" {% ifequal date_range 7 %}checked="checked" {% endifequal %}/>
+              <label for="dashboard-dateOptions-option-7">7 days</label>
+              <input type="radio" name="dashboard-dateOptions-option" value="14" id="dashboard-dateOptions-option-14" {% ifequal date_range 14 %}checked="checked" {% endifequal %}{% if not date_range %}checked="checked" {% endif %}/>
+              <label for="dashboard-dateOptions-option-14">14 days</label>
+              <input type="radio" name="dashboard-dateOptions-option" value="30" id="dashboard-dateOptions-option-30" {% ifequal date_range 30 %}checked="checked" {% endifequal %}/>
+              <label for="dashboard-dateOptions-option-30">30 days</label>
+              <input type="radio" name="dashboard-dateOptions-option" value="custom" id="dashboard-dateOptions-option-custom" />
+              <label for="dashboard-dateOptions-option-custom">Custom ...</label>
+            </span>
+            <div id="dashboard-dateOptions-custom-modal">
+              <div id="dashboard-dateOptions-custom-from"><h4>Start date:</h4></div>
+              <div id="dashboard-dateOptions-custom-to"><h4>End date:</h4></div>
+            </div>
+          </div>
+{% endifnotequal %}{% endblock dateButtons %}
 
 {% block titleBarRight %}
 {% ifequal account.status 'step4' %}            

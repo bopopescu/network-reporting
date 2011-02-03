@@ -548,8 +548,8 @@ class AdHandler(webapp.RequestHandler):
     to(rgba(255,255,255,0.06))); -webkit-background-origin: padding-box; -webkit-background-clip: content-box;">
     <div style="margin:5px;width:40px;height:40px;float:left"><img id="thumb" src="$image_url" style="-webkit-border-radius:6px;-moz-border-radius:6px" width=40 height=40/></div>
     <div style="float:left;width:230">
-      <div id="line1sample" style="color:white;font-weight:bold;margin:0px 0 0 5px;padding-top:8;">$line1</div>
-      <div id="line2sample" style="color:white;margin-top:6px;margin:5px 0 0 5px;">$line2</div>
+      <div style="color:white;font-weight:bold;margin:0px 0 0 5px;padding-top:8;">$line1</div>
+      <div style="color:white;margin-top:6px;margin:5px 0 0 5px;">$line2</div>
     </div>
     <div style="padding-top:5px;position:absolute;top:0;right:0;"><a href="$url"><img src="/images/$action_icon.png" width=40 height=40/></a></div>
     $trackingPixel

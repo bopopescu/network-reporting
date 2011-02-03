@@ -54,13 +54,13 @@ var mopub = mopub || {};
 
   }
    
-   campaignAdgroupFormOnLoad(); 
+  campaignAdgroupFormOnLoad(); 
   
    var options = { 
      data: { ajax: true },
      dataType : 'json',
       success:    function(jsonData, statusText, xhr, $form) {
-				 $('#campaignAdgroupForm-loading').hide();
+         $('#campaignAdgroupForm-loading').hide();
          if (jsonData.success){
            $('#campaignAdgroupForm-success').show(); // show message
             window.location = jsonData.new_page;
@@ -69,21 +69,27 @@ var mopub = mopub || {};
            $('#campaignAdgroupForm-fragment').html(jsonData.html);
            // reimplement the onload event
            campaignAdgroupFormOnLoad();
-					 // clear and reset the hash
-					 window.location.hash = '';
-					 window.location.hash = 'adgroupEditForm';
+          // clear and reset the hash
+          window.location.hash = '';
+          window.location.hash = 'adgroupEditForm';
           }
         } 
     };
    $('#campaignAdgroupForm').ajaxForm(options);
 
-    // set up "Help" links
-    $('#campaignForm-type-helpLink').click(function(e) {
-      e.preventDefault();
-      $('#campaignForm-type-helpContent').dialog({ 
-        buttons: { "Close": function() { $(this).dialog("close"); } }
-      });
+  // set up "Help" links
+  $('#campaignForm-type-helpLink').click(function(e) {
+    e.preventDefault();
+    $('#campaignForm-type-helpContent').dialog({ 
+      buttons: { "Close": function() { $(this).dialog("close"); } }
     });
+  });
+  $('#campaignForm-bid-helpLink').click(function(e) {
+    e.preventDefault();
+    $('#campaignForm-bid-helpContent').dialog({ 
+      buttons: { "Close": function() { $(this).dialog("close"); } }
+    });
+  });
   
   $('#campaignAdgroupForm input[name="start_date"]').datepicker({ minDate:0 });
   $('#campaignAdgroupForm input[name="end_date"]').datepicker({ minDate:0 });
@@ -262,17 +268,17 @@ var mopub = mopub || {};
 
     $('#creativeCreateForm input[name="ad_type"]')
       .click(function(e){
-        $('#creativeCreateForm')
-          .find('.adTypeDependent').hide().end()
-          .find('.'+$(this).val()).show().end();
+        $('.adTypeDependent',"#creativeCreateForm").hide();
+        $('.adTypeDependent.'+$(this).val(),"#creativeCreateForm").show();
       }).filter(':checked').click();
 
 
     $('.creativeEditForm input[name="ad_type"]')
       .click(function(e){
-        $(this).parents('form') // gets the form to which this belongs
-          .find('.adTypeDependent').hide().end()
-          .find('.'+$(this).val()).show().end();
+        // gets the form to which this belongs
+        var form = $(this).parents('form');
+        $('.adTypeDependent',form).hide();
+        $('.adTypeDependent.'+$(this).val(),form).show();
       }).filter(':checked').click();
 
     
@@ -307,6 +313,9 @@ var mopub = mopub || {};
       });
       
     $('#adgroupEditForm-submit')
+      .button({ 
+        icons: { secondary: "ui-icon-circle-triangle-e" } 
+      })
       .click(function(e){
         e.preventDefault();
 				$('#campaignAdgroupForm-loading').show();
@@ -331,7 +340,9 @@ var mopub = mopub || {};
     });
     
     $('#creativeCreateForm-submit')
-      .button()
+      .button({ 
+        icons: { secondary: "ui-icon-circle-triangle-e" } 
+      })
       .click(function(e) {
 				e.preventDefault();
 				$('#creativeCreateForm-loading').show();
@@ -347,9 +358,27 @@ var mopub = mopub || {};
         });
     });
     
+    $('#creativeForm-advanced-toggleButton')
+      .button('option', {icons: { primary: 'ui-icon-triangle-1-s' }})
+      .click(function(e) {
+        e.preventDefault();
+        var buttonTextElem = $('.ui-button-text', this);
+        if ($('.creativeForm-advanced-options').is(':hidden')) {
+          $('.creativeForm-advanced-options').show();
+          buttonTextElem.text('Hide Advanced Options');
+          $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
+        }
+        else {
+          $('.creativeForm-advanced-options').hide();
+          buttonTextElem.text('Show Advanced Options');
+          $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
+        }
+      });
+    
+    
 
     $('#creativeAddForm input[name="creative_type"]').click(function(e) {
-      $('#creativeCreate-text').hide();
+      $('#creativeCreate-text_icon').hide();
       $('#creativeCreate-image').hide();
       $('#creativeCreate-html').hide();
       $('#creativeCreate-'+$(this).val()).show();

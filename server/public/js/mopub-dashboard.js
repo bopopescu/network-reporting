@@ -100,13 +100,19 @@ var mopub = mopub || {};
       this.trafficChart = new Highcharts.Chart({
         chart: {
           renderTo: 'dashboard-stats-chart',
-          defaultSeriesType: 'area'
+          defaultSeriesType: 'area',
+          marginTop: 0,
+          marginBottom: 55
         },
         plotOptions: {
           series: {
             pointStart: data.pointStart,
             pointInterval: data.pointInterval
           }
+        },
+        legend: {
+          verticalAlign: "bottom",
+          y: -7
         },
         yAxis: {
           labels: {
@@ -205,6 +211,12 @@ var mopub = mopub || {};
         var location = document.location.href.replace(/\?.*/,'');
         document.location.href = location+'?r=' + option;
       }
+    });
+    
+    // set up stats breakdown dateOptions
+    $('#stats-breakdown-dateOptions input').click(function() {
+      $('.stats-breakdown-value').hide();
+      $('.stats-breakdown-value.'+$(this).val()).show();
     });
     
     // set up custom dateOptions modal dialog

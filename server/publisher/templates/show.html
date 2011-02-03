@@ -69,15 +69,15 @@
 		{% for s in site.all_stats %}
 		<tr>
 			<td>{{s.date|format_date}}</td>
-			<td class="numeric">{{s.request_count}}</td>
-			<td class="numeric">{{s.click_count}}</td>
+			<td class="numeric">{{s.request_count|withsep}}</td>
+			<td class="numeric">{{s.click_count|withsep}}</td>
 			<td class="numeric">{{s.ctr|percentage}}</td>
 		</tr>
 		{% endfor %}
 		<tr>
 			<td><strong>Total</strong></td>
-			<td class="numeric">{{site.stats.request_count}}</td>
-			<td class="numeric">{{site.stats.click_count}}</td>
+			<td class="numeric">{{site.stats.request_count|withsep}}</td>
+			<td class="numeric">{{site.stats.click_count|withsep}}</td>
 			<td class="numeric">{{site.stats.ctr|percentage}}</td>
 		</tr>
 		

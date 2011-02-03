@@ -820,7 +820,7 @@ dl.formFields {
 }
 
 .formFields .input-text-number {
-  width: 65px;
+  width: 70px;
 }
 
 .formFields-field-help {
@@ -969,6 +969,9 @@ dl.formFields {
   position: absolute;
   top: 0;
   left: 0;
+}
+
+.stats-breakdown table {
   width: 205px;
 }
 
@@ -1024,6 +1027,19 @@ dl.formFields {
 .stats-breakdown tr.active:hover th.stats-breakdown-name .inner {
   background-color: #4d4d4d;
   color: #fff;
+}
+
+.stats-breakdown-value.yesterday,
+.stats-breakdown-value.all {
+  display:none;
+}
+
+.stats-breakdown-buttons {
+  padding: 0 0 10px 0;
+  position:absolute;
+  bottom:0;
+  text-align:center;
+  width:205px;
 }
 
 .stats-chart {
@@ -1139,7 +1155,7 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
 }
 
 .appData-columnHeaders {
-  padding: 0 0 0 10px;
+  padding: 10px 10px 0 10px;
 }
 
 .dataTable .appData-icon {
@@ -1147,7 +1163,7 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
   width: 45px;
 }
 
-.dataTable .appData-icon a img {
+.dataTable .appData-icon a img, .dataTable .campaignData-icon a img {
   -webkit-border-radius:6px;-moz-border-radius:6px
 }
 
@@ -1161,6 +1177,11 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
   padding-top: 0;
   font-size: 15px;
   font-weight: 600;
+}
+
+.appData-main th .smaller, .appData-main td .smaller {
+  font-size: 13px;
+  font-weight: normal;
 }
 
 .appData-details {
@@ -1873,3 +1894,52 @@ input.ui-button { padding: 4px 12px 5px 12px; }
   #jsnotice { display: none; }
 }
 
+
+/******** 
+ * JP STYLES
+ ********/
+
+.numeric {
+  text-align: right;
+}
+
+td.numeric, th.numeric, .numeric TD {
+  text-align: right;
+}
+
+
+.campaignData {
+  padding: 10px 5px 6px 5px;
+  background: #f7f7f7;
+}
+
+.campaignData-alt {
+  background: #fff;
+}
+
+.campaignData th.dataTable-name {
+  width: 200px;
+}
+
+.campaignData-icon {
+  padding-right: 0;
+  width: 55px;
+}
+
+.campaignData-icon input {
+  margin-left: 5px;
+}
+
+.campaignData-icon img {
+  margin: 4px 0 0 4px;
+}
+
+table.campaignData-main {
+  margin: 0 0 15px 0;
+  width: 100%;
+}
+
+.campaignData-main th, .campaignData-main td {
+  font-size: 14px;
+  font-weight: normal;
+}

@@ -126,10 +126,10 @@
                   <tr>
                     <td class="appData-icon"><a href="{% url publisher_app_show app_key=a.key %}"><img src="{% if a.icon_url %}{{a.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" /></a></td>
                     <th class="dataTable-name"><span class="inner"><a href="{% url publisher_app_show app_key=a.key %}">{{a.name}}</a> <span class="muted unbold">({% ifequal a.app_type "iphone" %}iOS{% endifequal %}{% ifequal a.app_type "android" %}Android{% endifequal %})</span></span></th>
-                    <td class="dataTable-data">{{a.stats.request_count}}</td>
-                    <td class="dataTable-data">{{a.stats.impression_count}}</td>
-                    <td class="dataTable-data">{{a.stats.click_count}}</td>
-                    <td class="dataTable-data">{{a.stats.ctr|percentage}}</td>
+                    <td class="dataTable-data numeric">{{a.stats.request_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{a.stats.impression_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{a.stats.click_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{a.stats.ctr|percentage}}</td>
                   </tr>
                 </tbody>
               </table>
@@ -139,10 +139,10 @@
                     <tbody>
                       {% for au in a.adunits %}<tr>
                         <th class="dataTable-name"><span class="inner"><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a></span></th>
-                        <td class="dataTable-data">{{au.stats.request_count}}</td>
-                        <td class="dataTable-data">{{au.stats.impression_count}}</td>
-                        <td class="dataTable-data">{{au.stats.click_count}}</td>
-                        <td class="dataTable-data">{{au.stats.ctr|percentage}}</td>
+                        <td class="dataTable-data numeric">{{au.stats.request_count|withsep}}</td>
+                        <td class="dataTable-data numeric">{{au.stats.impression_count|withsep}}</td>
+                        <td class="dataTable-data numeric">{{au.stats.click_count|withsep}}</td>
+                        <td class="dataTable-data numeric">{{au.stats.ctr|percentage}}</td>
                       </tr>
                       {% endfor %}
                     </tbody>

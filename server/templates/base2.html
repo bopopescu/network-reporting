@@ -42,7 +42,7 @@
   <!-- MoPub -->
   <script src="/js/plugins.js"></script>
   <script src="/js/mopub.js?v=blah"></script>
-  {% block extraScripts %}<script src="/js/mopub-dashboard.js?v=blah4"></script>{% endblock extraScripts %}
+  {% block extraScripts %}<script src="/js/mopub-dashboard.js?v=blah5"></script>{% endblock extraScripts %}
   
   <!--[if lt IE 7 ]>
     <script src="/js/libs/dd_belatedpng.js"></script>
@@ -88,12 +88,6 @@
 {% block dateButtons %}
           <div id="titlebar-center">
             <span class="buttonset" id="dashboard-dateOptions">
-              <!--
-              <input type="radio" name="dashboard-dateOptions-option" value="0" id="dashboard-dateOptions-option-0" {% ifequal date_range 0 %}checked="checked" {% endifequal %}/>
-              <label for="dashboard-dateOptions-option-0">Today</label>
-              <input type="radio" name="dashboard-dateOptions-option" value="1" id="dashboard-dateOptions-option-1" {% ifequal date_range 1 %}checked="checked" {% endifequal %}/>
-              <label for="dashboard-dateOptions-option-1">Yesterday</label>
-              -->
               <input type="radio" name="dashboard-dateOptions-option" value="7" id="dashboard-dateOptions-option-7" {% ifequal date_range 7 %}checked="checked" {% endifequal %}/>
               <label for="dashboard-dateOptions-option-7">7 days</label>
               <input type="radio" name="dashboard-dateOptions-option" value="14" id="dashboard-dateOptions-option-14" {% ifequal date_range 14 %}checked="checked" {% endifequal %}{% if not date_range %}checked="checked" {% endif %}/>
@@ -111,9 +105,11 @@
 {% endblock dateButtons %}
           <div id="titlebar-right">
 {% block titleBarRight %}
+<!-- Disable for now
             <span class="titlebar-link">
               <a class="linkIcon" href="{% url publisher_index_geo %}">Ad performance by region <span class="ui-icon ui-icon-triangle-1-e"></span></a>
             </span>
+-->
 {% endblock titleBarRight %}
           </div>
         </div>
@@ -173,21 +169,22 @@
     <footer>
       <div id="footer-inner">
         <div class="pageWidth">
-          <div id="footer-links">
-            <ul>
-              <li>&copy; 2010 MoPub Inc.</li>
-              <li><a href="privacy.html">Privacy policy</a></li>
-              <li><a href="privacy.html">Privacy - ad serving</a></li>
-              <li><a href="terms.html">Terms of use</a></li>
-            </ul>
-            <ul>
-              <li><a href="about.html">About us</a></li>
-              <li><a href="blog.html">MoPub blog</a></li>
-              <li><a href="http://twitter.com/mopub">Twitter updates</a></li>
-              <li><a href="careers.html">Careers</a></li>
-              <li><a href="contact.html">Contact us</a></li>
-            </ul>
-          </div>
+           <div id="footer-links"> 
+			<ul id="menu-footer">
+			<li class="menu-item menu-item-type-post_type menu-item-58">&copy; 2011 MoPub Inc.</li> 
+			<li id="menu-item-58" class="menu-item menu-item-type-post_type menu-item-58"><a href="http://www.mopub.com/privacy/">Privacy</a></li> 
+			<li id="menu-item-57" class="menu-item menu-item-type-post_type menu-item-57"><a href="http://www.mopub.com/mopub-ads-privacy-policy/">Privacy &#8211; Ad Serving</a></li> 
+			<li id="menu-item-59" class="menu-item menu-item-type-post_type menu-item-59"><a href="http://www.mopub.com/terms/">Terms of Service</a></li> 
+			<li id="menu-item-279" class="menu-item menu-item-type-custom menu-item-279"><a href="https://groups.google.com/forum/#!forum/mopub-users">mopub-users Google Group</a></li> 
+			</ul>  			    
+			<ul id="menu-social">
+			<li class="menu-item menu-item-type-post_type menu-item-58">&nbsp;</li>
+			<li id="menu-item-60" class="menu-item menu-item-type-custom menu-item-60"><a href="http://www.twitter.com/mopub">@mopub</a></li> 
+			<li id="menu-item-268" class="menu-item menu-item-type-post_type menu-item-268"><a href="http://www.mopub.com/about/">About</a></li> 
+			<li id="menu-item-61" class="menu-item menu-item-type-post_type menu-item-61"><a href="http://www.mopub.com/contact/">Contact Us</a></li> 
+			<li id="menu-item-270" class="menu-item menu-item-type-post_type menu-item-270"><a href="http://www.mopub.com/jobs/">Jobs</a></li> 
+			</ul>		      
+		  </div>
           <div id="footer-account">
             Logged in as <a href="account.html">{{google_user}}</a>
 {% block adminSelect %}{% if user.is_admin %}

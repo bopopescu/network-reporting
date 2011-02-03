@@ -100,7 +100,7 @@
                       </dd>
                       <dt><label for="TODO2">Network eCPM:</label></dt> 
                       <dd> 
-                        <input type="text" class="input-text-number {% if form.bid.errors %}form-error{% endif %}" name="bid" value='{{form.bid.value|stringformat:".02f"}}' id="bid-network" /> USD
+                        <input type="text" class="input-text-number {% if form.bid.errors %}form-error{% endif %}" name="bid" value='{{form.bid.value}}' id="bid-network" /> USD
                         {% for error in form.bid.errors %}
                         <div class="form-error-text">{{error}}</div>
                         {% endfor %}

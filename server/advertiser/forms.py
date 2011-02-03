@@ -25,13 +25,13 @@ class AdGroupForm(mpforms.MPModelForm):
   site_keys = mpforms.MPModelMultipleChoiceField(AdUnit,required=False)
   keywords = mpforms.MPTextAreaField(required=False)
   geo_predicates = mpforms.MPTextAreaField()
-  device_predicates = mpforms.MPTextAreaField()
+  device_predicates = mpforms.MPTextAreaField(required=False)
   
   class Meta:
     model = AdGroup
     fields = ('name', 'network_type', 'priority_level', 'keywords',
               'bid', 'bid_strategy', 'geo_predicates', 
-              'device_predicates', 'percent_users', 'site_keys',
+              'percent_users', 'site_keys',
               'hourly_frequency_cap','daily_frequency_cap',
               'budget')
               

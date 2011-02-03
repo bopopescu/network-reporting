@@ -45,10 +45,17 @@
                           <option value="cpm" id="bid_strategy-cpm"{% ifequal form.bid_strategy.value "cpm"%}selected="selected"{% endifequal %}>CPM</option>
                           <option value="cpc" {% ifequal form.bid_strategy.value "cpc"%}selected="selected"{% endifequal %}>CPC</option>
                         </select>
-                        @ <input type="text" class="input-text-number {% if form.bid.errors %}form-error{% endif %}" name="bid" value="{{form.bid.value}}" id="bid-max" placeholder="1"/> USD
+                        @ <input type="text" class="input-text-number {% if form.bid.errors %}form-error{% endif %}" name="bid" value="{{form.bid.value|stringformat:'.02f'}}" id="bid-max" placeholder="1"/> USD
                         {% for error in form.bid.errors %}
                         <div class="form-error-text">{{error}}</div> 
                         {% endfor %}
+                        <dt>Delivery Speed</dt>  
+                        <dd>
+                          <span class="radios">
+                            <input type="radio" value="TODO1" checked="check" disabled="true"/> <label>Spread Evenly</label>
+                            <input type="radio" value="TODO2" disabled="true"/> <label>All at once</label>
+                          </span>  
+                        <dd>  
                       </dd>
                     </dl>
                     <dl class="formFields campaignDependent gtee"> 
@@ -71,7 +78,7 @@
                       </dd>
                       <dt><label for="TODO2">Network eCPM:</label></dt> 
                       <dd> 
-                        <input type="text" class="input-text-number {% if form.bid.errors %}form-error{% endif %}" name="bid" value="{{form.bid.value}}" id="bid-network" /> USD
+                        <input type="text" class="input-text-number {% if form.bid.errors %}form-error{% endif %}" name="bid" value='{{form.bid.value|stringformat:".02f"}}' id="bid-network" /> USD
                         {% for error in form.bid.errors %}
                         <div class="form-error-text">{{error}}</div>
                         {% endfor %}

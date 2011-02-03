@@ -10,25 +10,27 @@
                         <div class="form-error-text">{{error}}</div> 
                         {% endfor %}
                       </dd>    
-                      <dt><label for="TODO6">Goal:</label></dt>
-                      <dd>
-                        <input type="text" class="input-text-number {% if form.percent_users.errors %}form-error{% endif %}" name="{{form.percent_users.name}}" value="{{form.percent_users.value}}"/> % of all <select name="TODO"><option>Users</option><option>Requests</option></select>
-                        {% for error in form.percent_users.errors %}
-                        <div class="form-error-text">{{error}}</div> 
-                        {% endfor %}
-                      </dd>
-                      <dt><label for="TODO7">Frequency Caps:</label></dt>
-                      <dd>
-                        <input name="{{form.daily_frequency_cap.name}}" class="input-text-number {% if form.daily_frequency_cap.errors %}form-error{% endif %}" type="text" value="{{form.daily_frequency_cap.value}}"/> daily impressions per user <br/>
-                        {% for error in form.daily_frequency_cap.errors %}
-                        <div class="form-error-text">{{error}}</div> 
-                        {% endfor %}
-                        <input name="{{form.hourly_frequency_cap.name}}" class="input-text-number {% if form.hourly_frequency_cap.errors %}form-error{% endif %}" type="text" value="{{form.hourly_frequency_cap.value}}"/> hourly impressions per user
-                        {% for error in form.hourly_frequency_cap.errors %}
-                        <div class="form-error-text">{{error}}</div> 
-                        {% endfor %}
-                      </dd> 
                       <div class="adgroupForm-advanced hidden">
+                        <dt><label for="TODO6">Goal:</label></dt>
+                        <dd>
+                          <input type="text" class="input-text-number {% if form.percent_users.errors %}form-error{% endif %}" name="{{form.percent_users.name}}" value="{{form.percent_users.value}}"/> % of all <select name="TODO"><option>Users</option><option>Requests</option></select>
+                          {% for error in form.percent_users.errors %}
+                          <div class="form-error-text">{{error}}</div> 
+                          {% endfor %}
+                        </dd>
+                        
+                        <dt><label for="TODO7">Frequency Caps:</label></dt>
+                        <dd>
+                          <input name="{{form.daily_frequency_cap.name}}" class="input-text-number {% if form.daily_frequency_cap.errors %}form-error{% endif %}" type="text" value="{{form.daily_frequency_cap.value}}"/> daily impressions per user <br/>
+                          {% for error in form.daily_frequency_cap.errors %}
+                          <div class="form-error-text">{{error}}</div> 
+                          {% endfor %}
+                          <input name="{{form.hourly_frequency_cap.name}}" class="input-text-number {% if form.hourly_frequency_cap.errors %}form-error{% endif %}" type="text" value="{{form.hourly_frequency_cap.value}}"/> hourly impressions per user
+                          {% for error in form.hourly_frequency_cap.errors %}
+                          <div class="form-error-text">{{error}}</div> 
+                          {% endfor %}
+                        </dd> 
+                        
                         <dt><label for="TODO8">Keywords:</label></dt>
                         <dd><textarea cols="50" rows="3" name="{{form.keywords.name}}" class="{% if form.keywords.errors %}form-error{% endif %}" placeholder="Keywords, one per line, e.g. coffee">{{form.keywords.value}}</textarea>
                           {% for error in form.keywords.errors %}
@@ -43,14 +45,14 @@
                           <div class="form-error-text">{{error}}</div>
                           {% endfor %}
                         </dd>
-                        <dt><label for="TODO10">Device Predicates:</label></dt>
-                        <dd>
-                          <textarea name="device_predicates" class="{% if form.device_predicates.errors %}form-error{% endif %}">{% if form.geo_predicates.value %}{{form.device_predicates.value}}{% else %}platform_name=*{% endif %}</textarea>
-                          <div>platform_name=(*,android,iphone)</div>
-                          {% for error in form.device_predicates.errors %}
-                          <div class="form-error-text">{{error}}</div>
-                          {% endfor %}
-                        </dd>
+                        {# <dt><label for="TODO10">Device Predicates:</label></dt> #}
+                        {# <dd> #}
+                        {#   <textarea name="device_predicates" class="{% if form.device_predicates.errors %}form-error{% endif %}">{% if form.geo_predicates.value %}{{form.device_predicates.value}}{% else %}platform_name=*{% endif %}</textarea> #}
+                        {#   <div>platform_name=(*,android,iphone)</div> #}
+                        {#   {% for error in form.device_predicates.errors %} #}
+                        {#   <div class="form-error-text">{{error}}</div> #}
+                        {#   {% endfor %} #}
+                        {# </dd> #}
                       </div>
                       <dt><a class="button button-small" id="adgroupForm-advanced-toggleButton" href="#">Show Advanced Targeting</a></dt>
                       <dd></dd>

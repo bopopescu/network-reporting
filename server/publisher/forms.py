@@ -87,6 +87,8 @@ class AdUnitForm(mpforms.MPModelForm):
     logging.info('clean_data: %s'%self.cleaned_data)
     obj.name = self.cleaned_data['adunit_name']
     obj.description = self.cleaned_data['adunit_description'] 
+    obj.width = 50.0
+    obj.height = 320.0
     if commit:
       obj.put()
     logging.info('name: %s description: %s'%(obj.name,obj.description))  

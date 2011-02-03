@@ -57,7 +57,7 @@ class AdGroup(db.Model):
   priority_level = db.IntegerProperty(default=1)
   network_type = db.StringProperty(choices=["adsense", "iAd", "admob","millennial","appnexus","inmobi","brightroll","greystripe"])
 
-  bid = db.FloatProperty()
+  bid = db.FloatProperty(required=True,default=0.50)
   bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpm")
 
   # state of this ad group
@@ -66,6 +66,7 @@ class AdGroup(db.Model):
   
   # percent of users to be targetted
   percent_users = db.FloatProperty(default=100.0)
+  target_percent = db.FloatProperty(default=100.0)
 
   # frequency caps
   minute_frequency_cap = db.IntegerProperty(default=0)

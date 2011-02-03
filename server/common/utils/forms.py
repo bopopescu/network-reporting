@@ -1,11 +1,11 @@
 import logging
 
 from google.appengine.ext import db
+from google.appengine.ext.db.djangoforms import ModelChoiceField
 
 from django import forms
 from django.forms.forms import BoundField
 from django.forms.fields import FileField, CharField
-from django.forms.models import ModelChoiceField
 from django.template import Context, loader
 from django.utils.encoding import smart_unicode, force_unicode
 from django.utils.translation import ugettext_lazy as _, ugettext
@@ -71,7 +71,8 @@ class MPTextAreaField(CharField):
     
     def clean(self,value):
       super(MPTextAreaField,self).clean(value)
-      value = [v for v in value.lower().replace('\r','\n').split('\n') if v] 
+      if value:
+        value = [v for v in value.lower().replace('\r','\n').split('\n') if v] 
       return value
         
 class MPModelMultipleChoiceField(ModelChoiceField):
@@ -92,11 +93,14 @@ class MPModelMultipleChoiceField(ModelChoiceField):
                  help_text=None, *args, **kwargs):
         super(MPModelMultipleChoiceField,self).\
               __init__(reference_class,query,choices,
-                       empty_label,required,widget,label,initial,
+                       empty_label,
+                       required,widget,label,initial,
                        help_text,*args,**kwargs)         
 
 
     def clean(self, value):
+        import logging
+        logging.info('self.required:%s'%self.required)
         if self.required and not value:
             raise ValidationError(self.error_messages['required'])
         elif not self.required and not value:

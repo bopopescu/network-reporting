@@ -194,7 +194,9 @@ class CreateCampaignAJAXHander(RequestHandler):
       campaign = campaign or adgroup.campaign
     campaign_form = campaign_form or CampaignForm(instance=campaign)
     adgroup_form = adgroup_form or AdGroupForm(instance=adgroup)
-    networks = [["adsense","Google AdSense",False],["iAd","Apple iAd",False],["admob","AdMob",False],["millennial","Millennial Media",False],["inmobi","InMobi",False],["greystripe","GreyStripe",False],["brightroll","BrightRoll",False],["custom","Custom",False]]
+    networks = [["iAd","Apple iAd",False],["admob","AdMob",False],["millennial","Millennial Media",False],
+                ["inmobi","InMobi",False],["greystripe","GreyStripe",False],["brightroll","BrightRoll",False],
+                ["adsense","Google AdSense",False],["custom","Custom",False]]
     
     all_adunits = AdUnitQueryManager().get_adunits(account=self.account)
     
@@ -206,11 +208,9 @@ class CreateCampaignAJAXHander(RequestHandler):
 
     adunit_keys = adgroup_form['site_keys'].value or []
     adunit_str_keys = [unicode(k) for k in adunit_keys]
-    logging.info('adunit_keys: %s'%adunit_keys)
     for adunit in all_adunits:
       adunit.checked = unicode(adunit.key()) in adunit_str_keys
       adunit.app = App.get(adunit.app_key.key())
-      logging.info('checked: %s'%adunit.checked)
       
     campaign_form.add_context(dict(networks=networks))
     adgroup_form.add_context(dict(all_adunits=all_adunits))
@@ -236,7 +236,6 @@ class CreateCampaignAJAXHander(RequestHandler):
     adgroup_form = AdGroupForm(data=self.request.POST,instance=adgroup)
     
     all_adunits = AdUnitQueryManager().get_adunits(account=self.account)
-    logging.warning("adgroup: %s(%s)"%(adgroup_form.__class__,id(adgroup_form)))
     sk_field = adgroup_form.fields['site_keys']
     sk_field.choices = all_adunits # TODO: doesn't work needed for validation
     
@@ -246,18 +245,13 @@ class CreateCampaignAJAXHander(RequestHandler):
       campaign = campaign_form.save(commit=False)
       campaign.u = self.account.user
       
-      logging.info('sk_field :%s %s'%(sk_field.__class__, id(sk_field)))
-      
       if adgroup_form.is_valid():
         adgroup = adgroup_form.save(commit=False)
-        
-        logging.warning('form errors: %s'%adgroup_form.errors)
-        
+                
         # TODO: clean this up in case the campaign succeeds and the adgroup fails
         CampaignQueryManager().put_campaigns(campaign)
         adgroup.campaign = campaign
         AdGroupQueryManager().put_adgroups(adgroup)
-        logging.info('adgroup: %s'%adgroup.key())
         
         if campaign.campaign_type == "network":
           creative = adgroup.default_creative()
@@ -652,7 +646,6 @@ class AddCreativeHandler(RequestHandler):
         html_creative = HtmlCreativeQueryManager().get_by_key(creative.key())      
       
       
-    logging.warning('creative_key: %s, creative: %s'%(creative_key,creative))  
     base_creative_form = BaseCreativeForm(data=self.request.POST,instance=creative)
     text_creative_form = TextCreativeForm(data=self.request.POST,instance=text_creative)
     image_creative_form = ImageCreativeForm(data=self.request.POST,files=self.request.FILES,instance=image_creative)

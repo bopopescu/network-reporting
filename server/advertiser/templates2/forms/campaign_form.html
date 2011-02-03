@@ -2,11 +2,21 @@
                       <dt>Campaign Type:</dt> 
                       <dd> 
                         <span class="radios"> 
+                          {% if not form.instance %}
                           <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="gtee" id="advertiser-CampaignType-gtee" {% if not form.campaign_type.value %}checked="checked"{% endif %}{% ifequal form.campaign_type.value 'gtee' %}checked="checked"{% endifequal %}/> <label for="advertiser-CampaignType-gtee">Guaranteed</label> 
                           <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="promo" id="advertiser-CampaignType-promo" {% ifequal form.campaign_type.value "promo" %}checked="checked"{% endifequal %}/> <label for="advertiser-CampaignType-promo">Promotional</label> 
                           <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="network" id="advertiser-CampaignType-network" {% ifequal form.campaign_type.value "network" %}checked="checked"{% endifequal %}/> <label for="advertiser-CampaignType-network">Network</label>
+                          <a href="#" id="campaignForm-type-helpLink">What's this?</a>
+                          {% else %}
+                            {% ifequal form.campaign_type.value "network" %}
+                          <strong>Network</strong>
+                          <input type="hidden" name="{{form.campaign_type.name}}" value="{{form.campaign_type.value}}"/>
+                            {% else %}
+                            <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="gtee" id="advertiser-CampaignType-gtee" {% if not form.campaign_type.value %}checked="checked"{% endif %}{% ifequal form.campaign_type.value 'gtee' %}checked="checked"{% endifequal %}/> <label for="advertiser-CampaignType-gtee">Guaranteed</label> 
+                            <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="promo" id="advertiser-CampaignType-promo" {% ifequal form.campaign_type.value "promo" %}checked="checked"{% endifequal %}/> <label for="advertiser-CampaignType-promo">Promotional</label> 
+                            {% endifequal %}
+                          {% endif %}
                         </span>
-                        <a href="#" id="campaignForm-type-helpLink">What's this?</a>
                         <div id="campaignForm-type-helpContent" class="hidden"> 
                           <h3>Campaign Type</h3>
                           <h4>Guaranteed</h4>

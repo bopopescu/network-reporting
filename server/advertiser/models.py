@@ -66,7 +66,8 @@ class AdGroup(db.Model):
   
   # percent of users to be targetted
   percent_users = db.FloatProperty(default=100.0)
-  target_percent = db.FloatProperty(default=100.0)
+  allocation_percentage = db.FloatProperty(default=100.0)
+  allocation_type = db.StringProperty(choices=["users","requests"])
 
   # frequency caps
   minute_frequency_cap = db.IntegerProperty(default=0)

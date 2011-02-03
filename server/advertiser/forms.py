@@ -32,8 +32,8 @@ class AdGroupForm(mpforms.MPModelForm):
     fields = ('name', 'network_type', 'priority_level', 'keywords',
               'bid', 'bid_strategy', 'geo_predicates', 
               'percent_users', 'site_keys',
-              'hourly_frequency_cap','daily_frequency_cap',
-              'budget')
+              'hourly_frequency_cap','daily_frequency_cap','allocation_percentage',
+              'allocation_type','budget')
               
 
 class BaseCreativeForm(mpforms.MPModelForm):

@@ -68,7 +68,7 @@ class AdUnitForm(mpforms.MPModelForm):
     fields = ('app_key','ad_type', 'backfill', 'backfill_threshold_cpm', 'keywords','width','height','format','adsense_channel_id')
     
   def __init__(self, *args,**kwargs):
-      instance = kwargs.get('instance',None)
+      instance = kwargs.get('instancetance',None)
       initial = kwargs.get('initial',None)
       data = kwargs.get('data',None)
       logging.info('instance: %s kwargs: %s data: %s'%(instance, kwargs,data))       
@@ -87,8 +87,9 @@ class AdUnitForm(mpforms.MPModelForm):
     logging.info('clean_data: %s'%self.cleaned_data)
     obj.name = self.cleaned_data['adunit_name']
     obj.description = self.cleaned_data['adunit_description'] 
-    obj.width = 50.0
-    obj.height = 320.0
+    # TODO: hardcoding height and width
+    obj.width = 320.0
+    obj.height = 50.0
     if commit:
       obj.put()
     logging.info('name: %s description: %s'%(obj.name,obj.description))  

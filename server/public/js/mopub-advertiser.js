@@ -288,6 +288,7 @@ var mopub = mopub || {};
         e.preventDefault();
         $('#campaignAdgroupForm').submit()
       });
+      
     $('#adgroupForm-advanced-toggleButton')
       .button('option', {icons: { primary: 'ui-icon-triangle-1-s' }})
       .click(function(e) {

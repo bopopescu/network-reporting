@@ -1,13 +1,13 @@
                             <dt><label for="TODO1">Line 1</label></dt>
                             <dd>
-                              <input id='line1' type='text' name="{{form.line1.name}}" size="30" onkeyup='updateLine1();' class="input-text {% if form.line1.errors %}form-error{% endif %}"/>
+                              <input id='line1' type='text' name="{{form.line1.name}}" class="input-text {% if form.line1.errors %}form-error{% endif %}"/>
                               {% for error in form.line1.errors %}
                               <div class="form-error-text">{{error}}</div> 
                               {% endfor %}
                             </dd> 
                             <dt><label for="TODO2">Line 2</label></dt>
                             <dd>
-                              <input id='line2' type='text' name="{{form.line2.name}}" size="30" onkeyup='updateLine1();' class="input-text {% if form.line2.errors %}form-error{% endif %}"/>
+                              <input id='line2' type='text' name="{{form.line2.name}}" class="input-text {% if form.line2.errors %}form-error{% endif %}"/>
                               {% for error in form.line2.errors %}
                               <div class="form-error-text">{{error}}</div> 
                               {% endfor %}
@@ -37,21 +37,21 @@
                               </dd>
                               <dt><label for="TODO4">Color</label></dt> 
                               <dd>
-                                <input type='text' id='color' name="{{form.color.name}}" size="8" value="000000" onkeyup='updateColor();' class="input-text {% if form.color.errors %}form-error{% endif %}"/>
+                                <input type='text' id='color' name="{{form.color.name}}" value="000000" class="input-text {% if form.color.errors %}form-error{% endif %}"/>
                                 {% for error in form.color.errors %}
                                 <div class="form-error-text">{{error}}</div> 
                                 {% endfor %}
                               </dd>
                               <dt><label for="TODO5">Font Color</label></dt>
                               <dd>
-                                <input type='text' id='font_color' name="{{form.font_color.name}}" size="8" value="FFFFFF" onkeyup='updateFontColor();' class="input-text {% if form.font_color.errors %}form-error{% endif %}"/>
+                                <input type='text' id='font_color' name="{{form.font_color.name}}" value="FFFFFF" class="input-text {% if form.font_color.errors %}form-error{% endif %}"/>
                                 {% for error in form.font_color.errors %}
                                 <div class="form-error-text">{{error}}</div> 
                                 {% endfor %}
                               </dd> 
                               <dt><label>Gradient</label></dt>
                               <dd>
-                                <input type='checkbox' id='gradient' name="gradient" checked onchange='updateGradient()'/>
+                                <input type='checkbox' id='gradient' name="gradient" checked />
                               </dd>
                               <dt><label for="tracking_url">Impression Tracking Pixel:</label></dt>
                               <dd>

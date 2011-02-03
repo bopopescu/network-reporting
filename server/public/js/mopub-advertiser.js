@@ -237,17 +237,17 @@ var mopub = mopub || {};
 
     $('#creativeCreateForm input[name="ad_type"]')
       .click(function(e){
-        $('#creativeCreateForm')
-          .find('.adTypeDependent').hide().end()
-          .find('.'+$(this).val()).show().end();
+        $('.adTypeDependent',"#creativeCreateForm").hide();
+        $('.adTypeDependent.'+$(this).val(),"#creativeCreateForm").show();
       }).filter(':checked').click();
 
 
     $('.creativeEditForm input[name="ad_type"]')
       .click(function(e){
-        $(this).parents('form') // gets the form to which this belongs
-          .find('.adTypeDependent').hide().end()
-          .find('.'+$(this).val()).show().end();
+        // gets the form to which this belongs
+        var form = $(this).parents('form');
+        $('.adTypeDependent',form).hide();
+        $('.adTypeDependent.'+$(this).val(),form).show();
       }).filter(':checked').click();
 
     
@@ -340,9 +340,27 @@ var mopub = mopub || {};
         });
     });
     
+    $('#creativeForm-advanced-toggleButton')
+      .button('option', {icons: { primary: 'ui-icon-triangle-1-s' }})
+      .click(function(e) {
+        e.preventDefault();
+        var buttonTextElem = $('.ui-button-text', this);
+        if ($('.creativeForm-advanced-options').is(':hidden')) {
+          $('.creativeForm-advanced-options').show();
+          buttonTextElem.text('Hide Advanced Options');
+          $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
+        }
+        else {
+          $('.creativeForm-advanced-options').hide();
+          buttonTextElem.text('Show Advanced Options');
+          $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
+        }
+      });
+    
+    
 
     $('#creativeAddForm input[name="creative_type"]').click(function(e) {
-      $('#creativeCreate-text').hide();
+      $('#creativeCreate-text_icon').hide();
       $('#creativeCreate-image').hide();
       $('#creativeCreate-html').hide();
       $('#creativeCreate-'+$(this).val()).show();

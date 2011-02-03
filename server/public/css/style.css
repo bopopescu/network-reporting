@@ -969,6 +969,9 @@ dl.formFields {
   position: absolute;
   top: 0;
   left: 0;
+}
+
+.stats-breakdown table {
   width: 205px;
 }
 
@@ -1024,6 +1027,19 @@ dl.formFields {
 .stats-breakdown tr.active:hover th.stats-breakdown-name .inner {
   background-color: #4d4d4d;
   color: #fff;
+}
+
+.stats-breakdown-value.yesterday,
+.stats-breakdown-value.all {
+  display:none;
+}
+
+.stats-breakdown-buttons {
+  padding: 0 0 10px 0;
+  position:absolute;
+  bottom:0;
+  text-align:center;
+  width:205px;
 }
 
 .stats-chart {

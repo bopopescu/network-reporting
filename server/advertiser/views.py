@@ -695,7 +695,6 @@ class AddCreativeHandler(RequestHandler):
         CachedQueryManager().cache_delete(adunits)
         jsonDict.update(success=True)
         return self.json_response(jsonDict)
-    logging.error(creative_form.errors)
     new_html = self.get(base_creative_form,text_creative_form,image_creative_form,\
                         text_tile_creative_form,html_creative_form)
     jsonDict.update(success=False,html=new_html)

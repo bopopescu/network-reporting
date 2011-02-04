@@ -41,7 +41,6 @@ class AdUnitQueryManager(CachedQueryManager):
         return adunits.fetch(limit)
         
     def put_adunits(self,adunits):
-        self.cache_delete(adunits)
         db.put(adunits)    
                
     def get_by_key(self,key):

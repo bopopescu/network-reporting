@@ -707,6 +707,7 @@ class DisplayCreativeHandler(RequestHandler):
     if c and c.ad_type == "image" and c.image:
       return HttpResponse(c.image,content_type='image/png')
     if c and c.ad_type == "text_icon":
+      c.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
       return render_to_response(self.request, 'advertiser/text_tile.html', {'c':c})
       #return HttpResponse(c.image,content_type='image/png')
     if c and c.ad_type == "html":

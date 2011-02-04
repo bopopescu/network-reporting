@@ -55,9 +55,36 @@ class TextCreativeForm(mpforms.MPModelForm):
 class TextAndTileCreativeForm(mpforms.MPModelForm):
   TEMPLATE = 'advertiser/forms/text_tile_creative_form.html'
   
+  image_url = forms.URLField(verify_exists=False,required=False)
+  image_file = forms.FileField(required=False)
+  
   class Meta:
     model = TextAndTileCreative
     fields = ('line1','line2', 'ad_type','name','tracking_url','url')
+    
+  def __init__(self, *args,**kwargs):
+    instance = kwargs.get('instance',None)
+    initial = kwargs.get('initial',None)
+
+    if instance:
+      image_url = reverse('advertiser_creative_image',kwargs={'creative_key':str(instance.key())})
+      if not initial:
+        initial = {}
+      initial.update(image_url=image_url)  
+      kwargs.update(initial=initial)
+    super(TextAndTileCreativeForm,self).__init__(*args,**kwargs)    
+
+  def save(self,commit=True):
+    obj = super(TextAndTileCreativeForm,self).save(commit=False)  
+    if self.files.get('image_file',None):
+      img = images.Image(self.files.get('image_file').read())
+      img.im_feeling_lucky()
+      obj.image = db.Blob(img.execute_transforms())
+      obj.image_width = img.width
+      obj.image_height = img.height
+    if commit:
+      obj.put()
+    return obj  
     
 class HtmlCreativeForm(mpforms.MPModelForm):
   TEMPLATE = 'advertiser/forms/html_creative_form.html'

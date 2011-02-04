@@ -14,8 +14,13 @@
                             </dd> 
                             <dt><label for="TODO2">Image File</label></dt>
                             <dd>
-                              <span style="font-size:smaller;margin-left:5px;">(40 x 40)</span></th><td><div id='image_input_div'><input id='image_input' type='file' name="image" size="40"/></div><div id='image_input_change' style='display:none;'><a href="#" onclick="changeIcon();return false;">Change</a></div></td></tr>
+                              <span style="font-size:smaller;margin-left:5px;">(40 x 40)</span></th><td><div id='image_input_div'><input id='image_input' type='file' name="{{form.image_file.name}}" size="40"/></div><div id='image_input_change' style='display:none;'><a href="#" onclick="changeIcon();return false;">Change</a></div></td></tr>
                               <input type="hidden" id="app_img" name="app_img"/>
+                              {% if form.image_url %}
+                              <div>
+                                <img src="{{form.image_url.value}}"/>
+                              </div>
+                              {% endif %}
                             </dd>
                             <dt>
                               <a class="button button-small creativeFormAdvancedToggleButton" id="creativeFormAdvancedToggleButton" href="#">More Options</a>

@@ -48,26 +48,46 @@
           <div class="separated" id="chartWrapper">
             <section class="offset nomargin" id="dashboard-stats">
               <div class="stats">
-                <table class="stats-breakdown">
-                  <tbody>
-                    <tr class="active" id="stats-breakdown-revenue">
-                      <td class="stats-breakdown-value"><span class="inner">{{totals.revenue|currency}}</span></td>
-                      <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
-                    </tr>
-                    <tr id="stats-breakdown-impressions">
-                      <td class="stats-breakdown-value"><span class="inner">{{totals.impression_count|withsep}}</span></td>
-                      <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
-                    </tr>
-                    <tr id="stats-breakdown-clicks">
-                      <td class="stats-breakdown-value"><span class="inner">{{totals.click_count|withsep}}</span></td>
-                      <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
-                    </tr>
-                    <tr id="stats-breakdown-users">
-                      <td class="stats-breakdown-value"><span class="inner">{{totals.unique_user_count|withsep}}</span></td>
-                      <th class="stats-breakdown-name"><span class="inner">Users</span></th>
-                    </tr>
-                  </tbody>
-                </table>
+                <div class="stats-breakdown">
+                  <table>
+                    <tbody>
+                      <tr class="active" id="stats-breakdown-impressions">
+                        <td class="stats-breakdown-value today"><span class="inner">{{today.impression_count|withsep}}</span></td>
+                        <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.impression_count|withsep}}</span></td>
+                        <td class="stats-breakdown-value all"><span class="inner">{{totals.impression_count|withsep}}</span></td>
+                        <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
+                      </tr>
+                      <tr id="stats-breakdown-clicks">
+                        <td class="stats-breakdown-value today"><span class="inner">{{today.revenue|currency}}</span></td>
+                        <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.revenue|currency}}</span></td>
+                        <td class="stats-breakdown-value all"><span class="inner">{{totals.revenue|currency}}</span></td>
+                        <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
+                      </tr>
+                      <tr id="stats-breakdown-clicks">
+                        <td class="stats-breakdown-value today"><span class="inner">{{today.click_count|withsep}}</span></td>
+                        <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.click_count|withsep}}</span></td>
+                        <td class="stats-breakdown-value all"><span class="inner">{{totals.click_count|withsep}}</span></td>
+                        <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
+                      </tr>
+                      <tr id="stats-breakdown-users">
+                        <td class="stats-breakdown-value today"><span class="inner">{{today.unique_user_count|withsep}}</span></td>
+                        <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.unique_user_count|withsep}}</span></td>
+                        <td class="stats-breakdown-value all"><span class="inner">{{totals.unique_user_count|withsep}}</span></td>
+                        <th class="stats-breakdown-name"><span class="inner">Users</span></th>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="stats-breakdown-buttons">
+                  <span class="buttonset button-small" id="stats-breakdown-dateOptions">
+                    <input type="radio" name="stats-breakdown-dateOptions-option" value="today" id="stats-breakdown-dateOptions-option-0" checked="checked"/>
+                    <label for="stats-breakdown-dateOptions-option-0">Today</label>
+                    <input type="radio" name="stats-breakdown-dateOptions-option" value="yesterday" id="stats-breakdown-dateOptions-option-1"/>
+                    <label for="stats-breakdown-dateOptions-option-1">Yesterday</label>
+                    <input type="radio" name="stats-breakdown-dateOptions-option" value="all" id="stats-breakdown-dateOptions-option-2"/>
+                    <label for="stats-breakdown-dateOptions-option-2">All</label>
+                  </span>
+                </div>
                 <div class="chart chart-loading stats-chart" id="dashboard-stats-chart">
                   <div class="chart-loading-text">Loading ...</div>
                   <div class="chart-error-text">Could not load chart</div>

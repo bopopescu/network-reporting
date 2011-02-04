@@ -151,10 +151,6 @@ class AdGroupIndexHandler(RequestHandler):
       c.all_stats = SiteStatsQueryManager().get_sitestats_for_days(owner=c, days=days)      
       c.stats = reduce(lambda x, y: x+y, c.all_stats, SiteStats())
 
-    # compute rollups to display at the top
-    daily_totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[c.all_stats for c in adgroups])]
-    totals = reduce(lambda x,y: x+y, daily_totals, SiteStats())
-
     promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], adgroups)
     promo_campaigns = sorted(promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
     
@@ -173,9 +169,8 @@ class AdGroupIndexHandler(RequestHandler):
 
     graph_adgroups = adgroups[0:4]
     if len(adgroups) > 4:
-      graph_adgroups[3] = {'name': 'Others',
-                           'all_stats': [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[c.all_stats for c in graph_adgroups[3:]])]
-                          }
+      graph_adgroups[3].name = 'Others'
+      graph_adgroups[3].all_stats = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[c.all_stats for c in adgroups[3:]])]
 
     return render_to_response(self.request, 
       'advertiser/adgroups.html', 
@@ -187,7 +182,9 @@ class AdGroupIndexHandler(RequestHandler):
        'all_apps' : all_apps,
        'site' : site,
        'all_sites' : all_sites,
-       'totals':totals,
+       'totals': reduce(lambda x, y: x+y.stats, adgroups, SiteStats()),
+       'today': reduce(lambda x, y: x+y, [c.all_stats[-1] for c in graph_adgroups], SiteStats()),
+       'yesterday': reduce(lambda x, y: x+y, [c.all_stats[-2] for c in graph_adgroups], SiteStats()),
        'gtee': guarantee_campaigns,
        'promo': promo_campaigns,
        'network': network_campaigns,
@@ -513,18 +510,10 @@ class ShowAdGroupHandler(RequestHandler):
 
     adunits = sorted(adunits, key=lambda adunit: adunit.stats.impression_count, reverse=True)
 
-    if len(adunits) > 0:
-      all_totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[au.all_stats for au in adunits])]
-    else:
-      all_totals = [SiteStats() for d in days]
-
-    totals = reduce(lambda x,y: x+y, all_totals, SiteStats())
-
     graph_adunits = adunits[0:4]
     if len(adunits) > 4:
-      graph_adunits[3] = {'name': 'Others',
-                           'all_stats': [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[au.all_stats for au in graph_adunits[3:]])]
-                          }
+      graph_adunits[3].name = 'Others'
+      graph_adunits[3].all_stats = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[au.all_stats for au in graph_adunits[3:]])]
 
     # In order to have add creative
     creative_handler = AddCreativeHandler(self.request)
@@ -542,7 +531,9 @@ class ShowAdGroupHandler(RequestHandler):
                               'apps': apps,
                               'adgroup': adgroup, 
                               'creatives': creatives,
-                              'totals': totals,
+                              'totals': reduce(lambda x, y: x+y.stats, adunits, SiteStats()),
+                              'today': reduce(lambda x, y: x+y, [a.all_stats[-1] for a in graph_adunits], SiteStats()),
+                              'yesterday': reduce(lambda x, y: x+y, [a.all_stats[-2] for a in graph_adunits], SiteStats()),
                               'adunits' : adunits,
                               'start_date': days[0],
                               'creative_fragment':creative_fragment,

@@ -619,7 +619,7 @@ class AdHandler(webapp.RequestHandler):
       elif c.ad_type == "text_icon":
         if c.image:
           params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
-        self.response.headers.add_header("X-Adtype", str('html'))
+        # self.response.headers.add_header("X-Adtype", str('html'))
       elif c.ad_type == "greystripe":
         params.update(html_data=c.html_data)
         # TODO: Why is html data here twice?

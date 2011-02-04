@@ -440,13 +440,19 @@ var mopub = mopub || {};
       this.trafficChart = new Highcharts.Chart({
         chart: {
           renderTo: 'dashboard-stats-chart',
-          defaultSeriesType: 'area'
+          defaultSeriesType: 'area',
+          marginTop: 0,
+          marginBottom: 55
         },
         plotOptions: {
           series: {
             pointStart: data.pointStart,
             pointInterval: data.pointInterval
           }
+        },
+        legend: {
+          verticalAlign: "bottom",
+          y: -7
         },
         yAxis: {
           labels: {

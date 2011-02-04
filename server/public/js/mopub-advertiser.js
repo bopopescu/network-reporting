@@ -260,7 +260,6 @@ var mopub = mopub || {};
 
     $('#creativeCreateForm input[name="ad_type"]')
       .click(function(e){
-        e.preventDefault();
         $('.adTypeDependent',"#creativeCreateForm").hide();
         $('.adTypeDependent.'+$(this).val(),"#creativeCreateForm").show();
       }).filter(':checked').click();
@@ -268,7 +267,6 @@ var mopub = mopub || {};
 
     $('.creativeEditForm input[name="ad_type"]')
       .click(function(e){
-        e.preventDefault();
         // gets the form to which this belongs
         var form = $(this).parents('form');
         $('.adTypeDependent',form).hide();

@@ -167,7 +167,7 @@ class AdAuction(object):
     all_ad_groups = [a for a in all_ad_groups 
                       if a.campaign.active and 
                         (a.campaign.start_date >= SiteStats.today() if a.campaign.start_date else True) 
-                        and (a.campaign.end_date <= SiteStats.today() if a.campaign.end_date else True)]
+                        and (SiteStats.today() <= a.campaign.end_date if a.campaign.end_date else True)]
     logging.warning("removed non running campaigns, now: %s" % all_ad_groups)
     
     # ad group request-based targeting exclusions

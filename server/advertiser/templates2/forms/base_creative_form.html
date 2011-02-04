@@ -1,10 +1,18 @@
+                            <dt><label for="format">Format:</label></dt> 
+                            <dd>
+                              <select name="{{form.format.name}}">
+                                <option value="320x50" {% ifequal form.format.value "320x50"%}selected="selected"{% endifequal %}>320 x 50 (Banner)</option>
+                                <option value="300x250" {% ifequal form.format.value "300x250"%}selected="selected"{% endifequal %}>300 x 250 (MRect)</option>
+                                <option value="full" {% ifequal form.format.value "full"%}selected="selected"{% endifequal %}>Full Screen</option>
+                              </select>
+                            </dd>
                             <dt>Creative Type:</dt> 
                             <dd> 
                               <span class="radios"> 
                                 <input type="radio" class="input-radio" name="{{form.ad_type.name}}" value="text_icon" id="creativeType-text_icon" {% if not form.ad_type.value %}checked="checked"{% endif %}{% ifequal form.ad_type.value "text_icon" %}checked="checked"{% endifequal %}/> <label for="creativeType-text_icon">Text and Tile</label> 
                                 <input type="radio" class="input-radio" name="{{form.ad_type.name}}" value="image" id="creativeType-image" {% ifequal form.ad_type.value "image" %}checked="checked"{% endifequal %}/> <label for="creativeType-image">Image</label> 
                                 <input type="radio" class="input-radio" name="{{form.ad_type.name}}" value="html" id="creativeType-html" {% ifequal form.ad_type.value "html" %}checked="checked"{% endifequal %}/> <label for="creativeType-html">HTML</label> 
-                              </span> 
+                              </span>
                             </dd>
                             <dt><label for="name">Creative Name:</label></dt>
                             <dd>
@@ -13,3 +21,20 @@
                               <div class="form-error-text">{{error}}</div> 
                               {% endfor %}
                             </dd>
+                            <dt><label for="url">Click URL:</label></dt>
+                            <dd>
+                              <input type='text' name="{{form.url.name}}" class="input-text {% if form.url.errors %}form-error{% endif %}" value="{{form.url.value}}"/>
+                              <a href="#" id="creativeAddForm-url-helpLink">What's this?</a>
+                              <div id="creativeAddForm-url-helpContent" class="hidden"> 
+                                <h3>Click URL</h3>
+                                <p>This is the link that will open when a user clicks on this ad.  Some examples are:
+                                <h4>Web Page</h4>
+                                <p>http://www.example.com/</p>
+                                <h4>App Store</h4>
+                                <p>http://phobos.apple.com/WebObjects/MZStore.woa/....</p>
+                              </div>
+                              {% for error in form.url.errors %}
+                              <div class="form-error-text">{{error}}</div> 
+                              {% endfor %}
+                            </dd>
+                            

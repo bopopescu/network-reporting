@@ -5,10 +5,3 @@
                               <div class="form-error-text">{{error}}</div> 
                               {% endfor %}
                             </dd>
-                            <dt><label for="url">Click URL:</label></dt>
-                            <dd>
-                              <input type='text' name="{{form.url.name}}" class="input-text {% if form.url.errors %}form-error{% endif %}" value="{{form.url.value}}"/>
-                              {% for error in form.url.errors %}
-                              <div class="form-error-text">{{error}}</div> 
-                              {% endfor %}
-                            </dd>

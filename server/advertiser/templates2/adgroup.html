@@ -48,26 +48,46 @@
           <div class="separated" id="chartWrapper">
             <section class="offset nomargin" id="dashboard-stats">
               <div class="stats">
-                <table class="stats-breakdown">
-                  <tbody>
-                    <tr class="active" id="stats-breakdown-revenue">
-                      <td class="stats-breakdown-value"><span class="inner">{{totals.revenue|currency}}</span></td>
-                      <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
-                    </tr>
-                    <tr id="stats-breakdown-impressions">
-                      <td class="stats-breakdown-value"><span class="inner">{{totals.impression_count|withsep}}</span></td>
-                      <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
-                    </tr>
-                    <tr id="stats-breakdown-clicks">
-                      <td class="stats-breakdown-value"><span class="inner">{{totals.click_count|withsep}}</span></td>
-                      <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
-                    </tr>
-                    <tr id="stats-breakdown-users">
-                      <td class="stats-breakdown-value"><span class="inner">{{totals.unique_user_count|withsep}}</span></td>
-                      <th class="stats-breakdown-name"><span class="inner">Users</span></th>
-                    </tr>
-                  </tbody>
-                </table>
+                <div class="stats-breakdown">
+                  <table>
+                    <tbody>
+                      <tr class="active" id="stats-breakdown-impressions">
+                        <td class="stats-breakdown-value today"><span class="inner">{{today.impression_count|withsep}}</span></td>
+                        <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.impression_count|withsep}}</span></td>
+                        <td class="stats-breakdown-value all"><span class="inner">{{totals.impression_count|withsep}}</span></td>
+                        <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
+                      </tr>
+                      <tr id="stats-breakdown-clicks">
+                        <td class="stats-breakdown-value today"><span class="inner">{{today.revenue|currency}}</span></td>
+                        <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.revenue|currency}}</span></td>
+                        <td class="stats-breakdown-value all"><span class="inner">{{totals.revenue|currency}}</span></td>
+                        <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
+                      </tr>
+                      <tr id="stats-breakdown-clicks">
+                        <td class="stats-breakdown-value today"><span class="inner">{{today.click_count|withsep}}</span></td>
+                        <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.click_count|withsep}}</span></td>
+                        <td class="stats-breakdown-value all"><span class="inner">{{totals.click_count|withsep}}</span></td>
+                        <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
+                      </tr>
+                      <tr id="stats-breakdown-users">
+                        <td class="stats-breakdown-value today"><span class="inner">{{today.unique_user_count|withsep}}</span></td>
+                        <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.unique_user_count|withsep}}</span></td>
+                        <td class="stats-breakdown-value all"><span class="inner">{{totals.unique_user_count|withsep}}</span></td>
+                        <th class="stats-breakdown-name"><span class="inner">Users</span></th>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="stats-breakdown-buttons">
+                  <span class="buttonset button-small" id="stats-breakdown-dateOptions">
+                    <input type="radio" name="stats-breakdown-dateOptions-option" value="today" id="stats-breakdown-dateOptions-option-0" checked="checked"/>
+                    <label for="stats-breakdown-dateOptions-option-0">Today</label>
+                    <input type="radio" name="stats-breakdown-dateOptions-option" value="yesterday" id="stats-breakdown-dateOptions-option-1"/>
+                    <label for="stats-breakdown-dateOptions-option-1">Yesterday</label>
+                    <input type="radio" name="stats-breakdown-dateOptions-option" value="all" id="stats-breakdown-dateOptions-option-2"/>
+                    <label for="stats-breakdown-dateOptions-option-2">All</label>
+                  </span>
+                </div>
                 <div class="chart chart-loading stats-chart" id="dashboard-stats-chart">
                   <div class="chart-loading-text">Loading ...</div>
                   <div class="chart-error-text">Could not load chart</div>
@@ -77,16 +97,16 @@
                       //pointStart: 1294963200000,
                       pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
                       pointInterval: 86400000,
-                      'impressions': [{% for a in adunits %}
+                      'impressions': [{% for a in graph_adunits %}
                         { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                       ],
-                      'revenue': [{% for a in adunits %}
+                      'revenue': [{% for a in graph_adunits %}
                         { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.revenue}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                       ],
-                      'clicks': [{% for a in adunits %}
+                      'clicks': [{% for a in graph_adunits %}
                         { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                       ],
-                      'users': [{% for a in adunits %}
+                      'users': [{% for a in graph_adunits %}
                         { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.unique_user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                       ]
                     };
@@ -168,25 +188,25 @@
               </div>
             </section>
 
-        {% for c in creatives %}
-            <div id="{{c.key}}-edit" class="hidden advertiser-creativeEditForm">
-              <form action="{% url advertiser_creative_create %}" method="POST" accept-charset="utf-8" id="creativeEditForm-{{forloop.counter0}}" enctype="multipart/form-data" class="creativeEditForm">
-                <input type="hidden" name="adgroup_key" value="{{adgroup.key}}"/>
-                <input type="hidden" name="creative_key" value="{{c.key}}"/>
-                <fieldset id="creativeAddForm-details-{{forloop.counter0}}" class="alt">
-                  <div id="creativeEditForm-fragment-{{forloop.counter0}}" class="creativeEditForm-fragment">
-{{c.html_fragment}}
-                  </div>
-                  <div class="clear"></div>
-                  <div class="form-submit"> 
-                    <span id="creativeCreateForm-success" class="hidden creativeEditForm-success">Success!</span>
-                    <span class="buttonWrap"><a href="#" class="button creativeEditForm-submit" id="creativeCreateForm-submit">Save</a></span> 
-                    <span class="buttonWrap"><a href="#" class="button creativeEditForm-cancel" id="creativeCreateForm-cancel">Cancel</a></span> 
+        {% for c in creatives %} 
+            <div id="{{c.key}}-edit" class="hidden advertiser-creativeEditForm"> 
+              <form action="{% url advertiser_creative_create %}" method="POST" accept-charset="utf-8" id="creativeEditForm-{{forloop.counter0}}" enctype="multipart/form-data" class="creativeEditForm"> 
+                <input type="hidden" name="adgroup_key" value="{{adgroup.key}}"/> 
+                <input type="hidden" name="creative_key" value="{{c.key}}"/> 
+                <fieldset id="creativeAddForm-details-{{forloop.counter0}}" class="alt"> 
+                  <div id="creativeEditForm-fragment-{{forloop.counter0}}" class="creativeEditForm-fragment"> 
+{{c.html_fragment}} 
                   </div> 
-                </fieldset>
-              </form>
-            </div>
-        {% endfor %}
+                  <div class="clear"></div> 
+                  <div class="form-submit">  
+                    <span id="creativeCreateForm-success" class="hidden creativeEditForm-success">Success!</span> 
+                    <span class="buttonWrap"><a href="#" class="button creativeEditForm-submit" id="creativeCreateForm-submit">Save</a></span>  
+                    <span class="buttonWrap"><a href="#" class="button creativeEditForm-cancel" id="creativeCreateForm-cancel">Cancel</a></span>  
+                  </div>  
+                </fieldset> 
+              </form> 
+            </div> 
+        {% endfor %} 
             <section id="advertiser-creativeData">
               <table class="campaignData-main dataTable" id="dashboard-apps2-columnHeaders">
                 <thead>
@@ -222,7 +242,7 @@
                       <div class="creative hidden" id="{{c.key}}-preview">
                         <h3>{{c.name}}</h3>
                         <div>
-                          <iframe src="{% url advertiser_creative_html creative_key=c.key %}" frameborder="0" scrolling="no" width="320" height="50">
+                          <iframe src="{% url advertiser_creative_html creative_key=c.key %}" frameborder="0" scrolling="no" {% if c.size.2 %}width="{{c.size.0}}" height="{{c.size.2}}"{% else %}width="320" height="480"{% endif %}>
                             <p>Your browser does not support iframes.</p>
                           </iframe>
                         </div>

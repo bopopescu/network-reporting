@@ -434,8 +434,8 @@ class AdHandler(webapp.RequestHandler):
     
     # the user's site key was not set correctly...
     if site is None:
-      self.error(500)
-      self.response.out.write("Publisher site key %s not valid" % id)
+      self.error(404)
+      self.response.out.write("Publisher adunit key %s not valid" % id)
       return
     
     # get keywords 

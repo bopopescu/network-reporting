@@ -7,6 +7,7 @@ from google.appengine.datastore import entity_pb
 from django.utils import simplejson
 
 NAMESPACE = None
+MAX_CACHE_TIME = 60*5 # 5 minutes
 
 class CachedQueryManager(object):
   Model = None
@@ -49,9 +50,9 @@ class CachedQueryManager(object):
     #   obj_string_value = simplejson.dumps(prop_dict, separators=(',',':') # compact encoding      
     cache_dict = dict([(str(obj.key()),obj) for obj in objs])
     if replace:
-      memcache.replace_multi(cache_dict,namespace=NAMESPACE) 
+      memcache.replace_multi(cache_dict,time=MAX_CACHE_TIME,namespace=NAMESPACE) 
     else:  
-      memcache.set_multi(cache_dict,namespace=NAMESPACE)   
+      memcache.set_multi(cache_dict,time=MAX_CACHE_TIME,namespace=NAMESPACE)   
     return db.put(objs)  
     
   def cache_delete(self,objs):

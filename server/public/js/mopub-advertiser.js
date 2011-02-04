@@ -549,6 +549,12 @@ var mopub = mopub || {};
       }
     });
     
+    // set up stats breakdown dateOptions
+    $('#stats-breakdown-dateOptions input').click(function() {
+      $('.stats-breakdown-value').hide();
+      $('.stats-breakdown-value.'+$(this).val()).show();
+    });
+    
     // set up custom dateOptions modal dialog
     $('#dashboard-dateOptions-custom-from').datepicker({
       defaultDate: '-15d',

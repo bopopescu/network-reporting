@@ -127,7 +127,7 @@ class AppIndexHandler(RequestHandler):
     # In the graph, only show the top 3 apps and bundle the rest if there are more than 4
     graph_apps = apps[0:4]
     if len(apps) > 4:
-      graph_apps[3].name = 'Others'
+      graph_apps[3] = App(name='Others')
       graph_apps[3].all_stats = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[a.all_stats for a in apps[3:]])]
 
     return render_to_response(self.request,'publisher/index.html', 
@@ -334,7 +334,7 @@ class ShowAppHandler(RequestHandler):
     # In the graph, only show the top 3 ad units and bundle the rest if there are more than 4
     a.graph_adunits = a.adunits[0:4]
     if len(a.adunits) > 4:
-      a.graph_adunits[3].name ='Others'
+      a.graph_adunits[3] = Site(name='Others')
       a.graph_adunits[3].all_stats = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[au.all_stats for au in a.adunits[3:]])]
     # in order to make the app editable
     app_form_fragment = AppUpdateAJAXHandler(self.request).get(app=a)

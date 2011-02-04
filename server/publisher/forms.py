@@ -101,6 +101,6 @@ class AdUnitForm(mpforms.MPModelForm):
     return obj  
 
 class SiteForm(forms.ModelForm):
-	class Meta:
-		model = Site
-		fields = ('name', 'description', 'ad_type', 'backfill', 'backfill_threshold_cpm', 'keywords','width','height','format','adsense_channel_id')
+  class Meta:
+    model = Site
+    fields = ('name', 'description', 'ad_type', 'backfill', 'backfill_threshold_cpm', 'keywords','width','height','format','adsense_channel_id')

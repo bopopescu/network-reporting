@@ -344,7 +344,7 @@ class CreateAdGroupHandler(RequestHandler):
     for adunit in adunits:
       adunit.checked = adunit.key() in adgroup.site_keys
       adunit.app = App.get(adunit.app_key.key())
-    # TODO: Clean up this hacked shit	
+    # TODO: Clean up this hacked shit 
     networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["greystripe","GreyStripe",False],["iAd","iAd",False],["inmobi","InMobi",False],["millennial","Millennial Media",False]]
     for n in networks:
       if adgroup.network_type == n[0]:
@@ -691,6 +691,7 @@ class AddCreativeHandler(RequestHandler):
         CachedQueryManager().cache_delete(adunits)
         jsonDict.update(success=True)
         return self.json_response(jsonDict)
+    
     new_html = self.get(base_creative_form,text_creative_form,image_creative_form,\
                         text_tile_creative_form,html_creative_form)
     jsonDict.update(success=False,html=new_html)
@@ -707,11 +708,19 @@ class DisplayCreativeHandler(RequestHandler):
     if c and c.ad_type == "image" and c.image:
       return HttpResponse(c.image,content_type='image/png')
     if c and c.ad_type == "text_icon":
+      c.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
       return render_to_response(self.request, 'advertiser/text_tile.html', {'c':c})
       #return HttpResponse(c.image,content_type='image/png')
     if c and c.ad_type == "html":
       return HttpResponse("<html><body style='margin:0px;'>"+c.html_data+"</body></html");
     return HttpResponse('NOOOOOOOOOOOO IMAGE')
+    
+class CreativeImageHandler(RequestHandler):
+  def get(self,creative_key):
+    c = CreativeQueryManager().get_by_key(creative_key)
+    if c and c.image:
+      return HttpResponse(c.image,content_type='image/png')
+    raise Http404
 
 def creative_image(request,*args,**kwargs):
   return DisplayCreativeHandler()(request,*args,**kwargs)

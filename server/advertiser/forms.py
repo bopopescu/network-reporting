@@ -7,6 +7,7 @@ from advertiser.models import Campaign, AdGroup, Creative, \
                               HtmlCreative, ImageCreative
 from publisher.models import Site as AdUnit
 from django import forms
+from django.core.urlresolvers import reverse
 from common.utils import forms as mpforms
 
 class CampaignForm(mpforms.MPModelForm):
@@ -54,9 +55,36 @@ class TextCreativeForm(mpforms.MPModelForm):
 class TextAndTileCreativeForm(mpforms.MPModelForm):
   TEMPLATE = 'advertiser/forms/text_tile_creative_form.html'
   
+  image_url = forms.URLField(verify_exists=False,required=False)
+  image_file = forms.FileField(required=False)
+  
   class Meta:
     model = TextAndTileCreative
     fields = ('line1','line2', 'ad_type','name','tracking_url','url','format')
+    
+  def __init__(self, *args,**kwargs):
+    instance = kwargs.get('instance',None)
+    initial = kwargs.get('initial',None)
+
+    if instance:
+      image_url = reverse('advertiser_creative_image',kwargs={'creative_key':str(instance.key())})
+      if not initial:
+        initial = {}
+      initial.update(image_url=image_url)  
+      kwargs.update(initial=initial)
+    super(TextAndTileCreativeForm,self).__init__(*args,**kwargs)    
+
+  def save(self,commit=True):
+    obj = super(TextAndTileCreativeForm,self).save(commit=False)  
+    if self.files.get('image_file',None):
+      img = images.Image(self.files.get('image_file').read())
+      img.im_feeling_lucky()
+      obj.image = db.Blob(img.execute_transforms())
+      obj.image_width = img.width
+      obj.image_height = img.height
+    if commit:
+      obj.put()
+    return obj  
     
 class HtmlCreativeForm(mpforms.MPModelForm):
   TEMPLATE = 'advertiser/forms/html_creative_form.html'
@@ -69,19 +97,60 @@ class HtmlCreativeForm(mpforms.MPModelForm):
 class ImageCreativeForm(mpforms.MPModelForm):
   TEMPLATE = 'advertiser/forms/image_creative_form.html'
   
-  image_file = forms.FileField()
+  image_url = forms.URLField(verify_exists=False,required=False)
+  image_file = forms.FileField(required=False)
   
   class Meta:
     model = ImageCreative
     fields = ('ad_type','name','tracking_url','url','display_url','format') 
     
+  def __init__(self, *args,**kwargs):
+    instance = kwargs.get('instance',None)
+    initial = kwargs.get('initial',None)
+
+    if instance:
+      image_url = reverse('advertiser_creative_image',kwargs={'creative_key':str(instance.key())})
+      if not initial:
+        initial = {}
+      initial.update(image_url=image_url)  
+      kwargs.update(initial=initial)
+    super(ImageCreativeForm,self).__init__(*args,**kwargs)    
+    
   def save(self,commit=True):
     obj = super(ImageCreativeForm,self).save(commit=False)  
-    img = images.Image(self.files.get('image_file').read())
-    img.im_feeling_lucky()
-    obj.image = db.Blob(img.execute_transforms())
-    obj.image_width = img.width
-    obj.image_height = img.height
+    if self.files.get('image_file',None):
+      img = images.Image(self.files.get('image_file').read())
+      img.im_feeling_lucky()
+      obj.image = db.Blob(img.execute_transforms())
+      obj.image_width = img.width
+      obj.image_height = img.height
     if commit:
       obj.put()
     return obj  
+    
+  # def save(self,commit=True):
+  #   obj = super(AppForm,self).save(commit=False)
+  #   if self.cleaned_data['img_url']:
+  #     if not self.cleaned_data['img_url'] == self.initial.get('img_url'):
+  #       try:
+  #         response = urllib.urlopen(self.cleaned_data['img_url'])
+  #         img = response.read()
+  #         obj.icon = db.Blob(img)
+  #       except Exception, e: # TODO: appropriately handle the failure
+  #         raise Exception('WTF: %s'%e)
+  #     else:
+  #       logging.info("keeping same icon because the new is same as old")
+  #       obj.icon = self.instance.icon # sets the icon to the original
+  #   elif self.cleaned_data['img_file']:
+  #     try:
+  #       icon = images.resize(self.cleaned_data['img_file'], 60, 60)
+  #       obj.icon = db.Blob(icon)
+  #     except Exception: # TODO: appropriate handle the failure
+  #       raise Exception('WTF2: %s'%e)
+  #   elif self.instance: # if neither img_url or img_file come in just use the old value
+  #     logging.info("keeping same icon because no new provided")
+  #     obj.icon = self.instance.icon    
+  #   if commit:
+  #     obj.put()
+  #   return obj      
+    

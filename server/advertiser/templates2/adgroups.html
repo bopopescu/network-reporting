@@ -127,26 +127,26 @@
                   {% for c in gtee %}
                   <tr class="{% cycle 'campaignData' 'campaignData campaignData-alt' %}" id="campaigns-guaranteed-{{forloop.counter0}}">
                     <th class="campaignData-icon">
-                      <input type="checkbox" name="id" value="{{c.key}}"/>
-                      {% if c.deleted %}<img src="/images/deleted.gif" height=9 width=9></img>{% endif %}
-                      {% if c.active and not c.deleted %}<img src="/images/active.gif" height=9 width=9></img>{% endif %}
-                      {% if not c.active and not c.deleted %}<img src="/images/paused.gif" height=9 width=9></img>{% endif %}
+                        <input type="checkbox" name="id" value="{{c.key}}"/>
+                        {% if c.deleted %}<img src="/images/deleted.gif" height=9 width=9></img>{% endif %}
+                        {% if c.active and not c.deleted %}<img src="/images/active.gif" height=9 width=9></img>{% endif %}
+                        {% if not c.active and not c.deleted %}<img src="/images/paused.gif" height=9 width=9></img>{% endif %}
                     </th> 
                     <th class="dataTable-name">
-                      <a href="{% url advertiser_adgroup_show adgroup_key=c.key %}">{{c.name}}</a><br/>
-                      <span class="muted">
-                        {% if c.start_date and c.end_date %}
-                          {{c.start_date|format_date_compact}}-{{c.end_date|format_date_compact}}.
-                        {% endif %} {% if c.start_date and not c.end_date %}
-                          Starts {{c.start_date|format_date_compact}}.
-                        {% endif %} {% if not c.start_date and c.end_date %}
-                          Ends {{c.start_date|format_date_compact}}.
-                        {% endif %} {% if not c.start_date and not c.end_date %}
-                          No schedule.
-                        {% endif %}
-                        {% if c.budget %}{{c.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
-                      </span>
-                    </th>
+						<a href="{% url advertiser_adgroup_show adgroup_key=c.key %}">{{c.name}}</a><br/>
+						<span class="muted">
+							{% if c.start_date and c.end_date %}
+								{{c.start_date|format_date_compact}}-{{c.end_date|format_date_compact}}.
+							{% endif %} {% if c.start_date and not c.end_date %}
+								Starts {{c.start_date|format_date_compact}}.
+							{% endif %} {% if not c.start_date and c.end_date %}
+								Ends {{c.start_date|format_date_compact}}.
+							{% endif %} {% if not c.start_date and not c.end_date %}
+								All dates.
+							{% endif %}
+							{% if c.budget %}{{c.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
+						</span>
+					</th>
                     <td class="dataTable-data numeric">{{c.bid|currency}}</td>
                     <td class="dataTable-data numeric">{{c|campaign_status}}</td>
                     <td class="dataTable-data numeric">{{c.stats.impression_count|withsep}}</td>
@@ -195,6 +195,24 @@
                       {% if not c.active and not c.deleted %}<img src="/images/paused.gif" height=9 width=9></img>{% endif %}
                     </th> 
                     <th class="dataTable-name">
+<<<<<<< HEAD
+						<a href="{% url advertiser_adgroup_show adgroup_key=c.key %}">{{c.name}}</a><br/>
+						<span class="muted">
+							{% if c.start_date and c.end_date %}
+								{{c.start_date|format_date_compact}}-{{c.end_date|format_date_compact}}.
+							{% endif %} {% if c.start_date and not c.end_date %}
+								Starts {{c.start_date|format_date_compact}}.
+							{% endif %} {% if not c.start_date and c.end_date %}
+								Ends {{c.start_date|format_date_compact}}.
+							{% endif %} {% if not c.start_date and not c.end_date %}
+								All dates.
+							{% endif %}
+							{% if c.budget %}{{c.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
+						</span>
+					</th>
+                    <td class="dataTable-data numeric">{{c.bid|currency}}</td>
+					<td class="dataTable-data numeric">{{c|campaign_status}}</td>
+=======
                       <a href="{% url advertiser_adgroup_show adgroup_key=c.key %}">{{c.name}}</a><br/>
                       <span class="muted">
                       {% if c.start_date and c.end_date %}
@@ -211,6 +229,7 @@
                   </th>
                   <td class="dataTable-data numeric">{{c.bid|currency}}</td>
                   <td class="dataTable-data numeric">{{c|campaign_status}}</td>
+>>>>>>> 8502e337d578389c7196ddd48014c6c482d7c70b
                     <td class="dataTable-data numeric">{{c.stats.impression_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{c.stats.click_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{c.stats.ctr|percentage|withsep}}</td>

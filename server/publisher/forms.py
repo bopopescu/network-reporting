@@ -87,9 +87,14 @@ class AdUnitForm(mpforms.MPModelForm):
     logging.info('clean_data: %s'%self.cleaned_data)
     obj.name = self.cleaned_data['adunit_name']
     obj.description = self.cleaned_data['adunit_description'] 
-    # TODO: hardcoding height and width
-    obj.width = 320.0
-    obj.height = 50.0
+    # TODO: hardcoding height and width´
+    if obj.format == "full"´:
+      obj.width = 320.0
+      obj.height = 480.0
+    else:  ´
+      width,height = obj.format.split('x')
+      obj.width, obj.height = float(width),float(height)
+
     if commit:
       obj.put()
     logging.info('name: %s description: %s'%(obj.name,obj.description))  

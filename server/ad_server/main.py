@@ -137,7 +137,7 @@ class AdAuction(object):
     keywords = kw["q"]
     geo_predicates = AdAuction.geo_predicates_for_rgeocode(kw["addr"])
     device_predicates = AdAuction.device_predicates_for_request(kw["request"])
-    format_predicates = None; #AdAuction.format_predicates_for_format(kw["format"])
+    format_predicates = AdAuction.format_predicates_for_format(kw["format"])
     exclude_params = kw["excluded_creatives"]
     excluded_predicates = AdAuction.exclude_predicates_params(exclude_params)
     logging.warning("keywords=%s, geo_predicates=%s, device_predicates=%s, format_predicates=%s" % (keywords, geo_predicates, device_predicates, format_predicates))
@@ -449,9 +449,9 @@ class AdHandler(webapp.RequestHandler):
     logging.warning("keywords are %s" % keywords)
 
     # get format
-    # f = self.request.get("f") or "320x50" # TODO: remove this default
-    # f = "%dx%d"%(int(site.width),int(site.height))
-    # format = self.FORMAT_SIZES.get(f)
+    f = self.request.get("f") or "320x50" # TODO: remove this default
+    f = "%dx%d"%(int(site.width),int(site.height))
+    format = self.FORMAT_SIZES.get(f)
     # logging.warning("format is %s (requested '%s')" % (format, f))
     
     # look up lat/lon
@@ -470,7 +470,7 @@ class AdHandler(webapp.RequestHandler):
       logging.info('OLP ad-request {"request_id": "%s", "remote_addr": "%s", "q": "%s", "user_agent": "%s", "udid":"%s" }' % (request_id, self.request.remote_addr, self.request.query_string, self.request.headers["User-Agent"], udid))
 
     # get winning creative
-    c = AdAuction.run(request=self.request, site=site, format=None, q=q, addr=addr, excluded_creatives=excluded_creatives, udid=udid, request_id=request_id, now=now,manager=manager)
+    c = AdAuction.run(request=self.request, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, udid=udid, request_id=request_id, now=now,manager=manager)
     
     # output the request_id and the winning creative_id if an impression happened
     if c:

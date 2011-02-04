@@ -344,7 +344,7 @@ class CreateAdGroupHandler(RequestHandler):
     for adunit in adunits:
       adunit.checked = adunit.key() in adgroup.site_keys
       adunit.app = App.get(adunit.app_key.key())
-    # TODO: Clean up this hacked shit	
+    # TODO: Clean up this hacked shit 
     networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["greystripe","GreyStripe",False],["iAd","iAd",False],["inmobi","InMobi",False],["millennial","Millennial Media",False]]
     for n in networks:
       if adgroup.network_type == n[0]:

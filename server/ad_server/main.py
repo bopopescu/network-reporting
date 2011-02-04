@@ -449,10 +449,10 @@ class AdHandler(webapp.RequestHandler):
     logging.warning("keywords are %s" % keywords)
 
     # get format
-    # f = self.request.get("f") or "320x50" # TODO: remove this default
+    f = self.request.get("f") or "320x50" # TODO: remove this default
     f = "%dx%d"%(int(site.width),int(site.height))
     format = self.FORMAT_SIZES.get(f)
-    logging.warning("format is %s (requested '%s')" % (format, f))
+    # logging.warning("format is %s (requested '%s')" % (format, f))
     
     # look up lat/lon
     addr = self.rgeocode(self.request.get("ll")) if self.request.get("ll") else ()      

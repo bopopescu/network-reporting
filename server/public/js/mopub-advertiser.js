@@ -370,7 +370,12 @@ var mopub = mopub || {};
         }
       });
     
-    
+    $('#creativeAddForm-url-helpLink').click(function(e) {
+      e.preventDefault();
+      $('#creativeAddForm-url-helpContent').dialog({ 
+        buttons: { "Close": function() { $(this).dialog("close"); } }
+      });
+    }); 
 
     $('#creativeAddForm input[name="creative_type"]').click(function(e) {
       $('#creativeCreate-text_icon').hide();

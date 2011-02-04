@@ -169,8 +169,8 @@ class AdGroupIndexHandler(RequestHandler):
 
     graph_adgroups = adgroups[0:4]
     if len(adgroups) > 4:
-      graph_adgroups[3].name = 'Others'
-      graph_adgroups[3].all_stats = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[c.all_stats for c in adgroups[3:]])]
+      graph_adgroups[3] = AdGroup(name='Others')
+      graph_adgroups[3].all_stats = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[c.all_stats for c in adgroups[3:]])]      
 
     return render_to_response(self.request, 
       'advertiser/adgroups.html', 
@@ -511,9 +511,10 @@ class ShowAdGroupHandler(RequestHandler):
     adunits = sorted(adunits, key=lambda adunit: adunit.stats.impression_count, reverse=True)
 
     graph_adunits = adunits[0:4]
+      
     if len(adunits) > 4:
-      graph_adunits[3].name = 'Others'
-      graph_adunits[3].all_stats = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[au.all_stats for au in graph_adunits[3:]])]
+      graph_adunits[3] = Site(name='Others')
+      graph_adunits[3].all_stats = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[au.all_stats for au in adunits[3:]])]
 
     # In order to have add creative
     creative_handler = AddCreativeHandler(self.request)
@@ -535,6 +536,7 @@ class ShowAdGroupHandler(RequestHandler):
                               'today': reduce(lambda x, y: x+y, [a.all_stats[-1] for a in graph_adunits], SiteStats()),
                               'yesterday': reduce(lambda x, y: x+y, [a.all_stats[-2] for a in graph_adunits], SiteStats()),
                               'adunits' : adunits,
+                              'graph_adunits': graph_adunits,
                               'start_date': days[0],
                               'creative_fragment':creative_fragment,
                               'campaign_create_form_fragment':campaign_create_form_fragment})

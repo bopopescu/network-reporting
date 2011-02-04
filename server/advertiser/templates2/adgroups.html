@@ -64,12 +64,6 @@
                         <td class="stats-breakdown-value all"><span class="inner">{{totals.click_count|withsep}}</span></td>
                         <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
                       </tr>
-                      <tr id="stats-breakdown-users">
-                        <td class="stats-breakdown-value today"><span class="inner">{{today.unique_user_count|withsep}}</span></td>
-                        <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.unique_user_count|withsep}}</span></td>
-                        <td class="stats-breakdown-value all"><span class="inner">{{totals.unique_user_count|withsep}}</span></td>
-                        <th class="stats-breakdown-name"><span class="inner">Users</span></th>
-                      </tr>
                     </tbody>
                   </table>
                 </div>
@@ -100,9 +94,6 @@
                       ],
                       'clicks': [{% for a in graph_adgroups %}
                         { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                      ],
-                      'users': [{% for a in graph_adgroups %}
-                        { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.unique_user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                       ],
                     };
                   </script>

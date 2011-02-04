@@ -692,7 +692,6 @@ class AddCreativeHandler(RequestHandler):
         jsonDict.update(success=True)
         return self.json_response(jsonDict)
     
-    logging.info("creative_form: %s"%creative_form.errors)    
     new_html = self.get(base_creative_form,text_creative_form,image_creative_form,\
                         text_tile_creative_form,html_creative_form)
     jsonDict.update(success=False,html=new_html)
@@ -715,6 +714,13 @@ class DisplayCreativeHandler(RequestHandler):
     if c and c.ad_type == "html":
       return HttpResponse("<html><body style='margin:0px;'>"+c.html_data+"</body></html");
     return HttpResponse('NOOOOOOOOOOOO IMAGE')
+    
+class CreativeImageHandler(RequestHandler):
+  def get(self,creative_key):
+    c = CreativeQueryManager().get_by_key(creative_key)
+    if c and c.image:
+      return HttpResponse(c.image,content_type='image/png')
+    raise Http404
 
 def creative_image(request,*args,**kwargs):
   return DisplayCreativeHandler()(request,*args,**kwargs)

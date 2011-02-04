@@ -1,13 +1,13 @@
                             <dt><label for="TODO1">Line 1</label></dt>
                             <dd>
-                              <input id='line1' type='text' name="{{form.line1.name}}" class="input-text {% if form.line1.errors %}form-error{% endif %}"/>
+                              <input id='line1' type='text' name="{{form.line1.name}}" class="input-text {% if form.line1.errors %}form-error{% endif %}" value="{{form.line1.value}}"/>
                               {% for error in form.line1.errors %}
                               <div class="form-error-text">{{error}}</div> 
                               {% endfor %}
                             </dd> 
                             <dt><label for="TODO2">Line 2</label></dt>
                             <dd>
-                              <input id='line2' type='text' name="{{form.line2.name}}" class="input-text {% if form.line2.errors %}form-error{% endif %}"/>
+                              <input id='line2' type='text' name="{{form.line2.name}}" class="input-text {% if form.line2.errors %}form-error{% endif %}" value="{{form.line2.value}}"/>
                               {% for error in form.line2.errors %}
                               <div class="form-error-text">{{error}}</div> 
                               {% endfor %}

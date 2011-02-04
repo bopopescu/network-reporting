@@ -710,7 +710,7 @@ class DisplayCreativeHandler(RequestHandler):
       return render_to_response(self.request, 'advertiser/text_tile.html', {'c':c})
       #return HttpResponse(c.image,content_type='image/png')
     if c and c.ad_type == "html":
-      return HttpResponse("<html><body>"+c.html_data+"</body></html");
+      return HttpResponse("<html><body style='margin:0px;'>"+c.html_data+"</body></html");
     return HttpResponse('NOOOOOOOOOOOO IMAGE')
 
 def creative_image(request,*args,**kwargs):

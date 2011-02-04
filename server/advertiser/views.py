@@ -146,7 +146,6 @@ class AdGroupIndexHandler(RequestHandler):
       # TODO: Convert to QueryManager, why is this here anyway?
       campaigns = Campaign.gql("where u = :1 and deleted = :2", self.account.user, False).fetch(100)
       adgroups = AdGroup.gql("where campaign in :1 and deleted = :2", [x.key() for x in campaigns], False).fetch(100)
-    adgroups = sorted(adgroups, lambda x,y: cmp(y.bid, x.bid))
     
     for c in adgroups:
       c.all_stats = SiteStatsQueryManager().get_sitestats_for_days(owner=c, days=days)      
@@ -157,17 +156,31 @@ class AdGroupIndexHandler(RequestHandler):
     totals = reduce(lambda x,y: x+y, daily_totals, SiteStats())
 
     promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], adgroups)
+    promo_campaigns = sorted(promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
+    
     guarantee_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee'], adgroups)
+    guarantee_campaigns = sorted(guarantee_campaigns, lambda x,y: cmp(y.bid, x.bid))
+
     network_campaigns = filter(lambda x: x.campaign.campaign_type in ['network'], adgroups)
+    network_campaigns = sorted(network_campaigns, lambda x,y: cmp(y.bid, x.bid))
+    
+    adgroups = sorted(adgroups, key=lambda adgroup: adgroup.stats.impression_count, reverse=True)
     
     help_text = None
     if network_campaigns:
       if not (self.account.adsense_pub_id or self.account.admob_pub_id):
         help_text = 'Provide your ad network publisher IDs on the <a href="%s">account page</a>'%reverse('account_index')
 
+    graph_adgroups = adgroups[0:4]
+    if len(adgroups) > 4:
+      graph_adgroups[3] = {'name': 'Others',
+                           'all_stats': [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[c.all_stats for c in graph_adgroups[3:]])]
+                          }
+
     return render_to_response(self.request, 
       'advertiser/adgroups.html', 
       {'adgroups':adgroups,
+       'graph_adgroups': graph_adgroups,
        'start_date': days[0],
        'date_range': self.date_range,
        'app' : app,
@@ -194,23 +207,24 @@ class CreateCampaignAJAXHander(RequestHandler):
       campaign = campaign or adgroup.campaign
     campaign_form = campaign_form or CampaignForm(instance=campaign)
     adgroup_form = adgroup_form or AdGroupForm(instance=adgroup)
-    networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["greystripe","GreyStripe",False],["iAd","iAd",False],["inmobi","InMobi",False],["millennial","Millennial Media",False]]
+    networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["greystripe","GreyStripe",False],\
+      ["iAd","iAd",False],["inmobi","InMobi",False],["millennial","Millennial Media",False]]
     
     all_adunits = AdUnitQueryManager().get_adunits(account=self.account)
     
-    adgroup_form['site_keys'].queryset = all_adunits # needed for validation TODO: doesn't actually work
+    adgroup_form['site_keys'].choices = all_adunits # needed for validation TODO: doesn't actually work
     
     # TODO: Remove this hack to place the bidding info with the rest of campaign
     campaign_form.bid  = adgroup_form['bid']
     campaign_form.bid_strategy = adgroup_form['bid_strategy']
+    
+    logging.warning("bid: %s %s"%("campaign_form['bid']",campaign_form.bid.value))
 
     adunit_keys = adgroup_form['site_keys'].value or []
     adunit_str_keys = [unicode(k) for k in adunit_keys]
-    logging.info('adunit_keys: %s'%adunit_keys)
     for adunit in all_adunits:
       adunit.checked = unicode(adunit.key()) in adunit_str_keys
       adunit.app = App.get(adunit.app_key.key())
-      logging.info('checked: %s'%adunit.checked)
       
     campaign_form.add_context(dict(networks=networks))
     adgroup_form.add_context(dict(all_adunits=all_adunits))
@@ -235,9 +249,10 @@ class CreateCampaignAJAXHander(RequestHandler):
     campaign_form = CampaignForm(data=self.request.POST,instance=campaign)
     adgroup_form = AdGroupForm(data=self.request.POST,instance=adgroup)
     
+    
     all_adunits = AdUnitQueryManager().get_adunits(account=self.account)
     sk_field = adgroup_form.fields['site_keys']
-    sk_field.queryset = all_adunits # TODO: doesn't work needed for validation
+    sk_field.choices = all_adunits # TODO: doesn't work needed for validation
     
     json_dict = {'success':False,'html':None}
     
@@ -247,14 +262,11 @@ class CreateCampaignAJAXHander(RequestHandler):
       
       if adgroup_form.is_valid():
         adgroup = adgroup_form.save(commit=False)
-        
-        logging.warning('form errors: %s'%adgroup_form.errors)
-        
+                
         # TODO: clean this up in case the campaign succeeds and the adgroup fails
         CampaignQueryManager().put_campaigns(campaign)
         adgroup.campaign = campaign
         AdGroupQueryManager().put_adgroups(adgroup)
-        logging.info('adgroup: %s'%adgroup.key())
         
         if campaign.campaign_type == "network":
           creative = adgroup.default_creative()
@@ -267,7 +279,9 @@ class CreateCampaignAJAXHander(RequestHandler):
         
         json_dict.update(success=True,new_page=reverse('advertiser_adgroup_show',kwargs={'adgroup_key':str(adgroup.key())}))
         return self.json_response(json_dict)
-    logging.warning('adgroup form errors: %s'%adgroup_form.errors)      
+    logging.warning('adgroup form errors: %s'%adgroup_form.errors) 
+    logging.warning('adgroup form bid: %s'%adgroup_form['bid'].value)      
+         
     new_html = self.get(campaign_form=campaign_form,
                         adgroup_form=adgroup_form)
     json_dict.update(success=False,html=new_html)    
@@ -278,30 +292,13 @@ def campaign_adgroup_create_ajax(request,*args,**kwargs):
   return CreateCampaignAJAXHander()(request,*args,**kwargs)      
 
 
+# Wrapper for the AJAX handler
 class CreateCampaignHandler(RequestHandler):
   def get(self,campaign_form=None, adgroup_form=None):
     campaign_create_form_fragment = CreateCampaignAJAXHander(self.request).get()
-    
-    # campaign_form = campaign_form or CampaignForm()
-    # adgroup_form = adgroup_form or AdGroupForm()
-    # networks = [["adsense","Google AdSense",False],["iAd","Apple iAd",False],["admob","AdMob",False],["millennial","Millennial Media",False],["inmobi","InMobi",False],["greystripe","GreyStripe",False],["appnexus","App Nexus",False],["brightroll","BrightRoll",False],["custom","Custom",False]]
-    # all_adunits = AdUnitQueryManager().get_adunits(account=self.account)
-    # 
-    # adgroup_form['site_keys'].queryset = all_adunits # needed for validation TODO: doesn't actually work
-    # 
-    # # TODO: Remove this hack to place the bidding info with the rest of campaign
-    # campaign_form.bid  = adgroup_form['bid']
-    # campaign_form.bid_strategy = adgroup_form['bid_strategy']
-    # 
-    # adunit_keys = adgroup_form['site_keys'].value or []
-    # for adunit in all_adunits:
-    #   adunit.checked = unicode(adunit.key()) in adunit_keys
-    #   adunit.app = App.get(adunit.app_key.key())
-    # campaign_form.add_context(dict(networks=networks))
-    # adgroup_form.add_context(dict(all_adunits=all_adunits))
-
     return render_to_response(self.request,'advertiser/new.html', {"campaign_create_form_fragment": campaign_create_form_fragment})
-    
+  
+  # TODO: this should not get called  
   def post(self):
     campaign_form = CampaignForm(data=self.request.POST)
     adgroup_form = AdGroupForm(data=self.request.POST)
@@ -350,9 +347,8 @@ class CreateAdGroupHandler(RequestHandler):
     for adunit in adunits:
       adunit.checked = adunit.key() in adgroup.site_keys
       adunit.app = App.get(adunit.app_key.key())
-			
-		# TODO: Clean up this hacked shit	
-    networks = [["adsense","Google AdSense",False],["iAd","Apple iAd",False],["admob","AdMob",False],["millennial","Millennial Media",False],["inmobi","InMobi",False],["greystripe","GreyStripe",False],["appnexus","App Nexus",False],["brightroll","BrightRoll",False],["custom","Custom",False]]
+    # TODO: Clean up this hacked shit	
+    networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["greystripe","GreyStripe",False],["iAd","iAd",False],["inmobi","InMobi",False],["millennial","Millennial Media",False]]
     for n in networks:
       if adgroup.network_type == n[0]:
         n[2] = True
@@ -509,20 +505,26 @@ class ShowAdGroupHandler(RequestHandler):
       if a.icon:
         a.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(a.icon)
 
-    sites = map(lambda x: Site.get(x), adgroup.site_keys)
-    for s in sites:
-      s.all_stats = SiteStatsQueryManager().get_sitestats_for_days(site=s,owner=adgroup, days=days)
-      s.stats = reduce(lambda x, y: x+y, s.all_stats, SiteStats())
-      s.app = App.get(s.app_key.key())
+    adunits = map(lambda x: Site.get(x), adgroup.site_keys)
+    for au in adunits:
+      au.all_stats = SiteStatsQueryManager().get_sitestats_for_days(site=au,owner=adgroup, days=days)
+      au.stats = reduce(lambda x, y: x+y, au.all_stats, SiteStats())
+      au.app = App.get(au.app_key.key())
 
-    # compute rollups to display at the top
-    today = SiteStatsQueryManager().get_sitestats_for_days(owner=adgroup, days=[SiteStats.today()])[0]
-    if len(sites) > 0:
-      all_totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[s.all_stats for s in sites])]
+    adunits = sorted(adunits, key=lambda adunit: adunit.stats.impression_count, reverse=True)
+
+    if len(adunits) > 0:
+      all_totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[au.all_stats for au in adunits])]
     else:
       all_totals = [SiteStats() for d in days]
 
     totals = reduce(lambda x,y: x+y, all_totals, SiteStats())
+
+    graph_adunits = adunits[0:4]
+    if len(adunits) > 4:
+      graph_adunits[3] = {'name': 'Others',
+                           'all_stats': [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[au.all_stats for au in graph_adunits[3:]])]
+                          }
 
     # In order to have add creative
     creative_handler = AddCreativeHandler(self.request)
@@ -540,10 +542,8 @@ class ShowAdGroupHandler(RequestHandler):
                               'apps': apps,
                               'adgroup': adgroup, 
                               'creatives': creatives,
-                              'today': today,
                               'totals': totals,
-                              'sites': sites, 
-                              'adunits' : sites, # TODO: migrate over to adunit instead of site
+                              'adunits' : adunits,
                               'start_date': days[0],
                               'creative_fragment':creative_fragment,
                               'campaign_create_form_fragment':campaign_create_form_fragment})
@@ -667,7 +667,6 @@ class AddCreativeHandler(RequestHandler):
         html_creative = HtmlCreativeQueryManager().get_by_key(creative.key())      
       
       
-    logging.warning('creative_key: %s, creative: %s'%(creative_key,creative))  
     base_creative_form = BaseCreativeForm(data=self.request.POST,instance=creative)
     text_creative_form = TextCreativeForm(data=self.request.POST,instance=text_creative)
     image_creative_form = ImageCreativeForm(data=self.request.POST,files=self.request.FILES,instance=image_creative)
@@ -696,6 +695,7 @@ class AddCreativeHandler(RequestHandler):
         CachedQueryManager().cache_delete(adunits)
         jsonDict.update(success=True)
         return self.json_response(jsonDict)
+    logging.error(creative_form.errors)
     new_html = self.get(base_creative_form,text_creative_form,image_creative_form,\
                         text_tile_creative_form,html_creative_form)
     jsonDict.update(success=False,html=new_html)
@@ -711,8 +711,9 @@ class DisplayCreativeHandler(RequestHandler):
     c = CreativeQueryManager().get_by_key(creative_key)
     if c and c.ad_type == "image" and c.image:
       return HttpResponse(c.image,content_type='image/png')
-    if c and c.ad_type == "text_icon" and c.image:
-      return HttpResponse(c.image,content_type='image/png')
+    if c and c.ad_type == "text_icon":
+      return render_to_response(self.request, 'advertiser/text_tile.html', {'c':c})
+      #return HttpResponse(c.image,content_type='image/png')
     if c and c.ad_type == "html":
       return HttpResponse("<html><body>"+c.html_data+"</body></html");
     return HttpResponse('NOOOOOOOOOOOO IMAGE')

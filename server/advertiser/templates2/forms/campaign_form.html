@@ -2,9 +2,31 @@
                       <dt>Campaign Type:</dt> 
                       <dd> 
                         <span class="radios"> 
+                          {% if form.instance %} 
+                            {% ifequal form.campaign_type.value 'network' %}  
+                          <div class="hidden">
+                            {% endifequal %}  
+                          {% endif %}  
                           <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="gtee" id="advertiser-CampaignType-gtee" {% if not form.campaign_type.value %}checked="checked"{% endif %}{% ifequal form.campaign_type.value 'gtee' %}checked="checked"{% endifequal %}/> <label for="advertiser-CampaignType-gtee">Guaranteed</label> 
                           <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="promo" id="advertiser-CampaignType-promo" {% ifequal form.campaign_type.value "promo" %}checked="checked"{% endifequal %}/> <label for="advertiser-CampaignType-promo">Promotional</label> 
+                          {% if form.instance %}
+                            {% ifequal form.campaign_type.value 'network' %}
                           <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="network" id="advertiser-CampaignType-network" {% ifequal form.campaign_type.value "network" %}checked="checked"{% endifequal %}/> <label for="advertiser-CampaignType-network">Network</label>
+                            {% endifequal %}
+                          {% else %}
+                          <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="network" id="advertiser-CampaignType-network" {% ifequal form.campaign_type.value "network" %}checked="checked"{% endifequal %}/> <label for="advertiser-CampaignType-network">Network</label>
+                          {% endif %}
+                            
+                          {% if form.instance %} 
+                            {% ifequal form.campaign_type.value 'network' %}  
+                          </div>
+                            {% endifequal %}  
+                          {% endif %}  
+                          {% if form.instance %}
+                          {% ifequal form.campaign_type.value "network" %}
+                          <strong>Network</strong>
+                          {% endifequal %}
+                          {% endif %}
                         </span>
                         <a href="#" id="campaignForm-type-helpLink">What's this?</a>
                         <div id="campaignForm-type-helpContent" class="hidden"> 
@@ -49,6 +71,13 @@
                         {% for error in form.bid.errors %}
                         <div class="form-error-text">{{error}}</div> 
                         {% endfor %}
+                        <dt>Delivery Speed</dt>  
+                        <dd>
+                          <span class="radios">
+                            <input type="radio" value="TODO1" checked="check" disabled="true"/> <label>Spread Evenly</label>
+                            <input type="radio" value="TODO2" disabled="true"/> <label>All at once</label>
+                          </span>  
+                        <dd>  
                       </dd>
                     </dl>
                     <dl class="formFields campaignDependent gtee"> 
@@ -71,7 +100,7 @@
                       </dd>
                       <dt><label for="TODO2">Network eCPM:</label></dt> 
                       <dd> 
-                        <input type="text" class="input-text-number {% if form.bid.errors %}form-error{% endif %}" name="bid" value="{{form.bid.value}}" id="bid-network" /> USD
+                        <input type="text" class="input-text-number {% if form.bid.errors %}form-error{% endif %}" name="bid" value='{{form.bid.value}}' id="bid-network" /> USD
                         {% for error in form.bid.errors %}
                         <div class="form-error-text">{{error}}</div>
                         {% endfor %}

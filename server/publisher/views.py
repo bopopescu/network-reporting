@@ -470,7 +470,6 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
     else:
       adunit = None
 
-    logging.info('VIEW name: %s %s description: %s'%(adunit.key(),adunit.name,adunit.description))
     adunit_form = AdUnitForm(data=self.request.POST,instance=adunit)
     json_dict = {'success':False,'html':None}
 

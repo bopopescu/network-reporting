@@ -15,12 +15,14 @@
 {% block content %}
           <section id="dashboard-appEditForm" class="hidden">
             <div>
+              <a name="appForm" class="hidden">anchor</a>
               <form action="{% url publisher_app_update_ajax app_key=app.key %}" method="POST" accept-charset="utf-8" id="appForm" class="appEditForm">
                 <fieldset id="appForm-details" class="alt">
                   <div id="appForm-fragment">
 {{app_form_fragment}}
                   </div>
                   <div class="form-submit"> 
+                    <span class="hidden" id="appEditForm-loading"><img src="/images/loading2.gif"/></span>
                     <span class="buttonWrap"><a href="#" class="button" id="appEditForm-submit">Save</a></span> 
                     <span class="buttonWrap"><a href="#" class="button" id="appEditForm-cancel">Cancel</a></span> 
                   </div> 
@@ -109,12 +111,14 @@
             
             <section id="dashboard-adunitAddForm" class="hidden">
               <div>
+                <a name="adunitForm" class="hidden">anchor</a>
                 <form action="{% url publisher_adunit_update_ajax %}" method="POST" accept-charset="utf-8" id="adunitAddForm">
                   <fieldset id="appForm-details" class="alt">
 										<div id="adunitForm-fragment">
 											{{adunit_form_fragment}}
 										</div>
                     <div class="form-submit"> 
+                      <span class="hidden" id="adunitForm-loading"><img src="/images/loading2.gif"/></span>
                       <span class="buttonWrap"><a href="#" class="button" id="adunitAddForm-submit">Save</a></span> 
                       <span class="buttonWrap"><a href="#" class="button" id="adunitAddForm-cancel">Cancel</a></span> 
                     </div> 

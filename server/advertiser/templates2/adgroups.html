@@ -1,10 +1,12 @@
 {% extends 'advertiser/base.html' %}
 {% load filters %}
+
 {% block navLinks %}
-            <li><a href="{% url publisher_index %}">Dashboard</a></li>
-            <li class="active"><a href="{% url advertiser_campaign %}">Campaigns</a></li>{% endblock navLinks %}
+<li><a href="{% url publisher_index %}">Dashboard</a></li>
+<li class="active"><a href="{% url advertiser_campaign %}">Campaigns</a></li>{% endblock navLinks %}
 {% block pageTitle %}<h1>{% ifequal account.status 'step4' %}Step 4: Set up an ad campaign{% else %}Campaigns{% endifequal %}</h1>{% endblock pageTitle %}
-{% block titleBarRight %}{% ifequal account.status 'step4' %}            <div class="stepProgress"> 
+{% block titleBarRight %}{% ifequal account.status 'step4' %}
+            <div class="stepProgress"> 
               <span class="stepProgress-step">Step 1: Add app</span> 
               <span class="ui-icon ui-icon-arrow-1-e"></span> 
               <span class="stepProgress-step">Step 2: Integrate</span> 
@@ -14,7 +16,24 @@
               <span class="stepProgress-step stepProgress-active">Step 4: Ad campaigns</span> 
             </div>{% endifequal %}{% endblock titleBarRight %}
 {% block messageCenter %}{% endblock messageCenter %}
-
+{% block dateButtons %}{% ifnotequal account.status 'step4' %}
+          <div id="titlebar-center">
+            <span class="buttonset" id="dashboard-dateOptions">
+              <input type="radio" name="dashboard-dateOptions-option" value="7" id="dashboard-dateOptions-option-7" {% ifequal date_range 7 %}checked="checked" {% endifequal %}/>
+              <label for="dashboard-dateOptions-option-7">7 days</label>
+              <input type="radio" name="dashboard-dateOptions-option" value="14" id="dashboard-dateOptions-option-14" {% ifequal date_range 14 %}checked="checked" {% endifequal %}{% if not date_range %}checked="checked" {% endif %}/>
+              <label for="dashboard-dateOptions-option-14">14 days</label>
+              <input type="radio" name="dashboard-dateOptions-option" value="30" id="dashboard-dateOptions-option-30" {% ifequal date_range 30 %}checked="checked" {% endifequal %}/>
+              <label for="dashboard-dateOptions-option-30">30 days</label>
+              <input type="radio" name="dashboard-dateOptions-option" value="custom" id="dashboard-dateOptions-option-custom" />
+              <label for="dashboard-dateOptions-option-custom">Custom ...</label>
+            </span>
+            <div id="dashboard-dateOptions-custom-modal">
+              <div id="dashboard-dateOptions-custom-from"><h4>Start date:</h4></div>
+              <div id="dashboard-dateOptions-custom-to"><h4>End date:</h4></div>
+            </div>
+          </div>
+{% endifnotequal %}{% endblock dateButtons %}
 
 {% block content %}{% ifequal account.status "step4" %}
           <div class="alertMessage">
@@ -53,18 +72,18 @@
                       //pointStart: 1294963200000,
                       pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
                       pointInterval: 86400000,
-                      'revenue': [{% for a in adgroups %}
-                        { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.revenue}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                      ],
-                      'impressions': [{% for a in adgroups %}
+                      'impressions': [{% for a in graph_adgroups %}
                         { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                       ],
-                      'clicks': [{% for a in adgroups %}
+                      'revenue': [{% for a in graph_adgroups %}
+                        { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.revenue}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                      ],
+                      'clicks': [{% for a in graph_adgroups %}
                         { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                       ],
-                      'users': [{% for a in adgroups %}
+                      'users': [{% for a in graph_adgroups %}
                         { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.unique_user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                      ]
+                      ],
                     };
                   </script>
                 </div>
@@ -78,7 +97,6 @@
             </div>
             <form method="post" action="{% url advertiser_bid_pause %}" id="campaignForm">
               <input type="hidden" name="action" id="action"/>
-
               <h2>Guaranteed</h2>
               <table class="dataTable campaignData-main">
                 <thead>
@@ -95,7 +113,7 @@
                   </tr>
                 </thead>
                 <tbody>
-              	  {% for c in gtee %}
+                  {% for c in gtee %}
                   <tr class="{% cycle 'campaignData' 'campaignData campaignData-alt' %}" id="campaigns-guaranteed-{{forloop.counter0}}">
                     <th class="campaignData-icon">
                       <input type="checkbox" name="id" value="{{c.key}}"/>
@@ -104,6 +122,7 @@
                       {% if not c.active and not c.deleted %}<img src="/images/paused.gif" height=9 width=9></img>{% endif %}
                     </th> 
                     <th class="dataTable-name">
+<<<<<<< HEAD
 						<a href="{% url advertiser_adgroup_show adgroup_key=c.key %}">{{c.name}}</a><br/>
 						<span class="muted">
 							{% if c.start_date and c.end_date %}
@@ -118,6 +137,22 @@
 							{% if c.budget %}{{c.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
 						</span>
 					</th>
+=======
+                      <a href="{% url advertiser_adgroup_show adgroup_key=c.key %}">{{c.name}}</a><br/>
+                      <span class="muted">
+                        {% if c.start_date and c.end_date %}
+                          {{c.start_date|format_date_compact}}-{{c.end_date|format_date_compact}}.
+                        {% endif %} {% if c.start_date and not c.end_date %}
+                          Starts {{c.start_date|format_date_compact}}.
+                        {% endif %} {% if not c.start_date and c.end_date %}
+                          Ends {{c.start_date|format_date_compact}}.
+                        {% endif %} {% if not c.start_date and not c.end_date %}
+                          No schedule.
+                        {% endif %}
+                        {% if c.budget %}{{c.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
+                      </span>
+                    </th>
+>>>>>>> 8502e337d578389c7196ddd48014c6c482d7c70b
                     <td class="dataTable-data numeric">{{c.bid|currency}}</td>
                     <td class="dataTable-data numeric">{{c|campaign_status}}</td>
                     <td class="dataTable-data numeric">{{c.stats.impression_count|withsep}}</td>
@@ -126,23 +161,22 @@
                     <td class="dataTable-data numeric">{{c.stats.conversion_count|withsep}} ({{c.stats.conv_rate|percentage}})</td>
                     <td class="dataTable-data numeric">{{c.stats.cpa|currency}}</td>
                   </tr>
-              	  {% empty %}
-				  <tr class="campaignData">
+                  {% empty %}
+                  <tr class="campaignData">
                     <th class="campaignData-icon"></th>
                     <th class="dataTable-name"><span class="muted">None</span></th>
-					<td class="dataTable-data numeric"></td>
-					<td class="dataTable-data numeric"></td>
-					<td class="dataTable-data numeric"></td>
-					<td class="dataTable-data numeric"></td>
-					<td class="dataTable-data numeric"></td>
-					<td class="dataTable-data numeric"></td>
-					<td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric"></td>
                   </tr>
-              	  {% endfor %}
-				</tbody>
-			  </table>
-
-			  <h2>Promotional</h2>
+                  {% endfor %}
+                </tbody>
+              </table>
+              <h2>Promotional</h2>
               <table class="dataTable campaignData-main">
                 <thead>
                   <tr>
@@ -158,7 +192,7 @@
                   </tr>
                 </thead>
                 <tbody>
-              	  {% for c in promo %}
+                  {% for c in promo %}
                   <tr class="{% cycle 'campaignData' 'campaignData campaignData-alt' %}" id="campaigns-promo-{{forloop.counter0}}">
                     <th class="campaignData-icon">
                       <input type="checkbox" name="id" value="{{c.key}}"/>
@@ -167,6 +201,7 @@
                       {% if not c.active and not c.deleted %}<img src="/images/paused.gif" height=9 width=9></img>{% endif %}
                     </th> 
                     <th class="dataTable-name">
+<<<<<<< HEAD
 						<a href="{% url advertiser_adgroup_show adgroup_key=c.key %}">{{c.name}}</a><br/>
 						<span class="muted">
 							{% if c.start_date and c.end_date %}
@@ -183,28 +218,45 @@
 					</th>
                     <td class="dataTable-data numeric">{{c.bid|currency}}</td>
 					<td class="dataTable-data numeric">{{c|campaign_status}}</td>
+=======
+                      <a href="{% url advertiser_adgroup_show adgroup_key=c.key %}">{{c.name}}</a><br/>
+                      <span class="muted">
+                      {% if c.start_date and c.end_date %}
+                        {{c.start_date|format_date_compact}}-{{c.end_date|format_date_compact}}.
+                      {% endif %} {% if c.start_date and not c.end_date %}
+                        Starts {{c.start_date|format_date_compact}}.
+                      {% endif %} {% if not c.start_date and c.end_date %}
+                        Ends {{c.start_date|format_date_compact}}.
+                      {% endif %} {% if not c.start_date and not c.end_date %}
+                        No schedule.
+                      {% endif %}
+                      {% if c.budget %}{{c.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
+                    </span>
+                  </th>
+                  <td class="dataTable-data numeric">{{c.bid|currency}}</td>
+                  <td class="dataTable-data numeric">{{c|campaign_status}}</td>
+>>>>>>> 8502e337d578389c7196ddd48014c6c482d7c70b
                     <td class="dataTable-data numeric">{{c.stats.impression_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{c.stats.click_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{c.stats.ctr|percentage|withsep}}</td>
                     <td class="dataTable-data numeric">{{c.stats.conversion_count|withsep}} ({{c.stats.conv_rate|percentage}})</td>
                     <td class="dataTable-data numeric">{{c.stats.cpa|currency}}</td>
                   </tr>
-              	  {% empty %}
-				  <tr class="campaignData">
+                  {% empty %}
+                  <tr class="campaignData">
                     <th class="campaignData-icon"></th>
                     <th class="dataTable-name"><span class="muted">None</span></th>
-					<td class="dataTable-data numeric"></td>
-					<td class="dataTable-data numeric"></td>
-					<td class="dataTable-data numeric"></td>
-					<td class="dataTable-data numeric"></td>
-					<td class="dataTable-data numeric"></td>
-					<td class="dataTable-data numeric"></td>
-					<td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric"></td>
                   </tr>
-               	  {% endfor %}
-				</tbody>
-			  </table>
-			
+                  {% endfor %}
+                </tbody>
+              </table>
               <h2>Network</h2>
               <table class="dataTable campaignData-main">
                 <thead>
@@ -221,7 +273,7 @@
                   </tr>
                 </thead>
                 <tbody>
-              	  {% for c in network %}
+                  {% for c in network %}
                   <tr class="{% cycle 'campaignData' 'campaignData campaignData-alt' %}" id="campaigns-network-{{forloop.counter0}}">
                     <th class="campaignData-icon">
                       <input type="checkbox" name="id" value="{{c.key}}"/>
@@ -230,33 +282,32 @@
                       {% if not c.active and not c.deleted %}<img src="/images/paused.gif" height=9 width=9></img>{% endif %}
                     </th> 
                     <th class="dataTable-name">
-						<a href="{% url advertiser_adgroup_show adgroup_key=c.key %}">{{c.name}}</a><br/>
-						<span class="muted">{{c.network_type}}</span>
-					</th>
+                      <a href="{% url advertiser_adgroup_show adgroup_key=c.key %}">{{c.name}}</a><br/>
+                      <span class="muted">{{c.network_type}}</span>
+                    </th>
                     <td class="dataTable-data numeric">{{c.bid|currency}}</td>
                     <td class="dataTable-data numeric">{{c.stats.request_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{c.stats.impression_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{c.stats.click_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{c.stats.ctr|percentage|withsep}}</td>
-					<td class="dataTable-data numeric">&nbsp;</td>
-					<td class="dataTable-data numeric">&nbsp;</td>
+                    <td class="dataTable-data numeric">&nbsp;</td>
+                    <td class="dataTable-data numeric">&nbsp;</td>
                   </tr>
-              	  {% empty %}
-				  <tr class="campaignData">
+                  {% empty %}
+                    <tr class="campaignData">
                     <th class="campaignData-icon"></th>
                     <th class="dataTable-name"><span class="muted">None</span></th>
-					<td class="dataTable-data numeric"></td>
-					<td class="dataTable-data numeric"></td>
-					<td class="dataTable-data numeric"></td>
-					<td class="dataTable-data numeric"></td>
-					<td class="dataTable-data numeric"></td>
-					<td class="dataTable-data numeric"></td>
-					<td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric"></td>
                   </tr>
-               	  {% endfor %}
-				</tbody>
-			  </table>
-			
+                  {% endfor %}
+                </tbody>
+              </table>
               <div class="form-submit-left"> 
                 <span class="buttonWrap"><a class="button" id="campaignForm-pause">Pause</a>
                 <a class="button" id="campaignForm-resume">Resume</a>

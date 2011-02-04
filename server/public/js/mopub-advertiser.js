@@ -236,12 +236,7 @@ var mopub = mopub || {};
         e.preventDefault();
         var creative_key = $(this).attr("id");
         var creative_form = $("#"+creative_key+"-edit");
-        if (creative_form.is(":hidden")) {
-          creative_form.slideDown('fast');
-        }
-        else {
-          creative_form.slideUp('fast');
-        }
+        creative_form.dialog({width:1000});
       });
     
     $('#advertiser-adgroups-addCreativeButton')

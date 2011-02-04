@@ -1,3 +1,11 @@
+                            <dt><label for="format">Format:</label></dt> 
+                            <dd>
+                              <select name="{{form.format.name}}">
+                                <option value="320x50" {% ifequal form.format.value "320x50"%}selected="selected"{% endifequal %}>320 x 50 (Banner)</option>
+                                <option value="300x250" {% ifequal form.format.value "300x250"%}selected="selected"{% endifequal %}>300 x 250 (MRect)</option>
+                                <option value="full" {% ifequal form.format.value "full"%}selected="selected"{% endifequal %}>Full Screen</option>
+                              </select>
+                            </dd>
                             <dt>Creative Type:</dt> 
                             <dd> 
                               <span class="radios"> 

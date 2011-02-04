@@ -193,6 +193,7 @@ class Creative(polymodel.PolyModel):
   # e.g. format=320x50
   # e.g. format=*
   format_predicates = db.StringListProperty(default=["format=*"]) 
+  format = db.StringProperty() # We should switch to using this field instead of format_predicates: one creative per size
 
   # time of creation
   t = db.DateTimeProperty(auto_now_add=True)

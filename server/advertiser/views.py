@@ -771,7 +771,11 @@ class CreativeManagementHandler(RequestHandler):
       # update cache
       adunits = AdUnitQueryManager().get_by_key(c.ad_group.site_keys,none=True)
       if adunits:
-        CachedQueryManager().cache_delete([a for a in adunits if a])
+        try:
+          CachedQueryManager().cache_delete([a for a in adunits if a])
+        except:
+          CachedQueryManager().cache_delete(adunits)
+            
         
     return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':c.ad_group.key()}))
 

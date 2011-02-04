@@ -804,8 +804,8 @@ class TestHandler(webapp.RequestHandler):
     from ad_server.networks.millennial import MillennialServerSide
     from ad_server.networks.brightroll import BrightRollServerSide
     
-   # server_side = BrightRollServerSide(self.request,357)
-    server_side = InMobiServerSide(self.request,357)
+    server_side = BrightRollServerSide(self.request,357)
+    # server_side = InMobiServerSide(self.request,357)
     logging.warning("%s, %s"%(server_side.url,server_side.payload))
     
     rpc = urlfetch.create_rpc(5) # maximum delay we are willing to accept is 1000 ms

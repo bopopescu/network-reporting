@@ -33,11 +33,9 @@ var mopub = mopub || {};
       }    
     }).filter(':checked').click(); // make sure we're in sync when the page loads
     
-    console.log($('#adgroupForm-advanced-toggleButton'));
     $('#adgroupForm-advanced-toggleButton')
       .button('option', {icons: { primary: 'ui-icon-triangle-1-s' }})
       .click(function(e) {
-        console.log('button clicked');
         e.preventDefault();
         var buttonTextElem = $('.ui-button-text', this);
         if ($('.adgroupForm-advanced').is(':hidden')) {
@@ -191,7 +189,6 @@ var mopub = mopub || {};
                   .find('.adTypeDependent').hide().end()
                   .find('.'+$(this).val()).show().end();
               }).filter(':checked').click();
-            console.log($form.prev("a").attr('name'));
             window.location.hash = '';    
             window.location.hash = $form.prev("a").attr('name');
           }
@@ -268,7 +265,6 @@ var mopub = mopub || {};
 
     $('#creativeCreateForm input[name="ad_type"]')
       .click(function(e){
-        e.preventDefault();
         $('.adTypeDependent',"#creativeCreateForm").hide();
         $('.adTypeDependent.'+$(this).val(),"#creativeCreateForm").show();
       }).filter(':checked').click();
@@ -276,7 +272,6 @@ var mopub = mopub || {};
 
     $('.creativeEditForm input[name="ad_type"]')
       .click(function(e){
-        e.preventDefault();
         // gets the form to which this belongs
         var form = $(this).parents('form');
         $('.adTypeDependent',form).hide();

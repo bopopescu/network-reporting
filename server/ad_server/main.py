@@ -741,7 +741,7 @@ class AdHandler(webapp.RequestHandler):
       self.response.headers.add_header("X-Backfill", "clear")
     
     # make sure this response is not cached by the client  
-    self.response.headers.add_header('Cache-Control','no-cache')  
+    # self.response.headers.add_header('Cache-Control','no-cache')  
   
   def rgeocode(self, ll):
     url = "http://maps.google.com/maps/geo?%s" % urlencode({"q": ll, 

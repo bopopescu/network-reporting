@@ -42,7 +42,7 @@ class BaseCreativeForm(mpforms.MPModelForm):
   
   class Meta:
     model = Creative
-    fields = ('ad_type','name','tracking_url','url','display_url')
+    fields = ('ad_type','name','tracking_url','url','display_url','format')
     
 class TextCreativeForm(mpforms.MPModelForm):
   TEMPLATE = 'advertiser/forms/text_creative_form.html'
@@ -50,7 +50,7 @@ class TextCreativeForm(mpforms.MPModelForm):
   class Meta:
     model = TextCreative
     fields = ('headline','line1','line2') + \
-             ('ad_type','name','tracking_url','url','display_url')
+             ('ad_type','name','tracking_url','url','display_url','format')
     
 class TextAndTileCreativeForm(mpforms.MPModelForm):
   TEMPLATE = 'advertiser/forms/text_tile_creative_form.html'
@@ -60,7 +60,7 @@ class TextAndTileCreativeForm(mpforms.MPModelForm):
   
   class Meta:
     model = TextAndTileCreative
-    fields = ('line1','line2', 'ad_type','name','tracking_url','url')
+    fields = ('line1','line2', 'ad_type','name','tracking_url','url','format')
     
   def __init__(self, *args,**kwargs):
     instance = kwargs.get('instance',None)
@@ -92,7 +92,7 @@ class HtmlCreativeForm(mpforms.MPModelForm):
   class Meta:
     model = HtmlCreative
     fields = ('html_data',) + \
-             ('ad_type','name','tracking_url','url','display_url')
+             ('ad_type','name','tracking_url','url','display_url','format')
              
 class ImageCreativeForm(mpforms.MPModelForm):
   TEMPLATE = 'advertiser/forms/image_creative_form.html'
@@ -102,7 +102,7 @@ class ImageCreativeForm(mpforms.MPModelForm):
   
   class Meta:
     model = ImageCreative
-    fields = ('ad_type','name','tracking_url','url','display_url') 
+    fields = ('ad_type','name','tracking_url','url','display_url','format') 
     
   def __init__(self, *args,**kwargs):
     instance = kwargs.get('instance',None)

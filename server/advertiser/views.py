@@ -496,6 +496,9 @@ class ShowAdGroupHandler(RequestHandler):
     for c in creatives:
       c.all_stats = SiteStatsQueryManager().get_sitestats_for_days(owner=c, days=days)
       c.stats = reduce(lambda x, y: x+y, c.all_stats, SiteStats())
+      if not c.format:
+        c.format = "320x50" # TODO: Should fix DB so that format is always there
+      c.size = c.format.partition('x')
     
     apps = App.gql("where account = :1 and deleted = :2", self.account, False).fetch(50)
     for a in apps:
@@ -709,7 +712,7 @@ class DisplayCreativeHandler(RequestHandler):
       return render_to_response(self.request, 'advertiser/text_tile.html', {'c':c})
       #return HttpResponse(c.image,content_type='image/png')
     if c and c.ad_type == "html":
-      return HttpResponse("<html><body>"+c.html_data+"</body></html");
+      return HttpResponse("<html><body style='margin:0px;'>"+c.html_data+"</body></html");
     return HttpResponse('NOOOOOOOOOOOO IMAGE')
 
 def creative_image(request,*args,**kwargs):

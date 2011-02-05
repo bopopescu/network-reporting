@@ -45,8 +45,11 @@ class BrightRollServerSide(ServerSide):
     
     # get impression_url
     impressions = inline.getElementsByTagName("Impression")
+    logging.warning("impressions: %s"%impressions)
+    
     impression_url = self._getURL(impressions[0])
-    start_url = self._getURL(impressions[1])
+    start_url = ''#self._getURL()
+    # start_url = self._getURL(impressions[1])
         
     self.url_params.update(impression_url=impression_url,start_url=start_url)
                         

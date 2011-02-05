@@ -3,7 +3,7 @@
 {% block pageTitle %}
           <div class="breadcrumb">
             <a class="linkIcon breadcrumb-back" href="{% url advertiser_campaign %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Campaigns</a>
-            <h1>{{campaign.name}}</h1>
+            <h1>{{campaign.name}} <span class="muted">({{campaign|campaign_status}})</span></h1>
           </div>
 {% endblock pageTitle %}
 {% block messageCenter %}{% endblock messageCenter %}
@@ -45,6 +45,7 @@
               </form>
             </div>
           </section>
+          
           <div class="separated" id="chartWrapper">
             <section class="offset nomargin" id="dashboard-stats">
               <div class="stats">
@@ -116,20 +117,35 @@
               <div class="clear"></div>
             </section>
           </div>
+          
           <section id="dashboard-campaigns">
+            <h2>Summary</h2>
+            <p>
+                {% if campaign.start_date and campaign.end_date %}
+                {{campaign.start_date|format_date_compact}}-{{campaign.end_date|format_date_compact}}.
+                {% endif %} {% if campaign.start_date and not campaign.end_date %}
+                Starts {{campaign.start_date|format_date_compact}}.
+                {% endif %} {% if not campaign.start_date and campaign.end_date %}
+                Ends {{campaign.start_date|format_date_compact}}.
+                {% endif %} {% if not campaign.start_date and not campaign.end_date %}
+                All dates.
+                {% endif %}
+                {% if campaign.budget %}{{campaign.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
+            </p>
+
             <h2>Ad Unit Targeting</h2>
-            <table class="dataTable campaignData-main">
+            <table class="campaignData-main dataTable" id="dashboard-apps-columnHeaders">
               <thead>
                 <tr>
                 <th class="campaignData-icon"></th>
                 <th class="dataTable-name">Name</th>
                 <th class="dataTable-data numeric">&nbsp;</th>
-                <th class="dataTable-data numeric">&nbsp;</th>
-                <th class="dataTable-data numeric">&nbsp;</th>
-                <th class="dataTable-data numeric">&nbsp;</th>
                 <th class="dataTable-data numeric">Impressions</th>
                 <th class="dataTable-data numeric">Clicks</th>
-                <th class="dataTable-data numeric">Cost</th>
+                <th class="dataTable-data numeric">CTR</th>
+                <th class="dataTable-data numeric">Revenue</th>
+                <th class="dataTable-data numeric">Conv</th>
+                <th class="dataTable-data numeric">CPA</th>
                 </tr>
               </thead>
               <tbody>
@@ -145,12 +161,12 @@
                     <span class="smaller"><a href="{% url publisher_adunit_show adunit_key=adunit.key %}">{{adunit.name}}</a></span>
                   </th>
                   <td class="dataTable-data numeric"></td>
-                  <td class="dataTable-data numeric"></td>
-                  <td class="dataTable-data numeric"></td>
-                  <td class="dataTable-data numeric"></td>
                   <td class="dataTable-data numeric">{{adunit.stats.impression_count|withsep}}</td>
                   <td class="dataTable-data numeric">{{adunit.stats.click_count|withsep}}</td>
+                  <td class="dataTable-data numeric">{{adunit.stats.ctr|percentage}}</td>
                   <td class="dataTable-data numeric">{{adunit.stats.revenue|currency}}</td>
+                  <td class="dataTable-data numeric">{{adunit.stats.conversion_count|withsep}} ({{adunit.stats.conv_rate|percentage}})</td>
+                  <td class="dataTable-data numeric">{{adunit.stats.cpa|currency}}</td>
                 </tr>
                 {% empty %}
                 <tr class="campaignData" id="adgroup-adunits-0">
@@ -214,12 +230,12 @@
                     <th class="campaignData-icon"></th>                      
                     <th class="dataTable-name">Creative</th>
                     <th class="dataTable-data numeric"></th>
-                    <th class="dataTable-data numeric"></th>
-                    <th class="dataTable-data numeric"></th>
-                    <th class="dataTable-data numeric"></th>
                     <th class="dataTable-data numeric">Impressions</th>
                     <th class="dataTable-data numeric">Clicks</th>
+                    <th class="dataTable-data numeric">CTR</th>
                     <th class="dataTable-data numeric">Cost</th>
+                    <th class="dataTable-data numeric">Conv</th>
+                    <th class="dataTable-data numeric">CPA</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -255,14 +271,13 @@
                         <a class="button button-small advertiser-inLineCreativePreview" href="#" id="{{c.key}}">Preview Creative</a>
                       </span>                 
                     </th>
-                    <td class="dataTable-data numeric"></td>
-                    <td class="dataTable-data numeric"></td>
-                    <td class="dataTable-data numeric"></td>
-                    <td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric">&nbsp;</td>
                     <td class="dataTable-data numeric">{{c.stats.impression_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{c.stats.click_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{c.stats.ctr|percentage}}</td>
                     <td class="dataTable-data numeric">{{c.stats.revenue|currency}}</td>
-                  </tr>
+                    <td class="dataTable-data numeric">{{c.stats.conversion_count|withsep}} ({{c.stats.conv_rate|percentage}})</td>
+                    <td class="dataTable-data numeric">{{c.stats.cpa|currency}}</td>
                   {% endfor %}
                 </tbody>
               </table>

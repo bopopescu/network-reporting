@@ -43,16 +43,20 @@ class AdUnitQueryManager(CachedQueryManager):
     def put_adunits(self,adunits):
         db.put(adunits)    
                
-    def get_by_key(self,key):
-        if isinstance(key,list):
+    def get_by_key(self,key,none=False):
+        if isinstance(key,(set,list)):
             key = [str(k) for k in key]
         adunits = self.cache_get(key)
         if adunits:
             self.adunit = adunits[0]
             # trigger dereference to attach account info
-            self.adunit.account.active
+            if self.adunit:
+              self.adunit.account.active
         else:
-            self.adunit = "NONE!"  
+            if none:
+              self.adunit = None
+            else:
+              self.adunit = "!None"
         return self.adunit
     
     def get_adunit(self):

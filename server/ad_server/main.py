@@ -434,8 +434,8 @@ class AdHandler(webapp.RequestHandler):
     
     # the user's site key was not set correctly...
     if site is None:
-      self.error(500)
-      self.response.out.write("Publisher site key %s not valid" % id)
+      self.error(404)
+      self.response.out.write("Publisher adunit key %s not valid" % id)
       return
     
     # get keywords 
@@ -619,7 +619,7 @@ class AdHandler(webapp.RequestHandler):
       elif c.ad_type == "text_icon":
         if c.image:
           params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
-        self.response.headers.add_header("X-Adtype", str('html'))
+        # self.response.headers.add_header("X-Adtype", str('html'))
       elif c.ad_type == "greystripe":
         params.update(html_data=c.html_data)
         # TODO: Why is html data here twice?
@@ -741,7 +741,7 @@ class AdHandler(webapp.RequestHandler):
       self.response.headers.add_header("X-Backfill", "clear")
     
     # make sure this response is not cached by the client  
-    self.response.headers.add_header('Cache-Control','no-cache')  
+    # self.response.headers.add_header('Cache-Control','no-cache')  
   
   def rgeocode(self, ll):
     url = "http://maps.google.com/maps/geo?%s" % urlencode({"q": ll, 
@@ -804,8 +804,8 @@ class TestHandler(webapp.RequestHandler):
     from ad_server.networks.millennial import MillennialServerSide
     from ad_server.networks.brightroll import BrightRollServerSide
     
-   # server_side = BrightRollServerSide(self.request,357)
-    server_side = InMobiServerSide(self.request,357)
+    server_side = BrightRollServerSide(self.request,357)
+    # server_side = InMobiServerSide(self.request,357)
     logging.warning("%s, %s"%(server_side.url,server_side.payload))
     
     rpc = urlfetch.create_rpc(5) # maximum delay we are willing to accept is 1000 ms

@@ -4,7 +4,7 @@
                               {% for error in form.image_file.errors %}
                               <div class="form-error-text">{{error}}</div> 
                               {% endfor %}
-                              {% if form.image_url %}
+                              {% if form.image_url.value %}
                               <div>
                                 <img src="{{form.image_url.value}}"/>
                               </div>

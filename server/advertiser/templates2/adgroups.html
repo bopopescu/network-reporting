@@ -135,16 +135,16 @@
                     <th class="dataTable-name">
                         <a href="{% url advertiser_adgroup_show adgroup_key=c.key %}">{{c.name}}</a><br/>
                         <span class="muted">
-                            {% if c.start_date and c.end_date %}
-                            {{c.start_date|format_date_compact}}-{{c.end_date|format_date_compact}}.
-                            {% endif %} {% if c.start_date and not c.end_date %}
-                            Starts {{c.start_date|format_date_compact}}.
-                            {% endif %} {% if not c.start_date and c.end_date %}
-                            Ends {{c.start_date|format_date_compact}}.
-                            {% endif %} {% if not c.start_date and not c.end_date %}
+                            {% if c.campaign.start_date and c.campaign.end_date %}
+                            {{c.campaign.start_date|format_date_compact}}-{{c.campaign.end_date|format_date_compact}}.
+                            {% endif %} {% if c.campaign.start_date and not c.campaign.end_date %}
+                            Starts {{c.campaign.start_date|format_date_compact}}.
+                            {% endif %} {% if not c.campaign.start_date and c.campaign.end_date %}
+                            Ends {{c.campaign.start_date|format_date_compact}}.
+                            {% endif %} {% if not c.campaign.start_date and not c.campaign.end_date %}
                             All dates.
                             {% endif %}
-                            {% if c.budget %}{{c.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
+                            {% if c.campaign.budget %}{{c.campaign.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
                         </span>
                     </th>
                     <td class="dataTable-data numeric">{{c.bid|currency}}</td>
@@ -197,16 +197,16 @@
                     <th class="dataTable-name">
                         <a href="{% url advertiser_adgroup_show adgroup_key=c.key %}">{{c.name}}</a><br/>
                         <span class="muted">
-                            {% if c.start_date and c.end_date %}
-                            {{c.start_date|format_date_compact}}-{{c.end_date|format_date_compact}}.
-                            {% endif %} {% if c.start_date and not c.end_date %}
-                            Starts {{c.start_date|format_date_compact}}.
-                            {% endif %} {% if not c.start_date and c.end_date %}
-                            Ends {{c.start_date|format_date_compact}}.
-                            {% endif %} {% if not c.start_date and not c.end_date %}
+                            {% if c.campaign.start_date and c.campaign.end_date %}
+                            {{c.campaign.start_date|format_date_compact}}-{{c.campaign.end_date|format_date_compact}}.
+                            {% endif %} {% if c.campaign.start_date and not c.campaign.end_date %}
+                            Starts {{c.campaign.start_date|format_date_compact}}.
+                            {% endif %} {% if not c.campaign.start_date and c.campaign.end_date %}
+                            Ends {{c.campaign.start_date|format_date_compact}}.
+                            {% endif %} {% if not c.campaign.start_date and not c.campaign.end_date %}
                             All dates.
                             {% endif %}
-                            {% if c.budget %}{{c.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
+                            {% if c.campaign.budget %}{{c.campaign.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
                         </span>
                     </th>
                     <td class="dataTable-data numeric">{{c.bid|currency}}</td>

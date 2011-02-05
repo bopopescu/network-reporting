@@ -398,7 +398,11 @@ def campaign_adgroup_edit(request,*args,**kwargs):
 
 class ShowHandler(RequestHandler):          
   def get(self, campaign_key):
-    days = SiteStats.lastdays(14)
+    # Set start date if passed in, otherwise get most recent days
+    if self.start_date:
+      days = SiteStats.get_days(self.start_date, self.date_range)
+    else:
+      days = SiteStats.lastdays(self.date_range)
 
     # load the campaign
     campaign = CampaignQueryManager.get_by_key(campaign_key)
@@ -498,7 +502,11 @@ def campaign_pause(request,*args,**kwargs):
   
 class ShowAdGroupHandler(RequestHandler):
   def get(self, adgroup_key):
-    days = SiteStats.lastdays(14)
+    # Set start date if passed in, otherwise get most recent days
+    if self.start_date:
+      days = SiteStats.get_days(self.start_date, self.date_range)
+    else:
+      days = SiteStats.lastdays(self.date_range)
 
     adgroup = AdGroupQueryManager().get_by_key(adgroup_key)
     adgroup.all_stats = SiteStatsQueryManager().get_sitestats_for_days(owner=adgroup, days=days)

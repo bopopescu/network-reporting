@@ -501,6 +501,8 @@ class ShowAdGroupHandler(RequestHandler):
     days = SiteStats.lastdays(14)
 
     adgroup = AdGroupQueryManager().get_by_key(adgroup_key)
+    adgroup.all_stats = SiteStatsQueryManager().get_sitestats_for_days(owner=adgroup, days=days)
+    adgroup.stats = reduce(lambda x, y: x+y, adgroup.all_stats, SiteStats())    
     
     # creatives = Creative.gql('where ad_group = :1 and deleted = :2 and ad_type in :3', adgroup, False, ["text", "image", "html"]).fetch(50)
     creatives = CreativeQueryManager().get_creatives(adgroup=adgroup)

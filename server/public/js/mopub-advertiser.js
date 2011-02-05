@@ -49,31 +49,63 @@ var mopub = mopub || {};
           $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
         }
       });
-
+    $('#adgroupForm-bid_strategy-select')
+      .change(function() {
+        if ($(this).val() == 'cpm') {
+          $('.campaignAdgroupForm-budget').hide();
+          $('#campaignAdgroupForm-budget-impressions').show();
+        }
+        else {
+          $('.campaignAdgroupForm-budget').hide();
+          $('#campaignAdgroupForm-budget-bid').show();
+        }
+        calculateAndShowBudget();
+      });
+    $('#campaignAdgroupForm input[name="impressions"]')
+      .keyup(function() {
+        calculateAndShowBudget();        
+      });
+    $('#bid-max')
+      .keyup(function() {
+        calculateAndShowBudget();        
+      });
   }
    
   campaignAdgroupFormOnLoad(); 
   
-   var options = { 
-     data: { ajax: true },
-     dataType : 'json',
-      success:    function(jsonData, statusText, xhr, $form) {
-         $('#campaignAdgroupForm-loading').hide();
-         if (jsonData.success){
-           $('#campaignAdgroupForm-success').show(); // show message
-            window.location = jsonData.new_page;
-         }
-         else{
-           $('#campaignAdgroupForm-fragment').html(jsonData.html);
-           // reimplement the onload event
-           campaignAdgroupFormOnLoad();
-          // clear and reset the hash
-          window.location.hash = '';
-          window.location.hash = 'adgroupEditForm';
-          }
-        } 
-    };
-   $('#campaignAdgroupForm').ajaxForm(options);
+  function calculateAndShowBudget() {
+    $('#campaignAdgroupForm-budget-display').hide();
+    var rate = $('#campaignAdgroupForm input[name="bid"]').val();
+    if ($('#adgroupForm-bid_strategy-select').val() == 'cpm') {
+      var impressions = $('#campaignAdgroupForm input[name="impressions"]').val();
+      var budget = rate * impressions / 1000;
+      if (budget) {
+        $('#campaignAdgroupForm-budget-display').html(budget.toFixed(2)+" USD / day");
+        $('#campaignAdgroupForm-budget-display').show();
+      }
+    }
+  }
+  
+  var options = { 
+    data: { ajax: true },
+    dataType: 'json',
+    success: function(jsonData, statusText, xhr, $form) {
+      $('#campaignAdgroupForm-loading').hide();
+      if (jsonData.success){
+        $('#campaignAdgroupForm-success').show(); // show message
+        window.location = jsonData.new_page;
+      }
+      else{
+        $('#campaignAdgroupForm-fragment').html(jsonData.html);
+        // reimplement the onload event
+        campaignAdgroupFormOnLoad();
+        // clear and reset the hash
+        window.location.hash = '';
+        window.location.hash = 'adgroupEditForm';
+      }
+    } 
+  };
+  $('#campaignAdgroupForm').ajaxForm(options);
 
   // set up "Help" links
   $('#campaignForm-type-helpLink').click(function(e) {

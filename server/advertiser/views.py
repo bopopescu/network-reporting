@@ -398,7 +398,11 @@ def campaign_adgroup_edit(request,*args,**kwargs):
 
 class ShowHandler(RequestHandler):          
   def get(self, campaign_key):
-    days = SiteStats.lastdays(14)
+    # Set start date if passed in, otherwise get most recent days
+    if self.start_date:
+      days = SiteStats.get_days(self.start_date, self.date_range)
+    else:
+      days = SiteStats.lastdays(self.date_range)
 
     # load the campaign
     campaign = CampaignQueryManager.get_by_key(campaign_key)
@@ -498,7 +502,11 @@ def campaign_pause(request,*args,**kwargs):
   
 class ShowAdGroupHandler(RequestHandler):
   def get(self, adgroup_key):
-    days = SiteStats.lastdays(14)
+    # Set start date if passed in, otherwise get most recent days
+    if self.start_date:
+      days = SiteStats.get_days(self.start_date, self.date_range)
+    else:
+      days = SiteStats.lastdays(self.date_range)
 
     adgroup = AdGroupQueryManager().get_by_key(adgroup_key)
     adgroup.all_stats = SiteStatsQueryManager().get_sitestats_for_days(owner=adgroup, days=days)
@@ -724,7 +732,8 @@ class DisplayCreativeHandler(RequestHandler):
     if c and c.ad_type == "image" and c.image:
       return HttpResponse(c.image,content_type='image/png')
     if c and c.ad_type == "text_icon":
-      c.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
+      if c.image:
+        c.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
       return render_to_response(self.request, 'advertiser/text_tile.html', {'c':c})
       #return HttpResponse(c.image,content_type='image/png')
     if c and c.ad_type == "html":

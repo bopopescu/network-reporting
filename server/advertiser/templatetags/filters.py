@@ -80,7 +80,7 @@ def time_ago_in_words(value):
 
 @register.filter
 def campaign_status(c):
-    d = datetime.now()
+    d = datetime.now().date()
     if (c.start_date is None or d > c.start_date) and (c.end_date is None or d < c.end_date):
         if c.budget: 
             if c.stats.revenue >= c.budget:
@@ -91,9 +91,9 @@ def campaign_status(c):
                 return "Eligible"
         else:
             return "In-flight"
-    elif end_date and d > c.end_date:
+    elif c.end_date and d > c.end_date:
         return "Expired"
-    elif start_date and d < c.start_date:
+    elif c.start_date and d < c.start_date:
         return "Scheduled"
     else:
         return "Unknown"

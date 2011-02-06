@@ -77,7 +77,7 @@ input, select { vertical-align:middle; }
    * we normalize monospace styles ourselves
    * table font-size is reset in the HTML5 reset above so there is no need to repeat
 */
-body { font:15px/1.231 sans-serif; *font-size:small; } /* hack retained to preserve specificity */
+body { font:13px/1.231 sans-serif; *font-size:small; } /* hack retained to preserve specificity */
 
 select, input, textarea, button { font:99% sans-serif; }
 
@@ -389,9 +389,9 @@ header nav .active a {
 /* Titlebar */
 
 #titlebar {
-  padding: 30px 0 0 0;
-  height: 46px;
-  border-bottom: 4px solid #ebf2f7;
+  padding: 25px 0 0 0;
+  height: 36px;
+  border-bottom: 3px solid #ebf2f7;
   background: #f5f9fc;
 }
 
@@ -401,24 +401,23 @@ header nav .active a {
 
 #titlebar h1 {
   margin: -6px 0 0 0;
-  font-size: 30px;
+  font-size: 24px;
   font-weight: 300;
   color: #444;
 }
 
 #titlebar-center {
   position: absolute;
-  top: 5px;
+  top: 0;
   width: 100%;
   text-align: center;
 }
 
 #titlebar-right {
   position: absolute;
-  top: 5px;
+  top: 0;
   right: 0;
   text-align: right;
-  font-size: 14px;
 }
 
 #titlebar .buttonset {
@@ -431,13 +430,13 @@ header nav .active a {
 
 .titlebar-link {
   display: inline-block;
-  margin: 8px 0 0 0;
+  margin: 10px 0 0 0;
 }
 
 #titlebar .breadcrumb {
   margin: -6px 0 0 0;
   position: relative;
-  top: -9px;
+  top: -7px;
 }
 
 #titlebar .breadcrumb-back {
@@ -447,10 +446,10 @@ header nav .active a {
 }
 
 #titlebar .breadcrumb h1 {
-  margin-top: 0;
-  font-size: 20px;
+  margin-top: -1px;
+  font-size: 16px;
   font-weight: 400;
-  width: 330px;
+  width: 340px;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -459,7 +458,7 @@ header nav .active a {
 /* Content */
 
 #content {
-  padding: 35px 0 235px 0;
+  padding: 30px 0 235px 0;
   float: left;
   width: 100%;
 }
@@ -538,6 +537,7 @@ footer {
 #footer-links ul {
   float: left;
   margin: 0;
+  padding: 0;
   width: 180px;
   list-style: none;
 }
@@ -546,7 +546,7 @@ footer {
   margin: 0 0 7px 0;
 }
 
-#footer-account {
+#footer-account, #footer-copyright {
   float: right;
   width: 50%;
   text-align: right;
@@ -602,22 +602,22 @@ aside li {
 
 h2 {
   margin: 0 0 15px 0;
-  font-size: 24px;
+  font-size: 20px;
 }
 
 h3 {
   margin: 0 0 15px 0;
-  font-size: 18px;
+  font-size: 16px;
 }
 
 h4 {
   margin: 0 0 15px 0;
-  font-size: 16px;
+  font-size: 14px;
 }
 
 h5 {
   margin: 0 0 10px 0;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 /* Links */
@@ -714,12 +714,12 @@ a.mutedLink:hover {
 }
 
 .input-text, textarea {
-  padding: 1px 4px 4px 4px;
+  padding: 1px 2px 2px 3px;
   border: 1px solid #eaeaea;
   border-top-color: #b9b9b9;
   background: #fafafa;
-  font-size: 18px;
-  line-height: 20px;
+  font-size: 14px;
+  line-height: 16px;
   width: 290px;
   -webkit-border-radius: 3px;
   -moz-border-radius: 3px;
@@ -766,7 +766,7 @@ fieldset {
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
   border-radius: 5px;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 fieldset.alt {
@@ -775,7 +775,7 @@ fieldset.alt {
 
 fieldset h2 {
   /* legend gets converted to h2 in JS */
-  margin: 0 0 10px 0;
+  margin: 0 0 5px 0;
   font-size: 16px;
   font-weight: 600;
 }
@@ -789,38 +789,34 @@ dl.formFields {
 .formFields dt {
   float: left;
   clear: both;
-  margin: 15px 15px 0 0;
-  padding: 5px 0;
+  margin: 10px 12px 0 0;
+  padding: 3px 0;
   width: 175px;
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 300;
-  line-height: 20px;
+  line-height: 16px;
   text-align: right;
   white-space: nowrap;
 }
 
 .formFields dd {
   display: inline-block;
-  margin: 15px 0 0 0;
-  padding: 5px 0;
+  margin: 10px 0 0 0;
+  padding: 3px 0;
   width: 440px;
 }
 
 .formFields .radios {
-  font-size: 18px;
+  font-size: 14px;
 }
 
 .formFields .input-text,
 .formFields textarea {
-  margin: -5px 0;
+  margin: -3px 0;
 }
 
 .formFields .input-text-small {
   margin: 0;
-}
-
-.formFields .input-text-number {
-  width: 70px;
 }
 
 .formFields-field-help {
@@ -840,15 +836,14 @@ dl.formFields {
   display: none;
 }
 
+.formFields .input-text-number {
+  width: 70px;
+}
+
 .form-submit {
   border-top: 2px solid #f5f5f5;
   padding: 18px 0 0 0;
   text-align: right;
-}
-
-.form-submit-left {
-  border-top: 2px solid #f5f5f5;
-  padding: 18px 0 0 0;
 }
 
 .form-error {
@@ -863,10 +858,17 @@ dl.formFields {
   color: #cc2929;
 }
 
+.form-submit-left {
+  border-top: 2px solid #f5f5f5;
+  padding: 18px 0 0 0;
+}
+
 .formFields-right {
   padding: 5px 0 0 0;
   text-align: right;
 }
+
+
 /*---------------------------------------/
 / Modules
 /---------------------------------------*/
@@ -881,7 +883,7 @@ dl.formFields {
 #messageCenter-messages {
   margin: -10px 0 0 0;
   width: 100%;
-  font-size: 16px;
+  font-size: 14px;
   line-height: 1.1em;
 }
 
@@ -894,9 +896,9 @@ dl.formFields {
 }
 
 .messageCenter-message td.messageCenter-message-date {
-  padding: 12px 15px 0 0;
+  padding: 12px 10px 0 0;
   width: 65px;
-  font-size: 12px;
+  font-size: 11px;
   text-transform: uppercase;
   color: #999;
   white-space: nowrap;
@@ -904,7 +906,7 @@ dl.formFields {
 
 .messageCenter-message td.messageCenter-message-text {
   padding-left: 25px;
-  background-position: 1px 12px;
+  background-position: 1px 11px;
   background-repeat: no-repeat;
 }
 
@@ -937,7 +939,7 @@ dl.formFields {
 
 .alertMessage {
   margin: 0 0 30px 0;
-  padding: 14px 18px 18px 18px;
+  padding: 10px 14px 14px 14px;
   border: 1px solid #e6d2b8;
   background: #fffdf2;
   color: #664729;
@@ -969,7 +971,9 @@ dl.formFields {
   position: absolute;
   top: 0;
   left: 0;
+  width: 205px;
 }
+
 
 .stats-breakdown table {
   width: 205px;
@@ -978,7 +982,7 @@ dl.formFields {
 .stats-breakdown th,
 .stats-breakdown td {
   padding: 0;
-  font-size: 18px;
+  font-size: 16px;
   line-height: 20px;
   color: #595959;
   cursor: pointer;
@@ -993,8 +997,8 @@ dl.formFields {
 
 .stats-breakdown td.stats-breakdown-value .inner {
   display: block;
-  padding: 9px 8px 0 10px;
-  height: 31px;
+  padding: 6px 8px 0 10px;
+  height: 29px;
   -webkit-border-top-left-radius: 5px;
   -webkit-border-bottom-left-radius: 5px;
   -moz-border-radius-topleft: 5px;
@@ -1010,9 +1014,9 @@ dl.formFields {
 
 .stats-breakdown th.stats-breakdown-name .inner {
   display: block;
-  padding: 9px 10px 0 0;
-  height: 31px;
-  background: url(../images/layout/stats-breakdown-pointer.png) no-repeat top right;
+  padding: 6px 10px 0 0;
+  height: 29px;
+  background: url(../images/layout/stats-breakdown-pointer.png) no-repeat 100% -3px;
 }
 
 .stats-breakdown tr:hover td.stats-breakdown-value .inner,
@@ -1045,7 +1049,7 @@ dl.formFields {
 .stats-chart {
   margin-left: 205px;
   width: 695px;
-  height: 200px;
+  height: 175px;
 }
 
 /* Buttons and button bank */
@@ -1155,7 +1159,7 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
 }
 
 .appData-columnHeaders {
-  padding: 10px 10px 0 10px;
+  padding: 0 0 0 10px;
 }
 
 .dataTable .appData-icon {
@@ -1288,13 +1292,13 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
 
 #dashboard-dateOptions-custom-from {
   float: left;
-  padding-right: 16px;
+  padding-right: 25px;
   border-right: 1px solid #ddd;
 }
 
 #dashboard-dateOptions-custom-to {
   float: left;
-  padding-left: 16px;
+  padding-left: 25px;
   border-left: 1px solid #ddd;
   margin: 0 0 0 -1px;
 }
@@ -1302,7 +1306,7 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
 #dashboard-dateOptions-custom-from h4,
 #dashboard-dateOptions-custom-to h4 {
   margin: 0 0 10px 0;
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 300;
   text-align: center;
 }
@@ -1314,7 +1318,7 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
 }
 
 #titlebar-right .stepProgress {
-  margin-top: 10px;
+  margin-top: 11px;
   color: #7a8c99;
 }
 
@@ -1368,15 +1372,34 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
 .ui-widget-header { font-weight: 600; }
 
 /*button text element */
-.ui-button .ui-button-text { line-height: 1.1; }
-.ui-button-text-only .ui-button-text { padding: 4px 12px 5px 12px; }
-.ui-button-icon-only .ui-button-text, .ui-button-icons-only .ui-button-text { padding: 4px 5px 5px 5px; }
-.ui-button-text-icon-primary .ui-button-text, .ui-button-text-icons .ui-button-text { padding: 4px 12px 5px 25px; }
-.ui-button-text-icon-secondary .ui-button-text, .ui-button-text-icons .ui-button-text { padding: 4px 25px 5px 12px; }
-.ui-button-text-icons .ui-button-text { padding-left: 25px; padding-right: 25px; }
-input.ui-button { padding: 4px 12px 5px 12px; }
+.ui-button .ui-button-text {
+  line-height: 1.1;
+}
+.ui-button-text-only .ui-button-text {
+  padding: 3px 11px 4px 11px;
+}
+.ui-button-icon-only .ui-button-text, .ui-button-icons-only .ui-button-text {
+  padding: 3px 4px 4px 4px;
+}
+.ui-button-text-icon-primary .ui-button-text, .ui-button-text-icons .ui-button-text {
+  padding: 3px 11px 4px 24px;
+}
+.ui-button-text-icon-secondary .ui-button-text, .ui-button-text-icons .ui-button-text {
+  padding: 3px 24px 4px 11px;
+}
+.ui-button-text-icons .ui-button-text {
+  padding-left: 25px;
+  padding-right: 25px;
+}
+input.ui-button {
+  padding: 3px 11px 4px 11px;
+}
 
-/* Small and big buttons (custom) */
+/* Normal, small, and big buttons (custom) */
+.ui-button {
+  font-size: 12px;
+}
+
 .button-small .ui-button-text {
   font-size: 11px;
   padding-top: 2px;
@@ -1405,7 +1428,7 @@ input.ui-button { padding: 4px 12px 5px 12px; }
 /* Dialog */
 .ui-dialog { padding: 5px; background: transparent url(../images/ui/ui-dialog-shadow.png) repeat top left; border: none; -webkit-border-radius:10px;-moz-border-radius:10px;border-radius:10px; }
 .ui-dialog .ui-dialog-titlebar{display:none;}
-.ui-dialog .ui-dialog-content{padding:20px;background:#fff;font-size:14px;-webkit-border-radius:5px;-moz-border-radius:5px;border-radius:5px;}
+.ui-dialog .ui-dialog-content{padding:20px;background:#fff;font-size:13px;-webkit-border-radius:5px;-moz-border-radius:5px;border-radius:5px;}
 .ui-dialog .ui-dialog-buttonpane{border-width:0;margin:-5px 0 0 0;padding:5px 20px 20px 20px;-webkit-border-bottom-right-radius:5px;-webkit-border-bottom-left-radius:5px;-moz-border-radius-bottomright:5px;-moz-border-radius-bottomleft:5px;border-bottom-right-radius:5px;border-bottom-left-radius:5px;}
 .ui-dialog .ui-dialog-buttonpane button{margin:0 0 0 5px;}
 
@@ -1420,7 +1443,7 @@ input.ui-button { padding: 4px 12px 5px 12px; }
 /* qTip tooltips */
 
 .qtip-content {
-  font-size: 13px;
+  font-size: 12px;
 }
 
 /*---------------------------------------/
@@ -1458,28 +1481,26 @@ input.ui-button { padding: 4px 12px 5px 12px; }
 }
 
 #dashboard-stats {
-  padding-bottom: 15px;
+  padding: 20px 20px 10px 20px;
 }
 
 #dashboard-stats-chart {
-  height: 210px;
+  height: 185px;
 }
 
-#dashboard-apps,
-#dashboard-campaigns {
+#dashboard-apps {
   margin: 30px 0 0 0;
 }
 
-#dashboard-apps h2,
-#dashboard-campaigns h2 {
-  font-size: 22px;
+#dashboard-apps h2 {
+  font-size: 20px;
   margin: 0;
 }
 
 /* App and ad setup forms */
 
-.iphone .android, 
-.android .iphone {
+.ios .android, 
+.android .ios {
   display: none;
 }
 
@@ -1495,7 +1516,7 @@ input.ui-button { padding: 4px 12px 5px 12px; }
 #appForm-search-button {
   margin: 0;
   position: absolute;
-  top: -16px;
+  top: -14px;
   left: 4px;
   white-space: nowrap;
 }
@@ -1522,12 +1543,12 @@ input.ui-button { padding: 4px 12px 5px 12px; }
 
 .adForm-formats {
   float: left;
-  width: 505px;
+  width: 465px;
 }
 
 .adForm-format {
   float: left;
-  width: 120px;
+  width: 110px;
 }
 
 .adForm-format-name {
@@ -1550,13 +1571,13 @@ input.ui-button { padding: 4px 12px 5px 12px; }
 }
 
 .adForm-format-name label {
-  font-size: 18px;
-  line-height: 20px;
+  font-size: 14px;
+  line-height: 18px;
 }
 
 .adForm-format-details {
-  font-size: 13px;
-  line-height: 16px;
+  font-size: 11px;
+  line-height: 13px;
   color: #999;
   font-weight: 300;
 }
@@ -1567,7 +1588,7 @@ input.ui-button { padding: 4px 12px 5px 12px; }
 }
 
 .adForm-format-custom {
-  width: 145px;
+  width: 135px;
 }
 
 .adForm-format-custom .adForm-format-details .input-text-small {
@@ -1588,7 +1609,7 @@ input.ui-button { padding: 4px 12px 5px 12px; }
 }
 
 .adForm-appSearch-img span {
-  background:url(/images/mask40.png);
+  background:url(../images/mask40.png);
   display:block;
   position:absolute;
   left:-1px;
@@ -1620,6 +1641,7 @@ input.ui-button { padding: 4px 12px 5px 12px; }
 .creative iframe {
   border: 1px solid #e1edf5
 }
+
 /* Homepage */
 
 .mopub-home #nav1 li.active {
@@ -1722,7 +1744,7 @@ input.ui-button { padding: 4px 12px 5px 12px; }
   padding-top: 45px;
 }
 
-#home-features {
+.home-features {
   float: left;
 }
 
@@ -1769,8 +1791,8 @@ input.ui-button { padding: 4px 12px 5px 12px; }
 
 #mopub-home-alt1 #home-graphic {
   position: absolute;
-  top: 0;
-  right: 0;
+  top: -35px;
+  right: -30px;
 }
 
 #mopub-home-alt1 #home-intro {
@@ -1894,11 +1916,6 @@ input.ui-button { padding: 4px 12px 5px 12px; }
   #jsnotice { display: none; }
 }
 
-
-/******** 
- * JP STYLES
- ********/
-
 .numeric {
   text-align: right;
 }
@@ -1906,7 +1923,6 @@ input.ui-button { padding: 4px 12px 5px 12px; }
 td.numeric, th.numeric, .numeric TD {
   text-align: right;
 }
-
 
 .campaignData {
   padding: 10px 5px 6px 5px;

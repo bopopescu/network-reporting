@@ -80,7 +80,9 @@ var mopub = mopub || {};
       var impressions = $('#campaignAdgroupForm input[name="impressions"]').val();
       var budget = rate * impressions / 1000;
       if (budget) {
-        $('#campaignAdgroupForm-budget-display').html(budget.toFixed(2)+" USD / day");
+        var budget_fixed = budget.toFixed(2);
+        $('#campaignAdgroupForm-budget-display').html(budget_fixed +" USD / day");
+        $('#bid-max').val(budget_fixed);
         $('#campaignAdgroupForm-budget-display').show();
       }
     }

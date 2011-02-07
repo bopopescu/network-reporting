@@ -143,9 +143,7 @@ class AdGroupIndexHandler(RequestHandler):
     if campaigns:
       adgroups = AdGroupQueryManager().get_adgroups(campaigns=campaigns)
     else:
-      # TODO: Convert to QueryManager, why is this here anyway?
-      campaigns = Campaign.gql("where u = :1 and deleted = :2", self.account.user, False).fetch(100)
-      adgroups = AdGroup.gql("where campaign in :1 and deleted = :2", [x.key() for x in campaigns], False).fetch(100)
+      adgroups = []
     
     for c in adgroups:
       c.all_stats = SiteStatsQueryManager().get_sitestats_for_days(owner=c, days=days)      

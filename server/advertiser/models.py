@@ -172,7 +172,7 @@ class AdGroup(db.Model):
     return self.geo_predicates
 
 class Creative(polymodel.PolyModel):
-  name = db.StringProperty(required=True)
+  name = db.StringProperty()
   
   ad_group = db.ReferenceProperty(AdGroup,collection_name="creatives")
 

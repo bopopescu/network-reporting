@@ -561,7 +561,7 @@ class AppIconHandler(RequestHandler):
       response['Content-Type'] = 'image/png'
       return response
     else:
-      HttpResponseRedirect('/images/noicon.png')
+      return HttpResponseRedirect('/images/misc/appicon-missing.png')
 
 def app_icon(request,*args,**kwargs):
   return AppIconHandler()(request,*args,**kwargs)

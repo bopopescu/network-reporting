@@ -1173,7 +1173,7 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
 }
 
 .dataTable .appData-icon-none {
-  padding-right: 11px;
+  margin-right: 11px;
   height:45px;
   width: 45px;
 }

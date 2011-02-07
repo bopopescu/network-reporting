@@ -69,18 +69,30 @@ var mopub = mopub || {};
       .keyup(function() {
         calculateAndShowBudget();        
       });
+    // Initialize impression count on form display
+    if ($('#adgroupForm-bid_strategy-select').val() == 'cpm') {
+      var rate = $('#campaignAdgroupForm input[name="bid"]').val();
+      var budget = $('#campaignAdgroupForm input[name="budget"]').val();
+      var impressions = 1000 * budget / rate;
+      if (impressions) {
+        $('#campaignAdgroupForm input[name="impressions"]').val(impressions);
+        calculateAndShowBudget();
+      }
+    }
   }
    
   campaignAdgroupFormOnLoad(); 
   
   function calculateAndShowBudget() {
     $('#campaignAdgroupForm-budget-display').hide();
-    var rate = $('#campaignAdgroupForm input[name="bid"]').val();
     if ($('#adgroupForm-bid_strategy-select').val() == 'cpm') {
+      var rate = $('#campaignAdgroupForm input[name="bid"]').val();
       var impressions = $('#campaignAdgroupForm input[name="impressions"]').val();
       var budget = rate * impressions / 1000;
       if (budget) {
-        $('#campaignAdgroupForm-budget-display').html(budget.toFixed(2)+" USD / day");
+        var budget_fixed = budget.toFixed(2);
+        $('#campaignAdgroupForm-budget-display').html("("+budget_fixed +" USD / day)");
+        $('#campaignAdgroupForm input[name="budget"]').val(budget_fixed);
         $('#campaignAdgroupForm-budget-display').show();
       }
     }

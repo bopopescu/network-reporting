@@ -135,17 +135,12 @@ class AdGroupIndexHandler(RequestHandler):
     else:
       days = SiteStats.lastdays(self.date_range)
 
-    app = AppQueryManager().get_apps(account=self.account)
-    all_apps = None
-    site = None
-    all_sites = None
+    apps = AppQueryManager().get_apps(account=self.account)
     campaigns = CampaignQueryManager().get_campaigns(account=self.account)
     if campaigns:
       adgroups = AdGroupQueryManager().get_adgroups(campaigns=campaigns)
     else:
-      # TODO: Convert to QueryManager, why is this here anyway?
-      campaigns = Campaign.gql("where u = :1 and deleted = :2", self.account.user, False).fetch(100)
-      adgroups = AdGroup.gql("where campaign in :1 and deleted = :2", [x.key() for x in campaigns], False).fetch(100)
+      adgroups = []
     
     for c in adgroups:
       c.all_stats = SiteStatsQueryManager().get_sitestats_for_days(owner=c, days=days)      
@@ -178,10 +173,7 @@ class AdGroupIndexHandler(RequestHandler):
        'graph_adgroups': graph_adgroups,
        'start_date': days[0],
        'date_range': self.date_range,
-       'app' : app,
-       'all_apps' : all_apps,
-       'site' : site,
-       'all_sites' : all_sites,
+       'apps' : apps,
        'totals': reduce(lambda x, y: x+y.stats, adgroups, SiteStats()),
        'today': reduce(lambda x, y: x+y, [c.all_stats[-1] for c in graph_adgroups], SiteStats()),
        'yesterday': reduce(lambda x, y: x+y, [c.all_stats[-2] for c in graph_adgroups], SiteStats()),

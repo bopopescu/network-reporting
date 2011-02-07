@@ -1,7 +1,11 @@
 #!/bin/bash
 pushd /Users/njamal/tmp
 
-# rm /Users/njamal/tmp/datastore1
+# rm -rf /Users/njamal/tmp/datastore0
+# appcfg.py download_data --application=mopub-inc --url=http://mopub-inc.appspot.com/remote_api --filename=/Users/njamal/tmp/datastore1 --kind=User --email=nafisjamal@mopub.com
+appcfg.py upload_data --email=foobar@nowhere.com --filename=/Users/njamal/tmp/datastore1 --application=mopub-inc --url=http://localhost:8000/remote_api
+
+# rm -rf /Users/njamal/tmp/datastore1
 # appcfg.py download_data --application=mopub-inc --url=http://mopub-inc.appspot.com/remote_api --filename=/Users/njamal/tmp/datastore1 --kind=Account --email=nafisjamal@mopub.com
 appcfg.py upload_data --email=foobar@nowhere.com --filename=/Users/njamal/tmp/datastore1 --application=mopub-inc --url=http://localhost:8000/remote_api
 

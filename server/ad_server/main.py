@@ -214,7 +214,6 @@ class AdAuction(object):
             # if the winning creative exceeds the ad unit's threshold cpm for the
             # priority level, then we have a winner
             if winning_ecpm >= site.threshold_cpm(p):
-              # retain all creatives with comparable eCPM and randomize among them
               winners = filter(lambda x: x.e_cpm() >= winning_ecpm, players)
               logging.warning("%02d winners: %s"%(len(winners),winners))
               
@@ -233,7 +232,8 @@ class AdAuction(object):
               logging.warning("eligible creatives: %s %s" % (winners,exclude_params))
               winners = [c for c in winners if not (c.ad_type in exclude_params)]  
               logging.warning("eligible creatives after exclusions: %s" % winners)
-            
+              
+
               # calculate the user experiment bucket
               user_bucket = hash(udid+','.join([str(c.ad_group.key()) for ad_group in ad_groups])) % 100 # user gets assigned a number between 0-99 inclusive
               logging.warning("the user bucket is: #%d",user_bucket)
@@ -311,6 +311,12 @@ class AdAuction(object):
               
                 if winning_ad_groups:
                   winners = [winner for winner in winners if winner.ad_group in winning_ad_groups]
+                
+                # Remove wrong formats
+                # TODO: clean this up
+                logging.warning("winners: %s"%winners)
+                winners = [w for w in winners if w.format == site.format]
+                logging.warning("winners after formats: %s"%winners)
 
                 if winners:
                   logging.warning('winners %s'%[w.ad_group for w in winners])
@@ -368,10 +374,11 @@ class AdAuction(object):
     
   @classmethod
   def geo_predicates_for_rgeocode(c, r):
+    # r = [US, CA SF] or []
     # TODO: DEFAULT COUNTRY SHOULD NOT BE US!!!!!!!
     # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     if len(r) == 0:
-      return ["country_name=US","country_name=*"]
+      return ["country_name=US","country_name=*"] # ["country_name"=*] or ["country_name=US] ["country_name="CD"]
     elif len(r) == 2:
       return ["region_name=%s,country_name=%s" % (r[0], r[1]),
               "country_name=%s" % r[1],
@@ -680,11 +687,11 @@ class AdHandler(webapp.RequestHandler):
         logging.warning('pub id:%s'%kwargs["site"].account.adsense_pub_id)
         header_dict = {
           "Gclientid":str(kwargs["site"].account.adsense_pub_id),
-  				"Gcompanyname":str(kwargs["site"].account.adsense_company_name),
-  				"Gappname":str(kwargs["site"].app_key.adsense_app_name),
-  				"Gappid":"0",
-  				"Gkeywords":str(kwargs["site"].keywords or ''),
-  				"Gtestadrequest":"0",
+          "Gcompanyname":str(kwargs["site"].account.adsense_company_name),
+          "Gappname":str(kwargs["site"].app_key.adsense_app_name),
+          "Gappid":"0",
+          "Gkeywords":str(kwargs["site"].keywords or ''),
+          "Gtestadrequest":"0",
           "Gchannelids":str(kwargs["site"].adsense_channel_id or ''),        
         # "Gappwebcontenturl":,
           "Gadtype":"GADAdSenseTextImageAdType", #GADAdSenseTextAdType,GADAdSenseImageAdType,GADAdSenseTextImageAdType

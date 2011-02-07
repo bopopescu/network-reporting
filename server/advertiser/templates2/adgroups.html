@@ -40,6 +40,11 @@
             Finally, you will need to set up at least one ad campaign to serve into your inventory.  A <strong>Guaranteed</strong> ad campaign is typically a direct sold ad campaign.  <strong>Promotional</strong> campaigns are for house ads like an upsell.  A <strong>Network</strong> ad is an ad served from a ad network like AdMob.
           </div>
 {% endifequal %}
+{% if not apps %}
+          <div class="alertMessage">
+            Before you set up your ad campaigns, we recommend that you set up your App inventory.  Visit the <a href="{% url publisher_index %}">Dashboard</a> to add your Apps.
+          </div>
+{% endif %}
           <div class="separated">
             <section class="offset nomargin" id="dashboard-stats">
               <div class="stats">

@@ -75,9 +75,9 @@
                       <div class="campaignDependent gtee">
                         <dt><label for="TODO1">Delivery Amount:</label></dt>
                         <dd>
-                          <div class="campaignAdgroupForm-budget" id="campaignAdgroupForm-budget-display" style="color:#FF7F00;float:right;font-size:16px;"></div>
                           <span class="campaignAdgroupForm-budget" id="campaignAdgroupForm-budget-impressions"><input type='text' name="impressions" value="" class="input-text-number"/> impressions / day</span>
                           <span class="campaignAdgroupForm-budget hidden" id="campaignAdgroupForm-budget-bid"><input type='text' name="{{form.budget.name}}" value="{{form.budget.value}}" class="input-text-number {% if form.budget.errors %}form-error{% endif %}"/> USD / day</span>
+                          <div class="campaignAdgroupForm-budget success" id="campaignAdgroupForm-budget-display"></div>
                           {% for error in form.budget.errors %}
                           <div class="form-error-text">{{error}}</div> 
                           {% endfor %}

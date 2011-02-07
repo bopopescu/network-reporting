@@ -48,6 +48,7 @@ class BrightRollServerSide(ServerSide):
     logging.warning("impressions: %s"%impressions)
     
     impression_url = self._getURL(impressions[0])
+    # TODO: get rid of multiple impression_url's in the template
     start_url = ''#self._getURL()
     # start_url = self._getURL(impressions[1])
         

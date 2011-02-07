@@ -195,7 +195,10 @@ var mopub = mopub || {};
           window.location.hash = ''; 
           window.location.hash = 'advertiser-creativeAddForm'; 
         }
-      } 
+      },
+      error: function(jqXHR, textStatus, errorThrown){
+        console.log(errorThrown);
+      }
     };
     $('#creativeCreateForm').ajaxForm(options);
                  

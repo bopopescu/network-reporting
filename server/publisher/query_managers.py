@@ -56,7 +56,7 @@ class AdUnitQueryManager(CachedQueryManager):
             if none:
               self.adunit = None
             else:
-              self.adunit = "!None"
+              self.adunit = "None!"
         return self.adunit
     
     def get_adunit(self):

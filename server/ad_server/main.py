@@ -466,7 +466,8 @@ class AdHandler(webapp.RequestHandler):
     logging.warning("geo is %s (requested '%s')" % (addr, self.request.get("ll")))
     
     # get creative exclusions usually used to exclude iAd because it has already failed
-    excluded_creatives = self.request.get("exclude")
+    excluded_creatives = self.request.get_all("exclude")
+    logging.info("excluded_creatives: %s"%excluded_creatives)
     
     # TODO: get udid we should hash it if its not already hashed
     udid = self.request.get("udid")

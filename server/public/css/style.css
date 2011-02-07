@@ -1499,8 +1499,8 @@ input.ui-button {
 
 /* App and ad setup forms */
 
-.ios .android, 
-.android .ios {
+.iphone .android, 
+.android .iphone {
   display: none;
 }
 

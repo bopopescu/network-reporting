@@ -628,6 +628,7 @@ class AdHandler(webapp.RequestHandler):
         template_name = "html"
       elif c.ad_type == "image":
         params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
+        params.update({"w": format[0], "h": format[1]})
       elif c.ad_type == "html":
         params.update(html_data=c.html_data)
         params.update({"html_data": kwargs["html_data"], "w": format[0], "h": format[1]})

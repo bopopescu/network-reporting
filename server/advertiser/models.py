@@ -155,7 +155,7 @@ class AdGroup(db.Model):
     if self.network_type == 'adsense': c = AdSenseCreative(name="adsense dummy",ad_type="adsense", format_predicates=["format=*"])
     elif self.network_type == 'iAd': c = iAdCreative(name="iAd dummy",ad_type="iAd", format_predicates=["format=320x50"])
     elif self.network_type == 'admob': c = AdMobCreative(name="admob dummy",ad_type="admob", format_predicates=["format=320x50"])
-    elif self.network_type == 'brightroll': c = BrightRollCreative(name="brightroll dummy",ad_type="html_full", format_predicates=["format=*"])
+    elif self.network_type == 'brightroll': c = BrightRollCreative(name="brightroll dummy",ad_type="html_full", format="full",format_predicates=["format=*"])
     elif self.network_type == 'millennial': c = MillennialCreative(name="millennial dummy",ad_type="html",format_predicates=["format=320x50"]) # TODO: make sure formats are right
     elif self.network_type == 'inmobi': c = InMobiCreative(name="inmobi dummy",ad_type="html",format_predicates=["format=320x50"]) # TODO: make sure formats are right
     elif self.network_type == 'greystripe' : c = GreyStripeCreative(name="greystripe dummy",ad_type="greystripe", format_predicates=["format=*"]) # TODO: only formats 320x320, 320x48, 300x250

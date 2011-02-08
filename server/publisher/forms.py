@@ -68,7 +68,7 @@ class AdUnitForm(mpforms.MPModelForm):
     fields = ('app_key','ad_type', 'backfill', 'backfill_threshold_cpm', 'keywords','width','height','format','adsense_channel_id')
     
   def __init__(self, *args,**kwargs):
-      instance = kwargs.get('instancetance',None)
+      instance = kwargs.get('instance',None)
       initial = kwargs.get('initial',None)
       data = kwargs.get('data',None)
       logging.info('instance: %s kwargs: %s data: %s'%(instance, kwargs,data))       

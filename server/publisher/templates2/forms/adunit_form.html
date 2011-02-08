@@ -24,7 +24,7 @@
     <div class="adForm-formats clearfix"> 
       <div class="adForm-format"> 
         <div class="adForm-format-name"> 
-          <input type="radio" class="input-radio" name="{{form.format.name}}" value="320x50" id="appForm-adUnitFormat-banner" checked="checked" /> 
+          <input type="radio" class="input-radio" name="{{form.format.name}}" value="320x50" id="appForm-adUnitFormat-banner" {% ifequal form.format.value '320x50' %}checked="checked"{% endifequal %} /> 
           <label for="appForm-adUnitFormat-banner">Banner</label> 
           <div class="adForm-format-details">320 &times; 50</div> 
         </div> 
@@ -32,7 +32,7 @@
       </div> 
       <div class="adForm-format"> 
         <div class="adForm-format-name"> 
-          <input type="radio" class="input-radio" name="{{form.format.name}}" value="300x250" id="appForm-adUnitFormat-medium" /> 
+          <input type="radio" class="input-radio" name="{{form.format.name}}" value="300x250" id="appForm-adUnitFormat-medium" {% ifequal form.format.value '300x250' %}checked="checked"{% endifequal %}/> 
           <label for="appForm-adUnitFormat-medium">Medium</label> 
           <div class="adForm-format-details">300 &times; 250</div> 
         </div> 
@@ -40,7 +40,7 @@
       </div> 
       <div class="adForm-format"> 
         <div class="adForm-format-name"> 
-          <input type="radio" class="input-radio" name="{{form.format.name}}" value="full" id="appForm-adUnitFormat-full" /> 
+          <input type="radio" class="input-radio" name="{{form.format.name}}" value="full" id="appForm-adUnitFormat-full" {% ifequal form.format.value 'full' %}checked="checked"{% endifequal %}/> 
           <label for="appForm-adUnitFormat-full">Fullscreen</label> 
           <div class="adForm-format-details">320 &times; 480</div> 
         </div> 

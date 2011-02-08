@@ -314,6 +314,7 @@ class AdAuction(object):
                 
                 # Remove wrong formats
                 # TODO: clean this up
+                logging.warning('c.format: %s s.format: %s'%([c.format for c in winners],site.format))
                 logging.warning("winners: %s"%winners)
                 winners = [w for w in winners if w.format == site.format]
                 logging.warning("winners after formats: %s"%winners)

@@ -102,7 +102,7 @@ class AdAuction(object):
         KlassServerSide = server_side_dict[adgroup.network_type]
         # TODO fix this, only millenial needs extra parameters
         server_side = KlassServerSide(request,adunit.app_key.millennial_placement_id) 
-        logging.warning(server_side.url)   
+        logging.warning("%s url %s"%(KlassServerSide,server_side.url))
 
         rpc = urlfetch.create_rpc(2) # maximum delay we are willing to accept is 1000 ms
         payload = server_side.payload
@@ -350,7 +350,9 @@ class AdAuction(object):
                                 winning_creative.html_data = response
                                 return winning_creative
                         except Exception,e:
-                          logging.warning(e)
+                          import traceback, sys
+                          exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
+                          logging.error(exception_traceback)
                       else:
                         winning_creative = winner
                         return winning_creative
@@ -841,12 +843,17 @@ class TestHandler(webapp.RequestHandler):
     logging.info("%s"%self.request.headers["User-Agent"])  
     self.response.out.write("hello world")
 
+# TODO: clears the cache USE WITH FEAR
+class ClearHandler(webapp.RequestHandler):
+  def get(self):
+    self.response.out.write(memcache.flush_all())
 
 def main():
   application = webapp.WSGIApplication([('/m/ad', AdHandler), 
                                         ('/m/aclk', AdClickHandler),
                                         ('/m/open',AppOpenHandler),
-                                        ('/m/test',TestHandler),], 
+                                        ('/m/test',TestHandler),
+                                        ('/m/clear',ClearHandler),], 
                                         debug=True)
   run_wsgi_app(application)
   # wsgiref.handlers.CGIHandler().run(application)

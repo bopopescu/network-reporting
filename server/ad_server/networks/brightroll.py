@@ -28,6 +28,7 @@ class BrightRollServerSide(ServerSide):
     return None
     
   def get_response(self):
+    logging.info("url: %s"%self.url)
     req = urllib2.Request(self.url)
     response = urllib2.urlopen(req)  
     return response.read()
@@ -39,6 +40,7 @@ class BrightRollServerSide(ServerSide):
       return self._getText(node)    
     
   def parse_xml(self,document):
+    logging.info(document)
     dom = minidom.parseString(document)
     ad = dom.getElementsByTagName("Ad")[0]
     inline = dom.getElementsByTagName("InLine")[0]

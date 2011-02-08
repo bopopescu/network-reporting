@@ -214,6 +214,14 @@ class CreateCampaignAJAXHander(RequestHandler):
     for adunit in all_adunits:
       adunit.checked = unicode(adunit.key()) in adunit_str_keys
       adunit.app = App.get(adunit.app_key.key())
+    
+    if adgroup:  
+      for n in networks:
+        if adgroup.network_type == n[0]:
+          n[2] = True
+    else:
+      networks[0][2] = True # select the first by default      
+      
       
     campaign_form.add_context(dict(networks=networks))
     adgroup_form.add_context(dict(all_adunits=all_adunits))

@@ -43,9 +43,12 @@ class AdUnitQueryManager(CachedQueryManager):
     def put_adunits(self,adunits):
         db.put(adunits)    
                
-    def get_by_key(self,key,none=False):
+    def get_by_key(self,key,none=False,cache=False):
         if isinstance(key,(set,list)):
             key = [str(k) for k in key]
+        if not cache:
+          return super(AdUnitQueryManager, self).get_by_key(key)    
+
         adunits = self.cache_get(key)
         if adunits:
             self.adunit = adunits[0]
@@ -58,10 +61,10 @@ class AdUnitQueryManager(CachedQueryManager):
             else:
               self.adunit = "None!"
         return self.adunit
-    
+        
     def get_adunit(self):
         if not self.adunit:
-            self.get_by_key(self.key)
+            self.get_by_key(self.key,cache=True)
         if self.adunit == "NONE!":
             return None
         else:  

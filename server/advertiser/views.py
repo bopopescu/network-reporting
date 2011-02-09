@@ -215,7 +215,11 @@ class CreateCampaignAJAXHander(RequestHandler):
       adunit.checked = unicode(adunit.key()) in adunit_str_keys
       adunit.app = App.get(adunit.app_key.key())
     
-    if adgroup:  
+    if adgroup_form:
+      for n in networks:
+        if adgroup_form['network_type'].value == n[0]:
+          n[2] = True
+    elif adgroup:  
       for n in networks:
         if adgroup.network_type == n[0]:
           n[2] = True

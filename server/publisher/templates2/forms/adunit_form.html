@@ -24,7 +24,7 @@
     <div class="adForm-formats clearfix"> 
       <div class="adForm-format"> 
         <div class="adForm-format-name"> 
-          <input type="radio" class="input-radio" name="{{form.format.name}}" value="320x50" id="appForm-adUnitFormat-banner" {% ifequal form.format.value '320x50' %}checked="checked"{% endifequal %} /> 
+          <input type="radio" class="input-radio" name="{{form.format.name}}" value="320x50" id="appForm-adUnitFormat-banner" {% if not form.format.value %}checked="checked"{% endif%}{% ifequal form.format.value '320x50' %}checked="checked"{% endifequal %} /> 
           <label for="appForm-adUnitFormat-banner">Banner</label> 
           <div class="adForm-format-details">320 &times; 50</div> 
         </div> 

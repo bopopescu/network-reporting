@@ -77,7 +77,7 @@ var mopub = mopub || {};
       if (e.keyCode == 13) {
         $('#appForm-search-button').click();
       }
-    });
+    }).keyup();
     
     // Change icon
     $('#appForm-changeIcon-link').click(function (e) {

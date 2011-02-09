@@ -44,10 +44,11 @@ class AdUnitQueryManager(CachedQueryManager):
         db.put(adunits)    
                
     def get_by_key(self,key,none=False,cache=False):
-        if isinstance(key,(set,list)):
-            key = [str(k) for k in key]
         if not cache:
           return super(AdUnitQueryManager, self).get_by_key(key)    
+
+        if isinstance(key,(set,list)):
+            key = [str(k) for k in key]
 
         adunits = self.cache_get(key)
         if adunits:

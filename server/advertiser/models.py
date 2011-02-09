@@ -87,6 +87,10 @@ class AdGroup(db.Model):
   # this is a list of keys corresponding to Site objects
   site_keys = db.ListProperty(db.Key)
   
+  account = db.ReferenceProperty(Account)
+  t = db.DateTimeProperty(auto_now_add=True)
+  
+  
   DEVICE_CHOICES = (
     ('any','Any'),
     ('iphone','iPhone'),
@@ -196,6 +200,7 @@ class Creative(polymodel.PolyModel):
   format = db.StringProperty() # We should switch to using this field instead of format_predicates: one creative per size
 
   # time of creation
+  account = db.ReferenceProperty(Account)
   t = db.DateTimeProperty(auto_now_add=True)
 
   # calculates the eCPM for this creative, based on 

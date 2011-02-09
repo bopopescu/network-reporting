@@ -261,6 +261,7 @@ class CreateCampaignAJAXHander(RequestHandler):
     if campaign_form.is_valid():
       campaign = campaign_form.save(commit=False)
       campaign.u = self.account.user
+      campaign.account = self.account
       
       if adgroup_form.is_valid():
         adgroup = adgroup_form.save(commit=False)
@@ -543,13 +544,16 @@ class ShowAdGroupHandler(RequestHandler):
       graph_adunits[3] = Site(name='Others')
       graph_adunits[3].all_stats = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[au.all_stats for au in adunits[3:]])]
 
-    # In order to have add creative
-    creative_handler = AddCreativeHandler(self.request)
-    creative_fragment = creative_handler.get() # return the creative fragment
+    if not adgroup.network_type:  
+      # In order to have add creative
+      creative_handler = AddCreativeHandler(self.request)
+      creative_fragment = creative_handler.get() # return the creative fragment
 
-    # In order to have each creative be editable
-    for c in creatives:
-      c.html_fragment = creative_handler.get(creative=c)
+      # In order to have each creative be editable
+      for c in creatives:
+        c.html_fragment = creative_handler.get(creative=c)
+    else:
+      creative_fragment = None    
     
     # In order to make the edit page
     campaign_create_form_fragment = CreateCampaignAJAXHander(self.request).get(adgroup=adgroup)

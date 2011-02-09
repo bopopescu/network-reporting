@@ -49,33 +49,53 @@ class RequestHandler(object):
 
 
 class AccountHandler(RequestHandler):
-  def get(self):
+  def get(self,account_form=None):
     if self.params.get("skip"):
       self.account.status = "step4"
       AccountQueryManager().put_accounts(self.account)
       return HttpResponseRedirect(reverse('advertiser_campaign'))
 
-    return render_to_response(self.request,'account/account.html', {'account': self.account})
+    account_form = account_form or AccountForm(instance=self.account)
+    return render_to_response(self.request,'account/account.html', {'account': self.account,
+                                                                    'account_form': account_form})
 
   def post(self):
-    a = self.account
-    f = AccountForm(data=self.request.POST, instance=a)
+    account_form = AccountForm(data=self.request.POST, instance=self.account)
 
-    if f.is_valid():
-      f.save()
-      adunits = AdUnitQueryManager().get_adunits(account=a)
+    if account_form.is_valid():
+      account = account_form.save(commit=False)
+      adunits = AdUnitQueryManager().get_adunits(account=account)
       CachedQueryManager().cache_delete(adunits)
       
       if self.account.status == "step3":
         self.account.status = "step4"
         AccountQueryManager().put_accounts(self.account)
         return HttpResponseRedirect(reverse('advertiser_campaign'))
-
-    return render_to_response(self.request,'account/account.html', {'account': self.account})
+    
+    return self.get(account_form=account_form)    
+    # return render_to_response(self.request,'account/account.html', {'account': self.account})
 
 @whitelist_login_required     
 def index(request,*args,**kwargs):
   return AccountHandler()(request,*args,**kwargs)     
+  
+
+class AccountEditHandler(RequestHandler):
+  def get(self,account_form=None):
+    account_form = account_form or AccountForm(instance=self.account)
+    return render_to_response(self.request,'account/new_account.html',{'account': self.account,
+                                                               'account_form' : account_form })
+  def post(self):
+    account_form = AccountForm(data=self.request.POST,instance=self.account)
+    if account_form.is_valid():
+      account = account_form.save(commit=False)
+      AccountQueryManager().put_accounts(account)
+      return HttpResponseRedirect(reverse('publisher_app_create'))
+    return self.get(account_form=account_form)  
+  
+@whitelist_login_required  
+def new(request,*args,**kwargs):
+  return AccountEditHandler()(request,*args,**kwargs)  
 
 class LogoutHandler(RequestHandler):
   def get(self):

@@ -10,9 +10,9 @@ from xml.dom import minidom
 class InMobiServerSide(ServerSide):
   base_url = "http://w.mkhoj.com/showad.asm" # live
   #base_url = "http://w.sandbox.mkhoj.com/showad.asm" # testing
-  def __init__(self,request,app_id,*args,**kwargs):
+  def __init__(self,request,adunit,*args,**kwargs):
     self.url_params = {}
-    return super(InMobiServerSide,self).__init__(request,app_id,*args,**kwargs)
+    return super(InMobiServerSide,self).__init__(request,adunit,*args,**kwargs)
   
   @property
   def url(self):

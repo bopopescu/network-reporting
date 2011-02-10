@@ -10,9 +10,9 @@ from xml.dom import minidom
 class BrightRollServerSide(ServerSide):
   base_url = "http://mobile.btrll.com/adwhirl/req/?adFeedKey=506"
   base_url = "http://vast.bp3844869.btrll.com/vast/3844792"
-  def __init__(self,request,app_id,*args,**kwargs):
+  def __init__(self,request,adunit,*args,**kwargs):
     self.url_params = {}
-    return super(BrightRollServerSide,self).__init__(request,app_id,*args,**kwargs)
+    return super(BrightRollServerSide,self).__init__(request,adunit,*args,**kwargs)
   
   @property
   def url(self):

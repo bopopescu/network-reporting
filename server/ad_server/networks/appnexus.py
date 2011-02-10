@@ -2,8 +2,8 @@ from ad_server.networks.server_side import ServerSide
 
 class AppNexusServerSide(ServerSide):
   base_url = "http://ib.sand-08.adnxs.net/sspt"
-  def __init__(self,request,app_id=None,*args,**kwargs):
-    return super(AppNexusServerSide,self).__init__(request,app_id,*args,**kwargs)
+  def __init__(self,request,adunit=None,*args,**kwargs):
+    return super(AppNexusServerSide,self).__init__(request,adunit,*args,**kwargs)
       
   def get_key_values(self):
     return {'calltype':'admeld',

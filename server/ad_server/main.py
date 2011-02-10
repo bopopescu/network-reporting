@@ -59,7 +59,7 @@ from ad_server.networks.inmobi import InMobiServerSide
 from ad_server.networks.brightroll import BrightRollServerSide
 from ad_server.networks.greystripe import GreyStripeServerSide
 
-from publisher.query_managers import AdUnitQueryManager
+from publisher.query_managers import AdServerAdUnitQueryManager, AdUnitQueryManager
 from advertiser.query_managers import CampaignStatsCounter
 
 
@@ -90,7 +90,6 @@ class AdAuction(object):
 
   @classmethod
   def request_third_party_server(cls,request,adunit,adgroups):
-    # TODO: note adunit is actually a "Site"
     rpcs = []
     for adgroup in adgroups:
       server_side_dict = {"millennial":MillennialServerSide,
@@ -100,11 +99,10 @@ class AdAuction(object):
                           "greystripe":GreyStripeServerSide}
       if adgroup.network_type in server_side_dict:
         KlassServerSide = server_side_dict[adgroup.network_type]
-        # TODO fix this, only millenial needs extra parameters
-        server_side = KlassServerSide(request,adunit.app_key.millennial_placement_id) 
+        server_side = KlassServerSide(request, adunit) 
         logging.warning("%s url %s"%(KlassServerSide,server_side.url))
 
-        rpc = urlfetch.create_rpc(2) # maximum delay we are willing to accept is 1000 ms
+        rpc = urlfetch.create_rpc(2) # maximum delay we are willing to accept is 2000 ms
         payload = server_side.payload
         if payload == None:
           urlfetch.make_fetch_call(rpc, server_side.url, headers=server_side.headers)
@@ -433,7 +431,7 @@ class AdHandler(webapp.RequestHandler):
   def get(self):
     logging.warning(self.request.headers['User-Agent'] )
     id = self.request.get("id")
-    manager = AdUnitQueryManager(id)
+    manager = AdServerAdUnitQueryManager(id)
     # site = manager.get_by_key(key)#Site.site_by_id(id) if id else None
     adunit = manager.get_adunit()
     logging.info("!!!!!!!!adunit: %s"%adunit)
@@ -816,7 +814,8 @@ class TestHandler(webapp.RequestHandler):
     from ad_server.networks.millennial import MillennialServerSide
     from ad_server.networks.brightroll import BrightRollServerSide
     
-    server_side = BrightRollServerSide(self.request,357)
+    # server_side = BrightRollServerSide(self.request,357)
+    server_side = MillennialServerSide(self.request,357)
     # server_side = InMobiServerSide(self.request,357)
     logging.warning("%s, %s"%(server_side.url,server_side.payload))
     

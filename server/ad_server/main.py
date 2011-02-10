@@ -59,7 +59,7 @@ from ad_server.networks.inmobi import InMobiServerSide
 from ad_server.networks.brightroll import BrightRollServerSide
 from ad_server.networks.greystripe import GreyStripeServerSide
 
-from publisher.query_managers import AdUnitQueryManager
+from publisher.query_managers import AdServerAdUnitQueryManager, AdUnitQueryManager
 from advertiser.query_managers import CampaignStatsCounter
 
 
@@ -91,7 +91,6 @@ class AdAuction(object):
 
   @classmethod
   def request_third_party_server(cls,request,adunit,adgroups):
-    # TODO: note adunit is actually a "Site"
     rpcs = []
     for adgroup in adgroups:
       server_side_dict = {"millennial":MillennialServerSide,
@@ -101,11 +100,10 @@ class AdAuction(object):
                           "greystripe":GreyStripeServerSide}
       if adgroup.network_type in server_side_dict:
         KlassServerSide = server_side_dict[adgroup.network_type]
-        # TODO fix this, only millenial needs extra parameters
-        server_side = KlassServerSide(request,adunit.app_key.millennial_placement_id) 
+        server_side = KlassServerSide(request, adunit) 
         logging.warning("%s url %s"%(KlassServerSide,server_side.url))
 
-        rpc = urlfetch.create_rpc(2) # maximum delay we are willing to accept is 1000 ms
+        rpc = urlfetch.create_rpc(2) # maximum delay we are willing to accept is 2000 ms
         payload = server_side.payload
         if payload == None:
           urlfetch.make_fetch_call(rpc, server_side.url, headers=server_side.headers)
@@ -685,13 +683,13 @@ class AdHandler(webapp.RequestHandler):
       # indicate to the client the winning creative type, in case it is natively implemented (iad, clear)
       
       if str(c.ad_type) == "iAd":
-        # self.response.headers.add_header("X-Adtype","alert")
+        # self.response.headers.add_header("X-Adtype","custom")
         # self.response.headers.add_header("X-Backfill","alert")
-        # self.response.headers.add_header("X-Nativeparams",'{"title":"MoPub Alert View","cancelButtonTitle":"No Thanks","message":"We\'ve noticed you\'ve enjoyed playing Angry Birds.","otherButtonTitle":"Rank","clickURL":"mopub://inapp?id=pixel_001"}')
+        # # self.response.headers.add_header("X-Nativeparams",'{"title":"MoPub Alert View","cancelButtonTitle":"No Thanks","message":"We\'ve noticed you\'ve enjoyed playing Angry Birds.","otherButtonTitle":"Rank","clickURL":"mopub://inapp?id=pixel_001"}')
+        # self.response.headers.add_header("X-Customselector","customEventTest")
         
         self.response.headers.add_header("X-Adtype", str(c.ad_type))
-        self.response.headers.add_header("X-Backfill", str(c.ad_type))
-        
+        self.response.headers.add_header("X-Backfill", str(c.ad_type))        
         self.response.headers.add_header("X-Failurl",self.request.url+'&exclude='+str(c.ad_type))
         
       elif str(c.ad_type) == "adsense":
@@ -825,7 +823,8 @@ class TestHandler(webapp.RequestHandler):
     from ad_server.networks.millennial import MillennialServerSide
     from ad_server.networks.brightroll import BrightRollServerSide
     
-    server_side = BrightRollServerSide(self.request,357)
+    # server_side = BrightRollServerSide(self.request,357)
+    server_side = MillennialServerSide(self.request,357)
     # server_side = InMobiServerSide(self.request,357)
     logging.warning("%s, %s"%(server_side.url,server_side.payload))
     
@@ -856,13 +855,21 @@ class TestHandler(webapp.RequestHandler):
 class ClearHandler(webapp.RequestHandler):
   def get(self):
     self.response.out.write(memcache.flush_all())
+    
+class PurchaseHandler(webapp.RequestHandler):
+  def post(self):
+    logging.info(self.request.get("receipt"))
+    logging.info(self.request.get("udid"))
+    self.response.out.write("OK")    
+    
 
 def main():
   application = webapp.WSGIApplication([('/m/ad', AdHandler), 
                                         ('/m/aclk', AdClickHandler),
                                         ('/m/open',AppOpenHandler),
                                         ('/m/test',TestHandler),
-                                        ('/m/clear',ClearHandler),], 
+                                        ('/m/clear',ClearHandler),
+                                        ('/m/purchase',PurchaseHandler)], 
                                         debug=True)
   run_wsgi_app(application)
   # wsgiref.handlers.CGIHandler().run(application)

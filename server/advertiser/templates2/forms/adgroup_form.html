@@ -13,7 +13,7 @@
                       <div class="adgroupForm-advanced hidden">
                         <dt><label for="TODO6">Allocation:</label></dt>
                         <dd>
-                          <input type="text" class="input-text-number {% if form.allocation_percentage.errors %}form-error{% endif %}" name="{{form.allocation_percentage.name}}" value="{{form.allocation_percentage.value}}"/> % of all 
+                          <input type="text" class="input-text input-text-number {% if form.allocation_percentage.errors %}form-error{% endif %}" name="{{form.allocation_percentage.name}}" value="{{form.allocation_percentage.value}}"/> % of all 
                           <select name="{{form.allocation_type.name}}">
                             <option value="users" {% if not form.allocation_type.value %}selected="selected"{% endif %}{% ifequal form.allocation_type.value 'users' %}checked="checked"{% endifequal %}>Users</option>
                             <option value="requests" {% ifequal form.allocation_type.value 'requests' %}selected="selected"{% endifequal %}>Requests</option>
@@ -25,11 +25,11 @@
                         
                         <dt><label for="TODO7">Frequency Caps:</label></dt>
                         <dd>
-                          <input name="{{form.daily_frequency_cap.name}}" class="input-text-number {% if form.daily_frequency_cap.errors %}form-error{% endif %}" type="text" value="{{form.daily_frequency_cap.value}}"/> daily impressions per user <br/>
+                          <input name="{{form.daily_frequency_cap.name}}" class="input-text input-text-number {% if form.daily_frequency_cap.errors %}form-error{% endif %}" type="text" value="{{form.daily_frequency_cap.value}}"/> daily impressions per user <br/>
                           {% for error in form.daily_frequency_cap.errors %}
                           <div class="form-error-text">{{error}}</div> 
                           {% endfor %}
-                          <input name="{{form.hourly_frequency_cap.name}}" class="input-text-number {% if form.hourly_frequency_cap.errors %}form-error{% endif %}" type="text" value="{{form.hourly_frequency_cap.value}}"/> hourly impressions per user
+                          <input name="{{form.hourly_frequency_cap.name}}" class="input-text input-text-number {% if form.hourly_frequency_cap.errors %}form-error{% endif %}" type="text" value="{{form.hourly_frequency_cap.value}}"/> hourly impressions per user
                           {% for error in form.hourly_frequency_cap.errors %}
                           <div class="form-error-text">{{error}}</div> 
                           {% endfor %}

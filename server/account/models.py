@@ -11,7 +11,7 @@ class Account(db.Model):
         
     company = db.StringProperty()
     phone = db.PhoneNumberProperty()
-    traffic = db.IntegerProperty()
+    traffic = db.FloatProperty()
     mailing_list = db.BooleanProperty(default=True)
     
     active = db.BooleanProperty(default=False)

@@ -726,6 +726,10 @@ a.mutedLink:hover {
   border-radius: 3px;
 }
 
+.input-text-number {
+  width: 70px;
+}
+
 textarea {
   padding-top: 4px;
 }
@@ -834,10 +838,6 @@ dl.formFields {
 
 .formFields-field-help-text {
   display: none;
-}
-
-.formFields .input-text-number {
-  width: 70px;
 }
 
 .form-submit {

@@ -64,6 +64,7 @@ class AccountHandler(RequestHandler):
 
     if account_form.is_valid():
       account = account_form.save(commit=False)
+      AccountQueryManager().put_accounts(account)
       adunits = AdUnitQueryManager().get_adunits(account=account)
       CachedQueryManager().cache_delete(adunits)
       
@@ -77,8 +78,7 @@ class AccountHandler(RequestHandler):
 
 @whitelist_login_required     
 def index(request,*args,**kwargs):
-  return AccountHandler()(request,*args,**kwargs)     
-  
+  return AccountHandler()(request,*args,**kwargs)
 
 class AccountEditHandler(RequestHandler):
   def get(self,account_form=None):
@@ -87,13 +87,21 @@ class AccountEditHandler(RequestHandler):
                                                                'account_form' : account_form })
   def post(self):
     account_form = AccountForm(data=self.request.POST,instance=self.account)
+    # Make sure terms and conditions are agreed to
+    if not self.request.POST.get("terms_conditions"):
+      account_form.term_conditions_error = "Accept the terms and conditions in order to start using MoPub."
+      return self.get(account_form=account_form)  
+
     if account_form.is_valid():
       account = account_form.save(commit=False)
+      # Go ahead and activate the account
+      account.active = True
       AccountQueryManager().put_accounts(account)
       return HttpResponseRedirect(reverse('publisher_app_create'))
+
     return self.get(account_form=account_form)  
   
-@whitelist_login_required  
+@login_required
 def new(request,*args,**kwargs):
   return AccountEditHandler()(request,*args,**kwargs)  
 

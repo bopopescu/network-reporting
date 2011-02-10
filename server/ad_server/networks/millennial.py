@@ -4,11 +4,11 @@ import urllib
 
 class MillennialServerSide(ServerSide):
   base_url = "http://ads.mp.mydas.mobi/getAd.php5"
-  def __init__(self,request,app_id,*args,**kwargs):
-    return super(MillennialServerSide,self).__init__(request,app_id,*args,**kwargs)
+  def __init__(self,request,adunit,*args,**kwargs):
+    return super(MillennialServerSide,self).__init__(request,adunit,*args,**kwargs)
       
   def get_key_values(self):
-    return {'apid':self.get_appid(),
+    return {'apid':self.get_account().millenial_pub_id,
             'auid':self.get_udid(),
             'uip':self.get_ip(),
             'ua':self.get_user_agent()}
@@ -35,5 +35,7 @@ class MillennialServerSide(ServerSide):
     
   def bid_and_html_for_response(self,response):
     # TODO: do any sort of manipulation here that we want, like resizing the image, LAME
+    if len(response.content) == 0:
+      raise Exception("Millenial ad is empty")
     return 0.0,response.content
     

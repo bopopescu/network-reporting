@@ -50,10 +50,9 @@ class CachedQueryManager(object):
     #   obj_string_value = simplejson.dumps(prop_dict, separators=(',',':') # compact encoding      
     cache_dict = dict([(str(obj.key()),obj) for obj in objs])
     if replace:
-      memcache.replace_multi(cache_dict,time=MAX_CACHE_TIME,namespace=NAMESPACE) 
+      return memcache.replace_multi(cache_dict,time=MAX_CACHE_TIME,namespace=NAMESPACE) 
     else:  
-      memcache.set_multi(cache_dict,time=MAX_CACHE_TIME,namespace=NAMESPACE)   
-    return db.put(objs)  
+      return memcache.set_multi(cache_dict,time=MAX_CACHE_TIME,namespace=NAMESPACE)   
     
   def cache_delete(self,objs):
     if not isinstance(objs,list):

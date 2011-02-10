@@ -367,6 +367,7 @@ class AdAuction(object):
               # else:
               if not winning_creative:
                 logging.warning('taking away some players not in %s'%ad_groups)
+                logging.warning( 'current ad_groups %s' % [c.adgroup for c in players] )
                 logging.warning('current players: %s'%players)
                 players = [c for c in players if not c.ad_group in ad_groups]  
                 logging.warning('remaining players %s'%players)

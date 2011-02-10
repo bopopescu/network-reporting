@@ -124,6 +124,7 @@ INSTALLED_APPS = (
      'django.contrib.flatpages',
      'django.contrib.redirects',
      'django.contrib.sites',
+     #'django_nose',
      'common.ragendja',
      'account',
      'publisher',
@@ -133,6 +134,8 @@ INSTALLED_APPS = (
      'admin',
      'exchange',
 )
+
+#TEST_RUNNER = 'django_nose.NoseTestSuitRunner'
 
 IGNORE_APP_URLSAUTO = ('website')
 

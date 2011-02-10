@@ -1,5 +1,5 @@
 application: mopub-inc
-version: 36-newui
+version: 37-newui
 runtime: python
 api_version: 1
 # default_expiration: "10d"
@@ -40,6 +40,10 @@ handlers:
 
 - url: /remote_api
   script: $PYTHON_LIB/google/appengine/ext/remote_api/handler.py
+  login: admin
+
+- url: /m/clear
+  script: ad_server/main.py
   login: admin
 
 - url: /m/.*

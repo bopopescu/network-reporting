@@ -214,6 +214,18 @@ class CreateCampaignAJAXHander(RequestHandler):
     for adunit in all_adunits:
       adunit.checked = unicode(adunit.key()) in adunit_str_keys
       adunit.app = App.get(adunit.app_key.key())
+    
+    if adgroup_form:
+      for n in networks:
+        if adgroup_form['network_type'].value == n[0]:
+          n[2] = True
+    elif adgroup:  
+      for n in networks:
+        if adgroup.network_type == n[0]:
+          n[2] = True
+    else:
+      networks[0][2] = True # select the first by default      
+      
       
     campaign_form.add_context(dict(networks=networks))
     adgroup_form.add_context(dict(all_adunits=all_adunits))
@@ -253,6 +265,7 @@ class CreateCampaignAJAXHander(RequestHandler):
     if campaign_form.is_valid():
       campaign = campaign_form.save(commit=False)
       campaign.u = self.account.user
+      campaign.account = self.account
       
       if adgroup_form.is_valid():
         adgroup = adgroup_form.save(commit=False)
@@ -269,7 +282,9 @@ class CreateCampaignAJAXHander(RequestHandler):
         # update cache
         adunits_to_update.update(adgroup.site_keys)
         if adunits_to_update:
+          logging.info("adunits to clear: %s"%[str(a) for a in adunits_to_update])
           adunits = AdUnitQueryManager().get_by_key(adunits_to_update)
+          logging.info("adunits to clear: %s"%[str(a.key()) for a in adunits if a])
           CachedQueryManager().cache_delete(adunits)
         
         
@@ -534,13 +549,16 @@ class ShowAdGroupHandler(RequestHandler):
       graph_adunits[3] = Site(name='Others')
       graph_adunits[3].all_stats = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[au.all_stats for au in adunits[3:]])]
 
-    # In order to have add creative
-    creative_handler = AddCreativeHandler(self.request)
-    creative_fragment = creative_handler.get() # return the creative fragment
+    if not adgroup.network_type:  
+      # In order to have add creative
+      creative_handler = AddCreativeHandler(self.request)
+      creative_fragment = creative_handler.get() # return the creative fragment
 
-    # In order to have each creative be editable
-    for c in creatives:
-      c.html_fragment = creative_handler.get(creative=c)
+      # In order to have each creative be editable
+      for c in creatives:
+        c.html_fragment = creative_handler.get(creative=c)
+    else:
+      creative_fragment = None    
     
     # In order to make the edit page
     campaign_create_form_fragment = CreateCampaignAJAXHander(self.request).get(adgroup=adgroup)
@@ -568,10 +586,10 @@ class PauseAdGroupHandler(RequestHandler):
   def post(self):
     action = self.request.POST.get("action", "pause")
     adgroups = []
+    update_objs = []
     for id_ in self.request.POST.getlist('id') or []:
       a = AdGroupQueryManager().get_by_key(id_)
       adgroups.append(a)
-      update_objs = []
       if a != None and a.campaign.u == self.account.user:
         if action == "pause":
           a.active = False
@@ -588,14 +606,15 @@ class PauseAdGroupHandler(RequestHandler):
           for creative in a.creatives:
             creative.deleted = True
             update_objs.append(creative)
-      if update_objs:
-        # db.put(update_objs)     
-        AdGroupQueryManager().put_adgroups(update_objs)
-        adunits = []
-        for adgroup in adgroups:
-          adunits.extend(adgroup.site_keys)
-        adunits = Site.get(adunits)  
-        CachedQueryManager().cache_delete(adunits)
+      
+    if update_objs:
+      AdGroupQueryManager().put_adgroups(update_objs)
+      adunits = []
+      for adgroup in adgroups:
+        adunits.extend(adgroup.site_keys)
+        
+      adunits = Site.get(adunits)  
+      CachedQueryManager().cache_delete(adunits)
          
     return HttpResponseRedirect(reverse('advertiser_campaign', kwargs={}))
 

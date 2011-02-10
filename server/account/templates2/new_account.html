@@ -1,0 +1,15 @@
+{% extends 'account/account.html' %}
+
+{% block pageTitle %}<h1>{% ifequal account.status 'step3' %}Step 3: Set up ad networks{% else %}Account Info{% endifequal %}</h1>{% endblock pageTitle %}
+
+
+{% block content %}
+<form action="" method="POST" accept-charset="utf-8" id="accountForm">
+  <fieldset id="appForm-details"> 
+    {{account_form.as_template }}
+  </fieldset>  
+  <div class="form-submit"> 
+    <span class="buttonWrap"><a href="#" class="button" id="accountForm-submit">Continue</a></span> 
+  </div> 
+</form>  
+{% endblock %}

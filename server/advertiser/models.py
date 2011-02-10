@@ -87,6 +87,10 @@ class AdGroup(db.Model):
   # this is a list of keys corresponding to Site objects
   site_keys = db.ListProperty(db.Key)
   
+  account = db.ReferenceProperty(Account)
+  t = db.DateTimeProperty(auto_now_add=True)
+  
+  
   DEVICE_CHOICES = (
     ('any','Any'),
     ('iphone','iPhone'),
@@ -152,14 +156,14 @@ class AdGroup(db.Model):
   
   def default_creative(self):
     c = None
-    if self.network_type == 'adsense': c = AdSenseCreative(name="adsense dummy",ad_type="adsense", format_predicates=["format=*"])
-    elif self.network_type == 'iAd': c = iAdCreative(name="iAd dummy",ad_type="iAd", format_predicates=["format=320x50"])
-    elif self.network_type == 'admob': c = AdMobCreative(name="admob dummy",ad_type="admob", format_predicates=["format=320x50"])
+    if self.network_type == 'adsense': c = AdSenseCreative(name="adsense dummy",ad_type="adsense", format="320x50", format_predicates=["format=*"])
+    elif self.network_type == 'iAd': c = iAdCreative(name="iAd dummy",ad_type="iAd", format="320x50", format_predicates=["format=320x50"])
+    elif self.network_type == 'admob': c = AdMobCreative(name="admob dummy",ad_type="admob", format="320x50", format_predicates=["format=320x50"])
     elif self.network_type == 'brightroll': c = BrightRollCreative(name="brightroll dummy",ad_type="html_full", format="full",format_predicates=["format=*"])
-    elif self.network_type == 'millennial': c = MillennialCreative(name="millennial dummy",ad_type="html",format_predicates=["format=320x50"]) # TODO: make sure formats are right
-    elif self.network_type == 'inmobi': c = InMobiCreative(name="inmobi dummy",ad_type="html",format_predicates=["format=320x50"]) # TODO: make sure formats are right
-    elif self.network_type == 'greystripe' : c = GreyStripeCreative(name="greystripe dummy",ad_type="greystripe", format_predicates=["format=*"]) # TODO: only formats 320x320, 320x48, 300x250
-    elif self.network_type == 'appnexus': c = AppNexusCreative(name="appnexus dummy",ad_type="html",format_predicates=["format=300x250"])
+    elif self.network_type == 'millennial': c = MillennialCreative(name="millennial dummy",ad_type="html",format="320x50", format_predicates=["format=320x50"]) # TODO: make sure formats are right
+    elif self.network_type == 'inmobi': c = InMobiCreative(name="inmobi dummy",ad_type="html",format="320x50", format_predicates=["format=320x50"]) # TODO: make sure formats are right
+    elif self.network_type == 'greystripe' : c = GreyStripeCreative(name="greystripe dummy",ad_type="greystripe", format="320x50", format_predicates=["format=*"]) # TODO: only formats 320x320, 320x48, 300x250
+    elif self.network_type == 'appnexus': c = AppNexusCreative(name="appnexus dummy",ad_type="html",format="320x50",format_predicates=["format=300x250"])
     
     if c: c.ad_group = self
     return c
@@ -193,9 +197,10 @@ class Creative(polymodel.PolyModel):
   # e.g. format=320x50
   # e.g. format=*
   format_predicates = db.StringListProperty(default=["format=*"]) 
-  format = db.StringProperty() # We should switch to using this field instead of format_predicates: one creative per size
+  format = db.StringProperty(default="320x50") # We should switch to using this field instead of format_predicates: one creative per size
 
   # time of creation
+  account = db.ReferenceProperty(Account)
   t = db.DateTimeProperty(auto_now_add=True)
 
   # calculates the eCPM for this creative, based on 

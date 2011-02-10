@@ -59,7 +59,7 @@ from ad_server.networks.inmobi import InMobiServerSide
 from ad_server.networks.brightroll import BrightRollServerSide
 from ad_server.networks.greystripe import GreyStripeServerSide
 
-from publisher.query_managers import AdUnitQueryManager
+from publisher.query_managers import AdServerAdUnitQueryManager, AdUnitQueryManager
 from advertiser.query_managers import CampaignStatsCounter
 
 
@@ -431,7 +431,7 @@ class AdHandler(webapp.RequestHandler):
   def get(self):
     logging.warning(self.request.headers['User-Agent'] )
     id = self.request.get("id")
-    manager = AdUnitQueryManager(id)
+    manager = AdServerAdUnitQueryManager(id)
     # site = manager.get_by_key(key)#Site.site_by_id(id) if id else None
     adunit = manager.get_adunit()
     logging.info("!!!!!!!!adunit: %s"%adunit)

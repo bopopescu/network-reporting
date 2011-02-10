@@ -64,6 +64,7 @@ class AccountHandler(RequestHandler):
 
     if account_form.is_valid():
       account = account_form.save(commit=False)
+      AccountQueryManager().put_accounts(account)
       adunits = AdUnitQueryManager().get_adunits(account=account)
       CachedQueryManager().cache_delete(adunits)
       

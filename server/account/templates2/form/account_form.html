@@ -1,30 +1,28 @@
-<dl class="formFields"> 
-  <dt><label for="company">Company:</label></dt>
-  <dd>
-    <input id="company" name="{{form.company.name}}" cols="50" rows="3" placeholder="My Company Name" class="input-text {% if form.company.errors %}form-error{% endif %}" value="{{form.company.value}}"/>
-    {% for error in form.company.errors %}
-    <div class="form-error-text">{{error}}</div> 
-    {% endfor %}
-  </dd>
-  <dt><label for="phone">Phone #:</label></dt>
-  <dd>
-    <input id="phone" name="{{form.phone.name}}" cols="50" rows="3" placeholder="+1 (555) 555-5555" class="input-text {% if form.phone.errors %}form-error{% endif %}" value="{{form.phone.value}}"/>
-    {% for error in form.phone.errors %}
-    <div class="form-error-text">{{error}}</div> 
-    {% endfor %}
-  </dd>
-  <dt><label for="traffic">Est. Traffic:</label></dt>
-  <dd>
-    <input id="traffic" name="{{form.traffic.name}}" cols="50" rows="3" placeholder="50" class="input-text-number {% if form.traffic.errors %}form-error{% endif %}" value="{{form.traffic.value}}"/> (MM impressions/month)
-    {% for error in form.traffic.errors %}
-    <div class="form-error-text">{{error}}</div> 
-    {% endfor %}
-  </dd>
-  <dt><label for="mailing_list"><input id="mailing_list" name="{{form.mailing_list.name}}" cols="50" rows="3" placeholder="50" class="{% if form.mailing_list.errors %}form-error{% endif %}" {% if form.mailing_list.value %}checked="checked"{% endif %} type="checkbox"/></label></dt>
-  <dd>
-     If you would like to receive occasional updates
-    {% for error in form.mailing_list.errors %}
-    <div class="form-error-text">{{error}}</div> 
-    {% endfor %}
-  </dd>
-</dl>
+                  <dt><label for="company">Company:</label></dt>
+                  <dd>
+                    <input id="company" name="{{form.company.name}}" placeholder="My Company Name" class="input-text {% if form.company.errors %}form-error{% endif %}" value="{{form.company.value}}"/>
+                    {% for error in form.company.errors %}
+                    <div class="form-error-text">{{error}}</div> 
+                    {% endfor %}
+                  </dd>
+                  <dt><label for="phone">Phone #:</label></dt>
+                  <dd>
+                    <input id="phone" name="{{form.phone.name}}" placeholder="+1 (555) 555-5555" class="input-text {% if form.phone.errors %}form-error{% endif %}" value="{{form.phone.value}}"/>
+                    {% for error in form.phone.errors %}
+                    <div class="form-error-text">{{error}}</div> 
+                    {% endfor %}
+                  </dd>
+                  <dt><label for="traffic">Est. Traffic:</label></dt>
+                  <dd>
+                    <input id="traffic" name="{{form.traffic.name}}" placeholder="50" class="input-text input-text-number {% if form.traffic.errors %}form-error{% endif %}" value="{{form.traffic.value}}"/> (MM impressions/month)
+                    {% for error in form.traffic.errors %}
+                    <div class="form-error-text">{{error}}</div> 
+                    {% endfor %}
+                  </dd>
+                  <dt><input id="mailing_list" name="{{form.mailing_list.name}}" placeholder="50" class="{% if form.mailing_list.errors %}form-error{% endif %}" {% if form.mailing_list.value %}checked="checked"{% endif %} type="checkbox"/></dt>
+                  <dd>
+                     I would like to receive occasional updates.
+                    {% for error in form.mailing_list.errors %}
+                    <div class="form-error-text">{{error}}</div> 
+                    {% endfor %}
+                  </dd>

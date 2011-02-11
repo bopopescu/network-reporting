@@ -862,7 +862,7 @@ class PurchaseHandler(webapp.RequestHandler):
 
 def main():
   application = webapp.WSGIApplication([('/m/ad', AdHandler), 
-                                        ('/m/imp', AdImpressionHandler)
+                                        ('/m/imp', AdImpressionHandler),
                                         ('/m/aclk', AdClickHandler),
                                         ('/m/open', AppOpenHandler),
                                         ('/m/test', TestHandler),

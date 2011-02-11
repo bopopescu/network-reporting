@@ -273,6 +273,10 @@ class CreateCampaignAJAXHander(RequestHandler):
         # TODO: clean this up in case the campaign succeeds and the adgroup fails
         CampaignQueryManager().put_campaigns(campaign)
         adgroup.campaign = campaign
+        # TODO: put this in the adgroup form
+        if not adgroup.campaign.campaign_type == 'network':
+          adgroup.network_type = None
+        
         AdGroupQueryManager().put_adgroups(adgroup)
         
         if campaign.campaign_type == "network":

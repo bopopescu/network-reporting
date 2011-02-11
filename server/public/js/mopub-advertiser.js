@@ -395,9 +395,8 @@ var mopub = mopub || {};
         $('#advertiser-creativeAddForm').slideUp('fast', function() {
           $('#advertiser-adgroups-addCreativeButton').show();
         });
-    });
+      });
     
-    console.log($('.creativeFormAdvancedToggleButton'));
     $('.creativeFormAdvancedToggleButton')
       .button('option', {icons: { primary: 'ui-icon-triangle-1-s' }})
       .click(function(e) {

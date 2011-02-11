@@ -19,7 +19,7 @@ class InMobiServerSide(ServerSide):
   def get_inmobi_user_agent(self):
     ua = self.get_user_agent();
     if "Android" in ua:
-      return 'InMobi_AndroidSDK%3D1.1%20(Specs)'
+      return 'InMobi_AndroidSDK=1.1 (Specs)'
 
     # TODO: Should return actual software and hardware versions for iPhone/iPod
     return 'InMobi_Specs_iPhoneApp=1.0.2 (iPhone; iPhone OS 3.1.2; HW iPhone1,1)'

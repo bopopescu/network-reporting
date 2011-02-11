@@ -434,7 +434,6 @@ class AdHandler(webapp.RequestHandler):
     manager = AdUnitQueryManager(id)
     # site = manager.get_by_key(key)#Site.site_by_id(id) if id else None
     adunit = manager.get_adunit()
-    logging.info("!!!!!!!!adunit: %s"%adunit)
     site = adunit
     
     now = datetime.datetime.now()

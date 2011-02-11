@@ -99,8 +99,9 @@ class AccountEditHandler(RequestHandler):
       AccountQueryManager().put_accounts(account)
       return HttpResponseRedirect(reverse('publisher_app_create'))
 
-    return self.get(account_form=account_form)  
-  
+    return self.get(account_form=account_form)
+    
+# We use login_required here since we want to let users activate themselves on this page
 @login_required
 def new(request,*args,**kwargs):
   return AccountEditHandler()(request,*args,**kwargs)  

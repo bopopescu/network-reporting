@@ -16,7 +16,7 @@
                             </dd>
                             <dt><label for="name">Creative Name:</label></dt>
                             <dd>
-                              <input type='text' name="{{form.name.name}}" class="input-text {% if form.name.errors %}form-error{% endif %}" value="{{form.name.value}}" placeholder="My Ad Group Name"/>
+                              <input type='text' name="{{form.name.name}}" class="input-text {% if form.name.errors %}form-error{% endif %}" value="{{form.name.value}}" placeholder="My Creative Name"/>
                               {% for error in form.name.errors %}
                               <div class="form-error-text">{{error}}</div> 
                               {% endfor %}

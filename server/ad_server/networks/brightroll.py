@@ -9,14 +9,15 @@ from xml.dom import minidom
 
 class BrightRollServerSide(ServerSide):
   base_url = "http://mobile.btrll.com/adwhirl/req/?adFeedKey=506"
-  base_url = "http://vast.bp3844869.btrll.com/vast/3844792"
+  base_url = "http://vast.bp3844869.btrll.com/vast/"
   def __init__(self,request,adunit,*args,**kwargs):
     self.url_params = {}
+    self.pub_id = adunit.account.brightroll_pub_id
     return super(BrightRollServerSide,self).__init__(request,adunit,*args,**kwargs)
   
   @property
   def url(self):
-    return self.base_url + '?n=%f'%time.time()
+    return self.base_url + str(self.pub_id) + '?n=%f'%time.time()
     
   @property
   def headers(self):

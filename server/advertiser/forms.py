@@ -36,6 +36,16 @@ class AdGroupForm(mpforms.MPModelForm):
               'hourly_frequency_cap','daily_frequency_cap','allocation_percentage',
               'allocation_type','budget')
               
+  def save(self,commit=True):
+    obj = super(AdGroupForm,self).save(commit=False)
+    if not obj.campaign.campaign_type == 'network':
+      obj.network_type = None
+    
+    if commit:
+      obj.put()
+    else:
+      return obj                
+              
 
 class BaseCreativeForm(mpforms.MPModelForm):
   TEMPLATE = 'advertiser/forms/base_creative_form.html'

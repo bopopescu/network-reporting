@@ -17,7 +17,8 @@ class BrightRollServerSide(ServerSide):
   
   @property
   def url(self):
-    return self.base_url + str(self.pub_id) + '?n=%f'%time.time()
+    pub_id = self.pub_id or 3844792 
+    return self.base_url + pub_id or + '?n=%f'%time.time()
     
   @property
   def headers(self):

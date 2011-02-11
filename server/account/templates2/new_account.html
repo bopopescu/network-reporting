@@ -4,12 +4,27 @@
 
 
 {% block content %}
-<form action="" method="POST" accept-charset="utf-8" id="accountForm">
-  <fieldset id="appForm-details"> 
-    {{account_form.as_template }}
-  </fieldset>  
-  <div class="form-submit"> 
-    <span class="buttonWrap"><a href="#" class="button" id="accountForm-submit">Continue</a></span> 
-  </div> 
-</form>  
+          <div class="content-main">
+            <form action="" method="POST" accept-charset="utf-8" id="accountForm">
+              <fieldset id="appForm-details"> 
+                <legend>Get started with MoPub</legend> 
+                <p>
+                  Help us serve you better by filling out the following information.
+                </p>
+                <dl class="formFields"> 
+{{account_form.as_template}}
+                  <dt><input name="terms_conditions" placeholder="50" class="{% if form.terms_conditions.errors %}form-error{% endif %}" type="checkbox"/></dt>
+                  <dd>
+                     I agree to the <a href="http://www.mopub.com/terms/">Terms of Service</a> and the <a href="http://www.mopub.com/privacy/">Privacy Policy</a>.
+                    {% if account_form.term_conditions_error %}
+                    <div class="form-error-text">{{account_form.term_conditions_error}}</div> 
+                    {% endif %}
+                  </dd>
+                </dl>              
+              </fieldset>
+              <div class="form-submit">
+                <span class="buttonWrap"><a href="#" class="button" id="accountForm-submit">Continue</a></span>
+              </div>
+            </form>
+          </div>
 {% endblock %}

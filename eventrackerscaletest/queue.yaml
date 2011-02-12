@@ -1,0 +1,79 @@
+total_storage_limit: 10G
+
+queue:
+- name: bulk-log-processor
+  rate: 100/s
+  bucket_size: 100
+  
+- name: async-log-queue-01
+  rate: 100/s
+  bucket_size: 100 
+  retry_parameters:
+      task_retry_limit: 1
+      
+- name: async-log-queue-02
+  rate: 100/s
+  bucket_size: 100 
+  retry_parameters:
+      task_retry_limit: 1  
+
+- name: async-log-queue-03
+  rate: 100/s
+  bucket_size: 100 
+  retry_parameters:
+      task_retry_limit: 1      
+          
+- name: async-log-queue-04
+  rate: 100/s
+  bucket_size: 100 
+  retry_parameters:
+      task_retry_limit: 1  
+      
+- name: async-log-queue-05
+  rate: 100/s
+  bucket_size: 100 
+  retry_parameters:
+      task_retry_limit: 1  
+
+- name: async-log-queue-06
+  rate: 100/s
+  bucket_size: 100 
+  retry_parameters:
+      task_retry_limit: 1      
+
+- name: async-log-queue-07
+  rate: 100/s
+  bucket_size: 100 
+  retry_parameters:
+      task_retry_limit: 1
+
+- name: async-log-queue-08
+  rate: 100/s
+  bucket_size: 100 
+  retry_parameters:
+      task_retry_limit: 1  
+
+- name: async-log-queue-09
+  rate: 100/s
+  bucket_size: 100 
+  retry_parameters:
+      task_retry_limit: 1      
+
+- name: async-log-queue-10
+  rate: 100/s
+  bucket_size: 100 
+  retry_parameters:
+      task_retry_limit: 1          
+
+        
+# 100+ queues needed for the logging to hit 10K QPS
+
+- name: async-user-queue-01
+  rate: 100/s
+  bucket_size: 100 
+
+- name: async-user-queue-02
+  rate: 100/s
+  bucket_size: 100
+  
+# need lots of queues here  

@@ -85,6 +85,59 @@ def memcache_key_for_date(udid,datetime,db_key):
 def memcache_key_for_hour(udid,datetime,db_key):
   return '%s:%s:%s'%(udid,datetime.strftime('%y%m%d%H'),db_key)
 
+###############################
+#FILTERS
+#
+# --- Each filter function is a function which takes some arguments (or none) necessary 
+#       for the filter to work its magic. log_mesg is the message that will be logged 
+#       for the associated objects that eval'd to false.
+# --- ALL FILTER GENERATOR FUNCTIONS MUST RETURN ( filter_function, log_mesg, [] )
+# --- The empty list is the list that will contain all elt's for which the 
+#       filter_function returned False
+###############################
+
+def budget_filter():
+    log_mesg = "Removed due to being over budget: %s"
+    def real_filter( a ):
+        return not ( a.budget is None or a.campaign.delivery_counter.count < a.budget )
+    return ( real_filter, log_mesg, [] )
+
+def active_filter():
+    log_mesg = "Removed due to inactivity: %s"
+    def real_filter( a ):
+        return not ( a.campaign.active and ( a.campaign.start_date  >= SiteStats.today() if a.campaign.start_date else True ) and ( SiteStats.today() <= a.campaign.end_date if a.campaign.end_date else True ) )
+    return ( real_filter, log_mesg, [] )
+
+def kw_filter( keywords ):
+    log_mesg = "Removed due to keyword mismatch: %s"
+    def real_filter( a ):
+        return not ( not a.keywords or set( keywords ).intersection( a.keywords ) > set() )
+    return ( real_filter, log_mesg, [] )
+
+def geo_filter( geo_preds ):
+    log_mesg = "Removed due to geo mismatch: %s"
+    def real_filter( a ):
+        return not ( set( geo_preds ).intersection( a.geographic_predicates ) > set() )
+    return ( real_filter, log_mesg, [] )
+
+def device_filter( dev_preds ):
+    log_mesg = "Removed due to device mismatch: %s"
+    def real_filter( a ):
+        return  not ( set( dev_preds ).intersection( a.device_predicates ) > set() )
+    return ( real_filter, log_mesg, [] )
+
+
+def mega_filter( *filters ): 
+    def actual_filter( a ):
+        for ( f, msg, lst ) in filters:
+            if f( a ):
+                lst.append( a )
+                return False
+        return True
+    return actual_filter
+###############
+# End filters
+###############
 
 class AdAuction(object):
   MAX_ADGROUPS = 30
@@ -158,7 +211,22 @@ class AdAuction(object):
     for a in all_ad_groups:
       logging.info("%s of %s"%(a.campaign.delivery_counter.count,a.budget))
     
+    ALL_FILTERS     = ( budget_filter(), 
+                        active_filter(), 
+                        kw_filter( keywords ), 
+                        geo_filter( geo_predicates ), 
+                        device_filter( device_predicates ) 
+                        ) 
+
+    all_ad_groups = filter( mega_filter( *ALL_FILTERS ), all_ad_groups )
+
+    for fil in ALL_FILTERS:
+        func, warn, lst = fil
+        logging.warning( warn % lst )
+
     # NOTE: The budgets are in the adgroup when they should be in the campaign
+
+    """
     all_ad_groups = [a for a in all_ad_groups 
                       if a.budget is None or 
                       a.campaign.delivery_counter.count < a.budget]
@@ -180,7 +248,13 @@ class AdAuction(object):
     all_ad_groups = [a for a in all_ad_groups
                     if set(device_predicates).intersection(a.device_predicates) > set()]
     logging.warning("removed device non-matches, now: %s" % all_ad_groups)
-    
+    """
+
+
+
+
+
+
     # frequency capping and other user / request based randomizations
     udid = kw["udid"]
         
@@ -195,6 +269,8 @@ class AdAuction(object):
       
       logging.warning("creatives (max priority: %d): %s"%(max_priority,all_creatives))
 
+      #XXX Why is this here?  It does make sense to bail if there are no creatives, but it seems to be a waste to get all creatives just to verify that there, in fact, creatives after it's been verified that there are ad_groups 
+
       if len(all_creatives) > 0:
         # for each priority_level, perform an auction among the various creatives 
         for p in range(max_priority + 1):
@@ -207,7 +283,9 @@ class AdAuction(object):
           
           while players:
             logging.warning("players: %s"%players)
-            winning_ecpm = max(c.e_cpm() for c in players) if len(players) > 0 else 0.0
+            #players is sorted by cpm above, if len( players ) == 0 then the while loop will eval to False and not exec
+            winning_ecpm = players[0].e_cpm()
+            #winning_ecpm = max(c.e_cpm() for c in players) if len(players) > 0 else 0.0
             logging.warning("auction at priority=%d: %s, max eCPM=%s" % (p, players, winning_ecpm))
       
             # if the winning creative exceeds the ad unit's threshold cpm for the
@@ -222,7 +300,8 @@ class AdAuction(object):
               # find out which ad groups are eligible
               ad_groups = set([c.ad_group for c in winners])
               logging.warning("eligible ad_groups: %s" % ad_groups)
-                            
+
+              #XXX wat ( this is totally not used anywhere else )             
               creatives = [c for c in all_creatives if c.ad_group.key() in [a.key() for a in ad_groups]]
             
               # exclude according to the exclude parameter must do this after determining adgroups
@@ -365,7 +444,7 @@ class AdAuction(object):
               # else:
               if not winning_creative:
                 logging.warning('taking away some players not in %s'%ad_groups)
-                logging.warning( 'current ad_groups %s' % [c.adgroup for c in players] )
+                logging.warning( 'current ad_groups %s' % [c.ad_group for c in players] )
                 logging.warning('current players: %s'%players)
                 players = [c for c in players if not c.ad_group in ad_groups]  
                 logging.warning('remaining players %s'%players)
@@ -433,17 +512,23 @@ class AdHandler(webapp.RequestHandler):
   def get(self):
     logging.warning(self.request.headers['User-Agent'] )
     id = self.request.get("id")
-    if self.request.get('testing') == test_mode:
+    
+    manager = AdUnitQueryManager(id)
+    now = datetime.datetime.now()
+
+    #Testing!
+    if self.request.get( 'testing' ) == test_mode:
+        manager = AdServerAdUnitQueryManager( id )
         testing = True
+        now = datetime.datetime.fromtimestamp( float( self.request.get('dt') ) )
     else:
         testing = False
-    manager = AdUnitQueryManager(id)
+
     # site = manager.get_by_key(key)#Site.site_by_id(id) if id else None
     adunit = manager.get_adunit()
     logging.info("!!!!!!!!adunit: %s"%adunit)
     site = adunit
-    
-    now = datetime.datetime.now()
+     
     
     
     # the user's site key was not set correctly...

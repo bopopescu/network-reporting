@@ -161,7 +161,7 @@ class AdGroup(db.Model):
     elif self.network_type == 'admob': c = AdMobCreative(name="admob dummy",ad_type="admob", format="320x50", format_predicates=["format=320x50"])
     elif self.network_type == 'brightroll': c = BrightRollCreative(name="brightroll dummy",ad_type="html_full", format="full",format_predicates=["format=*"])
     elif self.network_type == 'millennial': c = MillennialCreative(name="millennial dummy",ad_type="html",format="320x50", format_predicates=["format=320x50"]) # TODO: make sure formats are right
-    elif self.network_type == 'inmobi': c = InMobiCreative(name="inmobi dummy",ad_type="html",format="320x50", format_predicates=["format=320x50"]) # TODO: make sure formats are right
+    elif self.network_type == 'inmobi': c = InMobiCreative(name="inmobi dummy",ad_type="html_full",format="320x50", format_predicates=["format=320x50"]) # TODO: make sure formats are right
     elif self.network_type == 'greystripe' : c = GreyStripeCreative(name="greystripe dummy",ad_type="greystripe", format="320x50", format_predicates=["format=*"]) # TODO: only formats 320x320, 320x48, 300x250
     elif self.network_type == 'appnexus': c = AppNexusCreative(name="appnexus dummy",ad_type="html",format="320x50",format_predicates=["format=300x250"])
     
@@ -244,7 +244,7 @@ class TextAndTileCreative(Creative):
 class HtmlCreative(Creative):
   # html ad properties
   # html_name = db.StringProperty(required=True)
-  html_data = db.TextProperty(default="<style type=\"text/css\">body {font-size: 12px;font-family:helvetica,arial,sans-serif;margin:0;padding:0;text-align:center} .creative_headline {font-size: 18px;} .creative_promo {color: green;text-decoration: none;}</style><div class=\"creative_headline\">Welcome to mopub!</div><div class=\"creative_promo\"><a href=\"http://www.mopub.com\">Click here to test ad</a></div><div>You can now set up a new campaign to serve other ads.</div>")
+  html_data = db.TextProperty()
 
 class ImageCreative(Creative):
   # image properties

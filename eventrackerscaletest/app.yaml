@@ -1,0 +1,27 @@
+application: eventrackerscaletest
+version: 1
+runtime: python
+api_version: 1
+
+
+builtins:
+-   datastore_admin: on
+- appstats: on
+
+handlers:
+- url: /remote_api
+  script: $PYTHON_LIB/google/appengine/ext/remote_api/handler.py
+  login: admin
+    
+- url: /event/.*
+  script: event/main.py
+
+- url: /log/.*
+  script: async/main.py  
+  
+- url: /counter/.*
+  script: counters/main.py
+  
+- url: /_ah/queue/.*
+  script: async/taskprocess.py
+  login: admin   

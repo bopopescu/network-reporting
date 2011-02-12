@@ -289,7 +289,10 @@ def add_demo_campaign(site):
   AdGroupQueryManager().put_adgroups(ag)
 
   # And set up a default creative
-  h = HtmlCreative(ad_type="html", ad_group=ag)
+  h = HtmlCreative(ad_type="html", 
+                   ad_group=ag, 
+                   name="Demo HTML Creative",
+                   html_data="<style type=\"text/css\">body {font-size: 12px;font-family:helvetica,arial,sans-serif;margin:0;padding:0;text-align:center} .creative_headline {font-size: 18px;} .creative_promo {color: green;text-decoration: none;}</style><div class=\"creative_headline\">Welcome to mopub!</div><div class=\"creative_promo\"><a href=\"http://www.mopub.com\">Click here to test ad</a></div><div>You can now set up a new campaign to serve other ads.</div>")
   CreativeQueryManager().put_creatives(h)
   
 class ShowAppHandler(RequestHandler):

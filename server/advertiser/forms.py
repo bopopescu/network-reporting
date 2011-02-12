@@ -35,7 +35,6 @@ class AdGroupForm(mpforms.MPModelForm):
               'percent_users', 'site_keys',
               'hourly_frequency_cap','daily_frequency_cap','allocation_percentage',
               'allocation_type','budget')
-              
 
 class BaseCreativeForm(mpforms.MPModelForm):
   TEMPLATE = 'advertiser/forms/base_creative_form.html'

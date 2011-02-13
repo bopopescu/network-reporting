@@ -677,7 +677,7 @@ class AdHandler(webapp.RequestHandler):
       if str(c.ad_type) == "iAd":
         # self.response.headers.add_header("X-Adtype","custom")
         # self.response.headers.add_header("X-Backfill","alert")
-        # # self.response.headers.add_header("X-Nativeparams",'{"title":"MoPub Alert View","cancelButtonTitle":"No Thanks","message":"We\'ve noticed you\'ve enjoyed playing Angry Birds.","otherButtonTitle":"Rank","clickURL":"mopub://inapp?id=pixel_001"}')
+        # self.response.headers.add_header("X-Nativeparams",'{"title":"MoPub Alert View","cancelButtonTitle":"No Thanks","message":"We\'ve noticed you\'ve enjoyed playing Angry Birds.","otherButtonTitle":"Rank","clickURL":"mopub://inapp?id=pixel_001"}')
         # self.response.headers.add_header("X-Customselector","customEventTest")
         
         self.response.headers.add_header("X-Adtype", str(c.ad_type))

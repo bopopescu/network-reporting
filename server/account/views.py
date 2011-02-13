@@ -12,6 +12,8 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
 from common.ragendja.template import render_to_response, JSONResponse
+from django.core.mail import send_mail, EmailMessage
+
 
 from common.utils.decorators import whitelist_login_required
 from common.utils.cachedquerymanager import CachedQueryManager
@@ -82,6 +84,7 @@ def index(request,*args,**kwargs):
 
 class AccountEditHandler(RequestHandler):
   def get(self,account_form=None):
+    send_mail("New User","%s has signed up for an account."%self.request.user.email,'olp@mopub.com',['beta@mopub.com'],fail_silently=True)
     account_form = account_form or AccountForm(instance=self.account)
     return render_to_response(self.request,'account/new_account.html',{'account': self.account,
                                                                'account_form' : account_form })

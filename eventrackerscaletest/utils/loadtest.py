@@ -61,6 +61,8 @@ parser.add_option("-l", "--logging", dest="LOGGING",type="int",
                 help="Which logging scheme to use.", default=3)         
 parser.add_option("-i", "--instance_id", dest="INSTANCE_ID",type="int",
                 help="LABEL THE INSTANCE.", default=0)         
+parser.add_option("-e", "--exp_id", dest="TEST_ID",type="str",
+                help="LABEL THE TEST.", default='NAFIS_MAC')         
                                
 
 (options, args) = parser.parse_args()
@@ -82,6 +84,8 @@ DELAY_BETWEEN_THREAD_START = options.DELAY_BETWEEN_THREAD_START # seconds
 LOGGING = options.LOGGING
 
 INSTANCE_ID = options.INSTANCE_ID
+
+TEST_ID = options.TEST_ID
 
 quitevent = Event()
 
@@ -109,7 +113,7 @@ def threadproc():
             dim_two_level_one = db.Key.from_path('DimensionTwoLevelOne',key_name,_app='eventrackerscaletest')
             t = time.time()
             
-            url = "http://eventrackerscaletest.appspot.com/event/one?log=%s&nc=1&deadline=.08&uid=%s&id=%s&req=%s&inst=%s"%(LOGGING,uid,dim_two_level_one,req_cnt,INSTANCE_ID)
+            url = "http://eventrackerscaletest.appspot.com/event/one?log=%s&nc=1&deadline=.08&uid=%s&id=%s&req=%s&inst=%s&test=%s"%(LOGGING,uid,dim_two_level_one,req_cnt,INSTANCE_ID,TEST_ID)
             
             fail_lock.acquire()
             print "URL: ",url

@@ -228,7 +228,6 @@ class AppCreateHandler(RequestHandler):
         CachedQueryManager().cache_delete(adunit)
 
         # Check if this is the first ad unit for this account
-        # if Site.gql("where account = :1 limit 2", self.account).count() == 1:
         if len(AdUnitQueryManager().get_adunits(account=self.account,limit=2)) == 1:      
           add_demo_campaign(adunit)
         # Check if this is the first app for this account
@@ -289,8 +288,9 @@ def add_demo_campaign(site):
   AdGroupQueryManager().put_adgroups(ag)
 
   # And set up a default creative
-  h = HtmlCreative(ad_type="html", 
-                   ad_group=ag, 
+  h = HtmlCreative(ad_type="html",
+                   ad_group=ag,
+                   format=site.format,
                    name="Demo HTML Creative",
                    html_data="<style type=\"text/css\">body {font-size: 12px;font-family:helvetica,arial,sans-serif;margin:0;padding:0;text-align:center} .creative_headline {font-size: 18px;} .creative_promo {color: green;text-decoration: none;}</style><div class=\"creative_headline\">Welcome to mopub!</div><div class=\"creative_promo\"><a href=\"http://www.mopub.com\">Click here to test ad</a></div><div>You can now set up a new campaign to serve other ads.</div>")
   CreativeQueryManager().put_creatives(h)

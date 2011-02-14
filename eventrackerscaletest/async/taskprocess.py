@@ -25,8 +25,6 @@ from async.main import ACCOUNT_KEY_FORMAT,\
 from async.main import TIME_BUCKET                       
                        
 from userstore.models import MobileUser   
-                    
-                       
 
 MAX_KEYS = 100
 
@@ -103,19 +101,22 @@ class LogTaskHandler(webapp.RequestHandler):
             date_hour = datetime.datetime.fromtimestamp(hour)
             attribute = type_dict[type_]
             update_count(counter_dict,dimension_one,dimension_two,date_hour,attribute,req=None,incr=v)
-            
+        
+        
+        total_counters = len(counter_dict)  
+        i = 0  
         for key_name, counter in counter_dict.iteritems():
             try:
                 db.run_in_transaction(increment_counter, counter, time_bucket)
-            except db.TransactionFailedError:
-                failed_writes.append(counter)
             except:
                 exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
                 mail.send_mail(sender="appenginescaletest@gmail.com",
-                              to="info@mopub.com",
+                              to="nafis@mopub.com",
                               subject="Logging error",
-                              body=exception_traceback)
+                              body="Succeeded %s of %s\n\n%s"%(i,total_counters,exception_traceback))
                 logging.error()
+                raise Exception("need to try transaction again")
+            i += 1    
 
 application = webapp.WSGIApplication([('/_ah/queue/bulk-log-processor', LogTaskHandler),
                                       ('/_ah/queue/async-log-queue-01', LogEventOne),

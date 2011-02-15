@@ -553,7 +553,7 @@ class ShowAdGroupHandler(RequestHandler):
       graph_adunits[3].all_stats = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[au.all_stats for au in adunits[3:]])]
     
     
-    logging.error("network: type: %s"%(adgroup.network_type))
+    logging.warning("network: type: %s"%(adgroup.network_type))
       
     if not adgroup.network_type:  
       # In order to have add creative

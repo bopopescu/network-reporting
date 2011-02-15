@@ -26,13 +26,11 @@ class InMobiServerSide(ServerSide):
 
   @property
   def headers(self):
-    # TODO: Replace with self.get_appid()
     return {'X-Mkhoj-SiteID': self.get_account().inmobi_pub_id,
             'X-InMobi-Phone-UserAgent': self.get_user_agent() }
 
   @property  
   def payload(self):
-    # TODO: Replace with self.get_appid()
     data = {'mk-siteid': self.get_account().inmobi_pub_id,
             'mk-version': 'pr-SPEC-ATATA-20090521',
             'u-id': self.get_udid(),
@@ -74,7 +72,7 @@ class InMobiServerSide(ServerSide):
     # Test responses
     # response.content = '<AdResponse><Ads number="1"><Ad type="banner" actionType="android"><ImageURL>http://r.w.inmobi.com/FileData/513cc422-33a6-4274-9e22-dd12e84e23d14.png</ImageURL><ImageAltText></ImageAltText><Placement>page</Placement><AdURL>http://c.w.mkhoj.com/c.asm/3/t/c7i/pl5/2/2m/aj/u/0/0/1/354957037659003/11ba085a-012e-1000-d9a8-00020fe80003/1/829a0c01</AdURL></Ad></Ads></AdResponse>'
     # response.content = '<AdResponse><Ads number="1"><Ad type="text" actionType="web"><LinkText>Sick of being overweight? Get Free Guide</LinkText><Placement>page</Placement><AdURL>http://c.w.mkhoj.com/c.asm/3/t/c7i/pl5/2/2m/aj/u/0/0/1/354957037659003/1217ae48-012e-1000-de75-00020ff10003/1/9c3e6541</AdURL></Ad></Ads></AdResponse>'
-    if re.match("^<!--.*--\>$", response.content) == None:
+    if re.match("^<!--.*--\>$", response.content) == None and len(response.content) != 0:
       # TODO: do any sort of manipulation here that we want, like resizing the image, LAME
       self.parse_xml(response.content)
       if 'image_url' in self.url_params:

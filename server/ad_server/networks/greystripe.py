@@ -1,6 +1,4 @@
 from ad_server.networks.server_side import ServerSide
-import logging
-import re
 import urllib
 import urllib2
 
@@ -43,8 +41,7 @@ class GreyStripeServerSide(ServerSide):
     return response.read()
     
   def bid_and_html_for_response(self,response):
-    if re.match("<!--.*--\>$", response.content) == None:
-      # TODO: do any sort of manipulation here that we want, like resizing the image, LAME
-      return 0.0,response.content
-    else:
+    if len(response.content) == 0:
       raise Exception("GreyStripe ad is empty")
+
+    return 0.0,response.content

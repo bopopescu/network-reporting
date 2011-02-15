@@ -537,7 +537,8 @@ class ShowAdGroupHandler(RequestHandler):
     for a in apps:
       if a.icon:
         a.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(a.icon)
-
+        
+    # TODO: use query manager    
     adunits = map(lambda x: Site.get(x), adgroup.site_keys)
     for au in adunits:
       au.all_stats = SiteStatsQueryManager().get_sitestats_for_days(site=au,owner=adgroup, days=days)

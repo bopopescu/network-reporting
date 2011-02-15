@@ -14,7 +14,7 @@ sys.path.append("/home/ubuntu/google_appengine/lib/fancy_urllib")
 
 sys.path.append("../..")
 sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine")
-sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/django")
+sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/django_1_2")
 sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/webob")
 sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/yaml/lib")
 sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/fancy_urllib")
@@ -274,12 +274,18 @@ class PubGeoRequestCounter(StatsCounter):
       pat = re.compile(r'Mac OS X; (.*?)\)') #TODO: make work for non android
       match = pat.search(d['client'])
       if match:
-        country_code = match.group(1).split('-')[1].lower()
+        try:
+          country_code = match.group(1).split('_')[1].lower()
+        except:
+          pass
       else:
         pat = re.compile(r'Android.*; (.*?);')
         match = pat.search(d['client'])
         if match:
-          country_code = match.group(1).split('-')[1].lower()
+          try:
+            country_code = match.group(1).split('-')[1].lower()
+          except:
+            pass
 
     if not country_code:
       country_code = "unknown"        

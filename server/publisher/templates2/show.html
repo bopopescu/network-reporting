@@ -102,9 +102,6 @@
                   <tr>
                     <th class="appData-icon"></th>
                     <th class="dataTable-name">&nbsp;</th>
-					<th class="dataTable-data numeric"></th>
-					<th class="dataTable-data numeric"></th>
-					<th class="dataTable-data numeric"></th>
                     <th class="dataTable-data numeric">Revenue</th>
                     <th class="dataTable-data numeric">Impressions</th>
                     <th class="dataTable-data numeric">Clicks</th>
@@ -119,9 +116,6 @@
                   <tr>
                     <td class="appData-icon-none"></td>
                     <th class="dataTable-name">Totals</th>
-					<td class="dataTable-data numeric"></td>
-					<td class="dataTable-data numeric"></td>
-					<td class="dataTable-data numeric"></td>
                     <td class="dataTable-data numeric">{{adunit.stats.revenue|currency}}</td>
                     <td class="dataTable-data numeric">{{adunit.stats.impression_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{adunit.stats.click_count|withsep}}</td>
@@ -135,9 +129,6 @@
                     <tbody>
                       {% for ag in adunit.adgroups %}<tr>
                         <th class="dataTable-name"><span class="inner"><a href="{% url advertiser_adgroup_show adgroup_key=ag.key %}">{{ag.name}}</a></span></th>
-						<td class="dataTable-data numeric"></td>
-						<td class="dataTable-data numeric"></td>
-						<td class="dataTable-data numeric"></td>
                         <td class="dataTable-data numeric">{{ag.stats.revenue|currency}}</td>
                         <td class="dataTable-data numeric">{{ag.stats.impression_count|withsep}}</td>
                         <td class="dataTable-data numeric">{{ag.stats.click_count|withsep}}</td>
@@ -161,9 +152,6 @@
                   <tr>
                     <th class="appData-icon"></th>
                     <th class="dataTable-name">&nbsp;</th>
-					<th class="dataTable-data numeric"></th>
-					<th class="dataTable-data numeric"></th>
-					<th class="dataTable-data numeric"></th>
                     <th class="dataTable-data numeric">Requests</th>
                     <th class="dataTable-data numeric">Impressions</th>
                     <th class="dataTable-data numeric">Clicks</th>
@@ -178,9 +166,6 @@
                   <tr>
                     <td class="appData-icon-none"></td>
                     <th class="dataTable-name">Totals</th>
-					<td class="dataTable-data numeric"></td>
-					<td class="dataTable-data numeric"></td>
-					<td class="dataTable-data numeric"></td>
                     <td class="dataTable-data numeric">{{adunit.stats.request_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{adunit.stats.impression_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{adunit.stats.click_count|withsep}}</td>
@@ -194,9 +179,6 @@
                     <tbody>
                       {% for s in adunit.all_stats %}<tr>
                         <th class="dataTable-name">{{s.date|format_date}}</th>
-						<td class="dataTable-data numeric"></td>
-						<td class="dataTable-data numeric"></td>
-						<td class="dataTable-data numeric"></td>
                         <td class="dataTable-data numeric">{{s.request_count|withsep}}</td>
                         <td class="dataTable-data numeric">{{s.impression_count|withsep}}</td>
                         <td class="dataTable-data numeric">{{s.click_count|withsep}}</td>

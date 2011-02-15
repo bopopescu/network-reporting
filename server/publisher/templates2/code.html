@@ -45,10 +45,25 @@
                 <div class="alertMessage">
                   <code>
                     <pre>
-AdController* adC = [[AdController alloc] initWithFormat:AdControllerFormat320x50
-                                                adUnitId:@"<b>{{site.key}}</b>"
-                                    parentViewController:self];
-[self.view addSubview:adC.view];</pre>
+#import "MPAdView.h"
+
+...
+// For more banner sizes, see the sizing constants in MPConstants.h.
+MPAdView *adView
+        = [[MPAdView alloc] initWithAdUnitId:@"<b>{{site.key}}</b>" size:MOPUB_BANNER_SIZE];
+adView.delegate = self;
+[adView loadAd];
+[self.view addSubview:adView];
+[adView release];
+
+...
+
+#pragma mark MPAdViewDelegate Methods
+
+- (UIViewController *)viewControllerForPresentingModalView
+{
+  return self;
+}
                   </code>
                 </div>
               </li>{% endifequal %}

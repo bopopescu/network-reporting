@@ -17,7 +17,7 @@ from google.appengine.ext import db
 
 from counters.models import Counter
 
-TOTAL = 50
+TOTAL = 142
 
 def auth_func():
     return "appenginescaletest@gmail.com", "test!@#$"
@@ -34,7 +34,10 @@ clk_diff = 0
 conv_diff = 0
 counter_dict = {}
 for i in range(TOTAL):
-  reader = csv.reader(open('counts_%d.csv'%i, 'rb'), delimiter=' ')
+  try:
+    reader = csv.reader(open('counts_%d.csv'%i, 'rb'), delimiter=' ')
+  except:
+    reader = []  
   for row in reader:
       req_cnt = int(row[0])
       imp_cnt = int(row[1])

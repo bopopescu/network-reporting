@@ -596,7 +596,7 @@ class AdHandler(webapp.RequestHandler):
       # render the creative 
       self.response.out.write(self.render_creative(c, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, request_id=request_id, v=int(self.request.get('v') or 0)))
       if testing:
-          return c.key()
+          return c.key() # TODO: shouldn't this be self.response.out.write(str(c.key()))
     else:
       self.response.out.write(self.render_creative(c, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, request_id=request_id, v=int(self.request.get('v') or 0)))
 

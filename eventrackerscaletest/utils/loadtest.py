@@ -114,6 +114,8 @@ def threadproc():
             t = time.time()
             
             url = "http://eventrackerscaletest.appspot.com/event/one?log=%s&nc=1&deadline=.08&uid=%s&id=%s&req=%s&inst=%s&test=%s"%(LOGGING,uid,dim_two_level_one,req_cnt,INSTANCE_ID,TEST_ID)
+            # url = "http://localhost:8080/event/one?log=%s&nc=1&deadline=.08&uid=%s&id=%s&req=%s&inst=%s&test=%s"%(LOGGING,uid,dim_two_level_one,req_cnt,INSTANCE_ID,TEST_ID)
+
             
             fail_lock.acquire()
             print "URL: ",url

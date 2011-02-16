@@ -12,7 +12,11 @@
 {% endblock titleBarRight %}
 {% block messageCenter %}{% endblock messageCenter %}
 
-{% block content %}
+{% block content %}{% if not adunit.adgroups %}
+          <div class="alertMessage">
+            There are no campaigns targeting this ad unit.  To show ads here, set up a new ad campaign or add this ad unit to an existing campaign on the <a href="{% url advertiser_campaign %}">Campaigns</a> page.
+          </div>
+{% endif %}
           <section id="dashboard-adunitEditForm" class="hidden">
             <div>
               <a name="adunitForm" class="hidden">anchor</a>
@@ -111,6 +115,7 @@
               </table>
             </div>
             <div class="appData">
+              {% if adunit.adgroups %}
               <table class="dataTable appData-main">
                 <tbody>
                   <tr>
@@ -140,6 +145,16 @@
                 </div>
                 <a class="button button-small appData-details-toggleButton" href="#">Hide details</a>
               </div>
+              {% else %}
+              <table class="dataTable appData-main">
+                <tbody>
+                  <tr>
+                    <td class="campaignData-icon"></td>
+                    <th class="dataTable-name"><span class="muted">None</span></th>
+                  </tr>
+                </tbody>
+              </table>
+              {% endif %}
             </div>
             
           </section>

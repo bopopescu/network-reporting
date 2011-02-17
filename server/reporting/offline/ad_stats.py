@@ -3,6 +3,7 @@
 import code
 import getpass
 import sys
+import traceback
 
 sys.path.append("/home/ubuntu/mopub/server")
 sys.path.append("/home/ubuntu/mopub/server/reporting")
@@ -14,7 +15,7 @@ sys.path.append("/home/ubuntu/google_appengine/lib/fancy_urllib")
 
 sys.path.append("../..")
 sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine")
-sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/django")
+sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/django_1_2")
 sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/webob")
 sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/yaml/lib")
 sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/fancy_urllib")
@@ -65,7 +66,8 @@ class AdStats:
             try:
               globals()[proc]().process(logline_dict)
             except Exception, e:
-              print e
+              exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
+              print exception_traceback
             
       # if this is an OLP info log
       olp_dict = self.parse_olp(line)
@@ -75,7 +77,8 @@ class AdStats:
             try:
               globals()[proc]().process(olp_dict)
             except Exception, e:
-              print e  
+              exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
+              print exception_traceback
   
   # takes a log line and parses it, detecting UserAgent, query parameters, origin IP and other information
   #
@@ -274,12 +277,18 @@ class PubGeoRequestCounter(StatsCounter):
       pat = re.compile(r'Mac OS X; (.*?)\)') #TODO: make work for non android
       match = pat.search(d['client'])
       if match:
-        country_code = match.group(1).split('-')[1].lower()
+        try:
+          country_code = match.group(1).split('_')[1].lower()
+        except:
+          pass
       else:
         pat = re.compile(r'Android.*; (.*?);')
         match = pat.search(d['client'])
         if match:
-          country_code = match.group(1).split('-')[1].lower()
+          try:
+            country_code = match.group(1).split('-')[1].lower()
+          except:
+            pass
 
     if not country_code:
       country_code = "unknown"        

@@ -95,9 +95,6 @@
                   <tr>
                     <th class="appData-icon"></th>
                     <th class="dataTable-name">&nbsp;</th>
-                    <th class="dataTable-data numeric"></th>
-                    <th class="dataTable-data numeric"></th>
-                    <th class="dataTable-data numeric"></th>
                     <th class="dataTable-data numeric">Requests</th>
                     <th class="dataTable-data numeric">Impressions</th>
                     <th class="dataTable-data numeric">Clicks</th>
@@ -113,9 +110,6 @@
                   <tr>
                     <td class="appData-icon"><a href="{% url publisher_app_show app_key=a.key %}"><img src="{% if a.icon_url %}{{a.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" /></a></td>
                     <th class="dataTable-name"><span class="inner"><a href="{% url publisher_app_show app_key=a.key %}">{{a.name}}</a> <span class="muted unbold">({% ifequal a.app_type "iphone" %}iOS{% endifequal %}{% ifequal a.app_type "android" %}Android{% endifequal %})</span></span></th>
-                    <td class="dataTable-data numeric"></td>
-                    <td class="dataTable-data numeric"></td>
-                    <td class="dataTable-data numeric"></td>
                     <td class="dataTable-data numeric">{{a.stats.request_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{a.stats.impression_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{a.stats.click_count|withsep}}</td>
@@ -128,11 +122,8 @@
                   <table class="dataTable">
                     <tbody>
                       {% for au in a.adunits %}
-            <tr>
+                      <tr>
                         <th class="dataTable-name"><span class="inner"><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a></span></th>
-            <td class="dataTable-data numeric"></td>
-            <td class="dataTable-data numeric"></td>
-            <td class="dataTable-data numeric"></td>
                         <td class="dataTable-data numeric">{{au.stats.request_count|withsep}}</td>
                         <td class="dataTable-data numeric">{{au.stats.impression_count|withsep}}</td>
                         <td class="dataTable-data numeric">{{au.stats.click_count|withsep}}</td>

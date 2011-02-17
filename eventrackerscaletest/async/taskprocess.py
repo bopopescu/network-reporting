@@ -1,43 +1,35 @@
 import logging
 import datetime
-import sys
 import traceback
+import sys
 
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
 
+from google.appengine.api import mail
 from google.appengine.api import memcache
 from google.appengine.api.taskqueue import Task
-from google.appengine.api import mail
-
 from event.models import db
 
 from counters.models import Counter
 
 from async.main import LogEventOne
-from async.main import ACCOUNT_KEY_FORMAT,\
-                       REQ_KEY_FORMAT,\
-                       IMP_KEY_FORMAT,\
-                       CLK_KEY_FORMAT,\
-                       CNV_KEY_FORMAT,\
-                       BASE_KEY_FORMAT
+from async.main import LOG_KEY_FORMAT,INDEX_KEY_FORMAT
                        
-from async.main import TIME_BUCKET                       
                        
-from userstore.models import MobileUser   
+from userstore.models import MobileUser                       
+                       
 
 MAX_KEYS = 100
 
 def increment_counter(counter,time_bucket):
     # datastore get
-    counter.reqs = [time_bucket]
     key_name = counter.key().name()
     obj = Counter.get_by_key_name(key_name)
     if obj:
         obj += counter
     else:
-        obj = counter
-    
+        obj = counter    
     # datastore put
     logging.info("putting in key_name: %s value: %s,%s"%(key_name,counter.count_one,counter.count_two))
     logging.info("putting in key_name: %s NEW value: %s,%s"%(key_name,obj.count_one,obj.count_two))
@@ -59,50 +51,94 @@ def update_count(counter_dict,dimension_one,dimension_two,date_hour,attribute,re
     if req:      
       counter_dict[key].reqs.append(req)
 
-
 class LogTaskHandler(webapp.RequestHandler):
     def get(self):
         # logging.info("I AM PROCESSING A TASK")
         # update a list of counters across the various dimensions
         account_name = self.request.get("account_name")
-        time_bucket = self.request.get("time_bucket")
+        time_bucket = int(self.request.get("time"))
 
-        logging.info('account name: %s'%account_name)
+        head_index = 1 # starts at one
         
-        account_key = ACCOUNT_KEY_FORMAT%dict(account_name=account_name)
+        # get the last index for a given time bucket
+        tail_key = INDEX_KEY_FORMAT%dict(account_name=account_name,time=time_bucket)
+        tail_index = int(memcache.get(tail_key))
         
-        logging.info('account key: %s'%account_key)
+        logging.info("account: %s time: %s start: %s stop: %s"%(account_name,time_bucket,head_index,tail_index))
         
+        counter_dict = {}      
+        start = head_index
+        # paginate the keys
+        while start <= tail_index: 
+            # get another MAX_KEYS or go to the end
+            stop = start + MAX_KEYS - 1 if (start+MAX_KEYS-1) < tail_index else tail_index
+            keys = [LOG_KEY_FORMAT%dict(account_name=account_name,time=time_bucket,log_index=i) 
+                     for i in range(start,stop+1)]
+    
+            logging.info("we have %d keys (start:%s stop:%s)"%(len(keys),start,stop))
+            # grab logs from memcache         
+            data_dicts = memcache.get_multi(keys)   
+    
+            logging.info("Memcache misses: %d"%(len(keys)-len(data_dicts)))
+            
+            for k,d in data_dicts.iteritems():
+                if d:
+                    uid = d['uid']
+                    dim2l1 = d['dim2l1']
+                    dim1l1 = d.get('dim1l1',None)
+                
+                    req = d.get('req',None)
+                    req = int(req) if req else None
+                    
+                    inst = d.get('inst',None)
+                    inst = int(inst) if inst else None
+                
+                    req = "%s.%s"%(req,inst)
+                    
+                    appid = d.get('appid',None)
+                
+                    clk = d.get('clk',None)
+                    conv = d.get('conv',None)
+                    
+                    t = int(float(d['t']))
+                    hour = t-t%3600
+                    date_hour = datetime.datetime.fromtimestamp(hour)
+                
+                    # attach on teh request id once per log line
+                    update_count(counter_dict,dim1l1,dim2l1,date_hour,None,req)
+                    update_count(counter_dict,None,dim2l1,date_hour,None,req)
+                    update_count(counter_dict,dim1l1,None,date_hour,None,req)
+                    
+                    
+                    if clk:
+                        # increment click count
+                        update_count(counter_dict,dim1l1,dim2l1,date_hour,'count_three',None)
+                        update_count(counter_dict,None,dim2l1,date_hour,'count_three',None)
+                        update_count(counter_dict,dim1l1,None,date_hour,'count_three',None)
+                    elif conv: 
+                        # increment conv count
+                        update_count(counter_dict,dim1l1,dim2l1,date_hour,'count_four',None)
+                        update_count(counter_dict,None,dim2l1,date_hour,'count_four',None)
+                        update_count(counter_dict,dim1l1,None,date_hour,'count_four',None)
+                    else:
+                        # increment impresssions
+                        if dim1l1:
+                            # adunit-creative impression
+                            update_count(counter_dict,dim1l1,dim2l1,date_hour,'count_two',None)
+                            # creative impression
+                            update_count(counter_dict,dim1l1,None,date_hour,'count_two',None)
+                            # adunit impression
+                            update_count(counter_dict,None,dim2l1,date_hour,'count_two',None)
+                        
+                        # increment request for adunit
+                        update_count(counter_dict,None,dim2l1,date_hour,'count_one',None)
+                        update_count(counter_dict,dim1l1,dim2l1,date_hour,'count_one',None)
+                        
+                else:
+                    logging.error("NO value for key %s exists"%k)    
         
-        counter_keys = memcache.get(account_key)
-        
-        counter_dict = {}    
-        type_dict = dict(R='count_one',I='count_two',C='count_three',A='count_four')
-          
-        for dim2l1_dim1l1 in counter_keys:
-            dim2l1,dim1l1 = dim2l1_dim1l1.split(':') # adunit, creative
-            keys = []
-            for type_ in type_dict:
-              for one,two in [(dim1l1,dim2l1),('',dim2l1),(dim1l1,'')]:
-                  key = BASE_KEY_FORMAT%dict(type=type_,
-                                              dim_one_level_one=one,
-                                              dim_two_level_one=two,
-                                              time_bucket=time_bucket)
-                  keys.append(key)
-        logging.info("keys: %s"%keys) # should be 12 keys   
-        delta_dict = memcache.get_multi(keys)
-        for k,v in delta_dict.iteritems():
-          logging.info("get key: %s"%k)
-          if v:
-            v = int(v)
-            type_,dimension_one,dimension_two,time_bucket = k.split(':')
-            t = int(time_bucket)*TIME_BUCKET # seconds
-            hour = t-t%3600 
-            date_hour = datetime.datetime.fromtimestamp(hour)
-            attribute = type_dict[type_]
-            update_count(counter_dict,dimension_one,dimension_two,date_hour,attribute,req=None,incr=v)
-        
-        
+            start += MAX_KEYS # update the next "page"    
+
         total_counters = len(counter_dict)  
         i = 0  
         for key_name, counter in counter_dict.iteritems():
@@ -114,9 +150,10 @@ class LogTaskHandler(webapp.RequestHandler):
                               to="nafis@mopub.com",
                               subject="Logging error",
                               body="Succeeded %s of %s\n\n%s"%(i,total_counters,exception_traceback))
-                logging.error()
+                logging.error(exception_traceback)
                 raise Exception("need to try transaction again")
             i += 1    
+        
 
 application = webapp.WSGIApplication([('/_ah/queue/bulk-log-processor', LogTaskHandler),
                                       ('/_ah/queue/async-log-queue-01', LogEventOne),

@@ -8,56 +8,11 @@ LOGGING=3
 TEST_ID=$RANDOM # generates a random test id
 
 
-EC2_IPS="ec2-50-16-61-151.compute-1.amazonaws.com
-ec2-184-73-74-71.compute-1.amazonaws.com
-ec2-50-17-12-94.compute-1.amazonaws.com
-ec2-184-72-151-215.compute-1.amazonaws.com
-ec2-50-16-108-196.compute-1.amazonaws.com
-ec2-184-72-163-210.compute-1.amazonaws.com
-ec2-204-236-207-10.compute-1.amazonaws.com
-ec2-50-16-140-95.compute-1.amazonaws.com
-ec2-50-16-28-242.compute-1.amazonaws.com
-ec2-50-16-158-239.compute-1.amazonaws.com
-ec2-75-101-202-173.compute-1.amazonaws.com
-ec2-50-16-94-52.compute-1.amazonaws.com
-ec2-184-72-205-159.compute-1.amazonaws.com
-ec2-67-202-33-80.compute-1.amazonaws.com
-ec2-50-17-29-71.compute-1.amazonaws.com
-ec2-50-16-16-41.compute-1.amazonaws.com
-ec2-50-16-153-69.compute-1.amazonaws.com
-ec2-184-72-179-12.compute-1.amazonaws.com
-ec2-72-44-58-168.compute-1.amazonaws.com
-ec2-50-16-138-99.compute-1.amazonaws.com
-ec2-50-16-121-29.compute-1.amazonaws.com
-ec2-174-129-70-74.compute-1.amazonaws.com
-ec2-184-73-46-101.compute-1.amazonaws.com
-ec2-50-16-174-87.compute-1.amazonaws.com
-ec2-50-16-178-141.compute-1.amazonaws.com
-ec2-50-16-178-87.compute-1.amazonaws.com
-ec2-184-73-6-67.compute-1.amazonaws.com
-ec2-174-129-191-19.compute-1.amazonaws.com
-ec2-75-101-226-45.compute-1.amazonaws.com
-ec2-67-202-45-47.compute-1.amazonaws.com
-ec2-50-17-21-15.compute-1.amazonaws.com
-ec2-50-16-66-216.compute-1.amazonaws.com
-ec2-50-16-151-125.compute-1.amazonaws.com
-ec2-75-101-255-149.compute-1.amazonaws.com
-ec2-50-17-13-213.compute-1.amazonaws.com
-ec2-50-16-51-3.compute-1.amazonaws.com
-ec2-72-44-41-218.compute-1.amazonaws.com
-ec2-184-73-148-144.compute-1.amazonaws.com
-ec2-184-72-90-59.compute-1.amazonaws.com
-ec2-174-129-180-194.compute-1.amazonaws.com
-ec2-50-17-1-190.compute-1.amazonaws.com
-ec2-184-73-9-41.compute-1.amazonaws.com
-ec2-50-17-23-105.compute-1.amazonaws.com
-ec2-50-17-14-246.compute-1.amazonaws.com
-ec2-50-17-31-198.compute-1.amazonaws.com
-ec2-204-236-245-90.compute-1.amazonaws.com
-ec2-174-129-66-120.compute-1.amazonaws.com
-ec2-75-101-213-60.compute-1.amazonaws.com
-ec2-50-16-140-19.compute-1.amazonaws.com
-ec2-50-16-117-146.compute-1.amazonaws.com"
+EC2_IPS="ec2-50-17-74-36.compute-1.amazonaws.com
+ec2-75-101-211-236.compute-1.amazonaws.com
+ec2-50-16-50-151.compute-1.amazonaws.com
+ec2-50-16-27-135.compute-1.amazonaws.com
+ec2-50-17-84-150.compute-1.amazonaws.com"
 
 # clear cache
 curl http://eventrackerscaletest.appspot.com/counter/test?flush=1

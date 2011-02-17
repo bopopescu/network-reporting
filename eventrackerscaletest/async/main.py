@@ -5,16 +5,14 @@ import time
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
 
+
 from google.appengine.api import memcache
 from google.appengine.api import taskqueue
 from google.appengine.api.taskqueue import Task
 
-ACCOUNT_KEY_FORMAT = 'k:%(account_name)s'
-BASE_KEY_FORMAT = '%(type)s:%(dim_one_level_one)s:%(dim_two_level_one)s:%(time_bucket)s'
-REQ_KEY_FORMAT = 'R:%(dim_one_level_one)s:%(dim_two_level_one)s:%(time_bucket)s'
-IMP_KEY_FORMAT = 'I:%(dim_one_level_one)s:%(dim_two_level_one)s:%(time_bucket)s'
-CLK_KEY_FORMAT = 'C:%(dim_one_level_one)s:%(dim_two_level_one)s:%(time_bucket)s'
-CNV_KEY_FORMAT = 'A:%(dim_one_level_one)s:%(dim_two_level_one)s:%(time_bucket)s'
+
+LOG_KEY_FORMAT = 'k:%(account_name)s:%(time)s:%(log_index)02d'
+INDEX_KEY_FORMAT = 'k:%(account_name)s:%(time)s'
 TASK_NAME = 't-%(account_name)s-%(time)s' # note time will be bucketed
 
 TIME_BUCKET = 10 # seconds
@@ -45,70 +43,30 @@ class LogEventThree(webapp.RequestHandler):
 
 # THIS IS WHERE ALL THE HEAVY LIFTING IS DONE        
 def log(**kwargs):
-    account_name = kwargs.get('dim2l1') # we use the the adunit id as the account key
-    now = float(kwargs.get('t'))
+    account_name = kwargs.get('dim2l1')
+    
+    # calculate time bucke
+    now = time.time()
     time_bucket = int(now)/TIME_BUCKET # maybe divide by 10 for every second
     
-    # get the new index
-    # index_key = INDEX_KEY_FORMAT%dict(account_name=account_name)
-    # log_index = memcache.incr(index_key,initial_value=0) # starts at 1
     
-    dim1l1 = kwargs.get('dim1l1','') # creative
-    dim2l1 = kwargs.get('dim2l1','') # adunit
-    
-    account_key = ACCOUNT_KEY_FORMAT%dict(account_name=account_name)
-    # TODO: make this list real
-    logging.info("putting key,value (%s,%s)"%(account_key,['%s:%s'%(dim2l1,dim1l1)]))
-    
-    # put a list of all creative-adunit tuples to be updated for this account and epoch
-    # currently this defaults to just the one tuple. List of counters to be dumped
-    memcache.set(account_key,['%s:%s'%(dim2l1,dim1l1)])
+    # get the new index for this account and time bucket
+    index_key = INDEX_KEY_FORMAT%dict(account_name=account_name,time=time_bucket)
+    log_index = memcache.incr(index_key,initial_value=0) # starts at 1
     
     # put the log data into appropriate place
-    increment_dict = {}
-    # if there is an impression
-    if dim1l1:
-      # impression for adunit-creative
-      counter_key = IMP_KEY_FORMAT%dict(dim_two_level_one=dim2l1,
-                                        dim_one_level_one=dim1l1,
-                                        time_bucket=time_bucket)
-      increment_dict[counter_key] = 1
-      # impression for creative 
-      counter_key = IMP_KEY_FORMAT%dict(dim_two_level_one='',
-                                        dim_one_level_one=dim1l1,
-                                        time_bucket=time_bucket)
-      increment_dict[counter_key] = 1                                  
-      # impression for adunit 
-      counter_key = IMP_KEY_FORMAT%dict(dim_two_level_one=dim2l1,
-                                        dim_one_level_one='',
-                                        time_bucket=time_bucket)
-                                        
-      increment_dict[counter_key] = 1
-      
-      # increment request for creative 
-      counter_key = REQ_KEY_FORMAT%dict(dim_two_level_one='',
-                                        dim_one_level_one=dim1l1,
-                                        time_bucket=time_bucket)
-      increment_dict[counter_key] = 1                                  
-      # increment request for adunit-creative 
-      counter_key = REQ_KEY_FORMAT%dict(dim_two_level_one=dim2l1,
-                                        dim_one_level_one=dim1l1,
-                                        time_bucket=time_bucket)
-      increment_dict[counter_key] = 1
-      
-    # increment request count for only the adunit 
-    counter_key = REQ_KEY_FORMAT%dict(dim_two_level_one=dim2l1,
-                                      dim_one_level_one='',
-                                      time_bucket=time_bucket)
-    increment_dict[counter_key] = 1
-                                      
-    count_dict = memcache.offset_multi(increment_dict,initial_value=0)
+    log_key = LOG_KEY_FORMAT%dict(account_name=account_name,time=time_bucket,log_index=log_index)
+    memcache.set(log_key,kwargs)
+    logging.info("just put %s=%s"%(log_key,kwargs))
     
-    # send to appropriately named task_queue
+    # send of appropriately named task_queue
     task_name = TASK_NAME%dict(account_name=account_name,time=time_bucket)
     logging.info('task: %s'%task_name)
+    
+    
     try:
-        t = Task(name=task_name,params={'account_name':account_name,'time_bucket':time_bucket},countdown=TIME_BUCKET+TIME_BUCKET,method='GET')
+        overlap = random.randint(0,1)
+        t = Task(name=task_name,params={'account_name':account_name,'time':time_bucket},countdown=TIME_BUCKET+overlap*TIME_BUCKET,method='GET')
         t.add('bulk-log-processor')
     except taskqueue.TaskAlreadyExistsError:
         logging.info("task %s already exists"%task_name)

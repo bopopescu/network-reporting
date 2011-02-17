@@ -53,11 +53,12 @@ from publisher.models import *
 from advertiser.models import *
 from reporting.models import *
 
-from ad_server.networks.millennial import MillennialServerSide
 from ad_server.networks.appnexus import AppNexusServerSide
-from ad_server.networks.inmobi import InMobiServerSide
 from ad_server.networks.brightroll import BrightRollServerSide
 from ad_server.networks.greystripe import GreyStripeServerSide
+from ad_server.networks.inmobi import InMobiServerSide
+from ad_server.networks.jumptap import JumptapServerSide
+from ad_server.networks.millennial import MillennialServerSide
 
 from publisher.query_managers import AdServerAdUnitQueryManager, AdUnitQueryManager
 from advertiser.query_managers import CampaignStatsCounter
@@ -150,6 +151,7 @@ class AdAuction(object):
                           "appnexus":AppNexusServerSide,
                           "inmobi":InMobiServerSide,
                           "brightroll":BrightRollServerSide,
+                          "jumptap":JumptapServerSide,
                           "greystripe":GreyStripeServerSide}
       if adgroup.network_type in server_side_dict:
         KlassServerSide = server_side_dict[adgroup.network_type]
@@ -566,7 +568,7 @@ class AdHandler(webapp.RequestHandler):
       # render the creative 
       self.response.out.write(self.render_creative(c, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, request_id=request_id, v=int(self.request.get('v') or 0)))
       if testing:
-          return c.key()
+          return c.key() # TODO: shouldn't this be self.response.out.write(str(c.key()))
     else:
       self.response.out.write(self.render_creative(c, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, request_id=request_id, v=int(self.request.get('v') or 0)))
 
@@ -882,10 +884,12 @@ class TestHandler(webapp.RequestHandler):
     from ad_server.networks.greystripe import GreyStripeServerSide
     from ad_server.networks.millennial import MillennialServerSide
     from ad_server.networks.brightroll import BrightRollServerSide
+    from ad_server.networks.jumptap import JumptapServerSide
     
     #server_side = BrightRollServerSide(self.request,357)
     #server_side = MillennialServerSide(self.request,357)
-    server_side = InMobiServerSide(self.request)
+    #server_side = InMobiServerSide(self.request)
+    server_side = JumptapServerSide(self.request)
     logging.warning("%s, %s"%(server_side.url,server_side.payload))
     
     rpc = urlfetch.create_rpc(5) # maximum delay we are willing to accept is 1000 ms

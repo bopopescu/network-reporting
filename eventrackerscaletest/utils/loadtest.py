@@ -52,9 +52,9 @@ from event.models import db
 from optparse import OptionParser
 parser = OptionParser()
 parser.add_option("-n", "--num_threads", dest="NUM_THREADS",type="int",
-                  help="How many threads should be running at peak load.", default=20)
+                  help="How many threads should be running at peak load.", default=10)
 parser.add_option("-t", "--time_at_peak", dest="TIME_AT_PEAK_QPS",type="float",
-                help="How many minutes the test should run with all threads active.", default=2)
+                help="How many minutes the test should run with all threads active.", default=1)
 parser.add_option("-d", "--delay", dest="DELAY_BETWEEN_THREAD_START",type="float",
                 help="How many seconds to wait between starting threads.", default=10) 
 parser.add_option("-l", "--logging", dest="LOGGING",type="int",
@@ -114,6 +114,8 @@ def threadproc():
             t = time.time()
             
             url = "http://eventrackerscaletest.appspot.com/event/one?log=%s&nc=1&deadline=.08&uid=%s&id=%s&req=%s&inst=%s&test=%s"%(LOGGING,uid,dim_two_level_one,req_cnt,INSTANCE_ID,TEST_ID)
+            # url = "http://localhost:8080/event/one?log=%s&nc=1&deadline=.08&uid=%s&id=%s&req=%s&inst=%s&test=%s"%(LOGGING,uid,dim_two_level_one,req_cnt,INSTANCE_ID,TEST_ID)
+
             
             fail_lock.acquire()
             print "URL: ",url

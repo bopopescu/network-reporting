@@ -114,9 +114,9 @@
                 <a name="adunitForm" class="hidden">anchor</a>
                 <form action="{% url publisher_adunit_update_ajax %}" method="POST" accept-charset="utf-8" id="adunitAddForm">
                   <fieldset id="appForm-details" class="alt">
-										<div id="adunitForm-fragment">
-											{{adunit_form_fragment}}
-										</div>
+                    <div id="adunitForm-fragment">
+                      {{adunit_form_fragment}}
+                    </div>
                     <div class="form-submit"> 
                       <span class="hidden" id="adunitForm-loading"><img src="/images/loading2.gif"/></span>
                       <span class="buttonWrap"><a href="#" class="button" id="adunitAddForm-submit">Save</a></span> 
@@ -133,9 +133,6 @@
                   <tr>
                     <th class="appData-icon"></th>
                     <th class="dataTable-name">&nbsp;</th>
-					<th class="dataTable-data numeric"></th>
-					<th class="dataTable-data numeric"></th>
-					<th class="dataTable-data numeric"></th>
                     <th class="dataTable-data numeric">Requests</th>
                     <th class="dataTable-data numeric">Impressions</th>
                     <th class="dataTable-data numeric">Clicks</th>
@@ -150,9 +147,6 @@
                   <tr>
                     <td class="appData-icon"><a href="#"><img src="{% if app.icon_url %}{{app.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" /></a></td>
                     <th class="dataTable-name">Totals</th>
-					<td class="dataTable-data numeric"></td>
-					<td class="dataTable-data numeric"></td>
-					<td class="dataTable-data numeric"></td>
                     <td class="dataTable-data numeric">{{app.stats.request_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{app.stats.impression_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{app.stats.click_count|withsep}}</td>
@@ -167,9 +161,6 @@
                       {% for au in app.adunits %}
                       <tr>
                         <th class="dataTable-name"><span class="inner"><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a></span></th>
-						<td class="dataTable-data numeric"></td>
-						<td class="dataTable-data numeric"></td>
-						<td class="dataTable-data numeric"></td>
                         <td class="dataTable-data numeric">{{au.stats.request_count|withsep}}</td>
                         <td class="dataTable-data numeric">{{au.stats.impression_count|withsep}}</td>
                         <td class="dataTable-data numeric">{{au.stats.click_count|withsep}}</td>

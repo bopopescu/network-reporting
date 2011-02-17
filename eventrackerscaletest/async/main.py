@@ -62,8 +62,11 @@ def log(**kwargs):
     # send of appropriately named task_queue
     task_name = TASK_NAME%dict(account_name=account_name,time=time_bucket)
     logging.info('task: %s'%task_name)
+    
+    
     try:
-        t = Task(name=task_name,params={'account_name':account_name,'time':time_bucket},countdown=TIME_BUCKET+TIME_BUCKET,method='GET')
+        overlap = random.randint(0,1)
+        t = Task(name=task_name,params={'account_name':account_name,'time':time_bucket},countdown=TIME_BUCKET+overlap*TIME_BUCKET,method='GET')
         t.add('bulk-log-processor')
     except taskqueue.TaskAlreadyExistsError:
         logging.info("task %s already exists"%task_name)

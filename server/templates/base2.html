@@ -201,7 +201,7 @@
             </ul>         
           </div>
           <div id="footer-account">
-            Logged in as <a href="account.html">{{google_user}}</a>
+            Logged in as <a href="{% url account_index %}">{{google_user}}</a>
 {% block adminSelect %}{% if user.is_admin %}
                   <div style="float:right;padding-left:10px">
                     <form id="admin_user_switch" action="{% url admin_switch_user %}" method="POST">

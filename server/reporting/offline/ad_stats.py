@@ -277,12 +277,18 @@ class PubGeoRequestCounter(StatsCounter):
       pat = re.compile(r'Mac OS X; (.*?)\)') #TODO: make work for non android
       match = pat.search(d['client'])
       if match:
-        country_code = match.group(1).split('_')[1].lower()
+        try:
+          country_code = match.group(1).split('_')[1].lower()
+        except:
+          pass
       else:
         pat = re.compile(r'Android.*; (.*?);')
         match = pat.search(d['client'])
         if match:
-          country_code = match.group(1).split('-')[1].lower()
+          try:
+            country_code = match.group(1).split('-')[1].lower()
+          except:
+            pass
 
     if not country_code:
       country_code = "unknown"        

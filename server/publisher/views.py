@@ -25,18 +25,22 @@ from common.ragendja.template import render_to_response, render_to_string, JSONR
 # from common.ragendja.auth.decorators import google_login_required as login_required
 from common.utils.decorators import whitelist_login_required
 
-
+## Models
+from advertiser.models import Campaign, AdGroup, HtmlCreative
 from publisher.models import Site, Account, App
 from publisher.forms import SiteForm, AppForm, AdUnitForm
-from advertiser.models import Campaign, AdGroup, HtmlCreative
 from reporting.models import SiteStats
 
-from common.utils.cachedquerymanager import CachedQueryManager
+## Query Managers
 from account.query_managers import AccountQueryManager
-from publisher.query_managers import AppQueryManager, AdUnitQueryManager
-from reporting.query_managers import SiteStatsQueryManager
 from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager, \
                                       CreativeQueryManager
+from common.utils.cachedquerymanager import CachedQueryManager
+from publisher.query_managers import AppQueryManager, AdUnitQueryManager
+from reporting.query_managers import SiteStatsQueryManager
+
+from common.utils import sswriter
+from common.constants import *
 
 class RequestHandler(object):
     def __init__(self,request=None):
@@ -359,6 +363,24 @@ class ShowAppHandler(RequestHandler):
 @whitelist_login_required
 def app_show(request,*args,**kwargs):
   return ShowAppHandler()(request,*args,**kwargs)   
+
+
+
+class ExportFileHandler( RequestHandler ):
+    def get( self, site_key, f_type ):
+        #this is temp, should have more than just adunit
+        stats = ( DTE_STAT, REQ_STAT, IMP_STAT, CLK_STAT )
+        adunit = AdUnitQueryManager().get_by_key( site_key )
+        if self.start_date:
+            days = SiteStats.get_days( self.start_date, self.date_range )
+        else:
+            days = SiteStats.lastdays( self.date_range )
+        return sswriter.write_stats( f_type, stats, site=site_key, days=days )
+
+
+@whitelist_login_required
+def export_file( request, *args, **kwargs ):
+    return ExportFileHandler()( request, *args, **kwargs )
 
 class AdUnitShowHandler(RequestHandler):
   def get(self,adunit_key):

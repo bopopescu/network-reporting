@@ -17,6 +17,7 @@ urlpatterns = patterns('publisher.views',
   url(r'^getstarted/$','getstarted',name='publisher_getstarted'),
   url(r'^geo$','index_geo',name='publisher_index_geo'),
   url(r'^$','index',name='publisher_index'),
+  url( r'^export/(?P<f_type>xls|csv)/(?P<site_key>[-\w\.]+)/$', 'export_file', name='exporter' ),
 )
 
 url(r'^show/(?P<campaign_key>[-\w\.]+)$','campaign_show',name='advertiser_campaign_show'),

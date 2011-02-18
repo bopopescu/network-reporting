@@ -222,40 +222,10 @@ class AdAuction(object):
 
     all_ad_groups = filter( mega_filter( *ALL_FILTERS ), all_ad_groups )
 
-    for fil in ALL_FILTERS:
-        func, warn, lst = fil
+    for ( func, warn, lst ) in ALL_FILTERS:
         logging.warning( warn % lst )
 
     # NOTE: The budgets are in the adgroup when they should be in the campaign
-
-    """
-    all_ad_groups = [a for a in all_ad_groups 
-                      if a.budget is None or 
-                      a.campaign.delivery_counter.count < a.budget]
-    logging.warning("removed over budget, now: %s" % all_ad_groups)
-    all_ad_groups = [a for a in all_ad_groups 
-                      if a.campaign.active and 
-                        (a.campaign.start_date >= SiteStats.today() if a.campaign.start_date else True) 
-                        and (SiteStats.today() <= a.campaign.end_date if a.campaign.end_date else True)]
-    logging.warning("removed non running campaigns, now: %s" % all_ad_groups)
-    
-    # ad group request-based targeting exclusions
-    all_ad_groups = [a for a in all_ad_groups 
-                    if not a.keywords or set(keywords).intersection(a.keywords) > set()]
-    logging.warning("removed keyword non-matches, now: %s" % all_ad_groups)
-    
-    all_ad_groups = [a for a in all_ad_groups
-                    if set(geo_predicates).intersection(a.geographic_predicates) > set()]
-    logging.warning("removed geo non-matches, now: %s" % all_ad_groups)
-    all_ad_groups = [a for a in all_ad_groups
-                    if set(device_predicates).intersection(a.device_predicates) > set()]
-    logging.warning("removed device non-matches, now: %s" % all_ad_groups)
-    """
-
-
-
-
-
 
     # frequency capping and other user / request based randomizations
     udid = kw["udid"]

@@ -105,14 +105,29 @@ def write_stats( f_type, desired_stats, site=None, owner=None, days=None ):
         # wat
         assert False, "This should never happen, %s is in %s but doens't have an if/else case" % ( f_type, TABLE_FILE_FORMATS )
 
-    #should probably do something about the filename here
-
     all_stats = SiteStatsQueryManager().get_sitestats_for_days( site=site, owner=owner,days=days )
     for i in range( len( days ) ):
         all_stats[i].date = days[i]
 
+    owner = all_stats[0].owner
+    owner_type = owner.key().kind()
+    owner_name = owner.name
+
+    start = days[0]
+    end = days[-1]
+    d_form = '%d/%m/%y' 
+    d_str = '%s-%s' % ( start.strftime( d_form ), end.strftime( d_form ) )
+    
+    #should probably do something about the filename here
+    response['Content-disposition'] = 'attachment; filename=%(name)_%(type)_%(d_range).%(f_type)' % dict(   name    = owner_name,
+                                                                                                            type    = owner_type,
+                                                                                                            d_range = d_str,
+                                                                                                            f_type  = f_type,
+                                                                                                            )
+
     #Verify requested stats and turn them into SiteStat attributes so we can getattr them
     map_stats = map( verify_stats, desired_stats )
+
 
     #write a header row.  Right now this will look EXACTLY like how the accessors look, Might want to clean this
     row_writer( map_stats )

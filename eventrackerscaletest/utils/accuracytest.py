@@ -17,7 +17,7 @@ from google.appengine.ext import db
 
 from counters.models import Counter
 
-TOTAL = 142
+TOTAL = 49
 
 def auth_func():
     return "appenginescaletest@gmail.com", "test!@#$"

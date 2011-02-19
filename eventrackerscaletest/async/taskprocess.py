@@ -16,9 +16,7 @@ from counters.models import Counter
 from async.main import LogEventOne
 from async.main import LOG_KEY_FORMAT,INDEX_KEY_FORMAT
                        
-                       
-from userstore.models import MobileUser                       
-                       
+from userstore.models import MobileUser
 
 MAX_KEYS = 100
 
@@ -33,7 +31,6 @@ def increment_counter(counter,time_bucket):
     # datastore put
     logging.info("putting in key_name: %s value: %s,%s"%(key_name,counter.count_one,counter.count_two))
     logging.info("putting in key_name: %s NEW value: %s,%s"%(key_name,obj.count_one,obj.count_two))
-    
     obj.put()
 
 
@@ -78,7 +75,9 @@ class LogTaskHandler(webapp.RequestHandler):
             logging.info("we have %d keys (start:%s stop:%s)"%(len(keys),start,stop))
             # grab logs from memcache         
             data_dicts = memcache.get_multi(keys)   
-    
+            data_values = [v['req'] for v in data_dicts.values()]
+            logging.info("data: %s"%data_values)
+            
             logging.info("Memcache misses: %d"%(len(keys)-len(data_dicts)))
             
             for k,d in data_dicts.iteritems():
@@ -93,7 +92,7 @@ class LogTaskHandler(webapp.RequestHandler):
                     inst = d.get('inst',None)
                     inst = int(inst) if inst else None
                 
-                    req = "%s.%s"%(req,inst)
+                    req = "%s.%s.%s"%(req,inst,time_bucket)
                     
                     appid = d.get('appid',None)
                 
@@ -105,9 +104,9 @@ class LogTaskHandler(webapp.RequestHandler):
                     date_hour = datetime.datetime.fromtimestamp(hour)
                 
                     # attach on teh request id once per log line
-                    update_count(counter_dict,dim1l1,dim2l1,date_hour,None,req)
-                    update_count(counter_dict,None,dim2l1,date_hour,None,req)
-                    update_count(counter_dict,dim1l1,None,date_hour,None,req)
+                    # update_count(counter_dict,dim1l1,dim2l1,date_hour,None,req)
+                    # update_count(counter_dict,None,dim2l1,date_hour,None,req)
+                    # update_count(counter_dict,dim1l1,None,date_hour,None,req)
                     
                     
                     if clk:

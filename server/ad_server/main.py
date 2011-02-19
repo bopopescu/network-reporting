@@ -63,6 +63,7 @@ from ad_server.networks.millennial import MillennialServerSide
 from publisher.query_managers import AdServerAdUnitQueryManager, AdUnitQueryManager
 from advertiser.query_managers import CampaignStatsCounter
 
+from mopub_logging import mp_logging
 
 test_mode = "3uoijg2349ic(test_mode)kdkdkg58gjslaf"
 CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gzip(gfe)"]
@@ -512,6 +513,9 @@ class AdHandler(webapp.RequestHandler):
   }
   
   def get(self):
+    
+    mp_logging.log(self.request)
+    
     logging.warning(self.request.headers['User-Agent'] )
     id = self.request.get("id")
     

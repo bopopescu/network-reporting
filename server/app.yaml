@@ -1,4 +1,4 @@
-application: mopub-inc
+application: mopub-staging
 version: 37-newui
 runtime: python
 api_version: 1
@@ -53,6 +53,10 @@ handlers:
   # script: $PYTHON_LIB/google/appengine/ext/appstats/ui.py
   script: appstats.py
   login: admin
+  
+- url: /_ah/queue/.*
+  script: mopub_logging/views.py
+  login: admin  
 
 - url: /.*
   script: main.py

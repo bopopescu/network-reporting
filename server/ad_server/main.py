@@ -38,16 +38,11 @@ from django.utils import simplejson
 from string import Template
 from urllib import urlencode, unquote
 
-from google.appengine.ext.webapp import template
-from google.appengine.api import users
-from google.appengine.ext import webapp
-from google.appengine.ext.webapp.util import run_wsgi_app
-from google.appengine.ext import db
-from google.appengine.api import urlfetch
-from google.appengine.api import memcache
-from google.appengine.api import users
+from google.appengine.api import users, urlfetch, memcache
 from google.appengine.api.labs import taskqueue
-from google.appengine.api import memcache
+from google.appengine.ext import webapp, db
+from google.appengine.ext.webapp import template
+from google.appengine.ext.webapp.util import run_wsgi_app
 
 from publisher.models import *
 from advertiser.models import *
@@ -61,8 +56,6 @@ from ad_server.networks.jumptap import JumptapServerSide
 from ad_server.networks.millennial import MillennialServerSide
 
 from publisher.query_managers import AdServerAdUnitQueryManager, AdUnitQueryManager
-from advertiser.query_managers import CampaignStatsCounter
-
 
 test_mode = "3uoijg2349ic(test_mode)kdkdkg58gjslaf"
 CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gzip(gfe)"]
@@ -542,7 +535,6 @@ class AdHandler(webapp.RequestHandler):
 
     # get winning creative
     c = AdAuction.run(request=self.request, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, udid=udid, request_id=request_id, now=now,manager=manager)
-    
     # output the request_id and the winning creative_id if an impression happened
     if c:
       user_adgroup_daily_key = memcache_key_for_date(udid,now,c.ad_group.key())

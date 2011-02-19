@@ -52,8 +52,8 @@ class CachedQueryManager(object):
     if replace:
       return memcache.replace_multi(cache_dict,time=MAX_CACHE_TIME,namespace=NAMESPACE) 
     else:  
-      return memcache.set_multi(cache_dict,time=MAX_CACHE_TIME,namespace=NAMESPACE)   
-    
+      return memcache.set_multi(cache_dict,time=MAX_CACHE_TIME,namespace=NAMESPACE)
+
   def cache_delete(self,objs):
     if not isinstance(objs,list):
       objs = [objs]

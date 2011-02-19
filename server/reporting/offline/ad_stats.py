@@ -30,7 +30,7 @@ from reporting.models import *
 from publisher.models import *
 from advertiser.models import *
 
-from google.appengine.api import users, memcache
+from google.appengine.api import users
 from google.appengine.api.urlfetch import fetch
 from google.appengine.ext.remote_api import remote_api_stub
 from google.appengine.ext import db, webapp

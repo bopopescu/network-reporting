@@ -7,7 +7,8 @@ from google.appengine.datastore import entity_pb
 from django.utils import simplejson
 
 NAMESPACE = None
-MAX_CACHE_TIME = 60*5 # 5 minutes
+#MAX_CACHE_TIME = 60*5 # 5 minutes
+MAX_CACHE_TIME = 0 # No expiration
 
 class CachedQueryManager(object):
   Model = None

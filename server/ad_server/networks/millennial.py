@@ -4,8 +4,6 @@ import urllib
 
 class MillennialServerSide(ServerSide):
   base_url = "http://ads.mp.mydas.mobi/getAd.php5"
-  def __init__(self,request,adunit,*args,**kwargs):
-    return super(MillennialServerSide,self).__init__(request,adunit,*args,**kwargs)
       
   def get_key_values(self):
     return {'apid':self.get_account().millenial_pub_id,

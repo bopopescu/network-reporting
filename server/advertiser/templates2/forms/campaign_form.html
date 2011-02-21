@@ -41,7 +41,7 @@
                       </dd>
                       <dt><label for="name">Name:</label></dt> 
                       <dd> 
-                        <input type="text" class="input-text {% if form.name.errors %}form-error{% endif %}" name="{{form.name.name}}" value="{{form.name.value}}" id="appForm-name" placeholder="Campaign Name" />
+                        <input type="text" class="input-text{% if form.name.errors %} form-error{% endif %}" name="{{form.name.name}}" value="{{form.name.value}}" placeholder="Campaign Name" />
                         {% for error in form.name.errors %}
                         <div class="form-error-text">{{error}}</div> 
                         {% endfor %}

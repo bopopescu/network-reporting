@@ -3,7 +3,7 @@ import logging, os, re, datetime, hashlib
 from urllib import urlencode
 
 import base64, binascii
-from google.appengine.api import users, memcache, images
+from google.appengine.api import users, images
 from google.appengine.api.urlfetch import fetch
 from google.appengine.ext import db
 from google.appengine.ext.webapp import template
@@ -197,7 +197,7 @@ class CreateCampaignAJAXHander(RequestHandler):
     campaign_form = campaign_form or CampaignForm(instance=campaign)
     adgroup_form = adgroup_form or AdGroupForm(instance=adgroup)
     networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["greystripe","GreyStripe",False],\
-      ["iAd","iAd",False],["inmobi","InMobi",False],["millennial","Millennial Media",False]]
+      ["iAd","iAd",False],["inmobi","InMobi",False],["jumptap","Jumptap",False],["millennial","Millennial Media",False]]
     
     all_adunits = AdUnitQueryManager().get_adunits(account=self.account)
     
@@ -368,7 +368,7 @@ class CreateAdGroupHandler(RequestHandler):
       adunit.checked = adunit.key() in adgroup.site_keys
       adunit.app = App.get(adunit.app_key.key())
     # TODO: Clean up this hacked shit 
-    networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["greystripe","GreyStripe",False],["iAd","iAd",False],["inmobi","InMobi",False],["millennial","Millennial Media",False]]
+    networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["jumptap","Jumptap",False],["greystripe","GreyStripe",False],["iAd","iAd",False],["inmobi","InMobi",False],["millennial","Millennial Media",False]]
     for n in networks:
       if adgroup.network_type == n[0]:
         n[2] = True
@@ -537,7 +537,8 @@ class ShowAdGroupHandler(RequestHandler):
     for a in apps:
       if a.icon:
         a.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(a.icon)
-
+        
+    # TODO: use query manager    
     adunits = map(lambda x: Site.get(x), adgroup.site_keys)
     for au in adunits:
       au.all_stats = SiteStatsQueryManager().get_sitestats_for_days(site=au,owner=adgroup, days=days)
@@ -553,7 +554,7 @@ class ShowAdGroupHandler(RequestHandler):
       graph_adunits[3].all_stats = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[au.all_stats for au in adunits[3:]])]
     
     
-    logging.error("network: type: %s"%(adgroup.network_type))
+    logging.warning("network: type: %s"%(adgroup.network_type))
       
     if not adgroup.network_type:  
       # In order to have add creative

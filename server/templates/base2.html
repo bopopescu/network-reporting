@@ -12,12 +12,20 @@
   <meta name="description" content="">
   <meta name="author" content="">
 
+  <!-- TypeKit -->
+  <script src="http://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js"></script> 
+  <script> 
+    WebFont.load({ 
+      typekit: { id: "qhz7iwb" } 
+    }); 
+  </script> 
+
   <link rel="shortcut icon" href="/favicon.ico">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
   <!-- CSS -->
   <link rel="stylesheet" href="/js/mylibs/jquery-ui-1.8.7.custom/css/mopub/jquery-ui-1.8.7.custom.css" />  
-  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/style.css?v=2">
  
   <!-- modernizr -->
   <script src="/js/libs/modernizr-1.6.min.js"></script>
@@ -29,20 +37,6 @@
       google.load("jquery", "1.4.4");
       google.load("jqueryui", "1.8.7");
   </script>
-  
-  <!-- TypeKit -->  
-  <script src="http://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js"></script> 
-  <script> 
-    WebFont.load({ 
-      typekit: { id: "qhz7iwb" } 
-    }); 
-  </script> 
-  <style> 
-    .wf-loading { visibility: hidden; } 
-    .wf-active, .wf-inactive {  
-      visibility: visible;  
-    } 
-  </style> 
         
   <!-- jQuery and jQuery UI -->
   <script src="/js/mylibs/jquery.form.js"></script>
@@ -213,7 +207,7 @@
             </ul>         
           </div>
           <div id="footer-account">
-            Logged in as <a href="account.html">{{google_user}}</a>
+            Logged in as <a href="{% url account_index %}">{{google_user}}</a>
 {% block adminSelect %}{% if user.is_admin %}
                   <div style="float:right;padding-left:10px">
                     <form id="admin_user_switch" action="{% url admin_switch_user %}" method="POST">

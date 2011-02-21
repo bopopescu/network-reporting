@@ -1132,12 +1132,12 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
 }
 
 .dataTable-name {
-  width: 270px;
+  width: 500px;
 }
 
 .dataTable-name .inner {
   display: block;
-  width: 270px;
+  width: 500px;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -1489,7 +1489,7 @@ input.ui-button {
   height: 185px;
 }
 
-#dashboard-apps {
+#dashboard-apps, #dashboard-campaigns {
   margin: 30px 0 0 0;
 }
 

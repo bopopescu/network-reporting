@@ -8,7 +8,7 @@ from urllib import urlencode
 from operator import itemgetter
 import base64, binascii
 
-from google.appengine.api import users, memcache
+from google.appengine.api import users
 from google.appengine.api.urlfetch import fetch
 from google.appengine.ext import db
 from google.appengine.ext.webapp import template
@@ -25,18 +25,22 @@ from common.ragendja.template import render_to_response, render_to_string, JSONR
 # from common.ragendja.auth.decorators import google_login_required as login_required
 from common.utils.decorators import whitelist_login_required
 
-
+## Models
+from advertiser.models import Campaign, AdGroup, HtmlCreative
 from publisher.models import Site, Account, App
 from publisher.forms import SiteForm, AppForm, AdUnitForm
-from advertiser.models import Campaign, AdGroup, HtmlCreative
 from reporting.models import SiteStats
 
-from common.utils.cachedquerymanager import CachedQueryManager
+## Query Managers
 from account.query_managers import AccountQueryManager
-from publisher.query_managers import AppQueryManager, AdUnitQueryManager
-from reporting.query_managers import SiteStatsQueryManager
 from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager, \
                                       CreativeQueryManager
+from common.utils.cachedquerymanager import CachedQueryManager
+from publisher.query_managers import AppQueryManager, AdUnitQueryManager
+from reporting.query_managers import SiteStatsQueryManager
+
+from common.utils import sswriter
+from common.constants import *
 
 class RequestHandler(object):
     def __init__(self,request=None):
@@ -228,7 +232,6 @@ class AppCreateHandler(RequestHandler):
         CachedQueryManager().cache_delete(adunit)
 
         # Check if this is the first ad unit for this account
-        # if Site.gql("where account = :1 limit 2", self.account).count() == 1:
         if len(AdUnitQueryManager().get_adunits(account=self.account,limit=2)) == 1:      
           add_demo_campaign(adunit)
         # Check if this is the first app for this account
@@ -289,8 +292,9 @@ def add_demo_campaign(site):
   AdGroupQueryManager().put_adgroups(ag)
 
   # And set up a default creative
-  h = HtmlCreative(ad_type="html", 
-                   ad_group=ag, 
+  h = HtmlCreative(ad_type="html",
+                   ad_group=ag,
+                   format=site.format,
                    name="Demo HTML Creative",
                    html_data="<style type=\"text/css\">body {font-size: 12px;font-family:helvetica,arial,sans-serif;margin:0;padding:0;text-align:center} .creative_headline {font-size: 18px;} .creative_promo {color: green;text-decoration: none;}</style><div class=\"creative_headline\">Welcome to mopub!</div><div class=\"creative_promo\"><a href=\"http://www.mopub.com\">Click here to test ad</a></div><div>You can now set up a new campaign to serve other ads.</div>")
   CreativeQueryManager().put_creatives(h)
@@ -359,6 +363,24 @@ class ShowAppHandler(RequestHandler):
 @whitelist_login_required
 def app_show(request,*args,**kwargs):
   return ShowAppHandler()(request,*args,**kwargs)   
+
+
+
+class ExportFileHandler( RequestHandler ):
+    def get( self, site_key, f_type ):
+        #this is temp, should have more than just adunit
+        stats = ( DTE_STAT, REQ_STAT, IMP_STAT, CLK_STAT )
+        adunit = AdUnitQueryManager().get_by_key( site_key )
+        if self.start_date:
+            days = SiteStats.get_days( self.start_date, self.date_range )
+        else:
+            days = SiteStats.lastdays( self.date_range )
+        return sswriter.write_stats( f_type, stats, site=site_key, days=days )
+
+
+@whitelist_login_required
+def export_file( request, *args, **kwargs ):
+    return ExportFileHandler()( request, *args, **kwargs )
 
 class AdUnitShowHandler(RequestHandler):
   def get(self,adunit_key):

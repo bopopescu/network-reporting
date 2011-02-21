@@ -12,7 +12,11 @@
 {% endblock titleBarRight %}
 {% block messageCenter %}{% endblock messageCenter %}
 
-{% block content %}
+{% block content %}{% if not adunit.adgroups %}
+          <div class="alertMessage">
+            There are no campaigns targeting this ad unit.  To show ads here, set up a new ad campaign or add this ad unit to an existing campaign on the <a href="{% url advertiser_campaign %}">Campaigns</a> page.
+          </div>
+{% endif %}
           <section id="dashboard-adunitEditForm" class="hidden">
             <div>
               <a name="adunitForm" class="hidden">anchor</a>
@@ -102,9 +106,6 @@
                   <tr>
                     <th class="appData-icon"></th>
                     <th class="dataTable-name">&nbsp;</th>
-					<th class="dataTable-data numeric"></th>
-					<th class="dataTable-data numeric"></th>
-					<th class="dataTable-data numeric"></th>
                     <th class="dataTable-data numeric">Revenue</th>
                     <th class="dataTable-data numeric">Impressions</th>
                     <th class="dataTable-data numeric">Clicks</th>
@@ -114,14 +115,12 @@
               </table>
             </div>
             <div class="appData">
+              {% if adunit.adgroups %}
               <table class="dataTable appData-main">
                 <tbody>
                   <tr>
                     <td class="appData-icon-none"></td>
                     <th class="dataTable-name">Totals</th>
-					<td class="dataTable-data numeric"></td>
-					<td class="dataTable-data numeric"></td>
-					<td class="dataTable-data numeric"></td>
                     <td class="dataTable-data numeric">{{adunit.stats.revenue|currency}}</td>
                     <td class="dataTable-data numeric">{{adunit.stats.impression_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{adunit.stats.click_count|withsep}}</td>
@@ -134,10 +133,7 @@
                   <table class="dataTable">
                     <tbody>
                       {% for ag in adunit.adgroups %}<tr>
-                        <th class="dataTable-name"><span class="inner"><a href="{% url advertiser_adgroup_show adgroup_key=ag.key %}">{{ag.name}}</a></span></th>
-						<td class="dataTable-data numeric"></td>
-						<td class="dataTable-data numeric"></td>
-						<td class="dataTable-data numeric"></td>
+                        <th class="dataTable-name"><span class="inner"><a href="{% url advertiser_adgroup_show adgroup_key=ag.key %}">{{ag.name}}</a>{% if not ag.active %}<span class="muted"> (Paused)</span>{% endif %}</span></th>
                         <td class="dataTable-data numeric">{{ag.stats.revenue|currency}}</td>
                         <td class="dataTable-data numeric">{{ag.stats.impression_count|withsep}}</td>
                         <td class="dataTable-data numeric">{{ag.stats.click_count|withsep}}</td>
@@ -149,6 +145,16 @@
                 </div>
                 <a class="button button-small appData-details-toggleButton" href="#">Hide details</a>
               </div>
+              {% else %}
+              <table class="dataTable appData-main">
+                <tbody>
+                  <tr>
+                    <td class="campaignData-icon"></td>
+                    <th class="dataTable-name"><span class="muted">None</span></th>
+                  </tr>
+                </tbody>
+              </table>
+              {% endif %}
             </div>
             
           </section>
@@ -161,9 +167,6 @@
                   <tr>
                     <th class="appData-icon"></th>
                     <th class="dataTable-name">&nbsp;</th>
-					<th class="dataTable-data numeric"></th>
-					<th class="dataTable-data numeric"></th>
-					<th class="dataTable-data numeric"></th>
                     <th class="dataTable-data numeric">Requests</th>
                     <th class="dataTable-data numeric">Impressions</th>
                     <th class="dataTable-data numeric">Clicks</th>
@@ -178,9 +181,6 @@
                   <tr>
                     <td class="appData-icon-none"></td>
                     <th class="dataTable-name">Totals</th>
-					<td class="dataTable-data numeric"></td>
-					<td class="dataTable-data numeric"></td>
-					<td class="dataTable-data numeric"></td>
                     <td class="dataTable-data numeric">{{adunit.stats.request_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{adunit.stats.impression_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{adunit.stats.click_count|withsep}}</td>
@@ -194,9 +194,6 @@
                     <tbody>
                       {% for s in adunit.all_stats %}<tr>
                         <th class="dataTable-name">{{s.date|format_date}}</th>
-						<td class="dataTable-data numeric"></td>
-						<td class="dataTable-data numeric"></td>
-						<td class="dataTable-data numeric"></td>
                         <td class="dataTable-data numeric">{{s.request_count|withsep}}</td>
                         <td class="dataTable-data numeric">{{s.impression_count|withsep}}</td>
                         <td class="dataTable-data numeric">{{s.click_count|withsep}}</td>
@@ -207,6 +204,8 @@
                   </table>
                 </div>
                 <a class="button button-small appData-details-toggleButton" href="#">Hide details</a>
+                <a class="button button-small" href="/inventory/export/csv/{{adunit.key}}">Export CSV</a>
+                <a class="button button-small" href="/inventory/export/xls/{{adunit.key}}">Export XLS</a>
               </div>
             </div>
           </section>

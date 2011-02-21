@@ -39,6 +39,13 @@ class SiteStats(db.Model):
   owner = db.ReferenceProperty()
   date = db.DateProperty()
 
+  @property
+  def str_date( self ):
+      if self.date:
+          return self.date.strftime( "%a, %b %d, %Y" )
+      else:
+          return "No date"
+
   # impressions and clicks
   request_count = db.IntegerProperty(default=0)
   impression_count = db.IntegerProperty(default=0)
@@ -50,6 +57,7 @@ class SiteStats(db.Model):
 
   # conversion information
   conversion_count = db.IntegerProperty()
+
 
   _geo_requests_json = db.StringProperty()
   _geo_impressions_json = db.StringProperty()
@@ -152,7 +160,7 @@ class SiteStats(db.Model):
   def ctr(self):
     if self.impression_count > 0:
       return self.click_count / float(self.impression_count)
-
+  
   def conv_rate(self):
 	if self.click_count > 0 and self.conversion_count > 0:
 	  return self.conversion_count / float(self.click_count)
@@ -172,6 +180,33 @@ class SiteStats(db.Model):
 	  return self.revenue / float(self.conversion_count)
 	else:
 	  return None
+
+# Turn the previous functions into properties of the class so they can be read as variables
+# ( useful for cool map shit )
+
+  @property
+  def fill_rate_p( self ):
+      return self.fill_rate()
+
+  @property
+  def cpa_p( self ):
+      return self.cpa()
+
+  @property
+  def ctr_p( self ):
+      return self.ctr()
+    
+  @property
+  def conv_rate_p( self ):
+      return self.conv_rate()
+
+  @property
+  def cpm_p( self ):
+      return self.cpm()
+
+  @property
+  def cpc_p( self ):
+      return self.cpc()
 
   def add_impression(self):
     self.impression_count += 1

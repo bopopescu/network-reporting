@@ -24,6 +24,7 @@ class Account(db.Model):
     brightroll_pub_id = db.StringProperty()
     greystripe_pub_id = db.StringProperty()
     inmobi_pub_id = db.StringProperty()
+    jumptap_pub_id = db.StringProperty()
     millenial_pub_id = db.StringProperty()
   
     @classmethod

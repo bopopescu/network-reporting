@@ -3,7 +3,7 @@ import sys
 sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine")
 sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/yaml/lib")
 sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/fancy_urllib")
-sys.path.append('/Users/f34r/mopub/server')
+sys.path.append('/Users/f34r/mopub-all/mopub/server')
 
 
 from advertiser.models import ( Campaign,
@@ -36,7 +36,7 @@ import logging
 
 AdUnit = Site
 
-AD_UNIT_ID = "agltb3B1Yi1pbmNyCgsSBFNpdGUYAgw" 
+AD_UNIT_ID = "agltb3B1Yi1pbmNyCgsSBFNpdGUYAgw"
 UDID = "thisisntrealatall"
 
 test_mode = "3uoijg2349ic(test_mode)kdkdkg58gjslaf"
@@ -142,6 +142,7 @@ def basic_net_test():
     for c in NETWORKS: 
         resume( c ) 
         id = get_id()
+        print "id is: %s" % id
         cret = Creative.get( id ) 
         assert_equal( cret.ad_group.name, c, "Expected %s, got %s" % ( c, cret.ad_group.name ) )
         pause( c )

@@ -128,6 +128,39 @@ def device_filter( dev_preds ):
     return ( real_filter, log_mesg, [] )
 
 
+
+# Function for constructing a frequency filter
+# Super generic, made this way since all the frequencies
+# were pretty much the exact same code except the attribute was different
+def freq_filter( type, key_func, udid, now, frq_dict ):
+    log_mesg = "Removed due to " + type + " frequency cap: %s"
+    attrib = "%s_frequency_cap" % type
+    def real_filter( a ):
+        a_key = key_func( udid, now, a.key() )
+        frq_cap = getattr( a, attrib ) 
+
+        if frq_cap and ( a_key in frq_dict ):
+            imp_cnt = int( frq_dict[ a_key ] )
+        else:
+            imp_cnt = 0
+        logging.warning( "%s imps: %s, freq cap: %d" % ( type.title(), imp_cnt, frq_cap ) )
+
+
+        return not ( not frq_cap or imp_cnt < frq_cap )
+
+    return ( real_filter, log_mesg, [] )
+
+        
+def all_freq_filter( *filters ):
+    def actual_filter( a ):
+        for f, msg, lst in filters:
+            logging.warning( "Adgroup: %s" % a )
+            if f( a ):
+                lst.append( a )
+                return False
+        return True
+    return actual_filter
+
 def mega_filter( *filters ): 
     def actual_filter( a ):
         for ( f, msg, lst ) in filters:
@@ -188,6 +221,8 @@ class AdAuction(object):
     manager = kw["manager"]
     request = kw["request"]
     
+    udid = kw["udid"]
+
     keywords = kw["q"]
     geo_predicates = AdAuction.geo_predicates_for_rgeocode(kw["addr"])
     device_predicates = AdAuction.device_predicates_for_request(kw["request"])
@@ -209,7 +244,6 @@ class AdAuction(object):
     
     # # campaign exclusions... budget + time
     
-    
     for a in all_ad_groups:
       logging.info("%s of %s"%(a.campaign.delivery_counter.count,a.budget))
     
@@ -222,13 +256,47 @@ class AdAuction(object):
 
     all_ad_groups = filter( mega_filter( *ALL_FILTERS ), all_ad_groups )
 
-    for ( func, warn, lst ) in ALL_FILTERS:
+    for fil in ALL_FILTERS:
+        func, warn, lst = fil
         logging.warning( warn % lst )
 
-    # NOTE: The budgets are in the adgroup when they should be in the campaign
 
+
+    # to add a frequency cap, add it here as follows:
+    #         ( 'name',     key_function ),
+    #   IMPORTANT: The corresponding frequency_cap property of adgroup must match the name as follows:
+    #                   (adgroup).<name>_frequency_cap, eg daily_frequency_cap, hourly_frequency_cap
+    #                   otherwise the filter will not fetch the appropriate cap
+    FREQS = ( ( 'daily',    memcache_key_for_date ),
+              ( 'hourly',   memcache_key_for_hour ),
+              )
+
+    # Trim ad_group space down so the keys for frequencies we fetch from memcache isn't that huge
+    # TODO: user based frequency caps (need to add other levels)
+    user_keys = []
+    for adgroup in all_ad_groups:
+        for type, key_func in FREQS:
+            attrib = "%s_frequency_cap" % type
+            try:
+                temp = getattr( adgroup, attrib )
+                user_keys.append( key_func( udid, now, adgroup.key() ) )
+            except:
+                continue
+
+    #batch fetch because they're that much better
+    if user_keys:  
+        frequency_cap_dict = memcache.get_multi(user_keys)    
+    else:
+        frequency_cap_dict = {}
+
+    #take a list of types and the key functions and build a list of frequency filter functions
+    freq_filters = ( freq_filter( type, key_func, udid, now, frequency_cap_dict ) for ( type, key_func ) in FREQS ) 
+    #filter on all those filter functions
+    all_ad_groups = filter( all_freq_filter( *freq_filters ), all_ad_groups )
+    # NOTE: The budgets are in the adgroup when they should be in the campaign
+    print "After freq filters:"
+    print all_ad_groups
     # frequency capping and other user / request based randomizations
-    udid = kw["udid"]
         
     # if any ad groups were returned, find the creatives that match the requested format in all candidates
     if len(all_ad_groups) > 0:
@@ -307,51 +375,9 @@ class AdAuction(object):
                   winning_ad_groups.append(ad_group)
                 start_bucket += percent_users
                 start_bucket = start_bucket % 100 
-                                
-              # TODO: user based frequency caps (need to add other levels)
-              user_keys = []
-              for adgroup in winning_ad_groups:
-                if adgroup.daily_frequency_cap:
-                  user_adgroup_daily_key = memcache_key_for_date(udid,now,adgroup.key())
-                  user_keys.append(user_adgroup_daily_key)
-                if adgroup.hourly_frequency_cap:  
-                  user_adgroup_hourly_key = memcache_key_for_hour(udid,now,adgroup.key())
-                  user_keys.append(user_adgroup_hourly_key)
 
-              if user_keys:  
-                frequency_cap_dict = memcache.get_multi(user_keys)    
-              else:
-                frequency_cap_dict = {}
-              
-              winning_ad_groups_new = []
-              logging.warning("winning ad groups: %s"%winning_ad_groups)
-              for adgroup in winning_ad_groups:
-                user_adgroup_daily_key = memcache_key_for_date(udid,now,adgroup.key())
-                user_adgroup_hourly_key = memcache_key_for_hour(udid,now,adgroup.key())
-                daily_frequency_cap = adgroup.daily_frequency_cap
-                hourly_frequency_cap = adgroup.hourly_frequency_cap
-                
-                
-                # pull out the impression count from memcache, otherwise its assumed to be 0
-                if daily_frequency_cap and (user_adgroup_daily_key in frequency_cap_dict):
-                  daily_impression_cnt = int(frequency_cap_dict[user_adgroup_daily_key])
-                else:
-                  daily_impression_cnt = 0 
-                  
-                if hourly_frequency_cap and (user_adgroup_hourly_key in frequency_cap_dict):
-                  hourly_impression_cnt = int(frequency_cap_dict[user_adgroup_hourly_key])
-                else:
-                  hourly_impression_cnt = 0  
-                  
-                logging.warning("daily imps:%d freq cap: %d"%(daily_impression_cnt,daily_frequency_cap))
-                logging.warning("hourly imps:%d freq cap: %d"%(hourly_impression_cnt,hourly_frequency_cap))
-                  
-                  
-                if (not daily_frequency_cap or daily_impression_cnt < daily_frequency_cap) and \
-                   (not hourly_frequency_cap or hourly_impression_cnt < hourly_frequency_cap):
-                  winning_ad_groups_new.append(adgroup)
-                  
-              winning_ad_groups = winning_ad_groups_new
+
+
               logging.warning("winning ad groups after frequency capping: %s"%winning_ad_groups)
 
               # if there is a winning/eligible adgroup find the appropriate creative for it
@@ -569,6 +595,7 @@ class AdHandler(webapp.RequestHandler):
       self.response.out.write(self.render_creative(c, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, request_id=request_id, v=int(self.request.get('v') or 0)))
       if testing:
           return c.key() # TODO: shouldn't this be self.response.out.write(str(c.key()))
+      #TODO: yes
     else:
       self.response.out.write(self.render_creative(c, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, request_id=request_id, v=int(self.request.get('v') or 0)))
 

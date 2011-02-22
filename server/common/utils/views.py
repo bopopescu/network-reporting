@@ -1,4 +1,4 @@
-from google.appengine.api import users, memcache
+from google.appengine.api import users
 from account.models import Account
 
 class RequestHandler(object):

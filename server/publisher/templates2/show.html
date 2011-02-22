@@ -133,7 +133,7 @@
                   <table class="dataTable">
                     <tbody>
                       {% for ag in adunit.adgroups %}<tr>
-                        <th class="dataTable-name"><span class="inner"><a href="{% url advertiser_adgroup_show adgroup_key=ag.key %}">{{ag.name}}</a></span></th>
+                        <th class="dataTable-name"><span class="inner"><a href="{% url advertiser_adgroup_show adgroup_key=ag.key %}">{{ag.name}}</a>{% if not ag.active %}<span class="muted"> (Paused)</span>{% endif %}</span></th>
                         <td class="dataTable-data numeric">{{ag.stats.revenue|currency}}</td>
                         <td class="dataTable-data numeric">{{ag.stats.impression_count|withsep}}</td>
                         <td class="dataTable-data numeric">{{ag.stats.click_count|withsep}}</td>

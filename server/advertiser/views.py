@@ -3,7 +3,7 @@ import logging, os, re, datetime, hashlib
 from urllib import urlencode
 
 import base64, binascii
-from google.appengine.api import users, memcache, images
+from google.appengine.api import users, images
 from google.appengine.api.urlfetch import fetch
 from google.appengine.ext import db
 from google.appengine.ext.webapp import template

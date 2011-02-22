@@ -8,7 +8,7 @@ from urllib import urlencode
 from operator import itemgetter
 import base64, binascii
 
-from google.appengine.api import users, memcache
+from google.appengine.api import users
 from google.appengine.api.urlfetch import fetch
 from google.appengine.ext import db
 from google.appengine.ext.webapp import template

@@ -52,7 +52,7 @@ handlers:
 - url: /stats.*
   # script: $PYTHON_LIB/google/appengine/ext/appstats/ui.py
   script: appstats.py
-  login: admin
+  #login: admin
 
 - url: /.*
   script: main.py

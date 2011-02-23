@@ -1,4 +1,4 @@
-application: mopub-inc
+application: mopub-staging
 version: 38-newlog
 runtime: python
 api_version: 1

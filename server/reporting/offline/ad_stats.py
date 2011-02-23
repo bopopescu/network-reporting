@@ -274,7 +274,7 @@ class PubGeoRequestCounter(StatsCounter):
     stats = self.get_site_stats(self.get_id_for_dict(d))
     country_code = None
     if stats:
-      pat = re.compile(r'Mac OS X; (.*?)\)') #TODO: make work for non android
+      pat = re.compile(r'Mac OS X; ([^\)]{5})') # Match the first 5 characters that aren't the ending parenthesis
       match = pat.search(d['client'])
       if match:
         try:

@@ -59,11 +59,11 @@ class SiteStats(db.Model):
   conversion_count = db.IntegerProperty()
 
 
-  _geo_requests_json = db.StringProperty()
-  _geo_impressions_json = db.StringProperty()
-  _geo_clicks_json = db.StringProperty()
-  _geo_revenues_json = db.StringProperty()
-  _geo_users_json = db.StringProperty()
+  _geo_requests_json = db.TextProperty()
+  _geo_impressions_json = db.TextProperty()
+  _geo_clicks_json = db.TextProperty()
+  _geo_revenues_json = db.TextProperty()
+  _geo_users_json = db.TextProperty()
 
   @property
   def geo_requests(self):

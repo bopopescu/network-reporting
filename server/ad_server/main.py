@@ -69,6 +69,7 @@ test_mode = "3uoijg2349ic(test_mode)kdkdkg58gjslaf"
 CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gzip(gfe)"]
 MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7PnE6cH9_PX7OoeIIr5FjnTA'
 DOMAIN = 'ads.mopub.com'
+DOMAIN = 'localhost:8000'
 
 import urllib
 urllib.getproxies_macosx_sysconf = lambda: {}
@@ -514,7 +515,7 @@ class AdHandler(webapp.RequestHandler):
   
   def get(self):
     
-    mp_logging.log(self.request)
+    mp_logging.log(self.request,event=mp_logging.REQ_EVENT)  
     
     logging.warning(self.request.headers['User-Agent'] )
     id = self.request.get("id")
@@ -588,12 +589,21 @@ class AdHandler(webapp.RequestHandler):
       if str(self.request.headers['User-Agent']) not in CRAWLERS:
         logging.info('OLP ad-auction {"id": "%s", "c": "%s", "request_id": "%s", "udid": "%s"}' % (id, c.key(), request_id, udid))
 
+      self.response.headers.add_header("X-Creative",str(c.key()))    
+
+      # add timer and animations for the ad
+      self.response.headers.add_header("X-Refreshtime","5")
+      
+      animation_type = random.randint(0,6)
+      
+      self.response.headers.add_header("X-Animation",str(animation_type))    
+
       # create an ad clickthrough URL
-      ad_click_url = "http://%s/m/aclk?id=%s&c=%s&req=%s" % (DOMAIN,id, c.key(), request_id)
+      ad_click_url = "http://%s/m/aclk?id=%s&cid=%s&req=%s" % (DOMAIN,id, c.key(), request_id)
       self.response.headers.add_header("X-Clickthrough", str(ad_click_url))
       
       # ad an impression tracker URL
-      self.response.headers.add_header("X-Imptracker", "http://%s/m/imp?"%(DOMAIN))
+      self.response.headers.add_header("X-Imptracker", "http://%s/m/imp?id=%s&cid=%s"%(DOMAIN,id,c.key()))
       
       # add to the campaign counter
       logging.info("adding to delivery: %s"%c.ad_group.bid)
@@ -886,12 +896,14 @@ class AdHandler(webapp.RequestHandler):
 
 class AdImpressionHandler(webapp.RequestHandler):
   def get(self):
+    mp_logging.log(self.request,event=mp_logging.IMP_EVENT)  
     self.response.out.write("OK")
         
 class AdClickHandler(webapp.RequestHandler):
   # /m/aclk?v=1&udid=26a85bc239152e5fbc221fe5510e6841896dd9f8&q=Hotels:%20Hotel%20Utah%20Saloon%20&id=agltb3B1Yi1pbmNyDAsSBFNpdGUY6ckDDA&r=http://googleads.g.doubleclick.net/aclk?sa=l&ai=BN4FhRH6hTIPcK5TUjQT8o9DTA7qsucAB0vDF6hXAjbcB4KhlEAEYASDgr4IdOABQrJON3ARgyfb4hsijoBmgAbqxif8DsgERYWRzLm1vcHViLWluYy5jb226AQkzMjB4NTBfbWLIAQHaAbwBaHR0cDovL2Fkcy5tb3B1Yi1pbmMuY29tL20vYWQ_dj0xJmY9MzIweDUwJnVkaWQ9MjZhODViYzIzOTE1MmU1ZmJjMjIxZmU1NTEwZTY4NDE4OTZkZDlmOCZsbD0zNy43ODM1NjgsLTEyMi4zOTE3ODcmcT1Ib3RlbHM6JTIwSG90ZWwlMjBVdGFoJTIwU2Fsb29uJTIwJmlkPWFnbHRiM0IxWWkxcGJtTnlEQXNTQkZOcGRHVVk2Y2tEREGAAgGoAwHoA5Ep6AOzAfUDAAAAxA&num=1&sig=AGiWqtx2KR1yHomcTK3f4HJy5kk28bBsNA&client=ca-mb-pub-5592664190023354&adurl=http://www.sanfranciscoluxuryhotels.com/
   def get(self):
-    import urllib
+    mp_logging.log(self.request,event=mp_logging.CLK_EVENT)  
+      
     id = self.request.get("id")
     q = self.request.get("q")    
     # BROKEN

@@ -38,6 +38,15 @@ class Campaign(db.Model):
   def counter_shards(self):
     #TODO: this should be a function of estimated qps
     return 5
+  
+  @property
+  def owner(self):
+    return None
+
+  @property
+  def owner_key(self):
+    return None
+      
     
     
 class AdGroup(db.Model):
@@ -175,6 +184,15 @@ class AdGroup(db.Model):
   @property
   def geographic_predicates(self):
     return self.geo_predicates
+    
+  @property
+  def owner(self):
+    return self.campaign
+
+  @property
+  def owner_key(self):
+    return self._campaign
+    
 
 class Creative(polymodel.PolyModel):
   name = db.StringProperty()
@@ -218,8 +236,13 @@ class Creative(polymodel.PolyModel):
   def p_ctr(self):
     return 0.01
     
-  # def __unicode__(self):
-  #   asdf  
+  @property
+  def owner(self):
+    return self.ad_group
+  
+  @property
+  def owner_key(self):
+    return self._ad_group
           
   def __repr__(self):
     return "Creative{ad_type=%s, eCPM=%.02f ,key_name=%s}" % (self.ad_type, self.e_cpm(),self.key().id_or_name())

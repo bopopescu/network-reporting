@@ -76,59 +76,88 @@ class StatsModel(db.Model):
             
             # grab the date and make key name
             date = kwargs.get('date',None)
+            date_hour = kwargs.get('date_hour',None)
+            
+            # if date_hour is used the underlying data is actually just stored in 'date'
+            if not date and date_hour:
+                kwargs.update(date=date_hour)
             key_name = self.get_key_name(publisher=publisher,
                                          advertiser=advertiser,
                                          date=date,
+                                         date_hour=date_hour,
                                          account=account)
         return super(StatsModel,self).__init__(parent=parent,key_name=key_name,**kwargs)
+        
+    @property
+    def date_hour(self):
+        return self.date
+        
+    @date_hour.setter
+    def date_hour(self,value):
+        self.date = value
         
     def __add__(self,s):
         return StatsModel(parent=self.parent_key(),
                           key_name=self.key().name(),
-                        publisher=StatsModel.publisher.get_value_for_datastore(self),
-                        advertiser=StatsModel.advertiser.get_value_for_datastore(self),
-                        account=StatsModel.account.get_value_for_datastore(self),
-                        date=self.date,
-                        request_count=self.request_count + s.request_count,
-                        impression_count=self.impression_count + s.impression_count,
-                        click_count=self.click_count + s.click_count,
-                        conversion_count=self.conversion_count + s.conversion_count,
-                        user_count=self.user_count + s.user_count, # TODO: this needs to be deduped
-                        reqs=self.reqs+s.reqs,
-
-                    )
+                          publisher=StatsModel.publisher.get_value_for_datastore(self),
+                          advertiser=StatsModel.advertiser.get_value_for_datastore(self),
+                          account=StatsModel.account.get_value_for_datastore(self),
+                          date=self.date,
+                          request_count=self.request_count + s.request_count,
+                          impression_count=self.impression_count + s.impression_count,
+                          click_count=self.click_count + s.click_count,
+                          conversion_count=self.conversion_count + s.conversion_count,
+                          user_count=self.user_count + s.user_count, # TODO: this needs to be deduped
+                          reqs=self.reqs+s.reqs,
+                         )
                
                
     def __unicode__(self):
         return str(self)           
+
+    def __repr__(self):
+        return self.__str__()
                     
     def __str__(self):
-        return  "StatsModel(pub=%s, adv=%s, account=%s)"%(StatsModel.publisher.get_value_for_datastore(self),
+        return  "StatsModel(date=%s, pub=%s, adv=%s, account=%s, %s,%s,%s,%s)"%(
+                                                          self.date,
+                                                          StatsModel.publisher.get_value_for_datastore(self),
                                                           StatsModel.advertiser.get_value_for_datastore(self),    
-                                                          StatsModel.account.get_value_for_datastore(self),)
+                                                          StatsModel.account.get_value_for_datastore(self),
+                                                          self.request_count,
+                                                          self.impression_count,
+                                                          self.click_count,
+                                                          self.conversion_count,
+                                                          )
+
     
     @classmethod
-    def get_key_name(cls,publisher,advertiser,date,account=None):
-        if publisher or advertiser or date:
-            return 'k:%(publisher)s:%(advertiser)s:%(date)s'%dict(date=date.strftime('%y%m%d%H'),
+    def get_key_name(cls,publisher,advertiser,date=None,date_hour=None,account=None):
+        if publisher or advertiser or date_hour or date:
+            if isinstance(publisher,db.Model):
+                publisher = publisher.key()
+            if isinstance(advertiser,db.Model):
+                advertiser = advertiser.key()    
+            
+            if date_hour:
+                date_str = date_hour.strftime('%y%m%d%H')
+            else:
+                date_str = date.strftime('%y%m%d')
+                
+            return 'k:%(publisher)s:%(advertiser)s:%(date)s'%dict(date=date_str,
                                                                   publisher=publisher or '',
                                                                   advertiser=advertiser or '')
         else:
             return 'k:%s'%account    
             
     @classmethod
-    def get_key(cls, publisher,advertiser,date,account=None):
-      return db.Key.from_path(cls.kind(),cls.get_key_name(publisher,advertiser,data,account))
-            
-            
+    def get_key(cls, publisher,advertiser,date,date_hour,account=None):
+      return db.Key.from_path(cls.kind(),cls.get_key_name(publisher,advertiser,data,date_hour,account))
             
     def _force_key(self,prop):
         if prop:
             prop = db.Key(prop) if isinstance(prop,(str,unicode)) else prop
         return prop    
-                                                                      
-    
-    
 
 # 
 # Tracks statistics for a site for a particular day - clicks and impressions are aggregated

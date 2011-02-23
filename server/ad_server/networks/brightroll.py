@@ -18,7 +18,7 @@ class BrightRollServerSide(ServerSide):
   @property
   def url(self):
     pub_id = self.pub_id or 3844792 
-    return self.base_url + str(pub_id) or + '?n=%f'%time.time()
+    return self.base_url + str(pub_id) + '?n=%f'%time.time()
     
   @property
   def headers(self):
@@ -89,9 +89,12 @@ class BrightRollServerSide(ServerSide):
     self.url_params.update(companion_image=companion_image)                               
     
     # get cpm
-    cpm = self._getText(inline.getElementsByTagName("Extensions")[0].\
-            getElementsByTagName("Extension")[0].\
-            getElementsByTagName("Price")[0])
+    try:
+        cpm = self._getText(inline.getElementsByTagName("Extensions")[0].\
+                getElementsByTagName("Extension")[0].\
+                getElementsByTagName("Price")[0])
+    except:
+        cpm = None            
     self.url_params.update(cpm=cpm)
     
   def bid_and_html_for_response(self,response):

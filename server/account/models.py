@@ -9,7 +9,7 @@ class Account(db.Model):
     user = db.UserProperty()
     date_added = db.DateTimeProperty(auto_now_add=True)
         
-    company = db.StringProperty()
+    company = db.TextProperty()
     phone = db.PhoneNumberProperty()
     traffic = db.FloatProperty()
     mailing_list = db.BooleanProperty(default=True)

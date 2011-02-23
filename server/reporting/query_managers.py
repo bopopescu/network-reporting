@@ -56,7 +56,7 @@ class StatsModelQueryManager(CachedQueryManager):
         all_stats_deltas = self._get_all_rollups(stats)
         all_stats_deltas = self._place_stats_under_account(all_stats_deltas)
         
-        # get or insert from db in order to update
+        # get or insert from db in order to update as transaction
         def _txn(stats):
             self._update_db(all_stats_deltas)
         return db.run_in_transaction(_txn,all_stats_deltas)
@@ -73,12 +73,13 @@ class StatsModelQueryManager(CachedQueryManager):
         logging.info("putting in key_name: %s NEW value: %s,%s"%(s.key().name(),stat.request_count,stat.impression_count))
         
     def _get_all_rollups(self,stats):
-        # initial the object dictionary 
+        # initialize the object dictionary 
         stats_dict = {}
         for stat in stats:
             stats_dict[stat.key().name()] = stat
         
         def _get_stat(pub=None,adv=None,date_hour=None,date=None):
+            """get or creates the stat from the local dictionary"""
             key = StatsModel.get_key_name(publisher=pub,
                                           advertiser=adv,
                                           date=date,
@@ -94,6 +95,7 @@ class StatsModelQueryManager(CachedQueryManager):
             return stat        
              
         
+        # TODO: Clean this function up a bit
         def make_above_stat(stat,attribute='date'):
             
             if attribute == 'advertiser' and not stat.advertiser:
@@ -130,15 +132,13 @@ class StatsModelQueryManager(CachedQueryManager):
                 date = datetime.datetime.fromtimestamp(day)
                 properties = stat._properties
                 attrs = dict([(k,getattr(stat,k)) for k in properties])    
-                attrs.update(date=date,date_hour=date)
+                attrs.update(date=date)
                 new_stat = StatsModel(**attrs)
                 prev_stat = _get_stat(pub=new_stat.publisher,
                                       adv=new_stat.advertiser,
                                       date=new_stat.date)
                 prev_stat += new_stat
                 stats_dict[prev_stat.key().name()] = prev_stat
-                
-                
         
         # publisher roll ups
         for stat in stats:
@@ -176,3 +176,130 @@ class StatsModelQueryManager(CachedQueryManager):
                                   **props)
             new_stats.append(new_stat)
         return new_stats
+        
+def rollup_test():
+    adunit_id1 = "agltb3B1Yi1pbmNyDAsSBFNpdGUYkaoMDA"
+    adunit_id2 = "agltb3B1Yi1pbmNyDAsSBFNpdGUYq-wdDA"
+    app_id = "agltb3B1Yi1pbmNyCwsSA0FwcBii-wsM"
+    creative_id1 = "agltb3B1Yi1pbmNyEAsSCENyZWF0aXZlGKrsHQw"
+    creative_id2 = "agltb3B1Yi1pbmNyEAsSCENyZWF0aXZlGPqBHAw"
+    adgroup_id = "agltb3B1Yi1pbmNyDwsSB0FkR3JvdXAY840LDA"
+    campaign_id = "agltb3B1Yi1pbmNyEAsSCENhbXBhaWduGPmxDAw"
+    date_hour = datetime.datetime(2011,02,22,03)
+    date = datetime.datetime(2011,02,22)
+    
+    # same app, adgroup
+    
+    # stat1 = db.get('agltb3B1Yi1pbmNytgELEgpTdGF0c01vZGVsIkFrOmFnbHRiM0IxWWkxcGJtTnlJZ3NTQjBGalkyOTFiblFpRlRFeE16WXhOek13TWpVNE1URTROREl5TWpFeE5ndwwLEgpTdGF0c01vZGVsIlVrOmFnbHRiM0IxWWkxcGJtTnlEQXNTQkZOcGRHVVlrYW9NREE6YWdsdGIzQjFZaTFwYm1OeUVBc1NDRU55WldGMGFYWmxHS3JzSFF3OjExMDIyMjAzDA')
+    stat1 = StatsModel(publisher=adunit_id1,advertiser=creative_id1,date_hour=date_hour)
+    stat1.impression_count = 69
+    stat1.click_count = 41
+    # stat2 = db.get('agltb3B1Yi1pbmNytgELEgpTdGF0c01vZGVsIkFrOmFnbHRiM0IxWWkxcGJtTnlJZ3NTQjBGalkyOTFiblFpRlRFeE16WXhOek13TWpVNE1URTROREl5TWpFeE5ndwwLEgpTdGF0c01vZGVsIlVrOmFnbHRiM0IxWWkxcGJtTnlEQXNTQkZOcGRHVVlrYW9NREE6YWdsdGIzQjFZaTFwYm1OeUVBc1NDRU55WldGMGFYWmxHUHFCSEF3OjExMDIyMjAzDA')
+    stat2 = StatsModel(publisher=adunit_id1,advertiser=creative_id2,date_hour=date_hour)
+    stat2.impression_count = 75
+    stat2.click_count = 32
+
+    stat3 = StatsModel(publisher=adunit_id2,advertiser=creative_id1,date_hour=date_hour)
+    stat3.impression_count = 64
+    stat3.click_count = 42
+    # stat2 = db.get('agltb3B1Yi1pbmNytgELEgpTdGF0c01vZGVsIkFrOmFnbHRiM0IxWWkxcGJtTnlJZ3NTQjBGalkyOTFiblFpRlRFeE16WXhOek13TWpVNE1URTROREl5TWpFeE5ndwwLEgpTdGF0c01vZGVsIlVrOmFnbHRiM0IxWWkxcGJtTnlEQXNTQkZOcGRHVVlrYW9NREE6YWdsdGIzQjFZaTFwYm1OeUVBc1NDRU55WldGMGFYWmxHUHFCSEF3OjExMDIyMjAzDA')
+    stat4 = StatsModel(publisher=adunit_id2,advertiser=creative_id2,date_hour=date_hour)
+    stat4.impression_count = 72
+    stat4.click_count = 23
+    
+    
+    obj_dict = {
+    #### ADUNITS ####
+    # Adunit-Creative
+    'k:%s:%s:%s'%(adunit_id1,creative_id1,date_hour.strftime('%y%m%d%H')):(0,stat1.impression_count,stat1.click_count),
+    'k:%s:%s:%s'%(adunit_id1,creative_id2,date_hour.strftime('%y%m%d%H')):(0,stat2.impression_count,stat2.click_count),
+    'k:%s:%s:%s'%(adunit_id2,creative_id1,date_hour.strftime('%y%m%d%H')):(0,stat3.impression_count,stat3.click_count),
+    'k:%s:%s:%s'%(adunit_id2,creative_id2,date_hour.strftime('%y%m%d%H')):(0,stat4.impression_count,stat4.click_count),
+    # Adunit-AdGroup
+    'k:%s:%s:%s'%(adunit_id1,adgroup_id,date_hour.strftime('%y%m%d%H')):(0,stat1.impression_count+stat2.impression_count,stat1.click_count+stat2.click_count),
+    'k:%s:%s:%s'%(adunit_id2,adgroup_id,date_hour.strftime('%y%m%d%H')):(0,stat3.impression_count+stat4.impression_count,stat3.click_count+stat4.click_count),
+    # Adunit-Campaign
+    'k:%s:%s:%s'%(adunit_id1,campaign_id,date_hour.strftime('%y%m%d%H')):(0,stat1.impression_count+stat2.impression_count,stat1.click_count+stat2.click_count),
+    'k:%s:%s:%s'%(adunit_id2,campaign_id,date_hour.strftime('%y%m%d%H')):(0,stat3.impression_count+stat4.impression_count,stat3.click_count+stat4.click_count),
+    # Adunit Totals
+    'k:%s:%s:%s'%(adunit_id1,'',date_hour.strftime('%y%m%d%H')):(0,stat1.impression_count+stat2.impression_count,stat1.click_count+stat2.click_count),
+    'k:%s:%s:%s'%(adunit_id2,'',date_hour.strftime('%y%m%d%H')):(0,stat3.impression_count+stat4.impression_count,stat3.click_count+stat4.click_count),
+
+    #### Apps ####
+    # App-Creative
+    'k:%s:%s:%s'%(app_id,creative_id1,date_hour.strftime('%y%m%d%H')):(0,stat1.impression_count+stat3.impression_count,stat1.click_count+stat3.click_count),
+    'k:%s:%s:%s'%(app_id,creative_id2,date_hour.strftime('%y%m%d%H')):(0,stat2.impression_count+stat4.impression_count,stat2.click_count+stat4.click_count),
+    # App-AdGroup
+    'k:%s:%s:%s'%(app_id,adgroup_id,date_hour.strftime('%y%m%d%H')):(0,stat1.impression_count+stat2.impression_count+stat3.impression_count+stat4.impression_count,stat1.click_count+stat2.click_count+stat3.click_count+stat4.click_count),    
+    # App-Campaign
+    'k:%s:%s:%s'%(app_id,campaign_id,date_hour.strftime('%y%m%d%H')):(0,stat1.impression_count+stat2.impression_count+stat3.impression_count+stat4.impression_count,stat1.click_count+stat2.click_count+stat3.click_count+stat4.click_count),    
+    # App-Total
+    'k:%s:%s:%s'%(app_id,'',date_hour.strftime('%y%m%d%H')):(0,stat1.impression_count+stat2.impression_count+stat3.impression_count+stat4.impression_count,stat1.click_count+stat2.click_count+stat3.click_count+stat4.click_count),    
+    
+    
+    ### * ###
+    # *-Creative
+    'k:%s:%s:%s'%('',creative_id1,date_hour.strftime('%y%m%d%H')):(0,stat1.impression_count+stat3.impression_count,stat1.click_count+stat3.click_count),
+    'k:%s:%s:%s'%('',creative_id2,date_hour.strftime('%y%m%d%H')):(0,stat2.impression_count+stat4.impression_count,stat2.click_count+stat4.click_count),
+    # *-AdGroup
+    'k:%s:%s:%s'%('',adgroup_id,date_hour.strftime('%y%m%d%H')):(0,stat1.impression_count+stat2.impression_count+stat3.impression_count+stat4.impression_count,stat1.click_count+stat2.click_count+stat3.click_count+stat4.click_count),    
+    # *-Campaign
+    'k:%s:%s:%s'%('',campaign_id,date_hour.strftime('%y%m%d%H')):(0,stat1.impression_count+stat2.impression_count+stat3.impression_count+stat4.impression_count,stat1.click_count+stat2.click_count+stat3.click_count+stat4.click_count),    
+    # *-*
+    'k:%s:%s:%s'%('','',date_hour.strftime('%y%m%d%H')):(0,stat1.impression_count+stat2.impression_count+stat3.impression_count+stat4.impression_count,stat1.click_count+stat2.click_count+stat3.click_count+stat4.click_count),    
+    
+    ####################
+    ### Date Rollups ###
+    ####################
+    
+    #### ADUNITS ####
+    'k:%s:%s:%s'%(adunit_id1,creative_id1,date_hour.strftime('%y%m%d')):(0,stat1.impression_count,stat1.click_count),
+    'k:%s:%s:%s'%(adunit_id1,creative_id2,date_hour.strftime('%y%m%d')):(0,stat2.impression_count,stat2.click_count),
+    'k:%s:%s:%s'%(adunit_id2,creative_id1,date_hour.strftime('%y%m%d')):(0,stat3.impression_count,stat3.click_count),
+    'k:%s:%s:%s'%(adunit_id2,creative_id2,date_hour.strftime('%y%m%d')):(0,stat4.impression_count,stat4.click_count),
+    # Adunit-AdGroup
+    'k:%s:%s:%s'%(adunit_id1,adgroup_id,date_hour.strftime('%y%m%d')):(0,stat1.impression_count+stat2.impression_count,stat1.click_count+stat2.click_count),
+    'k:%s:%s:%s'%(adunit_id2,adgroup_id,date_hour.strftime('%y%m%d')):(0,stat3.impression_count+stat4.impression_count,stat3.click_count+stat4.click_count),
+    # Adunit-Campaign
+    'k:%s:%s:%s'%(adunit_id1,campaign_id,date_hour.strftime('%y%m%d')):(0,stat1.impression_count+stat2.impression_count,stat1.click_count+stat2.click_count),
+    'k:%s:%s:%s'%(adunit_id2,campaign_id,date_hour.strftime('%y%m%d')):(0,stat3.impression_count+stat4.impression_count,stat3.click_count+stat4.click_count),
+    # Adunit Totals
+    'k:%s:%s:%s'%(adunit_id1,'',date_hour.strftime('%y%m%d')):(0,stat1.impression_count+stat2.impression_count,stat1.click_count+stat2.click_count),
+    'k:%s:%s:%s'%(adunit_id2,'',date_hour.strftime('%y%m%d')):(0,stat3.impression_count+stat4.impression_count,stat3.click_count+stat4.click_count),
+
+    #### Apps ####
+    # App-Creative
+    'k:%s:%s:%s'%(app_id,creative_id1,date_hour.strftime('%y%m%d')):(0,stat1.impression_count+stat3.impression_count,stat1.click_count+stat3.click_count),
+    'k:%s:%s:%s'%(app_id,creative_id2,date_hour.strftime('%y%m%d')):(0,stat2.impression_count+stat4.impression_count,stat2.click_count+stat4.click_count),
+    # App-AdGroup
+    'k:%s:%s:%s'%(app_id,adgroup_id,date_hour.strftime('%y%m%d')):(0,stat1.impression_count+stat2.impression_count+stat3.impression_count+stat4.impression_count,stat1.click_count+stat2.click_count+stat3.click_count+stat4.click_count),    
+    # App-Campaign
+    'k:%s:%s:%s'%(app_id,campaign_id,date_hour.strftime('%y%m%d')):(0,stat1.impression_count+stat2.impression_count+stat3.impression_count+stat4.impression_count,stat1.click_count+stat2.click_count+stat3.click_count+stat4.click_count),    
+    # App-Total
+    'k:%s:%s:%s'%(app_id,'',date_hour.strftime('%y%m%d')):(0,stat1.impression_count+stat2.impression_count+stat3.impression_count+stat4.impression_count,stat1.click_count+stat2.click_count+stat3.click_count+stat4.click_count),    
+    
+    
+    ### * ###
+    # *-Creative
+    'k:%s:%s:%s'%('',creative_id1,date_hour.strftime('%y%m%d')):(0,stat1.impression_count+stat3.impression_count,stat1.click_count+stat3.click_count),
+    'k:%s:%s:%s'%('',creative_id2,date_hour.strftime('%y%m%d')):(0,stat2.impression_count+stat4.impression_count,stat2.click_count+stat4.click_count),
+    # *-AdGroup
+    'k:%s:%s:%s'%('',adgroup_id,date_hour.strftime('%y%m%d')):(0,stat1.impression_count+stat2.impression_count+stat3.impression_count+stat4.impression_count,stat1.click_count+stat2.click_count+stat3.click_count+stat4.click_count),    
+    # *-Campaign
+    'k:%s:%s:%s'%('',campaign_id,date_hour.strftime('%y%m%d')):(0,stat1.impression_count+stat2.impression_count+stat3.impression_count+stat4.impression_count,stat1.click_count+stat2.click_count+stat3.click_count+stat4.click_count),    
+    # *-*
+    'k:%s:%s:%s'%('','',date_hour.strftime('%y%m%d')):(0,stat1.impression_count+stat2.impression_count+stat3.impression_count+stat4.impression_count,stat1.click_count+stat2.click_count+stat3.click_count+stat4.click_count),    
+    
+    }
+    
+    new_stats = StatsModelQueryManager()._get_all_rollups([stat1,stat2])        
+    
+    print len(new_stats), len(obj_dict)
+    assert(len(new_stats) == len(obj_dict))
+    passes = True
+    for stat in new_stats:
+        print stat.key().name()
+        print obj_dict[stat.key().name()], (stat.request_count,stat.impression_count,stat.click_count), \
+              obj_dict[stat.key().name()] == (stat.request_count,stat.impression_count,stat.click_count)
+        passes = passes and obj_dict[stat.key().name()] == (stat.request_count,stat.impression_count,stat.click_count)      
+    return passes    

@@ -1,0 +1,6 @@
+total_storage_limit: 10G
+
+queue:
+- name: bulk-log-processor
+  rate: 100/s
+  bucket_size: 100

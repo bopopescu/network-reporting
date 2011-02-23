@@ -1,4 +1,4 @@
-import logging_data
+import logging
 import time
 
 from google.appengine.api import memcache
@@ -6,10 +6,10 @@ from google.appengine.api import taskqueue
 
 from publisher.query_managers import AdUnitQueryManager
 
-REQ_TYPE = 0
-IMP_TYPE = 1
-CLK_TYPE = 2
-CONV_TYPE = 3
+REQ_EVENT = 0
+IMP_EVENT = 1
+CLK_EVENT = 2
+CONV_EVENT = 3
 
 TASK_QUEUE_NAME = 'bulk-log-processor'
 
@@ -20,13 +20,14 @@ TASK_NAME = 't-%(account_name)s-%(time)s' # note time will be bucketed
 TIME_BUCKET = 10
 
 
-def log(request,adunit=None,manager=None):
+def log(request,event,adunit=None,manager=None):
 
     # get parameters from the request
     adunit_id = request.get('id',None)
     creative_id = request.get('cid',None)
     udid = request.get('udid',None)
-    request_id = request.get('req',None)
+    request_id = request.get('reqcnt',None)
+    instance_id = request.get('inst',None)
 
     # get account name from the adunit
     adunit_qmanager = manager or AdUnitQueryManager(adunit_id)
@@ -44,11 +45,13 @@ def log(request,adunit=None,manager=None):
     index_key = INDEX_KEY_FORMAT%dict(account_name=account_name,time=time_bucket)
     log_index = memcache.incr(index_key,initial_value=0) # starts at 1
     
-    logging_data = dict(event_type=REQ_TYPE,
-                        adunit_id=adunit_id,
-                        creative_id=creative_id,
+    logging_data = dict(event=event,
+                        adunit=adunit_id,
+                        creative=creative_id,
+                        now=now,
                         udid=udid,
-                        req_id=request_id)
+                        req=request_id,
+                        inst=instance_id)
     
     # put the log data into appropriate place
     log_key = LOG_KEY_FORMAT%dict(account_name=account_name,time=time_bucket,log_index=log_index)
@@ -60,7 +63,7 @@ def log(request,adunit=None,manager=None):
     logging.info('task: %s'%task_name)
     
     try:
-        t = taskqueue.Task(name=task_name,params={'account_name':account_name,'time':time_bucket},countdown=TIME_BUCKET+TIME_BUCKET,method='GET')
+        t = taskqueue.Task(name=task_name,params={'account_name':account_name,'time':time_bucket},countdown=TIME_BUCKET*2,method='GET')
         t.add(TASK_QUEUE_NAME)
     except taskqueue.TaskAlreadyExistsError:
         logging.info("task %s already exists"%task_name)

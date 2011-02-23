@@ -1,3 +1,10 @@
+<<<<<<< HEAD:server/reporting/query_managers.py
+=======
+import logging
+import time
+import datetime
+
+>>>>>>> first pass of doing all the rollups:server/reporting/query_managers.py
 from common.utils.cachedquerymanager import CachedQueryManager
 
 from google.appengine.ext import db
@@ -44,7 +51,6 @@ class StatsModelQueryManager(CachedQueryManager):
         stats = StatsModel.get(keys) # db get
         stats = [s or StatsModel() for s in stats]
         return stats            
-        
     
     def put_stats(self,stats):
         if isinstance(stats,db.Model):
@@ -53,7 +59,9 @@ class StatsModelQueryManager(CachedQueryManager):
         all_stats_deltas = self._place_stats_under_account(all_stats_deltas)
         
         # get or insert from db in order to update
-        return self._update_db(all_stats_deltas)
+        def _txn(stats):
+            self._update_db(all_stats_deltas)
+        return db.run_in_transaction(_txn,all_stats_deltas)
         
     def _update_db(self,stats):
         for s in stats:
@@ -63,25 +71,96 @@ class StatsModelQueryManager(CachedQueryManager):
             else:
                 stat = s
             stat.put()
-            
         logging.info("putting in key_name: %s value: %s,%s"%(s.key().name(),s.request_count,s.impression_count))
         logging.info("putting in key_name: %s NEW value: %s,%s"%(s.key().name(),stat.request_count,stat.impression_count))
         
     def _get_all_rollups(self,stats):
-        # TODO: make all the necessary rollups here
-        # date-hour, date
-        # AdUnit, App
-        # Campaign, AdGroup, Creative
-        # AdUnit-Creative, App-Creative, AdUnit-AdGroup, App-AdGroup
-        # AdUnit-Campaign, App-Campaign
-        # Account
-        return stats    
+        # initial the object dictionary 
+        stats_dict = {}
+        for stat in stats:
+            stats_dict[stat.key().name()] = stat
+        
+        def _get_stat(pub=None,adv=None,date_hour=None,date=None):
+            key = StatsModel.get_key_name(publisher=pub,
+                                          advertiser=adv,
+                                          date=date,
+                                          date_hour=date_hour) 
+            if not key in stats_dict:
+                stat =  StatsModel(publisher=pub,
+                                   advertiser=adv,
+                                   date=date,
+                                   date_hour=date_hour)
+                stats_dict[key] = stat
+            else:
+                stat = stats_dict[key]
+            return stat        
+             
+        
+        def make_above_stat(stat,attribute='date'):
+            
+            if attribute == 'advertiser' and not stat.advertiser:
+                return None
+            if attribute == 'publisher' and not stat.publisher:
+                return None
+
+            properties = stat._properties
+            attrs = dict([(k,getattr(stat,k)) for k in properties])    
+            
+            if attribute == "publisher" and stat.publisher:    
+                attrs.update(publisher=stat.publisher.owner)
+                new_stat = StatsModel(**attrs)
+                make_above_stat(new_stat,'publisher')
+                prev_stat = _get_stat(pub=new_stat.publisher,
+                                      adv=new_stat.advertiser,
+                                      date_hour=new_stat.date)
+                prev_stat += new_stat
+                stats_dict[prev_stat.key().name()] = prev_stat
+
+            if attribute == "advertiser" and stat.advertiser:
+                attrs.update(advertiser=stat.advertiser.owner)
+                new_stat = StatsModel(**attrs)
+                make_above_stat(new_stat,'advertiser')
+                prev_stat = _get_stat(pub=new_stat.publisher,
+                                      adv=new_stat.advertiser,
+                                      date_hour=new_stat.date)
+                prev_stat += new_stat
+                stats_dict[prev_stat.key().name()] = prev_stat
+
+            if attribute == 'date':
+                t = time.mktime(stat.date.timetuple())
+                day = t-t%(3600*24) # day precision
+                date = datetime.datetime.fromtimestamp(day)
+                properties = stat._properties
+                attrs = dict([(k,getattr(stat,k)) for k in properties])    
+                attrs.update(date=date,date_hour=date)
+                new_stat = StatsModel(**attrs)
+                prev_stat = _get_stat(pub=new_stat.publisher,
+                                      adv=new_stat.advertiser,
+                                      date=new_stat.date)
+                prev_stat += new_stat
+                stats_dict[prev_stat.key().name()] = prev_stat
+                
+                
+        
+        # publisher roll ups
+        for stat in stats:
+            make_above_stat(stat,'publisher')
+                
+        # advertiser rollups        
+        stats = stats_dict.values()
+        for stat in stats:
+            make_above_stat(stat,'advertiser')
+        
+        # time rollups
+        stats = stats_dict.values()
+        for stat in stats:
+            make_above_stat(stat,'date')
+        return stats_dict.values()
     
     def _place_stats_under_account(self,stats,account=None):
         """
         rewrites all the stats objects in order to place them
         under the StatsModel object for the account
-        
         """
         account = account or self.account
         account_stats = StatsModel(account=account) 

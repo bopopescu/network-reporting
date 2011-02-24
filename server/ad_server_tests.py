@@ -166,7 +166,7 @@ def priority_t3st( camps ):
         resume( c )
     for c in camps: 
         prioritize( c )
-        logging.warning( "\n\n\n\nPrioritizing %s\n\n\n\n" % c )
+        logging.warning( "Prioritizing %s" % c )
         for i in range( 5 ):
             k = get_id()
             cret = Creative.get( k ) 

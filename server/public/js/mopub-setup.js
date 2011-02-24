@@ -18,8 +18,39 @@ var mopub = mopub || {};
         e.preventDefault();
         $('#appForm').submit();
     });
-    
-    // Search button
+   
+
+    $( '#appForm-market-search-button' )
+        .button( { icons: { primary: 'ui-icon-search' }, disabled: true } )
+        .click( function( e ) {
+            e.preventDefault();
+            if ( $( this ).button( "option", "disabled" ) ) {
+                return;
+            }
+            $( '#searchAppStore-loading' ).show();
+            $( '#dashboard-searchAppStore-custom-modal' ).dialog( {
+                buttons: [
+                    {
+                        text: 'Cancel',
+                        click: function() {
+                            $( '#searchAppStore-results' ).html('');
+                            $( this ).dialog( 'close' );
+                        }
+                    }
+                ]
+            } );
+            var name = $( '#appForm input[name="name"]' ).val();
+            $.ajax( {
+                url: '/android_market_search/' + name,
+                success: loadedArtwork,
+                dataType: 'json',
+            } );
+                
+            //Do ajax shit 
+        });
+
+
+    // App Store Search button
     $('#appForm-search-button')
       .button({ icons: { primary: "ui-icon-search" }, disabled: true})
       .click(function(e) {
@@ -70,12 +101,22 @@ var mopub = mopub || {};
     $('#appForm-name').keyup(function(e) {
       // Show/hide the app search button
       var name = $.trim($(this).val());
-      if (name.length)
+      var type = $('input:radio[name="app_type"]:checked').val();
+
+      if (name.length) {
         $('#appForm-search-button').button("enable");
-      else
+        $( '#appForm-market-search-button' ).button( 'enable' );
+      }
+      else {
         $('#appForm-search-button').button("disable");
+        $( '#appForm-market-search-button' ).button( 'disable' );
+      }
       if (e.keyCode == 13) {
-        $('#appForm-search-button').click();
+        console.log( type );
+        if ( type == 'iphone' )
+            $('#appForm-search-button').click();
+        else if ( type == 'android' )
+            $( '#appForm-market-search-button' ).click();
       }
     }).keyup();
     

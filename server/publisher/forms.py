@@ -1,4 +1,4 @@
-import urllib
+import urllib2 as urllib
 import logging
 
 from google.appengine.ext import db

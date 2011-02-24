@@ -36,7 +36,7 @@
     {% for error in form.url.errors %}
     <div class="form-error-text">{{error}}</div> 
     {% endfor %}
-    <input type="text" class="input-text android  {% if form.package.errors %}form-error{% endif %}" name="{{form.package.value}}" value="{{form.package.value}}" id="appForm-package" placeholder="com.company.appname" /> 
+    <input type="text" class="input-text android  {% if form.package.errors %}form-error{% endif %}" name="{{form.package.name}}" value="{{form.package.value}}" id="appForm-package" placeholder="com.company.appname" /> 
     {% for error in form.package.errors %}
     <div class="form-error-text">{{error}}</div> 
     {% endfor %}

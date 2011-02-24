@@ -112,7 +112,6 @@ var mopub = mopub || {};
         $( '#appForm-market-search-button' ).button( 'disable' );
       }
       if (e.keyCode == 13) {
-        console.log( type );
         if ( type == 'iphone' )
             $('#appForm-search-button').click();
         else if ( type == 'android' )
@@ -180,6 +179,8 @@ function loadedArtwork(json) {
   }
   else {
     for (var i=0;i<resultCount;i++) {
+      if ( i > 10 )
+          break;
       var app = json['results'][i];
     
       $('#searchAppStore-results').append($("<div class='adForm-appSearch' />")
@@ -211,11 +212,15 @@ function selectArtwork(index) {
   $('#dashboard-searchAppStore-custom-modal').dialog("close");
 
   var app = artwork_json['results'][index];
+  var type = $('input:radio[name="app_type"]:checked').val();
 
   var form = $('app_form');
   $('#appForm input[name="name"]').val(app['trackName'])
   $('#appForm input[name="description"]').val(app['description'])
-  $('#appForm input[name="url"]').val(app['trackViewUrl'])
+  if ( type == 'iphone' )
+      $('#appForm input[name="url"]').val(app['trackViewUrl'])
+  else if ( type == 'android' )
+      $('#appForm input[name="package"]').val(app['trackViewUrl'])
   $('#appForm input[name="img_url"]').val(app['artworkUrl60'])
   
   $('#appForm-icon').append($("<img />")

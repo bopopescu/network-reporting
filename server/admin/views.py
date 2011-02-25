@@ -71,7 +71,7 @@ def dashboard(request, *args, **kwargs):
     total_stats.sort(lambda x,y: cmp(x.date,y.date))
 
     # make a graph
-    url = "http://chart.apis.google.com/chart?cht=lc&chs=800x200&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
+    url = "http://chart.apis.google.com/chart?cht=lc&chs=600x240&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
     ','.join(map(lambda x: str(x.request_count), total_stats)), 
     max(map(lambda x: x.request_count, total_stats)) * 1.5,
     max(map(lambda x: x.request_count, total_stats)) * 1.5,
@@ -86,7 +86,7 @@ def dashboard(request, *args, **kwargs):
 
     # thanks
     return render_to_response(request, 
-    'd.html', 
+    'admin/d.html', 
     {"stats": total_stats, 
     "chart_url": url,
     "request_count": sum(map(lambda x: x.request_count, total_stats)),

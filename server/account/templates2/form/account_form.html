@@ -21,7 +21,7 @@
                   </dd>
                   <dt><input id="mailing_list" name="{{form.mailing_list.name}}" placeholder="50" class="{% if form.mailing_list.errors %}form-error{% endif %}" {% if form.mailing_list.value %}checked="checked"{% endif %} type="checkbox"/></dt>
                   <dd>
-                     I would like to receive occasional updates.
+                     I would like to receive occasional product update emails from MoPub.
                     {% for error in form.mailing_list.errors %}
                     <div class="form-error-text">{{error}}</div> 
                     {% endfor %}

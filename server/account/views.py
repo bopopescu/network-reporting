@@ -97,9 +97,23 @@ class AccountEditHandler(RequestHandler):
 
     if account_form.is_valid():
       account = account_form.save(commit=False)
+      
       # Go ahead and activate the account
       account.active = True
       AccountQueryManager().put_accounts(account)
+      
+      # send a reply
+      msg = EmailMessage('Welcome to MoPub', '''Hello from MoPub!
+      
+MoPub is designed to help mobile publishers monetize their apps more 
+effectively. If you have any questions during the setup process,
+please don't hesitate to email our sales department at sales@mopub.com.
+
+Thanks,
+The MoPub Team
+      ''', 'MoPub Team <olp@mopub.com>', [self.request.user.email], headers = {'Reply-To': 'sales@mopub.com'})
+      msg.send(fail_silently=True)
+      
       return HttpResponseRedirect(reverse('publisher_app_create'))
 
     return self.get(account_form=account_form)

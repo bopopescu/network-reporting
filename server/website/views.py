@@ -17,26 +17,7 @@ from common.ragendja.template import render_to_response, JSONResponse
 from django.core.mail import send_mail, EmailMessage
 
 def website_root(request,*args,**kwargs):
-  return HttpResponseRedirect("/inventory")
+    return HttpResponseRedirect("/inventory")
 
-def website_join(request,*args,**kwargs):
-  email = request.POST.get("email_address")
-  
-  # send a note to beta@mopub.com with the guy's signup
-  send_mail('Mailing list', "email=%s" % email, 'olp@mopub.com', ['beta@mopub.com'], fail_silently=True)  
-  
-  # send a reply
-  msg = EmailMessage('Thank you for your interest in MoPub', '''Hello from MoPub!
-
-Thanks again for signing up for MoPub's private beta.  We will get back to you ASAP with 
-instructions on how to join. 
-
-Thanks,
-The MoPub Team
-''', 'MoPub Team <olp@mopub.com>', [email], headers = {'Reply-To': 'beta@mopub.com'})
-  msg.send(fail_silently=True)
-  return HttpResponseRedirect("http://www.mopub.com/thanks")
-  
-def website_pending(request,*args,**kwargs):
-  send_mail("New User","%s has signed up for an account. Someone please activate him if necessary. https://appengine.google.com/datastore/explorer?submitted=1&app_id=mopub-inc&viewby=gql&query=SELECT+*+FROM+Account+order+by+active&namespace=&options=Run+Query"%request.user.email,'olp@mopub.com',['beta@mopub.com'],fail_silently=True)
-  return render_to_response(request, 'website/pending.html')
+def website_welcome(request,*args,**kwargs):
+    return HttpResponseRedirect("/inventory")

@@ -212,11 +212,12 @@ function selectArtwork(index) {
   $('#dashboard-searchAppStore-custom-modal').dialog("close");
 
   var app = artwork_json['results'][index];
-  var type = $('input:radio[name="app_type"]:checked').val();
 
-  var form = $('app_form');
   $('#appForm input[name="name"]').val(app['trackName'])
   $('#appForm input[name="description"]').val(app['description'])
+
+  var type = $('input:radio[name="app_type"]:checked').val();
+  
   if ( type == 'iphone' )
       $('#appForm input[name="url"]').val(app['trackViewUrl'])
   else if ( type == 'android' )

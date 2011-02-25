@@ -200,9 +200,9 @@ class AppCreateHandler(RequestHandler):
     app = None
     if self.request.POST.get("app_key"):
       app = AppQueryManager().get_by_key(self.request.POST.get("app_key"))
-      app_form = AppForm(data=self.request.POST, instance=app)
+      app_form = AppForm(data=self.request.POST, files = self.request.FILES, instance=app)
     else:
-      app_form = AppForm(data=self.request.POST)
+      app_form = AppForm(data=self.request.POST, files = self.request.FILES )
       
     adunit_form = AdUnitForm(data=self.request.POST)
       
@@ -450,7 +450,7 @@ class AppUpdateAJAXHandler(RequestHandler):
     else:
       app = None
 
-    app_form = AppForm(data=self.request.POST,instance=app)
+    app_form = AppForm(data=self.request.POST, files = self.request.FILES, instance=app)
 
     json_dict = {'success':False,'html':None}
 

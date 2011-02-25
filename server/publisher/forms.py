@@ -2,22 +2,25 @@ import urllib2 as urllib
 import logging
 
 from google.appengine.ext import db
+from google.appengine.api import images
+
 from django import forms
 from django.core.urlresolvers import reverse
 from common.utils import forms as mpforms
 from publisher.models import Site, App
 
 
+
 class AppForm(mpforms.MPModelForm):
   TEMPLATE = 'publisher/forms/app_form.html'
-  
+
   img_url = forms.URLField(verify_exists=False,required=False)
   img_file = forms.FileField(required=False)
   
   def __init__(self, *args,**kwargs):
     instance = kwargs.get('instance',None)
     initial = kwargs.get('initial',None)
-    
+
     if instance:
       img_url = reverse('publisher_app_icon',kwargs={'app_key':str(instance.key())})
       if not initial:
@@ -45,9 +48,10 @@ class AppForm(mpforms.MPModelForm):
         obj.icon = self.instance.icon # sets the icon to the original
     elif self.cleaned_data['img_file']:
       try:
-        icon = images.resize(self.cleaned_data['img_file'], 60, 60)
+        img = self.cleaned_data['img_file'].read()
+        icon = images.resize( img, 60, 60)
         obj.icon = db.Blob(icon)
-      except Exception: # TODO: appropriate handle the failure
+      except Exception, e: # TODO: appropriate handle the failure
         raise Exception('WTF2: %s'%e)
     elif self.instance: # if neither img_url or img_file come in just use the old value
       logging.info("keeping same icon because no new provided")

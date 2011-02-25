@@ -83,6 +83,10 @@ def dashboard(request, *args, **kwargs):
     
     # figure out unique accounts
     unique_accounts = set([x.site.account.key() for x in placements])
+    
+    # this week + last week
+    this_week = sum([x.request_count for x in total_stats[-8:-1]])
+    last_week = sum([x.request_count for x in total_stats[-15:-8]])
 
     # thanks
     return render_to_response(request, 
@@ -90,8 +94,9 @@ def dashboard(request, *args, **kwargs):
     {"stats": total_stats, 
     "chart_url": url,
     "request_count": sum(map(lambda x: x.request_count, total_stats)),
+    "today_request_count": total_stats[-2].request_count,
     "click_count": sum(map(lambda x: x.click_count, total_stats)),
-    "growth": total_stats[-2].request_count / float(total_stats[0].request_count) - 1.0,
+    "growth": this_week / float(last_week) - 1.0,
     "unique_placements": unique_placements, 
     "unique_accounts": unique_accounts, 
     "placements": placements})
@@ -114,5 +119,5 @@ def report(request, *args, **kwargs):
     # send a note
     metrics = "Served %d requests across %d ad units (%.1f%% w/w)" % (today_requests, ad_units, growth)
     send_mail(metrics,"http://ads.mopub.com/admin/d/",'olp@mopub.com',['metrics@mopub.com'],fail_silently=True)
-    return HttpResponse()
+    return HttpResponseRedirect(reverse('admin_dashboard'))
     

@@ -27,3 +27,15 @@ def whitelist_login_required(function=None):
       return HttpResponseRedirect(reverse('account_new'))
 
   return login_required_wrapper
+
+
+def webdec():
+    #if we want to include stuff inside this webdec, have a field day
+    def outer_wrap( f ):
+        def inner_wrap( request, *args, **kwargs ):
+            #do things with the request and stuf here
+            #Lots of cool things can be done here,
+            #ideally f( blah ) returns a dictionary, which is then used to render the appropriate template.  This way we don't have to keep writing render_to_template blah blah blah, right now since we DO do that, just return it
+            return f( **kwargs )
+        return inner_wrap
+    return outer_wrap

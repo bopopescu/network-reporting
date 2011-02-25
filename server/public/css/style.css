@@ -1514,7 +1514,7 @@ input.ui-button {
   position: relative;
 }
 
-#appForm-search-button {
+#appForm-market-search-button, #appForm-search-button {
   margin: 0;
   position: absolute;
   top: -14px;

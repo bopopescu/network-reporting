@@ -2,15 +2,18 @@
   <dt>Platform:</dt> 
   <dd> 
     <span class="radios"> 
-      <input type="radio" class="input-radio" name="{{form.app_type.name}}" value="iphone" id="appForm-platform-iphone" {% ifequal form.app_type.value 'iphone' %}checked="checked"{% endifequal %}{% if not form.app_type.value %}checked="checked"{% endif %} /> <label for="appForm-platform-iphone">iOS</label> 
-      <input type="radio" class="input-radio" name="{{form.app_type.name}}" value="android" id="appForm-platform-android" {% ifequal form.app_type.value 'android' %}checked="checked"{% endifequal %}/> <label for="appForm-platform-android">Android</label> 
+        <input type="radio" class="input-radio" name="{{form.app_type.name}}" value="iphone" id="appForm-platform-iphone" {% ifequal form.app_type.value 'iphone' %}checked="checked"{% endifequal %}{% if not form.app_type.value %}checked="checked"{% endif %} />
+        <label for="appForm-platform-iphone">iOS</label> 
+        <input type="radio" class="input-radio" name="{{form.app_type.name}}" value="android" id="appForm-platform-android" {% ifequal form.app_type.value 'android' %}checked="checked"{% endifequal %}/> 
+        <label for="appForm-platform-android">Android</label> 
     </span> 
   </dd>
   <dt><label for="appForm-name">App name:</label></dt> 
-  <dd class="appForm-platformDependent iphone"> 
+  <dd class="appForm-platformDependent"> 
     <input type="text" class="input-text {% if form.name.errors %}form-error{% endif %}" name="name" value="{{form.name.value}}" id="appForm-name" />
-    <div class="formFields-field-help iphone" id="appForm-search"> 
-      <a href="#" class="button" id="appForm-search-button">Search App Store</a> 
+    <div class="formFields-field-help" id="appForm-search"> 
+      <a href="#" class="button iphone" id="appForm-search-button">Search App Store</a> 
+      <a href="#" class="button android" id="appForm-market-search-button">Search Android Market</a> 
       <div id="dashboard-searchAppStore-custom-modal" class="hidden"> 
         <h3>Search Results</h3> 
         <div class="loading" id="searchAppStore-loading"> 
@@ -33,7 +36,7 @@
     {% for error in form.url.errors %}
     <div class="form-error-text">{{error}}</div> 
     {% endfor %}
-    <input type="text" class="input-text android  {% if form.package.errors %}form-error{% endif %}" name="{{form.package.value}}" value="{{form.package.value}}" id="appForm-package" placeholder="com.company.appname" /> 
+    <input type="text" class="input-text android  {% if form.package.errors %}form-error{% endif %}" name="{{form.package.name}}" value="{{form.package.value}}" id="appForm-package" placeholder="com.company.appname" /> 
     {% for error in form.package.errors %}
     <div class="form-error-text">{{error}}</div> 
     {% endfor %}

@@ -40,3 +40,7 @@ ALL_STATS =   ( SIT_STAT,
                 CPM_STAT,
                 CPC_STAT,
                 )
+
+#I don't have special characters because this is going into a regex and I'm lazy
+MARKET_SEARCH_KEY = "klfaa3dadfkfl28903uagnOMGSOSECRETkd938lvkjval8f285had9a834"
+MARKET_URL = "https://market.android.com/search?q=%s&c=apps"

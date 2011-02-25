@@ -42,7 +42,7 @@ class SiteStats(db.Model):
   @property
   def str_date( self ):
       if self.date:
-          return self.date.strftime( "%a, %b %d, %Y" )
+          return self.date.strftime( '%d/%m/%y' )
       else:
           return "No date"
 

@@ -61,6 +61,8 @@ test_mode = "3uoijg2349ic(test_mode)kdkdkg58gjslaf"
 CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gzip(gfe)"]
 MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7PnE6cH9_PX7OoeIIr5FjnTA'
 DOMAIN = 'ads.mopub.com'
+FREQ_ATTR = '%s_frequency_cap'
+
 
 import urllib
 urllib.getproxies_macosx_sysconf = lambda: {}
@@ -73,6 +75,8 @@ urllib.getproxies_macosx_sysconf = lambda: {}
 # Ad auction logic
 # The core of the whole damn thing
 #
+
+## Key functions
 def memcache_key_for_date(udid,datetime,db_key):
   return '%s:%s:%s'%(udid,datetime.strftime('%y%m%d'),db_key)
 
@@ -80,7 +84,7 @@ def memcache_key_for_hour(udid,datetime,db_key):
   return '%s:%s:%s'%(udid,datetime.strftime('%y%m%d%H'),db_key)
 
 ###############################
-#FILTERS
+# BASIC FILTERS
 #
 # --- Each filter function is a function which takes some arguments (or none) necessary 
 #       for the filter to work its magic. log_mesg is the message that will be logged 
@@ -120,7 +124,6 @@ def device_filter( dev_preds ):
         return  not ( set( dev_preds ).intersection( a.device_predicates ) > set() )
     return ( real_filter, log_mesg, [] )
 
-
 def mega_filter( *filters ): 
     def actual_filter( a ):
         for ( f, msg, lst ) in filters:
@@ -129,6 +132,74 @@ def mega_filter( *filters ):
                 return False
         return True
     return actual_filter
+
+######################################
+#
+# Creative filters
+#
+######################################
+
+def format_filter( format ):
+    log_mesg = "Removed due to format mismatch, expected " + str( format ) + ": %s"
+    def real_filter( a ):
+        return not a.format == format
+    return ( real_filter, log_mesg, [] )
+
+def exclude_filter( excl_params ):
+    log_mesg = "Removed due to exclusion parameters: %s"
+    def real_filter( a ):
+        return a.ad_type in excl_params
+    return ( real_filter, log_mesg, [] )
+
+def ecpm_filter( winning_ecpm ):
+    log_mesg = "Removed due to being a loser: %s"
+    def real_filter( a ):
+        return not a.e_cpm() >= winning_ecpm
+    return ( real_filter, log_mesg, [] )
+
+##############################################
+#
+#   FREQUENCY FILTERS
+#
+##############################################
+
+# Function for constructing a frequency filter
+# Super generic, made this way since all frequencies are just
+#  -verify frequency cap, if yes make sure we're not over it, otherwise carry on
+# so I just made a way to generate them
+def freq_filter( type, key_func, udid, now, frq_dict ):
+    log_mesg = "Removed due to " + type + " frequency cap: %s"
+    def real_filter( a ):
+        a_key = key_func( udid, now, a.key() )
+        #This is why all frequency cap attributes must follow the same naming convention, otherwise this
+        #trick doesn't work
+        try:
+            frq_cap = getattr( a, FREQ_ATTR % type ) 
+        except:
+            frq_cap = 0
+
+        if frq_cap and ( a_key in frq_dict ):
+            imp_cnt = int( frq_dict[ a_key ] )
+        else:
+            imp_cnt = 0
+        #Log the current counts and cap
+        logging.warning( "%s imps: %s, freq cap: %d" % ( type.title(), imp_cnt, frq_cap ) )
+        return not ( not frq_cap or imp_cnt < frq_cap )
+    return ( real_filter, log_mesg, [] )
+
+#this is identical to mega_filter except it logs the adgroup 
+def all_freq_filter( *filters ):
+    def actual_filter( a ):
+        #print the adgroup title so the counts/cap printing in the acutal filter don't confuse things
+        logging.warning( "Adgroup: %s" % a )
+        for f, msg, lst in filters:
+            if f( a ):
+                lst.append( a )
+                return False
+        return True
+    return actual_filter
+
+
 ###############
 # End filters
 ###############
@@ -181,6 +252,8 @@ class AdAuction(object):
     manager = kw["manager"]
     request = kw["request"]
     
+    udid = kw["udid"]
+
     keywords = kw["q"]
     geo_predicates = AdAuction.geo_predicates_for_rgeocode(kw["addr"])
     device_predicates = AdAuction.device_predicates_for_request(kw["request"])
@@ -196,13 +269,10 @@ class AdAuction(object):
     # 4) throw out ad groups that do not match device and geo predicates
     all_ad_groups = manager.get_adgroups() #AdGroup.gql("where site_keys = :1 and active = :2 and deleted = :3", site.key(), True, False).fetch(AdAuction.MAX_ADGROUPS)
     
+    #Start up those RPC calls
     rpcs = AdAuction.request_third_party_server(request,site,all_ad_groups)
-    
     logging.warning("ad groups: %s" % all_ad_groups)
-    
     # # campaign exclusions... budget + time
-    
-    
     for a in all_ad_groups:
       logging.info("%s of %s"%(a.campaign.delivery_counter.count,a.budget))
     
@@ -214,192 +284,142 @@ class AdAuction(object):
                         ) 
 
     all_ad_groups = filter( mega_filter( *ALL_FILTERS ), all_ad_groups )
-
     for ( func, warn, lst ) in ALL_FILTERS:
         logging.warning( warn % lst )
 
-    # NOTE: The budgets are in the adgroup when they should be in the campaign
+    # TODO: user based frequency caps (need to add other levels)
+    # to add a frequency cap, add it here as follows:
+    #         ( 'name',     key_function ),
+    #   IMPORTANT: The corresponding frequency_cap property of adgroup must match the name as follows:
+    #                   (adgroup).<name>_frequency_cap, eg daily_frequency_cap, hourly_frequency_cap
+    #                   otherwise the filter will not fetch the appropriate cap
+    FREQS = ( ( 'daily',    memcache_key_for_date ),
+              ( 'hourly',   memcache_key_for_hour ),
+              )
 
-    # frequency capping and other user / request based randomizations
-    udid = kw["udid"]
+    #Pull ALL keys (Before prioritizing) and batch get. This is slightly (according to test timings) 
+    # better than filtering based on priority 
+    user_keys = []
+    for adgroup in all_ad_groups:
+        for type, key_func in FREQS:
+            try:
+                # This causes an exception if it fails, the variable is actually never used though.
+                temp = getattr( adgroup, FREQ_ATTR % type ) 
+                user_keys.append( key_func( udid, now, adgroup.key() ) )
+            except:
+                continue
+    if user_keys:  
+        frequency_cap_dict = memcache.get_multi(user_keys)    
+    else:
+        frequency_cap_dict = {}
+    #build and apply list of frequency filter functions
+    FREQ_FILTERS = [ freq_filter( type, key_func, udid, now, frequency_cap_dict ) for ( type, key_func ) in FREQS ] 
+    all_ad_groups = filter( all_freq_filter( *FREQ_FILTERS ), all_ad_groups )
+    for fil in FREQ_FILTERS: 
+        func, warn, lst = fil
+        logging.warning( warn % lst )
         
+    # calculate the user experiment bucket
+    user_bucket = hash(udid+','.join([str( ad_group.key() ) for ad_group in all_ad_groups])) % 100 # user gets assigned a number between 0-99 inclusive
+    logging.warning("the user bucket is: #%d",user_bucket)
+
+  # determine in which ad group the user falls into to
+  # otherwise give creatives in the other adgroups a shot
+  # TODO: fix the stagger method how do we get 3 ads all at 100%
+  # currently we just mod by 100 such that there is wrapping
+    start_bucket = 0
+    winning_ad_groups = []
+  
+  # sort the ad groups by the percent of users desired, this allows us 
+  # to do the appropriate wrapping of the number line if they are nicely behaved
+  # TODO: finalize this so that we can do things like 90% and 15%. We need to decide
+  # what happens in this case, unclear what the intent of this is.
+    all_ad_groups.sort(lambda x,y: cmp(x.percent_users if x.percent_users else 100.0,y.percent_users if y.percent_users else 100.0))
+    for ad_group in all_ad_groups:
+        percent_users = ad_group.percent_users if not (ad_group.percent_users is None) else 100.0
+        if start_bucket <= user_bucket and user_bucket < (start_bucket + percent_users):
+            winning_ad_groups.append(ad_group)
+        start_bucket += percent_users
+        start_bucket = start_bucket % 100 
+
+    all_ad_groups = winning_ad_groups
     # if any ad groups were returned, find the creatives that match the requested format in all candidates
     if len(all_ad_groups) > 0:
-      logging.warning("ad_group: %s"%all_ad_groups)
-      
-      all_creatives = manager.get_creatives_for_adgroups(all_ad_groups)
-      # all_creatives = Creative.gql("where ad_group in :1 and format_predicates in :2 and active = :3 and deleted = :4", 
-      #   map(lambda x: x.key(), ad_groups), format_predicates, True, False).fetch(AdAuction.MAX_ADGROUPS)
-      max_priority = max(ad_group.priority_level for ad_group in all_ad_groups)
-      
-      logging.warning("creatives (max priority: %d): %s"%(max_priority,all_creatives))
+        logging.warning("ad_group: %s"%all_ad_groups)
+        all_creatives = manager.get_creatives_for_adgroups(all_ad_groups)
+        # all_creatives = Creative.gql("where ad_group in :1 and format_predicates in :2 and active = :3 and deleted = :4", 
+        #   map(lambda x: x.key(), ad_groups), format_predicates, True, False).fetch(AdAuction.MAX_ADGROUPS)
+        max_priority = max(ad_group.priority_level for ad_group in all_ad_groups)
+        logging.warning("creatives (max priority: %d): %s"%(max_priority,all_creatives))
+        if len(all_creatives) > 0:
+            # for each priority_level, perform an auction among the various creatives 
+            for p in range(max_priority + 1):
+                logging.warning("priority level: %d"%p)
+                eligible_adgroups = [a for a in all_ad_groups if a.priority_level == p]
+                logging.warning("eligible_adgroups: %s"%eligible_adgroups)
+                if not eligible_adgroups:
+                    continue
+                players = manager.get_creatives_for_adgroups(eligible_adgroups)
+                players.sort(lambda x,y: cmp(y.e_cpm(), x.e_cpm()))
 
-      #XXX Why is this here?  It does make sense to bail if there are no creatives, but it seems to be a waste to get all creatives just to verify that there, in fact, creatives after it's been verified that there are ad_groups 
+                while players:
+                    logging.warning("players: %s"%players)
+                    winning_ecpm = players[0].e_cpm()
+                    logging.warning("auction at priority=%d: %s, max eCPM=%s" % (p, players, winning_ecpm))
+                    if winning_ecpm >= site.threshold_cpm( p ):
 
-      if len(all_creatives) > 0:
-        # for each priority_level, perform an auction among the various creatives 
-        for p in range(max_priority + 1):
-          # players = filter(lambda c: c.ad_group.priority_level == p, all_creatives)
-          logging.warning("priority level: %d"%p)
-          eligible_adgroups = [a for a in all_ad_groups if a.priority_level == p]
-          logging.warning("eligible_adgroups: %s"%eligible_adgroups)
-          players = manager.get_creatives_for_adgroups(eligible_adgroups)
-          players.sort(lambda x,y: cmp(y.e_cpm(), x.e_cpm()))
-          
-          while players:
-            logging.warning("players: %s"%players)
-            #players is sorted by cpm above, if len( players ) == 0 then the while loop will eval to False and not exec
-            winning_ecpm = players[0].e_cpm()
-            #winning_ecpm = max(c.e_cpm() for c in players) if len(players) > 0 else 0.0
-            logging.warning("auction at priority=%d: %s, max eCPM=%s" % (p, players, winning_ecpm))
-      
-            # if the winning creative exceeds the ad unit's threshold cpm for the
-            # priority level, then we have a winner
-            if winning_ecpm >= site.threshold_cpm(p):
-              winners = filter(lambda x: x.e_cpm() >= winning_ecpm, players)
-              logging.warning("%02d winners: %s"%(len(winners),winners))
-              
-              # campaigns = set([c.ad_group.campaign for c in winners if not c.ad_group.deleted and not c.ad_group.campaign.deleted])
-              # logging.warning("campaigns: %s"%campaigns)
-              
-              # find out which ad groups are eligible
-              ad_groups = set([c.ad_group for c in winners])
-              logging.warning("eligible ad_groups: %s" % ad_groups)
+                        # exclude according to the exclude parameter must do this after determining adgroups
+                        # so that we maintain the correct order for user bucketing
+                        # TODO: we should exclude based on creative id not ad type :)
+                        CRTV_FILTERS = (    format_filter( site.format ),
+                                            exclude_filter( exclude_params ),
+                                            ecpm_filter( winning_ecpm ),
+                                            )
+                        winners = filter( mega_filter( *CRTV_FILTERS ), players )
+                        for func, warn, lst in CRTV_FILTERS:
+                            logging.warning( warn % lst )
 
-              #XXX wat ( this is totally not used anywhere else )             
-              creatives = [c for c in all_creatives if c.ad_group.key() in [a.key() for a in ad_groups]]
-            
-              # exclude according to the exclude parameter must do this after determining adgroups
-              # so that we maintain the correct order for user bucketing
-              # TODO: we should exclude based on creative id not ad type :)
-              logging.warning("eligible creatives: %s %s" % (winners,exclude_params))
-              winners = [c for c in winners if not (c.ad_type in exclude_params)]  
-              logging.warning("eligible creatives after exclusions: %s" % winners)
-              
+                        # if there is a winning/eligible adgroup find the appropriate creative for it
+                        winning_creative = None
+                        logging.warning("winner ad_groups: %s"%winning_ad_groups)
 
-              # calculate the user experiment bucket
-              user_bucket = hash(udid+','.join([str(c.ad_group.key()) for ad_group in ad_groups])) % 100 # user gets assigned a number between 0-99 inclusive
-              logging.warning("the user bucket is: #%d",user_bucket)
-          
-              # determine in which ad group the user falls into to
-              # otherwise give creatives in the other adgroups a shot
-              # TODO: fix the stagger method how do we get 3 ads all at 100%
-              # currently we just mod by 100 such that there is wrapping
-              start_bucket = 0
-              winning_ad_groups = []
-              ad_groups = list(ad_groups)
-              
-              # sort the ad groups by the percent of users desired, this allows us 
-              # to do the appropriate wrapping of the number line if they are nicely behaved
-              # TODO: finalize this so that we can do things like 90% and 15%. We need to decide
-              # what happens in this case, unclear what the intent of this is.
-              ad_groups.sort(lambda x,y: cmp(x.percent_users if x.percent_users else 100.0,y.percent_users if y.percent_users else 100.0))
-              for ad_group in ad_groups:
-                percent_users = ad_group.percent_users if not (ad_group.percent_users is None) else 100.0
-                if start_bucket <= user_bucket and user_bucket < (start_bucket + percent_users):
-                  winning_ad_groups.append(ad_group)
-                start_bucket += percent_users
-                start_bucket = start_bucket % 100 
-                                
-              # TODO: user based frequency caps (need to add other levels)
-              user_keys = []
-              for adgroup in winning_ad_groups:
-                if adgroup.daily_frequency_cap:
-                  user_adgroup_daily_key = memcache_key_for_date(udid,now,adgroup.key())
-                  user_keys.append(user_adgroup_daily_key)
-                if adgroup.hourly_frequency_cap:  
-                  user_adgroup_hourly_key = memcache_key_for_hour(udid,now,adgroup.key())
-                  user_keys.append(user_adgroup_hourly_key)
+                        if winners:
+                            logging.warning('winners %s' % [w.ad_group for w in winners])
+                            random.shuffle(winners)
+                            logging.warning('random winners %s' % winners)
+                            actual_winner = None
+                            # find the actual winner among all the eligble ones
+                            # loop through each of the randomized winners making sure that the data is ready to display
+                            for winner in winners:
+                                if not rpcs:
+                                    winning_creative = winner
+                                    return winning_creative
+                                else:
+                                    rpc = None                      
+                                    if winner.ad_group.key() in [r.adgroup.key() for r in rpcs]:
+                                        for rpc in rpcs:
+                                            if rpc.adgroup.key() == winner.ad_group.key():
+                                                logging.warning("rpc.adgroup %s"%rpc.adgroup)
+                                                break # This pulls out the rpc that matters there should be one always
 
-              if user_keys:  
-                frequency_cap_dict = memcache.get_multi(user_keys)    
-              else:
-                frequency_cap_dict = {}
-              
-              winning_ad_groups_new = []
-              logging.warning("winning ad groups: %s"%winning_ad_groups)
-              for adgroup in winning_ad_groups:
-                user_adgroup_daily_key = memcache_key_for_date(udid,now,adgroup.key())
-                user_adgroup_hourly_key = memcache_key_for_hour(udid,now,adgroup.key())
-                daily_frequency_cap = adgroup.daily_frequency_cap
-                hourly_frequency_cap = adgroup.hourly_frequency_cap
-                
-                
-                # pull out the impression count from memcache, otherwise its assumed to be 0
-                if daily_frequency_cap and (user_adgroup_daily_key in frequency_cap_dict):
-                  daily_impression_cnt = int(frequency_cap_dict[user_adgroup_daily_key])
-                else:
-                  daily_impression_cnt = 0 
-                  
-                if hourly_frequency_cap and (user_adgroup_hourly_key in frequency_cap_dict):
-                  hourly_impression_cnt = int(frequency_cap_dict[user_adgroup_hourly_key])
-                else:
-                  hourly_impression_cnt = 0  
-                  
-                logging.warning("daily imps:%d freq cap: %d"%(daily_impression_cnt,daily_frequency_cap))
-                logging.warning("hourly imps:%d freq cap: %d"%(hourly_impression_cnt,hourly_frequency_cap))
-                  
-                  
-                if (not daily_frequency_cap or daily_impression_cnt < daily_frequency_cap) and \
-                   (not hourly_frequency_cap or hourly_impression_cnt < hourly_frequency_cap):
-                  winning_ad_groups_new.append(adgroup)
-                  
-              winning_ad_groups = winning_ad_groups_new
-              logging.warning("winning ad groups after frequency capping: %s"%winning_ad_groups)
-
-              # if there is a winning/eligible adgroup find the appropriate creative for it
-              winning_creative = None
-              if winning_ad_groups:
-                logging.warning("winner ad_groups: %s"%winning_ad_groups)
-              
-                if winning_ad_groups:
-                  winners = [winner for winner in winners if winner.ad_group in winning_ad_groups]
-                
-                # Remove wrong formats
-                # TODO: clean this up
-                logging.warning('c.format: %s s.format: %s'%([c.format for c in winners],site.format))
-                logging.warning("winners: %s"%winners)
-                winners = [w for w in winners if w.format == site.format]
-                logging.warning("winners after formats: %s"%winners)
-
-                if winners:
-                  logging.warning('winners %s'%[w.ad_group for w in winners])
-                  random.shuffle(winners)
-                  logging.warning('random winners %s'%winners)
-          
-                  # find the actual winner among all the eligble ones
-                  actual_winner = None
-                  # loop through each of the randomized winners making sure that the data is ready to display
-                  for winner in winners:
-                    if not rpcs:
-                      winning_creative = winner
-                      return winning_creative
-                    else:
-                      rpc = None                      
-                      if winner.ad_group.key() in [r.adgroup.key() for r in rpcs]:
-                        for rpc in rpcs:
-                          if rpc.adgroup.key() == winner.ad_group.key():
-                            logging.warning("rpc.adgroup %s"%rpc.adgroup)
-                            break # This pulls out the rpc that matters there should be one always
-
-                      # if the winning creative relies on a rpc to get the actual data to display
-                      # go out and get the data and paste in the data to the creative      
-                      if rpc:      
-                        try:
-                            result = rpc.get_result()
-                            if result.status_code == 200:
-                                bid,response = rpc.serverside.bid_and_html_for_response(result)
-                                winning_creative = winner
-                                winning_creative.html_data = response
-                                return winning_creative
-                        except Exception,e:
-                          import traceback, sys
-                          exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
-                          logging.error(exception_traceback)
-                      else:
-                        winning_creative = winner
-                        return winning_creative
-                        
+                            # if the winning creative relies on a rpc to get the actual data to display
+                            # go out and get the data and paste in the data to the creative      
+                                    if rpc:      
+                                        try:
+                                            result = rpc.get_result()
+                                            if result.status_code == 200:
+                                                bid,response = rpc.serverside.bid_and_html_for_response(result)
+                                                winning_creative = winner
+                                                winning_creative.html_data = response
+                                                return winning_creative
+                                        except Exception,e:
+                                            import traceback, sys
+                                            exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
+                                            logging.error(exception_traceback)
+                                    else:
+                                        winning_creative = winner
+                                        return winning_creative
+                    
               #   else:
               #     logging.warning('taking away some players not in %s'%ad_groups)
               #     logging.warning('current players: %s'%players)
@@ -407,12 +427,13 @@ class AdAuction(object):
               #     logging.warning('remaining players %s'%players)
               #     
               # else:
-              if not winning_creative:
-                logging.warning('taking away some players not in %s'%ad_groups)
-                logging.warning( 'current ad_groups %s' % [c.ad_group for c in players] )
-                logging.warning('current players: %s'%players)
-                players = [c for c in players if not c.ad_group in ad_groups]  
-                logging.warning('remaining players %s'%players)
+                    if not winning_creative:
+                        #logging.warning('taking away some players not in %s'%ad_groups)
+                        #logging.warning( 'current ad_groups %s' % [c.ad_group for c in players] )
+                        logging.warning('current players: %s'%players)
+                        #players = [c for c in players if not c.ad_group in ad_groups]  
+                        players = [ p for p in players if p not in winners ] 
+                        logging.warning('remaining players %s'%players)
              # try at a new priority level   
 
     # nothing... failed auction
@@ -492,22 +513,20 @@ class AdHandler(webapp.RequestHandler):
     # site = manager.get_by_key(key)#Site.site_by_id(id) if id else None
     adunit = manager.get_adunit()
     site = adunit
-     
-    
     
     # the user's site key was not set correctly...
     if site is None:
-      self.error(404)
-      self.response.out.write("Publisher adunit key %s not valid" % id)
-      return
+        self.error(404)
+        self.response.out.write( "Publisher adunit key %s not valid" % id )
+        return
     
     # get keywords 
     # q = [sz.strip() for sz in ("%s\n%s" % (self.request.get("q").lower() if self.request.get("q") else '', site.keywords if site.k)).split("\n") if sz.strip()]
     keywords = []
     if site.keywords and site.keywords != 'None':
-      keywords += site.keywords.split(',')
+        keywords += site.keywords.split(',')
     if self.request.get("q"):
-      keywords += self.request.get("q").lower().split(',')
+        keywords += self.request.get("q").lower().split(',')
     q = keywords
     logging.warning("keywords are %s" % keywords)
 
@@ -531,38 +550,55 @@ class AdHandler(webapp.RequestHandler):
     # create a unique request id, but only log this line if the user agent is real
     request_id = hashlib.md5("%s:%s" % (self.request.query_string, time.time())).hexdigest()
     if str(self.request.headers['User-Agent']) not in CRAWLERS:
-      logging.info('OLP ad-request {"request_id": "%s", "remote_addr": "%s", "q": "%s", "user_agent": "%s", "udid":"%s" }' % (request_id, self.request.remote_addr, self.request.query_string, self.request.headers["User-Agent"], udid))
+        logging.info('OLP ad-request {"request_id": "%s", "remote_addr": "%s", "q": "%s", "user_agent": "%s", "udid":"%s" }' % (request_id, self.request.remote_addr, self.request.query_string, self.request.headers["User-Agent"], udid))
 
     # get winning creative
     c = AdAuction.run(request=self.request, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, udid=udid, request_id=request_id, now=now,manager=manager)
     # output the request_id and the winning creative_id if an impression happened
     if c:
-      user_adgroup_daily_key = memcache_key_for_date(udid,now,c.ad_group.key())
-      user_adgroup_hourly_key = memcache_key_for_hour(udid,now,c.ad_group.key())
-      logging.warning("user_adgroup_daily_key: %s"%user_adgroup_daily_key)
-      logging.warning("user_adgroup_hourly_key: %s"%user_adgroup_hourly_key)
-      memcache.offset_multi({user_adgroup_daily_key:1,user_adgroup_hourly_key:1}, key_prefix='', namespace=None, initial_value=0)
+        user_adgroup_daily_key = memcache_key_for_date(udid,now,c.ad_group.key())
+        user_adgroup_hourly_key = memcache_key_for_hour(udid,now,c.ad_group.key())
+        logging.warning("user_adgroup_daily_key: %s"%user_adgroup_daily_key)
+        logging.warning("user_adgroup_hourly_key: %s"%user_adgroup_hourly_key)
+        memcache.offset_multi({user_adgroup_daily_key:1,user_adgroup_hourly_key:1}, key_prefix='', namespace=None, initial_value=0)
       
-      if str(self.request.headers['User-Agent']) not in CRAWLERS:
-        logging.info('OLP ad-auction {"id": "%s", "c": "%s", "request_id": "%s", "udid": "%s"}' % (id, c.key(), request_id, udid))
+        if str(self.request.headers['User-Agent']) not in CRAWLERS:
+            logging.info('OLP ad-auction {"id": "%s", "c": "%s", "request_id": "%s", "udid": "%s"}' % (id, c.key(), request_id, udid))
 
       # create an ad clickthrough URL
-      ad_click_url = "http://%s/m/aclk?id=%s&c=%s&req=%s" % (DOMAIN,id, c.key(), request_id)
-      self.response.headers.add_header("X-Clickthrough", str(ad_click_url))
+        ad_click_url = "http://%s/m/aclk?id=%s&c=%s&req=%s" % (DOMAIN,id, c.key(), request_id)
+        self.response.headers.add_header("X-Clickthrough", str(ad_click_url))
       
       # ad an impression tracker URL
-      self.response.headers.add_header("X-Imptracker", "http://%s/m/imp?"%(DOMAIN))
+        self.response.headers.add_header("X-Imptracker", "http://%s/m/imp?"%(DOMAIN))
       
       # add to the campaign counter
-      logging.info("adding to delivery: %s"%c.ad_group.bid)
-      c.ad_group.campaign.delivery_counter.increment(dollars=c.ad_group.bid)
+        logging.info("adding to delivery: %s"%c.ad_group.bid)
+        c.ad_group.campaign.delivery_counter.increment(dollars=c.ad_group.bid)
       
       # render the creative 
-      self.response.out.write(self.render_creative(c, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, request_id=request_id, v=int(self.request.get('v') or 0)))
-      if testing:
-          return c.key() # TODO: shouldn't this be self.response.out.write(str(c.key()))
+        self.response.out.write( self.render_creative(  c, 
+                                                        site                = site, 
+                                                        format              = format, 
+                                                        q                   = q, 
+                                                        addr                = addr,
+                                                        excluded_creatives  = excluded_creatives, 
+                                                        request_id          = request_id, 
+                                                        v                   = int(self.request.get('v') or 0)
+                                                        ) )
+    if testing:
+        return c.key() if c else c# TODO: shouldn't this be self.response.out.write(str(c.key()))
+                         # TODO: yes
     else:
-      self.response.out.write(self.render_creative(c, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, request_id=request_id, v=int(self.request.get('v') or 0)))
+        self.response.out.write( self.render_creative(  c, 
+                                                        site                = site, 
+                                                        format              = format, 
+                                                        q                   = q, 
+                                                        addr                = addr, 
+                                                        excluded_creatives  = excluded_creatives, 
+                                                        request_id          = request_id, 
+                                                        v                   = int(self.request.get('v') or 0)
+                                                        ) )
 
       
   #

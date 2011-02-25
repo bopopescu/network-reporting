@@ -1,4 +1,9 @@
 #!/bin/bash
+#
+# This script works. Just type in your GAE username/password when prompted in the first download command. 
+# Then type in a blank password to upload to your local machine.
+# -Jim, 2/24/2011
+
 pushd /tmp
 
 rm -rf datastore

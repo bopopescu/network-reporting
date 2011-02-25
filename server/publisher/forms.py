@@ -17,7 +17,10 @@ class AppForm(mpforms.MPModelForm):
   def __init__(self, *args,**kwargs):
     instance = kwargs.get('instance',None)
     initial = kwargs.get('initial',None)
-    
+    logging.warning( "\n\n\n" )
+    logging.warning( instance.icon )
+    logging.warning( initial )
+
     if instance:
       img_url = reverse('publisher_app_icon',kwargs={'app_key':str(instance.key())})
       if not initial:

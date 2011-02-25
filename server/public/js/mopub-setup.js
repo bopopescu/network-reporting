@@ -126,6 +126,15 @@ var mopub = mopub || {};
       $('#appForm-icon-upload').show();
       $('#appForm input[name="img_url"]').val('');
     });
+
+/*    $('#appForm-icon-upload').change( function(e) {
+        $('#appForm-icon').append( $( '<img />')
+            .attr( 'src', $(this).val() )
+            .width( 40 )
+            .height( 40 )
+            .append( $( '<span />' ) )
+            )
+    } );*/
     
     /*---------------------------------------/
     / Ad Unit Form

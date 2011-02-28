@@ -130,7 +130,6 @@ INSTALLED_APPS = (
      'publisher',
      'advertiser',
      'website',
-     # 'bizops',
      'admin',
      'exchange',
 )

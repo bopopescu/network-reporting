@@ -225,8 +225,10 @@ class AdAuction(object):
         rpc = urlfetch.create_rpc(2) # maximum delay we are willing to accept is 2000 ms
         payload = server_side.payload
         if payload == None:
+          logging.info("rpc: %s"%server_side.url)
           urlfetch.make_fetch_call(rpc, server_side.url, headers=server_side.headers)
         else:
+          logging.info("rpc: %s"%server_side.url)
           urlfetch.make_fetch_call(rpc, server_side.url, headers=server_side.headers, method=urlfetch.POST, payload=payload)
         # attaching the adgroup to the rpc
         rpc.adgroup = adgroup

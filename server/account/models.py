@@ -12,7 +12,7 @@ class Account(db.Model):
     company = db.StringProperty()
     phone = db.PhoneNumberProperty()
     traffic = db.FloatProperty()
-    mailing_list = db.BooleanProperty(default=True)
+    mailing_list = db.BooleanProperty(default=False)
     
     active = db.BooleanProperty(default=False)
     status = db.StringProperty()  # Initially storing onboarding status

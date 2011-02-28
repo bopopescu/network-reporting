@@ -92,9 +92,9 @@ class StatsModel(db.Model):
     def date_hour(self):
         return self.date
         
-    @date_hour.setter
-    def date_hour(self,value):
-        self.date = value
+    # @date_hour.setter
+    # def date_hour(self,value):
+    #     self.date = value
         
     def __add__(self,s):
         return StatsModel(parent=self.parent_key(),

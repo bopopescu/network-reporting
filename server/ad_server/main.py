@@ -10,15 +10,15 @@
 # from django.conf import settings
 # settings._target = None
 
-from appengine_django import LoadDjango
-LoadDjango()
-import os
-from django.conf import settings
-
-os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
-# Force Django to reload its settings.
-settings._target = None
-
+# from appengine_django import LoadDjango
+# LoadDjango()
+# import os
+# from django.conf import settings
+# 
+# os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+# # Force Django to reload its settings.
+# settings._target = None
+# 
 # END TODO: PLEASE HAVE THIS FIX DJANGO PROBLEMS
 
 import wsgiref.handlers
@@ -33,7 +33,8 @@ import random
 import hashlib
 import time
 import base64, binascii
-from django.utils import simplejson
+# moved from django to common utils
+from common.utils import simplejson
 
 from string import Template
 from urllib import urlencode, unquote
@@ -584,7 +585,8 @@ class AdHandler(webapp.RequestHandler):
       user_adgroup_hourly_key = memcache_key_for_hour(udid,now,c.ad_group.key())
       logging.warning("user_adgroup_daily_key: %s"%user_adgroup_daily_key)
       logging.warning("user_adgroup_hourly_key: %s"%user_adgroup_hourly_key)
-      memcache.offset_multi({user_adgroup_daily_key:1,user_adgroup_hourly_key:1}, key_prefix='', namespace=None, initial_value=0)
+      # TODO: PUT BACK: removed memcache for user counts
+      # memcache.offset_multi({user_adgroup_daily_key:1,user_adgroup_hourly_key:1}, key_prefix='', namespace=None, initial_value=0)
       
       if str(self.request.headers['User-Agent']) not in CRAWLERS:
         logging.info('OLP ad-auction {"id": "%s", "c": "%s", "request_id": "%s", "udid": "%s"}' % (id, c.key(), request_id, udid))
@@ -698,7 +700,7 @@ class AdHandler(webapp.RequestHandler):
                           window.innerHeight = $h;
                         </script>
                         <title>$title</title>
-                        </head><body style="margin: 0;width:${w}px;height:${h}px;padding:0;">
+                        </head><body style="margin: 0;width:${w}px;height:${h}px;padding:0;background-color:transparent;">
                         <script type="text/javascript">
                         var admob_vars = {
                          pubid: '$client', // publisher id
@@ -716,7 +718,7 @@ class AdHandler(webapp.RequestHandler):
                           function webviewDidClose(){} 
                           function webviewDidAppear(){} 
                         </script></head>
-                        <body style="margin:0;padding:0;width:${w}px;background:white">${html_data}$trackingPixel</body></html>"""),
+                        <body style="margin:0;padding:0;width:${w}px;background:white;">${html_data}$trackingPixel</body></html>"""),
     "html_full":Template("$html_data")
   }
   def render_creative(self, c, **kwargs):

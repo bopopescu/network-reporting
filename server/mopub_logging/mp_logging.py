@@ -18,6 +18,7 @@ INDEX_KEY_FORMAT = 'k:%(account_name)s:%(time)s'
 TASK_NAME = 't-%(account_name)s-%(time)s' # note time will be bucketed
 
 TIME_BUCKET = 10
+MEMCACHE_ALIVE_TIME = 0#5*TIME_BUCKET
 
 
 def log(request,event,adunit=None,manager=None):
@@ -55,7 +56,7 @@ def log(request,event,adunit=None,manager=None):
     
     # put the log data into appropriate place
     log_key = LOG_KEY_FORMAT%dict(account_name=account_name,time=time_bucket,log_index=log_index)
-    memcache.set(log_key,logging_data)
+    memcache.set(log_key,logging_data,time=MEMCACHE_ALIVE_TIME)
     logging.info("just put %s=%s"%(log_key,logging_data))
     
     # send of appropriately named task_queue

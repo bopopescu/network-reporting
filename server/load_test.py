@@ -123,13 +123,14 @@ def threadproc():
             
             uid = uuid.uuid4()
             adunits = ["agltb3B1Yi1pbmNyDAsSBFNpdGUYkaoMDA","agltb3B1Yi1pbmNyDAsSBFNpdGUYycEMDA","agltb3B1Yi1pbmNyDAsSBFNpdGUYq-wdDA"]
+            adunits = ["ahRldmVudHJhY2tlcnNjYWxldGVzdHILCxIEU2l0ZRiJJww"]
             # random.shuffle(adunits)
             adunit = adunits[0]
             t = time.time()
 
             req_cnt_lock.acquire()
             req_cnt += 1
-            url = "http://%s/m/ad?udid=%s&id=%s&req=%s&inst=%s&test=%s"%(HOST,uid,adunit,req_cnt,INSTANCE_ID,TEST_ID)
+            url = "http://%s/m/ad?id=%s&udid=%s&reqcnt=%s&inst=%s&test=%s"%(HOST,adunit,uid,req_cnt,INSTANCE_ID,TEST_ID)
             req_cnt_lock.release()
             
             fail_lock.acquire()
@@ -164,34 +165,33 @@ def threadproc():
                                                    advertiser=creative,
                                                    date=date_hour)
                 
-                
-            if creative:
-                imp_url = resp['x-imptracker']
-                click_url = resp['x-clickthrough']
-                resp, content = h.request(imp_url)
-                
-                if resp.status != 200:
-                    fail_lock.acquire()
-                    print "Response not OK (status: %s)"%resp.status
-                    print "FAIL URL: %s"%imp_url
-                    print "FAIL content: %s"%content
-                    fail_lock.release()
-                else:
-                    update_stats(key,'imp',t)
-                    
-                # # simulate a click 3% CTR        
-                click = False
-                if random.randint(0,1) < 1:
-                    resp, content = h.request(click_url)
-                    if resp.status != 200:
-                        fail_lock.acquire()
-                        print "Response not OK (status: %s)"%resp.status
-                        print "FAIL URL: %s"%click
-                        print "FAIL content: %s"%content
-                        fail_lock.release()
-                    else:
-                        click = True
-                        update_stats(key,'clk',t)   
+            # if creative:
+            #     imp_url = resp['x-imptracker']
+            #     click_url = resp['x-clickthrough']
+            #     resp, content = h.request(imp_url)
+            #     
+            #     if resp.status != 200:
+            #         fail_lock.acquire()
+            #         print "Response not OK (status: %s)"%resp.status
+            #         print "FAIL URL: %s"%imp_url
+            #         print "FAIL content: %s"%content
+            #         fail_lock.release()
+            #     else:
+            #         update_stats(key,'imp',t)
+            #         
+            #     # # simulate a click 3% CTR        
+            #     click = False
+            #     if random.randint(0,1) < 1:
+            #         resp, content = h.request(click_url)
+            #         if resp.status != 200:
+            #             fail_lock.acquire()
+            #             print "Response not OK (status: %s)"%resp.status
+            #             print "FAIL URL: %s"%click
+            #             print "FAIL content: %s"%content
+            #             fail_lock.release()
+            #         else:
+            #             click = True
+            #             update_stats(key,'clk',t)   
                 
                 # if click:
                 #     if random.random(0,1) < 1:

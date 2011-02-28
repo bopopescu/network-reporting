@@ -16,6 +16,7 @@ from reporting import query_managers
 from mopub_logging import mp_logging
 
 MAX_KEYS = 100
+MAX_TAIL = 10000
 
 def increment_stats(stats):
     # datastore get
@@ -51,22 +52,27 @@ def update_stats(stats_dict,publisher,advertiser,date_hour,attribute,req=None,in
     
 class LogTaskHandler(webapp.RequestHandler):
   def get(self):
-      # logging.info("I AM PROCESSING A TASK")
-      # update a list of counters across the various dimensions
+      # inspect headers of the task
+      retry_count = self.request.headers.get('X-AppEngine-TaskRetryCount',None)
+      
+      # grab parameters from the message of the task
       account_name = self.request.get("account_name")
       time_bucket = int(self.request.get("time"))
 
-      head_index = 1 # starts at one
+      head_index = 1 # starts at one for a particular time_bucket
 
       # get the last index for a given time bucket
       tail_key = mp_logging.INDEX_KEY_FORMAT%dict(account_name=account_name,time=time_bucket)
-      tail_index = int(memcache.get(tail_key))
+      tail_index_str = memcache.get(tail_key)
+      tail_index = int(tail_index_str or MAX_TAIL)
 
       logging.info("account: %s time: %s start: %s stop: %s"%(account_name,time_bucket,head_index,tail_index))
 
       stats_dict = {}      
       start = head_index
       # paginate the keys
+      memcache_misses = 0
+      
       while start <= tail_index: 
           # get another MAX_KEYS or go to the end
           stop = start + MAX_KEYS - 1 if (start+MAX_KEYS-1) < tail_index else tail_index
@@ -76,7 +82,8 @@ class LogTaskHandler(webapp.RequestHandler):
           logging.info("we have %d keys (start:%s stop:%s)"%(len(keys),start,stop))
           
           # grab logs from memcache         
-          data_dicts = memcache.get_multi(keys)   
+          data_dicts = memcache.get_multi(keys) 
+          memcache_misses += len(keys)-len(data_dicts)  
           logging.info("Memcache misses: %d"%(len(keys)-len(data_dicts)))
 
           for k,d in data_dicts.iteritems():
@@ -149,6 +156,15 @@ class LogTaskHandler(webapp.RequestHandler):
                         body="%s"%(exception_traceback))
           logging.error(exception_traceback)
           raise Exception("need to try transaction again")
+          
+      if not tail_index_str or memcache_misses:
+          exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
+          mail.send_mail(sender="appenginescaletest@gmail.com",
+                        to="nafis@mopub.com",
+                        subject="Logging error",
+                        body="Account: %s time: %s tail: %s misses: %s retry: %s"%(account_name,time_bucket,tail_index_str,memcache_misses,retry_count))
+          logging.error("Account: %s time: %s tail: %s misses: %s retry: %s"%(account_name,time_bucket,tail_index_str,memcache_misses,retry_count))
+                
 
 application = webapp.WSGIApplication([('/_ah/queue/bulk-log-processor', LogTaskHandler),
                                      ],

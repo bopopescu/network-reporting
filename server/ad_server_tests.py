@@ -134,7 +134,8 @@ def get_id( dt = datetime.now() ):
     req = Request( fake_environ( build_ad_qs( UDID, '', AD_UNIT_ID, dt = dt ) ) )
     adH = AdHandler()
     adH.initialize( req, resp )
-    return adH.get()
+    adH.get()
+    return resp.headers.get('X-CreativeID')
 
 def basic_net_test():
     pause_all()

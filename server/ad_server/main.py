@@ -572,6 +572,10 @@ class AdHandler(webapp.RequestHandler):
       # ad an impression tracker URL
         self.response.headers.add_header("X-Imptracker", "http://%s/m/imp?"%(DOMAIN))
       
+      #add creative ID for testing (also prevents that one bad bug from happening)
+        if testing:
+            self.response.headers.add_header("X-CreativeID", "%s" % c.key())
+
       # add to the campaign counter
         logging.info("adding to delivery: %s"%c.ad_group.bid)
         c.ad_group.campaign.delivery_counter.increment(dollars=c.ad_group.bid)
@@ -586,9 +590,6 @@ class AdHandler(webapp.RequestHandler):
                                                         request_id          = request_id, 
                                                         v                   = int(self.request.get('v') or 0)
                                                         ) )
-        if testing:
-            return c.key() if c else c# TODO: shouldn't this be self.response.out.write(str(c.key()))
-                         # TODO: yes
     else:
         self.response.out.write( self.render_creative(  c, 
                                                         site                = site, 

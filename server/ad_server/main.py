@@ -586,8 +586,8 @@ class AdHandler(webapp.RequestHandler):
                                                         request_id          = request_id, 
                                                         v                   = int(self.request.get('v') or 0)
                                                         ) )
-    if testing:
-        return c.key() if c else c# TODO: shouldn't this be self.response.out.write(str(c.key()))
+        if testing:
+            return c.key() if c else c# TODO: shouldn't this be self.response.out.write(str(c.key()))
                          # TODO: yes
     else:
         self.response.out.write( self.render_creative(  c, 

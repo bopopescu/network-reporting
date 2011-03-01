@@ -20,7 +20,6 @@ TASK_NAME = 't-%(account_name)s-%(time)s' # note time will be bucketed
 TIME_BUCKET = 10
 MEMCACHE_ALIVE_TIME = 6*TIME_BUCKET
 
-
 def log(request,event,adunit=None,manager=None):
 
     # get parameters from the request

@@ -2,7 +2,7 @@
 #---------------------------------------------
 # ec2-describe-instances --filter instance-state-name=running --filter tag:Name=LOAD
 NUM_THREADS=40
-TIME_AT_PEAK=10 #minutes
+TIME_AT_PEAK=20 #minutes
 DELAY=10 # should be 30, but sometimes i just say fuck it and do 10
 LOGGING=3
 TEST_ID=$RANDOM # generates a random test id

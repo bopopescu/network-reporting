@@ -621,7 +621,7 @@ class AdHandler(webapp.RequestHandler):
       <div style="color:white;font-weight:bold;margin:0px 0 0 5px;padding-top:8;">$line1</div>
       <div style="color:white;margin-top:6px;margin:5px 0 0 5px;">$line2</div>
     </div>
-    <div style="padding-top:5px;position:absolute;top:0;right:0;"><a href="$url"><img src="/images/$action_icon.png" width=40 height=40/></a></div>
+    <div style="padding-top:5px;position:absolute;top:0;right:0;"><a href="$url" target="_blank"><img src="/images/$action_icon.png" width=40 height=40/></a></div>
     $trackingPixel
   </div>
   </body>
@@ -632,12 +632,12 @@ class AdHandler(webapp.RequestHandler):
                           </style>
                           $finishLoad
                           <script>
-                            function webviewDidClose(){} 
-                            function webviewDidAppear(){} 
+                            function webviewDidClose(){}
+                            function webviewDidAppear(){}
                           </script>
                         </head>
                         <body style="margin: 0;width:${w}px;height:${h}px;padding:0;">\
-                          <a href="$url"><img src="$image_url" width=$w height=$h/></a>
+                          <a href="$url" target="_blank"><img src="$image_url" width=$w height=$h/></a>
                         </body>   $trackingPixel</html> """),
     "admob": Template("""<html><head>
                         $finishLoad
@@ -663,8 +663,14 @@ class AdHandler(webapp.RequestHandler):
     "html":Template("""<html><head><title>$title</title>
                         $finishLoad                  
                         <script type="text/javascript">
-                          function webviewDidClose(){} 
-                          function webviewDidAppear(){} 
+                          function webviewDidClose(){}
+                          function webviewDidAppear(){}
+                          window.addEventListener("load", function() {
+                            var links = document.getElementsByTagName('a');
+                            for(var i=0; i < links.length; ++i){
+                              links[i].setAttribute('target','_blank');
+                            }
+                          }, false);
                         </script></head>
                         <body style="margin:0;padding:0;width:${w}px;background:white">${html_data}$trackingPixel</body></html>"""),
     "html_full":Template("$html_data")

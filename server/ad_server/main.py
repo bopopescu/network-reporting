@@ -573,8 +573,7 @@ class AdHandler(webapp.RequestHandler):
         self.response.headers.add_header("X-Imptracker", "http://%s/m/imp?"%(DOMAIN))
       
       #add creative ID for testing (also prevents that one bad bug from happening)
-        if testing:
-            self.response.headers.add_header("X-CreativeID", "%s" % c.key())
+        self.response.headers.add_header("X-CreativeID", "%s" % c.key())
 
       # add to the campaign counter
         logging.info("adding to delivery: %s"%c.ad_group.bid)

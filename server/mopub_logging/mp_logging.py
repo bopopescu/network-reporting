@@ -18,7 +18,7 @@ INDEX_KEY_FORMAT = 'k:%(account_name)s:%(time)s'
 TASK_NAME = 't-%(account_name)s-%(time)s' # note time will be bucketed
 
 TIME_BUCKET = 10
-MEMCACHE_ALIVE_TIME = 0#5*TIME_BUCKET
+MEMCACHE_ALIVE_TIME = 6*TIME_BUCKET
 
 
 def log(request,event,adunit=None,manager=None):
@@ -33,7 +33,6 @@ def log(request,event,adunit=None,manager=None):
     # get account name from the adunit
     adunit_qmanager = manager or AdUnitQueryManager(adunit_id)
     adunit = adunit or adunit_qmanager.get_adunit()
-    
     
     account_name = str(adunit.account.key())
     

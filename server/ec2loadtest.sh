@@ -1,7 +1,7 @@
 #!/bin/bash -x
 #---------------------------------------------
 # ec2-describe-instances --filter instance-state-name=running --filter tag:Name=LOAD
-NUM_THREADS=10
+NUM_THREADS=40
 TIME_AT_PEAK=10 #minutes
 DELAY=10 # should be 30, but sometimes i just say fuck it and do 10
 LOGGING=3
@@ -69,7 +69,6 @@ ec2-50-17-77-77.compute-1.amazonaws.com
 ec2-50-17-33-252.compute-1.amazonaws.com
 ec2-50-17-59-234.compute-1.amazonaws.com
 ec2-50-16-95-157.compute-1.amazonaws.com
-ec2-50-17-86-255.compute-1.amazonaws.com
 ec2-50-16-158-136.compute-1.amazonaws.com
 ec2-50-16-134-200.compute-1.amazonaws.com
 ec2-50-16-58-233.compute-1.amazonaws.com

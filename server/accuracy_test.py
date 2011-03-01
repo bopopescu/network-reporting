@@ -17,7 +17,7 @@ from google.appengine.ext import db
 
 from reporting.models import StatsModel
 
-TOTAL = 99
+TOTAL = 98
 
 def auth_func():
     return "appenginescaletest@gmail.com", "test!@#$"

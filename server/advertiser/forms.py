@@ -1,14 +1,21 @@
-import logging
-from google.appengine.ext import db
-from google.appengine.api import images
-
 from advertiser.models import Campaign, AdGroup, Creative, \
                               TextCreative, TextAndTileCreative,\
                               HtmlCreative, ImageCreative
-from publisher.models import Site as AdUnit
+from common.constants import (  CITY_GEO,
+                                REGION_GEO,
+                                COUNTRY_GEO,
+                                )
+#THIS ORDER IS VERY IMPORTANT DO NOT CHANGE IT (thanks!)
+GEO_LIST = ( COUNTRY_GEO, REGION_GEO, CITY_GEO )
+
+from common.utils import forms as mpforms
 from django import forms
 from django.core.urlresolvers import reverse
-from common.utils import forms as mpforms
+from google.appengine.ext import db
+from google.appengine.api import images
+from publisher.models import Site as AdUnit
+
+import logging
 
 class CampaignForm(mpforms.MPModelForm):
   TEMPLATE = 'advertiser/forms/campaign_form.html'
@@ -25,7 +32,7 @@ class AdGroupForm(mpforms.MPModelForm):
   # TODO: how can i make this dynamic
   site_keys = mpforms.MPModelMultipleChoiceField(AdUnit,required=False)
   keywords = mpforms.MPTextAreaField(required=False)
-  geo = forms.Field( widget = forms.MultipleHiddenInput )
+  geo = forms.Field(widget = forms.MultipleHiddenInput)
   device_predicates = mpforms.MPTextAreaField(required=False)
   
   class Meta:
@@ -35,11 +42,21 @@ class AdGroupForm(mpforms.MPModelForm):
               'percent_users', 'site_keys',
               'hourly_frequency_cap','daily_frequency_cap','allocation_percentage',
               'allocation_type','budget')
+
   def save( self, commit=True):
       obj = super(AdGroupForm, self).save(commit=False)
       if obj:
-          import logging
-          logging.warning(self.cleaned_data['geo'] )
+          geos = self.cleaned_data['geo']
+          geo_preds = []
+          for geo in geos:
+              geo = tuple(geo.split(','))
+              #Make the geo_list such that the one that needs 3 entries corresponds ot idx 2, 2 entires idx 1, 1 entry idx 0
+              geo_preds.append(GEO_LIST[len(geo)-1] % geo)
+          obj.geo_predicates = geo_preds
+      if commit:
+          obj.put()
+      return obj
+
 
 class BaseCreativeForm(mpforms.MPModelForm):
   TEMPLATE = 'advertiser/forms/base_creative_form.html'

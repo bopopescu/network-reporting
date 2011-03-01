@@ -340,6 +340,12 @@ $.TokenList = function (input, settings) {
 
         // Save this token id
         var id_string = li_data.id; 
+        //XXX IMPORTANT XXX
+        //order for id_string should be:
+        // [country], region], city]
+        // so US is US, California is US,CA and San Francisco is US,CA,SF (or some something like that)
+        // This is because the django forms are going to take this id, split it on ',' and then assign
+        // the first value as country_name, 2nd as region_name, and 3rd as city_name 
         var input = $( '<input type="hidden" name="geo" id="' + id_string + '" value="' + id_string + '" />' );
         input.appendTo( hidden_input ); 
         console.log( hidden_input );

@@ -60,7 +60,9 @@
                         </dd>
                         <dt><label for="TODO9">Geo Predicates:</label></dt>
                         <dd>
-                          <textarea id='geo_pred_ta' name="geo_predicates" class="{% if form.geo_predicates.errors %}form-error{% endif %}">{% if form.geo_predicates.value %}{{form.geo_predicates.value}}{% else %}country_name=*{% endif %}</textarea>
+                          <div id='geo_pred_ta' name='geo_predicates'></div>
+                          <!--
+                          <textarea id='geo_pred_ta' name="geo_predicates" class="{% if form.geo_predicates.errors %}form-error{% endif %}">{% if form.geo_predicates.value %}{{form.geo_predicates.value}}{% else %}country_name=*{% endif %}</textarea> -->
                           <div>country_name=X; region_name=X,country_name=X; city_name=X,region_name=X,country_name=X</div>
                           {% for error in form.geo_predicates.errors %}
                           <div class="form-error-text">{{error}}</div>

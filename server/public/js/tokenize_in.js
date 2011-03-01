@@ -76,6 +76,7 @@ $.TokenList = function (input, settings) {
     
     // Keep track of the number of tokens in the list
     var token_count = 0;
+    var token_id    = 0;
 
     // Basic cache to save on db hits
     var cache = new $.TokenList.Cache( settings );
@@ -253,7 +254,6 @@ $.TokenList = function (input, settings) {
 
     // Pre-populate list if items exist
     function init_list () {
-        hidden_input.val("");
         li_data = settings.prePopulate;
         if(li_data && li_data.length) {
             for(var i in li_data) {
@@ -280,8 +280,9 @@ $.TokenList = function (input, settings) {
                 hide_dropdown();
 
                 // Save this token id
-                var id_string = li_data[i].id + ","
-                hidden_input.val(hidden_input.val() + id_string);
+                var id_string = li_data[i].id;
+                var input = $( '<input type="hidden" id="' + id_string + '" value="' + id_string + '" />' );
+                input.appendTo( hidden_input ); 
             }
         }
     }
@@ -305,7 +306,6 @@ $.TokenList = function (input, settings) {
 
     // Inner function to a token to the list
     function insert_token(id, value) {
-      console.log( id );
       var this_token = $("<li><p>"+ value +"</p> </li>")
       .addClass(settings.classes.token)
       .insertBefore(input_token);
@@ -339,11 +339,13 @@ $.TokenList = function (input, settings) {
         hide_dropdown();
 
         // Save this token id
-        var id_string = li_data.id + ","
-        hidden_input.val(hidden_input.val() + id_string);
+        var id_string = li_data.id; 
+        var input = $( '<input type="hidden" name="input-' + token_id + '" id="' + id_string + '" value="' + id_string + '" />' );
+        input.appendTo( hidden_input ); 
         console.log( hidden_input );
-        
         token_count++;
+        //Strictly increasing number so we can name the hidden inputs
+        token_id++;
         
         if(settings.tokenLimit != null && token_count >= settings.tokenLimit) {
             input_box.hide();
@@ -406,20 +408,13 @@ $.TokenList = function (input, settings) {
         // Delete the token
         token.remove();
         selected_token = null;
-
+//TODO delete the hidden field wooo
         // Show the input box and give it focus again
         input_box.focus();
 
         // Delete this token's id from hidden input
-        var str = hidden_input.val()
-        var start = str.indexOf(token_data.id+",");
-        var end = str.indexOf(",", start) + 1;
-
-        if(end >= str.length) {
-            hidden_input.val(str.slice(0, start));
-        } else {
-            hidden_input.val(str.slice(0, start) + str.slice(end, str.length));
-        }
+        $( "#" + token_data.id ).remove();
+        console.log( hidden_input );
         
         token_count--;
         
@@ -688,7 +683,6 @@ $.TokenList.Cache = function (options) {
             size++;
         }
         data[query] = results;
-        console.log( data );
     };
 
     return {

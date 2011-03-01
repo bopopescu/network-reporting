@@ -340,7 +340,7 @@ $.TokenList = function (input, settings) {
 
         // Save this token id
         var id_string = li_data.id; 
-        var input = $( '<input type="hidden" name="input-' + token_id + '" id="' + id_string + '" value="' + id_string + '" />' );
+        var input = $( '<input type="hidden" name="geo" id="' + id_string + '" value="' + id_string + '" />' );
         input.appendTo( hidden_input ); 
         console.log( hidden_input );
         token_count++;

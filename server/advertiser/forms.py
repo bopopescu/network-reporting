@@ -25,16 +25,21 @@ class AdGroupForm(mpforms.MPModelForm):
   # TODO: how can i make this dynamic
   site_keys = mpforms.MPModelMultipleChoiceField(AdUnit,required=False)
   keywords = mpforms.MPTextAreaField(required=False)
-  geo_predicates = mpforms.MPTextAreaField()
+  geo = forms.Field( widget = forms.MultipleHiddenInput )
   device_predicates = mpforms.MPTextAreaField(required=False)
   
   class Meta:
     model = AdGroup
     fields = ('name', 'network_type', 'priority_level', 'keywords',
-              'bid', 'bid_strategy', 'geo_predicates', 
+              'bid', 'bid_strategy', 
               'percent_users', 'site_keys',
               'hourly_frequency_cap','daily_frequency_cap','allocation_percentage',
               'allocation_type','budget')
+  def save( self, commit=True):
+      obj = super(AdGroupForm, self).save(commit=False)
+      if obj:
+          import logging
+          logging.warning(self.cleaned_data['geo'] )
 
 class BaseCreativeForm(mpforms.MPModelForm):
   TEMPLATE = 'advertiser/forms/base_creative_form.html'

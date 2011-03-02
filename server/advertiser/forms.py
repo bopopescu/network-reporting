@@ -1,14 +1,21 @@
-import logging
-from google.appengine.ext import db
-from google.appengine.api import images
-
 from advertiser.models import Campaign, AdGroup, Creative, \
                               TextCreative, TextAndTileCreative,\
                               HtmlCreative, ImageCreative
-from publisher.models import Site as AdUnit
+from common.constants import (  CITY_GEO,
+                                REGION_GEO,
+                                COUNTRY_GEO,
+                                )
+#THIS ORDER IS VERY IMPORTANT DO NOT CHANGE IT (thanks!)
+GEO_LIST = ( COUNTRY_GEO, REGION_GEO, CITY_GEO )
+
+from common.utils import forms as mpforms
 from django import forms
 from django.core.urlresolvers import reverse
-from common.utils import forms as mpforms
+from google.appengine.ext import db
+from google.appengine.api import images
+from publisher.models import Site as AdUnit
+
+import logging
 
 class CampaignForm(mpforms.MPModelForm):
   TEMPLATE = 'advertiser/forms/campaign_form.html'
@@ -25,16 +32,48 @@ class AdGroupForm(mpforms.MPModelForm):
   # TODO: how can i make this dynamic
   site_keys = mpforms.MPModelMultipleChoiceField(AdUnit,required=False)
   keywords = mpforms.MPTextAreaField(required=False)
-  geo_predicates = mpforms.MPTextAreaField()
+  geo = forms.Field(widget = forms.MultipleHiddenInput)
   device_predicates = mpforms.MPTextAreaField(required=False)
   
   class Meta:
     model = AdGroup
     fields = ('name', 'network_type', 'priority_level', 'keywords',
-              'bid', 'bid_strategy', 'geo_predicates', 
+              'bid', 'bid_strategy', 
               'percent_users', 'site_keys',
               'hourly_frequency_cap','daily_frequency_cap','allocation_percentage',
               'allocation_type','budget')
+
+  def save( self, commit=True):
+      obj = super(AdGroupForm, self).save(commit=False)
+      if obj:
+          geos = self.cleaned_data['geo']
+          geo_preds = []
+          for geo in geos:
+              geo = tuple(geo.split(','))
+              #Make the geo_list such that the one that needs 3 entries corresponds ot idx 2, 2 entires idx 1, 1 entry idx 0
+              geo_preds.append(GEO_LIST[len(geo)-1] % geo)
+          obj.geo_predicates = geo_preds
+      if commit:
+          obj.put()
+      return obj
+
+  def __init__(self, *args,**kwargs):
+    instance = kwargs.get('instance',None)
+    initial = kwargs.get('initial',None)
+
+    if instance:
+      geo_predicates = [] 
+      for geo_pred in  instance.geo_predicates: 
+          preds = geo_pred.split(',')
+          geo_predicates.append( ','.join( [ str( pred.split('=')[1] ) for pred in preds ] ) )
+      logging.warning( geo_predicates )
+      if not initial:
+        initial = {}
+      initial.update(geo=geo_predicates)
+      #initial.update(geo=instance.geo_predicates)
+      kwargs.update(initial=initial)
+    super(AdGroupForm,self).__init__(*args,**kwargs)    
+
 
 class BaseCreativeForm(mpforms.MPModelForm):
   TEMPLATE = 'advertiser/forms/base_creative_form.html'

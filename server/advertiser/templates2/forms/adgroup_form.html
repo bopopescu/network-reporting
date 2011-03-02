@@ -1,3 +1,32 @@
+<script type='text/javascript' src='/js/countries.js'></script>
+<script type='text/javascript' src='/js/tokenize_in.js'></script>
+ <link rel='stylesheet' type='text/css' href='/css/token-input-mopub.css'></link>
+ <!-- <link rel='stylesheet' type='text/css' href='/css/token-input-mac.css'></link> -->
+<script type='text/javascript'>
+    $(document).ready( function () {
+            var priors = {{form.geo.value|safe}};
+            var pre = [];
+            for (var count = 0; count < countries.length; count++) {
+                var dat = countries[count];
+                if ($.inArray(dat.code, priors) != -1) {
+                    pre.push(dat);
+                }
+                if (pre.length == priors.length)
+                    break;
+            }
+            //Need to create data object that is array of dictionary [ {name, id} ] 
+
+            $('#geo_pred_ta').tokenInput( null, { data: countries,
+                                                  formatResult: function( row ) {
+                                                        return row.name;
+                                                        },
+                                                  formatMatch: function( row, i, max ){
+                                                        return [row.name, row.code];
+                                                        },
+                                                  prePopulate: pre 
+                });
+    });
+</script>
                     <dl class="formFields"> 
                       <dt><label for="TOOD5">Ad Units:</label></dt>
                       <dd> 
@@ -43,8 +72,9 @@
                         </dd>
                         <dt><label for="TODO9">Geo Predicates:</label></dt>
                         <dd>
-                          <textarea name="geo_predicates" class="{% if form.geo_predicates.errors %}form-error{% endif %}">{% if form.geo_predicates.value %}{{form.geo_predicates.value}}{% else %}country_name=*{% endif %}</textarea>
-                          <div>country_name=X; region_name=X,country_name=X; city_name=X,region_name=X,country_name=X</div>
+                          <div id='geo_pred_ta' name='geo_predicates'></div>
+                          <!--
+                          <textarea id='geo_pred_ta' name="geo_predicates" class="{% if form.geo_predicates.errors %}form-error{% endif %}">{% if form.geo_predicates.value %}{{form.geo_predicates.value}}{% else %}country_name=*{% endif %}</textarea> -->
                           {% for error in form.geo_predicates.errors %}
                           <div class="form-error-text">{{error}}</div>
                           {% endfor %}

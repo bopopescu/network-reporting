@@ -88,6 +88,6 @@ def TextResponse(string=''):
 
 # This is needed by app_prefixed_loader.
 if settings.NEW_UI:
-    app_template_dirs = get_app_dirs('templates2')
+    app_template_dirs = get_app_dirs('templates')
 else:
     app_template_dirs = get_app_dirs('templates')

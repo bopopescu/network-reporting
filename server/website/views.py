@@ -61,19 +61,5 @@ def droid_market_search(qs):
                  )
     return JSONResponse(final)
 
-
-    # a class="buy-link"
-    #
-    # { resultCount : <blah>, 
-    #   results: [
-    #               { artworkUrl60 : <blah>, data-docTitle
-    #                 trackName:  <blah>, data-docId
-    #                 artistName: <blah>, data-docAttribution
-    #                 trackViewUrl: <blah>, data-docIconUrl
-    #                 description: <blah>, blahhhhh
-    #                }, ....
-    #            ]
-    # }
-
 def website_welcome(request,*args,**kwargs):
     return HttpResponseRedirect("/inventory")

@@ -57,7 +57,7 @@ def log(request,event,adunit=None,manager=None):
     memcache.set(log_key,logging_data,time=MEMCACHE_ALIVE_TIME)
     logging.info("just put %s=%s"%(log_key,logging_data))
     
-    # send of appropriately named task_queue
+    # send to appropriately named task_queue
     task_name = TASK_NAME%dict(account_name=account_name,time=time_bucket)
     logging.info('task: %s'%task_name)
     

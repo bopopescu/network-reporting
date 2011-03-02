@@ -150,8 +150,8 @@ class LogTaskHandler(webapp.RequestHandler):
           query_manager.put_stats(stats_dict.values())
       except:
           exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
-          mail.send_mail(sender="appenginescaletest@gmail.com",
-                        to="nafis@mopub.com",
+          mail.send_mail(sender="olp@mopub.com",
+                        to="bugs@mopub.com",
                         subject="Logging error",
                         body="%s"%(exception_traceback))
           logging.error(exception_traceback)
@@ -159,8 +159,8 @@ class LogTaskHandler(webapp.RequestHandler):
           
       if not tail_index_str or memcache_misses:
           exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
-          mail.send_mail(sender="appenginescaletest@gmail.com",
-                        to="nafis@mopub.com",
+          mail.send_mail(sender="olp@mopub.com",
+                        to="bugs@mopub.com",
                         subject="Logging error",
                         body="Account: %s time: %s tail: %s misses: %s retry: %s"%(account_name,time_bucket,tail_index_str,memcache_misses,retry_count))
           logging.error("Account: %s time: %s tail: %s misses: %s retry: %s"%(account_name,time_bucket,tail_index_str,memcache_misses,retry_count))

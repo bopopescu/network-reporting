@@ -443,10 +443,13 @@ class AdAuction(object):
   @classmethod
   def geo_predicates_for_rgeocode(c, r):
     # r = [US, CA SF] or []
+    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     # TODO: DEFAULT COUNTRY SHOULD NOT BE US!!!!!!!
     # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     if len(r) == 0:
       return ["country_name=US","country_name=*"] # ["country_name"=*] or ["country_name=US] ["country_name="CD"]
+    elif len(r) == 1:
+        return ["country_name=%s" % r[0], "country_name=*"]
     elif len(r) == 2:
       return ["region_name=%s,country_name=%s" % (r[0], r[1]),
               "country_name=%s" % r[1],
@@ -498,7 +501,13 @@ class AdHandler(webapp.RequestHandler):
   def get(self):
     logging.warning(self.request.headers['User-Agent'] )
     id = self.request.get("id")
-    
+    locale = self.request.headers.get("Accept-Language")
+    country_re = r'[A-Z][A-Z]'
+    countries = re.findall(country_re, locale)
+    addr = []
+    if len(countries) == 1:
+        addr = tuple(countries[0])
+
     manager = AdUnitQueryManager(id)
     now = datetime.datetime.now()
 
@@ -586,8 +595,8 @@ class AdHandler(webapp.RequestHandler):
                                                         request_id          = request_id, 
                                                         v                   = int(self.request.get('v') or 0)
                                                         ) )
-    if testing:
-        return c.key() if c else c# TODO: shouldn't this be self.response.out.write(str(c.key()))
+        if testing:
+            return c.key() if c else c# TODO: shouldn't this be self.response.out.write(str(c.key()))
                          # TODO: yes
     else:
         self.response.out.write( self.render_creative(  c, 

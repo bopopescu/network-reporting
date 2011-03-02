@@ -90,11 +90,14 @@ $.TokenList = function (input, settings) {
             outline: "none"
         })
         .focus(function () {
-            if (settings.tokenLimit == null || settings.tokenLimit != token_count) {
-                show_dropdown_hint();
+            if( !token_list.hasClass('focused') )
+                token_list.addClass('focused');
+            if( $(this).val() ) {
+              setTimeout(function(){do_search(true);}, 5);
             }
         })
         .blur(function () {
+            token_list.removeClass('focused');
             hide_dropdown();
         })
         .keydown(function (event) {
@@ -200,6 +203,7 @@ $.TokenList = function (input, settings) {
         .addClass(settings.classes.tokenList)
         .insertBefore(hidden_input)
         .click(function (event) {
+            $(this).addClass('focused');
             var li = get_element_from_event(event, "li");
             if(li && li.get(0) != input_token.get(0)) {
                 toggle_select_token(li);
@@ -269,7 +273,7 @@ $.TokenList = function (input, settings) {
                         return false;
                     });
 
-                $.data(this_token.get(0), "tokeninput", {"id": li_data[i].id, "name": li_data[i].name});
+                $.data(this_token.get(0), "tokeninput", {"id": li_data[i].code, "name": li_data[i].name});
 
                 // Clear input box and make sure it keeps focus
                 input_box
@@ -280,8 +284,9 @@ $.TokenList = function (input, settings) {
                 hide_dropdown();
 
                 // Save this token id
-                var id_string = li_data[i].id;
-                var input = $( '<input type="hidden" id="' + id_string + '" value="' + id_string + '" />' );
+                var id_string = li_data[i].code;
+                // This is unique to this method (it should be li_data[i].id) but the data I pass in isn't formatted like that
+                var input = $( '<input type="hidden" name="geo" id="' + id_string + '" value="' + id_string + '" />' );
                 input.appendTo( hidden_input ); 
             }
         }
@@ -348,7 +353,6 @@ $.TokenList = function (input, settings) {
         // the first value as country_name, 2nd as region_name, and 3rd as city_name 
         var input = $( '<input type="hidden" name="geo" id="' + id_string + '" value="' + id_string + '" />' );
         input.appendTo( hidden_input ); 
-        console.log( hidden_input );
         token_count++;
         //Strictly increasing number so we can name the hidden inputs
         token_id++;
@@ -410,17 +414,15 @@ $.TokenList = function (input, settings) {
         // Remove the id from the saved list
         var token_data = $.data(token.get(0), "tokeninput");
 				var callback = settings.onDelete;
-
         // Delete the token
         token.remove();
         selected_token = null;
 //TODO delete the hidden field wooo
         // Show the input box and give it focus again
         input_box.focus();
-
+        console.log( token_data );
         // Delete this token's id from hidden input
         $( "#" + token_data.id ).remove();
-        console.log( hidden_input );
         
         token_count--;
         
@@ -601,6 +603,18 @@ $.TokenList.Cache = function (options) {
         data = {};
         size = 0;
     };
+    
+    function res_sort( query ) {
+        function actual_sort( a, b ) {
+            return q_dist( query, a.value ) - q_dist( query, b.value );
+        }
+        return actual_sort;
+    }
+    
+    function q_dist( query, value ) {
+        return value.length - query.length;
+    }
+
 
     function get(q) {
         if (!options.cacheLength || !size) {
@@ -612,13 +626,22 @@ $.TokenList.Cache = function (options) {
                if( k.length > 0 ) {
                    var c = data[k];
                    $.each( c, function( i, x ) {
-                      if (matchSubset( x.value, q )) {
-                         csub.push( x );
+                      if (matchSubset( x.value, q ) ) {
+                          var add = true;
+                          for( var idx in csub ) {
+                              var dat = csub[idx]; 
+                              if ( x.result == dat.result ) {
+                                  add = false;
+                                  break;
+                              }
+                          }
+                          if (add)
+                             csub.push( x );
                       }
                    });
                 }
            }
-           return csub;
+           return csub.sort(res_sort(q));
         }
         else if( data[q] ) {
             return data[q];
@@ -653,23 +676,25 @@ $.TokenList.Cache = function (options) {
             var rawValue = options.data[i];
             rawValue = (typeof rawValue == "string" ) ? [rawValue] : rawValue;
 
-            var value = options.formatMatch( rawValue, i+1, options.data.length );
-            if ( value == false )
-                continue;
-            var firstChar = value.charAt( 0 ).toLowerCase();
-            if (!stMatchSets[ firstChar ] )
-                 stMatchSets[ firstChar ] = [];
-            var row = {
-                 value: value,
-                 data: rawValue,
-                 result: options.formatResult && options.formatResult( rawValue ) || value
-             };
-             stMatchSets[ firstChar ].push( row );
-             if ( nullData++ < options.max ) {
-                 stMatchSets[""].push( row );
-             }
+            var values = options.formatMatch( rawValue, i+1, options.data.length );
+            for (var j = 0; j < values.length; j++) {
+                var value = values[j];
+                if (value == false)
+                    continue;
+                var firstChar = value.charAt( 0 ).toLowerCase();
+                if (!stMatchSets[ firstChar ] )
+                     stMatchSets[ firstChar ] = [];
+                var row = {
+                     value: value,
+                     data: rawValue,
+                     result: options.formatResult && options.formatResult( rawValue ) || value
+                 };
+                 stMatchSets[ firstChar ].push( row );
+                 if ( nullData++ < options.max ) {
+                     stMatchSets[""].push( row );
+                 }
+            };
         };
-
         $.each( stMatchSets, function( i, value ) {
             options.cacheLength++;
             add( i, value );

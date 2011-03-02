@@ -57,6 +57,18 @@ class AdGroupForm(mpforms.MPModelForm):
           obj.put()
       return obj
 
+  def __init__(self, *args,**kwargs):
+    instance = kwargs.get('instance',None)
+    initial = kwargs.get('initial',None)
+
+    if instance:
+      geo_predicates = instance.geo_predicates 
+      if not initial:
+        initial = {}
+      initial.update(geo=['US','UK'])  
+      kwargs.update(initial=initial)
+    super(AdGroupForm,self).__init__(*args,**kwargs)    
+
 
 class BaseCreativeForm(mpforms.MPModelForm):
   TEMPLATE = 'advertiser/forms/base_creative_form.html'

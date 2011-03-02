@@ -33,6 +33,12 @@ import random
 import hashlib
 import time
 import base64, binascii
+import urllib
+
+
+urllib.getproxies_macosx_sysconf = lambda: {}
+
+
 # moved from django to common utils
 # from django.utils import simplejson
 from common.utils import simplejson
@@ -67,8 +73,6 @@ CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gz
 MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7PnE6cH9_PX7OoeIIr5FjnTA'
 DOMAIN = 'ads.mopub.com'
 
-import urllib
-urllib.getproxies_macosx_sysconf = lambda: {}
 
 
 # TODO: Logging is fucked up with unicode characters
@@ -552,7 +556,7 @@ class AdHandler(webapp.RequestHandler):
       logging.warning("user_adgroup_daily_key: %s"%user_adgroup_daily_key)
       logging.warning("user_adgroup_hourly_key: %s"%user_adgroup_hourly_key)
       # TODO: PUT BACK: removed memcache for user counts
-      # memcache.offset_multi({user_adgroup_daily_key:1,user_adgroup_hourly_key:1}, key_prefix='', namespace=None, initial_value=0)
+      memcache.offset_multi({user_adgroup_daily_key:1,user_adgroup_hourly_key:1}, key_prefix='', namespace=None, initial_value=0)
       
       if str(self.request.headers['User-Agent']) not in CRAWLERS:
         logging.info('OLP ad-auction {"id": "%s", "c": "%s", "request_id": "%s", "udid": "%s"}' % (id, c.key(), request_id, udid))

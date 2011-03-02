@@ -7,4 +7,5 @@ from common.constants import (  MARKET_SEARCH_KEY,
 urlpatterns = patterns('website.views',
   url(r'^welcome$', 'website_welcome', name='website_welcome'),
   url(r'^$', 'website_root', name='website_root'),
+  url(r'^android_market_search/(?P<qs>.*?)/$', 'droid_market_search', name='market_search')
 )

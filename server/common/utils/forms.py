@@ -52,7 +52,7 @@ class MPBoundField(BoundField):
     @property
     def value(self):
         """
-        Adds a value property that easily get pre-filled data be it from
+        Adds a value property that easily gets pre-filled data be it from
         the model or from previous user input
         """
         if not self.form.is_bound:

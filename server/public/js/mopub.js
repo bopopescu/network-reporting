@@ -50,6 +50,9 @@ var mopub = mopub || {};
 		// set up buttonsets
 		$('.buttonset').buttonset().css({ visibility: 'visible' });
 		
+		// set up validation
+    $('.validate').validate();
+		
 		// override default jQuery UI dialog options
 		$.extend($.ui.dialog.prototype.options, {
 			modal: true,

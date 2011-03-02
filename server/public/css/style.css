@@ -854,6 +854,20 @@ dl.formFields {
   color: #222;
 }
 
+.input-text.error {
+  background: #fff2f2;
+  border-color: #e6a1a1;
+  border-top-color: #d98d8d;
+  color: #222;
+}
+
+label.error {
+  margin-top:8px;
+  display:block;
+  position:relative;
+  line-height:1em;
+}
+
 .form-error-text {
   margin: 10px 0 0 0;
   color: #cc2929;

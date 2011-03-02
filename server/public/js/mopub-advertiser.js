@@ -323,7 +323,6 @@ var mopub = mopub || {};
       .button({ icons : {secondary : 'ui-icon-circle-triangle-e'} })
       .click(function(e){
         e.preventDefault();
-        $('#campaignAdgroupForm-loading').show();
         $('#campaignAdgroupForm').submit();
       });
     

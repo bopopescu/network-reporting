@@ -2,7 +2,10 @@
 	MoPub Global JS
 */
 
-// global mopub object
+//For JSLint Validation:
+/*global console: true, Highcharts: true*/
+
+//mopub singleton object
 var mopub = mopub || {};
 
 (function($){
@@ -46,6 +49,9 @@ var mopub = mopub || {};
 		
 		// set up buttonsets
 		$('.buttonset').buttonset().css({ visibility: 'visible' });
+		
+		// set up validation
+    $('.validate').validate();
 		
 		// override default jQuery UI dialog options
 		$.extend($.ui.dialog.prototype.options, {
@@ -94,7 +100,7 @@ var mopub = mopub || {};
 		
 		// hide message center when page loads if there are no messages
 		function hideMessageCenterIfNoMessages() {
-			if($('.messageCenter-message').length == 0) {
+			if($('.messageCenter-message').length === 0) {
 				$('#messageCenter').hide();
 			}
 		}
@@ -278,7 +284,7 @@ var mopub = mopub || {};
       cacheImage.src = arguments[i];
       cache.push(cacheImage);
     }
-		window.log(cache);
-  }
+		console.log(cache);
+  };
   
 })(this.jQuery);

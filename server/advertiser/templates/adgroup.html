@@ -28,7 +28,7 @@
           <section id="advertiser-adgroupEditForm" class="hidden">
             <a name='adgroupEditForm' class="hidden">adgroupEditForm</a>
             <div>
-              <form action="{% url advertiser_campaign_create_ajax %}" method="POST" accept-charset="utf-8" id="campaignAdgroupForm" class="">
+              <form action="{% url advertiser_campaign_create_ajax %}" method="POST" accept-charset="utf-8" id="campaignAdgroupForm" class="validate">
                 <input type="hidden" name="adgroup_key" value="{{adgroup.key}}"/>
                 <div id="campaignAdgroupForm-fragment">
                   {{campaign_create_form_fragment}}

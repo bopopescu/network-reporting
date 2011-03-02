@@ -106,8 +106,8 @@ class LogTaskHandler(webapp.RequestHandler):
                   # calculate the datetime object to hour precision
                   now = int(float(d['now']))
                   hour = now-now%3600
-                  date_hour = datetime.datetime.fromtimestamp(hour)
-
+                  date_hour = datetime.datetime.fromtimestamp(hour,
+                                                              tz=r_models.Pacific_tzinfo())
                   # attach on the request id once per log line
                   # update_stats(stats_dict,
                   #              publisher=adunit,

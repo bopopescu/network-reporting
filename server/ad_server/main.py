@@ -34,6 +34,7 @@ import hashlib
 import time
 import base64, binascii
 # moved from django to common utils
+# from django.utils import simplejson
 from common.utils import simplejson
 
 from string import Template

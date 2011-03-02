@@ -1,5 +1,5 @@
 application: eventrackerscaletest
-version: 1-014
+version: 0-015
 runtime: python
 api_version: 1
 # default_expiration: "10d"

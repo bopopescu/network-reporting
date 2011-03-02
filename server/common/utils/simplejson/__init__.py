@@ -106,6 +106,8 @@ __all__ = [
 
 __author__ = 'Bob Ippolito <bob@redivi.com>'
 
+import sys
+
 from decimal import Decimal
 
 from decoder import JSONDecoder, JSONDecodeError

@@ -125,9 +125,9 @@ class StatsModelQueryManager(CachedQueryManager):
                 stats_dict[prev_stat.key().name()] = prev_stat
 
             if attribute == 'date':
-                t = time.mktime(stat.date.timetuple())
-                day = t-t%(3600*24) # day precision
-                date = datetime.datetime.fromtimestamp(day)
+                # NOTE: This is a Pacific TimeZone day
+                day = stat.date.date() # makes date object
+                date = datetime.datetime(day.year,day.month,day.day) # makes datetime obj
                 properties = stat._properties
                 attrs = dict([(k,getattr(stat,k)) for k in properties])    
                 attrs.update(date=date)

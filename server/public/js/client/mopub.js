@@ -22,6 +22,9 @@
         mopub_ad_url += ":"+mopub_url.port;
     mopub_ad_url += "/m/ad?id="+mopub_ad_unit;
 
+    if (window.mopub_keywords != null)
+        mopub_ad_url += "&q="+escape(window.mopub_keywords);
+
     document.write('<iframe frameborder="0" hspace="0" marginheight="0" marginwidth="0" scrolling="no" vspace="0"'
                    + ' width="'+window.mopub_ad_width+'"'
                    + ' height="'+window.mopub_ad_height+'"'

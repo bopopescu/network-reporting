@@ -62,10 +62,15 @@ class AdGroupForm(mpforms.MPModelForm):
     initial = kwargs.get('initial',None)
 
     if instance:
-      geo_predicates = instance.geo_predicates 
+      geo_predicates = [] 
+      for geo_pred in  instance.geo_predicates: 
+          preds = geo_pred.split(',')
+          geo_predicates.append( ','.join( [ str( pred.split('=')[1] ) for pred in preds ] ) )
+      logging.warning( geo_predicates )
       if not initial:
         initial = {}
-      initial.update(geo=['US','UK'])  
+      initial.update(geo=geo_predicates)
+      #initial.update(geo=instance.geo_predicates)
       kwargs.update(initial=initial)
     super(AdGroupForm,self).__init__(*args,**kwargs)    
 

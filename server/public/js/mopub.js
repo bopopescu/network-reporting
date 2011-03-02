@@ -2,7 +2,10 @@
 	MoPub Global JS
 */
 
-// global mopub object
+//For JSLint Validation:
+/*global console: true, Highcharts: true*/
+
+//mopub singleton object
 var mopub = mopub || {};
 
 (function($){
@@ -94,7 +97,7 @@ var mopub = mopub || {};
 		
 		// hide message center when page loads if there are no messages
 		function hideMessageCenterIfNoMessages() {
-			if($('.messageCenter-message').length == 0) {
+			if($('.messageCenter-message').length === 0) {
 				$('#messageCenter').hide();
 			}
 		}
@@ -278,7 +281,7 @@ var mopub = mopub || {};
       cacheImage.src = arguments[i];
       cache.push(cacheImage);
     }
-		window.log(cache);
-  }
+		console.log(cache);
+  };
   
 })(this.jQuery);

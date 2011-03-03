@@ -43,7 +43,7 @@ var mopub = mopub || {};
             $.ajax( {
                 url: '/android_market_search/' + name,
                 success: loadedArtwork,
-                dataType: 'json',
+                dataType: 'json'
             } );
                 
             //Do ajax shit 
@@ -55,8 +55,9 @@ var mopub = mopub || {};
       .button({ icons: { primary: "ui-icon-search" }, disabled: true})
       .click(function(e) {
         e.preventDefault();
-        if ($(this).button( "option", "disabled" ))
+        if ($(this).button( "option", "disabled" )) {
           return;
+        }
 
         $('#searchAppStore-loading').show();
 
@@ -73,8 +74,7 @@ var mopub = mopub || {};
         });
         var name = $('#appForm input[name="name"]').val();
         var script = document.createElement("script");
-        script.src = 'http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/wa/wsSearch?'       
-                       + 'entity=software&limit=10&callback=loadedArtwork&term='+name;
+        script.src = 'http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/wa/wsSearch?'+ 'entity=software&limit=10&callback=loadedArtwork&term='+name;
         var head = document.getElementsByTagName("head")[0];
         (head || document.body).appendChild( script );
     });

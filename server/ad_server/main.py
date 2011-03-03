@@ -971,6 +971,7 @@ def main():
                                         ('/m/imp', AdImpressionHandler),
                                         ('/m/aclk', AdClickHandler),
                                         ('/m/open', AppOpenHandler),
+                                        ('/m/track', AppOpenHandler),
                                         ('/m/test', TestHandler),
                                         ('/m/clear', ClearHandler),
                                         ('/m/purchase', PurchaseHandler)], 

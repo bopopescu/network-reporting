@@ -503,7 +503,10 @@ class AdHandler(webapp.RequestHandler):
     id = self.request.get("id")
     locale = self.request.headers.get("Accept-Language")
     country_re = r'[A-Z][A-Z]'
-    countries = re.findall(country_re, locale)
+    if locale:
+        countries = re.findall(country_re, locale)
+    else:
+        countries = [] 
     addr = []
     if len(countries) == 1:
         addr = tuple(countries[0])

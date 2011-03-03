@@ -774,6 +774,7 @@ def creative_html(request,*args,**kwargs):
 
 class CreativeManagementHandler(RequestHandler):
   def post(self):
+    adgroup_key = self.request.POST.get('adgroup_key')
     keys = self.request.POST.getlist('key')
     action = self.request.POST.get('action','pause')
     update_objs = []
@@ -807,7 +808,7 @@ class CreativeManagementHandler(RequestHandler):
           CachedQueryManager().cache_delete(adunits)
             
         
-    return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':c.ad_group.key()}))
+    return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':adgroup_key}))
 
 @whitelist_login_required  
 def creative_manage(request,*args,**kwargs):

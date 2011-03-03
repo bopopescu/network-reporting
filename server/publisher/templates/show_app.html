@@ -16,7 +16,7 @@
           <section id="dashboard-appEditForm" class="hidden">
             <div>
               <a name="appForm" class="hidden">anchor</a>
-              <form action="{% url publisher_app_update_ajax app_key=app.key %}" method="POST" accept-charset="utf-8" id="appForm" class="appEditForm">
+              <form action="{% url publisher_app_update_ajax app_key=app.key %}" enctype='multipart/form-data' method="POST" accept-charset="utf-8" id="appForm" class="appEditForm">
                 <fieldset id="appForm-details" class="alt">
                   <div id="appForm-fragment">
 {{app_form_fragment}}

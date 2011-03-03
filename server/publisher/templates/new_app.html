@@ -1,6 +1,5 @@
 {% extends 'publisher/base.html' %}
 {% load filters %}
-{% block extraScripts %}<script src="/js/mopub-setup.js"></script>{% endblock extraScripts %}
 {% block pageTitle %}<h1>{% ifnotequal account.status "new" %}Add an app{% else %}Step 1: Set up your first app{% endifnotequal %}</h1>{% endblock pageTitle %}{% block dateButtons %}{% endblock dateButtons %}
 {% block titleBarRight %}{% ifequal account.status "new" %}
             <div class="stepProgress"> 
@@ -19,7 +18,7 @@
               <div class="alertMessage">
                 The first step is to tell us about your apps and set up your ad units. Enter the details of your first app below. You can add more apps and ad units later.
               </div>{% endifequal %}
-              <form action="" method="POST" accept-charset="utf-8" id="appForm">{% if app_key %}
+              <form enctype='multipart/form-data' action="" method="POST" accept-charset="utf-8" id="appForm">{% if app_key %}
                 <input type="hidden" name="app_key" value="{{app_key}}"/>{% endif %}
                 <fieldset id="appForm-details" class="alt"> 
                   <legend>App Details</legend> 
@@ -39,26 +38,4 @@
               </form> 
             </div> 
           </section>
-
-
-
-          <!-- Google Code for Signup Conversion Page -->
-          <script type="text/javascript">
-          /* <![CDATA[ */
-          var google_conversion_id = 1008928244;
-          var google_conversion_language = "en";
-          var google_conversion_format = "1";
-          var google_conversion_color = "ffffff";
-          var google_conversion_label = "p4MqCISEogIQ9IuM4QM";
-          var google_conversion_value = 0;
-          /* ]]> */
-          </script>
-          <script type="text/javascript" src="http://www.googleadservices.com/pagead/conversion.js">
-          </script>
-          <noscript>
-          <div style="display:inline;">
-          <img height="1" width="1" style="border-style:none;" alt="" src="http://www.googleadservices.com/pagead/conversion/1008928244/?label=p4MqCISEogIQ9IuM4QM&amp;guid=ON&amp;script=0"/>
-          </div>
-          </noscript>
-
 {% endblock content %}

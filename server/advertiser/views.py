@@ -512,6 +512,8 @@ def campaign_pause(request,*args,**kwargs):
   return PauseHandler()(request,*args,**kwargs)
   
 class ShowAdGroupHandler(RequestHandler):
+    #TODO This currently doesn't show the locales that were set previously
+    #(kinda a problem...)
   def get(self, adgroup_key):
     # Set start date if passed in, otherwise get most recent days
     if self.start_date:

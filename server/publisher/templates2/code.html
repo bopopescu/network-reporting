@@ -1,6 +1,5 @@
 {% extends 'publisher/base.html' %}
 {% load filters %}
-{% block extraScripts %}<script src="/js/mopub-setup.js"></script>{% endblock extraScripts %}
 {% block pageTitle %}<h1>{% ifequal status 'welcome' %}Step 2: Integrate the code{% else %}<a href="{% url publisher_adunit_show adunit_key=site.key %}">{{site.name}}</a> code snippet{% endifequal %}</h1>{% endblock pageTitle %}{% block dateButtons %}{% endblock dateButtons %}
 {% block titleBarRight %}{% ifequal status 'welcome' %}            <div class="stepProgress"> 
               <span class="stepProgress-step">Step 1: Add app</span> 

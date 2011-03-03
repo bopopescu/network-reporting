@@ -65,6 +65,9 @@ var mopub = mopub || {};
     function setupDashboardStatsChart() {
       // get active metric from breakdown
       var metricElement = $('#dashboard-stats .stats-breakdown .active');
+      if (metricElement === null || metricElement.length === 0) {
+          return; 
+      }
       var metricElementIdComponents = metricElement.attr('id').split('-');
       var activeMetric = metricElementIdComponents[metricElementIdComponents.length - 1];
 
@@ -393,11 +396,7 @@ var mopub = mopub || {};
     /---------------------------------------*/
     
     // Platform-dependent URL/package name switching
-    function appFormOnload(dis){
-      if (dis !== null) {
-          dis = true;}
-      else { 
-          dis = false;}
+    function appFormOnload() {
       $('input[name="app_type"]').click(function(e) {
         $('#appForm .appForm-platformDependent')
           .removeClass('iphone')
@@ -409,9 +408,6 @@ var mopub = mopub || {};
         .button( { icons: { primary: 'ui-icon-search' }} )
         .click( function( e ) {
             e.preventDefault();
-            if ( $( this ).button( "option", "disabled" ) ) {
-                return;
-            }
             $( '#searchAppStore-loading' ).show();
             $( '#dashboard-searchAppStore-custom-modal' ).dialog( {
                 buttons: [
@@ -472,7 +468,9 @@ var mopub = mopub || {};
           (head || document.body).appendChild( script );
       });
       if ($('#appForm-name').val() === '') {
+        $('#appForm-search-button').button("disable");
         $('#appForm-search').button("disable");
+        $('#appForm-market-search-button').button("disable");
         $('#appForm-market-search').button("disable");
       }
       $('#appForm-name').keyup(function(e) {
@@ -483,7 +481,6 @@ var mopub = mopub || {};
           if (name.length) {
             $('#appForm-search-button').button("enable");
             $( '#appForm-market-search-button' ).button( 'enable' );
-            $( '#appForm-search-button' ).button( 'enable' );
           }
           else {
             $('#appForm-search-button').button("disable");
@@ -559,7 +556,8 @@ function loadedArtwork(json) {
   if (resultCount == 0) {
     $('#searchAppStore-results').append("<div class='adForm-appSearch-text' />")
       .append("No results found");
-    return;
+      $('#dashboard-searchAppStore-custom-modal').dialog("open");
+      return;
   }
   for (var i=0;i<resultCount;i++) {
     if (i > 10 ) {

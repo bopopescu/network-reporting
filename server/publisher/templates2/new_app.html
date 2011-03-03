@@ -1,6 +1,5 @@
 {% extends 'publisher/base.html' %}
 {% load filters %}
-{% block extraScripts %}<script src="/js/mopub-setup.js"></script>{% endblock extraScripts %}
 {% block pageTitle %}<h1>{% ifnotequal account.status "new" %}Add an app{% else %}Step 1: Set up your first app{% endifnotequal %}</h1>{% endblock pageTitle %}{% block dateButtons %}{% endblock dateButtons %}
 {% block titleBarRight %}{% ifequal account.status "new" %}
             <div class="stepProgress"> 

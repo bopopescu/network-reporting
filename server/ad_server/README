@@ -1,0 +1,18 @@
+////////////    AD_SERVER    ////////////
+/////////////////////////////////////////
+
+How to run tests:
+
+install AppEngine
+
+easy_install nosegae
+easy_install django_nose
+easy_install nose
+easy_install coverage
+
+
+Tom had a problem with fancy_urllib, which was fixed by adding:
+
+DIR_PATH = '/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine'
+
+to '/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/dev_appserver.py'

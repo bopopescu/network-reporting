@@ -126,6 +126,13 @@ var mopub = mopub || {};
       buttons: { "Close": function() { $(this).dialog("close"); } }
     });
   });
+  $('#campaignForm-priority-helpLink').click(function(e) {
+      e.preventDefault();
+      $('#campaignForm-priority-helpContent').dialog({
+          buttons: { "Close": function() { $(this).dialog('close'); }}
+      });
+  });
+
   $('#campaignForm-bid-helpLink').click(function(e) {
     e.preventDefault();
     $('#campaignForm-bid-helpContent').dialog({ 

@@ -22,7 +22,7 @@ class CampaignForm(mpforms.MPModelForm):
 
   class Meta:
     model = Campaign
-    fields = ('name', 'description', 'budget', 'campaign_type', 'start_date', 'end_date')
+    fields = ('name', 'description', 'budget', 'campaign_type', 'start_date', 'end_date', 'gtee_level')
 
 AdUnit.all()
 

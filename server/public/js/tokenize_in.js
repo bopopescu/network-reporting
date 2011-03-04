@@ -85,11 +85,12 @@ $.TokenList = function (input, settings) {
     var timeout;
 
     // Create a new text input an attach keyup events
-    var input_box = $("<input type=\"text\"  autocomplete=\"off\">")
+    var input_box = $("<input class=\"token-input-field\" type=\"text\"  autocomplete=\"off\">")
         .css({
             outline: "none"
         })
         .focus(function () {
+            $(this).addClass('focused');
             if( !token_list.hasClass('focused') )
                 token_list.addClass('focused');
             if( $(this).val() ) {
@@ -97,6 +98,7 @@ $.TokenList = function (input, settings) {
             }
         })
         .blur(function () {
+            $(this).removeClass('focused');
             token_list.removeClass('focused');
             hide_dropdown();
         })

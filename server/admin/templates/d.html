@@ -23,7 +23,8 @@
     	<h3>Ad Units</h3>
     	<table width="100%">
     		<thead>
-    			<th>Name</th>
+    			<th>App</th>
+    			<th>Ad Unit</th>
     			<th>Account</th>
     			<th width="75px">Requests</th>
     			<th width="75px">Clicks</th>
@@ -31,7 +32,8 @@
     		</thead>
     		{% for p in placements %}
     		<tr>
-    			<td>{{p.site.name}}</td>
+    			<td><a href="{% url publisher_app_show app_key=p.site.app_key.key %}">{{p.site.app_key.name}}</a></td>
+    			<td><a href="{% url publisher_adunit_show adunit_key=p.site.key %}">{{p.site.name}}</a></td>
     			<td><a href="mailto:{{p.site.account.user.email}}">{{p.site.account.user.email}}</a></td>
     			<td class="numeric">{{p.request_count|withsep}}</td>
     			<td class="numeric">{{p.click_count|withsep}}</td>

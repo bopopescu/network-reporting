@@ -159,7 +159,6 @@ class AdGroupIndexHandler(RequestHandler):
         name = level if level else 'normal'
         level_camps = filter(lambda x:x.campaign.campaign_type == this_level, guarantee_campaigns)
         gtee_levels.append(dict(name = name, campaigns = level_camps))
-
     logging.warning(guarantee_campaigns)
     
     for blah in gtee_levels:

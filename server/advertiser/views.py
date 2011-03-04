@@ -151,6 +151,8 @@ class AdGroupIndexHandler(RequestHandler):
     
     guarantee_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee'], adgroups)
     guarantee_campaigns = sorted(guarantee_campaigns, lambda x,y: cmp(y.bid, x.bid))
+    levels = ('high', 'normal', 'low')
+    gtee_levels = [{'name' : 'high'},{'name' : 'normal'},{'name' : 'low'}]
 
     network_campaigns = filter(lambda x: x.campaign.campaign_type in ['network'], adgroups)
     network_campaigns = sorted(network_campaigns, lambda x,y: cmp(y.bid, x.bid))
@@ -166,6 +168,8 @@ class AdGroupIndexHandler(RequestHandler):
     if len(adgroups) > 4:
       graph_adgroups[3] = AdGroup(name='Others')
       graph_adgroups[3].all_stats = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[c.all_stats for c in adgroups[3:]])]      
+
+      # gtee = [ {name: 'high', campaigns: what usually goes in gtee } ]
 
     return render_to_response(self.request, 
       'advertiser/adgroups.html', 

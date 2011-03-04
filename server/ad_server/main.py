@@ -2,7 +2,13 @@
 
 # TODO: PLEASE HAVE THIS FIX DJANGO PROBLEMS
 from appengine_django import LoadDjango
-LoadDjango('1.1')
+LoadDjango()
+import os
+from django.conf import settings
+
+os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+# Force Django to reload its settings.
+settings._target = None
 # END TODO: PLEASE HAVE THIS FIX DJANGO PROBLEMS
 
 import wsgiref.handlers

@@ -138,7 +138,7 @@
                     </thead>
                     <tbody>
                       {% for c in level.campaigns %}
-                      <tr class="{% cycle 'campaignData' 'campaignData campaignData-alt' %}" id="campaigns-guaranteed-{{level.name}}-{{forloop.counter0}}">
+                      <tr class="campaignData{% if not forloop.counter0|divisibleby:2 %}campaignData-alt{% endif %}" id="campaigns-guaranteed-{{level.name}}-{{forloop.counter0}}">
                         <th class="campaignData-icon">
                             <input type="checkbox" name="id" value="{{c.key}}"/>
                             {% if c.deleted %}<img src="/images/deleted.gif" height=9 width=9></img>{% endif %}

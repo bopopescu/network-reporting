@@ -83,8 +83,9 @@ class LogTaskHandler(webapp.RequestHandler):
           
           # grab logs from memcache         
           data_dicts = memcache.get_multi(keys) 
-          memcache_misses += len(keys)-len(data_dicts)  
-          logging.info("Memcache misses: %d"%(len(keys)-len(data_dicts)))
+          current_memcache_misses = (stop - start+1) - len(data_dicts)  
+          memcache_misses += current_memcache_misses
+          logging.info("Memcache misses: %d"%current_memcache_misses)
 
           for k,d in data_dicts.iteritems():
               if d:

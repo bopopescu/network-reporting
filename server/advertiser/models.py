@@ -7,7 +7,7 @@ from account.models import Account
 # A campaign.  Campaigns have budgetary and time based restrictions.  
 # 
 class Campaign(db.Model):
-  name = db.StringProperty(required=True)
+  name = db.StringProperty()
   description = db.TextProperty()
   campaign_type = db.StringProperty(choices=['gtee', 'promo', 'network'], default="network")
 

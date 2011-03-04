@@ -32,7 +32,6 @@ class Pacific_tzinfo(datetime.tzinfo):
         else:
             return "PDT"
 
-
 class StatsModel(db.Model):
     publisher = db.ReferenceProperty(collection_name='publisher_stats')
     advertiser = db.ReferenceProperty(collection_name='advertiser_stats')
@@ -44,7 +43,7 @@ class StatsModel(db.Model):
     impression_count = db.IntegerProperty(default=0)
     click_count = db.IntegerProperty(default=0)
     conversion_count = db.IntegerProperty(default=0)
-    user_count = db.IntegerProperty(default=0)
+    user_count = db.IntegerProperty(default=0) # NOTE: name change
     
     # List of requests, useful for debugging
     reqs = db.ListProperty(str,indexed=False)
@@ -91,10 +90,6 @@ class StatsModel(db.Model):
     @property
     def date_hour(self):
         return self.date
-        
-    # @date_hour.setter
-    # def date_hour(self,value):
-    #     self.date = value
         
     def __add__(self,s):
         return StatsModel(parent=self.parent_key(),

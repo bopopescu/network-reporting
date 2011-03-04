@@ -269,6 +269,7 @@ class CreateCampaignAJAXHander(RequestHandler):
       
       if adgroup_form.is_valid():
         adgroup = adgroup_form.save(commit=False)
+        adgroup.account = self.account
                 
         # TODO: clean this up in case the campaign succeeds and the adgroup fails
         CampaignQueryManager().put_campaigns(campaign)
@@ -281,6 +282,7 @@ class CreateCampaignAJAXHander(RequestHandler):
         
         if campaign.campaign_type == "network":
           creative = adgroup.default_creative()
+          creative.account = self.account
           CreativeQueryManager().put_creatives(creative)
 
         # update cache
@@ -726,6 +728,7 @@ class AddCreativeHandler(RequestHandler):
       if creative_form.is_valid():
         creative = creative_form.save(commit=False)
         creative.ad_group = ad_group
+        creative.account = self.account
         CreativeQueryManager().put_creatives(creative)    
         # update cache
         adunits = AdUnitQueryManager().get_by_key(ad_group.site_keys,none=True)

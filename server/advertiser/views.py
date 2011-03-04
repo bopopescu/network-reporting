@@ -149,7 +149,7 @@ class AdGroupIndexHandler(RequestHandler):
     promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], adgroups)
     promo_campaigns = sorted(promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
     
-    guarantee_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee'], adgroups)
+    guarantee_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee_high', 'gtee_low', 'gtee'], adgroups)
     guarantee_campaigns = sorted(guarantee_campaigns, lambda x,y: cmp(y.bid, x.bid))
     levels = ('high', '', 'low')
     gtee_str = "gtee_%s"

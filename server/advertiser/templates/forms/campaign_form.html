@@ -7,7 +7,15 @@
                           <div class="hidden">
                             {% endifequal %}  
                           {% endif %}  
-                          <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="gtee" id="advertiser-CampaignType-gtee" {% if not form.campaign_type.value %}checked="checked"{% endif %}{% ifequal form.campaign_type.value 'gtee' %}checked="checked"{% endifequal %}/> <label for="advertiser-CampaignType-gtee">Guaranteed</label> 
+                          <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="gtee" id="advertiser-CampaignType-gtee" {% if not form.campaign_type.value %}checked="checked"{% endif %}
+                          {% ifequal form.campaign_type.value 'gtee' %}checked="checked"{% endifequal %}
+                          {% comment %}
+                          I HATE YOU DJANGO
+                          {% endcomment %}
+                          {% ifequal form.campaign_type.value 'gtee_high' %}checked="checked"{% endifequal %}
+                          {% ifequal form.campaign_type.value 'gtee_low' %}checked="checked"{% endifequal %}
+                          /> 
+                          <label for="advertiser-CampaignType-gtee">Guaranteed</label> 
                           <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="promo" id="advertiser-CampaignType-promo" {% ifequal form.campaign_type.value "promo" %}checked="checked"{% endifequal %}/> <label for="advertiser-CampaignType-promo">Promotional</label> 
                           {% if form.instance %}
                             {% ifequal form.campaign_type.value 'network' %}
@@ -39,6 +47,22 @@
                           <p>A <strong>Network</strong> campaign is used for showing ads from an ad network like AdMob or iAd.</p>
                         </div>
                       </dd>
+                      <div class="campaignDependent gtee">
+                          <dt><label for="gtee_level">Priority:</label></dt>
+                          <dd>
+                          <select name='gtee_level'>
+                              <option value='high'{% ifequal form.campaign_type.value 'gtee_high' %}selected{% endifequal %}>High</option>
+                              <option value='normal' {% ifequal form.campaign_type.value 'gtee' %}selected{% endifequal %}{% if not form.campaign_type.value %}selected{% endif %}>Normal</option>
+                              <option value='low'{% ifequal form.campaign_type.value 'gtee_low' %}selected{% endifequal %}>Low</option>
+                          </select>
+                          <a href="#" id="campaignForm-priority-helpLink">What's this?</a>
+                          <div id='campaignForm-priority-helpContent' class='hidden'>
+                              <h3>Priority</h3>
+                              <p>
+                              Within a given priority campaigns are run in order of CPM.  By assigning a campaign priority you set it to run before those at a lower priority level. 
+                              </p>
+                          </dd>
+                      </div>
                       <dt><label for="name">Name:</label></dt> 
                       <dd> 
                         <input type="text" class="required input-text{% if form.name.errors %} form-error{% endif %}" name="{{form.name.name}}" value="{{form.name.value}}" placeholder="Campaign Name" />

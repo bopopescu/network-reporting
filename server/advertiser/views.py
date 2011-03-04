@@ -1,6 +1,7 @@
 import logging, os, re, datetime, hashlib
 
 from urllib import urlencode
+from copy import deepcopy
 
 import base64, binascii
 from google.appengine.api import users, images
@@ -149,8 +150,29 @@ class AdGroupIndexHandler(RequestHandler):
     promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], adgroups)
     promo_campaigns = sorted(promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
     
-    guarantee_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee'], adgroups)
+    guarantee_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee_high', 'gtee_low', 'gtee'], adgroups)
     guarantee_campaigns = sorted(guarantee_campaigns, lambda x,y: cmp(y.bid, x.bid))
+    levels = ('high', '', 'low')
+    gtee_str = "gtee_%s"
+    gtee_levels = []
+    for level in levels:
+        this_level = gtee_str % level if level else "gtee"
+        name = level if level else 'normal'
+        level_camps = filter(lambda x:x.campaign.campaign_type == this_level, guarantee_campaigns)
+        gtee_levels.append(dict(name = name, campaigns = level_camps))
+    logging.warning(guarantee_campaigns)
+    
+    for blah in gtee_levels:
+        if blah['name'] == 'normal' and len(gtee_levels[0]['campaigns']) == 0 and len(gtee_levels[2]['campaigns']) == 0: 
+
+            blah['foo'] = True 
+        elif len(blah['campaigns']) > 0:
+            blah['foo'] = True 
+        else:
+            blah['foo'] = False 
+
+    logging.warning(gtee_levels)
+
 
     network_campaigns = filter(lambda x: x.campaign.campaign_type in ['network'], adgroups)
     network_campaigns = sorted(network_campaigns, lambda x,y: cmp(y.bid, x.bid))
@@ -167,6 +189,8 @@ class AdGroupIndexHandler(RequestHandler):
       graph_adgroups[3] = AdGroup(name='Others')
       graph_adgroups[3].all_stats = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[c.all_stats for c in adgroups[3:]])]      
 
+      # gtee = [ {name: 'high', campaigns: what usually goes in gtee } ]
+
     return render_to_response(self.request, 
       'advertiser/adgroups.html', 
       {'adgroups':adgroups,
@@ -177,7 +201,7 @@ class AdGroupIndexHandler(RequestHandler):
        'totals': reduce(lambda x, y: x+y.stats, adgroups, SiteStats()),
        'today': reduce(lambda x, y: x+y, [c.all_stats[-1] for c in graph_adgroups], SiteStats()),
        'yesterday': reduce(lambda x, y: x+y, [c.all_stats[-2] for c in graph_adgroups], SiteStats()),
-       'gtee': guarantee_campaigns,
+       'gtee': gtee_levels, 
        'promo': promo_campaigns,
        'network': network_campaigns,
        'account': self.account,
@@ -246,9 +270,16 @@ class CreateCampaignAJAXHander(RequestHandler):
     else:
       adgroup = None
       campaign = None
-    
-    campaign_form = CampaignForm(data=self.request.POST,instance=campaign)
-    adgroup_form = AdGroupForm(data=self.request.POST,instance=adgroup)
+
+    form_data = deepcopy(self.request.POST)
+    if form_data['campaign_type'] == u'gtee':
+        if form_data['gtee_level'] == u'high':
+            form_data['campaign_type'] = u'gtee_high'
+        if form_data['gtee_level'] == u'low':
+            form_data['campaign_type'] = u'gtee_low'
+
+    campaign_form = CampaignForm(data=form_data,instance=campaign)
+    adgroup_form = AdGroupForm(data=form_data,instance=adgroup)
     
     if adgroup:
       adunits_to_update = set(adgroup.site_keys)

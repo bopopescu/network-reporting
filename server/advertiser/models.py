@@ -1,8 +1,8 @@
 import logging
 
-from account.models import Account
 from google.appengine.ext import db
 from google.appengine.ext.db import polymodel
+from account.models import Account
 #
 # A campaign.  Campaigns have budgetary and time based restrictions.  
 # 

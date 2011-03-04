@@ -26,6 +26,15 @@ class App(db.Model):
   t = db.DateTimeProperty(auto_now_add=True)
   
   exchange_creative = db.ReferenceProperty(Creative)
+  
+  @property
+  def owner(self):
+      return None
+  
+  @property
+  def owner_key(self):
+      return None
+  
 
 class Site(db.Model):
   app_key = db.ReferenceProperty(App)
@@ -82,3 +91,11 @@ class Site(db.Model):
     else:
       s = Site.get(id)      
     return s
+
+  @property
+  def owner(self):
+      return self.app_key
+  
+  @property
+  def owner_key(self):
+      return self._app_key            

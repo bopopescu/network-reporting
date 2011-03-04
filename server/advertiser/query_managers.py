@@ -71,7 +71,6 @@ class CampaignStatsCounter(object):
       delta = int(dollars*100)
     else:
       delta *= 100  
-      
     
     key = self._get_random_key()
     logging.info("random_key: %s"%key)

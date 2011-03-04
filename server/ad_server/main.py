@@ -10,15 +10,15 @@
 # from django.conf import settings
 # settings._target = None
 
-from appengine_django import LoadDjango
-LoadDjango()
-import os
-from django.conf import settings
-
-os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
-# Force Django to reload its settings.
-settings._target = None
-
+# from appengine_django import LoadDjango
+# LoadDjango()
+# import os
+# from django.conf import settings
+# 
+# os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+# # Force Django to reload its settings.
+# settings._target = None
+# 
 # END TODO: PLEASE HAVE THIS FIX DJANGO PROBLEMS
 
 import wsgiref.handlers
@@ -33,7 +33,15 @@ import random
 import hashlib
 import time
 import base64, binascii
-from django.utils import simplejson
+import urllib
+
+
+urllib.getproxies_macosx_sysconf = lambda: {}
+
+
+# moved from django to common utils
+# from django.utils import simplejson
+from common.utils import simplejson
 
 from string import Template
 from urllib import urlencode, unquote
@@ -56,6 +64,9 @@ from ad_server.networks.jumptap import JumptapServerSide
 from ad_server.networks.millennial import MillennialServerSide
 
 from publisher.query_managers import AdServerAdUnitQueryManager, AdUnitQueryManager
+from advertiser.query_managers import CampaignStatsCounter
+
+from mopub_logging import mp_logging
 
 test_mode = "3uoijg2349ic(test_mode)kdkdkg58gjslaf"
 CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gzip(gfe)"]
@@ -65,8 +76,6 @@ FREQ_ATTR = '%s_frequency_cap'
 CAMPAIGN_LEVELS = ('gtee_high', 'gtee', 'gtee_low', 'promo', 'network')
 
 
-import urllib
-urllib.getproxies_macosx_sysconf = lambda: {}
 
 
 # TODO: Logging is fucked up with unicode characters
@@ -498,6 +507,9 @@ class AdHandler(webapp.RequestHandler):
   }
   
   def get(self):
+    
+    mp_logging.log(self.request,event=mp_logging.REQ_EVENT)  
+    
     logging.warning(self.request.headers['User-Agent'] )
     id = self.request.get("id")
     locale = self.request.headers.get("Accept-Language")
@@ -576,12 +588,19 @@ class AdHandler(webapp.RequestHandler):
         if str(self.request.headers['User-Agent']) not in CRAWLERS:
             logging.info('OLP ad-auction {"id": "%s", "c": "%s", "request_id": "%s", "udid": "%s"}' % (id, c.key(), request_id, udid))
 
+        self.response.headers.add_header("X-Creative",str(c.key()))    
+
+        # add timer and animations for the ad
+        # self.response.headers.add_header("X-Refreshtime","5")
+        # animation_type = random.randint(0,6)
+        # self.response.headers.add_header("X-Animation",str(animation_type))    
+
       # create an ad clickthrough URL
         ad_click_url = "http://%s/m/aclk?id=%s&c=%s&req=%s" % (DOMAIN,id, c.key(), request_id)
         self.response.headers.add_header("X-Clickthrough", str(ad_click_url))
       
       # ad an impression tracker URL
-        self.response.headers.add_header("X-Imptracker", "http://%s/m/imp?"%(DOMAIN))
+        self.response.headers.add_header("X-Imptracker", "http://%s/m/imp?id=%s&cid=%s"%(DOMAIN,id,c.key()))
       
       #add creative ID for testing (also prevents that one bad bug from happening)
         self.response.headers.add_header("X-CreativeID", "%s" % c.key())
@@ -693,7 +712,7 @@ class AdHandler(webapp.RequestHandler):
                           window.innerHeight = $h;
                         </script>
                         <title>$title</title>
-                        </head><body style="margin: 0;width:${w}px;height:${h}px;padding:0;">
+                        </head><body style="margin: 0;width:${w}px;height:${h}px;padding:0;background-color:transparent;">
                         <script type="text/javascript">
                         var admob_vars = {
                          pubid: '$client', // publisher id
@@ -711,7 +730,7 @@ class AdHandler(webapp.RequestHandler):
                           function webviewDidClose(){} 
                           function webviewDidAppear(){} 
                         </script></head>
-                        <body style="margin:0;padding:0;width:${w}px;background:white">${html_data}$trackingPixel</body></html>"""),
+                        <body style="margin:0;padding:0;width:${w}px;background:white;">${html_data}$trackingPixel</body></html>"""),
     "html_full":Template("$html_data")
   }
   def render_creative(self, c, **kwargs):
@@ -891,12 +910,14 @@ class AdHandler(webapp.RequestHandler):
 
 class AdImpressionHandler(webapp.RequestHandler):
   def get(self):
+    mp_logging.log(self.request,event=mp_logging.IMP_EVENT)  
     self.response.out.write("OK")
         
 class AdClickHandler(webapp.RequestHandler):
   # /m/aclk?v=1&udid=26a85bc239152e5fbc221fe5510e6841896dd9f8&q=Hotels:%20Hotel%20Utah%20Saloon%20&id=agltb3B1Yi1pbmNyDAsSBFNpdGUY6ckDDA&r=http://googleads.g.doubleclick.net/aclk?sa=l&ai=BN4FhRH6hTIPcK5TUjQT8o9DTA7qsucAB0vDF6hXAjbcB4KhlEAEYASDgr4IdOABQrJON3ARgyfb4hsijoBmgAbqxif8DsgERYWRzLm1vcHViLWluYy5jb226AQkzMjB4NTBfbWLIAQHaAbwBaHR0cDovL2Fkcy5tb3B1Yi1pbmMuY29tL20vYWQ_dj0xJmY9MzIweDUwJnVkaWQ9MjZhODViYzIzOTE1MmU1ZmJjMjIxZmU1NTEwZTY4NDE4OTZkZDlmOCZsbD0zNy43ODM1NjgsLTEyMi4zOTE3ODcmcT1Ib3RlbHM6JTIwSG90ZWwlMjBVdGFoJTIwU2Fsb29uJTIwJmlkPWFnbHRiM0IxWWkxcGJtTnlEQXNTQkZOcGRHVVk2Y2tEREGAAgGoAwHoA5Ep6AOzAfUDAAAAxA&num=1&sig=AGiWqtx2KR1yHomcTK3f4HJy5kk28bBsNA&client=ca-mb-pub-5592664190023354&adurl=http://www.sanfranciscoluxuryhotels.com/
   def get(self):
-    import urllib
+    mp_logging.log(self.request,event=mp_logging.CLK_EVENT)  
+      
     id = self.request.get("id")
     q = self.request.get("q")    
     # BROKEN

@@ -37,7 +37,7 @@ class Campaign(db.Model):
   @property
   def counter_shards(self):
     #TODO: this should be a function of estimated qps
-    return 5
+    return 1
   
   @property
   def owner(self):

@@ -151,8 +151,28 @@ class AdGroupIndexHandler(RequestHandler):
     
     guarantee_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee'], adgroups)
     guarantee_campaigns = sorted(guarantee_campaigns, lambda x,y: cmp(y.bid, x.bid))
-    levels = ('high', 'normal', 'low')
-    gtee_levels = [{'name' : 'high'},{'name' : 'normal'},{'name' : 'low'}]
+    levels = ('high', '', 'low')
+    gtee_str = "gtee_%s"
+    gtee_levels = []
+    for level in levels:
+        this_level = gtee_str % level if level else "gtee"
+        name = level if level else 'normal'
+        level_camps = filter(lambda x:x.campaign.campaign_type == this_level, guarantee_campaigns)
+        gtee_levels.append(dict(name = name, campaigns = level_camps))
+
+    logging.warning(guarantee_campaigns)
+    
+    for blah in gtee_levels:
+        if blah['name'] == 'normal' and len(gtee_levels[0]['campaigns']) == 0 and len(gtee_levels[2]['campaigns']) == 0: 
+
+            blah['foo'] = True 
+        elif len(blah['campaigns']) > 0:
+            blah['foo'] = True 
+        else:
+            blah['foo'] = False 
+
+    logging.warning(gtee_levels)
+
 
     network_campaigns = filter(lambda x: x.campaign.campaign_type in ['network'], adgroups)
     network_campaigns = sorted(network_campaigns, lambda x,y: cmp(y.bid, x.bid))
@@ -181,7 +201,7 @@ class AdGroupIndexHandler(RequestHandler):
        'totals': reduce(lambda x, y: x+y.stats, adgroups, SiteStats()),
        'today': reduce(lambda x, y: x+y, [c.all_stats[-1] for c in graph_adgroups], SiteStats()),
        'yesterday': reduce(lambda x, y: x+y, [c.all_stats[-2] for c in graph_adgroups], SiteStats()),
-       'gtee': guarantee_campaigns,
+       'gtee': gtee_levels, 
        'promo': promo_campaigns,
        'network': network_campaigns,
        'account': self.account,

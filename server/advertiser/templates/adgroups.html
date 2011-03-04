@@ -1,5 +1,6 @@
 {% extends 'advertiser/base.html' %}
 {% load filters %}
+{% load super_if %}
 
 {% block navLinks %}
 <li><a href="{% url publisher_index %}">Dashboard</a></li>
@@ -120,7 +121,7 @@
               <input type="hidden" name="action" id="action"/>
               <h2>Guaranteed</h2>
               {% for level in gtee %}
-              {% if level.campaigns|length > 0 or (level.name == 'normal' and gtee.0.campaigns|length == 0 and gtee.2.campaigns|length == 0) %}
+              {% if level.foo %} 
               <table class="dataTable campaignData-main" id="campaignDataTable-direct-{{level.name}}">
                     <thead>
                       <tr>
@@ -181,7 +182,7 @@
                       </tr>
                       {% endfor %}
                       {% endif %}
-                {% end for %}
+                {% endfor %}
                 </tbody>
               </table>
               <h2>Promotional</h2>

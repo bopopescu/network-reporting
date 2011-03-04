@@ -1,5 +1,5 @@
 from appengine_django import LoadDjango
-LoadDjango()
+LoadDjango('1.1')
 
 import os
 from django.conf import settings

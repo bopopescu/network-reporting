@@ -1,8 +1,8 @@
 # !/usr/bin/env python
 
 # TODO: PLEASE HAVE THIS FIX DJANGO PROBLEMS
-from appengine_django import InstallAppengineHelperForDjango
-InstallAppengineHelperForDjango('1.1')
+from appengine_django import LoadDjango
+LoadDjango('1.1')
 # END TODO: PLEASE HAVE THIS FIX DJANGO PROBLEMS
 
 import wsgiref.handlers

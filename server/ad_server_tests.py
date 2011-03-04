@@ -158,6 +158,25 @@ def basic_promo_test():
             assert_equal( camp.ad_group.name, c, "Expected %s, got %s" % ( c, camp.ad_group.name ) )
         pause( c )
 
+def priority_level_test():
+    pause_all()
+    de_prioritize_all()
+    for a in PROMOS:
+        resume(a)
+    for a in NETWORKS:
+        resume(a)
+        prioritize(a)
+    for i in range(100):
+        camp = Creative.get(get_id())
+        t = camp.ad_group.name
+        assert t in PROMOS, "Expected promo, got %s" % t
+    for a in PROMOS:
+        pause(a)
+    for i in range(20):
+        camp = Creative.get(get_id())
+        assert camp.ad_group.name in NETWORKS, "Expected network, got %s" % camp.ad_group.name
+    de_prioritize_all()
+
 def net_priorty_test():
     priority_t3st( NETWORKS ) 
     return 
@@ -234,6 +253,8 @@ def net_freq_test():
     pause_all()
     zero_all_freqs()
     frequency_t3st( NETWORKS )
+    
+
 
 def promo_freq_test():
     pause_all()

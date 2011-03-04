@@ -62,6 +62,7 @@ CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gz
 MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7PnE6cH9_PX7OoeIIr5FjnTA'
 DOMAIN = 'ads.mopub.com'
 FREQ_ATTR = '%s_frequency_cap'
+CAMPAIGN_LEVELS = ('gtee_high', 'gtee', 'gtee_low', 'promo', 'network')
 
 
 import urllib
@@ -349,13 +350,11 @@ class AdAuction(object):
         all_creatives = manager.get_creatives_for_adgroups(all_ad_groups)
         # all_creatives = Creative.gql("where ad_group in :1 and format_predicates in :2 and active = :3 and deleted = :4", 
         #   map(lambda x: x.key(), ad_groups), format_predicates, True, False).fetch(AdAuction.MAX_ADGROUPS)
-        max_priority = max(ad_group.priority_level for ad_group in all_ad_groups)
-        logging.warning("creatives (max priority: %d): %s"%(max_priority,all_creatives))
         if len(all_creatives) > 0:
             # for each priority_level, perform an auction among the various creatives 
-            for p in range(max_priority + 1):
-                logging.warning("priority level: %d"%p)
-                eligible_adgroups = [a for a in all_ad_groups if a.priority_level == p]
+            for p in CAMPAIGN_LEVELS: 
+                logging.warning("priority level: %s"%p)
+                eligible_adgroups = [a for a in all_ad_groups if a.campaign.campaign_type == p]
                 logging.warning("eligible_adgroups: %s"%eligible_adgroups)
                 if not eligible_adgroups:
                     continue
@@ -365,7 +364,7 @@ class AdAuction(object):
                 while players:
                     logging.warning("players: %s"%players)
                     winning_ecpm = players[0].e_cpm()
-                    logging.warning("auction at priority=%d: %s, max eCPM=%s" % (p, players, winning_ecpm))
+                    logging.warning("auction at priority=%s: %s, max eCPM=%s" % (p, players, winning_ecpm))
                     if winning_ecpm >= site.threshold_cpm( p ):
 
                         # exclude according to the exclude parameter must do this after determining adgroups

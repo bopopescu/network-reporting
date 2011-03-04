@@ -63,6 +63,7 @@ class Site(db.Model):
   
   # Allows the site to reject ads if their eCPM does not 
   # exceed a given threshold, on a per-priority level basis
+  # TODO Make this actually do something 
   def threshold_cpm(self, priority_level):
     return 0
   

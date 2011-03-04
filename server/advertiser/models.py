@@ -9,7 +9,7 @@ from account.models import Account
 class Campaign(db.Model):
   name = db.StringProperty()
   description = db.TextProperty()
-  campaign_type = db.StringProperty(choices=['gtee', 'promo', 'network'], default="network")
+  campaign_type = db.StringProperty(choices=['gtee', 'gtee_high', 'gtee_low', 'promo', 'network'], default="network")
 
   # daily budget
   budget = db.FloatProperty() 

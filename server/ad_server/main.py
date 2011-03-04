@@ -1,24 +1,8 @@
 # !/usr/bin/env python
 
 # TODO: PLEASE HAVE THIS FIX DJANGO PROBLEMS
-# import logging, os, sys
-# os.environ["DJANGO_SETTINGS_MODULE"] = "settings"
-# 
-# from google.appengine.dist import use_library
-# use_library("django", "1.1") # or use_library("django", "1.0") if you're using 1.0
-# 
-# from django.conf import settings
-# settings._target = None
-
-# from appengine_django import LoadDjango
-# LoadDjango()
-# import os
-# from django.conf import settings
-# 
-# os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
-# # Force Django to reload its settings.
-# settings._target = None
-# 
+from appengine_django import InstallAppengineHelperForDjango
+InstallAppengineHelperForDjango('1.1')
 # END TODO: PLEASE HAVE THIS FIX DJANGO PROBLEMS
 
 import wsgiref.handlers

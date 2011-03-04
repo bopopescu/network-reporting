@@ -4,7 +4,7 @@
  <!-- <link rel='stylesheet' type='text/css' href='/css/token-input-mac.css'></link> -->
 <script type='text/javascript'>
     $(document).ready( function () {
-            var priors = {{form.geo.value|safe}};
+            var priors = {% if form.geo.value %}{{form.geo.value|safe}}{% else %}[]{% endif %};
             var pre = [];
             for (var count = 0; count < countries.length; count++) {
                 var dat = countries[count];

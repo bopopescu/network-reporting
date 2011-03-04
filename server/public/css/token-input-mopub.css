@@ -16,6 +16,7 @@ ul.token-input-list {
     border-radius: 3px;
 }
 
+
 ul.token-input-list {
     list-style-type: none;
 }
@@ -28,11 +29,15 @@ ul.token-input-list.focused {
     background: #FFF;
 }
 
+ul.token-input-list li input.focused {
+    background-color: white;
+}
+
 ul.token-input-list li input {
     border: 0;
     width: 100px;
     padding: 3px 8px;
-    background-color: white;
+    background-color: #FAFAFA; 
     margin: 2px 0;
 }
 

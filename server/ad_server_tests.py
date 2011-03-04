@@ -1,9 +1,10 @@
 import sys
+import os
 
 sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine")
 sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/yaml/lib")
 sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/fancy_urllib")
-sys.path.append('/Users/f34r/mopub-all/mopub/server')
+sys.path.append(os.environ['PWD'])
 
 
 from advertiser.models import ( Campaign,
@@ -135,7 +136,7 @@ def get_id( dt = datetime.now() ):
     adH = AdHandler()
     adH.initialize( req, resp )
     adH.get()
-    return resp.headers.get('X-CreativeID')
+    return resp.headers.get('X-Creativeid')
 
 def basic_net_test():
     pause_all()

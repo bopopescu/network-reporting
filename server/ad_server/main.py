@@ -507,11 +507,23 @@ class AdHandler(webapp.RequestHandler):
   }
   
   def get(self):
+    id = self.request.get("id")
+    manager = AdUnitQueryManager(id)
+    now = datetime.datetime.now()
     
-    mp_logging.log(self.request,event=mp_logging.REQ_EVENT)  
+    
+    #Testing!
+    if self.request.get( 'testing' ) == test_mode:
+        manager = AdServerAdUnitQueryManager( id )
+        testing = True
+        now = datetime.datetime.fromtimestamp( float( self.request.get('dt') ) )
+    else:
+        testing = False
+    
+    if not testing:
+        mp_logging.log(self.request,event=mp_logging.REQ_EVENT)  
     
     logging.warning(self.request.headers['User-Agent'] )
-    id = self.request.get("id")
     locale = self.request.headers.get("Accept-Language")
     country_re = r'[A-Z][A-Z]'
     if locale:
@@ -522,16 +534,7 @@ class AdHandler(webapp.RequestHandler):
     if len(countries) == 1:
         addr = tuple(countries[0])
 
-    manager = AdUnitQueryManager(id)
-    now = datetime.datetime.now()
 
-    #Testing!
-    if self.request.get( 'testing' ) == test_mode:
-        manager = AdServerAdUnitQueryManager( id )
-        testing = True
-        now = datetime.datetime.fromtimestamp( float( self.request.get('dt') ) )
-    else:
-        testing = False
 
     # site = manager.get_by_key(key)#Site.site_by_id(id) if id else None
     adunit = manager.get_adunit()
@@ -603,7 +606,7 @@ class AdHandler(webapp.RequestHandler):
         self.response.headers.add_header("X-Imptracker", "http://%s/m/imp?id=%s&cid=%s"%(DOMAIN,id,c.key()))
       
       #add creative ID for testing (also prevents that one bad bug from happening)
-        self.response.headers.add_header("X-CreativeID", "%s" % c.key())
+        self.response.headers.add_header("X-Creativeid", "%s" % c.key())
 
       # add to the campaign counter
         logging.info("adding to delivery: %s"%c.ad_group.bid)

@@ -131,7 +131,6 @@ INSTALLED_APPS = (
      'advertiser',
      'website',
      'admin',
-     'exchange',
 )
 
 #TEST_RUNNER = 'django_nose.NoseTestSuitRunner'

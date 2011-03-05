@@ -419,6 +419,11 @@ class AdAuction(object):
                                     else:
                                         winning_creative = winner
                                         return winning_creative
+                        else:
+                            # remove players of the current winning e_cpm
+                            logging.warning('current players: %s'%players)
+                            players = [ p for p in players if p.e_cpm() != winning_ecpm ] 
+                            logging.warning('remaining players %s'%players)
                         if not winning_creative:
                             #logging.warning('taking away some players not in %s'%ad_groups)
                             #logging.warning( 'current ad_groups %s' % [c.ad_group for c in players] )

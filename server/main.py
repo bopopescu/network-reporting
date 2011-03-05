@@ -26,7 +26,7 @@ import sys
 import logging
 
 from appengine_django import InstallAppengineHelperForDjango
-InstallAppengineHelperForDjango('1.1')
+InstallAppengineHelperForDjango()
 
 # Google App Engine imports.
 from google.appengine.ext.webapp import util

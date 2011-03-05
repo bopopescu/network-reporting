@@ -99,7 +99,7 @@ def campaign_status(c):
         return "Unknown"
 	
 @register.filter
-def all_user_dropdown(request,value=200):
+def all_user_dropdown(request,value=1000):
     from django.utils.safestring import mark_safe
     from account.models import Account
     from google.appengine.ext import db

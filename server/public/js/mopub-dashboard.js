@@ -9,51 +9,50 @@ var mopub = mopub || {};
   // dom ready
   $(document).ready(function() {
     
-    
     /*----------------------------------------/
     / TODO: Re-organize AJAX stuff            /
     /----------------------------------------*/
-    var options = { 
-     data: { ajax: true },
-     dataType : 'json',
-      success:    function(jsonData, statusText, xhr, $form) {
-				 $('#appEditForm-loading').hide();
-					
-         if (jsonData.success){
+    var options = {
+      data: { ajax: true },
+      dataType: 'json',
+      success: function(jsonData, statusText, xhr, $form) {
+         $('#appEditForm-loading').hide();
+
+         if (jsonData.success) {
            window.location.reload();
          }
-         else{
+         else {
            $('#appForm-fragment').html(jsonData.html);
            // reimplement the onload event
            appFormOnload();
-					 window.location.hash = '';
-					 window.location.hash = 'appForm'; 
-          }
-        } 
-     };
+           window.location.hash = '';
+           window.location.hash = 'appForm'; 
+        }
+      } 
+    };
     // Added on a class to differenitate from the the app creation page 
     $('#appForm.appEditForm').ajaxForm(options);
-    
-    var options = { 
-     data: { ajax: true },
-     dataType : 'json',
-      success:    function(jsonData, statusText, xhr, $form) {
-				 $('#adunitForm-loading').hide();
-         if (jsonData.success){
+
+    options = {
+      data: { ajax: true },
+      dataType: 'json',
+      success: function(jsonData, statusText, xhr, $form) {
+         $('#adunitForm-loading').hide();
+         if (jsonData.success) {
            window.location.reload();
          }
-         else{
+         else {
            $('#adunitForm-fragment').html(jsonData.html);
            // reimplement the onload event
            appFormOnload();
-					 window.location.hash = '';
-					 window.location.hash = 'adunitForm';
-          }
-        } 
-     };
+           window.location.hash = '';
+           window.location.hash = 'adunitForm';
+        }
+      } 
+    };
     $('#adunitAddForm').ajaxForm(options);
-    
-    
+
+
     /*---------------------------------------/
     / Chart
     /---------------------------------------*/
@@ -76,7 +75,7 @@ var mopub = mopub || {};
       if(typeof data == 'undefined') {
         chartError();
         return;
-      };
+      }
       
       // set up series
       var colors = ['#0090d9', '#e57300', '#53a600', '#444444'];
@@ -85,7 +84,7 @@ var mopub = mopub || {};
       if(typeof activeData == 'undefined') {
         chartError();
         return;
-      };
+      }
       $.each(activeData, function(i, seriesObject) {
         var seriesName, seriesData;
         $.each(seriesObject, function(name, value) {
@@ -254,7 +253,7 @@ var mopub = mopub || {};
           $('#dashboard-appEditForm').slideUp('fast');
         else
           $('#dashboard-appEditForm').slideDown('fast');
-    });
+      });
     $('#dashboard-apps-addAdUnitButton')
       .button({ icons: { primary: "ui-icon-circle-plus" } })
       .click(function(e) {
@@ -263,7 +262,7 @@ var mopub = mopub || {};
           $('#dashboard-adunitAddForm').slideUp('fast');
         else
           $('#dashboard-adunitAddForm').slideDown('fast');
-    });
+      });
     $('#dashboard-apps-editAdUnitButton')
       .button({ icons: { primary: "ui-icon-wrench" } })
       .click(function(e) {
@@ -272,14 +271,14 @@ var mopub = mopub || {};
           $('#dashboard-adunitEditForm').slideUp('fast');
         else
           $('#dashboard-adunitEditForm').slideDown('fast');
-    });
+      });
     $('#dashboard-apps-toggleAllButton')
       .button({ 
         icons: { primary: "ui-icon-triangle-2-n-s" } 
       })
       .click(function(e) {
         e.preventDefault();
-    });
+      });
     
     $('#appEditForm-submit')
       .button({ 
@@ -287,40 +286,39 @@ var mopub = mopub || {};
       })
       .click(function(e) {
         e.preventDefault();
-				$('#appEditForm-loading').show();
+        $('#appEditForm-loading').show();
         $('#appForm').submit();
-    });
+      });
     $('#appEditForm-cancel')
       .click(function(e) {
         e.preventDefault();
         $('#dashboard-appEditForm').slideUp('fast');
-    });
-    
+      });
     $('#adunitAddForm-submit')
       .button({ 
         icons: { secondary: "ui-icon-circle-triangle-e" } 
       })
       .click(function(e) {
         e.preventDefault();
-				$('#adunitForm-loading').show();
+        $('#adunitForm-loading').show();
         $('#adunitAddForm').submit();
-    });
+      });
     $('#adunitAddForm-cancel')
       .click(function(e) {
         e.preventDefault();
         $('#dashboard-adunitAddForm').slideUp('fast', function() {
           $('#dashboard-apps-addAdUnitButton').show();
         });
-    });
+      });
     $('#adunitEditForm-submit')
       .button({ 
         icons: { secondary: "ui-icon-circle-triangle-e" } 
       })
       .click(function(e) {
         e.preventDefault();
-				$('#adunitForm-loading').show();
+        $('#adunitForm-loading').show();
         $('#adunitAddForm').submit();
-    });
+      });
     $('#adunitEditForm-cancel')
       .click(function(e) {
         e.preventDefault();
@@ -395,6 +393,16 @@ var mopub = mopub || {};
     / App Details Form
     /---------------------------------------*/
     
+    // Submit button
+    $('#appForm-submit')
+      .button({ 
+        icons: { secondary: "ui-icon-circle-triangle-e" } 
+      })
+      .click(function(e) {
+        e.preventDefault();
+        $('#appForm').submit();
+      });
+    
     // Platform-dependent URL/package name switching
     function appFormOnload() {
       $('input[name="app_type"]').click(function(e) {
@@ -403,109 +411,111 @@ var mopub = mopub || {};
           .removeClass('android')
           .addClass($(this).val());
       }).filter(':checked').click(); // make sure we're in sync when the page loads
+    }
+    appFormOnload();
 
-    $( '#appForm-market-search-button' )
-        .button( { icons: { primary: 'ui-icon-search' }} )
-        .click( function( e ) {
-            e.preventDefault();
-            $( '#searchAppStore-loading' ).show();
-            $( '#dashboard-searchAppStore-custom-modal' ).dialog( {
-                buttons: [
-                    {
-                        text: 'Cancel',
-                        click: function() {
-                            $( '#searchAppStore-results' ).html('');
-                            $( this ).dialog( 'close' );
-                        }
-                    }
-                ]
-            } );
-            var name = $( '#appForm input[name="name"]' ).val();
-            $.ajax( {
-                url: '/android_market_search/' + name,
-                success: loadedArtwork,
-                dataType: 'json'
-            } );
-                
-            //Do ajax shit 
+    $('#appForm-market-search-button')
+      .button({ icons: { primary: 'ui-icon-search' }})
+      .click(function(e) {
+        e.preventDefault();
+        $('#searchAppStore-loading').show();
+        $('#dashboard-searchAppStore-custom-modal').dialog({
+          buttons: [
+            {
+              text: 'Cancel',
+              click: function() {
+                $('#searchAppStore-results').html('');
+                $(this).dialog('close');
+              }
+            }
+          ]
         });
-      //This is here because I'm slightly unsure of things and stuff
-        $('#appForm input[name="app_type"]').click(function(e) {
-             $('#appForm .appForm-platformDependent')
-               .removeClass('iphone')
-               .removeClass('android')
-               .addClass($(this).val());
-           }).filter(':checked').click(); 
+        var name = $('#appForm input[name="name"]').val();
+        $.ajax( {
+          url: '/android_market_search/' + name,
+          success: loadedArtwork,
+          dataType: 'json'
+        });
+      });
+
+    $('#appForm input[name="app_type"]').click(function(e) {
+      $('#appForm .appForm-platformDependent')
+        .removeClass('iphone')
+        .removeClass('android')
+        .addClass($(this).val());
+    }).filter(':checked').click();
+
     $('input[name="name"]').change(function() {
       var name = $.trim($(this).val());
       $('#appForm-adUnitName').val(name + ' banner ad');
     });
-      // Search button
-      $('#appForm-search-button')
-        .button({ icons: { primary: "ui-icon-search" }})
-        .click(function(e) {
-          e.preventDefault();
-  //        if ($(this).button( "option", "disabled" ))
-    //        return;
 
-          $('#searchAppStore-loading').show();
-
-          $('#dashboard-searchAppStore-custom-modal').dialog({
-            buttons: [
-              {
-                text: 'Cancel', 
-                click: function() {
-                  $('#searchAppStore-results').html('');
-                  $(this).dialog("close");
-                }
-              }
-            ]
-          });
-          var name = $('#appForm input[name="name"]').val();
-          var script = document.createElement("script");
-          script.src = 'http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/wa/wsSearch?' + 'entity=software&limit=10&callback=loadedArtwork&term='+name;
-          var head = document.getElementsByTagName("head")[0];
-          (head || document.body).appendChild( script );
-      });
-      if ($('#appForm-name').val() === '') {
-        $('#appForm-search-button').button("disable");
-        $('#appForm-search').button("disable");
-        $('#appForm-market-search-button').button("disable");
-        $('#appForm-market-search').button("disable");
-      }
-      $('#appForm-name').keyup(function(e) {
-          // Show/hide the app search button
-          var name = $.trim($(this).val());
-          var type = $('input:radio[name="app_type"]:checked').val();
-
-          if (name.length) {
-            $('#appForm-search-button').button("enable");
-            $( '#appForm-market-search-button' ).button( 'enable' );
-          }
-          else {
-            $('#appForm-search-button').button("disable");
-            $( '#appForm-market-search-button' ).button( 'disable' );
-          }
-          if (e.keyCode == 13) {
-            if ( type == 'iphone' ) {
-                $('#appForm-search-button').click();
-            }
-            else if ( type == 'android' ) {
-                $( '#appForm-market-search-button' ).click();
-            }
-          }   
-      });
-
-      // Change icon
-      $('#appForm-changeIcon-link').click(function (e) {
+    // Search button
+    $('#appForm-search-button')
+      .button({ icons: { primary: "ui-icon-search" }})
+      .click(function(e) {
         e.preventDefault();
-        $(this).hide();
-        $('#appForm-icon-upload').show();
-        $('#appForm input[name="img_url"]').val('');
+        if ($(this).button( "option", "disabled" ))
+          return;
+
+        $('#searchAppStore-loading').show();
+
+        $('#dashboard-searchAppStore-custom-modal').dialog({
+          buttons: [
+            {
+              text: 'Cancel', 
+              click: function() {
+                $('#searchAppStore-results').html('');
+                $(this).dialog("close");
+              }
+            }
+          ]
+        });
+        var name = $('#appForm input[name="name"]').val();
+        var script = document.createElement("script");
+        script.src = 'http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/wa/wsSearch?' + 'entity=software&limit=10&callback=loadedArtwork&term='+name;
+        var head = document.getElementsByTagName("head")[0];
+        (head || document.body).appendChild( script );
       });
+
+    if ($('#appForm-name').val() === '') {
+      $('#appForm-search-button').button("disable");
+      $('#appForm-search').button("disable");
+      $('#appForm-market-search-button').button("disable");
+      $('#appForm-market-search').button("disable");
     }
+
+    $('#appForm-name').keyup(function(e) {
+      // Show/hide the app search button
+      var name = $.trim($(this).val());
+      var type = $('input:radio[name="app_type"]:checked').val();
+
+      if (name.length) {
+        $('#appForm-search-button').button("enable");
+        $('#appForm-market-search-button').button('enable');
+      }
+      else {
+        $('#appForm-search-button').button("disable");
+        $('#appForm-market-search-button').button('disable');
+      }
+      if (e.keyCode == 13) {
+        if (type == 'iphone') {
+          $('#appForm-search-button').click();
+        }
+        else if (type == 'android') {
+          $('#appForm-market-search-button').click();
+        }
+      }
+    });
+
+    // Change icon
+    $('#appForm-changeIcon-link').click(function (e) {
+      e.preventDefault();
+      $(this).hide();
+      $('#appForm-icon-upload').show();
+      $('#appForm input[name="img_url"]').val('');
+    });
     
-    appFormOnload();
     /*---------------------------------------/
     / Ad Unit Form
     /---------------------------------------*/
@@ -519,10 +529,11 @@ var mopub = mopub || {};
         
         $('.adForm-format-image', container).css({ opacity: 0.5 });
         $('.adForm-format-image', formatContainer).css({ opacity: 1 });
-        
-        if(radio.val() == 'custom') {
+        /*
+        if (radio.val() == 'custom') {
           // $('.adForm-format-details input[type="text"]:first', formatContainer).focus();
         }
+        */
       }).filter(':checked').click();
       
       $('.adForm-format-image', container).click(function(e) {
@@ -609,5 +620,5 @@ function selectArtwork(index) {
     .width(40)
     .height(40)
     .append($("<span />"))
-  )
+  );
 }

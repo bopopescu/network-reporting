@@ -52,6 +52,7 @@ from ad_server.networks.greystripe import GreyStripeServerSide
 from ad_server.networks.inmobi import InMobiServerSide
 from ad_server.networks.jumptap import JumptapServerSide
 from ad_server.networks.millennial import MillennialServerSide
+from ad_server.networks.mobfox import MobFoxServerSide
 
 from publisher.query_managers import AdServerAdUnitQueryManager, AdUnitQueryManager
 from advertiser.query_managers import CampaignStatsCounter
@@ -216,7 +217,8 @@ class AdAuction(object):
                           "inmobi":InMobiServerSide,
                           "brightroll":BrightRollServerSide,
                           "jumptap":JumptapServerSide,
-                          "greystripe":GreyStripeServerSide}
+                          "greystripe":GreyStripeServerSide,
+                          "mobfox":MobFoxServerSide,}
       if adgroup.network_type in server_side_dict:
         KlassServerSide = server_side_dict[adgroup.network_type]
         server_side = KlassServerSide(request, adunit) 
@@ -371,7 +373,7 @@ class AdAuction(object):
                         # TODO: we should exclude based on creative id not ad type :)
                         CRTV_FILTERS = (    format_filter( site.format ), # remove wrong formats
                                             exclude_filter( exclude_params ), # remove exclude parameter
-                                            ecpm_filter( site.threshold_cpm(p) ), # remove creatives that don't meet site threshold
+                                            ecpm_filter( winning_ecpm ), # remove creatives that don't meet site threshold
                                             )
                         winners = filter( mega_filter( *CRTV_FILTERS ), players )
                         for func, warn, lst in CRTV_FILTERS:
@@ -417,16 +419,13 @@ class AdAuction(object):
                                     else:
                                         winning_creative = winner
                                         return winning_creative
-                        else:
-                            break              
-                                
-                    if not winning_creative:
-                        #logging.warning('taking away some players not in %s'%ad_groups)
-                        #logging.warning( 'current ad_groups %s' % [c.ad_group for c in players] )
-                        logging.warning('current players: %s'%players)
-                        #players = [c for c in players if not c.ad_group in ad_groups]  
-                        players = [ p for p in players if p not in winners ] 
-                        logging.warning('remaining players %s'%players)
+                        if not winning_creative:
+                            #logging.warning('taking away some players not in %s'%ad_groups)
+                            #logging.warning( 'current ad_groups %s' % [c.ad_group for c in players] )
+                            logging.warning('current players: %s'%players)
+                            #players = [c for c in players if not c.ad_group in ad_groups]  
+                            players = [ p for p in players if p not in winners ] 
+                            logging.warning('remaining players %s'%players)
              # try at a new priority level   
 
     # nothing... failed auction
@@ -933,12 +932,10 @@ class TestHandler(webapp.RequestHandler):
     from ad_server.networks.millennial import MillennialServerSide
     from ad_server.networks.brightroll import BrightRollServerSide
     from ad_server.networks.jumptap import JumptapServerSide
+    from ad_server.networks.mobfox import MobFoxServerSide
     
-    #server_side = BrightRollServerSide(self.request,357)
-    #server_side = MillennialServerSide(self.request,357)
-    #server_side = InMobiServerSide(self.request)
-    server_side = JumptapServerSide(self.request)
-    logging.warning("%s, %s"%(server_side.url,server_side.payload))
+    server_side = MobFoxServerSide(self.request)
+    logging.warning("%s\n%s"%(server_side.url,server_side.payload))
     
     rpc = urlfetch.create_rpc(5) # maximum delay we are willing to accept is 1000 ms
 

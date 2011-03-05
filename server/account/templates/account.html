@@ -103,6 +103,18 @@
                     <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.millennialmedia.com" target="_blank">Go to Millennial Media<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
                   </dl> 
                 </fieldset> 
+                <fieldset class="adForm"> 
+                  <div class="buttonBank buttonBank-right">
+                    <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
+                  </div>
+                  <legend>MobFox {% if account.mobfox_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Disabled)</span>{% endif %}</legend> 
+                  <dl class="formFields {% if account.mobfox_pub_id %}show{% endif %}"> 
+                    <dt><label for="appForm-adUnitName">MobFox Publisher ID:</label></dt> 
+                    <dd><input type="text" class="input-text" name="mobfox_pub_id" value="{{account.mobfox_pub_id|default_if_none:""}}" /></dd> 
+                    <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.mobfox.com/" target="_blank">Go to MobFox<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
+                  </dl> 
+                </fieldset> 
+                
                 <h2>Basic Account Settings</h2>
                 <p>
                   

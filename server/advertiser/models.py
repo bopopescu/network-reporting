@@ -64,7 +64,7 @@ class AdGroup(db.Model):
 
   # the priority level at which this ad group should be auctioned
   priority_level = db.IntegerProperty(default=1)
-  network_type = db.StringProperty(choices=["adsense", "iAd", "admob","millennial","appnexus","inmobi","jumptap","brightroll","greystripe"])
+  network_type = db.StringProperty(choices=["adsense", "iAd", "admob","millennial","appnexus","inmobi","mobfox","jumptap","brightroll","greystripe"])
 
   bid = db.FloatProperty()
   bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpm")
@@ -174,6 +174,7 @@ class AdGroup(db.Model):
     elif self.network_type == 'inmobi': c = InMobiCreative(name="inmobi dummy",ad_type="html_full",format="320x50", format_predicates=["format=320x50"]) # TODO: make sure formats are right
     elif self.network_type == 'greystripe' : c = GreyStripeCreative(name="greystripe dummy",ad_type="greystripe", format="320x50", format_predicates=["format=*"]) # TODO: only formats 320x320, 320x48, 300x250
     elif self.network_type == 'appnexus': c = AppNexusCreative(name="appnexus dummy",ad_type="html",format="320x50",format_predicates=["format=300x250"])
+    elif self.network_type == 'mobfox' : c = MobFoxCreative(name="mobfox dummy",ad_type="html",format="320x50",format_predicates=["format=320x50"])
     
     if c: c.ad_group = self
     return c
@@ -312,6 +313,10 @@ class JumptapCreative(Creative):
 
 class GreyStripeCreative(Creative):
   pass  
+  
+class MobFoxCreative(Creative):
+  pass
+  
   
 class NullCreative(Creative):
   pass

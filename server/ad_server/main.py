@@ -369,9 +369,9 @@ class AdAuction(object):
                         # exclude according to the exclude parameter must do this after determining adgroups
                         # so that we maintain the correct order for user bucketing
                         # TODO: we should exclude based on creative id not ad type :)
-                        CRTV_FILTERS = (    format_filter( site.format ),
-                                            exclude_filter( exclude_params ),
-                                            ecpm_filter( winning_ecpm ),
+                        CRTV_FILTERS = (    format_filter( site.format ), # remove wrong formats
+                                            exclude_filter( exclude_params ), # remove exclude parameter
+                                            ecpm_filter( site.threshold_cpm(p) ), # remove creatives that don't meet site threshold
                                             )
                         winners = filter( mega_filter( *CRTV_FILTERS ), players )
                         for func, warn, lst in CRTV_FILTERS:
@@ -417,14 +417,9 @@ class AdAuction(object):
                                     else:
                                         winning_creative = winner
                                         return winning_creative
-                    
-              #   else:
-              #     logging.warning('taking away some players not in %s'%ad_groups)
-              #     logging.warning('current players: %s'%players)
-              #     players = [c for c in players if not c.ad_group in ad_groups]  
-              #     logging.warning('remaining players %s'%players)
-              #     
-              # else:
+                        else:
+                            break              
+                                
                     if not winning_creative:
                         #logging.warning('taking away some players not in %s'%ad_groups)
                         #logging.warning( 'current ad_groups %s' % [c.ad_group for c in players] )

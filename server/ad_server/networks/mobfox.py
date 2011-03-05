@@ -46,7 +46,7 @@ class MobFoxServerSide(ServerSide):
         for header,value in self.request.headers.iteritems():
             if not header in exclude_headers:
                 headers.append((header,value))
-        return '&'.join(['h[%s]=%s'%(urllib.quote(h),urllib.quote(v)) for h,v in  headers])
+        return '&'.join(['h[%s]=%s'%(urllib.quote_plus(h),urllib.quote_plus(v)) for h,v in  headers])
 
     def get_response(self):
         req = urllib2.Request(self.url)

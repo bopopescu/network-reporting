@@ -1,6 +1,7 @@
 from ad_server.networks.server_side import ServerSide
 import urllib2
 import urllib
+import logging
 
 class MillennialServerSide(ServerSide):
   base_url = "http://ads.mp.mydas.mobi/getAd.php5"
@@ -33,7 +34,10 @@ class MillennialServerSide(ServerSide):
     
   def bid_and_html_for_response(self,response):
     # TODO: do any sort of manipulation here that we want, like resizing the image, LAME
-    if len(response.content) == 0:
-      raise Exception("Millenial ad is empty")
+    logging.info("MILLENIAL: %s\n%s"%(response.content,response.status_code))
+    if len(response.content) == 0 or \
+      response.status_code != 200 or \
+      '404' in response.content:
+        raise Exception("Millenial ad is empty")
     return 0.0,response.content
     

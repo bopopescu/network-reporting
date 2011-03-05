@@ -185,7 +185,7 @@ var mopub = mopub || {};
       $form = $('#creativeManagementForm');
     });
     
-   var options = { 
+   options = { 
    data: { ajax: true },
    dataType : 'json',
     success: function(jsonData) { 
@@ -222,7 +222,7 @@ var mopub = mopub || {};
     $('.creativeEditForm').each(function(i){
       var $this = $(this);
       var options = {
-        data: { ajax : true , },
+        data: { ajax : true },
         dataType: 'json',
         success: function(jsonData, statusText, xhr, $form){
           $form.find('.creativeEditForm-loading').hide();
@@ -465,7 +465,7 @@ var mopub = mopub || {};
       if(typeof data == 'undefined') {
         chartError();
         return;
-      };
+      }
       
       // set up series
       var colors = ['#0090d9', '#e57300', '#53a600', '#444444'];
@@ -474,7 +474,7 @@ var mopub = mopub || {};
       if(typeof activeData == 'undefined') {
         chartError();
         return;
-      };
+      }
       $.each(activeData, function(i, seriesObject) {
         var seriesName, seriesData;
         $.each(seriesObject, function(name, value) {

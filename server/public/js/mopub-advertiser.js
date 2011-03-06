@@ -214,7 +214,7 @@ var mopub = mopub || {};
         }
       },
       error: function(jqXHR, textStatus, errorThrown){
-        console.log(errorThrown);
+        log(errorThrown);
       }
     };
     $('#creativeCreateForm').ajaxForm(options);
@@ -409,7 +409,7 @@ var mopub = mopub || {};
         e.preventDefault();
         var buttonTextElem = $('.ui-button-text', this);
         var $options = $(this).parents('form').find('.creativeForm-advanced-options');
-        console.log($options.is(':hidden'));
+        log($options.is(':hidden'));
         if ($options.is(':hidden')) {
           $options.show();
           buttonTextElem.text('Hide Advanced Options');
@@ -709,9 +709,16 @@ var mopub = mopub || {};
         });
       }
     });
-    
-    
-    
-
   }); 
+
+  // helper fn for console logging
+  function log() {
+	if (window.console && window.console.log) {
+		window.console.log.apply(this,arguments);
+	}
+	else if (window.opera && window.opera.postError) {
+		window.opera.postError.apply(this,arguments);
+	}
+  };
+
 })(this.jQuery);

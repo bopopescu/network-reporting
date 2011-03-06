@@ -284,7 +284,18 @@ var mopub = mopub || {};
       cacheImage.src = arguments[i];
       cache.push(cacheImage);
     }
-		console.log(cache);
+    log(cache);
+  };
+  
+  
+  // helper fn for console logging
+  function log() {
+	if (window.console && window.console.log) {
+		window.console.log.apply(this,arguments);
+	}
+	else if (window.opera && window.opera.postError) {
+		window.opera.postError.apply(this,arguments);
+	}
   };
   
 })(this.jQuery);

@@ -148,8 +148,9 @@ def format_filter( format ):
 
 def exclude_filter( excl_params ):
     log_mesg = "Removed due to exclusion parameters: %s"
+    # NOTE: we are excluding on ad type not the creative id
     def real_filter( a ):
-        return a.ad_type in excl_params
+        return a.ad_type in excl_params 
     return ( real_filter, log_mesg, [] )
 
 def ecpm_filter( winning_ecpm ):
@@ -609,7 +610,7 @@ class AdHandler(webapp.RequestHandler):
                                                         addr                = addr,
                                                         excluded_creatives  = excluded_creatives, 
                                                         request_id          = request_id, 
-                                                        v                   = int(self.request.get('v') or 0)
+                                                        v                   = int(self.request.get('v') or 0),
                                                         ) )
     else:
         self.response.out.write( self.render_creative(  c, 
@@ -619,7 +620,7 @@ class AdHandler(webapp.RequestHandler):
                                                         addr                = addr, 
                                                         excluded_creatives  = excluded_creatives, 
                                                         request_id          = request_id, 
-                                                        v                   = int(self.request.get('v') or 0)
+                                                        v                   = int(self.request.get('v') or 0),
                                                         ) )
 
       
@@ -694,9 +695,9 @@ class AdHandler(webapp.RequestHandler):
                         </head>
                         <body style="margin: 0;width:${w}px;height:${h}px;padding:0;">\
                           <a href="$url"><img src="$image_url" width=$w height=$h/></a>
-                        </body>   $trackingPixel</html> """),
+                          $trackingPixel
+                        </body></html> """),
     "admob": Template("""<html><head>
-                        $finishLoad
                         <script type="text/javascript">
                           function webviewDidClose(){} 
                           function webviewDidAppear(){} 
@@ -710,12 +711,44 @@ class AdHandler(webapp.RequestHandler):
                          pubid: '$client', // publisher id
                          bgcolor: '000000', // background color (hex)
                          text: 'FFFFFF', // font-color (hex)
-                         ama: false, 
-                         test: false
+                         ama: false, // set to true and retain comma for the AdMob Adaptive Ad Unit, a special ad type designed for PC sites accessed from the iPhone.  More info: http://developer.admob.com/wiki/IPhone#Web_Integration
+                         test: false, // test mode, set to false to receive live ads
+                         manual_mode: true // set to manual mode
                         };
                         </script>
-                        <script type="text/javascript" src="http://mmv.admob.com/static/iphone/iadmob.js"></script>                        
-                        </body>$trackingPixel</html>"""),
+                        <script type="text/javascript" src="http://mmv.admob.com/static/iphone/iadmob.js"></script>  
+                        
+                        <!-- DIV For admob ad -->
+                        <div id="admob_ad">
+                        </div>
+
+                        <!-- Script to determine if admob loaded -->
+                        <script>
+                            var ad = _admob.fetchAd(document.getElementById('admob_ad'));                                                                         
+                            var POLLING_FREQ = 500;
+                            var MAX_POLL = 2000;
+                            var polling_timeout = 0;                                                                                                              
+                            var polling_func = function() {                                                                                                       
+                             if(ad.adEl.height == 48) {                                                                                                           
+                               // we have an ad                                                                                                                   
+                               console.log('received ad');
+                               $admob_finish_load
+                             } 
+                             else if(polling_timeout < MAX_POLL) {                                                                                                         
+                               console.log('repoll');                                                                                                             
+                               polling_timeout += POLLING_FREQ;                                                                                                           
+                               window.setTimeout(polling_func, POLLING_FREQ);                                                                                             
+                             }                                                                                                                                    
+                             else {                                                                                                                               
+                               console.log('no ad'); 
+                               $admob_fail_load                                                                                                               
+                               ad.adEl.style.display = 'none';                                                                                                    
+                             }                                                                                                                                    
+                            };                                                                                                                                    
+                            window.setTimeout(polling_func, POLLING_FREQ);
+                        </script>
+                        $trackingPixel
+                        </body></html>"""),
     "html":Template("""<html><head><title>$title</title>
                         $finishLoad                  
                         <script type="text/javascript">
@@ -779,9 +812,14 @@ class AdHandler(webapp.RequestHandler):
         
       if kwargs["v"] >= 2 and not "Android" in self.request.headers["User-Agent"]:  
         params.update(finishLoad='<script>function finishLoad(){window.location="mopub://finishLoad";} window.onload = function(){finishLoad();} </script>')
+        
+        params.update(admob_finish_load='window.location = "mopub://finishLoad";')
+        params.update(admob_fail_load='window.location = "mopub://failLoad";')
       else:
-        params.update(finishLoad='')  
-      
+        # don't use special url hooks because older clients don't understand    
+        params.update(finishLoad='')
+        params.update(admob_finish_load='')
+        params.update(admob_fail_load='')
       
       if c.tracking_url:
         params.update(trackingPixel='<span style="display:none;"><img src="%s"/></span>'%c.tracking_url)
@@ -841,6 +879,9 @@ class AdHandler(webapp.RequestHandler):
         self.response.headers.add_header("X-Height",str(format[1]))
       
         self.response.headers.add_header("X-Backgroundcolor","0000FF")
+      elif str(c.ad_type) == 'admob':
+          self.response.headers.add_header("X-Failurl",self.request.url+'&exclude='+str(c.ad_type))
+          self.response.headers.add_header("X-Adtype", str('html'))
       else:  
         self.response.headers.add_header("X-Adtype", str('html'))
         
@@ -849,11 +890,6 @@ class AdHandler(webapp.RequestHandler):
       else:
         params.update(title='')
       
-      if kwargs["v"] >= 2 and not "Android" in self.request.headers["User-Agent"]:  
-        params.update(finishLoad='<script>function finishLoad(){window.location="mopub://finishLoad";} window.onload = function(){finishLoad();} </script>')
-      else:
-        params.update(finishLoad='')
-
       if c.tracking_url:
         params.update(trackingPixel='<span style="display:none;"><img src="%s"/></span>'%c.tracking_url)
       else:

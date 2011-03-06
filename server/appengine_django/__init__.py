@@ -165,6 +165,11 @@ def LoadDjango(version=None):
       del sys.modules[k]
     return
 
+  # only try to load django 1.1    
+  use_library('django','1.1')
+  return
+    
+
   # If we aren't loading from a zip or local copy then try for whichever
   # supported version is highest and installed
   for check_version in ('1.1', '1.0'):

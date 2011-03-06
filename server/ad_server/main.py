@@ -812,12 +812,13 @@ class AdHandler(webapp.RequestHandler):
         
       if kwargs["v"] >= 2 and not "Android" in self.request.headers["User-Agent"]:  
         params.update(finishLoad='<script>function finishLoad(){window.location="mopub://finishLoad";} window.onload = function(){finishLoad();} </script>')
-        
+        # extra parameters used only by admob template
         params.update(admob_finish_load='window.location = "mopub://finishLoad";')
         params.update(admob_fail_load='window.location = "mopub://failLoad";')
       else:
         # don't use special url hooks because older clients don't understand    
         params.update(finishLoad='')
+        # extra parameters used only by admob template
         params.update(admob_finish_load='')
         params.update(admob_fail_load='')
       

@@ -32,7 +32,7 @@ class AdGroupForm(mpforms.MPModelForm):
   # TODO: how can i make this dynamic
   site_keys = mpforms.MPModelMultipleChoiceField(AdUnit,required=False)
   keywords = mpforms.MPTextAreaField(required=False)
-  geo = forms.Field(widget = forms.MultipleHiddenInput)
+  geo = forms.Field(widget = forms.MultipleHiddenInput, required=False)
   device_predicates = mpforms.MPTextAreaField(required=False)
   
   class Meta:

@@ -157,10 +157,9 @@ class User(BaseModel):
       except (ImportError, ImproperlyConfigured):
         raise SiteProfileNotAvailable
     return self._profile_cache
-  
+
   def is_admin(self):
     return users.is_current_user_admin()
-
 
 class Group(BaseModel):
   """Group model not fully implemented yet."""

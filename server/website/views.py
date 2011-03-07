@@ -10,8 +10,8 @@ from google.appengine.api.urlfetch import fetch
 from google.appengine.ext import db
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
-from google.appengine.ext.db import djangoforms
-
+# from google.appengine.ext.db import djangoforms
+from common.utils import djangoforms
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse

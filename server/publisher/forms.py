@@ -7,6 +7,7 @@ from google.appengine.api import images
 from django import forms
 from django.core.urlresolvers import reverse
 from common.utils import forms as mpforms
+from common.utils import fields as mpfields
 from publisher.models import Site, App
 
 
@@ -64,8 +65,10 @@ class AdUnitForm(mpforms.MPModelForm):
   TEMPLATE = 'publisher/forms/adunit_form.html'
   
   # renamed to avoid conflicts when submitting both app and adunit together
-  adunit_name = forms.CharField(required=True,initial="Banner Ad")
-  adunit_description = forms.CharField(required=True,initial="General Purpose Banner Ad")
+  # adunit_name = forms.CharField# (required=True,initial="Banner Ad")
+  # adunit_description = forms.CharField(required=True,initial="General Purpose Banner Ad")
+  adunit_name = mpfields.MPTextField(required=True,initial="Banner Ad")
+  adunit_description = mpfields.MPTextareaField(required=True,initial="General Purpose Banner Ad")
 
   class Meta:
     model = Site

@@ -271,15 +271,8 @@ class CreateCampaignAJAXHander(RequestHandler):
       adgroup = None
       campaign = None
 
-    form_data = deepcopy(self.request.POST)
-    if form_data['campaign_type'] == u'gtee':
-        if form_data['gtee_level'] == u'high':
-            form_data['campaign_type'] = u'gtee_high'
-        if form_data['gtee_level'] == u'low':
-            form_data['campaign_type'] = u'gtee_low'
-
-    campaign_form = CampaignForm(data=form_data,instance=campaign)
-    adgroup_form = AdGroupForm(data=form_data,instance=adgroup)
+    campaign_form = CampaignForm(data=self.request.POST,instance=campaign)
+    adgroup_form = AdGroupForm(data=self.request.POST,instance=adgroup)
     
     if adgroup:
       adunits_to_update = set(adgroup.site_keys)

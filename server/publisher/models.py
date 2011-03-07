@@ -60,6 +60,9 @@ class Site(db.Model):
   keywords = db.TextProperty() # TODO: make sure this doesn't break shit
   # keywords = db.StringListProperty()                          
   
+  refresh_interval = db.IntegerProperty(default=0)
+  
+  
   # color scheme
   color_border = db.StringProperty(required=True, default='336699')
   color_bg = db.StringProperty(required=True, default='FFFFFF')

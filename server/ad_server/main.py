@@ -583,8 +583,11 @@ class AdHandler(webapp.RequestHandler):
 
         self.response.headers.add_header("X-Creative",str(c.key()))    
 
-        # add timer and animations for the ad
-        # self.response.headers.add_header("X-Refreshtime","5")
+        # add timer and animations for the ad 
+        refresh = adunit.refresh_interval
+        # only send to client if there should be a refresh
+        if refresh:
+            self.response.headers.add_header("X-Refreshtime",str(refresh))
         # animation_type = random.randint(0,6)
         # self.response.headers.add_header("X-Animation",str(animation_type))    
 

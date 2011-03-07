@@ -19,6 +19,7 @@ import logging
 
 class CampaignForm(mpforms.MPModelForm):
   TEMPLATE = 'advertiser/forms/campaign_form.html'
+  gtee_level = forms.Field(widget = forms.Select)
   
   def __init__(self, *args, **kwargs):
       instance = kwargs.get('instance', None)
@@ -43,8 +44,6 @@ class CampaignForm(mpforms.MPModelForm):
   def save(self, commit=True):
       obj = super(CampaignForm, self).save(commit=False)
       if obj:
-          logging.warning(obj)
-          logging.warning(self.cleaned_data)
           type = self.cleaned_data['campaign_type']
           if type == 'gtee':
               lev = self.cleaned_data['gtee_level']

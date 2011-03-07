@@ -20,11 +20,14 @@ import logging
 class CampaignForm(mpforms.MPModelForm):
   TEMPLATE = 'advertiser/forms/campaign_form.html'
   gtee_level = forms.Field(widget = forms.Select)
-  
+ 
+  #priority is now based off of campaign_type, not actually priority
+  #gtee has 3 levels, this makes it so the database understands the three different levels of gtee
+  #but the form sees one level of gtee and three levels of priority
   def __init__(self, *args, **kwargs):
       instance = kwargs.get('instance', None)
       initial = kwargs.get('initial', None)
-      if instance:
+      if instance and instance.campaign_type:
           vals = instance.campaign_type.split('_')
           if 'gtee' in vals: 
               type = 'gtee'
@@ -41,6 +44,8 @@ class CampaignForm(mpforms.MPModelForm):
               kwargs.update(initial=initial)
       super(CampaignForm, self).__init__(*args, **kwargs)
       
+  #same as above, but so the one level of gtee and 3 levels of prioirty
+  #get correctly merged into a single datastore field
   def save(self, commit=True):
       obj = super(CampaignForm, self).save(commit=False)
       if obj:

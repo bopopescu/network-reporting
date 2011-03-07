@@ -32,6 +32,12 @@ var mopub = mopub || {};
         $('#bid-max').attr('name','bid');
       }    
     }).filter(':checked').click(); // make sure we're in sync when the page loads
+
+    $("#network_select").change( function(e) {
+            var network = $(this).val();
+            $('.networkDependent').hide();
+            $('.'+network+'.networkDependent').show();
+            }).change();
     
     $('#adgroupForm-advanced-toggleButton')
       .button('option', {icons: { primary: 'ui-icon-triangle-1-s' }})

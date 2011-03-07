@@ -52,6 +52,9 @@ class AdGroupQueryManager(CachedQueryManager):
 
   def put_adgroups(self,adgroups):
       return db.put(adgroups)
+
+  def delete_adgroups(self, adgroups):
+      return db.delete(adgroups)
       
 class CampaignStatsCounter(object):
   def __init__(self,campaign):

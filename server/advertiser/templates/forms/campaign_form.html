@@ -120,11 +120,17 @@
                         {# End Belong to AdGroup #}
                         <dt><label for="TODO4">Network Type:</label></dt>
                         <dd>
-                          <select name="network_type">
-                            {% for network in networks %}<option value="{{network.0}}" {% if network.2 %}selected="selected"{%endif%}>{{network.1}}</option>
+                          <select id="network_select" name="network_type">
+                            {% for network in networks %}<option class="network_option" value="{{network.0}}" {% if network.2 %}selected="selected"{%endif%}>{{network.1}}</option>
                             {% endfor %}
                           </select>
                         </dd>
+                        <div class='networkDependent custom'>
+                            <dt><label for="custom_html">Custom HTML:</label></dt>
+                            <dd>
+                            <textarea rows=10 name='custom_html'>{{form.custom_html.value}}</textarea>
+                            </dd>
+                        </div>
                         <dt><label for="TODO2">Network eCPM:</label></dt> 
                         <dd> 
                           <input type="text" class="input-text input-text-number {% if form.bid.errors %}form-error{% endif %}" name="bid" value='{{form.bid.value}}' id="bid-network" /> USD

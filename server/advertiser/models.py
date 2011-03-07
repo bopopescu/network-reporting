@@ -51,6 +51,7 @@ class Campaign(db.Model):
     
 class AdGroup(db.Model):
   campaign = db.ReferenceProperty(Campaign,collection_name="adgroups")
+  net_creative = db.ReferenceProperty(collection_name='adgroups')
   name = db.StringProperty()
   
   # daily budget
@@ -64,7 +65,7 @@ class AdGroup(db.Model):
 
   # the priority level at which this ad group should be auctioned
   priority_level = db.IntegerProperty(default=1)
-  network_type = db.StringProperty(choices=["adsense", "iAd", "admob","millennial","appnexus","inmobi","mobfox","jumptap","brightroll","greystripe"])
+  network_type = db.StringProperty(choices=["adsense", "iAd", "admob","millennial","appnexus","inmobi","mobfox","jumptap","brightroll","greystripe", "custom"])
 
   bid = db.FloatProperty()
   bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpm")
@@ -163,7 +164,7 @@ class AdGroup(db.Model):
   # platform_name=X
   device_predicates = db.StringListProperty(default=["platform_name=*"])
   
-  def default_creative(self):
+  def default_creative(self, custom_html=None):
     c = None
     if self.network_type == 'adsense': c = AdSenseCreative(name="adsense dummy",ad_type="adsense", format="320x50", format_predicates=["format=*"])
     elif self.network_type == 'iAd': c = iAdCreative(name="iAd dummy",ad_type="iAd", format="320x50", format_predicates=["format=320x50"])
@@ -175,6 +176,8 @@ class AdGroup(db.Model):
     elif self.network_type == 'greystripe' : c = GreyStripeCreative(name="greystripe dummy",ad_type="greystripe", format="320x50", format_predicates=["format=*"]) # TODO: only formats 320x320, 320x48, 300x250
     elif self.network_type == 'appnexus': c = AppNexusCreative(name="appnexus dummy",ad_type="html",format="320x50",format_predicates=["format=300x250"])
     elif self.network_type == 'mobfox' : c = MobFoxCreative(name="mobfox dummy",ad_type="html",format="320x50",format_predicates=["format=320x50"])
+    #NOT SUREEEE
+    elif self.network_type == 'custom': c = CustomCreative(name='custom dummy', ad_type='html', format='320x50', format_predicates=['format=320x50'], html_data=custom_html) 
     
     if c: c.ad_group = self
     return c
@@ -286,6 +289,9 @@ class ImageCreative(Creative):
       "468x60": "format=468x60"}
     fp = IMAGE_PREDICATES.get("%dx%d" % (img.width, img.height))
     return [fp] if fp else None
+
+class CustomCreative(HtmlCreative):
+    pass
 
 class iAdCreative(Creative):
   pass

@@ -79,13 +79,14 @@ class AdGroupForm(mpforms.MPModelForm):
   keywords = mpforms.MPTextAreaField(required=False)
   geo = forms.Field(widget = forms.MultipleHiddenInput, required=False)
   device_predicates = mpforms.MPTextAreaField(required=False)
+  custom_html = mpforms.MPTextAreaField(required=False)
   
   class Meta:
     model = AdGroup
     fields = ('name', 'network_type', 'priority_level', 'keywords',
               'bid', 'bid_strategy', 
               'percent_users', 'site_keys',
-              'hourly_frequency_cap','daily_frequency_cap','allocation_percentage',
+              'hourly_frequency_cap','daily_frequency_cap','allocation_percentage', 
               'allocation_type','budget')
 
   def save( self, commit=True):
@@ -105,14 +106,15 @@ class AdGroupForm(mpforms.MPModelForm):
   def __init__(self, *args,**kwargs):
     instance = kwargs.get('instance',None)
     initial = kwargs.get('initial',None)
-
     if instance:
+      if not initial:
+        initial = {}
+      if instance.network_type == 'custom' and instance.net_creative:
+          initial.update(custom_html = instance.net_creative.html_data)
       geo_predicates = [] 
       for geo_pred in  instance.geo_predicates: 
           preds = geo_pred.split(',')
           geo_predicates.append( ','.join( [ str( pred.split('=')[1] ) for pred in preds ] ) )
-      if not initial:
-        initial = {}
       initial.update(geo=geo_predicates)
       #initial.update(geo=instance.geo_predicates)
       kwargs.update(initial=initial)

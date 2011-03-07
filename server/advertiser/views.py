@@ -221,16 +221,18 @@ class CreateCampaignAJAXHander(RequestHandler):
     campaign_form = campaign_form or CampaignForm(instance=campaign)
     adgroup_form = adgroup_form or AdGroupForm(instance=adgroup)
     networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["greystripe","GreyStripe",False],\
-      ["iAd","iAd",False],["inmobi","InMobi",False],["jumptap","Jumptap",False],["millennial","Millennial Media",False],["mobfox","MobFox",False]]
+      ["iAd","iAd",False],["inmobi","InMobi",False],["jumptap","Jumptap",False],["millennial","Millennial Media",False],["mobfox","MobFox",False],['custom', 'Custom Network', False]]
     
     all_adunits = AdUnitQueryManager().get_adunits(account=self.account)
     
     adgroup_form['site_keys'].choices = all_adunits # needed for validation TODO: doesn't actually work
     
     # TODO: Remove this hack to place the bidding info with the rest of campaign
+    #Hackish part
     campaign_form.bid  = adgroup_form['bid']
     campaign_form.bid_strategy = adgroup_form['bid_strategy']
-    
+    campaign_form.custom_html = adgroup_form['custom_html']
+
     logging.warning("bid: %s %s"%("campaign_form['bid']",campaign_form.bid.value))
 
     adunit_keys = adgroup_form['site_keys'].value or []
@@ -302,12 +304,28 @@ class CreateCampaignAJAXHander(RequestHandler):
         if not adgroup.campaign.campaign_type == 'network':
           adgroup.network_type = None
         
+       
         AdGroupQueryManager().put_adgroups(adgroup)
-        
+
+       ##CHeck of creative exists for this network type, if yes
+       #update, if no, delete old and create new
         if campaign.campaign_type == "network":
-          creative = adgroup.default_creative()
+          html_dat = None
+          if adgroup.network_type == 'custom':
+              html_dat = adgroup_form['custom_html'].value
+          creative = adgroup.default_creative(html_dat)
+          if adgroup.net_creative and creative.__class__ == adgroup.net_creative.__class__:
+              creative = adgroup.net_creative
+              if adgroup.network_type == 'custom':
+                  creative.html_data = html_dat
+          elif adgroup.net_creative:
+              adgroup.net_creative.adgroup = None
+              AdGroupQueryManager().delete_adgroups(adgroup.net_creative)
           creative.account = self.account
           CreativeQueryManager().put_creatives(creative)
+          adgroup.net_creative = creative.key()
+          AdGroupQueryManager().put_adgroups(adgroup)
+          
 
         # update cache
         adunits_to_update.update(adgroup.site_keys)

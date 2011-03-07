@@ -289,13 +289,13 @@ var mopub = mopub || {};
   
   
   // helper fn for console logging
-  function log() {
-	if (window.console && window.console.log) {
-		window.console.log.apply(this,arguments);
-	}
-	else if (window.opera && window.opera.postError) {
-		window.opera.postError.apply(this,arguments);
-	}
-  };
-  
+  var log;
+
+  if (window.console && typeof console.log === "function"){
+    // use apply to preserve context and invocations with multiple arguments
+    log = function () { console.log.apply(console, arguments); };
+  } else {
+    log = function(){ return; }
+  }
+    
 })(this.jQuery);

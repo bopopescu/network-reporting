@@ -3,6 +3,9 @@ import datetime
 import traceback
 import sys
 
+from appengine_django import LoadDjango
+LoadDjango()
+
 from google.appengine.ext import db
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app

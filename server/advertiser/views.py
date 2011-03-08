@@ -305,6 +305,7 @@ class CreateCampaignAJAXHander(RequestHandler):
           adgroup.network_type = None
         
        
+       #put adgroup so creative can have a reference to it
         AdGroupQueryManager().put_adgroups(adgroup)
 
        ##CHeck of creative exists for this network type, if yes
@@ -313,17 +314,31 @@ class CreateCampaignAJAXHander(RequestHandler):
           html_dat = None
           if adgroup.network_type == 'custom':
               html_dat = adgroup_form['custom_html'].value
+          #build default creative with custom_html data if custom or none if anything else
           creative = adgroup.default_creative(html_dat)
           if adgroup.net_creative and creative.__class__ == adgroup.net_creative.__class__:
+              #if the adgroup has a creative AND the new creative and old creative are the same class, 
+              #ignore the new creative and set the variable to point to the old one
               creative = adgroup.net_creative
               if adgroup.network_type == 'custom':
+                  #if the network is a custom one, the creative might be the same, but the data might be new, set the old
+                  #creative to have the (possibly) new data
                   creative.html_data = html_dat
           elif adgroup.net_creative:
+              #in this case adgroup.net_creative has evaluated to true BUT the class comparison did NOT.  
+              #at this point we know that there was an old creative AND it's different from the old creative so
+              
+              #Get rid of the old creative's reference to the adgroup (just in case)
               adgroup.net_creative.adgroup = None
+              #and delete the old creative
               AdGroupQueryManager().delete_adgroups(adgroup.net_creative)
+          #creative should now reference the appropriate creative (new if different, old if the same, updated old if same and custom)
           creative.account = self.account
+          #put the creative so we can reference it
           CreativeQueryManager().put_creatives(creative)
+          #set adgroup to reference the correct creative
           adgroup.net_creative = creative.key()
+          #put the adgroup again with the new (or old) creative reference
           AdGroupQueryManager().put_adgroups(adgroup)
           
 

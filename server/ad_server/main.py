@@ -978,11 +978,14 @@ class TestHandler(webapp.RequestHandler):
     from ad_server.networks.brightroll import BrightRollServerSide
     from ad_server.networks.jumptap import JumptapServerSide
     from ad_server.networks.mobfox import MobFoxServerSide
-    
-    server_side = MobFoxServerSide(self.request)
+    key = self.request.get('id') or 'agltb3B1Yi1pbmNyCgsSBFNpdGUYAgw'
+    delay = self.request.get('delay') or '5'
+    delay = int(delay)
+    adunit = Site.get(key)
+    server_side = MobFoxServerSide(self.request,adunit)
     logging.warning("%s\n%s"%(server_side.url,server_side.payload))
     
-    rpc = urlfetch.create_rpc(5) # maximum delay we are willing to accept is 1000 ms
+    rpc = urlfetch.create_rpc(delay) # maximum delay we are willing to accept is 1000 ms
 
     payload = server_side.payload
     if payload == None:

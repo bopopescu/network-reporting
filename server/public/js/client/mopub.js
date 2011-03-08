@@ -20,7 +20,7 @@
     var mopub_ad_url = "http://"+mopub_url.hostname;
     if (mopub_url.port != "0")
         mopub_ad_url += ":"+mopub_url.port;
-    mopub_ad_url += "/m/ad?id="+mopub_ad_unit;
+    mopub_ad_url += "/m/ad?id="+mopub_ad_unit + "&udid=M0B1LEWEBC00KIE:" + get_session();
 
     if (window.mopub_keywords != null)
         mopub_ad_url += "&q="+escape(window.mopub_keywords);
@@ -30,4 +30,39 @@
                    + ' height="'+window.mopub_ad_height+'"'
                    + ' src="'+mopub_ad_url+'">');
     document.write('</iframe>');
+
+    var c_name = "mopub-udid-cookie";
+
+    function set_cookie(name, value, expires, path, domain, secure) {
+        var cookieString = name + "=" +escape(value) +
+        ((expires) ? ";expires=" + expires.toGMTString() : "") +
+        ((path) ? ";path=" + path : "") +
+        ((domain) ? ";domain=" + domain : "") +
+        ((secure) ? ";secure" : "");
+        document.cookie = cookieString;
+    }
+
+    function get_cookie(name) {
+        var start = document.cookie.indexOf(name+"=");
+        var len = start+name.length+1;
+        if ((!start) && (name != document.cookie.substring(0,name.length))) 
+            return null;
+        if (start == -1) 
+            return null;
+        var end = document.cookie.indexOf(";",len);
+        if (end == -1) 
+            end = document.cookie.length;
+        return unescape(document.cookie.substring(len,end));
+    }
+    
+    function get_session() {
+        //if no session, set it
+        if(!get_cookie(c_name)) {
+            set_cookie(c_name, Math.random());
+        }
+        //get it
+        return get_cookie(c_name);
+    }
+
+
 })();

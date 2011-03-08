@@ -681,7 +681,7 @@ class AdHandler(webapp.RequestHandler):
       <div style="color:white;font-weight:bold;margin:0px 0 0 5px;padding-top:8;">$line1</div>
       <div style="color:white;margin-top:6px;margin:5px 0 0 5px;">$line2</div>
     </div>
-    <div style="padding-top:5px;position:absolute;top:0;right:0;"><a href="$url"><img src="/images/$action_icon.png" width=40 height=40/></a></div>
+    $action_icon_div
     $trackingPixel
   </div>
   </body>
@@ -781,6 +781,8 @@ class AdHandler(webapp.RequestHandler):
       elif c.ad_type == "text_icon":
         if c.image:
           params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
+        if c.action_icon:
+          params["action_icon_div"] = '<div style="padding-top:5px;position:absolute;top:0;right:0;"><a href="$url"><img src="/images/'+c.action_icon+'.png" width=40 height=40/></a></div>'
         # self.response.headers.add_header("X-Adtype", str('html'))
       elif c.ad_type == "greystripe":
         params.update(html_data=c.html_data)

@@ -34,7 +34,6 @@ class MillennialServerSide(ServerSide):
     
   def bid_and_html_for_response(self,response):
     # TODO: do any sort of manipulation here that we want, like resizing the image, LAME
-    logging.info("MILLENIAL: %s\n%s"%(response.content,response.status_code))
     if len(response.content) == 0 or \
       response.status_code != 200 or \
       '<title>404' in response.content: # **See Note below

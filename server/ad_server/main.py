@@ -416,7 +416,7 @@ class AdAuction(object):
                                         except Exception,e:
                                             import traceback, sys
                                             exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
-                                            logging.error(exception_traceback)
+                                            logging.warning(exception_traceback)
                                     else:
                                         winning_creative = winner
                                         return winning_creative

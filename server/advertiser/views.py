@@ -308,14 +308,14 @@ class CreateCampaignAJAXHander(RequestHandler):
        #put adgroup so creative can have a reference to it
         AdGroupQueryManager().put_adgroups(adgroup)
 
-       ##CHeck of creative exists for this network type, if yes
+       ##Check if creative exists for this network type, if yes
        #update, if no, delete old and create new
         if campaign.campaign_type == "network":
-          html_dat = None
+          html_data = None
           if adgroup.network_type == 'custom':
-              html_dat = adgroup_form['custom_html'].value
+              html_data = adgroup_form['custom_html'].value
           #build default creative with custom_html data if custom or none if anything else
-          creative = adgroup.default_creative(html_dat)
+          creative = adgroup.default_creative(html_data)
           if adgroup.net_creative and creative.__class__ == adgroup.net_creative.__class__:
               #if the adgroup has a creative AND the new creative and old creative are the same class, 
               #ignore the new creative and set the variable to point to the old one
@@ -323,7 +323,7 @@ class CreateCampaignAJAXHander(RequestHandler):
               if adgroup.network_type == 'custom':
                   #if the network is a custom one, the creative might be the same, but the data might be new, set the old
                   #creative to have the (possibly) new data
-                  creative.html_data = html_dat
+                  creative.html_data = html_data
           elif adgroup.net_creative:
               #in this case adgroup.net_creative has evaluated to true BUT the class comparison did NOT.  
               #at this point we know that there was an old creative AND it's different from the old creative so

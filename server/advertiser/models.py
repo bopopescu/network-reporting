@@ -51,7 +51,7 @@ class Campaign(db.Model):
     
 class AdGroup(db.Model):
   campaign = db.ReferenceProperty(Campaign,collection_name="adgroups")
-  net_creative = db.ReferenceProperty(collection_name='adgroups')
+  net_creative = db.ReferenceProperty(collection_name='creative_adgroups')
   name = db.StringProperty()
   
   # daily budget
@@ -176,8 +176,7 @@ class AdGroup(db.Model):
     elif self.network_type == 'greystripe' : c = GreyStripeCreative(name="greystripe dummy",ad_type="greystripe", format="320x50", format_predicates=["format=*"]) # TODO: only formats 320x320, 320x48, 300x250
     elif self.network_type == 'appnexus': c = AppNexusCreative(name="appnexus dummy",ad_type="html",format="320x50",format_predicates=["format=300x250"])
     elif self.network_type == 'mobfox' : c = MobFoxCreative(name="mobfox dummy",ad_type="html",format="320x50",format_predicates=["format=320x50"])
-    #NOT SUREEEE
-    elif self.network_type == 'custom': c = CustomCreative(name='custom dummy', ad_type='html', format='320x50', format_predicates=['format=320x50'], html_data=custom_html) 
+    elif self.network_type == 'custom': c = CustomCreative(name='custom', ad_type='html', format='320x50', format_predicates=['format=320x50'], html_data=custom_html) 
     
     if c: c.ad_group = self
     return c

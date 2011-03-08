@@ -139,6 +139,13 @@ var mopub = mopub || {};
       });
   });
 
+  $('#campaignForm-customHtml-helpLink').click(function(e) {
+    e.preventDefault();
+    $('#campaignForm-customHtml-helpContent').dialog({ 
+      buttons: { "Close": function() { $(this).dialog("close"); } }
+    });
+  });
+
   $('#campaignForm-bid-helpLink').click(function(e) {
     e.preventDefault();
     $('#campaignForm-bid-helpContent').dialog({ 

@@ -19,6 +19,51 @@ import logging
 
 class CampaignForm(mpforms.MPModelForm):
   TEMPLATE = 'advertiser/forms/campaign_form.html'
+  gtee_level = forms.Field(widget = forms.Select)
+ 
+  #priority is now based off of campaign_type, not actually priority
+  #gtee has 3 levels, this makes it so the database understands the three different levels of gtee
+  #but the form sees one level of gtee and three levels of priority
+  def __init__(self, *args, **kwargs):
+      instance = kwargs.get('instance', None)
+      initial = kwargs.get('initial', None)
+      if instance and instance.campaign_type:
+          vals = instance.campaign_type.split('_')
+          if 'gtee' in vals: 
+              type = 'gtee'
+              if 'high' in vals:
+                  level = 'high'
+              elif 'low' in vals:
+                  level = 'low'
+              else:
+                  level = 'normal'
+              if not initial:
+                  initial = {}
+              initial.update(campaign_type=type)
+              initial.update(gtee_level=level)
+              kwargs.update(initial=initial)
+      super(CampaignForm, self).__init__(*args, **kwargs)
+      
+  #same as above, but so the one level of gtee and 3 levels of prioirty
+  #get correctly merged into a single datastore field
+  def save(self, commit=True):
+      obj = super(CampaignForm, self).save(commit=False)
+      if obj:
+          type = self.cleaned_data['campaign_type']
+          if type == 'gtee':
+              lev = self.cleaned_data['gtee_level']
+              if lev == 'high': 
+                  type = 'gtee_high'
+              elif lev == 'low':
+                  type = 'gtee_low'
+              elif lev == 'normal':
+                  type = 'gtee'
+              else:
+                  logging.warning("Invalid gtee_level for gtee")
+              obj.campaign_type = type     
+      if commit:
+          obj.put()
+      return obj
 
   class Meta:
     model = Campaign
@@ -66,7 +111,6 @@ class AdGroupForm(mpforms.MPModelForm):
       for geo_pred in  instance.geo_predicates: 
           preds = geo_pred.split(',')
           geo_predicates.append( ','.join( [ str( pred.split('=')[1] ) for pred in preds ] ) )
-      logging.warning( geo_predicates )
       if not initial:
         initial = {}
       initial.update(geo=geo_predicates)

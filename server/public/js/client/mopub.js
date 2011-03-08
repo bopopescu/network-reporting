@@ -58,11 +58,22 @@
     function get_session() {
         //if no session, set it
         if(!get_cookie(c_name)) {
-            set_cookie(c_name, Math.random());
+            set_cookie(c_name, gen_key()));
         }
         //get it
         return get_cookie(c_name);
     }
+
+    function gen_key() {
+        var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012345678';
+        var text = '';
+        for( var i=0; i < 20; i++ ) {
+            text += possible.charAt(Math.floor(Math.random() * possible.length));
+        }
+        return text;
+    }
+
+
 
 
 })();

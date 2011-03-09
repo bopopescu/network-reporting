@@ -697,7 +697,7 @@ class AdHandler(webapp.RequestHandler):
                           </script>
                         </head>
                         <body style="margin: 0;width:${w}px;height:${h}px;padding:0;">\
-                          <a href="$url"><img src="$image_url" width=$w height=$h/></a>
+                          <a href="$url" target="_blank"><img src="$image_url" width=$w height=$h/></a>
                           $trackingPixel
                         </body></html> """),
     "admob": Template("""<html><head>
@@ -753,10 +753,16 @@ class AdHandler(webapp.RequestHandler):
                         $trackingPixel
                         </body></html>"""),
     "html":Template("""<html><head><title>$title</title>
-                        $finishLoad                  
+                        $finishLoad
                         <script type="text/javascript">
-                          function webviewDidClose(){} 
-                          function webviewDidAppear(){} 
+                          function webviewDidClose(){}
+                          function webviewDidAppear(){}
+                          window.addEventListener("load", function() {
+                            var links = document.getElementsByTagName('a');
+                            for(var i=0; i < links.length; i++) {
+                              links[i].setAttribute('target','_blank');
+                            }
+                          }, false);
                         </script></head>
                         <body style="margin:0;padding:0;width:${w}px;background:white;">${html_data}$trackingPixel</body></html>"""),
     "html_full":Template("$html_data")

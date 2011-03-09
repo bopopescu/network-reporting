@@ -67,7 +67,7 @@ class AdGroup(db.Model):
   priority_level = db.IntegerProperty(default=1)
   network_type = db.StringProperty(choices=["adsense", "iAd", "admob","millennial","appnexus","inmobi","mobfox","jumptap","brightroll","greystripe", "custom"])
 
-  bid = db.FloatProperty()
+  bid = db.FloatProperty(default=0.0)
   bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpm")
 
   # state of this ad group

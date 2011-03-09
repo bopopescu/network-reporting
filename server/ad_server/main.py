@@ -143,6 +143,8 @@ def mega_filter( *filters ):
 def format_filter( format ):
     log_mesg = "Removed due to format mismatch, expected " + str( format ) + ": %s"
     def real_filter( a ):
+        if not a.format: 
+            return False
         return not a.format == format
     return ( real_filter, log_mesg, [] )
 

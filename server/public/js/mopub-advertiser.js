@@ -32,6 +32,12 @@ var mopub = mopub || {};
         $('#bid-max').attr('name','bid');
       }    
     }).filter(':checked').click(); // make sure we're in sync when the page loads
+
+    $("#network_select").change( function(e) {
+            var network = $(this).val();
+            $('.networkDependent').hide();
+            $('.'+network+'.networkDependent').show();
+            }).change();
     
     $('#adgroupForm-advanced-toggleButton')
       .button('option', {icons: { primary: 'ui-icon-triangle-1-s' }})
@@ -131,6 +137,13 @@ var mopub = mopub || {};
       $('#campaignForm-priority-helpContent').dialog({
           buttons: { "Close": function() { $(this).dialog('close'); }}
       });
+  });
+
+  $('#campaignForm-customHtml-helpLink').click(function(e) {
+    e.preventDefault();
+    $('#campaignForm-customHtml-helpContent').dialog({ 
+      buttons: { "Close": function() { $(this).dialog("close"); } }
+    });
   });
 
   $('#campaignForm-bid-helpLink').click(function(e) {

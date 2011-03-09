@@ -51,6 +51,10 @@ q:before, q:after { content:''; content:none; }
 
 a { margin:0; padding:0; font-size:100%; vertical-align:baseline; background:transparent; }
 
+#campaignForm-customHtml-helpLink {
+    vertical-align: top;
+}
+
 ins { background-color:#ff9; color:#000; text-decoration:none; }
 
 mark { background-color:#ff9; color:#000; font-style:italic; font-weight:600; }

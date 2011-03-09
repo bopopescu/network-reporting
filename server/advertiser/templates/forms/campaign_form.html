@@ -120,11 +120,42 @@
                         {# End Belong to AdGroup #}
                         <dt><label for="TODO4">Network Type:</label></dt>
                         <dd>
-                          <select name="network_type">
-                            {% for network in networks %}<option value="{{network.0}}" {% if network.2 %}selected="selected"{%endif%}>{{network.1}}</option>
+                          <select id="network_select" name="network_type">
+                            {% for network in networks %}<option class="network_option" value="{{network.0}}" {% if network.2 %}selected="selected"{%endif%}>{{network.1}}</option>
                             {% endfor %}
                           </select>
                         </dd>
+                        <div class='networkDependent custom'>
+                            <dt><label for="custom_html">Custom HTML:</label></dt>
+                            <dd>
+                            <textarea rows=3 name='custom_html' placeholder='HTML Custom Content'>{{form.custom_html.value}}</textarea>
+                          <a href="#" id="campaignForm-customHtml-helpLink">What's this?</a>
+                            </dd>
+                          <div id='campaignForm-customHtml-helpContent' class='hidden'>
+                              <h3>Custom Network</h3>
+                              MoPub supports custom ad networks if the network provides an HTML snippet for displaying ads.  Select Custom Network then paste the HTML snippet in the box below.
+                              <br/>
+                              <br/>
+                              <h4>AdSense Example:</h4>
+                              The custom HTML snippet for AdSense is:
+                              <br/>
+                              <code> &lt;script type=&quot;text/javascript&quot;&gt;
+                              <br/>
+                              &lt;!--
+                              // XHTML should not attempt to parse these strings, declare them CDATA.<br/>
+                              /* &lt;![CDATA[ */<br/><br/>
+                            window.googleAfmcRequest = {<br/>
+                                &nbsp;&nbsp;client: 'XXXXXXXXXXXXXX',<br/>
+                                &nbsp;&nbsp;format: '320x50_mb',<br/>
+                                &nbsp;&nbsp;output: 'html',<br/>
+                                &nbsp;&nbsp;slotname: 'XXXXXXXXX',<br/>
+                            };<br/>
+                            /* ]]&gt; */<br/>
+                            //--&gt;&lt;/script&gt;<br/>
+                            &lt;script type=&quot;text/javascript&quot; src = &quot;http://pagead2.googlesyndication.com/pagead/show_afmc_ads.js&quot;&gt;&lt;/script&gt;
+                            </code>
+                            </div>
+                        </div>
                         <dt><label for="TODO2">Network eCPM:</label></dt> 
                         <dd> 
                           <input type="text" class="input-text input-text-number {% if form.bid.errors %}form-error{% endif %}" name="bid" value='{{form.bid.value}}' id="bid-network" /> USD

@@ -221,16 +221,18 @@ class CreateCampaignAJAXHander(RequestHandler):
     campaign_form = campaign_form or CampaignForm(instance=campaign)
     adgroup_form = adgroup_form or AdGroupForm(instance=adgroup)
     networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["greystripe","GreyStripe",False],\
-      ["iAd","iAd",False],["inmobi","InMobi",False],["jumptap","Jumptap",False],["millennial","Millennial Media",False],["mobfox","MobFox",False]]
+      ["iAd","iAd",False],["inmobi","InMobi",False],["jumptap","Jumptap",False],["millennial","Millennial Media",False],["mobfox","MobFox",False],['custom', 'Custom Network', False]]
     
     all_adunits = AdUnitQueryManager().get_adunits(account=self.account)
     
     adgroup_form['site_keys'].choices = all_adunits # needed for validation TODO: doesn't actually work
     
     # TODO: Remove this hack to place the bidding info with the rest of campaign
+    #Hackish part
     campaign_form.bid  = adgroup_form['bid']
     campaign_form.bid_strategy = adgroup_form['bid_strategy']
-    
+    campaign_form.custom_html = adgroup_form['custom_html']
+
     logging.warning("bid: %s %s"%("campaign_form['bid']",campaign_form.bid.value))
 
     adunit_keys = adgroup_form['site_keys'].value or []
@@ -302,12 +304,43 @@ class CreateCampaignAJAXHander(RequestHandler):
         if not adgroup.campaign.campaign_type == 'network':
           adgroup.network_type = None
         
+       
+       #put adgroup so creative can have a reference to it
         AdGroupQueryManager().put_adgroups(adgroup)
-        
+
+       ##Check if creative exists for this network type, if yes
+       #update, if no, delete old and create new
         if campaign.campaign_type == "network":
-          creative = adgroup.default_creative()
+          html_data = None
+          if adgroup.network_type == 'custom':
+              html_data = adgroup_form['custom_html'].value
+          #build default creative with custom_html data if custom or none if anything else
+          creative = adgroup.default_creative(html_data)
+          if adgroup.net_creative and creative.__class__ == adgroup.net_creative.__class__:
+              #if the adgroup has a creative AND the new creative and old creative are the same class, 
+              #ignore the new creative and set the variable to point to the old one
+              creative = adgroup.net_creative
+              if adgroup.network_type == 'custom':
+                  #if the network is a custom one, the creative might be the same, but the data might be new, set the old
+                  #creative to have the (possibly) new data
+                  creative.html_data = html_data
+          elif adgroup.net_creative:
+              #in this case adgroup.net_creative has evaluated to true BUT the class comparison did NOT.  
+              #at this point we know that there was an old creative AND it's different from the old creative so
+              
+              #Get rid of the old creative's reference to the adgroup (just in case)
+              adgroup.net_creative.adgroup = None
+              #and delete the old creative
+              AdGroupQueryManager().delete_adgroups(adgroup.net_creative)
+          #creative should now reference the appropriate creative (new if different, old if the same, updated old if same and custom)
           creative.account = self.account
+          #put the creative so we can reference it
           CreativeQueryManager().put_creatives(creative)
+          #set adgroup to reference the correct creative
+          adgroup.net_creative = creative.key()
+          #put the adgroup again with the new (or old) creative reference
+          AdGroupQueryManager().put_adgroups(adgroup)
+          
 
         # update cache
         adunits_to_update.update(adgroup.site_keys)

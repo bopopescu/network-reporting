@@ -3,7 +3,6 @@
 */
 (function(){
     var c_name = "mopub-udid-cookie";
-
     if (window.mopub_ad_unit == null) {
         console.log("MoPub load failed. mopub_ad_unit needs to be defined.");
         return;

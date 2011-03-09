@@ -1,0 +1,9 @@
+<dt>
+	<label for="{{label|lower}}">{{label}}:</label>
+</dt>
+<dd>
+{{ widget }}
+{% for error in errors %}
+<div class="form-error-text">{{error}}</div> 
+{% endfor %}
+</dd>

@@ -258,7 +258,8 @@
                       <div class="creative hidden" id="{{c.key}}-preview">
                         <h3>{{c.name}}</h3>
                         <div>
-                          <iframe src="{% url advertiser_creative_html creative_key=c.key %}" frameborder="0" scrolling="no" {% if c.size.2 %}width="{{c.size.0}}" height="{{c.size.2}}"{% else %}width="320" height="480"{% endif %}>
+                          <input type="hidden" name="{{c.key}}-preview-src" id="{{c.key}}-preview-src" value="{% url advertiser_creative_html creative_key=c.key %}">
+                          <iframe frameborder="0" scrolling="no" {% if c.size.2 %}width="{{c.size.0}}" height="{{c.size.2}}"{% else %}width="320" height="480"{% endif %}>
                             <p>Your browser does not support iframes.</p>
                           </iframe>
                         </div>

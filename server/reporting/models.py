@@ -1,5 +1,4 @@
 from google.appengine.ext import db
-
 from publisher.models import Site
 from account.models import Account
 

@@ -26,6 +26,7 @@ from django.db.models.manager import EmptyManager
 
 from google.appengine.api import users
 from google.appengine.ext import db
+from common.utils import djangoforms
 
 from appengine_django.models import BaseModel
 

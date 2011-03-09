@@ -283,6 +283,8 @@ var mopub = mopub || {};
       .click(function(e){
         e.preventDefault();
         var creative_key = $(this).attr("id");
+        var creative_src = $('#'+creative_key+'-preview-src').val();
+        $("#"+creative_key+"-preview iframe").attr('src', creative_src);
         $("#"+creative_key+"-preview").dialog({
           buttons: [
             {

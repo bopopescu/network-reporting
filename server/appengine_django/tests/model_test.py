@@ -22,8 +22,7 @@ import unittest
 from django import VERSION
 from django.db.models import get_models
 from django import forms
-
-from google.appengine.ext.db import djangoforms
+from common.utils import djangoforms
 from google.appengine.ext import db
 
 from appengine_django.models import BaseModel

@@ -1,4 +1,5 @@
-                    <dl class="formFields"> 
+ 				{% load filters %}
+                   <dl class="formFields"> 
                       <dt>Campaign Type:</dt> 
                       <dd> 
                         <span class="radios"> 
@@ -43,42 +44,24 @@
                         </div>
                       </dd>
                       <div class="campaignDependent gtee">
-                          <dt><label for="gtee_level">Priority:</label></dt>
-                          <dd>
+                        <dt><label for="gtee_level">Priority:</label></dt>
+                        <dd>
                           <select name='gtee_level'>
-                              <option value='high'
-                              {% ifequal form.gtee_level.value 'high' %}selected{% endifequal %} 
-                              >High</option>
-                              <option value='normal'
-                              {% ifequal form.gtee_level.value 'normal' %}selected{% endifequal %}
-                              {% if not form.gtee_level.value %}selected{% endif %}
-                              >Normal</option>
-                              <option value='low'
-                              {% ifequal form.gtee_level.value 'low' %}selected{% endifequal %}
-                              >Low</option>
+                            <option value='high' {% ifequal form.gtee_level.value 'high' %}selected{% endifequal %}>High</option>
+                            <option value='normal' {% ifequal form.gtee_level.value 'normal' %}selected{% endifequal %}{% if not form.gtee_level.value %}selected{% endif %}>Normal</option>
+                            <option value='low' {% ifequal form.gtee_level.value 'low' %}selected{% endifequal %}>Low</option>
                           </select>
                           <a href="#" id="campaignForm-priority-helpLink">What's this?</a>
                           <div id='campaignForm-priority-helpContent' class='hidden'>
-                              <h3>Priority</h3>
-                              <p>
+                            <h3>Priority</h3>
+                            <p>
                               Within a given priority campaigns are run in order of CPM.  By assigning a campaign priority you set it to run before those at a lower priority level. 
-                              </p>
-                          </dd>
+                            </p>
+                          </div>
+                        </dd>
                       </div>
-                      <dt><label for="name">Name:</label></dt> 
-                      <dd> 
-                        <input type="text" class="required input-text{% if form.name.errors %} form-error{% endif %}" name="{{form.name.name}}" value="{{form.name.value}}" placeholder="Campaign Name" />
-                        {% for error in form.name.errors %}
-                        <div class="form-error-text">{{error}}</div> 
-                        {% endfor %}
-                      </dd>
-                      <dt><label for="description">Description:</label></dt>
-                      <dd>
-                        <textarea name="{{form.description.name}}" cols="50" rows="3" placeholder="Campaign for My New App" class="{% if form.description.errors %}form-error{% endif %}">{{form.description.value}}</textarea>
-                        {% for error in form.description.errors %}
-                        <div class="form-error-text">{{error}}</div> 
-                        {% endfor %}
-                      </dd>
+                      {{ form.name|attrs:'{"placeholder":"Campaign Name"}'  }}
+                      {{ form.description|attrs:'{"placeholder":"Campaign for My New App"}' }}
                       <div class="campaignDependent gtee promo">
                         <dt><label for="">Dates:</label></dt>
                         <dd>

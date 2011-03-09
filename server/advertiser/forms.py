@@ -9,6 +9,7 @@ from common.constants import (  CITY_GEO,
 GEO_LIST = ( COUNTRY_GEO, REGION_GEO, CITY_GEO )
 
 from common.utils import forms as mpforms
+from common.utils import fields as mpfields
 from django import forms
 from django.core.urlresolvers import reverse
 from google.appengine.ext import db
@@ -74,12 +75,11 @@ AdUnit.all()
 class AdGroupForm(mpforms.MPModelForm):
   TEMPLATE = 'advertiser/forms/adgroup_form.html'
   
-  # TODO: how can i make this dynamic
-  site_keys = mpforms.MPModelMultipleChoiceField(AdUnit,required=False)
-  keywords = mpforms.MPTextAreaField(required=False)
-  geo = forms.Field(widget = forms.MultipleHiddenInput, required=False)
-  device_predicates = mpforms.MPTextAreaField(required=False)
-  custom_html = mpforms.MPTextAreaField(required=False)
+  site_keys = mpfields.MPModelMultipleChoiceField(AdUnit,required=False)
+  keywords = mpfields.MPKeywordsField(required=False)
+  geo = forms.Field(widget=forms.MultipleHiddenInput)
+  device_predicates = mpfields.MPTextareaField(required=False)
+  custom_html = mpfields.MPTextareaField(required=False)
   
   class Meta:
     model = AdGroup

@@ -3,8 +3,26 @@ import time
 from datetime import datetime
 from django import template
 import base64, binascii
+from django.utils import simplejson as json
 
 register = template.Library()
+
+@register.filter
+def attrs(bound_field, attrs_json):
+    """
+    Parses a json attrs object from template and passes them to the bound_field
+    """
+    parsed = json.loads(attrs_json)
+    bound_field.add_attrs(attrs=parsed)
+    return bound_field
+    
+@register.filter
+def label(bound_field, label):
+    """
+    Sets the label of a field
+    """
+    bound_field.add_label(label)
+    return bound_field
 
 @register.filter
 def currency(value):

@@ -1,4 +1,5 @@
 from google.appengine.ext import db
+from common.utils import djangoforms
 from google.appengine.api import users
 
 from account.models import Account

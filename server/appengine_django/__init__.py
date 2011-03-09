@@ -601,7 +601,8 @@ def InstallAuthentication(settings):
 def InstallModelForm():
   """Replace Django ModelForm with the AppEngine ModelForm."""
   # This MUST happen as early as possible, but after any auth model patching.
-  from google.appengine.ext.db import djangoforms as aeforms
+  # from google.appengine.ext.db import djangoforms as aeforms
+  from common.utils import djangoforms as aeforms
   try:
     # pre 1.0
     from django import newforms as forms

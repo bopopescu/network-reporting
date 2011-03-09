@@ -32,7 +32,6 @@
                    + ' src="'+mopub_ad_url+'">');
     document.write('</iframe>');
 
-
     function set_cookie(name, value, expires, path, domain, secure) {
         var cookieString = name + "=" +escape(value) +
         ((expires) ? ";expires=" + expires.toGMTString() : "") +
@@ -72,8 +71,5 @@
         }
         return text;
     }
-
-
-
 
 })();

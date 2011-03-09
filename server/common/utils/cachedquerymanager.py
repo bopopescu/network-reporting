@@ -14,7 +14,10 @@ class CachedQueryManager(object):
   Model = None
   
   def get_by_key(self,keys):
-    return self.Model.get(keys)  
+    if self.Model:
+      return self.Model.get(keys)  
+    else:
+      return db.get(keys)  
   
   def cache_get(self,keys):
     if isinstance(keys,str) or isinstance(keys,unicode):

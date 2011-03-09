@@ -45,6 +45,7 @@ import unittest
 import zipfile
 
 
+INSTALLED = False
 DIR_PATH = os.path.abspath(os.path.dirname(__file__))
 PARENT_DIR = os.path.dirname(DIR_PATH)
 if PARENT_DIR.endswith(".zip"):
@@ -150,6 +151,10 @@ def LoadDjango(version=None):
   # Must set this env var *before* importing any more of Django.
   os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 
+  # Force Django 1.2 (Added by Bryan @ Mopub)
+  if not version:
+    version = '1.2'
+
   # If we have set a version explicitly, force that
   if version:
     use_library('django', version)
@@ -167,7 +172,7 @@ def LoadDjango(version=None):
 
   # If we aren't loading from a zip or local copy then try for whichever
   # supported version is highest and installed
-  for check_version in ('1.1', '1.0'):
+  for check_version in ('1.2', '1.1', '1.0'):
     try:
       use_library('django', check_version)
       return
@@ -329,7 +334,7 @@ def PatchDeserializedObjectClass():
   # This can't be imported until InstallAppengineDatabaseBackend has run.
   from django.core.serializers import base
   class NewDeserializedObject(base.DeserializedObject):
-    def save(self, save_m2m=True):
+    def save(self, save_m2m=True, using=None):
       self.object.save()
       self.object._parent = None
   base.DeserializedObject = NewDeserializedObject
@@ -511,6 +516,11 @@ def InstallAppengineHelperForDjango(version=None):
   If the variable DEBUG_APPENGINE_DJANGO is set in the environment verbose
   logging of the actions taken will be enabled.
   """
+  global INSTALLED
+  if INSTALLED:
+    logging.warning("App Engine Helper has already been installed for this "
+                    "process (not going to reinstall)")
+    return
 
   FixPython26Logging()
   LoadSdk()
@@ -523,7 +533,7 @@ def InstallAppengineHelperForDjango(version=None):
   # switching from webapp.template to django.template.
   # TODO(elsigh): Maybe there is a deeper, fixable problem somewhere?
   os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
- 
+
   if VERSION < (1, 0, None):
     logging.error("Django 1.0 or greater is required!")
     sys.exit(1)
@@ -551,6 +561,7 @@ def InstallAppengineHelperForDjango(version=None):
   InstallAuthentication(settings)
 
   logging.debug("Successfully loaded the Google App Engine Helper for Django.")
+  INSTALLED = True
 
 
 def InstallGoogleSMTPConnection():
@@ -590,7 +601,8 @@ def InstallAuthentication(settings):
 def InstallModelForm():
   """Replace Django ModelForm with the AppEngine ModelForm."""
   # This MUST happen as early as possible, but after any auth model patching.
-  from google.appengine.ext.db import djangoforms as aeforms
+  # from google.appengine.ext.db import djangoforms as aeforms
+  from common.utils import djangoforms as aeforms
   try:
     # pre 1.0
     from django import newforms as forms

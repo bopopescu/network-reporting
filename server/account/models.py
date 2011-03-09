@@ -26,7 +26,8 @@ class Account(db.Model):
     inmobi_pub_id = db.StringProperty()
     jumptap_pub_id = db.StringProperty()
     millenial_pub_id = db.StringProperty()
-  
+    mobfox_pub_id = db.StringProperty()
+    
     @classmethod
     def current_account(cls,user=None):
         if not user:

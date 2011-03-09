@@ -9,7 +9,7 @@ from account.models import Account
 class Campaign(db.Model):
   name = db.StringProperty(required=True)
   description = db.TextProperty()
-  campaign_type = db.StringProperty(choices=['gtee', 'promo', 'network'], default="network")
+  campaign_type = db.StringProperty(choices=['gtee', 'gtee_high', 'gtee_low', 'promo', 'network'], default="network")
 
   # daily budget
   budget = db.FloatProperty() 
@@ -37,11 +37,21 @@ class Campaign(db.Model):
   @property
   def counter_shards(self):
     #TODO: this should be a function of estimated qps
-    return 5
+    return 1
+  
+  @property
+  def owner(self):
+    return None
+
+  @property
+  def owner_key(self):
+    return None
+      
     
     
 class AdGroup(db.Model):
   campaign = db.ReferenceProperty(Campaign,collection_name="adgroups")
+  net_creative = db.ReferenceProperty(collection_name='creative_adgroups')
   name = db.StringProperty()
   
   # daily budget
@@ -55,7 +65,7 @@ class AdGroup(db.Model):
 
   # the priority level at which this ad group should be auctioned
   priority_level = db.IntegerProperty(default=1)
-  network_type = db.StringProperty(choices=["adsense", "iAd", "admob","millennial","appnexus","inmobi","jumptap","brightroll","greystripe"])
+  network_type = db.StringProperty(choices=["adsense", "iAd", "admob","millennial","appnexus","inmobi","mobfox","jumptap","brightroll","greystripe", "custom"])
 
   bid = db.FloatProperty()
   bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpm")
@@ -154,7 +164,7 @@ class AdGroup(db.Model):
   # platform_name=X
   device_predicates = db.StringListProperty(default=["platform_name=*"])
   
-  def default_creative(self):
+  def default_creative(self, custom_html=None):
     c = None
     if self.network_type == 'adsense': c = AdSenseCreative(name="adsense dummy",ad_type="adsense", format="320x50", format_predicates=["format=*"])
     elif self.network_type == 'iAd': c = iAdCreative(name="iAd dummy",ad_type="iAd", format="320x50", format_predicates=["format=320x50"])
@@ -165,6 +175,8 @@ class AdGroup(db.Model):
     elif self.network_type == 'inmobi': c = InMobiCreative(name="inmobi dummy",ad_type="html_full",format="320x50", format_predicates=["format=320x50"]) # TODO: make sure formats are right
     elif self.network_type == 'greystripe' : c = GreyStripeCreative(name="greystripe dummy",ad_type="greystripe", format="320x50", format_predicates=["format=*"]) # TODO: only formats 320x320, 320x48, 300x250
     elif self.network_type == 'appnexus': c = AppNexusCreative(name="appnexus dummy",ad_type="html",format="320x50",format_predicates=["format=300x250"])
+    elif self.network_type == 'mobfox' : c = MobFoxCreative(name="mobfox dummy",ad_type="html",format="320x50",format_predicates=["format=320x50"])
+    elif self.network_type == 'custom': c = CustomCreative(name='custom', ad_type='html', format='', format_predicates=['format=*'], html_data=custom_html) 
     
     if c: c.ad_group = self
     return c
@@ -175,6 +187,15 @@ class AdGroup(db.Model):
   @property
   def geographic_predicates(self):
     return self.geo_predicates
+    
+  @property
+  def owner(self):
+    return self.campaign
+
+  @property
+  def owner_key(self):
+    return self._campaign
+    
 
 class Creative(polymodel.PolyModel):
   name = db.StringProperty()
@@ -218,8 +239,13 @@ class Creative(polymodel.PolyModel):
   def p_ctr(self):
     return 0.01
     
-  # def __unicode__(self):
-  #   asdf  
+  @property
+  def owner(self):
+    return self.ad_group
+  
+  @property
+  def owner_key(self):
+    return self._ad_group
           
   def __repr__(self):
     return "Creative{ad_type=%s, eCPM=%.02f ,key_name=%s}" % (self.ad_type, self.e_cpm(),self.key().id_or_name())
@@ -263,6 +289,9 @@ class ImageCreative(Creative):
     fp = IMAGE_PREDICATES.get("%dx%d" % (img.width, img.height))
     return [fp] if fp else None
 
+class CustomCreative(HtmlCreative):
+    pass
+
 class iAdCreative(Creative):
   pass
     
@@ -289,6 +318,10 @@ class JumptapCreative(Creative):
 
 class GreyStripeCreative(Creative):
   pass  
+  
+class MobFoxCreative(Creative):
+  pass
+  
   
 class NullCreative(Creative):
   pass

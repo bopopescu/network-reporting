@@ -49,13 +49,9 @@ handlers:
 - url: /m/.*
   script: ad_server/main.py
 
-- url: /stats.*
-  # script: $PYTHON_LIB/google/appengine/ext/appstats/ui.py
-  script: appstats.py
-  login: admin
+- url: /_ah/queue/.*
+  script: mopub_logging/views.py
+  login: admin  
 
 - url: /.*
   script: main.py
-
-skip_files:  
-- django\.zip  

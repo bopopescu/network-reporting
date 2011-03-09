@@ -82,7 +82,6 @@ TEMPLATE_LOADERS = (
 
 MIDDLEWARE_CLASSES = (
 'common.ragendja.middleware.ErrorMiddleware',
-'google.appengine.ext.appstats.recording.AppStatsDjangoMiddleware',
 'django.contrib.sessions.middleware.SessionMiddleware',
 # 'appengine_django.auth.middleware.AuthenticationMiddleware',
 # Django authentication
@@ -131,7 +130,7 @@ INSTALLED_APPS = (
      'advertiser',
      'website',
      'admin',
-     'exchange',
+     'common_templates',
 )
 
 #TEST_RUNNER = 'django_nose.NoseTestSuitRunner'

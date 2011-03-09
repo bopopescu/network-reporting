@@ -63,6 +63,8 @@ parser.add_option("-i", "--instance_id", dest="INSTANCE_ID",type="int",
                 help="LABEL THE INSTANCE.", default=0)         
 parser.add_option("-e", "--exp_id", dest="TEST_ID",type="str",
                 help="LABEL THE TEST.", default='NAFIS_MAC')         
+parser.add_option("-x", "--host", dest="HOST",type="str",
+                help="HOST NAME.", default='eventrackerscaletest.appspot.com')         
                                
 
 (options, args) = parser.parse_args()
@@ -87,6 +89,8 @@ INSTANCE_ID = options.INSTANCE_ID
 
 TEST_ID = options.TEST_ID
 
+HOST = options.HOST
+
 quitevent = Event()
 
 def threadproc():
@@ -102,9 +106,6 @@ def threadproc():
         try:
             # HTTP requests to exercise the server go here
             # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!            
-            req_cnt_lock.acquire()
-            req_cnt += 1
-            req_cnt_lock.release()
             
             
             uid = uuid.uuid4()
@@ -112,10 +113,11 @@ def threadproc():
             key_name = "k:00:00"
             dim_two_level_one = db.Key.from_path('DimensionTwoLevelOne',key_name,_app='eventrackerscaletest')
             t = time.time()
-            
-            url = "http://eventrackerscaletest.appspot.com/event/one?log=%s&nc=1&deadline=.08&uid=%s&id=%s&req=%s&inst=%s&test=%s"%(LOGGING,uid,dim_two_level_one,req_cnt,INSTANCE_ID,TEST_ID)
-            # url = "http://localhost:8080/event/one?log=%s&nc=1&deadline=.08&uid=%s&id=%s&req=%s&inst=%s&test=%s"%(LOGGING,uid,dim_two_level_one,req_cnt,INSTANCE_ID,TEST_ID)
 
+            req_cnt_lock.acquire()
+            req_cnt += 1
+            url = "http://%s/event/one?log=%s&nc=1&deadline=.08&uid=%s&id=%s&req=%s&inst=%s&test=%s"%(HOST,LOGGING,uid,dim_two_level_one,req_cnt,INSTANCE_ID,TEST_ID)
+            req_cnt_lock.release()
             
             fail_lock.acquire()
             print "URL: ",url

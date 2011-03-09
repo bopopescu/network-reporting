@@ -1,15 +1,6 @@
 # !/usr/bin/env python
 
 # TODO: PLEASE HAVE THIS FIX DJANGO PROBLEMS
-# import logging, os, sys
-# os.environ["DJANGO_SETTINGS_MODULE"] = "settings"
-# 
-# from google.appengine.dist import use_library
-# use_library("django", "1.1") # or use_library("django", "1.0") if you're using 1.0
-# 
-# from django.conf import settings
-# settings._target = None
-
 from appengine_django import LoadDjango
 LoadDjango()
 import os
@@ -18,7 +9,6 @@ from django.conf import settings
 os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 # Force Django to reload its settings.
 settings._target = None
-
 # END TODO: PLEASE HAVE THIS FIX DJANGO PROBLEMS
 
 import wsgiref.handlers
@@ -33,7 +23,15 @@ import random
 import hashlib
 import time
 import base64, binascii
-from django.utils import simplejson
+import urllib
+
+
+urllib.getproxies_macosx_sysconf = lambda: {}
+
+
+# moved from django to common utils
+# from django.utils import simplejson
+from common.utils import simplejson
 
 from string import Template
 from urllib import urlencode, unquote
@@ -54,8 +52,12 @@ from ad_server.networks.greystripe import GreyStripeServerSide
 from ad_server.networks.inmobi import InMobiServerSide
 from ad_server.networks.jumptap import JumptapServerSide
 from ad_server.networks.millennial import MillennialServerSide
+from ad_server.networks.mobfox import MobFoxServerSide
 
 from publisher.query_managers import AdServerAdUnitQueryManager, AdUnitQueryManager
+from advertiser.query_managers import CampaignStatsCounter
+
+from mopub_logging import mp_logging
 
 test_mode = "3uoijg2349ic(test_mode)kdkdkg58gjslaf"
 CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gzip(gfe)"]
@@ -65,8 +67,6 @@ FREQ_ATTR = '%s_frequency_cap'
 CAMPAIGN_LEVELS = ('gtee_high', 'gtee', 'gtee_low', 'promo', 'network')
 
 
-import urllib
-urllib.getproxies_macosx_sysconf = lambda: {}
 
 
 # TODO: Logging is fucked up with unicode characters
@@ -143,13 +143,16 @@ def mega_filter( *filters ):
 def format_filter( format ):
     log_mesg = "Removed due to format mismatch, expected " + str( format ) + ": %s"
     def real_filter( a ):
+        if not a.format: 
+            return False
         return not a.format == format
     return ( real_filter, log_mesg, [] )
 
 def exclude_filter( excl_params ):
     log_mesg = "Removed due to exclusion parameters: %s"
+    # NOTE: we are excluding on ad type not the creative id
     def real_filter( a ):
-        return a.ad_type in excl_params
+        return a.ad_type in excl_params 
     return ( real_filter, log_mesg, [] )
 
 def ecpm_filter( winning_ecpm ):
@@ -217,7 +220,8 @@ class AdAuction(object):
                           "inmobi":InMobiServerSide,
                           "brightroll":BrightRollServerSide,
                           "jumptap":JumptapServerSide,
-                          "greystripe":GreyStripeServerSide}
+                          "greystripe":GreyStripeServerSide,
+                          "mobfox":MobFoxServerSide,}
       if adgroup.network_type in server_side_dict:
         KlassServerSide = server_side_dict[adgroup.network_type]
         server_side = KlassServerSide(request, adunit) 
@@ -370,9 +374,9 @@ class AdAuction(object):
                         # exclude according to the exclude parameter must do this after determining adgroups
                         # so that we maintain the correct order for user bucketing
                         # TODO: we should exclude based on creative id not ad type :)
-                        CRTV_FILTERS = (    format_filter( site.format ),
-                                            exclude_filter( exclude_params ),
-                                            ecpm_filter( winning_ecpm ),
+                        CRTV_FILTERS = (    format_filter( site.format ), # remove wrong formats
+                                            exclude_filter( exclude_params ), # remove exclude parameter
+                                            ecpm_filter( winning_ecpm ), # remove creatives that don't meet site threshold
                                             )
                         winners = filter( mega_filter( *CRTV_FILTERS ), players )
                         for func, warn, lst in CRTV_FILTERS:
@@ -414,25 +418,22 @@ class AdAuction(object):
                                         except Exception,e:
                                             import traceback, sys
                                             exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
-                                            logging.error(exception_traceback)
+                                            logging.warning(exception_traceback)
                                     else:
                                         winning_creative = winner
                                         return winning_creative
-                    
-              #   else:
-              #     logging.warning('taking away some players not in %s'%ad_groups)
-              #     logging.warning('current players: %s'%players)
-              #     players = [c for c in players if not c.ad_group in ad_groups]  
-              #     logging.warning('remaining players %s'%players)
-              #     
-              # else:
-                    if not winning_creative:
-                        #logging.warning('taking away some players not in %s'%ad_groups)
-                        #logging.warning( 'current ad_groups %s' % [c.ad_group for c in players] )
-                        logging.warning('current players: %s'%players)
-                        #players = [c for c in players if not c.ad_group in ad_groups]  
-                        players = [ p for p in players if p not in winners ] 
-                        logging.warning('remaining players %s'%players)
+                        else:
+                            # remove players of the current winning e_cpm
+                            logging.warning('current players: %s'%players)
+                            players = [ p for p in players if p.e_cpm() != winning_ecpm ] 
+                            logging.warning('remaining players %s'%players)
+                        if not winning_creative:
+                            #logging.warning('taking away some players not in %s'%ad_groups)
+                            #logging.warning( 'current ad_groups %s' % [c.ad_group for c in players] )
+                            logging.warning('current players: %s'%players)
+                            #players = [c for c in players if not c.ad_group in ad_groups]  
+                            players = [ p for p in players if p not in winners ] 
+                            logging.warning('remaining players %s'%players)
              # try at a new priority level   
 
     # nothing... failed auction
@@ -498,8 +499,23 @@ class AdHandler(webapp.RequestHandler):
   }
   
   def get(self):
-    logging.warning(self.request.headers['User-Agent'] )
     id = self.request.get("id")
+    manager = AdUnitQueryManager(id)
+    now = datetime.datetime.now()
+    
+    
+    #Testing!
+    if self.request.get( 'testing' ) == test_mode:
+        manager = AdServerAdUnitQueryManager( id )
+        testing = True
+        now = datetime.datetime.fromtimestamp( float( self.request.get('dt') ) )
+    else:
+        testing = False
+    
+    if not testing:
+        mp_logging.log(self.request,event=mp_logging.REQ_EVENT)  
+    
+    logging.warning(self.request.headers['User-Agent'] )
     locale = self.request.headers.get("Accept-Language")
     country_re = r'[A-Z][A-Z]'
     if locale:
@@ -510,16 +526,7 @@ class AdHandler(webapp.RequestHandler):
     if len(countries) == 1:
         addr = tuple(countries[0])
 
-    manager = AdUnitQueryManager(id)
-    now = datetime.datetime.now()
 
-    #Testing!
-    if self.request.get( 'testing' ) == test_mode:
-        manager = AdServerAdUnitQueryManager( id )
-        testing = True
-        now = datetime.datetime.fromtimestamp( float( self.request.get('dt') ) )
-    else:
-        testing = False
 
     # site = manager.get_by_key(key)#Site.site_by_id(id) if id else None
     adunit = manager.get_adunit()
@@ -576,15 +583,25 @@ class AdHandler(webapp.RequestHandler):
         if str(self.request.headers['User-Agent']) not in CRAWLERS:
             logging.info('OLP ad-auction {"id": "%s", "c": "%s", "request_id": "%s", "udid": "%s"}' % (id, c.key(), request_id, udid))
 
+        self.response.headers.add_header("X-Creative",str(c.key()))    
+
+        # add timer and animations for the ad 
+        refresh = adunit.refresh_interval
+        # only send to client if there should be a refresh
+        if refresh:
+            self.response.headers.add_header("X-Refreshtime",str(refresh))
+        # animation_type = random.randint(0,6)
+        # self.response.headers.add_header("X-Animation",str(animation_type))    
+
       # create an ad clickthrough URL
         ad_click_url = "http://%s/m/aclk?id=%s&c=%s&req=%s" % (DOMAIN,id, c.key(), request_id)
         self.response.headers.add_header("X-Clickthrough", str(ad_click_url))
       
       # ad an impression tracker URL
-        self.response.headers.add_header("X-Imptracker", "http://%s/m/imp?"%(DOMAIN))
+        self.response.headers.add_header("X-Imptracker", "http://%s/m/imp?id=%s&cid=%s"%(DOMAIN,id,c.key()))
       
       #add creative ID for testing (also prevents that one bad bug from happening)
-        self.response.headers.add_header("X-CreativeID", "%s" % c.key())
+        self.response.headers.add_header("X-Creativeid", "%s" % c.key())
 
       # add to the campaign counter
         logging.info("adding to delivery: %s"%c.ad_group.bid)
@@ -598,7 +615,7 @@ class AdHandler(webapp.RequestHandler):
                                                         addr                = addr,
                                                         excluded_creatives  = excluded_creatives, 
                                                         request_id          = request_id, 
-                                                        v                   = int(self.request.get('v') or 0)
+                                                        v                   = int(self.request.get('v') or 0),
                                                         ) )
     else:
         self.response.out.write( self.render_creative(  c, 
@@ -608,7 +625,7 @@ class AdHandler(webapp.RequestHandler):
                                                         addr                = addr, 
                                                         excluded_creatives  = excluded_creatives, 
                                                         request_id          = request_id, 
-                                                        v                   = int(self.request.get('v') or 0)
+                                                        v                   = int(self.request.get('v') or 0),
                                                         ) )
 
       
@@ -666,7 +683,7 @@ class AdHandler(webapp.RequestHandler):
       <div style="color:white;font-weight:bold;margin:0px 0 0 5px;padding-top:8;">$line1</div>
       <div style="color:white;margin-top:6px;margin:5px 0 0 5px;">$line2</div>
     </div>
-    <div style="padding-top:5px;position:absolute;top:0;right:0;"><a href="$url"><img src="/images/$action_icon.png" width=40 height=40/></a></div>
+    $action_icon_div
     $trackingPixel
   </div>
   </body>
@@ -682,10 +699,10 @@ class AdHandler(webapp.RequestHandler):
                           </script>
                         </head>
                         <body style="margin: 0;width:${w}px;height:${h}px;padding:0;">\
-                          <a href="$url"><img src="$image_url" width=$w height=$h/></a>
-                        </body>   $trackingPixel</html> """),
+                          <a href="$url" target="_blank"><img src="$image_url" width=$w height=$h/></a>
+                          $trackingPixel
+                        </body></html> """),
     "admob": Template("""<html><head>
-                        $finishLoad
                         <script type="text/javascript">
                           function webviewDidClose(){} 
                           function webviewDidAppear(){} 
@@ -693,25 +710,63 @@ class AdHandler(webapp.RequestHandler):
                           window.innerHeight = $h;
                         </script>
                         <title>$title</title>
-                        </head><body style="margin: 0;width:${w}px;height:${h}px;padding:0;">
+                        </head><body style="margin: 0;width:${w}px;height:${h}px;padding:0;background-color:transparent;">
                         <script type="text/javascript">
                         var admob_vars = {
                          pubid: '$client', // publisher id
                          bgcolor: '000000', // background color (hex)
                          text: 'FFFFFF', // font-color (hex)
-                         ama: false, 
-                         test: false
+                         ama: false, // set to true and retain comma for the AdMob Adaptive Ad Unit, a special ad type designed for PC sites accessed from the iPhone.  More info: http://developer.admob.com/wiki/IPhone#Web_Integration
+                         test: false, // test mode, set to false to receive live ads
+                         manual_mode: true // set to manual mode
                         };
                         </script>
-                        <script type="text/javascript" src="http://mmv.admob.com/static/iphone/iadmob.js"></script>                        
-                        </body>$trackingPixel</html>"""),
+                        <script type="text/javascript" src="http://mmv.admob.com/static/iphone/iadmob.js"></script>  
+                        
+                        <!-- DIV For admob ad -->
+                        <div id="admob_ad">
+                        </div>
+
+                        <!-- Script to determine if admob loaded -->
+                        <script>
+                            var ad = _admob.fetchAd(document.getElementById('admob_ad'));                                                                         
+                            var POLLING_FREQ = 500;
+                            var MAX_POLL = 2000;
+                            var polling_timeout = 0;                                                                                                              
+                            var polling_func = function() {                                                                                                       
+                             if(ad.adEl.height == 48) {                                                                                                           
+                               // we have an ad                                                                                                                   
+                               console.log('received ad');
+                               $admob_finish_load
+                             } 
+                             else if(polling_timeout < MAX_POLL) {                                                                                                         
+                               console.log('repoll');                                                                                                             
+                               polling_timeout += POLLING_FREQ;                                                                                                           
+                               window.setTimeout(polling_func, POLLING_FREQ);                                                                                             
+                             }                                                                                                                                    
+                             else {                                                                                                                               
+                               console.log('no ad'); 
+                               $admob_fail_load                                                                                                               
+                               ad.adEl.style.display = 'none';                                                                                                    
+                             }                                                                                                                                    
+                            };                                                                                                                                    
+                            window.setTimeout(polling_func, POLLING_FREQ);
+                        </script>
+                        $trackingPixel
+                        </body></html>"""),
     "html":Template("""<html><head><title>$title</title>
-                        $finishLoad                  
+                        $finishLoad
                         <script type="text/javascript">
-                          function webviewDidClose(){} 
-                          function webviewDidAppear(){} 
+                          function webviewDidClose(){}
+                          function webviewDidAppear(){}
+                          window.addEventListener("load", function() {
+                            var links = document.getElementsByTagName('a');
+                            for(var i=0; i < links.length; i++) {
+                              links[i].setAttribute('target','_blank');
+                            }
+                          }, false);
                         </script></head>
-                        <body style="margin:0;padding:0;width:${w}px;background:white">${html_data}$trackingPixel</body></html>"""),
+                        <body style="margin:0;padding:0;width:${w}px;background:white;">${html_data}$trackingPixel</body></html>"""),
     "html_full":Template("$html_data")
   }
   def render_creative(self, c, **kwargs):
@@ -734,6 +789,8 @@ class AdHandler(webapp.RequestHandler):
       elif c.ad_type == "text_icon":
         if c.image:
           params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
+        if c.action_icon:
+          params["action_icon_div"] = '<div style="padding-top:5px;position:absolute;top:0;right:0;"><a href="'+c.url+'" target="_blank"><img src="/images/'+c.action_icon+'.png" width=40 height=40/></a></div>'
         # self.response.headers.add_header("X-Adtype", str('html'))
       elif c.ad_type == "greystripe":
         params.update(html_data=c.html_data)
@@ -768,9 +825,15 @@ class AdHandler(webapp.RequestHandler):
         
       if kwargs["v"] >= 2 and not "Android" in self.request.headers["User-Agent"]:  
         params.update(finishLoad='<script>function finishLoad(){window.location="mopub://finishLoad";} window.onload = function(){finishLoad();} </script>')
+        # extra parameters used only by admob template
+        params.update(admob_finish_load='window.location = "mopub://finishLoad";')
+        params.update(admob_fail_load='window.location = "mopub://failLoad";')
       else:
-        params.update(finishLoad='')  
-      
+        # don't use special url hooks because older clients don't understand    
+        params.update(finishLoad='')
+        # extra parameters used only by admob template
+        params.update(admob_finish_load='')
+        params.update(admob_fail_load='')
       
       if c.tracking_url:
         params.update(trackingPixel='<span style="display:none;"><img src="%s"/></span>'%c.tracking_url)
@@ -830,6 +893,9 @@ class AdHandler(webapp.RequestHandler):
         self.response.headers.add_header("X-Height",str(format[1]))
       
         self.response.headers.add_header("X-Backgroundcolor","0000FF")
+      elif str(c.ad_type) == 'admob':
+          self.response.headers.add_header("X-Failurl",self.request.url+'&exclude='+str(c.ad_type))
+          self.response.headers.add_header("X-Adtype", str('html'))
       else:  
         self.response.headers.add_header("X-Adtype", str('html'))
         
@@ -838,11 +904,6 @@ class AdHandler(webapp.RequestHandler):
       else:
         params.update(title='')
       
-      if kwargs["v"] >= 2 and not "Android" in self.request.headers["User-Agent"]:  
-        params.update(finishLoad='<script>function finishLoad(){window.location="mopub://finishLoad";} window.onload = function(){finishLoad();} </script>')
-      else:
-        params.update(finishLoad='')
-
       if c.tracking_url:
         params.update(trackingPixel='<span style="display:none;"><img src="%s"/></span>'%c.tracking_url)
       else:
@@ -891,12 +952,14 @@ class AdHandler(webapp.RequestHandler):
 
 class AdImpressionHandler(webapp.RequestHandler):
   def get(self):
+    mp_logging.log(self.request,event=mp_logging.IMP_EVENT)  
     self.response.out.write("OK")
         
 class AdClickHandler(webapp.RequestHandler):
   # /m/aclk?v=1&udid=26a85bc239152e5fbc221fe5510e6841896dd9f8&q=Hotels:%20Hotel%20Utah%20Saloon%20&id=agltb3B1Yi1pbmNyDAsSBFNpdGUY6ckDDA&r=http://googleads.g.doubleclick.net/aclk?sa=l&ai=BN4FhRH6hTIPcK5TUjQT8o9DTA7qsucAB0vDF6hXAjbcB4KhlEAEYASDgr4IdOABQrJON3ARgyfb4hsijoBmgAbqxif8DsgERYWRzLm1vcHViLWluYy5jb226AQkzMjB4NTBfbWLIAQHaAbwBaHR0cDovL2Fkcy5tb3B1Yi1pbmMuY29tL20vYWQ_dj0xJmY9MzIweDUwJnVkaWQ9MjZhODViYzIzOTE1MmU1ZmJjMjIxZmU1NTEwZTY4NDE4OTZkZDlmOCZsbD0zNy43ODM1NjgsLTEyMi4zOTE3ODcmcT1Ib3RlbHM6JTIwSG90ZWwlMjBVdGFoJTIwU2Fsb29uJTIwJmlkPWFnbHRiM0IxWWkxcGJtTnlEQXNTQkZOcGRHVVk2Y2tEREGAAgGoAwHoA5Ep6AOzAfUDAAAAxA&num=1&sig=AGiWqtx2KR1yHomcTK3f4HJy5kk28bBsNA&client=ca-mb-pub-5592664190023354&adurl=http://www.sanfranciscoluxuryhotels.com/
   def get(self):
-    import urllib
+    mp_logging.log(self.request,event=mp_logging.CLK_EVENT)  
+      
     id = self.request.get("id")
     q = self.request.get("q")    
     # BROKEN
@@ -924,14 +987,15 @@ class TestHandler(webapp.RequestHandler):
     from ad_server.networks.millennial import MillennialServerSide
     from ad_server.networks.brightroll import BrightRollServerSide
     from ad_server.networks.jumptap import JumptapServerSide
+    from ad_server.networks.mobfox import MobFoxServerSide
+    key = self.request.get('id') or 'agltb3B1Yi1pbmNyCgsSBFNpdGUYAgw'
+    delay = self.request.get('delay') or '5'
+    delay = int(delay)
+    adunit = Site.get(key)
+    server_side = MobFoxServerSide(self.request,adunit)
+    logging.warning("%s\n%s"%(server_side.url,server_side.payload))
     
-    #server_side = BrightRollServerSide(self.request,357)
-    #server_side = MillennialServerSide(self.request,357)
-    #server_side = InMobiServerSide(self.request)
-    server_side = JumptapServerSide(self.request)
-    logging.warning("%s, %s"%(server_side.url,server_side.payload))
-    
-    rpc = urlfetch.create_rpc(5) # maximum delay we are willing to accept is 1000 ms
+    rpc = urlfetch.create_rpc(delay) # maximum delay we are willing to accept is 1000 ms
 
     payload = server_side.payload
     if payload == None:
@@ -971,6 +1035,7 @@ def main():
                                         ('/m/imp', AdImpressionHandler),
                                         ('/m/aclk', AdClickHandler),
                                         ('/m/open', AppOpenHandler),
+                                        ('/m/track', AppOpenHandler),
                                         ('/m/test', TestHandler),
                                         ('/m/clear', ClearHandler),
                                         ('/m/purchase', PurchaseHandler)], 

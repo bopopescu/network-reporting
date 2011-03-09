@@ -8,12 +8,59 @@ LOGGING=3
 TEST_ID=$RANDOM # generates a random test id
 
 
-EC2_IPS="ec2-50-17-74-36.compute-1.amazonaws.com
-ec2-75-101-211-236.compute-1.amazonaws.com
-ec2-50-16-50-151.compute-1.amazonaws.com
-ec2-50-16-27-135.compute-1.amazonaws.com
-ec2-50-17-84-150.compute-1.amazonaws.com"
+EC2_IPS="ec2-50-17-31-91.compute-1.amazonaws.com
+ec2-50-16-144-43.compute-1.amazonaws.com
+ec2-50-17-64-35.compute-1.amazonaws.com
+ec2-50-16-47-116.compute-1.amazonaws.com
+ec2-50-16-0-202.compute-1.amazonaws.com
+ec2-75-101-232-225.compute-1.amazonaws.com
+ec2-184-72-144-137.compute-1.amazonaws.com
+ec2-50-17-62-113.compute-1.amazonaws.com
+ec2-50-17-38-213.compute-1.amazonaws.com
+ec2-75-101-197-78.compute-1.amazonaws.com
+ec2-50-17-3-234.compute-1.amazonaws.com
+ec2-50-17-94-211.compute-1.amazonaws.com
+ec2-50-17-94-200.compute-1.amazonaws.com
+ec2-67-202-7-85.compute-1.amazonaws.com
+ec2-50-17-64-166.compute-1.amazonaws.com
+ec2-75-101-205-63.compute-1.amazonaws.com
+ec2-50-17-55-219.compute-1.amazonaws.com
+ec2-50-16-29-17.compute-1.amazonaws.com
+ec2-50-16-94-108.compute-1.amazonaws.com
+ec2-50-17-19-190.compute-1.amazonaws.com
+ec2-50-17-72-185.compute-1.amazonaws.com
+ec2-50-16-31-189.compute-1.amazonaws.com
+ec2-184-72-75-64.compute-1.amazonaws.com
+ec2-184-72-75-65.compute-1.amazonaws.com
+ec2-50-16-167-146.compute-1.amazonaws.com
+ec2-184-73-12-113.compute-1.amazonaws.com
+ec2-174-129-74-65.compute-1.amazonaws.com
+ec2-50-17-50-232.compute-1.amazonaws.com
+ec2-184-72-195-114.compute-1.amazonaws.com
+ec2-184-72-215-246.compute-1.amazonaws.com
+ec2-50-16-163-239.compute-1.amazonaws.com
+ec2-67-202-49-161.compute-1.amazonaws.com
+ec2-174-129-181-111.compute-1.amazonaws.com
+ec2-50-16-152-50.compute-1.amazonaws.com
+ec2-50-16-9-248.compute-1.amazonaws.com
+ec2-50-16-120-131.compute-1.amazonaws.com
+ec2-50-16-172-26.compute-1.amazonaws.com
+ec2-50-16-159-130.compute-1.amazonaws.com
+ec2-184-72-163-215.compute-1.amazonaws.com
+ec2-75-101-177-174.compute-1.amazonaws.com
+ec2-50-17-33-128.compute-1.amazonaws.com
+ec2-174-129-61-149.compute-1.amazonaws.com
+ec2-50-16-17-197.compute-1.amazonaws.com
+ec2-50-17-74-91.compute-1.amazonaws.com
+ec2-50-17-89-53.compute-1.amazonaws.com
+ec2-50-17-67-27.compute-1.amazonaws.com
+ec2-50-16-27-25.compute-1.amazonaws.com
+ec2-50-16-176-169.compute-1.amazonaws.com
+ec2-174-129-183-138.compute-1.amazonaws.com"
 
+
+
+# 
 # clear cache
 curl http://eventrackerscaletest.appspot.com/counter/test?flush=1
 echo
@@ -22,8 +69,8 @@ echo
 # for ec2_ip in $EC2_IPS
 # do
 # echo ${CNT} ${ec2_ip}
-# scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i ~/.ec2/jpmopub-keypair ~/programs/eventrackerscaletest/utils/loadtest.py ubuntu@${ec2_ip}:/home/ubuntu/eventrackerscaletest/utils/loadtest.py
-# scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i ~/.ec2/jpmopub-keypair ~/programs/eventrackerscaletest/utils/load.sh ubuntu@${ec2_ip}:/home/ubuntu/scripts/load.sh
+# scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i ~/.ec2/jpmopub-keypair ~/programs/mopub/eventrackerscaletest/utils/loadtest.py ubuntu@${ec2_ip}:/home/ubuntu/eventrackerscaletest/utils/loadtest.py
+# scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i ~/.ec2/jpmopub-keypair ~/programs/mopub/eventrackerscaletest/utils/load.sh ubuntu@${ec2_ip}:/home/ubuntu/scripts/load.sh
 # CNT=$((CNT+1))
 # done
 #---------------------
@@ -60,7 +107,7 @@ do
     echo ${CNT}
     echo ${ec2_ip}
     scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i ~/.ec2/jpmopub-keypair ubuntu@${ec2_ip}:/home/ubuntu/eventrackerscaletest/counts.csv counts_${CNT}.csv
-    # scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i ~/.ec2/jpmopub-keypair ubuntu@${ec2_ip}:/home/ubuntu/eventrackerscaletest/file.out file_${CNT}.out
+    # scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i ~/.ec2/jpmopub-keypair ubuntu@${ec2_ip}:/home/ubuntu/eventrackerscaletest/file_tail.out file_${CNT}.out
     CNT=$((CNT+1))
 done
 python accuracytest.py

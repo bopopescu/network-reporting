@@ -26,6 +26,7 @@ from django.db.models.manager import EmptyManager
 
 from google.appengine.api import users
 from google.appengine.ext import db
+from common.utils import djangoforms
 
 from appengine_django.models import BaseModel
 
@@ -157,10 +158,9 @@ class User(BaseModel):
       except (ImportError, ImproperlyConfigured):
         raise SiteProfileNotAvailable
     return self._profile_cache
-  
+
   def is_admin(self):
     return users.is_current_user_admin()
-
 
 class Group(BaseModel):
   """Group model not fully implemented yet."""

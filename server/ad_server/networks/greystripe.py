@@ -41,7 +41,8 @@ class GreyStripeServerSide(ServerSide):
     return response.read()
     
   def bid_and_html_for_response(self,response):
-    if len(response.content) == 0:
-      raise Exception("GreyStripe ad is empty")
+    if len(response.content) == 0 or \
+      response.status_code != 200:
+        raise Exception("GreyStripe ad is empty")
 
     return 0.0,response.content

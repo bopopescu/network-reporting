@@ -20,7 +20,7 @@ def auth_func():
 
 if len(sys.argv) < 2:
     print "Usage: %s app_id [host]" % (sys.argv[0],)
-app_id = sys.argv[1]
+app_id = 'eventrackerscaletest'
 if len(sys.argv) > 2:
     host = sys.argv[2]
 else:

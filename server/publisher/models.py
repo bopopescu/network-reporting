@@ -1,4 +1,5 @@
 from google.appengine.ext import db
+from common.utils import djangoforms
 from google.appengine.api import users
 
 from account.models import Account
@@ -26,6 +27,15 @@ class App(db.Model):
   t = db.DateTimeProperty(auto_now_add=True)
   
   exchange_creative = db.ReferenceProperty(Creative)
+  
+  @property
+  def owner(self):
+      return None
+  
+  @property
+  def owner_key(self):
+      return None
+  
 
 class Site(db.Model):
   app_key = db.ReferenceProperty(App)
@@ -50,6 +60,9 @@ class Site(db.Model):
   # additional keywords that are passed to the auction
   keywords = db.TextProperty() # TODO: make sure this doesn't break shit
   # keywords = db.StringListProperty()                          
+  
+  refresh_interval = db.IntegerProperty(default=0)
+  
   
   # color scheme
   color_border = db.StringProperty(required=True, default='336699')
@@ -82,3 +95,11 @@ class Site(db.Model):
     else:
       s = Site.get(id)      
     return s
+
+  @property
+  def owner(self):
+      return self.app_key
+  
+  @property
+  def owner_key(self):
+      return self._app_key            

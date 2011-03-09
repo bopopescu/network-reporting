@@ -9,6 +9,7 @@ from common.constants import (  CITY_GEO,
 GEO_LIST = ( COUNTRY_GEO, REGION_GEO, CITY_GEO )
 
 from common.utils import forms as mpforms
+from common.utils import fields as mpfields
 from django import forms
 from django.core.urlresolvers import reverse
 from google.appengine.ext import db
@@ -19,28 +20,73 @@ import logging
 
 class CampaignForm(mpforms.MPModelForm):
   TEMPLATE = 'advertiser/forms/campaign_form.html'
+  gtee_level = forms.Field(widget = forms.Select)
+ 
+  #priority is now based off of campaign_type, not actually priority
+  #gtee has 3 levels, this makes it so the database understands the three different levels of gtee
+  #but the form sees one level of gtee and three levels of priority
+  def __init__(self, *args, **kwargs):
+      instance = kwargs.get('instance', None)
+      initial = kwargs.get('initial', None)
+      if instance and instance.campaign_type:
+          vals = instance.campaign_type.split('_')
+          if 'gtee' in vals: 
+              type = 'gtee'
+              if 'high' in vals:
+                  level = 'high'
+              elif 'low' in vals:
+                  level = 'low'
+              else:
+                  level = 'normal'
+              if not initial:
+                  initial = {}
+              initial.update(campaign_type=type)
+              initial.update(gtee_level=level)
+              kwargs.update(initial=initial)
+      super(CampaignForm, self).__init__(*args, **kwargs)
+      
+  #same as above, but so the one level of gtee and 3 levels of prioirty
+  #get correctly merged into a single datastore field
+  def save(self, commit=True):
+      obj = super(CampaignForm, self).save(commit=False)
+      if obj:
+          type = self.cleaned_data['campaign_type']
+          if type == 'gtee':
+              lev = self.cleaned_data['gtee_level']
+              if lev == 'high': 
+                  type = 'gtee_high'
+              elif lev == 'low':
+                  type = 'gtee_low'
+              elif lev == 'normal':
+                  type = 'gtee'
+              else:
+                  logging.warning("Invalid gtee_level for gtee")
+              obj.campaign_type = type     
+      if commit:
+          obj.put()
+      return obj
 
   class Meta:
     model = Campaign
-    fields = ('name', 'description', 'budget', 'campaign_type', 'start_date', 'end_date')
+    fields = ('name', 'description', 'budget', 'campaign_type', 'start_date', 'end_date', 'gtee_level')
 
 AdUnit.all()
 
 class AdGroupForm(mpforms.MPModelForm):
   TEMPLATE = 'advertiser/forms/adgroup_form.html'
   
-  # TODO: how can i make this dynamic
-  site_keys = mpforms.MPModelMultipleChoiceField(AdUnit,required=False)
-  keywords = mpforms.MPTextAreaField(required=False)
-  geo = forms.Field(widget = forms.MultipleHiddenInput)
-  device_predicates = mpforms.MPTextAreaField(required=False)
+  site_keys = mpfields.MPModelMultipleChoiceField(AdUnit,required=False)
+  keywords = mpfields.MPKeywordsField(required=False)
+  geo = forms.Field(widget=forms.MultipleHiddenInput)
+  device_predicates = mpfields.MPTextareaField(required=False)
+  custom_html = mpfields.MPTextareaField(required=False)
   
   class Meta:
     model = AdGroup
     fields = ('name', 'network_type', 'priority_level', 'keywords',
               'bid', 'bid_strategy', 
               'percent_users', 'site_keys',
-              'hourly_frequency_cap','daily_frequency_cap','allocation_percentage',
+              'hourly_frequency_cap','daily_frequency_cap','allocation_percentage', 
               'allocation_type','budget')
 
   def save( self, commit=True):
@@ -60,15 +106,15 @@ class AdGroupForm(mpforms.MPModelForm):
   def __init__(self, *args,**kwargs):
     instance = kwargs.get('instance',None)
     initial = kwargs.get('initial',None)
-
     if instance:
+      if not initial:
+        initial = {}
+      if instance.network_type == 'custom' and instance.net_creative:
+          initial.update(custom_html = instance.net_creative.html_data)
       geo_predicates = [] 
       for geo_pred in  instance.geo_predicates: 
           preds = geo_pred.split(',')
           geo_predicates.append( ','.join( [ str( pred.split('=')[1] ) for pred in preds ] ) )
-      logging.warning( geo_predicates )
-      if not initial:
-        initial = {}
       initial.update(geo=geo_predicates)
       #initial.update(geo=instance.geo_predicates)
       kwargs.update(initial=initial)

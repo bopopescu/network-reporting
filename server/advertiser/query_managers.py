@@ -52,6 +52,9 @@ class AdGroupQueryManager(CachedQueryManager):
 
   def put_adgroups(self,adgroups):
       return db.put(adgroups)
+
+  def delete_adgroups(self, adgroups):
+      return db.delete(adgroups)
       
 class CampaignStatsCounter(object):
   def __init__(self,campaign):
@@ -71,7 +74,6 @@ class CampaignStatsCounter(object):
       delta = int(dollars*100)
     else:
       delta *= 100  
-      
     
     key = self._get_random_key()
     logging.info("random_key: %s"%key)

@@ -1,6 +1,7 @@
 import logging, os, re, datetime, hashlib
 
 from urllib import urlencode
+from copy import deepcopy
 
 import base64, binascii
 from google.appengine.api import users, images
@@ -149,8 +150,29 @@ class AdGroupIndexHandler(RequestHandler):
     promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], adgroups)
     promo_campaigns = sorted(promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
     
-    guarantee_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee'], adgroups)
+    guarantee_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee_high', 'gtee_low', 'gtee'], adgroups)
     guarantee_campaigns = sorted(guarantee_campaigns, lambda x,y: cmp(y.bid, x.bid))
+    levels = ('high', '', 'low')
+    gtee_str = "gtee_%s"
+    gtee_levels = []
+    for level in levels:
+        this_level = gtee_str % level if level else "gtee"
+        name = level if level else 'normal'
+        level_camps = filter(lambda x:x.campaign.campaign_type == this_level, guarantee_campaigns)
+        gtee_levels.append(dict(name = name, campaigns = level_camps))
+    logging.warning(guarantee_campaigns)
+    
+    for blah in gtee_levels:
+        if blah['name'] == 'normal' and len(gtee_levels[0]['campaigns']) == 0 and len(gtee_levels[2]['campaigns']) == 0: 
+
+            blah['foo'] = True 
+        elif len(blah['campaigns']) > 0:
+            blah['foo'] = True 
+        else:
+            blah['foo'] = False 
+
+    logging.warning(gtee_levels)
+
 
     network_campaigns = filter(lambda x: x.campaign.campaign_type in ['network'], adgroups)
     network_campaigns = sorted(network_campaigns, lambda x,y: cmp(y.bid, x.bid))
@@ -167,6 +189,8 @@ class AdGroupIndexHandler(RequestHandler):
       graph_adgroups[3] = AdGroup(name='Others')
       graph_adgroups[3].all_stats = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[c.all_stats for c in adgroups[3:]])]      
 
+      # gtee = [ {name: 'high', campaigns: what usually goes in gtee } ]
+
     return render_to_response(self.request, 
       'advertiser/adgroups.html', 
       {'adgroups':adgroups,
@@ -177,7 +201,7 @@ class AdGroupIndexHandler(RequestHandler):
        'totals': reduce(lambda x, y: x+y.stats, adgroups, SiteStats()),
        'today': reduce(lambda x, y: x+y, [c.all_stats[-1] for c in graph_adgroups], SiteStats()),
        'yesterday': reduce(lambda x, y: x+y, [c.all_stats[-2] for c in graph_adgroups], SiteStats()),
-       'gtee': guarantee_campaigns,
+       'gtee': gtee_levels, 
        'promo': promo_campaigns,
        'network': network_campaigns,
        'account': self.account,
@@ -197,16 +221,18 @@ class CreateCampaignAJAXHander(RequestHandler):
     campaign_form = campaign_form or CampaignForm(instance=campaign)
     adgroup_form = adgroup_form or AdGroupForm(instance=adgroup)
     networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["greystripe","GreyStripe",False],\
-      ["iAd","iAd",False],["inmobi","InMobi",False],["jumptap","Jumptap",False],["millennial","Millennial Media",False]]
+      ["iAd","iAd",False],["inmobi","InMobi",False],["jumptap","Jumptap",False],["millennial","Millennial Media",False],["mobfox","MobFox",False],['custom', 'Custom Network', False]]
     
     all_adunits = AdUnitQueryManager().get_adunits(account=self.account)
     
     adgroup_form['site_keys'].choices = all_adunits # needed for validation TODO: doesn't actually work
     
     # TODO: Remove this hack to place the bidding info with the rest of campaign
+    #Hackish part
     campaign_form.bid  = adgroup_form['bid']
     campaign_form.bid_strategy = adgroup_form['bid_strategy']
-    
+    campaign_form.custom_html = adgroup_form['custom_html']
+
     logging.warning("bid: %s %s"%("campaign_form['bid']",campaign_form.bid.value))
 
     adunit_keys = adgroup_form['site_keys'].value or []
@@ -246,7 +272,7 @@ class CreateCampaignAJAXHander(RequestHandler):
     else:
       adgroup = None
       campaign = None
-    
+
     campaign_form = CampaignForm(data=self.request.POST,instance=campaign)
     adgroup_form = AdGroupForm(data=self.request.POST,instance=adgroup)
     
@@ -269,6 +295,7 @@ class CreateCampaignAJAXHander(RequestHandler):
       
       if adgroup_form.is_valid():
         adgroup = adgroup_form.save(commit=False)
+        adgroup.account = self.account
                 
         # TODO: clean this up in case the campaign succeeds and the adgroup fails
         CampaignQueryManager().put_campaigns(campaign)
@@ -277,11 +304,43 @@ class CreateCampaignAJAXHander(RequestHandler):
         if not adgroup.campaign.campaign_type == 'network':
           adgroup.network_type = None
         
+       
+       #put adgroup so creative can have a reference to it
         AdGroupQueryManager().put_adgroups(adgroup)
-        
+
+       ##Check if creative exists for this network type, if yes
+       #update, if no, delete old and create new
         if campaign.campaign_type == "network":
-          creative = adgroup.default_creative()
+          html_data = None
+          if adgroup.network_type == 'custom':
+              html_data = adgroup_form['custom_html'].value
+          #build default creative with custom_html data if custom or none if anything else
+          creative = adgroup.default_creative(html_data)
+          if adgroup.net_creative and creative.__class__ == adgroup.net_creative.__class__:
+              #if the adgroup has a creative AND the new creative and old creative are the same class, 
+              #ignore the new creative and set the variable to point to the old one
+              creative = adgroup.net_creative
+              if adgroup.network_type == 'custom':
+                  #if the network is a custom one, the creative might be the same, but the data might be new, set the old
+                  #creative to have the (possibly) new data
+                  creative.html_data = html_data
+          elif adgroup.net_creative:
+              #in this case adgroup.net_creative has evaluated to true BUT the class comparison did NOT.  
+              #at this point we know that there was an old creative AND it's different from the old creative so
+              
+              #Get rid of the old creative's reference to the adgroup (just in case)
+              adgroup.net_creative.adgroup = None
+              #and delete the old creative
+              AdGroupQueryManager().delete_adgroups(adgroup.net_creative)
+          #creative should now reference the appropriate creative (new if different, old if the same, updated old if same and custom)
+          creative.account = self.account
+          #put the creative so we can reference it
           CreativeQueryManager().put_creatives(creative)
+          #set adgroup to reference the correct creative
+          adgroup.net_creative = creative.key()
+          #put the adgroup again with the new (or old) creative reference
+          AdGroupQueryManager().put_adgroups(adgroup)
+          
 
         # update cache
         adunits_to_update.update(adgroup.site_keys)
@@ -368,7 +427,7 @@ class CreateAdGroupHandler(RequestHandler):
       adunit.checked = adunit.key() in adgroup.site_keys
       adunit.app = App.get(adunit.app_key.key())
     # TODO: Clean up this hacked shit 
-    networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["jumptap","Jumptap",False],["greystripe","GreyStripe",False],["iAd","iAd",False],["inmobi","InMobi",False],["millennial","Millennial Media",False]]
+    networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["jumptap","Jumptap",False],["greystripe","GreyStripe",False],["iAd","iAd",False],["inmobi","InMobi",False],["millennial","Millennial Media",False],["mobfox","MobFox",False]]
     for n in networks:
       if adgroup.network_type == n[0]:
         n[2] = True
@@ -728,6 +787,7 @@ class AddCreativeHandler(RequestHandler):
       if creative_form.is_valid():
         creative = creative_form.save(commit=False)
         creative.ad_group = ad_group
+        creative.account = self.account
         CreativeQueryManager().put_creatives(creative)    
         # update cache
         adunits = AdUnitQueryManager().get_by_key(ad_group.site_keys,none=True)

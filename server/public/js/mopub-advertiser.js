@@ -32,6 +32,12 @@ var mopub = mopub || {};
         $('#bid-max').attr('name','bid');
       }    
     }).filter(':checked').click(); // make sure we're in sync when the page loads
+
+    $("#network_select").change( function(e) {
+            var network = $(this).val();
+            $('.networkDependent').hide();
+            $('.'+network+'.networkDependent').show();
+            }).change();
     
     $('#adgroupForm-advanced-toggleButton')
       .button('option', {icons: { primary: 'ui-icon-triangle-1-s' }})
@@ -126,6 +132,20 @@ var mopub = mopub || {};
       buttons: { "Close": function() { $(this).dialog("close"); } }
     });
   });
+  $('#campaignForm-priority-helpLink').click(function(e) {
+      e.preventDefault();
+      $('#campaignForm-priority-helpContent').dialog({
+          buttons: { "Close": function() { $(this).dialog('close'); }}
+      });
+  });
+
+  $('#campaignForm-customHtml-helpLink').click(function(e) {
+    e.preventDefault();
+    $('#campaignForm-customHtml-helpContent').dialog({ 
+      buttons: { "Close": function() { $(this).dialog("close"); } }
+    });
+  });
+
   $('#campaignForm-bid-helpLink').click(function(e) {
     e.preventDefault();
     $('#campaignForm-bid-helpContent').dialog({ 
@@ -178,7 +198,7 @@ var mopub = mopub || {};
       $form = $('#creativeManagementForm');
     });
     
-   var options = { 
+   options = { 
    data: { ajax: true },
    dataType : 'json',
     success: function(jsonData) { 
@@ -207,7 +227,7 @@ var mopub = mopub || {};
         }
       },
       error: function(jqXHR, textStatus, errorThrown){
-        console.log(errorThrown);
+        log(errorThrown);
       }
     };
     $('#creativeCreateForm').ajaxForm(options);
@@ -215,7 +235,7 @@ var mopub = mopub || {};
     $('.creativeEditForm').each(function(i){
       var $this = $(this);
       var options = {
-        data: { ajax : true , },
+        data: { ajax : true },
         dataType: 'json',
         success: function(jsonData, statusText, xhr, $form){
           $form.find('.creativeEditForm-loading').hide();
@@ -263,6 +283,8 @@ var mopub = mopub || {};
       .click(function(e){
         e.preventDefault();
         var creative_key = $(this).attr("id");
+        var creative_src = $('#'+creative_key+'-preview-src').val();
+        $("#"+creative_key+"-preview iframe").attr('src', creative_src);
         $("#"+creative_key+"-preview").dialog({
           buttons: [
             {
@@ -402,7 +424,7 @@ var mopub = mopub || {};
         e.preventDefault();
         var buttonTextElem = $('.ui-button-text', this);
         var $options = $(this).parents('form').find('.creativeForm-advanced-options');
-        console.log($options.is(':hidden'));
+        log($options.is(':hidden'));
         if ($options.is(':hidden')) {
           $options.show();
           buttonTextElem.text('Hide Advanced Options');
@@ -458,7 +480,7 @@ var mopub = mopub || {};
       if(typeof data == 'undefined') {
         chartError();
         return;
-      };
+      }
       
       // set up series
       var colors = ['#0090d9', '#e57300', '#53a600', '#444444'];
@@ -467,7 +489,7 @@ var mopub = mopub || {};
       if(typeof activeData == 'undefined') {
         chartError();
         return;
-      };
+      }
       $.each(activeData, function(i, seriesObject) {
         var seriesName, seriesData;
         $.each(seriesObject, function(name, value) {
@@ -702,9 +724,16 @@ var mopub = mopub || {};
         });
       }
     });
-    
-    
-    
-
   }); 
+
+  // helper fn for console logging
+  var log;
+
+  if (window.console && typeof console.log === "function"){
+    // use apply to preserve context and invocations with multiple arguments
+    log = function () { console.log.apply(console, arguments); };
+  } else {
+    log = function(){ return; }
+  }
+
 })(this.jQuery);

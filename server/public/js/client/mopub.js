@@ -2,6 +2,8 @@
 	MoPub Client JS
 */
 (function(){
+    var c_name = "mopub-udid-cookie";
+
     if (window.mopub_ad_unit == null) {
         console.log("MoPub load failed. mopub_ad_unit needs to be defined.");
         return;
@@ -31,7 +33,6 @@
                    + ' src="'+mopub_ad_url+'">');
     document.write('</iframe>');
 
-    var c_name = "mopub-udid-cookie";
 
     function set_cookie(name, value, expires, path, domain, secure) {
         var cookieString = name + "=" +escape(value) +

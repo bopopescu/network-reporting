@@ -1566,9 +1566,13 @@ input.ui-button {
   width: 465px;
 }
 
-.adForm-format {
+.adForm-phone-format {
   float: left;
   width: 110px;
+}
+.adForm-tablet-format {
+  float: left;
+  width: 160px;
 }
 
 .adForm-format-name {

@@ -15,7 +15,7 @@ class App(db.Model):
   adsense_app_name = db.StringProperty()
   millennial_placement_id = db.StringProperty()
   
-  app_type = db.StringProperty(required=True, default="iphone", choices=["iphone", "android", "ipad"])
+  app_type = db.StringProperty(required=True, default='iphone', choices=['iphone', 'android', 'ipad'])
   description = db.TextProperty()
   url = db.StringProperty()
   package = db.StringProperty()
@@ -44,18 +44,19 @@ class Site(db.Model):
   # TODO: figure out how to expose this
   adsense_channel_id = db.StringProperty()
   
-  name = db.StringProperty(required=True,default="Banner Ad")
+  name = db.StringProperty(required=True,default='Banner Ad')
   url = db.StringProperty()
   description = db.TextProperty()
   width = db.FloatProperty()
   height = db.FloatProperty()
   
+  device_format = db.StringProperty(default='phone')
   format = db.StringProperty() #TODO: we should use this w/o explicity using height, width
 
   deleted = db.BooleanProperty(default=False)
   
   # what kind of ad is preferred here
-  ad_type = db.StringProperty(choices=["text", "image"], default="image",required=False)
+  ad_type = db.StringProperty(choices=['text', 'image'], default='image',required=False)
   
   # additional keywords that are passed to the auction
   keywords = db.TextProperty() # TODO: make sure this doesn't break shit
@@ -89,9 +90,9 @@ class Site(db.Model):
     
   @classmethod
   def site_by_id(c, id):
-    if id.startswith("ca"):
-      account = Account.gql("where adsense_pub_id = :1", id).get()
-      s = Site.gql("where account = :1", account).get()
+    if id.startswith('ca'):
+      account = Account.gql('where adsense_pub_id = :1', id).get()
+      s = Site.gql('where account = :1', account).get()
     else:
       s = Site.get(id)      
     return s

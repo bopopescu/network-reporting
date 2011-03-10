@@ -72,7 +72,7 @@ class AdUnitForm(mpforms.MPModelForm):
 
   class Meta:
     model = Site
-    fields = ('app_key','ad_type', 'backfill', 'backfill_threshold_cpm', 'keywords','width','height','format','adsense_channel_id')
+    fields = ('app_key','ad_type', 'backfill', 'backfill_threshold_cpm', 'keywords','width','height','device_format', 'format','adsense_channel_id')
     
   def __init__(self, *args,**kwargs):
       instance = kwargs.get('instance',None)
@@ -83,9 +83,11 @@ class AdUnitForm(mpforms.MPModelForm):
       if instance and not data:
         initial = initial or {}
         initial.update(adunit_name=instance.name,
-                       adunit_description=instance.description)
+                       adunit_description=instance.description,
+                       format=instance.format,
+                       device_format=instance.device_format)
         kwargs.update(initial=initial)  
-      logging.info('instance: %s kwargs: %s data: %s'%(instance, kwargs,data))       
+      logging.info('!!!!!!!!!!!! instance: %s kwargs: %s data: %s'%(instance, kwargs,data))       
       super(AdUnitForm, self).__init__(*args,**kwargs)
     
     
@@ -98,6 +100,9 @@ class AdUnitForm(mpforms.MPModelForm):
     if obj.format == "full":
       obj.width = 320.0
       obj.height = 480.0
+    elif obj.format == "tablet_full":
+      obj.width = 768.0
+      obj.height = 1024.0
     else:
       width,height = obj.format.split('x')
       obj.width, obj.height = float(width),float(height)

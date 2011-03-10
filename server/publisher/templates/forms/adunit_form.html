@@ -8,69 +8,82 @@
   <dt>Device Format:</dt> 
   <dd> 
 	<div class="adForm-device-formats">
-			<input type="radio" id="appForm-adUnitDeviceFormat-phone" name="device_format" /><label for="appForm-adUnitDeviceFormat-phone">Phone</label>
-			<input type="radio" id="appForm-adUnitDeviceFormat-tablet" name="device_format" /><label for="appForm-adUnitDeviceFormat-tablet">Tablet</label>
+			<input type="radio" id="appForm-adUnitDeviceFormat-phone" name="{{form.device_format.name}}" value="phone" {% if not form.device_format.value %}checked="checked"{% endif%}{% ifequal form.device_format.value 'phone' %}checked="checked"{% endifequal %} /><label for="appForm-adUnitDeviceFormat-phone">Phone</label>
+			<input type="radio" id="appForm-adUnitDeviceFormat-tablet" name="{{form.device_format.name}}" value="tablet" {% ifequal form.device_format.value 'tablet' %}checked="checked"{% endifequal %}/><label for="appForm-adUnitDeviceFormat-tablet">Tablet</label>
 	</div>
   </dd>
-  <dt>Phone Format:</dt> 
-  <dd> 
-    <div class="adForm-formats clearfix"> 
-      <div class="adForm-format"> 
-        <div class="adForm-format-name"> 
-          <input type="radio" class="input-radio" name="{{form.format.name}}" value="320x50" id="appForm-adUnitFormat-banner" {% if not form.format.value %}checked="checked"{% endif%}{% ifequal form.format.value '320x50' %}checked="checked"{% endifequal %} /> 
-          <label for="appForm-adUnitFormat-banner">Banner</label> 
-          <div class="adForm-format-details">320 &times; 50</div> 
-        </div> 
-        <img class="adForm-format-image" src="/images/setup/ad-format-banner.png" alt="Banner ad" /> 
-      </div> 
-      <div class="adForm-format"> 
-        <div class="adForm-format-name"> 
-          <input type="radio" class="input-radio" name="{{form.format.name}}" value="300x250" id="appForm-adUnitFormat-medium" {% ifequal form.format.value '300x250' %}checked="checked"{% endifequal %}/> 
-          <label for="appForm-adUnitFormat-medium">Medium</label> 
-          <div class="adForm-format-details">300 &times; 250</div> 
-        </div> 
-        <img class="adForm-format-image" src="/images/setup/ad-format-medium.png" alt="Medium ad" /> 
-      </div> 
-      <div class="adForm-format"> 
-        <div class="adForm-format-name"> 
-          <input type="radio" class="input-radio" name="{{form.format.name}}" value="full" id="appForm-adUnitFormat-full" {% ifequal form.format.value 'full' %}checked="checked"{% endifequal %}/> 
-          <label for="appForm-adUnitFormat-full">Fullscreen</label> 
-          <div class="adForm-format-details">320 &times; 480</div> 
-        </div> 
-        <img class="adForm-format-image" src="/images/setup/ad-format-full.png" alt="Fullscreen ad" /> 
-      </div> 
-    </div>
-  </dd>
 
-  <dt>Tablet Format:</dt> 
-  <dd> 
-    <div class="adForm-formats clearfix"> 
-      <div class="adForm-format"> 
-        <div class="adForm-format-name"> 
-          <input type="radio" class="input-radio" name="{{form.format.name}}" value="320x50" id="appForm-adUnitFormat-banner" {% if not form.format.value %}checked="checked"{% endif%}{% ifequal form.format.value '320x50' %}checked="checked"{% endifequal %} /> 
-          <label for="appForm-adUnitFormat-banner">Banner</label> 
-          <div class="adForm-format-details">320 &times; 50</div> 
-        </div> 
-        <img class="adForm-format-image" src="/images/setup/ad-format-banner.png" alt="Banner ad" /> 
-      </div> 
-      <div class="adForm-format"> 
-        <div class="adForm-format-name"> 
-          <input type="radio" class="input-radio" name="{{form.format.name}}" value="300x250" id="appForm-adUnitFormat-medium" {% ifequal form.format.value '300x250' %}checked="checked"{% endifequal %}/> 
-          <label for="appForm-adUnitFormat-medium">Medium</label> 
-          <div class="adForm-format-details">300 &times; 250</div> 
-        </div> 
-        <img class="adForm-format-image" src="/images/setup/ad-format-medium.png" alt="Medium ad" /> 
-      </div> 
-      <div class="adForm-format"> 
-        <div class="adForm-format-name"> 
-          <input type="radio" class="input-radio" name="{{form.format.name}}" value="full" id="appForm-adUnitFormat-full" {% ifequal form.format.value 'full' %}checked="checked"{% endifequal %}/> 
-          <label for="appForm-adUnitFormat-full">Fullscreen</label> 
-          <div class="adForm-format-details">320 &times; 480</div> 
-        </div> 
-        <img class="adForm-format-image" src="/images/setup/ad-format-full.png" alt="Fullscreen ad" /> 
-      </div> 
-    </div>
-  </dd>
+	<div id="adForm-phones">
+	  <dt>Ad Format:</dt> 
+	  <dd> 
+	    <div class="adForm-formats clearfix"> 
+	      <div class="adForm-phone-format adForm-format"> 
+	        <div class="adForm-format-name"> 
+	          <input type="radio" class="input-radio" name="{{form.format.name}}" value="320x50" id="appForm-adUnitFormat-banner" {% if not form.format.value %}checked="checked"{% endif%}{% ifequal form.format.value '320x50' %}checked="checked"{% endifequal %} /> 
+	          <label for="appForm-adUnitFormat-banner">Banner</label> 
+	          <div class="adForm-format-details">320 &times; 50</div> 
+	        </div> 
+	        <img class="adForm-format-image" src="/images/setup/ad-format-banner.png" alt="Banner ad" /> 
+	      </div> 
+	      <div class="adForm-phone-format adForm-format"> 
+	        <div class="adForm-format-name"> 
+	          <input type="radio" class="input-radio" name="{{form.format.name}}" value="300x250" id="appForm-adUnitFormat-medium" {% ifequal form.format.value '300x250' %}checked="checked"{% endifequal %}/> 
+	          <label for="appForm-adUnitFormat-medium">Medium</label> 
+	          <div class="adForm-format-details">300 &times; 250</div> 
+	        </div> 
+	        <img class="adForm-format-image" src="/images/setup/ad-format-medium.png" alt="Medium ad" /> 
+	      </div> 
+	      <div class="adForm-phone-format adForm-format"> 
+	        <div class="adForm-format-name"> 
+	          <input type="radio" class="input-radio" name="{{form.format.name}}" value="full" id="appForm-adUnitFormat-full" {% ifequal form.format.value 'full' %}checked="checked"{% endifequal %}/> 
+	          <label for="appForm-adUnitFormat-full">Fullscreen</label> 
+	          <div class="adForm-format-details">320 &times; 480</div> 
+	        </div> 
+	        <img class="adForm-format-image" src="/images/setup/ad-format-full.png" alt="Fullscreen ad" /> 
+	      </div> 
+	    </div>
+	  </dd>
+	</div>
+	
+	<div id="adForm-tablets">
+	  <dt>Ad Format:</dt> 
+	  <dd> 
+	    <div class="adForm-formats clearfix"> 
+	      <div class="adForm-tablet-format adForm-format"> 
+	        <div class="adForm-format-name"> 
+	          <input type="radio" class="input-radio" name="{{form.format.name}}" value="728x90" id="appForm-adUnitFormat-tablet-leaderboard" {% if not form.format.value %}checked="checked"{% endif%}{% ifequal form.format.value '728x90' %}checked="checked"{% endifequal %} /> 
+	          <label for="appForm-adUnitFormat-tablet-leaderboard">Leaderboard</label> 
+	          <div class="adForm-format-details">728 &times; 90</div> 
+	        </div> 
+	        <img class="adForm-format-image" src="/images/setup/ad-format-tablet-leaderboard.png" alt="Banner ad" /> 
+	      </div> 
+	      <div class="adForm-tablet-format adForm-format"> 
+	        <div class="adForm-format-name"> 
+	          <input type="radio" class="input-radio" name="{{form.format.name}}" value="tablet_300x250" id="appForm-adUnitFormat-tablet-medium" {% ifequal form.format.value 'tablet_300x250' %}checked="checked"{% endifequal %}/> 
+	          <label for="appForm-adUnitFormat-tablet-medium">Medium</label> 
+	          <div class="adForm-format-details">300 &times; 250</div> 
+	        </div> 
+	        <img class="adForm-format-image" src="/images/setup/ad-format-tablet-medium.png" alt="Medium ad" /> 
+	      </div>
+	      <div class="adForm-tablet-format adForm-format"> 
+	        <div class="adForm-format-name"> 
+	          <input type="radio" class="input-radio" name="{{form.format.name}}" value="160x600" id="appForm-adUnitFormat-wide-tablet-skyscraper" {% ifequal form.format.value '160x600' %}checked="checked"{% endifequal %}/> 
+	          <label for="appForm-adUnitFormat-wide-tablet-skyscraper">Skyscraper</label> 
+	          <div class="adForm-format-details">160 &times; 600</div> 
+	        </div> 
+	        <img class="adForm-format-image" src="/images/setup/ad-format-tablet-wide-skyscraper.png" alt="Wide Skyscraper ad" /> 
+	      </div>
+	      <div class="adForm-tablet-format adForm-format"> 
+	        <div class="adForm-format-name"> 
+	          <input type="radio" class="input-radio" name="{{form.format.name}}" value="tablet_full" id="appForm-adUnitFormat-tablet-full" {% ifequal form.format.value 'tablet_full' %}checked="checked"{% endifequal %}/> 
+	          <label for="appForm-adUnitFormat-tablet-full">Fullscreen</label> 
+	          <div class="adForm-format-details">1024 &times; 768</div> 
+	        </div> 
+	        <img class="adForm-format-image" src="/images/setup/ad-format-tablet-full.png" alt="Fullscreen ad" /> 
+	      </div> 
+	    </div>
+	  </dd>
+	</div>
 
   {# <dt><label for="appForm-adUnitKeywords">Default keywords:</label></dt>  #}
   {# <dd>  #}

@@ -98,7 +98,7 @@ var mopub = mopub || {};
       if (budget) {
         var budget_fixed = budget.toFixed(2);
         $('#campaignAdgroupForm-budget-display').html("("+budget_fixed +" USD / day)");
-        $('#campaignAdgroupForm input[name="budget"]').val(budget_fixed);
+        $('#campaignAdgroupForm input[name="budget"]').val(budget);
         $('#campaignAdgroupForm-budget-display').show();
       }
     }

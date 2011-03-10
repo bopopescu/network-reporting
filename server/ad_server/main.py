@@ -609,7 +609,8 @@ class AdHandler(webapp.RequestHandler):
 
       # add to the campaign counter
         logging.info("adding to delivery: %s"%c.ad_group.bid)
-        c.ad_group.campaign.delivery_counter.increment(dollars=c.ad_group.bid)
+        if c.ad_group.bid_strategy == 'cpm':
+          c.ad_group.campaign.delivery_counter.increment(dollars=c.ad_group.bid*1.0/1000)
       
       # render the creative 
         self.response.out.write( self.render_creative(  c, 

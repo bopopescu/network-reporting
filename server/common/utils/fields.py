@@ -46,20 +46,7 @@ class MPModelMultipleChoiceField(ModelChoiceField):
         'invalid_pk_value': _(u'"%s" is not a valid value for a primary key.')
     }
 
-    def __init__(self, reference_class, query=None, choices=None,
-                 empty_label=u'---------',
-                 required=True, widget=forms.SelectMultiple, label=None, initial=None,
-                 help_text=None, *args, **kwargs):
-        super(MPModelMultipleChoiceField,self).\
-              __init__(reference_class,query,choices,
-                       empty_label,
-                       required,widget,label,initial,
-                       help_text,*args,**kwargs)         
-
-
     def clean(self, value):
-        import logging
-        logging.info('self.required:%s'%self.required)
         if self.required and not value:
             raise ValidationError(self.error_messages['required'])
         elif not self.required and not value:

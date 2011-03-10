@@ -77,7 +77,7 @@ class AdGroupForm(mpforms.MPModelForm):
   
   site_keys = mpfields.MPModelMultipleChoiceField(AdUnit,required=False)
   keywords = mpfields.MPKeywordsField(required=False)
-  geo = forms.Field(widget=forms.MultipleHiddenInput)
+  geo = forms.Field(widget=forms.MultipleHiddenInput, required=False)
   device_predicates = mpfields.MPTextareaField(required=False)
   custom_html = mpfields.MPTextareaField(required=False)
   

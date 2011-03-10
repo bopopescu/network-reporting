@@ -520,6 +520,9 @@ var mopub = mopub || {};
     / Ad Unit Form
     /---------------------------------------*/
     
+    $( ".adForm-device-formats" ).buttonset();
+    
+    
     // Set up format selection UI
     $('.adForm-formats').each(function() {
       var container = $(this);

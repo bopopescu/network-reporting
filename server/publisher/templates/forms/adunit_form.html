@@ -5,7 +5,14 @@
 	{{ form.adunit_name|attrs:'{"id":"appForm-adUnitName"}' }}
 	{{ form.adunit_description|attrs:'{"id":"appForm-adUnitDescription"}' }}
 
-  <dt>Format:</dt> 
+  <dt>Device Format:</dt> 
+  <dd> 
+	<div class="adForm-device-formats">
+			<input type="radio" id="appForm-adUnitDeviceFormat-phone" name="device_format" /><label for="appForm-adUnitDeviceFormat-phone">Phone</label>
+			<input type="radio" id="appForm-adUnitDeviceFormat-tablet" name="device_format" /><label for="appForm-adUnitDeviceFormat-tablet">Tablet</label>
+	</div>
+  </dd>
+  <dt>Phone Format:</dt> 
   <dd> 
     <div class="adForm-formats clearfix"> 
       <div class="adForm-format"> 
@@ -32,25 +39,39 @@
         </div> 
         <img class="adForm-format-image" src="/images/setup/ad-format-full.png" alt="Fullscreen ad" /> 
       </div> 
-      {# <div class="adForm-format adForm-format-custom">  #}
-      {#   <div class="adForm-format-name">  #}
-      {#     <input type="radio" class="input-radio" name="{{form.format.name}}" value="custom" id="appForm-adUnitFormat-custom" />  #}
-      {#     <label for="appForm-adUnitFormat-custom">Custom</label>  #}
-      {#     <div class="adForm-format-details">  #}
-      {#       <input type="text" class="input-text input-text-small {% if form.width.errors %}form-error{% endif %}" name="{{form.width.name}}" value="{{form.width.value}}" id="appForm-adUnitFormatCustomWidth" placeholder="width" />  #}
-      {#       &times; #}
-      {#       <input type="text" class="input-text input-text-small {% if form.height.errors %}form-error{% endif %}" name="{{form.height.name}}" value="{{form.height.value}}" id="appForm-adUnitFormatCustomHeight" placeholder="height" />  #}
-      {#       {% for error in form.width.errors %} #}
-      {#       <div class="form-error-text">{{error}}</div>  #}
-      {#       {% endfor %} #}
-      {#       {% for error in form.height.errors %} #}
-      {#       <div class="form-error-text">{{error}}</div>  #}
-      {#       {% endfor %} #}
-      {#     </div> #}
-      {#   </div> #}
-      {# </div> #}
     </div>
   </dd>
+
+  <dt>Tablet Format:</dt> 
+  <dd> 
+    <div class="adForm-formats clearfix"> 
+      <div class="adForm-format"> 
+        <div class="adForm-format-name"> 
+          <input type="radio" class="input-radio" name="{{form.format.name}}" value="320x50" id="appForm-adUnitFormat-banner" {% if not form.format.value %}checked="checked"{% endif%}{% ifequal form.format.value '320x50' %}checked="checked"{% endifequal %} /> 
+          <label for="appForm-adUnitFormat-banner">Banner</label> 
+          <div class="adForm-format-details">320 &times; 50</div> 
+        </div> 
+        <img class="adForm-format-image" src="/images/setup/ad-format-banner.png" alt="Banner ad" /> 
+      </div> 
+      <div class="adForm-format"> 
+        <div class="adForm-format-name"> 
+          <input type="radio" class="input-radio" name="{{form.format.name}}" value="300x250" id="appForm-adUnitFormat-medium" {% ifequal form.format.value '300x250' %}checked="checked"{% endifequal %}/> 
+          <label for="appForm-adUnitFormat-medium">Medium</label> 
+          <div class="adForm-format-details">300 &times; 250</div> 
+        </div> 
+        <img class="adForm-format-image" src="/images/setup/ad-format-medium.png" alt="Medium ad" /> 
+      </div> 
+      <div class="adForm-format"> 
+        <div class="adForm-format-name"> 
+          <input type="radio" class="input-radio" name="{{form.format.name}}" value="full" id="appForm-adUnitFormat-full" {% ifequal form.format.value 'full' %}checked="checked"{% endifequal %}/> 
+          <label for="appForm-adUnitFormat-full">Fullscreen</label> 
+          <div class="adForm-format-details">320 &times; 480</div> 
+        </div> 
+        <img class="adForm-format-image" src="/images/setup/ad-format-full.png" alt="Fullscreen ad" /> 
+      </div> 
+    </div>
+  </dd>
+
   {# <dt><label for="appForm-adUnitKeywords">Default keywords:</label></dt>  #}
   {# <dd>  #}
   {#   <textarea name="{{form.keywords.name}}" id="appForm-adUnitKeywords" rows="3" cols="40" placeholder="e.g. coffee, espresso, cafe, iced tea">{{form.keywords.value}}</textarea>  #}

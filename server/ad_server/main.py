@@ -851,7 +851,7 @@ class AdHandler(webapp.RequestHandler):
         # extra parameters used only by admob template
         #add in the success tracking pixel
         params.update(admob_finish_load= success + 'window.location = "mopub://finishLoad";')
-        params.update(admob_fail_load='window.location = "mopub://failLoad";')
+       params.update(admob_fail_load='window.location = "mopub://failLoad";')
       else:
         # don't use special url hooks because older clients don't understand    
         params.update(finishLoad='')
@@ -923,7 +923,6 @@ class AdHandler(webapp.RequestHandler):
         params.update(title=','.join(kwargs["q"]+list(kwargs["addr"])))
       else:
         params.update(title='')
-
       self.response.headers.add_header("X-Backfill", str('html'))
 
       # render the HTML body

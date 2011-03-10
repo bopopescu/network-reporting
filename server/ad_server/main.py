@@ -69,6 +69,7 @@ CAMPAIGN_LEVELS = ('gtee_high', 'gtee', 'gtee_low', 'promo', 'network')
 
 
 
+
 # TODO: Logging is fucked up with unicode characters
 
 # DOMAIN = 'localhost:8080'

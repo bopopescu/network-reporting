@@ -136,9 +136,9 @@ class AdGroupCache(object):
       datastore_objs = cls.Klass.get(keys)
       print 'fetching from remote datastore %s'%keys
       # put into local cache
-      for obj in datastore_objs:
-        if obj:
-          cls.cache[str(obj.key())] = obj
+      # we use map since datastore_objs may be None
+      for key,obj in zip(keys, datastore_objs):
+        cls.cache[str(key)] = obj
       objs += datastore_objs
     if len(objs) > 1:
       return objs
@@ -321,6 +321,8 @@ class PubRevenueCounter(StatsCounter):
 
       # TODO: Have a parent-child relationship such that the key name already tells us the parent key
       creative = CreativeCache.get(creative_key)
+      if not creative:
+        return
       adgroup_key = creative.ad_group.key()
       adgroup = AdGroupCache.get(adgroup_key)
 
@@ -360,6 +362,8 @@ class PubClickRevenueCounter(StatsCounter):
 
         # TODO: Have a parent-child relationship such that the key name already tells us the parent key
         creative = CreativeCache.get(creative_key)
+        if not creative:
+          return
         adgroup_key = creative.ad_group.key()
         adgroup = AdGroupCache.get(adgroup_key)
 

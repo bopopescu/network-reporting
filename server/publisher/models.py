@@ -1,5 +1,6 @@
 from google.appengine.ext import db
 from common.utils import djangoforms
+from common.utils import properties
 from google.appengine.api import users
 
 from account.models import Account
@@ -38,6 +39,11 @@ class App(db.Model):
   
 
 class Site(db.Model):
+  DEVICE_FORMAT_CHOICES = (
+         u'phone',
+         u'tablet',
+     )
+     
   app_key = db.ReferenceProperty(App)
   account = db.ReferenceProperty(Account)
   
@@ -49,8 +55,9 @@ class Site(db.Model):
   description = db.TextProperty()
   width = db.FloatProperty()
   height = db.FloatProperty()
+
   
-  device_format = db.StringProperty(default='phone')
+  device_format = properties.ChoiceProperty(default='phone', choices=DEVICE_FORMAT_CHOICES)
   format = db.StringProperty() #TODO: we should use this w/o explicity using height, width
 
   deleted = db.BooleanProperty(default=False)
@@ -63,7 +70,6 @@ class Site(db.Model):
   # keywords = db.StringListProperty()                          
   
   refresh_interval = db.IntegerProperty(default=0)
-  
   
   # color scheme
   color_border = db.StringProperty(required=True, default='336699')

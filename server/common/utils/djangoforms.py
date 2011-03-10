@@ -47,6 +47,8 @@ Mapping between properties and fields:
 +--------------------+-------------------+--------------+--------------------+
 | TextProperty       | CharField         | unicode      | MPTextarea         |
 +--------------------+-------------------+--------------+--------------------+
+| ChoiceProperty     | CharField         | unicode      | MPRadioInput       |
++--------------------+-------------------+--------------+--------------------+
 | BlobProperty       | FileField         | str          | skipped in v0.96   |
 +--------------------+-------------------+--------------+--------------------+
 | DateTimeProperty   | DateTimeField     | datetime     | skipped            |
@@ -270,6 +272,19 @@ class TextProperty(db.TextProperty):
     # defaults = {'widget': forms.Textarea}
     defaults.update(kwargs)
     return super(TextProperty, self).get_form_field(**defaults)
+
+
+class ChoiceProperty(StringProperty):
+
+  def get_form_field(self, **kwargs):
+    """Return a Django form field appropriate for a text property.
+
+    This sets the widget default to forms.Textarea.
+    """
+    defaults = {'widget': mpwidgets.MPRadioInput}
+    defaults.update(kwargs)
+    return super(ChoiceProperty, self).get_form_field(**defaults)
+
 
 
 class BlobProperty(db.BlobProperty):

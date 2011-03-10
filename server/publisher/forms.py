@@ -63,55 +63,13 @@ class AppForm(mpforms.MPModelForm):
 
 class AdUnitForm(mpforms.MPModelForm):
   TEMPLATE = 'publisher/forms/adunit_form.html'
-  
-  # renamed to avoid conflicts when submitting both app and adunit together
-  # adunit_name = forms.CharField# (required=True,initial="Banner Ad")
-  # adunit_description = forms.CharField(required=True,initial="General Purpose Banner Ad")
-  adunit_name = mpfields.MPTextField(required=True,initial="Banner Ad")
-  adunit_description = mpfields.MPTextareaField(required=True,initial="General Purpose Banner Ad")
-
   class Meta:
     model = Site
-    fields = ('app_key','ad_type', 'backfill', 'backfill_threshold_cpm', 'keywords','width','height','device_format', 'format','adsense_channel_id')
-    
-  def __init__(self, *args,**kwargs):
-      instance = kwargs.get('instance',None)
-      initial = kwargs.get('initial',None)
-      data = kwargs.get('data',None)
-      logging.info('instance: %s kwargs: %s data: %s'%(instance, kwargs,data))       
-      # re-write the names (TODO: this is annoying, we should move to a widget model)
-      if instance and not data:
-        initial = initial or {}
-        initial.update(adunit_name=instance.name,
-                       adunit_description=instance.description,
-                       format=instance.format,
-                       device_format=instance.device_format)
-        kwargs.update(initial=initial)  
-      logging.info('!!!!!!!!!!!! instance: %s kwargs: %s data: %s'%(instance, kwargs,data))       
-      super(AdUnitForm, self).__init__(*args,**kwargs)
-    
-    
-  def save(self,commit=True):
-    obj = super(AdUnitForm,self).save(commit=False) 
-    logging.info('clean_data: %s'%self.cleaned_data)
-    obj.name = self.cleaned_data['adunit_name']
-    obj.description = self.cleaned_data['adunit_description'] 
-    # TODO: hardcoding height and width
-    if obj.format == "full":
-      obj.width = 320.0
-      obj.height = 480.0
-    elif obj.format == "tablet_full":
-      obj.width = 768.0
-      obj.height = 1024.0
-    else:
-      width,height = obj.format.split('x')
-      obj.width, obj.height = float(width),float(height)
 
-    if commit:
-      obj.put()
-    logging.info('name: %s description: %s'%(obj.name,obj.description))  
-    return obj  
-
+    fields = ('name','description','app_key','ad_type', 'backfill', 'backfill_threshold_cpm','keywords',
+    'width','height', 'device_format', 'format','adsense_channel_id')
+ 
+ 
 class SiteForm(forms.ModelForm):
   class Meta:
     model = Site

@@ -2,16 +2,9 @@
 <input type="hidden" name="{{form.app_key.name}}" value="{{form.app_key.value}}"/>
 <dl class="formFields"> 
 
-	{{ form.adunit_name|attrs:'{"id":"appForm-adUnitName"}' }}
-	{{ form.adunit_description|attrs:'{"id":"appForm-adUnitDescription"}' }}
-
-  <dt>Device Format:</dt> 
-  <dd> 
-	<div class="adForm-device-formats">
-			<input type="radio" id="appForm-adUnitDeviceFormat-phone" name="{{form.device_format.name}}" value="phone" {% if not form.device_format.value %}checked="checked"{% endif%}{% ifequal form.device_format.value 'phone' %}checked="checked"{% endifequal %} /><label for="appForm-adUnitDeviceFormat-phone">Phone</label>
-			<input type="radio" id="appForm-adUnitDeviceFormat-tablet" name="{{form.device_format.name}}" value="tablet" {% ifequal form.device_format.value 'tablet' %}checked="checked"{% endifequal %}/><label for="appForm-adUnitDeviceFormat-tablet">Tablet</label>
-	</div>
-  </dd>
+	{{ form.name|attrs:'{"id":"appForm-adUnitName"}' }}
+	{{ form.description|attrs:'{"id":"appForm-adUnitDescription"}' }}
+	{{ form.device_format }}
 
 	<div id="adForm-phones">
 	  <dt>Ad Format:</dt> 

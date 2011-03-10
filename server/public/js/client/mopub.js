@@ -21,7 +21,8 @@
     var mopub_ad_url = "http://"+mopub_url.hostname;
     if (mopub_url.port != "0")
         mopub_ad_url += ":"+mopub_url.port;
-    mopub_ad_url += "/m/ad?id="+mopub_ad_unit + "&udid=M0B1LEWEBC00KIE:" + get_session();
+    mopub_ad_url += "/m/ad?id="+mopub_ad_unit + "&udid=M0B1LEWEBC00KIE" + get_session();
+    //Removed the : becaue I *think* it might mess with how we store the keys in the datastore
 
     if (window.mopub_keywords != null)
         mopub_ad_url += "&q="+escape(window.mopub_keywords);
@@ -57,7 +58,7 @@
     function get_session() {
         //if no session, set it
         if(!get_cookie(c_name)) {
-            set_cookie(c_name, gen_key()));
+            set_cookie(c_name, gen_key());
         }
         //get it
         return get_cookie(c_name);

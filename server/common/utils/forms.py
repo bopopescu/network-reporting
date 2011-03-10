@@ -64,7 +64,7 @@ class MPBoundField(BoundField):
                value = self.form.initial.get(self.name, self.field.initial)
            else:
                value = self.data
-        return value or ''
+        return value if value != None else ''
 
 class MPModelForm(forms.ModelForm):
     TEMPLATE = 'advertiser/forms/form.html'

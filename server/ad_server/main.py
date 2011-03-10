@@ -824,10 +824,9 @@ class AdHandler(webapp.RequestHandler):
       else:
         params.update(title='')
 
-      send_js = 'a.open("get", "%s", true); a.send();'
-      succes_js = 'var a = new XMLHttpRequest();' + send_js % track_url
+      succes_js = 'var a = new XMLHttpRequest(); a.open("get", "%s", true); a.send();' % track_url
       if c.tracking_url:
-        success_js += send_js % c.tracking_url
+        success_js += "var b = new XMLHttpRequest(); b.open('get', '%s', true); b.send();" % c.tracking_url 
         params.update(trackingPixel='<span style="display:none;"><img src="%s"/><img src="%s"/></span>'% (c.tracking_url, track_url))
       else:
         params.update(trackingPixel='<span style="display:none;"><img src="%s"/></span>'%track_url)
@@ -835,7 +834,7 @@ class AdHandler(webapp.RequestHandler):
       if kwargs["v"] >= 2 and not "Android" in self.request.headers["User-Agent"]:  
         params.update(finishLoad='<script>function finishLoad(){window.location="mopub://finishLoad";} window.onload = function(){finishLoad();} </script>')
         # extra parameters used only by admob template
-        params.update(admob_finish_load='window.location = "mopub://finishLoad";')
+        params.update(admob_finish_load=success_js+'window.location = "mopub://finishLoad";')
         params.update(admob_fail_load='window.location = "mopub://failLoad";')
       else:
         # don't use special url hooks because older clients don't understand    

@@ -66,3 +66,5 @@ def log(request,event,adunit=None,manager=None):
         t.add(TASK_QUEUE_NAME)
     except taskqueue.TaskAlreadyExistsError:
         logging.info("task %s already exists"%task_name)
+    except Exception, e:    
+        logging.warning(e)

@@ -1,3 +1,4 @@
+echo $1
 if [ "x" == "x$1" ] # if $1 does not exist
 then
     nosetests --with-gae --gae-datastore='./test_data/basic_test.datastore' --with-coverage ad_server_tests

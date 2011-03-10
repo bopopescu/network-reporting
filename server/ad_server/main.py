@@ -599,6 +599,7 @@ class AdHandler(webapp.RequestHandler):
       
       # ad an impression tracker URL
         self.response.headers.add_header("X-Imptracker", "http://%s/m/imp?id=%s&cid=%s"%(DOMAIN,id,c.key()))
+        track_url = "http://%s/m/imp?id=%s&cid=%s" % (DOMAIN, id, c.key())
       
       #add creative ID for testing (also prevents that one bad bug from happening)
         self.response.headers.add_header("X-Creativeid", "%s" % c.key())
@@ -616,6 +617,7 @@ class AdHandler(webapp.RequestHandler):
                                                         excluded_creatives  = excluded_creatives, 
                                                         request_id          = request_id, 
                                                         v                   = int(self.request.get('v') or 0),
+                                                        track_url           = track_url,
                                                         ) )
     else:
         self.response.out.write( self.render_creative(  c, 
@@ -752,7 +754,6 @@ class AdHandler(webapp.RequestHandler):
                             };                                                                                                                                    
                             window.setTimeout(polling_func, POLLING_FREQ);
                         </script>
-                        $trackingPixel
                         </body></html>"""),
     "html":Template("""<html><head><title>$title</title>
                         $finishLoad
@@ -769,7 +770,7 @@ class AdHandler(webapp.RequestHandler):
                         <body style="margin:0;padding:0;width:${w}px;background:white;">${html_data}$trackingPixel</body></html>"""),
     "html_full":Template("$html_data")
   }
-  def render_creative(self, c, **kwargs):
+  def render_creative(self, c, track_url=None, **kwargs):
     if c:
       logging.warning("rendering: %s" % c.ad_type)
       format = kwargs["format"]
@@ -822,7 +823,15 @@ class AdHandler(webapp.RequestHandler):
         params.update(title=','.join(kwargs["q"]+list(kwargs["addr"])))
       else:
         params.update(title='')
-        
+
+      send_js = 'a.open("get", "%s", true); a.send();'
+      succes_js = 'var a = new XMLHttpRequest();' + send_js % track_url
+      if c.tracking_url:
+        success_js += send_js % c.tracking_url
+        params.update(trackingPixel='<span style="display:none;"><img src="%s"/><img src="%s"/></span>'% (c.tracking_url, track_url))
+      else:
+        params.update(trackingPixel='<span style="display:none;"><img src="%s"/></span>'%track_url)
+
       if kwargs["v"] >= 2 and not "Android" in self.request.headers["User-Agent"]:  
         params.update(finishLoad='<script>function finishLoad(){window.location="mopub://finishLoad";} window.onload = function(){finishLoad();} </script>')
         # extra parameters used only by admob template
@@ -834,11 +843,7 @@ class AdHandler(webapp.RequestHandler):
         # extra parameters used only by admob template
         params.update(admob_finish_load='')
         params.update(admob_fail_load='')
-      
-      if c.tracking_url:
-        params.update(trackingPixel='<span style="display:none;"><img src="%s"/></span>'%c.tracking_url)
-      else:
-        params.update(trackingPixel='')  
+     
       
       # indicate to the client the winning creative type, in case it is natively implemented (iad, clear)
       
@@ -903,11 +908,12 @@ class AdHandler(webapp.RequestHandler):
         params.update(title=','.join(kwargs["q"]+list(kwargs["addr"])))
       else:
         params.update(title='')
+       
       
       if c.tracking_url:
-        params.update(trackingPixel='<span style="display:none;"><img src="%s"/></span>'%c.tracking_url)
+        params.update(trackingPixel='<span style="display:none;"><img src="%s"/><img src="%s"/></span>'%(c.tracking_url, track_url))
       else:
-        params.update(trackingPixel='')
+        params.update(trackingPixel='<span style="display:none;"><img src="%s"/></span>'%track_url)
 
       self.response.headers.add_header("X-Backfill", str('html'))
 

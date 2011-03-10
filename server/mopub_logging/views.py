@@ -123,7 +123,7 @@ class LogTaskHandler(webapp.RequestHandler):
                   if event == mp_logging.REQ_EVENT:
                       update_stats(stats_dict,
                                    publisher=adunit,
-                                   advertiser=None,
+                                   advertiser=creative,
                                    date_hour=date_hour,                                   
                                    attribute='request_count')
                   elif event == mp_logging.IMP_EVENT:

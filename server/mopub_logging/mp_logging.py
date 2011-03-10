@@ -62,7 +62,7 @@ def log(request,event,adunit=None,manager=None):
     logging.info('task: %s'%task_name)
     
     try:
-        t = taskqueue.Task(name=task_name,params={'account_name':account_name,'time':time_bucket},countdown=TIME_BUCKET*2,method='GET')
+        t = taskqueue.Task(name=task_name,params={'account_name':account_name,'time':time_bucket},countdown=TIME_BUCKET*1.10,method='GET')
         t.add(TASK_QUEUE_NAME)
     except taskqueue.TaskAlreadyExistsError:
         logging.info("task %s already exists"%task_name)

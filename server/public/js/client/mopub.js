@@ -21,8 +21,7 @@
     var mopub_ad_url = "http://"+mopub_url.hostname;
     if (mopub_url.port != "0")
         mopub_ad_url += ":"+mopub_url.port;
-    mopub_ad_url += "/m/ad?id="+mopub_ad_unit + "&udid=M0B1LEWEBC00KIE" + get_session();
-    //Removed the : becaue I *think* it might mess with how we store the keys in the datastore
+    mopub_ad_url += "/m/ad?id="+mopub_ad_unit + "&udid=M0B1LEWEBC00KIE:" + get_session();
 
     if (window.mopub_keywords != null)
         mopub_ad_url += "&q="+escape(window.mopub_keywords);

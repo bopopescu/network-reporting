@@ -15,6 +15,8 @@
                 if (pre.length == priors.length)
                     break;
             }
+            //Verify that all cities in city_pre are in the SINGLE country that is pre
+
             //Need to create data object that is array of dictionary [ {name, id} ] 
 
             $('#geo_pred_ta').tokenInput( null, { data: countries,
@@ -26,6 +28,11 @@
                                                         },
                                                   prePopulate: pre 
                 });
+            //$('#city_pred_ta').tokenInput( null, { formatResult: blah,
+            //                                      formatMatch: blah,
+            //                                      prePopulate: city_pre
+            
+                                                    
     });
 </script>
                     <dl class="formFields"> 
@@ -67,8 +74,18 @@
                           <div class="form-error-text">{{error}}</div> 
                           {% endfor %}
                         </dd> 
-                        
                       	{{ form.keywords|attrs:'{"placeholder":"Keywords, one per line, e.g. coffee"}' }}
+                        <dt><label for="loc">Location Specificity:</label></dt>
+                        <dd>
+                            <span class="radios">
+                                <input type='radio' class='input-radio' name='location-specificity' value='all' id='advertiser-LocationSpec-all'></input>
+                                <label for=''>Everywhere</label>
+                                <input type='radio' class='input-radio' name='location-specificity' value='state' id='advertiser-LocationSpec-state'></input>
+                                <label for=''>State/Province</label>
+                                <input type='radio' class='input-radio' name='location-specificity' value='city' id='advertiser-LocationSpec-city'></input>
+                                <label for=''>City</label>
+                            </span>
+                        </dd>
                         <dt><label for="TODO9">Geo Predicates:</label></dt>
                         <dd>
                           <div id='geo_pred_ta' name='geo_predicates'></div>
@@ -78,6 +95,17 @@
                           <div class="form-error-text">{{error}}</div>
                           {% endfor %}
                         </dd>
+
+                        <div class="locationDependent state" style='display:none;'>
+                            <dt><label for='location-state-autofill'>State/Province</label></dt>
+                            <dd><div id='location-state-autofill'></div></dd>
+                        </div>
+
+                        <div class="locationDependent city" style='display:none;'>
+                            <dt><label for='location-city-autofill'>City</label></dt>
+                            <dd><div id='location-city-autofill'></div></dd>
+                        </div>
+
                         {# <dt><label for="TODO10">Device Predicates:</label></dt> #}
                         {# <dd> #}
                         {#   <textarea name="device_predicates" class="{% if form.device_predicates.errors %}form-error{% endif %}">{% if form.geo_predicates.value %}{{form.device_predicates.value}}{% else %}platform_name=*{% endif %}</textarea> #}

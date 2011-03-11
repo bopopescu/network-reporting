@@ -24,8 +24,10 @@ $.fn.tokenInput = function (url, options) {
         contentType: "json",
         queryParam: "q",
         onResult: null,
-				onAdd: null,
-				onDelete: null
+        onAdd: null,
+        onDelete: null,
+        doImmediate:true,
+        country:'US'
     }, options);
 
     settings.classes = $.extend({
@@ -94,7 +96,7 @@ $.TokenList = function (input, settings) {
             if( !token_list.hasClass('focused') )
                 token_list.addClass('focused');
             if( $(this).val() ) {
-              setTimeout(function(){do_search(true);}, 5);
+              setTimeout(function(){do_search(settings.doImmediate);}, 5);
             }
         })
         .blur(function () {
@@ -160,7 +162,7 @@ $.TokenList = function (input, settings) {
                         hide_dropdown();
                     } else {
                         // set a timeout just long enough to let this function finish.
-                        setTimeout(function(){do_search(true);}, 5);
+                        setTimeout(function(){do_search(settings.doImmediate);}, 5);
                     }
                     break;
 
@@ -180,7 +182,7 @@ $.TokenList = function (input, settings) {
                 default:
                     if(is_printable_character(event.keyCode)) {
                       // set a timeout just long enough to let this function finish.
-                      setTimeout(function(){do_search(true);}, 5);
+                      setTimeout(function(){do_search(settings.doImmediate);}, 5);
                     }
                     break;
             }

@@ -10,4 +10,8 @@ def get_required_param(param, kwargs):
     else:
         return kwargs[param]
 
+def check_required_param(param, kwargs):
+    if param not in kwargs:
+        raise NameError('%s is required'%param)
+
 

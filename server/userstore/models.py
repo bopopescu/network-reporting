@@ -1,9 +1,19 @@
+# Google AppEngine Datastore Hierarchy:
+#
+# MobileUser
+#     MobileApp
+#         ClickEvent (mobile_appid specified)
+#         AppOpenEvent
+#     ClickEvent (mobile_appid not specified, i.e. mobile_appid=CLICK_EVENT_NO_APP_ID)
+
+
+
 import logging
 
 from google.appengine.ext import db
 from google.appengine.ext.db import Key
 
-from helper import get_key_name, get_required_param
+from helper import get_key_name, get_required_param, check_required_param
 
 
 CLICK_EVENT_NO_APP_ID = 'NOT_PROVIDED'
@@ -57,11 +67,11 @@ class ClickEvent(db.Model):
     
     def __init__(self, parent=None, key_name=None, **kwargs):
         udid = get_required_param('udid', kwargs)
-        time = get_required_param('time', kwargs)
-        adunit = get_required_param('adunit', kwargs)
-        creative = get_required_param('creative', kwargs)
         mobile_appid = kwargs.get('mobile_appid', None)
-
+        check_required_param('time', kwargs)
+        check_required_param('adunit', kwargs)
+        check_required_param('creative', kwargs)
+        
         if not kwargs.get('key', None):
             if not parent:
                 if mobile_appid:
@@ -83,7 +93,7 @@ class AppOpenEvent(db.Model):
     def __init__(self, parent=None, key_name=None, **kwargs):
         udid = get_required_param('udid', kwargs)
         mobile_appid = get_required_param('mobile_appid', kwargs)
-        time = get_required_param('time', kwargs)
+        check_required_param('time', kwargs)
 
         if 'conversion_window' not in kwargs:
             kwargs['conversion_window'] = DEFAULT_CONVERSION_WINDOW

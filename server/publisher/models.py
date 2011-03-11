@@ -44,6 +44,16 @@ class Site(db.Model):
          u'tablet',
      )
      
+  FORMAT_CHOICES = (
+        u'full',
+        u'full_tablet',
+        u'full_landscape',
+        u'full_tablet_landscape',
+        u'728x90',
+        u'300x250',
+        u'160x600',
+        u'320x50',
+    )
   app_key = db.ReferenceProperty(App)
   account = db.ReferenceProperty(Account)
   
@@ -58,7 +68,7 @@ class Site(db.Model):
 
   
   device_format = properties.ChoiceProperty(default='phone', choices=DEVICE_FORMAT_CHOICES)
-  format = db.StringProperty() #TODO: we should use this w/o explicity using height, width
+  format = db.StringProperty(choices=FORMAT_CHOICES) #TODO: we should use this w/o explicity using height, width
 
   deleted = db.BooleanProperty(default=False)
   

@@ -12,7 +12,7 @@
 	    <div class="adForm-formats clearfix"> 
 	      <div class="adForm-phone-format adForm-format"> 
 	        <div class="adForm-format-name"> 
-	          <input type="radio" class="input-radio" name="{{form.format.name}}" value="320x50" id="appForm-adUnitFormat-banner" {% if not form.format.value %}checked="checked"{% endif%}{% ifequal form.format.value '320x50' %}checked="checked"{% endifequal %} /> 
+	          <input type="radio" class="input-radio" name="{{form.format.name}}" value="320x50" id="appForm-adUnitFormat-banner" {% ifequal form.format.value '320x50' %}{% ifequal form.device_format.value "phone" %}  checked="checked"{% endifequal %}{% endifequal %} /> 
 	          <label for="appForm-adUnitFormat-banner">Banner</label> 
 	          <div class="adForm-format-details">320 &times; 50</div> 
 	        </div> 
@@ -20,7 +20,7 @@
 	      </div> 
 	      <div class="adForm-phone-format adForm-format"> 
 	        <div class="adForm-format-name"> 
-	          <input type="radio" class="input-radio" name="{{form.format.name}}" value="300x250" id="appForm-adUnitFormat-medium" {% ifequal form.format.value '300x250' %}checked="checked"{% endifequal %}/> 
+	          <input type="radio" class="input-radio" name="{{form.format.name}}" value="300x250" id="appForm-adUnitFormat-medium" {% ifequal form.format.value '300x250' %}{% ifequal form.device_format.value "phone" %}  checked="checked"{% endifequal %}{% endifequal %}/> 
 	          <label for="appForm-adUnitFormat-medium">Medium</label> 
 	          <div class="adForm-format-details">300 &times; 250</div> 
 	        </div> 
@@ -53,7 +53,7 @@
 	      </div> 
 	      <div class="adForm-tablet-format adForm-format"> 
 	        <div class="adForm-format-name"> 
-	          <input type="radio" class="input-radio" name="{{form.format.name}}" value="tablet_300x250" id="appForm-adUnitFormat-tablet-medium" {% ifequal form.format.value 'tablet_300x250' %}checked="checked"{% endifequal %}/> 
+	          <input type="radio" class="input-radio" name="{{form.format.name}}" value="300x250" id="appForm-adUnitFormat-tablet-medium" {% ifequal form.format.value '300x250' %}{% ifequal form.device_format.value "tablet" %}  checked="checked"{% endifequal %}{% endifequal %}/> 
 	          <label for="appForm-adUnitFormat-tablet-medium">Medium</label> 
 	          <div class="adForm-format-details">300 &times; 250</div> 
 	        </div> 
@@ -77,7 +77,7 @@
 	      </div>
 		  <div class="adForm-tablet-format adForm-format"> 
 	        <div class="adForm-format-name"> 
-	          <input type="radio" class="input-radio" name="{{form.format.name}}" value="tablet_320x50" id="appForm-adUnitFormat-tablet-banner" {% ifequal form.format.value 'tablet_320x50' %}checked="checked"{% endifequal %}/> 
+	          <input type="radio" class="input-radio" name="{{form.format.name}}" value="320x50" id="appForm-adUnitFormat-tablet-banner" {% ifequal form.format.value '320x50' %}{% ifequal form.device_format.value "tablet" %}  checked="checked"{% endifequal %}{% endifequal %}/> 
 	          <label for="appForm-adUnitFormat-tablet-banner">Banner</label> 
 	          <div class="adForm-format-details">320 &times; 50</div> 
 	        </div> 

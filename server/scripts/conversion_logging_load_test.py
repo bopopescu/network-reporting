@@ -19,8 +19,6 @@ testing skeleton script. Modify the code between !!!!!
 to make the requests you want load tested.
 """
 
-
-
 import httplib2
 import random
 import socket

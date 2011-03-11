@@ -7,7 +7,6 @@
 #     ClickEvent (mobile_appid not specified, i.e. mobile_appid=CLICK_EVENT_NO_APP_ID)
 
 
-
 import logging
 
 from google.appengine.ext import db

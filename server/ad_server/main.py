@@ -998,8 +998,10 @@ class AppOpenHandler(webapp.RequestHandler):
     mobile_appid = self.request.get('id')
     aoe_manager = AppOpenEventManager()
     aoe, conversion_logged = aoe_manager.log_conversion(udid, mobile_appid, time=datetime.datetime.now())
+    
     #if conversion_logged:
     #  mp_logging.log(self.request, event=mp_logging.CONV_EVENT, aoe.conversion_adunit, aoe.conversion_creative)
+
     self.response.out.write("ConversionLogged:"+str(conversion_logged)+":"+str(aoe.key())) 
 
     

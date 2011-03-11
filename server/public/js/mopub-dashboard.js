@@ -523,37 +523,23 @@ var mopub = mopub || {};
     // Set up device format selection UI
     $(".adForm-device-formats").buttonset();
     $('#appForm-adUnitDeviceFormat-phone').click(function(e){
-      $('#adForm-tablet-container').hide()
-      $('#adForm-phone-container').show()
+      $('#adForm-tablet-container').hide();
+      $('#adForm-phone-container').show().find('input[type="radio"]')[0].click();
     });
     
     $('#appForm-adUnitDeviceFormat-tablet').click(function(e){
-      $('#adForm-phone-container').hide()
-      $('#adForm-tablet-container').show()
+      $('#adForm-phone-container').hide();
+      $('#adForm-tablet-container').show().find('input[type="radio"]')[0].click();
     });
     
-        //initialize checked elements
-        $(".adForm-device-formats").children().filter(':checked').click().each(function(){
-          var deviceFormat = $(this).val(); //either tablet or phone
-          var container = "#adForm-"+deviceFormat+"-container"
-          $(container).find('.possible-format').click().select(); 
-        });
-    
-    
-    // Set up format selection UI
-    $('.adForm-formats').each(function() {
+    // Set up format selection UI for phone
+    $('#adForm-phone-formats').each(function() {
       var container = $(this);
       $('input[type="radio"]', container).click(function(e) {
         var radio = $(this);
         var formatContainer = radio.parents('.adForm-format');
-        
         $('.adForm-format-image').css({ opacity: 0.5 });
         $('.adForm-format-image', formatContainer).css({ opacity: 1 });
-        /*
-        if (radio.val() == 'custom') {
-          // $('.adForm-format-details input[type="text"]:first', formatContainer).focus();
-        }
-        */
       }).filter(':checked').click();
       
       $('.adForm-format-image', container).click(function(e) {
@@ -568,6 +554,27 @@ var mopub = mopub || {};
         $('input[type="radio"]', formatContainer).click();
       });
     });
+    
+    // Set up format selection UI for tablet
+    $('#adForm-tablet-formats').each(function(){
+        var container = $(this);
+        //bind radio buttons to images
+          $(this).find('input[type="radio"]').click(function(e){
+            var index = $(this).parent().index();
+            var images = $("#adForm-images-container");
+            images.children().hide();
+            var image = images.children()[index]
+            $(image).show().css({ opacity: 1 });;
+        }).first().click(); //initialize by activating the first
+      });
+
+      //initialize checked elements
+      $(".adForm-device-formats").children().filter(':checked').click().each(function(){
+        var deviceFormat = $(this).val(); //either tablet or phone
+        var container = "#adForm-"+deviceFormat+"-container"
+        $(container).find('.possible-format').click(); 
+      });
+
   });
 })(this.jQuery);
 

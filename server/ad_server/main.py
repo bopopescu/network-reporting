@@ -1,14 +1,14 @@
 # !/usr/bin/env python
 
 # TODO: PLEASE HAVE THIS FIX DJANGO PROBLEMS
-#from appengine_django import LoadDjango
-#LoadDjango()
-#import os
-#from django.conf import settings
+from appengine_django import LoadDjango
+LoadDjango()
+import os
+from django.conf import settings
 
-#os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 # Force Django to reload its settings.
-#settings._target = None
+settings._target = None
 # END TODO: PLEASE HAVE THIS FIX DJANGO PROBLEMS
 
 import wsgiref.handlers

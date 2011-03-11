@@ -57,7 +57,7 @@
     function get_session() {
         //if no session, set it
         if(!get_cookie(c_name)) {
-            set_cookie(c_name, gen_key()));
+            set_cookie(c_name, gen_key());
         }
         //get it
         return get_cookie(c_name);

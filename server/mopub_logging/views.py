@@ -57,7 +57,8 @@ class LogTaskHandler(webapp.RequestHandler):
   def get(self):
       # inspect headers of the task
       retry_count = self.request.headers.get('X-AppEngine-TaskRetryCount',None)
-      
+      memcache_stats_start = memcache.get_stats()
+      memcache_stats = None
       # grab parameters from the message of the task
       account_name = self.request.get("account_name")
       time_bucket = int(self.request.get("time"))
@@ -67,9 +68,12 @@ class LogTaskHandler(webapp.RequestHandler):
       # get the last index for a given time bucket
       tail_key = mp_logging.INDEX_KEY_FORMAT%dict(account_name=account_name,time=time_bucket)
       tail_index_str = memcache.get(tail_key)
+      if not tail_index_str:
+          memcache_stats = memcache_stats or memcache.get_stats()
       tail_index = int(tail_index_str or MAX_TAIL)
 
       logging.info("account: %s time: %s start: %s stop: %s"%(account_name,time_bucket,head_index,tail_index))
+      logging.info("MEMCACHE STATS: %s"%memcache_stats_start)
 
       stats_dict = {}      
       start = head_index
@@ -88,6 +92,8 @@ class LogTaskHandler(webapp.RequestHandler):
           data_dicts = memcache.get_multi(keys) 
           current_memcache_misses = (stop - start+1) - len(data_dicts)  
           memcache_misses += current_memcache_misses
+          if memcache_misses:
+              memcache_stats = memcache_stats or memcache.get_stats()
           logging.info("Memcache misses: %d"%current_memcache_misses)
 
           for k,d in data_dicts.iteritems():
@@ -123,7 +129,7 @@ class LogTaskHandler(webapp.RequestHandler):
                   if event == mp_logging.REQ_EVENT:
                       update_stats(stats_dict,
                                    publisher=adunit,
-                                   advertiser=None,
+                                   advertiser=creative,
                                    date_hour=date_hour,                                   
                                    attribute='request_count')
                   elif event == mp_logging.IMP_EVENT:
@@ -163,11 +169,16 @@ class LogTaskHandler(webapp.RequestHandler):
           
       if not tail_index_str or memcache_misses:
           exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
+          
+          message = "Account: %s time: %s tail: %s misses: %s retry: %s\nmemcache_stats_starts:%s\nmemcache_stats:%s"%(account_name,time_bucket,
+                                                                                  tail_index_str,memcache_misses,retry_count,
+                                                                                  memcache_stats_start,memcache_stats)
+          
           mail.send_mail(sender="olp@mopub.com",
                         to="bugs@mopub.com",
                         subject="Logging error",
-                        body="Account: %s time: %s tail: %s misses: %s retry: %s"%(account_name,time_bucket,tail_index_str,memcache_misses,retry_count))
-          logging.error("Account: %s time: %s tail: %s misses: %s retry: %s"%(account_name,time_bucket,tail_index_str,memcache_misses,retry_count))
+                        body=message)
+          logging.error(message)
                 
 
 application = webapp.WSGIApplication([('/_ah/queue/bulk-log-processor', LogTaskHandler),

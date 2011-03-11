@@ -583,8 +583,6 @@ class AdHandler(webapp.RequestHandler):
         if str(self.request.headers['User-Agent']) not in CRAWLERS:
             logging.info('OLP ad-auction {"id": "%s", "c": "%s", "request_id": "%s", "udid": "%s"}' % (id, c.key(), request_id, udid))
 
-        self.response.headers.add_header("X-Creative",str(c.key()))    
-
         # add timer and animations for the ad 
         refresh = adunit.refresh_interval
         # only send to client if there should be a refresh
@@ -593,11 +591,11 @@ class AdHandler(webapp.RequestHandler):
         # animation_type = random.randint(0,6)
         # self.response.headers.add_header("X-Animation",str(animation_type))    
 
-      # create an ad clickthrough URL
-        ad_click_url = "http://%s/m/aclk?id=%s&c=%s&req=%s" % (DOMAIN,id, c.key(), request_id)
+        # create an ad clickthrough URL
+        ad_click_url = "http://%s/m/aclk?id=%s&cid=%s&req=%s" % (DOMAIN,id, c.key(), request_id)
         self.response.headers.add_header("X-Clickthrough", str(ad_click_url))
       
-      # ad an impression tracker URL
+        # ad an impression tracker URL
         self.response.headers.add_header("X-Imptracker", "http://%s/m/imp?id=%s&cid=%s"%(DOMAIN,id,c.key()))
       
       #add creative ID for testing (also prevents that one bad bug from happening)

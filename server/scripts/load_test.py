@@ -19,8 +19,6 @@ testing skeleton script. Modify the code between !!!!!
 to make the requests you want load tested.
 """
 
-
-
 import httplib2
 import random
 import socket
@@ -122,9 +120,10 @@ def threadproc():
             
             
             uid = uuid.uuid4()
-            adunits = ["agltb3B1Yi1pbmNyDAsSBFNpdGUYkaoMDA","agltb3B1Yi1pbmNyDAsSBFNpdGUYycEMDA","agltb3B1Yi1pbmNyDAsSBFNpdGUYq-wdDA"]
-            adunits = ["ahRldmVudHJhY2tlcnNjYWxldGVzdHILCxIEU2l0ZRiJJww"]
-            # random.shuffle(adunits)
+            # adunits = ["agltb3B1Yi1pbmNyDAsSBFNpdGUYkaoMDA","agltb3B1Yi1pbmNyDAsSBFNpdGUYycEMDA","agltb3B1Yi1pbmNyDAsSBFNpdGUYq-wdDA"]
+            # adunits = ["ahRldmVudHJhY2tlcnNjYWxldGVzdHILCxIEU2l0ZRiJJww"]
+            adunits = ["agltb3B1Yi1pbmNyDAsSBFNpdGUYycoJDA","agltb3B1Yi1pbmNyDAsSBFNpdGUYmpUgDA"]
+            random.shuffle(adunits)
             adunit = adunits[0]
             t = time.time()
 
@@ -158,7 +157,7 @@ def threadproc():
                 print "FAIL content: %s"%content
                 fail_lock.release()
             else:    
-                creative = resp['x-creative'] # creative_id
+                creative = resp['x-creativeid'] # creative_id
             
 
             key = r_models.StatsModel.get_key_name(publisher=adunit,

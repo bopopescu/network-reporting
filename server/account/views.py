@@ -1,28 +1,15 @@
-import logging, os, re, datetime, hashlib
-
-from urllib import urlencode
-
-from google.appengine.api import users
-from google.appengine.api.urlfetch import fetch
-from google.appengine.ext import db
-from google.appengine.ext.webapp import template
-from google.appengine.ext.webapp.util import run_wsgi_app
+from google.appengine.api import users, mail
 
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseRedirect, Http404
+from django.http import HttpResponse, HttpResponseRedirect
 from django.core.urlresolvers import reverse
-from common.ragendja.template import render_to_response, JSONResponse
-from django.core.mail import send_mail, EmailMessage
-
+from common.ragendja.template import render_to_response
 
 from common.utils.decorators import whitelist_login_required
 from common.utils.cachedquerymanager import CachedQueryManager
-# from common.ragendja.auth.decorators import google_login_required as login_required
 
 from account.models import Account
 from account.forms import AccountForm
-from publisher.models import Site
-
 from account.query_managers import AccountQueryManager
 from publisher.query_managers import AdUnitQueryManager
 
@@ -82,9 +69,12 @@ class AccountHandler(RequestHandler):
 def index(request,*args,**kwargs):
   return AccountHandler()(request,*args,**kwargs)
 
-class AccountEditHandler(RequestHandler):
+class NewAccountHandler(RequestHandler):
   def get(self,account_form=None):
-    send_mail("New User","%s has signed up for an account."%self.request.user.email,'olp@mopub.com',['beta@mopub.com'],fail_silently=True)
+    mail.send_mail(sender="olp@mopub.com",
+                   to="beta@mopub.com",
+                   subject="New User",
+                   body="%s has signed up for an account."%self.request.user.email)
     account_form = account_form or AccountForm(instance=self.account)
     return render_to_response(self.request,'account/new_account.html',{'account': self.account,
                                                                'account_form' : account_form })
@@ -103,16 +93,19 @@ class AccountEditHandler(RequestHandler):
       AccountQueryManager().put_accounts(account)
       
       # send a reply
-      msg = EmailMessage('Welcome to MoPub', '''Hello from MoPub!
-      
+      mail.send_mail(sender="MoPub Team <olp@mopub.com>",
+                     reply_to="sales@mopub.com",
+                     to="self.request.user.email",
+                     subject="Welcome to MoPub",
+                     body="""Hello from MoPub!
+
 MoPub is designed to help mobile publishers monetize their apps more 
 effectively. If you have any questions during the setup process,
 please don't hesitate to email our sales department at sales@mopub.com.
 
 Thanks,
 The MoPub Team
-      ''', 'MoPub Team <olp@mopub.com>', [self.request.user.email], headers = {'Reply-To': 'sales@mopub.com'})
-      msg.send(fail_silently=True)
+""")
       
       return HttpResponseRedirect(reverse('publisher_app_create'))
 
@@ -121,7 +114,7 @@ The MoPub Team
 # We use login_required here since we want to let users activate themselves on this page
 @login_required
 def new(request,*args,**kwargs):
-  return AccountEditHandler()(request,*args,**kwargs)  
+  return NewAccountHandler()(request,*args,**kwargs)  
 
 class LogoutHandler(RequestHandler):
   def get(self):
@@ -129,30 +122,3 @@ class LogoutHandler(RequestHandler):
     
 def logout(request,*args,**kwargs):
   return LogoutHandler()(request,*args,**kwargs)
-  
-def test(request,*args,**kwargs):
-  from common.utils.cachedquerymanager import CachedQueryManager
-  key = request.GET.get('key')
-  response = CachedQueryManager().get([key])
-  return response
-
-def test2(request,*args,**kwargs):
-  from publisher.query_managers import AdUnitQueryManager
-  key = request.GET.get('key')
-  manager = AdUnitQueryManager(key)
-  adunit = manager.get_adunit()
-  adgroups = manager.get_adgroups()
-
-  adgroups = [a for a in adgroups 
-                    if a.campaign.active and 
-                      (a.campaign.start_date >= SiteStats.today() if a.campaign.start_date else True) 
-                      and (a.campaign.end_date <= SiteStats.today() if a.campaign.end_date else True)]
-  
-  creatives = manager.get_creatives_for_adgroups(adgroups)
-  
-  return HttpResponse("adgroups: %s <br>creatives: %s"%(adgroups,creatives))
-  
-  
-  
-  
-# <script> function  finishLoad(){window.location="mopub://finishLoad";} window.onload =  function(){ finishLoad(); }  </script> <script type="text/javascript">  function webviewDidClose(){var img  = new Image();  img.src="/hellothereimclosing/"}  function  webviewDidAppear(){var  img  =  new   Image();  img.src="/hellothereimopening/"}  function  showImage(){var  img  =  document.createElement("img"); img.setAttribute('src','/images/yelp.png'); document.body.appendChild(img);} setTimeout("showImage()",100); function  close(){window.location = "mopub://done"}; //setTimeout("close()",10000); </script>

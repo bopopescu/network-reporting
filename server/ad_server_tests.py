@@ -176,6 +176,7 @@ def priority_level_test():
     for i in range(20):
         camp = Creative.get(get_id())
         assert camp.ad_group.name in NETWORKS, "Expected network, got %s" % camp.ad_group.name
+    assert False # BREAK TEST ON PURPOSE    
     de_prioritize_all()
 
 def net_priorty_test():

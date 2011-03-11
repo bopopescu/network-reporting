@@ -33,8 +33,9 @@
 	          <div class="adForm-format-details">320 &times; 480</div> 
 	        </div> 
 	        <img class="adForm-format-image" src="/images/setup/ad-format-full.png" alt="Fullscreen ad" /> 
-	      </div> 
+	      </div>
 	    </div>
+	
 	  </dd>
 	</div>
 	
@@ -73,7 +74,15 @@
 	          <div class="adForm-format-details">1024 &times; 768</div> 
 	        </div> 
 	        <img class="adForm-format-image" src="/images/setup/ad-format-tablet-full.png" alt="Fullscreen ad" /> 
-	      </div> 
+	      </div>
+		  <div class="adForm-tablet-format adForm-format"> 
+	        <div class="adForm-format-name"> 
+	          <input type="radio" class="input-radio" name="{{form.format.name}}" value="tablet_320x50" id="appForm-adUnitFormat-tablet-banner" {% ifequal form.format.value 'tablet_320x50' %}checked="checked"{% endifequal %}/> 
+	          <label for="appForm-adUnitFormat-tablet-banner">Banner</label> 
+	          <div class="adForm-format-details">320 &times; 50</div> 
+	        </div> 
+	        <img class="adForm-format-image" src="/images/setup/ad-format-tablet-banner.png" alt="Fullscreen ad" /> 
+	      </div>
 	    </div>
 	  </dd>
 	</div>

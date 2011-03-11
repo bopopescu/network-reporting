@@ -70,7 +70,7 @@ class ClickEvent(db.Model):
         check_required_param('time', kwargs)
         check_required_param('adunit', kwargs)
         check_required_param('creative', kwargs)
-        
+
         if not kwargs.get('key', None):
             if not parent:
                 if mobile_appid:

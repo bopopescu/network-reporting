@@ -64,7 +64,7 @@ class AppForm(mpforms.MPModelForm):
 
 class AdUnitForm(mpforms.MPModelForm):
   TEMPLATE = 'publisher/forms/adunit_form.html'
-  format = mpfields.MPTextField(label="Phone #", required=False, widget = mpwidgets.MPFormatWidget)
+  format = mpfields.MPTextField(required=True, widget = mpwidgets.MPFormatWidget)
   
   class Meta:
     model = Site

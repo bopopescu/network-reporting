@@ -1068,6 +1068,7 @@ class TestHandler(webapp.RequestHandler):
     from ad_server.networks.brightroll import BrightRollServerSide
     from ad_server.networks.jumptap import JumptapServerSide
     from ad_server.networks.mobfox import MobFoxServerSide
+    from ad_server.networks.inmobi import InMobiServerSide
     key = self.request.get('id') or 'agltb3B1Yi1pbmNyCgsSBFNpdGUYAgw'
     delay = self.request.get('delay') or '5'
     delay = int(delay)

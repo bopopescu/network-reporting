@@ -1,8 +1,5 @@
 from ad_server.networks.server_side import ServerSide
-import re
-import urllib
-import urllib2
-import string
+import re, urllib, urllib2, string
 
 from xml.dom import minidom
 
@@ -24,6 +21,22 @@ class InMobiServerSide(ServerSide):
     # TODO: Should return actual software and hardware versions for iPhone/iPod
     return 'InMobi_Specs_iPhoneApp=1.0.2 (iPhone; iPhone OS 3.1.2; HW iPhone1,1)'
 
+  def get_inmobi_ad_size(self):
+    if self.adunit.format == "300x250":
+      self.url_params.update(width=300,height=250)
+      return '10'
+    if self.adunit.format == "728x90":
+      self.url_params.update(width=728,height=90)
+      return '11'
+    if self.adunit.format == "160x600":
+      # InMobi returns 120x600 non-IAB format
+      self.url_params.update(width=120,height=600)
+      return '13'
+
+    # By default, InMobi supports a 320x48 banner
+    self.url_params.update(width=320,height=48)
+    return '9'
+
   @property
   def headers(self):
     return {'X-Mkhoj-SiteID': self.get_account().inmobi_pub_id,
@@ -34,7 +47,9 @@ class InMobiServerSide(ServerSide):
     data = {'mk-siteid': self.get_account().inmobi_pub_id,
             'mk-version': 'pr-SPEC-ATATA-20090521',
             'u-id': self.get_udid(),
-            'mk-carrier': self.get_ip(),  # Test value: 'mk-carrier': '208.54.5.50',
+            'mk-carrier': self.get_ip(),
+            #'mk-carrier': '208.54.5.50',  # Test value
+            'mk-ad-slot': self.get_inmobi_ad_size(),
             'h-user-agent': self.get_inmobi_user_agent() }
 
     return urllib.urlencode(data)
@@ -84,7 +99,7 @@ class InMobiServerSide(ServerSide):
 
 banner_template = string.Template(
 """
-  <a href="$ad_url" target="_blank"><img src="$image_url"/></a>
+  <div style='text-align:center'><a href="$ad_url" target="_blank"><img src="$image_url"/></a></div>
 """)
 
 text_template = string.Template(

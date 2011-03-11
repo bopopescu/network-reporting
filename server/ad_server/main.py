@@ -16,7 +16,6 @@ import cgi
 import logging
 import os
 import re
-import datetime
 import hashlib
 import traceback
 import random
@@ -24,17 +23,17 @@ import hashlib
 import time
 import base64, binascii
 import urllib
+import datetime
 
 
 urllib.getproxies_macosx_sysconf = lambda: {}
 
 
-# moved from django to common utils
-# from django.utils import simplejson
 from common.utils import simplejson
 
 from string import Template
 from urllib import urlencode, unquote
+#from datetime import datetime
 
 from google.appengine.api import users, urlfetch, memcache
 from google.appengine.api.labs import taskqueue
@@ -45,6 +44,7 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 from publisher.models import *
 from advertiser.models import *
 from reporting.models import *
+from userstore.models import CLICK_EVENT_NO_APP_ID
 
 from ad_server.networks.appnexus import AppNexusServerSide
 from ad_server.networks.brightroll import BrightRollServerSide
@@ -54,6 +54,7 @@ from ad_server.networks.jumptap import JumptapServerSide
 from ad_server.networks.millennial import MillennialServerSide
 from ad_server.networks.mobfox import MobFoxServerSide
 
+from userstore.query_managers import ClickEventManager, AppOpenEventManager
 from publisher.query_managers import AdServerAdUnitQueryManager, AdUnitQueryManager
 from advertiser.query_managers import CampaignStatsCounter
 
@@ -591,6 +592,7 @@ class AdHandler(webapp.RequestHandler):
         # animation_type = random.randint(0,6)
         # self.response.headers.add_header("X-Animation",str(animation_type))    
 
+
         # create an ad clickthrough URL
         ad_click_url = "http://%s/m/aclk?id=%s&cid=%s&req=%s" % (DOMAIN,id, c.key(), request_id)
         self.response.headers.add_header("X-Clickthrough", str(ad_click_url))
@@ -954,10 +956,21 @@ class AdImpressionHandler(webapp.RequestHandler):
     self.response.out.write("OK")
         
 class AdClickHandler(webapp.RequestHandler):
-  # /m/aclk?v=1&udid=26a85bc239152e5fbc221fe5510e6841896dd9f8&q=Hotels:%20Hotel%20Utah%20Saloon%20&id=agltb3B1Yi1pbmNyDAsSBFNpdGUY6ckDDA&r=http://googleads.g.doubleclick.net/aclk?sa=l&ai=BN4FhRH6hTIPcK5TUjQT8o9DTA7qsucAB0vDF6hXAjbcB4KhlEAEYASDgr4IdOABQrJON3ARgyfb4hsijoBmgAbqxif8DsgERYWRzLm1vcHViLWluYy5jb226AQkzMjB4NTBfbWLIAQHaAbwBaHR0cDovL2Fkcy5tb3B1Yi1pbmMuY29tL20vYWQ_dj0xJmY9MzIweDUwJnVkaWQ9MjZhODViYzIzOTE1MmU1ZmJjMjIxZmU1NTEwZTY4NDE4OTZkZDlmOCZsbD0zNy43ODM1NjgsLTEyMi4zOTE3ODcmcT1Ib3RlbHM6JTIwSG90ZWwlMjBVdGFoJTIwU2Fsb29uJTIwJmlkPWFnbHRiM0IxWWkxcGJtTnlEQXNTQkZOcGRHVVk2Y2tEREGAAgGoAwHoA5Ep6AOzAfUDAAAAxA&num=1&sig=AGiWqtx2KR1yHomcTK3f4HJy5kk28bBsNA&client=ca-mb-pub-5592664190023354&adurl=http://www.sanfranciscoluxuryhotels.com/
+  # /m/aclk?udid=james&appid=angrybirds&id=ahRldmVudHJhY2tlcnNjYWxldGVzdHILCxIEU2l0ZRipRgw&cid=ahRldmVudHJhY2tlcnNjYWxldGVzdHIPCxIIQ3JlYXRpdmUYoh8M
   def get(self):
-    mp_logging.log(self.request,event=mp_logging.CLK_EVENT)  
-      
+    udid = self.request.get('udid')
+    mobile_appid = self.request.get('appid')
+    time = datetime.datetime.now()
+    adunit = self.request.get('id')
+    creative = self.request.get('cid')
+
+    if mobile_appid and mobile_appid != CLICK_EVENT_NO_APP_ID:
+      mp_logging.log(self.request, event=mp_logging.CLK_EVENT)  
+    
+    # TODO: maybe have this section run asynchronously
+    ce_manager = ClickEventManager()
+    ce = ce_manager.log_click_event(udid, mobile_appid, time, adunit, creative)
+
     id = self.request.get("id")
     q = self.request.get("q")    
     # BROKEN
@@ -970,14 +983,25 @@ class AdClickHandler(webapp.RequestHandler):
       # forward on to the click URL
       self.redirect(url)
     else:
-      self.response.out.write("OK")
+      self.response.out.write("ClickEvent:OK:"+str(ce.key()))
 
+      
+    
 # TODO: Process this on the logs processor 
 class AppOpenHandler(webapp.RequestHandler):
-  # /m/open?v=1&udid=26a85bc239152e5fbc221fe5510e6841896dd9f8&q=Hotels:%20Hotel%20Utah%20Saloon%20&id=agltb3B1Yi1pbmNyDAsSBFNpdGUY6ckDDA&r=http://googleads.g.doubleclick.net/aclk?sa=l&ai=BN4FhRH6hTIPcK5TUjQT8o9DTA7qsucAB0vDF6hXAjbcB4KhlEAEYASDgr4IdOABQrJON3ARgyfb4hsijoBmgAbqxif8DsgERYWRzLm1vcHViLWluYy5jb226AQkzMjB4NTBfbWLIAQHaAbwBaHR0cDovL2Fkcy5tb3B1Yi1pbmMuY29tL20vYWQ_dj0xJmY9MzIweDUwJnVkaWQ9MjZhODViYzIzOTE1MmU1ZmJjMjIxZmU1NTEwZTY4NDE4OTZkZDlmOCZsbD0zNy43ODM1NjgsLTEyMi4zOTE3ODcmcT1Ib3RlbHM6JTIwSG90ZWwlMjBVdGFoJTIwU2Fsb29uJTIwJmlkPWFnbHRiM0IxWWkxcGJtTnlEQXNTQkZOcGRHVVk2Y2tEREGAAgGoAwHoA5Ep6AOzAfUDAAAAxA&num=1&sig=AGiWqtx2KR1yHomcTK3f4HJy5kk28bBsNA&client=ca-mb-pub-5592664190023354&adurl=http://www.sanfranciscoluxuryhotels.com/
+  # /m/open?v=1&udid=26a85bc239152e5fbc221fe5510e6841896dd9f8&id=agltb3B1Yi1pbmNyDAsSBFNpdGUY6ckDDA
   def get(self):
-    self.response.out.write("OK") 
+    udid = self.request.get('udid')
+    mobile_appid = self.request.get('id')
+    aoe_manager = AppOpenEventManager()
+    aoe, conversion_logged = aoe_manager.log_conversion(udid, mobile_appid, time=datetime.datetime.now())
+    
+    if conversion_logged:
+      mp_logging.log(self.request, event=mp_logging.CONV_EVENT, adunit_id=aoe.conversion_adunit, creative_id=aoe.conversion_creative, udid=udid)
 
+    self.response.out.write("ConversionLogged:"+str(conversion_logged)+":"+str(aoe.key())) 
+
+    
 class TestHandler(webapp.RequestHandler):
   # /m/open?v=1&udid=26a85bc239152e5fbc221fe5510e6841896dd9f8&q=Hotels:%20Hotel%20Utah%20Saloon%20&id=agltb3B1Yi1pbmNyDAsSBFNpdGUY6ckDDA&r=http://googleads.g.doubleclick.net/aclk?sa=l&ai=BN4FhRH6hTIPcK5TUjQT8o9DTA7qsucAB0vDF6hXAjbcB4KhlEAEYASDgr4IdOABQrJON3ARgyfb4hsijoBmgAbqxif8DsgERYWRzLm1vcHViLWluYy5jb226AQkzMjB4NTBfbWLIAQHaAbwBaHR0cDovL2Fkcy5tb3B1Yi1pbmMuY29tL20vYWQ_dj0xJmY9MzIweDUwJnVkaWQ9MjZhODViYzIzOTE1MmU1ZmJjMjIxZmU1NTEwZTY4NDE4OTZkZDlmOCZsbD0zNy43ODM1NjgsLTEyMi4zOTE3ODcmcT1Ib3RlbHM6JTIwSG90ZWwlMjBVdGFoJTIwU2Fsb29uJTIwJmlkPWFnbHRiM0IxWWkxcGJtTnlEQXNTQkZOcGRHVVk2Y2tEREGAAgGoAwHoA5Ep6AOzAfUDAAAAxA&num=1&sig=AGiWqtx2KR1yHomcTK3f4HJy5kk28bBsNA&client=ca-mb-pub-5592664190023354&adurl=http://www.sanfranciscoluxuryhotels.com/
   def get(self):

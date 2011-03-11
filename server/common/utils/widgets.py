@@ -67,6 +67,9 @@ class MPRadioInput(MPWidget):
     TEMPLATE = 'widgets/radio_input.html'
     DEFAULT_CLASSES = "input-text"
 
+class MPFormatWidget(MPWidget):
+    TEMPLATE = 'widgets/format.html'
+
 class MPNumberInput(MPTextInput):
     TEMPLATE = 'widgets/number_input.html'
     DEFAULT_CLASSES = "input-text input-text-number"

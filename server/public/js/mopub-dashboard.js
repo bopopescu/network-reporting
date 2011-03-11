@@ -523,16 +523,21 @@ var mopub = mopub || {};
     // Set up device format selection UI
     $(".adForm-device-formats").buttonset();
     $('#appForm-adUnitDeviceFormat-phone').click(function(e){
-      $('#adForm-tablets').hide()
-      $('#adForm-phones').show()
+      $('#adForm-tablet-container').hide()
+      $('#adForm-phone-container').show()
     });
     
     $('#appForm-adUnitDeviceFormat-tablet').click(function(e){
-      $('#adForm-phones').hide()
-      $('#adForm-tablets').show()
+      $('#adForm-phone-container').hide()
+      $('#adForm-tablet-container').show()
     });
     
-    $(".adForm-device-formats").children().filter(':checked').click();
+        //initialize checked elements
+        $(".adForm-device-formats").children().filter(':checked').click().each(function(){
+          var deviceFormat = $(this).val(); //either tablet or phone
+          var container = "#adForm-"+deviceFormat+"-container"
+          $(container).find('.possible-format').click().select(); 
+        });
     
     
     // Set up format selection UI

@@ -15,6 +15,14 @@ def attrs(bound_field, attrs_json):
     parsed = json.loads(attrs_json)
     bound_field.add_attrs(attrs=parsed)
     return bound_field
+  
+@register.filter
+def raw(bound_field):
+    """
+    Parses a json attrs object from template and passes them to the bound_field
+    """
+    bound_field.TEMPLATE = 'raw_bound_field.html'
+    return bound_field
     
 @register.filter
 def label(bound_field, label):

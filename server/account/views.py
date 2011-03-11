@@ -44,12 +44,12 @@ class AccountHandler(RequestHandler):
       AccountQueryManager().put_accounts(self.account)
       return HttpResponseRedirect(reverse('advertiser_campaign'))
 
-    account_form = account_form or AccountForm(instance=self.account)
+    account_form = account_form or AccountForm(instance=self.account, prefix="account")
     return render_to_response(self.request,'account/account.html', {'account': self.account,
                                                                     'account_form': account_form})
 
   def post(self):
-    account_form = AccountForm(data=self.request.POST, instance=self.account)
+    account_form = AccountForm(data=self.request.POST, instance=self.account, prefix="account")
 
     if account_form.is_valid():
       account = account_form.save(commit=False)
@@ -75,11 +75,11 @@ class NewAccountHandler(RequestHandler):
                    to="beta@mopub.com",
                    subject="New User",
                    body="%s has signed up for an account."%self.request.user.email)
-    account_form = account_form or AccountForm(instance=self.account)
+    account_form = account_form or AccountForm(instance=self.account, prefix="account")
     return render_to_response(self.request,'account/new_account.html',{'account': self.account,
                                                                'account_form' : account_form })
   def post(self):
-    account_form = AccountForm(data=self.request.POST,instance=self.account)
+    account_form = AccountForm(data=self.request.POST, instance=self.account, prefix="account")
     # Make sure terms and conditions are agreed to
     if not self.request.POST.get("terms_conditions"):
       account_form.term_conditions_error = "Accept the terms and conditions in order to start using MoPub."

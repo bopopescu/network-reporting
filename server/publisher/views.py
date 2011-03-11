@@ -192,7 +192,7 @@ def index_geo(request,*args,**kwargs):
 class AppCreateHandler(RequestHandler):
   def get(self, app_form=None,adunit_form=None):
     app_form = app_form or AppForm()
-    adunit_form = adunit_form or AdUnitForm()
+    adunit_form = adunit_form or AdUnitForm(prefix="adunit")
     return render_to_response(self.request,'publisher/new_app.html', {"app_form": app_form, 
                                                                       "adunit_form":adunit_form,  
                                                                       "account": self.account})
@@ -205,7 +205,7 @@ class AppCreateHandler(RequestHandler):
     else:
       app_form = AppForm(data=self.request.POST, files = self.request.FILES )
       
-    adunit_form = AdUnitForm(data=self.request.POST)
+    adunit_form = AdUnitForm(data=self.request.POST, prefix="adunit")
       
     if app_form.is_valid():
       app = app_form.save(commit=False)
@@ -477,7 +477,7 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
     if app:
       initial.update(app_key=app.key())
     logging.info("adunit form: %s %s"%('adunit_form',adunit))
-    adunit_form = adunit_form or AdUnitForm(instance=adunit,initial=initial)
+    adunit_form = adunit_form or AdUnitForm(instance=adunit,initial=initial, prefix="adunit")
     return self.render(form=adunit_form)
 
   def render(self,template=None,**kwargs):
@@ -494,7 +494,7 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
     else:
       adunit = None
 
-    adunit_form = AdUnitForm(data=self.request.POST,instance=adunit)
+    adunit_form = AdUnitForm(data=self.request.POST,instance=adunit, prefix="adunit")
     json_dict = {'success':False,'html':None}
 
     if adunit_form.is_valid():

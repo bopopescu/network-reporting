@@ -792,6 +792,13 @@ class AdHandler(webapp.RequestHandler):
                       img%(name)s.setAttribute("width", 1);\
                       img%(name)s.setAttribute("src", "%(src)s");\
                       hid_span.appendChild(img%(name)s);'
+
+      # because we send the client the HTML, and THEN send requests to admob for content, just becaues our HTML 
+      # (in this case the tracking pixel) works, DOESNT mean that admob has successfully returned a creative.
+      # Because of the admob pixel has to be added AFTER the admob ad actually loads, this is done via javascript.
+      # It's hella generic and not all clean and jQuery'd because (in theory) this will work on all platforms 
+      # that support javascript (blackberry brower bs i'm looking at you)
+
       success = hidden_span
       success += tracking_pix % dict(name = 'first', src = track_url)
       if c.tracking_url:
@@ -851,7 +858,7 @@ class AdHandler(webapp.RequestHandler):
         # extra parameters used only by admob template
         #add in the success tracking pixel
         params.update(admob_finish_load= success + 'window.location = "mopub://finishLoad";')
-       params.update(admob_fail_load='window.location = "mopub://failLoad";')
+        params.update(admob_fail_load='window.location = "mopub://failLoad";')
       else:
         # don't use special url hooks because older clients don't understand    
         params.update(finishLoad='')

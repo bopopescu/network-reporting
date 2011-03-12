@@ -23,11 +23,20 @@ MEMCACHE_ALIVE_TIME = 0#6*TIME_BUCKET
 def log(request,event,adunit=None,manager=None,adunit_id=None,creative_id=None,udid=None):
 
     # get parameters from the request or args
+    
     adunit_id = adunit_id or request.get('id',None)
     creative_id = creative_id or request.get('cid',None)
     udid = udid or request.get('udid',None)
     request_id = request.get('reqcnt',None)
     instance_id = request.get('inst',None)
+    
+    # if this is the second request because of a 
+    # native failure we just bail
+    exclude_creatives = request.get_all("exclude")
+    if exclude_creatives:
+        return
+    
+    
 
     # get account name from the adunit
     adunit_qmanager = manager or AdUnitQueryManager(adunit_id)

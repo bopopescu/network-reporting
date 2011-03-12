@@ -66,7 +66,7 @@ MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7P
 DOMAIN = 'ads.mopub.com' 
 FREQ_ATTR = '%s_frequency_cap'
 CAMPAIGN_LEVELS = ('gtee_high', 'gtee', 'gtee_low', 'promo', 'network')
-
+NATIVE_REQUESTS = ['admob','adsense','iAd','custom']
 
 
 
@@ -256,6 +256,7 @@ class AdAuction(object):
   def run(cls, **kw):
     now = kw["now"]
     site = kw["site"]
+    adunit = kw["site"]
     manager = kw["manager"]
     request = kw["request"]
     
@@ -392,16 +393,21 @@ class AdAuction(object):
                             logging.warning('winners %s' % [w.ad_group for w in winners])
                             random.shuffle(winners)
                             logging.warning('random winners %s' % winners)
-                            actual_winner = None
+
                             # find the actual winner among all the eligble ones
                             # loop through each of the randomized winners making sure that the data is ready to display
                             for winner in winners:
                                 if not rpcs:
                                     winning_creative = winner
+                                    # if native, log native request
+                                    if winner.ad_type in NATIVE_REQUESTS:
+                                        mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner)
                                     return winning_creative
                                 else:
-                                    rpc = None                      
+                                    rpc = None          
+                                    # if winning ad_group is in network rpc and is in flight:
                                     if winner.ad_group.key() in [r.adgroup.key() for r in rpcs]:
+                                        # pick the winning rpc
                                         for rpc in rpcs:
                                             if rpc.adgroup.key() == winner.ad_group.key():
                                                 logging.warning("rpc.adgroup %s"%rpc.adgroup)
@@ -410,6 +416,8 @@ class AdAuction(object):
                             # if the winning creative relies on a rpc to get the actual data to display
                             # go out and get the data and paste in the data to the creative      
                                     if rpc:      
+                                        # if third-party network, log request
+                                        mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner)
                                         try:
                                             result = rpc.get_result()
                                             if result.status_code == 200:
@@ -516,6 +524,7 @@ class AdHandler(webapp.RequestHandler):
     
     if not testing:
         mp_logging.log(self.request,event=mp_logging.REQ_EVENT)  
+
     
     logging.warning(self.request.headers['User-Agent'] )
     locale = self.request.headers.get("Accept-Language")
@@ -571,7 +580,7 @@ class AdHandler(webapp.RequestHandler):
     request_id = hashlib.md5("%s:%s" % (self.request.query_string, time.time())).hexdigest()
     if str(self.request.headers['User-Agent']) not in CRAWLERS:
         logging.info('OLP ad-request {"request_id": "%s", "remote_addr": "%s", "q": "%s", "user_agent": "%s", "udid":"%s" }' % (request_id, self.request.remote_addr, self.request.query_string, self.request.headers["User-Agent"], udid))
-
+        
     # get winning creative
     c = AdAuction.run(request=self.request, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, udid=udid, request_id=request_id, now=now,manager=manager)
     # output the request_id and the winning creative_id if an impression happened

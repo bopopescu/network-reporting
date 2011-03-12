@@ -4,14 +4,7 @@ import logging
 from time import sleep
 from datetime import datetime, timedelta
 
-GAE_HOME = "/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine"
-sys.path.append(GAE_HOME)
-sys.path.append(GAE_HOME+'/lib/yaml/lib')
-sys.path.append(GAE_HOME+'/lib/fancy_urllib')
-
-# configure your own src path
-SRC_HOME = os.environ['HOME']+'/src/server' 
-sys.path.append(SRC_HOME)
+sys.path.append(os.environ['PWD'])
 
 from google.appengine.ext import db
 from nose.tools import assert_equals, assert_not_equals, assert_true, assert_false, assert_raises

@@ -20,14 +20,22 @@ TASK_NAME = 't-%(account_name)s-%(time)s' # note time will be bucketed
 TIME_BUCKET = 10
 MEMCACHE_ALIVE_TIME = 0#6*TIME_BUCKET
 
-def log(request,event,adunit=None,manager=None,adunit_id=None,creative_id=None,udid=None):
+def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,creative_id=None,udid=None):
 
     # get parameters from the request or args
-    adunit_id = adunit_id or request.get('id',None)
-    creative_id = creative_id or request.get('cid',None)
-    udid = udid or request.get('udid',None)
-    request_id = request.get('reqcnt',None)
-    instance_id = request.get('inst',None)
+    adunit_id = adunit_id or str(adunit.key()) 
+    creative_id = creative_id or str(creative.key()) 
+    
+    if request:
+        adunit_id = adunit_id or request.get('id', None)
+        creative_id = creative_id or request.get('cid', None)
+        udid = udid or request.get('udid', None)
+        request_id = request.get('reqcnt',None)
+        instance_id = request.get('inst',None)
+    else:
+        request_id = None
+        instance_id = None
+
 
     # get account name from the adunit
     adunit_qmanager = manager or AdUnitQueryManager(adunit_id)

@@ -88,9 +88,9 @@ def rollup_test():
     'k:%s:%s:%s'%(app_id,creative_id1,date_hour.strftime('%y%m%d%H')):(stat1.request_count+stat3.request_count,stat1.impression_count+stat3.impression_count,stat1.click_count+stat3.click_count),
     'k:%s:%s:%s'%(app_id,creative_id2,date_hour.strftime('%y%m%d%H')):(stat2.request_count+stat4.request_count,stat2.impression_count+stat4.impression_count,stat2.click_count+stat4.click_count),
     # App-AdGroup
-    'k:%s:%s:%s'%(app_id,adgroup_id,date_hour.strftime('%y%m%d%H')):(stat1.request_count+stat2.request_count,stat1.impression_count+stat2.impression_count+stat3.impression_count+stat4.impression_count,stat1.click_count+stat2.click_count+stat3.click_count+stat4.click_count),    
+    'k:%s:%s:%s'%(app_id,adgroup_id,date_hour.strftime('%y%m%d%H')):(stat1.request_count+stat2.request_count+stat3.request_count+stat4.request_count,stat1.impression_count+stat2.impression_count+stat3.impression_count+stat4.impression_count,stat1.click_count+stat2.click_count+stat3.click_count+stat4.click_count),    
     # App-Campaign
-    'k:%s:%s:%s'%(app_id,campaign_id,date_hour.strftime('%y%m%d%H')):(stat1.request_count+stat2.request_count,stat1.impression_count+stat2.impression_count+stat3.impression_count+stat4.impression_count,stat1.click_count+stat2.click_count+stat3.click_count+stat4.click_count),    
+    'k:%s:%s:%s'%(app_id,campaign_id,date_hour.strftime('%y%m%d%H')):(stat1.request_count+stat2.request_count+stat3.request_count+stat4.request_count,stat1.impression_count+stat2.impression_count+stat3.impression_count+stat4.impression_count,stat1.click_count+stat2.click_count+stat3.click_count+stat4.click_count),    
     # App-Total
     'k:%s:%s:%s'%(app_id,'',date_hour.strftime('%y%m%d%H')):(stat5.request_count+stat6.request_count,stat1.impression_count+stat2.impression_count+stat3.impression_count+stat4.impression_count,stat1.click_count+stat2.click_count+stat3.click_count+stat4.click_count),    
     
@@ -131,9 +131,9 @@ def rollup_test():
     'k:%s:%s:%s'%(app_id,creative_id1,date_hour.strftime('%y%m%d')):(stat1.request_count+stat3.request_count,stat1.impression_count+stat3.impression_count,stat1.click_count+stat3.click_count),
     'k:%s:%s:%s'%(app_id,creative_id2,date_hour.strftime('%y%m%d')):(stat2.request_count+stat4.request_count,stat2.impression_count+stat4.impression_count,stat2.click_count+stat4.click_count),
     # App-AdGroup
-    'k:%s:%s:%s'%(app_id,adgroup_id,date_hour.strftime('%y%m%d')):(stat1.request_count+stat2.request_count,stat1.impression_count+stat2.impression_count+stat3.impression_count+stat4.impression_count,stat1.click_count+stat2.click_count+stat3.click_count+stat4.click_count),    
+    'k:%s:%s:%s'%(app_id,adgroup_id,date_hour.strftime('%y%m%d')):(stat1.request_count+stat2.request_count+stat3.request_count+stat4.request_count,stat1.impression_count+stat2.impression_count+stat3.impression_count+stat4.impression_count,stat1.click_count+stat2.click_count+stat3.click_count+stat4.click_count),    
     # App-Campaign
-    'k:%s:%s:%s'%(app_id,campaign_id,date_hour.strftime('%y%m%d')):(stat1.request_count+stat2.request_count,stat1.impression_count+stat2.impression_count+stat3.impression_count+stat4.impression_count,stat1.click_count+stat2.click_count+stat3.click_count+stat4.click_count),    
+    'k:%s:%s:%s'%(app_id,campaign_id,date_hour.strftime('%y%m%d')):(stat1.request_count+stat2.request_count+stat3.request_count+stat4.request_count,stat1.impression_count+stat2.impression_count+stat3.impression_count+stat4.impression_count,stat1.click_count+stat2.click_count+stat3.click_count+stat4.click_count),    
     # App-Total
     'k:%s:%s:%s'%(app_id,'',date_hour.strftime('%y%m%d')):(stat5.request_count+stat6.request_count,stat1.impression_count+stat2.impression_count+stat3.impression_count+stat4.impression_count,stat1.click_count+stat2.click_count+stat3.click_count+stat4.click_count),    
 

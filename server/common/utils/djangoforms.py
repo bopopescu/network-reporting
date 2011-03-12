@@ -251,8 +251,10 @@ class StringProperty(db.StringProperty):
     multiline attribute is set.
     """
     defaults = {}
-    if self.multiline:
-      defaults['widget'] =  mpwidget.MPTextarea
+    if self.choices:
+      defaults['widget'] =  mpwidgets.MPRadioInput
+    elif self.multiline:
+      defaults['widget'] =  mpwidgets.MPTextarea
     else:
       defaults['widget'] =  mpwidgets.MPTextInput
     defaults.update(kwargs)

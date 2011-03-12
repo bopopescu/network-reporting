@@ -1,6 +1,4 @@
 from google.appengine.ext import db
-from common.utils import djangoforms
-from common.utils import properties
 from google.appengine.api import users
 
 from account.models import Account
@@ -67,7 +65,7 @@ class Site(db.Model):
   height = db.FloatProperty()
 
   
-  device_format = properties.ChoiceProperty(default='phone', choices=DEVICE_FORMAT_CHOICES)
+  device_format = db.StringProperty(default='phone', choices=DEVICE_FORMAT_CHOICES)
   format = db.StringProperty(choices=FORMAT_CHOICES) #TODO: we should use this w/o explicity using height, width
 
   deleted = db.BooleanProperty(default=False)

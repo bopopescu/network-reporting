@@ -123,7 +123,12 @@ class StatsModelQueryManager(CachedQueryManager):
                                       adv=new_stat.advertiser,
                                       date_hour=new_stat.date)
                 prev_stat += new_stat
+                # if owner is None, undo the increment of request count
+                # publisher-* is already accounted for
+                if not new_stat.advertiser:
+                    prev_stat.request_count -= new_stat.request_count
                 stats_dict[prev_stat.key().name()] = prev_stat
+                
 
             if attribute == 'date':
                 # NOTE: This is a Pacific TimeZone day

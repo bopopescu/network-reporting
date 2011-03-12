@@ -63,9 +63,10 @@ from mopub_logging import mp_logging
 test_mode = "3uoijg2349ic(test_mode)kdkdkg58gjslaf"
 CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gzip(gfe)"]
 MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7PnE6cH9_PX7OoeIIr5FjnTA'
-DOMAIN = 'ads.mopub.com'
+DOMAIN = 'ads.mopub.com' 
 FREQ_ATTR = '%s_frequency_cap'
 CAMPAIGN_LEVELS = ('gtee_high', 'gtee', 'gtee_low', 'promo', 'network')
+
 
 
 
@@ -599,6 +600,7 @@ class AdHandler(webapp.RequestHandler):
       
         # ad an impression tracker URL
         self.response.headers.add_header("X-Imptracker", "http://%s/m/imp?id=%s&cid=%s"%(DOMAIN,id,c.key()))
+        track_url = "http://%s/m/imp?id=%s&cid=%s" % (DOMAIN, id, c.key())
       
       #add creative ID for testing (also prevents that one bad bug from happening)
         self.response.headers.add_header("X-Creativeid", "%s" % c.key())
@@ -616,6 +618,7 @@ class AdHandler(webapp.RequestHandler):
                                                         excluded_creatives  = excluded_creatives, 
                                                         request_id          = request_id, 
                                                         v                   = int(self.request.get('v') or 0),
+                                                        track_url           = track_url,
                                                         ) )
     else:
         self.response.out.write( self.render_creative(  c, 
@@ -752,7 +755,6 @@ class AdHandler(webapp.RequestHandler):
                             };                                                                                                                                    
                             window.setTimeout(polling_func, POLLING_FREQ);
                         </script>
-                        $trackingPixel
                         </body></html>"""),
     "html":Template("""<html><head><title>$title</title>
                         $finishLoad
@@ -769,7 +771,7 @@ class AdHandler(webapp.RequestHandler):
                         <body style="margin:0;padding:0;width:${w}px;background:white;">${html_data}$trackingPixel</body></html>"""),
     "html_full":Template("$html_data")
   }
-  def render_creative(self, c, **kwargs):
+  def render_creative(self, c, track_url=None, **kwargs):
     if c:
       logging.warning("rendering: %s" % c.ad_type)
       format = kwargs["format"]
@@ -779,6 +781,34 @@ class AdHandler(webapp.RequestHandler):
       
       params = kwargs
       params.update(c.__dict__.get("_entity"))
+
+
+      #success tracking pixel for admob
+      #set up an invisible span
+      hidden_span = 'var hid_span = document.createElement("span"); hid_span.setAttribute("style", "display:none");'
+      #init an image, give it the right src url, pixel size, append to span
+      tracking_pix = 'var img%(name)s = document.createElement("img"); \
+                      img%(name)s.setAttribute("height", 1); \
+                      img%(name)s.setAttribute("width", 1);\
+                      img%(name)s.setAttribute("src", "%(src)s");\
+                      hid_span.appendChild(img%(name)s);'
+
+      # because we send the client the HTML, and THEN send requests to admob for content, just becaues our HTML 
+      # (in this case the tracking pixel) works, DOESNT mean that admob has successfully returned a creative.
+      # Because of the admob pixel has to be added AFTER the admob ad actually loads, this is done via javascript.
+      # It's hella generic and not all clean and jQuery'd because (in theory) this will work on all platforms 
+      # that support javascript (blackberry brower bs i'm looking at you)
+
+      success = hidden_span
+      success += tracking_pix % dict(name = 'first', src = track_url)
+      if c.tracking_url:
+        success += tracking_pix % dict(name = 'second', src = c.tracking_url) 
+        params.update(trackingPixel='<span style="display:none;"><img src="%s"/><img src="%s"/></span>'% (c.tracking_url, track_url))
+      else:
+        params.update(trackingPixel='<span style="display:none;"><img src="%s"/></span>'%track_url)
+      success += 'document.body.appendChild(hid_span);'
+
+
       if c.ad_type == "adsense":
         params.update({"title": ','.join(kwargs["q"]), "adsense_format": format[2], "w": format[0], "h": format[1], "client": kwargs["site"].account.adsense_pub_id})
         params.update(channel_id=kwargs["site"].adsense_channel_id or '')
@@ -822,11 +852,12 @@ class AdHandler(webapp.RequestHandler):
         params.update(title=','.join(kwargs["q"]+list(kwargs["addr"])))
       else:
         params.update(title='')
-        
+
       if kwargs["v"] >= 2 and not "Android" in self.request.headers["User-Agent"]:  
         params.update(finishLoad='<script>function finishLoad(){window.location="mopub://finishLoad";} window.onload = function(){finishLoad();} </script>')
         # extra parameters used only by admob template
-        params.update(admob_finish_load='window.location = "mopub://finishLoad";')
+        #add in the success tracking pixel
+        params.update(admob_finish_load= success + 'window.location = "mopub://finishLoad";')
         params.update(admob_fail_load='window.location = "mopub://failLoad";')
       else:
         # don't use special url hooks because older clients don't understand    
@@ -834,11 +865,7 @@ class AdHandler(webapp.RequestHandler):
         # extra parameters used only by admob template
         params.update(admob_finish_load='')
         params.update(admob_fail_load='')
-      
-      if c.tracking_url:
-        params.update(trackingPixel='<span style="display:none;"><img src="%s"/></span>'%c.tracking_url)
-      else:
-        params.update(trackingPixel='')  
+     
       
       # indicate to the client the winning creative type, in case it is natively implemented (iad, clear)
       
@@ -903,12 +930,6 @@ class AdHandler(webapp.RequestHandler):
         params.update(title=','.join(kwargs["q"]+list(kwargs["addr"])))
       else:
         params.update(title='')
-      
-      if c.tracking_url:
-        params.update(trackingPixel='<span style="display:none;"><img src="%s"/></span>'%c.tracking_url)
-      else:
-        params.update(trackingPixel='')
-
       self.response.headers.add_header("X-Backfill", str('html'))
 
       # render the HTML body

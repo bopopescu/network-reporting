@@ -151,7 +151,7 @@ def rollup_test():
     
     }
     
-    new_stats = StatsModelQueryManager(account)._get_all_rollups([stat1,stat2])        
+    new_stats = StatsModelQueryManager(account)._get_all_rollups([stat1,stat2,stat3,stat4,stat5,stat6])        
     
     print len(new_stats), len(obj_dict)
     assert(len(new_stats) == len(obj_dict))

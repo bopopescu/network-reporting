@@ -431,6 +431,9 @@ class AdAuction(object):
                                             logging.warning(exception_traceback)
                                     else:
                                         winning_creative = winner
+                                        # if native, log native request
+                                        if winner.ad_type in NATIVE_REQUESTS:
+                                            mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner)
                                         return winning_creative
                         else:
                             # remove players of the current winning e_cpm

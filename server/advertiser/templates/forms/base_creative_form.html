@@ -3,7 +3,10 @@
                               <select name="{{form.format.name}}">
                                 <option value="320x50" {% ifequal form.format.value "320x50"%}selected="selected"{% endifequal %}>320 x 50 (Banner)</option>
                                 <option value="300x250" {% ifequal form.format.value "300x250"%}selected="selected"{% endifequal %}>300 x 250 (MRect)</option>
-                                <option value="full" {% ifequal form.format.value "full"%}selected="selected"{% endifequal %}>Full Screen</option>
+								<option value="full" {% ifequal form.format.value "full"%}selected="selected"{% endifequal %}>Phone Full Screen </option>
+                                <option value="728x90" {% ifequal form.format.value "728x90"%}selected="selected"{% endifequal %}> 728 x 90 (Tablet Leaderboard)</option>
+                                <option value="160x600" {% ifequal form.format.value "160x600"%}selected="selected"{% endifequal %}>160 x 600 (Tablet Skyscraper)</option>
+                                <option value="full_tablet" {% ifequal form.format.value "full_tablet"%}selected="selected"{% endifequal %}>Tablet Full Screen</option>
                               </select>
                             </dd>
                             <dt>Creative Type:</dt> 

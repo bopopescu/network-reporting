@@ -1,3 +1,6 @@
 .DS_Store
 *.pyc
 *.tmproj
+server/test_data/basic_test.datastore 
+server/.coverage
+server/nosetests.xml

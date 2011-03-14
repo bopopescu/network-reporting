@@ -63,6 +63,12 @@ class MPTextInput(MPWidget):
     TEMPLATE = 'widgets/text_input.html'
     DEFAULT_CLASSES = "input-text"
 
+class MPRadioInput(MPWidget):
+    TEMPLATE = 'widgets/adunit_device_format.html'
+    DEFAULT_CLASSES = "input-text"
+
+class MPFormatWidget(MPWidget):
+    TEMPLATE = 'widgets/adunit_format.html'
 
 class MPNumberInput(MPTextInput):
     TEMPLATE = 'widgets/number_input.html'

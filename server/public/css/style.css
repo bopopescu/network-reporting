@@ -1563,12 +1563,26 @@ input.ui-button {
 
 .adForm-formats {
   float: left;
-  width: 465px;
+  width: 565px;
 }
 
-.adForm-format {
+.adForm-phone-format {
   float: left;
   width: 110px;
+}
+.adForm-tablet-format {
+  float: left;
+  width: 110px;
+}
+
+#adForm-tablet-formats {
+  width: 120px;
+  display: inline-block;
+  float: left;
+}
+
+#adForm-images-container {
+  padding-top:20px;
 }
 
 .adForm-format-name {

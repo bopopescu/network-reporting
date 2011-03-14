@@ -8,3 +8,4 @@ queue:
 - name: network-request-00
   rate: 100/s
   bucket_size: 100
+  task_retry_limit: 1

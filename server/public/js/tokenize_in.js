@@ -28,7 +28,7 @@ $.fn.tokenInput = function (url, options) {
         onDelete: null,
         doImmediate:true,
         country:'US'
-    }, options);
+   }, options);
 
     settings.classes = $.extend({
         tokenList: "token-input-list",
@@ -52,7 +52,6 @@ $.TokenList = function (input, settings) {
     //
     // Variables
     //
-
     // Input box position "enum"
     var POSITION = {
         BEFORE: 0,
@@ -93,11 +92,12 @@ $.TokenList = function (input, settings) {
         })
         .focus(function () {
             $(this).addClass('focused');
-            if( !token_list.hasClass('focused') )
+            if( !token_list.hasClass('focused')) {
                 token_list.addClass('focused');
+            }
             if( $(this).val() ) {
               setTimeout(function(){do_search(settings.doImmediate);}, 5);
-            }
+           }
         })
         .blur(function () {
             $(this).removeClass('focused');
@@ -163,7 +163,7 @@ $.TokenList = function (input, settings) {
                     } else {
                         // set a timeout just long enough to let this function finish.
                         setTimeout(function(){do_search(settings.doImmediate);}, 5);
-                    }
+                   }
                     break;
 
                 case KEY.TAB:
@@ -591,7 +591,7 @@ $.TokenList = function (input, settings) {
                 q_url += '&maxRows=' + settings.maxRows;
 		        $.get(q_url, {}, callback, settings.contentType);
 		    }
-        }
+       }
     }
 };
 
@@ -603,11 +603,14 @@ $.TokenList.Cache = function (options) {
     }, options);
 
     function matchSubset( s, sub ) {
-        if ( !options.matchCase )
+        if ( !options.matchCase ) {
             s = s.toLowerCase();
+        }
         var i = s.indexOf( sub );
-        if ( i == -1 ) return false;
-        return i == 0 || options.matchContains;
+        if ( i == -1 ) {
+            return false;
+        }
+        return i === 0 || options.matchContains;
     }
 
 
@@ -650,11 +653,12 @@ $.TokenList.Cache = function (options) {
                                   break;
                               }
                           }
-                          if (add)
-                             csub.push( x );
-                      }
-                   });
-                }
+                          if (add) {
+                            csub.push(x);
+                            }
+                        }
+                    });
+               } 
            }
            return csub.sort(res_sort(q));
         }

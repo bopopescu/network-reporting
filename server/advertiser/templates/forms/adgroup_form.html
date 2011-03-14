@@ -28,6 +28,22 @@
                                                         },
                                                   prePopulate: pre 
                 });
+            var geo_s = 'http://ws.geonames.org/searchJSON?';
+            $('#city_ta').tokenInput(geo_s, { country: 'US',
+                                              doImmediate: false,
+                                              queryParam: 'name_startsWith',
+                                              featureClass: 'P',
+                                              prePopulate: city_pre,
+                                              method: 'get'
+                                              }); 
+            $('#state_ta').tokenInput(geo_s, { country: 'US',
+                                              doImmediate: false,
+                                              queryParam: 'name_startsWith',
+                                              featureClass: 'ADM1',
+                                              prePopulate: city_pre,
+                                              method: 'get'
+                                              });
+            
             //$('#city_pred_ta').tokenInput( null, { formatResult: blah,
             //                                      formatMatch: blah,
             //                                      prePopulate: city_pre
@@ -75,18 +91,20 @@
                           {% endfor %}
                         </dd> 
                       	{{ form.keywords|attrs:'{"placeholder":"Keywords, one per line, e.g. coffee"}' }}
-                        <dt><label for="loc">Location Specificity:</label></dt>
+                        <dt><label for="loc">Location Targeting:</label></dt>
                         <dd>
                             <span class="radios">
-                                <input type='radio' class='input-radio' name='location-specificity' value='all' id='advertiser-LocationSpec-all'></input>
+                                <input type='radio' class='input-radio' name='location-targeting' value='all' id='advertiser-LocationSpec-all'></input>
                                 <label for=''>Everywhere</label>
-                                <input type='radio' class='input-radio' name='location-specificity' value='state' id='advertiser-LocationSpec-state'></input>
+                                <input type='radio' class='input-radio' name='location-targeting' value='state' id='advertiser-LocationSpec-state'></input>
                                 <label for=''>State/Province</label>
-                                <input type='radio' class='input-radio' name='location-specificity' value='city' id='advertiser-LocationSpec-city'></input>
+                                <input type='radio' class='input-radio' name='location-targeting' value='city' id='advertiser-LocationSpec-city'></input>
                                 <label for=''>City</label>
                             </span>
                         </dd>
-                        <dt><label for="TODO9">Geo Predicates:</label></dt>
+                        <dt><label for="TODO9">
+                        Country:
+                        </label></dt>
                         <dd>
                           <div id='geo_pred_ta' name='geo_predicates'></div>
                           <!--
@@ -97,12 +115,12 @@
                         </dd>
 
                         <div class="locationDependent state" style='display:none;'>
-                            <dt><label for='location-state-autofill'>State/Province</label></dt>
+                            <dt><label for='location-state-autofill'>State/Province:</label></dt>
                             <dd><div id='location-state-autofill'></div></dd>
                         </div>
 
                         <div class="locationDependent city" style='display:none;'>
-                            <dt><label for='location-city-autofill'>City</label></dt>
+                            <dt><label for='location-city-autofill'>City:</label></dt>
                             <dd><div id='location-city-autofill'></div></dd>
                         </div>
 

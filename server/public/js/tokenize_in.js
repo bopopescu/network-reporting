@@ -262,7 +262,7 @@ $.TokenList = function (input, settings) {
 
     // Pre-populate list if items exist
     function init_list () {
-        li_data = settings.prePopulate;
+        li_data = settings.prePopulate.data;
         if(li_data && li_data.length) {
             for(var i in li_data) {
                 var this_token = $("<li><p>"+li_data[i].name+"</p> </li>")

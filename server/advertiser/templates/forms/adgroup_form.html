@@ -6,11 +6,13 @@
 <script type='text/javascript'>
     $(document).ready( function () {
             var priors = {% if form.geo.value %}{{form.geo.value|safe}}{% else %}[]{% endif %};
-            var pre = [];
+            var pre = {'type': 'country', 'data': []};
+            var city_pre = {'type': 'city', 'data': []};
+            var state_pre = {'type': 'state', 'data': []};
             for (var count = 0; count < countries.length; count++) {
                 var dat = countries[count];
                 if ($.inArray(dat.code, priors) != -1) {
-                    pre.push(dat);
+                    pre.data.push(dat);
                 }
                 if (pre.length == priors.length)
                     break;
@@ -40,7 +42,7 @@
                                               doImmediate: false,
                                               queryParam: 'name_startsWith',
                                               featureClass: 'ADM1',
-                                              prePopulate: city_pre,
+                                              prePopulate: state_pre,
                                               method: 'get'
                                               });
             
@@ -115,13 +117,13 @@
                         </dd>
 
                         <div class="locationDependent state" style='display:none;'>
-                            <dt><label for='location-state-autofill'>State/Province:</label></dt>
-                            <dd><div id='location-state-autofill'></div></dd>
+                            <dt><label for='state_ta'>State/Province:</label></dt>
+                            <dd><div id='state_ta'></div></dd>
                         </div>
 
                         <div class="locationDependent city" style='display:none;'>
-                            <dt><label for='location-city-autofill'>City:</label></dt>
-                            <dd><div id='location-city-autofill'></div></dd>
+                            <dt><label for='city_ta'>City:</label></dt>
+                            <dd><div id='cty_ta'></div></dd>
                         </div>
 
                         {# <dt><label for="TODO10">Device Predicates:</label></dt> #}

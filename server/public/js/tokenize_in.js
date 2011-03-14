@@ -361,7 +361,7 @@ $.TokenList = function (input, settings) {
         //Strictly increasing number so we can name the hidden inputs
         token_id++;
         
-        if(settings.tokenLimit != null && token_count >= settings.tokenLimit) {
+        if(settings.tokenLimit !== null && token_count >= settings.tokenLimit) {
             input_box.hide();
             hide_dropdown();
         }
@@ -430,7 +430,7 @@ $.TokenList = function (input, settings) {
         
         token_count--;
         
-        if (settings.tokenLimit != null) {
+        if (settings.tokenLimit !== null) {
             input_box
                 .show()
                 .val("")
@@ -480,7 +480,7 @@ $.TokenList = function (input, settings) {
                 .mousedown(function (event) {
                     add_token(get_element_from_event(event, "li"));
                     return false;
-                })
+                });
             if ( !slide_state ) {
                 dropdown_ul.hide();
             }
@@ -495,7 +495,7 @@ $.TokenList = function (input, settings) {
                         this_li.addClass(settings.classes.dropdownItem2);
                     }
 
-                    if(i == 0) {
+                    if(i === 0) {
                         select_dropdown_item(this_li);
                     }
 
@@ -568,6 +568,7 @@ $.TokenList = function (input, settings) {
         } else {
 			var queryStringDelimiter = settings.url.indexOf("?") < 0 ? "?" : "&";
 			var callback = function(results) {
+                console.log(results);
 			  if($.isFunction(settings.onResult)) {
 			      results = settings.onResult.call(this, results);
 			  }
@@ -578,7 +579,17 @@ $.TokenList = function (input, settings) {
             if(settings.method == "POST") {
 			    $.post(settings.url + queryStringDelimiter + settings.queryParam + "=" + encodeURIComponent(query), {}, callback, settings.contentType);
 		    } else {
-		        $.get(settings.url + queryStringDelimiter + settings.queryParam + "=" + encodeURIComponent(query), {}, callback, settings.contentType);
+                var q_url = settings.url + queryStringDelimiter + settings.queryParam + "=" + encodeURICompnent(query);
+                q_url = q_url + '&featureClass=' + encodeURIComponent(settings.featureClass);
+                q_url = q_url + '&country=';
+                if ($('input[name="geo"]').val() !== null) {
+                   q_url += encodeURIComponent($('input[name="geo"]').val());
+                }
+                else {
+                    q_url += encodeURIComponent(settings.country);
+                }
+                q_url += '&maxRows=' + settings.maxRows;
+		        $.get(q_url, {}, callback, settings.contentType);
 		    }
         }
     }

@@ -4,3 +4,7 @@ queue:
 - name: bulk-log-processor
   rate: 100/s
   bucket_size: 100
+
+- name: network-request-00
+  rate: 100/s
+  bucket_size: 100

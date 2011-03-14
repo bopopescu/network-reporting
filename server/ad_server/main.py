@@ -36,7 +36,7 @@ from urllib import urlencode, unquote
 #from datetime import datetime
 
 from google.appengine.api import users, urlfetch, memcache
-from google.appengine.api.labs import taskqueue
+from google.appengine.api import taskqueue
 from google.appengine.ext import webapp, db
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
@@ -980,6 +980,13 @@ class AdHandler(webapp.RequestHandler):
       logging.error("rgeocode failed to parse %s" % json)
       return ()
 
+# Only exists in order to have data show up in apache logs
+# Currently, this is called only by a taskqueue
+# response is dummy
+class AdRequestHandler(webapp.RequestHandler):
+    def get(self):
+        self.response.out.write("OK")
+
 class AdImpressionHandler(webapp.RequestHandler):
   def get(self):
     mp_logging.log(self.request,event=mp_logging.IMP_EVENT)  
@@ -1090,7 +1097,8 @@ def main():
                                         ('/m/track', AppOpenHandler),
                                         ('/m/test', TestHandler),
                                         ('/m/clear', ClearHandler),
-                                        ('/m/purchase', PurchaseHandler)], 
+                                        ('/m/purchase', PurchaseHandler),
+                                        ('/m/req',AdRequestHandler),], 
                                         debug=True)
   run_wsgi_app(application)
   # wsgiref.handlers.CGIHandler().run(application)

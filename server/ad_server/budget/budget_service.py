@@ -1,3 +1,9 @@
+from google.appengine.api import memcache
+from datetime import datetime
+
+
+def timeslice_memcache_minute_key(campaign_id,datetime):
+  return 'timeslice:%s:%s'%(campaign_id,datetime.strftime('%y%m%d%H%M'))
 
 class BudgetService(object):
     """

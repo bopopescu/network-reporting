@@ -4,11 +4,16 @@
  <link rel='stylesheet' type='text/css' href='/css/token-input-mopub.css'></link>
  <!-- <link rel='stylesheet' type='text/css' href='/css/token-input-mac.css'></link> -->
 <script type='text/javascript'>
+    var rgeourl = 'http://ws.geonames.org/findNearbyPlaceNameJSON?';
+    var geo_s = 'http://ws.geonames.org/searchJSON?';
     $(document).ready( function () {
             var priors = {% if form.geo.value %}{{form.geo.value|safe}}{% else %}[]{% endif %};
+            var city_priors = {% if form.cities.value %}{{form.cities.value|safe}}{% else %}[]{% endif %};
             var pre = {type: 'country', data: []};
             var city_pre = {type: 'city', data: []};
-            var state_pre = {type: 'state', data: []};
+            //Not being used right now
+            //var state_pre = {type: 'state', data: []};
+
             for (var count = 0; count < countries.length; count++) {
                 var dat = countries[count];
                 if ($.inArray(dat.code, priors) != -1) {
@@ -17,6 +22,35 @@
                 if (pre.length == priors.length)
                     break;
             }
+            //city is ll:ste:name:ccode;
+            for (var i in city_priors) {
+                if (city_priors.hasOwnProperty(i)) {
+                    var datas = city_priors[i].split(':');
+                    var ll = datas[0].split(',');
+                    var ste = datas[1];
+                    var name = datas[2];
+                    var ccode = datas[3];
+                    city_pre.data.push(
+                            { lat: ll[0],
+                              lng: ll[1],
+                              countryCode: ccode,
+                              adminCode1: ste,
+                              name: name
+                              });
+                }
+            }
+
+           $('#city_ta').tokenInput(geo_s,
+                    { country: 'US',
+                      doImmediate: false,
+                      queryParam: 'name_startsWith',
+                      featureClass: 'P',
+                      prePopulate: city_pre,
+                      contentType: 'json',
+                      type: 'city',
+                      minChars: 5,
+                      method: 'get'
+              }); 
             //Verify that all cities in city_pre are in the SINGLE country that is pre
 
             //Need to create data object that is array of dictionary [ {name, id} ] 
@@ -30,17 +64,7 @@
                                                         },
                                                   prePopulate: pre 
                 });
-            var geo_s = 'http://ws.geonames.org/searchJSON?';
-            $('#city_ta').tokenInput(geo_s, { country: 'US',
-                                              doImmediate: false,
-                                              queryParam: 'name_startsWith',
-                                              featureClass: 'P',
-                                              contentType: 'json',
-                                              prePopulate: city_pre,
-                                              type: 'city',
-                                              minChars: 5,
-                                              method: 'get'
-                                              }); 
+                     /* Not doing states atm
             $('#state_ta').tokenInput(geo_s, { country: 'US',
                                               doImmediate: false,
                                               queryParam: 'name_startsWith',
@@ -51,12 +75,8 @@
                                               minChars: 5,
                                               method: 'get'
                                               });
+                                              */
             
-            //$('#city_pred_ta').tokenInput( null, { formatResult: blah,
-            //                                      formatMatch: blah,
-            //                                      prePopulate: city_pre
-            
-                                                    
     });
 </script>
                     <dl class="formFields"> 
@@ -102,11 +122,13 @@
                         <dt><label for="loc">Location Targeting:</label></dt>
                         <dd>
                             <span class="radios">
-                                <input type='radio' class='input-radio' name='location-targeting' value='all' id='advertiser-LocationSpec-all'></input>
+                                <input type='radio' class='input-radio' name='location-targeting' value='all' id='advertiser-LocationSpec-all'{% if not form.cities.value %}checked{% endif %}></input>
                                 <label for='advertiser-LocationSpec-all'>Everywhere</label>
+                                <!--
                                 <input type='radio' class='input-radio' name='location-targeting' value='state' id='advertiser-LocationSpec-state'></input>
                                 <label for='advertiser-LocationSpec-state'>State/Province</label>
-                                <input type='radio' class='input-radio' name='location-targeting' value='city' id='advertiser-LocationSpec-city'></input>
+                                --!>
+                                <input type='radio' class='input-radio' name='location-targeting' value='city' id='advertiser-LocationSpec-city'{% if form.cities.value %}checked{% endif %}></input>
                                 <label for='advertiser-LocationSpec-city'>City</label>
                             </span>
                         </dd>

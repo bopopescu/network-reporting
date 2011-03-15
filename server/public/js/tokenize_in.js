@@ -51,6 +51,42 @@ $.fn.tokenInput = function (url, options) {
     });
 };
 
+$.TokenData = function(data,type) {
+    console.log(data);
+    var raw = data;
+    var name;
+    var input;
+    var id;
+    var code; 
+    function city_input() {
+        var value = raw.lat + ',' + raw.lng + ':' + raw.adminCode1 + ':' + raw.name + ':' + raw.countryCode;
+        return $('<input type="hidden" class="' + raw.countryCode + '" name="cities" id="' + raw.name.replace(' ', '_') + '" value="' + value + '" />');
+    }
+    function country_input() {
+        return $('<input type="hidden" name="geo" id="' + code + '" value="' + code + '" />');
+    }
+
+    if (type == 'city') {
+        name = raw.name + ", " + raw.adminCode1;
+        input = city_input;
+        id = raw.name;
+    }
+    else if (type == 'country') {
+        code = (raw.data === undefined) ? raw.code : raw.data.code;
+        name = (raw.data === undefined) ? raw.name : raw.data.name;
+        input = country_input;
+        id = code;
+    }
+
+
+    return {
+        name: name,
+        input: input,
+        raw: data,
+        type: type,
+        id: id
+    }
+}
 
 $.TokenList = function (input, settings) {
     //
@@ -258,21 +294,64 @@ $.TokenList = function (input, settings) {
         .append(input_box);
 
     init_list();
-
+    verify_token_inputs();
     //
     // Functions
     //
 
+ 
+  //If more than two countries exist, select Everywhere, disable other options, and get rid of all of their inputs
+  function verify_token_inputs() {
+    //more than one country
+    if ($('.token-input-country').length > 1) {
+        //delete all other tokens
+        $('.token-input-city').each( function(i) {
+           delete_token($(this));
+        });
+        $('.token-input-state').each( function(i) {
+           delete_token($(this));
+        });
+        //disable everything else
+        $('input[name="location-targeting"]').each(
+            function(i) {
+                if ($(this).val() != 'all') { 
+                    $(this).attr('disabled', true);
+                }
+                //Select "Everywhere"
+                else {
+                    $(this).click();
+                }
+        });
+    } 
+    // turn all buttons back on
+    else {
+        $('input[name="location-targeting"]').each(
+            function(i) {
+                $(this).attr('disabled', false);
+        });
+    }
+  }
+
+
 
     // Pre-populate list if items exist
     function init_list () {
-        li_data = settings.prePopulate.data;
+        console.log('initing...');
+        var li_data = settings.prePopulate.data;
+        console.log(li_data);
         if(li_data && li_data.length) {
             for(var i in li_data) {
-                var this_token = $("<li><p>"+li_data[i].name+"</p> </li>")
+                var token_data = new $.TokenData(li_data[i], settings.prePopulate.type);
+                var this_token = $("<li><p>"+ token_data.name+"</p> </li>")
                     .addClass(settings.classes.token)
-                    .insertBefore(input_token);
-
+                if (token_data.type == 'city') {
+                    this_token.addClass('token-input-city')
+                    .addClass(token_data.raw.countryCode);
+                }
+                else if (token_data.type == 'country') {
+                    this_token.addClass('token-input-country')
+                }
+                    this_token.insertBefore(input_token);
                 $("<span>&times;</span>")
                     .addClass(settings.classes.tokenDelete)
                     .appendTo(this_token)
@@ -280,8 +359,9 @@ $.TokenList = function (input, settings) {
                         delete_token($(this).parent());
                         return false;
                     });
-
-                $.data(this_token.get(0), "tokeninput", {"id": li_data[i].code, "name": li_data[i].name});
+                console.log("Preloaded data");
+                console.log(token_data);
+                $.data(this_token.get(0), "tokeninput", token_data); 
 
                 // Clear input box and make sure it keeps focus
                 input_box
@@ -292,10 +372,7 @@ $.TokenList = function (input, settings) {
                 hide_dropdown();
 
                 // Save this token id
-                var id_string = li_data[i].code;
-                // This is unique to this method (it should be li_data[i].id) but the data I pass in isn't formatted like that
-                var input = $( '<input type="hidden" name="geo" id="' + id_string + '" value="' + id_string + '" />' );
-                input.appendTo( hidden_input ); 
+                token_data.input().appendTo( hidden_input ); 
             }
         }
     }
@@ -321,18 +398,19 @@ $.TokenList = function (input, settings) {
     function insert_token(datas) {
       var value = datas.name;
       var token_type;
+      var this_token = $("<li><p>"+ value +"</p> </li>")
+          
       if (datas.type == 'city') {
-          token_type = 'token-input-city';
-      }
+          this_token.addClass('token-input-city')
+          .addClass(datas.raw.countryCode);
+      }/*
       else if (datas.type == 'state') {
           token_type = 'token-input-state';
-      }
+      }*/
       else if (datas.type == 'country') {
-          token_type = 'token-input-country';
+          this_token.addClass('token-input-country');
       }
-      var this_token = $("<li><p>"+ value +"</p> </li>")
-      .addClass(settings.classes.token)
-      .addClass(token_type)
+      this_token.addClass(settings.classes.token)
       .insertBefore(input_token);
 
       // The 'delete token' button
@@ -348,7 +426,8 @@ $.TokenList = function (input, settings) {
     }
 
     // Add a token to the token list based on user input
-    function add_token (item) {
+    function add_token(item) {
+        //Make sure token stuff is okay before adding a new one
         verify_token_inputs();
         var li_data = $.data(item.get(0), "tokeninput");
         var this_token = insert_token(li_data);
@@ -362,20 +441,14 @@ $.TokenList = function (input, settings) {
         // Don't show the help dropdown, they've got the idea
         hide_dropdown();
 
-        // Save this token id
-        var id_string = li_data.id; 
         //XXX IMPORTANT XXX
         //order for id_string should be:
         // [country], region], city]
         // so US is US, California is US,CA and San Francisco is US,CA,SF (or some something like that)
         // This is because the django forms are going to take this id, split it on ',' and then assign
         // the first value as country_name, 2nd as region_name, and 3rd as city_name 
-        if (li_data.type == 'country') { 
-            $( '<input type="hidden" name="geo" id="' + id_string + '" value="' + id_string + '" />' ).appendTo(hidden_input);
-        }
-        else if (li_data.type == 'city') {
-            $('<input type="hidden" class="'+li_data.c_code+'" name="cities" id="' + li_data.name + '" value="' + li_data.lat+ ','+li_data.lng + '" />').appendTo(hidden_input);
-        }
+        li_data.input().appendTo(hidden_input);
+
         token_count++;
         //Strictly increasing number so we can name the hidden inputs
         token_id++;
@@ -389,6 +462,7 @@ $.TokenList = function (input, settings) {
 				if($.isFunction(callback)) {
 				  callback(li_data.id);
 				}
+        //make sure token stuff is okay after adding a new one
         verify_token_inputs();
     }
 
@@ -444,10 +518,17 @@ $.TokenList = function (input, settings) {
 //TODO delete the hidden field wooo
         // Show the input box and give it focus again
         input_box.focus();
-        console.log( token_data );
         // Delete this token's id from hidden input
-        $( "#" + token_data.id ).remove();
-        $('#'+token_data.name).remove();
+        console.log(token_data);
+        $("#"+token_data.id.replace(' ', '_')).remove();
+        console.log( $('#' + token_data.name));
+        $('#'+token_data.name.replace(' ', '_')).remove();
+        if (token_data.type == 'country') {
+            $('li.'+token_data.id+'.token-input-city').each( function(i) {
+                    delete_token($(this));
+                });
+        }
+        console.log( $('#' + token_data.name));
         
         token_count--;
         
@@ -457,11 +538,13 @@ $.TokenList = function (input, settings) {
                 .val("")
                 .focus();
         }
+        
 				
         // Execute the onDelete callback if defined
         if($.isFunction(callback)) {
           callback(token_data.id);
         }
+        //verify inputs after token has been removed
         verify_token_inputs();
     }
 
@@ -512,15 +595,9 @@ $.TokenList = function (input, settings) {
             var name;
             for(var i in results) {
                 if (results.hasOwnProperty(i)) {
-                    if (type == 'city') {
-                        name = results[i].name + ", " + results[i].adminCode1;
-                    }
-                    else if (type == 'country') {
-                        name = results[i].result;
-                    }    
-                    var this_li = $("<li>"+highlight_term(name, query)+"</li>")
+                    var tokenData = new $.TokenData(results[i],type);
+                    var this_li = $("<li>"+highlight_term(tokenData.name, query)+"</li>")
                                       .appendTo(dropdown_ul);
-
                     if(i%2) {
                         this_li.addClass(settings.classes.dropdownItem);
                     } else {
@@ -530,14 +607,7 @@ $.TokenList = function (input, settings) {
                     if(i === 0) {
                         select_dropdown_item(this_li);
                     }
-                    var datum;
-                    if (type == 'country') {
-                        datum = { "type": 'country', "id": results[i].data.code, "name": results[i].result};
-                    }
-                    else if (type == 'city') {
-                        datum = { "type" : 'city', 'lat': results[i].lat, 'lng': results[i].lng, 'name':results[i].name, 'c_code': results[i].countryCode};
-                    }
-                    $.data(this_li.get(0), "tokeninput", datum); 
+                    $.data(this_li.get(0), "tokeninput", tokenData); 
                 }
             }
             dropdown.replaceWith(drop_clone);
@@ -628,6 +698,7 @@ $.TokenList = function (input, settings) {
                 }
                 q_url += '&country=';
                 if ($('input[name="geo"]').val() !== undefined) {
+                    console.log($('input[name="geo"]').val());
                    q_url += encodeURIComponent($('input[name="geo"]').val());
                 }
                 else {
@@ -640,38 +711,6 @@ $.TokenList = function (input, settings) {
        }
     }
     
- 
-  //If more than two countries exist, select Everywhere, disable other options, and get rid of all of their inputs
-  function verify_token_inputs() {
-    //more than one country
-    if ($('.token-input-country').length > 1) {
-        //delete all other tokens
-        $('.token-input-city').each( function(i) {
-           delete_token($(this));
-        });
-        $('.token-input-state').each( function(i) {
-           delete_token($(this));
-        });
-        //disable everything else
-        $('input[name="location-targeting"]').each(
-            function(i) {
-                if ($(this).val() != 'all') { 
-                    $(this).attr('disabled', true);
-                }
-                //Select "Everywhere"
-                else {
-                    $(this).click();
-                }
-        });
-    } 
-    // turn all buttons back on
-    else {
-        $('input[name="location-targeting"]').each(
-            function(i) {
-                $(this).attr('disabled', false);
-        });
-    }
-  }
 
 
 

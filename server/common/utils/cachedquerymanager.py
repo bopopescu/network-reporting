@@ -4,7 +4,7 @@ from google.appengine.api import memcache
 from google.appengine.ext import db
 from google.appengine.datastore import entity_pb
 
-from django.utils import simplejson
+from common.utils import simplejson
 
 NAMESPACE = None
 #MAX_CACHE_TIME = 60*5 # 5 minutes

@@ -259,6 +259,7 @@ class AdAuction(object):
     adunit = kw["site"]
     manager = kw["manager"]
     request = kw["request"]
+    testing = kw["testing"]
     
     udid = kw["udid"]
 
@@ -401,7 +402,7 @@ class AdAuction(object):
                                     winning_creative = winner
                                     # if native, log native request
                                     if winner.ad_type in NATIVE_REQUESTS:
-                                        mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner)
+                                        mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, testing=testing)
                                     return winning_creative
                                 else:
                                     rpc = None          
@@ -417,7 +418,7 @@ class AdAuction(object):
                             # go out and get the data and paste in the data to the creative      
                                     if rpc:      
                                         # if third-party network, log request
-                                        mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner)
+                                        mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, testing=testing)
                                         try:
                                             result = rpc.get_result()
                                             if result.status_code == 200:
@@ -433,7 +434,7 @@ class AdAuction(object):
                                         winning_creative = winner
                                         # if native, log native request
                                         if winner.ad_type in NATIVE_REQUESTS:
-                                            mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner)
+                                            mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, testing=testing)
                                         return winning_creative
                         else:
                             # remove players of the current winning e_cpm
@@ -525,8 +526,7 @@ class AdHandler(webapp.RequestHandler):
     else:
         testing = False
     
-    if not testing:
-        mp_logging.log(self.request,event=mp_logging.REQ_EVENT)  
+    mp_logging.log(self.request,event=mp_logging.REQ_EVENT, testing=testing)  
 
     
     logging.warning(self.request.headers['User-Agent'] )
@@ -585,7 +585,7 @@ class AdHandler(webapp.RequestHandler):
         logging.info('OLP ad-request {"request_id": "%s", "remote_addr": "%s", "q": "%s", "user_agent": "%s", "udid":"%s" }' % (request_id, self.request.remote_addr, self.request.query_string, self.request.headers["User-Agent"], udid))
         
     # get winning creative
-    c = AdAuction.run(request=self.request, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, udid=udid, request_id=request_id, now=now,manager=manager)
+    c = AdAuction.run(request=self.request, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, udid=udid, request_id=request_id, now=now,manager=manager, testing=testing)
     # output the request_id and the winning creative_id if an impression happened
     if c:
         user_adgroup_daily_key = memcache_key_for_date(udid,now,c.ad_group.key())

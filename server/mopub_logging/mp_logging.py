@@ -25,7 +25,7 @@ REQ_QUEUE_NAME = "network-request-%02d"
 NUM_REQ_QUEUES = 1
 
 
-def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,creative_id=None,udid=None):    
+def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,creative_id=None,udid=None,testing=None):
     # if this is the second request because of a 
     # native failure we just bail in order to 
     # Note if logging an adnetwork request, we pass
@@ -64,7 +64,8 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
                               url='/m/req')
         queue_num = random.randint(0,NUM_REQ_QUEUES-1)                      
         queue_name = REQ_QUEUE_NAME%queue_num
-        task.add(queue_name)
+        if not testing:
+            task.add(queue_name)
             
     # get account name from the adunit
     adunit_qmanager = manager or AdUnitQueryManager(adunit_id)
@@ -100,7 +101,8 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
     
     try:
         t = taskqueue.Task(name=task_name,params={'account_name':account_name,'time':time_bucket},countdown=TIME_BUCKET*1.10,method='GET')
-        t.add(TASK_QUEUE_NAME)
+        if not testing:
+            t.add(TASK_QUEUE_NAME)
     except taskqueue.TaskAlreadyExistsError:
         logging.info("task %s already exists"%task_name)
     except Exception, e:    

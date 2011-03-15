@@ -49,27 +49,33 @@ class StatsModelQueryManager(CachedQueryManager):
         stats = [s or StatsModel() for s in stats]
         return stats            
     
-    def put_stats(self,stats):
+    def put_stats(self,stats,rollup=True):
         if isinstance(stats,db.Model):
             stats = [stats]
-        all_stats_deltas = self._get_all_rollups(stats)
+        if rollup:
+            all_stats_deltas = self._get_all_rollups(stats)
+        else:
+            all_stats_deltas = stats
         all_stats_deltas = self._place_stats_under_account(all_stats_deltas)
         
         # get or insert from db in order to update as transaction
         def _txn(stats):
-            self._update_db(all_stats_deltas)
+            return self._update_db(stats)
         return db.run_in_transaction(_txn,all_stats_deltas)
         
     def _update_db(self,stats):
+        key_list = []
         for s in stats:
             stat = db.get(s.key())    
             if stat:
                 stat += s
             else:
                 stat = s
-            stat.put()
+            key_list.append(stat.put())
         logging.info("putting in key_name: %s value: %s,%s"%(s.key().name(),s.request_count,s.impression_count))
         logging.info("putting in key_name: %s NEW value: %s,%s"%(s.key().name(),stat.request_count,stat.impression_count))
+        return key_list
+        
         
     def _get_all_rollups(self,stats):
         # initialize the object dictionary 

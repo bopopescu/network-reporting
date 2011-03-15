@@ -13,8 +13,8 @@ import logging
 def budget_filter():
     log_mesg = "Removed due to being over budget: %s"
     def real_filter( a ):
-        # return not ( a.budget is None or a.campaign.delivery_counter.count < a.budget )
-        return budget_service.process(a)
+        return not ( a.budget is None or a.campaign.delivery_counter.count < a.budget )
+        # return budget_service.process(a.campaign.key, a.bid, a.campaign)
     return ( real_filter, log_mesg, [] )
 
 def active_filter():

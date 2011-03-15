@@ -10,6 +10,7 @@ timeslice-budget is kept as well.
 TIMESLICES = 1440 #we use a default timeslice of one minute
 TEST_MODE = False
 SECONDS_PER_DAY = 86400
+FUDGE_FACTOR = 0.1
 
 test_timeslice = 0
 test_daily_budget = 0
@@ -41,23 +42,16 @@ def current_timeslice():
     else:
         return test_timeslice
 
-def current_timeslice_initial_budget(campaign_id):
+def current_timeslice_initial_budget(campaign_id, campaign_daily_budget):
     rollover_key = timeslice_campaign_key(campaign_id,previous_timeslice())
     rollover_val = memcache.get(rollover_key, namespace="budget") or 0.0
     rollover_budget = from_memcache_int(rollover_val)
     
-    initial_budget = daily_budget(campaign_id) / TIMESLICES
+    initial_budget = campaign_daily_budget * (1 + FUDGE_FACTOR) / TIMESLICES
     
     budget = rollover_budget + initial_budget
     return budget
     
-
-def daily_budget(campaign_id):
-    if not TEST_MODE:
-        "look up in db with fudge factor"
-    else:
-        return test_daily_budget
-
 def has_budget(key, bid):
     if from_memcache_int(memcache.get(key, namespace="budget")) >= bid:
         return True
@@ -68,13 +62,13 @@ def get_timeslice_budget(campaign_id):
     return from_memcache_int(memcache.get(key, namespace="budget"))
  
     
-def process(campaign_id, bid):
+def process(campaign_id, bid, campaign_daily_budget):
     """ Return true if the campaign's current timeslice budget has
     enough money for a creative's bid """
     key = timeslice_campaign_key(campaign_id,current_timeslice())
     
     # Add the budget every time, only is added the first
-    ts_budget = current_timeslice_initial_budget(campaign_id)
+    ts_budget = current_timeslice_initial_budget(campaign_id, campaign_daily_budget)
     memcache.add(key, to_memcache_int(ts_budget),namespace="budget")
     
     can_show = has_budget(key, bid)

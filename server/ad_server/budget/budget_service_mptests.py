@@ -2,7 +2,20 @@ from nose.tools import eq_
 from nose.tools import with_setup
 from server.ad_server.budget import budget_service
 
-def mptest_memcache_int():
+# We simplify budget_service for testing purposes
+budget_service.TEST_MODE = True
+budget_service.TIMESLICES = 2 
+
+def init_test_campaign(campaign_id, daily_budget, fudge_factor=0, timeslices=1):
+    """ Make a fake campaign """
+    budget_service.test_timeslice = 0
+    budget_service.test_daily_budget = daily_budget
+    
+    # process an empty bid to initialize values
+    budget_service.process(campaign_id,0)
+
+
+def mptest_to_memcache_int():
     val = 123.00
     same = budget_service.to_memcache_int(budget_service.from_memcache_int(val))
     eq_(val,same)
@@ -15,44 +28,54 @@ def mptest_memcache_int():
     same = budget_service.to_memcache_int(budget_service.from_memcache_int(val))
     eq_(val,same)
 
+def mptest_get_budget():
+    init_test_campaign(0,1000) #each ts has a budget of 500
+    eq_(budget_service.current_timeslice(), 0)
+    eq_(budget_service.get_timeslice_budget(0),500)
+
 def mptest_budget_all_at_once():
-    budget_service = BudgetService(1,500,300,timeslices=1)
-    eq_(budget_service.process(),True)
-    eq_(budget_service.process(),False)
+    init_test_campaign(1,1000) #each ts has a budget of 500
+    eq_(budget_service.get_timeslice_budget(1),500)
+    eq_(budget_service.process(1,300),True)
+    eq_(budget_service.get_timeslice_budget(1),200)
+    eq_(budget_service.process(1,300),False)
+    eq_(budget_service.get_timeslice_budget(1),200)
 
 def mptest_budget_evenly_success():
-    budget_service = BudgetService(2,250,115,timeslices=1,test_mode=True)
-    eq_(budget_service._get_timeslice_slots(),2)
-    eq_(budget_service.process(),True)
-    eq_(budget_service._get_timeslice_slots(),1)
-    eq_(budget_service.process(),True)
-    eq_(budget_service._get_timeslice_slots(),0)
-    eq_(budget_service.process(),False)
+    init_test_campaign(2,500) #each ts has a budget of 250
+    eq_(budget_service.get_timeslice_budget(2),250)
+    eq_(budget_service.process(2,125),True)
+    eq_(budget_service.get_timeslice_budget(2),125)
+    eq_(budget_service.process(2,125),True)
+    eq_(budget_service.get_timeslice_budget(2),0)
+    eq_(budget_service.process(2,125),False)
 
   
 def mptest_budget_evenly_failure():
-    budget_service = BudgetService(3,500,300,timeslices=2,test_mode=True)
-    eq_(budget_service.process(),False)
-    eq_(budget_service._get_timeslice_slots(),0)
-    eq_(budget_service.process(),False)
+    init_test_campaign(3,500) #each ts has a budget of 250
+    eq_(budget_service.process(3,300),False)
+    eq_(budget_service.get_timeslice_budget(3),250)
+    eq_(budget_service.process(3,300),False)
+    eq_(budget_service.get_timeslice_budget(3),250)
 
 def mptest_multiple_timeslices():
-    budget_service = BudgetService(4,200,100,timeslices=2,test_mode=True)
-    eq_(budget_service._get_timeslice_slots(),1)
-    eq_(budget_service.process(),True)
-    eq_(budget_service.process(),False)
+    init_test_campaign(4,2.4) #each ts is 1.2
+    eq_(budget_service.get_timeslice_budget(4),1.2)
+    eq_(budget_service.process(4,1.1),True)
+    eq_(budget_service.get_timeslice_budget(4),0.1)
+    eq_(budget_service.process(4,1.3),False)
     
-    budget_service._set_next_timeslice()
-    eq_(budget_service._get_timeslice_slots(),1)
-    eq_(budget_service.process(),True)
+    budget_service.test_timeslice += 1
+    
+    eq_(budget_service.process(4,1.1),True)
+    eq_(budget_service.get_timeslice_budget(4),0.2)
  
 def mptest_multiple_timeslice_rollover():
-    budget_service = BudgetService(5,200,100,timeslices=2,test_mode=True)
+    init_test_campaign(5,200) #each ts has a budget of 100
 
-    budget_service._set_next_timeslice()
+    budget_service.test_timeslice += 1
     
-    eq_(budget_service._get_timeslice_slots(),2)
-    eq_(budget_service.process(),True)
-    eq_(budget_service._get_timeslice_slots(),1)
-    eq_(budget_service.process(),True)
-    eq_(budget_service.process(),False)
+    eq_(budget_service.process(5,100),True)
+    eq_(budget_service.get_timeslice_budget(5),100)
+    eq_(budget_service.process(5,100),True)
+    eq_(budget_service.process(5,100),False)

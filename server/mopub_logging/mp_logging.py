@@ -64,6 +64,7 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
                               url='/m/req')
         queue_num = random.randint(0,NUM_REQ_QUEUES-1)                      
         queue_name = REQ_QUEUE_NAME%queue_num
+
         if not testing:
             task.add(queue_name)
             

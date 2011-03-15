@@ -70,7 +70,6 @@ NATIVE_REQUESTS = ['admob','adsense','iAd','custom']
 
 
 
-
 # TODO: Logging is fucked up with unicode characters
 
 # DOMAIN = 'localhost:8080'
@@ -527,7 +526,6 @@ class AdHandler(webapp.RequestHandler):
         testing = False
     
     mp_logging.log(self.request,event=mp_logging.REQ_EVENT, testing=testing)  
-
     
     logging.warning(self.request.headers['User-Agent'] )
     locale = self.request.headers.get("Accept-Language")

@@ -13,7 +13,7 @@ var mopub = mopub || {};
   if (typeof creatives=="undefined") {
     creatives = false;
     }
-    
+
   function campaignAdgroupFormOnLoad(){
     $('#campaignAdgroupForm input[name="campaign_type"]').click(function(e) {
       var campaign_type = $(this).val();

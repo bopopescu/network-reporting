@@ -6,9 +6,9 @@
 <script type='text/javascript'>
     $(document).ready( function () {
             var priors = {% if form.geo.value %}{{form.geo.value|safe}}{% else %}[]{% endif %};
-            var pre = {'type': 'country', 'data': []};
-            var city_pre = {'type': 'city', 'data': []};
-            var state_pre = {'type': 'state', 'data': []};
+            var pre = {type: 'country', data: []};
+            var city_pre = {type: 'city', data: []};
+            var state_pre = {type: 'state', data: []};
             for (var count = 0; count < countries.length; count++) {
                 var dat = countries[count];
                 if ($.inArray(dat.code, priors) != -1) {
@@ -35,14 +35,20 @@
                                               doImmediate: false,
                                               queryParam: 'name_startsWith',
                                               featureClass: 'P',
+                                              contentType: 'json',
                                               prePopulate: city_pre,
+                                              type: 'city',
+                                              minChars: 5,
                                               method: 'get'
                                               }); 
             $('#state_ta').tokenInput(geo_s, { country: 'US',
                                               doImmediate: false,
                                               queryParam: 'name_startsWith',
-                                              featureClass: 'ADM1',
+                                              featureCode: 'ADM1',
+                                              contentType: 'json',
                                               prePopulate: state_pre,
+                                              type: 'state',
+                                              minChars: 5,
                                               method: 'get'
                                               });
             
@@ -97,24 +103,26 @@
                         <dd>
                             <span class="radios">
                                 <input type='radio' class='input-radio' name='location-targeting' value='all' id='advertiser-LocationSpec-all'></input>
-                                <label for=''>Everywhere</label>
+                                <label for='advertiser-LocationSpec-all'>Everywhere</label>
                                 <input type='radio' class='input-radio' name='location-targeting' value='state' id='advertiser-LocationSpec-state'></input>
-                                <label for=''>State/Province</label>
+                                <label for='advertiser-LocationSpec-state'>State/Province</label>
                                 <input type='radio' class='input-radio' name='location-targeting' value='city' id='advertiser-LocationSpec-city'></input>
-                                <label for=''>City</label>
+                                <label for='advertiser-LocationSpec-city'>City</label>
                             </span>
                         </dd>
-                        <dt><label for="TODO9">
-                        Country:
-                        </label></dt>
-                        <dd>
-                          <div id='geo_pred_ta' name='geo_predicates'></div>
-                          <!--
-                          <textarea id='geo_pred_ta' name="geo_predicates" class="{% if form.geo_predicates.errors %}form-error{% endif %}">{% if form.geo_predicates.value %}{{form.geo_predicates.value}}{% else %}country_name=*{% endif %}</textarea> -->
-                          {% for error in form.geo_predicates.errors %}
-                          <div class="form-error-text">{{error}}</div>
-                          {% endfor %}
-                        </dd>
+                        <div class="locationDependent city state all" style='display:none;'>
+                            <dt><label for="TODO9">
+                            Country:
+                            </label></dt>
+                            <dd>
+                              <div id='geo_pred_ta' name='geo_predicates'></div>
+                              <!--
+                              <textarea id='geo_pred_ta' name="geo_predicates" class="{% if form.geo_predicates.errors %}form-error{% endif %}">{% if form.geo_predicates.value %}{{form.geo_predicates.value}}{% else %}country_name=*{% endif %}</textarea> -->
+                              {% for error in form.geo_predicates.errors %}
+                              <div class="form-error-text">{{error}}</div>
+                              {% endfor %}
+                            </dd>
+                        </div>
 
                         <div class="locationDependent state" style='display:none;'>
                             <dt><label for='state_ta'>State/Province:</label></dt>
@@ -123,7 +131,7 @@
 
                         <div class="locationDependent city" style='display:none;'>
                             <dt><label for='city_ta'>City:</label></dt>
-                            <dd><div id='cty_ta'></div></dd>
+                            <dd><div id='city_ta'></div></dd>
                         </div>
 
                         {# <dt><label for="TODO10">Device Predicates:</label></dt> #}

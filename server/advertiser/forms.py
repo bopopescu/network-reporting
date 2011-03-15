@@ -80,6 +80,7 @@ class AdGroupForm(mpforms.MPModelForm):
   geo = forms.Field(widget=forms.MultipleHiddenInput, required=False)
   device_predicates = mpfields.MPTextareaField(required=False)
   custom_html = mpfields.MPTextareaField(required=False)
+  cities = forms.Field(widget=forms.MultipleHiddenInput, required=False)
   
   class Meta:
     model = AdGroup

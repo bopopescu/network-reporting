@@ -3,39 +3,43 @@ from nose.tools import with_setup
 from server.ad_server.budget.budget_service import BudgetService
 
 def mptest_budget_all_at_once():
-    budget_service = BudgetService(1,500,timeslices=1,test_mode=True)
-    eq_(budget_service.process(300),True)
-    eq_(budget_service.process(300),False)
+    budget_service = BudgetService(1,500,300,timeslices=1,test_mode=True)
+    eq_(budget_service.process(),True)
+    eq_(budget_service.process(),False)
 
 def mptest_budget_evenly_success():
-    budget_service = BudgetService(1,500,timeslices=2,test_mode=True)
-    eq_(budget_service.process(125),True)
-    eq_(budget_service.process(125),True)
-    eq_(budget_service._get_timeslice_budget(),0)
-    eq_(budget_service.process(125),False)
+    budget_service = BudgetService(2,250,115,timeslices=1,test_mode=True)
+    eq_(budget_service._get_timeslice_slots(),2)
+    eq_(budget_service.process(),True)
+    eq_(budget_service._get_timeslice_slots(),1)
+    eq_(budget_service.process(),True)
+    eq_(budget_service._get_timeslice_slots(),0)
+    eq_(budget_service.process(),False)
 
   
 def mptest_budget_evenly_failure():
-    budget_service = BudgetService(1,500,timeslices=2,test_mode=True)
-    eq_(budget_service.process(300),False)
-    eq_(budget_service._get_timeslice_budget(),-50)
-    eq_(budget_service.process(300),False)
+    budget_service = BudgetService(3,500,300,timeslices=2,test_mode=True)
+    eq_(budget_service.process(),False)
+    eq_(budget_service._get_timeslice_slots(),0)
+    eq_(budget_service.process(),False)
 
 def mptest_multiple_timeslices():
-    budget_service = BudgetService(1,200,timeslices=2,test_mode=True)
-    eq_(budget_service._get_timeslice_budget(),100)
-    eq_(budget_service.process(100),True)
+    budget_service = BudgetService(4,200,100,timeslices=2,test_mode=True)
+    eq_(budget_service._get_timeslice_slots(),1)
+    eq_(budget_service.process(),True)
+    eq_(budget_service.process(),False)
     
     budget_service._set_next_timeslice()
-    eq_(budget_service._get_timeslice_budget(),100)
-    eq_(budget_service.process(100),True)
+    eq_(budget_service._get_timeslice_slots(),1)
+    eq_(budget_service.process(),True)
  
 def mptest_multiple_timeslice_rollover():
-    budget_service = BudgetService(1,200,timeslices=2,test_mode=True)
+    budget_service = BudgetService(5,200,100,timeslices=2,test_mode=True)
 
     budget_service._set_next_timeslice()
     
-    eq_(budget_service._get_timeslice_budget(),200)
-    eq_(budget_service.process(100),True)
-    eq_(budget_service._get_timeslice_budget(),100)
-    eq_(budget_service.process(100),True)
+    eq_(budget_service._get_timeslice_slots(),2)
+    eq_(budget_service.process(),True)
+    eq_(budget_service._get_timeslice_slots(),1)
+    eq_(budget_service.process(),True)
+    eq_(budget_service.process(),False)

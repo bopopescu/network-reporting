@@ -12,7 +12,10 @@
                           {% ifequal form.campaign_type.value "gtee" %}checked='checked'{% endifequal %}
                           /> 
                           <label for="advertiser-CampaignType-gtee">Guaranteed</label> 
-                          <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="promo" id="advertiser-CampaignType-promo" {% ifequal form.campaign_type.value "promo" %}checked="checked"{% endifequal %}/> <label for="advertiser-CampaignType-promo">Promotional</label> 
+                          
+<input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="promo" id="advertiser-CampaignType-promo" {% ifequal form.campaign_type.value "promo" %}checked="checked"{% endifequal %}/> 
+						  <label for="advertiser-CampaignType-promo">Promotional</label> 
+
                           {% if form.instance %}
                             {% ifequal form.campaign_type.value 'network' %}
                           <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="network" id="advertiser-CampaignType-network" {% ifequal form.campaign_type.value "network" %}checked="checked"{% endifequal %}/> <label for="advertiser-CampaignType-network">Network</label>
@@ -20,6 +23,7 @@
                           {% else %}
                           <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="network" id="advertiser-CampaignType-network" {% ifequal form.campaign_type.value "network" %}checked="checked"{% endifequal %}/> <label for="advertiser-CampaignType-network">Network</label>
                           {% endif %}
+
                             
                           {% if form.instance %} 
                             {% ifequal form.campaign_type.value 'network' %}  
@@ -60,9 +64,23 @@
                           </div>
                         </dd>
                       </div>
+                      <div class="campaignDependent promo">
+                        <dt><label for="promo_level">Priority:</label></dt>
+                        <dd>
+						  {{ form.promo_level.as_widget }}
+                          <a href="#" id="campaignForm-promo-priority-helpLink">What's this?</a>
+                          <div id='campaignForm-promo-priority-helpContent' class='hidden'>
+                            <h3>Priority</h3>
+                            <p>
+                              For a promotional campaign, you may pick whether it is prioritized above (<strong>Normal</strong>) or below ad networks (<strong>Backfill</strong>). 
+                            </p>
+                          </div>
+                        </dd>
+                      </div>
+
                       {{ form.name|attrs:'{"placeholder":"Campaign Name"}'  }}
                       {{ form.description|attrs:'{"placeholder":"Campaign for My New App"}' }}
-                      <div class="campaignDependent gtee promo">
+                      <div class="campaignDependent gtee promo backfill_promo">
                         <dt><label for="">Dates:</label></dt>
                         <dd>
                           <input type='text' class="input-text input-text-number" name="{{form.start_date.name}}" size="15" value="{{form.start_date.value|date:"m/d/Y"}}" placeholder="Start"/> - 

@@ -25,12 +25,16 @@ from nose.tools import assert_equal
 from publisher.models import (  App,
                                 Site
                                 )
+from random import random
 from server.ad_server.main import  ( AdHandler,
                                      AdAuction,
                                      AdClickHandler,
                                      AppOpenHandler,
                                      TestHandler,
                                      )
+
+from server.ad_server.filters.filters import ll_dist
+
 from time import mktime
 
 import logging
@@ -41,6 +45,7 @@ AD_UNIT_ID = "agltb3B1Yi1pbmNyCgsSBFNpdGUYAgw"
 UDID = "thisisntrealatall"
 
 test_mode = "3uoijg2349ic(test_mode)kdkdkg58gjslaf"
+TEST_LLS =  
 
 NETWORKS = ( u'iad', u'admob', u'adsense' )
 PROMOS = ( u'test1', u'test2' )
@@ -56,9 +61,12 @@ def fake_environ( query_string, method = 'get' ):
     ret[ 'wsgi.url_scheme' ] = 'http'
     return ret
 
-def build_ad_qs( udid, keys, ad_id, v = 3, dt = datetime.now() ):
+def build_ad_qs( udid, keys, ad_id, v = 3, dt = datetime.now(), ll=None):
     dt = process_time( dt )
-    return "v=%s&udid=%s&q=%s&id=%s&testing=%s&dt=%s" % ( v, udid, keys, ad_id, test_mode , dt )
+    basic_str = "v=%s&udid=%s&q=%s&id=%s&testing=%s&dt=%s" % ( v, udid, keys, ad_id, test_mode , dt )
+    if ll is not None:
+        basic_str += '&ll=%s' % ll
+    return basic_str
 
 def process_time( dt ):
     return mktime( dt.timetuple() ) 
@@ -264,3 +272,24 @@ def promo_freq_test():
 
 def comb_freq_test():
     pass
+
+
+def lat_lon_test():
+    pause_all()
+    for c in PROMOS:
+        resume(c)
+    for i in range(100):
+        idx = int(random() * len(TEST_LLS))
+        ll = TEST_LLS[idx]
+        ll = [float(val) for val in ll.split(',')]
+        e = gen_random_ll(ll)
+        creat = Creative.get(get_id())
+        name = creat.ad_group.name
+        if ll_dist(e, ll) < 50:
+            assert_equal(name, u'test2', 'Expected city-constrained promo, got %s' % name)
+        else:
+            assert_equal(name, u'test1', 'Expected non-city-constrained promo, got %s' % name) 
+
+def gen_random_ll(ll):
+
+

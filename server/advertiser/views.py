@@ -162,14 +162,14 @@ class AdGroupIndexHandler(RequestHandler):
         gtee_levels.append(dict(name = name, campaigns = level_camps))
     logging.warning(guarantee_campaigns)
     
-    for blah in gtee_levels:
-        if blah['name'] == 'normal' and len(gtee_levels[0]['campaigns']) == 0 and len(gtee_levels[2]['campaigns']) == 0: 
+    for level in gtee_levels:
+        if level['name'] == 'normal' and len(gtee_levels[0]['campaigns']) == 0 and len(gtee_levels[2]['campaigns']) == 0: 
 
-            blah['foo'] = True 
-        elif len(blah['campaigns']) > 0:
-            blah['foo'] = True 
+            level['foo'] = True 
+        elif len(level['campaigns']) > 0:
+            level['foo'] = True 
         else:
-            blah['foo'] = False 
+            level['foo'] = False 
 
     logging.warning(gtee_levels)
 

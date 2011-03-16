@@ -28,6 +28,9 @@ import datetime
 
 urllib.getproxies_macosx_sysconf = lambda: {}
 
+from ad_server.filters.filters import (
+                                        lat_lon_filter,
+                                        )
 
 from common.utils import simplejson
 
@@ -258,6 +261,7 @@ class AdAuction(object):
     site = kw["site"]
     manager = kw["manager"]
     request = kw["request"]
+	ll 		= kw['ll']
     
     udid = kw["udid"]
 
@@ -283,8 +287,9 @@ class AdAuction(object):
     for a in all_ad_groups:
       logging.info("%s of %s"%(a.campaign.delivery_counter.count,a.budget))
     
-    ALL_FILTERS     = ( budget_filter(), 
+    ALL_FILTERS     = ( budget_filter(),
                         active_filter(), 
+						lat_lon_filter(ll),
                         kw_filter( keywords ), 
                         geo_filter( geo_predicates ), 
                         device_filter( device_predicates ) 
@@ -557,8 +562,11 @@ class AdHandler(webapp.RequestHandler):
     # logging.warning("format is %s (requested '%s')" % (format, f))
     
     # look up lat/lon
-    addr = self.rgeocode(self.request.get("ll")) if self.request.get("ll") else ()      
-    logging.warning("geo is %s (requested '%s')" % (addr, self.request.get("ll")))
+	ll = self.request.get('ll') if self.request.get('ll') else None
+	
+	# Reverse Geocode stuff isn't used atm
+    # addr = self.rgeocode(self.request.get("ll")) if self.request.get("ll") else ()      
+    # logging.warning("geo is %s (requested '%s')" % (addr, self.request.get("ll")))
     
     # get creative exclusions usually used to exclude iAd because it has already failed
     excluded_creatives = self.request.get_all("exclude")
@@ -573,7 +581,17 @@ class AdHandler(webapp.RequestHandler):
         logging.info('OLP ad-request {"request_id": "%s", "remote_addr": "%s", "q": "%s", "user_agent": "%s", "udid":"%s" }' % (request_id, self.request.remote_addr, self.request.query_string, self.request.headers["User-Agent"], udid))
 
     # get winning creative
-    c = AdAuction.run(request=self.request, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, udid=udid, request_id=request_id, now=now,manager=manager)
+    c = AdAuction.run(request = self.request,
+							  site = site,
+							  format=format, 
+							  q=q, 
+							  addr=addr, 
+							  excluded_creatives=excluded_creatives, 
+							  udid=udid, 
+							  ll = ll,
+							  request_id=request_id, 
+							  now=now,
+							  manager=manager)
     # output the request_id and the winning creative_id if an impression happened
     if c:
         user_adgroup_daily_key = memcache_key_for_date(udid,now,c.ad_group.key())

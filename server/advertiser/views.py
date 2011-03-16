@@ -108,6 +108,7 @@ class IndexHandler(RequestHandler):
     promo_campaigns = filter(lambda x: x.campaign_type in ['promo'], campaigns)
     garauntee_campaigns = filter(lambda x: x.campaign_type in ['gtee'], campaigns)
     network_campaigns = filter(lambda x: x.campaign_type in ['network'], campaigns)
+    backfill_promo_campaigns = filter(lambda x: x.campaign_type in ['backfill_promo'], campaigns)
 
     help_text = None
     if network_campaigns:
@@ -121,6 +122,7 @@ class IndexHandler(RequestHandler):
        'date_range': self.date_range,
        'gtee': garauntee_campaigns,
        'promo': promo_campaigns,
+       'backfill_promo': backfill_promo_campaigns,
        'network': network_campaigns,
        'helptext':help_text })
       
@@ -162,6 +164,7 @@ class AdGroupIndexHandler(RequestHandler):
         gtee_levels.append(dict(name = name, campaigns = level_camps))
     logging.warning(guarantee_campaigns)
     
+    # TODO(Nick): Clean this up, i don't think this is needed anymore?
     for blah in gtee_levels:
         if blah['name'] == 'normal' and len(gtee_levels[0]['campaigns']) == 0 and len(gtee_levels[2]['campaigns']) == 0: 
 
@@ -176,6 +179,9 @@ class AdGroupIndexHandler(RequestHandler):
 
     network_campaigns = filter(lambda x: x.campaign.campaign_type in ['network'], adgroups)
     network_campaigns = sorted(network_campaigns, lambda x,y: cmp(y.bid, x.bid))
+    
+    backfill_promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_promo'], adgroups)
+    backfill_promo_campaigns = sorted(backfill_promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
     
     adgroups = sorted(adgroups, key=lambda adgroup: adgroup.stats.impression_count, reverse=True)
     
@@ -204,6 +210,7 @@ class AdGroupIndexHandler(RequestHandler):
        'gtee': gtee_levels, 
        'promo': promo_campaigns,
        'network': network_campaigns,
+       'backfill_promo': backfill_promo_campaigns,
        'account': self.account,
        'helptext':help_text })
 

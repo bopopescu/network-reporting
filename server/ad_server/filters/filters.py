@@ -1,6 +1,7 @@
 import logging 
+from server.ad_server.budget import budget_service
 ###############################
-# BASIC FILTERS
+# BASIC EXCLUSION FILTERS
 #
 # --- Each filter function is a function which takes some arguments (or none) necessary 
 #       for the filter to work its magic. log_mesg is the message that will be logged 
@@ -13,8 +14,9 @@ import logging
 def budget_filter():
     log_mesg = "Removed due to being over budget: %s"
     def real_filter( a ):
-        return not ( a.budget is None or a.campaign.delivery_counter.count < a.budget )
-        # return budget_service.process(a.campaign.key, a.bid, a.campaign)
+        # return not ( a.budget is None or a.campaign.delivery_counter.count < a.budget )
+        return not (a.campaign.budget is None or
+                    budget_service.process(a.campaign.key, a.bid, a.campaign.budget))
     return ( real_filter, log_mesg, [] )
 
 def active_filter():

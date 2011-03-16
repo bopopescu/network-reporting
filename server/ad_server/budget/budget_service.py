@@ -15,7 +15,7 @@ FUDGE_FACTOR = 0.1
 test_timeslice = 0
 test_daily_budget = 0
 
-def timeslice_campaign_key(campaign_id,timeslice):
+def make_timeslice_campaign_key(campaign_id,timeslice):
     """Returns a key based upon the campaign_id and the current time"""
     return 'timeslice:%s:%s'%(campaign_id,timeslice)
   
@@ -27,10 +27,10 @@ def from_memcache_int(value):
     value = float(value)
     return value/100000
 
-def previous_timeslice():
-    return current_timeslice() - 1;
+def get_previous_timeslice():
+    return get_current_timeslice() - 1;
 
-def current_timeslice():
+def get_current_timeslice():
     """Returns the current timeslice, has test mode"""
     if not TEST_MODE:
         origin = datetime.datetime.combine(datetime.date.today(),
@@ -42,8 +42,8 @@ def current_timeslice():
     else:
         return test_timeslice
 
-def current_timeslice_initial_budget(campaign_id, campaign_daily_budget):
-    rollover_key = timeslice_campaign_key(campaign_id,previous_timeslice())
+def get_current_timeslice_initial_budget(campaign_id, campaign_daily_budget):
+    rollover_key = make_timeslice_campaign_key(campaign_id,get_previous_timeslice())
     rollover_val = memcache.get(rollover_key, namespace="budget") or 0.0
     rollover_budget = from_memcache_int(rollover_val)
     
@@ -58,17 +58,17 @@ def has_budget(key, bid):
     return False
     
 def get_timeslice_budget(campaign_id):
-    key = timeslice_campaign_key(campaign_id,current_timeslice())
+    key = make_timeslice_campaign_key(campaign_id,get_current_timeslice())
     return from_memcache_int(memcache.get(key, namespace="budget"))
  
     
 def process(campaign_id, bid, campaign_daily_budget):
     """ Return true if the campaign's current timeslice budget has
     enough money for a creative's bid """
-    key = timeslice_campaign_key(campaign_id,current_timeslice())
+    key = make_timeslice_campaign_key(campaign_id,get_current_timeslice())
     
     # Add the budget every time, only is added the first
-    ts_budget = current_timeslice_initial_budget(campaign_id, campaign_daily_budget)
+    ts_budget = get_current_timeslice_initial_budget(campaign_id, campaign_daily_budget)
     memcache.add(key, to_memcache_int(ts_budget),namespace="budget")
     
     can_show = has_budget(key, bid)

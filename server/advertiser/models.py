@@ -14,9 +14,6 @@ class Campaign(db.Model):
   # daily budget
   budget = db.FloatProperty() 
   
-  # remaining daily budget
-  remaining_budget = db.FloatProperty()
-  
   # start and end dates 
   start_date = db.DateProperty()
   end_date = db.DateProperty()

@@ -42,7 +42,7 @@ UDID = "thisisntrealatall"
 
 test_mode = "3uoijg2349ic(test_mode)kdkdkg58gjslaf"
 
-NETWORKS = ( u'iad', u'admob', u'adsense' )
+NETWORK_ADGROUPS = ( u'iad', u'admob', u'adsense' )
 PROMOS = ( u'test1', u'test2' )
 
 def fake_environ( query_string, method = 'get' ):
@@ -141,7 +141,7 @@ def get_id( dt = datetime.now() ):
 def basic_net_test():
     pause_all()
     de_prioritize_all()
-    for c in NETWORKS: 
+    for c in NETWORK_ADGROUPS: 
         resume( c ) 
         id = get_id()
         print "id is: %s" % id
@@ -164,7 +164,7 @@ def priority_level_test():
     de_prioritize_all()
     for a in PROMOS:
         resume(a)
-    for a in NETWORKS:
+    for a in NETWORK_ADGROUPS:
         resume(a)
         prioritize(a)
     for i in range(100):
@@ -175,11 +175,11 @@ def priority_level_test():
         pause(a)
     for i in range(20):
         camp = Creative.get(get_id())
-        assert camp.ad_group.name in NETWORKS, "Expected network, got %s" % camp.ad_group.name
+        assert camp.ad_group.name in NETWORK_ADGROUPS, "Expected network, got %s" % camp.ad_group.name
     de_prioritize_all()
 
 def net_priorty_test():
-    priority_t3st( NETWORKS ) 
+    priority_t3st( NETWORK_ADGROUPS ) 
     return 
 
 def priority_t3st( camps ):
@@ -253,7 +253,7 @@ def frequency_t3st( camps, def_freq = 5 ):
 def net_freq_test():
     pause_all()
     zero_all_freqs()
-    frequency_t3st( NETWORKS )
+    frequency_t3st( NETWORK_ADGROUPS )
     
 
 

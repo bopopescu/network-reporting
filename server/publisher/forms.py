@@ -62,14 +62,25 @@ class AppForm(mpforms.MPModelForm):
       obj.put()
     return obj      
 
+ANIMATION_CHOICES = (
+    (u'0', 'No Animation'),
+    (u'1', 'Random'),
+    (u'2', 'Flip from left'),
+    (u'3', 'Flip from right'),
+    (u'4', 'Curl up'),
+    (u'5', 'Curl down'),
+    (u'6', 'Fade'),
+)
+
 class AdUnitForm(mpforms.MPModelForm):
   TEMPLATE = 'publisher/forms/adunit_form.html'
   format = mpfields.MPTextField(required=True, widget = mpwidgets.MPFormatWidget)
+  # animation_type = mpfields.MPChoiceField(choices=ANIMATION_CHOICES,widget=mpwidgets.MPSelectWidget)
   
   class Meta:
     model = Site
     fields = ('name','description','app_key','ad_type', 'backfill', 'backfill_threshold_cpm','keywords',
-    'width','height', 'device_format', 'format','adsense_channel_id')
+    'width','height', 'device_format', 'format','adsense_channel_id','refresh_interval')
  
  
 class SiteForm(forms.ModelForm):

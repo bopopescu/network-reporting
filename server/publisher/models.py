@@ -78,6 +78,7 @@ class Site(db.Model):
   # keywords = db.StringListProperty()                          
   
   refresh_interval = db.IntegerProperty(default=0)
+  animation_type = db.StringProperty(default='0') # NOTE: this is a string in case we don't want enumeration later
   
   # color scheme
   color_border = db.StringProperty(required=True, default='336699')

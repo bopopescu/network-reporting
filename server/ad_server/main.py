@@ -265,10 +265,9 @@ class AdAuction(object):
     keywords = kw["q"]
     geo_predicates = AdAuction.geo_predicates_for_rgeocode(kw["addr"])
     device_predicates = AdAuction.device_predicates_for_request(kw["request"])
-    format_predicates = AdAuction.format_predicates_for_format(kw["format"])
     exclude_params = kw["excluded_creatives"]
     excluded_predicates = AdAuction.exclude_predicates_params(exclude_params)
-    logging.warning("keywords=%s, geo_predicates=%s, device_predicates=%s, format_predicates=%s" % (keywords, geo_predicates, device_predicates, format_predicates))
+    logging.warning("keywords=%s, geo_predicates=%s, device_predicates=%s" % (keywords, geo_predicates, device_predicates))
 
     # Matching strategy: 
     # 1) match all ad groups that match the placement that is in question, sort by priority
@@ -355,8 +354,6 @@ class AdAuction(object):
     if len(all_ad_groups) > 0:
         logging.warning("ad_group: %s"%all_ad_groups)
         all_creatives = manager.get_creatives_for_adgroups(all_ad_groups)
-        # all_creatives = Creative.gql("where ad_group in :1 and format_predicates in :2 and active = :3 and deleted = :4", 
-        #   map(lambda x: x.key(), ad_groups), format_predicates, True, False).fetch(AdAuction.MAX_ADGROUPS)
         if len(all_creatives) > 0:
             # for each priority_level, perform an auction among the various creatives 
             for p in CAMPAIGN_LEVELS: 
@@ -560,11 +557,6 @@ class AdHandler(webapp.RequestHandler):
     q = keywords
     logging.warning("keywords are %s" % keywords)
 
-    # get format
-    f = self.request.get("f") or "320x50" # TODO: remove this default
-    f = "%dx%d"%(int(site.width),int(site.height))
-    format = self.FORMAT_SIZES.get(f)
-    # logging.warning("format is %s (requested '%s')" % (format, f))
     
     # look up lat/lon
     addr = self.rgeocode(self.request.get("ll")) if self.request.get("ll") else ()      
@@ -583,7 +575,7 @@ class AdHandler(webapp.RequestHandler):
         logging.info('OLP ad-request {"request_id": "%s", "remote_addr": "%s", "q": "%s", "user_agent": "%s", "udid":"%s" }' % (request_id, self.request.remote_addr, self.request.query_string, self.request.headers["User-Agent"], udid))
         
     # get winning creative
-    c = AdAuction.run(request=self.request, site=site, format=format, q=q, addr=addr, excluded_creatives=excluded_creatives, udid=udid, request_id=request_id, now=now,manager=manager, testing=testing)
+    c = AdAuction.run(request=self.request, site=site, q=q, addr=addr, excluded_creatives=excluded_creatives, udid=udid, request_id=request_id, now=now,manager=manager, testing=testing)
     # output the request_id and the winning creative_id if an impression happened
     if c:
         user_adgroup_daily_key = memcache_key_for_date(udid,now,c.ad_group.key())
@@ -622,7 +614,6 @@ class AdHandler(webapp.RequestHandler):
       # render the creative 
         self.response.out.write( self.render_creative(  c, 
                                                         site                = site, 
-                                                        format              = format, 
                                                         q                   = q, 
                                                         addr                = addr,
                                                         excluded_creatives  = excluded_creatives, 
@@ -633,7 +624,6 @@ class AdHandler(webapp.RequestHandler):
     else:
         self.response.out.write( self.render_creative(  c, 
                                                         site                = site, 
-                                                        format              = format, 
                                                         q                   = q, 
                                                         addr                = addr, 
                                                         excluded_creatives  = excluded_creatives, 
@@ -784,8 +774,12 @@ class AdHandler(webapp.RequestHandler):
   def render_creative(self, c, track_url=None, **kwargs):
     if c:
       logging.warning("rendering: %s" % c.ad_type)
-      format = kwargs["format"]
       site = kwargs["site"]
+      adunit = site
+      
+      format = adunit.format.split('x')
+      if len(format) < 2:
+          format = (320,480)
 
       template_name = c.ad_type
       

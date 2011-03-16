@@ -383,7 +383,7 @@ class IntegerProperty(db.IntegerProperty):
 
     This defaults to an IntegerField instance.
     """
-    defaults = {'form_class': forms.IntegerField}
+    defaults = {'form_class': forms.IntegerField,'widget':mpwidgets.MPNumberInput}
     defaults.update(kwargs)
     return super(IntegerProperty, self).get_form_field(**defaults)
 

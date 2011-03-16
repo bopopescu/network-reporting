@@ -4,7 +4,7 @@ from google.appengine.ext import db
 from django import forms
 
 from django.forms.models import ModelChoiceField
-from django.forms.fields import FileField, CharField, FloatField
+from django.forms.fields import FileField, CharField, FloatField, ChoiceField
 from django.template import Context, loader
 from django.utils.encoding import smart_unicode, force_unicode
 from django.utils.translation import ugettext_lazy as _, ugettext
@@ -36,8 +36,9 @@ class MPTextField(CharField):
 class MPFloatField(FloatField):
     widget = mpwidgets.MPNumberInput
 
-class MPChoiceField(FloatField):
+class MPChoiceField(ChoiceField):
     widget = mpwidgets.MPRadioInput
+    
     
 class MPModelMultipleChoiceField(ModelChoiceField):
     """A MultipleChoiceField whose choices are a model QuerySet."""

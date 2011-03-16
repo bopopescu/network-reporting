@@ -596,12 +596,13 @@ class AdHandler(webapp.RequestHandler):
 
 
         # create an ad clickthrough URL
-        ad_click_url = "http://%s/m/aclk?id=%s&cid=%s&req=%s" % (DOMAIN,id, c.key(), request_id)
+        ad_click_url = "http://%s/m/aclk?id=%s&cid=%s&req=%s&udid=%s" % (DOMAIN,id, c.key(), request_id, udid)
         self.response.headers.add_header("X-Clickthrough", str(ad_click_url))
       
         # ad an impression tracker URL
-        self.response.headers.add_header("X-Imptracker", "http://%s/m/imp?id=%s&cid=%s"%(DOMAIN,id,c.key()))
-        track_url = "http://%s/m/imp?id=%s&cid=%s" % (DOMAIN, id, c.key())
+        track_url = "http://%s/m/imp?id=%s&cid=%s&udid=%s" % (DOMAIN, id, c.key(), udid)
+        self.response.headers.add_header("X-Imptracker", str(track_url))
+        
       
       #add creative ID for testing (also prevents that one bad bug from happening)
         self.response.headers.add_header("X-Creativeid", "%s" % c.key())
@@ -813,7 +814,7 @@ class AdHandler(webapp.RequestHandler):
 
 
       if c.ad_type == "adsense":
-        params.update({"title": ','.join(kwargs["q"]), "adsense_format": format[2], "w": format[0], "h": format[1], "client": kwargs["site"].account.adsense_pub_id})
+        params.update({"title": ','.join(kwargs["q"]), "adsense_format": '300x250_as', "w": format[0], "h": format[1], "client": kwargs["site"].account.adsense_pub_id})
         params.update(channel_id=kwargs["site"].adsense_channel_id or '')
         # self.response.headers.add_header("X-Launchpage","http://googleads.g.doubleclick.net")
       elif c.ad_type == "admob":
@@ -918,7 +919,7 @@ class AdHandler(webapp.RequestHandler):
         
         # add some extra  
         self.response.headers.add_header("X-Failurl",self.request.url+'&exclude='+str(c.ad_type))
-        self.response.headers.add_header("X-Format",format[2])
+        self.response.headers.add_header("X-Format",'300x250_as')
         self.response.headers.add_header("X-Width",str(format[0]))
         self.response.headers.add_header("X-Height",str(format[1]))
       
@@ -989,18 +990,19 @@ class AdImpressionHandler(webapp.RequestHandler):
 class AdClickHandler(webapp.RequestHandler):
   # /m/aclk?udid=james&appid=angrybirds&id=ahRldmVudHJhY2tlcnNjYWxldGVzdHILCxIEU2l0ZRipRgw&cid=ahRldmVudHJhY2tlcnNjYWxldGVzdHIPCxIIQ3JlYXRpdmUYoh8M
   def get(self):
+    mp_logging.log(self.request, event=mp_logging.CLK_EVENT)  
+      
     udid = self.request.get('udid')
     mobile_appid = self.request.get('appid')
     time = datetime.datetime.now()
     adunit = self.request.get('id')
     creative = self.request.get('cid')
 
-    if mobile_appid and mobile_appid != CLICK_EVENT_NO_APP_ID:
-      mp_logging.log(self.request, event=mp_logging.CLK_EVENT)  
-    
-    # TODO: maybe have this section run asynchronously
-    ce_manager = ClickEventManager()
-    ce = ce_manager.log_click_event(udid, mobile_appid, time, adunit, creative)
+    # if driving download then we use the user datastore
+    if udid and mobile_appid and mobile_appid != CLICK_EVENT_NO_APP_ID:
+        # TODO: maybe have this section run asynchronously
+        ce_manager = ClickEventManager()
+        ce = ce_manager.log_click_event(udid, mobile_appid, time, adunit, creative)
 
     id = self.request.get("id")
     q = self.request.get("q")    

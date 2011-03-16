@@ -60,7 +60,7 @@ class Site(db.Model):
   
   name = db.StringProperty(required=True,default='Banner Ad')
   url = db.StringProperty()
-  description = db.TextProperty(required=True,default='General Purpose Banner Ad')
+  description = db.TextProperty(default='General Purpose Banner Ad')
   width = db.FloatProperty()
   height = db.FloatProperty()
 

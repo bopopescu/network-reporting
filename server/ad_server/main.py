@@ -65,7 +65,7 @@ CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gz
 MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7PnE6cH9_PX7OoeIIr5FjnTA'
 DOMAIN = 'ads.mopub.com' 
 FREQ_ATTR = '%s_frequency_cap'
-CAMPAIGN_LEVELS = ('gtee_high', 'gtee', 'gtee_low', 'promo', 'network')
+CAMPAIGN_LEVELS = ('gtee_high', 'gtee', 'gtee_low', 'promo', 'network','backfill_promo')
 NATIVE_REQUESTS = ['admob','adsense','iAd','custom']
 
 
@@ -562,7 +562,7 @@ class AdHandler(webapp.RequestHandler):
 
     # get format
     f = self.request.get("f") or "320x50" # TODO: remove this default
-    f = "%dx%d"%(int(site.width),int(site.height))
+    # f = "%dx%d"%(int(site.width),int(site.height))
     format = self.FORMAT_SIZES.get(f)
     # logging.warning("format is %s (requested '%s')" % (format, f))
     

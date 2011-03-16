@@ -768,7 +768,7 @@ class AdHandler(webapp.RequestHandler):
                             }
                           }, false);
                         </script></head>
-                        <body style="margin:0;padding:0;width:${w}px;background:white;">${html_data}$trackingPixel</body></html>"""),
+                        <body style="margin:0;padding:0;">${html_data}$trackingPixel</body></html>"""),
     "html_full":Template("$html_data")
   }
   def render_creative(self, c, track_url=None, **kwargs):
@@ -857,7 +857,7 @@ class AdHandler(webapp.RequestHandler):
       else:
         params.update(title='')
 
-      if kwargs["v"] >= 2 and not "Android" in self.request.headers["User-Agent"]:  
+      if kwargs["v"] >= 2:  
         params.update(finishLoad='<script>function finishLoad(){window.location="mopub://finishLoad";} window.onload = function(){finishLoad();} </script>')
         # extra parameters used only by admob template
         #add in the success tracking pixel

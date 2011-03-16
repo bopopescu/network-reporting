@@ -33,6 +33,7 @@ class MPBoundField(BoundField):
 
     def __init__(self, form, field, name, *args, **kwargs):
         self.attrs={}
+        self.raw = False
         
         if field.required:
              self.attrs['class'] = "required"

@@ -1,5 +1,6 @@
 import logging
 import time
+import random
 
 from google.appengine.api import memcache
 from google.appengine.api import taskqueue
@@ -20,15 +21,53 @@ TASK_NAME = 't-%(account_name)s-%(time)s' # note time will be bucketed
 TIME_BUCKET = 10
 MEMCACHE_ALIVE_TIME = 0#6*TIME_BUCKET
 
-def log(request,event,adunit=None,manager=None,adunit_id=None,creative_id=None,udid=None):
+REQ_QUEUE_NAME = "network-request-%02d"
+NUM_REQ_QUEUES = 1
+
+
+def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,creative_id=None,udid=None,testing=None):
+    # if this is the second request because of a 
+    # native failure we just bail in order to 
+    # Note if logging an adnetwork request, we pass
+    # in request = None.
+    if request:
+        exclude_creatives = request.get_all("exclude")
+        if exclude_creatives:
+            return    
 
     # get parameters from the request or args
-    adunit_id = adunit_id or request.get('id',None)
-    creative_id = creative_id or request.get('cid',None)
-    udid = udid or request.get('udid',None)
-    request_id = request.get('reqcnt',None)
-    instance_id = request.get('inst',None)
+    adunit_id = adunit_id 
+    if adunit:
+        adunit_id = adunit_id or str(adunit.key()) 
+    creative_id = creative_id 
+    if creative:
+        creative_id = creative_id or str(creative.key()) 
+    
+    if request:
+        adunit_id = adunit_id or request.get('id', None)
+        creative_id = creative_id or request.get('cid', None)
+        udid = udid or request.get('udid', None)
+        request_id = request.get('reqcnt',None)
+        instance_id = request.get('inst',None)
+    else:
+        request_id = None
+        instance_id = None
+    
+    # if trying to record the request of a adunit and creative
+    # i.e. request of a network creative
+    # we add a "fire-and-forget" taskqueue entry so that the
+    # data shows up in the apache-style request logs    
+    if adunit_id and creative_id and event == REQ_EVENT:
+        logging.info("fire and forget--adunit: %s creative:%s"%(adunit_id,creative_id))
+        task = taskqueue.Task(params=dict(id=adunit_id,cid=creative_id),
+                              method='GET',
+                              url='/m/req')
+        queue_num = random.randint(0,NUM_REQ_QUEUES-1)                      
+        queue_name = REQ_QUEUE_NAME%queue_num
 
+        if not testing:
+            task.add(queue_name)
+            
     # get account name from the adunit
     adunit_qmanager = manager or AdUnitQueryManager(adunit_id)
     adunit = adunit or adunit_qmanager.get_adunit()
@@ -63,7 +102,8 @@ def log(request,event,adunit=None,manager=None,adunit_id=None,creative_id=None,u
     
     try:
         t = taskqueue.Task(name=task_name,params={'account_name':account_name,'time':time_bucket},countdown=TIME_BUCKET*1.10,method='GET')
-        t.add(TASK_QUEUE_NAME)
+        if not testing:
+            t.add(TASK_QUEUE_NAME)
     except taskqueue.TaskAlreadyExistsError:
         logging.info("task %s already exists"%task_name)
     except Exception, e:    

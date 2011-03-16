@@ -52,7 +52,6 @@ $.fn.tokenInput = function (url, options) {
 };
 
 $.TokenData = function(data,type) {
-    console.log(data);
     var raw = data;
     var name;
     var input;
@@ -131,6 +130,9 @@ $.TokenList = function (input, settings) {
             outline: "none"
         })
         .focus(function () {
+            if (settings.tokenLimit === null || settings.tokenLimit !== token_count) {
+                show_dropdown_hint();
+            }
             $(this).addClass('focused');
             if( !token_list.hasClass('focused')) {
                 token_list.addClass('focused');
@@ -330,15 +332,20 @@ $.TokenList = function (input, settings) {
                 $(this).attr('disabled', false);
         });
     }
+    
+    // Only show countryNumDpdnt things that match the current number
+    // of countries in the input
+    var countries = $('#geo_pred_ta').children().length;
+    $('.countryNumDependent').hide();
+    $('.countryNumDependent.' + countries).show();
+
   }
 
 
 
     // Pre-populate list if items exist
     function init_list () {
-        console.log('initing...');
         var li_data = settings.prePopulate.data;
-        console.log(li_data);
         if(li_data && li_data.length) {
             for(var i in li_data) {
                 var token_data = new $.TokenData(li_data[i], settings.prePopulate.type);
@@ -359,8 +366,6 @@ $.TokenList = function (input, settings) {
                         delete_token($(this).parent());
                         return false;
                     });
-                console.log("Preloaded data");
-                console.log(token_data);
                 $.data(this_token.get(0), "tokeninput", token_data); 
 
                 // Clear input box and make sure it keeps focus
@@ -375,6 +380,7 @@ $.TokenList = function (input, settings) {
                 token_data.input().appendTo( hidden_input ); 
             }
         }
+        input_box.blur();
     }
 
     function is_printable_character(keycode) {
@@ -568,7 +574,8 @@ $.TokenList = function (input, settings) {
 
     // Highlight the query part of the search term
 	function highlight_term(value, term) {
-		return value.replace(new RegExp("(?![^&;]+;)(?!<[^<>]*)(" + term + ")(?![^<>]*>)(?![^&;]+;)", "gi"), "<b>$1</b>");
+        var ret_val = value.replace(new RegExp("(?![^&;]+;)(?!<[^<>]*)(" + term + ")(?![^<>]*>)(?![^&;]+;)", "gi"), "<b>$1</b>");
+		return ret_val; 
 	}
 
     var slide_state = false;
@@ -576,7 +583,6 @@ $.TokenList = function (input, settings) {
     function populate_dropdown (query, results) {
         var type = results.type;
         results = results.data;
-        console.log(results);
         if(results && results.length) {
             var drop_clone = dropdown.clone();
             drop_clone.empty();

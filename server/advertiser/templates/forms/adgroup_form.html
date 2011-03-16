@@ -43,6 +43,7 @@
            $('#city_ta').tokenInput(geo_s,
                     { country: 'US',
                       doImmediate: false,
+                      hintText: 'Type in a city name',
                       queryParam: 'name_startsWith',
                       featureClass: 'P',
                       prePopulate: city_pre,
@@ -55,14 +56,16 @@
 
             //Need to create data object that is array of dictionary [ {name, id} ] 
 
-            $('#geo_pred_ta').tokenInput( null, { data: countries,
-                                                  formatResult: function( row ) {
-                                                        return row.name;
-                                                        },
-                                                  formatMatch: function( row, i, max ){
-                                                        return [row.name, row.code];
-                                                        },
-                                                  prePopulate: pre 
+            $('#geo_pred_ta').tokenInput( null, 
+                            { data: countries,
+                              hintText: 'Type in a country name',
+                              formatResult: function( row ) {
+                                    return row.name;
+                                    },
+                              formatMatch: function( row, i, max ){
+                                    return [row.name, row.code];
+                                    },
+                              prePopulate: pre 
                 });
                      /* Not doing states atm
             $('#state_ta').tokenInput(geo_s, { country: 'US',
@@ -119,41 +122,44 @@
                           {% endfor %}
                         </dd> 
                       	{{ form.keywords|attrs:'{"placeholder":"Keywords, one per line, e.g. coffee"}' }}
-                        <dt><label for="loc">Location Targeting:</label></dt>
+                        <dt><label for="TODO9">
+                        Country Targeting:
+                        </label></dt>
                         <dd>
-                            <span class="radios">
-                                <input type='radio' class='input-radio' name='location-targeting' value='all' id='advertiser-LocationSpec-all'{% if not form.cities.value %}checked{% endif %}></input>
-                                <label for='advertiser-LocationSpec-all'>Everywhere</label>
-                                <!--
-                                <input type='radio' class='input-radio' name='location-targeting' value='state' id='advertiser-LocationSpec-state'></input>
-                                <label for='advertiser-LocationSpec-state'>State/Province</label>
-                                --!>
-                                <input type='radio' class='input-radio' name='location-targeting' value='city' id='advertiser-LocationSpec-city'{% if form.cities.value %}checked{% endif %}></input>
-                                <label for='advertiser-LocationSpec-city'>City</label>
-                            </span>
+                          <div id='geo_pred_ta' name='geo_predicates'></div>
+                          <!--
+                          <textarea id='geo_pred_ta' name="geo_predicates" class="{% if form.geo_predicates.errors %}form-error{% endif %}">{% if form.geo_predicates.value %}{{form.geo_predicates.value}}{% else %}country_name=*{% endif %}</textarea> -->
+                          {% for error in form.geo_predicates.errors %}
+                          <div class="form-error-text">{{error}}</div>
+                          {% endfor %}
                         </dd>
-                        <div class="locationDependent city state all" style='display:none;'>
-                            <dt><label for="TODO9">
-                            Country:
-                            </label></dt>
+                        <div class="countryNumDependent 0 1" style='display:none;'>
+                            <dt><label for="loc">Location Targeting:</label></dt>
                             <dd>
-                              <div id='geo_pred_ta' name='geo_predicates'></div>
-                              <!--
-                              <textarea id='geo_pred_ta' name="geo_predicates" class="{% if form.geo_predicates.errors %}form-error{% endif %}">{% if form.geo_predicates.value %}{{form.geo_predicates.value}}{% else %}country_name=*{% endif %}</textarea> -->
-                              {% for error in form.geo_predicates.errors %}
-                              <div class="form-error-text">{{error}}</div>
-                              {% endfor %}
+                                <span class="radios">
+                                    <input type='radio' class='input-radio' name='location-targeting' value='all' id='advertiser-LocationSpec-all'{% if not form.cities.value %}checked{% endif %}></input>
+                                    <label for='advertiser-LocationSpec-all'>Everywhere</label>
+                                    <!--
+                                    <input type='radio' class='input-radio' name='location-targeting' value='state' id='advertiser-LocationSpec-state'></input>
+                                    <label for='advertiser-LocationSpec-state'>State/Province</label>
+                                    --!>
+                                    <input type='radio' class='input-radio' name='location-targeting' value='city' id='advertiser-LocationSpec-city'{% if form.cities.value %}checked{% endif %}></input>
+                                    <label for='advertiser-LocationSpec-city'>City</label>
+                                </span>
                             </dd>
                         </div>
-
                         <div class="locationDependent state" style='display:none;'>
                             <dt><label for='state_ta'>State/Province:</label></dt>
                             <dd><div id='state_ta'></div></dd>
                         </div>
 
                         <div class="locationDependent city" style='display:none;'>
-                            <dt><label for='city_ta'>City:</label></dt>
-                            <dd><div id='city_ta'></div></dd>
+                            <!-- nest so we can do the dependent stuff and only show if both
+                                 without any more fancy logic --!>
+                            <div class="countryNumDependent 1" style='display:none;'>
+                                <dt><label for='city_ta'>City Targeting:</label></dt>
+                                <dd><div id='city_ta'></div></dd>
+                            </div>
                         </div>
 
                         {# <dt><label for="TODO10">Device Predicates:</label></dt> #}

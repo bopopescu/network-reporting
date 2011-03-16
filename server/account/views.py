@@ -79,7 +79,7 @@ class NewAccountHandler(RequestHandler):
     return render_to_response(self.request,'account/new_account.html',{'account': self.account,
                                                                'account_form' : account_form })
   def post(self):
-    account_form = AccountForm(data=self.request.POST,instance=self.account)
+    account_form = AccountForm(data=self.request.POST, instance=self.account)
     # Make sure terms and conditions are agreed to
     if not self.request.POST.get("terms_conditions"):
       account_form.term_conditions_error = "Accept the terms and conditions in order to start using MoPub."

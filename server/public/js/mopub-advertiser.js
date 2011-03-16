@@ -45,6 +45,7 @@ var mopub = mopub || {};
             $('.locationDependent', '#campaignAdgroupForm').hide();
             $('.' + loc_targ + '.locationDependent', '#campaignAdgroupForm').show();
             }).filter(':checked').click();
+
     
     $('#adgroupForm-advanced-toggleButton')
       .button('option', {icons: { primary: 'ui-icon-triangle-1-s' }})

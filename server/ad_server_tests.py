@@ -45,10 +45,11 @@ AD_UNIT_ID = "agltb3B1Yi1pbmNyCgsSBFNpdGUYAgw"
 UDID = "thisisntrealatall"
 
 test_mode = "3uoijg2349ic(test_mode)kdkdkg58gjslaf"
-TEST_LLS =  
+TEST_LLS = ["42.3584308,-71.0597732","40.7607794,-111.8910474","40.7142691,-74.0059729","38.3565773,-121.9877444","39.1637984,-119.7674034","34.0522342,-118.2436849","36.1749705,-115.137223"] 
 
 NETWORKS = ( u'iad', u'admob', u'adsense' )
 PROMOS = ( u'test1', u'test2' )
+GTEES = ( u'testbudget1', u'testbudget2')
 
 def fake_environ( query_string, method = 'get' ):
     ret = dict(    REQUEST_METHOD = method,
@@ -79,7 +80,6 @@ def make_delta( **kw ):
         return timedelta( days = kw[ 'days' ] )
     if kw.has_key( 'hours' ):
         return timedelta( hours = kw[ 'hours' ] )
-
 
 def pause_all():
     for c in Campaign.all():
@@ -138,9 +138,9 @@ def zero_all_freqs():
             set_freq( c.name, 0, type = t )
 
 
-def get_id( dt = datetime.now() ):
+def get_id( dt = datetime.now(), ll=None ):
     resp = Response()
-    req = Request( fake_environ( build_ad_qs( UDID, '', AD_UNIT_ID, dt = dt ) ) )
+    req = Request( fake_environ( build_ad_qs( UDID, '', AD_UNIT_ID, dt = dt, ll=ll) ) )
     adH = AdHandler()
     adH.initialize( req, resp )
     adH.get()
@@ -195,7 +195,6 @@ def priority_t3st( camps ):
         resume( c )
     for c in camps: 
         prioritize( c )
-        logging.warning( "Prioritizing %s" % c )
         for i in range( 5 ):
             k = get_id()
             cret = Creative.get( k ) 
@@ -273,23 +272,37 @@ def promo_freq_test():
 def comb_freq_test():
     pass
 
-
 def lat_lon_test():
     pause_all()
     for c in PROMOS:
         resume(c)
+    #prioritize test2 to show before everything else
+    #BUT test2 is city constrained!
+    prioritize(u'test2')
     for i in range(100):
-        idx = int(random() * len(TEST_LLS))
-        ll = TEST_LLS[idx]
-        ll = [float(val) for val in ll.split(',')]
-        e = gen_random_ll(ll)
-        creat = Creative.get(get_id())
-        name = creat.ad_group.name
-        if ll_dist(e, ll) < 50:
-            assert_equal(name, u'test2', 'Expected city-constrained promo, got %s' % name)
-        else:
-            assert_equal(name, u'test1', 'Expected non-city-constrained promo, got %s' % name) 
+        #iterate over all cities
+        for ll in TEST_LLS:
+            #pick a random city
+            ll = [float(val) for val in ll.split(',')]
+            #and slowly move away from it
+            e = gen_ll(ll, i)
+            f = str(e[0])+','+str(e[1])
+            creat = Creative.get(get_id(ll=f))
+            name = creat.ad_group.name
+            #if we're close, we should get test2 (higher priority)
+            tf_gen = (ll_dist(e, (float(lat), float(lng))) < 50 for (lat, lng) in (a.split(',') for a in TEST_LLS))
+            for tf in tf_gen:
+                if tf: 
+                    assert_equal(name, u'test2', 'Expected city-constrained promo, got %s' % name)
+                    #Break so else clause doesn't execute
+                    break
+            #otherwise, we should get the lower priority, unconstraned adgroup
+            else:
+                assert_equal(name, u'test1', 'Expected non-city-constrained promo (dist is %s), got %s' % (ll_dist(e,ll), name)) 
 
-def gen_random_ll(ll):
 
 
+
+def gen_ll(ll, i):
+    ret = [ll[0] + i * .05, ll[1] + i * .05] 
+    return ret 

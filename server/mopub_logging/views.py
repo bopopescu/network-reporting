@@ -19,7 +19,7 @@ from reporting import query_managers
 from mopub_logging import mp_logging
 
 MAX_KEYS = 100
-MAX_TAIL = 10000
+MAX_TAIL = 1000 # implies max 100 qps
 
 def increment_stats(stats):
     # datastore get

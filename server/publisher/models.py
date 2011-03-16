@@ -14,7 +14,7 @@ class App(db.Model):
   adsense_app_name = db.StringProperty()
   millennial_placement_id = db.StringProperty()
   
-  app_type = db.StringProperty(required=True, default="iphone", choices=["iphone", "android", "ipad"])
+  app_type = db.StringProperty(required=True, default='iphone', choices=['iphone', 'android', 'ipad'])
   description = db.TextProperty()
   url = db.StringProperty()
   package = db.StringProperty()
@@ -37,31 +37,47 @@ class App(db.Model):
   
 
 class Site(db.Model):
+  DEVICE_FORMAT_CHOICES = (
+         u'phone',
+         u'tablet',
+     )
+     
+  FORMAT_CHOICES = (
+        u'full',
+        u'full_tablet',
+        u'full_landscape',
+        u'full_tablet_landscape',
+        u'728x90',
+        u'300x250',
+        u'160x600',
+        u'320x50',
+    )
   app_key = db.ReferenceProperty(App)
   account = db.ReferenceProperty(Account)
   
   # TODO: figure out how to expose this
   adsense_channel_id = db.StringProperty()
   
-  name = db.StringProperty(required=True,default="Banner Ad")
+  name = db.StringProperty(required=True,default='Banner Ad')
   url = db.StringProperty()
-  description = db.TextProperty()
+  description = db.TextProperty(required=True,default='General Purpose Banner Ad')
   width = db.FloatProperty()
   height = db.FloatProperty()
+
   
-  format = db.StringProperty() #TODO: we should use this w/o explicity using height, width
+  device_format = db.StringProperty(default='phone', choices=DEVICE_FORMAT_CHOICES)
+  format = db.StringProperty(choices=FORMAT_CHOICES) #TODO: we should use this w/o explicity using height, width
 
   deleted = db.BooleanProperty(default=False)
   
   # what kind of ad is preferred here
-  ad_type = db.StringProperty(choices=["text", "image"], default="image",required=False)
+  ad_type = db.StringProperty(choices=['text', 'image'], default='image',required=False)
   
   # additional keywords that are passed to the auction
   keywords = db.TextProperty() # TODO: make sure this doesn't break shit
   # keywords = db.StringListProperty()                          
   
   refresh_interval = db.IntegerProperty(default=0)
-  
   
   # color scheme
   color_border = db.StringProperty(required=True, default='336699')
@@ -88,9 +104,9 @@ class Site(db.Model):
     
   @classmethod
   def site_by_id(c, id):
-    if id.startswith("ca"):
-      account = Account.gql("where adsense_pub_id = :1", id).get()
-      s = Site.gql("where account = :1", account).get()
+    if id.startswith('ca'):
+      account = Account.gql('where adsense_pub_id = :1', id).get()
+      s = Site.gql('where account = :1', account).get()
     else:
       s = Site.get(id)      
     return s

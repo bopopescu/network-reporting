@@ -13,6 +13,11 @@ from django.forms.widgets import Textarea
 
 from common.utils import widgets as mpwidgets
         
+"""
+These are used to make custom fields with widgets.
+To find the default widgets for a property, look in djangoforms
+"""        
+
 class MPTextareaField(CharField):
     widget = mpwidgets.MPTextarea
 
@@ -25,15 +30,15 @@ class MPKeywordsField(CharField):
         value = [v for v in value.lower().replace('\r','\n').split('\n') if v] 
       return value
       
-
 class MPTextField(CharField):
     widget = mpwidgets.MPTextInput
-    
     
 class MPFloatField(FloatField):
     widget = mpwidgets.MPNumberInput
 
-
+class MPChoiceField(FloatField):
+    widget = mpwidgets.MPRadioInput
+    
 class MPModelMultipleChoiceField(ModelChoiceField):
     """A MultipleChoiceField whose choices are a model QuerySet."""
     

@@ -1016,7 +1016,7 @@ class AdClickHandler(webapp.RequestHandler):
       # forward on to the click URL
       self.redirect(url)
     else:
-      self.response.out.write("ClickEvent:OK:"+str(ce.key()))
+      self.response.out.write("ClickEvent:OK:")
 
       
     

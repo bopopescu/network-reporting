@@ -23,8 +23,8 @@
                           {% else %}
                           <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="network" id="advertiser-CampaignType-network" {% ifequal form.campaign_type.value "network" %}checked="checked"{% endifequal %}/> <label for="advertiser-CampaignType-network">Network</label>
                           {% endif %}
-   						  <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="backfill_promo" id="advertiser-CampaignType-backfill-promo" {% ifequal form.campaign_type.value "backfill_promo" %}checked="checked"{% endifequal %}/> 
-						  <label for="advertiser-CampaignType-backfill-promo">Backfill Promotional</label> 
+   						  <!-- <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="backfill_promo" id="advertiser-CampaignType-backfill-promo" {% ifequal form.campaign_type.value "backfill_promo" %}checked="checked"{% endifequal %}/> 
+						  <label for="advertiser-CampaignType-backfill-promo">Backfill Promotional</label>  -->
 
                             
                           {% if form.instance %} 
@@ -47,8 +47,8 @@
                           <p>A <strong>Promotional</strong> campaign is for house ads like advertising another of your applications, ads for the paid version of your app or other functions like a "rate this app" campaign.</p>
                           <h4>Network</h4>
                           <p>A <strong>Network</strong> campaign is used for showing ads from an ad network like AdMob or iAd.</p>
-                          <h4>Backfill Promotional</h4>
-                          <p>A <strong>Backfill Promotional</strong> campaign is used for showing house ads as a default if none of the ad networks are able to fill the request.</p>
+                          <!-- <h4>Backfill Promotional</h4>
+                          <p>A <strong>Backfill Promotional</strong> campaign is used for showing house ads as a default if none of the ad networks are able to fill the request.</p> -->
                         </div>
                       </dd>
                       <div class="campaignDependent gtee">
@@ -68,6 +68,20 @@
                           </div>
                         </dd>
                       </div>
+                      <div class="campaignDependent promo">
+                        <dt><label for="gtee_level">Priority:</label></dt>
+                        <dd>
+						  {{ form.promo_level.as_widget }}
+                          <a href="#" id="campaignForm-promo-priority-helpLink">What's this?</a>
+                          <div id='campaignForm-promo-priority-helpContent' class='hidden'>
+                            <h3>Priority</h3>
+                            <p>
+                              For a promotional campaign, you may pick whether it is prioritized above (<strong>Normal</strong>) or below ad networks (<strong>Backfill</strong>). 
+                            </p>
+                          </div>
+                        </dd>
+                      </div>
+
                       {{ form.name|attrs:'{"placeholder":"Campaign Name"}'  }}
                       {{ form.description|attrs:'{"placeholder":"Campaign for My New App"}' }}
                       <div class="campaignDependent gtee promo backfill_promo">

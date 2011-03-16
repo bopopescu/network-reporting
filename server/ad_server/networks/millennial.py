@@ -38,7 +38,7 @@ class MillennialServerSide(ServerSide):
       response.status_code != 200 or \
       '<title>404' in response.content: # **See Note below
         raise Exception("Millenial ad is empty")
-    return 0.0,response.content
+    return 0.0,"<div style='text-align:center'>"+response.content+"</div>"
 
 
 # **

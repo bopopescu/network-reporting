@@ -83,19 +83,17 @@ class InMobiServerSide(ServerSide):
     raise Exception("InMobi ad is empty")
 
 banner_template = string.Template(
-"""<!DOCTYPE HTML>
-<html>
-<body style="margin:0;width:320px;height:48px;padding:0;" onclick="location.href='$ad_url';return false;">
-  <img src="$image_url" width=320 height=48/>
-</body>
-</html>""")
+"""
+  <a href="$ad_url" target="_blank"><img src="$image_url"/></a>
+""")
 
 text_template = string.Template(
-"""<!DOCTYPE HTML>
-<html>
-<body style="margin:0;width:320px;height:48px;padding:0;background-color:#000000;color:#FFFFFF;font-family:helvetica,arial" onclick="location.href='$ad_url';return false;">
-  <div id='highlight' style="position:relative;height:50px;background:-webkit-gradient(linear, left top, left bottom, from(rgba(255,255,255,0.35)),
-    to(rgba(255,255,255,0.06))); -webkit-background-origin: padding-box; -webkit-background-clip: content-box;">
+"""
+  <style type="text/css">
+   body { background-color:#000000; color:#FFFFFF; font-family:helvetica,arial }
+  </style>  
+  <div id='highlight' style="position:relative;height:${height}px;background:-webkit-gradient(linear, left top, left bottom, from(rgba(255,255,255,0.35)),to(rgba(255,255,255,0.06)));
+    -webkit-background-origin: padding-box; -webkit-background-clip: content-box;" onclick="window.open('$ad_url');return false;">
     <div style="padding:15px 0 0 10px">
       $link_text
     </div>
@@ -103,5 +101,4 @@ text_template = string.Template(
     Ads by InMobi
     </div>
   </div>
-</body>
-</html>""")
+""")

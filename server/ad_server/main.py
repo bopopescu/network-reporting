@@ -1048,7 +1048,7 @@ class TestHandler(webapp.RequestHandler):
     delay = self.request.get('delay') or '5'
     delay = int(delay)
     adunit = Site.get(key)
-    server_side = MobFoxServerSide(self.request,adunit)
+    server_side = InMobiServerSide(self.request,adunit)
     logging.warning("%s\n%s"%(server_side.url,server_side.payload))
     
     rpc = urlfetch.create_rpc(delay) # maximum delay we are willing to accept is 1000 ms

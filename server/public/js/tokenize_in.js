@@ -84,7 +84,7 @@ $.TokenData = function(data,type) {
         raw: data,
         type: type,
         id: id
-    }
+    };
 }
 
 $.TokenList = function (input, settings) {
@@ -130,7 +130,7 @@ $.TokenList = function (input, settings) {
             outline: "none"
         })
         .focus(function () {
-            if (settings.tokenLimit == null || settings.tokenLimit != token_count) {
+            if (settings.tokenLimit === null || settings.tokenLimit != token_count) {
                 show_dropdown_hint();
             }
             $(this).addClass('focused');
@@ -295,8 +295,6 @@ $.TokenList = function (input, settings) {
         .appendTo(token_list)
         .append(input_box);
 
-    init_list();
-    verify_token_inputs();
     //
     //
     // Functions
@@ -306,7 +304,6 @@ $.TokenList = function (input, settings) {
   //If more than two countries exist, select Everywhere, disable other options, and get rid of all of their inputs
   function verify_token_inputs() {
     var countries = $('.token-input-country').length;
-    console.log(countries);
     //more than one country
     if (countries > 1) {
         //delete all other tokens
@@ -353,13 +350,13 @@ $.TokenList = function (input, settings) {
             for(var i in li_data) {
                 var token_data = new $.TokenData(li_data[i], settings.prePopulate.type);
                 var this_token = $("<li><p>"+ token_data.name+"</p> </li>")
-                    .addClass(settings.classes.token)
+                    .addClass(settings.classes.token);
                 if (token_data.type == 'city') {
                     this_token.addClass('token-input-city')
                     .addClass(token_data.raw.countryCode);
                 }
                 else if (token_data.type == 'country') {
-                    this_token.addClass('token-input-country')
+                    this_token.addClass('token-input-country');
                 }
                     this_token.insertBefore(input_token);
                 $("<span>&times;</span>")
@@ -386,6 +383,9 @@ $.TokenList = function (input, settings) {
         input_box.blur();
     }
 
+    init_list();
+    verify_token_inputs();
+
     function is_printable_character(keycode) {
         if((keycode >= 48 && keycode <= 90) ||      // 0-1a-z
            (keycode >= 96 && keycode <= 111) ||     // numpad 0-9 + - / * .
@@ -407,7 +407,7 @@ $.TokenList = function (input, settings) {
     function insert_token(datas) {
       var value = datas.name;
       var token_type;
-      var this_token = $("<li><p>"+ value +"</p> </li>")
+      var this_token = $("<li><p>"+ value +"</p> </li>");
           
       if (datas.type == 'city') {
           this_token.addClass('token-input-city')
@@ -518,7 +518,6 @@ $.TokenList = function (input, settings) {
 
     // Delete a token from the token list
     function delete_token (token) {
-        console.log("Deleting: ", token);
         // Remove the id from the saved list
         var token_data = $.data(token.get(0), "tokeninput");
         var callback = settings.onDelete;
@@ -529,20 +528,23 @@ $.TokenList = function (input, settings) {
         // Show the input box and give it focus again
         input_box.focus();
         // Delete this token's id from hidden input
-        console.log(token_data);
-        $("#"+token_data.id.replace(/ /gi, '_')).remove();
-        console.log( $('#' + token_data.name));
-        $('#'+token_data.name.replace(/ /gi, '_')).remove();
+        if (token_data === undefined) {
+            return;
+        }
+        var r_id = token_data.id.replace(/ /gi, '_');
+        var r_nme = token_data.name.replace(/ /gi, '_');
+        $('#'+ r_id).remove();
+        $('#'+ r_nme).remove();
+        
         if (token_data.type == 'country') {
             $('li.'+token_data.id+'.token-input-city').each( function(i) {
                     delete_token($(this));
                 });
         }
-        console.log( $('#' + token_data.name));
         
         token_count--;
        
-        if ($('.token-input-country').length == 0) {
+        if ($('.token-input-country').length === 0) {
             $('#advertiser-LocationSpec-all').click();
         }
         
@@ -617,6 +619,7 @@ $.TokenList = function (input, settings) {
                     } else {
                         this_li.addClass(settings.classes.dropdownItem2);
                     }
+                    //JSLint doesn't like this, but needs to be == because '0' == 0 evals to true, but '0' === 0 does NOT
                     if(i == 0) {
                         select_dropdown_item(this_li);
                     }
@@ -694,7 +697,6 @@ $.TokenList = function (input, settings) {
         } else {
 			var queryStringDelimiter = settings.url.indexOf("?") < 0 ? "?" : "&";
 			var callback = function(results) {
-                console.log(results);
 			  if($.isFunction(settings.onResult)) {
 			      results = settings.onResult.call(this, results);
 			  }
@@ -715,22 +717,16 @@ $.TokenList = function (input, settings) {
                 }
                 q_url += '&country=';
                 if ($('input[name="geo"]').val() !== undefined) {
-                    console.log($('input[name="geo"]').val());
                    q_url += encodeURIComponent($('input[name="geo"]').val());
                 }
                 else {
                     q_url += encodeURIComponent(settings.country);
                 }
                 q_url += '&maxRows=' + settings.maxRows;
-                console.log(q_url);
 		        $.get(q_url, {}, callback, settings.contentType);
 		    }
        }
     }
-    
-
-
-
 };
 
 // Really basic cache for the results
@@ -836,11 +832,11 @@ $.TokenList.Cache = function (options) {
             var values = options.formatMatch( rawValue, i+1, options.data.length );
             for (var j = 0; j < values.length; j++) {
                 var value = values[j];
-                if (value == false)
-                    continue;
+                if (value === false)
+                    {continue;}
                 var firstChar = value.charAt( 0 ).toLowerCase();
                 if (!stMatchSets[ firstChar ] )
-                     stMatchSets[ firstChar ] = [];
+                    {stMatchSets[ firstChar ] = [];}
                 var row = {
                      value: value,
                      data: rawValue,
@@ -850,8 +846,8 @@ $.TokenList.Cache = function (options) {
                  if ( nullData++ < options.max ) {
                      stMatchSets[""].push( row );
                  }
-            };
-        };
+            }
+        }
         $.each( stMatchSets, function( i, value ) {
             options.cacheLength++;
             add( i, value );
@@ -871,13 +867,13 @@ $.TokenList.Cache = function (options) {
             size++;
         }
         data[query] = results;
-    };
+    }
 
     return {
         flush: flush,
         get: get,
         populate: populate,
-        add: add,
+        add: add
     };
     
 

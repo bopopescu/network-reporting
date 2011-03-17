@@ -324,7 +324,7 @@ def lat_lon_test():
             # Then for each of these tuples in this list, check to see if the distance from that city to e (the test point) is < 50
             # and save the True/False value in a list.  If any one of these lists is true we are < 50 from SOME city, so the AdHandler creative
             # must belong to test2.
-            tf_gen = (ll_dist(e, (lat, lng)) < 50 for (lat, lng) in map(lambda x: float(x), (a.split(',') for a in TEST_LLS)))
+            tf_gen = (ll_dist(e, (lat, lng)) < 50 for (lat, lng) in (map(lambda x: float(x), a.split(',')) for a in TEST_LLS))
             for tf in tf_gen:
                 if tf: 
                     assert_equal(name, u'test2', 'Expected city-constrained promo, got %s' % name)

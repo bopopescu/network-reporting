@@ -1,6 +1,8 @@
 from google.appengine.api import memcache
 import datetime
-
+from advertiser.models import ( Campaign,
+                                AdGroup,
+                                )
 """
 A service that determines if a campaign can be shown based upon the defined 
 budget for that campaign. If the budget_type is "evenly", a minute by minute
@@ -14,6 +16,43 @@ FUDGE_FACTOR = 0.1
 
 test_timeslice = 0
 test_daily_budget = 0
+
+
+def has_budget(adgroup):
+    """ Returns True if the bid is less than the budget in the current slice """
+    campaign_id = adgroup.campaign.key
+    bid = adgroup.bid
+    campaign_daily_budget = adgroup.campaign.budget
+    
+    key = make_timeslice_campaign_key(campaign_id,get_current_timeslice())
+    
+    # Add the budget every time, only is actually added the first
+    ts_budget = get_current_timeslice_initial_budget(campaign_id, campaign_daily_budget)
+    memcache.add(key, to_memcache_int(ts_budget),namespace="budget")
+    
+    return check_budget(key, bid)
+    
+def apply_expense(adgroup):
+    """ Applies an expense to our memcache """
+    campaign_id = adgroup.campaign.key
+    bid = adgroup.bid
+    key = make_timeslice_campaign_key(campaign_id,get_current_timeslice())
+    
+    memcache.decr(key, to_memcache_int(bid), namespace="budget")
+    
+
+def recalculate_timeslice_budgets():
+    """ Recalculates the initial_timeslice_budget and remaining_budget
+    for each campaign. Also backs up memcache in datastore."""
+    campaigns = Campaign.all().fetch()
+
+def _apply_if_able(adgroup):
+    """ For testing purposes """
+    success = has_budget(adgroup)
+    if success:
+        apply_expense(adgroup)
+    return success
+
 
 def make_timeslice_campaign_key(campaign_id,timeslice):
     """Returns a key based upon the campaign_id and the current time"""
@@ -52,7 +91,7 @@ def get_current_timeslice_initial_budget(campaign_id, campaign_daily_budget):
     budget = rollover_budget + initial_budget
     return budget
     
-def has_budget(key, bid):
+def check_budget(key, bid):
     if from_memcache_int(memcache.get(key, namespace="budget")) >= bid:
         return True
     return False
@@ -60,20 +99,4 @@ def has_budget(key, bid):
 def get_timeslice_budget(campaign_id):
     key = make_timeslice_campaign_key(campaign_id,get_current_timeslice())
     return from_memcache_int(memcache.get(key, namespace="budget"))
- 
-    
-def process(campaign_id, bid, campaign_daily_budget):
-    """ Return true if the campaign's current timeslice budget has
-    enough money for a creative's bid """
-    key = make_timeslice_campaign_key(campaign_id,get_current_timeslice())
-    
-    # Add the budget every time, only is added the first
-    ts_budget = get_current_timeslice_initial_budget(campaign_id, campaign_daily_budget)
-    memcache.add(key, to_memcache_int(ts_budget),namespace="budget")
-    
-    can_show = has_budget(key, bid)
-    if can_show:
-        memcache.decr(key, to_memcache_int(bid), namespace="budget")
-    return can_show
-        
         

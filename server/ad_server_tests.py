@@ -23,7 +23,7 @@ from google.appengine.ext.webapp import ( Request,
                                           )
 from nose.tools import assert_equal
 from publisher.models import (  App,
-                                Site
+                                Site,
                                 )
 from server.ad_server.main import  ( AdHandler,
                                      AdAuction,

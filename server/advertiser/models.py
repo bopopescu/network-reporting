@@ -11,8 +11,14 @@ class Campaign(db.Model):
   description = db.TextProperty()
   campaign_type = db.StringProperty(choices=['gtee', 'gtee_high', 'gtee_low', 'promo', 'network'], default="network")
 
-  # daily budget
+  # budget per day
   budget = db.FloatProperty() 
+  
+  remaining_budget = db.FloatProperty()
+  
+  # budget per timeslice, determined dynamically
+  timeslice_budget = db.FloatProperty()
+  
   
   # start and end dates 
   start_date = db.DateProperty()

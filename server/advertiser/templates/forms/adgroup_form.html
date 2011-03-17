@@ -49,7 +49,7 @@
                       prePopulate: city_pre,
                       contentType: 'json',
                       type: 'city',
-                      minChars: 5,
+                      minChars: 3,
                       method: 'get'
               }); 
             //Verify that all cities in city_pre are in the SINGLE country that is pre
@@ -159,6 +159,10 @@
                             <div class="countryNumDependent 1" style='display:none;'>
                                 <dt><label for='city_ta'>City Targeting:</label></dt>
                                 <dd><div id='city_ta'></div></dd>
+                            </div>
+                            <div class="countryNumDependent 0" style='display:none;'>
+                                <dt><label for='city_ta_fake'>City Targeting:</label></dt>
+                                <dd><div id='city_fake'>Please input a country</div></dd>
                             </div>
                         </div>
 

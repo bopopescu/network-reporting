@@ -131,7 +131,6 @@ $.TokenList = function (input, settings) {
         })
         .focus(function () {
             if (settings.tokenLimit == null || settings.tokenLimit != token_count) {
-                console.log('showing dropdown');
                 show_dropdown_hint();
             }
             $(this).addClass('focused');
@@ -299,14 +298,17 @@ $.TokenList = function (input, settings) {
     init_list();
     verify_token_inputs();
     //
+    //
     // Functions
     //
 
  
   //If more than two countries exist, select Everywhere, disable other options, and get rid of all of their inputs
   function verify_token_inputs() {
+    var countries = $('.token-input-country').length;
+    console.log(countries);
     //more than one country
-    if ($('.token-input-country').length > 1) {
+    if (countries > 1) {
         //delete all other tokens
         $('.token-input-city').each( function(i) {
            delete_token($(this));
@@ -336,9 +338,9 @@ $.TokenList = function (input, settings) {
     
     // Only show countryNumDpdnt things that match the current number
     // of countries in the input
-    var countries = $('#geo_pred_ta').children().length;
+    var children = $('#geo_pred_ta').children().length;
     $('.countryNumDependent').hide();
-    $('.countryNumDependent.' + countries).show();
+    $('.countryNumDependent.' + children).show();
 
   }
 
@@ -539,6 +541,10 @@ $.TokenList = function (input, settings) {
         console.log( $('#' + token_data.name));
         
         token_count--;
+       
+        if ($('.token-input-country').length == 0) {
+            $('#advertiser-LocationSpec-all').click();
+        }
         
         if (settings.tokenLimit !== null) {
             input_box
@@ -668,7 +674,10 @@ $.TokenList = function (input, settings) {
                     clearTimeout(timeout);
                     timeout = setTimeout(function(){run_search(query);}, settings.searchDelay);
                 }
-            } else {
+            } else if (query.length > 0) {
+                show_dropdown_hint();
+            }
+            else {
                 hide_dropdown();
             }
         }
@@ -676,6 +685,7 @@ $.TokenList = function (input, settings) {
 
     // Do the actual search
     function run_search(query) {
+        query = input_box.val().toLowerCase();
 
         var cached_results = cache.get(query);
         if(cached_results) {

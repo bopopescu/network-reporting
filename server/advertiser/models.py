@@ -137,6 +137,7 @@ class AdGroup(db.Model):
   
   active_user = db.StringListProperty(default=['any'])
   active_app = db.StringListProperty(default=['any'])
+  cities = db.StringListProperty(default=[])
   
   country = db.StringProperty()
   region = db.StringProperty()

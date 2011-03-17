@@ -10,9 +10,10 @@ var mopub = mopub || {};
   $(document).ready(function() {
     
     //get info from page
-  if (typeof creatives=="undefined")
+  if (typeof creatives=="undefined") {
     creatives = false;
-    
+    }
+
   function campaignAdgroupFormOnLoad(){
     $('#campaignAdgroupForm input[name="campaign_type"]').click(function(e) {
       var campaign_type = $(this).val();
@@ -38,6 +39,18 @@ var mopub = mopub || {};
             $('.networkDependent').hide();
             $('.'+network+'.networkDependent').show();
             }).change();
+
+    $('#campaignAdgroupForm input[name="location-targeting"]').click(function(e) {
+            var loc_targ = $(this).val();
+            $('.locationDependent', '#campaignAdgroupForm').hide();
+            $('.' + loc_targ + '.locationDependent', '#campaignAdgroupForm').show();
+            if ($(this).val() == 'all') {
+                $('li.token-input-city span.token-input-delete-token').each(function() {
+                    $(this).click();
+                    });
+            }
+            }).filter(':checked').click();
+
     
     $('#adgroupForm-advanced-toggleButton')
       .button('option', {icons: { primary: 'ui-icon-triangle-1-s' }})

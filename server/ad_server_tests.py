@@ -25,12 +25,16 @@ from nose.tools import assert_equal
 from publisher.models import (  App,
                                 Site
                                 )
+from random import random
 from server.ad_server.main import  ( AdHandler,
                                      AdAuction,
                                      AdClickHandler,
                                      AppOpenHandler,
                                      TestHandler,
                                      )
+
+from server.ad_server.filters.filters import ll_dist
+
 from time import mktime
 
 import logging
@@ -41,8 +45,10 @@ AD_UNIT_ID = "agltb3B1Yi1pbmNyCgsSBFNpdGUYAgw"
 UDID = "thisisntrealatall"
 
 test_mode = "3uoijg2349ic(test_mode)kdkdkg58gjslaf"
+TEST_LLS = ["42.3584308,-71.0597732","40.7607794,-111.8910474","40.7142691,-74.0059729","38.3565773,-121.9877444","39.1637984,-119.7674034","34.0522342,-118.2436849","36.1749705,-115.137223"] 
 
 PROMOS = ( u'test1', u'test2' )
+GTEES = ( u'testbudget1', u'testbudget2')
 NETWORKS = ( u'iad', u'admob', u'adsense' )
 BACKFILL_PROMOS = ( u'bpromo1','bpromo2')
 
@@ -57,9 +63,12 @@ def fake_environ( query_string, method = 'get' ):
     ret[ 'wsgi.url_scheme' ] = 'http'
     return ret
 
-def build_ad_qs( udid, keys, ad_id, v = 3, dt = datetime.now() ):
+def build_ad_qs( udid, keys, ad_id, v = 3, dt = datetime.now(), ll=None):
     dt = process_time( dt )
-    return "v=%s&udid=%s&q=%s&id=%s&testing=%s&dt=%s" % ( v, udid, keys, ad_id, test_mode , dt )
+    basic_str = "v=%s&udid=%s&q=%s&id=%s&testing=%s&dt=%s" % ( v, udid, keys, ad_id, test_mode , dt )
+    if ll is not None:
+        basic_str += '&ll=%s' % ll
+    return basic_str
 
 def process_time( dt ):
     return mktime( dt.timetuple() ) 
@@ -72,7 +81,6 @@ def make_delta( **kw ):
         return timedelta( days = kw[ 'days' ] )
     if kw.has_key( 'hours' ):
         return timedelta( hours = kw[ 'hours' ] )
-
 
 def pause_all():
     for c in Campaign.all():
@@ -131,9 +139,9 @@ def zero_all_freqs():
             set_freq( c.name, 0, type = t )
 
 
-def get_id( dt = datetime.now() ):
+def get_id( dt = datetime.now(), ll=None ):
     resp = Response()
-    req = Request( fake_environ( build_ad_qs( UDID, '', AD_UNIT_ID, dt = dt ) ) )
+    req = Request( fake_environ( build_ad_qs( UDID, '', AD_UNIT_ID, dt = dt, ll=ll) ) )
     adH = AdHandler()
     adH.initialize( req, resp )
     adH.get()
@@ -216,7 +224,6 @@ def priority_t3st( camps ):
         resume( c )
     for c in camps: 
         prioritize( c )
-        logging.warning( "Prioritizing %s" % c )
         for i in range( 5 ):
             k = get_id()
             cret = Creative.get( k ) 
@@ -293,3 +300,44 @@ def promo_freq_test():
 
 def comb_freq_test():
     pass
+
+def lat_lon_test():
+    pause_all()
+    for c in PROMOS:
+        resume(c)
+    # there are two priority tests, test1 and test2.  Test2 will only show for certain cities, these cities are teh ll_rads in the TEST_LLS consant
+    prioritize(u'test2')
+    # test2 is now prioritized to show before test1, but only if the ll passed to the ad server is < 50 miles from one of the TEST_LLS cities.
+    # otherwise, test1 will show (even though it's a lower priority)
+    for i in range(30):
+        #iterate over all cities
+        for ll in TEST_LLS:
+            #Turn string into list of floats, map rules
+            ll = map(lambda x: float(x), ll.split(','))
+            #and slowly move away from it (as we iterate, the amount we move from a city increases)
+            e = gen_ll(ll, i)
+            f = str(e[0])+','+str(e[1])
+            #get the creative that the ad auction returns and it's name
+            creat = Creative.get(get_id(ll=f))
+            name = creat.ad_group.name
+            #Turn TEST_LLS from a ("lat(str),lon(str)"...) list into a ((lat(float),lon(float)), ....) list 
+            # Then for each of these tuples in this list, check to see if the distance from that city to e (the test point) is < 50
+            # and save the True/False value in a list.  If any one of these lists is true we are < 50 from SOME city, so the AdHandler creative
+            # must belong to test2.
+            tf_gen = (ll_dist(e, (lat, lng)) < 50 for (lat, lng) in ((float(k) for k in a.split(',')) for a in TEST_LLS))
+            for tf in tf_gen:
+                if tf: 
+                    assert_equal(name, u'test2', 'Expected city-constrained promo, got %s' % name)
+                    #Break so else clause doesn't execute
+                    break
+            # the else clause only triggers if all tfs in tf_gen eval to false (because we never break), in this case we're >=50 miles from all
+            # the test cities, so we must get test1 (lower priority, but it's not city-constrained)
+            else:
+                assert_equal(name, u'test1', 'Expected non-city-constrained promo (dist is %s), got %s' % (ll_dist(e,ll), name)) 
+
+
+
+
+def gen_ll(ll, i):
+    ret = [ll[0] + i * .05, ll[1] + i * .05] 
+    return ret 

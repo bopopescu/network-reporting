@@ -28,6 +28,9 @@ import datetime
 
 urllib.getproxies_macosx_sysconf = lambda: {}
 
+from ad_server.filters.filters import (
+                                        lat_lon_filter,
+                                        )
 
 from common.utils import simplejson
 
@@ -258,6 +261,7 @@ class AdAuction(object):
     adunit = kw["site"]
     manager = kw["manager"]
     request = kw["request"]
+    ll 		= kw['ll']
     testing = kw["testing"]
     
     udid = kw["udid"]
@@ -283,8 +287,9 @@ class AdAuction(object):
     for a in all_ad_groups:
       logging.info("%s of %s"%(a.campaign.delivery_counter.count,a.budget))
     
-    ALL_FILTERS     = ( budget_filter(), 
+    ALL_FILTERS     = ( budget_filter(),
                         active_filter(), 
+						lat_lon_filter(ll),
                         kw_filter( keywords ), 
                         geo_filter( geo_predicates ), 
                         device_filter( device_predicates ) 
@@ -322,6 +327,7 @@ class AdAuction(object):
     #build and apply list of frequency filter functions
     FREQ_FILTERS = [ freq_filter( type, key_func, udid, now, frequency_cap_dict ) for ( type, key_func ) in FREQS ] 
     all_ad_groups = filter( all_freq_filter( *FREQ_FILTERS ), all_ad_groups )
+
     for fil in FREQ_FILTERS: 
         func, warn, lst = fil
         logging.warning( warn % lst )
@@ -358,6 +364,7 @@ class AdAuction(object):
             # for each priority_level, perform an auction among the various creatives 
             for p in CAMPAIGN_LEVELS: 
                 logging.warning("priority level: %s"%p)
+                #XXX maybe optimize? meh
                 eligible_adgroups = [a for a in all_ad_groups if a.campaign.campaign_type == p]
                 logging.warning("eligible_adgroups: %s"%eligible_adgroups)
                 if not eligible_adgroups:
@@ -374,6 +381,8 @@ class AdAuction(object):
                         # exclude according to the exclude parameter must do this after determining adgroups
                         # so that we maintain the correct order for user bucketing
                         # TODO: we should exclude based on creative id not ad type :)
+
+                        # TODO: move format and exclude above players (right now we're doing the same thing twice)
                         CRTV_FILTERS = (    format_filter( site.format ), # remove wrong formats
                                             exclude_filter( exclude_params ), # remove exclude parameter
                                             ecpm_filter( winning_ecpm ), # remove creatives that don't meet site threshold
@@ -409,7 +418,8 @@ class AdAuction(object):
                                             if rpc.adgroup.key() == winner.ad_group.key():
                                                 logging.warning("rpc.adgroup %s"%rpc.adgroup)
                                                 break # This pulls out the rpc that matters there should be one always
-
+                                        else:
+                                            rpc = None
                             # if the winning creative relies on a rpc to get the actual data to display
                             # go out and get the data and paste in the data to the creative      
                                     if rpc:      
@@ -558,8 +568,11 @@ class AdHandler(webapp.RequestHandler):
     logging.warning("keywords are %s" % keywords)
     
     # look up lat/lon
-    addr = self.rgeocode(self.request.get("ll")) if self.request.get("ll") else ()      
-    logging.warning("geo is %s (requested '%s')" % (addr, self.request.get("ll")))
+    ll = self.request.get('ll') if self.request.get('ll') else None
+	
+	# Reverse Geocode stuff isn't used atm
+    # addr = self.rgeocode(self.request.get("ll")) if self.request.get("ll") else ()      
+    # logging.warning("geo is %s (requested '%s')" % (addr, self.request.get("ll")))
     
     # get creative exclusions usually used to exclude iAd because it has already failed
     excluded_creatives = self.request.get_all("exclude")
@@ -574,7 +587,18 @@ class AdHandler(webapp.RequestHandler):
         logging.info('OLP ad-request {"request_id": "%s", "remote_addr": "%s", "q": "%s", "user_agent": "%s", "udid":"%s" }' % (request_id, self.request.remote_addr, self.request.query_string, self.request.headers["User-Agent"], udid))
         
     # get winning creative
-    c = AdAuction.run(request=self.request, site=site, q=q, addr=addr, excluded_creatives=excluded_creatives, udid=udid, request_id=request_id, now=now,manager=manager, testing=testing)
+    c = AdAuction.run(request = self.request,
+							  site = site,
+							  format=format, 
+							  q=q, 
+							  addr=addr, 
+							  excluded_creatives=excluded_creatives, 
+							  udid=udid, 
+							  ll = ll,
+							  request_id=request_id, 
+							  now=now,
+							  testing=testing,
+							  manager=manager)
     # output the request_id and the winning creative_id if an impression happened
     if c:
         user_adgroup_daily_key = memcache_key_for_date(udid,now,c.ad_group.key())

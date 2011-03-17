@@ -103,10 +103,11 @@ class AdGroupForm(mpforms.MPModelForm):
   geo = forms.Field(widget=forms.MultipleHiddenInput, required=False)
   device_predicates = mpfields.MPTextareaField(required=False)
   custom_html = mpfields.MPTextareaField(required=False)
+  cities = forms.Field(widget=forms.MultipleHiddenInput, required=False)
   
   class Meta:
     model = AdGroup
-    fields = ('name', 'network_type', 'priority_level', 'keywords',
+    fields = ('name', 'network_type', 'priority_level', 'keywords', 
               'bid', 'bid_strategy', 
               'percent_users', 'site_keys',
               'hourly_frequency_cap','daily_frequency_cap','allocation_percentage', 
@@ -134,11 +135,15 @@ class AdGroupForm(mpforms.MPModelForm):
         initial = {}
       if instance.network_type == 'custom' and instance.net_creative:
           initial.update(custom_html = instance.net_creative.html_data)
+      cities = []
+      for city in instance.cities:
+          cities.append(str(city))
       geo_predicates = [] 
       for geo_pred in  instance.geo_predicates: 
           preds = geo_pred.split(',')
           geo_predicates.append( ','.join( [ str( pred.split('=')[1] ) for pred in preds ] ) )
       initial.update(geo=geo_predicates)
+      initial.update(cities=cities)
       #initial.update(geo=instance.geo_predicates)
       kwargs.update(initial=initial)
     super(AdGroupForm,self).__init__(*args,**kwargs)    

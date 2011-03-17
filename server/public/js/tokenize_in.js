@@ -59,7 +59,7 @@ $.TokenData = function(data,type) {
     var code; 
     function city_input() {
         var value = raw.lat + ',' + raw.lng + ':' + raw.adminCode1 + ':' + raw.name + ':' + raw.countryCode;
-        return $('<input type="hidden" class="' + raw.countryCode + '" name="cities" id="' + raw.name.replace(' ', '_') + '" value="' + value + '" />');
+        return $('<input type="hidden" class="' + raw.countryCode + '" name="cities" id="' + raw.name.replace(/ /gi, '_') + '" value="' + value + '" />');
     }
     function country_input() {
         return $('<input type="hidden" name="geo" id="' + code + '" value="' + code + '" />');
@@ -130,7 +130,8 @@ $.TokenList = function (input, settings) {
             outline: "none"
         })
         .focus(function () {
-            if (settings.tokenLimit === null || settings.tokenLimit !== token_count) {
+            if (settings.tokenLimit == null || settings.tokenLimit != token_count) {
+                console.log('showing dropdown');
                 show_dropdown_hint();
             }
             $(this).addClass('focused');
@@ -515,20 +516,21 @@ $.TokenList = function (input, settings) {
 
     // Delete a token from the token list
     function delete_token (token) {
+        console.log("Deleting: ", token);
         // Remove the id from the saved list
         var token_data = $.data(token.get(0), "tokeninput");
         var callback = settings.onDelete;
         // Delete the token
         token.remove();
         selected_token = null;
-//TODO delete the hidden field wooo
+        //TODO delete the hidden field wooo
         // Show the input box and give it focus again
         input_box.focus();
         // Delete this token's id from hidden input
         console.log(token_data);
-        $("#"+token_data.id.replace(' ', '_')).remove();
+        $("#"+token_data.id.replace(/ /gi, '_')).remove();
         console.log( $('#' + token_data.name));
-        $('#'+token_data.name.replace(' ', '_')).remove();
+        $('#'+token_data.name.replace(/ /gi, '_')).remove();
         if (token_data.type == 'country') {
             $('li.'+token_data.id+'.token-input-city').each( function(i) {
                     delete_token($(this));
@@ -609,8 +611,7 @@ $.TokenList = function (input, settings) {
                     } else {
                         this_li.addClass(settings.classes.dropdownItem2);
                     }
-
-                    if(i === 0) {
+                    if(i == 0) {
                         select_dropdown_item(this_li);
                     }
                     $.data(this_li.get(0), "tokeninput", tokenData); 

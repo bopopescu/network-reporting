@@ -25,23 +25,21 @@ def ll_dist(p1, p2):
 
 def lat_lon_filter(ll=None):
     ll_p = None
+    #ll should be input as a string, turn it into a list of floats
     if ll is not None:
         ll_p = [float(val) for val in ll.split(',')]
     log_mesg = "Removed due to being outside target lat/long radii: %s"
     def real_filter(a):
-        logging.warning(a.name)
-        logging.warning(a.cities)
+        #If ll_p is none or adgroup has no city targets, dont' exclude
         if ll_p is None or len(a.cities) == 0: 
             return False
-        temp = (city.split(':')[0] for city in a.cities) 
-        latlons = (t.split(',') for t in temp)
+        #City format is ll:ste:city:ccode, split on ':', take the first entry, 'lat,lon', split that on ',' to get ('lat','lon') 
+        # for every city.  Apply map to this split list to get (float('lat'), float('lon'))
+        latlons = (map(lambda x: float(x), t.split(',')) for t in (city.split(':')[0] for city in a.cities))
         for lat, lon in latlons:
             #Check all lat, lon pairs.  If any one of them is too far, return True
             # since all filters are exclusion filters (True means don't keep it)
-            logging.warning(ll_dist((float(lat),float(lon)),ll_p)) 
-            logging.warning('\n\n\n\n\n')
-            if ll_dist((float(lat),float(lon)),ll_p) < CAPTURE_DIST:
-                logging.warning( 'latlon: %s, given: %s' % ( (lat,lon), ll_p))
+            if ll_dist((lat,lon),ll_p) < CAPTURE_DIST:
                 return False 
         return True 
     return (real_filter, log_mesg, [])

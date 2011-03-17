@@ -305,27 +305,33 @@ def lat_lon_test():
     pause_all()
     for c in PROMOS:
         resume(c)
-    #prioritize test2 to show before everything else
-    #BUT test2 is city constrained!
+    # there are two priority tests, test1 and test2.  Test2 will only show for certain cities, these cities are teh ll_rads in the TEST_LLS consant
     prioritize(u'test2')
-    for i in range(100):
+    # test2 is now prioritized to show before test1, but only if the ll passed to the ad server is < 50 miles from one of the TEST_LLS cities.
+    # otherwise, test1 will show (even though it's a lower priority)
+    for i in range(30):
         #iterate over all cities
         for ll in TEST_LLS:
-            #pick a random city
-            ll = [float(val) for val in ll.split(',')]
-            #and slowly move away from it
+            #Turn string into list of floats, map rules
+            ll = map(lambda x: float(x), ll.split(','))
+            #and slowly move away from it (as we iterate, the amount we move from a city increases)
             e = gen_ll(ll, i)
             f = str(e[0])+','+str(e[1])
+            #get the creative that the ad auction returns and it's name
             creat = Creative.get(get_id(ll=f))
             name = creat.ad_group.name
-            #if we're close, we should get test2 (higher priority)
-            tf_gen = (ll_dist(e, (float(lat), float(lng))) < 50 for (lat, lng) in (a.split(',') for a in TEST_LLS))
+            #Turn TEST_LLS from a ("lat(str),lon(str)"...) list into a ((lat(float),lon(float)), ....) list 
+            # Then for each of these tuples in this list, check to see if the distance from that city to e (the test point) is < 50
+            # and save the True/False value in a list.  If any one of these lists is true we are < 50 from SOME city, so the AdHandler creative
+            # must belong to test2.
+            tf_gen = (ll_dist(e, (lat, lng)) < 50 for (lat, lng) in map(lambda x: float(x), (a.split(',') for a in TEST_LLS)))
             for tf in tf_gen:
                 if tf: 
                     assert_equal(name, u'test2', 'Expected city-constrained promo, got %s' % name)
                     #Break so else clause doesn't execute
                     break
-            #otherwise, we should get the lower priority, unconstraned adgroup
+            # the else clause only triggers if all tfs in tf_gen eval to false (because we never break), in this case we're >=50 miles from all
+            # the test cities, so we must get test1 (lower priority, but it's not city-constrained)
             else:
                 assert_equal(name, u'test1', 'Expected non-city-constrained promo (dist is %s), got %s' % (ll_dist(e,ll), name)) 
 

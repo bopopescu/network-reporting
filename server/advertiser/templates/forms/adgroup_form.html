@@ -4,7 +4,9 @@
  <link rel='stylesheet' type='text/css' href='/css/token-input-mopub.css'></link>
  <!-- <link rel='stylesheet' type='text/css' href='/css/token-input-mac.css'></link> -->
 <script type='text/javascript'>
-    var rgeourl = 'http://ws.geonames.org/findNearbyPlaceNameJSON?';
+    //
+    // All this JS is here because it needs render-time info (see immediately below) to properly pre-populate//format the token inputs
+    //
     var geo_s = 'http://ws.geonames.org/searchJSON?';
     $(document).ready( function () {
             var priors = {% if form.geo.value %}{{form.geo.value|safe}}{% else %}[]{% endif %};
@@ -13,7 +15,6 @@
             var city_pre = {type: 'city', data: []};
             //Not being used right now
             //var state_pre = {type: 'state', data: []};
-
             for (var count = 0; count < countries.length; count++) {
                 var dat = countries[count];
                 if ($.inArray(dat.code, priors) != -1) {

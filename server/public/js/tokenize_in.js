@@ -685,8 +685,8 @@ $.TokenList = function (input, settings) {
 
     // Do the actual search
     function run_search(query) {
+        //Don't run with the query given, run with what's actually in the search box
         query = input_box.val().toLowerCase();
-
         var cached_results = cache.get(query);
         if(cached_results) {
             var pop = {type:'country', data:cached_results};

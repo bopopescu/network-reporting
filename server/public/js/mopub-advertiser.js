@@ -44,6 +44,11 @@ var mopub = mopub || {};
             var loc_targ = $(this).val();
             $('.locationDependent', '#campaignAdgroupForm').hide();
             $('.' + loc_targ + '.locationDependent', '#campaignAdgroupForm').show();
+            if ($(this).val() == 'all') {
+                $('li.token-input-city span.token-input-delete-token').each(function() {
+                    $(this).click();
+                    });
+            }
             }).filter(':checked').click();
 
     

@@ -35,7 +35,7 @@ def lat_lon_filter(ll=None):
             return False
         #City format is ll:ste:city:ccode, split on ':', take the first entry, 'lat,lon', split that on ',' to get ('lat','lon') 
         # for every city.  Apply map to this split list to get (float('lat'), float('lon'))
-        latlons = (map(lambda x: float(x), t.split(',')) for t in (city.split(':')[0] for city in a.cities))
+        latlons = ((float(k) for k in t.split(',')) for t in (city.split(':')[0] for city in a.cities))
         for lat, lon in latlons:
             #Check all lat, lon pairs.  If any one of them is too far, return True
             # since all filters are exclusion filters (True means don't keep it)

@@ -327,6 +327,7 @@ class AdAuction(object):
     #build and apply list of frequency filter functions
     FREQ_FILTERS = [ freq_filter( type, key_func, udid, now, frequency_cap_dict ) for ( type, key_func ) in FREQS ] 
     all_ad_groups = filter( all_freq_filter( *FREQ_FILTERS ), all_ad_groups )
+
     for fil in FREQ_FILTERS: 
         func, warn, lst = fil
         logging.warning( warn % lst )
@@ -363,6 +364,7 @@ class AdAuction(object):
             # for each priority_level, perform an auction among the various creatives 
             for p in CAMPAIGN_LEVELS: 
                 logging.warning("priority level: %s"%p)
+                #XXX maybe optimize? meh
                 eligible_adgroups = [a for a in all_ad_groups if a.campaign.campaign_type == p]
                 logging.warning("eligible_adgroups: %s"%eligible_adgroups)
                 if not eligible_adgroups:
@@ -379,6 +381,8 @@ class AdAuction(object):
                         # exclude according to the exclude parameter must do this after determining adgroups
                         # so that we maintain the correct order for user bucketing
                         # TODO: we should exclude based on creative id not ad type :)
+
+                        # TODO: move format and exclude above players (right now we're doing the same thing twice)
                         CRTV_FILTERS = (    format_filter( site.format ), # remove wrong formats
                                             exclude_filter( exclude_params ), # remove exclude parameter
                                             ecpm_filter( winning_ecpm ), # remove creatives that don't meet site threshold
@@ -414,7 +418,8 @@ class AdAuction(object):
                                             if rpc.adgroup.key() == winner.ad_group.key():
                                                 logging.warning("rpc.adgroup %s"%rpc.adgroup)
                                                 break # This pulls out the rpc that matters there should be one always
-
+                                        else:
+                                            rpc = None
                             # if the winning creative relies on a rpc to get the actual data to display
                             # go out and get the data and paste in the data to the creative      
                                     if rpc:      

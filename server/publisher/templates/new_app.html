@@ -18,7 +18,7 @@
               <div class="alertMessage">
                 The first step is to tell us about your apps and set up your ad units. Enter the details of your first app below. You can add more apps and ad units later.
               </div>{% endifequal %}
-              <form enctype='multipart/form-data' action="" method="POST" accept-charset="utf-8" id="appForm">{% if app_key %}
+              <form enctype='multipart/form-data' action="" method="POST" accept-charset="utf-8" id="appForm" class="validate">{% if app_key %}
                 <input type="hidden" name="app_key" value="{{app_key}}"/>{% endif %}
                 <fieldset id="appForm-details" class="alt"> 
                   <legend>App Details</legend> 

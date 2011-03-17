@@ -1,0 +1,6 @@
+<select name="{{name}}">
+	{% for option in choices %}
+	<option {% ifequal option.0 value %}selected="selected"{% endifequal %} value="{{option.0}}">{{option.1}}</option>
+	{% endfor %}
+</select>	
+{{ suffix_html }}

@@ -792,7 +792,7 @@ fieldset h2 {
 dl.formFields {
   float: left;
   margin: -15px 0 0 0;
-  width: 630px;
+  width: 800px;
 }
 
 .formFields dt {
@@ -812,7 +812,7 @@ dl.formFields {
   display: inline-block;
   margin: 10px 0 0 0;
   padding: 3px 0;
-  width: 440px;
+  width: 600px;
 }
 
 .formFields .radios {

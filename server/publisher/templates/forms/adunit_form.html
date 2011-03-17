@@ -6,6 +6,8 @@
 	{{ form.description|attrs:'{"id":"appForm-adUnitDescription"}' }}
 	{{ form.device_format }}
 	{{ form.format|raw }}
+	<!-- {{ form.animation_type }}  -->
+	{{ form.refresh_interval|attrs:'{"style":"width:50px;","suffix":"seconds (default: 0 for no refresh)"}' }}
 
   {# <dt><label for="appForm-adUnitKeywords">Default keywords:</label></dt>  #}
   {# <dd>  #}

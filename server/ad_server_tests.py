@@ -47,9 +47,10 @@ UDID = "thisisntrealatall"
 test_mode = "3uoijg2349ic(test_mode)kdkdkg58gjslaf"
 TEST_LLS = ["42.3584308,-71.0597732","40.7607794,-111.8910474","40.7142691,-74.0059729","38.3565773,-121.9877444","39.1637984,-119.7674034","34.0522342,-118.2436849","36.1749705,-115.137223"] 
 
-NETWORKS = ( u'iad', u'admob', u'adsense' )
 PROMOS = ( u'test1', u'test2' )
 GTEES = ( u'testbudget1', u'testbudget2')
+NETWORKS = ( u'iad', u'admob', u'adsense' )
+BACKFILL_PROMOS = ( u'bpromo1','bpromo2')
 
 def fake_environ( query_string, method = 'get' ):
     ret = dict(    REQUEST_METHOD = method,
@@ -166,6 +167,17 @@ def basic_promo_test():
             t = camp.ad_group.name
             assert_equal( camp.ad_group.name, c, "Expected %s, got %s" % ( c, camp.ad_group.name ) )
         pause( c )
+        
+def basic_backfill_promo_test():
+    pause_all()
+    for c in BACKFILL_PROMOS:
+        resume( c )
+        for i in range ( 3 ):
+            c_id = get_id()
+            camp = Creative.get( c_id )
+            t = camp.ad_group.name
+            assert_equal( camp.ad_group.name, c, "Excepted %s, got %s" % ( c, camp.ad_group.name ) ) 
+        pause( c )    
 
 def priority_level_test():
     pause_all()
@@ -175,15 +187,32 @@ def priority_level_test():
     for a in NETWORKS:
         resume(a)
         prioritize(a)
-    for i in range(100):
+    for a in BACKFILL_PROMOS:
+        resume(a)
+        prioritize(a)    
+    
+    # make sure we get only promos    
+    for i in range(10):
         camp = Creative.get(get_id())
         t = camp.ad_group.name
         assert t in PROMOS, "Expected promo, got %s" % t
+    
+    # turn off promos and make sure we get only networks
     for a in PROMOS:
+        pause(a)
+    for i in range(100):
+        camp = Creative.get(get_id())
+        assert camp.ad_group.name in NETWORKS, "Expected network, got %s" % camp.ad_group.name
+    
+    # turn off all networks, make sure we only get back fills
+    for a in NETWORKS:
         pause(a)
     for i in range(20):
         camp = Creative.get(get_id())
-        assert camp.ad_group.name in NETWORKS, "Expected network, got %s" % camp.ad_group.name
+        t = camp.ad_group.name
+        assert t in BACKFILL_PROMOS, "Expected promo, got %s" % t
+    
+    
     de_prioritize_all()
 
 def net_priorty_test():

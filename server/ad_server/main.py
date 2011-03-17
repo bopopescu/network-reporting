@@ -68,7 +68,7 @@ CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gz
 MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7PnE6cH9_PX7OoeIIr5FjnTA'
 DOMAIN = 'ads.mopub.com' 
 FREQ_ATTR = '%s_frequency_cap'
-CAMPAIGN_LEVELS = ('gtee_high', 'gtee', 'gtee_low', 'promo', 'network')
+CAMPAIGN_LEVELS = ('gtee_high', 'gtee', 'gtee_low', 'promo', 'network','backfill_promo')
 NATIVE_REQUESTS = ['admob','adsense','iAd','custom']
 
 
@@ -269,10 +269,9 @@ class AdAuction(object):
     keywords = kw["q"]
     geo_predicates = AdAuction.geo_predicates_for_rgeocode(kw["addr"])
     device_predicates = AdAuction.device_predicates_for_request(kw["request"])
-    format_predicates = AdAuction.format_predicates_for_format(kw["format"])
     exclude_params = kw["excluded_creatives"]
     excluded_predicates = AdAuction.exclude_predicates_params(exclude_params)
-    logging.warning("keywords=%s, geo_predicates=%s, device_predicates=%s, format_predicates=%s" % (keywords, geo_predicates, device_predicates, format_predicates))
+    logging.warning("keywords=%s, geo_predicates=%s, device_predicates=%s" % (keywords, geo_predicates, device_predicates))
 
     # Matching strategy: 
     # 1) match all ad groups that match the placement that is in question, sort by priority
@@ -360,8 +359,6 @@ class AdAuction(object):
     if len(all_ad_groups) > 0:
         logging.warning("ad_group: %s"%all_ad_groups)
         all_creatives = manager.get_creatives_for_adgroups(all_ad_groups)
-        # all_creatives = Creative.gql("where ad_group in :1 and format_predicates in :2 and active = :3 and deleted = :4", 
-        #   map(lambda x: x.key(), ad_groups), format_predicates, True, False).fetch(AdAuction.MAX_ADGROUPS)
         if len(all_creatives) > 0:
             # for each priority_level, perform an auction among the various creatives 
             for p in CAMPAIGN_LEVELS: 
@@ -564,12 +561,6 @@ class AdHandler(webapp.RequestHandler):
         keywords += self.request.get("q").lower().split(',')
     q = keywords
     logging.warning("keywords are %s" % keywords)
-
-    # get format
-    f = self.request.get("f") or "320x50" # TODO: remove this default
-    f = "%dx%d"%(int(site.width),int(site.height))
-    format = self.FORMAT_SIZES.get(f)
-    # logging.warning("format is %s (requested '%s')" % (format, f))
     
     # look up lat/lon
     ll = self.request.get('ll') if self.request.get('ll') else None
@@ -624,24 +615,25 @@ class AdHandler(webapp.RequestHandler):
 
 
         # create an ad clickthrough URL
-        ad_click_url = "http://%s/m/aclk?id=%s&cid=%s&req=%s" % (DOMAIN,id, c.key(), request_id)
+        ad_click_url = "http://%s/m/aclk?id=%s&cid=%s&req=%s&udid=%s" % (DOMAIN,id, c.key(), request_id, udid)
         self.response.headers.add_header("X-Clickthrough", str(ad_click_url))
       
         # ad an impression tracker URL
-        self.response.headers.add_header("X-Imptracker", "http://%s/m/imp?id=%s&cid=%s"%(DOMAIN,id,c.key()))
-        track_url = "http://%s/m/imp?id=%s&cid=%s" % (DOMAIN, id, c.key())
+        track_url = "http://%s/m/imp?id=%s&cid=%s&udid=%s" % (DOMAIN, id, c.key(), udid)
+        self.response.headers.add_header("X-Imptracker", str(track_url))
+        
       
       #add creative ID for testing (also prevents that one bad bug from happening)
         self.response.headers.add_header("X-Creativeid", "%s" % c.key())
 
       # add to the campaign counter
         logging.info("adding to delivery: %s"%c.ad_group.bid)
-        c.ad_group.campaign.delivery_counter.increment(dollars=c.ad_group.bid)
+        if c.ad_group.bid_strategy == 'cpm':
+          c.ad_group.campaign.delivery_counter.increment(dollars=c.ad_group.bid*1.0/1000)
       
       # render the creative 
         self.response.out.write( self.render_creative(  c, 
                                                         site                = site, 
-                                                        format              = format, 
                                                         q                   = q, 
                                                         addr                = addr,
                                                         excluded_creatives  = excluded_creatives, 
@@ -652,7 +644,6 @@ class AdHandler(webapp.RequestHandler):
     else:
         self.response.out.write( self.render_creative(  c, 
                                                         site                = site, 
-                                                        format              = format, 
                                                         q                   = q, 
                                                         addr                = addr, 
                                                         excluded_creatives  = excluded_creatives, 
@@ -797,14 +788,18 @@ class AdHandler(webapp.RequestHandler):
                             }
                           }, false);
                         </script></head>
-                        <body style="margin:0;padding:0;width:${w}px;background:white;">${html_data}$trackingPixel</body></html>"""),
+                        <body style="margin:0;padding:0;">${html_data}$trackingPixel</body></html>"""),
     "html_full":Template("$html_data")
   }
   def render_creative(self, c, track_url=None, **kwargs):
     if c:
       logging.warning("rendering: %s" % c.ad_type)
-      format = kwargs["format"]
       site = kwargs["site"]
+      adunit = site
+      
+      format = adunit.format.split('x')
+      if len(format) < 2:
+          format = (320,480)
 
       template_name = c.ad_type
       
@@ -839,7 +834,7 @@ class AdHandler(webapp.RequestHandler):
 
 
       if c.ad_type == "adsense":
-        params.update({"title": ','.join(kwargs["q"]), "adsense_format": format[2], "w": format[0], "h": format[1], "client": kwargs["site"].account.adsense_pub_id})
+        params.update({"title": ','.join(kwargs["q"]), "adsense_format": '300x250_as', "w": format[0], "h": format[1], "client": kwargs["site"].account.adsense_pub_id})
         params.update(channel_id=kwargs["site"].adsense_channel_id or '')
         # self.response.headers.add_header("X-Launchpage","http://googleads.g.doubleclick.net")
       elif c.ad_type == "admob":
@@ -882,7 +877,7 @@ class AdHandler(webapp.RequestHandler):
       else:
         params.update(title='')
 
-      if kwargs["v"] >= 2 and not "Android" in self.request.headers["User-Agent"]:  
+      if kwargs["v"] >= 2:  
         params.update(finishLoad='<script>function finishLoad(){window.location="mopub://finishLoad";} window.onload = function(){finishLoad();} </script>')
         # extra parameters used only by admob template
         #add in the success tracking pixel
@@ -944,7 +939,7 @@ class AdHandler(webapp.RequestHandler):
         
         # add some extra  
         self.response.headers.add_header("X-Failurl",self.request.url+'&exclude='+str(c.ad_type))
-        self.response.headers.add_header("X-Format",format[2])
+        self.response.headers.add_header("X-Format",'300x250_as')
         self.response.headers.add_header("X-Width",str(format[0]))
         self.response.headers.add_header("X-Height",str(format[1]))
       
@@ -1015,18 +1010,19 @@ class AdImpressionHandler(webapp.RequestHandler):
 class AdClickHandler(webapp.RequestHandler):
   # /m/aclk?udid=james&appid=angrybirds&id=ahRldmVudHJhY2tlcnNjYWxldGVzdHILCxIEU2l0ZRipRgw&cid=ahRldmVudHJhY2tlcnNjYWxldGVzdHIPCxIIQ3JlYXRpdmUYoh8M
   def get(self):
+    mp_logging.log(self.request, event=mp_logging.CLK_EVENT)  
+      
     udid = self.request.get('udid')
     mobile_appid = self.request.get('appid')
     time = datetime.datetime.now()
     adunit = self.request.get('id')
     creative = self.request.get('cid')
 
-    if mobile_appid and mobile_appid != CLICK_EVENT_NO_APP_ID:
-      mp_logging.log(self.request, event=mp_logging.CLK_EVENT)  
-    
-    # TODO: maybe have this section run asynchronously
-    ce_manager = ClickEventManager()
-    ce = ce_manager.log_click_event(udid, mobile_appid, time, adunit, creative)
+    # if driving download then we use the user datastore
+    if udid and mobile_appid and mobile_appid != CLICK_EVENT_NO_APP_ID:
+        # TODO: maybe have this section run asynchronously
+        ce_manager = ClickEventManager()
+        ce = ce_manager.log_click_event(udid, mobile_appid, time, adunit, creative)
 
     id = self.request.get("id")
     q = self.request.get("q")    
@@ -1040,7 +1036,7 @@ class AdClickHandler(webapp.RequestHandler):
       # forward on to the click URL
       self.redirect(url)
     else:
-      self.response.out.write("ClickEvent:OK:"+str(ce.key()))
+      self.response.out.write("ClickEvent:OK:")
 
       
     

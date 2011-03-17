@@ -26,10 +26,17 @@ class MPWidget(Widget):
             classes += " " + self.DEFAULT_CLASSES
 
         attrs['class'] = classes
+        
+        import logging
+        logging.warning("attrs %s"%attrs)
+        
+        suffix_html = mark_safe(attrs.pop(u'suffix',''))
+        logging.warning("suffix_html %s"%suffix_html)
 
         flat_attrs = mark_safe(self.flatatt(attrs))
 
-        context_dict = dict(widget = self, name = name, value = value, flat_attrs = flat_attrs)
+        context_dict = dict(widget = self, name = name, value = value, 
+                            flat_attrs = flat_attrs, suffix_html = suffix_html)
         c = Context(context_dict)
         t = loader.get_template(self.TEMPLATE)
         return t.render(c)
@@ -66,11 +73,48 @@ class MPTextInput(MPWidget):
 class MPRadioInput(MPWidget):
     TEMPLATE = 'widgets/adunit_device_format.html'
     DEFAULT_CLASSES = "input-text"
+    
+class MPSelectWidget(MPWidget):
+    TEMPLATE = 'widgets/select.html'
+    DEFAULT_CLASSES = "input-text"
+    
+    def __init__(self, attrs=None, choices=()):
+        super(MPSelectWidget, self).__init__(attrs)
+        # choices can be any iterable, but we may need to render this widget
+        # multiple times. Thus, collapse it into a list so it can be consumed
+        # more than once.
+        self.choices = list(choices)
+    
+    def render(self, name, value, attrs=None,errors=False,choices=()):
+        if value is None:
+            value = ''
+        
+        classes = attrs.get('class') or ""
+        if errors:
+             classes += " form-error"
+        
+        if self.DEFAULT_CLASSES:
+            classes += " " + self.DEFAULT_CLASSES
+
+        attrs['class'] = classes
+        
+        suffix_html = mark_safe(attrs.pop('suffix',''))
+        
+
+        flat_attrs = mark_safe(self.flatatt(attrs))
+
+        context_dict = dict(widget = self, name = name, value = value, 
+                            flat_attrs = flat_attrs, choices = self.choices,
+                            suffix_html = suffix_html )
+        c = Context(context_dict)
+        t = loader.get_template(self.TEMPLATE)
+        return t.render(c)
+        
 
 class MPFormatWidget(MPWidget):
     TEMPLATE = 'widgets/adunit_format.html'
 
 class MPNumberInput(MPTextInput):
     TEMPLATE = 'widgets/number_input.html'
-    DEFAULT_CLASSES = "input-text input-text-number"
+    DEFAULT_CLASSES = "input-text input-text-number number"
 

@@ -12,8 +12,8 @@
                             <dt>Creative Type:</dt> 
                             <dd> 
                               <span class="radios"> 
-                                <input type="radio" class="input-radio" name="{{form.ad_type.name}}" value="text_icon" id="creativeType-text_icon" {% if not form.ad_type.value %}checked="checked"{% endif %}{% ifequal form.ad_type.value "text_icon" %}checked="checked"{% endifequal %}/> <label for="creativeType-text_icon">Text and Tile</label> 
-                                <input type="radio" class="input-radio" name="{{form.ad_type.name}}" value="image" id="creativeType-image" {% ifequal form.ad_type.value "image" %}checked="checked"{% endifequal %}/> <label for="creativeType-image">Image</label> 
+                                <input type="radio" class="input-radio" name="{{form.ad_type.name}}" value="image" id="creativeType-image" {% if form.ad_type.value == "image" or not form.ad_type.value %}checked="checked"{% endif %}/> <label for="creativeType-image">Image</label> 
+                                <input type="radio" class="input-radio" name="{{form.ad_type.name}}" value="text_icon" id="creativeType-text_icon" {% ifequal form.ad_type.value "text_icon" %}checked="checked"{% endifequal %}/> <label for="creativeType-text_icon">Text and Tile</label> 
                                 <input type="radio" class="input-radio" name="{{form.ad_type.name}}" value="html" id="creativeType-html" {% ifequal form.ad_type.value "html" %}checked="checked"{% endifequal %}/> <label for="creativeType-html">HTML</label> 
                               </span>
                             </dd>
@@ -34,8 +34,12 @@
                                   <p>This is the link that will open when a user clicks on this ad.  Some examples are:
                                   <h4>Web Page</h4>
                                   <p>http://www.example.com/</p>
-                                  <h4>App Store</h4>
+                                  <h4>iTunes App Store</h4>
                                   <p>http://phobos.apple.com/WebObjects/MZStore.woa/....</p>
+                                  <h4>Android Market</h4>
+                                  <p>market://details?id=&lt;packagename&gt;</p>
+                                  <h3>Conversion Tracking</h3>
+                                  <p>If you enter an iTunes or Android store URL, MoPub will automatically track conversions for the app when it is opened.</p>
                                 </div>
                                 {% for error in form.url.errors %}
                                 <div class="form-error-text">{{error}}</div> 

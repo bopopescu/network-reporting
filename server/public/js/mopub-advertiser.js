@@ -172,6 +172,14 @@ var mopub = mopub || {};
       buttons: { "Close": function() { $(this).dialog("close"); } }
     });
   });
+  $('#campaignForm-keyword-helpLink').click(function(e) {
+    e.preventDefault();
+    $('#campaignForm-keyword-helpContent').dialog({ 
+      buttons: { "Close": function() { $(this).dialog("close"); } }
+    });
+  });
+  
+  
   
   $('#campaignAdgroupForm input[name="start_date"]').datepicker({ minDate:0 });
   $('#campaignAdgroupForm input[name="end_date"]').datepicker({ minDate:0 });

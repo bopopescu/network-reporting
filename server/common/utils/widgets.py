@@ -27,11 +27,8 @@ class MPWidget(Widget):
 
         attrs['class'] = classes
         
-        import logging
-        logging.warning("attrs %s"%attrs)
         
         suffix_html = mark_safe(attrs.pop(u'suffix',''))
-        logging.warning("suffix_html %s"%suffix_html)
 
         flat_attrs = mark_safe(self.flatatt(attrs))
 

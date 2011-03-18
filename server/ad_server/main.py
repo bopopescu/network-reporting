@@ -589,7 +589,6 @@ class AdHandler(webapp.RequestHandler):
     # get winning creative
     c = AdAuction.run(request = self.request,
 							  site = site,
-							  format=format, 
 							  q=q, 
 							  addr=addr, 
 							  excluded_creatives=excluded_creatives, 

@@ -69,7 +69,6 @@ class StatsModelQueryManager(CachedQueryManager):
         stats = [s or StatsModel() for s in stats]
         return stats            
     
-    
     def accumulate_stats(self, stat):
         self.stats.append(stat)
     

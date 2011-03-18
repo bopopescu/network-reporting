@@ -112,20 +112,21 @@ class AppIndexHandler(RequestHandler):
       if a.icon:
         a.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(a.icon)
 
-      a.stats = SiteStats()
+      #a.stats = SiteStats()
+      a.stats = StatsModel()
       # attaching adunits onto the app object
       a.adunits = AdUnitQueryManager().get_adunits(app=a)
 
       # organize impressions by days
       for adunit in a.adunits:
-        adunit.all_stats = SiteStatsQueryManager().get_sitestats_for_days(site=adunit,days=days)
-        adunit.stats = reduce(lambda x, y: x+y, adunit.all_stats, SiteStats())
+        adunit.all_stats = StatsModelQueryManager(self.account).get_sitestats_for_days(site=adunit,days=days)
+        adunit.stats = reduce(lambda x, y: x+y, adunit.all_stats, StatsModel())
 
       a.adunits = sorted(a.adunits, key=lambda adunit: adunit.stats.request_count, reverse=True)
 
       # We have to read the datastore at the app level since we need to get the de-duped unique_user_count
-      a.all_stats = SiteStatsQueryManager().get_sitestats_for_days(owner=a,days=days)
-      a.stats = reduce(lambda x, y: x+y, a.all_stats, SiteStats())
+      a.all_stats = StatsModelQueryManager(self.account).get_sitestats_for_days(owner=a,days=days)
+      a.stats = reduce(lambda x, y: x+y, a.all_stats, StatsModel())
 
     apps = sorted(apps, key=lambda app: app.stats.request_count, reverse=True)
 
@@ -133,16 +134,16 @@ class AppIndexHandler(RequestHandler):
     graph_apps = apps[0:4]
     if len(apps) > 4:
       graph_apps[3] = App(name='Others')
-      graph_apps[3].all_stats = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[a.all_stats for a in apps[3:]])]
+      graph_apps[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[a.all_stats for a in apps[3:]])]
 
     return render_to_response(self.request,'publisher/index.html', 
       {'apps': apps,
        'graph_apps': graph_apps,
        'start_date': days[0],
        'date_range': self.date_range,
-       'today': reduce(lambda x, y: x+y, [a.all_stats[-1] for a in graph_apps], SiteStats()),
-       'yesterday': reduce(lambda x, y: x+y, [a.all_stats[-2] for a in graph_apps], SiteStats()),
-       'totals': reduce(lambda x, y: x+y.stats, apps, SiteStats()),
+       'today': reduce(lambda x, y: x+y, [a.all_stats[-1] for a in graph_apps], StatsModel()),
+       'yesterday': reduce(lambda x, y: x+y, [a.all_stats[-2] for a in graph_apps], StatsModel()),
+       'totals': reduce(lambda x, y: x+y.stats, apps, StatsModel()),
        'account': self.account})
 
 @whitelist_login_required     

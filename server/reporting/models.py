@@ -223,14 +223,11 @@ class StatsModel(db.Expando):
     @classmethod
     def today(c):
       return datetime.datetime.now(Pacific_tzinfo()).date()
-        
-        
 
     @classmethod
     def today(c):
       return datetime.datetime.now(Pacific_tzinfo()).date()
-      
-    
+
     @classmethod
     def lastdays(c, n=7, omit=0):
         today = c.today() - datetime.timedelta(days=omit)    # Set omit=1 to eliminates partial days contributing to totals or appearing in graphs
@@ -246,7 +243,7 @@ class StatsModel(db.Expando):
         except:
             return c.lastdays(n)
 
-    @property   
+    @property
     def fill_rate(self):
         return self.impression_count / float(self.request_count)
 
@@ -254,13 +251,13 @@ class StatsModel(db.Expando):
     def ctr(self):
         if self.impression_count > 0:
             return self.click_count / float(self.impression_count)
-  
-    @property   
+
+    @property
     def conv_rate(self):
         if self.click_count > 0 and self.conversion_count > 0:
             return self.conversion_count / float(self.click_count)
         else:
-            return None 
+            return None
 
     @property   
     def cpm(self):

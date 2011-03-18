@@ -589,7 +589,6 @@ class AdHandler(webapp.RequestHandler):
     # get winning creative
     c = AdAuction.run(request = self.request,
 							  site = site,
-							  format=format, 
 							  q=q, 
 							  addr=addr, 
 							  excluded_creatives=excluded_creatives, 
@@ -620,7 +619,7 @@ class AdHandler(webapp.RequestHandler):
 
 
         # create an ad clickthrough URL
-        ad_click_url = "http://%s/m/aclk?id=%s&cid=%s&req=%s&udid=%s" % (DOMAIN,id, c.key(), request_id, udid)
+        ad_click_url = "http://%s/m/aclk?id=%s&cid=%s&c=%s&req=%s&udid=%s" % (DOMAIN,id, c.key(), c.key(),request_id, udid)
         self.response.headers.add_header("X-Clickthrough", str(ad_click_url))
       
         # ad an impression tracker URL

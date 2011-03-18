@@ -55,9 +55,9 @@
                       <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
                     </tr>
                     <tr id="stats-breakdown-users">
-                      <td class="stats-breakdown-value today"><span class="inner">{{today.unique_user_count|withsep}}</span></td>
-                      <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.unique_user_count|withsep}}</span></td>
-                      <td class="stats-breakdown-value all"><span class="inner">{{app.stats.unique_user_count|withsep}}</span></td>
+                      <td class="stats-breakdown-value today"><span class="inner">{{today.user_count|withsep}}</span></td>
+                      <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.user_count|withsep}}</span></td>
+                      <td class="stats-breakdown-value all"><span class="inner">{{app.stats.user_count|withsep}}</span></td>
                       <th class="stats-breakdown-name"><span class="inner">Users</span></th>
                     </tr>
                   </tbody>
@@ -92,7 +92,7 @@
                       { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                     ],
                     'users': [{% for au in app.graph_adunits %}
-                      { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.unique_user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                      { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                     ]
                   };
                 </script>

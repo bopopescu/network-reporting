@@ -75,7 +75,6 @@ class StatsModelQueryManager(CachedQueryManager):
     
     def put_stats(self, stats=None ,rollup=True, offline=False):
         stats = stats or self.stats
-        
         if isinstance(stats,db.Model):
             stats = [stats]
         if rollup:

@@ -44,3 +44,25 @@ def lat_lon_filter(ll=None):
         return True 
     return (real_filter, log_mesg, [])
 
+def kw_filter( keywords ):
+    log_mesg = "Removed due to keyword mismatch: %s"
+    def real_filter( adgroup ):
+        # if there are no keywords then we don't need to exclude
+        if not adgroup.keywords:
+            return False 
+        
+        keyword_match = False
+        # lists of tuples:
+        # m_age:19 AND m_gender:m
+        # m_age:20 AND m_gender:f
+        # is transformed to
+        # [(m_age:19,m_gender:m),(m_age:20,m_gender:f)]
+        anded_keywords = [k.split(' AND ') for k in adgroup.keywords] 
+        logging.info("KEYWORDS: %s == %s"%(keywords,anded_keywords))
+        for anded_keywords in anded_keywords:
+            anded_keywords = (kw.lower() for kw in anded_keywords)
+            if set(anded_keywords) <= set(keywords):
+                keyword_match = True
+                break
+        return not keyword_match # return False if there is a match and vice versa        
+    return ( real_filter, log_mesg, [] )

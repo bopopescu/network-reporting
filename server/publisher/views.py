@@ -34,7 +34,7 @@ from common.utils.decorators import whitelist_login_required
 from advertiser.models import Campaign, AdGroup, HtmlCreative
 from publisher.models import Site, Account, App
 from publisher.forms import SiteForm, AppForm, AdUnitForm
-from reporting.models import SiteStats, StatsModel
+from reporting.models import StatsModel
 
 ## Query Managers
 from account.query_managers import AccountQueryManager
@@ -42,7 +42,7 @@ from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager,
                                       CreativeQueryManager
 from common.utils.cachedquerymanager import CachedQueryManager
 from publisher.query_managers import AppQueryManager, AdUnitQueryManager
-from reporting.query_managers import SiteStatsQueryManager, StatsModelQueryManager
+from reporting.query_managers import StatsModelQueryManager
 
 from common.utils import sswriter
 from common.constants import *

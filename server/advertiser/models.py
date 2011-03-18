@@ -275,6 +275,24 @@ class Creative(polymodel.PolyModel):
 
   def set_owner(self, value):
     self.ad_group = value
+    
+  @property
+  def width(self):
+      width = 0 
+      if self.format:
+          parts = self.format.split('x')
+          if len(parts) == 2:
+              width = parts[0]
+      return width
+ 
+  @property
+  def height(self):
+      height = 0 
+      if self.format:
+          parts = self.format.split('x')
+          if len(parts) == 2:
+              height = parts[1]
+      return height
   
   def owner(self):
     return property(get_owner, set_owner)

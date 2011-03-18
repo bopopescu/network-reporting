@@ -75,10 +75,10 @@ class Site(db.Model):
   description = db.TextProperty(default='General Purpose Banner Ad')
   width = db.FloatProperty()
   height = db.FloatProperty()
-
   
   device_format = db.StringProperty(default='phone', choices=DEVICE_FORMAT_CHOICES)
   format = db.StringProperty(choices=FORMAT_CHOICES) #TODO: we should use this w/o explicity using height, width
+  resizable = db.BooleanProperty(default=False)
 
   deleted = db.BooleanProperty(default=False)
   

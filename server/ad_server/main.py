@@ -278,7 +278,10 @@ class AdAuction(object):
                         # TODO: we should exclude based on creative id not ad type :)
 
                         # TODO: move format and exclude above players (right now we're doing the same thing twice)
-                        CRTV_FILTERS = (    format_filter( site.format ), # remove wrong formats
+                        # if the adunit is resizable then its format doesn't really matter
+                        # all creatives can target it
+                        site_format = None if site.resizable else site.format
+                        CRTV_FILTERS = (    format_filter( site_format ), # remove wrong formats
                                             exclude_filter( exclude_params ), # remove exclude parameter
                                             ecpm_filter( winning_ecpm ), # remove creatives that don't meet site threshold
                                             )
@@ -861,6 +864,11 @@ class AdHandler(webapp.RequestHandler):
         params.update(title='')
       self.response.headers.add_header("X-Backfill", str('html'))
 
+      # pass the creative height and width if they are explicity set
+      if c.width and c.height:
+          self.response.headers.add_header("X-Width",c.width)
+          self.response.headers.add_header("X-Height",c.height)
+      
       # render the HTML body
       self.response.out.write(self.TEMPLATES[template_name].safe_substitute(params))
     else:

@@ -93,7 +93,10 @@ class AdUnitQueryManager(CachedQueryManager):
         self.adunit = None
         return super(AdUnitQueryManager,self).__init__()
   
-    def get_adunits(self,app=None,account=None,deleted=False,limit=50):
+    def get_adunits(self,app=None,account=None,keys=None,deleted=False,limit=50):
+        if keys:
+            return self.Model.get(keys)
+        
         adunits = Site.all()
         if not deleted == None:
             adunits = adunits.filter("deleted =",deleted)

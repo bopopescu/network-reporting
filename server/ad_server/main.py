@@ -56,7 +56,7 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 
 from publisher.models import *
 from advertiser.models import *
-from reporting.models import *
+from reporting.models import StatsModel
 from userstore.models import CLICK_EVENT_NO_APP_ID
 
 from ad_server.networks.appnexus import AppNexusServerSide

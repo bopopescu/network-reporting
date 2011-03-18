@@ -30,7 +30,7 @@ from common.utils.decorators import whitelist_login_required
 from advertiser.models import Campaign, AdGroup, HtmlCreative
 from publisher.models import Site, Account, App
 from publisher.forms import SiteForm, AppForm, AdUnitForm
-from reporting.models import SiteStats
+from reporting.models import SiteStats, StatsModel
 
 ## Query Managers
 from account.query_managers import AccountQueryManager
@@ -38,7 +38,7 @@ from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager,
                                       CreativeQueryManager
 from common.utils.cachedquerymanager import CachedQueryManager
 from publisher.query_managers import AppQueryManager, AdUnitQueryManager
-from reporting.query_managers import SiteStatsQueryManager
+from reporting.query_managers import SiteStatsQueryManager, StatsModelQueryManager
 
 from common.utils import sswriter
 from common.constants import *
@@ -100,9 +100,9 @@ class AppIndexHandler(RequestHandler):
 
     # Set start date if passed in, otherwise get most recent days
     if self.start_date:
-      days = SiteStats.get_days(self.start_date, self.date_range)
+      days = StatsModel.get_days(self.start_date, self.date_range)
     else:
-      days = SiteStats.lastdays(self.date_range)
+      days = StatsModel.lastdays(self.date_range)
 
     apps = AppQueryManager().get_apps(self.account)
     if len(apps) == 0:

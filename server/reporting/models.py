@@ -230,24 +230,21 @@ class StatsModel(db.Expando):
     def today(c):
       return datetime.datetime.now(Pacific_tzinfo()).date()
       
-    @classmethod
-    def get_key(c, site_key, owner_key, date):
-        return db.Key.from_path("SiteStats", "%s:%s:%s" % (site_key if site_key else '', owner_key if owner_key else '', str(date)))
     
-     @classmethod
-     def lastdays(c, n=7, omit=0):
+    @classmethod
+    def lastdays(c, n=7, omit=0):
         today = c.today() - datetime.timedelta(days=omit)    # Set omit=1 to eliminates partial days contributing to totals or appearing in graphs
         days = [today - datetime.timedelta(days=x) for x in range(0, n)]
         days.reverse()
         return days
   
-  @classmethod
-  def get_days(c, start, n=7):
-      try:
-          days = [start + datetime.timedelta(days=x) for x in range(0,n)]
-          return days
-      except:
-          return c.lastdays(n)
+    @classmethod
+    def get_days(c, start, n=7):
+        try:
+            days = [start + datetime.timedelta(days=x) for x in range(0,n)]
+            return days
+        except:
+            return c.lastdays(n)
 
     @property   
     def fill_rate(self):
@@ -261,9 +258,9 @@ class StatsModel(db.Expando):
     @property   
     def conv_rate(self):
         if self.click_count > 0 and self.conversion_count > 0:
-    	    return self.conversion_count / float(self.click_count)
-    	else:
-    	    return None	
+            return self.conversion_count / float(self.click_count)
+        else:
+            return None 
 
     @property   
     def cpm(self):
@@ -278,9 +275,9 @@ class StatsModel(db.Expando):
     @property   
     def cpa(self):
         if self.conversion_count > 0:
-	        return self.revenue / float(self.conversion_count)
-	    else:
-	        return None
+            return self.revenue / float(self.conversion_count)
+        else:
+            return None
 
 # 
 # Tracks statistics for a site for a particular day - clicks and impressions are aggregated
@@ -414,10 +411,10 @@ class SiteStats(db.Model):
       return self.click_count / float(self.impression_count)
   
   def conv_rate(self):
-	if self.click_count > 0 and self.conversion_count > 0:
-	  return self.conversion_count / float(self.click_count)
-	else:
-	  return None	
+    if self.click_count > 0 and self.conversion_count > 0:
+      return self.conversion_count / float(self.click_count)
+    else:
+      return None   
 
   def cpm(self):
     if self.impression_count > 0:
@@ -428,10 +425,10 @@ class SiteStats(db.Model):
       return self.revenue / float(self.click_count)
 
   def cpa(self):
-	if self.conversion_count > 0:
-	  return self.revenue / float(self.conversion_count)
-	else:
-	  return None
+    if self.conversion_count > 0:
+      return self.revenue / float(self.conversion_count)
+    else:
+      return None
 
 # Turn the previous functions into properties of the class so they can be read as variables
 # ( useful for cool map shit )

@@ -26,7 +26,7 @@ from advertiser.forms import CampaignForm, AdGroupForm, \
                              HtmlCreativeForm
 
 from publisher.models import Site, Account, App
-from reporting.models import SiteStats
+from reporting.models import SiteStats, StatsModel
 
 from common.utils.cachedquerymanager import CachedQueryManager
 
@@ -36,7 +36,7 @@ from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager,
                                       ImageCreativeQueryManager, TextAndTileCreativeQueryManager, \
                                       HtmlCreativeQueryManager
 from publisher.query_managers import AdUnitQueryManager, AppQueryManager
-from reporting.query_managers import SiteStatsQueryManager
+from reporting.query_managers import SiteStatsQueryManager, StatsModelQueryManager
 
 class RequestHandler(object):
     def __init__(self,request=None):
@@ -131,87 +131,80 @@ def index(request,*args,**kwargs):
     return IndexHandler()(request,*args,**kwargs)     
 
 class AdGroupIndexHandler(RequestHandler):
-  def get(self):
-    # Set start date if passed in, otherwise get most recent days
-    if self.start_date:
-      days = SiteStats.get_days(self.start_date, self.date_range)
-    else:
-      days = SiteStats.lastdays(self.date_range)
-
-    apps = AppQueryManager().get_apps(account=self.account)
-    campaigns = CampaignQueryManager().get_campaigns(account=self.account)
-    
-    if campaigns:
-      adgroups = AdGroupQueryManager().get_adgroups(campaigns=campaigns)
-    else:
-      adgroups = []
-    
-    for c in adgroups:
-      c.all_stats = SiteStatsQueryManager().get_sitestats_for_days(owner=c, days=days)      
-      c.stats = reduce(lambda x, y: x+y, c.all_stats, SiteStats())
-
-    promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], adgroups)
-    promo_campaigns = sorted(promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
-    
-    guarantee_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee_high', 'gtee_low', 'gtee'], adgroups)
-    guarantee_campaigns = sorted(guarantee_campaigns, lambda x,y: cmp(y.bid, x.bid))
-    levels = ('high', '', 'low')
-    gtee_str = "gtee_%s"
-    gtee_levels = []
-    for level in levels:
-        this_level = gtee_str % level if level else "gtee"
-        name = level if level else 'normal'
-        level_camps = filter(lambda x:x.campaign.campaign_type == this_level, guarantee_campaigns)
-        gtee_levels.append(dict(name = name, campaigns = level_camps))
-    logging.warning(guarantee_campaigns)
-    
-    for level in gtee_levels:
-        if level['name'] == 'normal' and len(gtee_levels[0]['campaigns']) == 0 and len(gtee_levels[2]['campaigns']) == 0: 
-            level['foo'] = True 
-        elif len(level['campaigns']) > 0:
-            level['foo'] = True 
+    def get(self):
+        # Set start date if passed in, otherwise get most recent days
+        if self.start_date:
+            days = StatsModel.get_days(self.start_date, self.date_range)
         else:
-            level['foo'] = False 
+            days = StatsModel.lastdays(self.date_range)
 
-    logging.warning(gtee_levels)
-
-
-    network_campaigns = filter(lambda x: x.campaign.campaign_type in ['network'], adgroups)
-    network_campaigns = sorted(network_campaigns, lambda x,y: cmp(y.bid, x.bid))
+        apps = AppQueryManager().get_apps(account=self.account)
+        campaigns = CampaignQueryManager().get_campaigns(account=self.account)
+        if campaigns:
+            adgroups = AdGroupQueryManager().get_adgroups(campaigns=campaigns)
+        else:
+            adgroups = []
     
-    backfill_promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_promo'], adgroups)
-    backfill_promo_campaigns = sorted(backfill_promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
+        for c in adgroups:
+            c.all_stats = StatsModelQueryManager(self.account).get_stats_for_days(advertiser=c, days=days)
+            c.stats = reduce(lambda x, y: x+y, c.all_stats, StatsModel())
+
+        promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], adgroups)
+        promo_campaigns = sorted(promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
     
-    adgroups = sorted(adgroups, key=lambda adgroup: adgroup.stats.impression_count, reverse=True)
+        guarantee_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee_high', 'gtee_low', 'gtee'], adgroups)
+        guarantee_campaigns = sorted(guarantee_campaigns, lambda x,y: cmp(y.bid, x.bid))
+        levels = ('high', '', 'low')
+        gtee_str = "gtee_%s"
+        gtee_levels = []
+        for level in levels:
+            this_level = gtee_str % level if level else "gtee"
+            name = level if level else 'normal'
+            level_camps = filter(lambda x:x.campaign.campaign_type == this_level, guarantee_campaigns)
+            gtee_levels.append(dict(name = name, campaigns = level_camps))
+
+        for level in gtee_levels:
+            if level['name'] == 'normal' and len(gtee_levels[0]['campaigns']) == 0 and len(gtee_levels[2]['campaigns']) == 0: 
+                level['foo'] = True 
+            elif len(level['campaigns']) > 0:
+                level['foo'] = True 
+            else:
+                level['foo'] = False 
+
+        network_campaigns = filter(lambda x: x.campaign.campaign_type in ['network'], adgroups)
+        network_campaigns = sorted(network_campaigns, lambda x,y: cmp(y.bid, x.bid))
     
-    help_text = None
-    if network_campaigns:
-      if not (self.account.adsense_pub_id or self.account.admob_pub_id):
-        help_text = 'Provide your ad network publisher IDs on the <a href="%s">account page</a>'%reverse('account_index')
+        backfill_promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_promo'], adgroups)
+        backfill_promo_campaigns = sorted(backfill_promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
+    
+        adgroups = sorted(adgroups, key=lambda adgroup: adgroup.stats.impression_count, reverse=True)
+    
+        help_text = None
+        if network_campaigns:
+            if not (self.account.adsense_pub_id or self.account.admob_pub_id):
+                help_text = 'Provide your ad network publisher IDs on the <a href="%s">account page</a>'%reverse('account_index')
 
-    graph_adgroups = adgroups[0:4]
-    if len(adgroups) > 4:
-      graph_adgroups[3] = AdGroup(name='Others')
-      graph_adgroups[3].all_stats = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[c.all_stats for c in adgroups[3:]])]      
+        graph_adgroups = adgroups[0:4]
+        if len(adgroups) > 4:
+            graph_adgroups[3] = AdGroup(name='Others')
+            graph_adgroups[3].all_stats = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[c.all_stats for c in adgroups[3:]])]      
 
-      # gtee = [ {name: 'high', campaigns: what usually goes in gtee } ]
-
-    return render_to_response(self.request, 
-      'advertiser/adgroups.html', 
-      {'adgroups':adgroups,
-       'graph_adgroups': graph_adgroups,
-       'start_date': days[0],
-       'date_range': self.date_range,
-       'apps' : apps,
-       'totals': reduce(lambda x, y: x+y.stats, adgroups, SiteStats()),
-       'today': reduce(lambda x, y: x+y, [c.all_stats[-1] for c in graph_adgroups], SiteStats()),
-       'yesterday': reduce(lambda x, y: x+y, [c.all_stats[-2] for c in graph_adgroups], SiteStats()),
-       'gtee': gtee_levels, 
-       'promo': promo_campaigns,
-       'network': network_campaigns,
-       'backfill_promo': backfill_promo_campaigns,
-       'account': self.account,
-       'helptext':help_text })
+        return render_to_response(self.request, 
+                                 'advertiser/adgroups.html', 
+                                  {'adgroups':adgroups,
+                                   'graph_adgroups': graph_adgroups,
+                                   'start_date': days[0],
+                                   'date_range': self.date_range,
+                                   'apps' : apps,
+                                   'totals': reduce(lambda x, y: x+y.stats, adgroups, StatsModel()),
+                                   'today': reduce(lambda x, y: x+y, [c.all_stats[-1] for c in graph_adgroups], StatsModel()),
+                                   'yesterday': reduce(lambda x, y: x+y, [c.all_stats[-2] for c in graph_adgroups], StatsModel()),
+                                   'gtee': gtee_levels, 
+                                   'promo': promo_campaigns,
+                                   'network': network_campaigns,
+                                   'backfill_promo': backfill_promo_campaigns,
+                                   'account': self.account,
+                                   'helptext':help_text })
 
 @whitelist_login_required     
 def adgroups(request,*args,**kwargs):

@@ -517,12 +517,18 @@ class AdHandler(webapp.RequestHandler):
 
         # create an ad clickthrough URL
         appid = c.conv_appid or ''
-        
         ad_click_url = "http://%s/m/aclk?id=%s&cid=%s&c=%s&req=%s&udid=%s&appid=%s" % (DOMAIN,id, c.key(), c.key(),request_id, udid, appid)
-        self.response.headers.add_header("X-Clickthrough", str(ad_click_url))
-      
         # ad an impression tracker URL
         track_url = "http://%s/m/imp?id=%s&cid=%s&udid=%s&appid=%s" % (DOMAIN, id, c.key(), udid, appid)
+        cost_tracker = "&rev=%s" 
+        if c.adgroup.bid_strategy == 'cpm':
+            cost_tracker = cost_tracker % float(c.adgroup.bid)/1000
+            track_url += cost_tracker
+        elif c.adgroup.bid_strategy == 'cpc':
+            cost_tracker = cost_tracker % c.adgroup.bid
+            ad_click_url += cost_tracker
+
+        self.response.headers.add_header("X-Clickthrough", str(ad_click_url))
         self.response.headers.add_header("X-Imptracker", str(track_url))
         
       
@@ -955,8 +961,6 @@ class AdClickHandler(webapp.RequestHandler):
             self.redirect(url)
         else:
             self.response.out.write("ClickEvent:OK:")
-
-  
     
 # TODO: Process this on the logs processor 
 class AppOpenHandler(webapp.RequestHandler):

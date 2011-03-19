@@ -52,6 +52,7 @@ def update_stats(stats_dict,publisher,advertiser,date_hour,country,attribute,req
     if attribute:
       # stats_dict[key].attribute += incr
       setattr(stats_dict[key],attribute,getattr(stats_dict[key],attribute)+incr) 
+      
       if revenue:
           stats_dict[key].revenue += revenue
     if req:      

@@ -56,8 +56,7 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
         request_id = None
         instance_id = None
         country_code = helpers.get_country_code(user_agent=user_agent)
-        
-    
+        revenue = None
     
     # if trying to record the request of a adunit and creative
     # i.e. request of a network creative
@@ -110,7 +109,6 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
     # put the log data into appropriate place
     log_key = LOG_KEY_FORMAT%dict(account_name=account_name,time=time_bucket,log_index=log_index)
     memcache.set(log_key,logging_data,time=MEMCACHE_ALIVE_TIME)
-    logging.info("just put %s=%s"%(log_key,logging_data))
     
     # send to appropriately named task_queue
     task_name = TASK_NAME%dict(account_name=account_name,time=time_bucket)

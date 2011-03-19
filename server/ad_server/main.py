@@ -520,9 +520,9 @@ class AdHandler(webapp.RequestHandler):
         ad_click_url = "http://%s/m/aclk?id=%s&cid=%s&c=%s&req=%s&udid=%s&appid=%s" % (DOMAIN,id, c.key(), c.key(),request_id, udid, appid)
         # ad an impression tracker URL
         track_url = "http://%s/m/imp?id=%s&cid=%s&udid=%s&appid=%s" % (DOMAIN, id, c.key(), udid, appid)
-        cost_tracker = "&rev=%s" 
+        cost_tracker = "&rev=%.07f" 
         if c.adgroup.bid_strategy == 'cpm':
-            cost_tracker = cost_tracker % float(c.adgroup.bid)/1000
+            cost_tracker = cost_tracker % (float(c.adgroup.bid)/1000)
             track_url += cost_tracker
         elif c.adgroup.bid_strategy == 'cpc':
             cost_tracker = cost_tracker % c.adgroup.bid

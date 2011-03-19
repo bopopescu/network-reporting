@@ -51,6 +51,7 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
         request_id = request.get('reqcnt',None)
         instance_id = request.get('inst',None)
         country_code = helpers.get_country_code(user_agent=request.headers['User-Agent'])            
+        revenue = request.get('rev',None)
     else:
         request_id = None
         instance_id = None
@@ -96,6 +97,7 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
                         adunit=adunit_id,
                         creative=creative_id,
                         country=country_code,
+                        revenue=revenue,
                         now=now,
                         udid=udid,
                         req=request_id,

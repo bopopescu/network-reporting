@@ -112,24 +112,23 @@ class AppIndexHandler(RequestHandler):
     if len(apps) == 0:
       return HttpResponseRedirect(reverse('publisher_app_create'))
 
-    for a in apps:
-      if a.icon:
-        a.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(a.icon)
+    for app in apps:
+      if app.icon:
+        app.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(app.icon)
 
-      a.stats = StatsModel()
       # attaching adunits onto the app object
-      a.adunits = AdUnitQueryManager().get_adunits(app=a)
+      app.adunits = AdUnitQueryManager().get_adunits(app=app)
 
       # organize impressions by days
-      for adunit in a.adunits:
+      for adunit in app.adunits:
         adunit.all_stats = StatsModelQueryManager(self.account).get_stats_for_days(publisher=adunit,days=days)
         adunit.stats = reduce(lambda x, y: x+y, adunit.all_stats, StatsModel())
 
-      a.adunits = sorted(a.adunits, key=lambda adunit: adunit.stats.request_count, reverse=True)
+      app.adunits = sorted(app.adunits, key=lambda adunit: adunit.stats.request_count, reverse=True)
 
       # We have to read the datastore at the app level since we need to get the de-duped user_count
-      a.all_stats = StatsModelQueryManager(self.account).get_stats_for_days(advertiser=a,days=days)
-      a.stats = reduce(lambda x, y: x+y, a.all_stats, StatsModel())
+      app.all_stats = StatsModelQueryManager(self.account).get_stats_for_days(publisher=app,days=days)
+      app.stats = reduce(lambda x, y: x+y, app.all_stats, StatsModel())
 
     apps = sorted(apps, key=lambda app: app.stats.request_count, reverse=True)
 

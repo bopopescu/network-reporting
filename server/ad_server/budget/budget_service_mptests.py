@@ -97,7 +97,7 @@ def mptest_cache_failure():
     eq_(budget_service.get_timeslice_budget(6),50)
     
     #delete the count from memcache
-    current_key = budget_service.make_timeslice_campaign_key(6,budget_service.test_timeslice)
+    current_key = budget_service.make_campaign_ts_budget_key(6,budget_service.test_timeslice)
     memcache.delete(current_key, namespace="budget")
 
     #the next process request puts it back

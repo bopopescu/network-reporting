@@ -3,6 +3,8 @@ import datetime
 from advertiser.models import ( Campaign,
                                 AdGroup,
                                 )
+import logging
+                        
 """
 A service that determines if a campaign can be shown based upon the defined 
 budget for that campaign. If the budget_type is "evenly", a minute by minute
@@ -18,85 +20,147 @@ test_timeslice = 0
 test_daily_budget = 0
 
 
-def has_budget(adgroup):
-    """ Returns True if the bid is less than the budget in the current slice """
-    campaign_id = adgroup.campaign.key
-    bid = adgroup.bid
-    campaign_daily_budget = adgroup.campaign.budget
+def has_budget(campaign, cost):
+    """ Returns True if the cost is less than the budget in the current slice """
+    campaign_daily_budget = campaign.budget
     
-    key = make_timeslice_campaign_key(campaign_id,get_current_timeslice())
+    key = _make_campaign_ts_budget_key(campaign)
     
     # Add the budget every time, only is actually added the first
-    ts_budget = get_current_timeslice_initial_budget(campaign_id, campaign_daily_budget)
-    memcache.add(key, to_memcache_int(ts_budget),namespace="budget")
+    ts_init_budget = campaign.timeslice_budget
+    if ts_init_budget is None:
+        ts_init_budget = _calculate_timeslice_initial_budget(campaign)
+        
+    memcache.add(key, _to_memcache_int(ts_init_budget),namespace="budget")
     
-    return check_budget(key, bid)
-    
-def apply_expense(adgroup):
-    """ Applies an expense to our memcache """
-    campaign_id = adgroup.campaign.key
-    bid = adgroup.bid
-    key = make_timeslice_campaign_key(campaign_id,get_current_timeslice())
-    
-    memcache.decr(key, to_memcache_int(bid), namespace="budget")
-    
-
-def recalculate_timeslice_budgets():
-    """ Recalculates the initial_timeslice_budget and remaining_budget
-    for each campaign. Also backs up memcache in datastore."""
-    campaigns = Campaign.all().fetch()
-
-def _apply_if_able(adgroup):
-    """ For testing purposes """
-    success = has_budget(adgroup)
-    if success:
-        apply_expense(adgroup)
-    return success
-
-
-def make_timeslice_campaign_key(campaign_id,timeslice):
-    """Returns a key based upon the campaign_id and the current time"""
-    return 'timeslice:%s:%s'%(campaign_id,timeslice)
-  
-def to_memcache_int(value):
-    """multiplies by 10^5 and converts to an int"""
-    return int(value*100000)
-    
-def from_memcache_int(value):
-    value = float(value)
-    return value/100000
-
-def get_previous_timeslice():
-    return get_current_timeslice() - 1;
-
-def get_current_timeslice():
-    """Returns the current timeslice, has test mode"""
-    if not TEST_MODE:
-        origin = datetime.datetime.combine(datetime.date.today(),
-                                           datetime.time.min)
-        now = datetime.datetime.now()
-        seconds_elapsed = (now-origin).seconds
-        # return seconds_elapsed/seconds_per_day*timeslices
-        return int(seconds_elapsed*TIMESLICES/SECONDS_PER_DAY)
-    else:
-        return test_timeslice
-
-def get_current_timeslice_initial_budget(campaign_id, campaign_daily_budget):
-    rollover_key = make_timeslice_campaign_key(campaign_id,get_previous_timeslice())
-    rollover_val = memcache.get(rollover_key, namespace="budget") or 0.0
-    rollover_budget = from_memcache_int(rollover_val)
-    
-    initial_budget = campaign_daily_budget * (1 + FUDGE_FACTOR) / TIMESLICES
-    
-    budget = rollover_budget + initial_budget
-    return budget
-    
-def check_budget(key, bid):
-    if from_memcache_int(memcache.get(key, namespace="budget")) >= bid:
+    if _get_memcache(campaign) >= cost:
         return True
     return False
     
-def get_timeslice_budget(campaign_id):
-    key = make_timeslice_campaign_key(campaign_id,get_current_timeslice())
-    return from_memcache_int(memcache.get(key, namespace="budget"))
+  
+def get_budget(campaign):
+    key = _make_campaign_ts_budget_key(campaign)
+    # logging.warning( "key: %s" % key )
+    value = memcache.get(key, namespace="budget")
+    if value is None:
+        return None
+    else:
+        return _from_memcache_int(value)
+    
+def apply_expense(campaign, cost):
+    """ Applies an expense to our memcache """
+    key = _make_campaign_ts_budget_key(campaign)
+    memcache.decr(key, _to_memcache_int(cost), namespace="budget")
+    # TODO: Check for rollunder in devappserver
+    
+
+def advance_timeslice(campaign):
+    """ Adds a new timeslice's worth of budget and pulls the budget
+     expenditures into the database. Executed once per timeslice."""
+    # If cache miss, assume that no budget has been spent
+    remaining_budget = get_budget(campaign)
+    if remaining_budget is None:
+        total_spent = 0
+    else:
+        total_spent = campaign.timeslice_budget - remaining_budget
+    
+    # Back up in database.
+    campaign.remaining_budget -= campaign.timeslice_budget
+    campaign.put()
+    
+    # Update in memory
+    key = _make_campaign_ts_budget_key(campaign)
+    memcache.incr(key, _to_memcache_int(campaign.timeslice_budget), namespace="budget")
+    # TODO: Also do budget logging
+    
         
+def advance_all():
+    campaigns = Campaign.all().fetch(100)
+    # We use campaigns as an iterator
+    for camp in campaigns:
+        if camp.budget is not None:
+            advance_timeslice(camp)   
+   
+def reset_all():
+    campaigns = Campaign.all()#.filter("budget >=", 0)
+    # We use campaigns as an iterator
+    for camp in campaigns:
+        if camp.budget is not None:
+            daily_reset(camp)
+
+def daily_reset(campaign):
+    """ Resets the remaining_budget and timeslice_budget values in the database.
+    also resets values in memcache. TODO: Called when initialized and at midnight """
+    # Flush from cache
+    _delete_memcache(campaign)
+
+    # Reset in db
+    campaign.remaining_budget = campaign.budget
+    campaign.timeslice_budget = campaign.budget / TIMESLICES * (1 + FUDGE_FACTOR) 
+    campaign.put()
+    
+    # Give us a first timeslice's worth in memory
+    advance_all()
+    # TODO: what happens to unspent daily budget?
+
+def _apply_if_able(campaign, cost):
+    """ For testing purposes """
+    success = has_budget(campaign, cost)
+    if success:
+        apply_expense(campaign, cost)
+    return success
+
+
+def _make_campaign_ts_budget_key(campaign):
+    """Returns a unique budget key based upon campaign.key """
+    return 'budget:%s'%(campaign.key())
+  
+def _to_memcache_int(value):
+    """multiplies by 10^5 and converts to an int"""
+    return int(value*100000)
+    
+def _from_memcache_int(value):
+    value = float(value)
+    return value/100000
+
+def _get_current_timeslice():
+    """Returns the current timeslice. Could be used to trigger advance_timeslice"""
+    #TODO: use it
+    origin = datetime.datetime.combine(datetime.date.today(),
+                                       datetime.time.min)
+    now = datetime.datetime.now()
+    seconds_elapsed = (now-origin).seconds
+    # return seconds_elapsed/seconds_per_day*timeslices
+    return int(seconds_elapsed*TIMESLICES/SECONDS_PER_DAY)
+
+
+def _calculate_timeslice_initial_budget(campaign):
+    """ Returns the initial budget each remaining timeslice should have. """
+    # We use the current budget as a rollover
+    rollover_key = _make_campaign_ts_budget_key(campaign)
+    rollover_val = memcache.get(rollover_key, namespace="budget")
+    
+    if rollover_val is not None:
+        rollover_budget = _from_memcache_int(rollover_val)
+    else:
+        #if cache miss, assume 0 expenses, if no budget in db, use 0
+        rollover_budget = campaign.timeslice_budget or 0
+    
+    initial_budget = campaign.budget * (1 + FUDGE_FACTOR) / TIMESLICES
+    budget = rollover_budget + initial_budget
+    return budget
+
+
+def _get_memcache(campaign):
+    """ Does a raw get from memcache """
+    key = _make_campaign_ts_budget_key(campaign)
+    return memcache.get(key, namespace="budget")
+   
+def _set_memcache(campaign, val):
+    key = _make_campaign_ts_budget_key(campaign)
+    memcache.set(key, _to_memcache_int(val), namespace="budget")
+
+
+def _delete_memcache(campaign):
+    key = _make_campaign_ts_budget_key(campaign)
+    memcache.delete(key, namespace="budget")

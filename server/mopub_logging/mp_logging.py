@@ -91,6 +91,10 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
                         req=request_id,
                         inst=instance_id)
     
+    # bail early if the memcache increment failed
+    if log_index is None: 
+        return
+    
     # put the log data into appropriate place
     log_key = LOG_KEY_FORMAT%dict(account_name=account_name,time=time_bucket,log_index=log_index)
     memcache.set(log_key,logging_data,time=MEMCACHE_ALIVE_TIME)

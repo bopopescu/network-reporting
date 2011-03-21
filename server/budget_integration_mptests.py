@@ -161,8 +161,8 @@ class TestBudgetIntegration(unittest.TestCase):
         mem_budget_c = budget_service.get_budget(self.cheap_c)
         mem_budget_e = budget_service.get_budget(self.expensive_c)
         
-        eq_(mem_budget_c + self.cheap_c.remaining_budget, self.cheap_c.budget)
-        eq_(mem_budget_c + self.expensive_c.remaining_budget,
+        eq_(mem_budget_c + self.cheap_c.remaining_daily_budget, self.cheap_c.budget)
+        eq_(mem_budget_c + self.expensive_c.remaining_daily_budget,
             self.expensive_c.budget)
     
     def mptest_multiple_campaigns_advance_twice(self):
@@ -179,27 +179,78 @@ class TestBudgetIntegration(unittest.TestCase):
         eq_(budget_service.get_budget(self.cheap_c), 298)
         eq_(budget_service.get_budget(self.expensive_c), 200)
 
-    def mptest_remaining_budget(self):
+    def mptest_remaining_daily_budget(self):
         eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
         # We have moved 100 to the current timeslice budget
-        eq_(self.cheap_c.remaining_budget, 900) 
+        eq_(self.cheap_c.remaining_daily_budget, 900) 
+        eq_(budget_service.get_budget(self.cheap_c),99)
         
         budget_service.advance_all()
         self.fetch_campaigns()
         
         # We have moved 200 to the current timeslice budget
-        eq_(self.cheap_c.remaining_budget, 800) 
+        eq_(self.cheap_c.remaining_daily_budget, 800) 
+        eq_(budget_service.get_budget(self.cheap_c),199)
         
         budget_service.advance_all()
         budget_service.advance_all()
         self.fetch_campaigns()
+        eq_(budget_service.get_budget(self.cheap_c),399)
         
         # We have moved 400 to the current timeslice budget
-        eq_(self.cheap_c.remaining_budget, 600) 
+        eq_(self.cheap_c.remaining_daily_budget, 600) 
+        
+        budget_service.advance_all()
+        self.fetch_campaigns()
+        eq_(budget_service.get_budget(self.cheap_c),499)
+
+    def mptest_cache_failure_then_spend(self):
+        eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
+        eq_(budget_service.get_budget(self.cheap_c), 99)
+        budget_service._delete_memcache(self.cheap_c)
+        
+        # Memcache miss -> restart timeslice
+        eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
+        eq_(budget_service.get_budget(self.cheap_c), 99)
+  
+    def mptest_cache_failure_then_spend_multiple_timeslices(self):
+        eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
         
         budget_service.advance_all()
         self.fetch_campaigns()
         
+        eq_(budget_service.get_budget(self.cheap_c), 199)
         
+        budget_service._delete_memcache(self.cheap_c)
+        # Memcache miss -> restart timeslice at last snapshot (199)
+        eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
+        eq_(budget_service.get_budget(self.cheap_c), 198)
+
+    def mptest_cache_failure_then_advance(self):
+        eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
+        eq_(budget_service.get_budget(self.cheap_c), 99)
+        budget_service._delete_memcache(self.cheap_c)
+
+        # Memcache miss -> restart timeslice at last snapshot (100)
+        budget_service.advance_all()
+        self.fetch_campaigns()
+        eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
+        eq_(budget_service.get_budget(self.cheap_c), 199)
+
+    def mptest_cache_failure_then_advance_multiple_timeslices(self):
+        eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
+        eq_(budget_service.get_budget(self.cheap_c), 99)
         
-        
+        budget_service.advance_all()
+        self.fetch_campaigns()
+
+        eq_(budget_service.get_budget(self.cheap_c), 199)
+
+        budget_service._delete_memcache(self.cheap_c)
+        # Memcache miss -> restart timeslice at last snapshot (199)
+        budget_service.advance_all()
+        self.fetch_campaigns()
+        eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
+        eq_(budget_service.get_budget(self.cheap_c), 298)
+
+

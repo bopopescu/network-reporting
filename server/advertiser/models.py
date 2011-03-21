@@ -14,7 +14,9 @@ class Campaign(db.Model):
   # budget per day
   budget = db.FloatProperty() 
   
-  remaining_budget = db.FloatProperty()
+  remaining_daily_budget = db.FloatProperty()
+  
+  previous_budget_snapshot = db.FloatProperty()
   
   # budget per timeslice, determined dynamically
   timeslice_budget = db.FloatProperty()

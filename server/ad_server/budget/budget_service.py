@@ -26,11 +26,11 @@ def has_budget(campaign, cost):
     
     key = _make_campaign_ts_budget_key(campaign)
     
-    # Add the budget every time, only is actually added the first
-    ts_init_budget = campaign.timeslice_budget
+    # If there is a cache miss, we fall back to the previous snapshot
+    ts_init_budget = campaign.previous_budget_snapshot
     if ts_init_budget is None:
         ts_init_budget = _calculate_timeslice_initial_budget(campaign)
-        
+    # Add the budget every time, only is actually added the first
     memcache.add(key, _to_memcache_int(ts_init_budget),namespace="budget")
     
     if _get_memcache(campaign) >= cost:
@@ -58,14 +58,15 @@ def advance_timeslice(campaign):
     """ Adds a new timeslice's worth of budget and pulls the budget
      expenditures into the database. Executed once per timeslice."""
     # If cache miss, assume that no budget has been spent
-    remaining_budget = get_budget(campaign)
-    if remaining_budget is None:
-        total_spent = 0
-    else:
-        total_spent = campaign.timeslice_budget - remaining_budget
+    mem_budget = get_budget(campaign)
+    if mem_budget is None:
+        # Use the snapshot from the beginning of this timeslice
+        mem_budget = campaign.previous_budget_snapshot 
+
     
     # Back up in database.
-    campaign.remaining_budget -= campaign.timeslice_budget
+    campaign.previous_budget_snapshot = mem_budget + campaign.timeslice_budget
+    campaign.remaining_daily_budget -= campaign.timeslice_budget
     campaign.put()
     
     # Update in memory
@@ -89,18 +90,19 @@ def reset_all():
             daily_reset(camp)
 
 def daily_reset(campaign):
-    """ Resets the remaining_budget and timeslice_budget values in the database.
+    """ Resets the remaining_daily_budget and timeslice_budget values in the database.
     also resets values in memcache. TODO: Called when initialized and at midnight """
     # Flush from cache
     _delete_memcache(campaign)
 
     # Reset in db
-    campaign.remaining_budget = campaign.budget
+    campaign.remaining_daily_budget = campaign.budget
+    campaign.previous_budget_snapshot = 0.0
     campaign.timeslice_budget = campaign.budget / TIMESLICES * (1 + FUDGE_FACTOR) 
     campaign.put()
     
     # Give us a first timeslice's worth in memory
-    advance_all()
+    advance_timeslice(campaign)
     # TODO: what happens to unspent daily budget?
 
 def _apply_if_able(campaign, cost):

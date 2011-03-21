@@ -104,11 +104,11 @@ class AdGroupIndexHandler(RequestHandler):
         else:
             adgroups = []
     
-        for c in adgroups:
+        for adgroup in adgroups:
             # get stats for date range
-            c.all_stats = StatsModelQueryManager(self.account).get_stats_for_days(advertiser=c, days=days)
+            adgroup.all_stats = StatsModelQueryManager(self.account).get_stats_for_days(advertiser=adgroup, days=days)
             # get total for the range
-            c.stats = reduce(lambda x, y: x+y, c.all_stats, StatsModel())
+            adgroup.stats = reduce(lambda x, y: x+y, adgroup.all_stats, StatsModel())
 
         promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], adgroups)
         promo_campaigns = sorted(promo_campaigns, lambda x,y: cmp(y.bid, x.bid))

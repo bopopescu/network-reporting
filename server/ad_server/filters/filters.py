@@ -31,7 +31,7 @@ def lat_lon_filter(ll=None):
     log_mesg = "Removed due to being outside target lat/long radii: %s"
     def real_filter(a):
         #If ll_p is none or adgroup has no city targets, dont' exclude
-        if ll_p is None or len(a.cities) == 0: 
+        if not ll_p or not a.cities or len(a.cities) == 0: 
             return False
         #City format is ll:ste:city:ccode, split on ':', take the first entry, 'lat,lon', split that on ',' to get ('lat','lon') 
         # for every city.  Apply map to this split list to get (float('lat'), float('lon'))

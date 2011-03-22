@@ -244,7 +244,6 @@ class CreateCampaignAJAXHander(RequestHandler):
     adunit_str_keys = [unicode(k) for k in adunit_keys]
     for adunit in all_adunits:
       adunit.checked = unicode(adunit.key()) in adunit_str_keys
-      adunit.app = App.get(adunit.app_key.key())
     
     if adgroup_form:
       for n in networks:
@@ -430,7 +429,7 @@ class CreateAdGroupHandler(RequestHandler):
     # allow the correct sites to be checked
     for adunit in adunits:
       adunit.checked = adunit.key() in adgroup.site_keys
-      adunit.app = App.get(adunit.app_key.key())
+
     # TODO: Clean up this hacked shit 
     networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["jumptap","Jumptap",False],["greystripe","GreyStripe",False],["iAd","iAd",False],["inmobi","InMobi",False],["millennial","Millennial Media",False],["mobfox","MobFox",False]]
     for n in networks:

@@ -504,7 +504,6 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
       
       CachedQueryManager().cache_delete(adunit)
       
-      
       json_dict.update(success=True)
       logging.info('VIEW name: %s %s description: %s'%(adunit.key(),adunit.name,adunit.description))
       return self.json_response(json_dict)

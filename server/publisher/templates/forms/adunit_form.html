@@ -1,5 +1,5 @@
 {% load filters %}
-<input type="hidden" name="{{form.app_key.name}}" value="{{form.app_key.value}}"/>
+<input type="hidden" name="{% if form.prefix %}{{form.prefix}}-{% endif %}{{form.app_key.name}}" value="{{form.app_key.value}}"/>
 <dl class="formFields"> 
 
 	{{ form.name|attrs:'{"id":"appForm-adUnitName"}' }}

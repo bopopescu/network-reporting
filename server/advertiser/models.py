@@ -215,6 +215,9 @@ class Creative(polymodel.PolyModel):
   # destination URLs
   url = db.StringProperty()
   display_url = db.StringProperty()
+  
+  # conversion goals
+  conv_appid = db.StringProperty()
 
   # format predicates - the set of formats that this creative can match
   # e.g. format=320x50

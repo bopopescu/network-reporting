@@ -140,6 +140,7 @@ class AdGroupIndexHandler(RequestHandler):
 
     apps = AppQueryManager().get_apps(account=self.account)
     campaigns = CampaignQueryManager().get_campaigns(account=self.account)
+    
     if campaigns:
       adgroups = AdGroupQueryManager().get_adgroups(campaigns=campaigns)
     else:
@@ -422,7 +423,7 @@ class CreateAdGroupHandler(RequestHandler):
       c = adgroup.campaign
       if not adgroup:
         raise Http404("AdGroup does not exist")  
-    adgroup.budget = adgroup.budget or c.budget # take budget from campaign for the time being
+    adgroup.budget = c.budget # take budget from campaign for the time being
     f = AdGroupForm(instance=adgroup)
     adunits = AdUnitQueryManager().get_adunits(account=self.account)
     

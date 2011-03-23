@@ -108,8 +108,8 @@ def time_ago_in_words(value):
 def campaign_status(c):
     d = datetime.now().date()
     if (c.start_date is None or d > c.start_date) and (c.end_date is None or d < c.end_date):
-        if c.budget: 
-            if c.stats.revenue >= c.budget:
+        if c.campaign.budget: 
+            if c.stats.revenue >= c.campaign.budget:
                 return "Delivered"
             elif c.stats.impression_count > 0:
                 return "In-flight, %d%%" % (c.stats.revenue / float(c.budget))

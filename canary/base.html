@@ -1,0 +1,147 @@
+<!doctype html>  
+
+<!--[if lt IE 7 ]> <html lang="en" class="no-js ie6"> <![endif]-->
+<!--[if IE 7 ]>    <html lang="en" class="no-js ie7"> <![endif]-->
+<!--[if IE 8 ]>    <html lang="en" class="no-js ie8"> <![endif]-->
+<!--[if IE 9 ]>    <html lang="en" class="no-js ie9"> <![endif]-->
+<!--[if (gt IE 9)|!(IE)]><!--> <html lang="en" class="no-js"> <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+
+  <title>MoPub - Ad Serving for Mobile Applications</title>
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!-- TypeKit -->
+  <script src="http://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js"></script> 
+  <script> 
+    WebFont.load({ 
+      typekit: { id: "qhz7iwb" } 
+    }); 
+  </script> 
+
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/js/mylibs/jquery-ui-1.8.7.custom/css/mopub/jquery-ui-1.8.7.custom.css" />  
+  <link rel="stylesheet" href="/css/style.css?v=3">
+ 
+  <!-- modernizr -->
+  <script src="/js/mylibs/modernizr-1.6.min.js"></script>
+   
+  <!-- Google load for jquery and jqueryui -->
+  <script src="https://www.google.com/jsapi?key=ABQIAAAAbRw2cYJlVhkm8Sy9e32IvhSp_nRSlbw3drc-oo9CvDm6lSB7YhTn-1GvX4YW6_H-c4ZV_1LYTj_jrw" type="text/javascript"></script>
+  <script language="Javascript" type="text/javascript">
+      //<![CDATA[
+      google.load("jquery", "1.4.4");
+      google.load("jqueryui", "1.8.7");
+  </script>
+  
+  <!--jQuery and jQuery UI -->
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/js/mylibs/jquery-1.4.4.min.js"%3E%3C/script%3E'));</script>
+  <script src="/js/mylibs/jquery-ui-1.8.7.custom/js/jquery-ui-1.8.7.custom.min.js"></script>
+  <script src="/js/mylibs/jquery.form.js"></script>
+  <script src="/js/mylibs/jquery.placeholder.js"></script> 
+  <script src="/js/mylibs/jquery.qtip-1.0.0-rc3.min.js"></script> 
+  <script src="/js/mylibs/jquery.text-overflow.min.js"></script>  
+  <script src="/js/mylibs/jquery.validate.min.js"></script>  
+
+  <!-- Highcharts -->
+  <script src="/js/mylibs/highcharts/highcharts.js"></script>
+  
+  <!-- MoPub -->
+  <script src="/js/mopub.js?v=3"></script>
+  {% block extraScripts %}<script src="/js/mopub-dashboard.js?v=2"></script>{% endblock extraScripts %}
+  
+  <!--[if lt IE 7 ]>
+    <script src="/js/mylibs/dd_belatedpng.js"></script>
+    <script> DD_belatedPNG.fix('img, .png_bg'); </script>
+  <![endif]-->
+  
+  <script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-20014961-2']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+  </script>
+</head>
+
+<body id="mopub-dashboard">
+  <div id="container">
+    <a class="visuallyhidden" href="#main">Skip navigation</a>
+    <div id="jsnotice">
+      JavaScript is currently disabled. This site requires JavaScript to function correctly.
+      Please <a href="http://enable-javascript.com/"> enable JavaScript in your browser</a>!
+    </div>
+    
+    <header>
+      <div class="pageWidth">
+        <div id="logo"><a class="ir" href="/">MoPub</a></div>
+        
+        <nav id="nav1">
+          <ul>
+            {% block navLinks %}
+            <li><a href="http://app.mopub.com/inventory">Dashboard</a></li>
+            <li><a href="http://app.mopub.com/campaigns">Campaigns</a></li>
+            {% endblock navLinks %}
+          </ul>
+        </nav>
+        
+        <nav id="nav2">
+          <ul>
+          </ul>
+        </nav>
+      </div>
+    </header>
+    
+    <div id="main">
+      <div id="titlebar">
+        <div class="pageWidth">
+          {% block pageTitle %}<h1>Canary!</h1>{% endblock pageTitle %}
+        </div>
+      </div>
+      <div id="content">
+        <div class="pageWidth">
+            {% block messageCenter %}
+            {% endblock messageCenter %}
+            {% block content %}
+            {% endblock content %}
+        </div>
+      </div>
+    </div>
+    <div class="clear"></div>
+    
+    <footer>
+      <div id="footer-inner">
+        <div class="pageWidth">
+          <div id="footer-links"> 
+            <ul id="menu-footer">
+              <li class="menu-item menu-item-type-post_type menu-item-58">&copy; 2011 MoPub Inc.</li> 
+              <li id="menu-item-58" class="menu-item menu-item-type-post_type menu-item-58"><a href="http://www.mopub.com/privacy/">Privacy</a></li> 
+              <li id="menu-item-57" class="menu-item menu-item-type-post_type menu-item-57"><a href="http://www.mopub.com/mopub-ads-privacy-policy/">Privacy &#8211; Ad Serving</a></li> 
+              <li id="menu-item-59" class="menu-item menu-item-type-post_type menu-item-59"><a href="http://www.mopub.com/terms/">Terms of Service</a></li> 
+              <li id="menu-item-279" class="menu-item menu-item-type-custom menu-item-279"><a href="https://groups.google.com/forum/#!forum/mopub-users">mopub-users Google Group</a></li> 
+            </ul>           
+            <ul id="menu-social">
+              <li class="menu-item menu-item-type-post_type menu-item-58">&nbsp;</li>
+              <li id="menu-item-60" class="menu-item menu-item-type-custom menu-item-60"><a href="http://www.twitter.com/mopub">@mopub</a></li> 
+              <li id="menu-item-268" class="menu-item menu-item-type-post_type menu-item-268"><a href="http://www.mopub.com/about/">About</a></li> 
+              <li id="menu-item-61" class="menu-item menu-item-type-post_type menu-item-61"><a href="http://www.mopub.com/contact/">Contact Us</a></li> 
+              <li id="menu-item-270" class="menu-item menu-item-type-post_type menu-item-270"><a href="http://www.mopub.com/jobs/">Jobs</a></li> 
+            </ul>         
+          </div>
+          <div id="footer-account">
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div> <!-- end of #container -->
+</body>
+</html>

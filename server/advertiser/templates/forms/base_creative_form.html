@@ -3,7 +3,7 @@
                               <select name="{{form.format.name}}">
                                 <option value="320x50" {% ifequal form.format.value "320x50"%}selected="selected"{% endifequal %}>320 x 50 (Banner)</option>
                                 <option value="300x250" {% ifequal form.format.value "300x250"%}selected="selected"{% endifequal %}>300 x 250 (MRect)</option>
-								<option value="full" {% ifequal form.format.value "full"%}selected="selected"{% endifequal %}>Phone Full Screen </option>
+                                <option value="full" {% ifequal form.format.value "full"%}selected="selected"{% endifequal %}>Phone Full Screen </option>
                                 <option value="728x90" {% ifequal form.format.value "728x90"%}selected="selected"{% endifequal %}> 728 x 90 (Tablet Leaderboard)</option>
                                 <option value="160x600" {% ifequal form.format.value "160x600"%}selected="selected"{% endifequal %}>160 x 600 (Tablet Skyscraper)</option>
                                 <option value="full_tablet" {% ifequal form.format.value "full_tablet"%}selected="selected"{% endifequal %}>Tablet Full Screen</option>
@@ -24,20 +24,22 @@
                               <div class="form-error-text">{{error}}</div> 
                               {% endfor %}
                             </dd>
-                            <dt><label for="url">Click URL:</label></dt>
-                            <dd>
-                              <input type='text' name="{{form.url.name}}" class="input-text {% if form.url.errors %}form-error{% endif %}" value="{{form.url.value}}"/>
-                              <a href="#" id="creativeAddForm-url-helpLink">What's this?</a>
-                              <div id="creativeAddForm-url-helpContent" class="hidden"> 
-                                <h3>Click URL</h3>
-                                <p>This is the link that will open when a user clicks on this ad.  Some examples are:
-                                <h4>Web Page</h4>
-                                <p>http://www.example.com/</p>
-                                <h4>App Store</h4>
-                                <p>http://phobos.apple.com/WebObjects/MZStore.woa/....</p>
-                              </div>
-                              {% for error in form.url.errors %}
-                              <div class="form-error-text">{{error}}</div> 
-                              {% endfor %}
-                            </dd>
+                            <div class="adTypeDependent text_icon image">
+                              <dt><label for="url">Click URL:</label></dt>
+                              <dd>
+                                <input type='text' name="{{form.url.name}}" class="input-text {% if form.url.errors %}form-error{% endif %}" value="{{form.url.value}}"/>
+                                <a href="#" id="creativeAddForm-url-helpLink">What's this?</a>
+                                <div id="creativeAddForm-url-helpContent" class="hidden"> 
+                                  <h3>Click URL</h3>
+                                  <p>This is the link that will open when a user clicks on this ad.  Some examples are:
+                                  <h4>Web Page</h4>
+                                  <p>http://www.example.com/</p>
+                                  <h4>App Store</h4>
+                                  <p>http://phobos.apple.com/WebObjects/MZStore.woa/....</p>
+                                </div>
+                                {% for error in form.url.errors %}
+                                <div class="form-error-text">{{error}}</div> 
+                                {% endfor %}
+                              </dd>
+                            </div>
                             

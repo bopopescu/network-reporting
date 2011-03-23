@@ -108,6 +108,7 @@ class IndexHandler(RequestHandler):
     promo_campaigns = filter(lambda x: x.campaign_type in ['promo'], campaigns)
     garauntee_campaigns = filter(lambda x: x.campaign_type in ['gtee'], campaigns)
     network_campaigns = filter(lambda x: x.campaign_type in ['network'], campaigns)
+    backfill_promo_campaigns = filter(lambda x: x.campaign_type in ['backfill_promo'], campaigns)
 
     help_text = None
     if network_campaigns:
@@ -121,6 +122,7 @@ class IndexHandler(RequestHandler):
        'date_range': self.date_range,
        'gtee': garauntee_campaigns,
        'promo': promo_campaigns,
+       'backfill_promo': backfill_promo_campaigns,
        'network': network_campaigns,
        'helptext':help_text })
       
@@ -162,20 +164,22 @@ class AdGroupIndexHandler(RequestHandler):
         gtee_levels.append(dict(name = name, campaigns = level_camps))
     logging.warning(guarantee_campaigns)
     
-    for blah in gtee_levels:
-        if blah['name'] == 'normal' and len(gtee_levels[0]['campaigns']) == 0 and len(gtee_levels[2]['campaigns']) == 0: 
-
-            blah['foo'] = True 
-        elif len(blah['campaigns']) > 0:
-            blah['foo'] = True 
+    for level in gtee_levels:
+        if level['name'] == 'normal' and len(gtee_levels[0]['campaigns']) == 0 and len(gtee_levels[2]['campaigns']) == 0: 
+            level['foo'] = True 
+        elif len(level['campaigns']) > 0:
+            level['foo'] = True 
         else:
-            blah['foo'] = False 
+            level['foo'] = False 
 
     logging.warning(gtee_levels)
 
 
     network_campaigns = filter(lambda x: x.campaign.campaign_type in ['network'], adgroups)
     network_campaigns = sorted(network_campaigns, lambda x,y: cmp(y.bid, x.bid))
+    
+    backfill_promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_promo'], adgroups)
+    backfill_promo_campaigns = sorted(backfill_promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
     
     adgroups = sorted(adgroups, key=lambda adgroup: adgroup.stats.impression_count, reverse=True)
     
@@ -204,6 +208,7 @@ class AdGroupIndexHandler(RequestHandler):
        'gtee': gtee_levels, 
        'promo': promo_campaigns,
        'network': network_campaigns,
+       'backfill_promo': backfill_promo_campaigns,
        'account': self.account,
        'helptext':help_text })
 
@@ -239,7 +244,6 @@ class CreateCampaignAJAXHander(RequestHandler):
     adunit_str_keys = [unicode(k) for k in adunit_keys]
     for adunit in all_adunits:
       adunit.checked = unicode(adunit.key()) in adunit_str_keys
-      adunit.app = App.get(adunit.app_key.key())
     
     if adgroup_form:
       for n in networks:
@@ -425,7 +429,7 @@ class CreateAdGroupHandler(RequestHandler):
     # allow the correct sites to be checked
     for adunit in adunits:
       adunit.checked = adunit.key() in adgroup.site_keys
-      adunit.app = App.get(adunit.app_key.key())
+
     # TODO: Clean up this hacked shit 
     networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["jumptap","Jumptap",False],["greystripe","GreyStripe",False],["iAd","iAd",False],["inmobi","InMobi",False],["millennial","Millennial Media",False],["mobfox","MobFox",False]]
     for n in networks:

@@ -10,6 +10,7 @@ GEO_LIST = ( COUNTRY_GEO, REGION_GEO, CITY_GEO )
 
 from common.utils import forms as mpforms
 from common.utils import fields as mpfields
+from common.utils import widgets as mpwidgets
 from django import forms
 from django.core.urlresolvers import reverse
 from google.appengine.ext import db
@@ -21,17 +22,19 @@ import logging
 class CampaignForm(mpforms.MPModelForm):
   TEMPLATE = 'advertiser/forms/campaign_form.html'
   gtee_level = forms.Field(widget = forms.Select)
+  promo_level = mpfields.MPChoiceField(choices=[('normal','Normal'),('backfill','Backfill')],widget=mpwidgets.MPSelectWidget)
+  
  
   #priority is now based off of campaign_type, not actually priority
   #gtee has 3 levels, this makes it so the database understands the three different levels of gtee
   #but the form sees one level of gtee and three levels of priority
   def __init__(self, *args, **kwargs):
       instance = kwargs.get('instance', None)
-      initial = kwargs.get('initial', None)
+      initial = kwargs.get('initial', {})
       if instance and instance.campaign_type:
           vals = instance.campaign_type.split('_')
           if 'gtee' in vals: 
-              type = 'gtee'
+              type_ = 'gtee'
               if 'high' in vals:
                   level = 'high'
               elif 'low' in vals:
@@ -40,9 +43,19 @@ class CampaignForm(mpforms.MPModelForm):
                   level = 'normal'
               if not initial:
                   initial = {}
-              initial.update(campaign_type=type)
+              initial.update(campaign_type=type_)
               initial.update(gtee_level=level)
               kwargs.update(initial=initial)
+          if 'promo' in vals:
+              type_ = 'promo'
+              if 'backfill' in vals:
+                  level = 'backfill'
+              else:
+                  level = 'normal' 
+              initial.update(campaign_type=type_)
+              initial.update(promo_level=level)
+              kwargs.update(initial=initial)
+              
       super(CampaignForm, self).__init__(*args, **kwargs)
       
   #same as above, but so the one level of gtee and 3 levels of prioirty
@@ -50,25 +63,35 @@ class CampaignForm(mpforms.MPModelForm):
   def save(self, commit=True):
       obj = super(CampaignForm, self).save(commit=False)
       if obj:
-          type = self.cleaned_data['campaign_type']
-          if type == 'gtee':
+          type_ = self.cleaned_data['campaign_type']
+          if type_ == 'gtee':
               lev = self.cleaned_data['gtee_level']
               if lev == 'high': 
-                  type = 'gtee_high'
+                  type_ = 'gtee_high'
               elif lev == 'low':
-                  type = 'gtee_low'
+                  type_ = 'gtee_low'
               elif lev == 'normal':
-                  type = 'gtee'
+                  type_ = 'gtee'
               else:
                   logging.warning("Invalid gtee_level for gtee")
-              obj.campaign_type = type     
+              obj.campaign_type = type_
+          elif type_ == 'promo':
+              lev = self.cleaned_data['promo_level']
+              if lev == 'normal':
+                  pass
+              elif lev == 'backfill':
+                  type_ = 'backfill_promo'
+              else:
+                  logging.warning("Invalid promo level")
+              obj.campaign_type = type_                  
+                   
       if commit:
           obj.put()
       return obj
 
   class Meta:
     model = Campaign
-    fields = ('name', 'description', 'budget', 'campaign_type', 'start_date', 'end_date', 'gtee_level')
+    fields = ('name', 'description', 'budget', 'campaign_type', 'start_date', 'end_date', 'gtee_level','promo_level')
 
 AdUnit.all()
 
@@ -80,10 +103,11 @@ class AdGroupForm(mpforms.MPModelForm):
   geo = forms.Field(widget=forms.MultipleHiddenInput, required=False)
   device_predicates = mpfields.MPTextareaField(required=False)
   custom_html = mpfields.MPTextareaField(required=False)
+  cities = forms.Field(widget=forms.MultipleHiddenInput, required=False)
   
   class Meta:
     model = AdGroup
-    fields = ('name', 'network_type', 'priority_level', 'keywords',
+    fields = ('name', 'network_type', 'priority_level', 'keywords', 
               'bid', 'bid_strategy', 
               'percent_users', 'site_keys',
               'hourly_frequency_cap','daily_frequency_cap','allocation_percentage', 
@@ -111,11 +135,15 @@ class AdGroupForm(mpforms.MPModelForm):
         initial = {}
       if instance.network_type == 'custom' and instance.net_creative:
           initial.update(custom_html = instance.net_creative.html_data)
+      cities = []
+      for city in instance.cities:
+          cities.append(str(city))
       geo_predicates = [] 
       for geo_pred in  instance.geo_predicates: 
           preds = geo_pred.split(',')
           geo_predicates.append( ','.join( [ str( pred.split('=')[1] ) for pred in preds ] ) )
       initial.update(geo=geo_predicates)
+      initial.update(cities=cities)
       #initial.update(geo=instance.geo_predicates)
       kwargs.update(initial=initial)
     super(AdGroupForm,self).__init__(*args,**kwargs)    

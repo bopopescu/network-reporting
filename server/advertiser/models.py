@@ -9,7 +9,7 @@ from account.models import Account
 class Campaign(db.Model):
   name = db.StringProperty(required=True)
   description = db.TextProperty()
-  campaign_type = db.StringProperty(choices=['gtee', 'gtee_high', 'gtee_low', 'promo', 'network'], default="network")
+  campaign_type = db.StringProperty(choices=['gtee', 'gtee_high', 'gtee_low', 'promo', 'network','backfill_promo'], default="network")
 
   # budget per day
   budget = db.FloatProperty() 
@@ -145,6 +145,7 @@ class AdGroup(db.Model):
   
   active_user = db.StringListProperty(default=['any'])
   active_app = db.StringListProperty(default=['any'])
+  cities = db.StringListProperty(default=[])
   
   country = db.StringProperty()
   region = db.StringProperty()
@@ -178,9 +179,9 @@ class AdGroup(db.Model):
     elif self.network_type == 'iAd': c = iAdCreative(name="iAd dummy",ad_type="iAd", format="320x50", format_predicates=["format=320x50"])
     elif self.network_type == 'admob': c = AdMobCreative(name="admob dummy",ad_type="admob", format="320x50", format_predicates=["format=320x50"])
     elif self.network_type == 'brightroll': c = BrightRollCreative(name="brightroll dummy",ad_type="html_full", format="full",format_predicates=["format=*"])
-    elif self.network_type == 'jumptap': c = JumptapCreative(name="jumptap dummy",ad_type="html_full", format="320x50",format_predicates=["format=320x50"])
+    elif self.network_type == 'jumptap': c = JumptapCreative(name="jumptap dummy",ad_type="html", format="320x50",format_predicates=["format=320x50"])
     elif self.network_type == 'millennial': c = MillennialCreative(name="millennial dummy",ad_type="html",format="320x50", format_predicates=["format=320x50"]) # TODO: make sure formats are right
-    elif self.network_type == 'inmobi': c = InMobiCreative(name="inmobi dummy",ad_type="html_full",format="320x50", format_predicates=["format=320x50"]) # TODO: make sure formats are right
+    elif self.network_type == 'inmobi': c = InMobiCreative(name="inmobi dummy",ad_type="html",format="320x50", format_predicates=["format=320x50"]) # TODO: make sure formats are right
     elif self.network_type == 'greystripe' : c = GreyStripeCreative(name="greystripe dummy",ad_type="greystripe", format="320x50", format_predicates=["format=*"]) # TODO: only formats 320x320, 320x48, 300x250
     elif self.network_type == 'appnexus': c = AppNexusCreative(name="appnexus dummy",ad_type="html",format="320x50",format_predicates=["format=300x250"])
     elif self.network_type == 'mobfox' : c = MobFoxCreative(name="mobfox dummy",ad_type="html",format="320x50",format_predicates=["format=320x50"])

@@ -1,0 +1,8 @@
+cron:
+- description: ping ad server every minute
+  url: /ping
+  schedule: every 1 minutes synchronized
+  
+- description: recalculate trailing latencies 
+  url: /r
+  schedule: every 5 minutes synchronized

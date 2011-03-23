@@ -24,9 +24,14 @@ $.fn.tokenInput = function (url, options) {
         contentType: "json",
         queryParam: "q",
         onResult: null,
-				onAdd: null,
-				onDelete: null
-    }, options);
+        onAdd: null,
+        onDelete: null,
+        doImmediate:true,
+        country:'US',
+        featureClass: null,
+        featureCode:null,
+        maxRows: 10
+   }, options);
 
     settings.classes = $.extend({
         tokenList: "token-input-list",
@@ -46,11 +51,46 @@ $.fn.tokenInput = function (url, options) {
     });
 };
 
+$.TokenData = function(data,type) {
+    var raw = data;
+    var name;
+    var input;
+    var id;
+    var code; 
+    function city_input() {
+        var value = raw.lat + ',' + raw.lng + ':' + raw.adminCode1 + ':' + raw.name + ':' + raw.countryCode;
+        return $('<input type="hidden" class="' + raw.countryCode + '" name="cities" id="' + raw.name.replace(/ /gi, '_') + '" value="' + value + '" />');
+    }
+    function country_input() {
+        return $('<input type="hidden" name="geo" id="' + code + '" value="' + code + '" />');
+    }
+
+    if (type == 'city') {
+        name = raw.name + ", " + raw.adminCode1;
+        input = city_input;
+        id = raw.name;
+    }
+    else if (type == 'country') {
+        code = (raw.data === undefined) ? raw.code : raw.data.code;
+        name = (raw.data === undefined) ? raw.name : raw.data.name;
+        input = country_input;
+        id = code;
+    }
+
+
+    return {
+        name: name,
+        input: input,
+        raw: data,
+        type: type,
+        id: id
+    };
+}
+
 $.TokenList = function (input, settings) {
     //
     // Variables
     //
-
     // Input box position "enum"
     var POSITION = {
         BEFORE: 0,
@@ -90,12 +130,16 @@ $.TokenList = function (input, settings) {
             outline: "none"
         })
         .focus(function () {
-            $(this).addClass('focused');
-            if( !token_list.hasClass('focused') )
-                token_list.addClass('focused');
-            if( $(this).val() ) {
-              setTimeout(function(){do_search(true);}, 5);
+            if (settings.tokenLimit === null || settings.tokenLimit != token_count) {
+                show_dropdown_hint();
             }
+            $(this).addClass('focused');
+            if( !token_list.hasClass('focused')) {
+                token_list.addClass('focused');
+            }
+            if( $(this).val() ) {
+              setTimeout(function(){do_search(settings.doImmediate);}, 5);
+           }
         })
         .blur(function () {
             $(this).removeClass('focused');
@@ -160,8 +204,8 @@ $.TokenList = function (input, settings) {
                         hide_dropdown();
                     } else {
                         // set a timeout just long enough to let this function finish.
-                        setTimeout(function(){do_search(true);}, 5);
-                    }
+                        setTimeout(function(){do_search(settings.doImmediate);}, 5);
+                   }
                     break;
 
                 case KEY.TAB:
@@ -180,7 +224,7 @@ $.TokenList = function (input, settings) {
                 default:
                     if(is_printable_character(event.keyCode)) {
                       // set a timeout just long enough to let this function finish.
-                      setTimeout(function(){do_search(true);}, 5);
+                      setTimeout(function(){do_search(settings.doImmediate);}, 5);
                     }
                     break;
             }
@@ -251,22 +295,70 @@ $.TokenList = function (input, settings) {
         .appendTo(token_list)
         .append(input_box);
 
-    init_list();
-
+    //
     //
     // Functions
     //
 
+ 
+  //If more than two countries exist, select Everywhere, disable other options, and get rid of all of their inputs
+  function verify_token_inputs() {
+    var countries = $('.token-input-country').length;
+    //more than one country
+    if (countries > 1) {
+        //delete all other tokens
+        $('.token-input-city').each( function(i) {
+           delete_token($(this));
+        });
+        $('.token-input-state').each( function(i) {
+           delete_token($(this));
+        });
+        //disable everything else
+        $('input[name="location-targeting"]').each(
+            function(i) {
+                if ($(this).val() != 'all') { 
+                    $(this).attr('disabled', true);
+                }
+                //Select "Everywhere"
+                else {
+                    $(this).click();
+                }
+        });
+    } 
+    // turn all buttons back on
+    else {
+        $('input[name="location-targeting"]').each(
+            function(i) {
+                $(this).attr('disabled', false);
+        });
+    }
+    
+    // Only show countryNumDpdnt things that match the current number
+    // of countries in the input
+    var children = $('#geo_pred_ta').children().length;
+    $('.countryNumDependent').hide();
+    $('.countryNumDependent.' + children).show();
+
+  }
+
+
 
     // Pre-populate list if items exist
     function init_list () {
-        li_data = settings.prePopulate;
+        var li_data = settings.prePopulate.data;
         if(li_data && li_data.length) {
             for(var i in li_data) {
-                var this_token = $("<li><p>"+li_data[i].name+"</p> </li>")
-                    .addClass(settings.classes.token)
-                    .insertBefore(input_token);
-
+                var token_data = new $.TokenData(li_data[i], settings.prePopulate.type);
+                var this_token = $("<li><p>"+ token_data.name+"</p> </li>")
+                    .addClass(settings.classes.token);
+                if (token_data.type == 'city') {
+                    this_token.addClass('token-input-city')
+                    .addClass(token_data.raw.countryCode);
+                }
+                else if (token_data.type == 'country') {
+                    this_token.addClass('token-input-country');
+                }
+                    this_token.insertBefore(input_token);
                 $("<span>&times;</span>")
                     .addClass(settings.classes.tokenDelete)
                     .appendTo(this_token)
@@ -274,8 +366,7 @@ $.TokenList = function (input, settings) {
                         delete_token($(this).parent());
                         return false;
                     });
-
-                $.data(this_token.get(0), "tokeninput", {"id": li_data[i].code, "name": li_data[i].name});
+                $.data(this_token.get(0), "tokeninput", token_data); 
 
                 // Clear input box and make sure it keeps focus
                 input_box
@@ -286,13 +377,14 @@ $.TokenList = function (input, settings) {
                 hide_dropdown();
 
                 // Save this token id
-                var id_string = li_data[i].code;
-                // This is unique to this method (it should be li_data[i].id) but the data I pass in isn't formatted like that
-                var input = $( '<input type="hidden" name="geo" id="' + id_string + '" value="' + id_string + '" />' );
-                input.appendTo( hidden_input ); 
+                token_data.input().appendTo( hidden_input ); 
             }
         }
+        input_box.blur();
     }
+
+    init_list();
+    verify_token_inputs();
 
     function is_printable_character(keycode) {
         if((keycode >= 48 && keycode <= 90) ||      // 0-1a-z
@@ -312,9 +404,22 @@ $.TokenList = function (input, settings) {
     }
 
     // Inner function to a token to the list
-    function insert_token(id, value) {
-      var this_token = $("<li><p>"+ value +"</p> </li>")
-      .addClass(settings.classes.token)
+    function insert_token(datas) {
+      var value = datas.name;
+      var token_type;
+      var this_token = $("<li><p>"+ value +"</p> </li>");
+          
+      if (datas.type == 'city') {
+          this_token.addClass('token-input-city')
+          .addClass(datas.raw.countryCode);
+      }/*
+      else if (datas.type == 'state') {
+          token_type = 'token-input-state';
+      }*/
+      else if (datas.type == 'country') {
+          this_token.addClass('token-input-country');
+      }
+      this_token.addClass(settings.classes.token)
       .insertBefore(input_token);
 
       // The 'delete token' button
@@ -325,17 +430,17 @@ $.TokenList = function (input, settings) {
               delete_token($(this).parent());
               return false;
           });
-
-      $.data(this_token.get(0), "tokeninput", {"id": id, "name": value});
-
+      $.data(this_token.get(0), "tokeninput", datas); 
       return this_token;
     }
 
     // Add a token to the token list based on user input
-    function add_token (item) {
+    function add_token(item) {
+        //Make sure token stuff is okay before adding a new one
+        verify_token_inputs();
         var li_data = $.data(item.get(0), "tokeninput");
-        var this_token = insert_token(li_data.id, li_data.name);
-				var callback = settings.onAdd;
+        var this_token = insert_token(li_data);
+        var callback = settings.onAdd;
 
         // Clear input box and make sure it keeps focus
         input_box
@@ -345,21 +450,19 @@ $.TokenList = function (input, settings) {
         // Don't show the help dropdown, they've got the idea
         hide_dropdown();
 
-        // Save this token id
-        var id_string = li_data.id; 
         //XXX IMPORTANT XXX
         //order for id_string should be:
         // [country], region], city]
         // so US is US, California is US,CA and San Francisco is US,CA,SF (or some something like that)
         // This is because the django forms are going to take this id, split it on ',' and then assign
         // the first value as country_name, 2nd as region_name, and 3rd as city_name 
-        var input = $( '<input type="hidden" name="geo" id="' + id_string + '" value="' + id_string + '" />' );
-        input.appendTo( hidden_input ); 
+        li_data.input().appendTo(hidden_input);
+
         token_count++;
         //Strictly increasing number so we can name the hidden inputs
         token_id++;
         
-        if(settings.tokenLimit != null && token_count >= settings.tokenLimit) {
+        if(settings.tokenLimit !== null && token_count >= settings.tokenLimit) {
             input_box.hide();
             hide_dropdown();
         }
@@ -368,6 +471,8 @@ $.TokenList = function (input, settings) {
 				if($.isFunction(callback)) {
 				  callback(li_data.id);
 				}
+        //make sure token stuff is okay after adding a new one
+        verify_token_inputs();
     }
 
     // Select a token in the token list
@@ -415,30 +520,48 @@ $.TokenList = function (input, settings) {
     function delete_token (token) {
         // Remove the id from the saved list
         var token_data = $.data(token.get(0), "tokeninput");
-				var callback = settings.onDelete;
+        var callback = settings.onDelete;
         // Delete the token
         token.remove();
         selected_token = null;
-//TODO delete the hidden field wooo
+        //TODO delete the hidden field wooo
         // Show the input box and give it focus again
         input_box.focus();
-        console.log( token_data );
         // Delete this token's id from hidden input
-        $( "#" + token_data.id ).remove();
+        if (token_data === undefined) {
+            return;
+        }
+        var r_id = token_data.id.replace(/ /gi, '_');
+        var r_nme = token_data.name.replace(/ /gi, '_');
+        $('#'+ r_id).remove();
+        $('#'+ r_nme).remove();
+        
+        if (token_data.type == 'country') {
+            $('li.'+token_data.id+'.token-input-city').each( function(i) {
+                    delete_token($(this));
+                });
+        }
         
         token_count--;
+       
+        if ($('.token-input-country').length === 0) {
+            $('#advertiser-LocationSpec-all').click();
+        }
         
-        if (settings.tokenLimit != null) {
+        if (settings.tokenLimit !== null) {
             input_box
                 .show()
                 .val("")
                 .focus();
         }
+        
 				
-				// Execute the onDelete callback if defined
-				if($.isFunction(callback)) {
-				  callback(token_data.id);
-				}
+        // Execute the onDelete callback if defined
+        if($.isFunction(callback)) {
+          callback(token_data.id);
+        }
+        //verify inputs after token has been removed
+        verify_token_inputs();
     }
 
     // Hide and clear the results dropdown
@@ -461,12 +584,15 @@ $.TokenList = function (input, settings) {
 
     // Highlight the query part of the search term
 	function highlight_term(value, term) {
-		return value.replace(new RegExp("(?![^&;]+;)(?!<[^<>]*)(" + term + ")(?![^<>]*>)(?![^&;]+;)", "gi"), "<b>$1</b>");
+        var ret_val = value.replace(new RegExp("(?![^&;]+;)(?!<[^<>]*)(" + term + ")(?![^<>]*>)(?![^&;]+;)", "gi"), "<b>$1</b>");
+		return ret_val; 
 	}
 
     var slide_state = false;
     // Populate the results dropdown with some results
     function populate_dropdown (query, results) {
+        var type = results.type;
+        results = results.data;
         if(results && results.length) {
             var drop_clone = dropdown.clone();
             drop_clone.empty();
@@ -478,26 +604,26 @@ $.TokenList = function (input, settings) {
                 .mousedown(function (event) {
                     add_token(get_element_from_event(event, "li"));
                     return false;
-                })
+                });
             if ( !slide_state ) {
                 dropdown_ul.hide();
             }
+            var name;
             for(var i in results) {
                 if (results.hasOwnProperty(i)) {
-                    var this_li = $("<li>"+highlight_term(results[i].result, query)+"</li>")
+                    var tokenData = new $.TokenData(results[i],type);
+                    var this_li = $("<li>"+highlight_term(tokenData.name, query)+"</li>")
                                       .appendTo(dropdown_ul);
-
                     if(i%2) {
                         this_li.addClass(settings.classes.dropdownItem);
                     } else {
                         this_li.addClass(settings.classes.dropdownItem2);
                     }
-
+                    //JSLint doesn't like this, but needs to be == because '0' == 0 evals to true, but '0' === 0 does NOT
                     if(i == 0) {
                         select_dropdown_item(this_li);
                     }
-
-                    $.data(this_li.get(0), "tokeninput", {"id": results[i].data.code, "name": results[i].result});
+                    $.data(this_li.get(0), "tokeninput", tokenData); 
                 }
             }
             dropdown.replaceWith(drop_clone);
@@ -551,7 +677,10 @@ $.TokenList = function (input, settings) {
                     clearTimeout(timeout);
                     timeout = setTimeout(function(){run_search(query);}, settings.searchDelay);
                 }
-            } else {
+            } else if (query.length > 0) {
+                show_dropdown_hint();
+            }
+            else {
                 hide_dropdown();
             }
         }
@@ -559,10 +688,12 @@ $.TokenList = function (input, settings) {
 
     // Do the actual search
     function run_search(query) {
-
+        //Don't run with the query given, run with what's actually in the search box
+        query = input_box.val().toLowerCase();
         var cached_results = cache.get(query);
         if(cached_results) {
-            populate_dropdown(query, cached_results);
+            var pop = {type:'country', data:cached_results};
+            populate_dropdown(query, pop);
         } else {
 			var queryStringDelimiter = settings.url.indexOf("?") < 0 ? "?" : "&";
 			var callback = function(results) {
@@ -570,15 +701,31 @@ $.TokenList = function (input, settings) {
 			      results = settings.onResult.call(this, results);
 			  }
               cache.add(query, settings.jsonContainer ? results[settings.jsonContainer] : results);
-              populate_dropdown(query, settings.jsonContainer ? results[settings.jsonContainer] : results);
+              var pop = {type: settings.type, data:results.geonames}; 
+              populate_dropdown(query, pop); 
             };
             
             if(settings.method == "POST") {
 			    $.post(settings.url + queryStringDelimiter + settings.queryParam + "=" + encodeURIComponent(query), {}, callback, settings.contentType);
 		    } else {
-		        $.get(settings.url + queryStringDelimiter + settings.queryParam + "=" + encodeURIComponent(query), {}, callback, settings.contentType);
+                var q_url = settings.url + queryStringDelimiter + settings.queryParam + "=" + encodeURIComponent(query);
+                if (settings.featureClass !== null) {
+                    q_url += '&featureClass=' + encodeURIComponent(settings.featureClass);
+                }
+                if (settings.featureCode !== null) {
+                    q_url += "&featureCode=" + encodeURIComponent(settings.featureCode);
+                }
+                q_url += '&country=';
+                if ($('input[name="geo"]').val() !== undefined) {
+                   q_url += encodeURIComponent($('input[name="geo"]').val());
+                }
+                else {
+                    q_url += encodeURIComponent(settings.country);
+                }
+                q_url += '&maxRows=' + settings.maxRows;
+		        $.get(q_url, {}, callback, settings.contentType);
 		    }
-        }
+       }
     }
 };
 
@@ -590,11 +737,14 @@ $.TokenList.Cache = function (options) {
     }, options);
 
     function matchSubset( s, sub ) {
-        if ( !options.matchCase )
+        if ( !options.matchCase ) {
             s = s.toLowerCase();
+        }
         var i = s.indexOf( sub );
-        if ( i == -1 ) return false;
-        return i == 0 || options.matchContains;
+        if ( i == -1 ) {
+            return false;
+        }
+        return i === 0 || options.matchContains;
     }
 
 
@@ -637,11 +787,12 @@ $.TokenList.Cache = function (options) {
                                   break;
                               }
                           }
-                          if (add)
-                             csub.push( x );
-                      }
-                   });
-                }
+                          if (add) {
+                            csub.push(x);
+                            }
+                        }
+                    });
+               } 
            }
            return csub.sort(res_sort(q));
         }
@@ -666,11 +817,11 @@ $.TokenList.Cache = function (options) {
     }
 
     function populate() {
-        if (!options.data ) return false;
+        if (!options.data ) {return false;}
         var stMatchSets = {},
             nullData = 0;
 
-        if (!options.url) options.cacheLength = 1;
+        if (!options.url) {options.cacheLength = 1;}
 
         stMatchSets[""] = [];
 
@@ -681,11 +832,11 @@ $.TokenList.Cache = function (options) {
             var values = options.formatMatch( rawValue, i+1, options.data.length );
             for (var j = 0; j < values.length; j++) {
                 var value = values[j];
-                if (value == false)
-                    continue;
+                if (value === false)
+                    {continue;}
                 var firstChar = value.charAt( 0 ).toLowerCase();
                 if (!stMatchSets[ firstChar ] )
-                     stMatchSets[ firstChar ] = [];
+                    {stMatchSets[ firstChar ] = [];}
                 var row = {
                      value: value,
                      data: rawValue,
@@ -695,8 +846,8 @@ $.TokenList.Cache = function (options) {
                  if ( nullData++ < options.max ) {
                      stMatchSets[""].push( row );
                  }
-            };
-        };
+            }
+        }
         $.each( stMatchSets, function( i, value ) {
             options.cacheLength++;
             add( i, value );
@@ -716,13 +867,13 @@ $.TokenList.Cache = function (options) {
             size++;
         }
         data[query] = results;
-    };
+    }
 
     return {
         flush: flush,
         get: get,
         populate: populate,
-        add: add,
+        add: add
     };
     
 

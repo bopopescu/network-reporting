@@ -67,13 +67,10 @@ class CampaignStatsCounter(object):
     key_prefix = "cnt_%s_"%self.campaign.key()
     cnt_dict = memcache.get_multi(keys,key_prefix,namespace=None)
     logging.info("using: %s shards"%len(cnt_dict))
-    return float(sum([long(e) for e in cnt_dict.values()]))/100      
+    return float(sum([long(e) for e in cnt_dict.values()]))/100000
     
-  def increment(self,delta=1,dollars=None):
-    if dollars:
-      delta = int(dollars*100)
-    else:
-      delta *= 100  
+  def increment(self,dollars):
+    delta = int(dollars*100000)
     
     key = self._get_random_key()
     logging.info("random_key: %s"%key)

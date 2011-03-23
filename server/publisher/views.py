@@ -297,7 +297,7 @@ def add_demo_campaign(site):
                    ad_group=ag,
                    format=site.format,
                    name="Demo HTML Creative",
-                   html_data="<style type=\"text/css\">body {font-size: 12px;font-family:helvetica,arial,sans-serif;margin:0;padding:0;text-align:center} .creative_headline {font-size: 18px;} .creative_promo {color: green;text-decoration: none;}</style><div class=\"creative_headline\">Welcome to mopub!</div><div class=\"creative_promo\"><a href=\"http://www.mopub.com\">Click here to test ad</a></div><div>You can now set up a new campaign to serve other ads.</div>")
+                   html_data="<style type=\"text/css\">body {font-size: 12px;font-family:helvetica,arial,sans-serif;margin:0;padding:0;text-align:center;background:white} .creative_headline {font-size: 18px;} .creative_promo {color: green;text-decoration: none;}</style><div class=\"creative_headline\">Welcome to mopub!</div><div class=\"creative_promo\"><a href=\"http://www.mopub.com\">Click here to test ad</a></div><div>You can now set up a new campaign to serve other ads.</div>")
   CreativeQueryManager().put_creatives(h)
   
 class ShowAppHandler(RequestHandler):
@@ -503,7 +503,6 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
       AdUnitQueryManager().put_adunits(adunit)
       
       CachedQueryManager().cache_delete(adunit)
-      
       
       json_dict.update(success=True)
       logging.info('VIEW name: %s %s description: %s'%(adunit.key(),adunit.name,adunit.description))

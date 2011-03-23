@@ -60,7 +60,7 @@ class Site(db.Model):
   
   name = db.StringProperty(required=True,default='Banner Ad')
   url = db.StringProperty()
-  description = db.TextProperty(required=True,default='General Purpose Banner Ad')
+  description = db.TextProperty(default='General Purpose Banner Ad')
   width = db.FloatProperty()
   height = db.FloatProperty()
 
@@ -78,6 +78,7 @@ class Site(db.Model):
   # keywords = db.StringListProperty()                          
   
   refresh_interval = db.IntegerProperty(default=0)
+  animation_type = db.StringProperty(default='0') # NOTE: this is a string in case we don't want enumeration later
   
   # color scheme
   color_border = db.StringProperty(required=True, default='336699')

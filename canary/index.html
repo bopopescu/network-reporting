@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% block pageTitle %}<h1>MoPub Canary!</h1>{% endblock %}
+
+{% block messageCenter %}
+<section class="separated" id="messageCenter">
+  <table id="messageCenter-messages">
+    <tbody>
+        {% if error %}    
+          <tr class="messageCenter-message messageCenter-error" id="messageCenter-message-0">
+            <td class="messageCenter-message-date">{{now|format_date}}</td>
+            <td class="messageCenter-message-text">
+              MoPub ad serving is not functioning normally. Our support teams have been alerted and are working on the problem.
+              <div class="messageCenter-message-moreInfo">
+                <h3>More details</h3>
+                <section class="separated">
+                    <table class="simpleTable">
+                        <tr><th>Ad server status</th>
+                            <td>Failure rate: {{failure_rate|percentage}}, consecutive failures: {{last_success}}</td></tr>
+                        <tr><th>Latency</th>
+                            <td>{{avg}}ms avg, {{median}}ms median</td></tr>
+                    </table>
+                </section>
+              </div>
+            </td>
+            <td class="messageCenter-message-links">
+              <a class="messageCenter-message-moreInfoLink" href="#">More info</a>
+            </td>
+          </tr>
+        {% endif %}
+
+        {% if warning %}
+        <tr class="messageCenter-message messageCenter-warning" id="messageCenter-message-0">
+          <td class="messageCenter-message-date">{{now|format_date}}</td>
+          <td class="messageCenter-message-text">
+            MoPub ad serving is experiencing periodic issues.
+            <div class="messageCenter-message-moreInfo">
+              <h3>More details</h3>
+              <section class="separated">
+                  <table class="simpleTable">
+                      <tr><th>Ad server status</th>
+                          <td>Failure rate: {{failure_rate|percentage}}, consecutive failures: {{last_success}}</td></tr>
+                      <tr><th>Latency</th>
+                          <td>{{avg}}ms avg, {{median}}ms median</td></tr>
+                  </table>
+              </section>
+            </div>
+          </td>
+          <td class="messageCenter-message-links">
+            <a class="messageCenter-message-moreInfoLink" href="#">More info</a>
+          </td>
+        </tr>
+        {% endif %}
+        
+        {% if ok %}
+          <tr class="messageCenter-message messageCenter-info" id="messageCenter-message-2">
+            <td class="messageCenter-message-date">{{now|format_date}}</td>
+            <td class="messageCenter-message-text">
+              MoPub is serving normally. Latency is averaging {{avg}}ms (median: {{median}}ms).
+            </td>
+            <td class="messageCenter-message-links">
+            </td>
+          </tr>
+        {% endif %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}
+
+{% block content %}
+<section class="offset nomargin" id="dashboard-stats"> 
+  <div class="stats"> 
+    <div class="chart chart-loading stats-chart" id="dashboard-stats-chart"> 
+      <div class="chart-loading-text">Loading ...</div> 
+      <div class="chart-error-text">Could not load chart</div> 
+      <script type="text/javascript"> 
+        // chart data
+        mopub.dashboardStatsChartData = {
+          pointStart: Date.UTC({{start.year}},{{start.month|add:"-1"}},{{start.day}},{{start.hour}},{{start.minute}}),
+          pointInterval: 60000,
+          'series': [
+            { 'OK': [{% for r in last reversed %}{% if r.success %}{{r.request_ms}}{% else %}null{% endif %}{% if not forloop.last %},{% endif %} {% endfor %}] },
+            { 'Failure': [{% for r in last reversed %}{% if not r.success %}{{r.request_ms}}{% else %}null{% endif %}{% if not forloop.last %},{% endif %} {% endfor %}] }
+          ]
+        };
+      </script> 
+    </div> 
+  </div> 
+  <div class="clear"></div> 
+</section> 
+
+<section id="dashboard-apps">
+  <div class="buttonBank buttonBank-right">
+    <a class="button" id="dashboard-status-detailsButton" href="#">Show/hide details</a>
+  </div>
+  <h2>Latency</h2>
+  <p>This graph shows MoPub service uptime and latency.  If you are having trouble, email us at <a href="mailto:support@mopub.com">support@mopub.com</a>.</p>
+  <div id="dashboard-status-details" class="hidden">
+    <table class="dataTable" width="100%">
+        <tr>
+            <th>Ad URL tested</th>
+            <th>Status</th>
+            <th>Requested at</th>
+            <th>Response time</th>
+            <th>Payload size</th>
+        </tr>
+        {% for r in last %}
+            <tr class="{% if not r.success %}messageCenter-message messageCenter-error{% endif %}">
+                <td class="messageCenter-message-text" title="{{r.url}}"><tt style="font-size:smaller;">{{r.url|truncate:50}}</tt></td>
+                <td>{% if r.status_code %}{{r.status_code}} {% endif %}{% if r.status_message %}{{r.status_message}}{% endif %}</td>
+                <td>{{r.t}} GMT</td>
+                <td>{% if r.request_ms %}{{r.request_ms}}ms{% endif %}</td>
+                <td>{% if r.response_size %}{{r.response_size}} bytes{% endif %}</td>
+            </tr>
+        {% endfor %}
+        
+    </table>
+  </div>
+</section>
+{% endblock %}

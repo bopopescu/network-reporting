@@ -2,3 +2,4 @@
 		<input type="radio" id="appForm-adUnitDeviceFormat-phone" name="{{name}}" value="phone" {% if not value %}checked="checked"{% endif%}{% ifequal value 'phone' %}checked="checked"{% endifequal %} /><label for="appForm-adUnitDeviceFormat-phone">Phone</label>
 		<input type="radio" id="appForm-adUnitDeviceFormat-tablet" name="{{name}}" value="tablet" {% ifequal value 'tablet' %}checked="checked"{% endifequal %}/><label for="appForm-adUnitDeviceFormat-tablet">Tablet</label>
 </div>
+{{suffix_html}}

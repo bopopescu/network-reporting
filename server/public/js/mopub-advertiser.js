@@ -10,9 +10,10 @@ var mopub = mopub || {};
   $(document).ready(function() {
     
     //get info from page
-  if (typeof creatives=="undefined")
+  if (typeof creatives=="undefined") {
     creatives = false;
-    
+    }
+
   function campaignAdgroupFormOnLoad(){
     $('#campaignAdgroupForm input[name="campaign_type"]').click(function(e) {
       var campaign_type = $(this).val();
@@ -38,6 +39,18 @@ var mopub = mopub || {};
             $('.networkDependent').hide();
             $('.'+network+'.networkDependent').show();
             }).change();
+
+    $('#campaignAdgroupForm input[name="location-targeting"]').click(function(e) {
+            var loc_targ = $(this).val();
+            $('.locationDependent', '#campaignAdgroupForm').hide();
+            $('.' + loc_targ + '.locationDependent', '#campaignAdgroupForm').show();
+            if ($(this).val() == 'all') {
+                $('li.token-input-city span.token-input-delete-token').each(function() {
+                    $(this).click();
+                    });
+            }
+            }).filter(':checked').click();
+
     
     $('#adgroupForm-advanced-toggleButton')
       .button('option', {icons: { primary: 'ui-icon-triangle-1-s' }})
@@ -98,7 +111,7 @@ var mopub = mopub || {};
       if (budget) {
         var budget_fixed = budget.toFixed(2);
         $('#campaignAdgroupForm-budget-display').html("("+budget_fixed +" USD / day)");
-        $('#campaignAdgroupForm input[name="budget"]').val(budget_fixed);
+        $('#campaignAdgroupForm input[name="budget"]').val(budget);
         $('#campaignAdgroupForm-budget-display').show();
       }
     }
@@ -135,6 +148,13 @@ var mopub = mopub || {};
   $('#campaignForm-priority-helpLink').click(function(e) {
       e.preventDefault();
       $('#campaignForm-priority-helpContent').dialog({
+          buttons: { "Close": function() { $(this).dialog('close'); }}
+      });
+  });
+
+  $('#campaignForm-promo-priority-helpLink').click(function(e) {
+      e.preventDefault();
+      $('#campaignForm-promo-priority-helpContent').dialog({
           buttons: { "Close": function() { $(this).dialog('close'); }}
       });
   });

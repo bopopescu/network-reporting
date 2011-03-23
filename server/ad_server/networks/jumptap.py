@@ -37,4 +37,4 @@ class JumptapServerSide(ServerSide):
     if len(response.content) == 0:
       raise Exception("Jumptap ad is empty")
 
-    return 0.0,"<html><body style='margin:0;padding:0;'><div style='text-align:center'>"+response.content+"</div></body></html>"
+    return 0.0,"<div style='text-align:center'>"+response.content+"</div>"

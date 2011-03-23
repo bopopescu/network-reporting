@@ -27,15 +27,17 @@
     			<th>Ad Unit</th>
     			<th>Account</th>
     			<th width="75px">Requests</th>
+    			<th width="75px">Impressions</th>
     			<th width="75px">Clicks</th>
     			<th width="75px">CTR</th>
     		</thead>
     		{% for p in placements %}
     		<tr>
-    			<td><a href="{% url publisher_app_show app_key=p.site.app_key.key %}">{{p.site.app_key.name}}</a></td>
-    			<td><a href="{% url publisher_adunit_show adunit_key=p.site.key %}">{{p.site.name}}</a></td>
+    			<td><a href="{% url publisher_app_show app_key=p.site.app_key.key %}">{{p.site.app_key.name|truncate:50}}</a></td>
+    			<td><a href="{% url publisher_adunit_show adunit_key=p.site.key %}">{{p.site.name|truncate:50}}</a></td>
     			<td><a href="mailto:{{p.site.account.user.email}}">{{p.site.account.user.email}}</a></td>
     			<td class="numeric">{{p.request_count|withsep}}</td>
+    			<td class="numeric">{{p.impression_count|withsep}}</td>
     			<td class="numeric">{{p.click_count|withsep}}</td>
     			<td class="numeric">{{p.ctr|percentage}}</td>
     		</tr>
@@ -50,6 +52,7 @@
         		<tr>
         		<th>Date</th>
         		<th width="75px">Requests</th>
+    			<th width="75px">Impressions</th>
         		<th width="75px">Clicks</th>
         		<th width="75px">CTR</th>
         		</tr>
@@ -58,6 +61,7 @@
         	<tr>
         		<td>{{s.date}}</td>
         		<td class="numeric">{{s.request_count|withsep}}</td>
+    			<td class="numeric">{{s.impression_count|withsep}}</td>
         		<td class="numeric">{{s.click_count|withsep}}</td>
         		<td class="numeric">{{s.ctr|percentage}}</td>
         	</tr>

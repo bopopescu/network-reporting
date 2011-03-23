@@ -1,0 +1,31 @@
+application: mopub-canary
+version: 1
+runtime: python
+api_version: 1
+# default_expiration: "10d"
+
+handlers:
+  
+- url: /images
+  static_dir: public/images    
+
+- url: /favicon.ico
+  static_files: public/images/favicon.ico
+  upload: public/images/favicon.ico
+
+- url: /css
+  static_dir: public/css
+
+- url: /js
+  static_dir: public/js
+  
+- url: /ping
+  script: main.py
+  login: admin
+  
+- url: /r
+  script: main.py
+  login: admin
+
+- url: /.*
+  script: main.py

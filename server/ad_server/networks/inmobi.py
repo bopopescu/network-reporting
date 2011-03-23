@@ -1,8 +1,5 @@
 from ad_server.networks.server_side import ServerSide
-import re
-import urllib
-import urllib2
-import string
+import re, urllib, urllib2, string
 
 from xml.dom import minidom
 
@@ -24,6 +21,22 @@ class InMobiServerSide(ServerSide):
     # TODO: Should return actual software and hardware versions for iPhone/iPod
     return 'InMobi_Specs_iPhoneApp=1.0.2 (iPhone; iPhone OS 3.1.2; HW iPhone1,1)'
 
+  def get_inmobi_ad_size(self):
+    if self.adunit.format == "300x250":
+      self.url_params.update(width=300,height=250)
+      return '10'
+    if self.adunit.format == "728x90":
+      self.url_params.update(width=728,height=90)
+      return '11'
+    if self.adunit.format == "160x600":
+      # InMobi returns 120x600 non-IAB format
+      self.url_params.update(width=120,height=600)
+      return '13'
+
+    # By default, InMobi supports a 320x48 banner
+    self.url_params.update(width=320,height=48)
+    return '9'
+
   @property
   def headers(self):
     return {'X-Mkhoj-SiteID': self.get_account().inmobi_pub_id,
@@ -34,7 +47,9 @@ class InMobiServerSide(ServerSide):
     data = {'mk-siteid': self.get_account().inmobi_pub_id,
             'mk-version': 'pr-SPEC-ATATA-20090521',
             'u-id': self.get_udid(),
-            'mk-carrier': self.get_ip(),  # Test value: 'mk-carrier': '208.54.5.50',
+            'mk-carrier': self.get_ip(),
+            #'mk-carrier': '208.54.5.50',  # Test value
+            'mk-ad-slot': self.get_inmobi_ad_size(),
             'h-user-agent': self.get_inmobi_user_agent() }
 
     return urllib.urlencode(data)
@@ -83,19 +98,17 @@ class InMobiServerSide(ServerSide):
     raise Exception("InMobi ad is empty")
 
 banner_template = string.Template(
-"""<!DOCTYPE HTML>
-<html>
-<body style="margin:0;width:320px;height:48px;padding:0;" onclick="location.href='$ad_url';return false;">
-  <img src="$image_url" width=320 height=48/>
-</body>
-</html>""")
+"""
+  <div style='text-align:center'><a href="$ad_url" target="_blank"><img src="$image_url"/></a></div>
+""")
 
 text_template = string.Template(
-"""<!DOCTYPE HTML>
-<html>
-<body style="margin:0;width:320px;height:48px;padding:0;background-color:#000000;color:#FFFFFF;font-family:helvetica,arial" onclick="location.href='$ad_url';return false;">
-  <div id='highlight' style="position:relative;height:50px;background:-webkit-gradient(linear, left top, left bottom, from(rgba(255,255,255,0.35)),
-    to(rgba(255,255,255,0.06))); -webkit-background-origin: padding-box; -webkit-background-clip: content-box;">
+"""
+  <style type="text/css">
+   body { background-color:#000000; color:#FFFFFF; font-family:helvetica,arial }
+  </style>  
+  <div id='highlight' style="position:relative;height:${height}px;background:-webkit-gradient(linear, left top, left bottom, from(rgba(255,255,255,0.35)),to(rgba(255,255,255,0.06)));
+    -webkit-background-origin: padding-box; -webkit-background-clip: content-box;" onclick="window.open('$ad_url');return false;">
     <div style="padding:15px 0 0 10px">
       $link_text
     </div>
@@ -103,5 +116,4 @@ text_template = string.Template(
     Ads by InMobi
     </div>
   </div>
-</body>
-</html>""")
+""")

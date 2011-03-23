@@ -47,6 +47,7 @@ class TestBudgetIntegration(unittest.TestCase):
         
         #get the campaigns and initialize them
         self.fetch_campaigns()
+
         budget_service.initialize(self.cheap_c)
         budget_service.initialize(self.expensive_c)
         
@@ -304,7 +305,7 @@ class TestBudgetEndToEnd(unittest.TestCase):
         # self.TEST_AD_UNIT_ID = "agltb3B1Yi1pbmNyCgsSBFNpdGUYAgw"
         self.TEST_AD_UNIT_ID = "agltb3B1Yi1pbmNyCgsSBFNpdGUYLQw"
     def tearDown(self):
-        pass
+        budget_service._flush_all()
 
     def init_campaigns(self):
         """Gets the campaigns from the database, updates their remaining budget.

@@ -1,0 +1,16 @@
+<html> 
+	<head>
+		<title></title>
+	</head> 
+	<body style="margin: 0;width:320px;height:480px;" > 
+		<script type="text/javascript">
+			function webviewDidClose(){var img = new Image(); img.src="/hellothereimclosing/"} 
+			function webviewDidAppear(){var img = new Image(); img.src="/hellothereimopening/"} 
+			function close(){window.location="mopub://finishLoad?query=imthequery";} 
+			setTimeout("close()",5000);
+			
+			function showImage(){var img = document.createElement("img"); img.setAttribute('src','/images/yelp.png'); document.body.appendChild(img);}
+			setTimeout("showImage()",3000);
+		</script>
+	</body>
+</html>

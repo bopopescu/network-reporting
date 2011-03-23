@@ -21,12 +21,21 @@ from server.ad_server.main import  ( AdHandler,
                                      AppOpenHandler,
                                      TestHandler,
                                      )
-#########################################
+############# Integration Tests #############
 import unittest
 from nose.tools import eq_
 from nose.tools import with_setup
 from server.ad_server.budget import budget_service
 from google.appengine.api import memcache
+
+################# End to End #################
+from time import mktime
+from datetime import          ( datetime,
+                                timedelta,
+                                )
+from google.appengine.ext.webapp import ( Request,
+                                          Response,
+                                          )
 
 class TestBudgetIntegration(unittest.TestCase):
     
@@ -88,7 +97,7 @@ class TestBudgetIntegration(unittest.TestCase):
         eq_(budget_service._apply_if_able(self.expensive_c, 100), True)
         
         # But it uses up all the timeslice's money and fails the second    
-        eq_(budget_service._get_budget(self.expensive_c), 0)         
+        eq_(budget_service._get_budget(self.expensive_c), 0)
         eq_(budget_service._apply_if_able(self.expensive_c, 100), False)
         eq_(budget_service._get_budget(self.expensive_c), 0)       
                                   
@@ -274,16 +283,60 @@ class TestBudgetIntegration(unittest.TestCase):
         eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
         eq_(budget_service._get_budget(self.cheap_c), 298)
 
+
+def build_ad_qs( udid, keys, ad_id, v = 3, dt = datetime.now() ):
+    dt = process_time( dt )
+    return "v=%s&udid=%s&q=%s&id=%s&testing=%s&dt=%s" % ( v, udid, keys, ad_id, "3uoijg2349ic(test_mode)kdkdkg58gjslaf" , dt )
+
+def process_time( dt ):
+    return mktime( dt.timetuple() ) 
+
+
 class TestBudgetEndToEnd(unittest.TestCase):
 
     def setUp(self):
         # We simplify budget_service for testing purposes
         budget_service.TIMESLICES = 10 # this means each campaign has 100 dollars per slice
         budget_service.FUDGE_FACTOR = 0.0
-
-
+        
+        # self.init_campaigns()
+        self.TEST_UDID = "12345"
+        # self.TEST_AD_UNIT_ID = "agltb3B1Yi1pbmNyCgsSBFNpdGUYAgw"
+        self.TEST_AD_UNIT_ID = "agltb3B1Yi1pbmNyCgsSBFNpdGUYLQw"
     def tearDown(self):
         pass
 
+    def init_campaigns(self):
+        """Gets the campaigns from the database, updates their remaining budget.
+        We should be able to call this at any time without effect"""
+        self.camp_query = Campaign.all().filter('name =', 'expensive') 
+
+        self.expensive_c = self.camp_query.get()
+        self.camp_query = Campaign.all().filter('name =', 'cheap')
+        self.cheap_c = self.camp_query.get()
+        
+    
+    def fake_environ( self, query_string, method = 'get' ):
+        ret = dict(    REQUEST_METHOD = method,
+                        QUERY_STRING   = query_string,
+                        HTTP_USER_AGENT = 'truck',
+                        SERVER_NAME = 'localhost',
+                        SERVER_PORT = 8000,
+                        )
+        ret[ 'wsgi.version' ] = (1, 0)
+        ret[ 'wsgi.url_scheme' ] = 'http'
+        return ret
+    
+    def run_auction(self):
+        resp = Response()
+        req = Request( self.fake_environ( build_ad_qs( self.TEST_UDID, '', self.TEST_AD_UNIT_ID, ) ) )
+        adH = AdHandler()
+        adH.initialize( req, resp )
+        adH.get()
+        return resp.headers.get('X-Creativeid')
+
     def mptest_simple_request(self):
-        eq_(True,True)
+        
+        response = self.run_auction()
+        
+        # eq_(response.campaign,"self.cheap_c")

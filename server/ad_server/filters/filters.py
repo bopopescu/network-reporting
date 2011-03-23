@@ -16,7 +16,7 @@ def budget_filter():
     def real_filter( a ):
         # return not ( a.budget is None or a.campaign.delivery_counter.count < a.budget )
         return not (a.campaign.budget is None or
-                    budget_service.process(a.campaign.key, a.bid, a.campaign.budget))
+                    budget_service.has_budget(a.campaign, a.bid))
 
     return ( real_filter, log_mesg, [] )
 

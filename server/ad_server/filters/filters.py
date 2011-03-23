@@ -21,10 +21,8 @@ from server.ad_server.budget import budget_service
 def budget_filter():
     log_mesg = "Removed due to being over budget: %s"
     def real_filter( a ):
-        # return not ( a.budget is None or a.campaign.delivery_counter.count < a.budget )
         return not (a.campaign.budget is None or
-                    budget_service.has_budget(a.campaign, a.bid))
-
+                        budget_service.has_budget(a.campaign, a.bid))
     return ( real_filter, log_mesg, [] )
 
 def active_filter():

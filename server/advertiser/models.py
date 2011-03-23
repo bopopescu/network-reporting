@@ -62,9 +62,6 @@ class AdGroup(db.Model):
   net_creative = db.ReferenceProperty(collection_name='creative_adgroups')
   name = db.StringProperty()
   
-  # daily budget
-  budget = db.FloatProperty() 
-  
   # start and end dates 
   start_date = db.DateProperty()
   end_date = db.DateProperty()

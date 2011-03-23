@@ -39,6 +39,8 @@ from time import mktime
 
 import logging
 
+from google.appengine.ext.db import Key
+
 AdUnit = Site
 
 AD_UNIT_ID = "agltb3B1Yi1pbmNyCgsSBFNpdGUYAgw"
@@ -139,9 +141,9 @@ def zero_all_freqs():
             set_freq( c.name, 0, type = t )
 
 
-def get_id( dt = datetime.now(), ll=None ):
+def get_creative_id( dt = datetime.now(), ll=None, ad_unit_id=AD_UNIT_ID ):
     resp = Response()
-    req = Request( fake_environ( build_ad_qs( UDID, '', AD_UNIT_ID, dt = dt, ll=ll) ) )
+    req = Request( fake_environ( build_ad_qs( UDID, '', ad_unit_id, dt = dt, ll=ll) ) )
     adH = AdHandler()
     adH.initialize( req, resp )
     adH.get()
@@ -152,7 +154,7 @@ def basic_net_test():
     de_prioritize_all()
     for c in NETWORKS: 
         resume( c ) 
-        id = get_id()
+        id = get_creative_id()
         print "id is: %s" % id
         cret = Creative.get( id ) 
         assert_equal( cret.ad_group.name, c, "Expected %s, got %s" % ( c, cret.ad_group.name ) )
@@ -163,7 +165,7 @@ def basic_promo_test():
     for c in PROMOS: 
         resume( c )
         for i in range( 3 ):
-            camp = Creative.get( get_id() )
+            camp = Creative.get( get_creative_id() )
             t = camp.ad_group.name
             assert_equal( camp.ad_group.name, c, "Expected %s, got %s" % ( c, camp.ad_group.name ) )
         pause( c )
@@ -173,7 +175,7 @@ def basic_backfill_promo_test():
     for c in BACKFILL_PROMOS:
         resume( c )
         for i in range ( 3 ):
-            c_id = get_id()
+            c_id = get_creative_id()
             camp = Creative.get( c_id )
             t = camp.ad_group.name
             assert_equal( camp.ad_group.name, c, "Excepted %s, got %s" % ( c, camp.ad_group.name ) ) 
@@ -193,7 +195,7 @@ def priority_level_test():
     
     # make sure we get only promos    
     for i in range(10):
-        camp = Creative.get(get_id())
+        camp = Creative.get(get_creative_id())
         t = camp.ad_group.name
         assert t in PROMOS, "Expected promo, got %s" % t
     
@@ -201,14 +203,14 @@ def priority_level_test():
     for a in PROMOS:
         pause(a)
     for i in range(100):
-        camp = Creative.get(get_id())
+        camp = Creative.get(get_creative_id())
         assert camp.ad_group.name in NETWORKS, "Expected network, got %s" % camp.ad_group.name
     
     # turn off all networks, make sure we only get back fills
     for a in NETWORKS:
         pause(a)
     for i in range(20):
-        camp = Creative.get(get_id())
+        camp = Creative.get(get_creative_id())
         t = camp.ad_group.name
         assert t in BACKFILL_PROMOS, "Expected promo, got %s" % t
     
@@ -225,14 +227,14 @@ def priority_t3st( camps ):
     for c in camps: 
         prioritize( c )
         for i in range( 5 ):
-            k = get_id()
+            k = get_creative_id()
             cret = Creative.get( k ) 
             assert_equal( cret.ad_group.name, c, "Expected %s, got %s" % ( c, cret.ad_group.name ) )
 
         pause( c )
         print c
         for i in range( 5 ):
-            cret = Creative.get( get_id() )
+            cret = Creative.get( get_creative_id() )
             assert cret.ad_group.name != c, "Expected NOT %s, got %s" % ( c, cret.ad_group.name )
         resume( c )
         de_prioritize( c )
@@ -243,9 +245,9 @@ def priority_t3st( camps ):
 #def add_time( dt, **kw ):
 def basic_freq( c, def_freq, dt = datetime.now() ):
     for i in range( def_freq ):
-        cret = Creative.get( get_id( dt ) )
+        cret = Creative.get( get_creative_id( dt ) )
         assert_equal( cret.ad_group.name, c, "Expected %s, got %s" % ( c, cret.ad_group.name ) )
-    over_cap = get_id( dt ) 
+    over_cap = get_creative_id( dt ) 
     assert over_cap is None, "Expected none, got %s" % Creative.get( over_cap )
     return
 
@@ -318,7 +320,7 @@ def lat_lon_test():
             e = gen_ll(ll, i)
             f = str(e[0])+','+str(e[1])
             #get the creative that the ad auction returns and it's name
-            creat = Creative.get(get_id(ll=f))
+            creat = Creative.get(get_creative_id(ll=f))
             name = creat.ad_group.name
             #Turn TEST_LLS from a ("lat(str),lon(str)"...) list into a ((lat(float),lon(float)), ....) list 
             # Then for each of these tuples in this list, check to see if the distance from that city to e (the test point) is < 50
@@ -341,3 +343,13 @@ def lat_lon_test():
 def gen_ll(ll, i):
     ret = [ll[0] + i * .05, ll[1] + i * .05] 
     return ret 
+
+def run_auction(ad_unit_id):
+    """For use by other tests. Takes an ad_unit_id and returns the
+    creative that won the CPM battle"""
+    creative_id = get_creative_id(ad_unit_id=ad_unit_id)
+    logging.warning("best creative: %s" % creative_id)
+    if creative_id is None:
+        return None
+    creative = Creative.get(Key(creative_id))
+    return creative

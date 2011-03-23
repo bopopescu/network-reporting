@@ -73,6 +73,7 @@ from publisher.query_managers import AdServerAdUnitQueryManager, AdUnitQueryMana
 from advertiser.query_managers import CampaignStatsCounter
 
 from mopub_logging import mp_logging
+from server.ad_server.budget import budget_service
 
 test_mode = "3uoijg2349ic(test_mode)kdkdkg58gjslaf"
 CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gzip(gfe)"]
@@ -172,8 +173,6 @@ class AdAuction(object):
     rpcs = AdAuction.request_third_party_server(request,site,all_ad_groups)
     logging.warning("ad groups: %s" % all_ad_groups)
     # # campaign exclusions... budget + time
-    for a in all_ad_groups:
-      logging.info("%s of %s"%(a.campaign.delivery_counter.count,a.budget))
     
     ALL_FILTERS     = ( budget_filter(),
                         active_filter(), 
@@ -515,13 +514,20 @@ class AdHandler(webapp.RequestHandler):
         self.response.headers.add_header("X-Imptracker", str(track_url))
         
       
-      #add creative ID for testing (also prevents that one bad bug from happening)
+        # add creative ID for testing (also prevents that one bad bug from happening)
         self.response.headers.add_header("X-Creativeid", "%s" % c.key())
 
-      # add to the campaign counter
-        logging.info("adding to delivery: %s"%c.ad_group.bid)
+        # add to the campaign counter
+        logging.info("adding to delivery: %s" % c.ad_group.bid)
         if c.ad_group.bid_strategy == 'cpm':
-          c.ad_group.campaign.delivery_counter.increment(dollars=c.ad_group.bid*1.0/1000)
+            c.ad_group.campaign.delivery_counter.increment(dollars=c.ad_group.bid*1.0/1000)
+      
+        # update budgeting service
+        logging.info("current timeslice budget: %s" % budget_service._get_budget(c.ad_group.campaign))
+        logging.info("decrementing budget by: %s" % c.ad_group.bid)
+        if c.ad_group.bid_strategy == 'cpm':
+            budget_service.apply_expense(c.ad_group.campaign, c.ad_group.bid)
+      
       
       # render the creative 
         self.response.out.write( self.render_creative(  c, 

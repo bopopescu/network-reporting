@@ -10,6 +10,7 @@ sys.path.append(os.environ['PWD'])
 
 from advertiser.models import ( Campaign,
                                 AdGroup,
+                                Creative,
                                 )
 from google.appengine.ext.webapp import ( Request,
                                           Response,
@@ -29,13 +30,8 @@ from server.ad_server.budget import budget_service
 from google.appengine.api import memcache
 
 ################# End to End #################
-from time import mktime
-from datetime import          ( datetime,
-                                timedelta,
-                                )
-from google.appengine.ext.webapp import ( Request,
-                                          Response,
-                                          )
+from ad_server_tests import run_auction
+from publisher.models import Site as AdUnit
 
 class TestBudgetIntegration(unittest.TestCase):
     
@@ -284,30 +280,33 @@ class TestBudgetIntegration(unittest.TestCase):
         eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
         eq_(budget_service._get_budget(self.cheap_c), 298)
 
-
-def build_ad_qs( udid, keys, ad_id, v = 3, dt = datetime.now() ):
-    dt = process_time( dt )
-    return "v=%s&udid=%s&q=%s&id=%s&testing=%s&dt=%s" % ( v, udid, keys, ad_id, "3uoijg2349ic(test_mode)kdkdkg58gjslaf" , dt )
-
-def process_time( dt ):
-    return mktime( dt.timetuple() ) 
-
-
 class TestBudgetEndToEnd(unittest.TestCase):
+    """
+    Using the web UI, we have created an ad_unit with the only two 
+    competitors being a cheap campaign ($10/ad) and an expensive
+    campaign ($100/ad)
+    """
 
     def setUp(self):
         # We simplify budget_service for testing purposes
         budget_service.TIMESLICES = 10 # this means each campaign has 100 dollars per slice
         budget_service.FUDGE_FACTOR = 0.0
         
-        # self.init_campaigns()
-        self.TEST_UDID = "12345"
-        # self.TEST_AD_UNIT_ID = "agltb3B1Yi1pbmNyCgsSBFNpdGUYAgw"
-        self.TEST_AD_UNIT_ID = "agltb3B1Yi1pbmNyCgsSBFNpdGUYLQw"
+        self.fetch_campaigns()
+        self.fetch_adunits()
+        
+        #unpause them TODO: This should not be necesary
+        self.expensive_c.active = True
+        self.expensive_c.put()
+        
+        self.cheap_c.active = True
+        self.cheap_c.put()
+   
+        
     def tearDown(self):
         budget_service._flush_all()
 
-    def init_campaigns(self):
+    def fetch_campaigns(self):
         """Gets the campaigns from the database, updates their remaining budget.
         We should be able to call this at any time without effect"""
         self.camp_query = Campaign.all().filter('name =', 'expensive') 
@@ -315,29 +314,91 @@ class TestBudgetEndToEnd(unittest.TestCase):
         self.expensive_c = self.camp_query.get()
         self.camp_query = Campaign.all().filter('name =', 'cheap')
         self.cheap_c = self.camp_query.get()
-        
-    
-    def fake_environ( self, query_string, method = 'get' ):
-        ret = dict(    REQUEST_METHOD = method,
-                        QUERY_STRING   = query_string,
-                        HTTP_USER_AGENT = 'truck',
-                        SERVER_NAME = 'localhost',
-                        SERVER_PORT = 8000,
-                        )
-        ret[ 'wsgi.version' ] = (1, 0)
-        ret[ 'wsgi.url_scheme' ] = 'http'
-        return ret
-    
-    def run_auction(self):
-        resp = Response()
-        req = Request( self.fake_environ( build_ad_qs( self.TEST_UDID, '', self.TEST_AD_UNIT_ID, ) ) )
-        adH = AdHandler()
-        adH.initialize( req, resp )
-        adH.get()
-        return resp.headers.get('X-Creativeid')
 
+    def fetch_adunits(self):
+        ad_unit_query = AdUnit.all().filter('name =', 'Budget')
+        self.budget_ad_unit = ad_unit_query.get()
+                
+        ad_unit_query = AdUnit.all().filter('name =', 'Fake')
+        self.fake_ad_unit = ad_unit_query.get()
+        
+    def mptest_get_adunit(self):
+        eq_(self.budget_ad_unit.name, 'Budget')
+        eq_(self.fake_ad_unit.name, 'Fake')
+    
     def mptest_simple_request(self):
+        creative = run_auction(self.budget_ad_unit.key())
+        eq_(creative.ad_group.campaign.name, "expensive")
+    
+    
+    def mptest_multiple_requests(self):
+        # We have enough budget for one expensive ad
+        creative = run_auction(self.budget_ad_unit.key())
+        eq_(creative.ad_group.campaign.name, "expensive")
+
+        # We have enough budget for 10 cheap ads
+        for i in xrange(10):
+            creative = run_auction(self.budget_ad_unit.key())
+            eq_(creative.ad_group.campaign.name, "cheap")
         
-        response = self.run_auction()
+        creative = run_auction(self.budget_ad_unit.key())
+        eq_(creative, None)
+  
+    def mptest_multiple_requests_advance_timeslice(self):
+        # We have enough budget for one expensive ad
+        creative = run_auction(self.budget_ad_unit.key())
+        eq_(creative.ad_group.campaign.name, "expensive")
+
+        # We use half our cheap campaign budget
+        for i in xrange(5):
+            creative = run_auction(self.budget_ad_unit.key())
+            eq_(creative.ad_group.campaign.name, "cheap")
+
+        # Advance all of our campaigns
+        budget_service.advance_all()
+        self.fetch_campaigns()
+
+        # We again have enough budget for one expensive ad
+        creative = run_auction(self.budget_ad_unit.key())
+        eq_(creative.ad_group.campaign.name, "expensive")
+
+        # We now have a cheap campaign budget for 15 ads
+        for i in xrange(15):
+            creative = run_auction(self.budget_ad_unit.key())
+            eq_(creative.ad_group.campaign.name, "cheap")
+
+        creative = run_auction(self.budget_ad_unit.key())
+        eq_(creative, None)
+      
+    def mptest_multiple_requests_advance_timeslice_twice(self):
+        # We have enough budget for one expensive ad
+        creative = run_auction(self.budget_ad_unit.key())
+        eq_(creative.ad_group.campaign.name, "expensive")
+
+        # We use half our cheap campaign budget
+        for i in xrange(5):
+            creative = run_auction(self.budget_ad_unit.key())
+            eq_(creative.ad_group.campaign.name, "cheap")
+
+        # Advance all of our campaigns
+        budget_service.advance_all()
+        budget_service.advance_all()
+        self.fetch_campaigns()
+
+        # We again have enough budget for two expensive ads
+        creative = run_auction(self.budget_ad_unit.key())
+        eq_(creative.ad_group.campaign.name, "expensive")
         
-        # eq_(response.campaign,"self.cheap_c")
+        creative = run_auction(self.budget_ad_unit.key())
+        eq_(creative.ad_group.campaign.name, "expensive")
+
+        # We now have a cheap campaign budget for 25 ads
+        for i in xrange(25):
+            creative = run_auction(self.budget_ad_unit.key())
+            eq_(creative.ad_group.campaign.name, "cheap")
+
+        creative = run_auction(self.budget_ad_unit.key())
+        eq_(creative, None)
+
+
+    

@@ -619,11 +619,13 @@ class AdHandler(webapp.RequestHandler):
 
 
         # create an ad clickthrough URL
-        ad_click_url = "http://%s/m/aclk?id=%s&cid=%s&c=%s&req=%s&udid=%s" % (DOMAIN,id, c.key(), c.key(),request_id, udid)
+        appid = c.conv_appid or ''
+        
+        ad_click_url = "http://%s/m/aclk?id=%s&cid=%s&c=%s&req=%s&udid=%s&appid=%s" % (DOMAIN,id, c.key(), c.key(),request_id, udid, appid)
         self.response.headers.add_header("X-Clickthrough", str(ad_click_url))
       
         # ad an impression tracker URL
-        track_url = "http://%s/m/imp?id=%s&cid=%s&udid=%s" % (DOMAIN, id, c.key(), udid)
+        track_url = "http://%s/m/imp?id=%s&cid=%s&udid=%s&appid=%s" % (DOMAIN, id, c.key(), udid, appid)
         self.response.headers.add_header("X-Imptracker", str(track_url))
         
       

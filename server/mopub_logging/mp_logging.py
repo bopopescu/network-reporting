@@ -66,7 +66,11 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
         queue_name = REQ_QUEUE_NAME%queue_num
 
         if not testing:
-            task.add(queue_name)
+            try:
+                task.add(queue_name)
+            except Exception, e:
+                logging.warning(e)
+                    
             
     # get account name from the adunit
     adunit_qmanager = manager or AdUnitQueryManager(adunit_id)

@@ -12,7 +12,6 @@ timeslice-budget is kept as well.
 """
 
 TIMESLICES = 1440 #we use a default timeslice of one minute
-TEST_MODE = False
 SECONDS_PER_DAY = 86400
 FUDGE_FACTOR = 0.1
 
@@ -29,7 +28,8 @@ def has_budget(campaign, cost):
     # If there is a cache miss, we fall back to the previous snapshot
     ts_init_budget = campaign.previous_budget_snapshot
     if ts_init_budget is None:
-        ts_init_budget = _calculate_timeslice_initial_budget(campaign)
+        ts_init_budget = campaign.timeslice_budget
+        logging.warning("calculated: %s" % ts_init_budget)
     # Add the budget every time, only is actually added the first
     memcache.add(key, _to_memcache_int(ts_init_budget),namespace="budget")
     
@@ -37,20 +37,10 @@ def has_budget(campaign, cost):
         return True
     return False
     
-  
-def get_budget(campaign):
-    key = _make_campaign_ts_budget_key(campaign)
-    # logging.warning( "key: %s" % key )
-    value = memcache.get(key, namespace="budget")
-    if value is None:
-        return None
-    else:
-        return _from_memcache_int(value)
-    
 def apply_expense(campaign, cost):
     """ Applies an expense to our memcache """
     key = _make_campaign_ts_budget_key(campaign)
-    memcache.decr(key, _to_memcache_int(cost), namespace="budget")
+    return memcache.decr(key, _to_memcache_int(cost), namespace="budget")
     # TODO: Check for rollunder in devappserver
     
 
@@ -58,7 +48,7 @@ def advance_timeslice(campaign):
     """ Adds a new timeslice's worth of budget and pulls the budget
      expenditures into the database. Executed once per timeslice."""
     # If cache miss, assume that no budget has been spent
-    mem_budget = get_budget(campaign)
+    mem_budget = _get_budget(campaign)
     if mem_budget is None:
         # Use the snapshot from the beginning of this timeslice
         mem_budget = campaign.previous_budget_snapshot 
@@ -76,34 +66,61 @@ def advance_timeslice(campaign):
     
         
 def advance_all():
-    campaigns = Campaign.all().fetch(100)
+    campaigns = Campaign.all()
     # We use campaigns as an iterator
     for camp in campaigns:
         if camp.budget is not None:
             advance_timeslice(camp)   
-   
+
+def daily_reset(campaign):
+    """ Resets the remaining_daily_budget in the database.
+    does not reset values in memcache. TODO: Called when initialized and at midnight """
+
+    # Reset in db
+    campaign.remaining_daily_budget = campaign.budget
+    campaign.put()
+
+def initialize(campaign):
+    # Reset in db
+    campaign.remaining_daily_budget = campaign.budget
+    campaign.previous_budget_snapshot = 0.0
+
+    campaign.timeslice_budget = campaign.budget / TIMESLICES * (1 + FUDGE_FACTOR) 
+    campaign.put()
+
+    # Give us a first timeslice's worth in memory
+    advance_timeslice(campaign)
+    # TODO: what happens to unspent daily budget?
+
 def reset_all():
-    campaigns = Campaign.all()#.filter("budget >=", 0)
+    campaigns = Campaign.all()
     # We use campaigns as an iterator
     for camp in campaigns:
         if camp.budget is not None:
             daily_reset(camp)
 
-def daily_reset(campaign):
-    """ Resets the remaining_daily_budget and timeslice_budget values in the database.
-    also resets values in memcache. TODO: Called when initialized and at midnight """
-    # Flush from cache
+def _flush_cache_and_snapshots(campaign):
     _delete_memcache(campaign)
-
-    # Reset in db
-    campaign.remaining_daily_budget = campaign.budget
-    campaign.previous_budget_snapshot = 0.0
-    campaign.timeslice_budget = campaign.budget / TIMESLICES * (1 + FUDGE_FACTOR) 
+    campaign.previous_budget_snapshot = None
     campaign.put()
     
-    # Give us a first timeslice's worth in memory
-    advance_timeslice(campaign)
-    # TODO: what happens to unspent daily budget?
+def _flush_all():
+    campaigns = Campaign.all()
+    # We use campaigns as an iterator
+    for camp in campaigns:
+        if camp.budget is not None:
+            logging.error("flushing: %s" % camp.name)
+            _flush_cache_and_snapshots(camp)
+
+def _get_budget(campaign):
+    key = _make_campaign_ts_budget_key(campaign)
+    # logging.warning( "key: %s" % key )
+    value = memcache.get(key, namespace="budget")
+    if value is None:
+        return None
+    else:
+        return _from_memcache_int(value)
+
 
 def _apply_if_able(campaign, cost):
     """ For testing purposes """
@@ -134,23 +151,6 @@ def _get_current_timeslice():
     seconds_elapsed = (now-origin).seconds
     # return seconds_elapsed/seconds_per_day*timeslices
     return int(seconds_elapsed*TIMESLICES/SECONDS_PER_DAY)
-
-
-def _calculate_timeslice_initial_budget(campaign):
-    """ Returns the initial budget each remaining timeslice should have. """
-    # We use the current budget as a rollover
-    rollover_key = _make_campaign_ts_budget_key(campaign)
-    rollover_val = memcache.get(rollover_key, namespace="budget")
-    
-    if rollover_val is not None:
-        rollover_budget = _from_memcache_int(rollover_val)
-    else:
-        #if cache miss, assume 0 expenses, if no budget in db, use 0
-        rollover_budget = campaign.timeslice_budget or 0
-    
-    initial_budget = campaign.budget * (1 + FUDGE_FACTOR) / TIMESLICES
-    budget = rollover_budget + initial_budget
-    return budget
 
 
 def _get_memcache(campaign):

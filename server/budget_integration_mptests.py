@@ -32,30 +32,25 @@ class TestBudgetIntegration(unittest.TestCase):
     
     def setUp(self):
         # We simplify budget_service for testing purposes
-        budget_service.TEST_MODE = True
         budget_service.TIMESLICES = 10 # this means each campaign has 100 dollars per slice
         budget_service.FUDGE_FACTOR = 0.0
         
-        # Simulate starting at midnight
-        budget_service.reset_all()
         
-        #get the campaigns
+        #get the campaigns and initialize them
         self.fetch_campaigns()
+        budget_service.initialize(self.cheap_c)
+        budget_service.initialize(self.expensive_c)
+        
     
     def tearDown(self):
-        # use the query as an iterable, reset all memcache vals
-        for camp in self.camp_query:
-            budget_service._delete_memcache(camp)
-        pass
+        budget_service._flush_all()
     
     def fetch_campaigns(self):
         """Gets the campaigns from the database, updates their remaining budget.
         We should be able to call this at any time without effect"""
-         # 100.00 bid with 1000 daily budget -> 1 per TS
         self.camp_query = Campaign.all().filter('name =', 'expensive') 
 
         self.expensive_c = self.camp_query.get()
-         # 1.00 bid with 1000 daily budget -> 100 per TS
         self.camp_query = Campaign.all().filter('name =', 'cheap')
         self.cheap_c = self.camp_query.get()
     
@@ -93,9 +88,9 @@ class TestBudgetIntegration(unittest.TestCase):
         eq_(budget_service._apply_if_able(self.expensive_c, 100), True)
         
         # But it uses up all the timeslice's money and fails the second    
-        eq_(budget_service.get_budget(self.expensive_c), 0)         
+        eq_(budget_service._get_budget(self.expensive_c), 0)         
         eq_(budget_service._apply_if_able(self.expensive_c, 100), False)
-        eq_(budget_service.get_budget(self.expensive_c), 0)       
+        eq_(budget_service._get_budget(self.expensive_c), 0)       
                                   
              
     def mptest_basic_cheap(self):
@@ -111,7 +106,7 @@ class TestBudgetIntegration(unittest.TestCase):
         eq_(budget_service._apply_if_able(self.expensive_c, 100), True)
         # But it uses up all the timeslice's money and fails the second             
         eq_(budget_service._apply_if_able(self.expensive_c, 100), False)
-        eq_(budget_service.get_budget(self.expensive_c), 0)       
+        eq_(budget_service._get_budget(self.expensive_c), 0)       
                                   
         # Then after we advance the timeslice
         budget_service.advance_timeslice(self.expensive_c)
@@ -120,20 +115,20 @@ class TestBudgetIntegration(unittest.TestCase):
         eq_(budget_service._apply_if_able(self.expensive_c, 100), True)
         # But it uses up all the timeslice's money and fails the second             
         eq_(budget_service._apply_if_able(self.expensive_c, 100), False)
-        eq_(budget_service.get_budget(self.expensive_c), 0)
+        eq_(budget_service._get_budget(self.expensive_c), 0)
  
     def mptest_timeslices_rollover(self):
         # We can do the bid one time
         eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
-        eq_(budget_service.get_budget(self.cheap_c), 99)       
+        eq_(budget_service._get_budget(self.cheap_c), 99)       
 
         # Then after we advance the timeslice
         budget_service.advance_all()
         self.fetch_campaigns()
 
-        eq_(budget_service.get_budget(self.cheap_c), 199)      
+        eq_(budget_service._get_budget(self.cheap_c), 199)      
         eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
-        eq_(budget_service.get_budget(self.cheap_c), 198)
+        eq_(budget_service._get_budget(self.cheap_c), 198)
         
         for i in xrange(198):
             eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
@@ -151,15 +146,15 @@ class TestBudgetIntegration(unittest.TestCase):
         budget_service.advance_all()
         self.fetch_campaigns()
         
-        eq_(budget_service.get_budget(self.cheap_c), 198)
-        eq_(budget_service.get_budget(self.expensive_c), 100)
+        eq_(budget_service._get_budget(self.cheap_c), 198)
+        eq_(budget_service._get_budget(self.expensive_c), 100)
         
     def budget_sum_is_daily_budget():
         eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
         eq_(budget_service._apply_if_able(self.expensive_c, 100), True)
         
-        mem_budget_c = budget_service.get_budget(self.cheap_c)
-        mem_budget_e = budget_service.get_budget(self.expensive_c)
+        mem_budget_c = budget_service._get_budget(self.cheap_c)
+        mem_budget_e = budget_service._get_budget(self.expensive_c)
         
         eq_(mem_budget_c + self.cheap_c.remaining_daily_budget, self.cheap_c.budget)
         eq_(mem_budget_c + self.expensive_c.remaining_daily_budget,
@@ -176,42 +171,42 @@ class TestBudgetIntegration(unittest.TestCase):
         budget_service.advance_all()
         self.fetch_campaigns()
 
-        eq_(budget_service.get_budget(self.cheap_c), 298)
-        eq_(budget_service.get_budget(self.expensive_c), 200)
+        eq_(budget_service._get_budget(self.cheap_c), 298)
+        eq_(budget_service._get_budget(self.expensive_c), 200)
 
     def mptest_remaining_daily_budget(self):
         eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
         # We have moved 100 to the current timeslice budget
         eq_(self.cheap_c.remaining_daily_budget, 900) 
-        eq_(budget_service.get_budget(self.cheap_c),99)
+        eq_(budget_service._get_budget(self.cheap_c),99)
         
         budget_service.advance_all()
         self.fetch_campaigns()
         
         # We have moved 200 to the current timeslice budget
         eq_(self.cheap_c.remaining_daily_budget, 800) 
-        eq_(budget_service.get_budget(self.cheap_c),199)
+        eq_(budget_service._get_budget(self.cheap_c),199)
         
         budget_service.advance_all()
         budget_service.advance_all()
         self.fetch_campaigns()
-        eq_(budget_service.get_budget(self.cheap_c),399)
+        eq_(budget_service._get_budget(self.cheap_c),399)
         
         # We have moved 400 to the current timeslice budget
         eq_(self.cheap_c.remaining_daily_budget, 600) 
         
         budget_service.advance_all()
         self.fetch_campaigns()
-        eq_(budget_service.get_budget(self.cheap_c),499)
+        eq_(budget_service._get_budget(self.cheap_c),499)
 
     def mptest_cache_failure_then_spend(self):
         eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
-        eq_(budget_service.get_budget(self.cheap_c), 99)
+        eq_(budget_service._get_budget(self.cheap_c), 99)
         budget_service._delete_memcache(self.cheap_c)
         
         # Memcache miss -> restart timeslice
         eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
-        eq_(budget_service.get_budget(self.cheap_c), 99)
+        eq_(budget_service._get_budget(self.cheap_c), 99)
   
     def mptest_cache_failure_then_spend_multiple_timeslices(self):
         eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
@@ -219,38 +214,76 @@ class TestBudgetIntegration(unittest.TestCase):
         budget_service.advance_all()
         self.fetch_campaigns()
         
-        eq_(budget_service.get_budget(self.cheap_c), 199)
+        eq_(budget_service._get_budget(self.cheap_c), 199)
         
         budget_service._delete_memcache(self.cheap_c)
         # Memcache miss -> restart timeslice at last snapshot (199)
         eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
-        eq_(budget_service.get_budget(self.cheap_c), 198)
+        eq_(budget_service._get_budget(self.cheap_c), 198)
 
-    def mptest_cache_failure_then_advance(self):
-        eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
-        eq_(budget_service.get_budget(self.cheap_c), 99)
-        budget_service._delete_memcache(self.cheap_c)
-
-        # Memcache miss -> restart timeslice at last snapshot (100)
-        budget_service.advance_all()
+    def mptest_cache_failure_then_apply_expense(self):
         self.fetch_campaigns()
         eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
-        eq_(budget_service.get_budget(self.cheap_c), 199)
+        eq_(budget_service._get_budget(self.cheap_c), 99)
+        
+        eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
+        budget_service._delete_memcache(self.cheap_c)
+
+        # Memcache miss -> restart timeslice
+        budget_service.apply_expense(self.cheap_c, 1)
+        budget_service.apply_expense(self.cheap_c, 1)
+        
+        # We lose any apply_expense calls that were queued
+        
+        eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
+        eq_(budget_service._get_budget(self.cheap_c), 99)
+
+    def mptest_cache_failure_then_advance(self):
+        self.fetch_campaigns()
+        eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
+        eq_(budget_service._get_budget(self.cheap_c), 99)
+        eq_(self.cheap_c.previous_budget_snapshot, 100)
+        eq_(budget_service._get_budget(self.cheap_c),99)
+        
+        budget_service._delete_memcache(self.cheap_c)
+        eq_(self.cheap_c.previous_budget_snapshot, 100)
+        # Memcache miss -> restart timeslice at last snapshot (100)
+
+        budget_service.advance_all()
+        eq_(self.cheap_c.previous_budget_snapshot, 100)
+        self.fetch_campaigns()
+        eq_(self.cheap_c.previous_budget_snapshot, 200)
+        
+        
+        eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
+        eq_(budget_service._get_budget(self.cheap_c), 199)
 
     def mptest_cache_failure_then_advance_multiple_timeslices(self):
         eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
-        eq_(budget_service.get_budget(self.cheap_c), 99)
+        eq_(budget_service._get_budget(self.cheap_c), 99)
         
         budget_service.advance_all()
         self.fetch_campaigns()
 
-        eq_(budget_service.get_budget(self.cheap_c), 199)
+        eq_(budget_service._get_budget(self.cheap_c), 199)
 
         budget_service._delete_memcache(self.cheap_c)
         # Memcache miss -> restart timeslice at last snapshot (199)
         budget_service.advance_all()
         self.fetch_campaigns()
         eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
-        eq_(budget_service.get_budget(self.cheap_c), 298)
+        eq_(budget_service._get_budget(self.cheap_c), 298)
+
+class TestBudgetEndToEnd(unittest.TestCase):
+
+    def setUp(self):
+        # We simplify budget_service for testing purposes
+        budget_service.TIMESLICES = 10 # this means each campaign has 100 dollars per slice
+        budget_service.FUDGE_FACTOR = 0.0
 
 
+    def tearDown(self):
+        pass
+
+    def mptest_simple_request(self):
+        eq_(True,True)

@@ -1,4 +1,5 @@
 import csv
+import datetime
 
 from common.constants import  *
 #                   (  TABLE_FILE_FORMATS,
@@ -15,7 +16,9 @@ from common.constants import  *
 from common.utils.pyExcelerator import * 
 from django.http import HttpResponse
 from reporting.models import SiteStats
-from reporting.query_managers import SiteStatsQueryManager
+from reporting.query_managers import SiteStatsQueryManager, StatsModelQueryManager
+
+DT_TYPES = (datetime.datetime, datetime.time, datetime.date)
 
 # Create a new excel workbook and add a sheet to it, return both
 def open_xls_sheet():
@@ -27,7 +30,10 @@ def open_xls_sheet():
 def write_xls_row( sheet, line, elts ):
     col = 0
     for elt in elts:
-        sheet.write( line, col, elt )
+        if type(elt) in DT_TYPES:
+            sheet.write(line, col, elt.isoformat())
+        else:
+            sheet.write(line, col, elt)
         col += 1
 
 # Write a workbook to to_write ( file-like object )
@@ -89,7 +95,7 @@ def verify_stats( stat ):
     assert stat in ALL_STATS, "Expected %s to be an element of %s, it's not" % ( stat, ALL_STATS )
     return stat.split( '_STAT' )[0]
 
-def write_stats( f_type, desired_stats, site=None, owner=None, days=None ):
+def write_stats( f_type, desired_stats, all_stats, site=None, owner=None, days=None ):
     #make sure things are valid
     assert f_type in TABLE_FILE_FORMATS, "Expected %s, got %s" % ( TABLE_FILE_FORMATS, f_type )
     response = None
@@ -105,27 +111,12 @@ def write_stats( f_type, desired_stats, site=None, owner=None, days=None ):
         # wat
         assert False, "This should never happen, %s is in %s but doens't have an if/else case" % ( f_type, TABLE_FILE_FORMATS )
 
-    all_stats = SiteStatsQueryManager().get_sitestats_for_days( site=site, owner=owner,days=days )
-    owner = None
-    for i in range( len( days ) ):
-        if owner is None and all_stats[i].owner is not None:
-            owner = all_stats[i].owner
-        elif owner is None and all_stats[i].site is not None:
-            owner = all_stats[i].site
-        all_stats[i].date = days[i]
-    import logging
-    for s in all_stats:
-        logging.info( all_stats )
-    owner_type = owner.key().kind()
-    if owner_type == 'Site':
-        owner_type = 'AdUnit'
-    owner_name = owner.name
-
     start = days[0]
     end = days[-1]
-    d_form = '%m%d%y' 
-    d_str = '%s-%s' % ( start.strftime( d_form ), end.strftime( d_form ) )
-   
+    d_form = '%m-%d-%y' 
+    d_str = '%s--%s' % ( start.strftime( d_form ), end.strftime( d_form ) )
+    owner_name = "test1"
+    owner_type = "AdUnit"
     fname = "%s_%s_%s.%s" % ( owner_name, owner_type, d_str, f_type )
     #should probably do something about the filename here
     response['Content-disposition'] = 'attachment; filename=%s' % fname 
@@ -133,14 +124,13 @@ def write_stats( f_type, desired_stats, site=None, owner=None, days=None ):
     #Verify requested stats and turn them into SiteStat attributes so we can getattr them
     map_stats = map( verify_stats, desired_stats )
 
-
-    #write a header row.  Right now this will look EXACTLY like how the accessors look, Might want to clean this
+    # Title the columns with the stats that are going to be written
     row_writer( map_stats )
     
     #Write the data
     for stat in all_stats:
         # This is super awesome, we iterate over all the stats objects, since the "desired stats" are formatted
-        #   to be identical to the properties, we just use the list of requested stats and map it to get the right values
+        # to be identical to the properties, we just use the list of requested stats and map it to get the right values
         row_writer( map( lambda x: getattr( stat, x ), map_stats ) )
     if f_type == 'xls':
         #excel has all the data in this temp object, dump all that into the response

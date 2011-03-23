@@ -56,6 +56,13 @@ class Campaign(db.Model):
     
   def set_owner(self, value):
     pass
+
+  @property
+  def camp_stats(self):
+      def get_stats(days):
+          all_stats = SiteStatsQueryManager.get_sitestats_for_days(owner=self, days=days)
+          return reduce(lambda x,y: x+y, all_stats, SiteStats())
+      return get_stats
       
   def owner(self):
     return property(get_owner, set_owner)
@@ -332,6 +339,14 @@ class Creative(polymodel.PolyModel):
           
   def __repr__(self):
     return "Creative{ad_type=%s, eCPM=%.02f ,key_name=%s}" % (self.ad_type, self.e_cpm(),self.key().id_or_name())
+
+  @property
+  def creative_stats(self):
+      def get_stats(days):
+          all_stats = SiteStatsQueryManager().get_sitestats_for_days(owner=self, days=days)
+          return reduce(lambda x, y: x+y, all_stats, SiteStats())
+      return get_stats
+
 
 class TextCreative(Creative):
   # text ad properties

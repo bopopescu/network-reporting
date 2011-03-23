@@ -340,20 +340,88 @@ def app_show(request,*args,**kwargs):
 
 
 class ExportFileHandler( RequestHandler ):
-    def get( self, site_key, f_type ):
-        #this is temp, should have more than just adunit
-        stats = ( DTE_STAT, REQ_STAT, IMP_STAT, CLK_STAT )
-        adunit = AdUnitQueryManager().get_by_key( site_key )
+    def get( self, key, key_type, f_type ):
+        #XXX make sure this is the right way to do it 
+        spec = self.params.get('spec') 
         if self.start_date:
             days = StatsModel.get_days( self.start_date, self.date_range )
         else:
             days = StatsModel.lastdays( self.date_range )
-        return sswriter.write_stats( f_type, stats, site=site_key, days=days )
+
+        stat_names, stat_models = self.get_desired_stats(key, key_type, days, spec=spec)
+        logging.warning(stat_models)
+        logging.warning("\n\nDays len:%s\nStats len:%s\n\n" % (len(days),len(stat_models)))
+        return sswriter.write_stats( f_type, stat_names, stat_models, site=key, days=days )
+
+
+    def get_desired_stats(self, key, key_type, days, spec=None):
+        """ Given a key, key_type, and specificity, return 
+        the appropriate stats to get AND their names"""
+        #default for all
+        stat_names = (IMP_STAT, CLK_STAT, CTR_STAT)
+        #sanity check
+        assert key_type in ('adunit', 'app', 'adgroup', 'account')
+        if spec:
+            assert spec in ('creatives', 'adunits', 'campaigns', 'days', 'apps')
+        #Set up attr getters/names
+        if key_type == 'app' or (key_type == 'account' and spec == 'apps') or (key_type == 'adunit' and spec == 'days'): 
+            stat_names = (REQ_STAT,) + stat_names
+            if spec == 'days':
+                stat_names = (DTE_STAT,) + stat_names
+        elif key_type == 'account' and spec == 'campaigns':
+            stat_names += (CPM_STAT, CONV_STAT, CPA_STAT)
+        elif key_type == 'adgroup':
+            stat_names += (REV_STAT, CONV_STAT, CPA_STAT)
+        elif key_type == 'adunit' and spec == 'campaigns':
+            stat_names += (REV_STAT,)
+        #General rollups for all data
+        if key_type == 'account':
+            if spec == 'apps':
+                apps = AppQueryManager.get_apps(self.account)
+                if len(apps) == 0:
+                    #should probably handle this more gracefully
+                    logging.warning("Apps for account is empty")
+                return (stat_names, [a.app_stats(days) for a in apps]) 
+            elif spec == 'campaigns':
+                camps = CampaignQueryManager().get_campaigns(account=self.account)
+                if len(camps) == 0:
+                    logging.warning("Campaigns for account is empty")
+                return (stat_names, [c.camp_stats(days) for c in camps])
+        #Rollups for adgroup data
+        elif key_type == 'adgroup':
+            if spec == 'creatives':
+                creatives = list(CreativeQueryManager().get_creatives(adgroup=key))
+                if len(creatives) == 0:
+                    logging.warning("Creatives for adgroup is empty")
+                return (stat_names, [c.creative_stats(days) for c in creatives])
+            if spec == 'adunits':
+                #XXX Put the right thing here
+                adunits = map(lambda x: Site.get(x), AdGroupQueryManager().get_by_key(key).site_keys)
+                if len(adunits) == 0:
+                    logging.warning("Adunits for adgroup is empty")
+                return (stat_names, [a.adunit_stats(days) for a in adunits]) 
+        #Rollups + not-rollup for adunit data            
+        elif key_type == 'adunit':
+            if spec == 'campaigns':
+                adgroups = AdGroupQueryManager().get_adgroups(adunit=key)
+                if len(adgroups) == 0:
+                    logging.warning("Campaigns for adunit is empty")
+                return (stat_names, [a.adgroup_stats(days) for a in adgroups])
+            if spec == 'days':
+                return (stat_names, StatsModelQueryManager(self.account).get_stats_for_days(publisher=key, days=days))
+        #App adunit rollup data
+        elif key_type == 'app':
+            adunits = AdUnitQueryManager().get_adunits(app=key)
+            if len(adunits) == 0:
+                logging.warning("Apps is empty")
+            return (stat_name, [a.adunit_stats(days) for a in adunits])
 
 
 @whitelist_login_required
 def export_file( request, *args, **kwargs ):
     return ExportFileHandler()( request, *args, **kwargs )
+
+            
 
 class AdUnitShowHandler(RequestHandler):
   def get(self,adunit_key):

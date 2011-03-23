@@ -45,7 +45,13 @@ class App(db.Model):
   def owner_name(self):
       return None
 
-    
+  #this is a property so we don't try to set it and stuff
+  @property
+  def app_stats(self):
+      def get_stats(days):
+          all_stats = SiteStatsQueryManager().get_sitestats_for_days(owner=self, days=days)
+          return reduce(lambda x,y: x+y, all_stats, SiteStats()) 
+      return get_stats
 
 
 class Site(db.Model):
@@ -140,3 +146,11 @@ class Site(db.Model):
   @property
   def owner_name(self):
       return "app_key"
+
+  def adunit_stats(self):
+      def get_stats(days):
+          all_stats = SiteStatQueryManager().get_sitestats_for_days(site=self, days=days)
+          for i in range(len(days)):
+              all_stats[i].date = days[i]
+          return reduce(lambda x,y: x+y, all_stats, SiteStats())
+      return get_stats

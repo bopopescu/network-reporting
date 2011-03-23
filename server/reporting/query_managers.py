@@ -98,8 +98,7 @@ class StatsModelQueryManager(CachedQueryManager):
         #       in this QM
         if not publishers and publisher:
             publishers = [publisher]
-        
-        
+       
         if publishers:
             keys = [db.Key.from_path(StatsModel.kind(),
                                      StatsModel.get_key_name(publisher=publisher,
@@ -122,9 +121,13 @@ class StatsModelQueryManager(CachedQueryManager):
                                       parent=parent)
                         for d in days]
                                
-
+        days_len = len(days)
         stats = StatsModel.get(keys) # db get
-        stats = [s or StatsModel() for s in stats]
+        #since pubs iterates more than once around days, stats might be too long
+        #but it shoudl only iterate on MULTIPLES of days_len, so ct mod days_len
+        #should be right
+        #Hackery to turn date obj into datetime obj  PYTHON WHY DONT YOU DO THIS FOR ME
+        stats = [s or StatsModel(date=datetime.datetime.combine(days[ct%days_len],datetime.time())) for ct,s in enumerate(stats)]
         return stats            
     
     def accumulate_stats(self, stat):

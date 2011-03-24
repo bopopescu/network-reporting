@@ -66,7 +66,11 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
         queue_name = REQ_QUEUE_NAME%queue_num
 
         if not testing:
-            task.add(queue_name)
+            try:
+                task.add(queue_name)
+            except Exception, e:
+                logging.warning(e)
+                    
             
     # get account name from the adunit
     adunit_qmanager = manager or AdUnitQueryManager(adunit_id)
@@ -90,6 +94,10 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
                         udid=udid,
                         req=request_id,
                         inst=instance_id)
+    
+    # bail early if the memcache increment failed
+    if log_index is None: 
+        return
     
     # put the log data into appropriate place
     log_key = LOG_KEY_FORMAT%dict(account_name=account_name,time=time_bucket,log_index=log_index)

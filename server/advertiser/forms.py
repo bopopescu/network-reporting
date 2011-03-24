@@ -18,6 +18,8 @@ from google.appengine.api import images
 from publisher.models import Site as AdUnit
 
 import logging
+import re
+import urlparse
 
 class CampaignForm(mpforms.MPModelForm):
   TEMPLATE = 'advertiser/forms/campaign_form.html'
@@ -148,15 +150,56 @@ class AdGroupForm(mpforms.MPModelForm):
       kwargs.update(initial=initial)
     super(AdGroupForm,self).__init__(*args,**kwargs)    
 
+class AbstractCreativeForm(mpforms.MPModelForm):
+    def save(self,commit=True):
+        obj = super(AbstractCreativeForm,self).save(commit=False)  
+        if obj.url:
+            obj.conv_appid = self._get_appid(obj.url)
+            
+        if commit:
+          obj.put()
+        return obj
+        
+    def _get_appid(self,url):
+        # extracts the itunes appid from the url
+        # http://itunes.apple.com/il/app/imosaic-project/id335853048?mt=8
+        # in this case: 335853048        
+        itunes_pattern = re.compile("http://itunes\.apple\.com.*id(\d+)")
+        itunes_match = itunes_pattern.search(url)
+        if itunes_match:
+            itunes_id = itunes_match.group(1)
+            return itunes_id    
+        
+        # extracts the itunes appid from the url old phobos urls
+        # http://phobos.apple.com/WebObjects/MZStore.woa/wa/viewSoftware?id=386584429&mt=8
+        # in this case: 386584429        
+        qs_dict = urlparse.parse_qs(urlparse.urlparse(url).query)
+        if 'id' in qs_dict:
+            itunes_id = qs_dict['id'][0]
+            return itunes_id
+        
+        # extracts the package from the url
+        # market://details?id=com.example.admob.lunarlander
+        # in this case: com.example.admob.lunarlander    
+        # NOTE: there not be any other characters after the id    
+        android_pattern = re.compile("market://.*id\=(.+)$")
+        android_match = android_pattern.search(url)
+        if android_match:
+            android_package_name = android_match.group(1)
+            return android_package_name    
+        
+        # return None if nothing was found    
+        return None
 
-class BaseCreativeForm(mpforms.MPModelForm):
-  TEMPLATE = 'advertiser/forms/base_creative_form.html'
-  
-  class Meta:
-    model = Creative
-    fields = ('ad_type','name','tracking_url','url','display_url','format')
-    
-class TextCreativeForm(mpforms.MPModelForm):
+
+class BaseCreativeForm(AbstractCreativeForm):
+    TEMPLATE = 'advertiser/forms/base_creative_form.html'
+
+    class Meta:
+        model = Creative
+        fields = ('ad_type','name','tracking_url','url','display_url','format')
+                    
+class TextCreativeForm(AbstractCreativeForm):
   TEMPLATE = 'advertiser/forms/text_creative_form.html'
   
   class Meta:
@@ -164,7 +207,7 @@ class TextCreativeForm(mpforms.MPModelForm):
     fields = ('headline','line1','line2') + \
              ('ad_type','name','tracking_url','url','display_url','format')
     
-class TextAndTileCreativeForm(mpforms.MPModelForm):
+class TextAndTileCreativeForm(AbstractCreativeForm):
   TEMPLATE = 'advertiser/forms/text_tile_creative_form.html'
   
   image_url = forms.URLField(verify_exists=False,required=False)
@@ -198,7 +241,7 @@ class TextAndTileCreativeForm(mpforms.MPModelForm):
       obj.put()
     return obj  
     
-class HtmlCreativeForm(mpforms.MPModelForm):
+class HtmlCreativeForm(AbstractCreativeForm):
   TEMPLATE = 'advertiser/forms/html_creative_form.html'
   
   class Meta:
@@ -206,7 +249,7 @@ class HtmlCreativeForm(mpforms.MPModelForm):
     fields = ('html_data',) + \
              ('ad_type','name','tracking_url','url','display_url','format')
              
-class ImageCreativeForm(mpforms.MPModelForm):
+class ImageCreativeForm(AbstractCreativeForm):
   TEMPLATE = 'advertiser/forms/image_creative_form.html'
   
   image_url = forms.URLField(verify_exists=False,required=False)
@@ -238,31 +281,4 @@ class ImageCreativeForm(mpforms.MPModelForm):
       obj.image_height = img.height
     if commit:
       obj.put()
-    return obj  
-    
-  # def save(self,commit=True):
-  #   obj = super(AppForm,self).save(commit=False)
-  #   if self.cleaned_data['img_url']:
-  #     if not self.cleaned_data['img_url'] == self.initial.get('img_url'):
-  #       try:
-  #         response = urllib.urlopen(self.cleaned_data['img_url'])
-  #         img = response.read()
-  #         obj.icon = db.Blob(img)
-  #       except Exception, e: # TODO: appropriately handle the failure
-  #         raise Exception('WTF: %s'%e)
-  #     else:
-  #       logging.info("keeping same icon because the new is same as old")
-  #       obj.icon = self.instance.icon # sets the icon to the original
-  #   elif self.cleaned_data['img_file']:
-  #     try:
-  #       icon = images.resize(self.cleaned_data['img_file'], 60, 60)
-  #       obj.icon = db.Blob(icon)
-  #     except Exception: # TODO: appropriate handle the failure
-  #       raise Exception('WTF2: %s'%e)
-  #   elif self.instance: # if neither img_url or img_file come in just use the old value
-  #     logging.info("keeping same icon because no new provided")
-  #     obj.icon = self.instance.icon    
-  #   if commit:
-  #     obj.put()
-  #   return obj      
-    
+    return obj

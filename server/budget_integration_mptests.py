@@ -301,7 +301,6 @@ class TestBudgetEndToEnd(unittest.TestCase):
         
         self.update_adgroups()
         self.fetch_campaigns()
-        self.fetch_adunits()
         
         #unpause them and set the appropriate bids
         self.expensive_c.active = True
@@ -312,6 +311,7 @@ class TestBudgetEndToEnd(unittest.TestCase):
 
         self.cheap_c.put()
         self.fetch_adunits()
+        self.switch_adgroups_to_cpm()
    
     def tearDown(self):
         budget_service._flush_all()
@@ -327,6 +327,48 @@ class TestBudgetEndToEnd(unittest.TestCase):
         c_g = group_query.get()
         c_g.bid = 10.0
         c_g.put()
+
+    def switch_adgroups_to_cpc(self):
+        group_query = AdGroup.all().filter('name =', 'expensive') 
+
+        e_g = group_query.get()
+        e_g.bid = 100.0
+        e_g.bid_strategy = "cpc"
+        e_g.put()
+        
+        group_query = AdGroup.all().filter('name =', 'cheap')
+        c_g = group_query.get()
+        c_g.bid = 10.0
+        c_g.bid_strategy = "cpc"
+        c_g.put()
+
+    def switch_adgroups_to_cpm(self):
+        group_query = AdGroup.all().filter('name =', 'expensive') 
+
+        e_g = group_query.get()
+        e_g.bid = 100.0
+        e_g.bid_strategy = "cpm"
+        e_g.put()
+
+        group_query = AdGroup.all().filter('name =', 'cheap')
+        c_g = group_query.get()
+        c_g.bid = 10.0
+        c_g.bid_strategy = "cpm"
+        c_g.put()
+
+
+    def update_adgroups(self):
+        group_query = AdGroup.all().filter('name =', 'expensive') 
+
+        e_g = group_query.get()
+        e_g.bid = 100.0
+        e_g.put()
+
+        group_query = AdGroup.all().filter('name =', 'cheap')
+        c_g = group_query.get()
+        c_g.bid = 10.0
+        c_g.put()
+
 
     def fetch_campaigns(self):
         """Gets the campaigns from the database, updates their remaining budget.
@@ -423,6 +465,21 @@ class TestBudgetEndToEnd(unittest.TestCase):
 
         # We now have a cheap campaign budget for 25 ads
         for i in xrange(25):
+            creative = run_auction(self.budget_ad_unit.key())
+            eq_(creative.ad_group.campaign.name, "cheap")
+
+        creative = run_auction(self.budget_ad_unit.key())
+        eq_(creative, None)
+
+    def mptest_multiple_requests_cpc(self):
+        self.switch_adgroups_to_cpc()
+        
+        # We have enough budget for one expensive ad
+        creative = run_auction(self.budget_ad_unit.key())
+        eq_(creative.ad_group.campaign.name, "expensive")
+
+        # We have enough budget for 10 cheap ads
+        for i in xrange(10):
             creative = run_auction(self.budget_ad_unit.key())
             eq_(creative.ad_group.campaign.name, "cheap")
 

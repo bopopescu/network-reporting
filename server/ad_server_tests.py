@@ -28,6 +28,7 @@ from publisher.models import (  App,
 from random import random
 from server.ad_server.main import  ( AdHandler,
                                      AdImpressionHandler,
+                                     AdClickHandler,
                                      AdAuction,
                                      AdClickHandler,
                                      AppOpenHandler,
@@ -379,6 +380,16 @@ def run_auction(ad_unit_id, simulate_client_success=True, dt = datetime.now(), l
         imp_handler = AdImpressionHandler()
         imp_handler.initialize(req, resp)
         imp_handler.get()
+        
+        # Simulate callback to click handler
+        # get rid of prepended "html://DOMAIN"
+        query_string = '/m/' + clickthrough_url.split('/m/')[1] + "&testing=%s" % TEST_MODE
+        logging.warning("query string: %s" % query_string)
+        req = Request( fake_environ(query_string))
+        resp = Response()
+        click_handler = AdClickHandler()
+        click_handler.initialize(req, resp)
+        click_handler.get()
         
     return creative
    

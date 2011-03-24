@@ -907,43 +907,45 @@ class AdImpressionHandler(webapp.RequestHandler):
         self.response.out.write("OK")
     
 class AdClickHandler(webapp.RequestHandler):
-  # /m/aclk?udid=james&appid=angrybirds&id=ahRldmVudHJhY2tlcnNjYWxldGVzdHILCxIEU2l0ZRipRgw&cid=ahRldmVudHJhY2tlcnNjYWxldGVzdHIPCxIIQ3JlYXRpdmUYoh8M
-  def get(self):
-    mp_logging.log(self.request, event=mp_logging.CLK_EVENT)  
-      
-    udid = self.request.get('udid')
-    mobile_app_id = self.request.get('appid')
-    time = datetime.datetime.now()
-    adunit_id = self.request.get('id')
-    creative_id = self.request.get('cid')
+    # /m/aclk?udid=james&appid=angrybirds&id=ahRldmVudHJhY2tlcnNjYWxldGVzdHILCxIEU2l0ZRipRgw&cid=ahRldmVudHJhY2tlcnNjYWxldGVzdHIPCxIIQ3JlYXRpdmUYoh8M
+    def get(self):
+        
+        if not self.request.get( 'testing' ) == TEST_MODE:
+            mp_logging.log(self.request, event=mp_logging.CLK_EVENT)  
+  
+        udid = self.request.get('udid')
+        mobile_app_id = self.request.get('appid')
+        time = datetime.datetime.now()
+        adunit_id = self.request.get('id')
+        creative_id = self.request.get('cid')
 
-    # Update budgeting
-    creative = Creative.get(Key(creative_id))
-    if creative.ad_group.bid_strategy == 'cpc':
-        budget_service.apply_expense(creative.ad_group.campaign, creative.ad_group.bid)
+        # Update budgeting
+        creative = Creative.get(Key(creative_id))
+        if creative.ad_group.bid_strategy == 'cpc':
+            budget_service.apply_expense(creative.ad_group.campaign, creative.ad_group.bid)
 
 
-    # if driving download then we use the user datastore
-    if udid and mobile_app_id and mobile_app_id != CLICK_EVENT_NO_APP_ID:
-        # TODO: maybe have this section run asynchronously
-        ce_manager = ClickEventManager()
-        ce = ce_manager.log_click_event(udid, mobile_app_id, time, adunit_id, creative_id)
+        # if driving download then we use the user datastore
+        if udid and mobile_app_id and mobile_app_id != CLICK_EVENT_NO_APP_ID:
+            # TODO: maybe have this section run asynchronously
+            ce_manager = ClickEventManager()
+            ce = ce_manager.log_click_event(udid, mobile_app_id, time, adunit_id, creative_id)
 
-    id = self.request.get("id")
-    q = self.request.get("q")    
-    # BROKEN
-    # url = self.request.get("r")
-    sz = self.request.query_string
-    r = sz.rfind("&r=")
-    if r > 0:
-      url = sz[(r + 3):]
-      url = unquote(url)
-      # forward on to the click URL
-      self.redirect(url)
-    else:
-      self.response.out.write("ClickEvent:OK:")
+        id = self.request.get("id")
+        q = self.request.get("q")    
+        # BROKEN
+        # url = self.request.get("r")
+        sz = self.request.query_string
+        r = sz.rfind("&r=")
+        if r > 0:
+            url = sz[(r + 3):]
+            url = unquote(url)
+            # forward on to the click URL
+            self.redirect(url)
+        else:
+            self.response.out.write("ClickEvent:OK:")
 
-      
+  
     
 # TODO: Process this on the logs processor 
 class AppOpenHandler(webapp.RequestHandler):

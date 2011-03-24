@@ -74,8 +74,9 @@ from advertiser.query_managers import CampaignStatsCounter
 
 from mopub_logging import mp_logging
 from server.ad_server.budget import budget_service
+from google.appengine.ext.db import Key
 
-test_mode = "3uoijg2349ic(test_mode)kdkdkg58gjslaf"
+TEST_MODE = "3uoijg2349ic(TEST_MODE)kdkdkg58gjslaf"
 CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gzip(gfe)"]
 MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7PnE6cH9_PX7OoeIIr5FjnTA'
 DOMAIN = 'ads.mopub.com' 
@@ -412,7 +413,7 @@ class AdHandler(webapp.RequestHandler):
     
     
     #Testing!
-    if self.request.get( 'testing' ) == test_mode:
+    if self.request.get( 'testing' ) == TEST_MODE:
         manager = AdServerAdUnitQueryManager( id )
         testing = True
         now = datetime.datetime.fromtimestamp( float( self.request.get('dt') ) )
@@ -516,17 +517,6 @@ class AdHandler(webapp.RequestHandler):
       
         # add creative ID for testing (also prevents that one bad bug from happening)
         self.response.headers.add_header("X-Creativeid", "%s" % c.key())
-
-        # add to the campaign counter
-        logging.info("adding to delivery: %s" % c.ad_group.bid)
-        if c.ad_group.bid_strategy == 'cpm':
-            c.ad_group.campaign.delivery_counter.increment(dollars=c.ad_group.bid*1.0/1000)
-      
-        # update budgeting service
-        logging.info("current timeslice budget: %s" % budget_service._get_budget(c.ad_group.campaign))
-        logging.info("decrementing budget by: %s" % c.ad_group.bid)
-        if c.ad_group.bid_strategy == 'cpm':
-            budget_service.apply_expense(c.ad_group.campaign, c.ad_group.bid)
       
       
       # render the creative 
@@ -816,7 +806,7 @@ class AdHandler(webapp.RequestHandler):
           "Gchannelids":str(kwargs["site"].adsense_channel_id or ''),        
         # "Gappwebcontenturl":,
           "Gadtype":"GADAdSenseTextImageAdType", #GADAdSenseTextAdType,GADAdSenseImageAdType,GADAdSenseTextImageAdType
-          "Gtestadrequest":"1" if site.account.adsense_test_mode else "0",
+          "Gtestadrequest":"1" if site.account.adsense_TEST_MODE else "0",
         # "Ghostid":,
         # "Gbackgroundcolor":"00FF00",
         # "Gadtopbackgroundcolor":"FF0000",
@@ -900,27 +890,42 @@ class AdRequestHandler(webapp.RequestHandler):
     def get(self):
         self.response.out.write("OK")
 
+# /m/imp?id=agltb3B1Yi1pbmNyDAsSBFNpdGUY1NsgDA&cid=agltb3B1Yi1pbmNyEAsSCENyZWF0aXZlGJvEIAw&udid=4863585ad8c80749
 class AdImpressionHandler(webapp.RequestHandler):
-  def get(self):
-    mp_logging.log(self.request,event=mp_logging.IMP_EVENT)  
-    self.response.out.write("OK")
+    def get(self):
         
+        # Update budgeting
+        creative_id = self.request.get('cid')
+        creative = Creative.get(Key(creative_id))
+        budget_service.apply_expense(creative.ad_group.campaign, creative.ad_group.bid)
+        logging.error("applied expense: %s" % creative.ad_group.bid)
+        
+        if not self.request.get( 'testing' ) == TEST_MODE:
+            mp_logging.log(self.request,event=mp_logging.IMP_EVENT)  
+            
+        self.response.out.write("OK")
+    
 class AdClickHandler(webapp.RequestHandler):
   # /m/aclk?udid=james&appid=angrybirds&id=ahRldmVudHJhY2tlcnNjYWxldGVzdHILCxIEU2l0ZRipRgw&cid=ahRldmVudHJhY2tlcnNjYWxldGVzdHIPCxIIQ3JlYXRpdmUYoh8M
   def get(self):
     mp_logging.log(self.request, event=mp_logging.CLK_EVENT)  
       
     udid = self.request.get('udid')
-    mobile_appid = self.request.get('appid')
+    mobile_app_id = self.request.get('appid')
     time = datetime.datetime.now()
-    adunit = self.request.get('id')
-    creative = self.request.get('cid')
+    adunit_id = self.request.get('id')
+    creative_id = self.request.get('cid')
+
+    # Update budgeting
+    creative = Creative.get(Key(creative_id))
+    budget_service.apply_expense(creative.ad_group.campaign, creative.ad_group.bid)
+
 
     # if driving download then we use the user datastore
-    if udid and mobile_appid and mobile_appid != CLICK_EVENT_NO_APP_ID:
+    if udid and mobile_app_id and mobile_app_id != CLICK_EVENT_NO_APP_ID:
         # TODO: maybe have this section run asynchronously
         ce_manager = ClickEventManager()
-        ce = ce_manager.log_click_event(udid, mobile_appid, time, adunit, creative)
+        ce = ce_manager.log_click_event(udid, mobile_app_id, time, adunit_id, creative_id)
 
     id = self.request.get("id")
     q = self.request.get("q")    

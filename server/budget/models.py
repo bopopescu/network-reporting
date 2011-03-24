@@ -4,7 +4,7 @@ from advertiser.models import Campaign
 DEFAULT_TIMESLICES = 1440.0 # Timeslices per day
 DEFAULT_FUDGE_FACTOR = 0.1
 
-class BudgetManager(db.Model):
+class BudgetSlicer(db.Model):
     
     campaign = db.ReferenceProperty(Campaign)
 
@@ -24,7 +24,7 @@ class BudgetManager(db.Model):
             campaign = kwargs.get('campaign',None)
             if campaign:
                 key_name = self.get_key_name(campaign)
-        super(BudgetManager, self).__init__(parent=parent, key_name=key_name, **kwargs)
+        super(BudgetSlicer, self).__init__(parent=parent, key_name=key_name, **kwargs)
 
     @classmethod
     def get_key_name(cls, campaign):
@@ -41,10 +41,10 @@ class BudgetManager(db.Model):
     def get_or_insert_for_campaign(cls,campaign,**kwargs):
         key_name = cls.get_key_name(campaign)
         kwargs.update(campaign=campaign)
-        return super(BudgetManager,cls).get_or_insert(key_name,**kwargs)
+        return super(BudgetSlicer,cls).get_or_insert(key_name,**kwargs)
         
 
 class TimesliceLog(db.Model):
-      budget = db.ReferenceProperty(BudgetManager,collection_name="timeslice_logs")
+      budget = db.ReferenceProperty(BudgetSlicer,collection_name="timeslice_logs")
       final_memcache_budget = db.FloatProperty()
       start_date = db.DateTimeProperty()

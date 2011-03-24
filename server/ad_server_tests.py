@@ -27,6 +27,7 @@ from publisher.models import (  App,
                                 )
 from random import random
 from server.ad_server.main import  ( AdHandler,
+                                     AdImpressionHandler,
                                      AdAuction,
                                      AdClickHandler,
                                      AppOpenHandler,
@@ -46,11 +47,10 @@ AdUnit = Site
 AD_UNIT_ID = "agltb3B1Yi1pbmNyCgsSBFNpdGUYAgw"
 UDID = "thisisntrealatall"
 
-test_mode = "3uoijg2349ic(test_mode)kdkdkg58gjslaf"
+TEST_MODE = "3uoijg2349ic(TEST_MODE)kdkdkg58gjslaf"
 TEST_LLS = ["42.3584308,-71.0597732","40.7607794,-111.8910474","40.7142691,-74.0059729","38.3565773,-121.9877444","39.1637984,-119.7674034","34.0522342,-118.2436849","36.1749705,-115.137223"] 
 
 PROMOS = ( u'test1', u'test2' )
-GTEES = ( u'testbudget1', u'testbudget2')
 NETWORKS = ( u'iad', u'admob', u'adsense' )
 BACKFILL_PROMOS = ( u'bpromo1','bpromo2')
 
@@ -67,7 +67,7 @@ def fake_environ( query_string, method = 'get' ):
 
 def build_ad_qs( udid, keys, ad_id, v = 3, dt = datetime.now(), ll=None):
     dt = process_time( dt )
-    basic_str = "v=%s&udid=%s&q=%s&id=%s&testing=%s&dt=%s" % ( v, udid, keys, ad_id, test_mode , dt )
+    basic_str = "v=%s&udid=%s&q=%s&id=%s&testing=%s&dt=%s" % ( v, udid, keys, ad_id, TEST_MODE , dt )
     if ll is not None:
         basic_str += '&ll=%s' % ll
     return basic_str
@@ -344,12 +344,58 @@ def gen_ll(ll, i):
     ret = [ll[0] + i * .05, ll[1] + i * .05] 
     return ret 
 
-def run_auction(ad_unit_id):
+def simulate_client(ad_unit_id):
+    creative = run_auction(ad_unit_id)
+    simulate_impression()
+
+def run_auction(ad_unit_id, simulate_client_success=True, dt = datetime.now(), ll=None,):
     """For use by other tests. Takes an ad_unit_id and returns the
-    creative that won the CPM battle"""
-    creative_id = get_creative_id(ad_unit_id=ad_unit_id)
+    creative that won the CPM battle, if success = True, also simulates client callback"""
+    
+    resp = Response()
+    req = Request( fake_environ( build_ad_qs( UDID, '', ad_unit_id, dt = dt, ll=ll) ) )
+    ad_handler = AdHandler()
+    ad_handler.initialize( req, resp )
+    ad_handler.get()
+        
+    # Pull data from ad_auction response
+    creative_id = resp.headers.get('X-Creativeid')
+    imp_tracker_url = resp.headers.get('X-Imptracker')
+    clickthrough_url = resp.headers.get('X-Clickthrough')
+    
+    # Get the creative
     logging.warning("best creative: %s" % creative_id)
     if creative_id is None:
         return None
     creative = Creative.get(Key(creative_id))
+    
+    if simulate_client_success:
+        # Simulate callback to impression handler
+        # get rid of prepended "html://DOMAIN"
+        query_string = '/m/' + imp_tracker_url.split('/m/')[1] + "&testing=%s" % TEST_MODE
+        logging.warning("query string: %s" % query_string)
+        req = Request( fake_environ(query_string))
+        resp = Response()
+        imp_handler = AdImpressionHandler()
+        imp_handler.initialize(req, resp)
+        imp_handler.get()
+        
     return creative
+   
+
+def get_creative_id( dt = datetime.now(), ll=None, ad_unit_id=AD_UNIT_ID ):
+    resp = Response()
+    req = Request( fake_environ( build_ad_qs( UDID, '', ad_unit_id, dt = dt, ll=ll) ) )
+    adH = AdHandler()
+    adH.initialize( req, resp )
+    adH.get()
+    return resp.headers.get('X-Creativeid')
+
+    
+def simulate_impression(creative):
+    cid = creative.key()
+    impressionHandler
+    
+    
+    
+    # /m/imp?id=agltb3B1Yi1pbmNyDAsSBFNpdGUY1NsgDA&cid=agltb3B1Yi1pbmNyEAsSCENyZWF0aXZlGJvEIAw&udid=4863585ad8c80749

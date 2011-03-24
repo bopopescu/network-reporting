@@ -29,7 +29,7 @@ from nose.tools import with_setup
 from server.ad_server.budget import budget_service
 from google.appengine.api import memcache
 from budget import models as budgetmodels
-from budget.models import BudgetManager
+from budget.models import BudgetSlicer
 
 ################# End to End #################
 from ad_server_tests import run_auction
@@ -81,7 +81,7 @@ class TestBudgetIntegration(unittest.TestCase):
         eq_(val,same)
         
     def mptest_timeslice_retrieval(self):
-        budget_manager = BudgetManager.get_or_insert_for_campaign(self.cheap_c)
+        budget_manager = BudgetSlicer.get_or_insert_for_campaign(self.cheap_c)
         eq_(budget_manager.timeslice_budget, 100)
 
     def mptest_memcache_rollunder(self):
@@ -251,7 +251,7 @@ class TestBudgetIntegration(unittest.TestCase):
 
     def mptest_cache_failure_then_advance(self):
         self.fetch_campaigns()
-        budget_manager = BudgetManager.get_or_insert_for_campaign(self.cheap_c)
+        budget_manager = BudgetSlicer.get_or_insert_for_campaign(self.cheap_c)
         eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
         eq_(budget_service._get_budget(self.cheap_c), 99)
         eq_(budget_manager.previous_budget_snapshot, 100)
@@ -264,7 +264,7 @@ class TestBudgetIntegration(unittest.TestCase):
         budget_service.advance_all()
         eq_(budget_manager.previous_budget_snapshot, 100)
         self.fetch_campaigns()
-        budget_manager = BudgetManager.get_or_insert_for_campaign(self.cheap_c)
+        budget_manager = BudgetSlicer.get_or_insert_for_campaign(self.cheap_c)
         eq_(budget_manager.previous_budget_snapshot, 200)
         
         
@@ -299,19 +299,34 @@ class TestBudgetEndToEnd(unittest.TestCase):
         budgetmodels.DEFAULT_TIMESLICES = 10 # this means each campaign has 100 dollars per slice
         budgetmodels.DEFAULT_FUDGE_FACTOR = 0.0
         
+        self.update_adgroups()
         self.fetch_campaigns()
         self.fetch_adunits()
         
-        #unpause them TODO: This should not be necesary
+        #unpause them and set the appropriate bids
         self.expensive_c.active = True
+
         self.expensive_c.put()
         
         self.cheap_c.active = True
+
         self.cheap_c.put()
+        self.fetch_adunits()
    
-        
     def tearDown(self):
         budget_service._flush_all()
+
+    def update_adgroups(self):
+        group_query = AdGroup.all().filter('name =', 'expensive') 
+
+        e_g = group_query.get()
+        e_g.bid = 100.0
+        e_g.put()
+        
+        group_query = AdGroup.all().filter('name =', 'cheap')
+        c_g = group_query.get()
+        c_g.bid = 10.0
+        c_g.put()
 
     def fetch_campaigns(self):
         """Gets the campaigns from the database, updates their remaining budget.
@@ -336,11 +351,18 @@ class TestBudgetEndToEnd(unittest.TestCase):
     def mptest_simple_request(self):
         creative = run_auction(self.budget_ad_unit.key())
         eq_(creative.ad_group.campaign.name, "expensive")
-    
+
+    def mptests_adgroups(self):
+        self.cheap_c.adgroups[0].bid = 10.0
+        self.cheap_c.adgroups[0].put()
+        eq_(self.cheap_c.adgroups[0].bid, 10.0)
+        eq_(self.expensive_c.adgroups[0].bid, 100.0)
+
     
     def mptest_multiple_requests(self):
         # We have enough budget for one expensive ad
         creative = run_auction(self.budget_ad_unit.key())
+        eq_(creative.ad_group.bid, 100.0)
         eq_(creative.ad_group.campaign.name, "expensive")
 
         # We have enough budget for 10 cheap ads
@@ -350,7 +372,7 @@ class TestBudgetEndToEnd(unittest.TestCase):
         
         creative = run_auction(self.budget_ad_unit.key())
         eq_(creative, None)
-  
+    
     def mptest_multiple_requests_advance_timeslice(self):
         # We have enough budget for one expensive ad
         creative = run_auction(self.budget_ad_unit.key())
@@ -376,7 +398,7 @@ class TestBudgetEndToEnd(unittest.TestCase):
 
         creative = run_auction(self.budget_ad_unit.key())
         eq_(creative, None)
-      
+
     def mptest_multiple_requests_advance_timeslice_twice(self):
         # We have enough budget for one expensive ad
         creative = run_auction(self.budget_ad_unit.key())
@@ -395,7 +417,7 @@ class TestBudgetEndToEnd(unittest.TestCase):
         # We again have enough budget for two expensive ads
         creative = run_auction(self.budget_ad_unit.key())
         eq_(creative.ad_group.campaign.name, "expensive")
-        
+    
         creative = run_auction(self.budget_ad_unit.key())
         eq_(creative.ad_group.campaign.name, "expensive")
 
@@ -408,4 +430,3 @@ class TestBudgetEndToEnd(unittest.TestCase):
         eq_(creative, None)
 
 
-    

@@ -4,6 +4,8 @@ from advertiser.models import ( Campaign,
                                 AdGroup,
                                 )
 import logging
+
+from budget.models import BudgetManager
                         
 """
 A service that determines if a campaign can be shown based upon the defined 
@@ -11,24 +13,21 @@ budget for that campaign. If the budget_type is "evenly", a minute by minute
 timeslice-budget is kept as well. 
 """
 
-TIMESLICES = 1440 #we use a default timeslice of one minute
-SECONDS_PER_DAY = 86400
-FUDGE_FACTOR = 0.1
-
 test_timeslice = 0
 test_daily_budget = 0
 
 
 def has_budget(campaign, cost):
     """ Returns True if the cost is less than the budget in the current slice """
+    budget_manager = BudgetManager.get_or_insert_for_campaign(campaign)
     campaign_daily_budget = campaign.budget
     
     key = _make_campaign_ts_budget_key(campaign)
     
     # If there is a cache miss, we fall back to the previous snapshot
-    ts_init_budget = campaign.previous_budget_snapshot
+    ts_init_budget = budget_manager.previous_budget_snapshot
     if ts_init_budget is None:
-        ts_init_budget = campaign.timeslice_budget
+        ts_init_budget = budget_manager.timeslice_budget
         logging.warning("calculated: %s" % ts_init_budget)
     # Add the budget every time, only is actually added the first
     memcache.add(key, _to_memcache_int(ts_init_budget),namespace="budget")
@@ -46,22 +45,23 @@ def apply_expense(campaign, cost):
 
 def advance_timeslice(campaign):
     """ Adds a new timeslice's worth of budget and pulls the budget
-     expenditures into the database. Executed once per timeslice."""
+    expenditures into the database. Executed once per timeslice."""
+    budget_manager = BudgetManager.get_or_insert_for_campaign(campaign)
+     
     # If cache miss, assume that no budget has been spent
     mem_budget = _get_budget(campaign)
     if mem_budget is None:
         # Use the snapshot from the beginning of this timeslice
-        mem_budget = campaign.previous_budget_snapshot 
+        mem_budget = budget_manager.previous_budget_snapshot 
 
     
     # Back up in database.
-    campaign.previous_budget_snapshot = mem_budget + campaign.timeslice_budget
-    campaign.remaining_daily_budget -= campaign.timeslice_budget
-    campaign.put()
+    budget_manager.previous_budget_snapshot = mem_budget + budget_manager.timeslice_budget
+    budget_manager.put()
     
     # Update in memory
     key = _make_campaign_ts_budget_key(campaign)
-    memcache.incr(key, _to_memcache_int(campaign.timeslice_budget), namespace="budget")
+    memcache.incr(key, _to_memcache_int(budget_manager.timeslice_budget), namespace="budget")
     # TODO: Also do budget logging
     
         
@@ -72,37 +72,25 @@ def advance_all():
         if camp.budget is not None:
             advance_timeslice(camp)   
 
-def daily_reset(campaign):
-    """ Resets the remaining_daily_budget in the database.
-    does not reset values in memcache. TODO: Called when initialized and at midnight """
-
-    # Reset in db
-    campaign.remaining_daily_budget = campaign.budget
-    campaign.put()
 
 def initialize(campaign):
-    # Reset in db
-    campaign.remaining_daily_budget = campaign.budget
-    campaign.previous_budget_snapshot = 0.0
+    
+    budget_manager = BudgetManager.get_or_insert_for_campaign(campaign)
 
-    campaign.timeslice_budget = campaign.budget / TIMESLICES * (1 + FUDGE_FACTOR) 
-    campaign.put()
+    # Reset in db
+    budget_manager.previous_budget_snapshot = 0.0
+    budget_manager.put()
 
     # Give us a first timeslice's worth in memory
     advance_timeslice(campaign)
     # TODO: what happens to unspent daily budget?
 
-def reset_all():
-    campaigns = Campaign.all()
-    # We use campaigns as an iterator
-    for camp in campaigns:
-        if camp.budget is not None:
-            daily_reset(camp)
-
 def _flush_cache_and_snapshots(campaign):
     _delete_memcache(campaign)
-    campaign.previous_budget_snapshot = None
-    campaign.put()
+    
+    budget_manager = BudgetManager.get_or_insert_for_campaign(campaign)
+    budget_manager.previous_budget_snapshot = None
+    budget_manager.put()
     
 def _flush_all():
     campaigns = Campaign.all()

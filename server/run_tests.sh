@@ -3,9 +3,9 @@
 echo $1
 if [ -z "$1" ] # if $1 does not exist
 then
-    nosetests --with-gae --gae-datastore='./test_data/basic_test.datastore' ad_server_tests # --with-coverage
-    # nosetests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --where='./userstore/tests' --with-coverage
-    # nosetests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --where='./reporting/tests' --with-coverage  --without-sandbox 
+    # nosetests --with-gae --gae-datastore='./test_data/basic_test.datastore' ad_server_tests # --with-coverage
+    nosetests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --where='./userstore/tests' #--with-coverage
+    nosetests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --where='./reporting/tests' --without-sandbox # --with-coverage 
     nosetests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-datastore='./test_data/basic_test.datastore' budget_integration_mptests #--with-coverage 
 
 else

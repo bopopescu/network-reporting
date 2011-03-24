@@ -897,7 +897,8 @@ class AdImpressionHandler(webapp.RequestHandler):
         # Update budgeting
         creative_id = self.request.get('cid')
         creative = Creative.get(Key(creative_id))
-        budget_service.apply_expense(creative.ad_group.campaign, creative.ad_group.bid)
+        if creative.ad_group.bid_strategy == 'cpm':
+            budget_service.apply_expense(creative.ad_group.campaign, creative.ad_group.bid)
         logging.error("applied expense: %s" % creative.ad_group.bid)
         
         if not self.request.get( 'testing' ) == TEST_MODE:
@@ -918,7 +919,8 @@ class AdClickHandler(webapp.RequestHandler):
 
     # Update budgeting
     creative = Creative.get(Key(creative_id))
-    budget_service.apply_expense(creative.ad_group.campaign, creative.ad_group.bid)
+    if creative.ad_group.bid_strategy == 'cpc':
+        budget_service.apply_expense(creative.ad_group.campaign, creative.ad_group.bid)
 
 
     # if driving download then we use the user datastore

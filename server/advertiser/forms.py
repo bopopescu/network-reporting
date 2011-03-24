@@ -19,6 +19,7 @@ from publisher.models import Site as AdUnit
 
 import logging
 import re
+import urlparse
 
 class CampaignForm(mpforms.MPModelForm):
   TEMPLATE = 'advertiser/forms/campaign_form.html'
@@ -168,6 +169,14 @@ class AbstractCreativeForm(mpforms.MPModelForm):
         if itunes_match:
             itunes_id = itunes_match.group(1)
             return itunes_id    
+        
+        # extracts the itunes appid from the url old phobos urls
+        # http://phobos.apple.com/WebObjects/MZStore.woa/wa/viewSoftware?id=386584429&mt=8
+        # in this case: 386584429        
+        qs_dict = urlparse.parse_qs(urlparse.urlparse(url).query)
+        if 'id' in qs_dict:
+            itunes_id = qs_dict['id'][0]
+            return itunes_id
         
         # extracts the package from the url
         # market://details?id=com.example.admob.lunarlander

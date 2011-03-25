@@ -7,6 +7,10 @@ from common.ragendja.template import render_to_response, render_to_string, JSONR
 from common.utils.decorators import whitelist_login_required
 from budget import budget_service
 
+from advertiser.models import ( Campaign,
+                                AdGroup,
+                                )
+
 def budget_advance(request):
     budget_service.advance_all()
     return HttpResponse("Advanced budget timeslices.")
@@ -22,5 +26,15 @@ def budget_logs(request, campaign_key):
     return HttpResponse(recent_logs)
     
 def mem_budget(request, campaign_key):
-    current_memory_budget = budget_service._get_budget_from_key(campaign_key)
-    return HttpResponse(current_memory_budget)
+    
+    campaign = Campaign.get(campaign_key)
+    mem_budget =  budget_service._get_budget(campaign)
+    
+    return HttpResponse(campaign.name + ": " + str(mem_budget))
+    
+def set_budget(request, campaign_key):
+    
+    campaign = Campaign.get(campaign_key)
+    mem_budget = 100.0
+    budget_service._set_memcache(campaign, mem_budget)
+    return HttpResponse(campaign.name + ": " + str(mem_budget))

@@ -21,7 +21,7 @@ test_daily_budget = 0
 
 def has_budget(campaign, cost):
     """ Returns True if the cost is less than the budget in the current slice """
-    memcache_budget = _get_memcache(campaign)
+    memcache_budget = _get_budget(campaign)
     
     if memcache_budget is None:
         # If there is a cache miss, we fall back to the previous snapshot
@@ -36,7 +36,7 @@ def has_budget(campaign, cost):
             logging.warning("calculated: %s" % ts_init_budget)
         # Add the budget every time, only is actually added the first
         memcache.add(key, _to_memcache_int(ts_init_budget),namespace="budget")
-        memcache_budget = _get_memcache(campaign)
+        memcache_budget = _get_budget(campaign)
     
     if memcache_budget >= cost:
         return True
@@ -114,12 +114,7 @@ def _to_memcache_int(value):
 def _from_memcache_int(value):
     value = float(value)
     return value/100000
-
-def _get_memcache(campaign):
-    """ Does a raw get from memcache """
-    key = _make_campaign_ts_budget_key(campaign)
-    return memcache.get(key, namespace="budget")
-   
+    
 def _set_memcache(campaign, val):
     key = _make_campaign_ts_budget_key(campaign)
     memcache.set(key, _to_memcache_int(val), namespace="budget")
@@ -140,10 +135,6 @@ def _get_budget(campaign):
         return _from_memcache_int(value)
 
 ################ TESTING FUNCTIONS ###################
-
-def _get_budget_from_key(campaign_key):
-    campaign = Campaign.get(campaign_key)
-    return _get_budget(campaign)
 
 def _apply_if_able(campaign, cost):
     """ For testing purposes """

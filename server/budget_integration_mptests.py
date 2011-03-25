@@ -85,13 +85,6 @@ class TestBudgetUnitTests(unittest.TestCase):
         budget_manager = BudgetSlicer.get_or_insert_for_campaign(self.cheap_c)
         eq_(budget_manager.timeslice_budget, 100)
 
-    def mptest_get_current_budget_from_key(self):
-        eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
-        
-        budget = budget_service._get_budget_from_key(self.cheap_c.key())
-        
-        eq_(budget, 99)
-
     def mptest_memcache_rollunder(self):
         #It does not appear that memcache allows rollunders, TODO: test in devappserver
         memcache.add("thing", 15)
@@ -329,7 +322,11 @@ class TestBudgetUnitTests(unittest.TestCase):
         last_log = budget_service.last_log(self.cheap_c)
         eq_(last_log.spending, 20)    
  
-
+    def mptest_very_expensive(self):
+         eq_(budget_service._apply_if_able(self.cheap_c, 10000), False)
+         
+         eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
+         eq_(budget_service._get_budget(self.cheap_c), 99)
 
 class TestBudgetEndToEnd(unittest.TestCase):
     """
@@ -369,25 +366,25 @@ class TestBudgetEndToEnd(unittest.TestCase):
         group_query = AdGroup.all().filter('name =', 'expensive') 
 
         e_g = group_query.get()
-        e_g.bid = 100.0
+        e_g.bid = 100000.0
         e_g.put()
         
         group_query = AdGroup.all().filter('name =', 'cheap')
         c_g = group_query.get()
-        c_g.bid = 10.0
+        c_g.bid = 10000.0
         c_g.put()
 
     def switch_adgroups_to_cpc(self):
         group_query = AdGroup.all().filter('name =', 'expensive') 
 
         e_g = group_query.get()
-        e_g.bid = 100.0
+        e_g.bid = 100000.0
         e_g.bid_strategy = "cpc"
         e_g.put()
         
         group_query = AdGroup.all().filter('name =', 'cheap')
         c_g = group_query.get()
-        c_g.bid = 10.0
+        c_g.bid = 10000.0
         c_g.bid_strategy = "cpc"
         c_g.put()
 
@@ -395,13 +392,13 @@ class TestBudgetEndToEnd(unittest.TestCase):
         group_query = AdGroup.all().filter('name =', 'expensive') 
 
         e_g = group_query.get()
-        e_g.bid = 100.0
+        e_g.bid = 100000.0
         e_g.bid_strategy = "cpm"
         e_g.put()
 
         group_query = AdGroup.all().filter('name =', 'cheap')
         c_g = group_query.get()
-        c_g.bid = 10.0
+        c_g.bid = 10000.0
         c_g.bid_strategy = "cpm"
         c_g.put()
 
@@ -410,12 +407,12 @@ class TestBudgetEndToEnd(unittest.TestCase):
         group_query = AdGroup.all().filter('name =', 'expensive') 
 
         e_g = group_query.get()
-        e_g.bid = 100.0
+        e_g.bid = 100000.0
         e_g.put()
 
         group_query = AdGroup.all().filter('name =', 'cheap')
         c_g = group_query.get()
-        c_g.bid = 10.0
+        c_g.bid = 10000.0
         c_g.put()
 
 
@@ -438,22 +435,26 @@ class TestBudgetEndToEnd(unittest.TestCase):
     def mptest_get_adunit(self):
         eq_(self.budget_ad_unit.name, 'Budget')
         eq_(self.fake_ad_unit.name, 'Fake')
+   
+    def mptests_adgroups(self):
+        self.cheap_c.adgroups[0].bid = 10000.0 # $10 per click
+        self.cheap_c.adgroups[0].put()
+        self.expensive_c.adgroups[0].bid = 100000.0 # $100 per click
+        self.expensive_c.adgroups[0].put()
+        eq_(self.cheap_c.adgroups[0].bid, 10000.0)
+        eq_(self.expensive_c.adgroups[0].bid, 100000.0)
+
     
     def mptest_simple_request(self):
         creative = run_auction(self.budget_ad_unit.key())
         eq_(creative.ad_group.campaign.name, "expensive")
 
-    def mptests_adgroups(self):
-        self.cheap_c.adgroups[0].bid = 10.0
-        self.cheap_c.adgroups[0].put()
-        eq_(self.cheap_c.adgroups[0].bid, 10.0)
-        eq_(self.expensive_c.adgroups[0].bid, 100.0)
 
     
     def mptest_multiple_requests(self):
         # We have enough budget for one expensive ad
         creative = run_auction(self.budget_ad_unit.key())
-        eq_(creative.ad_group.bid, 100.0)
+        eq_(creative.ad_group.bid, 100000.0)
         eq_(creative.ad_group.campaign.name, "expensive")
 
         # We have enough budget for 10 cheap ads
@@ -578,3 +579,4 @@ class TestBudgetEndToEnd(unittest.TestCase):
         
         eq_(log_generator[0].spending,150)
         eq_(log_generator[1].spending,50)
+        

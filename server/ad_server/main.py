@@ -73,7 +73,7 @@ from publisher.query_managers import AdServerAdUnitQueryManager, AdUnitQueryMana
 from advertiser.query_managers import CampaignStatsCounter
 
 from mopub_logging import mp_logging
-from server.ad_server.budget import budget_service
+from budget import budget_service
 from google.appengine.ext.db import Key
 
 TEST_MODE = "3uoijg2349ic(TEST_MODE)kdkdkg58gjslaf"

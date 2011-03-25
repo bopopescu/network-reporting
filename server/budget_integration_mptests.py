@@ -26,7 +26,7 @@ from server.ad_server.main import  ( AdHandler,
 import unittest
 from nose.tools import eq_
 from nose.tools import with_setup
-from server.ad_server.budget import budget_service
+from budget import budget_service
 from google.appengine.api import memcache
 from budget import models as budgetmodels
 from budget.models import (BudgetSlicer,
@@ -84,6 +84,13 @@ class TestBudgetUnitTests(unittest.TestCase):
     def mptest_timeslice_retrieval(self):
         budget_manager = BudgetSlicer.get_or_insert_for_campaign(self.cheap_c)
         eq_(budget_manager.timeslice_budget, 100)
+
+    def mptest_get_current_budget_from_key(self):
+        eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
+        
+        budget = budget_service._get_budget_from_key(self.cheap_c.key())
+        
+        eq_(budget, 99)
 
     def mptest_memcache_rollunder(self):
         #It does not appear that memcache allows rollunders, TODO: test in devappserver

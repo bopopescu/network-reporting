@@ -92,10 +92,14 @@ def last_log(campaign):
     slicer = BudgetSlicer.get_or_insert_for_campaign(campaign)
     return slicer.timeslice_logs.order("-end_date").get()
     
+def log_generator_from_key(campaign_key):
+    return log_generator(Campaign.get_by_key_name(campaign_key))
+    
 def log_generator(campaign):
     """Returns a generator function for the list of most recent logs"""
     slicer = BudgetSlicer.get_or_insert_for_campaign(campaign)
     return slicer.timeslice_logs.order("-end_date")
+            
             
 ################ HELPER FUNCTIONS ###################
 
@@ -136,6 +140,10 @@ def _get_budget(campaign):
         return _from_memcache_int(value)
 
 ################ TESTING FUNCTIONS ###################
+
+def _get_budget_from_key(campaign_key):
+    campaign = Campaign.get(campaign_key)
+    return _get_budget(campaign)
 
 def _apply_if_able(campaign, cost):
     """ For testing purposes """

@@ -62,7 +62,7 @@ parser.add_option("-l", "--logging", dest="LOGGING",type="int",
 parser.add_option("-i", "--instance_id", dest="INSTANCE_ID",type="int",
                 help="LABEL THE INSTANCE.", default=0)         
 parser.add_option("-e", "--exp_id", dest="TEST_ID",type="str",
-                help="LABEL THE TEST.", default='NAFIS_MAC')         
+                help="LABEL THE TEST.", default='PENELOPE')         
 parser.add_option("-x", "--host", dest="HOST",type="str",
                 help="HOST NAME.", default='eventrackerscaletest.appspot.com')         
                                
@@ -121,8 +121,8 @@ def threadproc():
             
             uid = uuid.uuid4()
             # adunits = ["agltb3B1Yi1pbmNyDAsSBFNpdGUYkaoMDA","agltb3B1Yi1pbmNyDAsSBFNpdGUYycEMDA","agltb3B1Yi1pbmNyDAsSBFNpdGUYq-wdDA"]
-            # adunits = ["ahRldmVudHJhY2tlcnNjYWxldGVzdHILCxIEU2l0ZRiJJww"]
-            adunits = ["agltb3B1Yi1pbmNyDAsSBFNpdGUYycoJDA","agltb3B1Yi1pbmNyDAsSBFNpdGUYmpUgDA"]
+            adunits = ["ahRldmVudHJhY2tlcnNjYWxldGVzdHILCxIEU2l0ZRjJZQw"]
+            # adunits = ["agltb3B1Yi1pbmNyDAsSBFNpdGUYycoJDA","agltb3B1Yi1pbmNyDAsSBFNpdGUYmpUgDA"]
             random.shuffle(adunits)
             adunit = adunits[0]
             t = time.time()

@@ -6,7 +6,7 @@ from math import ( atan2,
                    pow,
                    pi
                    )
-from ad_server.budget import budget_service
+from budget import budget_service
 ###############################
 # BASIC EXCLUSION FILTERS
 #

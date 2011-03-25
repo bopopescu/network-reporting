@@ -7,11 +7,6 @@ DEFAULT_FUDGE_FACTOR = 0.1
 class BudgetSlicer(db.Model):
     
     campaign = db.ReferenceProperty(Campaign)
-
-    # fudge_factor = db.FloatProperty(default=DEFAULT_FUDGE_FACTOR)
-    # 
-    # timeslices = db.FloatProperty(default=DEFAULT_TIMESLICES)
-  
     previous_budget_snapshot = db.FloatProperty(default=0.0)
   
 
@@ -45,6 +40,11 @@ class BudgetSlicer(db.Model):
         
 
 class TimesliceLog(db.Model):
-      budget = db.ReferenceProperty(BudgetSlicer,collection_name="timeslice_logs")
+      budget_slicer = db.ReferenceProperty(BudgetSlicer,collection_name="timeslice_logs")
+      initial_memcache_budget = db.FloatProperty()
       final_memcache_budget = db.FloatProperty()
-      start_date = db.DateTimeProperty()
+      end_date = db.DateTimeProperty()
+      
+      @property
+      def spending(self):
+          return self.initial_memcache_budget - self.final_memcache_budget

@@ -29,13 +29,15 @@ from nose.tools import with_setup
 from server.ad_server.budget import budget_service
 from google.appengine.api import memcache
 from budget import models as budgetmodels
-from budget.models import BudgetSlicer
+from budget.models import (BudgetSlicer,
+                           TimesliceLog,
+                           )
 
 ################# End to End #################
 from ad_server_tests import run_auction
 from publisher.models import Site as AdUnit
 
-class TestBudgetIntegration(unittest.TestCase):
+class TestBudgetUnitTests(unittest.TestCase):
     
     def setUp(self):
         # We simplify the budgetmanger for testing purposes
@@ -43,11 +45,10 @@ class TestBudgetIntegration(unittest.TestCase):
         budgetmodels.DEFAULT_FUDGE_FACTOR = 0.0
         
         
-        #get the campaigns and initialize them
+        # Get the campaigns and initialize them
         self.fetch_campaigns()
-
-        budget_service.initialize(self.cheap_c)
-        budget_service.initialize(self.expensive_c)
+        # Give all the campaigns one slice
+        budget_service.advance_all()
         
     
     def tearDown(self):
@@ -286,6 +287,42 @@ class TestBudgetIntegration(unittest.TestCase):
         self.fetch_campaigns()
         eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
         eq_(budget_service._get_budget(self.cheap_c), 298)
+        
+    def mptest_budget_logging_basic(self):
+        eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
+        eq_(budget_service._get_budget(self.cheap_c), 99)
+        
+        budget_service.advance_all()
+        self.fetch_campaigns()
+        
+        slicer = BudgetSlicer.get_or_insert_for_campaign(self.cheap_c)
+        eq_(slicer.previous_budget_snapshot, 199)
+        
+        last_log = slicer.timeslice_logs.order("-end_date").get()
+        eq_(last_log.spending, 1)
+        
+    def mptest_budget_logging_multiple(self):
+        eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
+        eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
+        eq_(budget_service._get_budget(self.cheap_c), 98)
+
+        budget_service.advance_all()
+        self.fetch_campaigns()
+
+        last_log = budget_service.last_log(self.cheap_c)
+        eq_(last_log.spending, 2)    
+ 
+        eq_(budget_service._apply_if_able(self.cheap_c, 10), True)
+        eq_(budget_service._apply_if_able(self.cheap_c, 10), True)
+        eq_(budget_service._get_budget(self.cheap_c), 178)
+
+        budget_service.advance_all()
+        self.fetch_campaigns()
+
+        last_log = budget_service.last_log(self.cheap_c)
+        eq_(last_log.spending, 20)    
+ 
+
 
 class TestBudgetEndToEnd(unittest.TestCase):
     """
@@ -312,6 +349,11 @@ class TestBudgetEndToEnd(unittest.TestCase):
         self.cheap_c.put()
         self.fetch_adunits()
         self.switch_adgroups_to_cpm()
+        
+        # Give all the campaigns one slice
+        budget_service.advance_all()
+        
+        
    
     def tearDown(self):
         budget_service._flush_all()
@@ -486,4 +528,46 @@ class TestBudgetEndToEnd(unittest.TestCase):
         creative = run_auction(self.budget_ad_unit.key())
         eq_(creative, None)
 
+    def mptest_multiple_requests_advance_timeslice_logging(self):
+        # We have enough budget for one expensive ad
+        creative = run_auction(self.budget_ad_unit.key())
+        eq_(creative.ad_group.campaign.name, "expensive")
 
+        # We use half our cheap campaign budget
+        for i in xrange(5):
+            creative = run_auction(self.budget_ad_unit.key())
+            eq_(creative.ad_group.campaign.name, "cheap")
+
+        # Advance all of our campaigns
+        budget_service.advance_all()
+        self.fetch_campaigns()
+        
+        # We spent 50.0 on cheap_c last timeslice
+        last_log = budget_service.last_log(self.cheap_c)
+        eq_(last_log.spending, 50)
+
+        # We again have enough budget for one expensive ad
+        creative = run_auction(self.budget_ad_unit.key())
+        eq_(creative.ad_group.campaign.name, "expensive")
+
+        # We now have a cheap campaign budget for 15 ads
+        for i in xrange(15):
+            creative = run_auction(self.budget_ad_unit.key())
+            eq_(creative.ad_group.campaign.name, "cheap")
+
+        creative = run_auction(self.budget_ad_unit.key())
+        eq_(creative, None)
+        
+        # Advance all of our campaigns
+        budget_service.advance_all()
+        self.fetch_campaigns()
+        
+        # We spent 150.0 on cheap_c last timeslice
+        last_log = budget_service.last_log(self.cheap_c)
+        eq_(last_log.spending, 150)
+
+        # Test the generator function:
+        log_generator = budget_service.log_generator(self.cheap_c)
+        
+        eq_(log_generator[0].spending,150)
+        eq_(log_generator[1].spending,50)

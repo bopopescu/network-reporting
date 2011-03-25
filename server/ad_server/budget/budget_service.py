@@ -5,7 +5,9 @@ from advertiser.models import ( Campaign,
                                 )
 import logging
 
-from budget.models import BudgetSlicer
+from budget.models import (BudgetSlicer,
+                           TimesliceLog,
+                           )
                         
 """
 A service that determines if a campaign can be shown based upon the defined 
@@ -58,15 +60,24 @@ def advance_timeslice(campaign):
         # Use the snapshot from the beginning of this timeslice
         mem_budget = budget_slicer.previous_budget_snapshot 
 
+    # Log budget as long as this is not the first time
+    if budget_slicer.previous_budget_snapshot is not None:
+        initial_memcache_budget = budget_slicer.previous_budget_snapshot
+        final_memcache_budget = mem_budget
+        log = TimesliceLog(budget_slicer=budget_slicer,
+                           initial_memcache_budget=initial_memcache_budget,
+                           final_memcache_budget=final_memcache_budget,
+                           end_date=datetime.datetime.now()
+                           )
+        log.put()
     
-    # Back up in database.
+    # Back up slicer in database.
     budget_slicer.previous_budget_snapshot = mem_budget + budget_slicer.timeslice_budget
     budget_slicer.put()
     
     # Update in memory
     key = _make_campaign_ts_budget_key(campaign)
     memcache.incr(key, _to_memcache_int(budget_slicer.timeslice_budget), namespace="budget")
-    # TODO: Also do budget logging
     
         
 def advance_all():
@@ -75,20 +86,17 @@ def advance_all():
     for camp in campaigns:
         if camp.budget is not None:
             advance_timeslice(camp)   
-
-
-def initialize(campaign):
+            
+def last_log(campaign):
+    """Returns the most recently recorded log"""
+    slicer = BudgetSlicer.get_or_insert_for_campaign(campaign)
+    return slicer.timeslice_logs.order("-end_date").get()
     
-    budget_slicer = BudgetSlicer.get_or_insert_for_campaign(campaign)
-
-    # Reset in db
-    budget_slicer.previous_budget_snapshot = 0.0
-    budget_slicer.put()
-
-    # Give us a first timeslice's worth in memory
-    advance_timeslice(campaign)
-    # TODO: what happens to unspent daily budget?
-
+def log_generator(campaign):
+    """Returns a generator function for the list of most recent logs"""
+    slicer = BudgetSlicer.get_or_insert_for_campaign(campaign)
+    return slicer.timeslice_logs.order("-end_date")
+            
 ################ HELPER FUNCTIONS ###################
 
 def _make_campaign_ts_budget_key(campaign):
@@ -137,12 +145,17 @@ def _apply_if_able(campaign, cost):
     return success
 
 
-def _flush_cache_and_snapshots(campaign):
+def _flush_cache_and_slicer(campaign):
+    """ For testing. Deletes the slicer and all logs"""
     _delete_memcache(campaign)
 
     budget_slicer = BudgetSlicer.get_or_insert_for_campaign(campaign)
-    budget_slicer.previous_budget_snapshot = None
-    budget_slicer.put()
+    # budget_slicer.previous_budget_snapshot = None
+    
+    for log in budget_slicer.timeslice_logs:
+        log.delete()
+    
+    budget_slicer.delete()
 
 def _flush_all():
     campaigns = Campaign.all()
@@ -150,4 +163,4 @@ def _flush_all():
     for camp in campaigns:
         if camp.budget is not None:
             logging.error("flushing: %s" % camp.name)
-            _flush_cache_and_snapshots(camp)
+            _flush_cache_and_slicer(camp)

@@ -80,6 +80,10 @@ class RequestHandler(object):
         if not self.account:  
           self.account = Account.current_account()
           
+        # use the offline stats  
+        self.offline = self.request.get("offline",False)   
+          
+          
         if request.method == "GET":
             return self.get(*args,**kwargs)
         elif request.method == "POST":

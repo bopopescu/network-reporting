@@ -88,6 +88,9 @@ class RequestHandler(object):
               self.account = AccountQueryManager().get_by_key_name(account_key_name)
         if not self.account:  
           self.account = Account.current_account()
+          
+        # use the offline stats  
+        self.offline = self.request.get("offline",False)   
 
         if request.method == "GET":
             return self.get(*args,**kwargs)

@@ -24,3 +24,6 @@ $ dev_appserver.py --datastore_path=test_data/basic_test.datastore .
 
 then go to:
 http://localhost:8080/_ah/admin/datastore
+
+NOTE: For this to function, the first line of app.yaml must be:
+ 	application: mopub-inc 

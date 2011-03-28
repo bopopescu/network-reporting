@@ -138,8 +138,7 @@ class StatsModelQueryManager(CachedQueryManager):
                 stat =  StatsModel(publisher=pub,
                                    advertiser=adv,
                                    date=date,
-                                   date_hour=date_hour,
-                                   offline=offline)
+                                   date_hour=date_hour)
                 stats_dict[key] = stat
             else:
                 stat = stats_dict[key]

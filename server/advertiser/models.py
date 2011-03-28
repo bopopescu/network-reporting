@@ -43,10 +43,17 @@ class Campaign(db.Model):
   def owner(self):
     return None
 
+  @owner.setter
+  def owner(self, value):
+    pass
+            
   @property
   def owner_key(self):
     return None
-      
+    
+  @property
+  def owner_name(self):
+    return None 
     
     
 class AdGroup(db.Model):
@@ -192,10 +199,18 @@ class AdGroup(db.Model):
   @property
   def owner(self):
     return self.campaign
+    
+  @owner.setter
+  def owner(self, value):
+    self.campaign = value
 
   @property
   def owner_key(self):
     return self._campaign
+
+  @property
+  def owner_name(self):
+    return 'campaign'
     
 
 class Creative(polymodel.PolyModel):
@@ -247,9 +262,17 @@ class Creative(polymodel.PolyModel):
   def owner(self):
     return self.ad_group
   
+  @owner.setter
+  def owner(self, value):
+    self.ad_group = value
+         
   @property
   def owner_key(self):
     return self._ad_group
+    
+  @property
+  def owner_name(self):
+    return 'ad_group'
           
   def __repr__(self):
     return "Creative{ad_type=%s, eCPM=%.02f ,key_name=%s}" % (self.ad_type, self.e_cpm(),self.key().id_or_name())

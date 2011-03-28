@@ -34,7 +34,7 @@ creative_id2 = str(creative2)
 adgroup_id = str(adgroup)
 campaign_id = str(campaign)
 date_hour = datetime.datetime(2011,02,22,03)
-date = datetime.datetime(2011,02,22)
+
 
 # same app, adgroup
 account = Account(key_name="account").key()
@@ -156,6 +156,10 @@ obj_dict = {
 
 
 def rollup_mptest():    
+    # make sure we start this unit test with clean slate
+    db.delete(StatsModel.all())
+    assert_equals(StatsModel.all().count(), 0)
+    
     assert_equals(App.all().count(), 1)
     assert_equals(Campaign.all().count(), 1)
     assert_equals(AdGroup.all().count(), 1)
@@ -171,3 +175,7 @@ def rollup_mptest():
         key_name = obj.key().name()
         if len(key_name.split(':')) == 2: continue # skip the account 
         assert_equals(obj_dict[key_name], (obj.request_count,obj.impression_count,obj.click_count))
+
+    # remove all StatsModels for next unit test
+    db.delete(StatsModel.all())
+    assert_equals(StatsModel.all().count(), 0)

@@ -1,11 +1,20 @@
 import logging
 import time
 import datetime
-from common.utils.cachedquerymanager import CachedQueryManager
 
 from google.appengine.ext import db
 
+from common.utils.cachedquerymanager import CachedQueryManager
 from reporting.models import SiteStats, StatsModel
+from advertiser.models import Creative
+from publisher.models import Site as AdUnit
+
+
+# maximum number of objects per batch put
+LIMIT = 200
+# object cache miss sentinel for StatsModelQueryManager
+SENTINEL = '!!!'
+
 
 class SiteStatsQueryManager(CachedQueryManager):
     def get_sitestats_for_days(self, site=None, owner=None, days=None):
@@ -30,10 +39,15 @@ class StatsModelQueryManager(CachedQueryManager):
     def __init__(self, account):
         if isinstance(account, db.Key):
             self.account = account
+        elif isinstance(account, db.Model):
+            self.account = account.key()
         else:
             self.account = db.Key(account)
+        self.stats = []
+        self.obj_cache = {}
+        
             
-    def get_stats_for_days(self, publisher=None, advertiser=None, days=None, account=None):
+    def get_stats_for_days(self, publisher=None, advertiser=None, days=None, account=None, offline=False):
         if isinstance(publisher,db.Model):
           publisher = publisher.key()
 
@@ -43,45 +57,75 @@ class StatsModelQueryManager(CachedQueryManager):
         days = days or []
         account = account or self.account
 
-        keys = (StatsModel.get_key(publisher=publisher,advertiser=advertiser,account=account)
+        keys = (StatsModel.get_key(publisher=publisher,advertiser=advertiser,account=account, offline=offline)
                     for d in days)
         stats = StatsModel.get(keys) # db get
         stats = [s or StatsModel() for s in stats]
         return stats            
     
-    def put_stats(self,stats,rollup=True):
+    
+    def accumulate_stats(self, stat):
+        self.stats.append(stat)
+    
+    
+    def put_stats(self, stats=None ,rollup=True, offline=False):
+        stats = stats or self.stats
+        
         if isinstance(stats,db.Model):
             stats = [stats]
         if rollup:
-            all_stats_deltas = self._get_all_rollups(stats)
+            all_stats_deltas = self._get_all_rollups(stats, offline)
         else:
             all_stats_deltas = stats
-        all_stats_deltas = self._place_stats_under_account(all_stats_deltas)
+        all_stats_deltas = self._place_stats_under_account(all_stats_deltas, offline=offline)
         
         # get or insert from db in order to update as transaction
-        def _txn(stats):
-            return self._update_db(stats)
-        return db.run_in_transaction(_txn,all_stats_deltas)
+        def _txn(stats, offline):
+            return self._update_db(stats, offline)
         
-    def _update_db(self,stats):
+        if offline:
+            return self._update_db(all_stats_deltas, offline)
+        else:
+            return db.run_in_transaction(_txn, all_stats_deltas, offline)    
+        
+        
+    def _update_db(self, stats, offline):
         key_list = []
+
+        if offline:
+            while stats:
+                db.put(stats[:LIMIT])
+                stats = stats[LIMIT:]
+            return [s.key() for s in stats]
+
         for s in stats:
-            stat = db.get(s.key())    
-            if stat:
+            stat = db.get(s.key())    # get datastore's stat using key of s
+            if stat:    # if exists, update with delta s
                 stat += s
-            else:
+            else:       # if doesn't exist, make it with delta s
                 stat = s
             key_list.append(stat.put())
-        logging.info("putting in key_name: %s value: %s,%s"%(s.key().name(),s.request_count,s.impression_count))
-        logging.info("putting in key_name: %s NEW value: %s,%s"%(s.key().name(),stat.request_count,stat.impression_count))
         return key_list
         
-        
-    def _get_all_rollups(self,stats):
+                
+    def _get_all_rollups(self, stats, offline):
         # initialize the object dictionary 
         stats_dict = {}
         for stat in stats:
             stats_dict[stat.key().name()] = stat
+        
+        
+        def _get_refprop_from_cache(entity, prop):
+            if prop:
+                model = entity.__class__
+                key = getattr(model,prop).get_value_for_datastore(entity)
+                value = self.obj_cache.get(key,SENTINEL)
+                if value == SENTINEL:
+                    value = getattr(entity,prop)
+                    self.obj_cache[key] = value
+                return value    
+            return None            
+        
         
         def _get_stat(pub=None,adv=None,date_hour=None,date=None):
             """get or creates the stat from the local dictionary"""
@@ -89,11 +133,13 @@ class StatsModelQueryManager(CachedQueryManager):
                                           advertiser=adv,
                                           date=date,
                                           date_hour=date_hour) 
+
             if not key in stats_dict:
                 stat =  StatsModel(publisher=pub,
                                    advertiser=adv,
                                    date=date,
-                                   date_hour=date_hour)
+                                   date_hour=date_hour,
+                                   offline=offline)
                 stats_dict[key] = stat
             else:
                 stat = stats_dict[key]
@@ -102,6 +148,8 @@ class StatsModelQueryManager(CachedQueryManager):
         
         # TODO: Clean this function up a bit
         def make_above_stat(stat,attribute='date'):
+            stat.advertiser = _get_refprop_from_cache(stat, 'advertiser')
+            stat.publisher = _get_refprop_from_cache(stat, 'publisher')
             
             if attribute == 'advertiser' and not stat.advertiser:
                 return None
@@ -112,22 +160,30 @@ class StatsModelQueryManager(CachedQueryManager):
             attrs = dict([(k,getattr(stat,k)) for k in properties])    
             
             if attribute == "publisher" and stat.publisher:    
+                # owner_name prop returns a string that's the owner, i.e. creative.owner_name = 'ad_group'
+                stat.publisher.owner = _get_refprop_from_cache(stat.publisher, stat.publisher.owner_name)
+                
                 attrs.update(publisher=stat.publisher.owner)
                 new_stat = StatsModel(**attrs)
                 make_above_stat(new_stat,'publisher')
                 prev_stat = _get_stat(pub=new_stat.publisher,
                                       adv=new_stat.advertiser,
-                                      date_hour=new_stat.date)
+                                      date_hour=new_stat.date_hour,
+                                      date=new_stat.date)
                 prev_stat += new_stat
                 stats_dict[prev_stat.key().name()] = prev_stat
 
             if attribute == "advertiser" and stat.advertiser:
+                # owner_name prop returns a string that's the owner, i.e. creative.owner_name = 'ad_group'
+                stat.advertiser.owner = _get_refprop_from_cache(stat.advertiser, stat.advertiser.owner_name)
+                
                 attrs.update(advertiser=stat.advertiser.owner)
                 new_stat = StatsModel(**attrs)
                 make_above_stat(new_stat,'advertiser')
                 prev_stat = _get_stat(pub=new_stat.publisher,
                                       adv=new_stat.advertiser,
-                                      date_hour=new_stat.date)
+                                      date_hour=new_stat.date_hour,
+                                      date=new_stat.date)
                 prev_stat += new_stat
                 # if owner is None, undo the increment of request count
                 # publisher-* is already accounted for
@@ -138,7 +194,7 @@ class StatsModelQueryManager(CachedQueryManager):
 
             if attribute == 'date':
                 # NOTE: This is a Pacific TimeZone day
-                day = stat.date.date() # makes date object
+                day = stat.date_hour.date() # makes date object
                 date = datetime.datetime(day.year,day.month,day.day) # makes datetime obj
                 properties = stat._properties
                 attrs = dict([(k,getattr(stat,k)) for k in properties])    
@@ -160,18 +216,21 @@ class StatsModelQueryManager(CachedQueryManager):
             make_above_stat(stat,'advertiser')
         
         # time rollups
-        stats = stats_dict.values()
-        for stat in stats:
-            make_above_stat(stat,'date')
+        if not offline: # do not rollup on date if it's offline, since aws-logging data is already cumulative
+            stats = stats_dict.values()
+            for stat in stats:
+                make_above_stat(stat,'date')
+        
         return stats_dict.values()
     
-    def _place_stats_under_account(self,stats,account=None):
+    
+    def _place_stats_under_account(self, stats, account=None, offline=False):
         """
         rewrites all the stats objects in order to place them
         under the StatsModel object for the account
         """
         account = account or self.account
-        account_stats = StatsModel(account=account) 
+        account_stats = StatsModel(account=account, offline=offline) 
         properties = StatsModel._properties
         new_stats = [account_stats]
         
@@ -181,6 +240,7 @@ class StatsModelQueryManager(CachedQueryManager):
             props = {}
             for k in properties:
                 props[k] = getattr(s,'_%s'%k) # gets underlying data w/ no derefernce
+            props.update(account=account)
             new_stat = StatsModel(parent=account_stats.key(),
                                   key_name=s.key().name(),
                                   **props)

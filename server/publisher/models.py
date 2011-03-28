@@ -35,6 +35,14 @@ class App(db.Model):
   def owner_key(self):
       return None
   
+  @property
+  def owner_name(self):
+      return None
+
+  @owner.setter
+  def owner(self, value):
+      pass
+
 
 class Site(db.Model):
   DEVICE_FORMAT_CHOICES = (
@@ -115,7 +123,15 @@ class Site(db.Model):
   @property
   def owner(self):
       return self.app_key
+
+  @owner.setter
+  def owner(self, value):
+      self.app_key = value
   
   @property
   def owner_key(self):
       return self._app_key            
+
+  @property
+  def owner_name(self):
+      return "app_key"

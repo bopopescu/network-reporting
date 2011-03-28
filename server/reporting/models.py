@@ -36,7 +36,8 @@ class StatsModel(db.Model):
     advertiser = db.ReferenceProperty(collection_name='advertiser_stats')
     account = db.ReferenceProperty(Account,collection_name='account_stats')
     
-    date = db.DateTimeProperty() # modulo to hour or day
+    date_hour = db.DateTimeProperty() # modulo to hour or day
+    date = db.DateTimeProperty()
     
     request_count = db.IntegerProperty(default=0)
     impression_count = db.IntegerProperty(default=0)
@@ -50,6 +51,9 @@ class StatsModel(db.Model):
     # total revenue (cost)
     revenue = db.FloatProperty(default=float(0))
 
+    # offline
+    offline = db.BooleanProperty(default=False)
+        
     # geo information
     _geo_requests_json = db.StringProperty()
     _geo_impressions_json = db.StringProperty()
@@ -68,27 +72,26 @@ class StatsModel(db.Model):
             advertiser = self._force_key(advertiser)
             account = kwargs.get('account',None)
             account = self._force_key(account)
+            offline = kwargs.get('offline',False)
             kwargs.update(publisher=publisher,advertiser=advertiser,account=account)
-
 
             
             # grab the date and make key name
             date = kwargs.get('date',None)
             date_hour = kwargs.get('date_hour',None)
             
-            # if date_hour is used the underlying data is actually just stored in 'date'
-            if not date and date_hour:
-                kwargs.update(date=date_hour)
+
             key_name = self.get_key_name(publisher=publisher,
                                          advertiser=advertiser,
                                          date=date,
                                          date_hour=date_hour,
-                                         account=account)
+                                         account=account,
+                                         offline=offline)
         return super(StatsModel,self).__init__(parent=parent,key_name=key_name,**kwargs)
         
-    @property
-    def date_hour(self):
-        return self.date
+    # @property
+    # def date_hour(self):
+    #     return self.date
         
     def __add__(self,s):
         return StatsModel(parent=self.parent_key(),
@@ -97,12 +100,14 @@ class StatsModel(db.Model):
                           advertiser=StatsModel.advertiser.get_value_for_datastore(self),
                           account=StatsModel.account.get_value_for_datastore(self),
                           date=self.date,
+                          date_hour=self.date_hour,
                           request_count=self.request_count + s.request_count,
                           impression_count=self.impression_count + s.impression_count,
                           click_count=self.click_count + s.click_count,
                           conversion_count=self.conversion_count + s.conversion_count,
                           user_count=self.user_count + s.user_count, # TODO: this needs to be deduped
                           reqs=self.reqs+s.reqs,
+                          offline=self.offline,
                          )
                
                
@@ -113,11 +118,12 @@ class StatsModel(db.Model):
         return self.__str__()
                     
     def __str__(self):
-        return  "StatsModel(date=%s, pub=%s, adv=%s, account=%s, %s,%s,%s,%s)"%(
+        return  "StatsModel(date=%s, pub=%s, adv=%s, account=%s, offline=%s, %s,%s,%s,%s)"%(
                                                           self.date,
                                                           StatsModel.publisher.get_value_for_datastore(self),
                                                           StatsModel.advertiser.get_value_for_datastore(self),    
                                                           StatsModel.account.get_value_for_datastore(self),
+                                                          self.offline,
                                                           self.request_count,
                                                           self.impression_count,
                                                           self.click_count,
@@ -126,7 +132,7 @@ class StatsModel(db.Model):
 
     
     @classmethod
-    def get_key_name(cls,publisher,advertiser,date=None,date_hour=None,account=None):
+    def get_key_name(cls,publisher,advertiser,date=None,date_hour=None,account=None,offline=False):
         if publisher or advertiser or date_hour or date:
             if isinstance(publisher,db.Model):
                 publisher = publisher.key()
@@ -142,11 +148,15 @@ class StatsModel(db.Model):
                                                                   publisher=publisher or '',
                                                                   advertiser=advertiser or '')
         else:
-            return 'k:%s'%account    
+            if offline:
+                return 'k:%s_offline'%account    
+            else:
+                return 'k:%s'%account
+            
             
     @classmethod
-    def get_key(cls, publisher,advertiser,date,date_hour,account=None):
-      return db.Key.from_path(cls.kind(),cls.get_key_name(publisher,advertiser,data,date_hour,account))
+    def get_key(cls, publisher,advertiser,date,date_hour,account=None,offline=False):
+        return db.Key.from_path(cls.kind(),cls.get_key_name(publisher,advertiser,date,date_hour,account,offline))
             
     def _force_key(self,prop):
         if prop:

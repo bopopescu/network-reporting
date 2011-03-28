@@ -256,8 +256,7 @@ class CreateCampaignAJAXHander(RequestHandler):
           n[2] = True
     else:
       networks[0][2] = True # select the first by default      
-      
-      
+    
     campaign_form.add_context(dict(networks=networks))
     adgroup_form.add_context(dict(all_adunits=all_adunits))
     return self.render(campaign_form=campaign_form,adgroup_form=adgroup_form)

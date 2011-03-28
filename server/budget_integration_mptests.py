@@ -167,10 +167,6 @@ class TestBudgetUnitTests(unittest.TestCase):
         
         mem_budget_c = budget_service._get_budget(self.cheap_c)
         mem_budget_e = budget_service._get_budget(self.expensive_c)
-        
-        # eq_(mem_budget_c + self.cheap_c.remaining_daily_budget, self.cheap_c.budget)
-        # eq_(mem_budget_c + self.expensive_c.remaining_daily_budget,
-            # self.expensive_c.budget)
     
     def mptest_multiple_campaigns_advance_twice(self):
         eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
@@ -189,14 +185,12 @@ class TestBudgetUnitTests(unittest.TestCase):
     def mptest_remaining_daily_budget(self):
         eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
         # We have moved 100 to the current timeslice budget
-        # eq_(self.cheap_c.remaining_daily_budget, 900) 
         eq_(budget_service._get_budget(self.cheap_c),99)
         
         budget_service.advance_all()
         self.fetch_campaigns()
         
         # We have moved 200 to the current timeslice budget
-        # eq_(self.cheap_c.remaining_daily_budget, 800) 
         eq_(budget_service._get_budget(self.cheap_c),199)
         
         budget_service.advance_all()
@@ -205,7 +199,6 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service._get_budget(self.cheap_c),399)
         
         # We have moved 400 to the current timeslice budget
-        # eq_(self.cheap_c.remaining_daily_budget, 600) 
         
         budget_service.advance_all()
         self.fetch_campaigns()
@@ -345,10 +338,12 @@ class TestBudgetEndToEnd(unittest.TestCase):
         
         #unpause them and set the appropriate bids
         self.expensive_c.active = True
+        self.expensive_c.budget_strategy = "evenly"
 
         self.expensive_c.put()
         
         self.cheap_c.active = True
+        self.cheap_c.budget_strategy = "evenly"
 
         self.cheap_c.put()
         self.fetch_adunits()

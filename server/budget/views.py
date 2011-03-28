@@ -24,25 +24,25 @@ import logging
 CAMPAIGNS_PER_WORKER = 30
 
 def budget_advance(request):
-    keys = Campaign.all(keys_only=True).fetch(1000000)
+    keys = Campaign.all(keys_only=True).filter('budget_strategy =', 'evenly').fetch(1000000)
     count = len(keys)
 
     # Break keys into shards of 10 and send them to a worker
     start_index = 0
     end_index = CAMPAIGNS_PER_WORKER
     
-    text = ""
+    text = ''
     
     while start_index < count:
     
         key_shard = keys[start_index:end_index]
-        text += "<br><br> %s:%s has value: %s" % (start_index, end_index, key_shard)
+        text += '<br><br> %s:%s has value: %s' % (start_index, end_index, key_shard)
         
         # Add the task to the default queue.
         
-        serial_key_shard = ""
+        serial_key_shard = ''
         for key in key_shard:
-            serial_key_shard += str(key) + ","
+            serial_key_shard += str(key) + ','
 
         serial_key_shard = serial_key_shard[:-1]
         
@@ -57,7 +57,7 @@ def budget_advance(request):
         start_index += CAMPAIGNS_PER_WORKER
         end_index += CAMPAIGNS_PER_WORKER
     
-    return HttpResponse("Advanced budget timeslices: %s" % text)
+    return HttpResponse('Advanced budget timeslices: %s' % text)
     
 def advance_worker(request):
     serial_key_shard = request.POST['key_shard']
@@ -71,16 +71,16 @@ def advance_worker(request):
         if camp.budget is not None:
             budget_service.advance_timeslice(camp)
                
-    return HttpResponse("Worker Succeeded")
+    return HttpResponse('Worker Succeeded')
 
     
 def budget_logs(request, campaign_key):
     
     recent_logs = budget_service.log_generator_from_key(campaign_key)[0]
-    output = ""
+    output = ''
     
     for log in recent_logs:
-        output += str(log) + "\n"
+        output += str(log) + '\n'
         
     return HttpResponse(recent_logs)
     
@@ -91,11 +91,11 @@ def mem_budget(request, campaign_key):
     campaign = Campaign.get(campaign_key)
     mem_budget =  budget_service._get_budget(campaign)
     
-    return HttpResponse(campaign.name + ": " + str(mem_budget))
+    return HttpResponse(campaign.name + ': ' + str(mem_budget))
     
 def set_budget(request, campaign_key):
     
     campaign = Campaign.get(campaign_key)
     mem_budget = 100.0
     budget_service._set_memcache(campaign, mem_budget)
-    return HttpResponse(campaign.name + ": " + str(mem_budget))
+    return HttpResponse(campaign.name + ': ' + str(mem_budget))

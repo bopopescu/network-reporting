@@ -23,7 +23,7 @@ class CampaignForm(mpforms.MPModelForm):
   TEMPLATE = 'advertiser/forms/campaign_form.html'
   gtee_level = forms.Field(widget = forms.Select)
   promo_level = mpfields.MPChoiceField(choices=[('normal','Normal'),('backfill','Backfill')],widget=mpwidgets.MPSelectWidget)
-  
+  budget_strategy = mpfields.MPChoiceField(choices=[('evenly','Spread Evenly'),('allatonce','All at once')],widget=mpwidgets.MPRadioWidget)
  
   #priority is now based off of campaign_type, not actually priority
   #gtee has 3 levels, this makes it so the database understands the three different levels of gtee
@@ -91,7 +91,7 @@ class CampaignForm(mpforms.MPModelForm):
 
   class Meta:
     model = Campaign
-    fields = ('name', 'description', 'budget', 'campaign_type', 'start_date', 'end_date', 'gtee_level','promo_level')
+    fields = ('name', 'budget_strategy', 'description', 'budget', 'campaign_type', 'start_date', 'end_date', 'gtee_level','promo_level')
 
 AdUnit.all()
 

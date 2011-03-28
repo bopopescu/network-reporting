@@ -14,13 +14,12 @@ class Campaign(db.Model):
   # budget per day
   budget = db.FloatProperty() 
   
-  remaining_daily_budget = db.FloatProperty()
-  
   previous_budget_snapshot = db.FloatProperty()
   
   # budget per timeslice, determined dynamically
   timeslice_budget = db.FloatProperty()
   
+  budget_strategy = db.StringProperty(choices=['evenly','allatonce'], default="allatonce")
   
   # start and end dates 
   start_date = db.DateProperty()
@@ -54,6 +53,9 @@ class Campaign(db.Model):
   @property
   def owner_key(self):
     return None
+    
+  def needs_smooth_budget(self):
+    return (not self.budget is None) and (self.budget_strategy == "evenly")
       
     
     

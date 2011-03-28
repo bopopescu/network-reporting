@@ -897,7 +897,7 @@ class AdImpressionHandler(webapp.RequestHandler):
         # Update budgeting
         creative_id = self.request.get('cid')
         creative = Creative.get(Key(creative_id))
-        if creative.ad_group.bid_strategy == 'cpm':
+        if creative.ad_group.campaign.needs_smooth_budget() and creative.ad_group.bid_strategy == 'cpm':
             budget_service.apply_expense(creative.ad_group.campaign, creative.ad_group.bid/1000)
         logging.error("applied expense: %s" % creative.ad_group.bid)
         
@@ -921,7 +921,7 @@ class AdClickHandler(webapp.RequestHandler):
 
         # Update budgeting
         creative = Creative.get(Key(creative_id))
-        if creative.ad_group.bid_strategy == 'cpc':
+        if creative.ad_group.campaign.needs_smooth_budget() and creative.ad_group.bid_strategy == 'cpc':
             budget_service.apply_expense(creative.ad_group.campaign, creative.ad_group.bid/1000)
 
 

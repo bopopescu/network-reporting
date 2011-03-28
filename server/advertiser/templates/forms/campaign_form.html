@@ -109,13 +109,9 @@
                           <div class="form-error-text">{{error}}</div> 
                           {% endfor %}
                         </dd>
-                        <dt>Delivery Speed</dt>  
-                        <dd>
-                          <span class="radios">
-                            <input type="radio" value="TODO1" checked="check" disabled="true"/> <label>Spread Evenly</label>
-                            <input type="radio" value="TODO2" disabled="true"/> <label>All at once</label>
-                          </span>  
-                        </dd>
+
+                        {{ form.budget_strategy|label:"Delivery Speed"}}
+
                       </div>
                       <div class="campaignDependent network">
                         {# End Belong to AdGroup #}

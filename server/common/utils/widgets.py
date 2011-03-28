@@ -70,10 +70,10 @@ class MPTextInput(MPWidget):
     TEMPLATE = 'widgets/text_input.html'
     DEFAULT_CLASSES = "input-text"
 
-class MPRadioInput(MPWidget):
+class MPDeviceFormatRadioInput(MPWidget):
     TEMPLATE = 'widgets/adunit_device_format.html'
     DEFAULT_CLASSES = "input-text"
-    
+     
 class MPSelectWidget(MPWidget):
     TEMPLATE = 'widgets/select.html'
     DEFAULT_CLASSES = "input-text"
@@ -110,6 +110,9 @@ class MPSelectWidget(MPWidget):
         t = loader.get_template(self.TEMPLATE)
         return t.render(c)
         
+class MPRadioWidget(MPSelectWidget):
+    TEMPLATE = 'widgets/radio.html'
+    DEFAULT_CLASSES = "input-text"
 
 class MPFormatWidget(MPWidget):
     TEMPLATE = 'widgets/adunit_format.html'

@@ -27,7 +27,7 @@ def budget_advance(request):
     keys = Campaign.all(keys_only=True).filter('budget_strategy =', 'evenly').fetch(1000000)
     count = len(keys)
 
-    # Break keys into shards of 10 and send them to a worker
+    # Break keys into shards of 30 and send them to a worker
     start_index = 0
     end_index = CAMPAIGNS_PER_WORKER
     

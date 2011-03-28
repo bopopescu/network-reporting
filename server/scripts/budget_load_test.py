@@ -111,7 +111,7 @@ def threadproc():
     global fail_lock
     global req_cnt
     
-    COUNT = 1
+    COUNT = -1
     
     print "Thread started: %s" % current_thread().getName()
     h = httplib2.Http(timeout=30)

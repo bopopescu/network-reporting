@@ -27,3 +27,10 @@ http://localhost:8080/_ah/admin/datastore
 
 NOTE: For this to function, the first line of app.yaml must be:
  	application: mopub-inc 
+
+//////////////////////////////////////////
+
+To push for a scale test use:
+python manage.py update
+email: appenginescaletest@gmail.com
+password: test!@#$

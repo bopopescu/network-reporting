@@ -2,3 +2,7 @@ cron:
 - description: Daily summary email 
   url: /admin/report
   schedule: every day 07:00
+  
+- description: Hourly dashboard refresh
+  url: /admin/prep
+  schedule: every 30 minutes

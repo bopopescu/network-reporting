@@ -1,5 +1,6 @@
 {% extends "admin/base.html" %}
 {% load filters %}
+{% block extraScripts %}<script src="/js/mopub-dashboard.js?v=2"></script>{% endblock extraScripts %}
 {% block pageTitle %}<h1>MoPub Metrics Dashboard</h1>{% endblock pageTitle %}
 {% block titleBarRight %}
     <span class="titlebar-link">
@@ -8,66 +9,118 @@
 {% endblock titleBarRight %}
 
 {% block content %}	
-    <section>
-        <img src="{{chart_url}}" width=600 height=240 style="padding: 5px 0 10px 0; float: right;"/>
-    	<table style="font-size: 36px; line-height: 1.3em;" width="300px">
-    		<tr><td class="numeric">{{request_count|withsep}}</td><td style="padding-left:5px;"> this month</td></tr>
-    		<tr><td class="numeric">{{today_request_count|withsep}}</td><td style="padding-left:5px;"> yesterday</td></tr>
-    		<tr><td class="numeric">{{growth|percentage}}</td><td style="padding-left:5px;"> w/w</td></tr>
-    		<tr><td class="numeric">{{unique_placements|length|withsep}}</td><td style="padding-left:5px;"> adunits</td></tr>
-    		<tr><td class="numeric">{{unique_accounts|length|withsep}}</td><td style="padding-left:5px;"> pubs</td></tr>
-    	</table>
+
+    <section class="offset separated" id="dashboard-stats"> 
+        <div class="stats"> 
+        <div class="stats-breakdown">
+            <table>
+              <tbody>
+                <tr class="active" id="stats-breakdown-requests">
+                  <td class="stats-breakdown-value today"><span class="inner">{{today.request_count|withsep}}</span></td>
+                  <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.request_count|withsep}}</span></td>
+                  <td class="stats-breakdown-value all"><span class="inner">{{all.request_count|withsep}}</span></td>
+                  <th class="stats-breakdown-name"><span class="inner">Requests</span></th>
+                </tr>
+                <tr id="stats-breakdown-impressions">
+                  <td class="stats-breakdown-value today"><span class="inner">{{today.impression_count|withsep}}</span></td>
+                  <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.impression_count|withsep}}</span></td>
+                  <td class="stats-breakdown-value all"><span class="inner">{{all.impression_count|withsep}}</span></td>
+                  <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
+                </tr>
+                <tr id="stats-breakdown-clicks">
+                  <td class="stats-breakdown-value today"><span class="inner">{{today.click_count|withsep}}</span></td>
+                  <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.click_count|withsep}}</span></td>
+                  <td class="stats-breakdown-value all"><span class="inner">{{all.click_count|withsep}}</span></td>
+                  <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
+                </tr>
+                <tr id="stats-breakdown-users">
+                  <td class="stats-breakdown-value today"><span class="inner">{{today.unique_user_count|withsep}}</span></td>
+                  <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.unique_user_count|withsep}}</span></td>
+                  <td class="stats-breakdown-value all"><span class="inner">{{all.unique_user_count|withsep}}</span></td>
+                  <th class="stats-breakdown-name"><span class="inner">Pubs</span></th>
+                </tr>
+              </tbody>
+            </table>
+            </div>
+            <div class="stats-breakdown-buttons">
+            <span class="buttonset button-small" id="stats-breakdown-dateOptions">
+              <input type="radio" name="stats-breakdown-dateOptions-option" value="today" id="stats-breakdown-dateOptions-option-0" checked="checked"/>
+              <label for="stats-breakdown-dateOptions-option-0">Today</label>
+              <input type="radio" name="stats-breakdown-dateOptions-option" value="yesterday" id="stats-breakdown-dateOptions-option-1"/>
+              <label for="stats-breakdown-dateOptions-option-1">Yesterday</label>
+              <input type="radio" name="stats-breakdown-dateOptions-option" value="all" id="stats-breakdown-dateOptions-option-2"/>
+              <label for="stats-breakdown-dateOptions-option-2">All</label>
+            </span>
+        </div>
+        <div class="chart chart-loading stats-chart" id="dashboard-stats-chart"> 
+          <div class="chart-loading-text">Loading ...</div> 
+          <div class="chart-error-text">Could not load chart</div> 
+          <script type="text/javascript"> 
+              mopub.dashboardStatsChartData = {
+                pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
+                pointInterval: 86400000,
+                'requests': [
+                    { 'MoPub': [{% for t in stats %}{{t.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
+                ],
+                'impressions': [
+                    { 'MoPub': [{% for t in stats %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
+                ],
+                'clicks': [
+                    { 'MoPub': [{% for t in stats %}{{t.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
+                ],
+                'users': [
+                    { 'MoPub': [{% for t in stats %}{{t.unique_user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
+                ] 
+              };
+          </script> 
+        </div> 
+      </div> 
+      <div class="clear"></div> 
     </section>
 	
-	<section>
-    	<h3>Ad Units</h3>
+	<section class="separated">
+    	<h3>Top MoPubs</h3>
     	<table width="100%">
     		<thead>
-    			<th>App</th>
-    			<th>Ad Unit</th>
-    			<th>Account</th>
+    			<th style="text-align: left;">App</th>
+    			<th style="text-align: left;">Account</th>
     			<th width="75px">Requests</th>
     			<th width="75px">Impressions</th>
     			<th width="75px">Clicks</th>
     			<th width="75px">CTR</th>
     		</thead>
-    		{% for p in placements %}
+    		{% for a in apps %}
     		<tr>
-    			<td><a href="{% url publisher_app_show app_key=p.site.app_key.key %}">{{p.site.app_key.name|truncate:50}}</a></td>
-    			<td><a href="{% url publisher_adunit_show adunit_key=p.site.key %}">{{p.site.name|truncate:50}}</a></td>
-    			<td><a href="mailto:{{p.site.account.user.email}}">{{p.site.account.user.email}}</a></td>
-    			<td class="numeric">{{p.request_count|withsep}}</td>
-    			<td class="numeric">{{p.impression_count|withsep}}</td>
-    			<td class="numeric">{{p.click_count|withsep}}</td>
-    			<td class="numeric">{{p.ctr|percentage}}</td>
+    			<td><a href="{% url publisher_app_show app_key=a.site.app_key.key %}">{{a.site.app_key.name|truncate:50}}</a></td>
+    			<td><a href="mailto:{{a.site.account.user.email}}">{{a.site.account.user.email}}</a></td>
+    			<td class="numeric">{{a.request_count|withsep}}</td>
+    			<td class="numeric">{{a.impression_count|withsep}}</td>
+    			<td class="numeric">{{a.click_count|withsep}}</td>
+    			<td class="numeric">{{a.ctr|percentage}}</td>
     		</tr>
     		{% endfor %}
     	</table>
     </section>
 	
-	<section>
-        <h3>Traffic Breakdown</h3>
+	<section class="separated">
+        <h3>Mailing list additions in last 30 days</h3>        
         <table width="100%">
-        	<thead>
+            <thead>
         		<tr>
-        		<th>Date</th>
-        		<th width="75px">Requests</th>
-    			<th width="75px">Impressions</th>
-        		<th width="75px">Clicks</th>
-        		<th width="75px">CTR</th>
+        		    <th>Email</th>
+        		    <th>Date</th>
         		</tr>
         	</thead>
-        	{% for s in stats %}
-        	<tr>
-        		<td>{{s.date}}</td>
-        		<td class="numeric">{{s.request_count|withsep}}</td>
-    			<td class="numeric">{{s.impression_count|withsep}}</td>
-        		<td class="numeric">{{s.click_count|withsep}}</td>
-        		<td class="numeric">{{s.ctr|percentage}}</td>
-        	</tr>
+        	<tbody>
+        	{% for a in mailing_list %}
+            	<tr>
+            		<td><a href="mailto:{{a.user.email}}">{{a.user.email}}</a></td>
+            		<td>{{a.date_added}}</td>
+            	</tr>
         	{% endfor %}
-	
+        	</tbody>	
         </table>
 	</section>
+	
 	
 {% endblock %}

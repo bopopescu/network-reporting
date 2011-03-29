@@ -94,8 +94,8 @@ class RecalculateHandler(webapp.RequestHandler):
         if last_success > LAST_SUCCESS_THRESHOLD:
             mail.send_mail(sender='jpayne@mopub.com', 
                            to='support@mopub.com',
-                           subject="CODE RED: ad server has been down for %s attempts " % last_success, 
-                           body="See more at http://stats.mopub.com")
+                           subject="CODE RED: ad server has been down for several tries", 
+                           body="Failure count=%d. See more at http://stats.mopub.com" % last_success)
          
         # recalculate latency median and average
         latencies = [x.request_ms for x in last if x.request_ms is not None]

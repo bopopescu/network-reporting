@@ -63,6 +63,13 @@ from advertiser.query_managers import CampaignStatsCounter
 
 from mopub_logging import mp_logging
 
+# figure out if we're on production server
+from google.appengine.api import apiproxy_stub_map
+have_appserver = bool(apiproxy_stub_map.apiproxy.GetStub('datastore_v3'))
+on_production_server = have_appserver and \
+    not os.environ.get('SERVER_SOFTWARE', '').lower().startswith('devel')
+DEBUG = not on_production_server
+
 test_mode = "3uoijg2349ic(test_mode)kdkdkg58gjslaf"
 CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gzip(gfe)"]
 MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7PnE6cH9_PX7OoeIIr5FjnTA'
@@ -1122,7 +1129,7 @@ def main():
                                         ('/m/clear', ClearHandler),
                                         ('/m/purchase', PurchaseHandler),
                                         ('/m/req',AdRequestHandler),], 
-                                        debug=True)
+                                        debug=DEBUG)
   run_wsgi_app(application)
   # wsgiref.handlers.CGIHandler().run(application)
 

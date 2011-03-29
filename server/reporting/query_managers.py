@@ -2,6 +2,8 @@ import logging
 import time
 import datetime
 
+import reporting.models as reporting_models
+
 from google.appengine.ext import db
 
 from common.utils.cachedquerymanager import CachedQueryManager
@@ -47,7 +49,7 @@ class StatsModelQueryManager(CachedQueryManager):
         self.obj_cache = {}
         
             
-    def get_stats_for_days(self, publisher=None, advertiser=None, days=None, account=None, offline=False):
+    def get_stats_for_days(self, publisher=None, advertiser=None, days=None, account=None, country=None, offline=False):
         if isinstance(publisher,db.Model):
           publisher = publisher.key()
 
@@ -57,7 +59,7 @@ class StatsModelQueryManager(CachedQueryManager):
         days = days or []
         account = account or self.account
 
-        keys = (StatsModel.get_key(publisher=publisher,advertiser=advertiser,account=account, offline=offline)
+        keys = (StatsModel.get_key(publisher=publisher,advertiser=advertiser,account=account, country=None, offline=offline)
                     for d in days)
         stats = StatsModel.get(keys) # db get
         stats = [s or StatsModel() for s in stats]
@@ -77,6 +79,7 @@ class StatsModelQueryManager(CachedQueryManager):
             all_stats_deltas = self._get_all_rollups(stats, offline)
         else:
             all_stats_deltas = stats
+        
         all_stats_deltas = self._place_stats_under_account(all_stats_deltas, offline=offline)
         
         # get or insert from db in order to update as transaction
@@ -127,18 +130,22 @@ class StatsModelQueryManager(CachedQueryManager):
             return None            
         
         
-        def _get_stat(pub=None,adv=None,date_hour=None,date=None):
+        def _get_stat(pub=None,adv=None,date_hour=None,date=None,month=None,country=None):
             """get or creates the stat from the local dictionary"""
             key = StatsModel.get_key_name(publisher=pub,
                                           advertiser=adv,
                                           date=date,
-                                          date_hour=date_hour) 
+                                          date_hour=date_hour,
+                                          month=month,
+                                          country=country) 
 
             if not key in stats_dict:
                 stat =  StatsModel(publisher=pub,
                                    advertiser=adv,
                                    date=date,
-                                   date_hour=date_hour)
+                                   date_hour=date_hour,
+                                   month=month,
+                                   country=country)
                 stats_dict[key] = stat
             else:
                 stat = stats_dict[key]
@@ -154,10 +161,17 @@ class StatsModelQueryManager(CachedQueryManager):
                 return None
             if attribute == 'publisher' and not stat.publisher:
                 return None
+            if attribute == 'country' and not stat.country:
+                return None   
+            if attribute == 'date' and stat.month: # stops at the month rollup
+                return None
 
-            properties = stat._properties
-            attrs = dict([(k,getattr(stat,k)) for k in properties])    
+            properties = stat.properties()
+            attrs = dict([(k,getattr(stat,k)) for k in properties])  
             
+            dynamic_properties = stat.dynamic_properties()
+            attrs.update(dict([(k,getattr(stat,k)) for k in dynamic_properties]))
+                        
             if attribute == "publisher" and stat.publisher:    
                 # owner_name prop returns a string that's the owner, i.e. creative.owner_name = 'ad_group'
                 stat.publisher.owner = _get_refprop_from_cache(stat.publisher, stat.publisher.owner_name)
@@ -167,8 +181,10 @@ class StatsModelQueryManager(CachedQueryManager):
                 make_above_stat(new_stat,'publisher')
                 prev_stat = _get_stat(pub=new_stat.publisher,
                                       adv=new_stat.advertiser,
+                                      date=new_stat.date,
                                       date_hour=new_stat.date_hour,
-                                      date=new_stat.date)
+                                      month=new_stat.month,
+                                      country=new_stat.country)
                 prev_stat += new_stat
                 stats_dict[prev_stat.key().name()] = prev_stat
 
@@ -181,8 +197,10 @@ class StatsModelQueryManager(CachedQueryManager):
                 make_above_stat(new_stat,'advertiser')
                 prev_stat = _get_stat(pub=new_stat.publisher,
                                       adv=new_stat.advertiser,
+                                      date=new_stat.date,
                                       date_hour=new_stat.date_hour,
-                                      date=new_stat.date)
+                                      month=new_stat.month,
+                                      country=new_stat.country)
                 prev_stat += new_stat
                 # if owner is None, undo the increment of request count
                 # publisher-* is already accounted for
@@ -190,18 +208,61 @@ class StatsModelQueryManager(CachedQueryManager):
                     prev_stat.request_count -= new_stat.request_count
                 stats_dict[prev_stat.key().name()] = prev_stat
                 
+            
+            if attribute == "country" and stat.country:
+                country = attrs.get("country")
+                attrs.update(country=None)
+                new_stat = StatsModel(**attrs)
+                
+                # updating the geo properties of the model
+                new_stat.update_geo(country,
+                                    reporting_models.GEO_REQUEST_COUNT,
+                                    attrs['request_count'])
+                new_stat.update_geo(country,
+                                    reporting_models.GEO_IMPRESSION_COUNT,
+                                    attrs['impression_count'])
+                new_stat.update_geo(country,
+                                    reporting_models.GEO_CLICK_COUNT,
+                                    attrs['click_count'])
+                new_stat.update_geo(country,
+                                    reporting_models.GEO_CONVERSION_COUNT,
+                                    attrs['conversion_count'])
+                
+                # we don't need to do a recursive call because
+                # we only have 2 levels, if we want to add something
+                # like regions we'd do it here
+                # make_above_stat(new_stat,'country')
+                prev_stat = _get_stat(pub=new_stat.publisher,
+                                      adv=new_stat.advertiser,
+                                      date=new_stat.date,
+                                      date_hour=new_stat.date_hour,
+                                      month=new_stat.month,
+                                      country=new_stat.country)
+                prev_stat += new_stat
+                stats_dict[prev_stat.key().name()] = prev_stat                      
 
             if attribute == 'date':
                 # NOTE: This is a Pacific TimeZone day
-                day = stat.date_hour.date() # makes date object
-                date = datetime.datetime(day.year,day.month,day.day) # makes datetime obj
-                properties = stat._properties
-                attrs = dict([(k,getattr(stat,k)) for k in properties])    
-                attrs.update(date=date)
+                if stat.date_hour:
+                    day = stat.date_hour.date() # makes date object
+                    date = datetime.datetime(day.year,day.month,day.day) # makes datetime obj
+                    # add date and remove date_hour
+                    attrs.update(date=date)
+                    del attrs['date_hour']
+                if stat.date:
+                    date = stat.date
+                    month = datetime.datetime(date.year,date.month,1) # makes a date obj for 1st of month
+                    attrs.update(month=month)
+                    del attrs['date']
+                        
                 new_stat = StatsModel(**attrs)
+                make_above_stat(new_stat,'date')
                 prev_stat = _get_stat(pub=new_stat.publisher,
                                       adv=new_stat.advertiser,
-                                      date=new_stat.date)
+                                      date=new_stat.date,
+                                      date_hour=new_stat.date_hour,
+                                      month=new_stat.month,
+                                      country=new_stat.country)
                 prev_stat += new_stat
                 stats_dict[prev_stat.key().name()] = prev_stat
         
@@ -209,10 +270,22 @@ class StatsModelQueryManager(CachedQueryManager):
         for stat in stats:
             make_above_stat(stat,'publisher')
                 
-        # advertiser rollups        
+        # # advertiser rollups        
         stats = stats_dict.values()
         for stat in stats:
             make_above_stat(stat,'advertiser')
+            
+        # country rollups
+        stats = stats_dict.values()
+        for stat in stats:
+            make_above_stat(stat,'country')
+            
+        # remove all the country level stats
+        # because we are storing this data in dynamic properties
+        stats = stats_dict.values()
+        for stat in stats:
+            if stat.country:
+                del stats_dict[stat.key().name()]
         
         # time rollups
         if not offline: # do not rollup on date if it's offline, since aws-logging data is already cumulative
@@ -230,15 +303,21 @@ class StatsModelQueryManager(CachedQueryManager):
         """
         account = account or self.account
         account_stats = StatsModel(account=account, offline=offline) 
-        properties = StatsModel._properties
+        properties = StatsModel.properties()
+        properties = [k for k in properties]
         new_stats = [account_stats]
         
         for s in stats:
             # get all the properties of the object
             # StatsModel.prop.get_value_for_datastore(s) for each property of s
             props = {}
+            
             for k in properties:
                 props[k] = getattr(s,'_%s'%k) # gets underlying data w/ no derefernce
+            
+            for k in s.dynamic_properties():
+                props[k] = getattr(s,k)    
+                
             props.update(account=account)
             new_stat = StatsModel(parent=account_stats.key(),
                                   key_name=s.key().name(),

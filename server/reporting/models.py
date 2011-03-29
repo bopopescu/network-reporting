@@ -6,6 +6,15 @@ import datetime
 import hashlib
 import logging
 
+DEFAULT_COUNTRY = 'XX'
+
+# Geo request type
+GEO_REQUEST_COUNT = 'request_count'
+GEO_IMPRESSION_COUNT = 'impression_count'
+GEO_CLICK_COUNT = 'click_count'
+GEO_CONVERSION_COUNT = 'conversion_count'
+GEO_COUNTS = [GEO_REQUEST_COUNT,GEO_IMPRESSION_COUNT,GEO_CLICK_COUNT,GEO_CONVERSION_COUNT]
+
 class Pacific_tzinfo(datetime.tzinfo):
     """Implementation of the Pacific timezone."""
     def utcoffset(self, dt):
@@ -31,13 +40,18 @@ class Pacific_tzinfo(datetime.tzinfo):
         else:
             return "PDT"
 
-class StatsModel(db.Model):
+class StatsModel(db.Expando):
+    
+    
     publisher = db.ReferenceProperty(collection_name='publisher_stats')
     advertiser = db.ReferenceProperty(collection_name='advertiser_stats')
     account = db.ReferenceProperty(Account,collection_name='account_stats')
     
     date_hour = db.DateTimeProperty() # modulo to hour or day
     date = db.DateTimeProperty()
+    month = db.DateTimeProperty()
+    
+    country = db.StringProperty() # two letter country code
     
     request_count = db.IntegerProperty(default=0)
     impression_count = db.IntegerProperty(default=0)
@@ -53,15 +67,7 @@ class StatsModel(db.Model):
 
     # offline
     offline = db.BooleanProperty(default=False)
-        
-    # geo information
-    _geo_requests_json = db.StringProperty()
-    _geo_impressions_json = db.StringProperty()
-    _geo_clicks_json = db.StringProperty()
-    _geo_revenues_json = db.StringProperty()
-    _geo_users_json = db.StringProperty()
-    
-    
+            
     def __init__(self, parent=None, key_name=None, **kwargs):
         if not key_name and not kwargs.get('key',None):
             
@@ -73,34 +79,63 @@ class StatsModel(db.Model):
             account = kwargs.get('account',None)
             account = self._force_key(account)
             offline = kwargs.get('offline',False)
-            kwargs.update(publisher=publisher,advertiser=advertiser,account=account)
+            country = kwargs.get('country',None)
+            if country:
+                country = country.upper()
+            kwargs.update(publisher=publisher,advertiser=advertiser,account=account,country=country)
 
             
             # grab the date and make key name
             date = kwargs.get('date',None)
             date_hour = kwargs.get('date_hour',None)
+            month = kwargs.get('month',None)
             
 
             key_name = self.get_key_name(publisher=publisher,
                                          advertiser=advertiser,
                                          date=date,
                                          date_hour=date_hour,
+                                         month=month,
+                                         country=country,
                                          account=account,
                                          offline=offline)
+
         return super(StatsModel,self).__init__(parent=parent,key_name=key_name,**kwargs)
         
-    # @property
-    # def date_hour(self):
-    #     return self.date
+
+    def update_geo(self,country,geo_type,value):
+        # update dynamic properties
+        if not geo_type in GEO_COUNTS:
+            raise Exception("Invalid Geo Count Type")
+        attribute = "%s_country_%s"%(country,geo_type) # e.g. US_request_count
+        setattr(self,attribute,value)
+        
+    def get_geo(self,country,geo_type):
+        if not geo_type in GEO_COUNTS:
+            raise Exception("Invalid Geo Count Type")
+        attribute = "%s_country_%s"%(country,geo_type)
+        return getattr(self,attribute,0)
+        
+    def get_countries(self):
+        countries = set()
+        for prop in self.dynamic_properties():
+            parts = prop.split('_country_')
+            if len(parts) > 1:
+                countries.update([parts[0]])
+        return list(countries)
+    
+    
         
     def __add__(self,s):
-        return StatsModel(parent=self.parent_key(),
+        obj = StatsModel(parent=self.parent_key(),
                           key_name=self.key().name(),
                           publisher=StatsModel.publisher.get_value_for_datastore(self),
                           advertiser=StatsModel.advertiser.get_value_for_datastore(self),
                           account=StatsModel.account.get_value_for_datastore(self),
                           date=self.date,
                           date_hour=self.date_hour,
+                          month=self.month,
+                          country=self.country,
                           request_count=self.request_count + s.request_count,
                           impression_count=self.impression_count + s.impression_count,
                           click_count=self.click_count + s.click_count,
@@ -109,7 +144,19 @@ class StatsModel(db.Model):
                           reqs=self.reqs+s.reqs,
                           offline=self.offline,
                          )
-               
+        
+        # add dynamic geo properties
+        countries_self = self.get_countries()
+        countries_s = s.get_countries()
+        # all countries
+        countries = set(countries_self).union(set(countries_s))
+        for country in countries:
+            for geo_count in GEO_COUNTS:
+                attribute = '%s_country_%s'%(country,geo_count)
+                # obj.US_country_request_count = self.US_country_request_count + s.US_country_request_count
+                new_value = getattr(self,attribute,0) + getattr(s,attribute,0)
+                setattr(obj,attribute,new_value)
+        return obj       
                
     def __unicode__(self):
         return str(self)           
@@ -118,11 +165,12 @@ class StatsModel(db.Model):
         return self.__str__()
                     
     def __str__(self):
-        return  "StatsModel(date=%s, pub=%s, adv=%s, account=%s, offline=%s, %s,%s,%s,%s)"%(
+        return  "StatsModel(date=%s, pub=%s, adv=%s, account=%s, country=%s, offline=%s, %s,%s,%s,%s)"%(
                                                           self.date,
                                                           StatsModel.publisher.get_value_for_datastore(self),
                                                           StatsModel.advertiser.get_value_for_datastore(self),    
                                                           StatsModel.account.get_value_for_datastore(self),
+                                                          self.country,
                                                           self.offline,
                                                           self.request_count,
                                                           self.impression_count,
@@ -132,8 +180,8 @@ class StatsModel(db.Model):
 
     
     @classmethod
-    def get_key_name(cls,publisher,advertiser,date=None,date_hour=None,account=None,offline=False):
-        if publisher or advertiser or date_hour or date:
+    def get_key_name(cls,publisher,advertiser,date=None,date_hour=None,account=None,offline=False,country=None, month=None):
+        if publisher or advertiser or date_hour or date or month or country:
             if isinstance(publisher,db.Model):
                 publisher = publisher.key()
             if isinstance(advertiser,db.Model):
@@ -141,12 +189,21 @@ class StatsModel(db.Model):
             
             if date_hour:
                 date_str = date_hour.strftime('%y%m%d%H')
-            else:
+            elif date:
                 date_str = date.strftime('%y%m%d')
-                
-            return 'k:%(publisher)s:%(advertiser)s:%(date)s'%dict(date=date_str,
-                                                                  publisher=publisher or '',
-                                                                  advertiser=advertiser or '')
+            elif month:
+                date_str = month.strftime('%y%m')     
+            
+            if not country:    
+                return 'k:%(publisher)s:%(advertiser)s:%(date)s'%dict(date=date_str,
+                                                                      publisher=publisher or '',
+                                                                      advertiser=advertiser or '')
+            else:
+                country = country.upper()
+                return 'k:%(publisher)s:%(advertiser)s:%(country)s:%(date)s'%dict(date=date_str,
+                                                                      publisher=publisher or '',
+                                                                      advertiser=advertiser or '',
+                                                                      country=country)                                                           
         else:
             if offline:
                 return 'k:%s_offline'%account    
@@ -155,13 +212,14 @@ class StatsModel(db.Model):
             
             
     @classmethod
-    def get_key(cls, publisher,advertiser,date,date_hour,account=None,offline=False):
-        return db.Key.from_path(cls.kind(),cls.get_key_name(publisher,advertiser,date,date_hour,account,offline))
+    def get_key(cls, publisher,advertiser,date,date_hour,account=None,offline=False,country=None,month=None):
+        return db.Key.from_path(cls.kind(),cls.get_key_name(publisher,advertiser,date,date_hour,account,offline,country,month))
             
     def _force_key(self,prop):
         if prop:
             prop = db.Key(prop) if isinstance(prop,(str,unicode)) else prop
-        return prop    
+        return prop   
+        
 
 # 
 # Tracks statistics for a site for a particular day - clicks and impressions are aggregated

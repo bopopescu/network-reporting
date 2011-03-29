@@ -27,9 +27,15 @@ class App(db.Model):
   
   exchange_creative = db.ReferenceProperty(Creative)
   
-  @property
-  def owner(self):
+
+  def get_owner(self):
       return None
+
+  def set_owner(self, value):
+      pass
+
+  def owner(self):
+      return property(get_owner, set_owner)
   
   @property
   def owner_key(self):
@@ -39,9 +45,7 @@ class App(db.Model):
   def owner_name(self):
       return None
 
-  @owner.setter
-  def owner(self, value):
-      pass
+    
 
 
 class Site(db.Model):
@@ -120,14 +124,15 @@ class Site(db.Model):
       s = Site.get(id)      
     return s
 
-  @property
-  def owner(self):
+  def get_owner(self):
       return self.app_key
-
-  @owner.setter
-  def owner(self, value):
+      
+  def set_owner(self, value):
       self.app_key = value
-  
+      
+  def owner(self):
+      return property(get_owner, set_owner)
+
   @property
   def owner_key(self):
       return self._app_key            

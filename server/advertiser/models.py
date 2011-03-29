@@ -39,14 +39,15 @@ class Campaign(db.Model):
     #TODO: this should be a function of estimated qps
     return 1
   
-  @property
-  def owner(self):
+  def get_owner(self):
     return None
-
-  @owner.setter
-  def owner(self, value):
+    
+  def set_owner(self, value):
     pass
-            
+      
+  def owner(self):
+    return property(get_owner, set_owner)
+
   @property
   def owner_key(self):
     return None
@@ -196,13 +197,14 @@ class AdGroup(db.Model):
   def geographic_predicates(self):
     return self.geo_predicates
     
-  @property
-  def owner(self):
+  def get_owner(self):
     return self.campaign
-    
-  @owner.setter
-  def owner(self, value):
+
+  def set_owner(self, value):
     self.campaign = value
+      
+  def owner(self, value):
+    return property(get_owner, set_owner)
 
   @property
   def owner_key(self):
@@ -258,13 +260,14 @@ class Creative(polymodel.PolyModel):
   def p_ctr(self):
     return 0.01
     
-  @property
-  def owner(self):
+  def get_owner(self):
     return self.ad_group
-  
-  @owner.setter
-  def owner(self, value):
+
+  def set_owner(self, value):
     self.ad_group = value
+  
+  def owner(self):
+    return property(get_owner, set_owner)
          
   @property
   def owner_key(self):

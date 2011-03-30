@@ -30,7 +30,7 @@ def timeslice_budget_advance(request):
     return budget_advance(request, daily=False)
 
 def budget_advance(request, daily=False):
-    keys = Campaign.all(keys_only=True).filter('budget_strategy =', 'evenly').fetch(1000000)
+    keys = Campaign.all(keys_only=True).fetch(1000000)
     count = len(keys)
 
     # Break keys into shards of 30 and send them to a worker

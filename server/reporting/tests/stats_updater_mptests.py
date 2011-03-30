@@ -90,7 +90,8 @@ a1_c1_day = add_lists([a1_c1_hour1, a1_c1_hour2])
 a1_c2_day = add_lists([a1_c2_hour1, a1_c2_hour2])
 a2_c1_day = add_lists([a2_c1_hour1, a2_c1_hour2])
 a2_c2_day = add_lists([a2_c2_hour1, a2_c2_hour2])
-
+a1_day = add_lists([a1_hour1, a1_hour2])
+a2_day = add_lists([a2_hour1, a2_hour2])
 
 
 
@@ -212,8 +213,8 @@ obj_dict = {
 'k:%s:%s:%s'%(adunit_id2, campaign_id, day.strftime('%y%m%d')): add_lists([a2_c1_day, a2_c2_day]),
 
 # Adunit Totals 
-'k:%s:%s:%s'%(adunit_id1, '', day.strftime('%y%m%d')): prepend_list(a1_hour1[0]+a1_hour2[0], add_lists([a1_c1_day, a1_c2_day])[1:]),
-'k:%s:%s:%s'%(adunit_id2, '', day.strftime('%y%m%d')): prepend_list(a2_hour1[0]+a1_hour2[0], add_lists([a2_c1_day, a2_c2_day])[1:]),
+'k:%s:%s:%s'%(adunit_id1, '', day.strftime('%y%m%d')): prepend_list(a1_day[0], add_lists([a1_c1_day, a1_c2_day])[1:]),
+'k:%s:%s:%s'%(adunit_id2, '', day.strftime('%y%m%d')): prepend_list(a2_day[0], add_lists([a2_c1_day, a2_c2_day])[1:]),
 
 #### Apps ####
 # App-Creative
@@ -227,7 +228,7 @@ obj_dict = {
 'k:%s:%s:%s'%(app_id, campaign_id, day.strftime('%y%m%d')): add_lists([a1_c1_day, a1_c2_day, a2_c1_day, a2_c2_day]),
 
 # App-Total
-'k:%s:%s:%s'%(app_id, '', day.strftime('%y%m%d')): prepend_list(a1_hour1[0]+a2_hour1[0]+a2_hour1[0]+a2_hour2[0], add_lists([a1_c1_day, a1_c2_day, a2_c1_day, a2_c2_day])[1:]),
+'k:%s:%s:%s'%(app_id, '', day.strftime('%y%m%d')): prepend_list(a1_day[0]+a2_day[0], add_lists([a1_c1_day, a1_c2_day, a2_c1_day, a2_c2_day])[1:]),
 
 ### * ###
 # *-Creative
@@ -241,7 +242,7 @@ obj_dict = {
 'k:%s:%s:%s'%('', campaign_id, day.strftime('%y%m%d')): add_lists([a1_c1_day, a1_c2_day, a2_c1_day, a2_c2_day]),
 
 # *-*
-'k:%s:%s:%s'%('', '', day.strftime('%y%m%d')): prepend_list(a1_hour1[0]+a2_hour1[0]+a1_hour2[0]+a2_hour2[0], add_lists([a1_c1_day, a1_c2_day, a2_c1_day, a2_c2_day])[1:]),
+'k:%s:%s:%s'%('', '', day.strftime('%y%m%d')): prepend_list(a1_day[0]+a2_day[0], add_lists([a1_c1_day, a1_c2_day, a2_c1_day, a2_c2_day])[1:]),
 }
 
 
@@ -259,14 +260,15 @@ def offline_rollup_mptest():
     assert_true(stats_updater.update_model(adunit_id2, creative_id2, [100, 90, 80, 70], date_hour=hour1))
        
     stats_updater.put_models()
-                 
+    
+    # hour1             
     assert_true(stats_updater.update_model(adunit_id1, creative_id1, a1_c1_hour1, date_hour=hour1))
     assert_true(stats_updater.update_model(adunit_id1, creative_id2, a1_c2_hour1, date_hour=hour1))
     assert_true(stats_updater.update_model(adunit_id2, creative_id1, a2_c1_hour1, date_hour=hour1))
     assert_true(stats_updater.update_model(adunit_id2, creative_id2, a2_c2_hour1, date_hour=hour1))
     assert_true(stats_updater.update_model(adunit_key=adunit_id1, counts=a1_hour1, date_hour=hour1))
     assert_true(stats_updater.update_model(adunit_key=adunit_id2, counts=a2_hour1, date_hour=hour1))
-   
+       
     # hour2
     assert_true(stats_updater.update_model(adunit_id1, creative_id1, a1_c1_hour2, date_hour=hour2))
     assert_true(stats_updater.update_model(adunit_id1, creative_id2, a1_c2_hour2, date_hour=hour2))
@@ -274,8 +276,18 @@ def offline_rollup_mptest():
     assert_true(stats_updater.update_model(adunit_id2, creative_id2, a2_c2_hour2, date_hour=hour2))
     assert_true(stats_updater.update_model(adunit_key=adunit_id1, counts=a1_hour2, date_hour=hour2))
     assert_true(stats_updater.update_model(adunit_key=adunit_id2, counts=a2_hour2, date_hour=hour2))
+
+
+    # day
+    assert_true(stats_updater.update_model(adunit_id1, creative_id1, a1_c1_day, date=day))
+    assert_true(stats_updater.update_model(adunit_id1, creative_id2, a1_c2_day, date=day))
+    assert_true(stats_updater.update_model(adunit_id2, creative_id1, a2_c1_day, date=day))
+    assert_true(stats_updater.update_model(adunit_id2, creative_id2, a2_c2_day, date=day))
+    assert_true(stats_updater.update_model(adunit_key=adunit_id1, counts=a1_day, date=day))
+    assert_true(stats_updater.update_model(adunit_key=adunit_id2, counts=a2_day, date=day))
     
     stats_updater.put_models() 
+            
             
     assert_equals(App.all().count(), 1)
     assert_equals(Campaign.all().count(), 1)
@@ -283,7 +295,8 @@ def offline_rollup_mptest():
     assert_equals(AdUnit.all().count(), 2)
     assert_equals(Creative.all().count(), 2)
 
-    
+    assert_equals(len(obj_dict)+1, StatsModel.all().count())            
+
     for stats in StatsModel.all():
         key_name = stats.key().name()
         if len(key_name.split(':')) == 2: continue # skip the account 

@@ -27,14 +27,26 @@ class App(db.Model):
   
   exchange_creative = db.ReferenceProperty(Creative)
   
-  @property
-  def owner(self):
+
+  def get_owner(self):
       return None
+
+  def set_owner(self, value):
+      pass
+
+  def owner(self):
+      return property(get_owner, set_owner)
   
   @property
   def owner_key(self):
       return None
   
+  @property
+  def owner_name(self):
+      return None
+
+    
+
 
 class Site(db.Model):
   DEVICE_FORMAT_CHOICES = (
@@ -112,10 +124,19 @@ class Site(db.Model):
       s = Site.get(id)      
     return s
 
-  @property
-  def owner(self):
+  def get_owner(self):
       return self.app_key
-  
+      
+  def set_owner(self, value):
+      self.app_key = value
+      
+  def owner(self):
+      return property(get_owner, set_owner)
+
   @property
   def owner_key(self):
       return self._app_key            
+
+  @property
+  def owner_name(self):
+      return "app_key"

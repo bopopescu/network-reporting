@@ -172,6 +172,14 @@ var mopub = mopub || {};
       buttons: { "Close": function() { $(this).dialog("close"); } }
     });
   });
+  $('#campaignForm-keyword-helpLink').click(function(e) {
+    e.preventDefault();
+    $('#campaignForm-keyword-helpContent').dialog({ 
+      buttons: { "Close": function() { $(this).dialog("close"); } }
+    });
+  });
+  
+  
   
   $('#campaignAdgroupForm input[name="start_date"]').datepicker({ minDate:0 });
   $('#campaignAdgroupForm input[name="end_date"]').datepicker({ minDate:0 });
@@ -745,15 +753,5 @@ var mopub = mopub || {};
       }
     });
   }); 
-
-  // helper fn for console logging
-  var log;
-
-  if (window.console && typeof console.log === "function"){
-    // use apply to preserve context and invocations with multiple arguments
-    log = function () { console.log.apply(console, arguments); };
-  } else {
-    log = function(){ return; }
-  }
 
 })(this.jQuery);

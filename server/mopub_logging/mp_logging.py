@@ -2,10 +2,11 @@ import logging
 import time
 import random
 
+from common.utils import helpers 
 from google.appengine.api import memcache
 from google.appengine.api import taskqueue
-
 from publisher.query_managers import AdUnitQueryManager
+from reporting import models as reporting_models
 
 REQ_EVENT = 0
 IMP_EVENT = 1
@@ -25,7 +26,7 @@ REQ_QUEUE_NAME = "network-request-%02d"
 NUM_REQ_QUEUES = 1
 
 
-def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,creative_id=None,udid=None,testing=None):
+def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,creative_id=None,udid=None,user_agent=None,testing=None):
     # if this is the second request because of a 
     # native failure we just bail in order to 
     # Note if logging an adnetwork request, we pass
@@ -38,7 +39,7 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
     # get parameters from the request or args
     adunit_id = adunit_id 
     if adunit:
-        adunit_id = adunit_id or str(adunit.key()) 
+        adunit_id = adunit_id or str(adunit.key())
     creative_id = creative_id 
     if creative:
         creative_id = creative_id or str(creative.key()) 
@@ -49,9 +50,13 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
         udid = udid or request.get('udid', None)
         request_id = request.get('reqcnt',None)
         instance_id = request.get('inst',None)
+        country_code = helpers.get_country_code(user_agent=request.headers['User-Agent'])            
     else:
         request_id = None
         instance_id = None
+        country_code = helpers.get_country_code(user_agent=user_agent)
+        
+    
     
     # if trying to record the request of a adunit and creative
     # i.e. request of a network creative
@@ -90,6 +95,7 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
     logging_data = dict(event=event,
                         adunit=adunit_id,
                         creative=creative_id,
+                        country=country_code,
                         now=now,
                         udid=udid,
                         req=request_id,

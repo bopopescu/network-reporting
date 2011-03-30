@@ -41,8 +41,7 @@ from ad_server.filters.filters import (budget_filter,
                                     all_freq_filter,
                                     lat_lon_filter,
                                     )
-
-
+                                    
 from common.utils import simplejson
 
 from string import Template
@@ -77,6 +76,14 @@ from budget import budget_service
 from google.appengine.ext.db import Key
 
 TEST_MODE = "3uoijg2349ic(TEST_MODE)kdkdkg58gjslaf"
+
+# figure out if we're on production server
+from google.appengine.api import apiproxy_stub_map
+have_appserver = bool(apiproxy_stub_map.apiproxy.GetStub('datastore_v3'))
+on_production_server = have_appserver and \
+    not os.environ.get('SERVER_SOFTWARE', '').lower().startswith('devel')
+DEBUG = not on_production_server
+
 CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gzip(gfe)"]
 MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7PnE6cH9_PX7OoeIIr5FjnTA'
 DOMAIN = 'ads.mopub.com' 
@@ -100,7 +107,6 @@ def memcache_key_for_date(udid,datetime,db_key):
 
 def memcache_key_for_hour(udid,datetime,db_key):
   return '%s:%s:%s'%(udid,datetime.strftime('%y%m%d%H'),db_key)
-
 
 class AdAuction(object):
   MAX_ADGROUPS = 30
@@ -155,6 +161,7 @@ class AdAuction(object):
     testing = kw["testing"]
     
     udid = kw["udid"]
+    user_agent = kw["user_agent"]
 
     keywords = kw["q"]
     geo_predicates = AdAuction.geo_predicates_for_rgeocode(kw["addr"])
@@ -295,7 +302,7 @@ class AdAuction(object):
                                     winning_creative = winner
                                     # if native, log native request
                                     if winner.ad_type in NATIVE_REQUESTS:
-                                        mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, testing=testing)
+                                        mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, testing=testing)
                                     return winning_creative
                                 else:
                                     rpc = None          
@@ -468,6 +475,7 @@ class AdHandler(webapp.RequestHandler):
     
     # TODO: get udid we should hash it if its not already hashed
     udid = self.request.get("udid")
+    user_agent = self.request.headers['User-Agent']
     
     # create a unique request id, but only log this line if the user agent is real
     request_id = hashlib.md5("%s:%s" % (self.request.query_string, time.time())).hexdigest()
@@ -485,6 +493,7 @@ class AdHandler(webapp.RequestHandler):
 							  request_id=request_id, 
 							  now=now,
 							  testing=testing,
+							  user_agent=user_agent,
 							  manager=manager)
     # output the request_id and the winning creative_id if an impression happened
     if c:
@@ -507,11 +516,13 @@ class AdHandler(webapp.RequestHandler):
 
 
         # create an ad clickthrough URL
-        ad_click_url = "http://%s/m/aclk?id=%s&cid=%s&c=%s&req=%s&udid=%s" % (DOMAIN,id, c.key(), c.key(),request_id, udid)
+        appid = c.conv_appid or ''
+        
+        ad_click_url = "http://%s/m/aclk?id=%s&cid=%s&c=%s&req=%s&udid=%s&appid=%s" % (DOMAIN,id, c.key(), c.key(),request_id, udid, appid)
         self.response.headers.add_header("X-Clickthrough", str(ad_click_url))
       
         # ad an impression tracker URL
-        track_url = "http://%s/m/imp?id=%s&cid=%s&udid=%s" % (DOMAIN, id, c.key(), udid)
+        track_url = "http://%s/m/imp?id=%s&cid=%s&udid=%s&appid=%s" % (DOMAIN, id, c.key(), udid, appid)
         self.response.headers.add_header("X-Imptracker", str(track_url))
         
       
@@ -1023,7 +1034,7 @@ def main():
                                         ('/m/clear', ClearHandler),
                                         ('/m/purchase', PurchaseHandler),
                                         ('/m/req',AdRequestHandler),], 
-                                        debug=True)
+                                        debug=DEBUG)
   run_wsgi_app(application)
   # wsgiref.handlers.CGIHandler().run(application)
 

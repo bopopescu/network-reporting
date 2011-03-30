@@ -34,7 +34,7 @@ class Account(db.Model):
             user = users.get_current_user()
         return Account.get_or_insert(db.Key.from_path("User", user.user_id()).name(), user=user, status="new")
 
-    def is_admin():
+    def is_admin(self):
         return users.is_current_user_admin()
 
     def __eq__(self, other):

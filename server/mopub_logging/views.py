@@ -35,17 +35,19 @@ def increment_stats(stats):
     logging.info("putting in key_name: %s NEW value: %s,%s"%(key_name,stats_obj.request_count,stats_obj.impression_count))
     stats_obj.put()
     
-def update_stats(stats_dict,publisher,advertiser,date_hour,attribute,req=None,incr=1):
+def update_stats(stats_dict,publisher,advertiser,date_hour,country,attribute,req=None,incr=1):
     publisher = publisher or None
     advertiser = advertiser or None
     key = r_models.StatsModel.get_key_name(publisher=publisher,
                                            advertiser=advertiser,
-                                           date_hour=date_hour)
+                                           date_hour=date_hour,
+                                           country=country)
 
     if not key in stats_dict:
       stats_dict[key] = r_models.StatsModel(publisher=publisher,
                                             advertiser=advertiser,
-                                            date_hour=date_hour)
+                                            date_hour=date_hour,
+                                            country=country)
 
     if attribute:
       # stats_dict[key].attribute += incr
@@ -113,6 +115,8 @@ class LogTaskHandler(webapp.RequestHandler):
 
                   appid = d.get('appid',None)
                   
+                  country = d.get('country',None)
+                  
                   # calculate the datetime object to hour precision
                   now = int(float(d['now']))
                   hour = now-now%3600
@@ -130,25 +134,29 @@ class LogTaskHandler(webapp.RequestHandler):
                       update_stats(stats_dict,
                                    publisher=adunit,
                                    advertiser=creative,
-                                   date_hour=date_hour,                                   
+                                   date_hour=date_hour,
+                                   country=country,                                   
                                    attribute='request_count')
                   elif event == mp_logging.IMP_EVENT:
                       update_stats(stats_dict,
                                    publisher=adunit,
                                    advertiser=creative,
                                    date_hour=date_hour,
+                                   country=country,
                                    attribute='impression_count')
                   if event == mp_logging.CLK_EVENT:
                       update_stats(stats_dict,
                                    publisher=adunit,
                                    advertiser=creative,
                                    date_hour=date_hour,
+                                   country=country,
                                    attribute='click_count')
                   elif event == mp_logging.CONV_EVENT: 
                       update_stats(stats_dict,
                                    publisher=adunit,
                                    advertiser=creative,
                                    date_hour=date_hour,
+                                   country=country,
                                    attribute='conversion_count')
               else:
                   logging.error("NO value for key %s exists"%k)    

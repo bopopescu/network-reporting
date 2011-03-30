@@ -3,10 +3,15 @@ cron:
   url: /admin/report
   schedule: every day 07:00
   
+
 - description: Advance the budget timeslices
   url: /budget/advance/
   schedule: every 1 minutes
   
 - description: Advance the daily budget
   url: /budget/daily_advance/
-  schedule: every day 13:19
+  schedule: every day 0:01
+  
+- description: Periodic dashboard refresh
+  url: /admin/prep
+  schedule: every 30 minutes

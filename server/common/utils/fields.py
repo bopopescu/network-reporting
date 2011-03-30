@@ -27,7 +27,9 @@ class MPKeywordsField(CharField):
     def clean(self,value):
       value = super(MPKeywordsField,self).clean(value)
       if value:
-        value = [v for v in value.lower().replace('\r','\n').split('\n') if v] 
+        value = [v for v in value.replace('\r','\n').split('\n') if v]
+        #retain the capitalization of " AND " but lowercase everything else
+        value = [' AND '.join((w.lower() for w in v.split(' AND '))) for v in value]
       return value
       
 class MPTextField(CharField):

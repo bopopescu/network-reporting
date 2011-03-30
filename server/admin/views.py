@@ -4,6 +4,8 @@ from urllib import urlencode
 
 from google.appengine.api import users, images
 from google.appengine.api.urlfetch import fetch
+from google.appengine.api import mail
+from google.appengine.api import memcache
 from google.appengine.ext import db
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
@@ -43,81 +45,90 @@ def admin_switch_user(request,*args,**kwargs):
     	  response.delete_cookie('account_impersonation')	 
     return response
   
+  
 @login_required
-def dashboard(request, *args, **kwargs):
+def dashboard_prep(request, *args, **kwargs):
+    # go back in time N days
     start_date = datetime.date.today() - datetime.timedelta(days=30)
     stats = SiteStats.gql("where date > :1 and owner = null order by date desc", start_date)
 
-    # calculate unique active Site and Account
-    # plus accumulate total impression and click counts
+    # accumulate individual site stats into daily totals 
+    unique_apps = {}
     unique_placements = {}
     unique_accounts = {}
     totals = {}
 
     # go and do it
     for s in stats:
-        # add this site stats to the total for the day
-        a = totals.get(str(s.date)) or SiteStats(date=s.date)
-        totals[str(s.date)] = a + s
+        # add this site stats to the total for the day and increment user count
+        a = totals.get(str(s.date)) or SiteStats(date=s.date, unique_user_count=0)
+        unique_user_count = a.unique_user_count
+        a = a + s
+        a.unique_user_count = unique_user_count + 1
+        totals[str(s.date)] = a
         
         # add a hash key for the site key and account key to calculate uniques
         try:
             unique_placements[str(s.site.key())] = s + (unique_placements.get(str(s.site.key())) or SiteStats(site=s.site))
+            unique_apps[str(s.site.app_key.key())] = s + (unique_apps.get(str(s.site.app_key.key())) or SiteStats(site=s.site))
+            unique_accounts[str(s.site.account.key())] = s + (unique_accounts.get(str(s.site.account.key())) or SiteStats(owner=s.site.account))      
         except:
             pass
     
-    # organize daily stats
+    # organize daily stats by date
     total_stats = totals.values()
     total_stats.sort(lambda x,y: cmp(x.date,y.date))
 
-    # make a graph
-    url = "http://chart.apis.google.com/chart?cht=lc&chs=600x240&chd=t:%s&chds=0,%d&chxr=1,0,%d&chxt=x,y&chxl=0:|%s&chco=006688&chm=o,006688,0,-1,6|B,EEEEFF,0,0,0" % (
-    ','.join(map(lambda x: str(x.request_count), total_stats)), 
-    max(map(lambda x: x.request_count, total_stats)) * 1.5,
-    max(map(lambda x: x.request_count, total_stats)) * 1.5,
-    '|'.join(map(lambda x: x.date.strftime("%m/%d"), total_stats)))
-
-    # sort placements by impression count
-    placements = unique_placements.values()
-    placements.sort(lambda x,y: cmp(y.request_count, x.request_count))
+    # organize apps by req count, also prepopulate some metadata to avoid db.get in /d render pipeline
+    apps = unique_apps.values()
+    apps.sort(lambda x,y: cmp(y.request_count, x.request_count))
     
-    # figure out unique accounts
-    unique_accounts = set([x.site.account.key() for x in placements])
+    # get folks who want to be on the mailing list
+    mailing_list = Account.gql("where date_added > :1 order by date_added desc", start_date).fetch(1000)
     
-    # this week + last week
-    this_week = sum([x.request_count for x in total_stats[-8:-1]])
-    last_week = sum([x.request_count for x in total_stats[-15:-8]])
-
-    # thanks
-    return render_to_response(request, 
-    'admin/d.html', 
-    {"stats": total_stats, 
-    "chart_url": url,
-    "request_count": sum(map(lambda x: x.request_count, total_stats)),
-    "today_request_count": total_stats[-2].request_count,
-    "click_count": sum(map(lambda x: x.click_count, total_stats)),
-    "growth": this_week / float(last_week) - 1.0,
-    "unique_placements": unique_placements, 
-    "unique_accounts": unique_accounts, 
-    "placements": placements})
+    # params
+    render_p = {"stats": total_stats, 
+        "start_date": start_date,
+        "today": total_stats[-1],
+        "yesterday": total_stats[-2],
+        "all": SiteStats(request_count=sum([x.request_count for x in total_stats]), 
+            impression_count=sum([x.impression_count for x in total_stats]), 
+            click_count=sum([x.click_count for x in total_stats]),
+            unique_user_count=max([x.unique_user_count for x in total_stats])),
+        "apps": apps,
+        "unique_apps": unique_apps, 
+        "unique_placements": unique_placements, 
+        "unique_accounts": unique_accounts,
+        "mailing_list": [a for a in mailing_list if a.mailing_list]}
+    memcache.set("jpayne:admin/d:render_p", render_p)
+    
+    return HttpResponseRedirect(reverse('admin_dashboard'))
+ 
+@login_required
+def dashboard(request, *args, **kwargs):
+    render_p = memcache.get("jpayne:admin/d:render_p")
+    if render_p:
+        return render_to_response(request, 
+            'admin/d.html', 
+             render_p)
+    else:
+        return HttpResponseRedirect(reverse('dashboard_prep'))        
     
 @login_required
 def report(request, *args, **kwargs):
-    start_date = datetime.date.today() - datetime.timedelta(days=8)
     today = datetime.date.today() - datetime.timedelta(days=1)
     
     # get stats from beginning of period and today
-    start_stats = SiteStats.gql("where date = :1 and owner = null order by date desc", start_date)
-    today_stats = SiteStats.gql("where date >= :1 and owner = null order by date desc", today)
+    today_stats = SiteStats.gql("where date = :1 and owner = null", today)
     
     # compute totals
-    start_requests = sum([x.request_count for x in start_stats])
     today_requests = sum([x.request_count for x in today_stats])
     ad_units = len(set([x.site.key() for x in today_stats]))
-    growth = 100 * ((today_requests / float(start_requests)) - 1.0)
     
     # send a note
-    metrics = "Served %d requests across %d ad units (%.1f%% w/w)" % (today_requests, ad_units, growth)
-    send_mail(metrics,"http://ads.mopub.com/admin/d/",'olp@mopub.com',['metrics@mopub.com'],fail_silently=True)
+    mail.send_mail(sender='jpayne@mopub.com', 
+                   to='support@mopub.com',
+                   subject="Served %d requests across %d ad units" % (today_requests, ad_units), 
+                   body="See more at http://app.mopub.com/admin/d")
     return HttpResponseRedirect(reverse('admin_dashboard'))
     

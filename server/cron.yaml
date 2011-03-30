@@ -3,6 +3,6 @@ cron:
   url: /admin/report
   schedule: every day 07:00
   
-- description: Hourly dashboard refresh
+- description: Periodic dashboard refresh
   url: /admin/prep
   schedule: every 30 minutes

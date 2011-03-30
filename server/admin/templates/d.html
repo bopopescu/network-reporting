@@ -1,6 +1,5 @@
 {% extends "admin/base.html" %}
 {% load filters %}
-{% block extraScripts %}<script src="/js/mopub-dashboard.js?v=2"></script>{% endblock extraScripts %}
 {% block pageTitle %}<h1>MoPub Metrics Dashboard</h1>{% endblock pageTitle %}
 {% block titleBarRight %}
     <span class="titlebar-link">
@@ -107,8 +106,8 @@
         <table width="100%">
             <thead>
         		<tr>
-        		    <th>Email</th>
-        		    <th>Date</th>
+        		    <th style="text-align: left;">Email</th>
+        		    <th style="text-align: left;">Date</th>
         		</tr>
         	</thead>
         	<tbody>

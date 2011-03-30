@@ -22,6 +22,9 @@ test_daily_budget = 0
 def has_budget(campaign, cost):
     """ Returns True if the cost is less than the budget in the current timeslice """
     
+    if campaign.budget is None:
+        return True
+    
     memcache_daily_budget = _remaining_daily_budget(campaign)
     if memcache_daily_budget < cost:
         return False
@@ -38,11 +41,12 @@ def has_budget(campaign, cost):
     
 def apply_expense(campaign, cost):
     """ Applies an expense to our memcache """
-    ts_key = _make_campaign_ts_budget_key(campaign)
-    daily_key = _make_campaign_daily_budget_key(campaign)
+    if campaign is not None:
+        ts_key = _make_campaign_ts_budget_key(campaign)
+        daily_key = _make_campaign_daily_budget_key(campaign)
     
-    memcache.decr(ts_key, _to_memcache_int(cost), namespace="budget")
-    memcache.decr(daily_key, _to_memcache_int(cost), namespace="budget")
+        memcache.decr(ts_key, _to_memcache_int(cost), namespace="budget")
+        memcache.decr(daily_key, _to_memcache_int(cost), namespace="budget")
 
 def timeslice_advance(campaign):
     """ Adds a new timeslice's worth of budget and pulls the budget

@@ -2,7 +2,7 @@ import re
 import reporting.models as reporting_models
 
 
-def get_country_code(request=None,user_agent=None,locale=None):
+def get_country_code(request=None, user_agent=None, locale=None):
     country_code = None
     
     split_pat = re.compile('[\-_]') # splits on '-' or '_'

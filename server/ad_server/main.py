@@ -272,6 +272,7 @@ class AdAuction(object):
     testing = kw["testing"]
     
     udid = kw["udid"]
+    user_agent = kw["user_agent"]
 
     keywords = kw["q"]
     geo_predicates = AdAuction.geo_predicates_for_rgeocode(kw["addr"])
@@ -414,7 +415,7 @@ class AdAuction(object):
                                     winning_creative = winner
                                     # if native, log native request
                                     if winner.ad_type in NATIVE_REQUESTS:
-                                        mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, testing=testing)
+                                        mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, testing=testing)
                                     return winning_creative
                                 else:
                                     rpc = None          
@@ -587,6 +588,7 @@ class AdHandler(webapp.RequestHandler):
     
     # TODO: get udid we should hash it if its not already hashed
     udid = self.request.get("udid")
+    user_agent = self.request.headers['User-Agent']
     
     # create a unique request id, but only log this line if the user agent is real
     request_id = hashlib.md5("%s:%s" % (self.request.query_string, time.time())).hexdigest()
@@ -604,6 +606,7 @@ class AdHandler(webapp.RequestHandler):
 							  request_id=request_id, 
 							  now=now,
 							  testing=testing,
+							  user_agent=user_agent,
 							  manager=manager)
     # output the request_id and the winning creative_id if an impression happened
     if c:

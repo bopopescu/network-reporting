@@ -107,7 +107,7 @@ class StatsModel(db.Expando):
         # update dynamic properties
         if not geo_type in GEO_COUNTS:
             raise Exception("Invalid Geo Count Type")
-        attribute = "%s_country_%s"%(country,geo_type) # e.g. US_request_count
+        attribute = "%s_country_%s"%(country,geo_type) # e.g. US_country_request_count
         setattr(self,attribute,value)
         
     def get_geo(self,country,geo_type):
@@ -121,7 +121,7 @@ class StatsModel(db.Expando):
         for prop in self.dynamic_properties():
             parts = prop.split('_country_')
             if len(parts) > 1:
-                countries.update([parts[0]])
+                countries.add(parts[0])
         return list(countries)
     
     

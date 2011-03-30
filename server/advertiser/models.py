@@ -11,8 +11,15 @@ class Campaign(db.Model):
   description = db.TextProperty()
   campaign_type = db.StringProperty(choices=['gtee', 'gtee_high', 'gtee_low', 'promo', 'network','backfill_promo'], default="network")
 
-  # daily budget
+  # budget per day
   budget = db.FloatProperty() 
+  
+  timeslice_snapshot = db.FloatProperty()
+  
+  # budget per timeslice, determined dynamically
+  timeslice_budget = db.FloatProperty()
+  
+  budget_strategy = db.StringProperty(choices=['evenly','allatonce'], default="allatonce")
   
   # start and end dates 
   start_date = db.DateProperty()
@@ -62,9 +69,6 @@ class AdGroup(db.Model):
   net_creative = db.ReferenceProperty(collection_name='creative_adgroups')
   name = db.StringProperty()
   
-  # daily budget
-  budget = db.FloatProperty() 
-  
   # start and end dates 
   start_date = db.DateProperty()
   end_date = db.DateProperty()
@@ -75,6 +79,8 @@ class AdGroup(db.Model):
   priority_level = db.IntegerProperty(default=1)
   network_type = db.StringProperty(choices=["adsense", "iAd", "admob","millennial","appnexus","inmobi","mobfox","jumptap","brightroll","greystripe", "custom"])
 
+  # Note that bid is in cost per 1000.
+  # An individual ad's price is bid/1000
   bid = db.FloatProperty(default=0.05)
   bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpm")
 

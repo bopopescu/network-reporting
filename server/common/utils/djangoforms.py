@@ -47,7 +47,7 @@ Mapping between properties and fields:
 +--------------------+-------------------+--------------+--------------------+
 | TextProperty       | CharField         | unicode      | MPTextarea         |
 +--------------------+-------------------+--------------+--------------------+
-| ChoiceProperty     | CharField         | unicode      | MPRadioInput       |
+| ChoiceProperty     | CharField         | unicode      | MPRadioWidget       |
 +--------------------+-------------------+--------------+--------------------+
 | BlobProperty       | FileField         | str          | skipped in v0.96   |
 +--------------------+-------------------+--------------+--------------------+
@@ -252,7 +252,7 @@ class StringProperty(db.StringProperty):
     """
     defaults = {}
     if self.choices:
-      defaults['widget'] =  mpwidgets.MPRadioInput
+      defaults['widget'] =  mpwidgets.MPRadioWidget
     elif self.multiline:
       defaults['widget'] =  mpwidgets.MPTextarea
     else:
@@ -283,7 +283,7 @@ class ChoiceProperty(StringProperty):
 
     This sets the widget default to forms.Textarea.
     """
-    defaults = {'widget': mpwidgets.MPRadioInput}
+    defaults = {'widget': mpwidgets.MPRadioWidget}
     defaults.update(kwargs)
     return super(ChoiceProperty, self).get_form_field(**defaults)
 

@@ -16,3 +16,21 @@ Tom had a problem with fancy_urllib, which was fixed by adding:
 DIR_PATH = '/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine'
 
 to '/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/dev_appserver.py'
+
+//////////////////////////////////////////
+
+To edit the datastore, use the following from your server directory:
+$ dev_appserver.py --datastore_path=test_data/basic_test.datastore .
+
+then go to:
+http://localhost:8080/_ah/admin/datastore
+
+NOTE: For this to function, the first line of app.yaml must be:
+ 	application: mopub-inc 
+
+//////////////////////////////////////////
+
+To push for a scale test use:
+python manage.py update
+email: appenginescaletest@gmail.com
+password: test!@#$

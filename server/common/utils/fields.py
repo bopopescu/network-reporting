@@ -39,7 +39,7 @@ class MPFloatField(FloatField):
     widget = mpwidgets.MPNumberInput
 
 class MPChoiceField(ChoiceField):
-    widget = mpwidgets.MPRadioInput
+    widget = mpwidgets.MPRadioWidget
     
     
 class MPModelMultipleChoiceField(ModelChoiceField):

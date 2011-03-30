@@ -14,7 +14,7 @@ class Campaign(db.Model):
   # budget per day
   budget = db.FloatProperty() 
   
-  previous_budget_snapshot = db.FloatProperty()
+  timeslice_snapshot = db.FloatProperty()
   
   # budget per timeslice, determined dynamically
   timeslice_budget = db.FloatProperty()
@@ -53,9 +53,6 @@ class Campaign(db.Model):
   @property
   def owner_key(self):
     return None
-    
-  def needs_smooth_budget(self):
-    return (not self.budget is None) and (self.budget_strategy == "evenly")
       
     
     
@@ -74,6 +71,8 @@ class AdGroup(db.Model):
   priority_level = db.IntegerProperty(default=1)
   network_type = db.StringProperty(choices=["adsense", "iAd", "admob","millennial","appnexus","inmobi","mobfox","jumptap","brightroll","greystripe", "custom"])
 
+  # Note that bid is in cost per 1000.
+  # An individual ad's price is bid/1000
   bid = db.FloatProperty(default=0.05)
   bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpm")
 

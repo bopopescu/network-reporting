@@ -41,6 +41,7 @@ from threading import Thread
 from threading import current_thread
 from threading import Lock
 from urllib import urlencode
+from advertiser.models import Campaign
 
 # from event.models import DimensionTwoLevelOne
 # from counters.models import Counter
@@ -163,9 +164,12 @@ def threadproc():
             else:    
                 creative = resp.get('x-creativeid', None) # creative_id
             
-            fail_lock.acquire()
-            print "Creative: ", creative
-            fail_lock.release()
+                fail_lock.acquire()
+                if creative is None:
+                    print "campaign: ", None
+                else: 
+                    print "campaign: ", creative
+                fail_lock.release()
 
             key = r_models.StatsModel.get_key_name(publisher=adunit,
                                                    advertiser=creative,

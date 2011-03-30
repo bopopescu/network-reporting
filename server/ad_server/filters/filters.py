@@ -22,7 +22,7 @@ def budget_filter():
     log_mesg = "Removed due to being over budget: %s"
     def real_filter( a ):
         # Check if we need smoothing, if so, use budgeting
-        return not ( not a.campaign.needs_smooth_budget() or
+        return not ( (a.campaign.budget is None) or
                         budget_service.has_budget(a.campaign, a.bid/1000))
     return ( real_filter, log_mesg, [] )
 

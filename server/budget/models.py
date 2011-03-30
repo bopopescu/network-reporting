@@ -1,5 +1,6 @@
 from google.appengine.ext import db
 from advertiser.models import Campaign
+import logging
 
 DEFAULT_TIMESLICES = 1440.0 # Timeslices per day
 DEFAULT_FUDGE_FACTOR = 0.1
@@ -7,7 +8,8 @@ DEFAULT_FUDGE_FACTOR = 0.1
 class BudgetSlicer(db.Model):
     
     campaign = db.ReferenceProperty(Campaign)
-    previous_budget_snapshot = db.FloatProperty(default=0.0)
+    timeslice_snapshot = db.FloatProperty()
+    daily_snapshot = db.FloatProperty()
   
 
     @property
@@ -16,16 +18,30 @@ class BudgetSlicer(db.Model):
 
     def __init__(self, parent=None, key_name=None, **kwargs):
         if not key_name and not kwargs.get('key', None):
+            # We are not coming from database
             campaign = kwargs.get('campaign',None)
             if campaign:
                 key_name = self.get_key_name(campaign)
-        super(BudgetSlicer, self).__init__(parent=parent, key_name=key_name, **kwargs)
+                timeslice_snapshot = (campaign.budget / 
+                                            DEFAULT_TIMESLICES * 
+                                            (1.0 + DEFAULT_FUDGE_FACTOR))
+                                            
+                kwargs.update(daily_snapshot = campaign.budget)
+                kwargs.update(timeslice_snapshot = timeslice_snapshot)
+                
+        super(BudgetSlicer, self).__init__(parent=parent,
+                                           key_name=key_name,
+                                            **kwargs)
 
     @classmethod
     def get_key_name(cls, campaign):
         if isinstance(campaign,db.Model):
             campaign = campaign.key()
         return "k:"+str(campaign)
+        
+    @classmethod
+    def get_by_campaign(cls, campaign):
+        return cls.get_by_key_name(cls.get_key_name(campaign))
         
 
     @classmethod
@@ -36,13 +52,20 @@ class BudgetSlicer(db.Model):
     def get_or_insert_for_campaign(cls,campaign,**kwargs):
         key_name = cls.get_key_name(campaign)
         kwargs.update(campaign=campaign)
-        return super(BudgetSlicer,cls).get_or_insert(key_name,**kwargs)
         
+        def _txn(campaign):
+            obj = cls.get_by_campaign(campaign)
+            if not obj:
+                obj = BudgetSlicer(**kwargs)
+                obj.put()
+            return obj
+        return db.run_in_transaction(_txn,campaign)        
 
 class TimesliceLog(db.Model):
       budget_slicer = db.ReferenceProperty(BudgetSlicer,collection_name="timeslice_logs")
       initial_memcache_budget = db.FloatProperty()
       final_memcache_budget = db.FloatProperty()
+      remaining_daily_budget = db.FloatProperty()
       end_date = db.DateTimeProperty()
       
       @property

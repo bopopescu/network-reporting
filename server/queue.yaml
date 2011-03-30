@@ -14,3 +14,7 @@ queue:
 - name: budget-advance
   rate: 100/s
   bucket_size: 100
+  
+- name: daily-budget-advance
+  rate: 100/s
+  bucket_size: 100

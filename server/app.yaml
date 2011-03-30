@@ -1,4 +1,4 @@
-application: mopub-inc #eventrackerscaletest
+application: mopub-inc
 version: 38
 runtime: python
 api_version: 1
@@ -53,10 +53,5 @@ handlers:
   script: mopub_logging/views.py
   login: admin  
 
-- url: /budget/.*
-  script: main.py
-  login: admin
-
 - url: /.*
   script: main.py
-  

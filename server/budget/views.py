@@ -23,7 +23,13 @@ import logging
 # Each worker must complete in less than a timeslice to avoid contention
 CAMPAIGNS_PER_WORKER = 30
 
-def budget_advance(request):
+def daily_budget_advance(request):
+     return budget_advance(request, daily=True)
+     
+def timeslice_budget_advance(request):
+    return budget_advance(request, daily=False)
+
+def budget_advance(request, daily=False):
     keys = Campaign.all(keys_only=True).filter('budget_strategy =', 'evenly').fetch(1000000)
     count = len(keys)
 
@@ -36,7 +42,6 @@ def budget_advance(request):
     while start_index < count:
     
         key_shard = keys[start_index:end_index]
-        text += '<br><br> %s:%s has value: %s' % (start_index, end_index, key_shard)
         
         # Add the task to the default queue.
         
@@ -45,57 +50,69 @@ def budget_advance(request):
             serial_key_shard += str(key) + ','
 
         serial_key_shard = serial_key_shard[:-1]
+        text += '<br><br> %s:%s has value: %s' % (start_index, end_index, serial_key_shard)
         
         # serialization of dict objects fails for params so we do it manually
         # key_shard = [str(key) for key in key_shard]
         
-        taskqueue.add(url=reverse('budget_advance_worker'),
+        if daily:
+            url = reverse('budget_daily_advance_worker')
+        else:    
+            url = reverse('budget_advance_worker')
+        
+        taskqueue.add(url=url,
                       queue_name='budget-advance',
                       params={'key_shard': serial_key_shard}
                       )
         
         start_index += CAMPAIGNS_PER_WORKER
         end_index += CAMPAIGNS_PER_WORKER
+        
+    if daily:
+        return HttpResponse('Advanced budget daily: %s' % text)
+    else:
+        return HttpResponse('Advanced budget timeslices: %s' % text)
     
-    return HttpResponse('Advanced budget timeslices: %s' % text)
+def daily_advance_worker(request):
+    return advance_worker(request,daily=True)
+
+def timeslice_advance_worker(request):
+    return advance_worker(request,daily=False)
     
-def advance_worker(request):
+def advance_worker(request, daily=False):
     serial_key_shard = request.POST['key_shard']
     keys = serial_key_shard.split(',')
-    
+
     for key in keys:
         logging.info(key)
 
     camps = Campaign.get(keys)
     for camp in camps:
         if camp.budget is not None:
-            budget_service.advance_timeslice(camp)
-               
+            if daily:
+                budget_service.daily_advance(camp)
+            else:
+                budget_service.timeslice_advance(camp)
+
     return HttpResponse('Worker Succeeded')
 
-    
-def budget_logs(request, campaign_key):
-    
-    recent_logs = budget_service.log_generator_from_key(campaign_key)[0]
-    output = ''
-    
-    for log in recent_logs:
-        output += str(log) + '\n'
-        
-    return HttpResponse(recent_logs)
-    
 
+def log_data(request, campaign_key):
     
-def mem_budget(request, campaign_key):
+    camp = Campaign.get(campaign_key)
     
-    campaign = Campaign.get(campaign_key)
-    mem_budget =  budget_service._get_budget(campaign)
+    recent_logs = budget_service.log_generator(camp).order('-end_date').fetch(60)
+    log_array = [log.spending for log in recent_logs]
     
-    return HttpResponse(campaign.name + ': ' + str(mem_budget))
+    # put in order of least to most recent
+    log_array.reverse()
     
-def set_budget(request, campaign_key):
+    return HttpResponse(simplejson.dumps(log_array))
     
-    campaign = Campaign.get(campaign_key)
-    mem_budget = 100.0
-    budget_service._set_memcache(campaign, mem_budget)
-    return HttpResponse(campaign.name + ': ' + str(mem_budget))
+def chart(request, campaign_key):
+    camp = Campaign.get(campaign_key)
+    
+    context =  {'campaign_key': campaign_key,
+                'campaign': camp}
+    
+    return render_to_response(request,'budget/chart.html', context)

@@ -3,8 +3,9 @@ from django.conf.urls.defaults import *
 
 urlpatterns = patterns('budget.views',
     url(r'^advance/$','budget_advance',name='budget_advance'),
+    url(r'^daily_advance/$','daily_budget_advance',name='budget_daily_advance'),
     url(r'^advance_worker/$','advance_worker',name='budget_advance_worker'),
-    url(r'^campaign_logs/(?P<campaign_key>.*)/$','budget_logs',name='budget_campaign_logs'),
-    url(r'^campaign_budget/(?P<campaign_key>.*)/$','mem_budget',name='budget_campaign_budget'),
-    url(r'^set_budget/(?P<campaign_key>.*)/$','set_budget',name='budget_set_budget'),
+    url(r'^daily_advance_worker/$','daily_advance_worker',name='budget_daily_advance_worker'),
+    url(r'^log_data/(?P<campaign_key>.*)/$','log_data',name='budget_log_data'),
+    url(r'^chart/(?P<campaign_key>.*)/$','chart',name='budget_chart'),
 )

@@ -23,7 +23,9 @@ class CampaignQueryManager(CachedQueryManager):
         if not (deleted == None):
             campaigns = campaigns.filter("deleted =",deleted)
         if account:
-            campaigns = campaigns.filter("u =",account.user) #TODO: Migrate this
+            campaigns = campaigns.filter("u =",account.user) 
+            # TODO: Migrate this to below
+            # campaigns = campaigns.filter("account =",account)
         return campaigns.fetch(limit)        
 
     def put_campaigns(self,campaigns):

@@ -42,18 +42,23 @@ class SiteStatsQueryManager(CachedQueryManager):
 class StatsModelQueryManager(CachedQueryManager):
     Model = StatsModel
     
-    def __init__(self, account):
+    def __init__(self, account, offline=False):
         if isinstance(account, db.Key):
             self.account = account
         elif isinstance(account, db.Model):
             self.account = account.key()
         else:
             self.account = db.Key(account)
+            
+        self.offline = offline
+            
         self.stats = []
         self.obj_cache = {}
         
+        
             
     def get_stats_for_days(self, publisher=None, advertiser=None, days=None, account=None, country=None, offline=False):
+        offline = offline or self.offline
         if isinstance(publisher,db.Model):
           publisher = publisher.key()
 
@@ -63,8 +68,16 @@ class StatsModelQueryManager(CachedQueryManager):
         days = days or []
         account = account or self.account
 
-        keys = (StatsModel.get_key(publisher=publisher,advertiser=advertiser,account=account, country=None, offline=offline)
-                    for d in days)
+        if account:
+            parent = db.Key.from_path(StatsModel.kind(),StatsModel.get_key_name(account=account,offline=offline))
+        else:
+            parent = None
+
+
+        keys = [db.Key.from_path(StatsModel.kind(),StatsModel.get_key_name(publisher=publisher,advertiser=advertiser,account=account,date=d,country=country, offline=offline),
+                                 parent=parent)
+                    for d in days]
+                                        
         stats = StatsModel.get(keys) # db get
         stats = [s or StatsModel() for s in stats]
         return stats            
@@ -74,6 +87,8 @@ class StatsModelQueryManager(CachedQueryManager):
     
     
     def put_stats(self, stats=None ,rollup=True, offline=False):
+        offline = offline or self.offline
+        
         stats = stats or self.stats
         if isinstance(stats,db.Model):
             stats = [stats]
@@ -95,6 +110,7 @@ class StatsModelQueryManager(CachedQueryManager):
         
         
     def _update_db(self, stats, offline):
+        offline = offline or self.offline
         key_list = []
         
         if offline:
@@ -123,6 +139,8 @@ class StatsModelQueryManager(CachedQueryManager):
         
                 
     def _get_all_rollups(self, stats, offline):
+        offline = offline or self.offline
+        
         # initialize the object dictionary 
         stats_dict = {}
         for stat in stats:
@@ -312,6 +330,8 @@ class StatsModelQueryManager(CachedQueryManager):
         rewrites all the stats objects in order to place them
         under the StatsModel object for the account
         """
+        offline = offline or self.offline
+        
         account = account or self.account
         account_stats = StatsModel(account=account, offline=offline) 
         properties = StatsModel.properties()

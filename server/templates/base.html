@@ -200,7 +200,8 @@
           </div>
           <div id="footer-account">
             Logged in as <a href="{% url account_index %}">{{google_user}}</a>
-{% block adminSelect %}{% if user.is_admin %}
+{% block adminSelect %}
+	{% if user.is_admin %}
                   <div style="float:right;padding-left:10px">
                     <form id="admin_user_switch" action="{% url admin_switch_user %}" method="POST">
                       <select name="user_key" id="admin_user_switch_select" onchange='$("#admin_user_switch").submit()'>
@@ -228,7 +229,9 @@
                     if (options[i].value == user_key_name)
                     options[i].selected = true;
                   }
-                  </script>{% endif %}{% endblock adminSelect %}
+                  </script>
+	{% endif %}
+{% endblock adminSelect %}
             <span class="sep">&middot;</span>
             <a href="{% google_logout_url %}">Log out</a>
           </div>

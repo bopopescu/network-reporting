@@ -29,6 +29,7 @@ from publisher.models import Site, Account, App
 from reporting.models import StatsModel
 
 from common.utils.cachedquerymanager import CachedQueryManager
+from common.utils.request_handler import RequestHandler
 
 from account.query_managers import AccountQueryManager
 from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager, \
@@ -38,60 +39,6 @@ from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager,
 from publisher.query_managers import AdUnitQueryManager, AppQueryManager
 from reporting.query_managers import StatsModelQueryManager
 
-class RequestHandler(object):
-    def __init__(self,request=None):
-      if request:
-        self.request = request
-        self.account = None
-        user = users.get_current_user()
-        if user:
-          if users.is_current_user_admin():
-            account_key_name = request.COOKIES.get("account_impersonation",None)
-            if account_key_name:
-              self.account = AccountQueryManager().get_by_key_name(account_key_name)
-        if not self.account:  
-          self.account = Account.current_account()
-        
-      super(RequestHandler,self).__init__()  
-  
-    def __call__(self,request,*args,**kwargs):
-        self.params = request.POST or request.GET
-        self.request = request or self.request
-        self.account = None
-
-        try:
-          # Limit date range to 31 days, otherwise too heavy
-          self.date_range = min(int(self.params.get('r')),31)  # date range
-        except:
-          self.date_range = 14
-          
-        try:
-          s = self.request.GET.get('s').split('-')
-          self.start_date = datetime.date(int(s[0]),int(s[1]),int(s[2]))
-        except:
-          self.start_date = None
-
-        user = users.get_current_user()
-        if user:
-          if users.is_current_user_admin():
-            account_key_name = request.COOKIES.get("account_impersonation",None)
-            if account_key_name:
-              self.account = AccountQueryManager().get_by_key_name(account_key_name)
-        if not self.account:  
-          self.account = Account.current_account()
-          
-        # use the offline stats  
-        self.offline = self.request.get("offline",False)   
-          
-          
-        if request.method == "GET":
-            return self.get(*args,**kwargs)
-        elif request.method == "POST":
-            return self.post(*args,**kwargs)    
-    def get(self):
-        pass
-    def put(self):
-        pass  
 
 class AdGroupIndexHandler(RequestHandler):
     def get(self):
@@ -103,6 +50,7 @@ class AdGroupIndexHandler(RequestHandler):
 
         apps = AppQueryManager().get_apps(account=self.account)
         campaigns = CampaignQueryManager().get_campaigns(account=self.account)
+        logging.info("\n\n\nCAMPAIGNS: %s \n\n\n"%campaigns)
         if campaigns:
             adgroups = AdGroupQueryManager().get_adgroups(campaigns=campaigns)
         else:
@@ -110,7 +58,7 @@ class AdGroupIndexHandler(RequestHandler):
     
         for adgroup in adgroups:
             # get stats for date range
-            adgroup.all_stats = StatsModelQueryManager(self.account).get_stats_for_days(advertiser=adgroup, days=days)
+            adgroup.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)
             # get total for the range
             adgroup.stats = reduce(lambda x, y: x+y, adgroup.all_stats, StatsModel())
 
@@ -480,14 +428,14 @@ class ShowAdGroupHandler(RequestHandler):
             days = StatsModel.lastdays(self.date_range)
 
         adgroup = AdGroupQueryManager().get_by_key(adgroup_key)
-        adgroup.all_stats = StatsModelQueryManager(self.account).get_stats_for_days(advertiser=adgroup, days=days)
+        adgroup.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)
         adgroup.stats = reduce(lambda x, y: x+y, adgroup.all_stats, StatsModel())    
     
         # creatives = Creative.gql('where ad_group = :1 and deleted = :2 and ad_type in :3', adgroup, False, ["text", "image", "html"]).fetch(50)
         creatives = CreativeQueryManager().get_creatives(adgroup=adgroup)
         creatives = list(creatives)
         for c in creatives:
-            c.all_stats = StatsModelQueryManager(self.account).get_stats_for_days(advertiser=c, days=days)
+            c.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(advertiser=c, days=days)
             c.stats = reduce(lambda x, y: x+y, c.all_stats, StatsModel())
             if not c.format:
                 c.format = "320x50" # TODO: Should fix DB so that format is always there
@@ -500,7 +448,7 @@ class ShowAdGroupHandler(RequestHandler):
         
         adunits = AdUnitQueryManager().get_adunits(keys=adgroup.site_keys)
         for au in adunits:
-            au.all_stats = StatsModelQueryManager(self.account).get_stats_for_days(publisher=au,advertiser=adgroup, days=days)
+            au.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=au,advertiser=adgroup, days=days)
             au.stats = reduce(lambda x, y: x+y, au.all_stats, StatsModel())
             au.app = App.get(au.app_key.key())
 

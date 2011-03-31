@@ -42,7 +42,6 @@ class Pacific_tzinfo(datetime.tzinfo):
 
 class StatsModel(db.Expando):
     
-    
     publisher = db.ReferenceProperty(collection_name='publisher_stats')
     advertiser = db.ReferenceProperty(collection_name='advertiser_stats')
     account = db.ReferenceProperty(Account,collection_name='account_stats')
@@ -181,7 +180,7 @@ class StatsModel(db.Expando):
 
     
     @classmethod
-    def get_key_name(cls,publisher,advertiser,date=None,date_hour=None,account=None,offline=False,country=None, month=None):
+    def get_key_name(cls,publisher=None,advertiser=None,date=None,date_hour=None,account=None,offline=False,country=None, month=None):
         if publisher or advertiser or date_hour or date or month or country:
             if isinstance(publisher,db.Model):
                 publisher = publisher.key()
@@ -213,7 +212,7 @@ class StatsModel(db.Expando):
             
             
     @classmethod
-    def get_key(cls, publisher,advertiser,date,date_hour,account=None,offline=False,country=None,month=None):
+    def get_key(cls, publisher,advertiser,date=None,date_hour=None,account=None,offline=False,country=None,month=None):
         return db.Key.from_path(cls.kind(),cls.get_key_name(publisher,advertiser,date,date_hour,account,offline,country,month))
             
     def _force_key(self,prop):

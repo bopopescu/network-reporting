@@ -12,7 +12,7 @@ from urllib import urlencode
 from operator import itemgetter
 import base64, binascii
 
-from google.appengine.api import users
+
 from google.appengine.api.urlfetch import fetch
 from google.appengine.ext import db
 from google.appengine.ext.webapp import template
@@ -45,66 +45,14 @@ from publisher.query_managers import AppQueryManager, AdUnitQueryManager
 from reporting.query_managers import StatsModelQueryManager
 
 from common.utils import sswriter
+from common.utils.request_handler import RequestHandler
 from common.constants import *
 
-class RequestHandler(object):
-    def __init__(self,request=None):
-      if request:
-        self.request = request
-        self.account = None
-        user = users.get_current_user()
-        if user:
-          if users.is_current_user_admin():
-            account_key_name = request.COOKIES.get("account_impersonation",None)
-            if account_key_name:
-              self.account = AccountQueryManager().get_by_key_name(account_key_name)
-        if not self.account:  
-          self.account = Account.current_account()
-
-      super(RequestHandler,self).__init__()  
-
-    def __call__(self,request,*args,**kwargs):
-        self.params = request.POST or request.GET
-        self.request = request or self.request
-        self.account = None
-        
-        try:
-          # Limit date range to 31 days, otherwise too heavy
-          self.date_range = min(int(self.params.get('r')),31)  # date range
-        except:
-          self.date_range = 14
-          
-        try:
-          s = self.request.GET.get('s').split('-')
-          self.start_date = date(int(s[0]),int(s[1]),int(s[2]))
-        except:
-          self.start_date = None
-        
-        user = users.get_current_user()
-        if user:
-          if users.is_current_user_admin():
-            account_key_name = request.COOKIES.get("account_impersonation",None)
-            if account_key_name:
-              self.account = AccountQueryManager().get_by_key_name(account_key_name)
-        if not self.account:  
-          self.account = Account.current_account()
-          
-        # use the offline stats  
-        self.offline = self.request.get("offline",False)   
-
-        if request.method == "GET":
-            return self.get(*args,**kwargs)
-        elif request.method == "POST":
-            return self.post(*args,**kwargs)    
-    def get(self):
-        pass
-    def put(self):
-        pass  
 
 class AppIndexHandler(RequestHandler):
   def get(self):
     report = self.request.POST.get('report')
-
+    
     # Set start date if passed in, otherwise get most recent days
     if self.start_date:
       days = StatsModel.get_days(self.start_date, self.date_range)
@@ -124,13 +72,15 @@ class AppIndexHandler(RequestHandler):
 
       # organize impressions by days
       for adunit in app.adunits:
-        adunit.all_stats = StatsModelQueryManager(self.account).get_stats_for_days(publisher=adunit,days=days)
+        adunit.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=adunit,days=days)
+
+        # sum of stats for this date range
         adunit.stats = reduce(lambda x, y: x+y, adunit.all_stats, StatsModel())
 
       app.adunits = sorted(app.adunits, key=lambda adunit: adunit.stats.request_count, reverse=True)
 
       # We have to read the datastore at the app level since we need to get the de-duped user_count
-      app.all_stats = StatsModelQueryManager(self.account).get_stats_for_days(publisher=app,days=days)
+      app.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=app,days=days)
       app.stats = reduce(lambda x, y: x+y, app.all_stats, StatsModel())
 
     apps = sorted(apps, key=lambda app: app.stats.request_count, reverse=True)
@@ -173,7 +123,7 @@ class AppIndexGeoHandler(RequestHandler):
       a.adunits = AdUnitQueryManager().get_adunits(app=a)
       if len(a.adunits) > 0:
         for adunit in a.adunits:
-          adunit.all_stats = StatsModelQueryManager(self.account).get_stats_for_days(publisher=adunit, days=days)
+          adunit.all_stats = StatsModelQueryManager(self.account,self.offline).get_stats_for_days(publisher=adunit, days=days)
           for stats in adunit.all_stats:
             #stats.geo_imp = simplejson.loads(stats.geo_impressions)
             #stats.geo_clk = simplejson.loads(stats.geo_clicks)
@@ -327,7 +277,7 @@ class ShowAppHandler(RequestHandler):
     # organize impressions by days
     if len(a.adunits) > 0:
       for adunit in a.adunits:
-        adunit.all_stats = StatsModelQueryManager(self.account).get_stats_for_days(publisher=adunit,days=days)
+        adunit.all_stats = StatsModelQueryManager(self.account,self.offline).get_stats_for_days(publisher=adunit,days=days)
         adunit.stats = reduce(lambda x, y: x+y, adunit.all_stats, StatsModel())
         a.stats += adunit.stats
       totals = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[au.all_stats for au in a.adunits])]
@@ -337,7 +287,7 @@ class ShowAppHandler(RequestHandler):
     a.adunits = sorted(a.adunits, key=lambda adunit: adunit.stats.request_count, reverse=True)
       
     # TODO: We are calculating app-level totals twice
-    app_stats = StatsModelQueryManager(self.account).get_stats_for_days(advertiser=a,days=days)
+    app_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(advertiser=a,days=days)
     # set the apps unique user count from the app stats rollup
     for stat,app_stat in zip(totals,app_stats):
       stat.user_count = app_stat.user_count
@@ -407,7 +357,7 @@ class AdUnitShowHandler(RequestHandler):
     logging.warning("\n\n\nDAYS: %s\n\n\n" % days)
     days = [day if type(day) == datetime else datetime.combine(day, time()) for day in days] 
     
-    adunit.all_stats = StatsModelQueryManager(self.account).get_stats_for_days(publisher=adunit,days=days)
+    adunit.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=adunit,days=days)
     #XXX Wat?
     for i in range(len(days)):
       adunit.all_stats[i].date = days[i]
@@ -418,7 +368,7 @@ class AdUnitShowHandler(RequestHandler):
     adunit.adgroups = AdGroupQueryManager().get_adgroups(adunit=adunit)
     adunit.adgroups = sorted(adunit.adgroups, lambda x,y: cmp(y.bid, x.bid))
     for ag in adunit.adgroups:
-      ag.all_stats = StatsModelQueryManager(self.account).get_stats_for_days(publisher=adunit,advertiser=ag,days=days)
+      ag.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=adunit,advertiser=ag,days=days)
       ag.stats = reduce(lambda x, y: x+y, ag.all_stats, StatsModel())
     
     # to allow the adunit to be edited

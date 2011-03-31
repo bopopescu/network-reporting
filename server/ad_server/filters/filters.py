@@ -7,6 +7,8 @@ from math import ( atan2,
                    pi
                    )
 from budget import budget_service
+from reporting.models import StatsModel
+
 ###############################
 # BASIC EXCLUSION FILTERS
 #
@@ -28,7 +30,7 @@ def budget_filter():
 def active_filter():
     log_mesg = "Removed due to inactivity: %s"
     def real_filter( a ):
-        return not ( a.campaign.active and ( a.campaign.start_date  >= SiteStats.today() if a.campaign.start_date else True ) and ( SiteStats.today() <= a.campaign.end_date if a.campaign.end_date else True ) )
+        return not ( a.campaign.active and ( a.campaign.start_date  >= StatsModel.today() if a.campaign.start_date else True ) and ( StatsModel.today() <= a.campaign.end_date if a.campaign.end_date else True ) )
     return ( real_filter, log_mesg, [] )
 
 def kw_filter( keywords ):

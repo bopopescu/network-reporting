@@ -220,6 +220,11 @@ class StatsModel(db.Expando):
             prop = db.Key(prop) if isinstance(prop,(str,unicode)) else prop
         return prop   
         
+    @classmethod
+    def today(c):
+      return datetime.datetime.now(Pacific_tzinfo()).date()
+        
+        
 
 # 
 # Tracks statistics for a site for a particular day - clicks and impressions are aggregated

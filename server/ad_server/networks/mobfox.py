@@ -97,7 +97,7 @@ class MobFoxServerSide(ServerSide):
 
     def bid_and_html_for_response(self,response):
         image_template = """<div style='text-align:center'><a href="%(clickurl)s" target="_blank"><img src="%(imageurl)s" width=%(bannerwidth)s height=%(bannerheight)s/></a></div>"""
-        text_template = """<div style='text-align:center' onclick="javascript: window.location='%(clickurl)s';" style='width:320px; height:50px'">%(htmlString)s</div>"""
+        text_template = """%(htmlString)s"""
         # Image: 
         # response.content = """<request type="imageAd"><bannerwidth>300</bannerwidth><bannerheight>50</bannerheight><clicktype>inapp</clicktype><clickurl>http://my.mobfox.com/activation-info.php</clickurl><imageurl>http://my.mobfox.com/documents/testbanner/300x50.jpg</imageurl><urltype>link</urltype><refresh>30</refresh><scale>no</scale><skippreflight>yes</skippreflight></request>"""
         # Text:

@@ -51,11 +51,13 @@ class TestBudgetUnitTests(unittest.TestCase):
         
         #unpause them and set the appropriate bids
         self.expensive_c.active = True
+        self.expensive_c.budget = 1000.0
         self.expensive_c.budget_strategy = "evenly"
 
         self.expensive_c.put()
         
         self.cheap_c.active = True
+        self.cheap_c.budget = 1000.0
         self.cheap_c.budget_strategy = "evenly"
 
         self.cheap_c.put()
@@ -370,10 +372,10 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service.remaining_daily_budget(self.cheap_c), 400)
         
         budget_service.daily_advance(self.cheap_c)
-        eq_(budget_service.remaining_daily_budget(self.cheap_c), 1400)
+        eq_(budget_service.remaining_daily_budget(self.cheap_c), 1000)
         
         eq_(budget_service._apply_if_able(self.cheap_c, 600), True)
-        eq_(budget_service.remaining_daily_budget(self.cheap_c), 800)
+        eq_(budget_service.remaining_daily_budget(self.cheap_c), 400)
      
     def mptest_daily_budget_allatonce_cache_miss(self):
         # Each campaign has $1000 total budget
@@ -385,19 +387,19 @@ class TestBudgetUnitTests(unittest.TestCase):
 
         eq_(budget_service._apply_if_able(self.cheap_c, 600), True)
         eq_(budget_service.remaining_daily_budget(self.cheap_c), 400)
-        eq_(budget_service._apply_if_able(self.cheap_c, 600), False)
-        eq_(budget_service.remaining_daily_budget(self.cheap_c), 400)
+        eq_(budget_service._apply_if_able(self.cheap_c, 200), True)
+        eq_(budget_service.remaining_daily_budget(self.cheap_c), 200)
 
         budget_service.daily_advance(self.cheap_c)
         budget_service._delete_memcache(self.cheap_c)
         
         # Fall back to snapshot
-        eq_(budget_service.remaining_daily_budget(self.cheap_c), 1400)
+        eq_(budget_service.remaining_daily_budget(self.cheap_c), 1000)
 
         eq_(budget_service._apply_if_able(self.cheap_c, 600), True)
-        eq_(budget_service.remaining_daily_budget(self.cheap_c), 800)
+        eq_(budget_service.remaining_daily_budget(self.cheap_c), 400)
 
-    def mptest_daily_budget_allatonce_cache_miss(self):
+    def mptest_daily_budget_allatonce_cache_miss_ts(self):
         # Each campaign has $1000 total budget
         self.expensive_c.budget_strategy = "allatonce"
         self.expensive_c.put()
@@ -417,10 +419,10 @@ class TestBudgetUnitTests(unittest.TestCase):
         # Fall back to snapshot
         budget_service.daily_advance(self.cheap_c)
         budget_service.timeslice_advance(self.cheap_c) # to backup
-        eq_(budget_service.remaining_daily_budget(self.cheap_c), 2400)
+        eq_(budget_service.remaining_daily_budget(self.cheap_c), 1000)
 
         eq_(budget_service._apply_if_able(self.cheap_c, 600), True)
-        eq_(budget_service.remaining_daily_budget(self.cheap_c), 1800)
+        eq_(budget_service.remaining_daily_budget(self.cheap_c), 400)
 
 
 class TestBudgetEndToEnd(unittest.TestCase):
@@ -440,14 +442,17 @@ class TestBudgetEndToEnd(unittest.TestCase):
         
         #unpause them and set the appropriate bids
         self.expensive_c.active = True
+        self.expensive_c.budget = 1000.0
         self.expensive_c.budget_strategy = "evenly"
 
         self.expensive_c.put()
         
         self.cheap_c.active = True
+        self.cheap_c.budget = 1000.0
         self.cheap_c.budget_strategy = "evenly"
-
+        
         self.cheap_c.put()
+        
         self.fetch_adunits()
         self.switch_adgroups_to_cpm()
         

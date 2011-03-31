@@ -51,7 +51,6 @@ def apply_expense(campaign, cost):
 def timeslice_advance(campaign):
     """ Adds a new timeslice's worth of budget and pulls the budget
     expenditures into the database. Executed once per timeslice."""
-   
     _backup_budgets(campaign)
     
     budget_slicer = BudgetSlicer.get_or_insert_for_campaign(campaign)
@@ -62,10 +61,10 @@ def timeslice_advance(campaign):
 def daily_advance(campaign):
     """ Adds a new timeslice's worth of daily budget, Executed once daily."""
     
-    _backup_budgets(campaign)
-    
     key = _make_campaign_daily_budget_key(campaign)
-    memcache.incr(key, _to_memcache_int(campaign.budget), namespace="budget")
+    memcache.set(key, _to_memcache_int(campaign.budget), namespace="budget")
+    # We backup immediately in order to set a new daily snapshot
+    _backup_budgets(campaign)
         
 def last_log(campaign):
     """Returns the most recently recorded log"""
@@ -77,8 +76,17 @@ def log_generator(campaign):
     slicer = BudgetSlicer.get_or_insert_for_campaign(campaign)
     return slicer.timeslice_logs.order("-end_date")
         
+def percent_delivered(campaign):
+    """ Gives the percent of the daily budget that has been delivered """
+    if campaign.budget is None:
+        return None
+    return (1 - remaining_daily_budget(campaign) / campaign.budget) * 100
+    
 def remaining_daily_budget(campaign):
     """ Gets or inserts the remaining daily budget """
+    if campaign.budget is None:
+        return None
+        
     key = _make_campaign_daily_budget_key(campaign)
 
     memcache_budget = memcache.get(key, namespace="budget")
@@ -92,11 +100,6 @@ def remaining_daily_budget(campaign):
 
         daily_init_budget = budget_slicer.daily_snapshot
 
-        # If there is no previous snapshot, we assume a full budget
-        if daily_init_budget is None:
-            daily_init_budget = campaign.budget
-            logging.warning("calculated: %s" % daily_init_budget)
-
         memcache_budget = _to_memcache_int(daily_init_budget)
         memcache.add(key, memcache_budget, namespace="budget")
 
@@ -104,6 +107,9 @@ def remaining_daily_budget(campaign):
 
 def remaining_ts_budget(campaign):
     """ Gets or inserts the remaining timeslice budget """
+    if campaign.budget is None:
+        return None
+    
     key = _make_campaign_ts_budget_key(campaign)
 
     memcache_budget = memcache.get(key, namespace="budget")
@@ -116,11 +122,6 @@ def remaining_ts_budget(campaign):
         key = _make_campaign_ts_budget_key(campaign)    
 
         ts_init_budget = budget_slicer.timeslice_snapshot
-
-        # If there is no previous snapshot, we assume a full budget
-        if ts_init_budget is None:
-            ts_init_budget = budget_slicer.timeslice_budget
-            logging.warning("calculated: %s" % ts_init_budget)
 
         memcache_budget = _to_memcache_int(ts_init_budget)
         memcache.add(key, memcache_budget, namespace="budget")

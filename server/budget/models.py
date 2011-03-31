@@ -22,12 +22,13 @@ class BudgetSlicer(db.Model):
             campaign = kwargs.get('campaign',None)
             if campaign:
                 key_name = self.get_key_name(campaign)
-                timeslice_snapshot = (campaign.budget / 
-                                            DEFAULT_TIMESLICES * 
-                                            (1.0 + DEFAULT_FUDGE_FACTOR))
+                if campaign.budget:
+                    timeslice_snapshot = (campaign.budget / 
+                                                DEFAULT_TIMESLICES * 
+                                                (1.0 + DEFAULT_FUDGE_FACTOR))
                                             
-                kwargs.update(daily_snapshot = campaign.budget)
-                kwargs.update(timeslice_snapshot = timeslice_snapshot)
+                    kwargs.update(daily_snapshot = campaign.budget)
+                    kwargs.update(timeslice_snapshot = timeslice_snapshot)
                 
         super(BudgetSlicer, self).__init__(parent=parent,
                                            key_name=key_name,

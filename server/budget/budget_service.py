@@ -82,6 +82,11 @@ def percent_delivered(campaign):
         return None
     return (1 - remaining_daily_budget(campaign) / campaign.budget) * 100
     
+def total_delivered(campaign):
+    if campaign.budget is None:
+        return None
+    return campaign.budget - remaining_daily_budget(campaign)
+    
 def remaining_daily_budget(campaign):
     """ Gets or inserts the remaining daily budget """
     if campaign.budget is None:

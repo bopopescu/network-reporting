@@ -426,6 +426,7 @@ class CreateAdGroupHandler(RequestHandler):
       if not adgroup:
         raise Http404("AdGroup does not exist")  
     adgroup.budget = c.budget # take budget from campaign for the time being
+    adgroup.percent_delivered = budget_service.percent_delivered(adgroup.campaign)
     f = AdGroupForm(instance=adgroup)
     adunits = AdUnitQueryManager().get_adunits(account=self.account)
     
@@ -589,7 +590,9 @@ class ShowAdGroupHandler(RequestHandler):
 
     adgroup = AdGroupQueryManager().get_by_key(adgroup_key)
     adgroup.all_stats = SiteStatsQueryManager().get_sitestats_for_days(owner=adgroup, days=days)
-    adgroup.stats = reduce(lambda x, y: x+y, adgroup.all_stats, SiteStats())    
+    adgroup.stats = reduce(lambda x, y: x+y, adgroup.all_stats, SiteStats())
+    adgroup.percent_delivered = budget_service.percent_delivered(adgroup.campaign) 
+    adgroup.total_delivered = budget_service.total_delivered(adgroup.campaign) 
     
     # creatives = Creative.gql('where ad_group = :1 and deleted = :2 and ad_type in :3', adgroup, False, ["text", "image", "html"]).fetch(50)
     creatives = CreativeQueryManager().get_creatives(adgroup=adgroup)

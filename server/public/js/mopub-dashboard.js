@@ -521,13 +521,13 @@ var mopub = mopub || {};
     /---------------------------------------*/
    
     // Set up device format selection UI
-    $(".adForm-device-formats").buttonset();
-    $('#appForm-adUnitDeviceFormat-phone').click(function(e){
+    $("#adunit-device_format_phone").parent().buttonset();
+    $('#adunit-device_format_phone').click(function(e){
       $('#adForm-tablet-container').hide();
       $('#adForm-phone-container').show().find('input[type="radio"]')[0].click();
     });
     
-    $('#appForm-adUnitDeviceFormat-tablet').click(function(e){
+    $('#adunit-device_format_tablet').click(function(e){
       $('#adForm-phone-container').hide();
       $('#adForm-tablet-container').show().find('input[type="radio"]')[0].click();
     });
@@ -569,7 +569,7 @@ var mopub = mopub || {};
       });
 
       //initialize checked elements
-      $(".adForm-device-formats").children().filter(':checked').click().each(function(){
+      $("#adunit-device_format_phone").parent().children().filter(':checked').click().each(function(){
         var deviceFormat = $(this).val(); //either tablet or phone
         var container = "#adForm-"+deviceFormat+"-container"
         $(container).find('.possible-format').click(); 

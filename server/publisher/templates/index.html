@@ -109,7 +109,7 @@
                 <tbody>
                   <tr>
                     <td class="appData-icon"><a href="{% url publisher_app_show app_key=a.key %}"><img src="{% if a.icon_url %}{{a.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" /></a></td>
-                    <th class="dataTable-name"><span class="inner"><a href="{% url publisher_app_show app_key=a.key %}">{{a.name}}</a> <span class="muted unbold">({% ifequal a.app_type "iphone" %}iOS{% endifequal %}{% ifequal a.app_type "android" %}Android{% endifequal %})</span></span></th>
+                    <th class="dataTable-name"><span class="inner"><a href="{% url publisher_app_show app_key=a.key %}">{{a.name}}</a> <span class="muted unbold">({% ifequal a.app_type "iphone" %}iOS{% endifequal %}{% ifequal a.app_type "android" %}Android{% endifequal %}{% ifequal a.app_type "mweb" %}Mobile Web{% endifequal %})</span></span></th>
                     <td class="dataTable-data numeric">{{a.stats.request_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{a.stats.impression_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{a.stats.click_count|withsep}}</td>

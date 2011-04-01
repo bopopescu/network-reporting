@@ -31,11 +31,13 @@
             </div>  
             <h2>Code Integration</h2>
             <ol>
+              {% ifnotequal site.app_key.app_type "mweb" %}
               <li>
                 <p>
                   You will need to install the MoPub SDK first. If you have not done so, see the <a href="http://code.google.com/p/mopub/wiki/GettingStarted">MoPub Getting Started instructions</a> on Google Code.
                 </p>
               </li>
+              {% endifnotequal %}
               {% ifequal site.app_key.app_type "iphone" %}
               <li>
                 <p>
@@ -94,7 +96,29 @@ mpv.loadAd();</pre>
                   </code>
                 </div>
               </li>
-        {% endifequal %}
+            {% endifequal %}
+            {% ifequal site.app_key.app_type "mweb" %}
+              <li>
+                <p>Add the following code snippet into your mobile webpage where you'd like to see ads appear:
+                </p>
+                <div class="alertMessage">
+                    <code>
+                        <pre>
+&lt;script type="text/javascript"&gt;
+    mopub_ad_unit=<b>{{site.key}}</b>;
+
+    //Be sure to set these to the size of your adunit
+    mopub_ad_width=320; //optional
+    mopub_ad_height=50; //optional
+
+    //Use custom keywords appropriate for your mobile webpage
+    mopub_keywords= "custom keywords"; //optional
+&lt;/script&gt;
+&lt;script src="http://ads.mopub.com/js/client/mopub.js"&gt;&lt;/script&gt;</pre>
+                    </code>
+                </div>
+                </li>
+                {% endifequal %}
               <li>
                 <p>
                   For more options, or if you have trouble, see the <a href="http://code.google.com/p/mopub/">MoPub Google Code project</a>.

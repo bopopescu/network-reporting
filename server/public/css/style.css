@@ -1519,7 +1519,11 @@ input.ui-button {
 
 /* App and ad setup forms */
 
+.mweb .android, 
+.mweb .iphone, 
+.iphone .mweb,
 .iphone .android, 
+.android .mweb, 
 .android .iphone {
   display: none;
 }

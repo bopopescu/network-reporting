@@ -131,9 +131,6 @@
                 All dates.
                 {% endif %}
                 {% if campaign.budget %}{{campaign.budget|currency}} daily budget.{% else %}Unlimited budget. {% endif %}
-				{% if campaign.total_delivered %}
-					{{campaign.total_delivered|currency}} delivered today.
-				{% endif %}
             </p>
 
             <h2>Ad Unit Targeting</h2>

@@ -6,7 +6,8 @@ from advertiser.models import ( Campaign,
 import logging
 
 from budget.models import (BudgetSlicer,
-                           TimesliceLog,
+                           BudgetSliceLog,
+                           BudgetDailyLog
                            )
                         
 """
@@ -62,25 +63,53 @@ def daily_advance(campaign):
     """ Adds a new timeslice's worth of daily budget, Executed once daily."""
     
     key = _make_campaign_daily_budget_key(campaign)
+    
+    budget_slicer = BudgetSlicer.get_or_insert_for_campaign(campaign)
+    rem_daily_budget = remaining_daily_budget(campaign)
+    
+    daily_log = BudgetDailyLog(budget_slicer=budget_slicer,
+                      remaining_daily_budget=rem_daily_budget,
+                      end_date=datetime.datetime.now()
+                      )
+    daily_log.put()
+        
     memcache.set(key, _to_memcache_int(campaign.budget), namespace="budget")
+    
     # We backup immediately in order to set a new daily snapshot
     _backup_budgets(campaign)
+    
         
 def last_log(campaign):
     """Returns the most recently recorded log"""
     slicer = BudgetSlicer.get_or_insert_for_campaign(campaign)
     return slicer.timeslice_logs.order("-end_date").get()
 
+def recent_daily_logs(campaign, max_days=14):
+    """ Returns a list of recent daily logs sorted by date"""
+    slicer = BudgetSlicer.get_or_insert_for_campaign(campaign)
+    return slicer.daily_logs.order("-end_date").fetch(max_days)
+    
 def log_generator(campaign):
     """Returns a generator function for the list of most recent logs"""
     slicer = BudgetSlicer.get_or_insert_for_campaign(campaign)
     return slicer.timeslice_logs.order("-end_date")
         
-def percent_delivered(campaign):
-    """ Gives the percent of the daily budget that has been delivered """
+def percent_delivered(campaign, max_days=14):
+    """ Gives the percent of the budget that has been delivered over a certain number of days"""
     if campaign.budget is None:
         return None
-    return (1 - remaining_daily_budget(campaign) / campaign.budget) * 100
+    
+    daily_logs = recent_daily_logs(campaign, max_days=max_days)
+    previous_spending = sum([log.spending for log in daily_logs])
+    previous_budget = campaign.budget * len(daily_logs)
+    
+    today_spending = total_delivered(campaign)
+    today_budget = campaign.budget
+    
+    total_spending = today_spending + previous_spending
+    total_budget = today_budget + previous_budget
+    
+    return (total_spending / total_budget) * 100
     
 def total_delivered(campaign):
     if campaign.budget is None:
@@ -160,21 +189,18 @@ def _backup_budgets(campaign):
     mem_budget = remaining_ts_budget(campaign)
     rem_daily_budget = remaining_daily_budget(campaign)
 
-    # Log budget as long as this is not the first time
-    if budget_slicer.timeslice_snapshot is not None:
-        initial_memcache_budget = budget_slicer.timeslice_snapshot
-        final_memcache_budget = mem_budget
+    # Make BudgetSliceLog
+    initial_memcache_budget = budget_slicer.timeslice_snapshot
+    final_memcache_budget = mem_budget
 
-
-
-        log = TimesliceLog(budget_slicer=budget_slicer,
-                          initial_memcache_budget=initial_memcache_budget,
-                          final_memcache_budget=final_memcache_budget,
-                          remaining_daily_budget=rem_daily_budget,
-                          end_date=datetime.datetime.now()
-                          )
-        log.put()
-
+    log = BudgetSliceLog(budget_slicer=budget_slicer,
+                      initial_memcache_budget=initial_memcache_budget,
+                      final_memcache_budget=final_memcache_budget,
+                      remaining_daily_budget=rem_daily_budget,
+                      end_date=datetime.datetime.now()
+                      )
+    log.put()
+    
     # Back up slicer with snapshots in database.
     budget_slicer.timeslice_snapshot = mem_budget + budget_slicer.timeslice_budget
     budget_slicer.daily_snapshot = rem_daily_budget
@@ -199,6 +225,9 @@ def _flush_cache_and_slicer(campaign):
     
     for log in budget_slicer.timeslice_logs:
         log.delete()
+
+    for log in budget_slicer.daily_logs:
+         log.delete()
     
     budget_slicer.delete()
 

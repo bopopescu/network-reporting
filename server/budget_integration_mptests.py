@@ -30,7 +30,8 @@ from budget import budget_service
 from google.appengine.api import memcache
 from budget import models as budgetmodels
 from budget.models import (BudgetSlicer,
-                           TimesliceLog,
+                           BudgetSliceLog,
+                           BudgetDailyLog,
                            )
 
 ################# End to End #################
@@ -423,6 +424,114 @@ class TestBudgetUnitTests(unittest.TestCase):
 
         eq_(budget_service._apply_if_able(self.cheap_c, 600), True)
         eq_(budget_service.remaining_daily_budget(self.cheap_c), 400)
+
+
+    def mptest_daily_logging(self):
+        # Each campaign has $1000 total budget
+        self.expensive_c.budget_strategy = "allatonce"
+        self.expensive_c.put()
+
+        self.cheap_c.budget_strategy = "allatonce"
+        self.cheap_c.put()
+
+        eq_(budget_service._apply_if_able(self.cheap_c, 900), True)
+        eq_(budget_service.remaining_daily_budget(self.cheap_c), 100)
+
+        budget_service.daily_advance(self.cheap_c)
+        
+        eq_(budget_service._apply_if_able(self.cheap_c, 950), True)
+        eq_(budget_service.remaining_daily_budget(self.cheap_c), 50)
+
+        budget_service.daily_advance(self.cheap_c)
+        eq_(budget_service.remaining_daily_budget(self.cheap_c), 1000)
+
+        # Check logs
+        
+        slicer = BudgetSlicer.get_or_insert_for_campaign(self.cheap_c)
+        
+        daily_logs = slicer.daily_logs.order("-end_date").fetch(2)
+          
+        eq_(daily_logs[0].remaining_daily_budget, 50)
+        eq_(daily_logs[1].remaining_daily_budget, 100)
+          
+        eq_(daily_logs[0].spending, 950)
+        eq_(daily_logs[1].spending, 900)
+        
+    def mptest_recent_daily_logs(self):
+        # Each campaign has $1000 total budget
+        self.expensive_c.budget_strategy = "allatonce"
+        self.expensive_c.put()
+
+        self.cheap_c.budget_strategy = "allatonce"
+        self.cheap_c.put()
+
+        eq_(budget_service._apply_if_able(self.cheap_c, 500), True)
+        eq_(budget_service.remaining_daily_budget(self.cheap_c), 500)
+
+        # We have only one day
+        eq_(budget_service.percent_delivered(self.cheap_c),50)
+
+        budget_service.daily_advance(self.cheap_c)
+       
+        # We have one day at 50, and a new empty one
+        eq_(budget_service.percent_delivered(self.cheap_c),25)
+        
+        eq_(budget_service._apply_if_able(self.cheap_c, 500), True)
+        eq_(budget_service.remaining_daily_budget(self.cheap_c), 500)
+
+        # We have two days at 50
+        eq_(budget_service.percent_delivered(self.cheap_c),50)
+
+        eq_(budget_service._apply_if_able(self.cheap_c, 500), True)
+        eq_(budget_service.remaining_daily_budget(self.cheap_c), 0)
+
+        eq_(budget_service.percent_delivered(self.cheap_c),75)
+    
+    def mptest_recent_daily_logs_mult(self):
+        # Each campaign has $1000 total budget
+        self.expensive_c.budget_strategy = "allatonce"
+        self.expensive_c.put()
+
+        self.cheap_c.budget_strategy = "allatonce"
+        self.cheap_c.put()
+
+        eq_(budget_service._apply_if_able(self.cheap_c, 900), True)
+        eq_(budget_service.remaining_daily_budget(self.cheap_c), 100)
+        
+        # We have only one day
+        eq_(budget_service.percent_delivered(self.cheap_c),90)
+
+        for i in xrange(15):
+            budget_service.daily_advance(self.cheap_c)
+            eq_(budget_service._apply_if_able(self.cheap_c, 950), True)
+            eq_(budget_service.remaining_daily_budget(self.cheap_c), 50)
+
+
+        # Check logs
+
+        # We use the full 14 days
+        eq_(budget_service.percent_delivered(self.cheap_c),95)
+   
+    def mptest_total_delivered(self):
+        # Each campaign has $1000 total budget
+        self.expensive_c.budget_strategy = "allatonce"
+        self.expensive_c.put()
+
+        self.cheap_c.budget_strategy = "allatonce"
+        self.cheap_c.put()
+
+        eq_(budget_service._apply_if_able(self.cheap_c, 500), True)
+        eq_(budget_service.total_delivered(self.cheap_c), 500)
+
+        budget_service.daily_advance(self.cheap_c)
+
+        eq_(budget_service._apply_if_able(self.cheap_c, 500), True)
+        eq_(budget_service.total_delivered(self.cheap_c), 500)
+
+        eq_(budget_service._apply_if_able(self.cheap_c, 500), True)
+        eq_(budget_service.remaining_daily_budget(self.cheap_c), 1000)
+   
+    
 
 
 class TestBudgetEndToEnd(unittest.TestCase):

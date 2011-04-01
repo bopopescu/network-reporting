@@ -54,8 +54,6 @@ def dashboard_prep(request, *args, **kwargs):
 
     # accumulate individual site stats into daily totals 
     unique_apps = {}
-    unique_placements = {}
-    unique_accounts = {}
     totals = {}
 
     # go and do it
@@ -69,9 +67,7 @@ def dashboard_prep(request, *args, **kwargs):
         
         # add a hash key for the site key and account key to calculate uniques
         try:
-            unique_placements[str(s.site.key())] = s + (unique_placements.get(str(s.site.key())) or SiteStats(site=s.site))
             unique_apps[str(s.site.app_key.key())] = s + (unique_apps.get(str(s.site.app_key.key())) or SiteStats(site=s.site))
-            unique_accounts[str(s.site.account.key())] = s + (unique_accounts.get(str(s.site.account.key())) or SiteStats(owner=s.site.account))      
         except:
             pass
     
@@ -79,7 +75,7 @@ def dashboard_prep(request, *args, **kwargs):
     total_stats = totals.values()
     total_stats.sort(lambda x,y: cmp(x.date,y.date))
 
-    # organize apps by req count, also prepopulate some metadata to avoid db.get in /d render pipeline
+    # organize apps by req count
     apps = unique_apps.values()
     apps.sort(lambda x,y: cmp(y.request_count, x.request_count))
     
@@ -97,8 +93,6 @@ def dashboard_prep(request, *args, **kwargs):
             unique_user_count=max([x.unique_user_count for x in total_stats])),
         "apps": apps,
         "unique_apps": unique_apps, 
-        "unique_placements": unique_placements, 
-        "unique_accounts": unique_accounts,
         "mailing_list": [a for a in mailing_list if a.mailing_list]}
     memcache.set("jpayne:admin/d:render_p", render_p)
     

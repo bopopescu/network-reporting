@@ -87,7 +87,9 @@
                       <dd> 
                         <ul style="overflow:auto; max-height:200px; list-style: none;padding:5px 10px" class="{% if form.site_keys.errors %}form-error{% endif %}"> 
                         {% for adunit in all_adunits %}   
-                          <li><input type="checkbox" name="site_keys" value="{{adunit.key}}"{% if adunit.checked %} checked="checked"{% endif %}> {{adunit.app.name}} &gt; {{adunit.name}} </input></li>   
+                        <div class="adunit-Target {{adunit.app_key.app_type}}"> 
+                            <li><input type="checkbox" name="site_keys" value="{{adunit.key}}"{% if adunit.checked %} checked="checked"{% endif %}> {{adunit.app.name}} &gt; {{adunit.name}} </input></li>   
+                        </div>
                         {% endfor %}   
                         </ul>  
                         {% for error in form.site_keys.errors %}

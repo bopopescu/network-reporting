@@ -38,6 +38,19 @@ var mopub = mopub || {};
             var network = $(this).val();
             $('.networkDependent').hide();
             $('.'+network+'.networkDependent').show();
+            if (network == 'iAd') {
+                $('div.adunit-Target.mweb')
+                .hide()
+                .find('input')
+                .removeAttr('checked');
+                $('div.adunit-Target.android')
+                .hide()
+                .find('input')
+                .removeAttr('checked');
+            }
+            else {
+                $('div.adunit-Target:hidden').show();
+            }
             }).change();
 
     $('#campaignAdgroupForm input[name="location-targeting"]').click(function(e) {
@@ -50,7 +63,6 @@ var mopub = mopub || {};
                     });
             }
             }).filter(':checked').click();
-
     
     $('#adgroupForm-advanced-toggleButton')
       .button('option', {icons: { primary: 'ui-icon-triangle-1-s' }})

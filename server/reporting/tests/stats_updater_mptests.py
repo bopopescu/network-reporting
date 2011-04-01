@@ -40,7 +40,7 @@ app = App(key_name='app1', name='App',account=account).put()
 adunit1 = AdUnit(key_name='adunit1', app_key=app, account=account).put()
 adunit2 = AdUnit(key_name='adunit2', app_key=app, account=account).put()
 
-campaign = Campaign(key_name='campaign', name='campaign',account=account).put()
+campaign = Campaign(key_name='campaign', name='campaign',account=account, u=user).put()
 adgroup = AdGroup(key_name='adgroup', campaign=campaign,account=account).put()
 creative1 = Creative(key_name='creative1', ad_group=adgroup,account=account).put()
 creative2 = Creative(key_name='creative2', ad_group=adgroup,account=account).put()

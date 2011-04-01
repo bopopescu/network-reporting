@@ -12,8 +12,9 @@ class AppQueryManager(CachedQueryManager):
     Model = App
     
     def get_apps(self,account=None,deleted=False,limit=50):
-        apps = App.all().filter("deleted =",deleted)
+        apps = self.Model.all().filter("deleted =",deleted)
         if account:
+            logging.info("HERHERHERHERHREHER%s"%account)
             apps = apps.filter("account =",account)
         return apps.fetch(limit)  
         

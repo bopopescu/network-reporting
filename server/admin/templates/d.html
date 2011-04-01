@@ -33,9 +33,9 @@
                   <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
                 </tr>
                 <tr id="stats-breakdown-users">
-                  <td class="stats-breakdown-value today"><span class="inner">{{today.unique_user_count|withsep}}</span></td>
-                  <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.unique_user_count|withsep}}</span></td>
-                  <td class="stats-breakdown-value all"><span class="inner">{{all.unique_user_count|withsep}}</span></td>
+                  <td class="stats-breakdown-value today"><span class="inner">{{today.user_count|withsep}}</span></td>
+                  <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.user_count|withsep}}</span></td>
+                  <td class="stats-breakdown-value all"><span class="inner">{{all.user_count|withsep}}</span></td>
                   <th class="stats-breakdown-name"><span class="inner">Pubs</span></th>
                 </tr>
               </tbody>
@@ -68,7 +68,7 @@
                     { 'MoPub': [{% for t in stats %}{{t.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
                 ],
                 'users': [
-                    { 'MoPub': [{% for t in stats %}{{t.unique_user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
+                    { 'MoPub': [{% for t in stats %}{{t.user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
                 ] 
               };
           </script> 
@@ -90,8 +90,8 @@
     		</thead>
     		{% for a in apps %}
     		<tr>
-    			<td><a href="{% url publisher_app_show app_key=a.site.app_key.key %}">{{a.site.app_key.name|truncate:50}}</a></td>
-    			<td><a href="mailto:{{a.site.account.user.email}}">{{a.site.account.user.email}}</a></td>
+    			<td><a href="{% url publisher_app_show app_key=a.publisher.key %}">{{a.publisher.name|truncate:50}}</a></td>
+    			<td><a href="mailto:{{a.publisher.account.user.email}}">{{a.publisher.account.user.email}}</a></td>
     			<td class="numeric">{{a.request_count|withsep}}</td>
     			<td class="numeric">{{a.impression_count|withsep}}</td>
     			<td class="numeric">{{a.click_count|withsep}}</td>

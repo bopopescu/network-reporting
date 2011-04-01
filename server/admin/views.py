@@ -22,7 +22,11 @@ from advertiser.models import *
 from advertiser.forms import CampaignForm, AdGroupForm
 
 from publisher.models import Site, Account, App
-from reporting.models import SiteStats
+from reporting.models import SiteStats,StatsModel
+from publisher.query_managers import AppQueryManager
+from reporting.query_managers import StatsModelQueryManager
+
+MEMCACHE_KEY = "jpayne:admin/d:render_p"
 
 @login_required
 def admin_switch_user(request,*args,**kwargs):
@@ -48,71 +52,105 @@ def admin_switch_user(request,*args,**kwargs):
   
 @login_required
 def dashboard_prep(request, *args, **kwargs):
-    # go back in time N days
+    offline = request.GET.get('offline',False)
+    offline = True if offline == "1" else False
+
+    days = StatsModel.lastdays(30)
+    # gets all undeleted applications
     start_date = datetime.date.today() - datetime.timedelta(days=30)
-    stats = SiteStats.gql("where date > :1 and owner = null order by date desc", start_date)
+    apps = AppQueryManager().get_apps(limit=1000)
+    logging.info("apps:%s"%apps)
+    
+    # get all the daily stats for the undeleted apps
+    # app_stats = StatsModelQueryManager(None,offline=offline).get_stats_for_days(publisher=apps[0],account=apps[0].account,days=days)
+    app_stats = StatsModelQueryManager(None,offline=offline).get_stats_for_apps(apps=apps,num_days=30)
 
     # accumulate individual site stats into daily totals 
     unique_apps = {}
     unique_placements = {}
     unique_accounts = {}
     totals = {}
-
-    # go and do it
-    for s in stats:
-        # add this site stats to the total for the day and increment user count
-        a = totals.get(str(s.date)) or SiteStats(date=s.date, unique_user_count=0)
-        unique_user_count = a.unique_user_count
-        a = a + s
-        a.unique_user_count = unique_user_count + 1
-        totals[str(s.date)] = a
-        
-        # add a hash key for the site key and account key to calculate uniques
-        try:
-            unique_placements[str(s.site.key())] = s + (unique_placements.get(str(s.site.key())) or SiteStats(site=s.site))
-            unique_apps[str(s.site.app_key.key())] = s + (unique_apps.get(str(s.site.app_key.key())) or SiteStats(site=s.site))
-            unique_accounts[str(s.site.account.key())] = s + (unique_accounts.get(str(s.site.account.key())) or SiteStats(owner=s.site.account))      
-        except:
-            pass
     
+    for d in days:
+        dt = datetime.datetime(year=d.year,month=d.month,day=d.day)
+        totals[str(dt)] = StatsModel(date=dt)
+    
+    # init the totals dictionary
+    def _incr_dict(d,k,v):
+        if not k in d:
+            d[k] = v
+        else:
+            d[k] += v
+    
+    # go and do it
+    logging.info("stats: %s"%app_stats)
+    
+    for app_stat in app_stats:
+        # add this site stats to the total for the day and increment user count
+        if app_stat.date:
+            _incr_dict(totals,str(app_stat.date),app_stat)
+            totals[str(app_stat.date)].user_count += 1
+        if app_stat._publisher:
+            _incr_dict(unique_apps,str(app_stat._publisher),app_stat)
+
     # organize daily stats by date
     total_stats = totals.values()
     total_stats.sort(lambda x,y: cmp(x.date,y.date))
-
+    
     # organize apps by req count, also prepopulate some metadata to avoid db.get in /d render pipeline
     apps = unique_apps.values()
     apps.sort(lambda x,y: cmp(y.request_count, x.request_count))
+    logging.info("\n\napps:%s\n\n\n"%apps)
     
     # get folks who want to be on the mailing list
     mailing_list = Account.gql("where date_added > :1 order by date_added desc", start_date).fetch(1000)
+    
+    
     
     # params
     render_p = {"stats": total_stats, 
         "start_date": start_date,
         "today": total_stats[-1],
         "yesterday": total_stats[-2],
-        "all": SiteStats(request_count=sum([x.request_count for x in total_stats]), 
+        "all": StatsModel(request_count=sum([x.request_count for x in total_stats]), 
             impression_count=sum([x.impression_count for x in total_stats]), 
             click_count=sum([x.click_count for x in total_stats]),
-            unique_user_count=max([x.unique_user_count for x in total_stats])),
+            user_count=max([x.user_count for x in total_stats])),
         "apps": apps,
         "unique_apps": unique_apps, 
-        "unique_placements": unique_placements, 
         "unique_accounts": unique_accounts,
         "mailing_list": [a for a in mailing_list if a.mailing_list]}
-    memcache.set("jpayne:admin/d:render_p", render_p)
+    key = MEMCACHE_KEY
+    if offline:
+        key += ':offline'    
+    memcache.set(key, render_p)
     
-    return HttpResponseRedirect(reverse('admin_dashboard'))
+    url = reverse('admin_dashboard')
+    if offline:
+        url += '?offline=1'
+    
+    return HttpResponseRedirect(url)
  
 @login_required
 def dashboard(request, *args, **kwargs):
-    render_p = memcache.get("jpayne:admin/d:render_p")
-    if render_p:
+    offline = request.GET.get('offline',False)
+    offline = True if offline == "1" else False
+    refresh = request.GET.get('refresh',False)
+    refresh = True if refresh == "1" else False
+    
+    key = MEMCACHE_KEY
+    if offline:
+        key += ':offline'
+    render_p = memcache.get(key)
+    if render_p and not refresh:
         return render_to_response(request, 
             'admin/d.html', 
              render_p)
     else:
-        return HttpResponseRedirect(reverse('dashboard_prep'))        
+        url = reverse('dashboard_prep')
+        if offline:
+            url += '?offline=1'
+        return HttpResponseRedirect(url)        
     
 @login_required
 def report(request, *args, **kwargs):

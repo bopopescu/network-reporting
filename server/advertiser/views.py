@@ -598,7 +598,7 @@ class ShowAdGroupHandler(RequestHandler):
         c.format = "320x50" # TODO: Should fix DB so that format is always there
       c.size = c.format.partition('x')
     
-    apps = App.gql("where account = :1 and deleted = :2", self.account, False).fetch(50)
+    apps = AppQueryManager().get_apps(account=self.account)
     for a in apps:
       if a.icon:
         a.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(a.icon)

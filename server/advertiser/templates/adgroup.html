@@ -121,6 +121,12 @@
           <section id="dashboard-campaigns">
             <h2>Summary</h2>
             <p>
+				{% if adgroup.active %}
+				<img src="/images/active.gif" width="9" height="9"/>
+				{% else %}
+				<img src="/images/paused.gif" width="9" height="9"/>
+				{% endif %}
+				This campaign is {% if adgroup.active %}running{% else %}currently paused{% endif %}.<br/>
                 {% if campaign.start_date and campaign.end_date %}
                 {{campaign.start_date|format_date_compact}}-{{campaign.end_date|format_date_compact}}.
                 {% endif %} {% if campaign.start_date and not campaign.end_date %}

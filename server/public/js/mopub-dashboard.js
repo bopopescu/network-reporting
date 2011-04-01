@@ -333,7 +333,7 @@ var mopub = mopub || {};
       
       function getButtonTextElement() {
         var buttonTextElement = $('.ui-button-text', button);
-        if(buttonTextElement.length == 0) buttonTextElement = button;
+        if(buttonTextElement.length === 0) {buttonTextElement = button;}
         return buttonTextElement;
       }
 
@@ -409,6 +409,7 @@ var mopub = mopub || {};
         $('#appForm .appForm-platformDependent')
           .removeClass('iphone')
           .removeClass('android')
+          .removeClass('mweb')
           .addClass($(this).val());
       }).filter(':checked').click(); // make sure we're in sync when the page loads
     }
@@ -455,8 +456,9 @@ var mopub = mopub || {};
       .button({ icons: { primary: "ui-icon-search" }})
       .click(function(e) {
         e.preventDefault();
-        if ($(this).button( "option", "disabled" ))
+        if ($(this).button( "option", "disabled" )) {
           return;
+          }
 
         $('#searchAppStore-loading').show();
 

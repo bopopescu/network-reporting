@@ -349,12 +349,10 @@ class AdUnitShowHandler(RequestHandler):
       raise Http404
       
     # Set start date if passed in, otherwise get most recent days
-    logging.warning("\n\n\nDateRange: %s\n\n\n" % self.date_range)
     if self.start_date:
       days = StatsModel.get_days(self.start_date, self.date_range)
     else:
       days = StatsModel.lastdays(self.date_range)
-    logging.warning("\n\n\nDAYS: %s\n\n\n" % days)
     days = [day if type(day) == datetime else datetime.combine(day, time()) for day in days] 
     
     adunit.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=adunit,days=days)
@@ -406,7 +404,6 @@ class AppUpdateAJAXHandler(RequestHandler):
     return JSONResponse(json_dict)
 
   def post(self,app_key=None):
-    logging.info("here in AppUpdateAJAXHandler")
     app_key = app_key or self.request.POST.get('app_key')
     if app_key:
       app = AppQueryManager().get_by_key(app_key)
@@ -423,7 +420,6 @@ class AppUpdateAJAXHandler(RequestHandler):
       AppQueryManager().put_apps(app)
       json_dict.update(success=True)
       return self.json_response(json_dict)
-    logging.info("errros: %s"%app_form.errors)
     new_html = self.get(app_form=app_form)
     json_dict.update(success=False,html=new_html)    
     return self.json_response(json_dict)  
@@ -438,7 +434,6 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
     initial = {}
     if app:
       initial.update(app_key=app.key())
-    logging.info("adunit form: %s %s"%('adunit_form',adunit))
     adunit_form = adunit_form or AdUnitForm(instance=adunit,initial=initial, prefix="adunit")
     return self.render(form=adunit_form)
 
@@ -467,7 +462,6 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
       CachedQueryManager().cache_delete(adunit)
       
       json_dict.update(success=True)
-      logging.info('VIEW name: %s %s description: %s'%(adunit.key(),adunit.name,adunit.description))
       return self.json_response(json_dict)
     new_html = self.get(adunit_form=adunit_form)
     json_dict.update(success=False,html=new_html)    

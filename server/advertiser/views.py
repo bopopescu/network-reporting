@@ -50,7 +50,6 @@ class AdGroupIndexHandler(RequestHandler):
 
         apps = AppQueryManager().get_apps(account=self.account)
         campaigns = CampaignQueryManager().get_campaigns(account=self.account)
-        logging.info("\n\n\nCAMPAIGNS: %s \n\n\n"%campaigns)
         if campaigns:
             adgroups = AdGroupQueryManager().get_adgroups(campaigns=campaigns)
         else:
@@ -144,8 +143,6 @@ class CreateCampaignAJAXHander(RequestHandler):
     campaign_form.bid  = adgroup_form['bid']
     campaign_form.bid_strategy = adgroup_form['bid_strategy']
     campaign_form.custom_html = adgroup_form['custom_html']
-
-    logging.warning("bid: %s %s"%("campaign_form['bid']",campaign_form.bid.value))
 
     adunit_keys = adgroup_form['site_keys'].value or []
     adunit_str_keys = [unicode(k) for k in adunit_keys]
@@ -255,9 +252,7 @@ class CreateCampaignAJAXHander(RequestHandler):
         # update cache
         adunits_to_update.update(adgroup.site_keys)
         if adunits_to_update:
-          logging.info("adunits to clear: %s"%[str(a) for a in adunits_to_update])
           adunits = AdUnitQueryManager().get_by_key(adunits_to_update)
-          logging.info("adunits to clear: %s"%[str(a.key()) for a in adunits if a])
           CachedQueryManager().cache_delete(adunits)
         
         
@@ -268,8 +263,6 @@ class CreateCampaignAJAXHander(RequestHandler):
         
         json_dict.update(success=True,new_page=reverse('advertiser_adgroup_show',kwargs={'adgroup_key':str(adgroup.key())}))
         return self.json_response(json_dict)
-    logging.warning('adgroup form errors: %s'%adgroup_form.errors) 
-    logging.warning('adgroup form bid: %s'%adgroup_form['bid'].value)      
          
     new_html = self.get(campaign_form=campaign_form,
                         adgroup_form=adgroup_form)
@@ -460,8 +453,7 @@ class ShowAdGroupHandler(RequestHandler):
               graph_adunits[3] = Site(name='Others')
               graph_adunits[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[au.all_stats for au in adunits[3:]])]
     
-        logging.warning("network: type: %s"%(adgroup.network_type))
-      
+
         if not adgroup.network_type:  
             # In order to have add creative
             creative_handler = AddCreativeHandler(self.request)
@@ -636,7 +628,6 @@ class AddCreativeHandler(RequestHandler):
         CreativeQueryManager().put_creatives(creative)    
         # update cache
         adunits = AdUnitQueryManager().get_by_key(ad_group.site_keys,none=True)
-        logging.warning("here: %s"%adunits)
         if adunits:
           CachedQueryManager().cache_delete(adunits)
         jsonDict.update(success=True)

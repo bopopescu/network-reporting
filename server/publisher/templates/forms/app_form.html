@@ -10,7 +10,11 @@
         <label for="appForm-platform-mweb">Mobile Web</label> 
     </span> 
   </dd>
-  <dt><label for="appForm-name">App name:</label></dt> 
+  <dt class="appForm-platformDependent">
+      <label class="iphone" for="appForm-name">App name:</label>
+      <label class="android" for="appForm-name">App name:</label>
+      <label class="mweb" for="appForm-name">Site name:</label>
+  </dt> 
   <dd class="appForm-platformDependent"> 
     <input type="text" class="input-text {% if form.name.errors %}form-error{% endif %}" name="name" value="{{form.name.value}}" id="appForm-name" />
     <div class="formFields-field-help" id="appForm-search"> 
@@ -30,10 +34,12 @@
   </dd> 
   <dt class="appForm-platformDependent iphone"> 
     <label class="iphone" for="appForm-url">iTunes URL:</label> 
+    <label class="mweb" for="appForm-url">URL:</label> 
     <label class="android" for="appForm-package">Package name:</label> 
   </dt> 
   <dd class="appForm-platformDependent iphone"> 
     <input type="url" class="input-text iphone {% if form.url.errors %}form-error{% endif %}" name="{{form.url.name}}" value="{{form.url.value}}" id="appForm-url" placeholder="http://itunes.apple.com/yourapp" /> 
+    <input type="url" class="input-text mweb {% if form.url.errors %}form-error{% endif %}" name="{{form.url.name}}" value="{{form.url.value}}" id="appForm-url" /> 
     {% for error in form.url.errors %}
     <div class="form-error-text">{{error}}</div> 
     {% endfor %}

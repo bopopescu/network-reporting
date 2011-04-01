@@ -72,9 +72,15 @@ ANIMATION_CHOICES = (
     (u'6', 'Fade'),
 )
 
+DEVICE_FORMAT_CHOICES = (
+       (u'phone', 'Phone'),
+       (u'tablet', 'Tablet'),
+   )
+
 class AdUnitForm(mpforms.MPModelForm):
   TEMPLATE = 'publisher/forms/adunit_form.html'
   format = mpfields.MPTextField(required=True, widget = mpwidgets.MPFormatWidget)
+  device_format = mpfields.MPChoiceField(required=True, widget=mpwidgets.MPRadioWidget, choices=DEVICE_FORMAT_CHOICES)
   # animation_type = mpfields.MPChoiceField(choices=ANIMATION_CHOICES,widget=mpwidgets.MPSelectWidget)
   
   class Meta:

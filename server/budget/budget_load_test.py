@@ -1,17 +1,3 @@
-#    Copyright 2009 Google Inc.
-#
-#    Licensed under the Apache License, Version 2.0 (the "License");
-#    you may not use this file except in compliance with the License.
-#    You may obtain a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#    Unless required by applicable law or agreed to in writing, software
-#    distributed under the License is distributed on an "AS IS" BASIS,
-#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#    See the License for the specific language governing permissions and
-#    limitations under the License.
-
 """Simple web application load testing script.
 
 This is a simple web application load
@@ -62,7 +48,7 @@ parser.add_option("-l", "--logging", dest="LOGGING",type="int",
 parser.add_option("-i", "--instance_id", dest="INSTANCE_ID",type="int",
                 help="LABEL THE INSTANCE.", default=0)         
 parser.add_option("-e", "--exp_id", dest="TEST_ID",type="str",
-                help="LABEL THE TEST.", default='PENELOPE')         
+                help="LABEL THE TEST.", default='NAFIS_MAC')         
 parser.add_option("-x", "--host", dest="HOST",type="str",
                 help="HOST NAME.", default='eventrackerscaletest.appspot.com')         
                                
@@ -120,16 +106,14 @@ def threadproc():
             
             
             uid = uuid.uuid4()
-            # adunits = ["agltb3B1Yi1pbmNyDAsSBFNpdGUYkaoMDA","agltb3B1Yi1pbmNyDAsSBFNpdGUYycEMDA","agltb3B1Yi1pbmNyDAsSBFNpdGUYq-wdDA"]
-            adunits = ["ahRldmVudHJhY2tlcnNjYWxldGVzdHILCxIEU2l0ZRjJZQw"]
-            # adunits = ["agltb3B1Yi1pbmNyDAsSBFNpdGUYycoJDA","agltb3B1Yi1pbmNyDAsSBFNpdGUYmpUgDA"]
-            random.shuffle(adunits)
-            adunit = adunits[0]
+
+            #we use an adunit that can be hosted by either a cheap campaign or an expensive one 
+            adunit_id = "agltb3B1Yi1pbmNyCgsSBFNpdGUYLgw"
             t = time.time()
 
             req_cnt_lock.acquire()
             req_cnt += 1
-            url = "http://%s/m/ad?id=%s&udid=%s&reqcnt=%s&inst=%s&test=%s"%(HOST,adunit,uid,req_cnt,INSTANCE_ID,TEST_ID)
+            url = "http://%s/m/ad?id=%s&udid=%s&reqcnt=%s&inst=%s&test=%s"%(HOST,adunit_id,uid,req_cnt,INSTANCE_ID,TEST_ID)
             req_cnt_lock.release()
             
             fail_lock.acquire()
@@ -157,7 +141,7 @@ def threadproc():
                 print "FAIL content: %s"%content
                 fail_lock.release()
             else:    
-                creative = resp.get('x-creativeid', None) # creative_id
+                creative = resp['x-creativeid'] # creative_id
             
 
             key = r_models.StatsModel.get_key_name(publisher=adunit,
@@ -165,9 +149,8 @@ def threadproc():
                                                    date=date_hour)
                 
             if creative:
-                imp_url = resp['x-imptracker'].replace('ads.mopub.com', 'eventrackerscaletest.appspot.com')
-
-                click_url = resp['x-clickthrough'].replace('ads.mopub.com', 'eventrackerscaletest.appspot.com')
+                imp_url = resp['x-imptracker']
+                click_url = resp['x-clickthrough']
                 resp, content = h.request(imp_url)
                 
                 if resp.status != 200:

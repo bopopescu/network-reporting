@@ -1,10 +1,12 @@
+import datetime
 import logging
 import time
-import datetime
-
-import reporting.models as reporting_models
 
 from google.appengine.ext import db
+from google.appengine.ext.db import InternalError, Timeout
+from google.appengine.runtime.apiproxy_errors import CapabilityDisabledError
+
+import reporting.models as reporting_models
 
 from common.utils.cachedquerymanager import CachedQueryManager
 from reporting.models import SiteStats, StatsModel
@@ -16,6 +18,8 @@ from publisher.models import Site as AdUnit
 LIMIT = 200
 # object cache miss sentinel for StatsModelQueryManager
 SENTINEL = '!!!'
+# max number of retries for offline batch put
+MAX_RETRIES = 3
 
 
 class SiteStatsQueryManager(CachedQueryManager):
@@ -94,12 +98,21 @@ class StatsModelQueryManager(CachedQueryManager):
         
     def _update_db(self, stats, offline):
         key_list = []
-
+        
         if offline:
-            while stats:
-                db.put(stats[:LIMIT])
-                stats = stats[LIMIT:]
-            return [s.key() for s in stats]
+            all_stats = stats
+            page_count = 0
+            retries = 0
+
+            while stats and retries <= MAX_RETRIES:
+                try:
+                    db.put(stats[:LIMIT])
+                    stats = stats[LIMIT:]
+                    page_count += 1
+                    retries = 0
+                except (InternalError, Timeout, CapabilityDisabledError):
+                    retries += 1
+            return [s.key() for s in all_stats[:LIMIT*page_count]] # only return the ones that were successully batch put
 
         for s in stats:
             stat = db.get(s.key())    # get datastore's stat using key of s

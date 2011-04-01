@@ -70,3 +70,9 @@ indexes:
   - name: owner
   - name: date
     direction: desc
+
+- kind: TimesliceLog
+  properties:
+  - name: budget_slicer
+  - name: end_date
+    direction: desc

@@ -41,6 +41,7 @@ from threading import Thread
 from threading import current_thread
 from threading import Lock
 from urllib import urlencode
+from advertiser.models import Campaign
 
 # from event.models import DimensionTwoLevelOne
 # from counters.models import Counter
@@ -64,8 +65,7 @@ parser.add_option("-i", "--instance_id", dest="INSTANCE_ID",type="int",
 parser.add_option("-e", "--exp_id", dest="TEST_ID",type="str",
                 help="LABEL THE TEST.", default='PENELOPE')         
 parser.add_option("-x", "--host", dest="HOST",type="str",
-                help="HOST NAME.", default='eventrackerscaletest.appspot.com')         
-                               
+                help="HOST NAME.", default='eventrackerscaletest.appspot.com')
 
 (options, args) = parser.parse_args()
 
@@ -93,6 +93,7 @@ HOST = options.HOST
 
 quitevent = Event()
 
+
 def update_stats(key,attribute,t):
     global lock
     global stats_dict
@@ -111,13 +112,17 @@ def threadproc():
     global fail_lock
     global req_cnt
     
+    COUNT = -1
+    
     print "Thread started: %s" % current_thread().getName()
     h = httplib2.Http(timeout=30)
-    while not quitevent.is_set():
+    while not quitevent.is_set() and COUNT != 0:
+        
         try:
             # HTTP requests to exercise the server go here
             # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!            
             
+            COUNT -= 1
             
             uid = uuid.uuid4()
             # adunits = ["agltb3B1Yi1pbmNyDAsSBFNpdGUYkaoMDA","agltb3B1Yi1pbmNyDAsSBFNpdGUYycEMDA","agltb3B1Yi1pbmNyDAsSBFNpdGUYq-wdDA"]
@@ -133,7 +138,7 @@ def threadproc():
             req_cnt_lock.release()
             
             fail_lock.acquire()
-            print "URL: ",url
+            # print "URL: ",url
             fail_lock.release()
             
             resp, content = h.request(url)
@@ -159,6 +164,12 @@ def threadproc():
             else:    
                 creative = resp.get('x-creativeid', None) # creative_id
             
+                fail_lock.acquire()
+                if creative is None:
+                    print "campaign: ", None
+                else: 
+                    print "campaign: ", creative
+                fail_lock.release()
 
             key = r_models.StatsModel.get_key_name(publisher=adunit,
                                                    advertiser=creative,

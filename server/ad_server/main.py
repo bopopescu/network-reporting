@@ -28,11 +28,20 @@ import datetime
 
 urllib.getproxies_macosx_sysconf = lambda: {}
 
-from ad_server.filters.filters import (
-                                        lat_lon_filter,
-                                        kw_filter,
-                                        )
-
+from ad_server.filters.filters import (budget_filter,
+                                    active_filter,
+                                    kw_filter,
+                                    geo_filter,
+                                    device_filter,
+                                    mega_filter,
+                                    format_filter,
+                                    exclude_filter,
+                                    ecpm_filter,
+                                    freq_filter,
+                                    all_freq_filter,
+                                    lat_lon_filter,
+                                    )
+                                    
 from common.utils import simplejson
 
 from string import Template
@@ -63,6 +72,10 @@ from publisher.query_managers import AdServerAdUnitQueryManager, AdUnitQueryMana
 from advertiser.query_managers import CampaignStatsCounter
 
 from mopub_logging import mp_logging
+from budget import budget_service
+from google.appengine.ext.db import Key
+
+TEST_MODE = "3uoijg2349ic(TEST_MODE)kdkdkg58gjslaf"
 
 # figure out if we're on production server
 from google.appengine.api import apiproxy_stub_map
@@ -71,7 +84,6 @@ on_production_server = have_appserver and \
     not os.environ.get('SERVER_SOFTWARE', '').lower().startswith('devel')
 DEBUG = not on_production_server
 
-test_mode = "3uoijg2349ic(test_mode)kdkdkg58gjslaf"
 CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gzip(gfe)"]
 MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7PnE6cH9_PX7OoeIIr5FjnTA'
 DOMAIN = 'ads.mopub.com' 
@@ -95,124 +107,6 @@ def memcache_key_for_date(udid,datetime,db_key):
 
 def memcache_key_for_hour(udid,datetime,db_key):
   return '%s:%s:%s'%(udid,datetime.strftime('%y%m%d%H'),db_key)
-
-###############################
-# BASIC FILTERS
-#
-# --- Each filter function is a function which takes some arguments (or none) necessary 
-#       for the filter to work its magic. log_mesg is the message that will be logged 
-#       for the associated objects that eval'd to false.
-# --- ALL FILTER GENERATOR FUNCTIONS MUST RETURN ( filter_function, log_mesg, [] )
-# --- The empty list is the list that will contain all elt's for which the 
-#       filter_function returned False
-###############################
-
-def budget_filter():
-    log_mesg = "Removed due to being over budget: %s"
-    def real_filter( a ):
-        return not ( a.budget is None or a.campaign.delivery_counter.count < a.budget )
-    return ( real_filter, log_mesg, [] )
-
-def active_filter():
-    log_mesg = "Removed due to inactivity: %s"
-    def real_filter( a ):
-        return not ( a.campaign.active and ( a.campaign.start_date  >= SiteStats.today() if a.campaign.start_date else True ) and ( SiteStats.today() <= a.campaign.end_date if a.campaign.end_date else True ) )
-    return ( real_filter, log_mesg, [] )
-
-def geo_filter( geo_preds ):
-    log_mesg = "Removed due to geo mismatch: %s"
-    def real_filter( a ):
-        return not ( set( geo_preds ).intersection( a.geographic_predicates ) > set() )
-    return ( real_filter, log_mesg, [] )
-
-def device_filter( dev_preds ):
-    log_mesg = "Removed due to device mismatch: %s"
-    def real_filter( a ):
-        return  not ( set( dev_preds ).intersection( a.device_predicates ) > set() )
-    return ( real_filter, log_mesg, [] )
-
-def mega_filter( *filters ): 
-    def actual_filter( a ):
-        for ( f, msg, lst ) in filters:
-            if f( a ):
-                lst.append( a )
-                return False
-        return True
-    return actual_filter
-
-######################################
-#
-# Creative filters
-#
-######################################
-
-def format_filter( format ):
-    log_mesg = "Removed due to format mismatch, expected " + str( format ) + ": %s"
-    def real_filter( a ):
-        if not a.format: 
-            return False
-        return not a.format == format
-    return ( real_filter, log_mesg, [] )
-
-def exclude_filter( excl_params ):
-    log_mesg = "Removed due to exclusion parameters: %s"
-    # NOTE: we are excluding on ad type not the creative id
-    def real_filter( a ):
-        return a.ad_type in excl_params 
-    return ( real_filter, log_mesg, [] )
-
-def ecpm_filter( winning_ecpm ):
-    log_mesg = "Removed due to being a loser: %s"
-    def real_filter( a ):
-        return not a.e_cpm() >= winning_ecpm
-    return ( real_filter, log_mesg, [] )
-
-##############################################
-#
-#   FREQUENCY FILTERS
-#
-##############################################
-
-# Function for constructing a frequency filter
-# Super generic, made this way since all frequencies are just
-#  -verify frequency cap, if yes make sure we're not over it, otherwise carry on
-# so I just made a way to generate them
-def freq_filter( type, key_func, udid, now, frq_dict ):
-    log_mesg = "Removed due to " + type + " frequency cap: %s"
-    def real_filter( a ):
-        a_key = key_func( udid, now, a.key() )
-        #This is why all frequency cap attributes must follow the same naming convention, otherwise this
-        #trick doesn't work
-        try:
-            frq_cap = getattr( a, FREQ_ATTR % type ) 
-        except:
-            frq_cap = 0
-
-        if frq_cap and ( a_key in frq_dict ):
-            imp_cnt = int( frq_dict[ a_key ] )
-        else:
-            imp_cnt = 0
-        #Log the current counts and cap
-        logging.warning( "%s imps: %s, freq cap: %d" % ( type.title(), imp_cnt, frq_cap ) )
-        return not ( not frq_cap or imp_cnt < frq_cap )
-    return ( real_filter, log_mesg, [] )
-
-#this is identical to mega_filter except it logs the adgroup 
-def all_freq_filter( *filters ):
-    def actual_filter( a ):
-        #print the adgroup title so the counts/cap printing in the acutal filter don't confuse things
-        logging.warning( "Adgroup: %s" % a )
-        for f, msg, lst in filters:
-            if f( a ):
-                lst.append( a )
-                return False
-        return True
-    return actual_filter
-
-
-###############
-# End filters
-###############
 
 class AdAuction(object):
   MAX_ADGROUPS = 30
@@ -287,8 +181,6 @@ class AdAuction(object):
     rpcs = AdAuction.request_third_party_server(request,site,all_ad_groups)
     logging.warning("ad groups: %s" % all_ad_groups)
     # # campaign exclusions... budget + time
-    for a in all_ad_groups:
-      logging.info("%s of %s"%(a.campaign.delivery_counter.count,a.budget))
     
     ALL_FILTERS     = ( budget_filter(),
                         active_filter(), 
@@ -319,7 +211,7 @@ class AdAuction(object):
         for type, key_func in FREQS:
             try:
                 # This causes an exception if it fails, the variable is actually never used though.
-                temp = getattr( adgroup, FREQ_ATTR % type ) 
+                temp = getattr( adgroup, '%s_frequency_cap' % type ) 
                 user_keys.append( key_func( udid, now, adgroup.key() ) )
             except:
                 continue
@@ -528,7 +420,7 @@ class AdHandler(webapp.RequestHandler):
     
     
     #Testing!
-    if self.request.get( 'testing' ) == test_mode:
+    if self.request.get( 'testing' ) == TEST_MODE:
         manager = AdServerAdUnitQueryManager( id )
         testing = True
         now = datetime.datetime.fromtimestamp( float( self.request.get('dt') ) )
@@ -634,13 +526,9 @@ class AdHandler(webapp.RequestHandler):
         self.response.headers.add_header("X-Imptracker", str(track_url))
         
       
-      #add creative ID for testing (also prevents that one bad bug from happening)
+        # add creative ID for testing (also prevents that one bad bug from happening)
         self.response.headers.add_header("X-Creativeid", "%s" % c.key())
-
-      # add to the campaign counter
-        logging.info("adding to delivery: %s"%c.ad_group.bid)
-        if c.ad_group.bid_strategy == 'cpm':
-          c.ad_group.campaign.delivery_counter.increment(dollars=c.ad_group.bid*1.0/1000)
+      
       
       # render the creative 
         self.response.out.write( self.render_creative(  c, 
@@ -929,7 +817,7 @@ class AdHandler(webapp.RequestHandler):
           "Gchannelids":str(kwargs["site"].adsense_channel_id or ''),        
         # "Gappwebcontenturl":,
           "Gadtype":"GADAdSenseTextImageAdType", #GADAdSenseTextAdType,GADAdSenseImageAdType,GADAdSenseTextImageAdType
-          "Gtestadrequest":"1" if site.account.adsense_test_mode else "0",
+          "Gtestadrequest":"1" if site.account.adsense_TEST_MODE else "0",
         # "Ghostid":,
         # "Gbackgroundcolor":"00FF00",
         # "Gadtopbackgroundcolor":"FF0000",
@@ -1013,43 +901,62 @@ class AdRequestHandler(webapp.RequestHandler):
     def get(self):
         self.response.out.write("OK")
 
+# /m/imp?id=agltb3B1Yi1pbmNyDAsSBFNpdGUY1NsgDA&cid=agltb3B1Yi1pbmNyEAsSCENyZWF0aXZlGJvEIAw&udid=4863585ad8c80749
 class AdImpressionHandler(webapp.RequestHandler):
-  def get(self):
-    mp_logging.log(self.request,event=mp_logging.IMP_EVENT)  
-    self.response.out.write("OK")
+    def get(self):
         
+        # Update budgeting
+        creative_id = self.request.get('cid')
+        creative = Creative.get(Key(creative_id))
+        if creative.ad_group.bid_strategy == 'cpm':
+            budget_service.apply_expense(creative.ad_group.campaign, creative.ad_group.bid/1000)
+        # logging.error("applied expense: %s" % creative.ad_group.bid)
+        
+        if not self.request.get( 'testing' ) == TEST_MODE:
+            mp_logging.log(self.request,event=mp_logging.IMP_EVENT)  
+            
+        self.response.out.write("OK")
+    
 class AdClickHandler(webapp.RequestHandler):
-  # /m/aclk?udid=james&appid=angrybirds&id=ahRldmVudHJhY2tlcnNjYWxldGVzdHILCxIEU2l0ZRipRgw&cid=ahRldmVudHJhY2tlcnNjYWxldGVzdHIPCxIIQ3JlYXRpdmUYoh8M
-  def get(self):
-    mp_logging.log(self.request, event=mp_logging.CLK_EVENT)  
-      
-    udid = self.request.get('udid')
-    mobile_appid = self.request.get('appid')
-    time = datetime.datetime.now()
-    adunit = self.request.get('id')
-    creative = self.request.get('cid')
+    # /m/aclk?udid=james&appid=angrybirds&id=ahRldmVudHJhY2tlcnNjYWxldGVzdHILCxIEU2l0ZRipRgw&cid=ahRldmVudHJhY2tlcnNjYWxldGVzdHIPCxIIQ3JlYXRpdmUYoh8M
+    def get(self):
+        
+        if not self.request.get( 'testing' ) == TEST_MODE:
+            mp_logging.log(self.request, event=mp_logging.CLK_EVENT)  
+  
+        udid = self.request.get('udid')
+        mobile_app_id = self.request.get('appid')
+        time = datetime.datetime.now()
+        adunit_id = self.request.get('id')
+        creative_id = self.request.get('cid')
 
-    # if driving download then we use the user datastore
-    if udid and mobile_appid and mobile_appid != CLICK_EVENT_NO_APP_ID:
-        # TODO: maybe have this section run asynchronously
-        ce_manager = ClickEventManager()
-        ce = ce_manager.log_click_event(udid, mobile_appid, time, adunit, creative)
+        # Update budgeting
+        creative = Creative.get(Key(creative_id))
+        if creative.ad_group.bid_strategy == 'cpc':
+            budget_service.apply_expense(creative.ad_group.campaign, creative.ad_group.bid/1000)
 
-    id = self.request.get("id")
-    q = self.request.get("q")    
-    # BROKEN
-    # url = self.request.get("r")
-    sz = self.request.query_string
-    r = sz.rfind("&r=")
-    if r > 0:
-      url = sz[(r + 3):]
-      url = unquote(url)
-      # forward on to the click URL
-      self.redirect(url)
-    else:
-      self.response.out.write("ClickEvent:OK:")
 
-      
+        # if driving download then we use the user datastore
+        if udid and mobile_app_id and mobile_app_id != CLICK_EVENT_NO_APP_ID:
+            # TODO: maybe have this section run asynchronously
+            ce_manager = ClickEventManager()
+            ce = ce_manager.log_click_event(udid, mobile_app_id, time, adunit_id, creative_id)
+
+        id = self.request.get("id")
+        q = self.request.get("q")    
+        # BROKEN
+        # url = self.request.get("r")
+        sz = self.request.query_string
+        r = sz.rfind("&r=")
+        if r > 0:
+            url = sz[(r + 3):]
+            url = unquote(url)
+            # forward on to the click URL
+            self.redirect(url)
+        else:
+            self.response.out.write("ClickEvent:OK:")
+
+  
     
 # TODO: Process this on the logs processor 
 class AppOpenHandler(webapp.RequestHandler):

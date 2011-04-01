@@ -140,6 +140,7 @@ class AdGroupIndexHandler(RequestHandler):
 
     apps = AppQueryManager().get_apps(account=self.account)
     campaigns = CampaignQueryManager().get_campaigns(account=self.account)
+    
     if campaigns:
       adgroups = AdGroupQueryManager().get_adgroups(campaigns=campaigns)
     else:
@@ -255,8 +256,7 @@ class CreateCampaignAJAXHander(RequestHandler):
           n[2] = True
     else:
       networks[0][2] = True # select the first by default      
-      
-      
+    
     campaign_form.add_context(dict(networks=networks))
     adgroup_form.add_context(dict(all_adunits=all_adunits))
     return self.render(campaign_form=campaign_form,adgroup_form=adgroup_form)
@@ -422,7 +422,7 @@ class CreateAdGroupHandler(RequestHandler):
       c = adgroup.campaign
       if not adgroup:
         raise Http404("AdGroup does not exist")  
-    adgroup.budget = adgroup.budget or c.budget # take budget from campaign for the time being
+    adgroup.budget = c.budget # take budget from campaign for the time being
     f = AdGroupForm(instance=adgroup)
     adunits = AdUnitQueryManager().get_adunits(account=self.account)
     

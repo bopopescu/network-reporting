@@ -2,7 +2,7 @@ application: mopub-inc
 version: 38
 runtime: python
 api_version: 1
-# default_expiration: "10d"
+default_expiration: "10d"
 
 handlers:
   
@@ -10,11 +10,8 @@ handlers:
   static_files: public/robots.txt
   upload: public/robots.txt
 
-- url: /static
-  static_dir: static
-    
 - url: /images
-  static_dir: public/images    
+  static_dir: public/images
 
 - url: /favicon.ico
   static_files: public/images/favicon.ico
@@ -28,15 +25,6 @@ handlers:
 
 - url: /placeholders
   static_dir: public/placeholders
-
-- url: /stylesheets
-  static_dir: public/stylesheets
-
-- url: /iblogpro
-  static_dir: public/iblogpro
-
-- url: /media
-  static_dir: public/media
 
 - url: /remote_api
   script: $PYTHON_LIB/google/appengine/ext/remote_api/handler.py

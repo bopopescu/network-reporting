@@ -1,6 +1,7 @@
 ########## Set up Django ###########
 import sys
 import os
+import datetime
 
 sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine")
 sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/yaml/lib")
@@ -59,6 +60,8 @@ class TestBudgetUnitTests(unittest.TestCase):
         
         self.cheap_c.active = True
         self.cheap_c.budget = 1000.0
+        self.cheap_c.start_date = None
+        self.cheap_c.end_date = None
         self.cheap_c.budget_strategy = "evenly"
 
         self.cheap_c.put()
@@ -449,7 +452,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         
         slicer = BudgetSlicer.get_or_insert_for_campaign(self.cheap_c)
         
-        daily_logs = slicer.daily_logs.order("-end_date").fetch(2)
+        daily_logs = slicer.daily_logs.order("-end_datetime").fetch(2)
           
         eq_(daily_logs[0].remaining_daily_budget, 50)
         eq_(daily_logs[1].remaining_daily_budget, 100)
@@ -529,10 +532,24 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service.total_delivered(self.cheap_c), 500)
 
         eq_(budget_service._apply_if_able(self.cheap_c, 500), True)
-        eq_(budget_service.remaining_daily_budget(self.cheap_c), 1000)
-   
-    
+        eq_(budget_service.remaining_daily_budget(self.cheap_c), 0)
+        
+    def mptest_percent_delivered_dates(self):
+        # The campaign has a $1000 daily budget, and goes for 10 days inclusive -> $10,000
+        self.cheap_c.budget_strategy = "allatonce"
+        self.cheap_c.start_date = datetime.date(1987,4,4)
+        self.cheap_c.end_date = datetime.date(1987,4,13)
+        self.cheap_c.put()
 
+        eq_(budget_service.percent_delivered(self.cheap_c), 0.0)
+        
+        eq_(budget_service._apply_if_able(self.cheap_c, 500), True)    
+        eq_(budget_service.percent_delivered(self.cheap_c), 5.0)
+
+        # The end of the first day
+        budget_service.daily_advance(self.cheap_c, date=datetime.date(1987,4,4))
+        
+        
 
 class TestBudgetEndToEnd(unittest.TestCase):
     """
@@ -556,6 +573,8 @@ class TestBudgetEndToEnd(unittest.TestCase):
 
         self.expensive_c.put()
         
+        self.cheap_c.start_date = None
+        self.cheap_c.end_date = None
         self.cheap_c.active = True
         self.cheap_c.budget = 1000.0
         self.cheap_c.budget_strategy = "evenly"

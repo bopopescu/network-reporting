@@ -76,7 +76,8 @@ class BudgetSliceLog(db.Model):
 class BudgetDailyLog(db.Model):
     budget_slicer = db.ReferenceProperty(BudgetSlicer,collection_name="daily_logs")
     remaining_daily_budget = db.FloatProperty()
-    end_date = db.DateTimeProperty()
+    end_datetime = db.DateTimeProperty()
+    date = db.DateProperty
 
     @property
     def spending(self):

@@ -30,7 +30,7 @@ creative5 = Creative(key_name='creative1', ad_group=adgroup2,account=account).pu
 creative6 = Creative(key_name='creative2', ad_group=adgroup2,account=account).put()
 
 
-udids = [uuid.uuid4() for i in range(1000)]
+udids = [uuid.uuid4() for i in range(100)]
 adunits = [adunit1,adunit2,adunit3]
 adunits = [str(a) for a in adunits]
 creatives = [creative1,creative2,creative3,creative4,creative5,creative6]
@@ -99,7 +99,7 @@ def update_count_dict(action,adunit,creative,date_obj,udid,**kwargs):
             count_dict[key] = set()
         count_dict[key].add(udid)
 
-for i in range(20):
+for i in range(1000):
     params = ["ip","date","action","adunit","creative","udid","user_agent","exclude"]
     d = dict()
     for param in params:

@@ -99,16 +99,29 @@ class StatsModelQueryManager(CachedQueryManager):
         if not publishers and publisher:
             publishers = [publisher]
         
-        keys = [db.Key.from_path(StatsModel.kind(),
-                                 StatsModel.get_key_name(publisher=publisher,
-                                                         advertiser=advertiser,
-                                                         account=account,
-                                                         date=d,
-                                                         country=country,
-                                                         offline=offline),
-                                  parent=parent)
-                    for d in days
-                        for publisher in publishers]
+        
+        if publishers:
+            keys = [db.Key.from_path(StatsModel.kind(),
+                                     StatsModel.get_key_name(publisher=publisher,
+                                                             advertiser=advertiser,
+                                                             account=account,
+                                                             date=d,
+                                                             country=country,
+                                                             offline=offline),
+                                      parent=parent)
+                        for d in days
+                            for publisher in publishers]
+        else:
+            keys = [db.Key.from_path(StatsModel.kind(),
+                                     StatsModel.get_key_name(publisher=publisher,
+                                                             advertiser=advertiser,
+                                                             account=account,
+                                                             date=d,
+                                                             country=country,
+                                                             offline=offline),
+                                      parent=parent)
+                        for d in days]
+                               
 
         stats = StatsModel.get(keys) # db get
         stats = [s or StatsModel() for s in stats]

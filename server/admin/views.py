@@ -81,20 +81,6 @@ def dashboard_prep(request, *args, **kwargs):
             d[k] += v
     
     # go and do it
-    for s in stats:
-        # add this site stats to the total for the day and increment user count
-        a = totals.get(str(s.date)) or SiteStats(date=s.date, unique_user_count=0)
-        unique_user_count = a.unique_user_count
-        a = a + s
-        a.unique_user_count = unique_user_count + 1
-        totals[str(s.date)] = a
-        
-        # add a hash key for the site key and account key to calculate uniques
-        try:
-            unique_apps[str(s.site.app_key.key())] = s + (unique_apps.get(str(s.site.app_key.key())) or SiteStats(site=s.site))
-        except:
-            pass
-    
     for app_stat in app_stats:
         # add this site stats to the total for the day and increment user count
         if app_stat.date:
@@ -102,7 +88,7 @@ def dashboard_prep(request, *args, **kwargs):
             totals[str(app_stat.date)].user_count += 1
         if app_stat._publisher:
             _incr_dict(unique_apps,str(app_stat._publisher),app_stat)
-
+    
     # organize daily stats by date
     total_stats = totals.values()
     total_stats.sort(lambda x,y: cmp(x.date,y.date))
@@ -112,8 +98,6 @@ def dashboard_prep(request, *args, **kwargs):
     
     # get folks who want to be on the mailing list
     mailing_list = Account.gql("where date_added > :1 order by date_added desc", start_date).fetch(1000)
-    
-    
     
     # params
     render_p = {"stats": total_stats, 

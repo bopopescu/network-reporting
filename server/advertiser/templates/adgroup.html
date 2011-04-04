@@ -119,6 +119,11 @@
           </div>
           
           <section id="dashboard-campaigns">
+            <form method="post" action="/campaigns/adgroup/{{adgroup.key}}/" id="fake-campaignForm">
+                <input type=hidden name="action" id="action" />
+            </form>
+            <br />
+            <h2>Campaign Details</h2>
             <div id="play-pause-bar">
                 <span class="buttonset ui-buttonset" id="campaign-play-pause" style="visibility:visible;">
                     <input type="radio" name="play-pause-option" value="play" id="play-option" class="ui-helper-hidden-accessible" {% if adgroup.active %}checked{% endif %} />
@@ -131,12 +136,7 @@
                     </label>
                 </span>
             </div>
-            <form method="post" action="/campaigns/adgroup/{{adgroup.key}}/" id="fake-campaignForm">
-                <input type=hidden name="action" id="action" />
-            </form>
             <br />
-            <h2>Summary</h2>
-
             <p style="font-size: 14px;">
 				{% if adgroup.active %}
 				<img src="/images/active.gif" width="9" height="9"/>

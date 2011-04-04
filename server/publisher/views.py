@@ -1,4 +1,8 @@
-import logging, os, re, datetime, hashlib
+import logging, os, re, hashlib
+from datetime import (datetime,
+                      time,
+                      date,
+                      )
 
 import urllib
 # hack to get urllib to work on snow leopard
@@ -8,7 +12,7 @@ from urllib import urlencode
 from operator import itemgetter
 import base64, binascii
 
-from google.appengine.api import users
+
 from google.appengine.api.urlfetch import fetch
 from google.appengine.ext import db
 from google.appengine.ext.webapp import template
@@ -30,7 +34,7 @@ from common.utils.decorators import whitelist_login_required
 from advertiser.models import Campaign, AdGroup, HtmlCreative
 from publisher.models import Site, Account, App
 from publisher.forms import SiteForm, AppForm, AdUnitForm
-from reporting.models import SiteStats
+from reporting.models import StatsModel
 
 ## Query Managers
 from account.query_managers import AccountQueryManager
@@ -38,94 +42,46 @@ from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager,
                                       CreativeQueryManager
 from common.utils.cachedquerymanager import CachedQueryManager
 from publisher.query_managers import AppQueryManager, AdUnitQueryManager
-from reporting.query_managers import SiteStatsQueryManager
+from reporting.query_managers import StatsModelQueryManager
 
 from common.utils import sswriter
+from common.utils.request_handler import RequestHandler
 from common.constants import *
 
-class RequestHandler(object):
-    def __init__(self,request=None):
-      if request:
-        self.request = request
-        self.account = None
-        user = users.get_current_user()
-        if user:
-          if users.is_current_user_admin():
-            account_key_name = request.COOKIES.get("account_impersonation",None)
-            if account_key_name:
-              self.account = AccountQueryManager().get_by_key_name(account_key_name)
-        if not self.account:  
-          self.account = Account.current_account()
-
-      super(RequestHandler,self).__init__()  
-
-    def __call__(self,request,*args,**kwargs):
-        self.params = request.POST or request.GET
-        self.request = request or self.request
-        self.account = None
-        
-        try:
-          # Limit date range to 31 days, otherwise too heavy
-          self.date_range = min(int(self.params.get('r')),31)  # date range
-        except:
-          self.date_range = 14
-          
-        try:
-          s = self.request.GET.get('s').split('-')
-          self.start_date = datetime.date(int(s[0]),int(s[1]),int(s[2]))
-        except:
-          self.start_date = None
-        
-        user = users.get_current_user()
-        if user:
-          if users.is_current_user_admin():
-            account_key_name = request.COOKIES.get("account_impersonation",None)
-            if account_key_name:
-              self.account = AccountQueryManager().get_by_key_name(account_key_name)
-        if not self.account:  
-          self.account = Account.current_account()
-
-        if request.method == "GET":
-            return self.get(*args,**kwargs)
-        elif request.method == "POST":
-            return self.post(*args,**kwargs)    
-    def get(self):
-        pass
-    def put(self):
-        pass  
 
 class AppIndexHandler(RequestHandler):
   def get(self):
     report = self.request.POST.get('report')
-
+    
     # Set start date if passed in, otherwise get most recent days
     if self.start_date:
-      days = SiteStats.get_days(self.start_date, self.date_range)
+      days = StatsModel.get_days(self.start_date, self.date_range)
     else:
-      days = SiteStats.lastdays(self.date_range)
+      days = StatsModel.lastdays(self.date_range)
 
     apps = AppQueryManager().get_apps(self.account)
     if len(apps) == 0:
       return HttpResponseRedirect(reverse('publisher_app_create'))
 
-    for a in apps:
-      if a.icon:
-        a.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(a.icon)
+    for app in apps:
+      if app.icon:
+        app.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(app.icon)
 
-      a.stats = SiteStats()
       # attaching adunits onto the app object
-      a.adunits = AdUnitQueryManager().get_adunits(app=a)
+      app.adunits = AdUnitQueryManager().get_adunits(app=app)
 
       # organize impressions by days
-      for adunit in a.adunits:
-        adunit.all_stats = SiteStatsQueryManager().get_sitestats_for_days(site=adunit,days=days)
-        adunit.stats = reduce(lambda x, y: x+y, adunit.all_stats, SiteStats())
+      for adunit in app.adunits:
+        adunit.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=adunit,days=days)
 
-      a.adunits = sorted(a.adunits, key=lambda adunit: adunit.stats.request_count, reverse=True)
+        # sum of stats for this date range
+        adunit.stats = reduce(lambda x, y: x+y, adunit.all_stats, StatsModel())
 
-      # We have to read the datastore at the app level since we need to get the de-duped unique_user_count
-      a.all_stats = SiteStatsQueryManager().get_sitestats_for_days(owner=a,days=days)
-      a.stats = reduce(lambda x, y: x+y, a.all_stats, SiteStats())
+      app.adunits = sorted(app.adunits, key=lambda adunit: adunit.stats.request_count, reverse=True)
+
+      # We have to read the datastore at the app level since we need to get the de-duped user_count
+      app.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=app,days=days)
+      app.stats = reduce(lambda x, y: x+y, app.all_stats, StatsModel())
 
     apps = sorted(apps, key=lambda app: app.stats.request_count, reverse=True)
 
@@ -133,16 +89,16 @@ class AppIndexHandler(RequestHandler):
     graph_apps = apps[0:4]
     if len(apps) > 4:
       graph_apps[3] = App(name='Others')
-      graph_apps[3].all_stats = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[a.all_stats for a in apps[3:]])]
+      graph_apps[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[a.all_stats for a in apps[3:]])]
 
     return render_to_response(self.request,'publisher/index.html', 
       {'apps': apps,
        'graph_apps': graph_apps,
        'start_date': days[0],
        'date_range': self.date_range,
-       'today': reduce(lambda x, y: x+y, [a.all_stats[-1] for a in graph_apps], SiteStats()),
-       'yesterday': reduce(lambda x, y: x+y, [a.all_stats[-2] for a in graph_apps], SiteStats()),
-       'totals': reduce(lambda x, y: x+y.stats, apps, SiteStats()),
+       'today': reduce(lambda x, y: x+y, [a.all_stats[-1] for a in graph_apps], StatsModel()),
+       'yesterday': reduce(lambda x, y: x+y, [a.all_stats[-2] for a in graph_apps], StatsModel()),
+       'totals': reduce(lambda x, y: x+y.stats, apps, StatsModel()),
        'account': self.account})
 
 @whitelist_login_required     
@@ -152,7 +108,7 @@ def index(request,*args,**kwargs):
 class AppIndexGeoHandler(RequestHandler):
   def get(self):
     # compute start times; start day before today so incomplete days don't mess up graphs
-    days = SiteStats.lastdays(14)
+    days = StatsModel.lastdays(14)
     
     apps = AppQueryManager().get_apps(self.account)
     
@@ -167,7 +123,7 @@ class AppIndexGeoHandler(RequestHandler):
       a.adunits = AdUnitQueryManager().get_adunits(app=a)
       if len(a.adunits) > 0:
         for adunit in a.adunits:
-          adunit.all_stats = SiteStatsQueryManager().get_sitestats_for_days(site=adunit, days=days)
+          adunit.all_stats = StatsModelQueryManager(self.account,self.offline).get_stats_for_days(publisher=adunit, days=days)
           for stats in adunit.all_stats:
             #stats.geo_imp = simplejson.loads(stats.geo_impressions)
             #stats.geo_clk = simplejson.loads(stats.geo_clicks)
@@ -304,9 +260,9 @@ class ShowAppHandler(RequestHandler):
   def get(self,app_key):
     # Set start date if passed in, otherwise get most recent days
     if self.start_date:
-      days = SiteStats.get_days(self.start_date, self.date_range)
+      days = StatsModel.get_days(self.start_date, self.date_range)
     else:
-      days = SiteStats.lastdays(self.date_range)
+      days = StatsModel.lastdays(self.date_range)
 
     # load the site
     a = AppQueryManager().get_by_key(app_key)
@@ -315,26 +271,26 @@ class ShowAppHandler(RequestHandler):
     if a.account.key() != self.account.key() and not self.account.is_admin():
       raise Http404
 
-    a.stats = SiteStats()
+    a.stats = StatsModel()
     a.adunits = AdUnitQueryManager().get_adunits(app=a)
     
     # organize impressions by days
     if len(a.adunits) > 0:
       for adunit in a.adunits:
-        adunit.all_stats = SiteStatsQueryManager().get_sitestats_for_days(site=adunit,days=days)
-        adunit.stats = reduce(lambda x, y: x+y, adunit.all_stats, SiteStats())
+        adunit.all_stats = StatsModelQueryManager(self.account,self.offline).get_stats_for_days(publisher=adunit,days=days)
+        adunit.stats = reduce(lambda x, y: x+y, adunit.all_stats, StatsModel())
         a.stats += adunit.stats
-      totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[au.all_stats for au in a.adunits])]
+      totals = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[au.all_stats for au in a.adunits])]
     else:
-      totals = [SiteStats() for d in days]
+      totals = [StatsModel() for d in days]
       
     a.adunits = sorted(a.adunits, key=lambda adunit: adunit.stats.request_count, reverse=True)
       
     # TODO: We are calculating app-level totals twice
-    app_stats = SiteStatsQueryManager().get_sitestats_for_days(owner=a,days=days)
+    app_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(advertiser=a,days=days)
     # set the apps unique user count from the app stats rollup
     for stat,app_stat in zip(totals,app_stats):
-      stat.unique_user_count = app_stat.unique_user_count
+      stat.user_count = app_stat.user_count
 
     help_text = 'Create an Ad Unit below' if len(a.adunits) == 0 else None
     
@@ -345,7 +301,7 @@ class ShowAppHandler(RequestHandler):
     a.graph_adunits = a.adunits[0:4]
     if len(a.adunits) > 4:
       a.graph_adunits[3] = Site(name='Others')
-      a.graph_adunits[3].all_stats = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[au.all_stats for au in a.adunits[3:]])]
+      a.graph_adunits[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[au.all_stats for au in a.adunits[3:]])]
     # in order to make the app editable
     app_form_fragment = AppUpdateAJAXHandler(self.request).get(app=a)
     # in order to have a creat adunit form
@@ -375,9 +331,9 @@ class ExportFileHandler( RequestHandler ):
         stats = ( DTE_STAT, REQ_STAT, IMP_STAT, CLK_STAT )
         adunit = AdUnitQueryManager().get_by_key( site_key )
         if self.start_date:
-            days = SiteStats.get_days( self.start_date, self.date_range )
+            days = StatsModel.get_days( self.start_date, self.date_range )
         else:
-            days = SiteStats.lastdays( self.date_range )
+            days = StatsModel.lastdays( self.date_range )
         return sswriter.write_stats( f_type, stats, site=site_key, days=days )
 
 
@@ -394,22 +350,24 @@ class AdUnitShowHandler(RequestHandler):
       
     # Set start date if passed in, otherwise get most recent days
     if self.start_date:
-      days = SiteStats.get_days(self.start_date, self.date_range)
+      days = StatsModel.get_days(self.start_date, self.date_range)
     else:
-      days = SiteStats.lastdays(self.date_range)
-
-    adunit.all_stats = SiteStatsQueryManager().get_sitestats_for_days(site=adunit,days=days)
+      days = StatsModel.lastdays(self.date_range)
+    days = [day if type(day) == datetime else datetime.combine(day, time()) for day in days] 
+    
+    adunit.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=adunit,days=days)
+    #XXX Wat?
     for i in range(len(days)):
       adunit.all_stats[i].date = days[i]
 
-    adunit.stats = reduce(lambda x, y: x+y, adunit.all_stats, SiteStats())
+    adunit.stats = reduce(lambda x, y: x+y, adunit.all_stats, StatsModel())
 
     # Get all of the ad groups for this site
     adunit.adgroups = AdGroupQueryManager().get_adgroups(adunit=adunit)
     adunit.adgroups = sorted(adunit.adgroups, lambda x,y: cmp(y.bid, x.bid))
     for ag in adunit.adgroups:
-      ag.all_stats = SiteStatsQueryManager().get_sitestats_for_days(site=adunit,owner=ag,days=days)
-      ag.stats = reduce(lambda x, y: x+y, ag.all_stats, SiteStats())
+      ag.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=adunit,advertiser=ag,days=days)
+      ag.stats = reduce(lambda x, y: x+y, ag.all_stats, StatsModel())
     
     # to allow the adunit to be edited
     adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(adunit=adunit)
@@ -446,7 +404,6 @@ class AppUpdateAJAXHandler(RequestHandler):
     return JSONResponse(json_dict)
 
   def post(self,app_key=None):
-    logging.info("here in AppUpdateAJAXHandler")
     app_key = app_key or self.request.POST.get('app_key')
     if app_key:
       app = AppQueryManager().get_by_key(app_key)
@@ -463,7 +420,6 @@ class AppUpdateAJAXHandler(RequestHandler):
       AppQueryManager().put_apps(app)
       json_dict.update(success=True)
       return self.json_response(json_dict)
-    logging.info("errros: %s"%app_form.errors)
     new_html = self.get(app_form=app_form)
     json_dict.update(success=False,html=new_html)    
     return self.json_response(json_dict)  
@@ -478,7 +434,6 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
     initial = {}
     if app:
       initial.update(app_key=app.key())
-    logging.info("adunit form: %s %s"%('adunit_form',adunit))
     adunit_form = adunit_form or AdUnitForm(instance=adunit,initial=initial, prefix="adunit")
     return self.render(form=adunit_form)
 
@@ -507,7 +462,6 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
       CachedQueryManager().cache_delete(adunit)
       
       json_dict.update(success=True)
-      logging.info('VIEW name: %s %s description: %s'%(adunit.key(),adunit.name,adunit.description))
       return self.json_response(json_dict)
     new_html = self.get(adunit_form=adunit_form)
     json_dict.update(success=False,html=new_html)    

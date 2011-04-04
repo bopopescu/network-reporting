@@ -42,7 +42,6 @@ class Pacific_tzinfo(datetime.tzinfo):
 
 class StatsModel(db.Expando):
     
-    
     publisher = db.ReferenceProperty(collection_name='publisher_stats')
     advertiser = db.ReferenceProperty(collection_name='advertiser_stats')
     account = db.ReferenceProperty(Account,collection_name='account_stats')
@@ -127,19 +126,20 @@ class StatsModel(db.Expando):
     
         
     def __add__(self,s):
-        obj = StatsModel(parent=self.parent_key(),
-                          key_name=self.key().name(),
-                          publisher=StatsModel.publisher.get_value_for_datastore(self),
-                          advertiser=StatsModel.advertiser.get_value_for_datastore(self),
-                          account=StatsModel.account.get_value_for_datastore(self),
-                          date=self.date,
-                          date_hour=self.date_hour,
-                          month=self.month,
-                          country=self.country,
+        obj = StatsModel(parent=self.parent_key() or s.parent_key(),
+                          key_name=self.key().name() or self.key.name(),
+                          publisher=StatsModel.publisher.get_value_for_datastore(self) or StatsModel.publisher.get_value_for_datastore(s),
+                          advertiser=StatsModel.advertiser.get_value_for_datastore(self) or StatsModel.advertiser.get_value_for_datastore(s),
+                          account=StatsModel.account.get_value_for_datastore(self) or StatsModel.account.get_value_for_datastore(s),
+                          date=self.date or s.date,
+                          date_hour=self.date_hour or s.date_hour,
+                          month=self.month or s.month,
+                          country=self.country or s.country,
                           request_count=self.request_count + s.request_count,
                           impression_count=self.impression_count + s.impression_count,
                           click_count=self.click_count + s.click_count,
                           conversion_count=self.conversion_count + s.conversion_count,
+                          revenue=self.revenue + s.revenue,
                           user_count=self.user_count + s.user_count, # TODO: this needs to be deduped
                           reqs=self.reqs+s.reqs,
                           offline=self.offline,
@@ -180,7 +180,7 @@ class StatsModel(db.Expando):
 
     
     @classmethod
-    def get_key_name(cls,publisher,advertiser,date=None,date_hour=None,account=None,offline=False,country=None, month=None):
+    def get_key_name(cls,publisher=None,advertiser=None,date=None,date_hour=None,account=None,offline=False,country=None, month=None):
         if publisher or advertiser or date_hour or date or month or country:
             if isinstance(publisher,db.Model):
                 publisher = publisher.key()
@@ -212,7 +212,7 @@ class StatsModel(db.Expando):
             
             
     @classmethod
-    def get_key(cls, publisher,advertiser,date,date_hour,account=None,offline=False,country=None,month=None):
+    def get_key(cls, publisher,advertiser,date=None,date_hour=None,account=None,offline=False,country=None,month=None):
         return db.Key.from_path(cls.kind(),cls.get_key_name(publisher,advertiser,date,date_hour,account,offline,country,month))
             
     def _force_key(self,prop):
@@ -223,8 +223,58 @@ class StatsModel(db.Expando):
     @classmethod
     def today(c):
       return datetime.datetime.now(Pacific_tzinfo()).date()
-        
-        
+
+    @classmethod
+    def today(c):
+      return datetime.datetime.now(Pacific_tzinfo()).date()
+
+    @classmethod
+    def lastdays(c, n=7, omit=0):
+        today = c.today() - datetime.timedelta(days=omit)    # Set omit=1 to eliminates partial days contributing to totals or appearing in graphs
+        days = [today - datetime.timedelta(days=x) for x in range(0, n)]
+        days.reverse()
+        return days
+  
+    @classmethod
+    def get_days(c, start, n=7):
+        try:
+            days = [start + datetime.timedelta(days=x) for x in range(0,n)]
+            return days
+        except:
+            return c.lastdays(n)
+
+    @property
+    def fill_rate(self):
+        return self.impression_count / float(self.request_count)
+
+    @property
+    def ctr(self):
+        if self.impression_count > 0:
+            return self.click_count / float(self.impression_count)
+
+    @property
+    def conv_rate(self):
+        if self.click_count > 0 and self.conversion_count > 0:
+            return self.conversion_count / float(self.click_count)
+        else:
+            return None
+
+    @property   
+    def cpm(self):
+        if self.impression_count > 0:
+            return self.revenue * 1000 / float(self.impression_count)
+
+    @property   
+    def cpc(self):
+        if self.click_count > 0:
+            return self.revenue / float(self.click_count)
+
+    @property   
+    def cpa(self):
+        if self.conversion_count > 0:
+            return self.revenue / float(self.conversion_count)
+        else:
+            return None
 
 # 
 # Tracks statistics for a site for a particular day - clicks and impressions are aggregated
@@ -358,10 +408,10 @@ class SiteStats(db.Model):
       return self.click_count / float(self.impression_count)
   
   def conv_rate(self):
-	if self.click_count > 0 and self.conversion_count > 0:
-	  return self.conversion_count / float(self.click_count)
-	else:
-	  return None	
+    if self.click_count > 0 and self.conversion_count > 0:
+      return self.conversion_count / float(self.click_count)
+    else:
+      return None   
 
   def cpm(self):
     if self.impression_count > 0:
@@ -372,10 +422,10 @@ class SiteStats(db.Model):
       return self.revenue / float(self.click_count)
 
   def cpa(self):
-	if self.conversion_count > 0:
-	  return self.revenue / float(self.conversion_count)
-	else:
-	  return None
+    if self.conversion_count > 0:
+      return self.revenue / float(self.conversion_count)
+    else:
+      return None
 
 # Turn the previous functions into properties of the class so they can be read as variables
 # ( useful for cool map shit )

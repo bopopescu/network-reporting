@@ -12,7 +12,7 @@ class AppQueryManager(CachedQueryManager):
     Model = App
     
     def get_apps(self,account=None,deleted=False,limit=50):
-        apps = App.all().filter("deleted =",deleted)
+        apps = self.Model.all().filter("deleted =",deleted)
         if account:
             apps = apps.filter("account =",account)
         return apps.fetch(limit)  
@@ -93,7 +93,10 @@ class AdUnitQueryManager(CachedQueryManager):
         self.adunit = None
         return super(AdUnitQueryManager,self).__init__()
   
-    def get_adunits(self,app=None,account=None,deleted=False,limit=50):
+    def get_adunits(self,app=None,account=None,keys=None,deleted=False,limit=50):
+        if keys:
+            return self.Model.get(keys)
+        
         adunits = Site.all()
         if not deleted == None:
             adunits = adunits.filter("deleted =",deleted)

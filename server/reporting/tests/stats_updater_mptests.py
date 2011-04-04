@@ -6,16 +6,16 @@ import datetime
 sys.path.append(os.environ['PWD'])
 
 from google.appengine.ext import db
+from google.appengine.api import users
 from nose.tools import assert_equals, assert_not_equals, assert_true, assert_false
 
 from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
 from reporting.aws_logging import stats_updater
 
+
 from publisher.models import *
 from advertiser.models import *
-
-
 
 AdUnit = Site
 
@@ -33,16 +33,17 @@ def add_lists(list_of_lists):
 
 
 # create and put model objects 
-account = Account(key_name="account").put()
+user = users.User(email="test@example.com")
+account = Account(key_name="account",user=user).put()
 
-app = App(key_name='app1', name='App').put()
+app = App(key_name='app1', name='App',account=account).put()
 adunit1 = AdUnit(key_name='adunit1', app_key=app, account=account).put()
 adunit2 = AdUnit(key_name='adunit2', app_key=app, account=account).put()
 
-campaign = Campaign(key_name='campaign', name='campaign').put()
-adgroup = AdGroup(key_name='adgroup', campaign=campaign).put()
-creative1 = Creative(key_name='creative1', ad_group=adgroup).put()
-creative2 = Creative(key_name='creative2', ad_group=adgroup).put()
+campaign = Campaign(key_name='campaign', name='campaign',account=account, u=user).put()
+adgroup = AdGroup(key_name='adgroup', campaign=campaign,account=account).put()
+creative1 = Creative(key_name='creative1', ad_group=adgroup,account=account).put()
+creative2 = Creative(key_name='creative2', ad_group=adgroup,account=account).put()
    
 # get encoded strings of keys
 adunit_id1 = str(adunit1)
@@ -66,9 +67,9 @@ id_dict = {adunit_id1: 'adunit_id1',
            
 
 # date_hours: first and last hours of pi day
-hour1 = datetime.datetime(2011, 03, 14, 01)
-hour2 = datetime.datetime(2011, 03, 14, 23)
-day = datetime.datetime(2011, 03, 14)
+hour1 = datetime.datetime(2011, 03, 21, 01)
+hour2 = datetime.datetime(2011, 03, 21, 23)
+day = datetime.datetime(2011, 03, 21)
 
 # date_hour count lists
 a1_c1_hour1 = [28, 16, 0, 0]

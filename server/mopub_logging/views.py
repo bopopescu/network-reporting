@@ -35,7 +35,7 @@ def increment_stats(stats):
     logging.info("putting in key_name: %s NEW value: %s,%s"%(key_name,stats_obj.request_count,stats_obj.impression_count))
     stats_obj.put()
     
-def update_stats(stats_dict,publisher,advertiser,date_hour,country,attribute,req=None,incr=1):
+def update_stats(stats_dict,publisher,advertiser,date_hour,country,attribute,req=None,revenue=None,incr=1):
     publisher = publisher or None
     advertiser = advertiser or None
     key = r_models.StatsModel.get_key_name(publisher=publisher,
@@ -52,6 +52,9 @@ def update_stats(stats_dict,publisher,advertiser,date_hour,country,attribute,req
     if attribute:
       # stats_dict[key].attribute += incr
       setattr(stats_dict[key],attribute,getattr(stats_dict[key],attribute)+incr) 
+      
+      if revenue:
+          stats_dict[key].revenue += revenue
     if req:      
       stats_dict[key].reqs.append(req)
     
@@ -107,6 +110,9 @@ class LogTaskHandler(webapp.RequestHandler):
 
                   req = d.get('req',None)
                   req = int(req) if req else None
+                  
+                  revenue = d.get('revenue',None)
+                  revenue = float(revenue) if revenue else None
 
                   inst = d.get('inst',None)
                   inst = int(inst) if inst else None
@@ -143,21 +149,27 @@ class LogTaskHandler(webapp.RequestHandler):
                                    advertiser=creative,
                                    date_hour=date_hour,
                                    country=country,
-                                   attribute='impression_count')
+                                   attribute='impression_count',
+                                   revenue=revenue)
+
                   if event == mp_logging.CLK_EVENT:
                       update_stats(stats_dict,
                                    publisher=adunit,
                                    advertiser=creative,
                                    date_hour=date_hour,
                                    country=country,
-                                   attribute='click_count')
+                                   attribute='click_count',
+                                   revenue=revenue)
+
                   elif event == mp_logging.CONV_EVENT: 
                       update_stats(stats_dict,
                                    publisher=adunit,
                                    advertiser=creative,
                                    date_hour=date_hour,
                                    country=country,
-                                   attribute='conversion_count')
+                                   attribute='conversion_count',
+                                   revenue=revenue)
+
               else:
                   logging.error("NO value for key %s exists"%k)    
 

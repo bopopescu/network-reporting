@@ -26,9 +26,10 @@ from advertiser.forms import CampaignForm, AdGroupForm, \
                              HtmlCreativeForm
 
 from publisher.models import Site, Account, App
-from reporting.models import SiteStats
+from reporting.models import StatsModel
 
 from common.utils.cachedquerymanager import CachedQueryManager
+from common.utils.request_handler import RequestHandler
 
 from account.query_managers import AccountQueryManager
 from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager, \
@@ -36,182 +37,86 @@ from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager,
                                       ImageCreativeQueryManager, TextAndTileCreativeQueryManager, \
                                       HtmlCreativeQueryManager
 from publisher.query_managers import AdUnitQueryManager, AppQueryManager
-from reporting.query_managers import SiteStatsQueryManager
+from reporting.query_managers import StatsModelQueryManager
 
-class RequestHandler(object):
-    def __init__(self,request=None):
-      if request:
-        self.request = request
-        self.account = None
-        user = users.get_current_user()
-        if user:
-          if users.is_current_user_admin():
-            account_key_name = request.COOKIES.get("account_impersonation",None)
-            if account_key_name:
-              self.account = AccountQueryManager().get_by_key_name(account_key_name)
-        if not self.account:  
-          self.account = Account.current_account()
-        
-      super(RequestHandler,self).__init__()  
-  
-    def __call__(self,request,*args,**kwargs):
-        self.params = request.POST or request.GET
-        self.request = request or self.request
-        self.account = None
-
-        try:
-          # Limit date range to 31 days, otherwise too heavy
-          self.date_range = min(int(self.params.get('r')),31)  # date range
-        except:
-          self.date_range = 14
-          
-        try:
-          s = self.request.GET.get('s').split('-')
-          self.start_date = datetime.date(int(s[0]),int(s[1]),int(s[2]))
-        except:
-          self.start_date = None
-
-        user = users.get_current_user()
-        if user:
-          if users.is_current_user_admin():
-            account_key_name = request.COOKIES.get("account_impersonation",None)
-            if account_key_name:
-              self.account = AccountQueryManager().get_by_key_name(account_key_name)
-        if not self.account:  
-          self.account = Account.current_account()
-          
-        if request.method == "GET":
-            return self.get(*args,**kwargs)
-        elif request.method == "POST":
-            return self.post(*args,**kwargs)    
-    def get(self):
-        pass
-    def put(self):
-        pass  
-
-class IndexHandler(RequestHandler):
-  def get(self):
-    # Set start date if passed in, otherwise get most recent days
-    if self.start_date:
-      days = SiteStats.get_days(self.start_date, self.date_range)
-    else:
-      days = SiteStats.lastdays(self.date_range)
-
-    campaigns = CampaignQueryManager().get_campaigns(account=self.account)
-    for c in campaigns:
-      c.all_stats = SiteStatsQueryManager.get_sitestats_for_days(owner=c, days=days)      
-      c.stats = reduce(lambda x, y: x+y, c.all_stats, SiteStats())
-            
-    # compute rollups to display at the top
-    totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[c.all_stats for c in campaigns])]
-    
-    promo_campaigns = filter(lambda x: x.campaign_type in ['promo'], campaigns)
-    garauntee_campaigns = filter(lambda x: x.campaign_type in ['gtee'], campaigns)
-    network_campaigns = filter(lambda x: x.campaign_type in ['network'], campaigns)
-    backfill_promo_campaigns = filter(lambda x: x.campaign_type in ['backfill_promo'], campaigns)
-
-    help_text = None
-    if network_campaigns:
-      if not (self.account.adsense_pub_id or self.account.admob_pub_id):
-        help_text = 'Provide your ad network publisher IDs on the <a href="%s">account page</a>'%reverse('account_index')
-
-    return render_to_response(self.request, 
-      'advertiser/index.html', 
-      {'campaigns':campaigns, 
-       'start_date': days[0],
-       'date_range': self.date_range,
-       'gtee': garauntee_campaigns,
-       'promo': promo_campaigns,
-       'backfill_promo': backfill_promo_campaigns,
-       'network': network_campaigns,
-       'helptext':help_text })
-      
-@whitelist_login_required     
-def index(request,*args,**kwargs):
-    return IndexHandler()(request,*args,**kwargs)     
 
 class AdGroupIndexHandler(RequestHandler):
-  def get(self):
-    # Set start date if passed in, otherwise get most recent days
-    if self.start_date:
-      days = SiteStats.get_days(self.start_date, self.date_range)
-    else:
-      days = SiteStats.lastdays(self.date_range)
-
-    apps = AppQueryManager().get_apps(account=self.account)
-    campaigns = CampaignQueryManager().get_campaigns(account=self.account)
-    
-    if campaigns:
-      adgroups = AdGroupQueryManager().get_adgroups(campaigns=campaigns)
-    else:
-      adgroups = []
-    
-    for c in adgroups:
-      c.all_stats = SiteStatsQueryManager().get_sitestats_for_days(owner=c, days=days)      
-      c.stats = reduce(lambda x, y: x+y, c.all_stats, SiteStats())
-
-    promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], adgroups)
-    promo_campaigns = sorted(promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
-    
-    guarantee_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee_high', 'gtee_low', 'gtee'], adgroups)
-    guarantee_campaigns = sorted(guarantee_campaigns, lambda x,y: cmp(y.bid, x.bid))
-    levels = ('high', '', 'low')
-    gtee_str = "gtee_%s"
-    gtee_levels = []
-    for level in levels:
-        this_level = gtee_str % level if level else "gtee"
-        name = level if level else 'normal'
-        level_camps = filter(lambda x:x.campaign.campaign_type == this_level, guarantee_campaigns)
-        gtee_levels.append(dict(name = name, campaigns = level_camps))
-    logging.warning(guarantee_campaigns)
-    
-    for level in gtee_levels:
-        if level['name'] == 'normal' and len(gtee_levels[0]['campaigns']) == 0 and len(gtee_levels[2]['campaigns']) == 0: 
-            level['foo'] = True 
-        elif len(level['campaigns']) > 0:
-            level['foo'] = True 
+    def get(self):
+        # Set start date if passed in, otherwise get most recent days
+        if self.start_date:
+            days = StatsModel.get_days(self.start_date, self.date_range)
         else:
-            level['foo'] = False 
+            days = StatsModel.lastdays(self.date_range)
 
-    logging.warning(gtee_levels)
-
-
-    network_campaigns = filter(lambda x: x.campaign.campaign_type in ['network'], adgroups)
-    network_campaigns = sorted(network_campaigns, lambda x,y: cmp(y.bid, x.bid))
+        apps = AppQueryManager().get_apps(account=self.account)
+        campaigns = CampaignQueryManager().get_campaigns(account=self.account)
+        if campaigns:
+            adgroups = AdGroupQueryManager().get_adgroups(campaigns=campaigns)
+        else:
+            adgroups = []
     
-    backfill_promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_promo'], adgroups)
-    backfill_promo_campaigns = sorted(backfill_promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
+        for adgroup in adgroups:
+            # get stats for date range
+            adgroup.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)
+            # get total for the range
+            adgroup.stats = reduce(lambda x, y: x+y, adgroup.all_stats, StatsModel())
+
+        promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], adgroups)
+        promo_campaigns = sorted(promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
     
-    adgroups = sorted(adgroups, key=lambda adgroup: adgroup.stats.impression_count, reverse=True)
+        guarantee_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee_high', 'gtee_low', 'gtee'], adgroups)
+        guarantee_campaigns = sorted(guarantee_campaigns, lambda x,y: cmp(y.bid, x.bid))
+        levels = ('high', '', 'low')
+        gtee_str = "gtee_%s"
+        gtee_levels = []
+        for level in levels:
+            this_level = gtee_str % level if level else "gtee"
+            name = level if level else 'normal'
+            level_camps = filter(lambda x:x.campaign.campaign_type == this_level, guarantee_campaigns)
+            gtee_levels.append(dict(name = name, campaigns = level_camps))
+
+        for level in gtee_levels:
+            if level['name'] == 'normal' and len(gtee_levels[0]['campaigns']) == 0 and len(gtee_levels[2]['campaigns']) == 0: 
+                level['foo'] = True 
+            elif len(level['campaigns']) > 0:
+                level['foo'] = True 
+            else:
+                level['foo'] = False 
+
+        network_campaigns = filter(lambda x: x.campaign.campaign_type in ['network'], adgroups)
+        network_campaigns = sorted(network_campaigns, lambda x,y: cmp(y.bid, x.bid))
     
-    help_text = None
-    if network_campaigns:
-      if not (self.account.adsense_pub_id or self.account.admob_pub_id):
-        help_text = 'Provide your ad network publisher IDs on the <a href="%s">account page</a>'%reverse('account_index')
+        backfill_promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_promo'], adgroups)
+        backfill_promo_campaigns = sorted(backfill_promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
+    
+        adgroups = sorted(adgroups, key=lambda adgroup: adgroup.stats.impression_count, reverse=True)
+    
+        help_text = None
+        if network_campaigns:
+            if not (self.account.adsense_pub_id or self.account.admob_pub_id):
+                help_text = 'Provide your ad network publisher IDs on the <a href="%s">account page</a>'%reverse('account_index')
 
-    graph_adgroups = adgroups[0:4]
-    if len(adgroups) > 4:
-      graph_adgroups[3] = AdGroup(name='Others')
-      graph_adgroups[3].all_stats = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[c.all_stats for c in adgroups[3:]])]      
+        graph_adgroups = adgroups[0:4]
+        if len(adgroups) > 4:
+            graph_adgroups[3] = AdGroup(name='Others')
+            graph_adgroups[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[c.all_stats for c in adgroups[3:]])]      
 
-      # gtee = [ {name: 'high', campaigns: what usually goes in gtee } ]
-
-    return render_to_response(self.request, 
-      'advertiser/adgroups.html', 
-      {'adgroups':adgroups,
-       'graph_adgroups': graph_adgroups,
-       'start_date': days[0],
-       'date_range': self.date_range,
-       'apps' : apps,
-       'totals': reduce(lambda x, y: x+y.stats, adgroups, SiteStats()),
-       'today': reduce(lambda x, y: x+y, [c.all_stats[-1] for c in graph_adgroups], SiteStats()),
-       'yesterday': reduce(lambda x, y: x+y, [c.all_stats[-2] for c in graph_adgroups], SiteStats()),
-       'gtee': gtee_levels, 
-       'promo': promo_campaigns,
-       'network': network_campaigns,
-       'backfill_promo': backfill_promo_campaigns,
-       'account': self.account,
-       'helptext':help_text })
+        return render_to_response(self.request, 
+                                 'advertiser/adgroups.html', 
+                                  {'adgroups':adgroups,
+                                   'graph_adgroups': graph_adgroups,
+                                   'start_date': days[0],
+                                   'date_range': self.date_range,
+                                   'apps' : apps,
+                                   'totals': reduce(lambda x, y: x+y.stats, adgroups, StatsModel()),
+                                   'today': reduce(lambda x, y: x+y, [c.all_stats[-1] for c in graph_adgroups], StatsModel()),
+                                   'yesterday': reduce(lambda x, y: x+y, [c.all_stats[-2] for c in graph_adgroups], StatsModel()),
+                                   'gtee': gtee_levels, 
+                                   'promo': promo_campaigns,
+                                   'network': network_campaigns,
+                                   'backfill_promo': backfill_promo_campaigns,
+                                   'account': self.account,
+                                   'helptext':help_text })
 
 @whitelist_login_required     
 def adgroups(request,*args,**kwargs):
@@ -238,8 +143,6 @@ class CreateCampaignAJAXHander(RequestHandler):
     campaign_form.bid  = adgroup_form['bid']
     campaign_form.bid_strategy = adgroup_form['bid_strategy']
     campaign_form.custom_html = adgroup_form['custom_html']
-
-    logging.warning("bid: %s %s"%("campaign_form['bid']",campaign_form.bid.value))
 
     adunit_keys = adgroup_form['site_keys'].value or []
     adunit_str_keys = [unicode(k) for k in adunit_keys]
@@ -349,9 +252,7 @@ class CreateCampaignAJAXHander(RequestHandler):
         # update cache
         adunits_to_update.update(adgroup.site_keys)
         if adunits_to_update:
-          logging.info("adunits to clear: %s"%[str(a) for a in adunits_to_update])
           adunits = AdUnitQueryManager().get_by_key(adunits_to_update)
-          logging.info("adunits to clear: %s"%[str(a.key()) for a in adunits if a])
           CachedQueryManager().cache_delete(adunits)
         
         
@@ -362,8 +263,6 @@ class CreateCampaignAJAXHander(RequestHandler):
         
         json_dict.update(success=True,new_page=reverse('advertiser_adgroup_show',kwargs={'adgroup_key':str(adgroup.key())}))
         return self.json_response(json_dict)
-    logging.warning('adgroup form errors: %s'%adgroup_form.errors) 
-    logging.warning('adgroup form bid: %s'%adgroup_form['bid'].value)      
          
     new_html = self.get(campaign_form=campaign_form,
                         adgroup_form=adgroup_form)
@@ -468,69 +367,6 @@ def campaign_adgroup_new(request,*args,**kwargs):
 def campaign_adgroup_edit(request,*args,**kwargs):
   kwargs.update(title="Edit Ad Group",edit=True)
   return CreateAdGroupHandler()(request,*args,**kwargs)  
-  
-
-class ShowHandler(RequestHandler):          
-  def get(self, campaign_key):
-    # Set start date if passed in, otherwise get most recent days
-    if self.start_date:
-      days = SiteStats.get_days(self.start_date, self.date_range)
-    else:
-      days = SiteStats.lastdays(self.date_range)
-
-    # load the campaign
-    campaign = CampaignQueryManager.get_by_key(campaign_key)
-    
-    # load the adgroups
-    bids = AdGroupQueryManager().get_campaigns(campaign=campaign)
-    bids.sort(lambda x,y:cmp(x.priority_level, y.priority_level))
-    for b in bids:
-      b.all_stats = SiteStatsQueryManager.get_sitestats_for_days(owner=b, days=days)      
-      b.stats = reduce(lambda x, y: x+y, b.all_stats, SiteStats())
-
-    # no ad groups?
-    if len(bids) == 0:
-      return HttpResponseRedirect(reverse('advertiser_adgroup_new', kwargs={'campaign_key': campaign.key()}))
-    else:
-      # compute rollups to display at the top
-      today = SiteStats.rollup_for_day(bids, SiteStats.today())
-      totals = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[b.all_stats for b in bids])]
-      
-      help_text = None
-      if campaign.campaign_type == 'network':
-        if not (self.account.adsense_pub_id or self.account.admob_pub_id):
-          help_text = 'Provide your ad network publisher IDs on the <a href="%s">account page</a>'%reverse('account_index')
-
-      
-      # write response
-      return render_to_response(self.request,'advertiser/show.html', 
-                                            {'campaign':campaign, 
-                                            'bids': bids,
-                                            'today': today,
-                                            'user':self.account,
-                                            'helptext':help_text})
-
-@whitelist_login_required     
-def campaign_show(request,*args,**kwargs):
- return ShowHandler()(request,*args,**kwargs) 
-
-class EditHandler(RequestHandler):
-  def get(self,campaign_key):
-    c = CampaignQueryManager().get_by_key(campaign_key)
-    f = CampaignForm(instance=c)
-    return render_to_response(self.request,'advertiser/edit.html', {"f": f, "campaign": c})
-
-  def post(self):
-    c = CampaignQueryManager().get_by_key(self.request.POST.get('id'))
-    f = CampaignForm(data=self.request.POST, instance=c)
-    if c.u == self.account.user:
-      f.save(commit=False)
-      CampaignQueryManager().put_campaigns(c)
-      return HttpResponseRedirect(reverse('advertiser_campaign_show',kwargs={'campaign_key':c.key()}))
-
-@whitelist_login_required  
-def campaign_edit(request,*args,**kwargs):
-  return EditHandler()(request,*args,**kwargs)
 
 class PauseHandler(RequestHandler):
   def post(self):
@@ -577,77 +413,74 @@ def campaign_pause(request,*args,**kwargs):
 class ShowAdGroupHandler(RequestHandler):
     #TODO This currently doesn't show the locales that were set previously
     #(kinda a problem...)
-  def get(self, adgroup_key):
-    # Set start date if passed in, otherwise get most recent days
-    if self.start_date:
-      days = SiteStats.get_days(self.start_date, self.date_range)
-    else:
-      days = SiteStats.lastdays(self.date_range)
+    def get(self, adgroup_key):
+        # Set start date if passed in, otherwise get most recent days
+        if self.start_date:
+            days = StatsModel.get_days(self.start_date, self.date_range)
+        else:
+            days = StatsModel.lastdays(self.date_range)
 
-    adgroup = AdGroupQueryManager().get_by_key(adgroup_key)
-    adgroup.all_stats = SiteStatsQueryManager().get_sitestats_for_days(owner=adgroup, days=days)
-    adgroup.stats = reduce(lambda x, y: x+y, adgroup.all_stats, SiteStats())    
+        adgroup = AdGroupQueryManager().get_by_key(adgroup_key)
+        adgroup.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)
+        adgroup.stats = reduce(lambda x, y: x+y, adgroup.all_stats, StatsModel())    
     
-    # creatives = Creative.gql('where ad_group = :1 and deleted = :2 and ad_type in :3', adgroup, False, ["text", "image", "html"]).fetch(50)
-    creatives = CreativeQueryManager().get_creatives(adgroup=adgroup)
-    creatives = list(creatives)
-    for c in creatives:
-      c.all_stats = SiteStatsQueryManager().get_sitestats_for_days(owner=c, days=days)
-      c.stats = reduce(lambda x, y: x+y, c.all_stats, SiteStats())
-      if not c.format:
-        c.format = "320x50" # TODO: Should fix DB so that format is always there
-      c.size = c.format.partition('x')
+        # creatives = Creative.gql('where ad_group = :1 and deleted = :2 and ad_type in :3', adgroup, False, ["text", "image", "html"]).fetch(50)
+        creatives = CreativeQueryManager().get_creatives(adgroup=adgroup)
+        creatives = list(creatives)
+        for c in creatives:
+            c.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(advertiser=c, days=days)
+            c.stats = reduce(lambda x, y: x+y, c.all_stats, StatsModel())
+            if not c.format:
+                c.format = "320x50" # TODO: Should fix DB so that format is always there
+            c.size = c.format.partition('x')
     
-    apps = AppQueryManager().get_apps(account=self.account)
-    for a in apps:
-      if a.icon:
-        a.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(a.icon)
+        apps = AppQueryManager().get_apps(account=self.account)
+        for a in apps:
+            if a.icon:
+                a.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(a.icon)
         
-    # TODO: use query manager    
-    adunits = map(lambda x: Site.get(x), adgroup.site_keys)
-    for au in adunits:
-      au.all_stats = SiteStatsQueryManager().get_sitestats_for_days(site=au,owner=adgroup, days=days)
-      au.stats = reduce(lambda x, y: x+y, au.all_stats, SiteStats())
-      au.app = App.get(au.app_key.key())
+        adunits = AdUnitQueryManager().get_adunits(keys=adgroup.site_keys)
+        for au in adunits:
+            au.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=au,advertiser=adgroup, days=days)
+            au.stats = reduce(lambda x, y: x+y, au.all_stats, StatsModel())
+            au.app = App.get(au.app_key.key())
 
-    adunits = sorted(adunits, key=lambda adunit: adunit.stats.impression_count, reverse=True)
+        adunits = sorted(adunits, key=lambda adunit: adunit.stats.impression_count, reverse=True)
 
-    graph_adunits = adunits[0:4]
+        graph_adunits = adunits[0:4]
       
-    if len(adunits) > 4:
-      graph_adunits[3] = Site(name='Others')
-      graph_adunits[3].all_stats = [reduce(lambda x, y: x+y, stats, SiteStats()) for stats in zip(*[au.all_stats for au in adunits[3:]])]
+        if len(adunits) > 4:
+              graph_adunits[3] = Site(name='Others')
+              graph_adunits[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[au.all_stats for au in adunits[3:]])]
     
-    
-    logging.warning("network: type: %s"%(adgroup.network_type))
-      
-    if not adgroup.network_type:  
-      # In order to have add creative
-      creative_handler = AddCreativeHandler(self.request)
-      creative_fragment = creative_handler.get() # return the creative fragment
 
-      # In order to have each creative be editable
-      for c in creatives:
-        c.html_fragment = creative_handler.get(creative=c)
-    else:
-      creative_fragment = None    
+        if not adgroup.network_type:  
+            # In order to have add creative
+            creative_handler = AddCreativeHandler(self.request)
+            creative_fragment = creative_handler.get() # return the creative fragment
+
+            # In order to have each creative be editable
+            for c in creatives:
+                c.html_fragment = creative_handler.get(creative=c)
+        else:
+            creative_fragment = None    
     
-    # In order to make the edit page
-    campaign_create_form_fragment = CreateCampaignAJAXHander(self.request).get(adgroup=adgroup)
+        # In order to make the edit page
+        campaign_create_form_fragment = CreateCampaignAJAXHander(self.request).get(adgroup=adgroup)
     
-    return render_to_response(self.request,'advertiser/adgroup.html', 
-                              {'campaign': adgroup.campaign,
-                              'apps': apps,
-                              'adgroup': adgroup, 
-                              'creatives': creatives,
-                              'totals': reduce(lambda x, y: x+y.stats, adunits, SiteStats()),
-                              'today': reduce(lambda x, y: x+y, [a.all_stats[-1] for a in graph_adunits], SiteStats()),
-                              'yesterday': reduce(lambda x, y: x+y, [a.all_stats[-2] for a in graph_adunits], SiteStats()),
-                              'adunits' : adunits,
-                              'graph_adunits': graph_adunits,
-                              'start_date': days[0],
-                              'creative_fragment':creative_fragment,
-                              'campaign_create_form_fragment':campaign_create_form_fragment})
+        return render_to_response(self.request,'advertiser/adgroup.html', 
+                                    {'campaign': adgroup.campaign,
+                                    'apps': apps,
+                                    'adgroup': adgroup, 
+                                    'creatives': creatives,
+                                    'totals': reduce(lambda x, y: x+y.stats, adunits, StatsModel()),
+                                    'today': reduce(lambda x, y: x+y, [a.all_stats[-1] for a in graph_adunits], StatsModel()),
+                                    'yesterday': reduce(lambda x, y: x+y, [a.all_stats[-2] for a in graph_adunits], StatsModel()),
+                                    'adunits' : adunits,
+                                    'graph_adunits': graph_adunits,
+                                    'start_date': days[0],
+                                    'creative_fragment':creative_fragment,
+                                    'campaign_create_form_fragment':campaign_create_form_fragment})
     
 @whitelist_login_required   
 def campaign_adgroup_show(request,*args,**kwargs):    
@@ -795,7 +628,6 @@ class AddCreativeHandler(RequestHandler):
         CreativeQueryManager().put_creatives(creative)    
         # update cache
         adunits = AdUnitQueryManager().get_by_key(ad_group.site_keys,none=True)
-        logging.warning("here: %s"%adunits)
         if adunits:
           CachedQueryManager().cache_delete(adunits)
         jsonDict.update(success=True)

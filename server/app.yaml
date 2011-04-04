@@ -4,6 +4,9 @@ runtime: python
 api_version: 1
 default_expiration: "10d"
 
+builtins:
+- datastore_admin: on
+
 handlers:
   
 - url: /robots.txt

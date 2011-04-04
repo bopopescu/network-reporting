@@ -132,7 +132,8 @@ def all_user_dropdown(request,value=1000):
     value = int(value)
     htmls = []
     for account in Account.all().order("user").fetch(value):
-        htmls.append('<option value="%s">%s</option>'%(account.key().name(),account.user.email()))
+        if account.user:
+            htmls.append('<option value="%s">%s</option>'%(account.key().name(),account.user.email()))
     return mark_safe('\n'.join(htmls))
 
 @register.filter

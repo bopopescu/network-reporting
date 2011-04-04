@@ -83,6 +83,11 @@ indexes:
   - name: end_date
     direction: desc
 
+- kind: Campaign
+  properties:
+  - name: active
+  - name: budget
+
 - kind: SiteStats
   properties:
   - name: owner

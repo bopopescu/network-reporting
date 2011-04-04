@@ -88,7 +88,7 @@ def advance_worker(request, daily=False):
 
     camps = Campaign.get(keys)
     for camp in camps:
-        if camp.budget is not None:
+        if camp.active and camp.budget is not None:
             if daily:
                 budget_service.daily_advance(camp)
             else:

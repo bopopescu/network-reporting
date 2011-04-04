@@ -428,8 +428,6 @@ class ShowAdGroupHandler(RequestHandler):
             AdGroupQueryManager().put_adgroups(adgroup)
         return HttpResponseRedirect(reverse('advertiser_adgroup_show', kwargs={'adgroup_key': str(adgroup.key())}))
 
-    #TODO This currently doesn't show the locales that were set previously
-    #(kinda a problem...)
     def get(self, adgroup_key):
         # Set start date if passed in, otherwise get most recent days
         if self.start_date:

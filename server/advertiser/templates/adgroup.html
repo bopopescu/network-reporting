@@ -119,8 +119,31 @@
           </div>
           
           <section id="dashboard-campaigns">
-            <h2>Summary</h2>
-            <p>
+            <form method="post" action="/campaigns/adgroup/{{adgroup.key}}/" id="fake-campaignForm">
+                <input type=hidden name="action" id="action" />
+            </form>
+            <br />
+            <h2>Campaign Details</h2>
+            <div id="play-pause-bar">
+                <span class="buttonset ui-buttonset" id="campaign-play-pause" style="visibility:visible;">
+                    <input type="radio" name="play-pause-option" value="play" id="play-option" class="ui-helper-hidden-accessible" {% if adgroup.active %}checked{% endif %} />
+                    <label for="play-option" aria-pressed="false" class="ui-button ui-widget ui-state-default ui-button-text-only ui-corner-left" role="button" aria-disabled="false">
+                        Play
+                    </label>
+                    <input type="radio" name="play-pause-option" value="pause" id="pause-option" class="ui-helper-hidden-accessible" {% if not adgroup.active %}checked{% endif %} />
+                    <label for="pause-option" aria-pressed="false" class="ui-button ui-widget ui-state-default ui-button-text-only ui-corner-left" role="button" aria-disabled="false">
+                        Pause
+                    </label>
+                </span>
+            </div>
+            <br />
+            <p style="font-size: 14px;">
+				{% if adgroup.active %}
+				<img src="/images/active.gif" width="9" height="9"/>
+				{% else %}
+				<img src="/images/paused.gif" width="9" height="9"/>
+				{% endif %}
+                This campaign is {% if adgroup.active %}running{% else %}currently paused{% endif %}.&nbsp;
                 {% if campaign.start_date and campaign.end_date %}
                 {{campaign.start_date|format_date_compact}}-{{campaign.end_date|format_date_compact}}.
                 {% endif %} {% if campaign.start_date and not campaign.end_date %}
@@ -129,11 +152,10 @@
                 Ends {{campaign.start_date|format_date_compact}}.
                 {% endif %} {% if not campaign.start_date and not campaign.end_date %}
                 All dates.
-                {% endif %}
+                {% endif %}&nbsp;
                 {% if campaign.budget %}{{campaign.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
             </p>
-
-            <h2>Ad Unit Targeting</h2>
+                        <h2>Ad Unit Targeting</h2>
             <table class="campaignData-main dataTable" id="dashboard-apps-columnHeaders">
               <thead>
                 <tr>

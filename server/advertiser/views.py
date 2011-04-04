@@ -411,8 +411,23 @@ def campaign_pause(request,*args,**kwargs):
   return PauseHandler()(request,*args,**kwargs)
   
 class ShowAdGroupHandler(RequestHandler):
-    #TODO This currently doesn't show the locales that were set previously
-    #(kinda a problem...)
+    def post(self, adgroup_key):
+        adgroup = AdGroupQueryManager().get_by_key(adgroup_key)
+        opt = self.params.get('action')
+        update = False
+        if opt == 'play':
+            adgroup.active = True
+            update = True
+        elif opt == 'pause':
+            adgroup.active = False
+            update = True
+        else:
+            logging.error("Passed an impossible option")
+
+        if update:
+            AdGroupQueryManager().put_adgroups(adgroup)
+        return HttpResponseRedirect(reverse('advertiser_adgroup_show', kwargs={'adgroup_key': str(adgroup.key())}))
+
     def get(self, adgroup_key):
         # Set start date if passed in, otherwise get most recent days
         if self.start_date:

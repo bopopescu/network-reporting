@@ -3,6 +3,7 @@ import logging
 from google.appengine.ext import db
 from google.appengine.ext.db import polymodel
 from account.models import Account
+# from budget import budget_service
 #
 # A campaign.  Campaigns have budgetary and time based restrictions.  
 # 
@@ -32,11 +33,7 @@ class Campaign(db.Model):
   u = db.UserProperty() 
   account = db.ReferenceProperty(Account)
   t = db.DateTimeProperty(auto_now_add=True)
-  
-  def delivery(self):
-    if self.stats: return self.stats.revenue / self.budget
-    else: return 1
-  
+
   @property
   def _estimated_qps(self):
     return 0
@@ -45,6 +42,14 @@ class Campaign(db.Model):
   def counter_shards(self):
     #TODO: this should be a function of estimated qps
     return 1
+
+  @property
+  def owner_key(self):
+    return None
+
+  @property
+  def owner_name(self):
+    return None 
   
   def get_owner(self):
     return None
@@ -55,13 +60,10 @@ class Campaign(db.Model):
   def owner(self):
     return property(get_owner, set_owner)
 
-  @property
-  def owner_key(self):
-    return None
-    
-  @property
-  def owner_name(self):
-    return None 
+  def delivery(self):
+    if self.stats: return self.stats.revenue / self.budget
+    else: return 1
+
     
     
 class AdGroup(db.Model):

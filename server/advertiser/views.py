@@ -38,6 +38,7 @@ from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager,
                                       HtmlCreativeQueryManager
 from publisher.query_managers import AdUnitQueryManager, AppQueryManager
 from reporting.query_managers import StatsModelQueryManager
+from budget import budget_service
 
 
 class AdGroupIndexHandler(RequestHandler):
@@ -60,6 +61,7 @@ class AdGroupIndexHandler(RequestHandler):
             adgroup.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)
             # get total for the range
             adgroup.stats = reduce(lambda x, y: x+y, adgroup.all_stats, StatsModel())
+            adgroup.percent_delivered = budget_service.percent_delivered(adgroup.campaign)
 
         promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], adgroups)
         promo_campaigns = sorted(promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
@@ -73,12 +75,12 @@ class AdGroupIndexHandler(RequestHandler):
             this_level = gtee_str % level if level else "gtee"
             name = level if level else 'normal'
             level_camps = filter(lambda x:x.campaign.campaign_type == this_level, guarantee_campaigns)
-            gtee_levels.append(dict(name = name, campaigns = level_camps))
+            gtee_levels.append(dict(name = name, adgroups = level_camps))
 
         for level in gtee_levels:
-            if level['name'] == 'normal' and len(gtee_levels[0]['campaigns']) == 0 and len(gtee_levels[2]['campaigns']) == 0: 
+            if level['name'] == 'normal' and len(gtee_levels[0]['adgroups']) == 0 and len(gtee_levels[2]['adgroups']) == 0: 
                 level['foo'] = True 
-            elif len(level['campaigns']) > 0:
+            elif len(level['adgroups']) > 0:
                 level['foo'] = True 
             else:
                 level['foo'] = False 
@@ -423,6 +425,7 @@ class ShowAdGroupHandler(RequestHandler):
         adgroup = AdGroupQueryManager().get_by_key(adgroup_key)
         adgroup.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)
         adgroup.stats = reduce(lambda x, y: x+y, adgroup.all_stats, StatsModel())    
+        adgroup.percent_delivered = budget_service.percent_delivered(adgroup.campaign)
     
         # creatives = Creative.gql('where ad_group = :1 and deleted = :2 and ad_type in :3', adgroup, False, ["text", "image", "html"]).fetch(50)
         creatives = CreativeQueryManager().get_creatives(adgroup=adgroup)

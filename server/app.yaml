@@ -1,8 +1,11 @@
-application: mopub-inc
+application: eventrackerscaletest #mopub-inc
 version: 38
 runtime: python
 api_version: 1
 default_expiration: "10d"
+
+builtins:
+- datastore_admin: on
 
 handlers:
   

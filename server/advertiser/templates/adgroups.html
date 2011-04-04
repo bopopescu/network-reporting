@@ -137,36 +137,39 @@
                       </tr>
                     </thead>
                     <tbody>
-                      {% for c in level.campaigns %}
+                      {% for adgroup in level.adgroups %}
                       <tr class="campaignData{% if not forloop.counter0|divisibleby:2 %}campaignData-alt{% endif %}" id="campaigns-guaranteed-{{level.name}}-{{forloop.counter0}}">
                         <th class="campaignData-icon">
-                            <input type="checkbox" name="id" value="{{c.key}}"/>
-                            {% if c.deleted %}<img src="/images/deleted.gif" height=9 width=9></img>{% endif %}
-                            {% if c.active and not c.deleted %}<img src="/images/active.gif" height=9 width=9></img>{% endif %}
-                            {% if not c.active and not c.deleted %}<img src="/images/paused.gif" height=9 width=9></img>{% endif %}
+                            <input type="checkbox" name="id" value="{{adgroup.key}}"/>
+                            {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9></img>{% endif %}
+                            {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9></img>{% endif %}
+                            {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9></img>{% endif %}
                         </th> 
                         <th class="dataTable-name">
-                            <a href="{% url advertiser_adgroup_show adgroup_key=c.key %}">{{c.name}}</a><br/>
+                            <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
                             <span class="muted">
-                                {% if c.campaign.start_date and c.campaign.end_date %}
-                                {{c.campaign.start_date|format_date_compact}}-{{c.campaign.end_date|format_date_compact}}.
-                                {% endif %} {% if c.campaign.start_date and not c.campaign.end_date %}
-                                Starts {{c.campaign.start_date|format_date_compact}}.
-                                {% endif %} {% if not c.campaign.start_date and c.campaign.end_date %}
-                                Ends {{c.campaign.start_date|format_date_compact}}.
-                                {% endif %} {% if not c.campaign.start_date and not c.campaign.end_date %}
+                                {% if adgroup.campaign.start_date and adgroup.campaign.end_date %}
+                                {{adgroup.campaign.start_date|format_date_compact}}-{{adgroup.campaign.end_date|format_date_compact}}.
+                                {% endif %} {% if adgroup.campaign.start_date and not adgroup.campaign.end_date %}
+                                Starts {{adgroup.campaign.start_date|format_date_compact}}.
+                                {% endif %} {% if not adgroup.campaign.start_date and adgroup.campaign.end_date %}
+                                Ends {{adgroup.campaign.start_date|format_date_compact}}.
+                                {% endif %} {% if not adgroup.campaign.start_date and not adgroup.campaign.end_date %}
                                 All dates.
                                 {% endif %}
-                                {% if c.campaign.budget %}{{c.campaign.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
+                                {% if adgroup.campaign.budget %}{{adgroup.campaign.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
                             </span>
                         </th>
-                        <td class="dataTable-data numeric">{{c.bid|currency}}</td>
-                        <td class="dataTable-data numeric">{{c|campaign_status}}</td>
-                        <td class="dataTable-data numeric">{{c.stats.impression_count|withsep}}</td>
-                        <td class="dataTable-data numeric">{{c.stats.click_count|withsep}}</td>
-                        <td class="dataTable-data numeric">{{c.stats.ctr|percentage|withsep}}</td>
-                        <td class="dataTable-data numeric">{{c.stats.conversion_count|withsep}} ({{c.stats.conv_rate|percentage}})</td>
-                        <td class="dataTable-data numeric">{{c.stats.cpa|currency}}</td>
+                        <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
+                        <td class="dataTable-data numeric">{{adgroup|campaign_status}}<br>
+														   {% if adgroup.percent_delivered %}
+														   <span class="muted">({{adgroup.percent_delivered|floatformat:1}}%)</span></td>
+														   {%endif %}
+                        <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
+                        <td class="dataTable-data numeric">{{adgroup.stats.click_count|withsep}}</td>
+                        <td class="dataTable-data numeric">{{adgroup.stats.ctr|percentage|withsep}}</td>
+                        <td class="dataTable-data numeric">{{adgroup.stats.conversion_count|withsep}} ({{adgroup.stats.conv_rate|percentage}})</td>
+                        <td class="dataTable-data numeric">{{adgroup.stats.cpa|currency}}</td>
                       </tr>
                       {% empty %}
                       <tr class="campaignData">
@@ -201,36 +204,36 @@
                   </tr>
                 </thead>
                 <tbody>
-                  {% for c in promo %}
+                  {% for adgroup in promo %}
                   <tr class="{% cycle 'campaignData' 'campaignData campaignData-alt' %}" id="campaigns-promo-{{forloop.counter0}}">
                     <th class="campaignData-icon">
-                      <input type="checkbox" name="id" value="{{c.key}}"/>
-                      {% if c.deleted %}<img src="/images/deleted.gif" height=9 width=9></img>{% endif %}
-                      {% if c.active and not c.deleted %}<img src="/images/active.gif" height=9 width=9></img>{% endif %}
-                      {% if not c.active and not c.deleted %}<img src="/images/paused.gif" height=9 width=9></img>{% endif %}
+                      <input type="checkbox" name="id" value="{{adgroup.key}}"/>
+                      {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9></img>{% endif %}
+                      {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9></img>{% endif %}
+                      {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9></img>{% endif %}
                     </th> 
                     <th class="dataTable-name">
-                        <a href="{% url advertiser_adgroup_show adgroup_key=c.key %}">{{c.name}}</a><br/>
+                        <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
                         <span class="muted">
-                            {% if c.campaign.start_date and c.campaign.end_date %}
-                            {{c.campaign.start_date|format_date_compact}}-{{c.campaign.end_date|format_date_compact}}.
-                            {% endif %} {% if c.campaign.start_date and not c.campaign.end_date %}
-                            Starts {{c.campaign.start_date|format_date_compact}}.
-                            {% endif %} {% if not c.campaign.start_date and c.campaign.end_date %}
-                            Ends {{c.campaign.start_date|format_date_compact}}.
-                            {% endif %} {% if not c.campaign.start_date and not c.campaign.end_date %}
+                            {% if adgroup.campaign.start_date and adgroup.campaign.end_date %}
+                            {{adgroup.campaign.start_date|format_date_compact}}-{{adgroup.campaign.end_date|format_date_compact}}.
+                            {% endif %} {% if adgroup.campaign.start_date and not adgroup.campaign.end_date %}
+                            Starts {{adgroup.campaign.start_date|format_date_compact}}.
+                            {% endif %} {% if not adgroup.campaign.start_date and adgroup.campaign.end_date %}
+                            Ends {{adgroup.campaign.start_date|format_date_compact}}.
+                            {% endif %} {% if not adgroup.campaign.start_date and not adgroup.campaign.end_date %}
                             All dates.
                             {% endif %}
-                            {% if c.campaign.budget %}{{c.campaign.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
+                            {% if adgroup.campaign.budget %}{{adgroup.campaign.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
                         </span>
                     </th>
-                    <td class="dataTable-data numeric">{{c.bid|currency}}</td>
-                    <td class="dataTable-data numeric">{{c|campaign_status}}</td>
-                    <td class="dataTable-data numeric">{{c.stats.impression_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{c.stats.click_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{c.stats.ctr|percentage|withsep}}</td>
-                    <td class="dataTable-data numeric">{{c.stats.conversion_count|withsep}} ({{c.stats.conv_rate|percentage}})</td>
-                    <td class="dataTable-data numeric">{{c.stats.cpa|currency}}</td>
+                    <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
+                    <td class="dataTable-data numeric">{{adgroup|campaign_status}}</td>
+                    <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{adgroup.stats.click_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{adgroup.stats.ctr|percentage|withsep}}</td>
+                    <td class="dataTable-data numeric">{{adgroup.stats.conversion_count|withsep}} ({{adgroup.stats.conv_rate|percentage}})</td>
+                    <td class="dataTable-data numeric">{{adgroup.stats.cpa|currency}}</td>
                   </tr>
                   {% empty %}
                   <tr class="campaignData">
@@ -263,23 +266,23 @@
                   </tr>
                 </thead>
                 <tbody>
-                  {% for c in network %}
+                  {% for adgroup in network %}
                   <tr class="{% cycle 'campaignData' 'campaignData campaignData-alt' %}" id="campaigns-network-{{forloop.counter0}}">
                     <th class="campaignData-icon">
-                      <input type="checkbox" name="id" value="{{c.key}}"/>
-                      {% if c.deleted %}<img src="/images/deleted.gif" height=9 width=9></img>{% endif %}
-                      {% if c.active and not c.deleted %}<img src="/images/active.gif" height=9 width=9></img>{% endif %}
-                      {% if not c.active and not c.deleted %}<img src="/images/paused.gif" height=9 width=9></img>{% endif %}
+                      <input type="checkbox" name="id" value="{{adgroup.key}}"/>
+                      {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9></img>{% endif %}
+                      {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9></img>{% endif %}
+                      {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9></img>{% endif %}
                     </th> 
                     <th class="dataTable-name">
-                      <a href="{% url advertiser_adgroup_show adgroup_key=c.key %}">{{c.name}}</a><br/>
-                      <span class="muted">{{c.network_type}}</span>
+                      <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
+                      <span class="muted">{{adgroup.network_type}}</span>
                     </th>
-                    <td class="dataTable-data numeric">{{c.bid|currency}}</td>
-                    <td class="dataTable-data numeric">{{c.stats.request_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{c.stats.impression_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{c.stats.click_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{c.stats.ctr|percentage|withsep}}</td>
+                    <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
+                    <td class="dataTable-data numeric">{{adgroup.stats.request_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{adgroup.stats.click_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{adgroup.stats.ctr|percentage|withsep}}</td>
                     <td class="dataTable-data numeric">&nbsp;</td>
                     <td class="dataTable-data numeric">&nbsp;</td>
                   </tr>

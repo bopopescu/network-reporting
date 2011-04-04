@@ -4,7 +4,7 @@
 __revision__ = "$Id: SHA.py,v 1.4 2002/07/11 14:31:19 akuchling Exp $"
 
 from sha import *
-import sha
+timeslice_advance
 if hasattr(sha, 'digestsize'):
     digest_size = digestsize
     del digestsize

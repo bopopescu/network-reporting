@@ -130,7 +130,7 @@
                 {% endif %} {% if not campaign.start_date and not campaign.end_date %}
                 All dates.
                 {% endif %}
-                {% if campaign.budget %}{{campaign.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
+                {% if campaign.budget %}{{campaign.budget|currency}} daily budget.{% else %}Unlimited budget. {% endif %}
             </p>
 
             <h2>Ad Unit Targeting</h2>

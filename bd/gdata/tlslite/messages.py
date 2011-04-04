@@ -8,7 +8,7 @@ from constants import *
 from X509 import X509
 from X509CertChain import X509CertChain
 
-import sha
+timeslice_advance
 import md5
 
 class RecordHeader3:

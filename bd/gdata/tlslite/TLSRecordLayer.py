@@ -12,7 +12,7 @@ from constants import *
 from utils.cryptomath import getRandomBytes
 from utils import hmac
 from FileObject import FileObject
-import sha
+timeslice_advance
 import md5
 import socket
 import errno

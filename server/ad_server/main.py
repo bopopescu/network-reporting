@@ -998,7 +998,7 @@ class TestHandler(webapp.RequestHandler):
     delay = self.request.get('delay') or '5'
     delay = int(delay)
     adunit = Site.get(key)
-    server_side = InMobiServerSide(self.request,adunit)
+    server_side = BrightRollServerSide(self.request,adunit)
     logging.warning("%s\n%s"%(server_side.url,server_side.payload))
     
     rpc = urlfetch.create_rpc(delay) # maximum delay we are willing to accept is 1000 ms
@@ -1016,7 +1016,8 @@ class TestHandler(webapp.RequestHandler):
         result = rpc.get_result()
         if result.status_code == 200:
             bid,response = server_side.bid_and_html_for_response(result)
-            self.response.out.write("%s<br/> %s %s"%(server_side.url+'?'+payload if payload else '',bid,response))
+            self.response.out.write(response)
+            # self.response.out.write("%s<br/> %s %s"%(server_side.url+'?'+payload if payload else '',bid,response))
     except urlfetch.DownloadError:
       self.response.out.write("%s<br/> %s"%(server_side.url,"response not fast enough"))
       

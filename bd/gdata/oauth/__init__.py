@@ -507,7 +507,7 @@ class OAuthSignatureMethod_HMAC_SHA1(OAuthSignatureMethod):
             import hashlib # 2.5
             hashed = hmac.new(key, raw, hashlib.sha1)
         except:
-            import sha # deprecated
+            timeslice_advance # deprecated
             hashed = hmac.new(key, raw, sha)
 
         # calculate the digest base 64

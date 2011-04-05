@@ -105,21 +105,21 @@ def time_ago_in_words(value):
                 return "%d days" % (d.days)
 
 @register.filter
-def campaign_status(c):
+def campaign_status(adgroup):
     d = datetime.now().date()
-    if (c.start_date is None or d > c.start_date) and (c.end_date is None or d < c.end_date):
-        if c.campaign.budget: 
-            if c.stats.revenue >= c.campaign.budget:
-                return "Delivered"
-            elif c.stats.impression_count > 0:
-                return "In-flight, %d%%" % (c.stats.revenue / float(c.campaign.budget))
+    if (adgroup.start_date is None or d > adgroup.start_date) and (adgroup.end_date is None or d < adgroup.end_date):
+        if adgroup.campaign.budget: 
+            if adgroup.percent_delivered and adgroup.percent_delivered < 100.0:
+                return "In-flight"
+            elif adgroup.percent_delivered and adgroup.percent_delivered >= 100.0:
+                return "Completed"
             else:
                 return "Eligible"
         else:
             return "In-flight"
-    elif c.end_date and d > c.end_date:
+    elif adgroup.end_date and d > adgroup.end_date:
         return "Expired"
-    elif c.start_date and d < c.start_date:
+    elif adgroup.start_date and d < adgroup.start_date:
         return "Scheduled"
     else:
         return "Unknown"

@@ -94,6 +94,9 @@ def log_generator(campaign):
         
 def percent_delivered(campaign, continuous_max_days=14):
     """ Gives the percent of the budget that has been delivered over a certain number of days"""
+    if not campaign.budget:
+        return None
+        
     if not campaign.start_date:
         daily_logs = _recent_daily_logs(campaign, max_days=continuous_max_days)
         total_budget = campaign.budget * (len(daily_logs) + 1) # for today

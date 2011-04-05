@@ -23,7 +23,7 @@ test_daily_budget = 0
 def has_budget(campaign, cost):
     """ Returns True if the cost is less than the budget in the current timeslice """
     
-    if campaign.budget is None:
+    if not campaign.budget:
         return True
     
     memcache_daily_budget = remaining_daily_budget(campaign)
@@ -94,7 +94,7 @@ def log_generator(campaign):
         
 def percent_delivered(campaign, continuous_max_days=14):
     """ Gives the percent of the budget that has been delivered over a certain number of days"""
-    if campaign.budget is None:
+    if not campaign.budget:
         return None
     
     if not campaign.start_date:
@@ -118,13 +118,13 @@ def percent_delivered(campaign, continuous_max_days=14):
     return (total_spending / total_budget) * 100
     
 def total_delivered(campaign):
-    if campaign.budget is None:
+    if not campaign.budget:
         return None
     return campaign.budget - remaining_daily_budget(campaign)
     
 def remaining_daily_budget(campaign):
     """ Gets or inserts the remaining daily budget """
-    if campaign.budget is None:
+    if not campaign.budget:
         return None
         
     key = _make_campaign_daily_budget_key(campaign)
@@ -148,7 +148,7 @@ def remaining_daily_budget(campaign):
 
 def remaining_ts_budget(campaign):
     """ Gets or inserts the remaining timeslice budget """
-    if campaign.budget is None:
+    if not campaign.budget:
         return None
     
     key = _make_campaign_ts_budget_key(campaign)

@@ -795,7 +795,7 @@ class AdHandler(webapp.RequestHandler):
         # don't use special url hooks because older clients don't understand    
         params.update(finishLoad='')
         # extra parameters used only by admob template
-        params.update(admob_finish_load='')
+        params.update(admob_finish_load=success)
         params.update(admob_fail_load='')
      
       

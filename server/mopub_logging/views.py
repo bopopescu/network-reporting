@@ -38,25 +38,27 @@ def increment_stats(stats):
 def update_stats(stats_dict,publisher,advertiser,date_hour,country,attribute,req=None,revenue=None,incr=1):
     publisher = publisher or None
     advertiser = advertiser or None
-    key = r_models.StatsModel.get_key_name(publisher=publisher,
-                                           advertiser=advertiser,
-                                           date_hour=date_hour,
-                                           country=country)
+    try:
+        key = r_models.StatsModel.get_key_name(publisher=publisher,
+                                               advertiser=advertiser,
+                                               date_hour=date_hour,
+                                               country=country)
+        if not key in stats_dict:
+          stats_dict[key] = r_models.StatsModel(publisher=publisher,
+                                                advertiser=advertiser,
+                                                date_hour=date_hour,
+                                                country=country)
 
-    if not key in stats_dict:
-      stats_dict[key] = r_models.StatsModel(publisher=publisher,
-                                            advertiser=advertiser,
-                                            date_hour=date_hour,
-                                            country=country)
-
-    if attribute:
-      # stats_dict[key].attribute += incr
-      setattr(stats_dict[key],attribute,getattr(stats_dict[key],attribute)+incr) 
+        if attribute:
+          # stats_dict[key].attribute += incr
+          setattr(stats_dict[key],attribute,getattr(stats_dict[key],attribute)+incr) 
       
-      if revenue:
-          stats_dict[key].revenue += revenue
-    if req:      
-      stats_dict[key].reqs.append(req)
+          if revenue:
+              stats_dict[key].revenue += revenue
+        if req:      
+          stats_dict[key].reqs.append(req)
+    except Exception, e:
+        logging.error("Error in update_stats: %s"%e)      
     
 class LogTaskHandler(webapp.RequestHandler):
   def get(self):
@@ -202,6 +204,16 @@ class LogTaskHandler(webapp.RequestHandler):
                 
 
 application = webapp.WSGIApplication([('/_ah/queue/bulk-log-processor', LogTaskHandler),
+                                      ('/_ah/queue/bulk-log-processor-00', LogTaskHandler),
+                                      ('/_ah/queue/bulk-log-processor-01', LogTaskHandler),
+                                      ('/_ah/queue/bulk-log-processor-02', LogTaskHandler),
+                                      ('/_ah/queue/bulk-log-processor-03', LogTaskHandler),
+                                      ('/_ah/queue/bulk-log-processor-04', LogTaskHandler),
+                                      ('/_ah/queue/bulk-log-processor-05', LogTaskHandler),
+                                      ('/_ah/queue/bulk-log-processor-06', LogTaskHandler),
+                                      ('/_ah/queue/bulk-log-processor-07', LogTaskHandler),    
+                                      ('/_ah/queue/bulk-log-processor-08', LogTaskHandler),
+                                      ('/_ah/queue/bulk-log-processor-09', LogTaskHandler),
                                      ],
                                      debug=True)
 

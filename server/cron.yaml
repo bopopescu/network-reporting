@@ -6,7 +6,7 @@ cron:
 
 - description: Advance the budget timeslices
   url: /budget/advance/
-  schedule: every 1 minutes
+  schedule: every 1 minutes synchronized
   
 - description: Advance the daily budget
   url: /budget/daily_advance/

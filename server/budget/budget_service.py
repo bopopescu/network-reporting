@@ -132,6 +132,7 @@ def remaining_daily_budget(campaign):
     memcache_budget = memcache.get(key, namespace="budget")
 
     if memcache_budget is None:
+        logging.error("cache miss for campaign with key: %s" % key)
         # If there is a cache miss, we fall back to the previous snapshot
         budget_slicer = BudgetSlicer.get_or_insert_for_campaign(campaign)
         campaign_daily_budget = campaign.budget
@@ -155,6 +156,7 @@ def remaining_ts_budget(campaign):
     memcache_budget = memcache.get(key, namespace="budget")
 
     if memcache_budget is None:
+        logging.error("cache miss for campaign with key: %s" % key)
         # If there is a cache miss, we fall back to the previous snapshot
         budget_slicer = BudgetSlicer.get_or_insert_for_campaign(campaign)
         campaign_daily_budget = campaign.budget

@@ -19,7 +19,7 @@ LOG_KEY_FORMAT = 'k:%(account_name)s:%(time)s:%(log_index)02d'
 INDEX_KEY_FORMAT = 'k:%(account_name)s:%(time)s'
 TASK_NAME = 't-%(account_name)s-%(time)s' # note time will be bucketed
 
-TIME_BUCKET = 10
+TIME_BUCKET = 100
 MEMCACHE_ALIVE_TIME = 0#6*TIME_BUCKET
 
 REQ_QUEUE_NAME = "network-request-%02d"

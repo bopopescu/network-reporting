@@ -22,7 +22,7 @@ class InMobiServerSide(ServerSide):
     return 'InMobi_Specs_iPhoneApp=1.0.2 (iPhone; iPhone OS 3.1.2; HW iPhone1,1)'
 
   def get_inmobi_ad_size(self):
-    if self.adunit.format == "300x250":
+    if self.adunit.format == "300x250" or self.adunit.format == 'full' or self.adunit.format == 'full_landscape':
       self.url_params.update(width=300,height=250)
       return '10'
     if self.adunit.format == "728x90":

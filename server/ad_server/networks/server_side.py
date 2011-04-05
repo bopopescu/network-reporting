@@ -2,10 +2,14 @@ import hashlib
 
 class ServerSide(object):
   base_url = "http://www.test.com/ad?"
-  def __init__(self,request,adunit=None,*args,**kwargs):
+  def __init__(self,request,adunit=None,format=None,*args,**kwargs):
     self.request = request
     self.adunit = adunit
 
+  @property
+  def format(self):
+      return self.adunit.format
+  
   def get_udid(self,udid=None):
     """
     udid from the device comes as 

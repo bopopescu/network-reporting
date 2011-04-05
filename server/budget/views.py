@@ -30,7 +30,8 @@ def timeslice_budget_advance(request):
     return budget_advance(request, daily=False)
 
 def budget_advance(request, daily=False):
-    keys = Campaign.all(keys_only=True).fetch(1000000)
+    campaigns = Campaign.all().filter("budget >", 0).filter("active =", True).fetch(1000000)
+    keys = [camp.key() for camp in campaigns]
     count = len(keys)
 
     # Break keys into shards of 30 and send them to a worker
@@ -88,11 +89,10 @@ def advance_worker(request, daily=False):
 
     camps = Campaign.get(keys)
     for camp in camps:
-        if camp.active and camp.budget is not None:
-            if daily:
-                budget_service.daily_advance(camp)
-            else:
-                budget_service.timeslice_advance(camp)
+        if daily:
+            budget_service.daily_advance(camp)
+        else:
+            budget_service.timeslice_advance(camp)
 
     return HttpResponse('Worker Succeeded')
 

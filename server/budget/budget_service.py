@@ -94,9 +94,6 @@ def log_generator(campaign):
         
 def percent_delivered(campaign, continuous_max_days=14):
     """ Gives the percent of the budget that has been delivered over a certain number of days"""
-    if not campaign.budget:
-        return None
-    
     if not campaign.start_date:
         daily_logs = _recent_daily_logs(campaign, max_days=continuous_max_days)
         total_budget = campaign.budget * (len(daily_logs) + 1) # for today
@@ -124,9 +121,6 @@ def total_delivered(campaign):
     
 def remaining_daily_budget(campaign):
     """ Gets or inserts the remaining daily budget """
-    if not campaign.budget:
-        return None
-        
     key = _make_campaign_daily_budget_key(campaign)
 
     memcache_budget = memcache.get(key, namespace="budget")
@@ -148,9 +142,6 @@ def remaining_daily_budget(campaign):
 
 def remaining_ts_budget(campaign):
     """ Gets or inserts the remaining timeslice budget """
-    if not campaign.budget:
-        return None
-    
     key = _make_campaign_ts_budget_key(campaign)
 
     memcache_budget = memcache.get(key, namespace="budget")

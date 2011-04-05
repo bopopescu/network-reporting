@@ -3,6 +3,46 @@ total_storage_limit: 10G
 queue:
 - name: bulk-log-processor
   rate: 100/s
+  bucket_size: 100    
+    
+- name: bulk-log-processor-00
+  rate: 100/s
+  bucket_size: 100
+
+- name: bulk-log-processor-01
+  rate: 100/s
+  bucket_size: 100
+
+- name: bulk-log-processor-02
+  rate: 100/s
+  bucket_size: 100
+  
+- name: bulk-log-processor-03
+  rate: 100/s
+  bucket_size: 100
+
+- name: bulk-log-processor-04
+  rate: 100/s
+  bucket_size: 100
+
+- name: bulk-log-processor-05
+  rate: 100/s
+  bucket_size: 100
+
+- name: bulk-log-processor-06
+  rate: 100/s
+  bucket_size: 100
+
+- name: bulk-log-processor-07
+  rate: 100/s
+  bucket_size: 100
+
+- name: bulk-log-processor-08
+  rate: 100/s
+  bucket_size: 100
+
+- name: bulk-log-processor-09
+  rate: 100/s
   bucket_size: 100
 
 - name: network-request-00

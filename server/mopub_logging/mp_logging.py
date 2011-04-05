@@ -14,6 +14,8 @@ CLK_EVENT = 2
 CONV_EVENT = 3
 
 TASK_QUEUE_NAME = 'bulk-log-processor'
+TASK_QUEUE_NAME_FORMAT = 'bulk-log-processor-%02d'
+NUM_TASK_QUEUES = 10
 
 LOG_KEY_FORMAT = 'k:%(account_name)s:%(time)s:%(log_index)02d'
 INDEX_KEY_FORMAT = 'k:%(account_name)s:%(time)s'
@@ -112,12 +114,15 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
     
     # send to appropriately named task_queue
     task_name = TASK_NAME%dict(account_name=account_name,time=time_bucket)
-    logging.info('task: %s'%task_name)
     
     try:
+        account_bucket = hash(account_name)%NUM_TASK_QUEUES
+        task_queue_name = TASK_QUEUE_NAME_FORMAT%account_bucket
+        logging.info('task: %s\n queue: %s'%(task_name,task_queue_name))
+        
         t = taskqueue.Task(name=task_name,params={'account_name':account_name,'time':time_bucket},countdown=TIME_BUCKET*1.10,method='GET')
         if not testing:
-            t.add(TASK_QUEUE_NAME)
+            t.add(task_queue_name)
     except taskqueue.TaskAlreadyExistsError:
         logging.info("task %s already exists"%task_name)
     except Exception, e:    

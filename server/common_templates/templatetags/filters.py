@@ -112,7 +112,7 @@ def campaign_status(c):
             if c.stats.revenue >= c.campaign.budget:
                 return "Delivered"
             elif c.stats.impression_count > 0:
-                return "In-flight, %d%%" % (c.stats.revenue / float(c.budget))
+                return "In-flight, %d%%" % (c.stats.revenue / float(c.campaign.budget))
             else:
                 return "Eligible"
         else:

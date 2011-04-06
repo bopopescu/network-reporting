@@ -140,7 +140,7 @@ class StatsModel(db.Expando):
                           click_count=self.click_count + s.click_count,
                           conversion_count=self.conversion_count + s.conversion_count,
                           revenue=self.revenue + s.revenue,
-                          user_count=self.user_count + s.user_count, # TODO: this needs to be deduped
+                          user_count=self.user_count, # TODO: this needs to be deduped
                           reqs=self.reqs+s.reqs,
                           offline=self.offline,
                          )

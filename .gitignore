@@ -4,3 +4,4 @@
 server/test_data
 server/.coverage
 server/nosetests.xml
+counts.csv

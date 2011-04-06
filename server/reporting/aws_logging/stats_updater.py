@@ -1,6 +1,10 @@
+import os
 import sys
 import time
 import traceback
+
+from datetime import datetime
+from optparse import OptionParser
 
 sys.path.append("/home/ubuntu/mopub/server")
 sys.path.append("/home/ubuntu/mopub/server/reporting")
@@ -9,20 +13,14 @@ sys.path.append("/home/ubuntu/google_appengine/lib/django")
 sys.path.append("/home/ubuntu/google_appengine/lib/webob")
 sys.path.append("/home/ubuntu/google_appengine/lib/yaml/lib")
 sys.path.append("/home/ubuntu/google_appengine/lib/fancy_urllib")
-from google.appengine.ext.remote_api import remote_api_stub
-
-
-import os
-import sys
-import traceback
-from datetime import datetime
-from optparse import OptionParser
 
 from google.appengine.ext import db
+from google.appengine.ext.remote_api import remote_api_stub
 
 # for run_jobflow.sh
 sys.path.append(os.getcwd()+'/../../')
 
+import utils
 from publisher.models import Site
 from reporting.models import StatsModel, Pacific_tzinfo
 from reporting.query_managers import StatsModelQueryManager
@@ -96,6 +94,8 @@ def update_model(adunit_key, creative_key=None, counts=None, date=None, date_hou
 def parse_and_update_models(input_file):
     with open(input_file, 'r') as f:
         for line in f:
+            if '\\' in line:
+                line = line.replace(r'\'', '')
             key_name, counts = line.split('\t', 1)
             counts = eval(counts)
             parts = key_name.split(':')
@@ -115,8 +115,6 @@ def parse_and_update_models(input_file):
                 date = datetime(year, month, day)
                 update_model(adunit_key, creative_key, counts, date=date)
         
-def auth_func():
-    return "olp@mopub.com", "N47935"            
 
 def main():
     start = time.time()
@@ -127,8 +125,7 @@ def main():
     
     app_id = 'mopub-inc'
     host = '38-aws.latest.mopub-inc.appspot.com'
-    
-    remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', auth_func, host)
+    remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', utils.auth_func, host)
     
     print "processing %s for GAE datastore..." %options.input_file
     parse_and_update_models(options.input_file)

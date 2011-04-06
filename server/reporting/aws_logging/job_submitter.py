@@ -8,11 +8,11 @@ from boto.emr.step import StreamingStep
 
 S3_BUCKET = 'mopub-aws-logging'
 LOG_URI = 's3://' + S3_BUCKET + '/jobflow_logs'
-MAPPER = 's3://' + S3_BUCKET + '/code/log_mapper.py'
-REDUCER = 's3://' + S3_BUCKET + '/code/log_reducer.py'
+LOG_MAPPER = 's3://' + S3_BUCKET + '/code/log_mapper.py'
+LOG_REDUCER = 's3://' + S3_BUCKET + '/code/log_reducer.py'
+UNIQ_USER_MAPPER = 's3://' + S3_BUCKET + '/code/uniq_user_mapper.py'
 
 
-JOBFLOW_FILE = 'jobflow.txt'
 NUM_INSTANCES = 1
 MASTER_INSTANCE_TYPE = 'm1.small'
 SLAVE_INSTANCE_TYPE = 'm1.small'
@@ -40,18 +40,29 @@ def main():
     
     conn = EmrConnection('AKIAJKOJXDCZA3VYXP3Q', 'yjMKFo61W0mMYhMgphqa+Lc2WX74+g9fP+FVeyoH')
 
-    step = StreamingStep(
-        name='logparser step',
-        mapper=MAPPER,
-        reducer=REDUCER,
+    log_count_step = StreamingStep(
+        name='log count step',
+        mapper=LOG_MAPPER,
+        reducer=LOG_REDUCER,
+        cache_files = ['s3://' + S3_BUCKET + '/code/log_parser.py#log_parser.py'],
         input=options.logfile,
         output=options.logfile+'.out',
     )
     
-    # try to find an existing jobflow in waiting mode
+    uniq_user_count_step = StreamingStep(
+        name='uniq user count step',
+        mapper=UNIQ_USER_MAPPER,
+        reducer='aggregate',
+        cache_files = ['s3://' + S3_BUCKET + '/code/log_parser.py#log_parser.py'],
+        input=options.logfile+'.pp',
+        output=options.logfile+'.pp.out',
+    )
+    
+    #try to find an existing jobflow in waiting mode
     jobid = get_waiting_jobflow(conn)
+    
     if jobid:
-        conn.add_jobflow_steps(jobid, [step])
+        conn.add_jobflow_steps(jobid, [log_count_step, uniq_user_count_step])
         print 'added step to waiting jobflow:', jobid
         
         # wait while jobflow is still in waiting mode
@@ -60,8 +71,8 @@ def main():
             time.sleep(1)
     else:   # spin up a new jobflow    
         jobid = conn.run_jobflow(
-            name='logparser job',
-            steps=[step],
+            name='testing uniq user job',
+            steps=[log_count_step, uniq_user_count_step],
             log_uri=LOG_URI,
             num_instances=options.num_instances,
             master_instance_type=MASTER_INSTANCE_TYPE,

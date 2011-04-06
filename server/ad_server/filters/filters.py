@@ -70,36 +70,36 @@ def mega_filter( *filters ):
 
 def format_filter( format ):
     log_mesg = "Removed due to format mismatch, expected " + str( format ) + ": %s"
-    def real_filter( a ):
-        if not format or not a.format:
+    def real_filter( creative ):
+        if not format or not creative.format:
             return True 
-        if a.multi_format:
-            if format in a.multi_format:
+        if creative.multi_format:
+            if format in creative.multi_format:
                 return True
         if format == 'full' or format == 'full_landscape':
-            if a.multi_format:
-                return set(a.multi_format).intersection(set(VALID_FULL_FORMATS)) > set()
+            if creative.multi_format:
+                return set(creative.multi_format).intersection(set(VALID_FULL_FORMATS)) > set()
             else:
-                return a.format in VALID_FULL_FORMATS
+                return creative.format in VALID_FULL_FORMATS
         if format == 'full_tablet' or format == 'full_tablet_landscape'
-            if a.multi_format:
-                return set(a.multi_format).intersection(set(VALID_TABLET_FULL_FORMATS)) > set()
+            if creative.multi_format:
+                return set(creative.multi_format).intersection(set(VALID_TABLET_FULL_FORMATS)) > set()
             else:
-                return a.format in VALID_TABLET_FULL_FORMATS
-        return a.format == format
+                return creative.format in VALID_TABLET_FULL_FORMATS
+        return creative.format == format
     return ( real_filter, log_mesg, [] )
 
 def exclude_filter( excl_params ):
     log_mesg = "Removed due to exclusion parameters: %s"
     # NOTE: we are excluding on ad type not the creative id
-    def real_filter( a ):
-        return not a.ad_type in excl_params 
+    def real_filter( creative ):
+        return not creative.ad_type in excl_params 
     return ( real_filter, log_mesg, [] )
 
 def ecpm_filter( winning_ecpm ):
     log_mesg = "Removed due to being a loser: %s"
-    def real_filter( a ):
-        return a.e_cpm() >= winning_ecpm
+    def real_filter( creative ):
+        return creative.e_cpm() >= winning_ecpm
     return ( real_filter, log_mesg, [] )
 
 ##############################################

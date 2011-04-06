@@ -1,5 +1,4 @@
 from string import Template
-
 #
 # Templates
 #

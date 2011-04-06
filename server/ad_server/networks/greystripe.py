@@ -24,7 +24,7 @@ class GreyStripeServerSide(ServerSide):
         phone_headers[header] = self.request.headers[header]
     
     phone_headers = [urllib.urlencode({key.upper():value}) for key,value in phone_headers.iteritems()]    
-    size = self.adunit.format if "full" not in self.adunit.format else '320x250'
+    size = self.adunit.format if "full" not in self.adunit.format else '300x250'
 
 
     data = {'language':'python',

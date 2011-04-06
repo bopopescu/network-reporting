@@ -72,6 +72,7 @@ def dashboard_prep(request, *args, **kwargs):
     for d in days:
         dt = datetime.datetime(year=d.year,month=d.month,day=d.day)
         totals[str(dt)] = StatsModel(date=dt)
+        totals[str(dt)].user_count = 0
     
     # init the totals dictionary
     def _incr_dict(d,k,v):

@@ -271,7 +271,7 @@ class ShowAppHandler(RequestHandler):
     a = AppQueryManager().get_by_key(app_key)
     
     # check to see that the user has viewership rights, ow return 404
-    if a.account.key() != self.account.key() and not self.account.is_admin():
+    if a.account.key() != self.account.key():
       raise Http404
 
     a.stats = StatsModel()

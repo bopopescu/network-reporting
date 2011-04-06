@@ -352,6 +352,7 @@ class CreateAdGroupHandler(RequestHandler):
     if campaign_form.is_valid():
       campaign = campaign_form.save(commit=False)
       campaign.u = self.account.user
+      campaign.account = self.account
       
       if adgroup_form.is_valid():
         adgroup = adgroup_form.save(commit=False)

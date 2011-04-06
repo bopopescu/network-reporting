@@ -93,6 +93,10 @@ class AppIndexHandler(RequestHandler):
     # this is the max active users over the date range
     # NOT total unique users
     totals.user_count = max([t.user_count for t in totals_list])
+    
+    logging.warning("ACCOUNT: %s"%self.account.key())
+    logging.warning("YESTERDAY: %s"%yesterday.key())
+    logging.warning("TODAY: %s"%today.key())
 
     # In the graph, only show the top 3 apps and bundle the rest if there are more than 4
     graph_apps = apps[0:4]

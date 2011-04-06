@@ -11,6 +11,6 @@ html = Template("""<html><head><title>$title</title>
                               links[i].setAttribute('target','_blank');
                             }
                           }, false);
-                        </script></head>
-                        <body style="margin:0;padding:0;">${html_data}$trackingPixel</body></html>""")
+                        </script>$network_style</head>
+                        <body class="network_center" style="margin:0;padding:0;">${html_data}$trackingPixel</body></html>""")
 

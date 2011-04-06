@@ -44,6 +44,7 @@ from ad_server.filters.filters import (budget_filter,
 from ad_server.adserver_templates import TEMPLATES
                                     
 from common.utils import simplejson
+from common.constants import FULL_NETWORKS
 
 from string import Template
 from urllib import urlencode, unquote
@@ -568,14 +569,35 @@ class AdHandler(webapp.RequestHandler):
       adunit = site
       
       format = adunit.format.split('x')
+      network_center = False
       if len(format) < 2:
-          format = (320,480)
+          if not c.adgroup.network_type or c.adgroup.network_type in FULL_NETWORKS:
+              format = (320,480)
+          elif c.adgroup.network_type:
+              #TODO this should be a littttleee bit smarter. This is basically saying default
+              #to 300x250 if the adunit is a full (of some kind) and the creative is from
+              #an ad network that doesn't serve fulls
+              network_center = True
+              format = (300, 250)
 
       template_name = c.ad_type
-      
+      #css to center things
+      style = "<style type='text/css'> \
+                    .network_center { \
+                        position: fixed; \
+                        top: 50%; \
+                        left: 50%; \
+                        margin-left: -%d; \
+                        margin-top: -%d; \
+                        } \
+                </style>"
       params = kwargs
       params.update(c.__dict__.get("_entity"))
-
+      #centering non-full ads in fullspace
+      if network_center:
+          params.update({'network_style': style % (a/2 for a in format)})
+      else:
+          params.update({'network_style':''})
       #success tracking pixel for admob
       #set up an invisible span
       hidden_span = 'var hid_span = document.createElement("span"); hid_span.setAttribute("style", "display:none");'

@@ -95,7 +95,7 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
     log_index = memcache.incr(index_key,initial_value=0) # starts at 1
     
     logging_data = dict(event=event,
-                        adunit=adunit_id,
+                        adunit=adunit_id.replace(r"\'",""), # cleanup for mobile web
                         creative=creative_id,
                         country=country_code,
                         revenue=revenue,

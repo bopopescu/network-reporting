@@ -81,7 +81,7 @@ def format_filter( format ):
                 return set(creative.multi_format).intersection(set(VALID_FULL_FORMATS)) > set()
             else:
                 return creative.format in VALID_FULL_FORMATS
-        if format == 'full_tablet' or format == 'full_tablet_landscape'
+        if format == 'full_tablet' or format == 'full_tablet_landscape':
             if creative.multi_format:
                 return set(creative.multi_format).intersection(set(VALID_TABLET_FULL_FORMATS)) > set()
             else:

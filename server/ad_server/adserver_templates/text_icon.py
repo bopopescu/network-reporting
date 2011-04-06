@@ -1,3 +1,5 @@
+from string import Template
+
 text_icon = Template(
 """<html>
   <head>

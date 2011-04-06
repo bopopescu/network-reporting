@@ -585,8 +585,8 @@ class AdHandler(webapp.RequestHandler):
       style = "<style type='text/css'> \
                     .network_center { \
                         position: fixed; \
-                        top: 50%; \
-                        left: 50%; \
+                        top: 50%%; \
+                        left: 50%%; \
                         margin-left: -%d; \
                         margin-top: -%d; \
                         } \
@@ -594,8 +594,8 @@ class AdHandler(webapp.RequestHandler):
       params = kwargs
       params.update(c.__dict__.get("_entity"))
       #centering non-full ads in fullspace
-      if network_center:
-          params.update({'network_style': style % (a/2 for a in format)})
+      if False: #network_center:
+          params.update({'network_style': style % tuple(a/2 for a in format)})
       else:
           params.update({'network_style':''})
       #success tracking pixel for admob

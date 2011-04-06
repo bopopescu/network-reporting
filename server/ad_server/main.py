@@ -826,7 +826,7 @@ class AdHandler(webapp.RequestHandler):
           "Gchannelids":str(kwargs["site"].adsense_channel_id or ''),        
         # "Gappwebcontenturl":,
           "Gadtype":"GADAdSenseTextImageAdType", #GADAdSenseTextAdType,GADAdSenseImageAdType,GADAdSenseTextImageAdType
-          "Gtestadrequest":"1" if site.account.adsense_TEST_MODE else "0",
+          "Gtestadrequest":"0",
         # "Ghostid":,
         # "Gbackgroundcolor":"00FF00",
         # "Gadtopbackgroundcolor":"FF0000",

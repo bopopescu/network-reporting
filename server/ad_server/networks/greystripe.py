@@ -30,7 +30,7 @@ class GreyStripeServerSide(ServerSide):
             'version':'1.0',
             'format':'html',
             'ip': self.get_ip(),
-            'site_id':"10641", #TODO: allow input of site id
+            'site_id': self.get_account().greystripe_pub_id, 
             'sizes':"320x48", #TODO: have this be an input parameter
             }
     return urllib.urlencode(data)+'&phone_headers='+'||'.join(phone_headers)

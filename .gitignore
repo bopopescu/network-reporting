@@ -1,6 +1,8 @@
 .DS_Store
 *.pyc
 *.tmproj
+*.log
+*.pp
 server/test_data
 server/.coverage
 server/nosetests.xml

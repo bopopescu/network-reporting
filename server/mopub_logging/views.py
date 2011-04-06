@@ -58,7 +58,7 @@ def update_stats(stats_dict,publisher,advertiser,date_hour,country,attribute,req
         if req:      
           stats_dict[key].reqs.append(req)
     except Exception, e:
-        logging.error("Error in update_stats: %s"%e)      
+        logging.warning("Error in update_stats: %s"%e)      
     
 class LogTaskHandler(webapp.RequestHandler):
   def get(self):

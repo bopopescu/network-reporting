@@ -443,12 +443,8 @@ class AdHandler(webapp.RequestHandler):
     mp_logging.log(self.request,event=mp_logging.REQ_EVENT, testing=testing)  
     
     logging.warning(self.request.headers['User-Agent'] )
-    locale = self.request.headers.get("Accept-Language")
     country_re = r'[a-zA-Z][a-zA-Z][-_](?P<ccode>[a-zA-Z][a-zA-Z])'
-    if locale:
-        countries = re.findall(country_re, self.request.headers['User-Agent'])
-    else:
-        countries = [] 
+    countries = re.findall(country_re, self.request.headers['User-Agent'])
     addr = []
     if len(countries) == 1:
         countries = [c.upper() for c in countries]

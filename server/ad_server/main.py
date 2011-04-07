@@ -751,18 +751,8 @@ class AdHandler(webapp.RequestHandler):
       if c.width and c.height and 'full' not in site.format:
           self.response.headers.add_header("X-Width",c.width)
           self.response.headers.add_header("X-Height",c.height)
-      elif 'full' in site.format:
-          if 'tablet' not in site.format:
-              self.response.headers.add_header("X-Width", '320')
-              self.response.headers.add_header("X-Height", '480')
-          else:
-              pass
-      else:
-          pass
-
       
       # render the HTML body
-      logging.warning("\n\nFINAL:\n%s\n\n" % self.TEMPLATES[template_name].safe_substitute(params))
       self.response.out.write(self.TEMPLATES[template_name].safe_substitute(params))
     else:
       self.response.headers.add_header("X-Adtype", "clear")

@@ -98,8 +98,6 @@ class InMobiServerSide(ServerSide):
       if 'image_url' in self.url_params:
         return 0.0, banner_template.safe_substitute(self.url_params)
       elif 'link_text' in self.url_params:
-        import logging
-        logging.warning("\n\n\n%s\n\n" % text_template.safe_substitute(self.url_params))
         return 0.0, text_template.safe_substitute(self.url_params)
 
     raise Exception("InMobi ad is empty")

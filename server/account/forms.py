@@ -10,4 +10,4 @@ class AccountForm(mpforms.MPModelForm):
   
   class Meta:
     model = Account
-    exclude = ('user', 'date_added', 'active', 'status')
+    exclude = ('user', 'all_users', 'date_added', 'active', 'status')

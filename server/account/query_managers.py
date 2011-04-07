@@ -36,6 +36,12 @@ class AccountQueryManager(CachedQueryManager):
         return account
                 
     def put_accounts(self,accounts):
+        if not isinstance(accounts,list):
+            accounts = [accounts]
+        # delete from cache
+        for account in accounts:
+            memcache_key = MEMCACHE_KEY_FORMAT%dict(user=account.user)
+            memcache.delete(memcache_key)
         return db.put(accounts)    
     
     @classmethod    
@@ -45,7 +51,7 @@ class AccountQueryManager(CachedQueryManager):
 
     # only to be used for migrations that are manual    
     @classmethod    
-    def migrate(cls,user_nickname,account):
+    def migrate(cls,user_nickname,account_nickname=None,new_account=None):
         accounts = Account.all().fetch(1000)
         user = None
         for account in accounts:
@@ -56,12 +62,25 @@ class AccountQueryManager(CachedQueryManager):
         if not user: return     
         
         # get the old account that we don't really need   
-        old_account = cls().get_current_user(user=user)           
+        old_account = cls().get_current_account(user=user)           
         # add the user to the destination account
         all_users = set(account.all_users)
-        all_users.add(user)
-        account.all_users = list(all_users)
-        account.put()
+        all_users.add(cls._user_key(user))
         
-        # delete old account
-        old_account.delete()
+        if not new_account:
+            for account in accounts:
+                if account.user.nickname() == account_nickname:
+                    new_account = account
+                    break
+        
+            if not new_account: return
+            
+        
+        # update the new accounts access list
+        print new_account.all_users
+        new_account.all_users = list(all_users)
+        new_account.put()
+        
+        # delete old account as long as the accounts aren't the same
+        if not new_account.key() == old_account.key():
+            old_account.delete()

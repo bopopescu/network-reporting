@@ -23,8 +23,8 @@ mkdir $LOG_DIR
 
 # download logs from GAE
 START_TIME=$(date +%s)
-#echo N47935 | appcfg.py --no_cookies --email=olp@mopub.com --passin --append --num_days=1 request_logs $APP_DIR $LOG_DIR/request-logfile
-echo N47935 | appcfg.py --no_cookies --email=olp@mopub.com --passin --num_days=10 request_logs $APP_DIR $LOG_DIR/request-logfile
+echo N47935 | appcfg.py --no_cookies --email=olp@mopub.com --passin --append --num_days=1 request_logs $APP_DIR $LOG_DIR/request-logfile
+#echo N47935 | appcfg.py --no_cookies --email=olp@mopub.com --passin --num_days=10 request_logs $APP_DIR $LOG_DIR/request-logfile
 echo
 STOP_TIME=$(date +%s)
 echo
@@ -63,7 +63,7 @@ echo "uploading logs to S3 took" $((STOP_TIME-START_TIME)) "seconds"
 START_TIME=$(date +%s)
 echo
 echo "submitting EMR job..."
-python $APP_DIR/reporting/aws_logging/job_submitter.py -f $S3_LOGFILE -n 10
+python $APP_DIR/reporting/aws_logging/job_submitter.py -f $S3_LOGFILE -n 3
 STOP_TIME=$(date +%s)
 echo "EMR job took" $((STOP_TIME-START_TIME)) "seconds"
 

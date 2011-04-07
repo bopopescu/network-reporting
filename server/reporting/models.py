@@ -56,7 +56,12 @@ class StatsModel(db.Expando):
     impression_count = db.IntegerProperty(default=0)
     click_count = db.IntegerProperty(default=0)
     conversion_count = db.IntegerProperty(default=0)
+    
+    # uniq user counts
     user_count = db.IntegerProperty(default=0) # NOTE: name change
+    request_user_count = db.IntegerProperty(default=0)
+    impression_user_count = db.IntegerProperty(default=0)
+    click_user_count = db.IntegerProperty(default=0)
     
     # List of requests, useful for debugging
     reqs = db.ListProperty(str,indexed=False)
@@ -141,6 +146,9 @@ class StatsModel(db.Expando):
                           conversion_count=self.conversion_count + s.conversion_count,
                           revenue=self.revenue + s.revenue,
                           user_count=self.user_count, # TODO: this needs to be deduped
+                          request_user_count=self.request_user_count,
+                          impression_user_count=self.impression_user_count,
+                          click_user_count=self.click_user_count,
                           reqs=self.reqs+s.reqs,
                           offline=self.offline,
                          )

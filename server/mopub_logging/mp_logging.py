@@ -66,7 +66,7 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
     # data shows up in the apache-style request logs    
     if adunit_id and creative_id and event == REQ_EVENT:
         logging.info("fire and forget--adunit: %s creative:%s"%(adunit_id,creative_id))
-        task = taskqueue.Task(params=dict(id=adunit_id,cid=creative_id),
+        task = taskqueue.Task(params=dict(id=adunit_id,cid=creative_id,udid=udid),
                               method='GET',
                               url='/m/req')
         queue_num = random.randint(0,NUM_REQ_QUEUES-1)                      

@@ -34,15 +34,15 @@ stats_model_cache = {}
 counts_cache = {}
 
 
-def update_counts(current, delta):
-    return map(sum, zip(current, delta))
+def update_counts(array1, array2):
+    return map(sum, zip(array1, array2))
     
 
 def update_models():             
     def txn(account_stats, stats_key_names):
         put_list = []
-    
-        stats_models = StatsModel.get_by_key_name(stats_key_names, parent=account_stats)
+
+        stats_models = StatsModel.get_by_key_name([s.split('|')[0] for s in stats_key_names], parent=account_stats)
         for stats_key_name, stats_model in zip(stats_key_names, stats_models):
             if stats_model:
                 stats_model.user_count, stats_model.request_user_count, stats_model.impression_user_count, stats_model.click_user_count = counts_cache[stats_key_name]
@@ -57,8 +57,8 @@ def update_models():
             print "uniq user: %i models failed on batch put" %fail_count
     
     
-    for account_stats, stats_key_names in stats_model_cache.iteritems():
-        print
+    for account_stats, stats_key_names in stats_model_cache.iteritems():   
+        stats_key_names = list(stats_key_names)
         print "uniq user: putting models for account %s ..." % (repr(account_stats.key()))
         while stats_key_names:
             db.run_in_transaction(txn, account_stats, stats_key_names[:LIMIT])
@@ -118,16 +118,16 @@ def parse_file(input_file):
                         account_cache[account_stats_kn] = account_stats
             
                 if account_stats:
-                    # stats_model_cache format: {account_stats: [stats_key_name]}
+                    # stats_model_cache format: {account_stats: [stats_key_name|account]}
                     if account_stats in stats_model_cache:
-                        stats_model_cache[account_stats].append(stats_key_name)
+                        stats_model_cache[account_stats].add(stats_key_name+'|'+account)
                     else:
-                        stats_model_cache[account_stats] = [stats_key_name]
+                        stats_model_cache[account_stats] = set([stats_key_name+'|'+account])
                
                     
             # initialize uniq_user_counts array
-            if stats_key_name in counts_cache:
-                uniq_user_counts = counts_cache[stats_key_name]
+            if stats_key_name+'|'+account in counts_cache:
+                uniq_user_counts = counts_cache[stats_key_name+'|'+account]
             else: 
                 uniq_user_counts = [0, 0, 0, 0] # [user_count, request_user_count, impression_user_count, click_user_count]
         
@@ -141,11 +141,7 @@ def parse_file(input_file):
                 uniq_user_counts = update_counts(uniq_user_counts, [0, 0, 0, uniq_count])
             elif handler == REQ:
                 uniq_user_counts = update_counts(uniq_user_counts, [0, uniq_count, 0, 0])
-            counts_cache[stats_key_name] = uniq_user_counts
-            
-            # if handler == '' and account == 'agltb3B1Yi1pbmNyIgsSB0FjY291bnQiFTEwMzI2MTQyNDE5MzI3NDU1MDMxOAw' and \
-            #     pub_key == '' and adv_key == '' and time_str == '110406':
-            #     print uniq_user_counts
+            counts_cache[stats_key_name+'|'+account] = uniq_user_counts
                 
                 
 

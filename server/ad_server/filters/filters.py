@@ -9,7 +9,9 @@ from math import ( atan2,
 from budget import budget_service
 from reporting.models import StatsModel
 
-from common.constants import VALID_FULL_FORMATS, VALID_TABLET_FULL_FORMATS
+from common.constants import (VALID_FULL_FORMATS,     
+                              VALID_TABLET_FULL_FORMATS,
+                              )
 ###############################
 # BASIC INCLUSION FILTERS
 #

@@ -44,7 +44,9 @@ from ad_server.filters.filters import (budget_filter,
 from ad_server.adserver_templates import TEMPLATES
                                     
 from common.utils import simplejson
-from common.constants import FULL_NETWORKS
+from common.constants import (FULL_NETWORKS,
+                              ACCEPTED_MULTI_COUNTRY,
+                              )
 
 from string import Template
 from urllib import urlencode, unquote
@@ -161,12 +163,19 @@ class AdAuction(object):
     request = kw["request"]
     ll 		= kw['ll']
     testing = kw["testing"]
+    addr    = kw['addr']
     
     udid = kw["udid"]
     user_agent = kw["user_agent"]
 
     keywords = kw["q"]
-    geo_predicates = AdAuction.geo_predicates_for_rgeocode(kw["addr"])
+    geo_predicates = AdAuction.geo_predicates_for_rgeocode(addr)
+    
+    #if only one geo_pred (it's a country) check to see if this country has multiple
+    #possible codes.  If it does, get all of them and use them all
+    if len(addr) == 1 and ACCEPTED_MULTI_COUNTRY.has_key(addr[0]):
+        geo_predicates = reduce(lambda x,y: x+y, [AdAuction.geo_predicates_for_rgeocode([address]) for address in ACCEPTED_MULTI_COUNTRY[addr[0]]])
+
     device_predicates = AdAuction.device_predicates_for_request(kw["request"])
     exclude_params = kw["excluded_creatives"]
     excluded_predicates = AdAuction.exclude_predicates_params(exclude_params)
@@ -435,14 +444,15 @@ class AdHandler(webapp.RequestHandler):
     
     logging.warning(self.request.headers['User-Agent'] )
     locale = self.request.headers.get("Accept-Language")
-    country_re = r'[A-Z][A-Z]'
+    country_re = r'[a-zA-Z][a-zA-Z][-_](?P<ccode>[a-zA-Z][a-zA-Z])'
     if locale:
-        countries = re.findall(country_re, locale)
+        countries = re.findall(country_re, self.request.headers['User-Agent'])
     else:
         countries = [] 
     addr = []
     if len(countries) == 1:
-        addr = tuple(countries[0])
+        countries = [c.upper() for c in countries]
+        addr = tuple(countries)
 
 
 

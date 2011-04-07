@@ -42,7 +42,9 @@ class GreyStripeServerSide(ServerSide):
     
   def bid_and_html_for_response(self,response):
     if len(response.content) == 0 or \
-      response.status_code != 200:
+      response.status_code != 200 or \
+      """<script type='text/javascript'>/*<![CDATA[*/<a href='F' target='_blank'><img src='F' border='0' alt=''></a>/*]]>*/</script""" in response.content:
         raise Exception("GreyStripe ad is empty")
+        
 
     return 0.0,response.content

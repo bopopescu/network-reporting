@@ -48,3 +48,7 @@ MARKET_URL = "https://market.android.com/search?q=%s&c=apps"
 CITY_GEO = "city_name=%s,region_name=%s,country_name=%s"
 REGION_GEO = "region_name=%s,country_name=%s"
 COUNTRY_GEO = "country_name=%s"
+
+VALID_FULL_FORMATS = ('300x250', 'full', 'full_landscape',)
+VALID_TABLET_FULL_FORMATS = ('300x250','160x600', 'full_tablet', 'full_tablet_landscape',)
+FULL_NETWORKS = ('brightroll',)

@@ -263,6 +263,10 @@ class Creative(polymodel.PolyModel):
     elif self.ad_group.bid_strategy == 'cpm':
       return float(self.ad_group.bid)
 
+  @property
+  def multi_format(self):
+      return None
+
   # predicts a CTR for this ad.  We use 1% for now.
   # TODO: implement this in a better way
   def p_ctr(self):
@@ -362,10 +366,16 @@ class AdMobCreative(Creative):
   pass
 
 class MillennialCreative(Creative):
-  pass
+    
+  @property
+  def multi_format(self):
+      return ('728x90', '320x50', '300x250',)
 
 class InMobiCreative(Creative):
-  pass
+
+  @property
+  def multi_format(self):
+      return ('728x90', '320x50', '300x250', '468x60', '120x600',)
   
 class AppNexusCreative(Creative):
   pass  
@@ -377,7 +387,10 @@ class JumptapCreative(Creative):
   pass
 
 class GreyStripeCreative(Creative):
-  pass  
+
+  @property
+  def multi_format(self):
+      return ('320x320', '320x50', '300x250',)
   
 class MobFoxCreative(Creative):
   pass

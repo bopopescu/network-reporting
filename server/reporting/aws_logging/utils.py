@@ -134,6 +134,23 @@ def deref_models(logline_dict):
     
     if handler and param_dict:
 
+        # params: 'udid', 'id', 'cid'    # id = adunit, cid = creative  TODO: udid currently not passed in to logs     
+        if handler == REQ:
+            print 'REQ'
+            adunit_str = param_dict.get('id', None)
+            creative_str = param_dict.get('cid', None)
+
+            if adunit_str and creative_str:
+                pub_models = deref_adunit(adunit_str)
+                adv_models = deref_creative(creative_str)
+                if pub_models and adv_models:
+                    # NOTE: put adv_models before put_models since there's a bug where account_str is NOT guaranteed to get retrieved from adv_models
+                    [adgroup_str, campaign_str, account_str] = adv_models
+                    [app_str, account_str] = pub_models
+                    return "&%s=%s&%s=%s&%s=%s&%s=%s&%s=%s&%s=%s" % ('adunit', adunit_str, 'app', app_str, \
+                                                                     'creative', creative_str, 'adgroup', adgroup_str, 'campaign', campaign_str, \
+                                                                     'account', account_str)
+        
         # params: 'udid', 'id'  # id = adunit
         if handler == AD:
             adunit_str = param_dict.get('id', None)
@@ -179,25 +196,10 @@ def deref_models(logline_dict):
             
         # params: 'udid', 'id'   # id = mobile_appid
         if handler == OPEN:
-           dest_app_str = param_dict.get('id', None)
-           if dest_app_str:
-               return "&%s=%s" % ('dest_app', dest_app_str)
+            dest_app_str = param_dict.get('id', None)
+            if dest_app_str:
+                return "&%s=%s" % ('dest_app', dest_app_str)
                    
-        # params: 'udid', 'id', 'cid'    # id = adunit, cid = creative     
-        if handler == REQ:
-           adunit_str = param_dict.get('id', None)
-           creative_str = param_dict.get('cid', None)
-
-           if adunit_str and creative_str:
-               pub_models = deref_adunit(adunit_str)
-               adv_models = deref_creative(creative_str)
-               if pub_models and adv_models:
-                   # NOTE: put adv_models before put_models since there's a bug where account_str is NOT guaranteed to get retrieved from adv_models
-                   [adgroup_str, campaign_str, account_str] = adv_models
-                   [app_str, account_str] = pub_models
-                   return "&%s=%s&%s=%s&%s=%s&%s=%s&%s=%s&%s=%s" % ('adunit', adunit_str, 'app', app_str, \
-                                                                    'creative', creative_str, 'adgroup', adgroup_str, 'campaign', campaign_str, \
-                                                                    'account', account_str)
     return None
 
     

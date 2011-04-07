@@ -892,7 +892,7 @@ class TestHandler(webapp.RequestHandler):
     
     
     server_side = ServerSideKlass(self.request,adunit)
-    self.response.out.write("%s <br/> %s"%(server_side.url,server_side.payload))
+    self.response.out.write("URL: %s <br/>PAYLOAD: %s <br/> HEADERS: %s"%(server_side.url,server_side.payload,server_side.headers))
     
     rpc = urlfetch.create_rpc(delay) # maximum delay we are willing to accept is 1000 ms
 

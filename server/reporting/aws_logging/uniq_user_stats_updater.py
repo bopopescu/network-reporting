@@ -133,7 +133,7 @@ def parse_file(input_file):
         
             if handler == '':
                 uniq_user_counts = update_counts(uniq_user_counts, [uniq_count, 0, 0, 0])                
-            if handler == AD:
+            elif handler == AD:
                 uniq_user_counts = update_counts(uniq_user_counts, [0, uniq_count, 0, 0])
             elif handler == IMP:
                 uniq_user_counts = update_counts(uniq_user_counts, [0, 0, uniq_count, 0])
@@ -142,6 +142,10 @@ def parse_file(input_file):
             elif handler == REQ:
                 uniq_user_counts = update_counts(uniq_user_counts, [0, uniq_count, 0, 0])
             counts_cache[stats_key_name] = uniq_user_counts
+            
+            # if handler == '' and account == 'agltb3B1Yi1pbmNyIgsSB0FjY291bnQiFTEwMzI2MTQyNDE5MzI3NDU1MDMxOAw' and \
+            #     pub_key == '' and adv_key == '' and time_str == '110406':
+            #     print uniq_user_counts
                 
                 
 

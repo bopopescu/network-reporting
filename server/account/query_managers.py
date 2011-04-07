@@ -51,36 +51,42 @@ class AccountQueryManager(CachedQueryManager):
 
     # only to be used for migrations that are manual    
     @classmethod    
-    def migrate(cls,user_nickname,account_nickname=None,new_account=None):
+    def migrate(cls,user_email,account_user_email=None,new_account=None):
+        user_email = unicode(user_email)
+        account_user_email = unicode(account_user_email)
         accounts = Account.all().fetch(1000)
         user = None
         for account in accounts:
-            if account.user.nickname() == user_nickname:
+            if account.user and account.user.email() == user_email:
                 user = account.user
                 break
-        # break early if no user        
-        if not user: return     
+
+        if not user: 
+            print "no user"
+            user = users.User(email=user_email)
+            return 
         
         # get the old account that we don't really need   
         old_account = cls().get_current_account(user=user)           
-        # add the user to the destination account
-        all_users = set(account.all_users)
-        all_users.add(cls._user_key(user))
-        
+        # add the user to the destination account        
         if not new_account:
             for account in accounts:
-                if account.user.nickname() == account_nickname:
+                if account.user.email() == account_user_email:
                     new_account = account
                     break
         
-            if not new_account: return
-            
+            if not new_account: 
+                print "no new account"
+                return
         
+        all_users = set(new_account.all_users)
+        all_users.add(cls._user_key(user))
+
         # update the new accounts access list
-        print new_account.all_users
         new_account.all_users = list(all_users)
+        print new_account.all_users
         new_account.put()
         
         # delete old account as long as the accounts aren't the same
-        if not new_account.key() == old_account.key():
-            old_account.delete()
+        # if not new_account.key() == old_account.key():
+        #     old_account.delete()

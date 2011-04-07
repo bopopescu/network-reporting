@@ -587,14 +587,14 @@ class AdHandler(webapp.RequestHandler):
                         position: fixed; \
                         top: 50%%; \
                         left: 50%%; \
-                        margin-left: -%d; \
-                        margin-top: -%d; \
+                        margin-left: -%dpx !important; \
+                        margin-top: -%dpx !important; \
                         } \
                 </style>"
       params = kwargs
       params.update(c.__dict__.get("_entity"))
       #centering non-full ads in fullspace
-      if False: #network_center:
+      if network_center:
           params.update({'network_style': style % tuple(a/2 for a in format)})
       else:
           params.update({'network_style':''})
@@ -748,11 +748,21 @@ class AdHandler(webapp.RequestHandler):
       self.response.headers.add_header("X-Backfill", str('html'))
 
       # pass the creative height and width if they are explicity set
-      if c.width and c.height:
+      if c.width and c.height and 'full' not in site.format:
           self.response.headers.add_header("X-Width",c.width)
           self.response.headers.add_header("X-Height",c.height)
+      elif 'full' in site.format:
+          if 'tablet' not in site.format:
+              self.response.headers.add_header("X-Width", '320')
+              self.response.headers.add_header("X-Height", '480')
+          else:
+              pass
+      else:
+          pass
+
       
       # render the HTML body
+      logging.warning("\n\nFINAL:\n%s\n\n" % self.TEMPLATES[template_name].safe_substitute(params))
       self.response.out.write(self.TEMPLATES[template_name].safe_substitute(params))
     else:
       self.response.headers.add_header("X-Adtype", "clear")

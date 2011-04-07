@@ -232,29 +232,32 @@ class CreateAdUnitHandler(RequestHandler):
 def adunit_create(request,*args,**kwargs):
   return CreateAdUnitHandler()(request,*args,**kwargs)   
 
-def add_demo_campaign(site):
-  # Set up a test campaign that returns a demo ad
-  c = Campaign(name="MoPub Demo Campaign",
-               u=site.account.user,
-               campaign_type="promo",
-               description="Demo campaign for checking that MoPub works for your application")
-  CampaignQueryManager().put_campaigns(c)
+  def add_demo_campaign(site):
+    # Set up a test campaign that returns a demo ad
+    c = Campaign(name="MoPub Demo Campaign",
+                 u=site.account.user,
+                 account=site.account,
+                 campaign_type="promo",
+                 description="Demo campaign for checking that MoPub works for your application")
+    CampaignQueryManager().put_campaigns(c)
 
-  # Set up a test ad group for this campaign
-  ag = AdGroup(name="MoPub Demo Campaign",
-               campaign=c,
-               priority_level=3,
-               bid=1.0,
-               site_keys=[site.key()])
-  AdGroupQueryManager().put_adgroups(ag)
+    # Set up a test ad group for this campaign
+    ag = AdGroup(name="MoPub Demo Campaign",
+                 campaign=c,
+                 account=site.account,
+                 priority_level=3,
+                 bid=1.0,
+                 site_keys=[site.key()])
+    AdGroupQueryManager().put_adgroups(ag)
 
-  # And set up a default creative
-  h = HtmlCreative(ad_type="html",
-                   ad_group=ag,
-                   format=site.format,
-                   name="Demo HTML Creative",
-                   html_data="<style type=\"text/css\">body {font-size: 12px;font-family:helvetica,arial,sans-serif;margin:0;padding:0;text-align:center;background:white} .creative_headline {font-size: 18px;} .creative_promo {color: green;text-decoration: none;}</style><div class=\"creative_headline\">Welcome to mopub!</div><div class=\"creative_promo\"><a href=\"http://www.mopub.com\">Click here to test ad</a></div><div>You can now set up a new campaign to serve other ads.</div>")
-  CreativeQueryManager().put_creatives(h)
+    # And set up a default creative
+    h = HtmlCreative(ad_type="html",
+                     ad_group=ag,
+                     account=site.account,
+                     format=site.format,
+                     name="Demo HTML Creative",
+                     html_data="<style type=\"text/css\">body {font-size: 12px;font-family:helvetica,arial,sans-serif;margin:0;padding:0;text-align:center;background:white} .creative_headline {font-size: 18px;} .creative_promo {color: green;text-decoration: none;}</style><div class=\"creative_headline\">Welcome to mopub!</div><div class=\"creative_promo\"><a href=\"http://www.mopub.com\">Click here to test ad</a></div><div>You can now set up a new campaign to serve other ads.</div>")
+    CreativeQueryManager().put_creatives(h)
   
 class ShowAppHandler(RequestHandler):
   def get(self,app_key):

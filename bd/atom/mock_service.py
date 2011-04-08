@@ -34,7 +34,7 @@ recordings = []
 real_request_handler = None
 
 def ConcealValueWithSha(source):
-  timeslice_advance
+  import sha
   return sha.new(source[:-5]).hexdigest()
 
 def DumpRecordings(conceal_func=ConcealValueWithSha):

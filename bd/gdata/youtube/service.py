@@ -739,8 +739,8 @@ class YouTubeService(gdata.service.GDataService):
     for link in video_entry.link:
       if link.rel == 'edit':
         edit_uri = link.href
-    return self.Put(video_entry, uri=edit_uri,
-                    converter=gdata.youtube.YouTubeVideoEntryFromString)
+        return self.Put(video_entry, uri=edit_uri, 
+        	converter=gdata.youtube.YouTubeVideoEntryFromString)
 
   def DeleteVideoEntry(self, video_entry):
     """Deletes a video entry.
@@ -756,7 +756,7 @@ class YouTubeService(gdata.service.GDataService):
     for link in video_entry.link:
       if link.rel == 'edit':
         edit_uri = link.href
-    return self.Delete(edit_uri)
+        return self.Delete(edit_uri)
 
   def AddRating(self, rating_value, video_entry):
     """Add a rating to a video entry.
@@ -1339,12 +1339,12 @@ class YouTubeService(gdata.service.GDataService):
                                      'body': HTTP body of the server response})
     """
     result = self.Query(query.ToUri())
-    if isinstance(query, YouTubeVideoQuery):
-      return gdata.youtube.YouTubeVideoFeedFromString(result.ToString())
-    elif isinstance(query, YouTubeUserQuery):
+    if isinstance(query, YouTubeUserQuery):
       return gdata.youtube.YouTubeUserFeedFromString(result.ToString())
     elif isinstance(query, YouTubePlaylistQuery):
       return gdata.youtube.YouTubePlaylistFeedFromString(result.ToString())
+    elif isinstance(query, YouTubeVideoQuery):
+      return gdata.youtube.YouTubeVideoFeedFromString(result.ToString())
     else:
       return result
 
@@ -1539,7 +1539,7 @@ class YouTubeUserQuery(YouTubeVideoQuery):
     else:
       feed = "http://%s/feeds/users" % (YOUTUBE_SERVER)
 
-    YouTubeVideoQuery.__init__(self, feed, text_query=text_query,
+    YouTubeVideoQuery.__init__(self, feed=feed, text_query=text_query,
                                params=params, categories=categories)
 
 
@@ -1559,5 +1559,5 @@ class YouTubePlaylistQuery(YouTubeVideoQuery):
     else:
       feed = "http://%s/feeds/playlists" % (YOUTUBE_SERVER)
 
-    YouTubeVideoQuery.__init__(self, feed, text_query=text_query,
+    YouTubeVideoQuery.__init__(self, feed=feed, text_query=text_query,
                                params=params, categories=categories)

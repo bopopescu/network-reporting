@@ -613,7 +613,7 @@ def generate_hmac_signature(http_request, consumer_key, consumer_secret,
     import hashlib
     hashed = hmac.new(hash_key, base_string, hashlib.sha1)
   except ImportError:
-    timeslice_advance
+    import sha
     hashed = hmac.new(hash_key, base_string, sha)
   # Python2.3 does not have base64.b64encode.
   if hasattr(base64, 'b64encode'):

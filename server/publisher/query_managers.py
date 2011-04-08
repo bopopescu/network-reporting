@@ -8,6 +8,11 @@ from google.appengine.ext import db
 from publisher.models import App, Site
 from advertiser.models import Campaign, AdGroup, Creative
 
+class AdUnitBundle(Site):
+    """ An adunit with additional fields attached.
+    This contains all the adunit information necessary
+    to run the auction """
+
 class AppQueryManager(CachedQueryManager):
     Model = App
     
@@ -21,6 +26,7 @@ class AppQueryManager(CachedQueryManager):
         return db.put(apps)    
 
 class AdServerAdUnitQueryManager(object):
+    # Deprecated, This should be removed
     Model = Site
 
     def __init__(self, key=None):
@@ -126,13 +132,13 @@ class AdUnitQueryManager(CachedQueryManager):
             if none:
               self.adunit = None
             else:
-              self.adunit = "None!"
+              self.adunit = "Does not exist"
         return self.adunit
         
     def get_adunit(self):
         if not self.adunit:
             self.get_by_key(self.key,cache=True)
-        if self.adunit == "NONE!":
+        if self.adunit == "Does not exist":
             return None
         else:  
             return self.adunit

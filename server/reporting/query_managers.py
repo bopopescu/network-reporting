@@ -72,7 +72,9 @@ class StatsModelQueryManager(CachedQueryManager):
         return stats    
             
     def get_stats_for_days(self, publisher=None, publishers=None, advertiser=None, days=None, num_days=None, account=None, country=None, offline=False):
-        # What sort of object is advertiser, a campaign? an adgroup?
+        """ Gets the stats for a specific pairing. Definitions:
+            advertiser: Either AdGroup or Creative
+            publisher: Either Campaign, or Site(AdUnit)"""
         offline = offline or self.offline
         if isinstance(publisher,db.Model):
           publisher = publisher.key()

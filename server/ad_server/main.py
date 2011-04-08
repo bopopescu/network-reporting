@@ -336,9 +336,19 @@ class AdAuction(object):
                                         try:
                                             result = rpc.get_result()
                                             if result.status_code == 200:
-                                                bid,response = rpc.serverside.bid_and_html_for_response(result)
+                                                server_tuple = rpc.serverside.bid_and_html_for_response(result)
+                                                bid = server_tuple[0]
+                                                response = server_tuple[1]
                                                 winning_creative = winner
                                                 winning_creative.html_data = response
+                                                
+                                                
+                                                if len(server_tuple) == 4:
+                                                    width = server_tuple[2]
+                                                    height = server_tuple[3]
+                                                    winning_creative.width = width
+                                                    winning_creative.height = height
+                                                
                                                 return winning_creative
                                         except Exception,e:
                                             import traceback, sys
@@ -755,8 +765,8 @@ class AdHandler(webapp.RequestHandler):
 
       # pass the creative height and width if they are explicity set
       if c.width and c.height and 'full' not in site.format:
-          self.response.headers.add_header("X-Width",c.width)
-          self.response.headers.add_header("X-Height",c.height)
+          self.response.headers.add_header("X-Width",str(c.width))
+          self.response.headers.add_header("X-Height",str(c.height))
       
       # render the HTML body
       self.response.out.write(self.TEMPLATES[template_name].safe_substitute(params))
@@ -908,7 +918,9 @@ class TestHandler(webapp.RequestHandler):
     try:
         result = rpc.get_result()
         if result.status_code == 200:
-            bid,response = server_side.bid_and_html_for_response(result)
+            server_tuple = server_side.bid_and_html_for_response(result)
+            bid = server_tuple[0]
+            response = server_tuple[1]
             # self.response.out.write(response)
         self.response.out.write("%s<br/> %s %s"%(server_side.url+'?'+payload if payload else '',bid,response))
     except urlfetch.DownloadError:

@@ -361,7 +361,7 @@ var mopub = mopub || {};
         
     if (!creatives) {
       $('#chartWrapper').hide();
-      $('#advertiser-creativeData').hide()
+      $('#advertiser-creativeData').hide();
       $('#advertiser-adgroups-addCreativeButton').click();
     }
 
@@ -389,7 +389,7 @@ var mopub = mopub || {};
       });
     
     $('#advertisers-addCampaign')
-      .button({ icons : {primary : 'ui-icon-circle-plus'} })
+      .button({ icons : {primary : 'ui-icon-circle-plus'} });
     
     $('#advertisers-adgroups-editAdGroupButton')
       .button({ icons: { primary: "ui-icon-wrench" } })
@@ -472,18 +472,19 @@ var mopub = mopub || {};
       .click(function(e) {
         e.preventDefault();
         var buttonTextElem = $('.ui-button-text', this);
+        console.log(buttonTextElem);
         var $options = $(this).parents('form').find('.creativeForm-advanced-options');
-        log($options.is(':hidden'));
         if ($options.is(':hidden')) {
-          $options.show();
-          buttonTextElem.text('Hide Advanced Options');
+          $options.slideDown('fast');
+          buttonTextElem.text('Less Options');
           $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
         }
         else {
-          $options.hide();
-          buttonTextElem.text('Show Advanced Options');
+          $options.slideUp('fast');
+          buttonTextElem.text('More Options');
           $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
         }
+          console.log(this);
       });
     
     $('#creativeAddForm-url-helpLink').click(function(e) {
@@ -718,7 +719,7 @@ var mopub = mopub || {};
       
       function getButtonTextElement() {
         var buttonTextElement = $('.ui-button-text', button);
-        if(buttonTextElement.length == 0) buttonTextElement = button;
+        if(buttonTextElement.length == 0) { buttonTextElement = button;}
         return buttonTextElement;
       }
 

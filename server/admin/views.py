@@ -62,7 +62,6 @@ def dashboard_prep(request, *args, **kwargs):
     logging.info("apps:%s"%apps)
     
     # get all the daily stats for the undeleted apps
-    # app_stats = StatsModelQueryManager(None,offline=offline).get_stats_for_days(publisher=apps[0],account=apps[0].account,days=days)
     app_stats = StatsModelQueryManager(None,offline=offline).get_stats_for_apps(apps=apps,num_days=30)
 
     # accumulate individual site stats into daily totals 
@@ -85,8 +84,9 @@ def dashboard_prep(request, *args, **kwargs):
     for app_stat in app_stats:
         # add this site stats to the total for the day and increment user count
         if app_stat.date:
+            user_count = totals[str(app_stat.date)].user_count
             _incr_dict(totals,str(app_stat.date),app_stat)
-            totals[str(app_stat.date)].user_count += 1
+            totals[str(app_stat.date)].user_count = user_count + 1
         if app_stat._publisher:
             _incr_dict(unique_apps,str(app_stat._publisher),app_stat)
     
@@ -98,7 +98,7 @@ def dashboard_prep(request, *args, **kwargs):
     logging.info("\n\napps:%s\n\n\n"%apps)
     
     # get folks who want to be on the mailing list
-    mailing_list = Account.gql("where date_added > :1 order by date_added desc", start_date).fetch(1000)
+    new_users = Account.gql("where date_added >= :1 order by date_added desc", start_date).fetch(1000)
     
     # params
     render_p = {"stats": total_stats, 
@@ -111,7 +111,8 @@ def dashboard_prep(request, *args, **kwargs):
             user_count=max([x.user_count for x in total_stats])),
         "apps": apps,
         "unique_apps": unique_apps, 
-        "mailing_list": [a for a in mailing_list if a.mailing_list]}
+        "new_users": new_users,
+        "mailing_list": [a for a in new_users if a.mailing_list]}
     key = MEMCACHE_KEY
     if offline:
         key += ':offline'    
@@ -143,22 +144,3 @@ def dashboard(request, *args, **kwargs):
         if offline:
             url += '?offline=1'
         return HttpResponseRedirect(url)        
-    
-@login_required
-def report(request, *args, **kwargs):
-    today = datetime.date.today() - datetime.timedelta(days=1)
-    
-    # get stats from beginning of period and today
-    today_stats = SiteStats.gql("where date = :1 and owner = null", today)
-    
-    # compute totals
-    today_requests = sum([x.request_count for x in today_stats])
-    ad_units = len(set([x.site.key() for x in today_stats]))
-    
-    # send a note
-    mail.send_mail(sender='jpayne@mopub.com', 
-                   to='support@mopub.com',
-                   subject="Served %d requests across %d ad units" % (today_requests, ad_units), 
-                   body="See more at http://app.mopub.com/admin/d")
-    return HttpResponseRedirect(reverse('admin_dashboard'))
-    

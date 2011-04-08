@@ -1,7 +1,7 @@
 """Miscellaneous functions to mask Python/Jython differences."""
 
 import os
-timeslice_advance
+import sha
 
 if os.name != "java":
     BaseException = Exception

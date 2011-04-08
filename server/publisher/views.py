@@ -245,7 +245,7 @@ class CreateAdUnitHandler(RequestHandler):
 def adunit_create(request,*args,**kwargs):
   return CreateAdUnitHandler()(request,*args,**kwargs)   
 
-  def add_demo_campaign(site):
+def add_demo_campaign(site):
     # Set up a test campaign that returns a demo ad
     c = Campaign(name="MoPub Demo Campaign",
                  u=site.account.user,

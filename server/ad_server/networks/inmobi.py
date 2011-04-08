@@ -1,5 +1,6 @@
 from ad_server.networks.server_side import ServerSide
 import re, urllib, urllib2, string
+import logging
 
 from xml.dom import minidom
 
@@ -47,14 +48,22 @@ class InMobiServerSide(ServerSide):
   @property  
   def payload(self):
     data = {'mk-siteid': self.get_account().inmobi_pub_id,
-            'mk-version': 'pr-SPEC-ATATA-20090521',
+            'mk-version': 'pr-SPEC-ATATA-2009052',
             'u-id': self.get_udid(),
             'mk-carrier': self.get_ip(),
-            #'mk-carrier': '208.54.5.50',  # Test value
+            # 'mk-carrier': '117.97.87.6',  # Test value
             'mk-ad-slot': self.get_inmobi_ad_size(),
-            'h-user-agent': self.get_inmobi_user_agent() }
-
-    return urllib.urlencode(data)
+            'h-user-agent': self.get_inmobi_user_agent(),
+            'format': 'xml' }
+    #         
+    #         
+    #         
+    # return "mk-carrier=117.97.87.6 \
+    #         &mk-siteid=4028cb962ca1c524012ccdb55c3801bf \
+    #         &mk-version=pr-SPEC-ATATA-2009052 \
+    #         &h-user-agent=Mozilla/5.0 (iPad; U; CPU OS 3_2 like Mac OS X; en-us) AppleWebKit/531.21.10 (KHTML, like Gecko) Version/4.0.4 Mobile/7B367 Safari/531.21.10 \
+    #         &format=xml"        
+    #return urllib.urlencode(data)
 
   def get_response(self):
     req = urllib2.Request(self.url)
@@ -93,7 +102,7 @@ class InMobiServerSide(ServerSide):
     #response.content = '<AdResponse><Ads number="1"><Ad type="text" actionType="web"><LinkText>Sick of being overweight? Get Free Guide</LinkText><Placement>page</Placement><AdURL>http://c.w.mkhoj.com/c.asm/3/t/c7i/pl5/2/2m/aj/u/0/0/1/354957037659003/1217ae48-012e-1000-de75-00020ff10003/1/9c3e6541</AdURL></Ad></Ads></AdResponse>'
     # Simple MRect/Image
     #reponse.content = '
-
+    logging.warning('response: %s'%response.content)
     if re.match("^<!--.*--\>$", response.content) == None and len(response.content) != 0:
       # TODO: do any sort of manipulation here that we want, like resizing the image, LAME
       self.parse_xml(response.content)

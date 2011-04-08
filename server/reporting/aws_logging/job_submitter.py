@@ -71,7 +71,7 @@ def main():
             time.sleep(1)
     else:   # spin up a new jobflow    
         jobid = conn.run_jobflow(
-            name='testing uniq user job',
+            name='log parsing job',
             steps=[log_count_step, uniq_user_count_step],
             log_uri=LOG_URI,
             num_instances=options.num_instances,

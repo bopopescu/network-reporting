@@ -84,8 +84,9 @@ def dashboard_prep(request, *args, **kwargs):
     for app_stat in app_stats:
         # add this site stats to the total for the day and increment user count
         if app_stat.date:
+            user_count = totals[str(app_stat.date)].user_count
             _incr_dict(totals,str(app_stat.date),app_stat)
-            totals[str(app_stat.date)].user_count += 1
+            totals[str(app_stat.date)].user_count = user_count + 1
         if app_stat._publisher:
             _incr_dict(unique_apps,str(app_stat._publisher),app_stat)
     

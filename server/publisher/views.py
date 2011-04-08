@@ -85,6 +85,19 @@ class AppIndexHandler(RequestHandler):
 
     apps = sorted(apps, key=lambda app: app.stats.request_count, reverse=True)
 
+    totals_list = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(days=days)
+    
+    today = totals_list[-1]
+    yesterday = totals_list[-2]
+    totals = reduce(lambda x, y: x+y, totals_list, StatsModel())
+    # this is the max active users over the date range
+    # NOT total unique users
+    totals.user_count = max([t.user_count for t in totals_list])
+    
+    logging.warning("ACCOUNT: %s"%self.account.key())
+    logging.warning("YESTERDAY: %s"%yesterday.key())
+    logging.warning("TODAY: %s"%today.key())
+
     # In the graph, only show the top 3 apps and bundle the rest if there are more than 4
     graph_apps = apps[0:4]
     if len(apps) > 4:
@@ -96,9 +109,9 @@ class AppIndexHandler(RequestHandler):
        'graph_apps': graph_apps,
        'start_date': days[0],
        'date_range': self.date_range,
-       'today': reduce(lambda x, y: x+y, [a.all_stats[-1] for a in graph_apps], StatsModel()),
-       'yesterday': reduce(lambda x, y: x+y, [a.all_stats[-2] for a in graph_apps], StatsModel()),
-       'totals': reduce(lambda x, y: x+y.stats, apps, StatsModel()),
+       'today': today,
+       'yesterday': yesterday,
+       'totals': totals,
        'account': self.account})
 
 @whitelist_login_required     
@@ -274,7 +287,6 @@ class ShowAppHandler(RequestHandler):
     if a.account.key() != self.account.key():
       raise Http404
 
-    a.stats = StatsModel()
     a.adunits = AdUnitQueryManager().get_adunits(app=a)
     
     # organize impressions by days
@@ -282,18 +294,10 @@ class ShowAppHandler(RequestHandler):
       for adunit in a.adunits:
         adunit.all_stats = StatsModelQueryManager(self.account,self.offline).get_stats_for_days(publisher=adunit,days=days)
         adunit.stats = reduce(lambda x, y: x+y, adunit.all_stats, StatsModel())
-        a.stats += adunit.stats
-      totals = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[au.all_stats for au in a.adunits])]
-    else:
-      totals = [StatsModel() for d in days]
       
     a.adunits = sorted(a.adunits, key=lambda adunit: adunit.stats.request_count, reverse=True)
       
-    # TODO: We are calculating app-level totals twice
-    app_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(advertiser=a,days=days)
-    # set the apps unique user count from the app stats rollup
-    for stat,app_stat in zip(totals,app_stats):
-      stat.user_count = app_stat.user_count
+    app_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=a,days=days)
 
     help_text = 'Create an Ad Unit below' if len(a.adunits) == 0 else None
     
@@ -309,6 +313,13 @@ class ShowAppHandler(RequestHandler):
     app_form_fragment = AppUpdateAJAXHandler(self.request).get(app=a)
     # in order to have a creat adunit form
     adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(app=a)
+    
+    today = app_stats[-1]
+    yesterday = app_stats[-2]
+    a.stats = reduce(lambda x, y: x+y, app_stats, StatsModel())
+    # this is the max active users over the date range
+    # NOT total unique users
+    a.stats.user_count = max([sm.user_count for sm in app_stats])
 
     return render_to_response(self.request,'publisher/show_app.html', 
         {'app': a,  
@@ -316,8 +327,8 @@ class ShowAppHandler(RequestHandler):
          'adunit_form_fragment':adunit_form_fragment,
          'start_date': days[0],
          'date_range': self.date_range,
-         'today': totals[-1],
-         'yesterday': totals[-2],
+         'today': today,
+         'yesterday': yesterday,
          'account': self.account,
          'helptext': help_text})
          

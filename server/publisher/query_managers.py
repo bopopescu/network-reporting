@@ -100,7 +100,7 @@ class AdUnitQueryManager(CachedQueryManager):
             elif len(keys) > 0:
                 return self.Model.get(keys)
             else:
-                logging.error('non
+                logging.error('len is negative?')
 
         adunits = Site.all().filter("deleted =",deleted)
         if app:

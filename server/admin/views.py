@@ -97,7 +97,7 @@ def dashboard_prep(request, *args, **kwargs):
     logging.info("\n\napps:%s\n\n\n"%apps)
     
     # get folks who want to be on the mailing list
-    new_users = Account.gql("where date_added > :1 order by date_added desc", start_date).fetch(1000)
+    new_users = Account.gql("where date_added >= :1 order by date_added desc", start_date).fetch(1000)
     
     # params
     render_p = {"stats": total_stats, 

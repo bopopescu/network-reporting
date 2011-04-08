@@ -6,9 +6,9 @@ import logging
 # The main account
 #
 class Account(db.Model):
-    user = db.UserProperty()
+    user = db.UserProperty() # admin user for this account
     date_added = db.DateTimeProperty(auto_now_add=True)
-        
+    all_users = db.ListProperty(db.Key)    
     company = db.StringProperty()
     phone = db.PhoneNumberProperty()
     traffic = db.FloatProperty()
@@ -28,12 +28,6 @@ class Account(db.Model):
     millenial_pub_id = db.StringProperty()
     mobfox_pub_id = db.StringProperty()
     
-    @classmethod
-    def current_account(cls,user=None):
-        if not user:
-            user = users.get_current_user()
-        return Account.get_or_insert(db.Key.from_path("User", user.user_id()).name(), user=user, status="new")
-
     def is_admin(self):
         return users.is_current_user_admin()
 

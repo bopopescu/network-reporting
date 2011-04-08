@@ -6,6 +6,10 @@ class ServerSide(object):
     self.request = request
     self.adunit = adunit
 
+  @property
+  def format(self):
+      return self.adunit.format
+  
   def get_udid(self,udid=None):
     """
     udid from the device comes as 

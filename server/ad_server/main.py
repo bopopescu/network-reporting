@@ -41,8 +41,12 @@ from ad_server.filters.filters import (budget_filter,
                                     all_freq_filter,
                                     lat_lon_filter,
                                     )
+from ad_server.adserver_templates import TEMPLATES
                                     
 from common.utils import simplejson
+from common.constants import (FULL_NETWORKS,
+                              ACCEPTED_MULTI_COUNTRY,
+                              )
 
 from string import Template
 from urllib import urlencode, unquote
@@ -159,12 +163,19 @@ class AdAuction(object):
     request = kw["request"]
     ll 		= kw['ll']
     testing = kw["testing"]
+    addr    = kw['addr']
     
     udid = kw["udid"]
     user_agent = kw["user_agent"]
 
     keywords = kw["q"]
-    geo_predicates = AdAuction.geo_predicates_for_rgeocode(kw["addr"])
+    geo_predicates = AdAuction.geo_predicates_for_rgeocode(addr)
+    
+    #if only one geo_pred (it's a country) check to see if this country has multiple
+    #possible codes.  If it does, get all of them and use them all
+    if len(addr) == 1 and ACCEPTED_MULTI_COUNTRY.has_key(addr[0]):
+        geo_predicates = reduce(lambda x,y: x+y, [AdAuction.geo_predicates_for_rgeocode([address]) for address in ACCEPTED_MULTI_COUNTRY[addr[0]]])
+
     device_predicates = AdAuction.device_predicates_for_request(kw["request"])
     exclude_params = kw["excluded_creatives"]
     excluded_predicates = AdAuction.exclude_predicates_params(exclude_params)
@@ -291,7 +302,6 @@ class AdAuction(object):
 
                         # if there is a winning/eligible adgroup find the appropriate creative for it
                         winning_creative = None
-                        logging.warning("winner ad_groups: %s"%winning_ad_groups)
 
                         if winners:
                             logging.warning('winners %s' % [w.ad_group for w in winners])
@@ -433,15 +443,12 @@ class AdHandler(webapp.RequestHandler):
     mp_logging.log(self.request,event=mp_logging.REQ_EVENT, testing=testing)  
     
     logging.warning(self.request.headers['User-Agent'] )
-    locale = self.request.headers.get("Accept-Language")
-    country_re = r'[A-Z][A-Z]'
-    if locale:
-        countries = re.findall(country_re, locale)
-    else:
-        countries = [] 
+    country_re = r'[a-zA-Z][a-zA-Z][-_](?P<ccode>[a-zA-Z][a-zA-Z])'
+    countries = re.findall(country_re, self.request.headers['User-Agent'])
     addr = []
     if len(countries) == 1:
-        addr = tuple(countries[0])
+        countries = [c.upper() for c in countries]
+        addr = tuple(countries)
 
 
 
@@ -560,161 +567,43 @@ class AdHandler(webapp.RequestHandler):
                                                         ) )
 
       
-  #
-  # Templates
-  #
-  TEMPLATES = {
-    "adsense": Template("""<html>
-                            <head>
-                              <title>$title</title>
-                              $finishLoad
-                              <script>
-                                function webviewDidClose(){} 
-                                function webviewDidAppear(){} 
-                              </script>
-                            </head>
-                            <body style="margin: 0;width:${w}px;height:${h}px;" >
-                              <script type="text/javascript">window.googleAfmcRequest = {client: '$client',ad_type: 'text_image', output: 'html', channel: '$channel_id',format: '$adsense_format',oe: 'utf8',color_border: '336699',color_bg: 'FFFFFF',color_link: '0000FF',color_text: '000000',color_url: '008000',};</script> 
-                              <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_afmc_ads.js"></script>  
-                              $trackingPixel
-                            </body>
-                          </html> """),
-    "iAd": Template("iAd"),
-    "clear": Template(""),
-    "text": Template("""<html>
-                        <head>
-                          <style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: ${w}px;height: ${h}px;}.creative_headline {font-size: 14px;}.creative .creative_url a {color: green;text-decoration: none;}
-                          </style>
-                          $finishLoad
-                          <script>
-                            function webviewDidClose(){} 
-                            function webviewDidAppear(){} 
-                          </script>
-                          <title>$title</title>
-                        </head>
-                        <body style="margin: 0;width:${w}px;height:${h}px;padding:0;">
-                          <div class="creative"><div style="padding: 5px 10px;"><a href="$url" class="creative_headline">$headline</a><br/>$line1 $line2<br/><span class="creative_url"><a href="$url">$display_url</a></span></div></div>\
-                          $trackingPixel
-                        </body> </html> """),
-    "text_icon": Template(
-"""<html>
-  <head>
-    $finishLoad
-    <script>
-      function webviewDidClose(){}
-      function webviewDidAppear(){}
-    </script>
-    <title></title>
-  </head>
-  <body style="top-margin:0;margin:0;width:320px;padding:0;background-color:#$color;font-size:12px;font-family:Arial,sans-serif;">
-  <div id='highlight' style="position:relative;height:50px;background:-webkit-gradient(linear, left top, left bottom, from(rgba(255,255,255,0.35)),
-    to(rgba(255,255,255,0.06))); -webkit-background-origin: padding-box; -webkit-background-clip: content-box;">
-    <div style="margin:5px;width:40px;height:40px;float:left"><img id="thumb" src="$image_url" style="-webkit-border-radius:6px;-moz-border-radius:6px" width=40 height=40/></div>
-    <div style="float:left;width:230">
-      <div style="color:white;font-weight:bold;margin:0px 0 0 5px;padding-top:8;">$line1</div>
-      <div style="color:white;margin-top:6px;margin:5px 0 0 5px;">$line2</div>
-    </div>
-    $action_icon_div
-    $trackingPixel
-  </div>
-  </body>
-</html>"""),
-    "image":Template("""<html>
-                        <head>
-                          <style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: ${w}px;height: ${h}px;}.creative_headline {font-size: 20px;}.creative .creative_url a {color: green;text-decoration: none;}
-                          </style>
-                          $finishLoad
-                          <script>
-                            function webviewDidClose(){} 
-                            function webviewDidAppear(){} 
-                          </script>
-                        </head>
-                        <body style="margin: 0;width:${w}px;height:${h}px;padding:0;">\
-                          <a href="$url" target="_blank"><img src="$image_url" width=$w height=$h/></a>
-                          $trackingPixel
-                        </body></html> """),
-    "admob": Template("""<html><head>
-                        <script type="text/javascript">
-                          function webviewDidClose(){} 
-                          function webviewDidAppear(){} 
-                          window.innerWidth = $w;
-                          window.innerHeight = $h;
-                        </script>
-                        <title>$title</title>
-                        </head><body style="margin: 0;width:${w}px;height:${h}px;padding:0;background-color:transparent;">
-                        <script type="text/javascript">
-                        var admob_vars = {
-                         pubid: '$client', // publisher id
-                         bgcolor: '000000', // background color (hex)
-                         text: 'FFFFFF', // font-color (hex)
-                         ama: false, // set to true and retain comma for the AdMob Adaptive Ad Unit, a special ad type designed for PC sites accessed from the iPhone.  More info: http://developer.admob.com/wiki/IPhone#Web_Integration
-                         test: false, // test mode, set to false to receive live ads
-                         manual_mode: true // set to manual mode
-                        };
-                        </script>
-                        <script type="text/javascript" src="http://mmv.admob.com/static/iphone/iadmob.js"></script>  
-                        
-                        <!-- DIV For admob ad -->
-                        <div id="admob_ad">
-                        </div>
-
-                        <!-- Script to determine if admob loaded -->
-                        <script>
-                            var ad = _admob.fetchAd(document.getElementById('admob_ad'));                                                                         
-                            var POLLING_FREQ = 500;
-                            var MAX_POLL = 2000;
-                            var polling_timeout = 0;                                                                                                              
-                            var polling_func = function() {                                                                                                       
-                             if(ad.adEl.height == 48) {                                                                                                           
-                               // we have an ad                                                                                                                   
-                               console.log('received ad');
-                               $admob_finish_load
-                             } 
-                             else if(polling_timeout < MAX_POLL) {                                                                                                         
-                               console.log('repoll');                                                                                                             
-                               polling_timeout += POLLING_FREQ;                                                                                                           
-                               window.setTimeout(polling_func, POLLING_FREQ);                                                                                             
-                             }                                                                                                                                    
-                             else {                                                                                                                               
-                               console.log('no ad'); 
-                               $admob_fail_load                                                                                                               
-                               ad.adEl.style.display = 'none';                                                                                                    
-                             }                                                                                                                                    
-                            };                                                                                                                                    
-                            window.setTimeout(polling_func, POLLING_FREQ);
-                        </script>
-                        </body></html>"""),
-    "html":Template("""<html><head><title>$title</title>
-                        $finishLoad
-                        <script type="text/javascript">
-                          function webviewDidClose(){}
-                          function webviewDidAppear(){}
-                          window.addEventListener("load", function() {
-                            var links = document.getElementsByTagName('a');
-                            for(var i=0; i < links.length; i++) {
-                              links[i].setAttribute('target','_blank');
-                            }
-                          }, false);
-                        </script></head>
-                        <body style="margin:0;padding:0;">${html_data}$trackingPixel</body></html>"""),
-    "html_full":Template("$html_data")
-  }
   def render_creative(self, c, track_url=None, **kwargs):
+    self.TEMPLATES = TEMPLATES
     if c:
       logging.warning("rendering: %s" % c.ad_type)
       site = kwargs["site"]
       adunit = site
       
       format = adunit.format.split('x')
+      network_center = False
       if len(format) < 2:
-          format = (320,480)
+          if not c.adgroup.network_type or c.adgroup.network_type in FULL_NETWORKS:
+              format = (320,480)
+          elif c.adgroup.network_type:
+              #TODO this should be a littttleee bit smarter. This is basically saying default
+              #to 300x250 if the adunit is a full (of some kind) and the creative is from
+              #an ad network that doesn't serve fulls
+              network_center = True
+              format = (300, 250)
 
       template_name = c.ad_type
-      
+      #css to center things
+      style = "<style type='text/css'> \
+                    .network_center { \
+                        position: fixed; \
+                        top: 50%%; \
+                        left: 50%%; \
+                        margin-left: -%dpx !important; \
+                        margin-top: -%dpx !important; \
+                        } \
+                </style>"
       params = kwargs
       params.update(c.__dict__.get("_entity"))
-
-
+      #centering non-full ads in fullspace
+      if network_center:
+          params.update({'network_style': style % tuple(a/2 for a in format)})
+      else:
+          params.update({'network_style':''})
       #success tracking pixel for admob
       #set up an invisible span
       hidden_span = 'var hid_span = document.createElement("span"); hid_span.setAttribute("style", "display:none");'
@@ -865,7 +754,7 @@ class AdHandler(webapp.RequestHandler):
       self.response.headers.add_header("X-Backfill", str('html'))
 
       # pass the creative height and width if they are explicity set
-      if c.width and c.height:
+      if c.width and c.height and 'full' not in site.format:
           self.response.headers.add_header("X-Width",c.width)
           self.response.headers.add_header("X-Height",c.height)
       
@@ -998,8 +887,12 @@ class TestHandler(webapp.RequestHandler):
     delay = self.request.get('delay') or '5'
     delay = int(delay)
     adunit = Site.get(key)
-    server_side = InMobiServerSide(self.request,adunit)
-    logging.warning("%s\n%s"%(server_side.url,server_side.payload))
+    network_name = self.request.get('network','BrightRoll')
+    ServerSideKlass = locals()[network_name+"ServerSide"]
+    
+    
+    server_side = ServerSideKlass(self.request,adunit)
+    self.response.out.write("URL: %s <br/>PAYLOAD: %s <br/> HEADERS: %s"%(server_side.url,server_side.payload,server_side.headers))
     
     rpc = urlfetch.create_rpc(delay) # maximum delay we are willing to accept is 1000 ms
 
@@ -1016,9 +909,12 @@ class TestHandler(webapp.RequestHandler):
         result = rpc.get_result()
         if result.status_code == 200:
             bid,response = server_side.bid_and_html_for_response(result)
-            self.response.out.write("%s<br/> %s %s"%(server_side.url+'?'+payload if payload else '',bid,response))
+            # self.response.out.write(response)
+        self.response.out.write("%s<br/> %s %s"%(server_side.url+'?'+payload if payload else '',bid,response))
     except urlfetch.DownloadError:
       self.response.out.write("%s<br/> %s"%(server_side.url,"response not fast enough"))
+    except Exception, e:
+        self.response.out.write("%s <br/> %s"%(server_side.url, e)) 
       
   def post(self):
     logging.info("%s"%self.request.headers["User-Agent"])  

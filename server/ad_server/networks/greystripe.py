@@ -24,14 +24,15 @@ class GreyStripeServerSide(ServerSide):
         phone_headers[header] = self.request.headers[header]
     
     phone_headers = [urllib.urlencode({key.upper():value}) for key,value in phone_headers.iteritems()]    
-      
-          
+    size = self.adunit.format if "full" not in self.adunit.format else '300x250'
+
+
     data = {'language':'python',
             'version':'1.0',
             'format':'html',
             'ip': self.get_ip(),
             'site_id': self.get_account().greystripe_pub_id, 
-            'sizes':"320x48", #TODO: have this be an input parameter
+            'sizes':size, #TODO: have this be an input parameter
             }
     return urllib.urlencode(data)+'&phone_headers='+'||'.join(phone_headers)
     
@@ -42,7 +43,9 @@ class GreyStripeServerSide(ServerSide):
     
   def bid_and_html_for_response(self,response):
     if len(response.content) == 0 or \
-      response.status_code != 200:
+      response.status_code != 200 or \
+      """<script type='text/javascript'>/*<![CDATA[*/<a href='F' target='_blank'><img src='F' border='0' alt=''></a>/*]]>*/</script""" in response.content:
         raise Exception("GreyStripe ad is empty")
+        
 
     return 0.0,response.content

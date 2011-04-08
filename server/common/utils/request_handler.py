@@ -1,5 +1,8 @@
+import logging
+
 from account.query_managers import AccountQueryManager
 from google.appengine.api import users
+from google.appengine.ext import db
 from account.models import Account
 
 
@@ -15,7 +18,7 @@ class RequestHandler(object):
             if account_key_name:
               self.account = AccountQueryManager().get_by_key_name(account_key_name)
         if not self.account:  
-          self.account = Account.current_account()
+          self.account = AccountQueryManager().get_current_account()
 
       super(RequestHandler,self).__init__()  
 
@@ -43,7 +46,10 @@ class RequestHandler(object):
             if account_key_name:
               self.account = AccountQueryManager().get_by_key_name(account_key_name)
         if not self.account:  
-          self.account = Account.current_account()
+          self.account = AccountQueryManager().get_current_account()
+        
+        logging.info("final account: %s"%(self.account.key()))  
+        logging.info("final account: %s"%repr(self.account.key()))
           
         # use the offline stats  
         self.offline = self.params.get("offline",False)   

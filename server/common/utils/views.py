@@ -1,5 +1,5 @@
 from google.appengine.api import users
-from account.models import Account
+from account.query_managers import AccountQueryManager
 
 class RequestHandler(object):
     def __call__(self,request,*args,**kwargs):
@@ -11,9 +11,9 @@ class RequestHandler(object):
           if users.is_current_user_admin():
             account_key_name = request.COOKIES.get("account_impersonation",None)
             if account_key_name:
-              self.account = Account.get_by_key_name(account_key_name)
+              self.account = AccountQueryManager().get_by_key_name(account_key_name)
         if not self.account:  
-          self.account = Account.current_account()
+          self.account = AccountQueryManager().get_current_account()
           
         if request.method == "GET":
             return self.get(*args,**kwargs)

@@ -17,12 +17,14 @@ class InMobiServerSide(ServerSide):
     ua = self.get_user_agent();
     if "Android" in ua:
       return 'InMobi_AndroidSDK=1.1 (Specs)'
+    if "iPad" in ua:
+      return ua  
 
     # TODO: Should return actual software and hardware versions for iPhone/iPod
     return 'InMobi_Specs_iPhoneApp=1.0.2 (iPhone; iPhone OS 3.1.2; HW iPhone1,1)'
 
   def get_inmobi_ad_size(self):
-    if self.adunit.format == "300x250":
+    if self.adunit.format == "300x250" or self.adunit.format == 'full' or self.adunit.format == 'full_landscape':
       self.url_params.update(width=300,height=250)
       return '10'
     if self.adunit.format == "728x90":
@@ -85,8 +87,13 @@ class InMobiServerSide(ServerSide):
 
   def bid_and_html_for_response(self,response):
     # Test responses
-    # response.content = '<AdResponse><Ads number="1"><Ad type="banner" actionType="android"><ImageURL>http://r.w.inmobi.com/FileData/513cc422-33a6-4274-9e22-dd12e84e23d14.png</ImageURL><ImageAltText></ImageAltText><Placement>page</Placement><AdURL>http://c.w.mkhoj.com/c.asm/3/t/c7i/pl5/2/2m/aj/u/0/0/1/354957037659003/11ba085a-012e-1000-d9a8-00020fe80003/1/829a0c01</AdURL></Ad></Ads></AdResponse>'
-    # response.content = '<AdResponse><Ads number="1"><Ad type="text" actionType="web"><LinkText>Sick of being overweight? Get Free Guide</LinkText><Placement>page</Placement><AdURL>http://c.w.mkhoj.com/c.asm/3/t/c7i/pl5/2/2m/aj/u/0/0/1/354957037659003/1217ae48-012e-1000-de75-00020ff10003/1/9c3e6541</AdURL></Ad></Ads></AdResponse>'
+    # Simple Banner
+    #response.content = '<AdResponse><Ads number="1"><Ad type="banner" actionType="android"><ImageURL>http://r.w.inmobi.com/FileData/513cc422-33a6-4274-9e22-dd12e84e23d14.png</ImageURL><ImageAltText></ImageAltText><Placement>page</Placement><AdURL>http://c.w.mkhoj.com/c.asm/3/t/c7i/pl5/2/2m/aj/u/0/0/1/354957037659003/11ba085a-012e-1000-d9a8-00020fe80003/1/829a0c01</AdURL></Ad></Ads></AdResponse>'
+    # Simple Text/image (also banner)
+    #response.content = '<AdResponse><Ads number="1"><Ad type="text" actionType="web"><LinkText>Sick of being overweight? Get Free Guide</LinkText><Placement>page</Placement><AdURL>http://c.w.mkhoj.com/c.asm/3/t/c7i/pl5/2/2m/aj/u/0/0/1/354957037659003/1217ae48-012e-1000-de75-00020ff10003/1/9c3e6541</AdURL></Ad></Ads></AdResponse>'
+    # Simple MRect/Image
+    #reponse.content = '
+
     if re.match("^<!--.*--\>$", response.content) == None and len(response.content) != 0:
       # TODO: do any sort of manipulation here that we want, like resizing the image, LAME
       self.parse_xml(response.content)

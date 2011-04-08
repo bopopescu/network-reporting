@@ -145,7 +145,7 @@ class StatsModel(db.Expando):
                           click_count=self.click_count + s.click_count,
                           conversion_count=self.conversion_count + s.conversion_count,
                           revenue=self.revenue + s.revenue,
-                          user_count=max(self.user_count, s.user_count), # TODO: this is not quite right but close
+                          user_count=max(self.user_count, s.user_count), # TODO: takes the maximum user count over the period (high water mark)
                           request_user_count=self.request_user_count,
                           impression_user_count=self.impression_user_count,
                           click_user_count=self.click_user_count,

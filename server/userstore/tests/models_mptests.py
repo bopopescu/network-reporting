@@ -139,7 +139,7 @@ def app_open_event_model_mptests():
 
     # creation
     aoe1 = AppOpenEvent(udid=SAMPLE_UDID1, mobile_appid=SAMPLE_MOBILE_APPID1, time=dt)
-    aoe2 = AppOpenEvent(udid=SAMPLE_UDID2, mobile_appid=SAMPLE_MOBILE_APPID2, time=dt, conversion_window=2)
+    aoe2 = AppOpenEvent(udid=SAMPLE_UDID2, mobile_appid=SAMPLE_MOBILE_APPID2, time=dt)
     db.put([aoe1, aoe2])
 
     # fetch count check
@@ -151,12 +151,10 @@ def app_open_event_model_mptests():
     assert_equals(fetched_aoe1.udid, SAMPLE_UDID1)
     assert_equals(fetched_aoe1.mobile_appid, SAMPLE_MOBILE_APPID1)
     assert_equals(fetched_aoe1.time, dt)
-    assert_equals(fetched_aoe1.conversion_window, DEFAULT_CONVERSION_WINDOW)
 
     assert_equals(fetched_aoe2.udid, SAMPLE_UDID2)
     assert_equals(fetched_aoe2.mobile_appid, SAMPLE_MOBILE_APPID2)
     assert_equals(fetched_aoe2.time, dt)
-    assert_equals(fetched_aoe2.conversion_window, 2)
 
     assert_equals(fetched_aoe1.key(), aoe1.key())
     assert_equals(fetched_aoe2.key(), aoe2.key())

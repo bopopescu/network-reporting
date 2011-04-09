@@ -118,25 +118,39 @@ class AppOpenEventManager(CachedQueryManager):
     
     def _log_conversion_transaction(self, udid, mobile_appid, time, conversion_window):
         # create app open event
-        app_open_event = AppOpenEvent(udid=udid, mobile_appid=mobile_appid, time=time, conversion_window=conversion_window)
+        app_open_event = AppOpenEvent(udid=udid, mobile_appid=mobile_appid, time=time)
         
-        # get mobile app that was opened
+        # try to get mobile app that was opened
         mobile_app_db_key = MobileApp.get_db_key(udid, mobile_appid)
         mobile_app = MobileApp.get(mobile_app_db_key)
-        if not mobile_app:
-                mobile_user = MobileUserManager.get_or_insert(udid)
-                mobile_app = MobileApp(udid=udid, mobile_appid=mobile_appid)
-                mobile_app.put()
-        elif mobile_app.latest_click_time:
-            # associate conversion adunit and creative if within window
-            if (time - mobile_app.latest_click_time) < timedelta(conversion_window):
-                app_open_event.conversion_adunit = mobile_app.latest_click_adunit
-                app_open_event.conversion_creative = mobile_app.latest_click_creative
-                app_open_event.put()
-                return app_open_event, True
 
-        app_open_event.put()
-        return app_open_event, False
+        # if mobile_app doesn't exist, create it but don't log conversion event
+        if not mobile_app:
+            mobile_user = MobileUserManager.get_or_insert(udid)
+            mobile_app = MobileApp(udid=udid, mobile_appid=mobile_appid)
+            mobile_app.opened = True
+            mobile_app.put()
+            app_open_event.put()
+            return app_open_event, False
+        elif not mobile_app.opened:  # mobile_app exists, i.e. the ad driving it's download was clicked on 
+            # associate conversion adunit and creative if within window
+            open_delay = time - mobile_app.latest_click_time
+            if open_delay < timedelta(DEFAULT_CONVERSION_WINDOW):
+                conversion = True
+            else:
+                conversion = False  
+
+            app_open_event.conversion_adunit = mobile_app.latest_click_adunit
+            app_open_event.conversion_creative = mobile_app.latest_click_creative
+            app_open_event.conversion_delay = open_delay.seconds + open_delay.days * 86400
+            app_open_event.put() 
+            mobile_app.opened = True
+            mobile_app.put()
+            return app_open_event, conversion
+               
+        # mobile_app exists but already opened
+        return None, False    
+
         
             
     

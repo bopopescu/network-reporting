@@ -39,6 +39,7 @@ class MobileApp(db.Model):
     latest_click_time = db.DateTimeProperty()
     latest_click_adunit = db.StringProperty()
     latest_click_creative = db.StringProperty()
+    opened = db.BooleanProperty(default=False)
 
     def __init__(self, parent=None, key_name=None, **kwargs):
         udid = get_required_param('udid', kwargs)
@@ -85,7 +86,7 @@ class AppOpenEvent(db.Model):
     udid = db.StringProperty(required=True)
     mobile_appid = db.StringProperty(required=True)
     time = db.DateTimeProperty(required=True)
-    conversion_window = db.IntegerProperty()
+    conversion_delay = db.IntegerProperty() # number of secs between click time and open time
     conversion_adunit = db.StringProperty()
     conversion_creative = db.StringProperty()
 
@@ -93,9 +94,6 @@ class AppOpenEvent(db.Model):
         udid = get_required_param('udid', kwargs)
         mobile_appid = get_required_param('mobile_appid', kwargs)
         check_required_param('time', kwargs)
-
-        if 'conversion_window' not in kwargs:
-            kwargs['conversion_window'] = DEFAULT_CONVERSION_WINDOW
             
         if not kwargs.get('key', None):
             if not parent:

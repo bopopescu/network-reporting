@@ -878,10 +878,11 @@ class AppOpenHandler(webapp.RequestHandler):
     aoe_manager = AppOpenEventManager()
     aoe, conversion_logged = aoe_manager.log_conversion(udid, mobile_appid, time=datetime.datetime.now())
     
-    if conversion_logged:
+    if aoe and conversion_logged:
       mp_logging.log(self.request, event=mp_logging.CONV_EVENT, adunit_id=aoe.conversion_adunit, creative_id=aoe.conversion_creative, udid=udid)
-
-    self.response.out.write("ConversionLogged:"+str(conversion_logged)+":"+str(aoe.key())) 
+      self.response.out.write("ConversionLogged:"+str(conversion_logged)+":"+str(aoe.key())) 
+    else:
+      self.response.out.write("ConversionLogged:"+str(conversion_logged)) 
 
     
 class TestHandler(webapp.RequestHandler):

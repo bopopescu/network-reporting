@@ -903,7 +903,7 @@ class TestHandler(webapp.RequestHandler):
     
     
     server_side = ServerSideKlass(self.request,adunit)
-    self.response.out.write("URL: %s <br/>PAYLOAD: %s <br/> HEADERS: %s"%(server_side.url,server_side.payload,server_side.headers))
+    self.response.out.write("URL: %s <br/>PAYLOAD: %s <br/> HEADERS: %s<br/><br/>"%(server_side.url,server_side.payload,server_side.headers))
     
     rpc = urlfetch.create_rpc(delay) # maximum delay we are willing to accept is 1000 ms
 
@@ -922,8 +922,14 @@ class TestHandler(webapp.RequestHandler):
             server_tuple = server_side.bid_and_html_for_response(result)
             bid = server_tuple[0]
             response = server_tuple[1]
+            if len(server_tuple) > 2:
+                width = server_tuple[2]
+                height = server_tuple[3]
+            else:
+                width = "UNKOWN"
+                height = "UNKOWN"    
             # self.response.out.write(response)
-        self.response.out.write("%s<br/> %s %s"%(server_side.url+'?'+payload if payload else '',bid,response))
+        self.response.out.write("%s<br/> %s %s %s %s"%(server_side.url+'?'+payload if payload else '',bid,response, width, height))
     except urlfetch.DownloadError:
       self.response.out.write("%s<br/> %s"%(server_side.url,"response not fast enough"))
     except Exception, e:

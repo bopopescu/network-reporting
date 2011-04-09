@@ -2,7 +2,6 @@ from ad_server.networks.server_side import ServerSide
 import urllib2
 import urllib
 import logging
-import re
 
 class MillennialServerSide(ServerSide):
   base_url = "http://ads.mp.mydas.mobi/getAd.php5"
@@ -32,21 +31,7 @@ class MillennialServerSide(ServerSide):
     req = urllib2.Request(self.url)
     response = urllib2.urlopen(req)  
     return response.read()
-    
-  def _get_size(self,content):
-      width_pat = re.compile(r'width="(?P<width>\d+?)"')
-      height_pat = re.compile(r'height="(?P<height>\d+?)"')
-
-      width_match = re.search(width_pat,content)
-      height_match = re.search(height_pat,content)
-
-      width = 0
-      height = 0
-      if height_match and width_match:
-          width = int(width_match.groups('width')[0])
-          height = int(height_match.groups('height')[0])
-      return width,height      
-    
+        
   def bid_and_html_for_response(self,response):
     # TODO: do any sort of manipulation here that we want, like resizing the image, LAME
     if len(response.content) == 0 or \

@@ -239,8 +239,8 @@ class CreateCampaignAJAXHander(RequestHandler):
               
               #Get rid of the old creative's reference to the adgroup (just in case)
               adgroup.net_creative.adgroup = None
-              #and delete the old creative
-              AdGroupQueryManager().delete_adgroups(adgroup.net_creative)
+              #and delete the old creative just marks as deleted!
+              CreativeQueryManager().delete_creatives(adgroup.net_creative)
           #creative should now reference the appropriate creative (new if different, old if the same, updated old if same and custom)
           creative.account = self.account
           #put the creative so we can reference it

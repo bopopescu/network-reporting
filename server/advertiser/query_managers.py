@@ -100,6 +100,15 @@ class CreativeQueryManager(CachedQueryManager):
         return creatives            
     def put_creatives(self,creatives):
         return db.put(creatives)
+        
+    def delete_creatives(self,creatives):
+        if isinstance(creatives,db.Model):
+            creatives = [creatives]
+        update_list = []    
+        for c in creatives:
+            c.deleted = True
+            update_list.append(c)
+        db.put(update_list)            
 
 class TextCreativeQueryManager(CreativeQueryManager):
   Model = TextCreative

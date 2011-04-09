@@ -272,9 +272,15 @@ class Creative(polymodel.PolyModel):
   def p_ctr(self):
     return 0.01
     
-  @property
-  def adgroup(self):
+  
+  def _get_adgroup(self):
       return self.ad_group    
+
+  def _set_adgroup(self,value):
+      self.ad_group = value
+      
+  adgroup = property(_get_adgroup,_set_adgroup)
+      
 
   def get_owner(self):
     return self.ad_group

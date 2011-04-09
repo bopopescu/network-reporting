@@ -10,22 +10,13 @@ class RequestHandler(object):
     def __init__(self,request=None):
       if request:
         self.request = request
-        self.account = None
-        user = users.get_current_user()
-        if user:
-          if users.is_current_user_admin():
-            account_key_name = request.COOKIES.get("account_impersonation",None)
-            if account_key_name:
-              self.account = AccountQueryManager().get_by_key_name(account_key_name)
-        if not self.account:  
-          self.account = AccountQueryManager().get_current_account()
+        self._set_account()    
 
       super(RequestHandler,self).__init__()  
 
     def __call__(self,request,*args,**kwargs):
         self.params = request.POST or request.GET
         self.request = request or self.request
-        self.account = None
         
         try:
           # Limit date range to 31 days, otherwise too heavy
@@ -39,14 +30,7 @@ class RequestHandler(object):
         except:
           self.start_date = None
         
-        user = users.get_current_user()
-        if user:
-          if users.is_current_user_admin():
-            account_key = request.COOKIES.get("account_impersonation",None)
-            if account_key:
-              self.account = AccountQueryManager().get_by_key(account_key)
-        if not self.account:  
-          self.account = AccountQueryManager().get_current_account()
+        self._set_account()
         
         logging.info("final account: %s"%(self.account.key()))  
         logging.info("final account: %s"%repr(self.account.key()))
@@ -63,3 +47,15 @@ class RequestHandler(object):
         pass
     def put(self):
         pass  
+        
+    def _set_account(self):
+        self.account = None
+        user = users.get_current_user()
+        if user:
+          if users.is_current_user_admin():
+            account_key = self.request.COOKIES.get("account_impersonation",None)
+            if account_key:
+              self.account = AccountQueryManager().get_by_key(account_key)
+        if not self.account:  
+          self.account = AccountQueryManager().get_current_account()
+            

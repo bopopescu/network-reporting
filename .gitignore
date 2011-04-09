@@ -3,6 +3,7 @@
 *.tmproj
 *.log
 *.pp
+*.pkl
 server/test_data
 server/.coverage
 server/nosetests.xml

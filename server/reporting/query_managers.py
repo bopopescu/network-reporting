@@ -15,7 +15,7 @@ from publisher.models import Site as AdUnit
 
 
 # maximum number of objects per batch put
-LIMIT = 400
+LIMIT = 200
 # object cache miss sentinel for StatsModelQueryManager
 SENTINEL = '!!!'
 # max number of retries for offline batch put

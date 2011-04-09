@@ -1,9 +1,10 @@
 #!/bin/bash
 
-LOG_DIR=~/aws_logs
-rm -rf $LOG_DIR
+LOG_ROOT_DIR=~/aws_logs
+#LOG_ROOT_DIR=/mnt/aws_logs # EC2 path
+rm -rf $LOG_ROOT_DIR
 echo
 echo `date +"%D"` `date +"%T"`
-echo $LOG_DIR "deleted"
+echo $LOG_ROOT_DIR "deleted" 
 echo
 

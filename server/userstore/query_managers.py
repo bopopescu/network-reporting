@@ -132,7 +132,7 @@ class AppOpenEventManager(CachedQueryManager):
             mobile_app.put()
             app_open_event.put()
             return app_open_event, False
-        elif not mobile_app.opened:  # mobile_app exists, i.e. the ad driving it's download was clicked on 
+        elif mobile_app.latest_click_time and not mobile_app.opened:  # mobile_app exists, i.e. the ad driving it's download was clicked on 
             # associate conversion adunit and creative if within window
             open_delay = time - mobile_app.latest_click_time
             if open_delay < timedelta(DEFAULT_CONVERSION_WINDOW):
@@ -148,7 +148,8 @@ class AppOpenEventManager(CachedQueryManager):
             mobile_app.put()
             return app_open_event, conversion
                
-        # mobile_app exists but already opened
+        # mobile_app exists but either already opened OR
+        # doesn't have latest_click_time (i.e. mobile_app not created as result of ClickEvent)
         return None, False    
 
         

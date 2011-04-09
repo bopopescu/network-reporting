@@ -41,7 +41,7 @@ def admin_switch_user(request,*args,**kwargs):
     	user_key = params.get('user_key',None)
     	set_cookie = False
     	if user_key:
-    	  account = Account.get(user_key_name)
+    	  account = Account.get(user_key)
     	  if account:
     		response.set_cookie('account_impersonation',params.get('user_key'))
     		set_cookie = True

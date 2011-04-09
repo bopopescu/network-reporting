@@ -42,9 +42,9 @@ class RequestHandler(object):
         user = users.get_current_user()
         if user:
           if users.is_current_user_admin():
-            account_key_name = request.COOKIES.get("account_impersonation",None)
-            if account_key_name:
-              self.account = AccountQueryManager().get_by_key_name(account_key_name)
+            account_key = request.COOKIES.get("account_impersonation",None)
+            if account_key:
+              self.account = AccountQueryManager().get_by_key(account_key)
         if not self.account:  
           self.account = AccountQueryManager().get_current_account()
         

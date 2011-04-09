@@ -71,13 +71,13 @@ var mopub = mopub || {};
         var buttonTextElem = $('.ui-button-text', this);
         if ($('.adgroupForm-advanced').is(':hidden')) {
           $('.adgroupForm-advanced').slideDown('fast');
-          buttonTextElem.text('Hide Advanced Details');
           $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
+          $('.ui-button-text', this).text('Hide Advanced Details');
         }
         else {
           $('.adgroupForm-advanced').slideUp('fast');
-          buttonTextElem.text('Show Advanced Details');
           $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
+          $('.ui-button-text', this).text('Show Advanced Details');
         }
       });
     $('#adgroupForm-bid_strategy-select')
@@ -471,20 +471,17 @@ var mopub = mopub || {};
       .button('option', {icons: { primary: 'ui-icon-triangle-1-s' }})
       .click(function(e) {
         e.preventDefault();
-        var buttonTextElem = $('.ui-button-text', this);
-        console.log(buttonTextElem);
         var $options = $(this).parents('form').find('.creativeForm-advanced-options');
         if ($options.is(':hidden')) {
           $options.slideDown('fast');
-          buttonTextElem.text('Less Options');
           $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
+          $('.ui-button-text', this).text('Less Options');
         }
         else {
           $options.slideUp('fast');
-          buttonTextElem.text('More Options');
           $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
+          $('.ui-button-text', this).text('More Options');
         }
-          console.log(this);
       });
     
     $('#creativeAddForm-url-helpLink').click(function(e) {

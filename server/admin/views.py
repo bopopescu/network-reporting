@@ -38,10 +38,10 @@ def admin_switch_user(request,*args,**kwargs):
     
     # drop a cookie of the email is the admin user is trying to impersonate
     if users.is_current_user_admin():
-    	user_key_name = params.get('user_key',None)
+    	user_key = params.get('user_key',None)
     	set_cookie = False
-    	if user_key_name:
-    	  account = Account.get_by_key_name(user_key_name)
+    	if user_key:
+    	  account = Account.get_by_key(user_key_name)
     	  if account:
     		response.set_cookie('account_impersonation',params.get('user_key'))
     		set_cookie = True

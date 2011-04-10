@@ -185,7 +185,7 @@ class LogTaskHandler(webapp.RequestHandler):
           mail.send_mail(sender="olp@mopub.com",
                         to="bugs@mopub.com",
                         subject="Logging error",
-                        body="%s"%(exception_traceback))
+                        body="account: %s\n%s"%(account_name,exception_traceback))
           logging.error(exception_traceback)
           raise Exception("need to try transaction again")
           
@@ -198,7 +198,7 @@ class LogTaskHandler(webapp.RequestHandler):
           
           mail.send_mail(sender="olp@mopub.com",
                         to="bugs@mopub.com",
-                        subject="Logging error",
+                        subject="Logging error (cache miss)",
                         body=message)
           logging.error(message)
                 

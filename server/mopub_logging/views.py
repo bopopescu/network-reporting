@@ -185,7 +185,7 @@ class LogTaskHandler(webapp.RequestHandler):
           mail.send_mail(sender="olp@mopub.com",
                         to="bugs@mopub.com",
                         subject="Logging error",
-                        body="account: %s retries: %s\n%s"%(retry_count,account_name,exception_traceback))
+                        body="account: %s retries: %s\n%s"%(account_name,retry_count,exception_traceback))
           logging.error(exception_traceback)
           raise Exception("need to try transaction again")
           

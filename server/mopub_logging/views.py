@@ -64,6 +64,8 @@ class LogTaskHandler(webapp.RequestHandler):
   def get(self):
       # inspect headers of the task
       retry_count = self.request.headers.get('X-AppEngine-TaskRetryCount',None)
+      task_name = self.request.headers.get('X-AppEngine-TaskName',None)
+      
       memcache_stats_start = memcache.get_stats()
       memcache_stats = None
       # grab parameters from the message of the task
@@ -185,7 +187,7 @@ class LogTaskHandler(webapp.RequestHandler):
           mail.send_mail(sender="olp@mopub.com",
                         to="bugs@mopub.com",
                         subject="Logging error",
-                        body="account: %s retries: %s\n%s"%(account_name,retry_count,exception_traceback))
+                        body="account: %s retries: %s task name: %s\n%s"%(account_name,retry_count,task_name,exception_traceback))
           logging.error(exception_traceback)
           raise Exception("need to try transaction again")
           

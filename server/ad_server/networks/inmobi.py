@@ -50,8 +50,8 @@ class InMobiServerSide(ServerSide):
     data = {'mk-siteid': self.get_account().inmobi_pub_id,
             'mk-version': 'pr-SPEC-ATATA-2009052',
             'u-id': self.get_udid(),
-            'mk-carrier': self.get_ip(),
-            # 'mk-carrier': '117.97.87.6',  # Test value
+            # 'mk-carrier': self.get_ip(),
+            'mk-carrier': '117.97.87.6',  # Test value
             'mk-ad-slot': self.get_inmobi_ad_size(),
             'h-user-agent': self.get_inmobi_user_agent(),
             'format': 'xml' }
@@ -63,7 +63,7 @@ class InMobiServerSide(ServerSide):
     #         &mk-version=pr-SPEC-ATATA-2009052 \
     #         &h-user-agent=Mozilla/5.0 (iPad; U; CPU OS 3_2 like Mac OS X; en-us) AppleWebKit/531.21.10 (KHTML, like Gecko) Version/4.0.4 Mobile/7B367 Safari/531.21.10 \
     #         &format=xml"        
-    #return urllib.urlencode(data)
+    return urllib.urlencode(data)
 
   def get_response(self):
     req = urllib2.Request(self.url)

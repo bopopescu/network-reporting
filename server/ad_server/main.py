@@ -332,7 +332,7 @@ class AdAuction(object):
                             # go out and get the data and paste in the data to the creative      
                                     if rpc:      
                                         # if third-party network, log request
-                                        mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, testing=testing)
+                                        mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, udid=udid, testing=testing)
                                         try:
                                             result = rpc.get_result()
                                             if result.status_code == 200:
@@ -358,7 +358,7 @@ class AdAuction(object):
                                         winning_creative = winner
                                         # if native, log native request
                                         if winner.ad_type in NATIVE_REQUESTS:
-                                            mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, testing=testing)
+                                            mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, udid=udid, testing=testing)
                                         return winning_creative
                         else:
                             # remove players of the current winning e_cpm

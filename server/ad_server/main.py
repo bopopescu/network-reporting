@@ -315,7 +315,7 @@ class AdAuction(object):
                                     winning_creative = winner
                                     # if native, log native request
                                     if winner.ad_type in NATIVE_REQUESTS:
-                                        mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, testing=testing)
+                                        mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, udid=udid, testing=testing)
                                     return winning_creative
                                 else:
                                     rpc = None          

@@ -50,8 +50,8 @@ class InMobiServerSide(ServerSide):
     data = {'mk-siteid': self.get_account().inmobi_pub_id,
             'mk-version': 'pr-SPEC-ATATA-2009052',
             'u-id': self.get_udid(),
-            # 'mk-carrier': self.get_ip(),
-            'mk-carrier': '117.97.87.6',  # Test value
+            'mk-carrier': self.get_ip(),
+            # 'mk-carrier': '117.97.87.6',  # Test value
             'mk-ad-slot': self.get_inmobi_ad_size(),
             'h-user-agent': self.get_inmobi_user_agent(),
             'format': 'xml' }

@@ -1100,12 +1100,12 @@ label.error {
   float: right;
 }
 
-.buttonBank .ui-button {
-  float: left;
+.buttonBank .button {
+  /*float: left;*/
   margin: 0 5px 0 0;
 }
 
-.buttonBank-right .ui-button {
+.buttonBank-right .button {
   margin: 0 0 0 5px;
 }
 

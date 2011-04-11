@@ -115,6 +115,16 @@
           </div>
           <section id="dashboard-campaigns">
             <div class="buttonBank buttonBank-right">
+              <span class="buttonset" id="campaigns-filterOptions"> 
+                <input type="radio" name="campaigns-filterOptions-option" value="all" checked="checked" id="campaigns-filterOptions-option-all"/> 
+                <label for="campaigns-filterOptions-option-all">All</label> 
+                <input type="radio" name="campaigns-filterOptions-option" value="running" id="campaigns-filterOptions-option-running"/> 
+                <label for="campaigns-filterOptions-option-running">Running</label> 
+                <input type="radio" name="campaigns-filterOptions-option" value="paused" id="campaigns-filterOptions-option-paused" /> 
+                <label for="campaigns-filterOptions-option-paused">Paused</label> 
+                <input type="radio" name="campaigns-filterOptions-option" value="scheduled" id="campaigns-filterOptions-option-scheduled" /> 
+                <label for="campaigns-filterOptions-option-scheduled">Scheduled</label> 
+              </span>
               <a class="button" id="advertisers-addCampaign" href="{% url advertiser_campaign_create %}">Add a campaign</a>
             </div>
             <form method="post" action="{% url advertiser_bid_pause %}" id="campaignForm">

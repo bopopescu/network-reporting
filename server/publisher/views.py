@@ -355,6 +355,7 @@ class ExportFileHandler( RequestHandler ):
 
 
     def get_desired_stats(self, key, key_type, days, spec=None):
+        manager = StatsModelQueryManager(self.account, offline=self.offline)
         """ Given a key, key_type, and specificity, return 
         the appropriate stats to get AND their names"""
         #default for all
@@ -381,40 +382,40 @@ class ExportFileHandler( RequestHandler ):
                 if len(apps) == 0:
                     #should probably handle this more gracefully
                     logging.warning("Apps for account is empty")
-                return (stat_names, [a.app_stats(days) for a in apps]) 
+                return (stat_names, [manager.get_stat_rollup_for_days(publisher=a, days=days) for a in apps]) 
             elif spec == 'campaigns':
                 camps = CampaignQueryManager().get_campaigns(account=self.account)
                 if len(camps) == 0:
                     logging.warning("Campaigns for account is empty")
-                return (stat_names, [c.camp_stats(days) for c in camps])
+                return (stat_names, [manager.get_stat_rollup_for_days(advertiser=c, days=days) for c in camps])
         #Rollups for adgroup data
         elif key_type == 'adgroup':
             if spec == 'creatives':
                 creatives = list(CreativeQueryManager().get_creatives(adgroup=key))
                 if len(creatives) == 0:
                     logging.warning("Creatives for adgroup is empty")
-                return (stat_names, [c.creative_stats(days) for c in creatives])
+                return (stat_names, [manager.get_stat_rollup_for_days(advertiser=c, days=days) for c in creatives])
             if spec == 'adunits':
                 #XXX Put the right thing here
                 adunits = map(lambda x: Site.get(x), AdGroupQueryManager().get_by_key(key).site_keys)
                 if len(adunits) == 0:
                     logging.warning("Adunits for adgroup is empty")
-                return (stat_names, [a.adunit_stats(days) for a in adunits]) 
+                return (stat_names, [manager.get_stat_rollup_for_days(publisher=a, days=days) for a in adunits]) 
         #Rollups + not-rollup for adunit data            
         elif key_type == 'adunit':
             if spec == 'campaigns':
                 adgroups = AdGroupQueryManager().get_adgroups(adunit=key)
                 if len(adgroups) == 0:
                     logging.warning("Campaigns for adunit is empty")
-                return (stat_names, [a.adgroup_stats(days) for a in adgroups])
+                return (stat_names, [manager.get_stat_rollup_for_days(advertiser=a, days=days) for a in adgroups])
             if spec == 'days':
-                return (stat_names, StatsModelQueryManager(self.account).get_stats_for_days(publisher=key, days=days))
+                return (stat_names, manager.get_stats_for_days(publisher=key, days=days))
         #App adunit rollup data
         elif key_type == 'app':
             adunits = AdUnitQueryManager().get_adunits(app=key)
             if len(adunits) == 0:
                 logging.warning("Apps is empty")
-            return (stat_name, [a.adunit_stats(days) for a in adunits])
+            return (stat_name, [manager.get_stat_rollup_for_days(publisher=a, days=days) for a in adunits])
 
 
 @whitelist_login_required

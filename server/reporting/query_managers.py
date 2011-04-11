@@ -71,6 +71,12 @@ class StatsModelQueryManager(CachedQueryManager):
             
         return stats    
             
+    def get_stat_rollup_for_days(self, **kwargs):
+        stats = self.get_stats_for_days(**kwargs)
+        return reduce(lambda x,y: x+y, stats, StatsModel())
+
+
+
     def get_stats_for_days(self, publisher=None, publishers=None, advertiser=None, days=None, num_days=None, account=None, country=None, offline=False):
         offline = offline or self.offline
         if isinstance(publisher,db.Model):

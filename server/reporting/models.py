@@ -250,7 +250,7 @@ class StatsModel(db.Expando):
     @property
     def ctr(self):
         if self.impression_count > 0:
-            return self.click_count / float(self.impression_count)
+            return float(self.click_count) / float(self.impression_count)
 
     @property
     def conv_rate(self):

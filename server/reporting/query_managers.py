@@ -70,11 +70,59 @@ class StatsModelQueryManager(CachedQueryManager):
             stats += self.get_stats_for_days(publishers=apps,account=account,num_days=num_days)
             
         return stats    
+        
+    def get_stats_for_hours(self, publisher=None, advertiser=None, date_hour=None, date_hours=None, account=None, country=None, offline=False):
+        """
+        date_hour is a datetime object
+        date_hours are a list of datetime objects
+        """
+        offline = offline or self.offline
+        account = account or self.account
+        
+        if isinstance(publisher,db.Model):
+          publisher = publisher.key()
+          
+        if isinstance(advertiser,db.Model):
+          advertiser = advertiser.key()
+        
+        if date_hour:
+            multiple = False
+            date_hours = [date_hour]    
+        else:
+            multiple = True    
+            
+        if account:
+            parent = db.Key.from_path(StatsModel.kind(),StatsModel.get_key_name(account=account,offline=offline))
+        else:
+            parent = None
+            
+        keys = [db.Key.from_path(StatsModel.kind(),
+                                 StatsModel.get_key_name(publisher=publisher,
+                                                         advertiser=advertiser,
+                                                         account=account,
+                                                         date_hour=dt,
+                                                         country=country,
+                                                         offline=offline),
+                                  parent=parent)
+                    for dt in date_hours]
+
+        stats = StatsModel.get(keys) # db get
+        # all_keys = [s.key() for s in StatsModel.all().fetch(100)]
+        # print all_keys
+        # print keys
+        # print keys[0] in all_keys
+        stats = [s or StatsModel() for s in stats]  
+                  
+        if not multiple:
+            return stats[0]
+        else:
+            return stats        
+            
             
     def get_stats_for_days(self, publisher=None, publishers=None, advertiser=None, days=None, num_days=None, account=None, country=None, offline=False):
         """ Gets the stats for a specific pairing. Definitions:
-            advertiser: Either AdGroup or Creative
-            publisher: Either Campaign, or Site(AdUnit)"""
+            advertiser_group: Either Campaign, AdGroup or Creative
+            publisher_group: Either App, or Site(AdUnit)"""
         offline = offline or self.offline
         if isinstance(publisher,db.Model):
           publisher = publisher.key()
@@ -101,7 +149,6 @@ class StatsModelQueryManager(CachedQueryManager):
         #       in this QM
         if not publishers and publisher:
             publishers = [publisher]
-        
         
         if publishers:
             keys = [db.Key.from_path(StatsModel.kind(),

@@ -351,7 +351,7 @@
               <div class="appData-details-inner hidden">
                 <table class="dataTable">
                   <tbody>
-                    {% for s in adgroup.all_stats %}<tr>
+                    {% for s in adgroup.all_stats reversed %}<tr>
                       <th class="dataTable-name">{{s.date|format_date}}</th>
                       <td class="dataTable-data numeric">{{s.impression_count|withsep}}</td>
                       <td class="dataTable-data numeric">{{s.click_count|withsep}}</td>
@@ -365,6 +365,8 @@
                 </table>
               </div>
               <a class="button button-small appData-details-toggleButton" href="#">Hide details</a>
+              <a class="button button-small" href="/inventory/export/csv/adgroup/{{adgroup.key}}?spec=days">Export CSV</a>
+              <a class="button button-small" href="/inventory/export/xls/adgroup/{{adgroup.key}}?spec=days">Export XLS</a>
             </div>
           </div>
 <script type="text/javascript">

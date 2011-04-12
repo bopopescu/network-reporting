@@ -333,6 +333,7 @@ class Creative(polymodel.PolyModel):
   def __repr__(self):
     return "Creative{ad_type=%s, eCPM=%.02f ,key_name=%s}" % (self.ad_type, self.e_cpm(),self.key().id_or_name())
 
+
 class TextCreative(Creative):
   # text ad properties
   headline = db.StringProperty()

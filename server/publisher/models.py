@@ -45,9 +45,7 @@ class App(db.Model):
   def owner_name(self):
       return None
 
-    
-
-
+  
 class Site(db.Model):
   DEVICE_FORMAT_CHOICES = (
          u'phone',
@@ -140,3 +138,4 @@ class Site(db.Model):
   @property
   def owner_name(self):
       return "app_key"
+

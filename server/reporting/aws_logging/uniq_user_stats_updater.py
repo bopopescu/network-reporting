@@ -27,7 +27,7 @@ from reporting.models import StatsModel, Pacific_tzinfo
 
 
 # maximum number of objects per batch put
-LIMIT = 400
+LIMIT = 100
 
 account_cache = {}
 stats_model_cache = {}

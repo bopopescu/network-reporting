@@ -2,11 +2,13 @@
 PATH=$PATH:/usr/local/bin:~/google_appengine
 
 APP_DIR=~/mopub/server
-LOG_DIR=~/aws_logs
+LOG_ROOT_DIR=~/aws_logs
+#LOG_ROOT_DIR=/mnt/aws_logs  # EC2 path
+LOG_DIR=$LOG_ROOT_DIR/logs-`date +"%Y-%m%d-%H%M"` # to minute resolution, so every run is siloed completely
 S3_BUCKET=mopub-aws-logging
 S3_LOG_DIR=s3://$S3_BUCKET/logs-`date +"%Y-%m%d"`
 
-LOGFILE=testing-aws-logfile-`date +"%Y-%m%d-%H%M"`
+LOGFILE=aws-logfile-`date +"%Y-%m%d-%H%M"`
 LOCAL_LOGFILE=$LOG_DIR/$LOGFILE
 S3_LOGFILE=$S3_LOG_DIR/$LOGFILE
 
@@ -19,12 +21,14 @@ echo `date +"%D"` `date +"%T"`
 echo
 echo
 
+mkdir $LOG_ROOT_DIR
 mkdir $LOG_DIR
 
 # download logs from GAE
 START_TIME=$(date +%s)
-echo N47935 | appcfg.py --no_cookies --email=olp@mopub.com --passin --append --num_days=1 request_logs $APP_DIR $LOG_DIR/request-logfile
-#echo N47935 | appcfg.py --no_cookies --email=olp@mopub.com --passin --num_days=10 request_logs $APP_DIR $LOG_DIR/request-logfile
+echo
+echo N47935 | appcfg.py --no_cookies --email=olp@mopub.com --passin --append --num_days=1 request_logs $APP_DIR $LOG_ROOT_DIR/request-logfile
+#echo N47935 | appcfg.py --no_cookies --email=olp@mopub.com --passin --num_days=3 request_logs $APP_DIR $LOG_ROOT_DIR/request-logfile
 echo
 STOP_TIME=$(date +%s)
 echo
@@ -35,7 +39,7 @@ echo "downloading GAE logs took" $((STOP_TIME-START_TIME)) "seconds"
 echo
 echo "copying downloaded logs to" $LOCAL_LOGFILE "as input to EMR..."
 echo
-cp $LOG_DIR/request-logfile $LOCAL_LOGFILE
+cp $LOG_ROOT_DIR/request-logfile $LOCAL_LOGFILE
 
 
 # preprocess logs for unique user count
@@ -59,11 +63,20 @@ STOP_TIME=$(date +%s)
 echo "uploading logs to S3 took" $((STOP_TIME-START_TIME)) "seconds"
 
 
+# remove local log file and preprocessed log file
+echo
+echo "removing " $LOCAL_LOGFILE
+rm $LOCAL_LOGFILE
+echo
+echo "removing" $LOCAL_LOGFILE.pp
+rm $LOCAL_LOGFILE.pp
+
+
 # submit and run job
 START_TIME=$(date +%s)
 echo
 echo "submitting EMR job..."
-python $APP_DIR/reporting/aws_logging/job_submitter.py -f $S3_LOGFILE -n 3
+python $APP_DIR/reporting/aws_logging/job_submitter.py -f $S3_LOGFILE -n 10
 STOP_TIME=$(date +%s)
 echo "EMR job took" $((STOP_TIME-START_TIME)) "seconds"
 
@@ -137,9 +150,8 @@ s3cmd put $LOCAL_LOGFILE.uu.stats $S3_LOGFILE.uu.stats
 OVERALL_STOP_TIME=$(date +%s)
 echo
 echo
-echo "total time:" $(((OVERALL_STOP_TIME-OVERALL_START_TIME)/60)) "minutes and" $(((OVERALL_STOP_TIME-OVERALL_START_TIME)%60)) "seconds"
+echo `date +"%D"` `date +"%T"`    "total runtime:" $(((OVERALL_STOP_TIME-OVERALL_START_TIME)/60)) "minutes and" $(((OVERALL_STOP_TIME-OVERALL_START_TIME)%60)) "seconds"
 echo
-echo `date +"%D"` `date +"%T"`
-echo
-echo
+echo 
+
 

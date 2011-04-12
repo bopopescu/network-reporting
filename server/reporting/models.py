@@ -253,36 +253,53 @@ class StatsModel(db.Expando):
 
     @property
     def fill_rate(self):
-        return self.impression_count / float(self.request_count)
+        if self.request_count > 0:
+            return self.impression_count / float(self.request_count)
+        else:
+            return 0
 
     @property
     def ctr(self):
         if self.impression_count > 0:
             return self.click_count / float(self.impression_count)
+        else:
+            return 0
+
 
     @property
     def conv_rate(self):
         if self.click_count > 0 and self.conversion_count > 0:
             return self.conversion_count / float(self.click_count)
         else:
-            return None
+            return 0
+
+    @property
+    def only_date(self):
+        #we just want the date, not the time
+        if self.date:
+            return self.date.date()
+
 
     @property   
     def cpm(self):
         if self.impression_count > 0:
             return self.revenue * 1000 / float(self.impression_count)
+        else:
+            return 0
 
     @property   
     def cpc(self):
         if self.click_count > 0:
             return self.revenue / float(self.click_count)
+        else:
+            return 0
 
     @property   
     def cpa(self):
         if self.conversion_count > 0:
             return self.revenue / float(self.conversion_count)
         else:
-            return None
+            return 0
 
 # 
 # Tracks statistics for a site for a particular day - clicks and impressions are aggregated

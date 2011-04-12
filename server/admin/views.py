@@ -1,6 +1,7 @@
 import logging, os, re, datetime, hashlib
 
 from urllib import urlencode
+import time
 
 from google.appengine.api import users, images
 from google.appengine.api.urlfetch import fetch
@@ -130,10 +131,19 @@ def dashboard(request, *args, **kwargs):
     else:
         key_name = "realtime"
     if refresh:
-        task = taskqueue.Task(params=dict(offline="1" if offline else "0"),
+        now = time.time()
+        time_bucket = int(now)/300 #only allow once ever 5 minutes
+        task_name = "admin-%s"%time_bucket
+        if offline:
+            task_name = 'offline-' + task_name
+        task = taskqueue.Task(name=task_name,
+                              params=dict(offline="1" if offline else "0"),
                               method='GET',
                               url='/admin/prep/')
-        task.add("admin-dashboard-queue")            
+        try:                      
+            task.add("admin-dashboard-queue")
+        except Exception, e:
+            logging.warning("task error: %s"%e)                
         
     page = AdminPage.get_by_key_name(key_name)
     return HttpResponse(page.html)

@@ -259,9 +259,10 @@
                     <th class="dataTable-data numeric">eCPM</th>
                     <th class="dataTable-data numeric">Requests</th>
                     <th class="dataTable-data numeric">Impressions</th>
+                    <th class="dataTable-data numeric">Fillrate</th>
                     <th class="dataTable-data numeric">Clicks</th>
                     <th class="dataTable-data numeric">CTR</th>
-                    <th class="dataTable-data numeric">&nbsp;</th>
+                    <!-- <th class="dataTable-data numeric">&nbsp;</th> -->
                     <th class="dataTable-data numeric">&nbsp;</th>
                   </tr>
                 </thead>
@@ -281,9 +282,10 @@
                     <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
                     <td class="dataTable-data numeric">{{adgroup.stats.request_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{adgroup.stats.fill_rate|percentage|withsep}}</td>
                     <td class="dataTable-data numeric">{{adgroup.stats.click_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{adgroup.stats.ctr|percentage|withsep}}</td>
-                    <td class="dataTable-data numeric">&nbsp;</td>
+                    <!-- <td class="dataTable-data numeric">&nbsp;</td> -->
                     <td class="dataTable-data numeric">&nbsp;</td>
                   </tr>
                   {% empty %}

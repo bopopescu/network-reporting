@@ -1,6 +1,10 @@
 total_storage_limit: 10G
 
 queue:
+
+- name: admin-dashboard-queue
+  rate: 10/s
+    
 - name: bulk-log-processor
   rate: 100/s
   bucket_size: 100    

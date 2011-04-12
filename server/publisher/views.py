@@ -338,7 +338,6 @@ def app_show(request,*args,**kwargs):
   return ShowAppHandler()(request,*args,**kwargs)   
 
 
-
 class ExportFileHandler( RequestHandler ):
     def get( self, key, key_type, f_type ):
         #XXX make sure this is the right way to do it 
@@ -351,7 +350,7 @@ class ExportFileHandler( RequestHandler ):
         stat_names, stat_models = self.get_desired_stats(key, key_type, days, spec=spec)
         logging.warning(stat_models)
         logging.warning("\n\nDays len:%s\nStats len:%s\n\n" % (len(days),len(stat_models)))
-        return sswriter.write_stats( f_type, stat_names, stat_models, site=key, days=days )
+        return sswriter.write_stats( f_type, stat_names, stat_models, site=key, days=days, key_type=key_type )
 
 
     def get_desired_stats(self, key, key_type, days, spec=None):
@@ -364,17 +363,25 @@ class ExportFileHandler( RequestHandler ):
         assert key_type in ('adunit', 'app', 'adgroup', 'account')
         if spec:
             assert spec in ('creatives', 'adunits', 'campaigns', 'days', 'apps')
+
+
+
         #Set up attr getters/names
         if key_type == 'app' or (key_type == 'account' and spec == 'apps') or (key_type == 'adunit' and spec == 'days'): 
             stat_names = (REQ_STAT,) + stat_names
             if spec == 'days':
                 stat_names = (DTE_STAT,) + stat_names
         elif key_type == 'account' and spec == 'campaigns':
-            stat_names += (CPM_STAT, CONV_STAT, CPA_STAT)
+            stat_names += (CPM_STAT, CNV_RATE_STAT, CPA_STAT)
         elif key_type == 'adgroup':
-            stat_names += (REV_STAT, CONV_STAT, CPA_STAT)
+            if spec == 'days':
+                stat_names = (DTE_STAT,) + stat_names
+            stat_names += (REV_STAT, CNV_RATE_STAT, CPA_STAT)
         elif key_type == 'adunit' and spec == 'campaigns':
             stat_names += (REV_STAT,)
+
+
+
         #General rollups for all data
         if key_type == 'account':
             if spec == 'apps':
@@ -396,18 +403,19 @@ class ExportFileHandler( RequestHandler ):
                     logging.warning("Creatives for adgroup is empty")
                 return (stat_names, [manager.get_stat_rollup_for_days(advertiser=c, days=days) for c in creatives])
             if spec == 'adunits':
-                #XXX Put the right thing here
                 adunits = map(lambda x: Site.get(x), AdGroupQueryManager().get_by_key(key).site_keys)
                 if len(adunits) == 0:
                     logging.warning("Adunits for adgroup is empty")
-                return (stat_names, [manager.get_stat_rollup_for_days(publisher=a, days=days) for a in adunits]) 
+                return (stat_names, [manager.get_stat_rollup_for_days(advertiser=key, publisher=a, days=days) for a in adunits]) 
+            if spec == 'days':
+                return (stat_names, manager.get_stats_for_days(advertiser=key, days=days))
         #Rollups + not-rollup for adunit data            
         elif key_type == 'adunit':
             if spec == 'campaigns':
                 adgroups = AdGroupQueryManager().get_adgroups(adunit=key)
                 if len(adgroups) == 0:
                     logging.warning("Campaigns for adunit is empty")
-                return (stat_names, [manager.get_stat_rollup_for_days(advertiser=a, days=days) for a in adgroups])
+                return (stat_names, [manager.get_stat_rollup_for_days(publisher=key, advertiser=a, days=days) for a in adgroups])
             if spec == 'days':
                 return (stat_names, manager.get_stats_for_days(publisher=key, days=days))
         #App adunit rollup data

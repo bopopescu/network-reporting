@@ -17,6 +17,7 @@ from common.utils.pyExcelerator import *
 from django.http import HttpResponse
 from reporting.models import SiteStats
 from reporting.query_managers import SiteStatsQueryManager, StatsModelQueryManager
+from google.appengine.ext import db
 
 DT_TYPES = (datetime.datetime, datetime.time, datetime.date)
 
@@ -95,7 +96,7 @@ def verify_stats( stat ):
     assert stat in ALL_STATS, "Expected %s to be an element of %s, it's not" % ( stat, ALL_STATS )
     return stat.split( '_STAT' )[0]
 
-def write_stats( f_type, desired_stats, all_stats, site=None, owner=None, days=None ):
+def write_stats( f_type, desired_stats, all_stats, site=None, owner=None, days=None, key_type=None):
     #make sure things are valid
     assert f_type in TABLE_FILE_FORMATS, "Expected %s, got %s" % ( TABLE_FILE_FORMATS, f_type )
     response = None
@@ -115,9 +116,10 @@ def write_stats( f_type, desired_stats, all_stats, site=None, owner=None, days=N
     end = days[-1]
     d_form = '%m-%d-%y' 
     d_str = '%s--%s' % ( start.strftime( d_form ), end.strftime( d_form ) )
-    owner_name = "test1"
-    owner_type = "AdUnit"
-    fname = "%s_%s_%s.%s" % ( owner_name, owner_type, d_str, f_type )
+    if key_type == 'adgroup':
+        key_type = 'campaign'
+    owner_type = key_type.title() 
+    fname = "%s_%s_%s.%s" % ( owner_type, db.get(site).name, d_str, f_type )
     #should probably do something about the filename here
     response['Content-disposition'] = 'attachment; filename=%s' % fname 
 

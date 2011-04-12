@@ -13,9 +13,9 @@ cron:
   schedule: every day 0:01
   
 - description: Periodic dashboard refresh
-  url: /admin/prep
+  url: /admin/prep/
   schedule: every 30 minutes
   
 - description: Periodic dashboard refresh (offline)
-  url: /admin/prep?offline=1
+  url: /admin/prep/?offline=1
   schedule: every 30 minutes  

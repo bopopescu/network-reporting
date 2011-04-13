@@ -236,12 +236,15 @@ class AdUnitQueryManager(CachedQueryManager):
         return super(AdUnitQueryManager,self).__init__()
   
     def get_adunits(self,app=None,account=None,keys=None,deleted=False,limit=50):
-        if keys:
-            return self.Model.get(keys)
-        
-        adunits = AdUnit.all()
-        if not deleted == None:
-            adunits = adunits.filter("deleted =",deleted)
+        if keys is not None:
+            if type(keys) == list and len(keys) == 0:
+                return []
+            elif len(keys) > 0:
+                return self.Model.get(keys)
+            else:
+                logging.error('len is negative?')
+
+        adunits = Site.all().filter("deleted =",deleted)
         if app:
             adunits = adunits.filter("app_key =",app)
         if account:

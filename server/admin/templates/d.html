@@ -1,9 +1,10 @@
 {% extends "admin/base.html" %}
 {% load filters %}
 {% block pageTitle %}<h1>MoPub Metrics Dashboard</h1>{% endblock pageTitle %}
+{% block pageTitleTag %}{{today.request_count|withsep}} served{% endblock pageTitleTag %}
 {% block titleBarRight %}
     <span class="titlebar-link">
-      <a class="linkIcon" href="{% url admin_report %}">Send report email <span class="ui-icon ui-icon-triangle-1-e"></span></a>
+      <a class="linkIcon" href="?refresh=1">Force update stats</a>
     </span>
 {% endblock titleBarRight %}
 
@@ -87,39 +88,48 @@
     			<th width="75px">Impressions</th>
     			<th width="75px">Clicks</th>
     			<th width="75px">CTR</th>
+    			<th width="75px">Users</th>
     		</thead>
     		{% for a in apps %}
-    		<tr>
+    		<tr class="alternating-color">
     			<td><a href="{% url publisher_app_show app_key=a.publisher.key %}">{{a.publisher.name|truncate:50}}</a></td>
     			<td><a href="mailto:{{a.publisher.account.user.email}}">{{a.publisher.account.user.email}}</a></td>
     			<td class="numeric">{{a.request_count|withsep}}</td>
     			<td class="numeric">{{a.impression_count|withsep}}</td>
     			<td class="numeric">{{a.click_count|withsep}}</td>
     			<td class="numeric">{{a.ctr|percentage}}</td>
+    			<td class="numeric">{{a.user_count|withsep}}</td>
     		</tr>
     		{% endfor %}
     	</table>
     </section>
 	
 	<section class="separated">
-        <h3>Mailing list additions since {{start_date}}</h3>        
+        <h3>New users since {{start_date}}</h3>
         <table width="100%">
             <thead>
         		<tr>
         		    <th style="text-align: left;">Email</th>
         		    <th style="text-align: left;">Date</th>
+        		    <th style="text-align: left;">Mailing List</th>
         		</tr>
         	</thead>
         	<tbody>
-        	{% for a in mailing_list %}
+        	{% for a in new_users %}
             	<tr>
             		<td><a href="mailto:{{a.user.email}}">{{a.user.email}}</a></td>
             		<td>{{a.date_added}}</td>
+            		<td>{{a.mailing_list}}</td>
             	</tr>
         	{% endfor %}
         	</tbody>	
         </table>
+        
+        <h3>Paste these people into MailChimp</h3>        
+        <form><textarea>{% for a in mailing_list %}{{a.user.email}} {% endfor %}</textarea></form>
 	</section>
 	
-	
+	<script type="text/javascript">
+    	setTimeout("location.reload(true);", 600000);
+    </script>
 {% endblock %}

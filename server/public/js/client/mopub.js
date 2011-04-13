@@ -21,6 +21,7 @@
     var mopub_ad_url = "http://"+mopub_url.hostname;
     if (mopub_url.port != "0")
         mopub_ad_url += ":"+mopub_url.port;
+    // TODO: add version    
     mopub_ad_url += "/m/ad?id="+mopub_ad_unit + "&udid=M0B1LEWEBC00KIE:" + get_session();
 
     if (window.mopub_keywords != null)

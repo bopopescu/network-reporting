@@ -6,12 +6,16 @@ cron:
 
 - description: Advance the budget timeslices
   url: /budget/advance/
-  schedule: every 1 minutes
+  schedule: every 1 minutes synchronized
   
 - description: Advance the daily budget
   url: /budget/daily_advance/
   schedule: every day 0:01
   
 - description: Periodic dashboard refresh
-  url: /admin/prep
+  url: /admin/prep/
   schedule: every 30 minutes
+  
+- description: Periodic dashboard refresh (offline)
+  url: /admin/prep/?offline=1
+  schedule: every 30 minutes  

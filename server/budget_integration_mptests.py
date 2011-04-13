@@ -548,8 +548,15 @@ class TestBudgetUnitTests(unittest.TestCase):
 
         # The end of the first day
         budget_service.daily_advance(self.cheap_c, date=datetime.date(1987,4,4))
-        
-        
+    
+    def mptest_percent_delivered_none(self):
+         # The campaign has a $1000 daily budget, and goes for 10 days inclusive -> $10,000
+         self.cheap_c.budget_strategy = "allatonce"
+         self.cheap_c.budget = None
+         self.cheap_c.put()
+
+         eq_(budget_service.percent_delivered(self.cheap_c), None)
+
 
 class TestBudgetEndToEnd(unittest.TestCase):
     """

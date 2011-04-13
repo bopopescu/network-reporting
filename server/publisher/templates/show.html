@@ -192,7 +192,7 @@
                 <div class="appData-details-inner show">
                   <table class="dataTable">
                     <tbody>
-                      {% for s in adunit.all_stats %}<tr>
+                      {% for s in adunit.all_stats reversed %}<tr>
                         <th class="dataTable-name">{{s.date|format_date}}</th>
                         <td class="dataTable-data numeric">{{s.request_count|withsep}}</td>
                         <td class="dataTable-data numeric">{{s.impression_count|withsep}}</td>
@@ -204,8 +204,8 @@
                   </table>
                 </div>
                 <a class="button button-small appData-details-toggleButton" href="#">Hide details</a>
-                <a class="button button-small" href="/inventory/export/csv/{{adunit.key}}">Export CSV</a>
-                <a class="button button-small" href="/inventory/export/xls/{{adunit.key}}">Export XLS</a>
+                <a class="button button-small" href="/inventory/export/csv/adunit/{{adunit.key}}?spec=days">Export CSV</a>
+                <a class="button button-small" href="/inventory/export/xls/adunit/{{adunit.key}}?spec=days">Export XLS</a>
               </div>
             </div>
           </section>

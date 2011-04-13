@@ -2,6 +2,7 @@ from ad_server.networks.server_side import ServerSide
 import urllib
 import urllib2
 import string
+import logging
 
 class JumptapServerSide(ServerSide):
   base_url = "http://a.jumptap.com/a/ads" # live
@@ -36,5 +37,8 @@ class JumptapServerSide(ServerSide):
   def bid_and_html_for_response(self,response):
     if len(response.content) == 0:
       raise Exception("Jumptap ad is empty")
+    logging.info("response: %s"%response.content)  
 
-    return 0.0,"<div style='text-align:center'>"+response.content+"</div>"
+    width, height = self._get_size(response.content)
+
+    return 0.0,"<div style='text-align:center'>"+response.content+"</div>", width, height

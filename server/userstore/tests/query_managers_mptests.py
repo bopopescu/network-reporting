@@ -190,28 +190,7 @@ def app_open_event_manager_filtering_mptests():
 def app_open_event_manager_conversion_logging_mptests():
     dt = datetime.now()
     manager = AppOpenEventManager()
-    
-    # no mobile app created for conversion logging, so create new app and user
-    aoe, conversion_logged = manager.log_conversion(udid=SAMPLE_UDID1, mobile_appid=SAMPLE_MOBILE_APPID1, time=dt)
-    assert_equals(AppOpenEvent.all().count(), 1)
-    assert_equals(MobileApp.all().count(), 1)
-    assert_equals(MobileUser.all().count(), 1)
-    
-    # verify that no conversion was logged
-    assert_false(conversion_logged)
-    assert_true(aoe.conversion_adunit is None)
-    assert_true(aoe.conversion_creative is None)
-
-    # fetch created user and verify udid
-    fetched_user = MobileUser.all().fetch(1)[0]
-    assert_equals(fetched_user.udid, SAMPLE_UDID1)
-    
-    # fetch created mobile app and verify None for click properties
-    fetched_app = MobileApp.all().fetch(1)[0]
-    assert_true(fetched_app.latest_click_adunit is None)
-    assert_true(fetched_app.latest_click_creative is None)
-    assert_true(fetched_app.latest_click_time is None)
-
+  
     # app gets clicked on
     ce_manager = ClickEventManager()
     ce_manager.log_click_event(SAMPLE_UDID1, SAMPLE_MOBILE_APPID1, dt, SAMPLE_ADUNIT1, SAMPLE_CREATIVE1)
@@ -222,21 +201,21 @@ def app_open_event_manager_conversion_logging_mptests():
     
     # app_open_event happens again (hypothetically)
     aoe, conversion_logged = manager.log_conversion(SAMPLE_UDID1, SAMPLE_MOBILE_APPID1, dt)
-    assert_equals(AppOpenEvent.all().count(), 2)
+    assert_equals(AppOpenEvent.all().count(), 1)
     assert_equals(MobileApp.all().count(), 1)
     assert_equals(MobileUser.all().count(), 1)
     assert_true(conversion_logged)
-    assert_equals(aoe.conversion_adunit, SAMPLE_ADUNIT1)
-    assert_equals(aoe.conversion_creative, SAMPLE_CREATIVE1)
+    assert_equals(fetched_app.latest_click_adunit, SAMPLE_ADUNIT1)
+    assert_equals(fetched_app.latest_click_creative, SAMPLE_CREATIVE1)
+    assert_true(fetched_app.latest_click_time is not None)
 
     # try open app again after 20 days, which is > default windows of 14 days 
     aoe, conversion_logged = manager.log_conversion(SAMPLE_UDID1, SAMPLE_MOBILE_APPID1, dt+timedelta(20))
-    assert_equals(AppOpenEvent.all().count(), 3)
+    assert_equals(AppOpenEvent.all().count(), 1)
     assert_equals(MobileApp.all().count(), 1)
     assert_equals(MobileUser.all().count(), 1)
     assert_false(conversion_logged)
-    assert_true(aoe.conversion_adunit is None)
-    assert_true(aoe.conversion_creative is None)
+    assert_true(aoe is None)
     
     # cleanup
     clear_datastore()    

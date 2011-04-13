@@ -33,6 +33,11 @@ handlers:
   script: $PYTHON_LIB/google/appengine/ext/remote_api/handler.py
   login: admin
 
+- url: /admin/prep
+  script: main.py
+  login: admin
+
+
 - url: /m/clear
   script: ad_server/main.py
   login: admin

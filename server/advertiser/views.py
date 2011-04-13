@@ -237,10 +237,8 @@ class CreateCampaignAJAXHander(RequestHandler):
               #in this case adgroup.net_creative has evaluated to true BUT the class comparison did NOT.  
               #at this point we know that there was an old creative AND it's different from the old creative so
               
-              #Get rid of the old creative's reference to the adgroup (just in case)
-              adgroup.net_creative.adgroup = None
-              #and delete the old creative
-              AdGroupQueryManager().delete_adgroups(adgroup.net_creative)
+              #and delete the old creative just marks as deleted!
+              CreativeQueryManager().delete_creatives(adgroup.net_creative)
           #creative should now reference the appropriate creative (new if different, old if the same, updated old if same and custom)
           creative.account = self.account
           #put the creative so we can reference it
@@ -352,6 +350,7 @@ class CreateAdGroupHandler(RequestHandler):
     if campaign_form.is_valid():
       campaign = campaign_form.save(commit=False)
       campaign.u = self.account.user
+      campaign.account = self.account
       
       if adgroup_form.is_valid():
         adgroup = adgroup_form.save(commit=False)

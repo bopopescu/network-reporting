@@ -58,13 +58,13 @@ def main(app_id="mopub-inc",host="38-aws.latest.mopub-inc.appspot.com"):
     creative1 = creative1_obj.put()
     creative2_obj = Creative(key_name='creative2', ad_group=adgroup,account=account)
     creative2 = creative2_obj.put()
-    creative3_obj = Creative(key_name='creative1', ad_group=adgroup,account=account)
+    creative3_obj = Creative(key_name='creative3', ad_group=adgroup,account=account)
     creative3 = creative3_obj.put()
-    creative4_obj = Creative(key_name='creative2', ad_group=adgroup2,account=account)
+    creative4_obj = Creative(key_name='creative4', ad_group=adgroup2,account=account)
     creative4 = creative4_obj.put()
-    creative5_obj = Creative(key_name='creative1', ad_group=adgroup2,account=account)
+    creative5_obj = Creative(key_name='creative5', ad_group=adgroup2,account=account)
     creative5 = creative5_obj.put()
-    creative6_obj = Creative(key_name='creative2', ad_group=adgroup2,account=account)
+    creative6_obj = Creative(key_name='creative6', ad_group=adgroup2,account=account)
     creative6 = creative6_obj.put()
     print "DONE PUTTING OBJECTS"
     
@@ -94,7 +94,7 @@ def main(app_id="mopub-inc",host="38-aws.latest.mopub-inc.appspot.com"):
     creatives = [str(c) for c in creatives]
     ips = ["%i.%i.%i.%i"%(random.randint(0,255),random.randint(0,255),random.randint(0,255),random.randint(0,255)) for i in range(100)]
     user_agents = ["GaiaLite/4.4 (iPhone; U; CPU iPhone OS 4.0.1 like Mac OS X; es_ES),gzip(gfe),gzip(gfe),gzip(gfe)"]
-    actions = ["ad","imp","req","aclk"]
+    actions = ["/m/ad","/m/imp","/m/req","/m/aclk"]
     excludes = ["","exclude=iAd"]
     dates = [datetime.datetime(2011,04,02,22,10,tzinfo=Pacific_tzinfo()),
              datetime.datetime(2011,04,02,22,20,tzinfo=Pacific_tzinfo()),
@@ -103,8 +103,8 @@ def main(app_id="mopub-inc",host="38-aws.latest.mopub-inc.appspot.com"):
              datetime.datetime(2011,04,03,01,10,tzinfo=Pacific_tzinfo()),]
 
     # 174.253.18.133 - - [23/Mar/2011:15:57:21 -0700] "GET /m/imp?id=agltb3B1Yi1pbmNyDAsSBFNpdGUY1NsgDA&cid=agltb3B1Yi1pbmNyEAsSCENyZWF0aXZlGOj6IAw&udid=577a639187e2ff11 HTTP/1.1" 200 146 "http://ads.mopub.com/" "Mozilla/5.0 (Linux; U; Android 2.2.1; en-us; DROIDX Build/VZW) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1,gzip(gfe),gzip(gfe),gzip(gfe)"
-    AD_LOG_FORMAT = '%(ip)s - - [%(date)s] "GET /m/%(action)s?id=%(adunit)s&udid=%(udid)s&%(exclude)s HTTP/1.1" 200 146 "http://ads.mopub.com/" "%(user_agent)s"'
-    ALL_LOG_FORMAT = '%(ip)s - - [%(date)s] "GET /m/%(action)s?id=%(adunit)s&cid=%(creative)s&udid=%(udid)s HTTP/1.1" 200 146 "http://ads.mopub.com/" "%(user_agent)s"'
+    AD_LOG_FORMAT = '%(ip)s - - [%(date)s] "GET %(action)s?id=%(adunit)s&udid=%(udid)s&%(exclude)s HTTP/1.1" 200 146 "http://ads.mopub.com/" "%(user_agent)s"'
+    ALL_LOG_FORMAT = '%(ip)s - - [%(date)s] "GET %(action)s?id=%(adunit)s&cid=%(creative)s&udid=%(udid)s HTTP/1.1" 200 146 "http://ads.mopub.com/" "%(user_agent)s"'
 
     def pick_random(param):
         # grabs the appropriate param list 
@@ -114,12 +114,11 @@ def main(app_id="mopub-inc",host="38-aws.latest.mopub-inc.appspot.com"):
         return l[index]
 
 
-    f = open('sample_unique_log.txt','w')
+    f = open('sample_unique_log.log','w')
 
     count_dict = {}
     def update_count_dict(action,adunit,creative,date_obj,udid,**kwargs):
-        if action == "ad":
-            action = "req"
+        if action == "/m/ad":
             creative = ""
 
         advs = []
@@ -142,15 +141,19 @@ def main(app_id="mopub-inc",host="38-aws.latest.mopub-inc.appspot.com"):
         pubs = [adunit]
         pubs.append(app_obj.key())
         pubs.append("") # wildcard
+        
+        actions = [action,""]
 
-        dates = [date_obj.strftime("%Y%m%d%H"),date_obj.strftime("%Y%m%d")]
+        dates = [date_obj.strftime("%y%m%d%H"),date_obj.strftime("%y%m%d")]
 
-        keys = []    
+        keys = set()    
         for pub in pubs:
             for adv in advs:
                 for date in dates:
-                    key = "k:%s:%s:%s:%s:%s"%(action,account,pub,adv,date)
-                    keys.append(key)
+                    for action in actions:
+                        key = "k:%s:%s:%s:%s:%s"%(action,account,pub,adv,date)
+                        keys.add(key)
+
         for key in keys:            
             if not key in count_dict:
                 count_dict[key] = set()
@@ -176,8 +179,10 @@ def main(app_id="mopub-inc",host="38-aws.latest.mopub-inc.appspot.com"):
         update_count_dict(**d)    
     f.close()
 
-    f = open('sample_unique_log_counts.txt','w')
-    for key in count_dict:
+    f = open('sample_unique_log_counts.log','w')
+    keys = count_dict.keys()
+    keys.sort()
+    for key in keys:
         f.write("%s %s\n"%(key,len(count_dict[key])))
     f.close()
 

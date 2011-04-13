@@ -14,12 +14,14 @@ CLK_EVENT = 2
 CONV_EVENT = 3
 
 TASK_QUEUE_NAME = 'bulk-log-processor'
+TASK_QUEUE_NAME_FORMAT = 'bulk-log-processor-%02d'
+NUM_TASK_QUEUES = 10
 
 LOG_KEY_FORMAT = 'k:%(account_name)s:%(time)s:%(log_index)02d'
 INDEX_KEY_FORMAT = 'k:%(account_name)s:%(time)s'
 TASK_NAME = 't-%(account_name)s-%(time)s' # note time will be bucketed
 
-TIME_BUCKET = 10
+TIME_BUCKET = 100
 MEMCACHE_ALIVE_TIME = 0#6*TIME_BUCKET
 
 REQ_QUEUE_NAME = "network-request-%02d"
@@ -64,7 +66,7 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
     # data shows up in the apache-style request logs    
     if adunit_id and creative_id and event == REQ_EVENT:
         logging.info("fire and forget--adunit: %s creative:%s"%(adunit_id,creative_id))
-        task = taskqueue.Task(params=dict(id=adunit_id,cid=creative_id),
+        task = taskqueue.Task(params=dict(id=adunit_id,cid=creative_id,udid=udid),
                               method='GET',
                               url='/m/req')
         queue_num = random.randint(0,NUM_REQ_QUEUES-1)                      
@@ -93,7 +95,7 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
     log_index = memcache.incr(index_key,initial_value=0) # starts at 1
     
     logging_data = dict(event=event,
-                        adunit=adunit_id,
+                        adunit=adunit_id.replace(r"\'",""), # cleanup for mobile web
                         creative=creative_id,
                         country=country_code,
                         revenue=revenue,
@@ -112,12 +114,15 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
     
     # send to appropriately named task_queue
     task_name = TASK_NAME%dict(account_name=account_name,time=time_bucket)
-    logging.info('task: %s'%task_name)
     
     try:
+        account_bucket = hash(account_name)%NUM_TASK_QUEUES
+        task_queue_name = TASK_QUEUE_NAME_FORMAT%account_bucket
+        logging.info('task: %s\n queue: %s'%(task_name,task_queue_name))
+        
         t = taskqueue.Task(name=task_name,params={'account_name':account_name,'time':time_bucket},countdown=TIME_BUCKET*1.10,method='GET')
         if not testing:
-            t.add(TASK_QUEUE_NAME)
+            t.add(task_queue_name)
     except taskqueue.TaskAlreadyExistsError:
         logging.info("task %s already exists"%task_name)
     except Exception, e:    

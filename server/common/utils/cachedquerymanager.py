@@ -28,6 +28,8 @@ class CachedQueryManager(object):
     new_cache_dict = {}
     new_data = False
     for key in keys:
+      #strip stupid stuff
+      key = key.replace("'", '').replace('"','')
       data = data_dict.get(key,None)
       if not data:
         new_data = True

@@ -263,14 +263,24 @@ class Creative(polymodel.PolyModel):
     elif self.ad_group.bid_strategy == 'cpm':
       return float(self.ad_group.bid)
 
+  @property
+  def multi_format(self):
+      return None
+
   # predicts a CTR for this ad.  We use 1% for now.
   # TODO: implement this in a better way
   def p_ctr(self):
     return 0.01
     
-  @property
-  def adgroup(self):
+  
+  def _get_adgroup(self):
       return self.ad_group    
+
+  def _set_adgroup(self,value):
+      self.ad_group = value
+      
+  adgroup = property(_get_adgroup,_set_adgroup)
+      
 
   def get_owner(self):
     return self.ad_group
@@ -278,23 +288,36 @@ class Creative(polymodel.PolyModel):
   def set_owner(self, value):
     self.ad_group = value
     
-  @property
-  def width(self):
+  
+  def _get_width(self):
+      if hasattr(self,'_width'):
+          return self._width
       width = 0 
       if self.format:
           parts = self.format.split('x')
           if len(parts) == 2:
               width = parts[0]
       return width
- 
-  @property
-  def height(self):
+  def _set_width(self,value):
+      self._width = value
+  width = property(_get_width,_set_width)      
+       
+  def _get_height(self):
+      if hasattr(self,'_height'):
+          return self._height
+          
       height = 0 
       if self.format:
           parts = self.format.split('x')
           if len(parts) == 2:
               height = parts[1]
       return height
+  
+  def _set_height(self, value):
+      self._height = value
+      
+  height = property(_get_height,_set_height)      
+        
   
   def owner(self):
     return property(get_owner, set_owner)
@@ -309,6 +332,7 @@ class Creative(polymodel.PolyModel):
           
   def __repr__(self):
     return "Creative{ad_type=%s, eCPM=%.02f ,key_name=%s}" % (self.ad_type, self.e_cpm(),self.key().id_or_name())
+
 
 class TextCreative(Creative):
   # text ad properties
@@ -362,10 +386,16 @@ class AdMobCreative(Creative):
   pass
 
 class MillennialCreative(Creative):
-  pass
+    
+  @property
+  def multi_format(self):
+      return ('728x90', '320x50', '300x250',)
 
 class InMobiCreative(Creative):
-  pass
+
+  @property
+  def multi_format(self):
+      return ('728x90', '320x50', '300x250', '468x60', '120x600',)
   
 class AppNexusCreative(Creative):
   pass  
@@ -377,7 +407,10 @@ class JumptapCreative(Creative):
   pass
 
 class GreyStripeCreative(Creative):
-  pass  
+
+  @property
+  def multi_format(self):
+      return ('320x320', '320x50', '300x250',)
   
 class MobFoxCreative(Creative):
   pass

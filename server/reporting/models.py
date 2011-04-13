@@ -56,7 +56,12 @@ class StatsModel(db.Expando):
     impression_count = db.IntegerProperty(default=0)
     click_count = db.IntegerProperty(default=0)
     conversion_count = db.IntegerProperty(default=0)
+    
+    # uniq user counts
     user_count = db.IntegerProperty(default=0) # NOTE: name change
+    request_user_count = db.IntegerProperty(default=0)
+    impression_user_count = db.IntegerProperty(default=0)
+    click_user_count = db.IntegerProperty(default=0)
     
     # List of requests, useful for debugging
     reqs = db.ListProperty(str,indexed=False)
@@ -140,7 +145,10 @@ class StatsModel(db.Expando):
                           click_count=self.click_count + s.click_count,
                           conversion_count=self.conversion_count + s.conversion_count,
                           revenue=self.revenue + s.revenue,
-                          user_count=self.user_count + s.user_count, # TODO: this needs to be deduped
+                          user_count=max(self.user_count, s.user_count), # TODO: takes the maximum user count over the period (high water mark)
+                          request_user_count=self.request_user_count,
+                          impression_user_count=self.impression_user_count,
+                          click_user_count=self.click_user_count,
                           reqs=self.reqs+s.reqs,
                           offline=self.offline,
                          )
@@ -245,36 +253,52 @@ class StatsModel(db.Expando):
 
     @property
     def fill_rate(self):
-        return self.impression_count / float(self.request_count)
+        if self.request_count > 0:
+            return self.impression_count / float(self.request_count)
+        else:
+            return 0
 
     @property
     def ctr(self):
         if self.impression_count > 0:
             return float(self.click_count) / float(self.impression_count)
+        else:
+            return 0
 
     @property
     def conv_rate(self):
         if self.click_count > 0 and self.conversion_count > 0:
             return self.conversion_count / float(self.click_count)
         else:
-            return None
+            return 0
+
+    @property
+    def only_date(self):
+        #we just want the date, not the time
+        if self.date:
+            return self.date.date()
+
 
     @property   
     def cpm(self):
         if self.impression_count > 0:
             return self.revenue * 1000 / float(self.impression_count)
+        else:
+            return 0
 
     @property   
     def cpc(self):
         if self.click_count > 0:
             return self.revenue / float(self.click_count)
+        else:
+            return 0
 
     @property   
     def cpa(self):
         if self.conversion_count > 0:
             return self.revenue / float(self.conversion_count)
         else:
-            return None
+            return 0
 
 # 
 # Tracks statistics for a site for a particular day - clicks and impressions are aggregated

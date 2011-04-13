@@ -38,30 +38,35 @@ def increment_stats(stats):
 def update_stats(stats_dict,publisher,advertiser,date_hour,country,attribute,req=None,revenue=None,incr=1):
     publisher = publisher or None
     advertiser = advertiser or None
-    key = r_models.StatsModel.get_key_name(publisher=publisher,
-                                           advertiser=advertiser,
-                                           date_hour=date_hour,
-                                           country=country)
+    try:
+        key = r_models.StatsModel.get_key_name(publisher=publisher,
+                                               advertiser=advertiser,
+                                               date_hour=date_hour,
+                                               country=country)
+        if not key in stats_dict:
+          stats_dict[key] = r_models.StatsModel(publisher=publisher,
+                                                advertiser=advertiser,
+                                                date_hour=date_hour,
+                                                country=country)
 
-    if not key in stats_dict:
-      stats_dict[key] = r_models.StatsModel(publisher=publisher,
-                                            advertiser=advertiser,
-                                            date_hour=date_hour,
-                                            country=country)
-
-    if attribute:
-      # stats_dict[key].attribute += incr
-      setattr(stats_dict[key],attribute,getattr(stats_dict[key],attribute)+incr) 
+        if attribute:
+          # stats_dict[key].attribute += incr
+          setattr(stats_dict[key],attribute,getattr(stats_dict[key],attribute)+incr) 
       
-      if revenue:
-          stats_dict[key].revenue += revenue
-    if req:      
-      stats_dict[key].reqs.append(req)
+          if revenue:
+              stats_dict[key].revenue += revenue
+        if req:      
+          stats_dict[key].reqs.append(req)
+    except Exception, e:
+        logging.warning("Error in update_stats: %s"%e)      
     
 class LogTaskHandler(webapp.RequestHandler):
   def get(self):
       # inspect headers of the task
       retry_count = self.request.headers.get('X-AppEngine-TaskRetryCount',None)
+      task_name = self.request.headers.get('X-AppEngine-TaskName',None)
+      queue_name = self.request.headers.get('X-AppEngine-QueueName',None)
+      
       memcache_stats_start = memcache.get_stats()
       memcache_stats = None
       # grab parameters from the message of the task
@@ -183,7 +188,11 @@ class LogTaskHandler(webapp.RequestHandler):
           mail.send_mail(sender="olp@mopub.com",
                         to="bugs@mopub.com",
                         subject="Logging error",
-                        body="%s"%(exception_traceback))
+                        body="account: %s retries: %s task name: %s queue name: %s\n%s"%(account_name,
+                                                                                         retry_count,
+                                                                                         task_name,
+                                                                                         queue_name,
+                                                                                         exception_traceback))
           logging.error(exception_traceback)
           raise Exception("need to try transaction again")
           
@@ -196,12 +205,22 @@ class LogTaskHandler(webapp.RequestHandler):
           
           mail.send_mail(sender="olp@mopub.com",
                         to="bugs@mopub.com",
-                        subject="Logging error",
+                        subject="Logging error (cache miss)",
                         body=message)
           logging.error(message)
                 
 
 application = webapp.WSGIApplication([('/_ah/queue/bulk-log-processor', LogTaskHandler),
+                                      ('/_ah/queue/bulk-log-processor-00', LogTaskHandler),
+                                      ('/_ah/queue/bulk-log-processor-01', LogTaskHandler),
+                                      ('/_ah/queue/bulk-log-processor-02', LogTaskHandler),
+                                      ('/_ah/queue/bulk-log-processor-03', LogTaskHandler),
+                                      ('/_ah/queue/bulk-log-processor-04', LogTaskHandler),
+                                      ('/_ah/queue/bulk-log-processor-05', LogTaskHandler),
+                                      ('/_ah/queue/bulk-log-processor-06', LogTaskHandler),
+                                      ('/_ah/queue/bulk-log-processor-07', LogTaskHandler),    
+                                      ('/_ah/queue/bulk-log-processor-08', LogTaskHandler),
+                                      ('/_ah/queue/bulk-log-processor-09', LogTaskHandler),
                                      ],
                                      debug=True)
 

@@ -71,13 +71,13 @@ var mopub = mopub || {};
         var buttonTextElem = $('.ui-button-text', this);
         if ($('.adgroupForm-advanced').is(':hidden')) {
           $('.adgroupForm-advanced').slideDown('fast');
-          buttonTextElem.text('Hide Advanced Details');
           $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
+          $('.ui-button-text', this).text('Hide Advanced Details');
         }
         else {
           $('.adgroupForm-advanced').slideUp('fast');
-          buttonTextElem.text('Show Advanced Details');
           $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
+          $('.ui-button-text', this).text('Show Advanced Details');
         }
       });
     $('#adgroupForm-bid_strategy-select')
@@ -361,7 +361,7 @@ var mopub = mopub || {};
         
     if (!creatives) {
       $('#chartWrapper').hide();
-      $('#advertiser-creativeData').hide()
+      $('#advertiser-creativeData').hide();
       $('#advertiser-adgroups-addCreativeButton').click();
     }
 
@@ -389,7 +389,7 @@ var mopub = mopub || {};
       });
     
     $('#advertisers-addCampaign')
-      .button({ icons : {primary : 'ui-icon-circle-plus'} })
+      .button({ icons : {primary : 'ui-icon-circle-plus'} });
     
     $('#advertisers-adgroups-editAdGroupButton')
       .button({ icons: { primary: "ui-icon-wrench" } })
@@ -471,18 +471,16 @@ var mopub = mopub || {};
       .button('option', {icons: { primary: 'ui-icon-triangle-1-s' }})
       .click(function(e) {
         e.preventDefault();
-        var buttonTextElem = $('.ui-button-text', this);
         var $options = $(this).parents('form').find('.creativeForm-advanced-options');
-        log($options.is(':hidden'));
         if ($options.is(':hidden')) {
-          $options.show();
-          buttonTextElem.text('Hide Advanced Options');
+          $options.slideDown('fast');
           $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
+          $('.ui-button-text', this).text('Less Options');
         }
         else {
-          $options.hide();
-          buttonTextElem.text('Show Advanced Options');
+          $options.slideUp('fast');
           $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
+          $('.ui-button-text', this).text('More Options');
         }
       });
     
@@ -718,7 +716,7 @@ var mopub = mopub || {};
       
       function getButtonTextElement() {
         var buttonTextElement = $('.ui-button-text', button);
-        if(buttonTextElement.length == 0) buttonTextElement = button;
+        if(buttonTextElement.length == 0) { buttonTextElement = button;}
         return buttonTextElement;
       }
 

@@ -1,25 +1,30 @@
 ## Constants wooo
 
+#Formats for exported files
 TABLE_FILE_FORMATS = ( 'xls', 'csv' )
 
+#Stats
 SIT_STAT = 'site_STAT' #Site
 OWN_STAT = 'owner_STAT' #Owner
-DTE_STAT = 'str_date_STAT' #Date
+DTE_STAT = 'only_date_STAT' #Date
 
 REQ_STAT = 'request_count_STAT' #Request count
 IMP_STAT = 'impression_count_STAT' #Impression count
 CLK_STAT = 'click_count_STAT' #Click count
-UU_STAT  = 'unique_user_count_STAT'  #Unique user count
+UU_STAT  = 'user_count_STAT'  #Unique user count
+RU_STAT  = 'request_user_count_STAT'
+IU_STAT  = 'impression_user_count_STAT'
+CU_STAT  = 'click_user_count_STAT'
 
 REV_STAT = 'revenue_STAT' #Revenue
 CNV_STAT = 'conversion_count_STAT' #Conversion count
 
-FLR_STAT = 'fill_rate_p_STAT' #Fill Rate
-CPA_STAT = 'cpa_p_STAT' #CPA
-CTR_STAT = 'ctr_p_STAT' #CTR
-CNV_RATE_STAT = 'conv_rate_p_STAT' #Conversion rate
-CPM_STAT = 'cpm_p_STAT' #CPM
-CPC_STAT = 'cpc_p_STAT' #CPC
+FLR_STAT = 'fill_rate_STAT' #Fill Rate
+CPA_STAT = 'cpa_STAT' #CPA
+CTR_STAT = 'ctr_STAT' #CTR
+CNV_RATE_STAT = 'conv_rate_STAT' #Conversion rate
+CPM_STAT = 'cpm_STAT' #CPM
+CPC_STAT = 'cpc_STAT' #CPC
 
 
 ALL_STATS =   ( SIT_STAT,
@@ -48,3 +53,24 @@ MARKET_URL = "https://market.android.com/search?q=%s&c=apps"
 CITY_GEO = "city_name=%s,region_name=%s,country_name=%s"
 REGION_GEO = "region_name=%s,country_name=%s"
 COUNTRY_GEO = "country_name=%s"
+
+########################
+# Formatting Constants
+########################
+
+# A valid "format" is one of the accepted entries for format in the site model (I think it's the site model...)
+
+#Valid ad "formats" for smartphone adunits that are set to "full"
+VALID_FULL_FORMATS = ('300x250', 'full', 'full_landscape',)
+#Valid ad "formats" for tablet adunits that are set to "full"
+VALID_TABLET_FULL_FORMATS = ('300x250','160x600', 'full_tablet', 'full_tablet_landscape',)
+
+#Networks that can serve fullsize ads
+FULL_NETWORKS = ('brightroll',)
+
+# End formatting constants
+
+#Name Mapper for countries with more than 1 country code (Dammit UK why are you now GB??!!?)
+ACCEPTED_MULTI_COUNTRY = {'GB' : ['UK', 'GB'],
+                          'UK' : ['UK', 'GB'],
+                          }

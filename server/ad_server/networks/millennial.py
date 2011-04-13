@@ -31,14 +31,17 @@ class MillennialServerSide(ServerSide):
     req = urllib2.Request(self.url)
     response = urllib2.urlopen(req)  
     return response.read()
-    
+        
   def bid_and_html_for_response(self,response):
     # TODO: do any sort of manipulation here that we want, like resizing the image, LAME
     if len(response.content) == 0 or \
       response.status_code != 200 or \
       '<title>404' in response.content: # **See Note below
         raise Exception("Millenial ad is empty")
-    return 0.0,"<div style='text-align:center'>"+response.content+"</div>"
+    
+    width, height = self._get_size(response.content)
+        
+    return 0.0,"<div style='text-align:center'>"+response.content+"</div>", width, height
 
 
 # **

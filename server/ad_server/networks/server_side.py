@@ -1,4 +1,6 @@
 import hashlib
+import re
+
 
 class ServerSide(object):
   base_url = "http://www.test.com/ad?"
@@ -6,6 +8,10 @@ class ServerSide(object):
     self.request = request
     self.adunit = adunit
 
+  @property
+  def format(self):
+      return self.adunit.format
+  
   def get_udid(self,udid=None):
     """
     udid from the device comes as 
@@ -56,6 +62,19 @@ class ServerSide(object):
   def payload(self):
     return None
 
+  def _get_size(self,content):
+      width_pat = re.compile(r'width="(?P<width>\d+?)"')
+      height_pat = re.compile(r'height="(?P<height>\d+?)"')
+  
+      width_match = re.search(width_pat,content)
+      height_match = re.search(height_pat,content)
+  
+      width = 0
+      height = 0
+      if height_match and width_match:
+          width = int(width_match.groups('width')[0])
+          height = int(height_match.groups('height')[0])
+      return width,height      
 
   def bid_and_html_for_response(self,response):
     return 0.0,"<html>BLAH</html>"  

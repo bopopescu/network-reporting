@@ -85,6 +85,19 @@ class AppIndexHandler(RequestHandler):
 
     apps = sorted(apps, key=lambda app: app.stats.request_count, reverse=True)
 
+    totals_list = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(days=days)
+    
+    today = totals_list[-1]
+    yesterday = totals_list[-2]
+    totals = reduce(lambda x, y: x+y, totals_list, StatsModel())
+    # this is the max active users over the date range
+    # NOT total unique users
+    totals.user_count = max([t.user_count for t in totals_list])
+    
+    logging.warning("ACCOUNT: %s"%self.account.key())
+    logging.warning("YESTERDAY: %s"%yesterday.key())
+    logging.warning("TODAY: %s"%today.key())
+
     # In the graph, only show the top 3 apps and bundle the rest if there are more than 4
     graph_apps = apps[0:4]
     if len(apps) > 4:
@@ -96,9 +109,9 @@ class AppIndexHandler(RequestHandler):
        'graph_apps': graph_apps,
        'start_date': days[0],
        'date_range': self.date_range,
-       'today': reduce(lambda x, y: x+y, [a.all_stats[-1] for a in graph_apps], StatsModel()),
-       'yesterday': reduce(lambda x, y: x+y, [a.all_stats[-2] for a in graph_apps], StatsModel()),
-       'totals': reduce(lambda x, y: x+y.stats, apps, StatsModel()),
+       'today': today,
+       'yesterday': yesterday,
+       'totals': totals,
        'account': self.account})
 
 @whitelist_login_required     
@@ -233,28 +246,31 @@ def adunit_create(request,*args,**kwargs):
   return CreateAdUnitHandler()(request,*args,**kwargs)   
 
 def add_demo_campaign(site):
-  # Set up a test campaign that returns a demo ad
-  c = Campaign(name="MoPub Demo Campaign",
-               u=site.account.user,
-               campaign_type="promo",
-               description="Demo campaign for checking that MoPub works for your application")
-  CampaignQueryManager().put_campaigns(c)
+    # Set up a test campaign that returns a demo ad
+    c = Campaign(name="MoPub Demo Campaign",
+                 u=site.account.user,
+                 account=site.account,
+                 campaign_type="promo",
+                 description="Demo campaign for checking that MoPub works for your application")
+    CampaignQueryManager().put_campaigns(c)
 
-  # Set up a test ad group for this campaign
-  ag = AdGroup(name="MoPub Demo Campaign",
-               campaign=c,
-               priority_level=3,
-               bid=1.0,
-               site_keys=[site.key()])
-  AdGroupQueryManager().put_adgroups(ag)
+    # Set up a test ad group for this campaign
+    ag = AdGroup(name="MoPub Demo Campaign",
+                 campaign=c,
+                 account=site.account,
+                 priority_level=3,
+                 bid=1.0,
+                 site_keys=[site.key()])
+    AdGroupQueryManager().put_adgroups(ag)
 
-  # And set up a default creative
-  h = HtmlCreative(ad_type="html",
-                   ad_group=ag,
-                   format=site.format,
-                   name="Demo HTML Creative",
-                   html_data="<style type=\"text/css\">body {font-size: 12px;font-family:helvetica,arial,sans-serif;margin:0;padding:0;text-align:center;background:white} .creative_headline {font-size: 18px;} .creative_promo {color: green;text-decoration: none;}</style><div class=\"creative_headline\">Welcome to mopub!</div><div class=\"creative_promo\"><a href=\"http://www.mopub.com\">Click here to test ad</a></div><div>You can now set up a new campaign to serve other ads.</div>")
-  CreativeQueryManager().put_creatives(h)
+    # And set up a default creative
+    h = HtmlCreative(ad_type="html",
+                     ad_group=ag,
+                     account=site.account,
+                     format=site.format,
+                     name="Demo HTML Creative",
+                     html_data="<style type=\"text/css\">body {font-size: 12px;font-family:helvetica,arial,sans-serif;margin:0;padding:0;text-align:center;background:white} .creative_headline {font-size: 18px;} .creative_promo {color: green;text-decoration: none;}</style><div class=\"creative_headline\">Welcome to mopub!</div><div class=\"creative_promo\"><a href=\"http://www.mopub.com\">Click here to test ad</a></div><div>You can now set up a new campaign to serve other ads.</div>")
+    CreativeQueryManager().put_creatives(h)
   
 class ShowAppHandler(RequestHandler):
   def get(self,app_key):
@@ -268,10 +284,9 @@ class ShowAppHandler(RequestHandler):
     a = AppQueryManager().get_by_key(app_key)
     
     # check to see that the user has viewership rights, ow return 404
-    if a.account.key() != self.account.key() and not self.account.is_admin():
+    if a.account.key() != self.account.key():
       raise Http404
 
-    a.stats = StatsModel()
     a.adunits = AdUnitQueryManager().get_adunits(app=a)
     
     # organize impressions by days
@@ -279,18 +294,10 @@ class ShowAppHandler(RequestHandler):
       for adunit in a.adunits:
         adunit.all_stats = StatsModelQueryManager(self.account,self.offline).get_stats_for_days(publisher=adunit,days=days)
         adunit.stats = reduce(lambda x, y: x+y, adunit.all_stats, StatsModel())
-        a.stats += adunit.stats
-      totals = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[au.all_stats for au in a.adunits])]
-    else:
-      totals = [StatsModel() for d in days]
       
     a.adunits = sorted(a.adunits, key=lambda adunit: adunit.stats.request_count, reverse=True)
       
-    # TODO: We are calculating app-level totals twice
-    app_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(advertiser=a,days=days)
-    # set the apps unique user count from the app stats rollup
-    for stat,app_stat in zip(totals,app_stats):
-      stat.user_count = app_stat.user_count
+    app_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=a,days=days)
 
     help_text = 'Create an Ad Unit below' if len(a.adunits) == 0 else None
     
@@ -306,6 +313,13 @@ class ShowAppHandler(RequestHandler):
     app_form_fragment = AppUpdateAJAXHandler(self.request).get(app=a)
     # in order to have a creat adunit form
     adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(app=a)
+    
+    today = app_stats[-1]
+    yesterday = app_stats[-2]
+    a.stats = reduce(lambda x, y: x+y, app_stats, StatsModel())
+    # this is the max active users over the date range
+    # NOT total unique users
+    a.stats.user_count = max([sm.user_count for sm in app_stats])
 
     return render_to_response(self.request,'publisher/show_app.html', 
         {'app': a,  
@@ -313,8 +327,8 @@ class ShowAppHandler(RequestHandler):
          'adunit_form_fragment':adunit_form_fragment,
          'start_date': days[0],
          'date_range': self.date_range,
-         'today': totals[-1],
-         'yesterday': totals[-2],
+         'today': today,
+         'yesterday': yesterday,
          'account': self.account,
          'helptext': help_text})
          
@@ -324,22 +338,99 @@ def app_show(request,*args,**kwargs):
   return ShowAppHandler()(request,*args,**kwargs)   
 
 
-
 class ExportFileHandler( RequestHandler ):
-    def get( self, site_key, f_type ):
-        #this is temp, should have more than just adunit
-        stats = ( DTE_STAT, REQ_STAT, IMP_STAT, CLK_STAT )
-        adunit = AdUnitQueryManager().get_by_key( site_key )
+    def get( self, key, key_type, f_type ):
+        #XXX make sure this is the right way to do it 
+        spec = self.params.get('spec') 
         if self.start_date:
             days = StatsModel.get_days( self.start_date, self.date_range )
         else:
             days = StatsModel.lastdays( self.date_range )
-        return sswriter.write_stats( f_type, stats, site=site_key, days=days )
+
+        stat_names, stat_models = self.get_desired_stats(key, key_type, days, spec=spec)
+        logging.warning(stat_models)
+        logging.warning("\n\nDays len:%s\nStats len:%s\n\n" % (len(days),len(stat_models)))
+        return sswriter.write_stats( f_type, stat_names, stat_models, site=key, days=days, key_type=key_type )
+
+
+    def get_desired_stats(self, key, key_type, days, spec=None):
+        manager = StatsModelQueryManager(self.account, offline=self.offline)
+        """ Given a key, key_type, and specificity, return 
+        the appropriate stats to get AND their names"""
+        #default for all
+        stat_names = (IMP_STAT, CLK_STAT, CTR_STAT)
+        #sanity check
+        assert key_type in ('adunit', 'app', 'adgroup', 'account')
+        if spec:
+            assert spec in ('creatives', 'adunits', 'campaigns', 'days', 'apps')
+
+
+
+        #Set up attr getters/names
+        if key_type == 'app' or (key_type == 'account' and spec == 'apps') or (key_type == 'adunit' and spec == 'days'): 
+            stat_names = (REQ_STAT,) + stat_names
+            if spec == 'days':
+                stat_names = (DTE_STAT,) + stat_names
+        elif key_type == 'account' and spec == 'campaigns':
+            stat_names += (CPM_STAT, CNV_RATE_STAT, CPA_STAT)
+        elif key_type == 'adgroup':
+            if spec == 'days':
+                stat_names = (DTE_STAT,) + stat_names
+            stat_names += (REV_STAT, CNV_RATE_STAT, CPA_STAT)
+        elif key_type == 'adunit' and spec == 'campaigns':
+            stat_names += (REV_STAT,)
+
+
+
+        #General rollups for all data
+        if key_type == 'account':
+            if spec == 'apps':
+                apps = AppQueryManager.get_apps(self.account)
+                if len(apps) == 0:
+                    #should probably handle this more gracefully
+                    logging.warning("Apps for account is empty")
+                return (stat_names, [manager.get_stat_rollup_for_days(publisher=a, days=days) for a in apps]) 
+            elif spec == 'campaigns':
+                camps = CampaignQueryManager().get_campaigns(account=self.account)
+                if len(camps) == 0:
+                    logging.warning("Campaigns for account is empty")
+                return (stat_names, [manager.get_stat_rollup_for_days(advertiser=c, days=days) for c in camps])
+        #Rollups for adgroup data
+        elif key_type == 'adgroup':
+            if spec == 'creatives':
+                creatives = list(CreativeQueryManager().get_creatives(adgroup=key))
+                if len(creatives) == 0:
+                    logging.warning("Creatives for adgroup is empty")
+                return (stat_names, [manager.get_stat_rollup_for_days(advertiser=c, days=days) for c in creatives])
+            if spec == 'adunits':
+                adunits = map(lambda x: Site.get(x), AdGroupQueryManager().get_by_key(key).site_keys)
+                if len(adunits) == 0:
+                    logging.warning("Adunits for adgroup is empty")
+                return (stat_names, [manager.get_stat_rollup_for_days(advertiser=key, publisher=a, days=days) for a in adunits]) 
+            if spec == 'days':
+                return (stat_names, manager.get_stats_for_days(advertiser=key, days=days))
+        #Rollups + not-rollup for adunit data            
+        elif key_type == 'adunit':
+            if spec == 'campaigns':
+                adgroups = AdGroupQueryManager().get_adgroups(adunit=key)
+                if len(adgroups) == 0:
+                    logging.warning("Campaigns for adunit is empty")
+                return (stat_names, [manager.get_stat_rollup_for_days(publisher=key, advertiser=a, days=days) for a in adgroups])
+            if spec == 'days':
+                return (stat_names, manager.get_stats_for_days(publisher=key, days=days))
+        #App adunit rollup data
+        elif key_type == 'app':
+            adunits = AdUnitQueryManager().get_adunits(app=key)
+            if len(adunits) == 0:
+                logging.warning("Apps is empty")
+            return (stat_name, [manager.get_stat_rollup_for_days(publisher=a, days=days) for a in adunits])
 
 
 @whitelist_login_required
 def export_file( request, *args, **kwargs ):
     return ExportFileHandler()( request, *args, **kwargs )
+
+            
 
 class AdUnitShowHandler(RequestHandler):
   def get(self,adunit_key):

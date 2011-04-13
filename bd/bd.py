@@ -38,14 +38,14 @@ class ITunesReader(object):
     
   def populate_row(self, e = {}):
     # Prepare the dictionary to write
-    d = {'title': e['title'],
-      'summary': e['summary'][0:100],
-      'id': e['id'],
-      'artist': e['artist'],
-      'releaseDate': e['releasedate'],
-      'price': e['price'],
-      'category': e['category'],
-      'rights': e['rights']}
+    d = {'title': e.get('title'),
+      'summary': e.get('summary')[0:100],
+      'id': e.get('id'),
+      'artist': e.get('artist'),
+      'releaseDate': e.get('releasedate'),
+      'price': e.get('price'),
+      'category': e.get('category'),
+      'rights': e.get('rights')}
 
     entry = self.gd_client.InsertRow(d, self.spreadsheet_key, self.worksheet_id)
     if not isinstance(entry, gdata.spreadsheet.SpreadsheetsList):

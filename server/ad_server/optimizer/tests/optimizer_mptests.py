@@ -24,7 +24,7 @@ import datetime
 
 import logging
 
-from publisher.query_managers import AdUnitContext, CreativeCTR
+from publisher.query_managers import AdUnitContext, CreativeCTR, AdUnitContextQueryManager
   
 class TestOptimizer(unittest.TestCase):
 
@@ -39,6 +39,7 @@ class TestOptimizer(unittest.TestCase):
         
         # Set up useful datetime
         self.dt = datetime.datetime(1987,4,4,4,4)# save some test time
+        self.one_hour_ago = self.dt - datetime.timedelta(hours=1)
         
         # Set up default models
         self.account = Account()
@@ -127,30 +128,30 @@ class TestOptimizer(unittest.TestCase):
         
         
     def mptest_context(self):
-         # Test that we have the appropriate rollups
-         eq_(self.adunit_context.adunit, self.adunit)
-         eq_(self.adunit_context.eligible_campaigns[0].key(), self.campaign.key())
-         eq_(self.adunit_context.eligible_adgroups[0].key(), self.adgroup.key())
-         eq_(self.adunit_context.eligible_creatives[0].tracking_url, "test-tracking-url")
-        
-    
+        # Test that we have the appropriate rollups
+        eq_(self.adunit_context.adunit, self.adunit)
+        eq_(self.adunit_context.eligible_campaigns[0].key(), self.campaign.key())
+        eq_(self.adunit_context.eligible_adgroups[0].key(), self.adgroup.key())
+        eq_(self.adunit_context.eligible_creatives[0].tracking_url, "test-tracking-url")
+       
+       
     def mptest_creative_ctrs_key(self):
          creative_ctr = CreativeCTR(self.creative, self.adunit)
          eq_(creative_ctr.creative.key(), self.creative.key())
                  
     def mptest_adunit_context_rollup(self):
         daily_CTR = .65
-    
+      
         # Set up test
         self._set_statsmodel_click_count(self.adunit, self.creative, 650, dt=self.dt)
         self._set_statsmodel_impression_count(self.adunit, self.creative, 1000, dt=self.dt)
-    
+      
         # The adunit has been updated, so we roll up the adunit_context
         self.adunit_context = AdUnitContext.rollup(self.adunit)
-    
+      
         ctr = self.adunit_context.get_ctr(self.creative, date=self.dt.date())
         eq_(ctr, daily_CTR)
-    
+      
     def mptest_adunit_context_multiple_dates(self):
         """Tests for the case in which both hours are unset and have insufficient samples,
         we then fall back to the daily """
@@ -293,7 +294,7 @@ class TestOptimizer(unittest.TestCase):
         qm_stats = self.smqm.get_stats_for_days(publisher=self.adunit,
                                             advertiser=self.creative,
                                             days=[self.dt.date()])
-
+   
         stats = qm_stats[0] # qm_stats is a list of stats of length 1
         eq_(stats.impression_count, 1200)
     
@@ -310,28 +311,84 @@ class TestOptimizer(unittest.TestCase):
         two_hours_ago = self.dt - datetime.timedelta(hours=2)
         yesterday = self.dt - datetime.timedelta(days=1)
         # Set up test
-
+   
         self._set_statsmodel_click_count(self.adunit, self.creative, 0, date_hour=two_hours_ago)
         self._set_statsmodel_impression_count(self.adunit, self.creative, 600, date_hour=two_hours_ago)
-
-
+   
+   
         self._set_statsmodel_click_count(self.adunit, self.creative, 600, date_hour=two_hours_ago)
         self._set_statsmodel_impression_count(self.adunit, self.creative, 600, date_hour=two_hours_ago)
-
-
+   
+   
         qm_stats = self.smqm.get_stats_for_days(publisher=self.adunit,
                                             advertiser=self.creative,
                                             days=[yesterday])
-
+   
         stats = qm_stats[0] # qm_stats is a list of stats of length 1
         eq_(stats.impression_count, 1200)
-
+   
         ctr = optimizer.get_ctr(self.adunit_context, self.creative, dt=yesterday)
-
+   
         # There are insufficient datapoints to use hourly, so we use daily
         ctr = optimizer.get_ctr(self.adunit_context, self.creative, dt=self.dt)
         eq_(ctr, 0.5)
+        
+  
+       
+    def mptest_cache_simple(self):
+        one_hour_ago = self.dt - datetime.timedelta(hours=1)
+        # Put in some arbitrary data
+        self._set_statsmodel_click_count(self.adunit, self.creative, 600, date_hour=one_hour_ago)
+        self._set_statsmodel_impression_count(self.adunit, self.creative, 1200, date_hour=one_hour_ago)
+        
+        # Cache it
+        qm = AdUnitContextQueryManager()
+        adunit_context = qm.cache_get(str(self.adunit.key()))
+        
+        ctr = self.adunit_context.get_ctr(self.creative, date_hour=self.dt)
+        eq_(ctr, 0.5)
 
+        
+    def mptest_cache_update(self):
+        # Put in some arbitrary data
+        self._set_statsmodel_click_count(self.adunit, self.creative, 600, date_hour=self.dt)
+        self._set_statsmodel_impression_count(self.adunit, self.creative, 1200, date_hour=self.dt)
+            
+        # Cache context
+        qm = AdUnitContextQueryManager()
+        adunit_context = qm.cache_get(str(self.adunit.key()))
+            
+        new_creative = Creative(account=self.account,
+                                           ad_group=self.adgroup,
+                                           tracking_url="test-tracking-url-2", 
+                                           cpc=.03)
+        new_creative.put()
+    
+        self._set_statsmodel_click_count(self.adunit, new_creative, 12, date_hour=self.one_hour_ago)
+        self._set_statsmodel_impression_count(self.adunit, new_creative, 1200, date_hour=self.one_hour_ago)
+    
+        # get Cache context, make sure it is updated
+                      
+        # First we get a cache hit, so there is no value for this element
+        qm = AdUnitContextQueryManager()
+        adunit_context = qm.cache_get(str(self.adunit.key()))
+ 
+        ctr = adunit_context.get_ctr(new_creative, date_hour=self.dt)
+
+        eq_(ctr, None)
+ 
+ 
+        # Clear the cache manually, now we have the information for the new creative
+        memcache.delete(str(self.adunit.key()))
+        
+        qm = AdUnitContextQueryManager()
+        adunit_context = qm.cache_get(str(self.adunit.key()))
+    
+        ctr = adunit_context.get_ctr(new_creative, date_hour=self.dt)
+        
+        eq_(ctr, 0.01)
+    
+    
 ############# Testing Helper Functions ###############
     
     def _set_statsmodel_click_count(self, adunit, creative, count, dt=None, date_hour=None):

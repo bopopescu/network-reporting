@@ -10,6 +10,7 @@ from publisher.models import Site as AdUnit
 from advertiser.models import Campaign, AdGroup, Creative
 import datetime
 from reporting.query_managers import StatsModelQueryManager
+from google.appengine.api import memcache
 
 class AdUnitContext(object):
     """All the adunit information necessary
@@ -28,23 +29,29 @@ class AdUnitContext(object):
         self.eligible_campaigns = eligible_campaigns
         self.eligible_adgroups = eligible_adgroups
         self.eligible_creatives = eligible_creatives
-        self.creative_ctrs = [CreativeCTR(c, adunit) for c in eligible_creatives]
+        
+        # creative_ctr is a mapping from creative keys to CreativeCTR objects
+        self.creative_ctrs = {}
+        for c in eligible_creatives:
+            self.creative_ctrs[c.key()] = CreativeCTR(c, adunit)
         
     def key(self):
+        """ Since we want a 1-1 mapping from adunits to adunit_contexts, we
+        appropriate the key from the adunit """
         return self.adunit.key()    
 
-        
     def get_ctr(self, creative, date=datetime.date.today(), date_hour=None, min_sample_size=1000):
         
-        for creative_ctr in self.creative_ctrs:
-            if creative_ctr.creative.key() == creative.key():
-                found_creative_ctr = creative_ctr
-        # Use daily if passed a date_hour
-        if date_hour is not None:
-            return found_creative_ctr.get_or_update_hourly_ctr(date_hour=date_hour, min_sample_size=min_sample_size)
-        else:
-            return found_creative_ctr.get_or_update_daily_ctr(date=date, min_sample_size=min_sample_size)
-                    
+        creative_ctr = self.creative_ctrs.get(creative.key())
+        try:
+            # Use daily if passed a date_hour
+            if date_hour is not None:
+                return creative_ctr.get_or_update_hourly_ctr(date_hour=date_hour, min_sample_size=min_sample_size)
+            else:
+                return creative_ctr.get_or_update_daily_ctr(date=date, min_sample_size=min_sample_size)
+        except AttributeError:
+            # If we couldn't find the creative, return None
+            return None
                     
     def get_creatives_for_adgroups(self,adgroups,limit=30):
         """ Get only the creatives for the requested adgroups """
@@ -187,46 +194,20 @@ class CreativeCTR(object):
           self.daily_ctr_expiration_date = date
 
         
-        
 class AdUnitContextQueryManager(CachedQueryManager):
     Model = AdUnitContext
 
-    def cache_get(self,key):
-        """ Takes an AdUnit key """
-        obj = memcache.get(key)
-        if obj is None:
+    def cache_get(self,adunit_key):
+        """ Takes an AdUnit key, gets or builds the context """
+        adunit_context = memcache.get(adunit_key)
+        if adunit_context is None:
             # get adunit from db
+            adunit = AdUnit.get(adunit_key)
             # wrap context
+            adunit_context = AdUnitContext.rollup(adunit)
             # put context in cache
-            # celebrate
-            pass
-            
-            
-        
-            #   
-            #   
-            #   
-            # if isinstance(keys,str) or isinstance(keys,unicode):
-            #   keys = [keys]
-            # 
-            # data_dict = memcache.get_multi([k for k in keys],namespace=NAMESPACE)
-            # logging.info("data dict: %s"%data_dict)
-            # new_cache_dict = {}
-            # new_data = False
-            # for key in keys:
-            #   data = data_dict.get(key,None)
-            #   if not data:
-            #     new_data = True
-            #     logging.info("getting %s from db"%key)
-            #     data = db.get(key)
-            #     new_cache_dict[key] = data
-            #     data_dict[key] = data
-            #   else:
-            #     pass  
-            # if new_data:    
-            #   memcache.set_multi(new_cache_dict,namespace=NAMESPACE)
-            # objects = data_dict.values()
-            # return [obj for obj in objects if not getattr(obj,"deleted",False) ]
+            memcache.set(str(adunit_context.key()), adunit_context)
+        return adunit_context
 
 class AppQueryManager(CachedQueryManager):
     Model = App

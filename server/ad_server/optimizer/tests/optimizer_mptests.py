@@ -70,7 +70,7 @@ class TestOptimizer(unittest.TestCase):
         self.smqm = StatsModelQueryManager(self.account)
         
         # Roll up adunit context
-        self.adunit_context = AdUnitContext.rollup(self.adunit)
+        self.adunit_context = AdUnitContext.wrap(self.adunit)
         
     def tearDown(self):
         self.testbed.deactivate()
@@ -147,7 +147,7 @@ class TestOptimizer(unittest.TestCase):
         self._set_statsmodel_impression_count(self.adunit, self.creative, 1000, dt=self.dt)
       
         # The adunit has been updated, so we roll up the adunit_context
-        self.adunit_context = AdUnitContext.rollup(self.adunit)
+        self.adunit_context = AdUnitContext.wrap(self.adunit)
       
         ctr = self.adunit_context.get_ctr(self.creative, date=self.dt.date())
         eq_(ctr, daily_CTR)

@@ -15,16 +15,27 @@ from google.appengine.api import memcache
 class AdUnitContext(object):
     """All the adunit information necessary
     to run the auction """
+    
+    @classmethod
+    def wrap(cls, adunit):
+        """ Factory method that takes an adunit, fetches all the appropriate information
+        from the database, and then returns an adunit_context object """
+        
+        eligible_adgroups = cls.fetch_adgroups(adunit)
+        eligible_campaigns = cls.fetch_campaigns(eligible_adgroups)
+        eligible_creatives = cls.fetch_creatives(eligible_adgroups)
+        
+        adunit_context = cls(adunit, 
+                             eligible_campaigns, 
+                             eligible_adgroups, 
+                             eligible_creatives)
+        return adunit_context
 
     def __init__(self, adunit, eligible_campaigns,
                                eligible_adgroups, 
                                eligible_creatives):
         self.adunit = adunit
         
-        # Triggers dereferencing of references
-        # We ask both Account and App for an arbitrary property
-        self.adunit.account.active
-        self.adunit.app_key.deleted
         
         self.eligible_campaigns = eligible_campaigns
         self.eligible_adgroups = eligible_adgroups
@@ -34,6 +45,13 @@ class AdUnitContext(object):
         self.creative_ctrs = {}
         for c in eligible_creatives:
             self.creative_ctrs[c.key()] = CreativeCTR(c, adunit)
+            
+            
+        # Triggers dereferencing of references
+        # We ask both Account and App for an arbitrary property
+        self.adunit.account.active
+        self.adunit.app_key.deleted
+            
         
     def key(self):
         """ Since we want a 1-1 mapping from adunits to adunit_contexts, we
@@ -62,21 +80,6 @@ class AdUnitContext(object):
                               if creative.ad_group.key() in adgroup_keys]
 
         return creatives
-        
-    @classmethod
-    def rollup(cls, adunit):
-        """ Takes an adunit, fetches all the appropriate information from the
-        database, and then returns an adunit_context object """
-        
-        eligible_adgroups = cls.fetch_adgroups(adunit)
-        eligible_campaigns = cls.fetch_campaigns(eligible_adgroups)
-        eligible_creatives = cls.fetch_creatives(eligible_adgroups)
-        
-        adunit_context = cls(adunit, 
-                             eligible_campaigns, 
-                             eligible_adgroups, 
-                             eligible_creatives)
-        return adunit_context
         
     @classmethod
     def fetch_adgroups(cls, adunit, limit=30):
@@ -204,7 +207,7 @@ class AdUnitContextQueryManager(CachedQueryManager):
             # get adunit from db
             adunit = AdUnit.get(adunit_key)
             # wrap context
-            adunit_context = AdUnitContext.rollup(adunit)
+            adunit_context = AdUnitContext.wrap(adunit)
             # put context in cache
             memcache.set(str(adunit_context.key()), adunit_context)
         return adunit_context

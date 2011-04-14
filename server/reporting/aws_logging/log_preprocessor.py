@@ -238,14 +238,19 @@ def preprocess_logline(logline):
     return None
 
 
-def preprocess_logs(input_file):
-    output_file = input_file + ".pp"  # .pp for preprocessed
+def preprocess_logs(input_file, output_file):
+    if not output_file:
+        output_file = input_file + ".pp"  # .pp for preprocessed
     with open(input_file, 'r') as in_stream:
         with open(output_file, 'w') as out_stream:
+            count = 0
             for line in in_stream:
                 pp_line = preprocess_logline(line)
                 if pp_line:
                     out_stream.write(pp_line)
+                    count += 1
+                    if count % 100000 == 0:
+                        print "%ix 100k lines pre-processed successfully" %(count/100000)
             
        
 def main():
@@ -253,13 +258,14 @@ def main():
     
     parser = OptionParser()
     parser.add_option('-f', '--input_file', dest='input_file')
+    parser.add_option('-o', '--output_file', dest='output_file')
     (options, args) = parser.parse_args()
     
     app_id = 'mopub-inc'
     host = '38-aws.latest.mopub-inc.appspot.com'
     remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', utils.auth_func, host)
     
-    preprocess_logs(options.input_file)
+    preprocess_logs(options.input_file, options.output_file)
 
     # pickle deref cache 
     with open(DEREF_CACHE_PICKLE_FILE, 'wb') as pickle_file:
@@ -267,8 +273,11 @@ def main():
 
     elapsed = time.time() - start
     print 'preprocessing logs took %i minutes and %i seconds' % (elapsed/60, elapsed%60)
-    print 'preprocessed logs written to %s.pp'%options.input_file
     
+    if options.output_file:
+        print 'preprocessed logs written to %s'%options.output_file
+    else:
+        print 'preprocessed logs written to %s.pp'%options.input_file
 
 if __name__ == '__main__':
     main()

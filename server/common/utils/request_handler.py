@@ -1,9 +1,13 @@
 import logging
 
+
 from account.query_managers import AccountQueryManager
+from account.models import Account
+
 from google.appengine.api import users
 from google.appengine.ext import db
-from account.models import Account
+
+from inspect import getargspec
 
 
 class RequestHandler(object):
@@ -40,8 +44,20 @@ class RequestHandler(object):
         self.offline = True if self.offline == "1" else False
 
         if request.method == "GET":
+            # Now we can define get/post methods with variables instead of having to get it from the 
+            # Query dict every time! hooray!
+            f_args = getargspec(self.get).args
+            for arg in f_args:
+                if not kwargs.has_key(arg) and self.params.has_key(arg):
+                    kwargs[arg] = self.params.get(arg)
             return self.get(*args,**kwargs)
         elif request.method == "POST":
+            # Now we can define get/post methods with variables instead of having to get it from the 
+            # Query dict every time! hooray!
+            f_args = getargspec(self.post).args
+            for arg in f_args:
+                if not kwargs.has_key(arg) and self.params.has_key(arg):
+                    kwargs[arg] = self.params.get(arg)
             return self.post(*args,**kwargs)    
     def get(self):
         pass

@@ -15,7 +15,7 @@ admob = Template("""<html><head>
                          bgcolor: '000000', // background color (hex)
                          text: 'FFFFFF', // font-color (hex)
                          ama: false, // set to true and retain comma for the AdMob Adaptive Ad Unit, a special ad type designed for PC sites accessed from the iPhone.  More info: http://developer.admob.com/wiki/IPhone#Web_Integration
-                         test: false, // test mode, set to false to receive live ads
+                         test: true, // test mode, set to false to receive live ads
                          manual_mode: true // set to manual mode
                         };
                         </script>

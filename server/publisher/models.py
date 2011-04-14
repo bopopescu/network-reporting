@@ -120,7 +120,6 @@ class Site(db.Model):
         self.app_key = value
     app = property(_get_app, _set_app)
       
-      
     @classmethod
     def site_by_id(c, id):
         if id.startswith('ca'):
@@ -146,5 +145,9 @@ class Site(db.Model):
     @property
     def owner_name(self):
         return "app_key"
-  
-  
+
+###############
+# rename Site #
+###############
+
+AdUnit = Site

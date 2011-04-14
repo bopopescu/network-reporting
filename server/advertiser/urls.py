@@ -13,5 +13,6 @@ urlpatterns = patterns('advertiser.views',
   url(r'^adgroup/new/(?P<campaign_key>[-\w\.]+)/$', 'campaign_adgroup_new', name='advertiser_adgroup_new'),
   url(r'^adgroup/edit/(?P<adgroup_key>[-\w\.]+)/$', 'campaign_adgroup_edit', name='advertiser_adgroup_edit'),
   url(r'^adgroup/(?P<adgroup_key>[-\w\.]+)/$','campaign_adgroup_show',name='advertiser_adgroup_show'),  
+  url(r'^adserver_test/$','adserver_test', name='advertiser_adserver_test'),
   url(r'^$','adgroups',name='advertiser_campaign'),
 )

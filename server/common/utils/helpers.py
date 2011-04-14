@@ -38,3 +38,8 @@ def get_country_code(request=None, user_agent=None, locale=None):
         country_code = reporting_models.DEFAULT_COUNTRY
     return country_code         
     
+def get_user_agent(request):
+    return request.get('ua') or request.headers['User-Agent']    
+    
+def get_ip(request):
+    return request.get('ip') or request.remote_addr

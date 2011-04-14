@@ -6,7 +6,8 @@
 <li><a href="{% url publisher_index %}">Dashboard</a></li>
 <li class="active"><a href="{% url advertiser_campaign %}">Campaigns</a></li>{% endblock navLinks %}
 {% block pageTitle %}<h1>{% ifequal account.status 'step4' %}Step 4: Set up an ad campaign{% else %}Campaigns{% endifequal %}</h1>{% endblock pageTitle %}
-{% block titleBarRight %}{% ifequal account.status 'step4' %}
+{% block titleBarRight %}
+    {% ifequal account.status 'step4' %}
             <div class="stepProgress"> 
               <span class="stepProgress-step">Step 1: Add app</span> 
               <span class="ui-icon ui-icon-arrow-1-e"></span> 
@@ -15,7 +16,16 @@
               <span class="stepProgress-step">Step 3: Ad networks</span> 
               <span class="ui-icon ui-icon-arrow-1-e"></span> 
               <span class="stepProgress-step stepProgress-active">Step 4: Ad campaigns</span> 
-            </div>{% endifequal %}{% endblock titleBarRight %}
+            </div>
+    {% else %}        
+            <span class="titlebar-right">
+              <a class="button" id="advertisers-testAdServer" href="#">Test AdServer</a>
+            </span>
+    {% endifequal %}
+            
+{% endblock titleBarRight %}
+    
+    
 {% block messageCenter %}{% endblock messageCenter %}
 {% block dateButtons %}{% ifnotequal account.status 'step4' %}
           <div id="titlebar-center">
@@ -127,6 +137,13 @@
               </span>
               <a class="button" id="advertisers-addCampaign" href="{% url advertiser_campaign_create %}">Add a campaign</a>
             </div>
+            
+            <div id="adserverTest" style="display:none;">
+                <iframe height="480" width="350" id="adserverTest-iFrame" scrolling="no">
+                </iframe>    
+                <div id="adserverTest-iFrame-src" style="display:none;">{% url advertiser_adserver_test %}</div>    
+            </div>    
+            
             <form method="post" action="{% url advertiser_bid_pause %}" id="campaignForm">
               <input type="hidden" name="action" id="action"/>
               <h2>Guaranteed</h2>

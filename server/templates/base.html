@@ -11,7 +11,7 @@
   <title>MoPub - {% block pageTitleTag %}Ad Serving for Mobile Applications{% endblock %}</title>
   <meta name="description" content="">
   <meta name="author" content="">
-
+  {% block extraMeta %}{% endblock %}
   <!-- TypeKit -->
   <script type="text/javascript" src="http://use.typekit.com/qhz7iwb.js"></script>
   <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
@@ -63,6 +63,7 @@
   </script>
 </head>
 
+{% block body_content %}
 <body id="mopub-dashboard">
   <div id="container">
     <a class="visuallyhidden" href="#main">Skip navigation</a>
@@ -240,4 +241,5 @@
     </footer>
   </div> <!-- end of #container -->
 </body>
+{% endblock body_content %}
 </html>

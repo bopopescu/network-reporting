@@ -41,7 +41,7 @@ class AppNexusServerSide(ServerSide):
         response = urllib2.urlopen(req)    
         return response.read()
         
-    def bid_and_html_for_response(self,response):
+    def _bid_and_html_for_response(self,response):
         from django.utils import simplejson
         import logging
         response_dict = simplejson.loads(response.content)        

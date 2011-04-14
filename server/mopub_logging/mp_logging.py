@@ -25,7 +25,7 @@ TIME_BUCKET = 100
 MEMCACHE_ALIVE_TIME = 0#6*TIME_BUCKET
 
 REQ_QUEUE_NAME = "network-request-%02d"
-NUM_REQ_QUEUES = 1
+NUM_REQ_QUEUES = 10
 
 
 def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,creative_id=None,udid=None,user_agent=None,testing=None):

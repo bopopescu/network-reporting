@@ -835,7 +835,8 @@ class BaseModelForm(forms.BaseForm):
       )
     for name, prop in propiter:
       value = cleaned_data.get(name)
-      converted_data[name] = prop.make_value_from_form(value)
+      if value is not None:
+		  converted_data[name] = prop.make_value_from_form(value)
     try:
       if instance is None:
         instance = opts.model(**converted_data)

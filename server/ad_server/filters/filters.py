@@ -34,14 +34,32 @@ def budget_filter():
 def active_filter():
     log_mesg = "Removed due to inactivity: %s"
     def real_filter( a ):
-        return ( a.campaign.active and ( a.campaign.start_date  >= StatsModel.today() if a.campaign.start_date else True ) and ( StatsModel.today() <= a.campaign.end_date if a.campaign.end_date else True ) )
+        return ( a.campaign.active and ( a.campaign.start_date  <= StatsModel.today() if a.campaign.start_date else True ) and ( StatsModel.today() <= a.campaign.end_date if a.campaign.end_date else True ) )
     return ( real_filter, log_mesg, [] )
 
 def kw_filter( keywords ):
     log_mesg = "Removed due to keyword mismatch: %s"
-    def real_filter( a ):
-        return ( not a.keywords or set( keywords ).intersection( a.keywords ) > set() )
+    def real_filter( adgroup ):
+        # if there are no keywords then we don't need to exclude
+        if not adgroup.keywords:
+            return True 
+        
+        keyword_match = False 
+        # lists of tuples:
+        # m_age:19 AND m_gender:m
+        # m_age:20 AND m_gender:f
+        # is transformed to
+        # [(m_age:19,m_gender:m),(m_age:20,m_gender:f)]
+        anded_keywords = [k.split(' AND ') for k in adgroup.keywords] 
+        logging.info("KEYWORDS: %s == %s"%(keywords,anded_keywords))
+        for anded_keyword in anded_keywords:
+            anded_keyword = (kw.lower() for kw in anded_keyword)
+            if set(anded_keyword) <= set(keywords):
+                keyword_match = True 
+                break
+        return keyword_match # return False if there is a match and vice versa        
     return ( real_filter, log_mesg, [] )
+
 
 def geo_filter( geo_preds ):
     log_mesg = "Removed due to geo mismatch: %s"
@@ -186,29 +204,6 @@ def lat_lon_filter(ll=None):
                 return True 
         return False 
     return (real_filter, log_mesg, [])
-
-def kw_filter( keywords ):
-    log_mesg = "Removed due to keyword mismatch: %s"
-    def real_filter( adgroup ):
-        # if there are no keywords then we don't need to exclude
-        if not adgroup.keywords:
-            return True 
-        
-        keyword_match = True
-        # lists of tuples:
-        # m_age:19 AND m_gender:m
-        # m_age:20 AND m_gender:f
-        # is transformed to
-        # [(m_age:19,m_gender:m),(m_age:20,m_gender:f)]
-        anded_keywords = [k.split(' AND ') for k in adgroup.keywords] 
-        logging.info("KEYWORDS: %s == %s"%(keywords,anded_keywords))
-        for anded_keywords in anded_keywords:
-            anded_keywords = (kw.lower() for kw in anded_keywords)
-            if set(anded_keywords) <= set(keywords):
-                keyword_match = False 
-                break
-        return keyword_match # return False if there is a match and vice versa        
-    return ( real_filter, log_mesg, [] )
 
 ###############
 # End filters

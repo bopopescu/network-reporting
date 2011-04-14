@@ -10,10 +10,10 @@ def kw_filter_mptest():
                                 ('m_age:20 AND m_gender:f')])
     
     # True means this filter would like to reject the value                            
-    inputs_expected = {('m_age:19','m_gender:m','color:blue'):False,
-                       ('m_age:22','m_gender:f','color:blue'):True,
-                       ('m_age:19','m_gender:f'):True,
-                       ('m_age:20','m_gender:f','color:green'):False,
+    inputs_expected = {('m_age:19','m_gender:m','color:blue'):True,
+                       ('m_age:22','m_gender:f','color:blue'):False,
+                       ('m_age:19','m_gender:f'):False,
+                       ('m_age:20','m_gender:f','color:green'):True,
                       }
     
     for keywords,match in inputs_expected.iteritems():

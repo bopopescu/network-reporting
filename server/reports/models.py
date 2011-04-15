@@ -11,20 +11,24 @@ class Report(db.Model):
     deleted = db.BooleanProperty(default=False)
     saved = db.BooleanProperty(default=False)
 
-    account = db.ReferenceProperty(Account)
+    account = db.ReferenceProperty(Account, collection_name='reports')
 
     created_at = db.DateTimeProperty(auto_now_add=True)
     last_viewed = db.DateTimeProperty()
 
     # defines the Report
-    d1 = db.StringProperty() 
+    d1 = db.StringProperty(required=True) 
     d2 = db.StringProperty() 
     d3 = db.StringProperty() 
-    start = db.DateProperty()
-    end = db.DateProperty()
+    start = db.DateProperty(required=True)
+    end = db.DateProperty(required=True)
 
     #the actual report
     data = db.TextProperty()
 
     # maybe useful for internal analytics//informing users
-    time_to_gen = db.FloatProperty()
+    completed_at = db.DateTimeProperty()
+
+
+#class ScheduledReport
+

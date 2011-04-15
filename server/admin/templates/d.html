@@ -15,12 +15,11 @@
 {{page.html|safe}}
 <script type="text/javascript">
     var reloadTime;
-    {% if oading %}
+    {% if loading %}
     reloadTime = 60000;
     {% else %}
     reloadTime = 1200000;
     {% endif %}
-    
-	setTimeout("window.location.href = {% url admin_dashboard %};", reloadTime);
+	setTimeout("window.location.href = '{% url admin_dashboard %}';", reloadTime);
 </script>
 {% endblock %}

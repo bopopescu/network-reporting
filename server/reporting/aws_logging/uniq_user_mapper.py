@@ -2,10 +2,6 @@
 import sys
 from datetime import datetime
 
-# for EMR so log_parser can be found within each task
-sys.path.append('.')
-
-from log_parser import parse_logline
 
 PUB_PARAMS = ['adunit', 'app', '']
 ADV_PARAMS = ['creative', 'adgroup', 'campaign', '']
@@ -29,33 +25,41 @@ def generate_pub_adv_combos(handler, param_dict, date_hour):
     
 # abstract out core logic; this function is used for both mrjob (local testing) and boto (remote EMR job)
 def generate_kv_pairs(line):
-    logline_dict = parse_logline(line)
-    if logline_dict:
-        handler = logline_dict.get('path', None)
-        param_dict = logline_dict.get('params', None)
+    param_dict = {}
+    fields = line.strip().split(',')
+    for f in fields:
+        pair = f.split('=')
+        if len(pair) != 2: continue
+        param_dict[pair[0]] = pair[1]
+        
+    handler = param_dict.get('handler', None)
 
-        # ex: 14/Mar/2011:15:04:09 -0700
-        log_date = logline_dict.get('date', None)
-        log_time = logline_dict.get('time', None)
-        # log_tz = logline_dict.get('tz', None)
-            
-        if handler and param_dict and log_date and log_time:# and log_tz:      
-            # construct datetime object           
-            date_hour = datetime.strptime(log_date + ':' + log_time, '%d/%b/%Y:%H:%M:%S')
-            
-            # resolution is hour            
-            for key, value in generate_pub_adv_combos(handler, param_dict, date_hour.strftime('%y%m%d%H')):
-                yield key, value
+    # ex: 14/Mar/2011:15:04:09 -0700
+    log_date = param_dict.get('date', None)
+    log_time = param_dict.get('time', None)
+        
+    if handler and log_date and log_time:
+        # construct datetime object           
+        date_hour = datetime.strptime(log_date + ':' + log_time, '%d/%b/%Y:%H:%M:%S')
+        
+        # resolution is hour            
+        for key, value in generate_pub_adv_combos(handler, param_dict, date_hour.strftime('%y%m%d%H')):
+            yield key, value
 
-            # resolution is day                
-            for key, value in generate_pub_adv_combos(handler, param_dict, date_hour.strftime('%y%m%d')):
-                yield key, value
+        # resolution is day                
+        for key, value in generate_pub_adv_combos(handler, param_dict, date_hour.strftime('%y%m%d')):
+            yield key, value
     yield None, None
 
 
 def main():
     try:
+        # read in output from preprocess stage; key is comma-separated preprocessed log line, ignore the value
         for line in sys.stdin:
+            parts = line.split('\t')
+            if len(parts) != 2: continue
+            
+            line = parts[0]
             for key, value in generate_kv_pairs(line):
                 if key and value:
                     print "%s\t%s" % (key, value)

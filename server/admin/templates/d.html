@@ -21,6 +21,6 @@
     reloadTime = 1200000;
     {% endif %}
     
-	setTimeout("location.reload(true);", reloadTime);
+	setTimeout("window.location.href = {% url admin_dashboard %};", reloadTime);
 </script>
 {% endblock %}

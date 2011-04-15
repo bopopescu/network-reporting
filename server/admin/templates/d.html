@@ -1,135 +1,26 @@
 {% extends "admin/base.html" %}
 {% load filters %}
 {% block pageTitle %}<h1>MoPub Metrics Dashboard</h1>{% endblock pageTitle %}
-{% block pageTitleTag %}{{today.request_count|withsep}} served{% endblock pageTitleTag %}
 {% block titleBarRight %}
-    <span class="titlebar-link">
+<span class="titlebar-link">
+    {% if page.loading %}
+      <img src="/images/loading2.gif"/> Updating...    
+    {% else %}
       <a class="linkIcon" href="?refresh=1">Force update stats</a>
-    </span>
+    {% endif %}
+</span>    
 {% endblock titleBarRight %}
 
 {% block content %}	
-
-    <section class="offset separated" id="dashboard-stats"> 
-        <div class="stats"> 
-        <div class="stats-breakdown">
-            <table>
-              <tbody>
-                <tr class="active" id="stats-breakdown-requests">
-                  <td class="stats-breakdown-value today"><span class="inner">{{today.request_count|withsep}}</span></td>
-                  <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.request_count|withsep}}</span></td>
-                  <td class="stats-breakdown-value all"><span class="inner">{{all.request_count|withsep}}</span></td>
-                  <th class="stats-breakdown-name"><span class="inner">Requests</span></th>
-                </tr>
-                <tr id="stats-breakdown-impressions">
-                  <td class="stats-breakdown-value today"><span class="inner">{{today.impression_count|withsep}}</span></td>
-                  <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.impression_count|withsep}}</span></td>
-                  <td class="stats-breakdown-value all"><span class="inner">{{all.impression_count|withsep}}</span></td>
-                  <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
-                </tr>
-                <tr id="stats-breakdown-clicks">
-                  <td class="stats-breakdown-value today"><span class="inner">{{today.click_count|withsep}}</span></td>
-                  <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.click_count|withsep}}</span></td>
-                  <td class="stats-breakdown-value all"><span class="inner">{{all.click_count|withsep}}</span></td>
-                  <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
-                </tr>
-                <tr id="stats-breakdown-users">
-                  <td class="stats-breakdown-value today"><span class="inner">{{today.user_count|withsep}}</span></td>
-                  <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.user_count|withsep}}</span></td>
-                  <td class="stats-breakdown-value all"><span class="inner">{{all.user_count|withsep}}</span></td>
-                  <th class="stats-breakdown-name"><span class="inner">Pubs</span></th>
-                </tr>
-              </tbody>
-            </table>
-            </div>
-            <div class="stats-breakdown-buttons">
-            <span class="buttonset button-small" id="stats-breakdown-dateOptions">
-              <input type="radio" name="stats-breakdown-dateOptions-option" value="today" id="stats-breakdown-dateOptions-option-0" checked="checked"/>
-              <label for="stats-breakdown-dateOptions-option-0">Today</label>
-              <input type="radio" name="stats-breakdown-dateOptions-option" value="yesterday" id="stats-breakdown-dateOptions-option-1"/>
-              <label for="stats-breakdown-dateOptions-option-1">Yesterday</label>
-              <input type="radio" name="stats-breakdown-dateOptions-option" value="all" id="stats-breakdown-dateOptions-option-2"/>
-              <label for="stats-breakdown-dateOptions-option-2">All</label>
-            </span>
-        </div>
-        <div class="chart chart-loading stats-chart" id="dashboard-stats-chart"> 
-          <div class="chart-loading-text">Loading ...</div> 
-          <div class="chart-error-text">Could not load chart</div> 
-          <script type="text/javascript"> 
-              mopub.dashboardStatsChartData = {
-                pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
-                pointInterval: 86400000,
-                'requests': [
-                    { 'MoPub': [{% for t in stats %}{{t.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
-                ],
-                'impressions': [
-                    { 'MoPub': [{% for t in stats %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
-                ],
-                'clicks': [
-                    { 'MoPub': [{% for t in stats %}{{t.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
-                ],
-                'users': [
-                    { 'MoPub': [{% for t in stats %}{{t.user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
-                ] 
-              };
-          </script> 
-        </div> 
-      </div> 
-      <div class="clear"></div> 
-    </section>
-	
-	<section class="separated">
-    	<h3>Top MoPubs</h3>
-    	<table width="100%">
-    		<thead>
-    			<th style="text-align: left;">App</th>
-    			<th style="text-align: left;">Account</th>
-    			<th width="75px">Requests</th>
-    			<th width="75px">Impressions</th>
-    			<th width="75px">Clicks</th>
-    			<th width="75px">CTR</th>
-    			<th width="75px">Users</th>
-    		</thead>
-    		{% for a in apps %}
-    		<tr class="alternating-color">
-    			<td><a href="{% url publisher_app_show app_key=a.publisher.key %}">{{a.publisher.name|truncate:50}}</a></td>
-    			<td><a href="mailto:{{a.publisher.account.user.email}}">{{a.publisher.account.user.email}}</a></td>
-    			<td class="numeric">{{a.request_count|withsep}}</td>
-    			<td class="numeric">{{a.impression_count|withsep}}</td>
-    			<td class="numeric">{{a.click_count|withsep}}</td>
-    			<td class="numeric">{{a.ctr|percentage}}</td>
-    			<td class="numeric">{{a.user_count|withsep}}</td>
-    		</tr>
-    		{% endfor %}
-    	</table>
-    </section>
-	
-	<section class="separated">
-        <h3>New users since {{start_date}}</h3>
-        <table width="100%">
-            <thead>
-        		<tr>
-        		    <th style="text-align: left;">Email</th>
-        		    <th style="text-align: left;">Date</th>
-        		    <th style="text-align: left;">Mailing List</th>
-        		</tr>
-        	</thead>
-        	<tbody>
-        	{% for a in new_users %}
-            	<tr>
-            		<td><a href="mailto:{{a.user.email}}">{{a.user.email}}</a></td>
-            		<td>{{a.date_added}}</td>
-            		<td>{{a.mailing_list}}</td>
-            	</tr>
-        	{% endfor %}
-        	</tbody>	
-        </table>
-        
-        <h3>Paste these people into MailChimp</h3>        
-        <form><textarea>{% for a in mailing_list %}{{a.user.email}} {% endfor %}</textarea></form>
-	</section>
-	
-	<script type="text/javascript">
-    	setTimeout("location.reload(true);", 600000);
-    </script>
+{{page.html|safe}}
+<script type="text/javascript">
+    var reloadTime;
+    {% if page.loading %}
+    reloadTime = 60000;
+    {% else %}
+    reloadTime = 1200000;
+    {% endif }
+    
+	setTimeout("location.reload(true);", reloadTime);
+</script>
 {% endblock %}

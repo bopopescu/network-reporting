@@ -58,6 +58,16 @@ def dashboard_prep(request, *args, **kwargs):
     offline = request.GET.get('offline',False)
     offline = True if offline == "1" else False
 
+
+    # mark the page as loading
+    def _txn():
+        page = AdminPage.get_by_stats_source(offline=offline)
+        if page:
+            page.loading = True
+            page.put()
+    db.run_in_transaction(_txn)    
+    
+    
     days = StatsModel.lastdays(30)
     # gets all undeleted applications
     start_date = datetime.date.today() - datetime.timedelta(days=30) # NOTE: change
@@ -114,7 +124,7 @@ def dashboard_prep(request, *args, **kwargs):
         "new_users": new_users,
         "mailing_list": [a for a in new_users if a.mailing_list]}
 
-    page = AdminPage(offline=offline,html=render_to_string(request,'admin/d.html',render_params))
+    page = AdminPage(offline=offline,html=render_to_string(request,'admin/pre_render.html',render_params))
     page.put()
     
     return HttpResponse("OK")
@@ -145,5 +155,5 @@ def dashboard(request, *args, **kwargs):
         except Exception, e:
             logging.warning("task error: %s"%e)                
         
-    page = AdminPage.get_by_key_name(key_name)
-    return HttpResponse(page.html)
+    page = AdminPage.get_by_stats_source(offline=offline)
+    return render_to_response(request,'admin/d.html',{'page': page})

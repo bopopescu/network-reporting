@@ -135,6 +135,8 @@ def dashboard(request, *args, **kwargs):
     offline = True if offline == "1" else False
     refresh = request.GET.get('refresh',False)
     refresh = True if refresh == "1" else False
+    loading = request.GET.get('loading',False)
+    loading = True if loading == "1" else False
     
     if offline:
         key_name = "offline"
@@ -152,8 +154,10 @@ def dashboard(request, *args, **kwargs):
                               url='/admin/prep/')
         try:                      
             task.add("admin-dashboard-queue")
+            return HttpResponseRedirect(reverse('admin_dashboard')+'?loading=1')
         except Exception, e:
             logging.warning("task error: %s"%e)                
         
     page = AdminPage.get_by_stats_source(offline=offline)
-    return render_to_response(request,'admin/d.html',{'page': page})
+    loading = loading or page.loading
+    return render_to_response(request,'admin/d.html',{'page': page, 'loading': loading})

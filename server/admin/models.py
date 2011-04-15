@@ -2,6 +2,7 @@ from google.appengine.ext import db
 
 class AdminPage(db.Model):
     html = db.TextProperty()
+    today_requests = db.IntegerProperty()
     loading = db.BooleanProperty(default=False)
     generated = db.DateTimeProperty(auto_now_add=True)
     

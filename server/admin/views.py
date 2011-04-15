@@ -95,9 +95,9 @@ def dashboard_prep(request, *args, **kwargs):
     for app_stat in app_stats:
         # add this site stats to the total for the day and increment user count
         if app_stat.date:
-            user_count = totals[str(app_stat.date)].user_count
+            user_count = totals[str(app_stat.date)].user_count + 1
             _incr_dict(totals,str(app_stat.date),app_stat)
-            totals[str(app_stat.date)].user_count = user_count + 1
+            totals[str(app_stat.date)].user_count = user_count
         if app_stat._publisher:
             _incr_dict(unique_apps,str(app_stat._publisher),app_stat)
     
@@ -124,7 +124,9 @@ def dashboard_prep(request, *args, **kwargs):
         "new_users": new_users,
         "mailing_list": [a for a in new_users if a.mailing_list]}
 
-    page = AdminPage(offline=offline,html=render_to_string(request,'admin/pre_render.html',render_params))
+    page = AdminPage(offline=offline,
+                     html=render_to_string(request,'admin/pre_render.html',render_params),
+                     today_requests=total_stats[-1].request_count)
     page.put()
     
     return HttpResponse("OK")

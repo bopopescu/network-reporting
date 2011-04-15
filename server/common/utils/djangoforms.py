@@ -834,17 +834,26 @@ class BaseModelForm(forms.BaseForm):
       iter([('key_name', StringProperty(name='key_name'))])
       )
     for name, prop in propiter:
-      value = cleaned_data.get(name)
-      if value is not None:
+      if name in cleaned_data:
+          value = cleaned_data.get(name)
           converted_data[name] = prop.make_value_from_form(value)
     try:
       if instance is None:
+        delete_keys = []
+        # for key,value in converted_data.iteritems():
+        #     if value is None:
+        #         delete_keys.append(key)
+        # for key in delete_keys:
+        #     del converted_data[key]
+                
         instance = opts.model(**converted_data)
         self.instance = instance
       else:
         for name, value in converted_data.iteritems():
           if name == 'key_name':
             continue
+          # if (getattr(instance,name) and value is None) or \
+          #   value is not None:
           setattr(instance, name, value)
     except db.BadValueError, err:
       raise ValueError('The %s could not be %s (%s)' %

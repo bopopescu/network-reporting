@@ -15,8 +15,8 @@ UNIQ_USER_MAPPER = 's3://' + S3_BUCKET + '/code/uniq_user_mapper.py'
 
 
 NUM_INSTANCES = 1
-MASTER_INSTANCE_TYPE = 'm1.small'
-SLAVE_INSTANCE_TYPE = 'm1.small'
+MASTER_INSTANCE_TYPE = 'm1.large'
+SLAVE_INSTANCE_TYPE = 'm1.large'
 KEEP_ALIVE = True
     
 

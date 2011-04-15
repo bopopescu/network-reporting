@@ -73,7 +73,7 @@ echo "uploading logs to S3 took" $((STOP_TIME-START_TIME)) "seconds"
 START_TIME=$(date +%s)
 echo
 echo "submitting EMR job..."
-python $APP_DIR/reporting/aws_logging/job_submitter.py -l $LOG_DIR -r $S3_LOG_DIR/$LOGFILE -o $S3_LOGFILE -n 20
+python $APP_DIR/reporting/aws_logging/job_submitter.py -l $LOG_DIR -r $S3_LOG_DIR/$LOGFILE -o $S3_LOGFILE -n 100
 STOP_TIME=$(date +%s)
 echo "EMR job took" $((STOP_TIME-START_TIME)) "seconds"
 
@@ -85,6 +85,9 @@ rm $LOG_DIR/chunk-$TIMESTAMP.*
 echo
 echo "removing" $LOG_DIR/pp-chunk-$TIMESTAMP".*"
 rm $LOG_DIR/pp-chunk-$TIMESTAMP.*
+echo
+echo "removing" $LOCAL_LOGFILE.pp
+rm $LOCAL_LOGFILE.pp
 
 
 # download log counts output files from S3 and merge them into one

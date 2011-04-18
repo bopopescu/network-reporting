@@ -130,9 +130,9 @@ class TestOptimizer(unittest.TestCase):
     def mptest_context(self):
         # Test that we have the appropriate rollups
         eq_(self.adunit_context.adunit, self.adunit)
-        eq_(self.adunit_context.eligible_campaigns[0].key(), self.campaign.key())
-        eq_(self.adunit_context.eligible_adgroups[0].key(), self.adgroup.key())
-        eq_(self.adunit_context.eligible_creatives[0].tracking_url, "test-tracking-url")
+        eq_(self.adunit_context.campaigns[0].key(), self.campaign.key())
+        eq_(self.adunit_context.adgroups[0].key(), self.adgroup.key())
+        eq_(self.adunit_context.creatives[0].tracking_url, "test-tracking-url")
        
        
     def mptest_creative_ctrs_key(self):
@@ -356,7 +356,7 @@ class TestOptimizer(unittest.TestCase):
             
         # Cache context
         qm = AdUnitContextQueryManager()
-        adunit_context = qm.cache_get(str(self.adunit.key()))
+        adunit_context = qm.cache_get(self.adunit.key())
             
         new_creative = Creative(account=self.account,
                                            ad_group=self.adgroup,
@@ -371,7 +371,7 @@ class TestOptimizer(unittest.TestCase):
                       
         # First we get a cache hit, so there is no value for this element
         qm = AdUnitContextQueryManager()
-        adunit_context = qm.cache_get(str(self.adunit.key()))
+        adunit_context = qm.cache_get(self.adunit.key())
  
         ctr = adunit_context.get_ctr(new_creative, date_hour=self.dt)
 
@@ -379,10 +379,10 @@ class TestOptimizer(unittest.TestCase):
  
  
         # Clear the cache manually, now we have the information for the new creative
-        memcache.delete(str(self.adunit.key()))
+        memcache.delete(str(self.adunit.key()), namespace="context")
         
         qm = AdUnitContextQueryManager()
-        adunit_context = qm.cache_get(str(self.adunit.key()))
+        adunit_context = qm.cache_get(self.adunit.key())
     
         ctr = adunit_context.get_ctr(new_creative, date_hour=self.dt)
         

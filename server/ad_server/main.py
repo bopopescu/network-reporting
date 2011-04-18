@@ -72,7 +72,7 @@ from ad_server.networks.millennial import MillennialServerSide
 from ad_server.networks.mobfox import MobFoxServerSide
 
 from userstore.query_managers import ClickEventManager, AppOpenEventManager
-from publisher.query_managers import AdServerAdUnitQueryManager, AdUnitQueryManager
+from publisher.query_managers import AdUnitQueryManager, CreativeCTR, AdUnitContext, AdUnitContextQueryManager
 from advertiser.query_managers import CampaignStatsCounter
 
 from mopub_logging import mp_logging
@@ -159,7 +159,7 @@ class AdAuction(object):
     now = kw["now"]
     site = kw["site"]
     adunit = kw["site"]
-    manager = kw["manager"]
+    adunit_context = kw["adunit_context"]
     request = kw["request"]
     ll 		= kw['ll']
     testing = kw["testing"]
@@ -186,7 +186,7 @@ class AdAuction(object):
     # 2) throw out ad groups owned by campaigns that have exceeded budget or are paused
     # 3) throw out ad groups that restrict by keywords and do not match the keywords
     # 4) throw out ad groups that do not match device and geo predicates
-    all_ad_groups = manager.get_adgroups() #AdGroup.gql("where site_keys = :1 and active = :2 and deleted = :3", site.key(), True, False).fetch(AdAuction.MAX_ADGROUPS)
+    all_ad_groups = adunit_context.adgroups
     
     #Start up those RPC calls
     rpcs = AdAuction.request_third_party_server(request,site,all_ad_groups)
@@ -265,7 +265,7 @@ class AdAuction(object):
     # if any ad groups were returned, find the creatives that match the requested format in all candidates
     if len(all_ad_groups) > 0:
         logging.warning("ad_group: %s"%all_ad_groups)
-        all_creatives = manager.get_creatives_for_adgroups(all_ad_groups)
+        all_creatives = adunit_context.creatives
         if len(all_creatives) > 0:
             # for each priority_level, perform an auction among the various creatives 
             for p in CAMPAIGN_LEVELS: 
@@ -275,7 +275,7 @@ class AdAuction(object):
                 logging.warning("eligible_adgroups: %s"%eligible_adgroups)
                 if not eligible_adgroups:
                     continue
-                players = manager.get_creatives_for_adgroups(eligible_adgroups)
+                players = adunit_context.get_creatives_for_adgroups(eligible_adgroups)
                 players.sort(lambda x,y: cmp(y.e_cpm(), x.e_cpm()))
 
                 while players:
@@ -315,7 +315,7 @@ class AdAuction(object):
                                     winning_creative = winner
                                     # if native, log native request
                                     if winner.ad_type in NATIVE_REQUESTS:
-                                        mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, udid=udid, testing=testing)
+                                        mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, udid=udid)
                                     return winning_creative
                                 else:
                                     rpc = None          
@@ -332,7 +332,7 @@ class AdAuction(object):
                             # go out and get the data and paste in the data to the creative      
                                     if rpc:      
                                         # if third-party network, log request
-                                        mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, udid=udid, testing=testing)
+                                        mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, udid=udid)
                                         try:
                                             result = rpc.get_result()
                                             if result.status_code == 200:
@@ -358,7 +358,7 @@ class AdAuction(object):
                                         winning_creative = winner
                                         # if native, log native request
                                         if winner.ad_type in NATIVE_REQUESTS:
-                                            mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, udid=udid, testing=testing)
+                                            mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, udid=udid)
                                         return winning_creative
                         else:
                             # remove players of the current winning e_cpm
@@ -438,19 +438,11 @@ class AdHandler(webapp.RequestHandler):
   
   def get(self):
     id = self.request.get("id")
-    manager = AdUnitQueryManager(id)
+    adunit_manager = AdUnitQueryManager(id)
     now = datetime.datetime.now()
     
-    
-    #Testing!
-    if self.request.get( 'testing' ) == TEST_MODE:
-        manager = AdServerAdUnitQueryManager( id )
-        testing = True
-        now = datetime.datetime.fromtimestamp( float( self.request.get('dt') ) )
-    else:
-        testing = False
-    
-    mp_logging.log(self.request,event=mp_logging.REQ_EVENT, testing=testing)  
+    mp_logging.log(self.request,event=mp_logging.REQ_EVENT)  
+    # mp_logging.log(self.request,event=mp_logging.REQ_EVENT, testing=testing)  
     
     logging.warning(self.request.headers['User-Agent'] )
     country_re = r'[a-zA-Z][a-zA-Z][-_](?P<ccode>[a-zA-Z][a-zA-Z])'
@@ -460,11 +452,19 @@ class AdHandler(webapp.RequestHandler):
         countries = [c.upper() for c in countries]
         addr = tuple(countries)
 
+    adunit = adunit_manager.get_adunit()
+    site = adunit # TODO: get rid of site
+    
+    adunit_context = AdUnitContextQueryManager().cache_get(adunit.key())
+    
+    if self.request.get( 'testing' ) == TEST_MODE:
+        # If we are running tests from ad_server_tests, don't use caching
+        testing = True
+        adunit_context = AdUnitContext.wrap(adunit)
+        now = datetime.datetime.fromtimestamp( float( self.request.get('dt') ) )
+    else:
+        testing = False
 
-
-    # site = manager.get_by_key(key)#Site.site_by_id(id) if id else None
-    adunit = manager.get_adunit()
-    site = adunit
     
     # the user's site key was not set correctly...
     if site is None:
@@ -514,7 +514,7 @@ class AdHandler(webapp.RequestHandler):
 							  now=now,
 							  testing=testing,
 							  user_agent=user_agent,
-							  manager=manager)
+							  adunit_context=adunit_context)
     # output the request_id and the winning creative_id if an impression happened
     if c:
         user_adgroup_daily_key = memcache_key_for_date(udid,now,c.ad_group.key())

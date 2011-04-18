@@ -28,7 +28,7 @@ REQ_QUEUE_NAME = "network-request-%02d"
 NUM_REQ_QUEUES = 1
 
 
-def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,creative_id=None,udid=None,user_agent=None,testing=None):
+def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,creative_id=None,udid=None,user_agent=None):
     # if this is the second request because of a 
     # native failure we just bail in order to 
     # Note if logging an adnetwork request, we pass
@@ -72,13 +72,12 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
         queue_num = random.randint(0,NUM_REQ_QUEUES-1)                      
         queue_name = REQ_QUEUE_NAME%queue_num
 
-        if not testing:
-            try:
-                task.add(queue_name)
-            except Exception, e:
-                logging.warning(e)
-                    
-            
+        try:
+            task.add(queue_name)
+        except Exception, e:
+            logging.warning(e)
+                
+        
     # get account name from the adunit
     adunit_qmanager = manager or AdUnitQueryManager(adunit_id)
     adunit = adunit or adunit_qmanager.get_adunit()

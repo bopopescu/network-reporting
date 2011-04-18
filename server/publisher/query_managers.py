@@ -21,34 +21,32 @@ class AdUnitContext(object):
         """ Factory method that takes an adunit, fetches all the appropriate information
         from the database, and then returns an adunit_context object """
         
-        eligible_adgroups = cls.fetch_adgroups(adunit)
-        eligible_campaigns = cls.fetch_campaigns(eligible_adgroups)
-        eligible_creatives = cls.fetch_creatives(eligible_adgroups)
+        adgroups = cls.fetch_adgroups(adunit)
+        campaigns = cls.fetch_campaigns(adgroups)
+        creatives = cls.fetch_creatives(adgroups)
         
         adunit_context = cls(adunit, 
-                             eligible_campaigns, 
-                             eligible_adgroups, 
-                             eligible_creatives)
+                             campaigns, 
+                             adgroups, 
+                             creatives)
         return adunit_context
 
-    def __init__(self, adunit, eligible_campaigns,
-                               eligible_adgroups, 
-                               eligible_creatives):
+    def __init__(self, adunit, campaigns, adgroups, creatives):
         self.adunit = adunit
         
         
-        self.eligible_campaigns = eligible_campaigns
-        self.eligible_adgroups = eligible_adgroups
-        self.eligible_creatives = eligible_creatives
+        self.campaigns = campaigns
+        self.adgroups = adgroups
+        self.creatives = creatives
         
         # creative_ctr is a mapping from creative keys to CreativeCTR objects
         self.creative_ctrs = {}
-        for c in eligible_creatives:
+        for c in creatives:
             self.creative_ctrs[c.key()] = CreativeCTR(c, adunit)
             
             
-        # Triggers dereferencing of references
-        # We ask both Account and App for an arbitrary property
+        # Triggers dereferencing of references so we can cache the whole object
+        # We ask both Account and App for an arbitrary property 
         self.adunit.account.active
         self.adunit.app_key.deleted
             
@@ -74,9 +72,9 @@ class AdUnitContext(object):
     def get_creatives_for_adgroups(self,adgroups,limit=30):
         """ Get only the creatives for the requested adgroups """
         adgroup_keys = [adgroup.key() for adgroup in adgroups]
-        creatives = self.eligible_creatives
+        creatives = self.creatives
         # we must use get_value_for_datastore so we don't auto dereference
-        creatives = [creative for creative in self.eligible_creatives
+        creatives = [creative for creative in self.creatives
                               if creative.ad_group.key() in adgroup_keys]
 
         return creatives
@@ -84,41 +82,40 @@ class AdUnitContext(object):
     @classmethod
     def fetch_adgroups(cls, adunit, limit=30):
         logging.info("getting adgroups from db")
-        eligible_adgroups = AdGroup.all().filter("site_keys =",adunit.key()).\
+        adgroups = AdGroup.all().filter("site_keys =",adunit.key()).\
                                   filter("active =",True).\
                                   filter("deleted =",False).\
                                   fetch(limit)
-        return eligible_adgroups
+        return adgroups
 
     @classmethod
-    def fetch_creatives(cls, eligible_adgroups, limit=30):
+    def fetch_creatives(cls, adgroups, limit=30):
         logging.info("getting creatives from db")
-        eligible_creatives = Creative.all().filter("ad_group IN", eligible_adgroups).\
+        creatives = Creative.all().filter("ad_group IN", adgroups).\
                     filter("active =",True).filter("deleted =",False).\
                     fetch(limit)
                     
         # re-write creative so that ad_group is actually the object already in memory
-        for creative in eligible_creatives:
-            creative.ad_group = [ag for ag in eligible_adgroups 
+        for creative in creatives:
+            creative.ad_group = [ag for ag in adgroups 
                         if ag.key() == Creative.ad_group.get_value_for_datastore(creative)][0]
-        # [creative.ad_group.key() for creative in self.adunit.eligible_creatives]
         
-        return eligible_creatives
+        return creatives
 
     @classmethod
-    def fetch_campaigns(cls, eligible_adgroups):  
+    def fetch_campaigns(cls, adgroups):  
         # campaign exclusions... budget + time
         logging.info("attach eligible campaigns")
-        eligible_campaigns = []
-        for adgroup in eligible_adgroups:
+        campaigns = []
+        for adgroup in adgroups:
             campaign = db.get(adgroup.campaign.key())
-            eligible_campaigns.append(campaign)
+            campaigns.append(campaign)
 
         # attach sharded counter to all campaigns for budgetary
         # @Nafis: is this necessary?
-        for campaign in eligible_campaigns:
+        for campaign in campaigns:
             campaign.delivery_counter = CampaignStatsCounter(campaign)
-        return eligible_campaigns
+        return campaigns
         
 class CreativeCTR(object):
     """ The relevant CTR information for a creative"""
@@ -202,14 +199,15 @@ class AdUnitContextQueryManager(CachedQueryManager):
 
     def cache_get(self,adunit_key):
         """ Takes an AdUnit key, gets or builds the context """
-        adunit_context = memcache.get(adunit_key)
+        adunit_key = str(adunit_key)
+        adunit_context = memcache.get(adunit_key, namespace="context")
         if adunit_context is None:
             # get adunit from db
             adunit = AdUnit.get(adunit_key)
             # wrap context
             adunit_context = AdUnitContext.wrap(adunit)
             # put context in cache
-            memcache.set(str(adunit_context.key()), adunit_context)
+            memcache.set(str(adunit_context.key()), adunit_context, namespace="context")
         return adunit_context
 
 class AppQueryManager(CachedQueryManager):
@@ -282,133 +280,67 @@ class AdUnitQueryManager(CachedQueryManager):
         else:  
             return self.adunit
     
-    def get_adgroups(self,limit=30):
-        # Deprecated, use AdUnitContext
-        if not self.adunit:
-            self.get_adunit()
-
-        adunit = self.adunit  
-        if not hasattr(adunit,'eligible_adgroups'):
-            logging.info("getting adgroups from db")
-            adunit.eligible_adgroups = AdGroup.all().filter("site_keys =",adunit.key()).\
-                                      filter("active =",True).\
-                                      filter("deleted =",False).\
-                                      fetch(limit)
-            self._attach_campaign_info(adunit)                            
-            self.cache_put(adunit)
-        return adunit.eligible_adgroups
-    
-    def _attach_campaign_info(self,adunit):  
-        # Deprecated, use AdUnitContext
-        # campaign exclusions... budget + time
-        if not hasattr(adunit,'eligible_campaigns'):
-            logging.info("attach eligible campaigns")
-            adunit.eligible_campaigns = []
-            for adgroup in adunit.eligible_adgroups:
-                adgroup.campaign = db.get(adgroup.campaign.key())
-                adunit.eligible_campaigns.append(adgroup.campaign)
-      
-            # attach sharded counter to all campaigns for budgetary
-            for campaign in adunit.eligible_campaigns:
-                campaign.delivery_counter = CampaignStatsCounter(campaign)
-    
-    def get_creatives_for_adgroups(self,adgroups,limit=30):
-        # Deprecated, use AdUnitContext
-        if not hasattr(self.adunit,'eligible_adgroups'):
-            self.get_adgroups()
-      
-        # put all the creatives into memcache if not already there 
-        if not hasattr(self.adunit,'eligible_creatives'):
-            logging.info("getting creatives from db")
-            self.adunit.eligible_creatives = Creative.all().filter("ad_group IN",self.adunit.eligible_adgroups).\
-                        filter("active =",True).filter("deleted =",False).\
-                        fetch(limit)
-            # re-write creative so that ad_group is actual the object already in memory
-            for creative in self.adunit.eligible_creatives:
-                creative.ad_group = [ag for ag in self.adunit.eligible_adgroups 
-                            if ag.key() == Creative.ad_group.get_value_for_datastore(creative)][0]
-            # [creative.ad_group.key() for creative in self.adunit.eligible_creatives]
-            self.cache_put(self.adunit)
-    
-        # get only the creatives for the requested adgroups
-        adgroup_keys = [adgroup.key() for adgroup in adgroups]
-        creatives = self.adunit.eligible_creatives
-        # we must use get_value_for_datastore so we don't auto dereference
-        creatives = [creative for creative in self.adunit.eligible_creatives
-                              if creative.ad_group.key() in adgroup_keys]
-      
-        return creatives                  
-
-
-
-
-
+    # def get_adgroups(self,limit=30):
+    #      # Deprecated, use AdUnitContext
+    #      if not self.adunit:
+    #          self.get_adunit()
+    # 
+    #      adunit = self.adunit  
+    #      if not hasattr(adunit,'eligible_adgroups'):
+    #          logging.info("getting adgroups from db")
+    #          adunit.eligible_adgroups = AdGroup.all().filter("site_keys =",adunit.key()).\
+    #                                    filter("active =",True).\
+    #                                    filter("deleted =",False).\
+    #                                    fetch(limit)
+    #          self._attach_campaign_info(adunit)                            
+    #          self.cache_put(adunit)
+    #      return adunit.eligible_adgroups
+    #  
+    #  def _attach_campaign_info(self,adunit):  
+    #      # Deprecated, use AdUnitContext
+    #      # campaign exclusions... budget + time
+    #      if not hasattr(adunit,'eligible_campaigns'):
+    #          logging.info("attach eligible campaigns")
+    #          adunit.eligible_campaigns = []
+    #          for adgroup in adunit.eligible_adgroups:
+    #              adgroup.campaign = db.get(adgroup.campaign.key())
+    #              adunit.eligible_campaigns.append(adgroup.campaign)
+    #    
+    #          # attach sharded counter to all campaigns for budgetary
+    #          for campaign in adunit.eligible_campaigns:
+    #              campaign.delivery_counter = CampaignStatsCounter(campaign)
+    #  
+    #  def get_creatives_for_adgroups(self,adgroups,limit=30):
+    #      # Deprecated, use AdUnitContext
+    #      if not hasattr(self.adunit,'eligible_adgroups'):
+    #          self.get_adgroups()
+    #    
+    #      # put all the creatives into memcache if not already there 
+    #      if not hasattr(self.adunit,'eligible_creatives'):
+    #          logging.info("getting creatives from db")
+    #          self.adunit.eligible_creatives = Creative.all().filter("ad_group IN",self.adunit.eligible_adgroups).\
+    #                      filter("active =",True).filter("deleted =",False).\
+    #                      fetch(limit)
+    #          # re-write creative so that ad_group is actual the object already in memory
+    #          for creative in self.adunit.eligible_creatives:
+    #              creative.ad_group = [ag for ag in self.adunit.eligible_adgroups 
+    #                          if ag.key() == Creative.ad_group.get_value_for_datastore(creative)][0]
+    #          # [creative.ad_group.key() for creative in self.adunit.eligible_creatives]
+    #          self.cache_put(self.adunit)
+    #  
+    #      # get only the creatives for the requested adgroups
+    #      adgroup_keys = [adgroup.key() for adgroup in adgroups]
+    #      creatives = self.adunit.eligible_creatives
+    #      # we must use get_value_for_datastore so we don't auto dereference
+    #      creatives = [creative for creative in self.adunit.eligible_creatives
+    #                            if creative.ad_group.key() in adgroup_keys]
+    #    
+    #      return creatives                  
+    # 
+    # 
+ 
 
 
 
 
 
-
-class AdServerAdUnitQueryManager(object):
-    # Deprecated, This should be removed
-    # Jim put this together when he thought cache was broken
-    Model = AdUnit
-
-    def __init__(self, key=None):
-        if isinstance(key, db.Key):
-            self.key = key
-        else:
-            self.key = db.Key(key)
-        self.adunit = db.get(self.key)
-
-    def get_adunit(self):
-        return self.adunit
-
-    def get_adgroups(self,limit=30):
-        adunit = self.adunit  
-        if not hasattr(adunit,'eligible_adgroups'):
-            logging.info("getting adgroups from db")
-            adunit.eligible_adgroups = AdGroup.all().filter("site_keys =",adunit.key()).\
-                                      filter("active =",True).\
-                                      filter("deleted =",False).\
-                                      fetch(limit)
-        self._attach_campaign_info(adunit)                            
-        return adunit.eligible_adgroups
-
-    def _attach_campaign_info(self,adunit):  
-        # campaign exclusions... budget + time
-        if not hasattr(adunit,'eligible_campaigns'):
-            adunit.eligible_campaigns = []
-        for adgroup in adunit.eligible_adgroups:
-            adgroup.campaign = db.get(adgroup.campaign.key())
-            adunit.eligible_campaigns.append(adgroup.campaign)
-
-        # attach sharded counter to all campaigns for budgetary
-        for campaign in adunit.eligible_campaigns:
-            campaign.delivery_counter = CampaignStatsCounter(campaign)
-
-    def get_creatives_for_adgroups(self,adgroups,limit=30):
-        if not hasattr(self.adunit,'eligible_adgroups'):
-            self.get_adgroups()
-
-        # put all the creatives into memcache if not already there 
-        if not hasattr(self.adunit,'eligible_creatives'):
-            logging.info("getting creatives from db")
-            self.adunit.eligible_creatives = Creative.all().filter("ad_group IN",self.adunit.eligible_adgroups).\
-                        filter("active =",True).filter("deleted =",False).\
-                        fetch(limit)
-
-        # re-write creative so that ad_group is actual the object already in memory
-        for creative in self.adunit.eligible_creatives:
-            creative.ad_group = [ag for ag in self.adunit.eligible_adgroups 
-                        if ag.key() == Creative.ad_group.get_value_for_datastore(creative)][0]
-
-        # get only the creatives for the requested adgroups
-        adgroup_keys = [adgroup.key() for adgroup in adgroups]
-        creatives = self.adunit.eligible_creatives
-
-        # we must use get_value_for_datastore so we don't auto dereference
-        creatives = [creative for creative in self.adunit.eligible_creatives
-                              if creative.ad_group.key() in adgroup_keys]
-
-        return creatives

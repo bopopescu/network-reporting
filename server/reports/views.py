@@ -48,8 +48,10 @@ def add_report(request, *args, **kwargs):
     return AddReportHandler()(request, *args, **kwargs)
 
 class RequestReportHandler(RequestHandler):
+    def get(self):
+        
     #shoudl do this with forms...
-    def get(self, d1, start, end, d2=None, d3=None):
+    def post(self, d1, start, end, d2=None, d3=None):
         manager = ReportQueryManager(self.account)
         rep = manager.get_report(d1, d2, d3, start, end, view=True)
         #redirect to view handler
@@ -71,7 +73,8 @@ def check_report(request, *args, **kwargs):
 
 class GenReportHandler(RequestHandler):
     def post(self, report):
-        build_report(report)
+        report = ReportQueryMangager(self.account).get_report_by_key(report)
+        build_report(report, self.account)
         return HttpResponse('Report Generation Successful')
     def get(self):
         pass

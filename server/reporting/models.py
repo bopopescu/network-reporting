@@ -173,8 +173,9 @@ class StatsModel(db.Expando):
         return self.__str__()
                     
     def __str__(self):
-        return  "StatsModel(date=%s, pub=%s, adv=%s, account=%s, country=%s, offline=%s, %s,%s,%s,%s)"%(
+        return  "StatsModel(date=%s, date_hour=%s, pub=%s, adv=%s, account=%s, country=%s, offline=%s, %s,%s,%s,%s)"%(
                                                           self.date,
+                                                          self.date_hour,
                                                           StatsModel.publisher.get_value_for_datastore(self),
                                                           StatsModel.advertiser.get_value_for_datastore(self),    
                                                           StatsModel.account.get_value_for_datastore(self),

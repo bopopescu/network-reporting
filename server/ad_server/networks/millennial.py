@@ -7,12 +7,19 @@ class MillennialServerSide(ServerSide):
     base_url = "http://ads.mp.mydas.mobi/getAd.php5"
             
     def get_key_values(self):
-        return {'apid':self.get_account().millenial_pub_id,
+        return {'apid':self.get_millennial_apid(),
                         'vendor':'mopubserver', # Custom parameter for MoPub requested by Millennial
                         'auid':self.get_udid(),
                         'uip':self.get_ip(),
                         'ua':self.get_user_agent()}
-        
+
+    def get_millennial_apid(self):
+        if self.adunit.millennial_site_id:
+            return self.adunit.millennial_site_id
+        if self.adunit.app.millennial_app_id:
+            return self.adunit.millennial_app_id
+        return self.get_account().millenial_pub_id
+
     def get_query_string(self):
         query_string = urllib.urlencode(self.get_key_values())             
         return query_string

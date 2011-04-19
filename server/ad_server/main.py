@@ -70,6 +70,7 @@ from ad_server.networks.inmobi import InMobiServerSide
 from ad_server.networks.jumptap import JumptapServerSide
 from ad_server.networks.millennial import MillennialServerSide
 from ad_server.networks.mobfox import MobFoxServerSide
+from ad_server.optimizer import optimizer
 
 from userstore.query_managers import ClickEventManager, AppOpenEventManager
 from publisher.query_managers import AdUnitQueryManager, CreativeCTR, AdUnitContext, AdUnitContextQueryManager
@@ -276,11 +277,17 @@ class AdAuction(object):
                     if not eligible_adgroups:
                         continue
                     players = adunit_context.get_creatives_for_adgroups(eligible_adgroups)
-                    players.sort(lambda x,y: cmp(y.e_cpm(), x.e_cpm()))
+                    
+                    # construct dict: k=player, v=ecpm
+                    player_ecpm_dict = {}
+                    for p in players:
+                        player_ecpm_dict[p] = optimizer.get_ecpm(adunit_context, p)
+
+                    players.sort(lambda x,y: cmp(player_ecpm_dict[x], player_ecpm_dict[y]))
         
                     while players:
                         logging.warning("players: %s"%players)
-                        winning_ecpm = players[0].e_cpm()
+                        winning_ecpm = player_ecpm_dict[players[0]]
                         logging.warning("auction at priority=%s: %s, max eCPM=%s" % (p, players, winning_ecpm))
                         if winning_ecpm >= site.threshold_cpm( p ):
         
@@ -294,7 +301,7 @@ class AdAuction(object):
                             site_format = None if site.resizable else site.format
                             CRTV_FILTERS = (    format_filter( site_format ), # remove wrong formats
                                                 exclude_filter( exclude_params ), # remove exclude parameter
-                                                ecpm_filter( winning_ecpm ), # remove creatives that don't meet site threshold
+                                                ecpm_filter( winning_ecpm, player_ecpm_dict ), # remove creatives that aren't tied for first (winning ecpm)
                                                 )
                             winners = filter( mega_filter( *CRTV_FILTERS ), players )
                             for func, warn, lst in CRTV_FILTERS:
@@ -363,7 +370,7 @@ class AdAuction(object):
                             else:
                                 # remove players of the current winning e_cpm
                                 logging.warning('current players: %s'%players)
-                                players = [ p for p in players if p.e_cpm() != winning_ecpm ] 
+                                players = [ p for p in players if player_ecpm_dict[p] != winning_ecpm ] 
                                 logging.warning('remaining players %s'%players)
                             if not winning_creative:
                                 #logging.warning('taking away some players not in %s'%ad_groups)

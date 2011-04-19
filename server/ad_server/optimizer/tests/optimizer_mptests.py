@@ -149,7 +149,7 @@ class TestOptimizer(unittest.TestCase):
         # The adunit has been updated, so we roll up the adunit_context
         self.adunit_context = AdUnitContext.wrap(self.adunit)
       
-        ctr = self.adunit_context.get_ctr(self.creative, date=self.dt.date())
+        ctr = self.adunit_context._get_ctr(self.creative, date=self.dt.date())
         eq_(ctr, daily_CTR)
       
     def mptest_adunit_context_multiple_dates(self):
@@ -163,8 +163,8 @@ class TestOptimizer(unittest.TestCase):
         self._set_statsmodel_click_count(self.adunit, self.creative, 200, dt=datetime.datetime.now())
         self._set_statsmodel_impression_count(self.adunit, self.creative, 1000, dt=datetime.datetime.now())
     
-        ctr = self.adunit_context.get_ctr(self.creative, date=self.dt.date())
-        today_ctr = self.adunit_context.get_ctr(self.creative, date=datetime.date.today())
+        ctr = self.adunit_context._get_ctr(self.creative, date=self.dt.date())
+        today_ctr = self.adunit_context._get_ctr(self.creative, date=datetime.date.today())
         eq_(ctr, .10)
         eq_(today_ctr, .20)
     
@@ -229,7 +229,7 @@ class TestOptimizer(unittest.TestCase):
         eq_(stats.impression_count, 1200)
         
         # The previous hour has sufficient samples
-        ctr = self.adunit_context.get_ctr(self.creative, date_hour=self.dt)
+        ctr = self.adunit_context._get_ctr(self.creative, date_hour=self.dt)
         eq_(ctr, .50)
         
         
@@ -282,7 +282,7 @@ class TestOptimizer(unittest.TestCase):
         stats = qm_stats[0] # qm_stats is a list of stats of length 1
         eq_(stats.impression_count, 1200)
     
-        ctr = self.adunit_context.get_ctr(self.creative, date=self.dt.date())
+        ctr = self.adunit_context._get_ctr(self.creative, date=self.dt.date())
         eq_(ctr, 0.5)
         
         # There are insufficient datapoints to use hourly, so we use daily
@@ -329,7 +329,7 @@ class TestOptimizer(unittest.TestCase):
         qm = AdUnitContextQueryManager()
         adunit_context = qm.cache_get(str(self.adunit.key()))
         
-        ctr = self.adunit_context.get_ctr(self.creative, date_hour=self.dt)
+        ctr = self.adunit_context._get_ctr(self.creative, date_hour=self.dt)
         eq_(ctr, 0.5)
 
         
@@ -357,7 +357,7 @@ class TestOptimizer(unittest.TestCase):
         qm = AdUnitContextQueryManager()
         adunit_context = qm.cache_get(self.adunit.key())
  
-        ctr = adunit_context.get_ctr(new_creative, date_hour=self.dt)
+        ctr = adunit_context._get_ctr(new_creative, date_hour=self.dt)
 
         eq_(ctr, None)
  
@@ -368,7 +368,7 @@ class TestOptimizer(unittest.TestCase):
         qm = AdUnitContextQueryManager()
         adunit_context = qm.cache_get(self.adunit.key())
     
-        ctr = adunit_context.get_ctr(new_creative, date_hour=self.dt)
+        ctr = adunit_context._get_ctr(new_creative, date_hour=self.dt)
         
         eq_(ctr, 0.01)
     

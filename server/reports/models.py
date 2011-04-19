@@ -126,7 +126,12 @@ class Report(db.Model):
                                              advertiser = adv,
                                              )
         elif dim == CRTV:
+            man = CreativeQueryManager()
             type == 'adv'
+            vals = man.reports_get_creatives(account = self.account,
+                                             publisher = pub,
+                                             advertiser = adv,
+                                             )
             #do crtv stuff
         elif dim == P:
             return "Not implemented yet"

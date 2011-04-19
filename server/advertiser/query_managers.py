@@ -27,9 +27,6 @@ class CampaignQueryManager(CachedQueryManager):
         return campaigns.fetch(limit)        
     
     def reports_get_campaigns(self, account=None, publisher=None, advertiser=None, deleted=False):
-        camps = Campaign.all().filter('deleted =', deleted)
-        if account:
-            camps = camps.filter('account = ', account)
         if advertiser:
             # advertiser as list means priority level, return all these camps 
             # because we want stuff for those campaigns individually
@@ -37,14 +34,24 @@ class CampaignQueryManager(CachedQueryManager):
                 return advertiser
             else:
                 logging.error("this makes no sensssseeeee")
+                return advertiser
+
         if publisher:
             #publisher is either an app or an adunit, assume it's an adunit first and make it a list
             adunits = [publisher]
             if hasattr(publisher, 'adunits'): 
-                #if it's not an adunit, make it 
+                #if it's not an adunit, make it  
                 adunits = publisher.adunits
+            adgroups = AdGroup.all().filter('site_keys IN', adunits)
+            #adgroups = AdGroup.all().filter('site_keys IN', [a.key() for a in adunits])
+            adgroups = [a for a in adgroups if a.deleted == deleted]
+            camps = [adgroup.campaign for adgroup in adgroups]
+            return camps
 
-
+        camps = Campaign.all().filter('deleted =', deleted)
+        if account:
+            camps = camps.filter('account = ', account)
+        return camps
 
     def put_campaigns(self,campaigns):
         if isinstance(campaigns, db.Model):
@@ -120,6 +127,20 @@ class CreativeQueryManager(CachedQueryManager):
         return creatives            
     def put_creatives(self,creatives):
         return db.put(creatives)
+
+    def reports_get_creatives(self, account=None, publisher=None, advertiser=None):
+        adgroups = []
+        if advertiser:
+            if type(advertiser) != list:
+                advertiser = [advertiser]
+            for adv in advertiser:
+                adgroups += adv.adgroups
+
+        if publisher:
+            
+
+
+
         
     def delete_creatives(self,creatives):
         if isinstance(creatives,db.Model):

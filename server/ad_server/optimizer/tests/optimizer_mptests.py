@@ -363,7 +363,7 @@ class TestOptimizer(unittest.TestCase):
  
  
         # Clear the cache manually, now we have the information for the new creative
-        qm.cache_delete(self.adunit.key())
+        qm.cache_delete_from_adunits(self.adunit)
         
         qm = AdUnitContextQueryManager()
         adunit_context = qm.cache_get(self.adunit.key())

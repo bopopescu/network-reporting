@@ -643,10 +643,12 @@ class AddCreativeHandler(RequestHandler):
         creative.ad_group = ad_group
         creative.account = self.account
         CreativeQueryManager().put_creatives(creative)    
+       
         # update cache
         adunits = AdUnitQueryManager().get_by_key(ad_group.site_keys,none=True)
         if adunits:
           AdUnitContextQueryManager().cache_delete_from_adunits(adunits)
+          
         jsonDict.update(success=True)
         return self.json_response(jsonDict)
     
@@ -717,11 +719,8 @@ class CreativeManagementHandler(RequestHandler):
       # update cache
       adunits = AdUnitQueryManager().get_by_key(c.ad_group.site_keys,none=True)
       if adunits:
-        try:
-          AdUnitContextQueryManager().cache_delete_from_adunits([a for a in adunits if a])
-        except:
-          AdUnitContextQueryManager().cache_delete_from_adunits(adunits)
-            
+        AdUnitContextQueryManager().cache_delete_from_adunits([a for a in adunits if a])
+
         
     return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':adgroup_key}))
 

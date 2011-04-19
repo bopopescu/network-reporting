@@ -63,7 +63,7 @@ class Site(db.Model):
         u'320x50',
     )
   # TODO: Why is this "app_key" and not "app"?
-  app_key = db.ReferenceProperty(App)
+  app_key = db.ReferenceProperty(App, collection_name="all_adunits")
   account = db.ReferenceProperty(Account)
   
   # TODO: figure out how to expose this

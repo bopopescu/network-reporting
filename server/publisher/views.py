@@ -41,7 +41,7 @@ from account.query_managers import AccountQueryManager
 from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager, \
                                       CreativeQueryManager
 from common.utils.cachedquerymanager import CachedQueryManager
-from publisher.query_managers import AppQueryManager, AdUnitQueryManager
+from publisher.query_managers import AppQueryManager, AdUnitQueryManager, AdUnitContextQueryManager
 from reporting.query_managers import StatsModelQueryManager
 
 from common.utils import sswriter
@@ -199,7 +199,7 @@ class AppCreateHandler(RequestHandler):
 
         # update the cache as necessary 
         # replace=True means don't do anything if not already in the cache
-        CachedQueryManager().cache_delete(adunit)
+        AdUnitContextQueryManager().cache_delete_from_adunits(adunit)
 
         # Check if this is the first ad unit for this account
         if len(AdUnitQueryManager().get_adunits(account=self.account,limit=2)) == 1:      
@@ -231,7 +231,7 @@ class CreateAdUnitHandler(RequestHandler):
       
       # update the cache as necessary 
       # replace=True means don't do anything if not already in the cache
-      CachedQueryManager().cache_delete(adunit)
+      AdUnitContextQueryManager().cache_delete_from_adunits(adunit)
       
       # Check if this is the first ad unit for this account
       # if Site.gql("where account = :1 limit 2", self.account).count() == 1:
@@ -509,7 +509,13 @@ class AppUpdateAJAXHandler(RequestHandler):
       app = app_form.save(commit=False)
       app.account = self.account
       AppQueryManager().put_apps(app)
+      
       json_dict.update(success=True)
+      
+      # Delete related adunit contexts from memcache
+      adunits = AdUnitQueryManager().get_adunits(app=app)
+      AdUnitContextQueryManager().cache_delete_from_adunits(adunits)
+      
       return self.json_response(json_dict)
     new_html = self.get(app_form=app_form)
     json_dict.update(success=False,html=new_html)    
@@ -550,7 +556,7 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
       adunit.account = self.account
       AdUnitQueryManager().put_adunits(adunit)
       
-      CachedQueryManager().cache_delete(adunit)
+      AdUnitContextQueryManager().cache_delete_from_adunits(adunit)
       
       json_dict.update(success=True)
       return self.json_response(json_dict)
@@ -560,70 +566,6 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
 
 def adunit_update_ajax(request,*args,**kwargs):
   return AdUnitUpdateAJAXHandler()(request,*args,**kwargs)
-
-class AppUpdateHandler(RequestHandler):
-  def get(self,app_key):
-    a = AppQueryManager().get_by_key(app_key)
-    f = AppForm(instance=a)
-    
-    if a.icon:
-      a.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(a.icon)
-    
-    return render_to_response(self.request,'publisher/edit_app.html', {"f": f, "app": a})
-
-  def post(self,app_key):
-    a = AppQueryManager().get_by_key(app_key)
-    f = AppForm(data=self.request.POST, instance=a)
-    if a.account.user == self.account.user:
-      f.save(commit=False)
-
-      # Store the image
-      if not self.request.POST.get("img_url") == "":
-        try:
-          response = urllib.urlopen(self.request.POST.get("img_url"))
-          img = response.read()
-          a.icon = db.Blob(img)
-        except:
-          pass
-      elif self.request.FILES.get("img_file"):
-        try:
-          icon = images.resize(self.request.FILES.get("img_file").read(), 60, 60)
-          a.icon = db.Blob(icon)
-        except:
-          pass
-
-      AppQueryManager().put_apps(a)
-
-    return HttpResponseRedirect(reverse('publisher_app_show',kwargs={'app_key':a.key()}))
-
-@whitelist_login_required
-def app_update(request,*args,**kwargs):
-  return AppUpdateHandler()(request,*args,**kwargs)   
-
-class UpdateAdUnitHandler(RequestHandler):
-  def get(self,adunit_key):
-    adunit = AdUnitQueryManager().get_by_key(adunit_key)
-    f = SiteForm(instance=adunit)
-    return render_to_response(self.request,'publisher/edit.html', {"f": f, "site": adunit})
-
-  def post(self,adunit_key):
-    adunit = AdUnitQueryManager().get_by_key(adunit_key)
-    f = SiteForm(data=self.request.POST, instance=adunit)
-    if adunit.account.user == self.account.user:
-      f.save(commit=False)
-
-      # update the database
-      AdUnitQueryManager().put_adunits(adunit)
-      
-      # update the cache as necessary 
-      # replace=True means don't do anything if not already in the cache
-      CachedQueryManager().cache_delete(adunit)
-      
-    return HttpResponseRedirect(reverse('publisher_adunit_show',kwargs={'adunit_key':adunit.key()}))
-  
-@whitelist_login_required
-def adunit_update(request,*args,**kwargs):
-  return UpdateAdUnitHandler()(request,*args,**kwargs)   
 
 class AppIconHandler(RequestHandler):
   def get(self, app_key):
@@ -664,7 +606,9 @@ class RemoveAdUnitHandler(RequestHandler):
         a.deleted = True
         AdUnitQueryManager().put_adunits(a)
         # delete from cache
-        CachedQueryManager().cache_delete(a)
+        # CachedQueryManager().cache_delete(a)
+        AdUnitContextQueryManager().cache_delete_from_adunits(a)
+        
     return HttpResponseRedirect(reverse('publisher_app_show','app_key',a.app_key.key()))
  
 @whitelist_login_required

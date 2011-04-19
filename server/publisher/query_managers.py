@@ -14,7 +14,7 @@ from google.appengine.api import memcache
 
 class AdUnitContext(object):
     """All the adunit information necessary
-    to run the auction """
+    to run the auction. """
     
     @classmethod
     def wrap(cls, adunit):
@@ -195,6 +195,8 @@ class CreativeCTR(object):
 
         
 class AdUnitContextQueryManager(CachedQueryManager):
+    """ Keeps an up-to-date version of the AdUnit Context in memcache.
+    Deleted from memcache whenever its components are updated."""
     Model = AdUnitContext
 
     def cache_get(self,adunit_key):

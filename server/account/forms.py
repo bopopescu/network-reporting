@@ -4,10 +4,10 @@ from common.utils import fields as mpfields
 from account.models import Account
 
 class AccountForm(mpforms.MPModelForm):
-  TEMPLATE = 'account/form/account_form.html'
-  
-  phone = mpfields.MPTextField(label="Phone #", required=False)
-  
-  class Meta:
-    model = Account
-    exclude = ('user', 'all_users', 'date_added', 'active', 'status')
+    TEMPLATE = 'account/form/account_form.html'
+    
+    phone = mpfields.MPTextField(label="Phone #", required=False)
+    
+    class Meta:
+        model = Account
+        exclude = ('user', 'all_users', 'date_added', 'active', 'status')

@@ -8,138 +8,138 @@ import time
 from xml.dom import minidom
 
 class BrightRollServerSide(ServerSide):
-  base_url = "http://mobile.btrll.com/adwhirl/req/?adFeedKey=506"
-  base_url = "http://vast.bp3844869.btrll.com/vast/"
-  def __init__(self,request,adunit,*args,**kwargs):
-    self.url_params = {}
-    self.pub_id = adunit.account.brightroll_pub_id
-    return super(BrightRollServerSide,self).__init__(request,adunit,*args,**kwargs)
-  
-  @property
-  def url(self):
-    pub_id = self.pub_id or 3844792 
-    return self.base_url + str(pub_id) + '?n=%f'%time.time()
+    base_url = "http://mobile.btrll.com/adwhirl/req/?adFeedKey=506"
+    base_url = "http://vast.bp3844869.btrll.com/vast/"
+    def __init__(self,request,adunit,*args,**kwargs):
+        self.url_params = {}
+        self.pub_id = adunit.account.brightroll_pub_id
+        return super(BrightRollServerSide,self).__init__(request,adunit,*args,**kwargs)
     
-  @property
-  def headers(self):
-    # TODO: Replace with self.get_appid()
-    return {}
-
-  @property  
-  def payload(self):
-    return None
-    
-  def get_response(self):
-    logging.info("url: %s"%self.url)
-    req = urllib2.Request(self.url)
-    response = urllib2.urlopen(req)  
-    return response.read()
-
-  def _getText(self,node):
-      return node.childNodes[0].data     
-    
-  def _getURL(self,node):
-      return str(self._getText(node))
-    
-  def parse_xml(self,document):
-    logging.info(document)
-    
-    dom = minidom.parseString(document)
-    ad = dom.getElementsByTagName("Ad")[0]
-    inline = dom.getElementsByTagName("InLine")[0]
-    
-    
-    ############################
-    # Get Tracking information #
-    ############################
-    impression_urls = []
-    midpoint_urls = []
-    end_urls = []
-    click_urls = []
-    
-    impressions = inline.getElementsByTagName("Impression")
-    for impression in impressions:
-        impression_urls.append(self._getURL(impression))
+    @property
+    def url(self):
+        pub_id = self.pub_id or 3844792 
+        return self.base_url + str(pub_id) + '?n=%f'%time.time()
         
-                        
-    tracking_events = inline.getElementsByTagName("TrackingEvents")[0].\
-                        getElementsByTagName("Tracking")
-    
-    # get start_url, midpoint_url, complete_url
-    for tracking_event in tracking_events:
-        #names: start, midpoint, complete
-        name = tracking_event.getAttribute("event")
-        if name == "midpoint":
-            midpoint_urls.append(self._getURL(tracking_event))
-        elif name == "complete":
-            end_urls.append(self._getURL(tracking_event))    
-    
-    
-    video_clicks = inline.getElementsByTagName("VideoClicks")[0]
-    
-    click_urls.append(self._getURL(inline.getElementsByTagName("ClickThrough")[0]))
-    # this is weird, but what brightroll wants
-    end_urls.append(self._getURL(inline.getElementsByTagName("ClickTracking")[0]))
-    
-    # update the params
-    self.url_params.update(impression_urls=impression_urls,
-                           midpoint_urls=midpoint_urls,
-                           end_urls=end_urls,
-                           click_urls=click_urls,
-                           visit_us_url=click_urls[0])
-    
-    ##################################
-    # Get video creative information #
-    ##################################
-    video = inline.getElementsByTagName("Creative")[0]
-    
-    # get video_height, video_width, video_url
-    video_media = video.getElementsByTagName("MediaFiles")[0].\
-                  getElementsByTagName("MediaFile")[0]
-    video_width = video_media.getAttribute("width")
-    video_height = video_media.getAttribute("height")
-    video_url = self._getURL(video_media)
-    
-    self.url_params.update(video_width=video_width,video_height=video_height,
-                           video_url=video_url)
-    
-    companion_image = self._getURL(inline.getElementsByTagName("CompanionAds")[0].\
-                                   getElementsByTagName("StaticResource")[0])
-    self.url_params.update(companion_image=companion_image)                               
-    
-    ####################
-    # Get Realtime CPM #
-    ####################
-    try:
-        cpm = self._getText(inline.getElementsByTagName("Extensions")[0].\
-                getElementsByTagName("Extension")[0].\
-                getElementsByTagName("Price")[0])
-    except:
-        cpm = None            
-    self.url_params.update(cpm=cpm)
-    
-  def bid_and_html_for_response(self,response):
-    self.parse_xml(response.content)
-    # try:
-    #     self.parse_xml(response.content)
-    # except:
-    #     raise Exception("BrightRoll ad is empty") 
-    scripts = """
-    <script type="text/javascript">
-        window.addEventListener("load", function() { window.location="mopub://finishLoad";}, false);
-        function webviewDidAppear(){playAdVideo();};
-        //function webviewDidAppear(){alert(window.innerWidth+" "+window.innerHeight)};
-        windowInnerWidth = 320;
-    </script>"""  
-           
-    self.url_params.update(mopub_scripts=scripts) 
-    logging.info(self.url_params)   
-    return self.url_params.get('cpm'),template.safe_substitute(self.url_params)
-    # return 0.0,string.replace(response.content,"<head>","<head><script type=\"text/javascript\">\nwindow.addEventListener(\"load\", function() { loadAdVideo();playAdVideo();}, false);function webviewDidAppear(){playAdVideo();}\n</script>",1)
-    #return 0.0, "<html><body>hi</body></html>"
-    #return 0.0,response.content
-    
-    
+    @property
+    def headers(self):
+        # TODO: Replace with self.get_appid()
+        return {}
+
+    @property    
+    def payload(self):
+        return None
+        
+    def get_response(self):
+        logging.info("url: %s"%self.url)
+        req = urllib2.Request(self.url)
+        response = urllib2.urlopen(req)    
+        return response.read()
+
+    def _getText(self,node):
+        return node.childNodes[0].data     
+      
+    def _getURL(self,node):
+        return str(self._getText(node))
+      
+    def parse_xml(self,document):
+        logging.info(document)
+        
+        dom = minidom.parseString(document)
+        ad = dom.getElementsByTagName("Ad")[0]
+        inline = dom.getElementsByTagName("InLine")[0]
+        
+        
+        ############################
+        # Get Tracking information #
+        ############################
+        impression_urls = []
+        midpoint_urls = []
+        end_urls = []
+        click_urls = []
+        
+        impressions = inline.getElementsByTagName("Impression")
+        for impression in impressions:
+            impression_urls.append(self._getURL(impression))
+            
+                            
+        tracking_events = inline.getElementsByTagName("TrackingEvents")[0].\
+                            getElementsByTagName("Tracking")
+        
+        # get start_url, midpoint_url, complete_url
+        for tracking_event in tracking_events:
+            #names: start, midpoint, complete
+            name = tracking_event.getAttribute("event")
+            if name == "midpoint":
+                midpoint_urls.append(self._getURL(tracking_event))
+            elif name == "complete":
+                end_urls.append(self._getURL(tracking_event))    
+        
+        
+        video_clicks = inline.getElementsByTagName("VideoClicks")[0]
+        
+        click_urls.append(self._getURL(inline.getElementsByTagName("ClickThrough")[0]))
+        # this is weird, but what brightroll wants
+        end_urls.append(self._getURL(inline.getElementsByTagName("ClickTracking")[0]))
+        
+        # update the params
+        self.url_params.update(impression_urls=impression_urls,
+                               midpoint_urls=midpoint_urls,
+                               end_urls=end_urls,
+                               click_urls=click_urls,
+                               visit_us_url=click_urls[0])
+        
+        ##################################
+        # Get video creative information #
+        ##################################
+        video = inline.getElementsByTagName("Creative")[0]
+        
+        # get video_height, video_width, video_url
+        video_media = video.getElementsByTagName("MediaFiles")[0].\
+                      getElementsByTagName("MediaFile")[0]
+        video_width = video_media.getAttribute("width")
+        video_height = video_media.getAttribute("height")
+        video_url = self._getURL(video_media)
+        
+        self.url_params.update(video_width=video_width,video_height=video_height,
+                               video_url=video_url)
+        
+        companion_image = self._getURL(inline.getElementsByTagName("CompanionAds")[0].\
+                                       getElementsByTagName("StaticResource")[0])
+        self.url_params.update(companion_image=companion_image)                               
+        
+        ####################
+        # Get Realtime CPM #
+        ####################
+        try:
+            cpm = self._getText(inline.getElementsByTagName("Extensions")[0].\
+                    getElementsByTagName("Extension")[0].\
+                    getElementsByTagName("Price")[0])
+        except:
+            cpm = None            
+        self.url_params.update(cpm=cpm)
+        
+    def bid_and_html_for_response(self,response):
+        self.parse_xml(response.content)
+        # try:
+        #     self.parse_xml(response.content)
+        # except:
+        #     raise Exception("BrightRoll ad is empty") 
+        scripts = """
+        <script type="text/javascript">
+            window.addEventListener("load", function() { window.location="mopub://finishLoad";}, false);
+            function webviewDidAppear(){playAdVideo();};
+            //function webviewDidAppear(){alert(window.innerWidth+" "+window.innerHeight)};
+            windowInnerWidth = 320;
+        </script>"""  
+               
+        self.url_params.update(mopub_scripts=scripts) 
+        logging.info(self.url_params)   
+        return self.url_params.get('cpm'),template.safe_substitute(self.url_params)
+        # return 0.0,string.replace(response.content,"<head>","<head><script type=\"text/javascript\">\nwindow.addEventListener(\"load\", function() { loadAdVideo();playAdVideo();}, false);function webviewDidAppear(){playAdVideo();}\n</script>",1)
+        #return 0.0, "<html><body>hi</body></html>"
+        #return 0.0,response.content
+        
+        
 template = string.Template("""
 <!DOCTYPE HTML> 
 <html> 

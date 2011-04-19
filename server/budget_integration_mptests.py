@@ -8,6 +8,9 @@ sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/Go
 sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/fancy_urllib")
 sys.path.append(os.environ['PWD'])
 
+from account.models import Account
+
+from publisher.models import App
 
 from advertiser.models import ( Campaign,
                                 AdGroup,
@@ -35,6 +38,7 @@ from budget.models import (BudgetSlicer,
                            BudgetDailyLog,
                            )
 
+from google.appengine.ext import testbed
 ################# End to End #################
 from ad_server_tests import run_auction
 from publisher.models import Site as AdUnit
@@ -42,33 +46,78 @@ from publisher.models import Site as AdUnit
 class TestBudgetUnitTests(unittest.TestCase):
     
     def setUp(self):
+        # First, create an instance of the Testbed class.
+        self.testbed = testbed.Testbed()
+        # Then activate the testbed, which prepares the service stubs for use.
+        self.testbed.activate()
+        # Next, declare which service stubs you want to use.
+        self.testbed.init_datastore_v3_stub()
+        self.testbed.init_memcache_stub()
+        
+        
         # We simplify the budgetmanger for testing purposes
         budgetmodels.DEFAULT_TIMESLICES = 10 # this means each campaign has 100 dollars per slice
         budgetmodels.DEFAULT_FUDGE_FACTOR = 0.0
         
-        self.update_adgroups()
-        
-        # Get the campaigns and initialize them
-        self.fetch_campaigns()
-        
-        #unpause them and set the appropriate bids
-        self.expensive_c.active = True
-        self.expensive_c.budget = 1000.0
-        self.expensive_c.budget_strategy = "evenly"
+        # Set up default models
+        self.account = Account()
+        self.account.put()
 
+        self.app = App(account=self.account, name="Test App")
+        self.app.put()
+
+        self.adunit = AdUnit(account=self.account, app_key=self.app, name="Test AdUnit")
+        self.adunit.put()
+
+        # Make Expensive Campaign
+        self.expensive_c = Campaign(name="expensive",
+                                    budget=1000.0,
+                                    budget_strategy="evenly")
         self.expensive_c.put()
-        
-        self.cheap_c.active = True
-        self.cheap_c.budget = 1000.0
-        self.cheap_c.start_date = None
-        self.cheap_c.end_date = None
-        self.cheap_c.budget_strategy = "evenly"
 
+        self.expensive_adgroup = AdGroup(account=self.account, 
+                                          campaign=self.expensive_c, 
+                                          site_keys=[self.adunit.key()],
+                                          bid_strategy="cpc",
+                                          bid=100000.0) # 100 per click
+        self.expensive_adgroup.put()
+        
+        
+
+        self.expensive_creative = Creative(account=self.account,
+                                ad_group=self.expensive_adgroup,
+                                tracking_url="test-tracking-url", 
+                                cpc=.03)
+        self.expensive_creative.put()
+        
+        # Make cheap campaign
+        self.cheap_c = Campaign(name="expensive",
+                                budget=1000.0,
+                                budget_strategy="evenly")
         self.cheap_c.put()
+
+        self.cheap_adgroup = AdGroup(account=self.account, 
+                              campaign=self.cheap_c, 
+                              site_keys=[self.adunit.key()],
+                              bid_strategy="cpc",
+                              budget=1000.0,
+                              budget_strategy="evenly",
+                              bid=10000.0)
+        self.cheap_adgroup.put()
+
+
+        self.cheap_creative = Creative(account=self.account,
+                                ad_group=self.cheap_adgroup,
+                                tracking_url="test-tracking-url", 
+                                cpc=.03)
+        self.cheap_creative.put()
+        
+        
         
     
     def tearDown(self):
-        budget_service._flush_all()
+        self.testbed.deactivate()
+        # budget_service._flush_all()
   
     def update_adgroups(self):
         group_query = AdGroup.all().filter('name =', 'expensive') 
@@ -81,15 +130,6 @@ class TestBudgetUnitTests(unittest.TestCase):
         c_g = group_query.get()
         c_g.bid = 10000.0
         c_g.put()
-    
-    def fetch_campaigns(self):
-        """Gets the campaigns from the database, updates their remaining budget.
-        We should be able to call this at any time without effect"""
-        self.camp_query = Campaign.all().filter('name =', 'expensive') 
-
-        self.expensive_c = self.camp_query.get()
-        self.camp_query = Campaign.all().filter('name =', 'cheap')
-        self.cheap_c = self.camp_query.get()
     
     def mptest_load_campaigns(self):
         eq_(1000,self.expensive_c.budget)
@@ -164,7 +204,7 @@ class TestBudgetUnitTests(unittest.TestCase):
 
         # Then after we advance the timeslice
         budget_service._advance_all()
-        self.fetch_campaigns()
+        
 
         eq_(budget_service.remaining_ts_budget(self.cheap_c), 199)      
         eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
@@ -184,7 +224,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service._apply_if_able(self.expensive_c, 100), False)
 
         budget_service._advance_all()
-        self.fetch_campaigns()
+        
         
         eq_(budget_service.remaining_ts_budget(self.cheap_c), 198)
         eq_(budget_service.remaining_ts_budget(self.expensive_c), 100)
@@ -205,7 +245,7 @@ class TestBudgetUnitTests(unittest.TestCase):
 
         budget_service._advance_all()
         budget_service._advance_all()
-        self.fetch_campaigns()
+        
 
         eq_(budget_service.remaining_ts_budget(self.cheap_c), 298)
         eq_(budget_service.remaining_ts_budget(self.expensive_c), 200)
@@ -216,20 +256,20 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service.remaining_ts_budget(self.cheap_c),99)
         
         budget_service._advance_all()
-        self.fetch_campaigns()
+        
         
         # We have moved 200 to the current timeslice budget
         eq_(budget_service.remaining_ts_budget(self.cheap_c),199)
         
         budget_service._advance_all()
         budget_service._advance_all()
-        self.fetch_campaigns()
+        
         eq_(budget_service.remaining_ts_budget(self.cheap_c),399)
         
         # We have moved 400 to the current timeslice budget
         
         budget_service._advance_all()
-        self.fetch_campaigns()
+        
         eq_(budget_service.remaining_ts_budget(self.cheap_c),499)
 
     def mptest_cache_failure_then_spend(self):
@@ -245,7 +285,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
         
         budget_service._advance_all()
-        self.fetch_campaigns()
+        
         
         eq_(budget_service.remaining_ts_budget(self.cheap_c), 199)
         
@@ -255,7 +295,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service.remaining_ts_budget(self.cheap_c), 198)
 
     def mptest_cache_failure_then_apply_expense(self):
-        self.fetch_campaigns()
+        
         eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
         eq_(budget_service.remaining_ts_budget(self.cheap_c), 99)
         
@@ -272,7 +312,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service.remaining_ts_budget(self.cheap_c), 99)
 
     def mptest_cache_failure_then_advance(self):
-        self.fetch_campaigns()
+        
         budget_manager = BudgetSlicer.get_or_insert_for_campaign(self.cheap_c)
         eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
         eq_(budget_service.remaining_ts_budget(self.cheap_c), 99)
@@ -286,7 +326,7 @@ class TestBudgetUnitTests(unittest.TestCase):
 
         budget_service._advance_all()
         eq_(budget_manager.timeslice_snapshot, 100)
-        self.fetch_campaigns()
+        
         budget_manager = BudgetSlicer.get_or_insert_for_campaign(self.cheap_c)
         eq_(budget_manager.timeslice_snapshot, 200)
         
@@ -299,14 +339,14 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service.remaining_ts_budget(self.cheap_c), 99)
         
         budget_service._advance_all()
-        self.fetch_campaigns()
+        
 
         eq_(budget_service.remaining_ts_budget(self.cheap_c), 199)
 
         budget_service._delete_memcache(self.cheap_c)
         # Memcache miss -> restart timeslice at last snapshot (199)
         budget_service._advance_all()
-        self.fetch_campaigns()
+        
         eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
         eq_(budget_service.remaining_ts_budget(self.cheap_c), 298)
         
@@ -315,7 +355,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service.remaining_ts_budget(self.cheap_c), 99)
         
         budget_service._advance_all()
-        self.fetch_campaigns()
+        
         
         slicer = BudgetSlicer.get_or_insert_for_campaign(self.cheap_c)
         eq_(slicer.timeslice_snapshot, 199)
@@ -329,7 +369,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service.remaining_ts_budget(self.cheap_c), 98)
 
         budget_service._advance_all()
-        self.fetch_campaigns()
+        
 
         last_log = budget_service.last_log(self.cheap_c)
         eq_(last_log.spending, 2)    
@@ -339,7 +379,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service.remaining_ts_budget(self.cheap_c), 178)
 
         budget_service._advance_all()
-        self.fetch_campaigns()
+        
 
         last_log = budget_service.last_log(self.cheap_c)
         eq_(last_log.spending, 20)    
@@ -566,35 +606,87 @@ class TestBudgetEndToEnd(unittest.TestCase):
     """
 
     def setUp(self):
-        # We simplify budget_service for testing purposes
+        
+    
+        # First, create an instance of the Testbed class.
+        self.testbed = testbed.Testbed()
+        # Then activate the testbed, which prepares the service stubs for use.
+        self.testbed.activate()
+        # Next, declare which service stubs you want to use.
+        self.testbed.init_datastore_v3_stub()
+        self.testbed.init_memcache_stub()
+
+
+        # We simplify the budgetmanger for testing purposes
         budgetmodels.DEFAULT_TIMESLICES = 10 # this means each campaign has 100 dollars per slice
         budgetmodels.DEFAULT_FUDGE_FACTOR = 0.0
-        
-        self.update_adgroups()
-        self.fetch_campaigns()
-        
-        #unpause them and set the appropriate bids
-        self.expensive_c.active = True
-        self.expensive_c.budget = 1000.0
-        self.expensive_c.budget_strategy = "evenly"
 
+        # Set up default models
+        self.account = Account()
+        self.account.put()
+
+        self.app = App(account=self.account, name="Test App")
+        self.app.put()
+
+        self.budget_ad_unit = AdUnit(account=self.account, 
+                                     app_key=self.app, 
+                                     name="Test AdUnit",
+                                     format=u'320x50')
+        self.budget_ad_unit.put()
+
+        # Make Expensive Campaign
+        self.expensive_c = Campaign(name="expensive",
+                                    budget=1000.0,
+                                    budget_strategy="evenly")
         self.expensive_c.put()
-        
-        self.cheap_c.start_date = None
-        self.cheap_c.end_date = None
-        self.cheap_c.active = True
-        self.cheap_c.budget = 1000.0
-        self.cheap_c.budget_strategy = "evenly"
-        
+
+        self.expensive_adgroup = AdGroup(account=self.account, 
+                                          name="expensive",
+                                          campaign=self.expensive_c, 
+                                          site_keys=[self.budget_ad_unit.key()],
+                                          bid_strategy="cpc",
+                                          bid=100000.0) # 100 per click
+        self.expensive_adgroup.put()
+
+
+
+        self.expensive_creative = Creative(account=self.account,
+                                ad_group=self.expensive_adgroup,
+                                tracking_url="test-tracking-url", 
+                                cpc=.03,
+                                ad_type="clear")
+        self.expensive_creative.put()
+
+        # Make cheap campaign
+        self.cheap_c = Campaign(name="cheap",
+                                budget=1000.0,
+                                budget_strategy="evenly")
         self.cheap_c.put()
-        
-        self.fetch_adunits()
+
+        self.cheap_adgroup = AdGroup(account=self.account, 
+                              name="cheap",
+                              campaign=self.cheap_c, 
+                              site_keys=[self.budget_ad_unit.key()],
+                              bid_strategy="cpc",
+                              budget=1000.0,
+                              budget_strategy="evenly",
+                              bid=10000.0)
+        self.cheap_adgroup.put()
+
+
+        self.cheap_creative = Creative(account=self.account,
+                                ad_group=self.cheap_adgroup,
+                                tracking_url="test-tracking-url", 
+                                cpc=.03,
+                                ad_type="clear")
+        self.cheap_creative.put()
+    
         self.switch_adgroups_to_cpm()
         
         
    
     def tearDown(self):
-        budget_service._flush_all()
+        self.testbed.deactivate()
 
     def update_adgroups(self):
         group_query = AdGroup.all().filter('name =', 'expensive') 
@@ -648,57 +740,50 @@ class TestBudgetEndToEnd(unittest.TestCase):
         c_g = group_query.get()
         c_g.bid = 10000.0
         c_g.put()
-
-
-    def fetch_campaigns(self):
-        """Gets the campaigns from the database, updates their remaining budget.
-        We should be able to call this at any time without effect"""
-        self.camp_query = Campaign.all().filter('name =', 'expensive') 
-
-        self.expensive_c = self.camp_query.get()
-        self.camp_query = Campaign.all().filter('name =', 'cheap')
-        self.cheap_c = self.camp_query.get()
-
-    def fetch_adunits(self):
-        ad_unit_query = AdUnit.all().filter('name =', 'Budget')
-        self.budget_ad_unit = ad_unit_query.get()
-                
-        ad_unit_query = AdUnit.all().filter('name =', 'Fake')
-        self.fake_ad_unit = ad_unit_query.get()
-        
-    def mptest_get_adunit(self):
-        eq_(self.budget_ad_unit.name, 'Budget')
-        eq_(self.fake_ad_unit.name, 'Fake')
-   
-    def mptests_adgroups(self):
-        self.cheap_c.adgroups[0].bid = 10000.0 # $10 per imp or click
-        self.cheap_c.adgroups[0].put()
-        self.expensive_c.adgroups[0].bid = 100000.0 # $100 per imp/click
-        self.expensive_c.adgroups[0].put()
-        eq_(self.cheap_c.adgroups[0].bid, 10000.0)
-        eq_(self.expensive_c.adgroups[0].bid, 100000.0)
-
     
     def mptest_simple_request(self):
         creative = run_auction(self.budget_ad_unit.key())
         eq_(creative.ad_group.campaign.name, "expensive")
-
-
-    
-    def mptest_multiple_requests(self):
+        
+    def mptest_two_requests(self):
         # We have enough budget for one expensive ad
+
+        eq_(budget_service.remaining_daily_budget(self.expensive_c), 1000)
+        eq_(budget_service.remaining_ts_budget(self.expensive_c), 100)
+
         creative = run_auction(self.budget_ad_unit.key())
         eq_(creative.ad_group.bid, 100000.0)
         eq_(creative.ad_group.campaign.name, "expensive")
+
+        eq_(budget_service.remaining_daily_budget(self.expensive_c), 900)
+        eq_(budget_service.remaining_ts_budget(self.expensive_c), 0)
+
+        creative = run_auction(self.budget_ad_unit.key())
+        eq_(creative.ad_group.campaign.name, "cheap")
+    
+      
+  
+    def mptest_multiple_requests(self):
+        # We have enough budget for one expensive ad
+        
+        eq_(budget_service.remaining_daily_budget(self.expensive_c), 1000)
+        eq_(budget_service.remaining_ts_budget(self.expensive_c), 100)
+        
+        creative = run_auction(self.budget_ad_unit.key())
+        eq_(creative.ad_group.bid, 100000.0)
+        eq_(creative.ad_group.campaign.name, "expensive")
+    
+        eq_(budget_service.remaining_daily_budget(self.expensive_c), 900)
+        eq_(budget_service.remaining_ts_budget(self.expensive_c), 0)
     
         # We have enough budget for 10 cheap ads
         for i in xrange(10):
             creative = run_auction(self.budget_ad_unit.key())
             eq_(creative.ad_group.campaign.name, "cheap")
-        
+    
         creative = run_auction(self.budget_ad_unit.key())
         eq_(creative, None)
-    
+   
     def mptest_multiple_requests_timeslice_advance(self):
         # We have enough budget for one expensive ad
         creative = run_auction(self.budget_ad_unit.key())
@@ -711,7 +796,7 @@ class TestBudgetEndToEnd(unittest.TestCase):
     
         # Advance all of our campaigns
         budget_service._advance_all()
-        self.fetch_campaigns()
+    
     
         # We again have enough budget for one expensive ad
         creative = run_auction(self.budget_ad_unit.key())
@@ -738,7 +823,7 @@ class TestBudgetEndToEnd(unittest.TestCase):
         # Advance all of our campaigns
         budget_service._advance_all()
         budget_service._advance_all()
-        self.fetch_campaigns()
+    
     
         # We again have enough budget for two expensive ads
         creative = run_auction(self.budget_ad_unit.key())
@@ -757,7 +842,7 @@ class TestBudgetEndToEnd(unittest.TestCase):
     
     def mptest_multiple_requests_cpc(self):
         self.switch_adgroups_to_cpc()
-        
+    
         # We have enough budget for one expensive ad
         creative = run_auction(self.budget_ad_unit.key())
         eq_(creative.ad_group.campaign.name, "expensive")
@@ -782,8 +867,8 @@ class TestBudgetEndToEnd(unittest.TestCase):
     
         # Advance all of our campaigns
         budget_service._advance_all()
-        self.fetch_campaigns()
-        
+    
+    
         # We spent 50.0 on cheap_c last timeslice
         last_log = budget_service.last_log(self.cheap_c)
         eq_(last_log.spending, 50)
@@ -799,45 +884,45 @@ class TestBudgetEndToEnd(unittest.TestCase):
     
         creative = run_auction(self.budget_ad_unit.key())
         eq_(creative, None)
-        
+    
         # Advance all of our campaigns
         budget_service._advance_all()
-        self.fetch_campaigns()
-        
+    
+    
         # We spent 150.0 on cheap_c last timeslice
         last_log = budget_service.last_log(self.cheap_c)
         eq_(last_log.spending, 150)
     
         # Test the generator function:
         log_generator = budget_service.log_generator(self.cheap_c)
-        
+    
         eq_(log_generator[0].spending,150)
         eq_(log_generator[1].spending,50)
     
     def mptest_allatonce(self):
         self.expensive_c.budget_strategy = "allatonce"
         self.expensive_c.put()
-
+    
         self.cheap_c.budget_strategy = "allatonce"
         self.cheap_c.put()
-   
+    
         eq_(self.expensive_c.budget, 1000)
         eq_(budget_service.remaining_daily_budget(self.cheap_c),1000)     
-        
+    
         creative = run_auction(self.budget_ad_unit.key())
         eq_(creative.ad_group.campaign.name, "expensive")
-        
-        self.fetch_campaigns()
-        
+    
+    
+    
         eq_(budget_service.remaining_daily_budget(self.expensive_c),900)
-        
+    
         # We have enough budget for 10 expensive ads
         for i in xrange(9):
             creative = run_auction(self.budget_ad_unit.key())
             eq_(creative.ad_group.campaign.name, "expensive")
-
+    
         # We now use our cheap campaign budget
         creative = run_auction(self.budget_ad_unit.key())
         eq_(creative.ad_group.campaign.name, "cheap")
-
+    
     

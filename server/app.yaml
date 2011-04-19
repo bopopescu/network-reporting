@@ -7,6 +7,10 @@ default_expiration: "10d"
 builtins:
 - datastore_admin: on
 
+# Turn this on to debug
+- appstats: on
+
+
 handlers:
   
 - url: /robots.txt

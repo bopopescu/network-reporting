@@ -43,6 +43,14 @@ import logging
 
 from google.appengine.ext.db import Key
 
+
+""" 
+This serves as the end-to-end framework for ad_server tests.
+Due to some strange path issues, it appears that it must remain in this location.
+TODO: move to mopub/server/ad_server
+"""
+
+
 AdUnit = Site
 
 AD_UNIT_ID = "agltb3B1Yi1pbmNyCgsSBFNpdGUYAgw"

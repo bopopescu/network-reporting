@@ -65,7 +65,7 @@ parser.add_option("-i", "--instance_id", dest="INSTANCE_ID",type="int",
 parser.add_option("-e", "--exp_id", dest="TEST_ID",type="str",
                 help="LABEL THE TEST.", default='PENELOPE')         
 parser.add_option("-x", "--host", dest="HOST",type="str",
-                help="HOST NAME.", default='eventrackerscaletest.appspot.com')
+                help="HOST NAME.", default='localhost:8080')
 
 
 (options, args) = parser.parse_args()
@@ -127,7 +127,7 @@ def threadproc():
             
             uid = uuid.uuid4()
             # adunits = ["agltb3B1Yi1pbmNyDAsSBFNpdGUYkaoMDA","agltb3B1Yi1pbmNyDAsSBFNpdGUYycEMDA","agltb3B1Yi1pbmNyDAsSBFNpdGUYq-wdDA"]
-            adunits = ["ahRldmVudHJhY2tlcnNjYWxldGVzdHILCxIEU2l0ZRjJZQw"]
+            adunits = ["agltb3B1Yi1pbmNyCgsSBFNpdGUYAgw"]
             # adunits = ["agltb3B1Yi1pbmNyDAsSBFNpdGUYycoJDA","agltb3B1Yi1pbmNyDAsSBFNpdGUYmpUgDA"]
             random.shuffle(adunits)
             adunit = adunits[0]

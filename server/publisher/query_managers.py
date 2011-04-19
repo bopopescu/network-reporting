@@ -49,12 +49,6 @@ class AdUnitContext(object):
         # We ask both Account and App for an arbitrary property 
         self.adunit.account.active
         self.adunit.app_key.deleted
-            
-        
-    def key(self):
-        """ Since we want a 1-1 mapping from adunits to adunit_contexts, we
-        appropriate the key from the adunit """
-        return self.adunit.key()    
 
     def get_ctr(self, creative, date=datetime.date.today(), date_hour=None, min_sample_size=1000):
         
@@ -116,6 +110,12 @@ class AdUnitContext(object):
         for campaign in campaigns:
             campaign.delivery_counter = CampaignStatsCounter(campaign)
         return campaigns
+        
+        
+    def key(self):
+        """ Since we want a 1-1 mapping from adunits to adunit_contexts, we
+        appropriate the key from the adunit, returns a string. """
+        return "context:"+str(self.adunit.key())
         
 class CreativeCTR(object):
     """ The relevant CTR information for a creative"""
@@ -199,8 +199,8 @@ class AdUnitContextQueryManager(CachedQueryManager):
 
     def cache_get(self,adunit_key):
         """ Takes an AdUnit key, gets or builds the context """
-        adunit_key = str(adunit_key)
-        adunit_context = memcache.get(adunit_key, namespace="context")
+        adunit_context_key = "context:"+str(adunit_key)
+        adunit_context = memcache.get(adunit_context_key, namespace="context")
         if adunit_context is None:
             # get adunit from db
             adunit = AdUnit.get(adunit_key)
@@ -209,6 +209,12 @@ class AdUnitContextQueryManager(CachedQueryManager):
             # put context in cache
             memcache.set(str(adunit_context.key()), adunit_context, namespace="context")
         return adunit_context
+        
+    def cache_delete_from_adunits(self, adunits):
+        if not isinstance(adunits,list):
+          adunits = [adunits]
+
+        return memcache.delete_multi(["context:"+str(adunit.key()) for adunit in adunits],namespace="context")
 
 class AppQueryManager(CachedQueryManager):
     Model = App
@@ -242,7 +248,7 @@ class AdUnitQueryManager(CachedQueryManager):
             else:
                 logging.error('len is negative?')
 
-        adunits = Site.all().filter("deleted =",deleted)
+        adunits = AdUnit.all().filter("deleted =",deleted)
         if app:
             adunits = adunits.filter("app_key =",app)
         if account:

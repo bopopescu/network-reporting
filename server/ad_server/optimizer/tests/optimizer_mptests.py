@@ -199,22 +199,6 @@ class TestOptimizer(unittest.TestCase):
         eq_(ctr, .10)
         
     def mptest_hourly_smqm(self):
-        # one_hour_ago = self.dt - datetime.timedelta(hours=1)
-        #  two_hours_ago = self.dt - datetime.timedelta(hours=2)
-        
-        # Set up test
-        self._set_statsmodel_click_count(self.adunit, self.creative, 600, date_hour=self.dt)
-        self._set_statsmodel_impression_count(self.adunit, self.creative, 1200, date_hour=self.dt)
-        
-        
-        qm_stats = self.smqm.get_stats_for_hours(publisher=self.adunit,
-                                         advertiser=self.creative,
-                                         date_hour=self.dt)
-        stats = qm_stats # qm_stats is a list of stats of length 1
-        eq_(stats.impression_count, 1200)
-        
-        
-    def mptest_hourly_smqm(self):
         one_hour_ago = self.dt - datetime.timedelta(hours=1)
         #  two_hours_ago = self.dt - datetime.timedelta(hours=2)
     
@@ -379,7 +363,7 @@ class TestOptimizer(unittest.TestCase):
  
  
         # Clear the cache manually, now we have the information for the new creative
-        memcache.delete(str(self.adunit.key()), namespace="context")
+        qm.cache_delete(self.adunit.key())
         
         qm = AdUnitContextQueryManager()
         adunit_context = qm.cache_get(self.adunit.key())

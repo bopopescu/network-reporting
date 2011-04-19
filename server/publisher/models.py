@@ -145,7 +145,6 @@ class Site(db.Model):
     @property
     def owner_name(self):
         return "app_key"
-
 ###############
 # rename Site #
 ###############

@@ -25,6 +25,26 @@ class CampaignQueryManager(CachedQueryManager):
         if account:
             campaigns = campaigns.filter("account =",account)
         return campaigns.fetch(limit)        
+    
+    def reports_get_campaigns(self, account=None, publisher=None, advertiser=None, deleted=False):
+        camps = Campaign.all().filter('deleted =', deleted)
+        if account:
+            camps = camps.filter('account = ', account)
+        if advertiser:
+            # advertiser as list means priority level, return all these camps 
+            # because we want stuff for those campaigns individually
+            if type(advertiser) == list:
+                return advertiser
+            else:
+                logging.error("this makes no sensssseeeee")
+        if publisher:
+            #publisher is either an app or an adunit, assume it's an adunit first and make it a list
+            adunits = [publisher]
+            if hasattr(publisher, 'adunits'): 
+                #if it's not an adunit, make it 
+                adunits = publisher.adunits
+
+
 
     def put_campaigns(self,campaigns):
         if isinstance(campaigns, db.Model):

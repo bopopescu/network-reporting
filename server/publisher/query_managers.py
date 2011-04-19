@@ -12,6 +12,8 @@ import datetime
 from reporting.query_managers import StatsModelQueryManager
 from google.appengine.api import memcache
 
+AdUnit = Site
+
 class AdUnitContext(object):
     """All the adunit information necessary
     to run the auction. """
@@ -20,7 +22,6 @@ class AdUnitContext(object):
     def wrap(cls, adunit):
         """ Factory method that takes an adunit, fetches all the appropriate information
         from the database, and then returns an adunit_context object """
-        
         adgroups = cls.fetch_adgroups(adunit)
         campaigns = cls.fetch_campaigns(adgroups)
         creatives = cls.fetch_creatives(adgroups)
@@ -241,6 +242,54 @@ class AppQueryManager(CachedQueryManager):
         if account:
             apps = apps.filter("account =",account)
         return apps.fetch(limit)  
+
+    def reports_get_apps(self, account=None, publisher=None, advertiser=None, deleted=False, limit=50):
+        '''Given account or pub, or adv or some combination thereof return a list of apps that (correctly) 
+        correspond to the inputs and things'''
+        apps = self.model.all().filter("deleted =", deleted)
+        if account:
+            apps = apps.filter('account =', account)
+        adunits = []
+        #if advertiser is set, restrict apps to be only those apps that advertiser has an effect on
+        if advertiser:
+            if type(advertiser) != list:
+                advertiser = [advertiser]
+            for adv in advertiser:
+                #get adgroups from campaigns
+                if hasattr(adv, 'adgroups'):
+                    adgroups = adv.adgroups
+                # or creatives
+                elif hasattr(adv, 'adgroup'):
+                    adgroups = [adv.adgroup]
+                else:
+                    adgroups = advertiser
+                #iterate over adgroups and accumulate site_keys
+                for adgroup in adgroups:
+                    for key in adgroup.site_keys:
+                        if key not in adunits:
+                            adunits.append(key)
+            
+            adunit_objs = AdUnit.get(adunits)
+
+            apps = set()
+            for adunit in adunit_objs:
+                apps.add(adunit.app)
+            return list(apps)    
+
+            
+            final_apps = []
+            for app in apps:
+                for au in app.adunits:
+                    if au in adunits:
+                        final_apps.append(app)
+                        break
+            return final_apps
+        #if publisher has been set then everything makes no sense so just ignore it and pass it back or something
+        # huh?
+        if publisher:
+            return [publisher]
+        else:
+            return apps
         
     def put_apps(self,apps):
         return db.put(apps)    
@@ -256,7 +305,7 @@ class AdUnitQueryManager(CachedQueryManager):
         self.adunit = None
         return super(AdUnitQueryManager,self).__init__()
   
-    def get_adunits(self,app=None,account=None,keys=None,deleted=False,limit=50):
+    def get_adunits(self,app=None,apps=None, account=None,keys=None,deleted=False,limit=50):
         if keys is not None:
             if type(keys) == list and len(keys) == 0:
                 return []
@@ -268,9 +317,51 @@ class AdUnitQueryManager(CachedQueryManager):
         adunits = AdUnit.all().filter("deleted =",deleted)
         if app:
             adunits = adunits.filter("app_key =",app)
+        elif apps:
+            adunits = adunits.filter("app_key in", apps)
         if account:
             adunits = adunits.filter("account =",account)      
         return adunits.fetch(limit)
+
+    def reports_get_adunits(self, account=None, publisher=None, advertiser=None, deleted=False):
+        '''Given an account or publisher or advertiser return a list of adunits targeted by 
+        the advertiser(s) and/or linked to the publisher(s)'''
+        adunits = Site.all().filter('deleted =', deleted)
+        if account:
+            #sanity check
+            adunits = adunits.filter('account =', account)
+        #do first
+        if advertiser:
+            #we have advertisers, so don't target ALL adunits for a user, target only
+            # those that are specified by advertisers
+            adunits = []
+            #make advertiser a list (this has to do with how I plan on implementing network priority
+            # and stuff) if it isn't already one
+            if not type(advertiser) == list:
+                advertiser = [advertiser]
+            for adv in advertiser:
+                # this is how campaigns reference adgroups
+                if hasattr(adv, 'adgroups'):
+                    adgroups = adv.adgroups
+                # this is how creatives reference adgroups
+                elif hasattr(adv, 'adgroup'):
+                    adgroups = [adv.adgroup]
+                else:
+                    adgroups = advertiser
+                # iterate over the adgroups (I think this is always just one though...?)
+                for ag in adgroups:
+                    #iterate over adgroup adunit targets
+                    for key in ag.site_keys:
+                        #if this isn't in the adunits list yet, put it there
+                        if key not in adunits:
+                            adunits.append(key)
+            #turn string refs into actual objects
+            adunits = AdUnit.get(adunits)
+        #publisher can only be an app or adunit, and two adunits is dumb
+        # also do publisher after because we can filter much faster with advertiser data than the deleted stuff
+        if publisher:
+            adunits = adunits.filter('app_key =', publisher)
+        return adunits
         
     def put_adunits(self,adunits):
         db.put(adunits)    

@@ -28,7 +28,7 @@ REQ_QUEUE_NAME = "network-request-%02d"
 NUM_REQ_QUEUES = 10
 
 
-def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,creative_id=None,udid=None,user_agent=None):
+def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,creative_id=None,udid=None,user_agent=None,testing=False):
     # if this is the second request because of a 
     # native failure we just bail in order to 
     # Note if logging an adnetwork request, we pass

@@ -49,7 +49,7 @@ class StatsModelQueryManager(CachedQueryManager):
             self.account = account.key()
         else:
             self.account = db.Key(account)
-            
+
         self.offline = offline
             
         self.stats = []
@@ -125,20 +125,24 @@ class StatsModelQueryManager(CachedQueryManager):
 
 
     def get_rollup_for_days(self, publisher=None, publishers=None, advertiser=None, advertisers=None, days=None, num_days=None,account=None, country=None, offline=False):
+        if publisher and publishers:
+            logging.error("cannot pass both a single publisher and multiple publishers")
         if publisher and not publishers:
             if type(publisher) == list:
                 publishers = publisher
             else:
                 publishers = [publisher]
-        if publisher and publishers:
-            logging.error("cannot pass both a single publisher and multiple publishers")
+        if advertiser and advertisers:
+            logging.error("cannot pass both a single advertiser and multiple advertisers")
         if advertiser and not advertisers:
             if type(advertiser) == list:
                 advertisers = advertiser
             else:
                 advertisers = [advertiser]
-        if advertiser and advertisers:
-            logging.error("cannot pass both a single advertiser and multiple advertisers")
+        if publisher == publishers:
+            publishers = [publisher]
+        if advertiser == advertisers:
+            advertisers = [advertiser]
         stats = []
         for pub in publishers:
             for adv in advertisers:

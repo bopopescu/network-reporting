@@ -189,20 +189,27 @@ class StatsModel(db.Expando):
 
     
     @classmethod
-    def get_key_name(cls,publisher=None,advertiser=None,date=None,date_hour=None,account=None,offline=False,country=None, month=None):
+    def get_key_name(cls,publisher=None,advertiser=None,date=None,date_hour=None,account=None,offline=False,country=None, month=None, date_as='date'):
         if publisher or advertiser or date_hour or date or month or country:
             if isinstance(publisher,db.Model):
                 publisher = publisher.key()
             if isinstance(advertiser,db.Model):
                 advertiser = advertiser.key()    
             
-            if date_hour:
+            if date:
+                if date_as == 'date':
+                    date_str = date.strftime('%y%m%d')
+                elif date_as == 'date_hour':
+                    date_str == date.strftime('%y%m%d%H')
+                elif date_as == 'month':
+                    date_str == date.strftime('%y%m')
+
+            elif date_hour and not date_as == 'date_hour':
                 date_str = date_hour.strftime('%y%m%d%H')
-            elif date:
-                date_str = date.strftime('%y%m%d')
-            elif month:
-                date_str = month.strftime('%y%m')     
-            
+
+            elif month and not date_as == 'month':
+                date_str = month.strftime('%y%m')
+
             if not country:    
                 return 'k:%(publisher)s:%(advertiser)s:%(date)s'%dict(date=date_str,
                                                                       publisher=publisher or '',

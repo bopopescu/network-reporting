@@ -1,4 +1,6 @@
 import os, sys
+import pprint
+
 sys.path.append(os.environ['PWD'])
 
 import datetime
@@ -16,6 +18,7 @@ from advertiser.models import AdGroup, Creative, Campaign
 from account.models import Account
 from publisher.models import App
 from publisher.models import Site as AdUnit
+from reports.models import Report
 from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
 
@@ -28,24 +31,37 @@ AU_NAME = "Test Adunit %d for App %d"
 CAMP_NAME = "Test Camp %d"
 AG_NAME = "Adgroup for Camp %d"
 CRTV_NAME = "Test Creative %d For Campaign %d"
-APP_CT = 2
-AU_CT = 2 # per app
-CAMP_CT = 3
-CRTV_CT = 2 #per campaign
-STATS_FOR_DAYS = 5 
+#FOR ALL YOU CARE THIS IS THE BEGINNING OF TIME
+DATE = datetime.date(2011,1,1)
+#Set this to true if you are impatient
+QUICK = True
+if QUICK:
+    APP_CT = 1
+    AU_CT = 2 
+    CAMP_CT = 2 
+    CRTV_CT = 1
+    STATS_FOR_DAYS = 2
+else:
+    APP_CT = 2
+    AU_CT = 2 # per app
+    CAMP_CT = 3
+    CRTV_CT = 2 #per campaign
+    STATS_FOR_DAYS = 5 
 #hours per day
 HPD = 24
 STATS = ('request_count', 'impression_count', 'click_count', 'conversion_count', 'revenue')
 
-
-CAMP_TARGETING = (((True, True, False), (True, False, False)), ((False, True, True), (False, False, True))) 
+if QUICK:
+    CAMP_TARGETING = (((True,True), (False, True)),)
+else:
+    CAMP_TARGETING = (((True, True, False), (True, False, False)), ((False, True, True), (False, False, True))) 
 
 # len(CAMP_TARGETING) = APP_CT 
 # len(Each entry in CAMP_TARGETING) = AU_CT 
 # len(each entry in each entry of CAMP_TARGETING) = CAMP_CT 
 # Basically, for each adunit in each app, which campaigns should target it 
 
-class TestReports(unittest.TestCase):
+class TestReports():
 
     #Generate a bunch of psuedo-random (deterministically, same every time) stat values
     # and make the stats models for them.  What fun
@@ -65,7 +81,6 @@ class TestReports(unittest.TestCase):
                                 for stat in STATS:
                                     setattr(model, stat, self.nums[au_key][c_key][day][hour][stat])
                                 stats.append(model)
-        print stats
         self.smqm.put_stats(stats)
 
 
@@ -73,7 +88,6 @@ class TestReports(unittest.TestCase):
     #Generate all the numbers for the stats objects we're gonna make.  AWESSOOMMEEE
     #Seed the random number generator with the same seed so the sequenece is the same every time
     def gen_nums(self):
-        print "gen'in nums"
         random.seed(RANDOM_SEED)
         self.nums = {}
         #Best nested set of for loops ever
@@ -104,7 +118,6 @@ class TestReports(unittest.TestCase):
         self.testbed.deactivate()
 
     def setUp(self):
-        print "SETTING UP"
         self.dte = datetime.datetime(2011,1,1,0)
         self.testbed = testbed.Testbed()
         self.testbed.activate()
@@ -122,7 +135,9 @@ class TestReports(unittest.TestCase):
         self.campaigns = []
         self.adgroups = []
         self.creatives = []
-        temp_keys = [[]] * CAMP_CT
+        temp_keys = []
+        for i in range(CAMP_CT):
+            temp_keys.append([])
 
         for i in range(APP_CT):
             #create apps
@@ -142,9 +157,11 @@ class TestReports(unittest.TestCase):
                         temp_keys[camp].append(adunit.key())
                 #store adunits
                 self.adunits.append(adunit)
+        print temp_keys
+        print '\n\n\n'
         for targets, c_id in zip(temp_keys, range(CAMP_CT)):
             #gen + put camp
-            camp = Campaign(name=CAMP_NAME % c_id)
+            camp = Campaign(name=CAMP_NAME % c_id, account = self.account)
             camp.put()
             #add to list
             self.campaigns.append(camp)
@@ -167,13 +184,16 @@ class TestReports(unittest.TestCase):
                 self.creatives.append(crtv)
         self.gen_stats()
 
-    def runTest(self):
-        print self.nums 
-        assert False
-
-
 
 def simple_mptest():
     tester = TestReports()
-    print tester.nums
+    tester.setUp()
+    rep1 = Report(d1='campaign', d2='app', d3='adunit', start=DATE, end=DATE+datetime.timedelta(days=1), account=tester.account)
+    rep2 = Report(d1='campaign', d2='app', d3='day', start=DATE, end=DATE+datetime.timedelta(days=1), account=tester.account)
+    data1 = rep1.gen_data()
+    data2 = rep2.gen_data()
+    print rep1
+    pprint.pprint(data1)
+    print rep2
+    pprint.pprint(data2)
     assert False

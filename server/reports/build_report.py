@@ -8,16 +8,11 @@ from reporting.query_managers import StatsModelQueryManager
 def build_report(report,account):
     logging.warning("\n\n\nTRYING TO BUILD A REPORT AWESOME\n\n\n")
     manager = StatsModelQueryManager(account)
-
-    d1_keys, d2_keys, d3_keys = gen_keys(d1, d2, d3, start, end)
     #d1 = 'App'
     #d2 = 'AdUnit'
     #d3 = 'Campaign'
-
-    adunits = []
-    campaigns = []
-    days = []
-
+    data = report.gen_data()
+    print "\n\nData for report is:\n%s\n\n\n" % data
     report.complete_at = datetime.now()
     report.put()
 

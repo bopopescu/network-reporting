@@ -1,4 +1,4 @@
-from datetime import datetime, time, date
+from datetime import datetime, time, date, timedelta
 
 DAYS_IN_MONTHS = (31,28,31,30,31,30,31,31,30,31,30,31)
 
@@ -48,7 +48,6 @@ def end_last_week(d):
     delta = timedelta(days=1)
     return new_d - delta
 
-
 def is_leap_year(d):
     year = d.year
     if year % 400 == 0:
@@ -60,7 +59,36 @@ def is_leap_year(d):
     else:
         return False
 
-
 def last_seven(d):
     delta = timedelta(days=7)
     return (d, d-delta)
+
+def gen_days(start, end):
+    dt = timedelta(days=1)
+    temp = start
+    days = [temp]
+    while temp != end:
+        temp = temp + dt
+        days.append(temp)
+    return days
+
+def hours_for_day(day):
+    '''Take a single date object and turn it into a
+    list of datetime objects going from 0000 to 2300'''
+    yr = day.year
+    mo = day.month
+    dy = day.day
+    days = []
+    for hour in range(24):
+        days.append(datetime(yr,mo,dy,hour))
+    return days
+
+def get_hours(days):
+    '''Turn a list of days into a list of lists where
+    each list is a list of the hours that make up that day'''
+    return map(lambda x: hours_for_day(x), days)
+
+def get_days(days):
+    '''turn a list of days into a list of lists where
+    each list is a single day'''
+    return map(lambda x: [x], days)

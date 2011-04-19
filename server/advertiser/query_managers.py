@@ -13,6 +13,9 @@ from advertiser.models import Creative, TextCreative, \
                               HtmlCreative,\
                               ImageCreative
 
+from publisher.models import App
+from publisher.models import Site as AdUnit
+
 NAMESPACE = None
 
 class CampaignQueryManager(CachedQueryManager):
@@ -39,10 +42,10 @@ class CampaignQueryManager(CachedQueryManager):
         if publisher:
             #publisher is either an app or an adunit, assume it's an adunit first and make it a list
             adunits = [publisher]
-            if hasattr(publisher, 'adunits'): 
+            if hasattr(publisher, 'all_adunits'):
                 #if it's not an adunit, make it  
-                adunits = publisher.adunits
-            adgroups = AdGroup.all().filter('site_keys IN', adunits)
+                adunits = publisher.all_adunits
+            adgroups = AdGroup.all().filter('site_keys IN', [a for a in adunits])
             #adgroups = AdGroup.all().filter('site_keys IN', [a.key() for a in adunits])
             adgroups = [a for a in adgroups if a.deleted == deleted]
             camps = [adgroup.campaign for adgroup in adgroups]
@@ -138,8 +141,8 @@ class CreativeQueryManager(CachedQueryManager):
 
         if publisher:
             adunits = [publisher]
-            if hasattr(publisher, 'adunits'):
-                adunits = publisher.adunits
+            if hasattr(publisher, 'all_adunits'):
+                adunits = publisher.all_adunits
             pub_ags = AdGroup.all().filter('site_keys IN', adunits)
             pub_ags = [a for a in pub_ags if a.deleted == deleted]
             if adgroups:

@@ -83,7 +83,7 @@ class Report(db.Model):
                 # going to make new function in SMQM that if given a list for these things it automatically
                 # rolls them up
                 name = NAME_STR % (level, idx) 
-                stats = manager.get_stats_for_days(publisher = pub, advertiser = adv, days = days)
+                stats = manager.get_rollup_for_days(publisher = pub, advertiser = adv, days = days)
                 if level == 3:
                     ret[name] = dict(stats = stats)
                 else:
@@ -117,7 +117,6 @@ class Report(db.Model):
                                            publisher = pub,
                                            advertiser = adv,
                                            )
-            #do adunit stuff
         elif dim == CAMP:
             man = CampaignQueryManager()
             type == 'adv'
@@ -132,7 +131,6 @@ class Report(db.Model):
                                              publisher = pub,
                                              advertiser = adv,
                                              )
-            #do crtv stuff
         elif dim == P:
             return "Not implemented yet"
             type == 'adv'
@@ -149,6 +147,9 @@ class Report(db.Model):
             return "Not implemented yet"
             type = 'other'
             #do 'custom targeting' stuff
+        else:
+            logging.error("cry me a river ohh ohhhhh")
+            return None, None
         return vals, type
 
 

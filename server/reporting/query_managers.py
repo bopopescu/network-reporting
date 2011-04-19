@@ -124,6 +124,27 @@ class StatsModelQueryManager(CachedQueryManager):
         return reduce(lambda x,y: x+y, stats, StatsModel())
 
 
+    def get_rollup_for_days(self, publisher=None, publishers=None, advertiser=None, advertisers=None, days=None, num_days=None,account=None, country=None, offline=False):
+        if publisher and not publishers:
+            if type(publisher) == list:
+                publishers = publisher
+            else:
+                publishers = [publisher]
+        if publisher and publishers:
+            logging.error("cannot pass both a single publisher and multiple publishers")
+        if advertiser and not advertisers:
+            if type(advertiser) == list:
+                advertisers = advertiser
+            else:
+                advertisers = [advertiser]
+        if advertiser and advertisers:
+            logging.error("cannot pass both a single advertiser and multiple advertisers")
+        stats = []
+        for pub in publishers:
+            for adv in advertisers:
+                stats += self.get_stats_for_days(publisher=pub, advertiser=adv, days=days, num_days=num_days, account=account, country=country, offline=offline)
+        return reduce(lambda x,y: x+y, stats, StatsModel())
+
 
     def get_stats_for_days(self, publisher=None, publishers=None, advertiser=None, days=None, num_days=None, account=None, country=None, offline=False):
         """ Gets the stats for a specific pairing. Definitions:

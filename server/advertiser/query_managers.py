@@ -128,7 +128,7 @@ class CreativeQueryManager(CachedQueryManager):
     def put_creatives(self,creatives):
         return db.put(creatives)
 
-    def reports_get_creatives(self, account=None, publisher=None, advertiser=None):
+    def reports_get_creatives(self, account=None, publisher=None, advertiser=None, deleted=False):
         adgroups = []
         if advertiser:
             if type(advertiser) != list:
@@ -137,9 +137,24 @@ class CreativeQueryManager(CachedQueryManager):
                 adgroups += adv.adgroups
 
         if publisher:
-            
-
-
+            adunits = [publisher]
+            if hasattr(publisher, 'adunits'):
+                adunits = publisher.adunits
+            pub_ags = AdGroup.all().filter('site_keys IN', adunits)
+            pub_ags = [a for a in pub_ags if a.deleted == deleted]
+            if adgroups:
+                if len(pub_ags) >= len(adgroups):
+                    adgroups = [a for a in pub_ags if a in adgroups]
+                elif len(pub_ags) < len(adgroups):
+                    adgroups = [a for a in adgroups if a in pub_ags]
+                else:
+                    logging.error("That's Impossible")
+            else:
+                adgroups = pub_ags
+        if adgroups:
+            return reduce(lambda x, y: x+y, [ag.creatives for ag in adgroups])
+        crtvs = Creative.all().filter('deleted =', deleted).filter('account =', account)
+        return crtvs
 
         
     def delete_creatives(self,creatives):

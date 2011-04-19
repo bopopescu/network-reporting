@@ -17,66 +17,66 @@ from common.utils.request_handler import RequestHandler
 
 
 class AccountHandler(RequestHandler):
-  def get(self,account_form=None):
-    if self.params.get("skip"):
-      self.account.status = "step4"
-      AccountQueryManager().put_accounts(self.account)
-      return HttpResponseRedirect(reverse('advertiser_campaign'))
+    def get(self,account_form=None):
+        if self.params.get("skip"):
+            self.account.status = "step4"
+            AccountQueryManager().put_accounts(self.account)
+            return HttpResponseRedirect(reverse('advertiser_campaign'))
 
-    account_form = account_form or AccountForm(instance=self.account)
-    return render_to_response(self.request,'account/account.html', {'account': self.account,
-                                                                    'account_form': account_form})
+        account_form = account_form or AccountForm(instance=self.account)
+        return render_to_response(self.request,'account/account.html', {'account': self.account,
+                                                                                                                                        'account_form': account_form})
 
-  def post(self):
-    account_form = AccountForm(data=self.request.POST, instance=self.account)
+    def post(self):
+        account_form = AccountForm(data=self.request.POST, instance=self.account)
 
-    if account_form.is_valid():
-      account = account_form.save(commit=False)
-      AccountQueryManager().put_accounts(account)
-      adunits = AdUnitQueryManager().get_adunits(account=account)
-      AdunitContextQueryManager().cache_delete_from_adunits(adunits)
-      
-      if self.account.status == "step3":
-        self.account.status = "step4"
-        AccountQueryManager().put_accounts(self.account)
-        return HttpResponseRedirect(reverse('advertiser_campaign'))
-    
-    return self.get(account_form=account_form)    
-    # return render_to_response(self.request,'account/account.html', {'account': self.account})
+        if account_form.is_valid():
+            account = account_form.save(commit=False)
+            AccountQueryManager().put_accounts(account)
+            adunits = AdUnitQueryManager().get_adunits(account=account)
+            AdunitContextQueryManager().cache_delete_from_adunits(adunits)
+            
+            if self.account.status == "step3":
+                self.account.status = "step4"
+                AccountQueryManager().put_accounts(self.account)
+                return HttpResponseRedirect(reverse('advertiser_campaign'))
+        
+        return self.get(account_form=account_form)        
+        # return render_to_response(self.request,'account/account.html', {'account': self.account})
 
-@whitelist_login_required     
+@whitelist_login_required         
 def index(request,*args,**kwargs):
-  return AccountHandler()(request,*args,**kwargs)
+    return AccountHandler()(request,*args,**kwargs)
 
 class NewAccountHandler(RequestHandler):
-  def get(self,account_form=None):
-    mail.send_mail(sender="olp@mopub.com",
-                   to="beta@mopub.com",
-                   subject="New User",
-                   body="%s has signed up for an account."%self.request.user.email)
-    account_form = account_form or AccountForm(instance=self.account)
-    return render_to_response(self.request,'account/new_account.html',{'account': self.account,
-                                                               'account_form' : account_form })
-  def post(self):
-    account_form = AccountForm(data=self.request.POST, instance=self.account)
-    # Make sure terms and conditions are agreed to
-    if not self.request.POST.get("terms_conditions"):
-      account_form.term_conditions_error = "Accept the terms and conditions in order to start using MoPub."
-      return self.get(account_form=account_form)  
+    def get(self,account_form=None):
+        mail.send_mail(sender="olp@mopub.com",
+                                     to="beta@mopub.com",
+                                     subject="New User",
+                                     body="%s has signed up for an account."%self.request.user.email)
+        account_form = account_form or AccountForm(instance=self.account)
+        return render_to_response(self.request,'account/new_account.html',{'account': self.account,
+                                                                           'account_form' : account_form })
+    def post(self):
+        account_form = AccountForm(data=self.request.POST, instance=self.account)
+        # Make sure terms and conditions are agreed to
+        if not self.request.POST.get("terms_conditions"):
+            account_form.term_conditions_error = "Accept the terms and conditions in order to start using MoPub."
+            return self.get(account_form=account_form)    
 
-    if account_form.is_valid():
-      account = account_form.save(commit=False)
-      
-      # Go ahead and activate the account
-      account.active = True
-      AccountQueryManager().put_accounts(account)
-      
-      # send a reply
-      mail.send_mail(sender="MoPub Team <olp@mopub.com>",
-                     reply_to="sales@mopub.com",
-                     to="self.request.user.email",
-                     subject="Welcome to MoPub",
-                     body="""Hello from MoPub!
+        if account_form.is_valid():
+            account = account_form.save(commit=False)
+            
+            # Go ahead and activate the account
+            account.active = True
+            AccountQueryManager().put_accounts(account)
+            
+            # send a reply
+            mail.send_mail(sender="MoPub Team <olp@mopub.com>",
+                             reply_to="sales@mopub.com",
+                             to="self.request.user.email",
+                             subject="Welcome to MoPub",
+                             body="""Hello from MoPub!
 
 MoPub is designed to help mobile publishers monetize their apps more 
 effectively. If you have any questions during the setup process,
@@ -85,19 +85,19 @@ please don't hesitate to email our sales department at sales@mopub.com.
 Thanks,
 The MoPub Team
 """)
-      
-      return HttpResponseRedirect(reverse('publisher_app_create'))
+            
+            return HttpResponseRedirect(reverse('publisher_app_create'))
 
-    return self.get(account_form=account_form)
-    
+        return self.get(account_form=account_form)
+        
 # We use login_required here since we want to let users activate themselves on this page
 @login_required
 def new(request,*args,**kwargs):
-  return NewAccountHandler()(request,*args,**kwargs)  
+    return NewAccountHandler()(request,*args,**kwargs)    
 
 class LogoutHandler(RequestHandler):
-  def get(self):
-    return HttpResponseRedirect(users.create_logout_url('/main/'))
-    
+    def get(self):
+        return HttpResponseRedirect(users.create_logout_url('/main/'))
+        
 def logout(request,*args,**kwargs):
-  return LogoutHandler()(request,*args,**kwargs)
+    return LogoutHandler()(request,*args,**kwargs)

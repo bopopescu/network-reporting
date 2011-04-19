@@ -8,6 +8,7 @@ class MillennialServerSide(ServerSide):
       
   def get_key_values(self):
     return {'apid':self.get_account().millenial_pub_id,
+            'vendor':'mopubserver', # Custom parameter for MoPub requested by Millennial
             'auid':self.get_udid(),
             'uip':self.get_ip(),
             'ua':self.get_user_agent()}

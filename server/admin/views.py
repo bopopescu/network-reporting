@@ -58,9 +58,19 @@ def dashboard_prep(request, *args, **kwargs):
     offline = request.GET.get('offline',False)
     offline = True if offline == "1" else False
 
+
+    # mark the page as loading
+    def _txn():
+        page = AdminPage.get_by_stats_source(offline=offline)
+        if page:
+            page.loading = True
+            page.put()
+    db.run_in_transaction(_txn)    
+    
+    
     days = StatsModel.lastdays(30)
     # gets all undeleted applications
-    start_date = datetime.date.today() - datetime.timedelta(days=30)
+    start_date = datetime.date.today() - datetime.timedelta(days=30) # NOTE: change
     apps = AppQueryManager().get_apps(limit=1000)    
     # get all the daily stats for the undeleted apps
     app_stats = StatsModelQueryManager(None,offline=offline).get_stats_for_apps(apps=apps,num_days=30)
@@ -85,9 +95,9 @@ def dashboard_prep(request, *args, **kwargs):
     for app_stat in app_stats:
         # add this site stats to the total for the day and increment user count
         if app_stat.date:
-            user_count = totals[str(app_stat.date)].user_count
+            user_count = totals[str(app_stat.date)].user_count + 1
             _incr_dict(totals,str(app_stat.date),app_stat)
-            totals[str(app_stat.date)].user_count = user_count + 1
+            totals[str(app_stat.date)].user_count = user_count
         if app_stat._publisher:
             _incr_dict(unique_apps,str(app_stat._publisher),app_stat)
     
@@ -114,7 +124,9 @@ def dashboard_prep(request, *args, **kwargs):
         "new_users": new_users,
         "mailing_list": [a for a in new_users if a.mailing_list]}
 
-    page = AdminPage(offline=offline,html=render_to_string(request,'admin/d.html',render_params))
+    page = AdminPage(offline=offline,
+                     html=render_to_string(request,'admin/pre_render.html',render_params),
+                     today_requests=total_stats[-1].request_count)
     page.put()
     
     return HttpResponse("OK")
@@ -125,6 +137,8 @@ def dashboard(request, *args, **kwargs):
     offline = True if offline == "1" else False
     refresh = request.GET.get('refresh',False)
     refresh = True if refresh == "1" else False
+    loading = request.GET.get('loading',False)
+    loading = True if loading == "1" else False
     
     if offline:
         key_name = "offline"
@@ -142,8 +156,10 @@ def dashboard(request, *args, **kwargs):
                               url='/admin/prep/')
         try:                      
             task.add("admin-dashboard-queue")
+            return HttpResponseRedirect(reverse('admin_dashboard')+'?loading=1')
         except Exception, e:
             logging.warning("task error: %s"%e)                
         
-    page = AdminPage.get_by_key_name(key_name)
-    return HttpResponse(page.html)
+    page = AdminPage.get_by_stats_source(offline=offline)
+    loading = loading or page.loading
+    return render_to_response(request,'admin/d.html',{'page': page, 'loading': loading})

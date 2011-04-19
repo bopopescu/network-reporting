@@ -5,6 +5,7 @@
 *.pp
 *.pkl
 server/test_data
+server/test_data/basic_test.datastore
 server/.coverage
 server/nosetests.xml
 counts.csv

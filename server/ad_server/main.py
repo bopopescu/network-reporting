@@ -747,8 +747,6 @@ class AdHandler(webapp.RequestHandler):
         # add some extra  
         self.response.headers.add_header("X-Failurl",self.request.url+'&exclude='+str(c.ad_type))
         self.response.headers.add_header("X-Format",'300x250_as')
-        self.response.headers.add_header("X-Width",str(format[0]))
-        self.response.headers.add_header("X-Height",str(format[1]))
       
         self.response.headers.add_header("X-Backgroundcolor","0000FF")
       elif str(c.ad_type) == 'admob':

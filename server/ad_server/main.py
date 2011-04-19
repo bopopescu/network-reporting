@@ -90,7 +90,7 @@ DEBUG = not on_production_server
 
 CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gzip(gfe)"]
 MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7PnE6cH9_PX7OoeIIr5FjnTA'
-DOMAIN = 'ads.mopub.com' 
+DOMAIN = 'localhost:8000' 
 FREQ_ATTR = '%s_frequency_cap'
 CAMPAIGN_LEVELS = ('gtee_high', 'gtee', 'gtee_low', 'promo', 'network','backfill_promo')
 NATIVE_REQUESTS = ['admob','adsense','iAd','custom']
@@ -438,10 +438,12 @@ class AdHandler(webapp.RequestHandler):
     
     def get(self):
         id = self.request.get("id")
-        adunit_manager = AdUnitQueryManager(id)
         now = datetime.datetime.now()
         
-        mp_logging.log(self.request,event=mp_logging.REQ_EVENT)  
+        adunit_context = AdUnitContextQueryManager().cache_get(id)
+        adunit = adunit_context.adunit
+        
+        mp_logging.log(self.request,event=mp_logging.REQ_EVENT,adunit=adunit)  
         # mp_logging.log(self.request,event=mp_logging.REQ_EVENT, testing=testing)  
         
         logging.warning(self.request.headers['User-Agent'] )
@@ -452,10 +454,7 @@ class AdHandler(webapp.RequestHandler):
             countries = [c.upper() for c in countries]
             addr = tuple(countries)
         
-        adunit = adunit_manager.get_adunit()
-        site = adunit # TODO: get rid of site
-        
-        adunit_context = AdUnitContextQueryManager().cache_get(adunit.key())
+        site = adunit
         
         if self.request.get( 'testing' ) == TEST_MODE:
             # If we are running tests from ad_server_tests, don't use caching
@@ -819,14 +818,17 @@ class AdImpressionHandler(webapp.RequestHandler):
     def get(self):
         
         # Update budgeting
+        # TODO: cache this
+        adunit_key = self.request.get('id')
+        adunit_context = AdUnitContextQueryManager().cache_get(adunit_key)
         creative_id = self.request.get('cid')
-        creative = Creative.get(Key(creative_id))
+        creative = adunit_context.get_creative_by_key(creative_id)
         if creative.ad_group.bid_strategy == 'cpm':
             budget_service.apply_expense(creative.ad_group.campaign, creative.ad_group.bid/1000)
         # logging.error("applied expense: %s" % creative.ad_group.bid)
         
         if not self.request.get( 'testing' ) == TEST_MODE:
-            mp_logging.log(self.request,event=mp_logging.IMP_EVENT)  
+            mp_logging.log(self.request,event=mp_logging.IMP_EVENT,adunit=adunit_context.adunit)  
             
         self.response.out.write("OK")
     

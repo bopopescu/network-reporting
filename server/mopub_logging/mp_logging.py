@@ -5,7 +5,7 @@ import random
 from common.utils import helpers 
 from google.appengine.api import memcache
 from google.appengine.api import taskqueue
-from publisher.query_managers import AdUnitQueryManager
+from publisher.query_managers import AdUnitContextQueryManager
 from reporting import models as reporting_models
 
 REQ_EVENT = 0
@@ -79,8 +79,9 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
                 
         
     # get account name from the adunit
-    adunit_qmanager = manager or AdUnitQueryManager(adunit_id)
-    adunit = adunit or adunit_qmanager.get_adunit()
+    if not adunit:
+        adunit_context = AdUnitContextQueryManager().cache_get(adunit_id)
+        adunit = adunit_context.adunit
     
     account_name = str(adunit.account.key())
     

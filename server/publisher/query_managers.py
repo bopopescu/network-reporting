@@ -117,6 +117,14 @@ class AdUnitContext(object):
         appropriate the key from the adunit, returns a string. """
         return "context:"+str(self.adunit.key())
         
+    def get_creative_by_key(self,creative_key):
+        creative = None
+        for c in self.creatives:
+            if str(creative_key) == str(c.key()):
+                creative = c
+                break
+        return creative    
+        
 class CreativeCTR(object):
     """ The relevant CTR information for a creative"""
     def __init__(self, creative, adunit):

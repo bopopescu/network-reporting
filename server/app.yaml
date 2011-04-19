@@ -8,7 +8,7 @@ builtins:
 - datastore_admin: on
 
 # Turn this on to debug
-- appstats: on
+# - appstats: on
 
 
 handlers:

@@ -57,13 +57,13 @@ class TestOptimizer(unittest.TestCase):
         self.adgroup = AdGroup(account=self.account, 
                                campaign=self.campaign, 
                                site_keys=[self.adunit.key()],
-                               bid_strategy="cpc")
+                               bid_strategy="cpc",
+                               bid=100.0)
         self.adgroup.put()
         
         self.creative = Creative(account=self.account,
                                  ad_group=self.adgroup,
-                                 tracking_url="test-tracking-url", 
-                                 cpc=.03)
+                                 tracking_url="test-tracking-url")
         self.creative.put()
         
         # Set up QM
@@ -74,16 +74,7 @@ class TestOptimizer(unittest.TestCase):
         
     def tearDown(self):
         self.testbed.deactivate()
-
-    def mptest_load_campaigns(self):
-        eq_(1000,1000)
-
-    def mptest_testbed(self):
-        apps = App.all().fetch(10)
         
-        logging.info(apps)
-        eq_(len(apps),1)
-        eq_(apps[0].name, "Test App")
         
     def mptest_stats(self):
         apps = StatsModel.all().fetch(10)
@@ -278,7 +269,7 @@ class TestOptimizer(unittest.TestCase):
         qm_stats = self.smqm.get_stats_for_days(publisher=self.adunit,
                                             advertiser=self.creative,
                                             days=[self.dt.date()])
-   
+       
         stats = qm_stats[0] # qm_stats is a list of stats of length 1
         eq_(stats.impression_count, 1200)
     
@@ -295,29 +286,29 @@ class TestOptimizer(unittest.TestCase):
         two_hours_ago = self.dt - datetime.timedelta(hours=2)
         yesterday = self.dt - datetime.timedelta(days=1)
         # Set up test
-   
+       
         self._set_statsmodel_click_count(self.adunit, self.creative, 0, date_hour=two_hours_ago)
         self._set_statsmodel_impression_count(self.adunit, self.creative, 600, date_hour=two_hours_ago)
-   
-   
+       
+       
         self._set_statsmodel_click_count(self.adunit, self.creative, 600, date_hour=two_hours_ago)
         self._set_statsmodel_impression_count(self.adunit, self.creative, 600, date_hour=two_hours_ago)
-   
-   
+       
+       
         qm_stats = self.smqm.get_stats_for_days(publisher=self.adunit,
                                             advertiser=self.creative,
                                             days=[yesterday])
-   
+       
         stats = qm_stats[0] # qm_stats is a list of stats of length 1
         eq_(stats.impression_count, 1200)
-   
+       
         ctr = optimizer.get_ctr(self.adunit_context, self.creative, dt=yesterday)
-   
+       
         # There are insufficient datapoints to use hourly, so we use daily
         ctr = optimizer.get_ctr(self.adunit_context, self.creative, dt=self.dt)
         eq_(ctr, 0.5)
         
-  
+      
        
     def mptest_cache_simple(self):
         one_hour_ago = self.dt - datetime.timedelta(hours=1)
@@ -331,7 +322,7 @@ class TestOptimizer(unittest.TestCase):
         
         ctr = self.adunit_context._get_ctr(self.creative, date_hour=self.dt)
         eq_(ctr, 0.5)
-
+    
         
     def mptest_cache_update(self):
         # Put in some arbitrary data
@@ -356,12 +347,12 @@ class TestOptimizer(unittest.TestCase):
         # First we get a cache hit, so there is no value for this element
         qm = AdUnitContextQueryManager()
         adunit_context = qm.cache_get(self.adunit.key())
- 
+     
         ctr = adunit_context._get_ctr(new_creative, date_hour=self.dt)
-
+    
         eq_(ctr, None)
- 
- 
+     
+     
         # Clear the cache manually, now we have the information for the new creative
         qm.cache_delete_from_adunits(self.adunit)
         
@@ -371,7 +362,70 @@ class TestOptimizer(unittest.TestCase):
         ctr = adunit_context._get_ctr(new_creative, date_hour=self.dt)
         
         eq_(ctr, 0.01)
-    
+
+    def mptest_ecpm_calc_cpm(self):
+        # Set to cpm 
+        # Set up default models
+        self.account = Account()
+        self.account.put()
+        
+        self.app = App(account=self.account, name="Test App")
+        self.app.put()
+        
+        self.adunit = AdUnit(account=self.account, app_key=self.app, name="Test AdUnit")
+        self.adunit.put()
+        
+        self.campaign = Campaign(name="Test Campaign")
+        self.campaign.put()
+        
+        self.adgroup = AdGroup(account=self.account, 
+                               campaign=self.campaign, 
+                               site_keys=[self.adunit.key()],
+                               bid_strategy="cpm",
+                               bid=100.0)
+        self.adgroup.put()
+        
+        self.creative = Creative(account=self.account,
+                                 ad_group=self.adgroup,
+                                 tracking_url="test-tracking-url")
+        self.creative.put()
+        
+        # Set up QM
+        self.smqm = StatsModelQueryManager(self.account)
+        
+        # Roll up adunit context
+        self.adunit_context = AdUnitContext.wrap(self.adunit)
+        
+        # Check
+        eq_(self.adunit_context.adgroups[0].bid_strategy, "cpm")
+
+        # ecpm for a group with a set cpm is just cpm
+        ecpm = optimizer.get_ecpm(self.adunit_context, self.creative)
+        eq_(ecpm, 100)
+
+    def mptest_ecpm_calc_cpc(self):
+        one_hour_ago = self.dt - datetime.timedelta(hours=1)
+        two_hours_ago = self.dt - datetime.timedelta(hours=2)
+
+        # Set up test
+        self._set_statsmodel_click_count(self.adunit, self.creative, 100, dt=two_hours_ago)
+        self._set_statsmodel_impression_count(self.adunit, self.creative, 1200, dt=two_hours_ago)
+        self._set_statsmodel_click_count(self.adunit, self.creative, 100, dt=one_hour_ago)
+        self._set_statsmodel_impression_count(self.adunit, self.creative, 800, dt=one_hour_ago)
+
+
+        # There are only 800 samples for the hour in the datastore so we fall back to daily
+        ctr = optimizer.get_ctr(self.adunit_context, self.creative, dt=self.dt)
+        # The total is 200 clicks and 2000 impressions
+        eq_(ctr, .10)
+        
+        # Make sure we are using cpc
+        eq_(self.adunit_context.adgroups[0].bid_strategy, "cpc")
+
+        # ecpm for a group with a cpc is cpc * ctr *1000
+        ecpm = optimizer.get_ecpm(self.adunit_context, self.creative, dt=self.dt)
+        eq_(ecpm, 100*.1*1000)
+
     
 ############# Testing Helper Functions ###############
     

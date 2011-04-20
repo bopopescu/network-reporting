@@ -281,9 +281,11 @@ class AdAuction(object):
                     # construct dict: k=player, v=ecpm
                     player_ecpm_dict = {}
                     for p in players:
-                        player_ecpm_dict[p] = optimizer.get_ecpm(adunit_context, p)
+                        ecpm = optimizer.get_ecpm(adunit_context, p)
+                        player_ecpm_dict[p] = ecpm
+                        logging.warning(" Player eCPM: %s" % ecpm)
 
-                    players.sort(lambda x,y: cmp(player_ecpm_dict[x], player_ecpm_dict[y]))
+                    players.sort(lambda x,y: cmp(player_ecpm_dict[y], player_ecpm_dict[x]))
         
                     while players:
                         logging.warning("players: %s"%players)

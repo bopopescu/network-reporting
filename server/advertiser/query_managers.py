@@ -111,10 +111,10 @@ class CreativeQueryManager(CachedQueryManager):
         db.put(update_list)            
 
 class TextCreativeQueryManager(CreativeQueryManager):
-  Model = TextCreative
+    Model = TextCreative
 class TextAndTileCreativeQueryManager(CreativeQueryManager):
-  Model = TextAndTileCreative
+    Model = TextAndTileCreative
 class HtmlCreativeQueryManager(CreativeQueryManager):
-  Model = HtmlCreative
+    Model = HtmlCreative
 class ImageCreativeQueryManager(CreativeQueryManager):
-  Model = ImageCreative
+    Model = ImageCreative

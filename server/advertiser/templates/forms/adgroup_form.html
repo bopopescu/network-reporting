@@ -165,10 +165,8 @@
                                 <span class="radios">
                                     <input type='radio' class='input-radio' name='location-targeting' value='all' id='advertiser-LocationSpec-all'{% if not form.cities.value %}checked{% endif %}></input>
                                     <label for='advertiser-LocationSpec-all'>Everywhere</label>
-                                    <!--
-                                    <input type='radio' class='input-radio' name='location-targeting' value='state' id='advertiser-LocationSpec-state'></input>
-                                    <label for='advertiser-LocationSpec-state'>State/Province</label>
-                                    --!>
+                                    {# <input type='radio' class='input-radio' name='location-targeting' value='state' id='advertiser-LocationSpec-state'></input> #}
+                                    {# <label for='advertiser-LocationSpec-state'>State/Province</label> #}
                                     <input type='radio' class='input-radio' name='location-targeting' value='city' id='advertiser-LocationSpec-city'{% if form.cities.value %}checked{% endif %}></input>
                                     <label for='advertiser-LocationSpec-city'>City</label>
                                 </span>
@@ -180,8 +178,7 @@
                         </div>
 
                         <div class="locationDependent city" style='display:none;'>
-                            <!-- nest so we can do the dependent stuff and only show if both
-                                 without any more fancy logic --!>
+                            {# nest so we can do the dependent stuff and only show if both without any more fancy logic #}
                             <div class="countryNumDependent 1" style='display:none;'>
                                 <dt><label for='city_ta'>City Targeting:</label></dt>
                                 <dd><div id='city_ta'></div></dd>

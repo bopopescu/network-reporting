@@ -41,7 +41,7 @@ from account.query_managers import AccountQueryManager
 from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager, \
                                       CreativeQueryManager
 from common.utils.cachedquerymanager import CachedQueryManager
-from publisher.query_managers import AppQueryManager, AdUnitQueryManager
+from publisher.query_managers import AppQueryManager, AdUnitQueryManager, AdUnitContextQueryManager
 from reporting.query_managers import StatsModelQueryManager
 
 from common.utils import sswriter
@@ -199,7 +199,7 @@ class AppCreateHandler(RequestHandler):
 
         # update the cache as necessary 
         # replace=True means don't do anything if not already in the cache
-        CachedQueryManager().cache_delete(adunit)
+        AdUnitContextQueryManager().cache_delete_from_adunits(adunit)
 
         # Check if this is the first ad unit for this account
         if len(AdUnitQueryManager().get_adunits(account=self.account,limit=2)) == 1:      
@@ -231,7 +231,7 @@ class CreateAdUnitHandler(RequestHandler):
       
       # update the cache as necessary 
       # replace=True means don't do anything if not already in the cache
-      CachedQueryManager().cache_delete(adunit)
+      AdUnitContextQueryManager().cache_delete_from_adunits(adunit)
       
       # Check if this is the first ad unit for this account
       # if Site.gql("where account = :1 limit 2", self.account).count() == 1:
@@ -338,22 +338,99 @@ def app_show(request,*args,**kwargs):
   return ShowAppHandler()(request,*args,**kwargs)   
 
 
-
 class ExportFileHandler( RequestHandler ):
-    def get( self, site_key, f_type ):
-        #this is temp, should have more than just adunit
-        stats = ( DTE_STAT, REQ_STAT, IMP_STAT, CLK_STAT )
-        adunit = AdUnitQueryManager().get_by_key( site_key )
+    def get( self, key, key_type, f_type ):
+        #XXX make sure this is the right way to do it 
+        spec = self.params.get('spec') 
         if self.start_date:
             days = StatsModel.get_days( self.start_date, self.date_range )
         else:
             days = StatsModel.lastdays( self.date_range )
-        return sswriter.write_stats( f_type, stats, site=site_key, days=days )
+
+        stat_names, stat_models = self.get_desired_stats(key, key_type, days, spec=spec)
+        logging.warning(stat_models)
+        logging.warning("\n\nDays len:%s\nStats len:%s\n\n" % (len(days),len(stat_models)))
+        return sswriter.write_stats( f_type, stat_names, stat_models, site=key, days=days, key_type=key_type )
+
+
+    def get_desired_stats(self, key, key_type, days, spec=None):
+        manager = StatsModelQueryManager(self.account, offline=self.offline)
+        """ Given a key, key_type, and specificity, return 
+        the appropriate stats to get AND their names"""
+        #default for all
+        stat_names = (IMP_STAT, CLK_STAT, CTR_STAT)
+        #sanity check
+        assert key_type in ('adunit', 'app', 'adgroup', 'account')
+        if spec:
+            assert spec in ('creatives', 'adunits', 'campaigns', 'days', 'apps')
+
+
+
+        #Set up attr getters/names
+        if key_type == 'app' or (key_type == 'account' and spec == 'apps') or (key_type == 'adunit' and spec == 'days'): 
+            stat_names = (REQ_STAT,) + stat_names
+            if spec == 'days':
+                stat_names = (DTE_STAT,) + stat_names
+        elif key_type == 'account' and spec == 'campaigns':
+            stat_names += (CPM_STAT, CNV_RATE_STAT, CPA_STAT)
+        elif key_type == 'adgroup':
+            if spec == 'days':
+                stat_names = (DTE_STAT,) + stat_names
+            stat_names += (REV_STAT, CNV_RATE_STAT, CPA_STAT)
+        elif key_type == 'adunit' and spec == 'campaigns':
+            stat_names += (REV_STAT,)
+
+
+
+        #General rollups for all data
+        if key_type == 'account':
+            if spec == 'apps':
+                apps = AppQueryManager.get_apps(self.account)
+                if len(apps) == 0:
+                    #should probably handle this more gracefully
+                    logging.warning("Apps for account is empty")
+                return (stat_names, [manager.get_stat_rollup_for_days(publisher=a, days=days) for a in apps]) 
+            elif spec == 'campaigns':
+                camps = CampaignQueryManager().get_campaigns(account=self.account)
+                if len(camps) == 0:
+                    logging.warning("Campaigns for account is empty")
+                return (stat_names, [manager.get_stat_rollup_for_days(advertiser=c, days=days) for c in camps])
+        #Rollups for adgroup data
+        elif key_type == 'adgroup':
+            if spec == 'creatives':
+                creatives = list(CreativeQueryManager().get_creatives(adgroup=key))
+                if len(creatives) == 0:
+                    logging.warning("Creatives for adgroup is empty")
+                return (stat_names, [manager.get_stat_rollup_for_days(advertiser=c, days=days) for c in creatives])
+            if spec == 'adunits':
+                adunits = map(lambda x: Site.get(x), AdGroupQueryManager().get_by_key(key).site_keys)
+                if len(adunits) == 0:
+                    logging.warning("Adunits for adgroup is empty")
+                return (stat_names, [manager.get_stat_rollup_for_days(advertiser=key, publisher=a, days=days) for a in adunits]) 
+            if spec == 'days':
+                return (stat_names, manager.get_stats_for_days(advertiser=key, days=days))
+        #Rollups + not-rollup for adunit data            
+        elif key_type == 'adunit':
+            if spec == 'campaigns':
+                adgroups = AdGroupQueryManager().get_adgroups(adunit=key)
+                if len(adgroups) == 0:
+                    logging.warning("Campaigns for adunit is empty")
+                return (stat_names, [manager.get_stat_rollup_for_days(publisher=key, advertiser=a, days=days) for a in adgroups])
+            if spec == 'days':
+                return (stat_names, manager.get_stats_for_days(publisher=key, days=days))
+        #App adunit rollup data
+        elif key_type == 'app':
+            adunits = AdUnitQueryManager().get_adunits(app=key)
+            if len(adunits) == 0:
+                logging.warning("Apps is empty")
+            return (stat_name, [manager.get_stat_rollup_for_days(publisher=a, days=days) for a in adunits])
 
 
 @whitelist_login_required
 def export_file( request, *args, **kwargs ):
     return ExportFileHandler()( request, *args, **kwargs )
+
+            
 
 class AdUnitShowHandler(RequestHandler):
   def get(self,adunit_key):
@@ -432,7 +509,13 @@ class AppUpdateAJAXHandler(RequestHandler):
       app = app_form.save(commit=False)
       app.account = self.account
       AppQueryManager().put_apps(app)
+      
       json_dict.update(success=True)
+      
+      # Delete related adunit contexts from memcache
+      adunits = AdUnitQueryManager().get_adunits(app=app)
+      AdUnitContextQueryManager().cache_delete_from_adunits(adunits)
+      
       return self.json_response(json_dict)
     new_html = self.get(app_form=app_form)
     json_dict.update(success=False,html=new_html)    
@@ -473,7 +556,7 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
       adunit.account = self.account
       AdUnitQueryManager().put_adunits(adunit)
       
-      CachedQueryManager().cache_delete(adunit)
+      AdUnitContextQueryManager().cache_delete_from_adunits(adunit)
       
       json_dict.update(success=True)
       return self.json_response(json_dict)
@@ -483,70 +566,6 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
 
 def adunit_update_ajax(request,*args,**kwargs):
   return AdUnitUpdateAJAXHandler()(request,*args,**kwargs)
-
-class AppUpdateHandler(RequestHandler):
-  def get(self,app_key):
-    a = AppQueryManager().get_by_key(app_key)
-    f = AppForm(instance=a)
-    
-    if a.icon:
-      a.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(a.icon)
-    
-    return render_to_response(self.request,'publisher/edit_app.html', {"f": f, "app": a})
-
-  def post(self,app_key):
-    a = AppQueryManager().get_by_key(app_key)
-    f = AppForm(data=self.request.POST, instance=a)
-    if a.account.user == self.account.user:
-      f.save(commit=False)
-
-      # Store the image
-      if not self.request.POST.get("img_url") == "":
-        try:
-          response = urllib.urlopen(self.request.POST.get("img_url"))
-          img = response.read()
-          a.icon = db.Blob(img)
-        except:
-          pass
-      elif self.request.FILES.get("img_file"):
-        try:
-          icon = images.resize(self.request.FILES.get("img_file").read(), 60, 60)
-          a.icon = db.Blob(icon)
-        except:
-          pass
-
-      AppQueryManager().put_apps(a)
-
-    return HttpResponseRedirect(reverse('publisher_app_show',kwargs={'app_key':a.key()}))
-
-@whitelist_login_required
-def app_update(request,*args,**kwargs):
-  return AppUpdateHandler()(request,*args,**kwargs)   
-
-class UpdateAdUnitHandler(RequestHandler):
-  def get(self,adunit_key):
-    adunit = AdUnitQueryManager().get_by_key(adunit_key)
-    f = SiteForm(instance=adunit)
-    return render_to_response(self.request,'publisher/edit.html', {"f": f, "site": adunit})
-
-  def post(self,adunit_key):
-    adunit = AdUnitQueryManager().get_by_key(adunit_key)
-    f = SiteForm(data=self.request.POST, instance=adunit)
-    if adunit.account.user == self.account.user:
-      f.save(commit=False)
-
-      # update the database
-      AdUnitQueryManager().put_adunits(adunit)
-      
-      # update the cache as necessary 
-      # replace=True means don't do anything if not already in the cache
-      CachedQueryManager().cache_delete(adunit)
-      
-    return HttpResponseRedirect(reverse('publisher_adunit_show',kwargs={'adunit_key':adunit.key()}))
-  
-@whitelist_login_required
-def adunit_update(request,*args,**kwargs):
-  return UpdateAdUnitHandler()(request,*args,**kwargs)   
 
 class AppIconHandler(RequestHandler):
   def get(self, app_key):
@@ -587,7 +606,9 @@ class RemoveAdUnitHandler(RequestHandler):
         a.deleted = True
         AdUnitQueryManager().put_adunits(a)
         # delete from cache
-        CachedQueryManager().cache_delete(a)
+        # CachedQueryManager().cache_delete(a)
+        AdUnitContextQueryManager().cache_delete_from_adunits(a)
+        
     return HttpResponseRedirect(reverse('publisher_app_show','app_key',a.app_key.key()))
  
 @whitelist_login_required

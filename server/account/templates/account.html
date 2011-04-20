@@ -30,7 +30,7 @@
                   <legend>AdMob {% if account.admob_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Disabled)</span>{% endif %}</legend>
                   <dl class="formFields {% if account.admob_pub_id %}show{% endif %}"> 
                     <dt><label for="appForm-adUnitName">AdMob Publisher ID:</label></dt> 
-                    <dd><input type="text" class="input-text" name="admob_pub_id" value="{{account.admob_pub_id|default_if_none:""}}" /></dd> 
+                    <dd><input type="text" class="input-text" name="admob_pub_id" value="{{account.admob_pub_id|default_if_none:""}}"  placeholder="ex: a14cdb1922f35xx"/></dd> 
                     <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.admob.com/" target="_blank">Go to AdMob<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
                   </dl>
                 </fieldset> 
@@ -41,7 +41,7 @@
                   <legend>AdSense {% if account.adsense_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Disabled)</span>{% endif %}</legend>
                   <dl class="formFields {% if account.adsense_pub_id %}show{% endif %}"> 
                     <dt><label for="appForm-adUnitName">AdSense Publisher ID:</label></dt> 
-                    <dd><input type="text" class="input-text" name="adsense_pub_id" value="{{account.adsense_pub_id|default_if_none:""}}" /></dd> 
+                    <dd><input type="text" class="input-text" name="adsense_pub_id" value="{{account.adsense_pub_id|default_if_none:""}}"  placeholder="ex: ca-mb-pub-5592664190023789"/></dd> 
 
                     <dt><label for="appForm-adUnitName">Company Name:</label></dt> 
                     <dd><input type="text" class="input-text" name="adsense_company_name" value="{{account.adsense_company_name|default_if_none:""}}" placeholder="Optional" /></dd> 
@@ -55,7 +55,7 @@
                   <legend>BrightRoll {% if account.brightroll_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Disabled)</span>{% endif %}</legend> 
                   <dl class="formFields {% if account.brightroll_pub_id %}show{% endif %}"> 
                     <dt><label for="appForm-adUnitName">BrightRoll Publisher ID:</label></dt> 
-                    <dd><input type="text" class="input-text" name="brightroll_pub_id" value="{{account.brightroll_pub_id|default_if_none:""}}" /></dd> 
+                    <dd><input type="text" class="input-text" name="brightroll_pub_id" value="{{account.brightroll_pub_id|default_if_none:""}}" placeholder="ex: 3836789"/></dd> 
                     <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.brightroll.com/" target="_blank">Go to BrightRoll<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
                   </dl> 
                 </fieldset> 
@@ -66,7 +66,7 @@
                   <legend>Greystripe {% if account.greystripe_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Disabled)</span>{% endif %}</legend> 
                   <dl class="formFields {% if account.greystripe_pub_id %}show{% endif %}"> 
                     <dt><label for="appForm-adUnitName">Greystripe Publisher ID:</label></dt> 
-                    <dd><input type="text" class="input-text" name="greystripe_pub_id" value="{{account.greystripe_pub_id|default_if_none:""}}" /></dd> 
+                    <dd><input type="text" class="input-text" name="greystripe_pub_id" value="{{account.greystripe_pub_id|default_if_none:""}}" placeholder="ex: 3705265e-1025-4873-9352-7b1e4986xxxx" /></dd> 
                     <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.greystripe.com/" target="_blank">Go to Greystripe<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
                   </dl> 
                 </fieldset> 
@@ -77,7 +77,7 @@
                   <legend>InMobi {% if account.inmobi_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Disabled)</span>{% endif %}</legend> 
                   <dl class="formFields {% if account.inmobi_pub_id %}show{% endif %}"> 
                     <dt><label for="appForm-adUnitName">InMobi Publisher ID:</label></dt> 
-                    <dd><input type="text" class="input-text" name="inmobi_pub_id" value="{{account.inmobi_pub_id|default_if_none:""}}" /></dd> 
+                    <dd><input type="text" class="input-text" name="inmobi_pub_id" value="{{account.inmobi_pub_id|default_if_none:""}}" placeholder="ex: 4028cb962b75ff06012b792fc5fb6789" /></dd> 
                     <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.inmobi.com/" target="_blank">Go to InMobi<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
                   </dl> 
                 </fieldset> 
@@ -88,7 +88,7 @@
                   <legend>Jumptap {% if account.jumptap_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Disabled)</span>{% endif %}</legend> 
                   <dl class="formFields {% if account.jumptap_pub_id %}show{% endif %}"> 
                     <dt><label for="appForm-adUnitName">Jumptap Publisher ID:</label></dt> 
-                    <dd><input type="text" class="input-text" name="jumptap_pub_id" value="{{account.jumptap_pub_id|default_if_none:""}}" /></dd> 
+                    <dd><input type="text" class="input-text" name="jumptap_pub_id" value="{{account.jumptap_pub_id|default_if_none:""}}"  placeholder="ex: pa_company_inc"/></dd> 
                     <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.jumptap.com/" target="_blank">Go to Jumptap<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
                   </dl> 
                 </fieldset> 
@@ -99,7 +99,7 @@
                   <legend>Millenial Media {% if account.millenial_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Disabled)</span>{% endif %}</legend> 
                   <dl class="formFields {% if account.millenial_pub_id %}show{% endif %}"> 
                     <dt><label for="appForm-adUnitName">Millenial Publisher ID:</label></dt> 
-                    <dd><input type="text" class="input-text" name="millenial_pub_id" value="{{account.millenial_pub_id|default_if_none:""}}" /></dd> 
+                    <dd><input type="text" class="input-text" name="millenial_pub_id" value="{{account.millenial_pub_id|default_if_none:""}}"  placeholder="ex: 36789"/></dd> 
                     <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.millennialmedia.com" target="_blank">Go to Millennial Media<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
                   </dl> 
                 </fieldset> 
@@ -110,7 +110,7 @@
                   <legend>MobFox {% if account.mobfox_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Disabled)</span>{% endif %}</legend> 
                   <dl class="formFields {% if account.mobfox_pub_id %}show{% endif %}"> 
                     <dt><label for="appForm-adUnitName">MobFox Publisher ID:</label></dt> 
-                    <dd><input type="text" class="input-text" name="mobfox_pub_id" value="{{account.mobfox_pub_id|default_if_none:""}}" /></dd> 
+                    <dd><input type="text" class="input-text" name="mobfox_pub_id" value="{{account.mobfox_pub_id|default_if_none:""}}"  placeholder="ex: 008048afe367bf4ce82ae95363c4xxxx"/></dd> 
                     <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.mobfox.com/" target="_blank">Go to MobFox<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
                   </dl> 
                 </fieldset> 

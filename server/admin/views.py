@@ -1,6 +1,7 @@
 import logging, os, re, datetime, hashlib
 
 from urllib import urlencode
+import time
 
 from google.appengine.api import users, images
 from google.appengine.api.urlfetch import fetch
@@ -13,7 +14,7 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
-from common.ragendja.template import render_to_response, JSONResponse
+from common.ragendja.template import render_to_response, render_to_string
 from django.core.mail import send_mail, EmailMessage
 
 from common.utils.decorators import whitelist_login_required
@@ -21,10 +22,13 @@ from common.utils.decorators import whitelist_login_required
 from advertiser.models import *
 from advertiser.forms import CampaignForm, AdGroupForm
 
+from admin.models import AdminPage
 from publisher.models import Site, Account, App
 from reporting.models import SiteStats,StatsModel
 from publisher.query_managers import AppQueryManager
 from reporting.query_managers import StatsModelQueryManager
+
+from google.appengine.api import taskqueue
 
 MEMCACHE_KEY = "jpayne:admin/d:render_p"
 
@@ -50,17 +54,24 @@ def admin_switch_user(request,*args,**kwargs):
     return response
   
   
-@login_required
 def dashboard_prep(request, *args, **kwargs):
     offline = request.GET.get('offline',False)
     offline = True if offline == "1" else False
 
+
+    # mark the page as loading
+    def _txn():
+        page = AdminPage.get_by_stats_source(offline=offline)
+        if page:
+            page.loading = True
+            page.put()
+    db.run_in_transaction(_txn)    
+    
+    
     days = StatsModel.lastdays(30)
     # gets all undeleted applications
-    start_date = datetime.date.today() - datetime.timedelta(days=30)
-    apps = AppQueryManager().get_apps(limit=1000)
-    logging.info("apps:%s"%apps)
-    
+    start_date = datetime.date.today() - datetime.timedelta(days=30) # NOTE: change
+    apps = AppQueryManager().get_apps(limit=1000)    
     # get all the daily stats for the undeleted apps
     app_stats = StatsModelQueryManager(None,offline=offline).get_stats_for_apps(apps=apps,num_days=30)
 
@@ -84,9 +95,9 @@ def dashboard_prep(request, *args, **kwargs):
     for app_stat in app_stats:
         # add this site stats to the total for the day and increment user count
         if app_stat.date:
-            user_count = totals[str(app_stat.date)].user_count
+            user_count = totals[str(app_stat.date)].user_count + 1
             _incr_dict(totals,str(app_stat.date),app_stat)
-            totals[str(app_stat.date)].user_count = user_count + 1
+            totals[str(app_stat.date)].user_count = user_count
         if app_stat._publisher:
             _incr_dict(unique_apps,str(app_stat._publisher),app_stat)
     
@@ -95,13 +106,12 @@ def dashboard_prep(request, *args, **kwargs):
     total_stats.sort(lambda x,y: cmp(x.date,y.date))
     apps = unique_apps.values()
     apps.sort(lambda x,y: cmp(y.request_count, x.request_count))
-    logging.info("\n\napps:%s\n\n\n"%apps)
     
     # get folks who want to be on the mailing list
     new_users = Account.gql("where date_added >= :1 order by date_added desc", start_date).fetch(1000)
     
     # params
-    render_p = {"stats": total_stats, 
+    render_params = {"stats": total_stats, 
         "start_date": start_date,
         "today": total_stats[-1],
         "yesterday": total_stats[-2],
@@ -113,16 +123,13 @@ def dashboard_prep(request, *args, **kwargs):
         "unique_apps": unique_apps, 
         "new_users": new_users,
         "mailing_list": [a for a in new_users if a.mailing_list]}
-    key = MEMCACHE_KEY
-    if offline:
-        key += ':offline'    
-    memcache.set(key, render_p)
+
+    page = AdminPage(offline=offline,
+                     html=render_to_string(request,'admin/pre_render.html',render_params),
+                     today_requests=total_stats[-1].request_count)
+    page.put()
     
-    url = reverse('admin_dashboard')
-    if offline:
-        url += '?offline=1'
-    
-    return HttpResponseRedirect(url)
+    return HttpResponse("OK")
  
 @login_required
 def dashboard(request, *args, **kwargs):
@@ -130,17 +137,29 @@ def dashboard(request, *args, **kwargs):
     offline = True if offline == "1" else False
     refresh = request.GET.get('refresh',False)
     refresh = True if refresh == "1" else False
+    loading = request.GET.get('loading',False)
+    loading = True if loading == "1" else False
     
-    key = MEMCACHE_KEY
     if offline:
-        key += ':offline'
-    render_p = memcache.get(key)
-    if render_p and not refresh:
-        return render_to_response(request, 
-            'admin/d.html', 
-             render_p)
+        key_name = "offline"
     else:
-        url = reverse('dashboard_prep')
+        key_name = "realtime"
+    if refresh:
+        now = time.time()
+        time_bucket = int(now)/300 #only allow once ever 5 minutes
+        task_name = "admin-%s"%time_bucket
         if offline:
-            url += '?offline=1'
-        return HttpResponseRedirect(url)        
+            task_name = 'offline-' + task_name
+        task = taskqueue.Task(name=task_name,
+                              params=dict(offline="1" if offline else "0"),
+                              method='GET',
+                              url='/admin/prep/')
+        try:                      
+            task.add("admin-dashboard-queue")
+            return HttpResponseRedirect(reverse('admin_dashboard')+'?loading=1')
+        except Exception, e:
+            logging.warning("task error: %s"%e)                
+        
+    page = AdminPage.get_by_stats_source(offline=offline)
+    loading = loading or page.loading
+    return render_to_response(request,'admin/d.html',{'page': page, 'loading': loading})

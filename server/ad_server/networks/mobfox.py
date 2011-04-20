@@ -58,9 +58,9 @@ class MobFoxServerSide(ServerSide):
 
     def parse_xml(self,document):
         try:
-          dom = minidom.parseString(document)
+            dom = minidom.parseString(document)
         except:
-          return None       
+            return None       
         
         request_elems = dom.getElementsByTagName("request")        
         # bail early if improper response

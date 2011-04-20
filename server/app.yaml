@@ -7,6 +7,10 @@ default_expiration: "10d"
 builtins:
 - datastore_admin: on
 
+# Turn this on to debug
+# - appstats: on
+
+
 handlers:
   
 - url: /robots.txt
@@ -32,6 +36,11 @@ handlers:
 - url: /remote_api
   script: $PYTHON_LIB/google/appengine/ext/remote_api/handler.py
   login: admin
+
+- url: /admin/prep
+  script: main.py
+  login: admin
+
 
 - url: /m/clear
   script: ad_server/main.py

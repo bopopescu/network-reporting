@@ -1,4 +1,5 @@
 import logging
+import os
 import time
 from optparse import OptionParser
 
@@ -14,8 +15,8 @@ UNIQ_USER_MAPPER = 's3://' + S3_BUCKET + '/code/uniq_user_mapper.py'
 
 
 NUM_INSTANCES = 1
-MASTER_INSTANCE_TYPE = 'm1.small'
-SLAVE_INSTANCE_TYPE = 'm1.small'
+MASTER_INSTANCE_TYPE = 'm1.large'
+SLAVE_INSTANCE_TYPE = 'm1.large'
 KEEP_ALIVE = True
     
 
@@ -34,10 +35,22 @@ def main():
     start = time.time()
         
     parser = OptionParser()
-    parser.add_option('-f', '--file', dest='logfile')
+    parser.add_option('-l', '--local_dir', dest='local_dir')
+    parser.add_option('-r', '--remote_dir', dest='remote_dir')
+    parser.add_option('-o', '--output_file', dest='output_file')
     parser.add_option('-n', '--num_instances', dest='num_instances', default=NUM_INSTANCES)
     (options, args) = parser.parse_args()
     
+    print
+    print "local dir:\t", options.local_dir
+    print "remote dir:\t", options.remote_dir
+    print
+
+    log_count_input_files = [os.path.join(options.remote_dir, f) for f in os.listdir(options.local_dir) 
+                                if f.startswith('chunk')]
+    uniq_user_input_files = [os.path.join(options.remote_dir, f) for f in os.listdir(options.local_dir) 
+                                if f.startswith('pp-chunk')]
+        
     conn = EmrConnection('AKIAJKOJXDCZA3VYXP3Q', 'yjMKFo61W0mMYhMgphqa+Lc2WX74+g9fP+FVeyoH')
 
     log_count_step = StreamingStep(
@@ -45,8 +58,8 @@ def main():
         mapper=LOG_MAPPER,
         reducer=LOG_REDUCER,
         cache_files = ['s3://' + S3_BUCKET + '/code/log_parser.py#log_parser.py'],
-        input=options.logfile,
-        output=options.logfile+'.out',
+        input=log_count_input_files,
+        output=options.output_file+'.out',
     )
     
     uniq_user_count_step = StreamingStep(
@@ -54,8 +67,8 @@ def main():
         mapper=UNIQ_USER_MAPPER,
         reducer='aggregate',
         cache_files = ['s3://' + S3_BUCKET + '/code/log_parser.py#log_parser.py'],
-        input=options.logfile+'.pp',
-        output=options.logfile+'.pp.out',
+        input=uniq_user_input_files,
+        output=options.output_file+'.pp.out',
     )
     
     #try to find an existing jobflow in waiting mode

@@ -43,6 +43,14 @@ import logging
 
 from google.appengine.ext.db import Key
 
+
+""" 
+This serves as the end-to-end framework for ad_server tests.
+Due to some strange path issues, it appears that it must remain in this location.
+TODO: move to mopub/server/ad_server
+"""
+
+
 AdUnit = Site
 
 AD_UNIT_ID = "agltb3B1Yi1pbmNyCgsSBFNpdGUYAgw"
@@ -373,7 +381,7 @@ def run_auction(ad_unit_id, simulate_client_success=True, dt = datetime.now(), l
     if simulate_client_success:
         # Simulate callback to impression handler
         # get rid of prepended "html://DOMAIN"
-        query_string = '/m/' + imp_tracker_url.split('/m/')[1] + "&testing=%s" % TEST_MODE
+        query_string = imp_tracker_url.split('?')[1] + "&testing=%s" % TEST_MODE
         logging.warning("query string: %s" % query_string)
         req = Request( fake_environ(query_string))
         resp = Response()

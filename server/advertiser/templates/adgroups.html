@@ -148,7 +148,7 @@
                     </thead>
                     <tbody>
                       {% for adgroup in level.adgroups %}
-                      <tr class="campaignData{% if not forloop.counter0|divisibleby:2 %}campaignData-alt{% endif %}" id="campaigns-guaranteed-{{level.name}}-{{forloop.counter0}}">
+                      <tr class="campaignData campaign-status-{{adgroup|campaign_status}}" id="campaigns-guaranteed-{{level.name}}-{{forloop.counter0}}">
                         <th class="campaignData-icon">
                             <input type="checkbox" name="id" value="{{adgroup.key}}"/>
                             {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9></img>{% endif %}
@@ -181,8 +181,8 @@
                         <td class="dataTable-data numeric">{{adgroup.stats.conversion_count|withsep}} ({{adgroup.stats.conv_rate|percentage}})</td>
                         <td class="dataTable-data numeric">{{adgroup.stats.cpa|currency}}</td>
                       </tr>
-                      {% empty %}
-                      <tr class="campaignData">
+                      {% endfor %}
+                      <tr class="campaignData campaignData-placeholder">
                         <th class="campaignData-icon"></th>
                         <th class="dataTable-name"><span class="muted">None</span></th>
                         <td class="dataTable-data numeric"></td>
@@ -193,7 +193,6 @@
                         <td class="dataTable-data numeric"></td>
                         <td class="dataTable-data numeric"></td>
                       </tr>
-                      {% endfor %}
                       {% endif %}
                 {% endfor %}
                 </tbody>
@@ -215,7 +214,7 @@
                 </thead>
                 <tbody>
                   {% for adgroup in promo %}
-                  <tr class="{% cycle 'campaignData' 'campaignData campaignData-alt' %}" id="campaigns-promo-{{forloop.counter0}}">
+                  <tr class="campaignData campaign-status-{{adgroup|campaign_status}}" id="campaigns-promo-{{forloop.counter0}}">
                     <th class="campaignData-icon">
                       <input type="checkbox" name="id" value="{{adgroup.key}}"/>
                       {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9></img>{% endif %}
@@ -245,8 +244,8 @@
                     <td class="dataTable-data numeric">{{adgroup.stats.conversion_count|withsep}} ({{adgroup.stats.conv_rate|percentage}})</td>
                     <td class="dataTable-data numeric">{{adgroup.stats.cpa|currency}}</td>
                   </tr>
-                  {% empty %}
-                  <tr class="campaignData">
+                  {% endfor %}
+                  <tr class="campaignData campaignData-placeholder">
                     <th class="campaignData-icon"></th>
                     <th class="dataTable-name"><span class="muted">None</span></th>
                     <td class="dataTable-data numeric"></td>
@@ -257,7 +256,6 @@
                     <td class="dataTable-data numeric"></td>
                     <td class="dataTable-data numeric"></td>
                   </tr>
-                  {% endfor %}
                 </tbody>
               </table>
               <h2>Network</h2>
@@ -296,8 +294,8 @@
                     <td class="dataTable-data numeric">{{adgroup.stats.ctr|percentage|withsep}}</td>
                     <td class="dataTable-data numeric">&nbsp;</td>
                   </tr>
-                  {% empty %}
-                    <tr class="campaignData">
+                  {% endfor %}
+                  <tr class="campaignData campaignData-placeholder">
                     <th class="campaignData-icon"></th>
                     <th class="dataTable-name"><span class="muted">None</span></th>
                     <td class="dataTable-data numeric"></td>
@@ -308,7 +306,6 @@
                     <td class="dataTable-data numeric"></td>
                     <td class="dataTable-data numeric"></td>
                   </tr>
-                  {% endfor %}
                 </tbody>
               </table>
               <h2>Backfill Promotional</h2>
@@ -328,7 +325,7 @@
                 </thead>
                 <tbody>
                   {% for adgroup in backfill_promo %}
-                  <tr class="{% cycle 'campaignData' 'campaignData campaignData-alt' %}" id="campaigns-promo-{{forloop.counter0}}">
+                  <tr class="campaignData campaign-status-{{adgroup|campaign_status}}" id="campaigns-promo-{{forloop.counter0}}">
                     <th class="campaignData-icon">
                       <input type="checkbox" name="id" value="{{adgroup.key}}"/>
                       {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9></img>{% endif %}
@@ -358,8 +355,8 @@
                     <td class="dataTable-data numeric">{{adgroup.stats.conversion_count|withsep}} ({{adgroup.stats.conv_rate|percentage}})</td>
                     <td class="dataTable-data numeric">{{adgroup.stats.cpa|currency}}</td>
                   </tr>
-                  {% empty %}
-                  <tr class="campaignData">
+                  {% endfor %}
+                  <tr class="campaignData campaignData-placeholder">
                     <th class="campaignData-icon"></th>
                     <th class="dataTable-name"><span class="muted">None</span></th>
                     <td class="dataTable-data numeric"></td>
@@ -370,7 +367,6 @@
                     <td class="dataTable-data numeric"></td>
                     <td class="dataTable-data numeric"></td>
                   </tr>
-                  {% endfor %}
                 </tbody>
               </table>
               

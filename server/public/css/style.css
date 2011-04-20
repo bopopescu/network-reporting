@@ -1976,6 +1976,10 @@ td.numeric, th.numeric, .numeric TD {
   background: #fff;
 }
 
+.campaignData-placeholder {
+  display: table-row;
+}
+
 .campaignData th.dataTable-name {
   width: 200px;
 }

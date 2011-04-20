@@ -115,7 +115,7 @@ class InMobiServerSide(ServerSide):
 
 banner_template = string.Template(
 """
-    <div style='text-align:center'><a href="$ad_url" target="_blank"><img src="$image_url"/></a></div>
+    <div style='text-align:center'><a href="$ad_url" target="_top"><img src="$image_url"/></a></div>
 """)
 
 text_template = string.Template(

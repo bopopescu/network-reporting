@@ -387,6 +387,10 @@ var mopub = mopub || {};
         e.preventDefault();
         $('#campaignAdgroupForm').submit();
       });
+      
+    ////////////////////////////////////
+    //////////  /campaigns/ ////////////
+    ////////////////////////////////////
     
     $('#advertisers-addCampaign')
       .button({ icons : {primary : 'ui-icon-circle-plus'} });
@@ -447,6 +451,69 @@ var mopub = mopub || {};
                 var val = $(this).val();
                 $('#fake-campaignForm').find('#action').attr('value', val).end().submit();
                 });
+                
+                
+    // Filter by status            
+    $('#campaigns-filterOptions-option-all')
+        .click(function(e){
+            $('.campaignData').show();
+            addPlaceholder()
+            refreshAlternatingColor();
+        });
+        
+    $('#campaigns-filterOptions-option-running')
+        .click(function(e){
+            $('.campaignData').hide();
+            $('.campaign-status-Running').show();
+            addPlaceholder()
+            refreshAlternatingColor();
+        });  
+        
+    $('#campaigns-filterOptions-option-paused')
+        .click(function(e){
+            $('.campaignData').hide();
+            $('.campaign-status-Paused').show();
+            addPlaceholder()
+            refreshAlternatingColor();
+        });
+
+    $('#campaigns-filterOptions-option-scheduled')
+        .click(function(e){
+            $('.campaignData').hide();
+            $('.campaign-status-Scheduled').show();
+            addPlaceholder()
+            refreshAlternatingColor();
+        });              
+                
+    function refreshAlternatingColor(){
+        $('.campaignData').removeClass('campaignData-alt');
+        $('table').each(function(){
+            $(this).find('.campaignData:visible:odd').addClass('campaignData-alt');
+        });
+    }
+    
+    function addPlaceholder(){
+        // Placeholders start out hidden
+        $('.campaignData-placeholder').hide()
+        $('table').each(function(){
+            // Show them where there is nothing else
+            visible = $(this).find('.campaignData:visible');
+            // alert(visible.length);
+            if (visible.length === 0){
+                placeholder = $(this).find('.campaignData-placeholder')
+                console.log(placeholder)
+                placeholder.show()
+            }
+        });
+    }
+    
+    // Initialize
+    $('#campaigns-filterOptions-option-all').click()
+                
+    ////////////////////////////////////////////
+    //////////  /campaigns/adgroup/ ////////////
+    ////////////////////////////////////////////
+    
     
     $('#creativeCreateForm-submit')
       .button({ 

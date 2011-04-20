@@ -108,15 +108,19 @@ def time_ago_in_words(value):
 def campaign_status(adgroup):
     d = datetime.now().date()
     if (adgroup.start_date is None or d > adgroup.start_date) and (adgroup.end_date is None or d < adgroup.end_date):
+        if not adgroup.active:
+            return "Paused"
         if adgroup.campaign.budget: 
             if adgroup.percent_delivered and adgroup.percent_delivered < 100.0:
-                return "In-flight"
+                return "Running"
             elif adgroup.percent_delivered and adgroup.percent_delivered >= 100.0:
                 return "Completed"
             else:
+                # Eligible campaigns have 0% delivery.
+                # They should only last a couple seconds before becoming running campaigns
                 return "Eligible"
         else:
-            return "In-flight"
+            return "Running"
     elif adgroup.end_date and d > adgroup.end_date:
         return "Expired"
     elif adgroup.start_date and d < adgroup.start_date:

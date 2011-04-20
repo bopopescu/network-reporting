@@ -645,7 +645,7 @@ class AdHandler(webapp.RequestHandler):
                 if c.image:
                   params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
                 if c.action_icon:
-                  params["action_icon_div"] = '<div style="padding-top:5px;position:absolute;top:0;right:0;"><a href="'+c.url+'" target="_blank"><img src="/images/'+c.action_icon+'.png" width=40 height=40/></a></div>'
+                  params["action_icon_div"] = '<div style="padding-top:5px;position:absolute;top:0;right:0;"><a href="'+c.url+'" target="_top"><img src="/images/'+c.action_icon+'.png" width=40 height=40/></a></div>'
                 # self.response.headers.add_header("X-Adtype", str('html'))
             elif c.ad_type == "greystripe":
                 params.update(html_data=c.html_data)

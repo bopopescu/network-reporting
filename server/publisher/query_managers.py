@@ -132,7 +132,7 @@ class AdUnitContext(object):
         return creative    
         
 class CreativeCTR(object):
-    """ The relevant CTR information for a creative"""
+    """ The relevant CTR information for a creative-adunit pairing"""
     def __init__(self, creative, adunit):
         self.creative = creative
         self.adunit = adunit

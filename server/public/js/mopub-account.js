@@ -24,6 +24,7 @@ var mopub = mopub || {};
 			var details = $(this);
 			var data = $('.formFields', details);
 			var button = $('.adForm-fields-toggleButton', details);
+			var infobutton = $('.adForm-fields-infoButton', details);
 			
 			function getButtonTextElement() {
 				var buttonTextElement = $('.ui-button-text', button);
@@ -64,7 +65,24 @@ var mopub = mopub || {};
 					didShowData();
 				}
 			});
+			
+			infobutton.button({ 
+				icons: { secondary: "ui-icon-info" } 
+			})
+			.click(function(e) {
+				e.preventDefault();
+				$('#accountInfoForm').dialog({
+				  width: 570,
+					buttons: [
+						{
+							text: 'Close', 
+							click: function() {
+								$(this).dialog("close");
+							}
+						}
+					]
+				});
+			});
 		});
-		
 	});
 })(this.jQuery);

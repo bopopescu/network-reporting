@@ -81,8 +81,9 @@ class AdGroup(db.Model):
     priority_level = db.IntegerProperty(default=1)
     network_type = db.StringProperty(choices=["adsense", "iAd", "admob","millennial","appnexus","inmobi","mobfox","jumptap","brightroll","greystripe", "custom"])
 
-    # Note that bid is in cost per 1000.
-    # An individual ad's price is bid/1000
+    # Note that bid has different meaning depending on the bidding strategy.
+    # if CPM: bid = cost per 1000 impressions
+    # if CPC: bid = cost per 1 click
     bid = db.FloatProperty(default=0.05)
     bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpm")
 
@@ -222,6 +223,18 @@ class AdGroup(db.Model):
     def owner_name(self):
         return 'campaign'
         
+    @property
+    def cpc(self):
+        if self.bid_strategy == 'cpc':
+            return self.bid
+        return None
+        
+    @property
+    def cpm(self):
+        if self.bid_strategy == 'cpm':
+            return self.bid
+        return None
+        
 
 class Creative(polymodel.PolyModel):
     name = db.StringProperty()
@@ -254,23 +267,24 @@ class Creative(polymodel.PolyModel):
     account = db.ReferenceProperty(Account)
     t = db.DateTimeProperty(auto_now_add=True)
 
-    # calculates the eCPM for this creative, based on 
-    # the CPM bid for the ad group or the CPC bid for the ad group and the predicted CTR for this
-    # creative
-    def e_cpm(self):
-        if self.ad_group.bid_strategy == 'cpc':
-            return float(self.p_ctr() * self.ad_group.bid * 1000)
-        elif self.ad_group.bid_strategy == 'cpm':
-            return float(self.ad_group.bid)
+    # DEPRECATED: metrics such as e_cpm and CTR only make sense within the context of matching a creative with an adunit
+    # Use /ad_server/optimizer/optimizer.py instead to calculate these metrics.
+    #
+    # def e_cpm(self):
+    #     if self.ad_group.bid_strategy == 'cpc':
+    #         return float(self.p_ctr() * self.ad_group.bid * 1000)
+    #     elif self.ad_group.bid_strategy == 'cpm':
+    #         return float(self.ad_group.bid)
 
     @property
     def multi_format(self):
             return None
 
+    # DEPRECATED: see comment above
     # predicts a CTR for this ad.    We use 1% for now.
     # TODO: implement this in a better way
-    def p_ctr(self):
-        return 0.01
+    # def p_ctr(self):
+    #     return 0.01
         
     
     def _get_adgroup(self):
@@ -331,7 +345,7 @@ class Creative(polymodel.PolyModel):
         return 'ad_group'
             
     def __repr__(self):
-        return "Creative{ad_type=%s, eCPM=%.02f ,key_name=%s}" % (self.ad_type, self.e_cpm(),self.key().id_or_name())
+        return "Creative{ad_type=%s, key_name=%s}" % (self.ad_type, self.key().id_or_name())
   
 
 class TextCreative(Creative):

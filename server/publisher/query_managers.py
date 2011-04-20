@@ -50,11 +50,17 @@ class AdUnitContext(object):
         self.adunit.account.active
         self.adunit.app_key.deleted
 
-    def get_ctr(self, creative, date=datetime.date.today(), date_hour=None, min_sample_size=1000):
+
+    def _get_ctr(self, creative, date=datetime.date.today(), date_hour=None, min_sample_size=1000):
+        '''Given a creative, calculates the CTR.  
+        The date_hour parameter is the last full hour that has passed.
+        If date_hour is specified, gets or updates the CTR for that hour. 
+        If date_hour is not specified, use daily CTR.
+        If sample size is insufficient, return None.'''
         
         creative_ctr = self.creative_ctrs.get(creative.key())
         try:
-            # Use daily if passed a date_hour
+            # Use daily if date_hour is not specified
             if date_hour is not None:
                 return creative_ctr.get_or_update_hourly_ctr(date_hour=date_hour, min_sample_size=min_sample_size)
             else:

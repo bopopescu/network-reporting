@@ -96,7 +96,7 @@ CAMPAIGN_LEVELS = ('gtee_high', 'gtee', 'gtee_low', 'promo', 'network','backfill
 NATIVE_REQUESTS = ['admob','adsense','iAd','custom']
 
 
-server_side_dict = {"millennial":MillennialServerSide,
+SERVER_SIDE_DICT = {"millennial":MillennialServerSide,
                     "appnexus":AppNexusServerSide,
                     "inmobi":InMobiServerSide,
                     "brightroll":BrightRollServerSide,
@@ -132,8 +132,8 @@ class AdAuction(object):
             multiple = True    
         rpcs = []
         for adgroup in adgroups:
-            if adgroup.network_type in server_side_dict:
-                KlassServerSide = server_side_dict[adgroup.network_type]
+            if adgroup.network_type in SERVER_SIDE_DICT:
+                KlassServerSide = SERVER_SIDE_DICT[adgroup.network_type]
                 server_side = KlassServerSide(request, adunit) 
                 logging.warning("%s url %s"%(KlassServerSide,server_side.url))
                 
@@ -323,7 +323,7 @@ class AdAuction(object):
                                 for winner in winners:
                                     # if this adgroup does not requires an RPC
                                     # we can simply return the creative
-                                    if not winner.adgroup.network_type in server_side_dict:
+                                    if not winner.adgroup.network_type in SERVER_SIDE_DICT:
                                         winning_creative = winner
                                         # if native, log native request
                                         if winner.ad_type in NATIVE_REQUESTS:

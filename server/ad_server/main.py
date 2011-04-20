@@ -90,7 +90,6 @@ DEBUG = not on_production_server
 
 CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gzip(gfe)"]
 MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7PnE6cH9_PX7OoeIIr5FjnTA'
-DOMAIN = 'ads.mopub.com'
 FREQ_ATTR = '%s_frequency_cap'
 CAMPAIGN_LEVELS = ('gtee_high', 'gtee', 'gtee_low', 'promo', 'network','backfill_promo')
 NATIVE_REQUESTS = ['admob','adsense','iAd','custom']
@@ -536,9 +535,9 @@ class AdHandler(webapp.RequestHandler):
         
             # create an ad clickthrough URL
             appid = c.conv_appid or ''
-            ad_click_url = "http://%s/m/aclk?id=%s&cid=%s&c=%s&req=%s&udid=%s&appid=%s" % (DOMAIN,id, c.key(), c.key(),request_id, udid, appid)
+            ad_click_url = "http://%s/m/aclk?id=%s&cid=%s&c=%s&req=%s&udid=%s&appid=%s" % (self.request.host,id, c.key(), c.key(),request_id, udid, appid)
             # ad an impression tracker URL
-            track_url = "http://%s/m/imp?id=%s&cid=%s&udid=%s&appid=%s" % (DOMAIN, id, c.key(), udid, appid)
+            track_url = "http://%s/m/imp?id=%s&cid=%s&udid=%s&appid=%s" % (self.request.host, id, c.key(), udid, appid)
             cost_tracker = "&rev=%.07f" 
             if c.adgroup.bid_strategy == 'cpm':
                 cost_tracker = cost_tracker % (float(c.adgroup.bid)/1000)

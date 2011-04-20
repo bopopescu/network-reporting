@@ -11,7 +11,7 @@ from common.utils.cachedquerymanager import CachedQueryManager
 from account.models import Account
 from account.forms import AccountForm
 from account.query_managers import AccountQueryManager
-from publisher.query_managers import AdUnitQueryManager, AdunitContextQueryManager
+from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 
 from common.utils.request_handler import RequestHandler
 

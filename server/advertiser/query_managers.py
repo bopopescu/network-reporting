@@ -155,7 +155,7 @@ class CreativeQueryManager(CachedQueryManager):
             else:
                 adgroups = pub_ags
         if adgroups:
-            return reduce(lambda x, y: x+y, [ag.creatives for ag in adgroups])
+            return reduce(lambda x, y: x+y, [[c for c in ag.creatives] for ag in adgroups])
         crtvs = Creative.all().filter('deleted =', deleted).filter('account =', account)
         return crtvs
 

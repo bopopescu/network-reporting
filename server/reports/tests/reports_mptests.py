@@ -188,12 +188,16 @@ class TestReports():
 def simple_mptest():
     tester = TestReports()
     tester.setUp()
-    rep1 = Report(d1='campaign', d2='app', d3='adunit', start=DATE, end=DATE+datetime.timedelta(days=1), account=tester.account)
+    rep1 = Report(d1='adunit', d2='creative', d3='day', start=DATE, end=DATE+datetime.timedelta(days=1), account=tester.account)
     rep2 = Report(d1='campaign', d2='app', d3='day', start=DATE, end=DATE+datetime.timedelta(days=1), account=tester.account)
+    rep3 = Report(d1='campaign', d2='day', d3='app', start=DATE, end=DATE+datetime.timedelta(days=1), account=tester.account)
     data1 = rep1.gen_data()
     data2 = rep2.gen_data()
-    print rep1
+    data3 = rep3.gen_data()
+    print "Report 1: %s" % rep1
     pprint.pprint(data1)
-    print rep2
+    print "\n\nReport 2: %s" % rep2
     pprint.pprint(data2)
+    print "\n\nReport 3: %s" % rep3
+    pprint.pprint(data3)
     assert False

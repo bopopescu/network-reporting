@@ -90,9 +90,7 @@ class Report(db.Model):
             ret = {}
             manager = StatsModelQueryManager(self.account)
             vals, type, date_fmt = self.get_vals(pub, adv, days, dim)
-            print "Enumerating"
             for idx, val in enumerate(vals):
-                print "actually enumerating"
                 if type == 'days':
                     days = val
                 elif type == 'pub':
@@ -103,7 +101,7 @@ class Report(db.Model):
                 # going to make new function in SMQM that if given a list for these things it automatically
                 # rolls them up
                 name = NAME_STR % (level, idx) 
-                stats = manager.get_rollup_for_days(publisher = pub, advertiser = adv, days = days)
+                stats = manager.get_rollup_for_days(publisher = pub, advertiser = adv, days = days, date_fmt = date_fmt)
                 if last_dim: 
                     ret[name] = dict(stats = stats)
                 else:

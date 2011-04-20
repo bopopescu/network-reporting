@@ -72,21 +72,19 @@ def gen_days(start, end):
         days.append(temp)
     return days
 
-def hours_for_day(day):
-    '''Take a single date object and turn it into a
-    list of datetime objects going from 0000 to 2300'''
-    yr = day.year
-    mo = day.month
-    dy = day.day
-    days = []
-    for hour in range(24):
-        days.append(datetime(yr,mo,dy,hour))
-    return days
-
 def get_hours(days):
     '''Turn a list of days into a list of lists where
     each list is a list of the hours that make up that day'''
-    return map(lambda x: hours_for_day(x), days)
+    ret = []
+    for hour in range(24):
+        ent = []
+        for day in days:
+            date = day.day
+            yr = day.year
+            mo = day.month
+            ent.append(datetime(yr,mo,date,hour))
+        ret.append(ent)
+    return ret
 
 def get_days(days):
     '''turn a list of days into a list of lists where

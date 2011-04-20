@@ -124,7 +124,7 @@ class StatsModelQueryManager(CachedQueryManager):
         return reduce(lambda x,y: x+y, stats, StatsModel())
 
 
-    def get_rollup_for_days(self, publisher=None, publishers=None, advertiser=None, advertisers=None, days=None, num_days=None,account=None, country=None, offline=False):
+    def get_rollup_for_days(self, publisher=None, publishers=None, advertiser=None, advertisers=None, days=None, num_days=None,account=None, country=None, offline=False, date_fmt='date'):
         if publisher and publishers:
             logging.error("cannot pass both a single publisher and multiple publishers")
         if publisher and not publishers:
@@ -146,11 +146,11 @@ class StatsModelQueryManager(CachedQueryManager):
         stats = []
         for pub in publishers:
             for adv in advertisers:
-                stats += self.get_stats_for_days(publisher=pub, advertiser=adv, days=days, num_days=num_days, account=account, country=country, offline=offline)
+                stats += self.get_stats_for_days(publisher=pub, advertiser=adv, days=days, num_days=num_days, account=account, country=country, offline=offline, date_fmt=date_fmt)
         return reduce(lambda x,y: x+y, stats, StatsModel())
 
 
-    def get_stats_for_days(self, publisher=None, publishers=None, advertiser=None, days=None, num_days=None, account=None, country=None, offline=False):
+    def get_stats_for_days(self, publisher=None, publishers=None, advertiser=None, days=None, num_days=None, account=None, country=None, offline=False, date_fmt='date'):
         """ Gets the stats for a specific pairing. Definitions:
             advertiser_group: Either Campaign, AdGroup or Creative
             publisher_group: Either App, or Site(AdUnit)"""
@@ -188,7 +188,8 @@ class StatsModelQueryManager(CachedQueryManager):
                                                              account=account,
                                                              date=d,
                                                              country=country,
-                                                             offline=offline),
+                                                             offline=offline,
+                                                             date_fmt=date_fmt),
                                       parent=parent)
                         for d in days
                             for publisher in publishers]
@@ -199,7 +200,8 @@ class StatsModelQueryManager(CachedQueryManager):
                                                              account=account,
                                                              date=d,
                                                              country=country,
-                                                             offline=offline),
+                                                             offline=offline,
+                                                             date_fmt=date_fmt),
                                       parent=parent)
                         for d in days]
                                

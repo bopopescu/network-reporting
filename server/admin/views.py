@@ -30,6 +30,8 @@ from reporting.query_managers import StatsModelQueryManager
 
 from google.appengine.api import taskqueue
 
+from admin import beatbox
+
 MEMCACHE_KEY = "jpayne:admin/d:render_p"
 
 @login_required
@@ -166,6 +168,7 @@ def dashboard(request, *args, **kwargs):
         
 @login_required
 def update_sfdc_leads(request, *args, **kwargs):
+    # This is gnarly
     user = "jim@mopub.com"
     pw = "fhaaCohb0hXCNSQnreJUPhHbgKYNaQf00"
     
@@ -177,8 +180,10 @@ def update_sfdc_leads(request, *args, **kwargs):
         print "Login failed: %s %s" % (errorInfo.faultCode, errorInfo.faultString)
         return
     
-    # Create the new leads...  
-    while len(companies) > 0:
-        create_result = sforce.upsert('MoPub_Account_ID', [v.to_sfdc() for v in companies[:200]])
-        print create_result
-        companies[:200] = []
+    # Create/update the recent leads...  
+    start_date = datetime.date.today() - datetime.timedelta(days=7)
+    accounts = Account.gql("where date_added >= :1", start_date).fetch(1000)
+    while len(accounts) > 0:
+        create_result = sforce.upsert('MoPub_Account_ID__c', [v.to_sfdc() for v in accounts[:200]])
+        logging.info(create_result)
+        accounts[:200] = []

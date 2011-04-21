@@ -14,6 +14,7 @@ class AccountQueryManager(CachedQueryManager):
     Model = Account
     def get_by_key_name(self,name):
         return self.Model.get_by_key_name(name)
+        
     def get_current_account(self,user=None):
         if not user:
             user = users.get_current_user()

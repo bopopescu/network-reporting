@@ -9,8 +9,14 @@ class Account(db.Model):
     user = db.UserProperty() # admin user for this account
     date_added = db.DateTimeProperty(auto_now_add=True)
     all_users = db.ListProperty(db.Key)    
+    first_name = db.StringProperty()
+    last_name = db.StringProperty()
+    title = db.StringProperty()
     company = db.StringProperty()
     phone = db.PhoneNumberProperty()
+    city = db.StringProperty()
+    state = db.StringProperty()
+    country = db.StringProperty()
     traffic = db.FloatProperty()
     mailing_list = db.BooleanProperty(default=False)
     
@@ -32,17 +38,18 @@ class Account(db.Model):
         return users.is_current_user_admin()
         
     def to_sfdc(self):
-        return {'Company': self.name, 
-                'FirstName': "A", 'LastName': "Developer",
-                'LeadSource': 'AppStoreCrawl', 
-                'Number_of_Apps__c': len(self.apps),
-                'Apps__c': "\n".join(["%s (#%d in %s)" % (a.get("title"), a.get("rank"), a.get("category")) for a in self.apps]),
-                'iTunesURL__c': max([a.get("url") for a in self.apps]),
-                'Top_Rank__c': min(a.get('rank') for a in self.apps),
-                'Primary_Category__c': max(set(categories), key=categories.count),
-                'iTunes_Artist_Name__c': max([a.get('artist') for a in self.apps]),
-                'HtmlSummary__c': "<hr/>".join([a.get('summary') for a in self.apps]),
-                'Description': '',
+        return {'FirstName': (self.first_name or '')[:40],
+                'LastName': (self.last_name or '')[:80],
+                'Title': (self.title or '')[:80],
+                'Company': (self.company or '')[:255], 
+                'City': (self.city or '')[:40],
+                'State': (self.state or '')[:20],
+                'Country': (self.country or '')[:40],
+                'Phone': (self.phone or '')[:40],
+                'HasOptedOutOfEmail': not self.mailing_list,
+                'LeadSource': 'app.mopub.com', 
+                'Impressions_Month__c': str(self.traffic) or "Unknown",
+                'MoPub_Account_ID__c': str(self.key()),
                 'type': 'Lead'}
         
     def __eq__(self, other):

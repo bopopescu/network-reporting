@@ -99,7 +99,7 @@ class InMobiServerSide(ServerSide):
         #response.content = '<AdResponse><Ads number="1"><Ad type="text" actionType="web"><LinkText>Sick of being overweight? Get Free Guide</LinkText><Placement>page</Placement><AdURL>http://c.w.mkhoj.com/c.asm/3/t/c7i/pl5/2/2m/aj/u/0/0/1/354957037659003/1217ae48-012e-1000-de75-00020ff10003/1/9c3e6541</AdURL></Ad></Ads></AdResponse>'
         # Simple MRect/Image
         #reponse.content = '
-        trace_logging.info('InMobi response: %s'%cgi.escape(response.content))
+        trace_logging.warning('InMobi response: %s'%cgi.escape(response.content))
         if re.match("^<!--.*--\>$", response.content) == None and len(response.content) != 0:
             # TODO: do any sort of manipulation here that we want, like resizing the image, LAME
             self.parse_xml(response.content)

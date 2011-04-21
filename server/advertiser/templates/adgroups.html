@@ -292,7 +292,7 @@
                 </thead>
                 <tbody>
                   {% for adgroup in network %}
-                  <tr class="{% cycle 'campaignData' 'campaignData campaignData-alt' %}" id="campaigns-network-{{forloop.counter0}}">
+                  <tr class="campaignData campaign-status-{{adgroup|campaign_status}}" id="campaigns-network-{{forloop.counter0}}">
                     <th class="campaignData-icon">
                       <input type="checkbox" name="id" value="{{adgroup.key}}"/>
                       {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9></img>{% endif %}

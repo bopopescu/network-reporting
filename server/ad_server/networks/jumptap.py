@@ -1,7 +1,7 @@
 from ad_server.networks.server_side import ServerSide
 from ad_server.debug_console import trace_logging
 
-
+import cgi
 import urllib
 import urllib2
 import string
@@ -42,7 +42,7 @@ class JumptapServerSide(ServerSide):
         return response.read()
    
     def _bid_and_html_for_response(self,response):
-        trace_logging.info("Jumptap response: %s"%response.content)  
+        trace_logging.info("Jumptap response: %s"%cgi.escape(response.content))
         if len(response.content) == 0:
             trace_logging.info("Jumptap ad is empty")
             raise Exception("Jumptap ad is empty")

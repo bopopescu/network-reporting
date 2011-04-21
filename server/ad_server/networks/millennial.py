@@ -1,6 +1,7 @@
 from ad_server.networks.server_side import ServerSide
 from ad_server.debug_console import trace_logging
 
+import cgi
 import urllib2
 import urllib
 import logging
@@ -41,7 +42,7 @@ class MillennialServerSide(ServerSide):
   
     def _bid_and_html_for_response(self,response):
       # TODO: do any sort of manipulation here that we want, like resizing the image, LAME
-        trace_logging.info("Received Millennial Response: %s"%response.content)
+        trace_logging.info("Received Millennial Response: %s"%cgi.escape(response.content))
         if len(response.content) == 0 or \
           response.status_code != 200 or \
           '<title>404' in response.content: # **See Note below

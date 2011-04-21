@@ -40,6 +40,7 @@ class DebugConsole(object):
     <head>
         <style type="text/css">
             body{padding:0;margin:0;}
+            .line{width:320px}
         </style>
         <script type="text/javascript">
             var total_lines = %(num_lines)s;

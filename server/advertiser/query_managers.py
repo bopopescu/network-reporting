@@ -34,10 +34,13 @@ class CampaignQueryManager(CachedQueryManager):
 class AdGroupQueryManager(CachedQueryManager):
   Model = AdGroup   
       
-  def get_adgroups(self,campaign=None,campaigns=None,adunit=None,deleted=False,limit=50):
+  def get_adgroups(self,campaign=None,campaigns=None,adunit=None,account=None,deleted=False,limit=50):
       adgroups = AdGroup.all()
       if not (deleted == None):
           adgroups = adgroups.filter("deleted =",deleted)
+      if account:
+          adgroups = adgroups.filter("account =",account)      
+          
       if campaigns:
           adgroups = adgroups.filter("campaign IN",campaigns)
       elif campaign:      
@@ -87,17 +90,20 @@ class CampaignStatsCounter(object):
 class CreativeQueryManager(CachedQueryManager):
     Model = Creative
 
-    def get_creatives(self,adgroup=None,ad_type=None,ad_types=None,deleted=False,limit=None):
+    def get_creatives(self,adgroup=None,ad_type=None,ad_types=None,account=None,deleted=False,limit=None):
         creatives = Creative.all()
         if not (deleted == None):
-            creatives = creatives.filter("deleted =",deleted)
+            creatives = creatives.filter("deleted =", deleted)
+        if account:
+            creatives = creatives.filter("account =", account)    
         if adgroup:
-            creatives = creatives.filter("ad_group =",adgroup)
+            creatives = creatives.filter("ad_group =", adgroup)
         if ad_types:
-            creatives = creatives.filter("ad_types IN",ad_types)
+            creatives = creatives.filter("ad_types IN", ad_types)
         if ad_type:
-            creatives = creatives.filter("ad_type =",ad_type)
-        return creatives            
+            creatives = creatives.filter("ad_type =", ad_type)
+
+        return creatives.fetch(limit)            
     def put_creatives(self,creatives):
         return db.put(creatives)
         

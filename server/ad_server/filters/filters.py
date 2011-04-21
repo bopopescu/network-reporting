@@ -116,10 +116,10 @@ def exclude_filter( excl_params ):
         return not creative.ad_type in excl_params 
     return ( real_filter, log_mesg, [] )
 
-def ecpm_filter( winning_ecpm ):
+def ecpm_filter( winning_ecpm, creative_ecpm_dict ):
     log_mesg = "Removed due to being a loser: %s"
     def real_filter( creative ):
-        return creative.e_cpm() >= winning_ecpm
+        return creative_ecpm_dict[creative] >= winning_ecpm
     return ( real_filter, log_mesg, [] )
 
 ##############################################

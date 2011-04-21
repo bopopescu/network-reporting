@@ -12,7 +12,6 @@ class App(db.Model):
   
     name = db.StringProperty(required=True)
     adsense_app_name = db.StringProperty()
-    millennial_placement_id = db.StringProperty()
     
     app_type = db.StringProperty(required=True, default='iphone', choices=['iphone', 'android', 'ipad', 'mweb'])
     description = db.TextProperty()
@@ -21,6 +20,10 @@ class App(db.Model):
     
     icon = db.BlobProperty()
     
+    # Ad network overrides
+    jumptap_app_id = db.StringProperty()
+    millennial_app_id = db.StringProperty()
+
     deleted = db.BooleanProperty(default=False)
   
     t = db.DateTimeProperty(auto_now_add=True)
@@ -78,11 +81,15 @@ class Site(db.Model):
     device_format = db.StringProperty(default='phone', choices=DEVICE_FORMAT_CHOICES)
     format = db.StringProperty(choices=FORMAT_CHOICES) #TODO: we should use this w/o explicity using height, width
     resizable = db.BooleanProperty(default=False)
-  
+
     deleted = db.BooleanProperty(default=False)
     
     # what kind of ad is preferred here
     ad_type = db.StringProperty(choices=['text', 'image'], default='image',required=False)
+    
+    # Ad network overrides
+    jumptap_site_id = db.StringProperty()
+    millennial_site_id = db.StringProperty()
     
     # additional keywords that are passed to the auction
     keywords = db.TextProperty() # TODO: make sure this doesn't break shit

@@ -11,7 +11,7 @@ def get_ctr(adunit_context, creative, min_sample_size=1000, default_ctr=0.03, dt
     # Get adunit bundled with additional context - Note: this is passed in
     # adunit_bundle = AdUnitQueryManager(adunit.key()).get_adunit()
     
-    hourly_ctr = adunit_context.get_ctr(creative, 
+    hourly_ctr = adunit_context._get_ctr(creative, 
                                   min_sample_size=min_sample_size, 
                                   date_hour=dt)
     
@@ -20,7 +20,7 @@ def get_ctr(adunit_context, creative, min_sample_size=1000, default_ctr=0.03, dt
         return hourly_ctr
     
     # If there is no valid hourly ctr fall back to daily
-    daily_ctr = adunit_context.get_ctr(creative, 
+    daily_ctr = adunit_context._get_ctr(creative, 
                                   min_sample_size=min_sample_size, 
                                   date=dt.date())
                                   
@@ -29,3 +29,11 @@ def get_ctr(adunit_context, creative, min_sample_size=1000, default_ctr=0.03, dt
         
     else:
         return default_ctr
+        
+        
+def get_ecpm(adunit_context, creative, min_sample_size=1000, default_ctr=0.03, dt=datetime.datetime.now()):
+    if creative.ad_group.cpc is not None:
+        ctr = get_ctr(adunit_context, creative, min_sample_size, default_ctr, dt)
+        return float(ctr * creative.ad_group.cpc * 1000) 
+    elif creative.ad_group.cpm is not None:
+        return float(creative.ad_group.cpm) 

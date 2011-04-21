@@ -50,11 +50,17 @@ class AdUnitContext(object):
         self.adunit.account.active
         self.adunit.app_key.deleted
 
-    def get_ctr(self, creative, date=datetime.date.today(), date_hour=None, min_sample_size=1000):
+
+    def _get_ctr(self, creative, date=datetime.date.today(), date_hour=None, min_sample_size=1000):
+        '''Given a creative, calculates the CTR.  
+        The date_hour parameter is the last full hour that has passed.
+        If date_hour is specified, gets or updates the CTR for that hour. 
+        If date_hour is not specified, use daily CTR.
+        If sample size is insufficient, return None.'''
         
         creative_ctr = self.creative_ctrs.get(creative.key())
         try:
-            # Use daily if passed a date_hour
+            # Use daily if date_hour is not specified
             if date_hour is not None:
                 return creative_ctr.get_or_update_hourly_ctr(date_hour=date_hour, min_sample_size=min_sample_size)
             else:
@@ -126,7 +132,7 @@ class AdUnitContext(object):
         return creative    
         
 class CreativeCTR(object):
-    """ The relevant CTR information for a creative"""
+    """ The relevant CTR information for a creative-adunit pairing"""
     def __init__(self, creative, adunit):
         self.creative = creative
         self.adunit = adunit
@@ -209,6 +215,7 @@ class AdUnitContextQueryManager(CachedQueryManager):
 
     def cache_get(self,adunit_key):
         """ Takes an AdUnit key, gets or builds the context """
+        adunit_key = str(adunit_key).replace("'","")
         adunit_context_key = "context:"+str(adunit_key)
         adunit_context = memcache.get(adunit_context_key, namespace="context")
         if adunit_context is None:

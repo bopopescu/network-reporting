@@ -69,7 +69,7 @@ TEMPLATES = {
                           </script>
                         </head>
                         <body style="margin: 0;width:${w}px;height:${h}px;padding:0;">\
-                          <a href="$url" target="_blank"><img src="$image_url" width=$w height=$h/></a>
+                          <a href="$url" target="_top"><img src="$image_url" width=$w height=$h/></a>
                           $trackingPixel
                         </body></html> """),
     "admob": Template("""<html><head>
@@ -131,7 +131,7 @@ TEMPLATES = {
                           window.addEventListener("load", function() {
                             var links = document.getElementsByTagName('a');
                             for(var i=0; i < links.length; i++) {
-                              links[i].setAttribute('target','_blank');
+                              links[i].setAttribute('target','_top');
                             }
                           }, false);
                         </script></head>

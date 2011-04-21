@@ -8,7 +8,7 @@ html = Template("""<html><head><title>$title</title>
                           window.addEventListener("load", function() {
                             var links = document.getElementsByTagName('a');
                             for(var i=0; i < links.length; i++) {
-                              links[i].setAttribute('target','_blank');
+                              links[i].setAttribute('target','_top');
                             }
                           }, false);
                         </script>$network_style</head>

@@ -96,6 +96,14 @@ CAMPAIGN_LEVELS = ('gtee_high', 'gtee', 'gtee_low', 'promo', 'network','backfill
 NATIVE_REQUESTS = ['admob','adsense','iAd','custom']
 
 
+SERVER_SIDE_DICT = {"millennial":MillennialServerSide,
+                    "appnexus":AppNexusServerSide,
+                    "inmobi":InMobiServerSide,
+                    "brightroll":BrightRollServerSide,
+                    "jumptap":JumptapServerSide,
+                    "greystripe":GreyStripeServerSide,
+                    "mobfox":MobFoxServerSide,}
+
 
 # TODO: Logging is fucked up with unicode characters
 
@@ -117,17 +125,15 @@ class AdAuction(object):
     
     @classmethod
     def request_third_party_server(cls,request,adunit,adgroups):
+        if not isinstance(adgroups,(list,tuple)):
+            multiple = False
+            adgroups = [adgroups]
+        else:
+            multiple = True    
         rpcs = []
         for adgroup in adgroups:
-            server_side_dict = {"millennial":MillennialServerSide,
-                                "appnexus":AppNexusServerSide,
-                                "inmobi":InMobiServerSide,
-                                "brightroll":BrightRollServerSide,
-                                "jumptap":JumptapServerSide,
-                                "greystripe":GreyStripeServerSide,
-                                "mobfox":MobFoxServerSide,}
-            if adgroup.network_type in server_side_dict:
-                KlassServerSide = server_side_dict[adgroup.network_type]
+            if adgroup.network_type in SERVER_SIDE_DICT:
+                KlassServerSide = SERVER_SIDE_DICT[adgroup.network_type]
                 server_side = KlassServerSide(request, adunit) 
                 logging.warning("%s url %s"%(KlassServerSide,server_side.url))
                 
@@ -141,7 +147,7 @@ class AdAuction(object):
                 rpc.adgroup = adgroup
                 rpc.serverside = server_side
                 rpcs.append(rpc)
-        return rpcs    
+        return rpcs if multiple else rpcs[0]    
           # 
           # # ... do other things ...
           # 
@@ -188,11 +194,7 @@ class AdAuction(object):
         # 4) throw out ad groups that do not match device and geo predicates
         all_ad_groups = adunit_context.adgroups
         
-        #Start up those RPC calls
-        rpcs = AdAuction.request_third_party_server(request,site,all_ad_groups)
-        logging.warning("ad groups: %s" % all_ad_groups)
         # # campaign exclusions... budget + time
-        
         ALL_FILTERS     = ( budget_filter(),
                             active_filter(), 
         					lat_lon_filter(ll),
@@ -319,55 +321,40 @@ class AdAuction(object):
                                 # find the actual winner among all the eligble ones
                                 # loop through each of the randomized winners making sure that the data is ready to display
                                 for winner in winners:
-                                    if not rpcs:
+                                    # if this adgroup does not requires an RPC
+                                    # we can simply return the creative
+                                    if not winner.adgroup.network_type in SERVER_SIDE_DICT:
                                         winning_creative = winner
                                         # if native, log native request
                                         if winner.ad_type in NATIVE_REQUESTS:
                                             mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, udid=udid)
                                         return winning_creative
+                                    # if the adgroup requires an RPC    
                                     else:
-                                        rpc = None          
-                                        # if winning ad_group is in network rpc and is in flight:
-                                        if winner.ad_group.key() in [r.adgroup.key() for r in rpcs]:
-                                            # pick the winning rpc
-                                            for rpc in rpcs:
-                                                if rpc.adgroup.key() == winner.ad_group.key():
-                                                    logging.warning("rpc.adgroup %s"%rpc.adgroup)
-                                                    break # This pulls out the rpc that matters there should be one always
-                                            else:
-                                                rpc = None
-                                # if the winning creative relies on a rpc to get the actual data to display
-                                # go out and get the data and paste in the data to the creative      
-                                        if rpc:      
-                                            # if third-party network, log request
-                                            mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, udid=udid)
-                                            try:
-                                                result = rpc.get_result()
-                                                if result.status_code == 200:
-                                                    server_tuple = rpc.serverside.bid_and_html_for_response(result)
-                                                    bid = server_tuple[0]
-                                                    response = server_tuple[1]
-                                                    winning_creative = winner
-                                                    winning_creative.html_data = response
-                                                    
-                                                    
-                                                    if len(server_tuple) == 4:
-                                                        width = server_tuple[2]
-                                                        height = server_tuple[3]
-                                                        winning_creative.width = width
-                                                        winning_creative.height = height
-                                                    
-                                                    return winning_creative
-                                            except Exception,e:
-                                                import traceback, sys
-                                                exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
-                                                logging.warning(exception_traceback)
-                                        else:
-                                            winning_creative = winner
-                                            # if native, log native request
-                                            if winner.ad_type in NATIVE_REQUESTS:
-                                                mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, udid=udid)
-                                            return winning_creative
+                                        logging.warning('\n\nwinners calling rpc for adgroup: %s\n\n'%winner.adgroup)
+                                        rpc = AdAuction.request_third_party_server(request,site,winner.adgroup)
+                                        # log a network "request"
+                                        mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, udid=udid)
+                                        try:
+                                            result = rpc.get_result()
+                                            if result.status_code == 200:
+                                                server_tuple = rpc.serverside.bid_and_html_for_response(result)
+                                                bid = server_tuple[0]
+                                                response = server_tuple[1]
+                                                winning_creative = winner
+                                                winning_creative.html_data = response
+                                                
+                                                
+                                                if len(server_tuple) == 4:
+                                                    width = server_tuple[2]
+                                                    height = server_tuple[3]
+                                                    winning_creative.width = width
+                                                    winning_creative.height = height
+                                                return winning_creative
+                                        except Exception,e:
+                                            import traceback, sys
+                                            exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
+                                            logging.warning(exception_traceback)
                             else:
                                 # remove players of the current winning e_cpm
                                 logging.warning('current players: %s'%players)

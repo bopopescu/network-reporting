@@ -215,6 +215,7 @@ class AdUnitContextQueryManager(CachedQueryManager):
 
     def cache_get(self,adunit_key):
         """ Takes an AdUnit key, gets or builds the context """
+        adunit_key = str(adunit_key).replace("'","")
         adunit_context_key = "context:"+str(adunit_key)
         adunit_context = memcache.get(adunit_context_key, namespace="context")
         if adunit_context is None:

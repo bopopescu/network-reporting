@@ -3,6 +3,9 @@
 # Parses iTunes RSS feeds and creates Lead objects in SFDC for each of the applications
 # discovered. 
 #
+# Usage: ./bd-sfdc.py --user jim@mopub.com --pw fhaaCohb0hXCNSQnreJUPhHbgKYNaQf00
+#
+
 import feedparser
 try:
   from xml.etree import ElementTree
@@ -39,6 +42,7 @@ class Company(object):
                 'Primary_Category__c': max(set(categories), key=categories.count),
                 'iTunes_Artist_Name__c': max([a.get('artist') for a in self.apps]),
                 'HtmlSummary__c': "<hr/>".join([a.get('summary') for a in self.apps]),
+                'Description': '',
                 'type': 'Lead'}
 
     def __repr__(self):

@@ -163,3 +163,22 @@ def dashboard(request, *args, **kwargs):
     page = AdminPage.get_by_stats_source(offline=offline)
     loading = loading or page.loading
     return render_to_response(request,'admin/d.html',{'page': page, 'loading': loading})
+        
+@login_required
+def update_sfdc_leads(request, *args, **kwargs):
+    user = "jim@mopub.com"
+    pw = "fhaaCohb0hXCNSQnreJUPhHbgKYNaQf00"
+    
+    # Save these into SFDC objects
+    sforce = beatbox.PythonClient()
+    try:
+        login_result = sforce.login(user, pw)
+    except beatbox.SoapFaultError, errorInfo:
+        print "Login failed: %s %s" % (errorInfo.faultCode, errorInfo.faultString)
+        return
+    
+    # Create the new leads...  
+    while len(companies) > 0:
+        create_result = sforce.upsert('MoPub_Account_ID', [v.to_sfdc() for v in companies[:200]])
+        print create_result
+        companies[:200] = []

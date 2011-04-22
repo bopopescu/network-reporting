@@ -2019,11 +2019,11 @@ table.campaignData-main {
   font-weight: normal;
 }
 
-.map-requests .map-impressions,
+/*.map-requests .map-impressions,
 .map-requests .map-clicks,
 .map-impressions .map-clicks,
 .map-impressions .map-requests,
 .map-clicks .map-impressions,
 .map-clicks .map-requests{
     display: none;
-}
+}*/

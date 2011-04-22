@@ -60,6 +60,27 @@
 
 	var geomap_clk = new google.visualization.GeoMap(document.getElementById('map_canvas_clk'));
 	geomap_clk.draw(data_clk, options);
+	
+	$(function() {
+	  // Dom is set up
+	  $("#stats-breakdown-requests").click(function() {
+		$(".map-image").hide();
+		$(".map-requests").show();
+	  });
+
+	  $("#stats-breakdown-impressions").click(function() {
+		$(".map-image").hide();
+		$(".map-impressions").show();
+	  });
+
+	  $("#stats-breakdown-clicks").click(function() {
+		$(".map-image").hide();
+		$(".map-clicks").show();
+	  });
+
+	  // Trigger requests
+	  $("#stats-breakdown-requests").click();
+	});
   }
 </script>
 {% endblock %}

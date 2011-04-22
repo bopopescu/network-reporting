@@ -49,7 +49,7 @@ class AdGroupIndexHandler(RequestHandler):
         else:
             days = StatsModel.lastdays(self.date_range)
             
-        apps = AppQueryManager().get_apps(account=self.account)
+        apps = AppQueryManager().get_apps(account=self.account, alphabetize=True)
         
         
         

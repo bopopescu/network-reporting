@@ -471,6 +471,11 @@ var mopub = mopub || {};
                 
     ///// Filter Campaigns by status and targeted apps /////    
     
+    $('#campaigns-appFilterOptions').selectmenu({
+        maxHeight: 300,
+        width:184,
+    })
+    
     function refreshAlternatingColor(){
         $('.campaignData').removeClass('campaignData-alt');
         $('table').each(function(){

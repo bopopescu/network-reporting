@@ -138,7 +138,7 @@
                   <label for="campaigns-filterOptions-option-scheduled">Scheduled</label> 
                 </span>
               
-              	<select name="campaigns-appFilterOptions" id="campaigns-appFilterOptions" class="selectmenu"> 
+              	<select name="campaigns-appFilterOptions" id="campaigns-appFilterOptions"> 
         					<option id="campaigns-appFilterOptions-option-all" value="campaign-status-all" selected="selected">Show campaigns for all apps</option> 
   								{% for app in apps %}
   								<option value="campaign-targeting-{{app.key}}">{{app.name}}</option> 

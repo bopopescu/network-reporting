@@ -40,7 +40,7 @@ function mp_cb(data) {
 
 
     //init openx cursor tracking magic
-    document.write('<script type="text/javascript" src="http://localhost:8000/js/openx.js?v=100"></script>');
+    document.write('<script type="text/javascript" src="http://ads.mopub.com/js/openx.js?v=1"></script>');
     //iframe for ad
     document.write('<iframe id="mopub-iframe" frameborder="0" hspace="0" marginheight="0" marginwidth="0" scrolling="no" vspace="0"'
                    + ' width="'+window.mopub_ad_width+'"'

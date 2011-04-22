@@ -447,6 +447,13 @@ class AdHandler(webapp.RequestHandler):
     }
     
     def get(self):
+        if self.request.get('jsonp', '0') == '1':
+            jsonp = True
+            callback = self.request.get('callback')
+        else:
+            callback = None
+            jsonp = False
+
         if self.request.get("debug_mode","0") == "1":
             debug = True
         else:
@@ -576,6 +583,7 @@ class AdHandler(webapp.RequestHandler):
             self.response.headers.add_header("X-Creativeid", "%s" % c.key())
         else:
             track_url = None  
+            ad_click_url = None
           
         # render the creative 
         rendered_creative = self.render_creative(  c, 
@@ -588,7 +596,9 @@ class AdHandler(webapp.RequestHandler):
                                                         track_url           = track_url,
                                                         ) 
                                                             
-        if not (debug or admin_debug_mode):                                                    
+        if jsonp:
+            self.response.out.write('%s(%s)' % (callback, dict(ad=str(rendered_creative), click_url = str(ad_click_url))))
+        elif not (debug or admin_debug_mode):                                                    
             self.response.out.write( rendered_creative )
         else:
             trace_logging.rendered_creative = rendered_creative

@@ -2,6 +2,12 @@
   MoPub Advertiser JS
 */
 
+// We list standard globals for jslint */
+/*globals $, log, window */
+
+// We also list some globals that we have defined. TODO: clean this up
+/*globals calculateAndShowBudget, Highcharts, creatives*/
+
 // global mopub object
 var mopub = mopub || {};
 
@@ -212,7 +218,7 @@ var mopub = mopub || {};
     $form.find('input[name="key"]').remove();
     $('#advertiser-creativeData').find('input[name="creativeManagementForm-key"]:checked')
       .each(function(i){
-        $(this).val() // key
+        $(this).val(); // key
         $('<input></input>').attr('name','key').attr('type','hidden')
           .val($(this).val())
           .appendTo($form);
@@ -243,9 +249,9 @@ var mopub = mopub || {};
       $('#creativeManagementForm input[name="key"]').remove(); // remove all keys
       $('.creativeManagementForm-key:checked')
         .each(function(i){
-          $(this).val() // key
-        })
-      $form = $('#creativeManagementForm');
+          $(this).val(); // key
+        });
+      var $form = $('#creativeManagementForm');
     });
     
    options = { 
@@ -291,7 +297,7 @@ var mopub = mopub || {};
           $form.find('.creativeEditForm-loading').hide();
           if (jsonData.success){
             $form.find('.creativeCreateForm-success').show();
-            $form.parent()
+            $form.parent();
             $form.find('.creativeCreateForm-success').hide();
             window.location.reload();
           }
@@ -308,7 +314,7 @@ var mopub = mopub || {};
             window.location.hash = $form.prev("a").attr('name');
           }
         }
-      }
+      };
       $(this).ajaxForm(options);
     });
 
@@ -474,21 +480,21 @@ var mopub = mopub || {};
     
     function addPlaceholder(){
         // Placeholders start out hidden
-        $('.campaignData-placeholder').hide()
+        $('.campaignData-placeholder').hide();
         $('table').each(function(){
             // Show them where there is nothing else
-            visible = $(this).find('.campaignData:visible');
+            var visible = $(this).find('.campaignData:visible');
             // alert(visible.length);
             if (visible.length === 0){
-                placeholder = $(this).find('.campaignData-placeholder');
+                var placeholder = $(this).find('.campaignData-placeholder');
                 placeholder.show();
             }
         });
     }
     
     function applyFilters(){
-        statusFilter = $("#campaigns-filterOptions").find(':checked').val()
-        appFilter = $('#campaigns-appFilterOptions').val();
+        var statusFilter = $("#campaigns-filterOptions").find(':checked').val();
+        var appFilter = $('#campaigns-appFilterOptions').val();
 
         // Hide all the campaigns, then show the ones that pass the filters
         $('.campaignData').hide();
@@ -677,9 +683,9 @@ var mopub = mopub || {};
       
       $('#dashboard-stats-chart').removeClass('chart-loading');
     }
-    if ($('#dashboard-stats').length)
+    if ($('#dashboard-stats').length){
       setupDashboardStatsChart();
-    
+    }
     // Use breakdown to switch charts
     $('.stats-breakdown tr').click(function(e) {
       $('#dashboard-stats-chart').fadeOut('fast', function() {
@@ -779,7 +785,9 @@ var mopub = mopub || {};
       
       function getButtonTextElement() {
         var buttonTextElement = $('.ui-button-text', button);
-        if(buttonTextElement.length == 0) { buttonTextElement = button;}
+        if(buttonTextElement.length === 0) { 
+            buttonTextElement = button;
+        }
         return buttonTextElement;
       }
 

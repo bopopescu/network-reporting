@@ -1,0 +1,114 @@
+import os
+import sys
+
+sys.path.append(os.getcwd()+'/../')
+sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine")
+sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/django_1_2")
+sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/webob")
+sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/yaml/lib")
+sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/fancy_urllib")
+
+import datetime
+import random
+import uuid
+
+from itertools import chain
+
+from google.appengine.api import users
+from google.appengine.ext import db
+from google.appengine.ext.remote_api import remote_api_stub
+
+from advertiser.models import Campaign, AdGroup, Creative
+from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager, CreativeQueryManager
+from publisher.models import App, Site
+from publisher.query_managers import AdUnitQueryManager, AppQueryManager
+from account.models import Account
+from reporting.models import StatsModel
+
+LIMIT = 100
+DATES = [datetime.date(2011,04,18),datetime.date(2011,04,19)]
+
+def main(app_id="mopub-inc",host="38-aws.latest.mopub-inc.appspot.com"):
+    def auth_func():
+      return "olp@mopub.com", "N47935"
+
+    # connect to google datastore
+    remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', auth_func, host)
+    
+    times = []
+    for date in DATES:
+        times.append(date)
+        for hour in xrange(24):
+            times.append(datetime.datetime(date.year,date.month,date.day,hour))
+            
+    
+    # accounts = Account.all().fetch(1000)
+    # accounts = accounts[:1]
+    accounts = [Account.get('agltb3B1Yi1pbmNyIgsSB0FjY291bnQiFTEwNjIyMjAxMTg3NzEyNjE0MzA5OQw')]
+    
+    for account in accounts:
+        apps = AppQueryManager().get_apps(account=account,limit=1000)
+        adunits = AdUnitQueryManager().get_adunits(account=account,limit=1000)
+        campaigns = CampaignQueryManager().get_campaigns(account=account,limit=1000)
+        adgroups = AdGroupQueryManager().get_adgroups(account=account,limit=1000)
+        creatives = CreativeQueryManager().get_creatives(account=account,limit=1000)
+        print "Apps: %s"%len(apps)
+        print "AdUnits: %s"%len(adunits)
+        print "Campaigns: %s"%len(campaigns)
+        print "AdGroups: %s"%len(adgroups)
+        print "Creatives: %s"%len(creatives)
+        
+        
+        realtime_keys = []
+        offline_keys = []
+        for advertiser in chain(campaigns, adgroups, creatives, [None]):
+            for publisher in chain(apps, adunits, [None]):
+                for t in times:
+                    if isinstance(t,datetime.datetime):
+                        key = StatsModel.get_key(publisher=publisher.key() if publisher else None,
+                                                advertiser=advertiser.key() if advertiser else None,
+                                                date_hour=t)                    
+                    else:
+                        key = StatsModel.get_key(publisher=publisher.key() if publisher else None,
+                                                advertiser=advertiser.key() if advertiser else None,
+                                                date=t)    
+                    parent_key = StatsModel.get_key(account=account.key(),publisher=None,advertiser=None)
+                    realtime_full_key = db.Key.from_path(key.kind(),key.name(),parent=parent_key)
+                    parent_key = StatsModel.get_key(account=account.key(),publisher=None,advertiser=None,offline=True)
+                    offline_full_key = db.Key.from_path(key.kind(),key.name(),parent=parent_key)
+                    realtime_keys.append(realtime_full_key)
+                    offline_keys.append(offline_full_key)
+
+        # print realtime_keys, offline_keys
+        page = 1
+        while realtime_keys and offline_keys:
+            print 'PAGE',page
+            # realtime_stats = StatsModel.get(realtime_keys[:LIMIT])
+            to_put = []
+            offline_stats = StatsModel.get(offline_keys[:LIMIT])
+            for realtime_key, offline in zip(realtime_keys[:LIMIT],offline_stats):
+                if not offline: continue
+
+                properties = offline.properties()
+                attrs = dict([(k,getattr(offline,k)) for k in properties])  
+
+                dynamic_properties = offline.dynamic_properties()
+                attrs.update(dict([(k,getattr(offline,k)) for k in dynamic_properties]))
+
+                # print attrs
+                realtime = StatsModel(key=realtime_key,**attrs)
+                to_put.append(realtime)
+                # for attr,value in attrs.iteritems():
+                #     setattr(realtime,attr,value)
+                # db.put(realtime_stats)    
+            # db.put(to_put)    
+            
+            # next page
+            page += 1
+            realtime_keys = realtime_keys[LIMIT:]
+            offline_keys = offline_keys[LIMIT:]
+            
+
+
+if __name__ == '__main__':
+    main()

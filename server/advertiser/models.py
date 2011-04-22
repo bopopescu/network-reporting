@@ -234,8 +234,7 @@ class AdGroup(db.Model):
         if self.bid_strategy == 'cpm':
             return self.bid
         return None
-        
-
+ 
 class Creative(polymodel.PolyModel):
     name = db.StringProperty()
     

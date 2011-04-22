@@ -1461,6 +1461,14 @@ input.ui-button {
 .ui-datepicker th { font-weight: 300; padding: 3px 0;  }
 .ui-datepicker .ui-datepicker-title { line-height: 1.7em; }
 
+/* Selectmenu */
+.ui-selectmenu {
+  font-size: 12px;
+/*  height: 1.9em !important;*/
+}
+
+.ui-selectmenu { display: block; display: inline-block; position: relative; height: 2.2em; vertical-align: middle; text-decoration: none; overflow: hidden; zoom: 1; }
+
 /*---------------------------------------/
 / Other Plugins
 /---------------------------------------*/

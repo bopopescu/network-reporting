@@ -453,11 +453,11 @@ var mopub = mopub || {};
                 });
                 
                 
-    // Filter by status            
+    ///// Filter by status /////         
     $('#campaigns-filterOptions-option-all')
         .click(function(e){
             $('.campaignData').show();
-            addPlaceholder()
+            addPlaceholder();
             refreshAlternatingColor();
         });
         
@@ -465,7 +465,7 @@ var mopub = mopub || {};
         .click(function(e){
             $('.campaignData').hide();
             $('.campaign-status-Running').show();
-            addPlaceholder()
+            addPlaceholder();
             refreshAlternatingColor();
         });  
         
@@ -473,7 +473,7 @@ var mopub = mopub || {};
         .click(function(e){
             $('.campaignData').hide();
             $('.campaign-status-Paused').show();
-            addPlaceholder()
+            addPlaceholder();
             refreshAlternatingColor();
         });
 
@@ -481,7 +481,7 @@ var mopub = mopub || {};
         .click(function(e){
             $('.campaignData').hide();
             $('.campaign-status-Scheduled').show();
-            addPlaceholder()
+            addPlaceholder();
             refreshAlternatingColor();
         });              
                 
@@ -500,15 +500,18 @@ var mopub = mopub || {};
             visible = $(this).find('.campaignData:visible');
             // alert(visible.length);
             if (visible.length === 0){
-                placeholder = $(this).find('.campaignData-placeholder')
-                console.log(placeholder)
-                placeholder.show()
+                placeholder = $(this).find('.campaignData-placeholder');
+                placeholder.show();
             }
         });
     }
-    
     // Initialize
-    $('#campaigns-filterOptions-option-all').click()
+    $('#campaigns-filterOptions-option-all').click();
+    
+    ///// Filter by app /////  
+    // $('#campaigns-appFilterOptions').selectmenu();
+    
+    
                 
     ////////////////////////////////////////////
     //////////  /campaigns/adgroup/ ////////////

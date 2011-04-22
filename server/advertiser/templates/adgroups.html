@@ -115,6 +115,17 @@
           </div>
           <section id="dashboard-campaigns">
             <div class="buttonBank buttonBank-right">
+	
+	
+	
+				<select name="campaigns-appFilterOptions" id="campaigns-appFilterOptions"> 
+								<option value="all" selected="selected">Show campaigns for all apps</option> 
+								{% for app in apps %}
+								<option value="campaign-targeting-{{app.key}}">{{app.name}}</option> 
+								{% endfor %}
+				</select>
+	
+	
               <span class="buttonset" id="campaigns-filterOptions"> 
                 <input type="radio" name="campaigns-filterOptions-option" value="all" checked="checked" id="campaigns-filterOptions-option-all"/> 
                 <label for="campaigns-filterOptions-option-all">All</label> 
@@ -148,7 +159,11 @@
                     </thead>
                     <tbody>
                       {% for adgroup in level.adgroups %}
-                      <tr class="campaignData campaign-status-{{adgroup|campaign_status}}" id="campaigns-guaranteed-{{level.name}}-{{forloop.counter0}}">
+
+		                  <tr class="campaignData campaign-status-{{adgroup|campaign_status}}
+							{% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}"
+
+						id="campaigns-guaranteed-{{level.name}}-{{forloop.counter0}}">
                         <th class="campaignData-icon">
                             <input type="checkbox" name="id" value="{{adgroup.key}}"/>
                             {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9></img>{% endif %}
@@ -275,7 +290,9 @@
                 </thead>
                 <tbody>
                   {% for adgroup in network %}
-                  <tr class="{% cycle 'campaignData' 'campaignData campaignData-alt' %}" id="campaigns-network-{{forloop.counter0}}">
+                  <tr class="campaignData campaign-status-{{adgroup|campaign_status}}
+					{% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}"
+                   id="campaigns-network-{{forloop.counter0}}">
                     <th class="campaignData-icon">
                       <input type="checkbox" name="id" value="{{adgroup.key}}"/>
                       {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9></img>{% endif %}
@@ -284,6 +301,7 @@
                     </th> 
                     <th class="dataTable-name">
                       <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
+
                       <span class="muted">{{adgroup.network_type}}</span>
                     </th>
                     <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
@@ -325,7 +343,9 @@
                 </thead>
                 <tbody>
                   {% for adgroup in backfill_promo %}
-                  <tr class="campaignData campaign-status-{{adgroup|campaign_status}}" id="campaigns-promo-{{forloop.counter0}}">
+                  <tr class="campaignData campaign-status-{{adgroup|campaign_status}}
+					{% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}" 
+id="campaigns-promo-{{forloop.counter0}}">
                     <th class="campaignData-icon">
                       <input type="checkbox" name="id" value="{{adgroup.key}}"/>
                       {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9></img>{% endif %}

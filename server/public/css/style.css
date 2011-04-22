@@ -1542,7 +1542,7 @@ input.ui-button {
   height: 185px;
 }
 
-#dashboard-apps, #dashboard-campaigns {
+#dashboard-apps, #dashboard-campaign {
   margin: 30px 0 0 0;
 }
 
@@ -1938,6 +1938,82 @@ input.ui-button {
 }
 
 
+/* Campaigns */
+
+.campaignData {
+  padding: 10px 5px 6px 5px;
+  background: #f7f7f7;
+}
+
+.campaignData-alt {
+  background: #fff;
+}
+
+.campaignData-placeholder {
+  display: table-row;
+}
+
+.campaignData th.dataTable-name {
+  width: 200px;
+}
+
+.campaignData-icon {
+  padding-right: 0;
+  width: 55px;
+}
+
+.campaignData-icon input {
+  margin-left: 5px;
+}
+
+.campaignData-icon img {
+  margin: 4px 0 0 4px;
+}
+
+table.campaignData-main {
+  margin: 0 0 15px 0;
+  width: 100%;
+}
+
+.campaignData-main th, .campaignData-main td {
+  font-size: 14px;
+  font-weight: normal;
+}
+
+#campaigns-appFilterOptions {
+  display:block;
+  position:relative;
+  right:150px;
+  margin-right: 40px;
+  padding-right: 40px;
+}
+
+#campaigns-control-panel{
+  display:block;
+  width:100%;
+}
+
+#advertisers-addCampaign{
+  position:absolute;
+  margin-top:5px;
+  right:0px;
+}
+
+.center-button-bank{
+  display:inline-block;
+  position:relative;
+  left:210px;
+  background: #F7F7F7;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  border-radius: 10px;
+  padding:5px 40px;
+}
+
+#dashboard-campaigns {
+  margin: 20px 0 0 0;
+}
+
 /****************************************
  * Media Queries
  ****************************************/
@@ -1994,44 +2070,4 @@ input.ui-button {
 
 td.numeric, th.numeric, .numeric TD {
   text-align: right;
-}
-
-.campaignData {
-  padding: 10px 5px 6px 5px;
-  background: #f7f7f7;
-}
-
-.campaignData-alt {
-  background: #fff;
-}
-
-.campaignData-placeholder {
-  display: table-row;
-}
-
-.campaignData th.dataTable-name {
-  width: 200px;
-}
-
-.campaignData-icon {
-  padding-right: 0;
-  width: 55px;
-}
-
-.campaignData-icon input {
-  margin-left: 5px;
-}
-
-.campaignData-icon img {
-  margin: 4px 0 0 4px;
-}
-
-table.campaignData-main {
-  margin: 0 0 15px 0;
-  width: 100%;
-}
-
-.campaignData-main th, .campaignData-main td {
-  font-size: 14px;
-  font-weight: normal;
 }

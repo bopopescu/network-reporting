@@ -487,13 +487,14 @@ var mopub = mopub || {};
         refreshAlternatingColor();
     }
     
+    // We filter whenever the user changes the filtering options
     $("#campaigns-filterOptions, #campaigns-appFilterOptions").change(function(){
         applyFilters();
     });
     
     
-    // Initialize
-    applyFilters();
+    // Initialize - trigger initial filtering
+    $("#campaigns-filterOptions").change();
                 
     ////////////////////////////////////////////
     //////////  /campaigns/adgroup/ ////////////

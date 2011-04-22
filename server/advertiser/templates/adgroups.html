@@ -114,27 +114,28 @@
             </section>
           </div>
           <section id="dashboard-campaigns">
-            <div class="buttonBank buttonBank-right">
+            <div id="campaigns-control-panel">
+              <div class="center-button-bank">
 	
-              <span class="buttonset" id="campaigns-filterOptions"> 
-                <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-all" checked="checked" id="campaigns-filterOptions-option-all"/> 
-                <label for="campaigns-filterOptions-option-all">All</label> 
-                <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Running" id="campaigns-filterOptions-option-running"/> 
-                <label for="campaigns-filterOptions-option-running">Running</label> 
-                <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Paused" id="campaigns-filterOptions-option-paused" /> 
-                <label for="campaigns-filterOptions-option-paused">Paused</label> 
-                <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Scheduled" id="campaigns-filterOptions-option-scheduled" /> 
-                <label for="campaigns-filterOptions-option-scheduled">Scheduled</label> 
-              </span>
+                <span class="buttonset" id="campaigns-filterOptions"> 
+                  <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-all" checked="checked" id="campaigns-filterOptions-option-all"/> 
+                  <label for="campaigns-filterOptions-option-all">All</label> 
+                  <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Running" id="campaigns-filterOptions-option-running"/> 
+                  <label for="campaigns-filterOptions-option-running">Running</label> 
+                  <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Paused" id="campaigns-filterOptions-option-paused" /> 
+                  <label for="campaigns-filterOptions-option-paused">Paused</label> 
+                  <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Scheduled" id="campaigns-filterOptions-option-scheduled" /> 
+                  <label for="campaigns-filterOptions-option-scheduled">Scheduled</label> 
+                </span>
               
-            	<select name="campaigns-appFilterOptions" id="campaigns-appFilterOptions" class="selectmenu"> 
-      					<option id="campaigns-appFilterOptions-option-all" value="campaign-status-all" selected="selected">Show campaigns for all apps</option> 
-								{% for app in apps %}
-								<option value="campaign-targeting-{{app.key}}">{{app.name}}</option> 
-								{% endfor %}
-      				</select>
-      				
-              <a class="button" id="advertisers-addCampaign" href="{% url advertiser_campaign_create %}">Add a campaign</a>
+              	<select name="campaigns-appFilterOptions" id="campaigns-appFilterOptions" class="selectmenu"> 
+        					<option id="campaigns-appFilterOptions-option-all" value="campaign-status-all" selected="selected">Show campaigns for all apps</option> 
+  								{% for app in apps %}
+  								<option value="campaign-targeting-{{app.key}}">{{app.name}}</option> 
+  								{% endfor %}
+        				</select>
+              </div>
+               <a class="button" id="advertisers-addCampaign" href="{% url advertiser_campaign_create %}">Add a campaign</a>
             </div>
             <form method="post" action="{% url advertiser_bid_pause %}" id="campaignForm">
               <input type="hidden" name="action" id="action"/>

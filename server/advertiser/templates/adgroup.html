@@ -118,7 +118,7 @@
             </section>
           </div>
           
-          <section id="dashboard-campaigns">
+          <section id="dashboard-campaign">
             <form method="post" action="/campaigns/adgroup/{{adgroup.key}}/" id="fake-campaignForm">
                 <input type=hidden name="action" id="action" />
             </form>
@@ -201,7 +201,7 @@
             </table>
           </section>
             {% ifnotequal campaign.campaign_type "network" %}
-          <section id="dashboard-campaigns">
+          <section id="dashboard-campaign">
             <div class="buttonBank buttonBank-right">
               <a class="button" id="advertiser-adgroups-addCreativeButton" href="#">Add a creative</a>
             </div>

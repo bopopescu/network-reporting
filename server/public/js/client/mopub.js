@@ -1,6 +1,16 @@
 /*
 	MoPub Client JS
 */
+var mopub_click_url;
+
+function mp_cb(data) {
+    var iframe = document.getElementById('mopub-iframe');
+    iframe = (iframe.contentWindow) ? iframe.contentWindow : (iframe.contentDocument.document);
+    iframe.document.open();
+    iframe.document.write(data.ad);
+    iframe.document.close();
+    mopub_click_url = data.click_url;
+}
 (function(){
     var c_name = "mopub-udid-cookie";
     if (window.mopub_ad_unit == null) {
@@ -26,12 +36,19 @@
 
     if (window.mopub_keywords != null)
         mopub_ad_url += "&q="+escape(window.mopub_keywords);
+    mopub_ad_url += '&jsonp=1&callback=mp_cb';
 
-    document.write('<iframe frameborder="0" hspace="0" marginheight="0" marginwidth="0" scrolling="no" vspace="0"'
+
+    //init openx cursor tracking magic
+    document.write('<script type="text/javascript" src="http://ads.mopub.com/js/openx.js?v=1"></script>');
+    //iframe for ad
+    document.write('<iframe id="mopub-iframe" frameborder="0" hspace="0" marginheight="0" marginwidth="0" scrolling="no" vspace="0"'
                    + ' width="'+window.mopub_ad_width+'"'
                    + ' height="'+window.mopub_ad_height+'"'
-                   + ' src="'+mopub_ad_url+'">');
+                   + ' src="about:blank">');
     document.write('</iframe>');
+    //init holders for variables
+    document.write('<script type="text/javascript" src="'+mopub_ad_url+'"></script>');
 
     function set_cookie(name, value, expires, path, domain, secure) {
         var cookieString = name + "=" +escape(value) +

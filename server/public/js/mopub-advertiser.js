@@ -178,6 +178,16 @@ var mopub = mopub || {};
     });
   });
 
+  $('#advertisers-testAdServer')
+    .button({ icons : {secondary : 'ui-icon-circle-triangle-e'} })
+    .click(function(e) {
+     e.preventDefault();
+     $('#adserverTest').dialog({ 
+       buttons: { "Close": function() { $(this).dialog("close"); } }
+     });
+     $('#adserverTest-iFrame').attr('src',$('#adserverTest-iFrame-src').text());
+  });
+  
   $('#campaignForm-bid-helpLink').click(function(e) {
     e.preventDefault();
     $('#campaignForm-bid-helpContent').dialog({ 
@@ -825,5 +835,6 @@ var mopub = mopub || {};
       }
     });
   }); 
+  
 
 })(this.jQuery);

@@ -813,12 +813,24 @@ dl.formFields {
   white-space: nowrap;
 }
 
+dl.formFields.thin {
+  width: 320px;
+}
+.formFields.thin dt {
+  width: 50px;
+}
+
 .formFields dd {
   display: inline-block;
   margin: 10px 0 0 0;
   padding: 3px 0;
   width: 440px;
 }
+
+.formFields.thin dd {
+  width: 250px;
+}
+
 
 .formFields .radios {
   font-size: 14px;
@@ -2071,3 +2083,52 @@ table.campaignData-main {
 td.numeric, th.numeric, .numeric TD {
   text-align: right;
 }
+
+.campaignData {
+  padding: 10px 5px 6px 5px;
+  background: #f7f7f7;
+}
+
+.campaignData-alt {
+  background: #fff;
+}
+
+.campaignData-placeholder {
+  display: table-row;
+}
+
+.campaignData th.dataTable-name {
+  width: 200px;
+}
+
+.campaignData-icon {
+  padding-right: 0;
+  width: 55px;
+}
+
+.campaignData-icon input {
+  margin-left: 5px;
+}
+
+.campaignData-icon img {
+  margin: 4px 0 0 4px;
+}
+
+table.campaignData-main {
+  margin: 0 0 15px 0;
+  width: 100%;
+}
+
+.campaignData-main th, .campaignData-main td {
+  font-size: 14px;
+  font-weight: normal;
+}
+
+/*.map-requests .map-impressions,
+.map-requests .map-clicks,
+.map-impressions .map-clicks,
+.map-impressions .map-requests,
+.map-clicks .map-impressions,
+.map-clicks .map-requests{
+    display: none;
+}*/

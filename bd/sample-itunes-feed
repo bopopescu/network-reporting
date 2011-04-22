@@ -1,5 +1,3 @@
-Uses feeds from iTunes AppStore to populate a BD spreadsheet.
-
 RSS: http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/sf=143441/limit=300/genre=6018/xml
 
 Genres: 6000-6018

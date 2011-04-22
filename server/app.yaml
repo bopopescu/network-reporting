@@ -30,6 +30,10 @@ handlers:
 - url: /js
   static_dir: public/js
 
+- url: /js/client
+  static_dir: public/js/client
+  expiration: "30m"
+
 - url: /placeholders
   static_dir: public/placeholders
 

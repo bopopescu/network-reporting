@@ -8,12 +8,20 @@ import time
 from xml.dom import minidom
 
 class BrightRollServerSide(ServerSide):
-    base_url = "http://mobile.btrll.com/adwhirl/req/?adFeedKey=506"
     base_url = "http://vast.bp3844869.btrll.com/vast/"
+    pub_id_attr = 'brightroll_pub_id'
+    no_pub_id_warning = 'Warning: no %s Publisher ID has been specified using demo account'
+    network_name = 'BrightRoll'
+    
+  
     def __init__(self,request,adunit,*args,**kwargs):
         self.url_params = {}
-        self.pub_id = adunit.account.brightroll_pub_id
         return super(BrightRollServerSide,self).__init__(request,adunit,*args,**kwargs)
+    
+    @property
+    def url(self):
+        pub_id = self.get_pub_id() or 3844792 
+        return self.base_url + str(pub_id) + '?n=%f'%time.time()
     
     @property
     def url(self):
@@ -118,7 +126,7 @@ class BrightRollServerSide(ServerSide):
             cpm = None            
         self.url_params.update(cpm=cpm)
         
-    def bid_and_html_for_response(self,response):
+    def _bid_and_html_for_response(self,response):
         self.parse_xml(response.content)
         # try:
         #     self.parse_xml(response.content)

@@ -25,7 +25,6 @@ import base64, binascii
 import urllib
 import datetime
 
-
 urllib.getproxies_macosx_sysconf = lambda: {}
 
 from ad_server.filters.filters import (budget_filter,
@@ -44,6 +43,7 @@ from ad_server.filters.filters import (budget_filter,
 from ad_server.adserver_templates import TEMPLATES
                                     
 from common.utils import simplejson
+from common.utils import helpers
 from common.constants import (FULL_NETWORKS,
                               ACCEPTED_MULTI_COUNTRY,
                               )
@@ -80,6 +80,15 @@ from mopub_logging import mp_logging
 from budget import budget_service
 from google.appengine.ext.db import Key
 
+from ad_server.debug_console import trace_logging
+
+###################
+# Import Handlers #
+###################
+from ad_server.handlers import TestHandler
+
+
+
 TEST_MODE = "3uoijg2349ic(TEST_MODE)kdkdkg58gjslaf"
 
 # figure out if we're on production server
@@ -95,7 +104,6 @@ FREQ_ATTR = '%s_frequency_cap'
 CAMPAIGN_LEVELS = ('gtee_high', 'gtee', 'gtee_low', 'promo', 'network','backfill_promo')
 NATIVE_REQUESTS = ['admob','adsense','iAd','custom']
 
-
 SERVER_SIDE_DICT = {"millennial":MillennialServerSide,
                     "appnexus":AppNexusServerSide,
                     "inmobi":InMobiServerSide,
@@ -103,7 +111,6 @@ SERVER_SIDE_DICT = {"millennial":MillennialServerSide,
                     "jumptap":JumptapServerSide,
                     "greystripe":GreyStripeServerSide,
                     "mobfox":MobFoxServerSide,}
-
 
 # TODO: Logging is fucked up with unicode characters
 
@@ -135,7 +142,7 @@ class AdAuction(object):
             if adgroup.network_type in SERVER_SIDE_DICT:
                 KlassServerSide = SERVER_SIDE_DICT[adgroup.network_type]
                 server_side = KlassServerSide(request, adunit) 
-                logging.warning("%s url %s"%(KlassServerSide,server_side.url))
+                trace_logging.warning("%s url %s"%(KlassServerSide,server_side.url))
                 
                 rpc = urlfetch.create_rpc(2) # maximum delay we are willing to accept is 2000 ms
                 payload = server_side.payload
@@ -185,7 +192,7 @@ class AdAuction(object):
         device_predicates = AdAuction.device_predicates_for_request(kw["request"])
         exclude_params = kw["excluded_creatives"]
         excluded_predicates = AdAuction.exclude_predicates_params(exclude_params)
-        logging.warning("keywords=%s, geo_predicates=%s, device_predicates=%s" % (keywords, geo_predicates, device_predicates))
+        trace_logging.warning("keywords=%s, geo_predicates=%s, device_predicates=%s" % (keywords, geo_predicates, device_predicates))
         
         # Matching strategy: 
         # 1) match all ad groups that match the placement that is in question, sort by priority
@@ -193,6 +200,10 @@ class AdAuction(object):
         # 3) throw out ad groups that restrict by keywords and do not match the keywords
         # 4) throw out ad groups that do not match device and geo predicates
         all_ad_groups = adunit_context.adgroups
+        
+        trace_logging.info("##############################")
+        trace_logging.info("Excluding Ineligible Campaigns")
+        trace_logging.info("##############################")
         
         # # campaign exclusions... budget + time
         ALL_FILTERS     = ( budget_filter(),
@@ -205,7 +216,7 @@ class AdAuction(object):
         
         all_ad_groups = filter( mega_filter( *ALL_FILTERS ), all_ad_groups )
         for ( func, warn, lst ) in ALL_FILTERS:
-            logging.warning( warn % lst )
+            trace_logging.info( warn % lst )
         
         # TODO: user based frequency caps (need to add other levels)
         # to add a frequency cap, add it here as follows:
@@ -238,11 +249,11 @@ class AdAuction(object):
         
         for fil in FREQ_FILTERS: 
             func, warn, lst = fil
-            logging.warning( warn % lst )
+            trace_logging.info( warn % lst )
             
         # calculate the user experiment bucket
         user_bucket = hash(udid+','.join([str( ad_group.key() ) for ad_group in all_ad_groups])) % 100 # user gets assigned a number between 0-99 inclusive
-        logging.warning("the user bucket is: #%d",user_bucket)
+        trace_logging.warning("the user bucket is: #%d"%user_bucket)
         
     # determine in which ad group the user falls into to
     # otherwise give creatives in the other adgroups a shot
@@ -264,17 +275,21 @@ class AdAuction(object):
             start_bucket = start_bucket % 100 
         
         all_ad_groups = winning_ad_groups
+        trace_logging.info("#####################")
+        trace_logging.info(" Beginning Auction")
+        trace_logging.info("#####################")
+        
         # if any ad groups were returned, find the creatives that match the requested format in all candidates
         if len(all_ad_groups) > 0:
-            logging.warning("ad_group: %s"%all_ad_groups)
+            trace_logging.info("All Eligible Campaigns: %s"%[str(a.name) for a in all_ad_groups])
             all_creatives = adunit_context.creatives
             if len(all_creatives) > 0:
                 # for each priority_level, perform an auction among the various creatives 
                 for p in CAMPAIGN_LEVELS: 
-                    logging.warning("priority level: %s"%p)
+                    trace_logging.info("Trying priority level: %s"%p)
                     #XXX maybe optimize? meh
                     eligible_adgroups = [a for a in all_ad_groups if a.campaign.campaign_type == p]
-                    logging.warning("eligible_adgroups: %s"%eligible_adgroups)
+                    trace_logging.info("Campaigns of this priority: %s"%[str(a.name) for a in eligible_adgroups])
                     if not eligible_adgroups:
                         continue
                     players = adunit_context.get_creatives_for_adgroups(eligible_adgroups)
@@ -284,14 +299,14 @@ class AdAuction(object):
                     for p in players:
                         ecpm = optimizer.get_ecpm(adunit_context, p)
                         player_ecpm_dict[p] = ecpm
-                        logging.warning(" Player eCPM: %s" % ecpm)
+                        trace_logging.warning(" Player eCPM: %s" % ecpm)
 
                     players.sort(lambda x,y: cmp(player_ecpm_dict[y], player_ecpm_dict[x]))
         
                     while players:
-                        logging.warning("players: %s"%players)
                         winning_ecpm = player_ecpm_dict[players[0]]
-                        logging.warning("auction at priority=%s: %s, max eCPM=%s" % (p, players, winning_ecpm))
+                        trace_logging.info("Trying to get creatives: %s"%[str(c.name).replace("dummy","") if c.name else c.name for c in players])
+                        trace_logging.warning("auction at priority=%s: %s, max eCPM=%s" % (p, players, winning_ecpm))
                         if winning_ecpm >= site.threshold_cpm( p ):
         
                             # exclude according to the exclude parameter must do this after determining adgroups
@@ -308,15 +323,16 @@ class AdAuction(object):
                                                 )
                             winners = filter( mega_filter( *CRTV_FILTERS ), players )
                             for func, warn, lst in CRTV_FILTERS:
-                                logging.warning( warn % lst )
+                                if lst:
+                                    trace_logging.info( warn % [str(c.name).replace("dummy","") if c.name else c.name for c in lst] )
         
                             # if there is a winning/eligible adgroup find the appropriate creative for it
                             winning_creative = None
         
                             if winners:
-                                logging.warning('winners %s' % [w.ad_group for w in winners])
+                                trace_logging.warning('winners %s' % [str(w.ad_group.name) for w in winners])
                                 random.shuffle(winners)
-                                logging.warning('random winners %s' % winners)
+                                trace_logging.info('Randomized winning campaigns: %s' % [str(w.ad_group.name) for w in winners])
         
                                 # find the actual winner among all the eligble ones
                                 # loop through each of the randomized winners making sure that the data is ready to display
@@ -331,20 +347,19 @@ class AdAuction(object):
                                         return winning_creative
                                     # if the adgroup requires an RPC    
                                     else:
-                                        logging.warning('\n\nwinners calling rpc for adgroup: %s\n\n'%winner.adgroup)
+                                        trace_logging.info('Attemping ad network request: %s ...'%winner.adgroup.network_type.title())
                                         rpc = AdAuction.request_third_party_server(request,site,winner.adgroup)
                                         # log a network "request"
                                         mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, udid=udid)
                                         try:
                                             result = rpc.get_result()
-                                            if result.status_code == 200:
-                                                server_tuple = rpc.serverside.bid_and_html_for_response(result)
+                                            server_tuple = rpc.serverside.bid_and_html_for_response(result)
+                                            if server_tuple:
                                                 bid = server_tuple[0]
                                                 response = server_tuple[1]
                                                 winning_creative = winner
                                                 winning_creative.html_data = response
-                                                
-                                                
+                                            
                                                 if len(server_tuple) == 4:
                                                     width = server_tuple[2]
                                                     height = server_tuple[3]
@@ -354,23 +369,23 @@ class AdAuction(object):
                                         except Exception,e:
                                             import traceback, sys
                                             exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
-                                            logging.warning(exception_traceback)
+                                            trace_logging.warning(exception_traceback)
                             else:
                                 # remove players of the current winning e_cpm
-                                logging.warning('current players: %s'%players)
+                                trace_logging.warning('current players: %s'%players)
                                 players = [ p for p in players if player_ecpm_dict[p] != winning_ecpm ] 
-                                logging.warning('remaining players %s'%players)
+                                trace_logging.warning('remaining players %s'%players)
                             if not winning_creative:
-                                #logging.warning('taking away some players not in %s'%ad_groups)
-                                #logging.warning( 'current ad_groups %s' % [c.ad_group for c in players] )
-                                logging.warning('current players: %s'%players)
+                                #trace_logging.warning('taking away some players not in %s'%ad_groups)
+                                #trace_logging.warning( 'current ad_groups %s' % [c.ad_group for c in players] )
+                                trace_logging.warning('current players: %s'%players)
                                 #players = [c for c in players if not c.ad_group in ad_groups]  
                                 players = [ p for p in players if p not in winners ] 
-                                logging.warning('remaining players %s'%players)
+                                trace_logging.warning('remaining players %s'%players)
                  # try at a new priority level   
         
         # nothing... failed auction
-        logging.warning("auction failed, returning None")
+        trace_logging.warning("auction failed, returning None")
         return None
         
     @classmethod
@@ -432,6 +447,28 @@ class AdHandler(webapp.RequestHandler):
     }
     
     def get(self):
+        if self.request.get('jsonp', '0') == '1':
+            jsonp = True
+            callback = self.request.get('callback')
+        else:
+            callback = None
+            jsonp = False
+
+        if self.request.get("debug_mode","0") == "1":
+            debug = True
+        else:
+            debug = False
+        
+        if self.request.get('admin_debug_mode','0') == "1":
+            admin_debug_mode = True
+            trace_logging.info_levels = [logging.info,logging.debug,logging.warning,
+                                        logging.error,logging.critical,]
+        else:
+            admin_debug_mode = False 
+
+        trace_logging.start()
+        trace_logging.response = self.response
+        
         id = self.request.get("id")
         now = datetime.datetime.now()
         
@@ -441,7 +478,7 @@ class AdHandler(webapp.RequestHandler):
         mp_logging.log(self.request,event=mp_logging.REQ_EVENT,adunit=adunit)  
         # mp_logging.log(self.request,event=mp_logging.REQ_EVENT, testing=testing)  
         
-        logging.warning(self.request.headers['User-Agent'] )
+        trace_logging.warning(self.request.headers['User-Agent'] )
         country_re = r'[a-zA-Z][a-zA-Z][-_](?P<ccode>[a-zA-Z][a-zA-Z])'
         countries = re.findall(country_re, self.request.headers['User-Agent'])
         addr = []
@@ -474,18 +511,19 @@ class AdHandler(webapp.RequestHandler):
         if self.request.get("q"):
             keywords += self.request.get("q").lower().split(',')
         q = keywords
-        logging.warning("keywords are %s" % keywords)
+        trace_logging.warning("keywords are %s" % keywords)
         
         # look up lat/lon
         ll = self.request.get('ll') if self.request.get('ll') else None
         
         # Reverse Geocode stuff isn't used atm
         # addr = self.rgeocode(self.request.get("ll")) if self.request.get("ll") else ()      
-        # logging.warning("geo is %s (requested '%s')" % (addr, self.request.get("ll")))
+        # trace_logging.warning("geo is %s (requested '%s')" % (addr, self.request.get("ll")))
         
         # get creative exclusions usually used to exclude iAd because it has already failed
         excluded_creatives = self.request.get_all("exclude")
-        logging.info("excluded_creatives: %s"%excluded_creatives)
+        if excluded_creatives:
+            trace_logging.info("excluded_creatives: %s"%excluded_creatives)
         
         # TODO: get udid we should hash it if its not already hashed
         udid = self.request.get("udid")
@@ -493,8 +531,6 @@ class AdHandler(webapp.RequestHandler):
         
         # create a unique request id, but only log this line if the user agent is real
         request_id = hashlib.md5("%s:%s" % (self.request.query_string, time.time())).hexdigest()
-        if str(self.request.headers['User-Agent']) not in CRAWLERS:
-            logging.info('OLP ad-request {"request_id": "%s", "remote_addr": "%s", "q": "%s", "user_agent": "%s", "udid":"%s" }' % (request_id, self.request.remote_addr, self.request.query_string, self.request.headers["User-Agent"], udid))
           
         # get winning creative
         c = AdAuction.run(request = self.request,
@@ -513,13 +549,10 @@ class AdHandler(webapp.RequestHandler):
         if c:
             user_adgroup_daily_key = memcache_key_for_date(udid,now,c.ad_group.key())
             user_adgroup_hourly_key = memcache_key_for_hour(udid,now,c.ad_group.key())
-            logging.warning("user_adgroup_daily_key: %s"%user_adgroup_daily_key)
-            logging.warning("user_adgroup_hourly_key: %s"%user_adgroup_hourly_key)
+            trace_logging.warning("user_adgroup_daily_key: %s"%user_adgroup_daily_key)
+            trace_logging.warning("user_adgroup_hourly_key: %s"%user_adgroup_hourly_key)
             memcache.offset_multi({user_adgroup_daily_key:1,user_adgroup_hourly_key:1}, key_prefix='', namespace=None, initial_value=0)
-          
-            if str(self.request.headers['User-Agent']) not in CRAWLERS:
-                logging.info('OLP ad-auction {"id": "%s", "c": "%s", "request_id": "%s", "udid": "%s"}' % (id, c.key(), request_id, udid))
-        
+                  
             # add timer and animations for the ad 
             refresh = adunit.refresh_interval
             # only send to client if there should be a refresh
@@ -548,33 +581,41 @@ class AdHandler(webapp.RequestHandler):
           
             # add creative ID for testing (also prevents that one bad bug from happening)
             self.response.headers.add_header("X-Creativeid", "%s" % c.key())
-          
-          
-          # render the creative 
-            self.response.out.write( self.render_creative(  c, 
-                                                            site                = site, 
-                                                            q                   = q, 
-                                                            addr                = addr,
-                                                            excluded_creatives  = excluded_creatives, 
-                                                            request_id          = request_id, 
-                                                            v                   = int(self.request.get('v') or 0),
-                                                            track_url           = track_url,
-                                                            ) )
         else:
-            self.response.out.write( self.render_creative(  c, 
-                                                            site                = site, 
-                                                            q                   = q, 
-                                                            addr                = addr, 
-                                                            excluded_creatives  = excluded_creatives, 
-                                                            request_id          = request_id, 
-                                                            v                   = int(self.request.get('v') or 0),
-                                                            ) )
+            track_url = None  
+            ad_click_url = None
+          
+        # render the creative 
+        rendered_creative = self.render_creative(  c, 
+                                                        site                = site, 
+                                                        q                   = q, 
+                                                        addr                = addr,
+                                                        excluded_creatives  = excluded_creatives, 
+                                                        request_id          = request_id, 
+                                                        v                   = int(self.request.get('v') or 0),
+                                                        track_url           = track_url,
+                                                        ) 
+                                                            
+        if jsonp:
+            self.response.out.write('%s(%s)' % (callback, dict(ad=str(rendered_creative), click_url = str(ad_click_url))))
+        elif not (debug or admin_debug_mode):                                                    
+            self.response.out.write( rendered_creative )
+        else:
+            trace_logging.rendered_creative = rendered_creative
+            trace_logging.render()
         
           
     def render_creative(self, c, track_url=None, **kwargs):
         self.TEMPLATES = TEMPLATES
         if c:
-            logging.warning("rendering: %s" % c.ad_type)
+            # rename network so its sensical
+            if c.adgroup.network_type:
+                c.name = c.adgroup.network_type
+            
+            trace_logging.info("##############################")
+            trace_logging.info("##############################")
+            trace_logging.info("Winner found, rendering: %s" % str(c.name))
+            trace_logging.warning("rendering: %s" % c.ad_type)
             site = kwargs["site"]
             adunit = site
             
@@ -708,7 +749,7 @@ class AdHandler(webapp.RequestHandler):
                 self.response.headers.add_header("X-Adtype", str(c.ad_type))
                 self.response.headers.add_header("X-Backfill", str(c.ad_type))
                 
-                logging.warning('pub id:%s'%kwargs["site"].account.adsense_pub_id)
+                trace_logging.warning('pub id:%s'%kwargs["site"].account.adsense_pub_id)
                 header_dict = {
                   "Gclientid":str(kwargs["site"].account.adsense_pub_id),
                   "Gcompanyname":str(kwargs["site"].account.adsense_company_name),
@@ -761,12 +802,15 @@ class AdHandler(webapp.RequestHandler):
                 self.response.headers.add_header("X-Height",str(c.height))
             
             # render the HTML body
-            self.response.out.write(self.TEMPLATES[template_name].safe_substitute(params))
+            rendered_creative = self.TEMPLATES[template_name].safe_substitute(params)
+            return rendered_creative
             
             # Otherwise, if there was no creative
         if not c:
+            trace_logging.info('Auction returning None')
             self.response.headers.add_header("X-Adtype", "clear")
             self.response.headers.add_header("X-Backfill", "clear")
+            return None
             
       # make sure this response is not cached by the client  
       # self.response.headers.add_header('Cache-Control','no-cache')  
@@ -783,13 +827,13 @@ class AdHandler(webapp.RequestHandler):
             if geocode.get("Placemark"):
                 for placemark in geocode["Placemark"]:
                     if placemark.get("AddressDetails").get("Accuracy") == 8:
-                        logging.warning("rgeocode Accuracy == 8")
+                        trace_logging.warning("rgeocode Accuracy == 8")
 
                         country = placemark.get("AddressDetails").get("Country")
                         administrativeArea = country.get("AdministrativeArea") if country else None
                         subAdministrativeArea = administrativeArea.get("SubAdministrativeArea") if administrativeArea else None
                         locality = (subAdministrativeArea.get("Locality") if subAdministrativeArea else administrativeArea.get("Locality")) if administrativeArea else None
-                        logging.warning("country=%s, administrativeArea=%s, subAdminArea=%s, locality=%s" % (country, administrativeArea, subAdministrativeArea, locality))
+                        trace_logging.warning("country=%s, administrativeArea=%s, subAdminArea=%s, locality=%s" % (country, administrativeArea, subAdministrativeArea, locality))
 
                         return (locality.get("LocalityName") if locality else "", 
                                         administrativeArea.get("AdministrativeAreaName") if administrativeArea else "",
@@ -798,7 +842,7 @@ class AdHandler(webapp.RequestHandler):
             else:
                 return ()
         except:
-            logging.error("rgeocode failed to parse %s" % json)
+            trace_logging.error("rgeocode failed to parse %s" % json)
             return ()
 
 # Only exists in order to have data show up in apache logs
@@ -820,7 +864,6 @@ class AdImpressionHandler(webapp.RequestHandler):
         creative = adunit_context.get_creative_by_key(creative_id)
         if creative.ad_group.bid_strategy == 'cpm':
             budget_service.apply_expense(creative.ad_group.campaign, creative.ad_group.bid/1000)
-        # logging.error("applied expense: %s" % creative.ad_group.bid)
         
         if not self.request.get( 'testing' ) == TEST_MODE:
             mp_logging.log(self.request,event=mp_logging.IMP_EVENT,adunit=adunit_context.adunit)  
@@ -933,7 +976,7 @@ class TestHandler(webapp.RequestHandler):
             self.response.out.write("%s <br/> %s"%(server_side.url, e)) 
           
     def post(self):
-        logging.info("%s"%self.request.headers["User-Agent"])  
+        trace_logging.info("%s"%self.request.headers["User-Agent"])  
         self.response.out.write("hello world")
         
 # TODO: clears the cache USE WITH FEAR
@@ -943,8 +986,8 @@ class ClearHandler(webapp.RequestHandler):
     
 class PurchaseHandler(webapp.RequestHandler):
     def post(self):
-        logging.info(self.request.get("receipt"))
-        logging.info(self.request.get("udid"))
+        trace_logging.info(self.request.get("receipt"))
+        trace_logging.info(self.request.get("udid"))
         self.response.out.write("OK")    
         
 

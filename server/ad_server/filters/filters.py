@@ -117,7 +117,7 @@ def exclude_filter( excl_params ):
     return ( real_filter, log_mesg, [] )
 
 def ecpm_filter( winning_ecpm, creative_ecpm_dict ):
-    log_mesg = "Removed due to being a loser: %s"
+    log_mesg = "Removed due to low eCPM: %s"
     def real_filter( creative ):
         return creative_ecpm_dict[creative] >= winning_ecpm
     return ( real_filter, log_mesg, [] )

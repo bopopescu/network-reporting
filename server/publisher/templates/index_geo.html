@@ -1,155 +1,179 @@
 {% extends 'publisher/base.html' %}
 {% load filters %}
+{% block pageTitle %}<div class="breadcrumb"><a class="linkIcon breadcrumb-back" href="/inventory/"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Dashboard</a> <h1>Region Performance</h1></div>{% endblock pageTitle %}
 {% block messageCenter %}{% endblock %}
 {% block titleBarRight %}{% endblock %}
-{% block extraScripts %}<script src="http://www.google.com/jsapi"></script>{% endblock %}
+{% block extraScripts %}
+<script src="/js/mopub-dashboard.js"></script>
+<script src="http://www.google.com/jsapi"></script>
+<script type="text/javascript">
+  google.load('visualization', '1', {'packages': ['geomap']});
+  google.setOnLoadCallback(initMap);
+
+  function initMap() {	
+	// request count data (log10 scale)
+    var data_req = new google.visualization.DataTable();
+    data_req.addRows({{ geo_log_dict|length }});
+    data_req.addColumn('string', 'Country');
+    data_req.addColumn('number', 'Requests (log10 scale)');
+    data_req.addColumn('string', 'HoverText');
+    {% for key, value in geo_log_dict.iteritems %}
+    data_req.setValue({{ forloop.counter0 }}, 0, '{{ key }}');
+    data_req.setValue({{ forloop.counter0 }}, 1, {{ value.request_count }});
+    data_req.setValue({{ forloop.counter0 }}, 2, '{{ key }}');
+    {% endfor %}
+	
+	// impression count data (log10 scale)
+	var data_imp = new google.visualization.DataTable();
+    data_imp.addRows({{ geo_log_dict|length }});
+    data_imp.addColumn('string', 'Country');
+    data_imp.addColumn('number', 'Impressions (log10 scale)');
+    data_imp.addColumn('string', 'HoverText');
+    {% for key, value in geo_log_dict.iteritems %}
+    data_imp.setValue({{ forloop.counter0 }}, 0, '{{ key }}');
+    data_imp.setValue({{ forloop.counter0 }}, 1, {{ value.impression_count }});
+    data_imp.setValue({{ forloop.counter0 }}, 2, '{{ key }}');
+    {% endfor %}
+	
+	// click count data (log10 scale)
+	var data_clk = new google.visualization.DataTable();
+    data_clk.addRows({{ geo_log_dict|length }});
+    data_clk.addColumn('string', 'Country');
+    data_clk.addColumn('number', 'Clicks (log10 scale)');
+    data_clk.addColumn('string', 'HoverText');
+    {% for key, value in geo_log_dict.iteritems %}
+    data_clk.setValue({{ forloop.counter0 }}, 0, '{{ key }}');
+    data_clk.setValue({{ forloop.counter0 }}, 1, {{ value.click_count }});
+    data_clk.setValue({{ forloop.counter0 }}, 2, '{{ key }}');
+    {% endfor %}
+	
+	// set options
+    var options = {'width':'693px','height':'353px','colors':[0xFFD78F, 0xFFC352, 0xFFAF02, 0xFF9A01]};
+	options['dataMode'] = 'regions';
+
+	// draw maps
+	var geomap_req = new google.visualization.GeoMap(document.getElementById('map_canvas_req'));
+	geomap_req.draw(data_req, options);
+
+	var geomap_imp = new google.visualization.GeoMap(document.getElementById('map_canvas_imp'));
+	geomap_imp.draw(data_imp, options);
+
+	var geomap_clk = new google.visualization.GeoMap(document.getElementById('map_canvas_clk'));
+	geomap_clk.draw(data_clk, options);
+	
+	$(function() {
+	  // Dom is set up
+	  $("#stats-breakdown-requests").click(function() {
+		$(".map-image").hide();
+		$(".map-requests").show();
+	  });
+
+	  $("#stats-breakdown-impressions").click(function() {
+		$(".map-image").hide();
+		$(".map-impressions").show();
+	  });
+
+	  $("#stats-breakdown-clicks").click(function() {
+		$(".map-image").hide();
+		$(".map-clicks").show();
+	  });
+
+	  // Trigger requests
+	  $("#stats-breakdown-requests").click();
+	});
+  }
+</script>
+{% endblock %}
 {% block content %}
-          <section class="offset nomargin" id="dashboard-stats">
+          <section class="offset nomargin" id="dashboard-geo-stats">
             <div class="stats">
-              <table class="stats-breakdown">
+              <table class="stats-breakdown geo">
                 <tbody>
-                  <tr class="active" id="stats-breakdown-requests">
+                  <tr class="active requests" id="stats-breakdown-requests">
                     <td class="stats-breakdown-value"><span class="inner">{{totals.request_count|withsep}}</span></td>
                     <th class="stats-breakdown-name"><span class="inner">Requests</span></th>
                   </tr>
-                  <tr id="stats-breakdown-impressions">
+                  <tr class="impressions" id="stats-breakdown-impressions">
                     <td class="stats-breakdown-value"><span class="inner">{{totals.impression_count|withsep}}</span></td>
                     <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
                   </tr>
-                  <tr id="stats-breakdown-clicks">
+                  <tr class="clicks" id="stats-breakdown-clicks">
                     <td class="stats-breakdown-value"><span class="inner">{{totals.click_count|withsep}}</span></td>
                     <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
                   </tr>
-                  <tr id="stats-breakdown-users">
-                    <td class="stats-breakdown-value"><span class="inner">{{totals.user_count|withsep}}</span></td>
-                    <th class="stats-breakdown-name"><span class="inner">Users</span></th>
-                  </tr>
                 </tbody>
               </table>
-              <div class="chart chart-loading stats-chart" id="dashboard-stats-chart">
-                <!-- <div class="chart-loading-text">Loading ...</div>
-                <div class="chart-error-text">Could not load chart</div> -->
-                <div id="map_canvas" style="margin-top:10px"></div>
-                <script type="text/javascript">
-                  google.load('visualization', '1', {'packages': ['geomap']});
-                  google.setOnLoadCallback(initMap);
-
-                  var geomap;  
-                  var options;
-                  var data_req;
-                  var data_imp;
-                  var data_clk;
-                  var data_rev;
-
-                  function drawMap(type) {
-                    switch (type) {
-                      case 'req':
-                        geomap.draw(data_req, options);
-                        break;
-                      case 'imp':
-                        geomap.draw(data_imp, options);
-                        break;
-                      case 'clk':
-                        geomap.draw(data_clk, options);
-                        break;
-                      case 'rev':
-                        geomap.draw(data_rev, options);
-                        break;
-                    }
-                  }
-                  function initMap() {
-                    data_req = new google.visualization.DataTable();
-                    data_req.addRows({{ geo_req|length }});
-                    data_req.addColumn('string', 'Country');
-                    data_req.addColumn('number', 'Requests');
-                    data_req.addColumn('string', 'Title');
-                    {% for key, value in geo_req %}
-                    data_req.setValue({{ forloop.counter0 }}, 0, '{{ key }}');
-                    data_req.setValue({{ forloop.counter0 }}, 1, {{ value }});
-                    data_req.setValue({{ forloop.counter0 }}, 2, '{{ key }}');
-                    {% endfor %}
-
-                    data_imp = new google.visualization.DataTable();
-                    data_imp.addRows(6);
-                    data_imp.addColumn('string', 'Country');
-                    data_imp.addColumn('number', 'Impressions');
-                    data_imp.setValue(0, 0, 'Germany');
-                    data_imp.setValue(0, 1, 200);
-                    data_imp.setValue(1, 0, 'United States');
-                    data_imp.setValue(1, 1, 10);
-                    data_imp.setValue(2, 0, 'Brazil');
-                    data_imp.setValue(2, 1, 400);
-                    data_imp.setValue(3, 0, 'Canada');
-                    data_imp.setValue(3, 1, 500);
-                    data_imp.setValue(4, 0, 'France');
-                    data_imp.setValue(4, 1, 600);
-                    data_imp.setValue(5, 0, 'RU');
-                    data_imp.setValue(5, 1, 700);
-
-                    options = {'width':'800px','colors':[0xFFD78F, 0xFFC352, 0xFFAF02, 0xFF9A01]};
-                    geomap = new google.visualization.GeoMap($('#map_canvas'));
-                    drawMap('req');
-                  }
-                </script>
-              </div>
+			  <div id="allMaps">
+	              <div class="map-requests map-image" style="margin-left:205px;height:355px;border:1px solid #EBF2F7;">
+	                <div id="map_canvas_req"></div>
+	              </div>
+				  <div class="map-impressions map-image" style="margin-left:205px;height:355px;border:1px solid #EBF2F7;">
+	                <div id="map_canvas_imp" ></div>
+	              </div>
+				  <div class="map-clicks map-image" style="margin-left:205px;height:355px;border:1px solid #EBF2F7;">
+	                <div id="map_canvas_clk"></div>
+	              </div>
+			  </div>
             </div>
             <div class="clear"></div>
           </section>
 
           <div class="clear"></div>
 
-          <section id="dashboard-apps">
-            <div class="buttonBank buttonBank-right">
-              <a class="button" id="dashboard-apps-toggleAllButton" href="#">Show/hide all details</a>
-              <a class="button" id="dashboard-apps-addAppButton" href="{% url publisher_app_create %}">Add an app</a>
-            </div>
-            <h2>Your Apps</h2>
-            
-            <div class="appData-columnHeaders">
-              <table class="dataTable" id="dashboard-apps-columnHeaders">
-                <thead>
-                  <tr>
-                    <th class="appData-icon"></th>
-                    <th class="dataTable-name">&nbsp;</th>
-                    <th class="dataTable-data">Requests</th>
-                    <th class="dataTable-data">Impressions</th>
-                    <th class="dataTable-data">Clicks</th>
-                    <th class="dataTable-data">CTR</th>
-                  </tr>
-                </thead>
-              </table>
-            </div>
-            {% for a in apps %}
-            <div class="{% cycle 'appData' 'appData appData-alt' %}" id="dashboard-app-{{forloop.counter0}}">
-              <table class="dataTable appData-main" id="dashboard-app-{{forloop.counter0}}-main">
-                <tbody>
-                  <tr>
-                    <td class="appData-icon"><a href="{% url publisher_app_show app_key=a.key %}"><img src="{% if a.icon_url %}{{a.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" /></a></td>
-                    <th class="dataTable-name"><span class="inner"><a href="{% url publisher_app_show app_key=a.key %}">{{a.name}}</a> <span class="muted unbold">({% ifequal a.app_type "iphone" %}iOS{% endifequal %}{% ifequal a.app_type "android" %}Android{% endifequal %})</span></span></th>
-                    <td class="dataTable-data numeric">{{a.stats.request_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{a.stats.impression_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{a.stats.click_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{a.stats.ctr|percentage}}</td>
-                  </tr>
-                </tbody>
-              </table>
-              <div class="appData-details" id="dashboard-app-{{forloop.counter0}}-details">
-                <div class="appData-details-inner show">
-                  <table class="dataTable">
-                    <tbody>
-                      {% for au in a.adunits %}<tr>
-                        <th class="dataTable-name"><span class="inner"><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a></span></th>
-                        <td class="dataTable-data numeric">{{au.stats.request_count|withsep}}</td>
-                        <td class="dataTable-data numeric">{{au.stats.impression_count|withsep}}</td>
-                        <td class="dataTable-data numeric">{{au.stats.click_count|withsep}}</td>
-                        <td class="dataTable-data numeric">{{au.stats.ctr|percentage}}</td>
-                      </tr>
-                      {% endfor %}
-                    </tbody>
-                  </table>
-                </div>
-                <a class="button button-small appData-details-toggleButton" href="#">Hide details</a>
-              </div>
-            </div>
-            {% endfor %}</section>
+          <section id="dashboard-apps"> 
+            <h2>Country Counts</h2>            
+            <div class="appData-columnHeaders"> 
+              <table class="dataTable" id="dashboard-apps-columnHeaders"> 
+                <thead> 
+                  <tr> 
+                    <th class="appData-icon"></th> 
+                    <th class="dataTable-name">&nbsp;</th> 
+                    <th class="dataTable-data numeric">Requests</th> 
+                    <th class="dataTable-data numeric">Impressions</th> 
+					<th class="dataTable-data numeric">Fillrate</th> 
+                    <th class="dataTable-data numeric">Clicks</th> 
+                    <th class="dataTable-data numeric">CTR</th> 
+                  </tr> 
+                </thead> 
+              </table> 
+            </div> 
+            <div class="appData" id="dashboard-app-0"> 
+              <table class="dataTable appData-main" id="dashboard-app-0-main"> 
+                <tbody> 
+                  <tr> 
+                    <td class="appData-icon-none"></td> 
+                    <th class="dataTable-name">Totals</th> 
+                    <td class="dataTable-data numeric">{{totals.request_count|withsep}}</td> 
+                    <td class="dataTable-data numeric">{{totals.impression_count|withsep}}</td> 
+                    <td class="dataTable-data numeric">{{totals.fill_rate|percentage|withsep}}</td> 
+                    <td class="dataTable-data numeric">{{totals.click_count|withsep}}</td> 
+					<td class="dataTable-data numeric">{{totals.ctr|percentage|withsep}}</td> 
+                  </tr> 
+                </tbody> 
+              </table> 
+              <div class="appData-details" id="dashboard-app-0-details"> 
+                <div class="appData-details-inner show"> 
+                  <table class="dataTable"> 
+                    <tbody> 
+	                  {% for pair in geo_table %}
+						{% if pair.0|country_code_to_name %}
+	                      <tr> 
+	                        <th class="dataTable-name">{{pair.0|country_code_to_name}}</th> 
+	                        <td class="dataTable-data numeric">{{pair.1.request_count|withsep}}</td> 
+	                        <td class="dataTable-data numeric">{{pair.1.impression_count|withsep}}</td> 
+	                        <td class="dataTable-data numeric">{{pair.1.fill_rate|percentage|withsep}}</td> 
+	                        <td class="dataTable-data numeric">{{pair.1.click_count|withsep}}</td> 
+							<td class="dataTable-data numeric">{{pair.1.ctr|percentage|withsep}}</td>
+	                      </tr> 
+						{% endif %}
+  					  {% endfor %}
+                    </tbody> 
+                  </table> 
+                </div> 
+                <a class="button button-small appData-details-toggleButton" href="#">Hide details</a> 
+                <a class="button button-small" href="/inventory/export/csv/agltb3B1Yi1pbmNyDAsSBFNpdGUYwZ0LDA">Export CSV</a> 
+                <a class="button button-small" href="/inventory/export/xls/agltb3B1Yi1pbmNyDAsSBFNpdGUYwZ0LDA">Export XLS</a> 
+              </div> 
+            </div> 
+          </section> 
 {% endblock content %}

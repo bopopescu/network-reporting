@@ -1,4 +1,11 @@
-import logging, os, re, hashlib
+import base64
+import binascii
+import hashlib
+import logging
+import math
+import os
+import re
+
 from datetime import (datetime,
                       time,
                       date,
@@ -10,7 +17,6 @@ urllib.getproxies_macosx_sysconf = lambda: {}
 
 from urllib import urlencode
 from operator import itemgetter
-import base64, binascii
 
 
 from google.appengine.api.urlfetch import fetch
@@ -34,7 +40,7 @@ from common.utils.decorators import whitelist_login_required
 from advertiser.models import Campaign, AdGroup, HtmlCreative
 from publisher.models import Site, Account, App
 from publisher.forms import SiteForm, AppForm, AdUnitForm
-from reporting.models import StatsModel
+from reporting.models import StatsModel, GEO_COUNTS
 
 ## Query Managers
 from account.query_managers import AccountQueryManager
@@ -121,37 +127,62 @@ def index(request,*args,**kwargs):
 class AppIndexGeoHandler(RequestHandler):
   def get(self):
     # compute start times; start day before today so incomplete days don't mess up graphs
-    days = StatsModel.lastdays(14)
+
+    if self.start_date:
+      days = StatsModel.get_days(self.start_date, self.date_range)
+    else:
+      days = StatsModel.lastdays(self.date_range)
+
+    now = datetime.now()
     
     apps = AppQueryManager().get_apps(self.account)
     
     if len(apps) == 0:
       return HttpResponseRedirect(reverse('publisher_app_create'))
 
-    geo_req = {}  
-    geo_imp = {}
-    geo_clk = {}
-    geo_rev = {}
-    for a in apps:
-      a.adunits = AdUnitQueryManager().get_adunits(app=a)
-      if len(a.adunits) > 0:
-        for adunit in a.adunits:
-          adunit.all_stats = StatsModelQueryManager(self.account,self.offline).get_stats_for_days(publisher=adunit, days=days)
-          for stats in adunit.all_stats:
-            #stats.geo_imp = simplejson.loads(stats.geo_impressions)
-            #stats.geo_clk = simplejson.loads(stats.geo_clicks)
-            #stats.geo_rev = simplejson.loads(stats.geo_revenue)
-            geo_req = dict( (n, geo_req.get(n,0)+stats.geo_requests.get(n,0)) for n in set(geo_req)|set(stats.geo_requests) )
-            #geo_imp = dict( (n, geo_imp.get(n,0)+stats.geo_imp.get(n,0)) for n in set(geo_imp)|set(stats.geo_imp) )
-            #geo_clk = dict( (n, geo_clk.get(n,0)+stats.geo_clk.get(n,0)) for n in set(geo_clk)|set(stats.geo_clk) )
-            #geo_rev = dict( (n, geo_rev.get(n,0)+stats.geo_rev.get(n,0)) for n in set(geo_rev)|set(stats.geo_rev) )
-
-    geo_req = sorted(geo_req.items(), key=itemgetter(1), reverse=True)
-    return render_to_response(self.request,'publisher/index_geo.html', 
-      {'geo_imp': geo_imp,    
-       'geo_clk': geo_clk,
-       'geo_rev': geo_rev,
-       'geo_req': geo_req,
+    geo_dict = {}
+    totals = StatsModel(date=now) # sum across all days and countries
+    
+    # hydrate geo count dicts with stats counts on account level
+    all_stats = StatsModelQueryManager(self.account,self.offline).get_stats_for_days(days=days) 
+    for stats in all_stats:
+      totals = totals + StatsModel(request_count=stats.request_count, 
+                                   impression_count=stats.impression_count, 
+                                   click_count=stats.click_count, 
+                                   user_count=stats.user_count,
+                                   date=now)                                   
+      countries = stats.get_countries()
+      for c in countries:
+        geo_dict[c] = geo_dict.get(c, StatsModel(country=c, date=now)) + \
+                        StatsModel(country=c,  
+                                   request_count=stats.get_geo(c, GEO_COUNTS[0]), 
+                                   impression_count=stats.get_geo(c, GEO_COUNTS[1]), 
+                                   click_count=stats.get_geo(c, GEO_COUNTS[2]), 
+                                   date=now)
+    
+    # creates a sorted table based on request count 
+    geo_table = []
+    keys = geo_dict.keys()
+    keys.sort(lambda x,y: cmp(geo_dict[y].request_count, geo_dict[x].request_count))
+    for k in keys:
+      geo_table.append((k, geo_dict[k]))
+    
+    # create copy of geo_dict with counts on log scale
+    geo_log_dict = {}
+    for c, stats in geo_dict.iteritems():
+      geo_log_dict[c] = StatsModel(country=c,
+                                   # check to see if count is 0 since log 0 is invalid; +0.5 at the end for rounding
+                                   request_count=int(math.log10(stats.request_count if stats.request_count > 0 else 1) + 0.5), 
+                                   impression_count=int(math.log10(stats.impression_count if stats.impression_count > 0 else 1) + 0.5),
+                                   click_count=int(math.log10(stats.click_count if stats.click_count > 0 else 1) + 0.5),
+                                   date=now)
+    
+    return render_to_response(self.request, 'publisher/index_geo.html', 
+      {'geo_dict': geo_dict,
+       'geo_log_dict': geo_log_dict,
+       'geo_table': geo_table,
+       'totals' : totals,
+       'date_range': self.date_range,
        'account': self.account})
 
 @whitelist_login_required     

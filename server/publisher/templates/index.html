@@ -5,6 +5,12 @@
             <li><a href="{% url advertiser_campaign %}">Campaigns</a></li>{% endblock navLinks %}
 {% block messageCenter %}{% endblock messageCenter %}
 
+{% block titleBarRight %}
+<span class="titlebar-right">
+  <a class="button" id="dashboard-geoBreakdown" href="{% url publisher_index_geo %}">Geo Breakdown</a>
+</span>
+{% endblock titleBarRight %}
+
 {% block content %}{% ifequal account.status "step3" %}
           <div class="alertMessage">
             The next step is to set up your ad networks.  Visit your <a href="{% url account_index %}">Account</a> page to enable your ad networks.

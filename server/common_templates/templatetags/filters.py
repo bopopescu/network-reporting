@@ -4,6 +4,9 @@ from datetime import datetime
 from django import template
 import base64, binascii
 from django.utils import simplejson as json
+import logging
+
+from country_codes import COUNTRY_CODE_DICT
 
 register = template.Library()
 
@@ -143,3 +146,12 @@ def all_user_dropdown(request,value=1000):
 @register.filter
 def binary_data(data):
     return "data:image/png;base64,%s" % binascii.b2a_base64(data)
+    
+@register.filter
+def country_code_to_name(country_code):
+    if country_code in COUNTRY_CODE_DICT:
+        return COUNTRY_CODE_DICT.get(country_code)
+    else:
+        logging.warning("No country name for code: %s"%country_code)
+        return None    
+    

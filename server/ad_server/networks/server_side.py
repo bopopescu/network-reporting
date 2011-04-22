@@ -1,35 +1,40 @@
 import hashlib
 import re
 
+from ad_server.debug_console import trace_logging
+from common.utils import helpers
+
 
 class ServerSide(object):
     base_url = "http://www.test.com/ad?"
+    no_pub_id_warning = 'Warning: no %s Publisher ID has been specified'
+    pub_id_attr = 'None' # must be specified by sub class
+    network_name = 'Generic Server Side'
+    
     def __init__(self,request,adunit=None,*args,**kwargs):
         self.request = request
         self.adunit = adunit
-   
     @property
     def format(self):
         return self.adunit.format
-    
+  
     def get_udid(self,udid=None):
         """
         udid from the device comes as 
         udid=md5:asdflkjbaljsadflkjsdf (new clients) or
         udid=pqesdlsdfoqeld (old clients)
-        
         For the newer clients we can just pass over the hashed string
         after "md5:"
-        
+
         For older clients we must md5 hash the udid with salt 
         "mopub-" prepended.
-        
+
         returns hashed_udid
-        
+
         """  
         raw_udid = udid or self.request.get('udid')
         raw_udid_parts = raw_udid.split('md5:')
-        
+
         # if has md5: then just pull out value
         if len(raw_udid_parts) == 2:
             # get the part after 'md5:'
@@ -41,41 +46,55 @@ class ServerSide(object):
             m.update(raw_udid_parts[0])
             hashed_udid = m.hexdigest().upper()
         return hashed_udid    
-       
     def get_ip(self):
-        return self.request.remote_addr
-   
+        """gets ths ip from either a query parameter or the header"""
+        return helpers.get_ip(self.request)
+
     def get_adunit(self):
         return self.adunit
-   
+
     def get_account(self):
         return self.adunit.account
-   
+    
     def get_user_agent(self):
-        return self.request.headers['User-Agent']
-   
+        """gets the user agent from either a query paramter or the header"""
+        return helpers.get_user_agent(self.request)
+        
+    def get_pub_id(self,warn=False):
+        pub_id = getattr(self.get_account(),self.pub_id_attr)
+        if warn and not pub_id:
+            trace_logging.info(self.no_pub_id_warning%self.network_name)  
+        return pub_id
+
     @property
     def headers(self):
-        return {}    
-   
-    @property    
+        return {}  
+
+    @property  
     def payload(self):
         return None
-   
+        
     def _get_size(self,content):
-            width_pat = re.compile(r'width="(?P<width>\d+?)"')
-            height_pat = re.compile(r'height="(?P<height>\d+?)"')
-   
-            width_match = re.search(width_pat,content)
-            height_match = re.search(height_pat,content)
-   
-            width = 0
-            height = 0
-            if height_match and width_match:
-                width = int(width_match.groups('width')[0])
-                height = int(height_match.groups('height')[0])
-            return width,height            
-   
+        width_pat = re.compile(r'width="(?P<width>\d+?)"')
+        height_pat = re.compile(r'height="(?P<height>\d+?)"')
+
+        width_match = re.search(width_pat,content)
+        height_match = re.search(height_pat,content)
+
+        width = 0
+        height = 0
+        if height_match and width_match:
+            width = int(width_match.groups('width')[0])
+            height = int(height_match.groups('height')[0])
+        return width,height      
+
     def bid_and_html_for_response(self,response):
-        return 0.0,"<html>BLAH</html>"    
-       
+        self.get_pub_id(warn=True) # get the pub id and warn if not present
+        if response.status_code == 200:
+            return self._bid_and_html_for_response(response)
+        else:    
+            trace_logging.info("Failed to load ad from %s"%self.network_name)    
+            return None
+        
+    def _bid_and_html_for_response(self,response):
+        return 0.0,"<html>BLAH</html>"     

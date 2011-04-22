@@ -50,6 +50,9 @@ var mopub = mopub || {};
 		// set up buttonsets
 		$('.buttonset').buttonset().css({ visibility: 'visible' });
 		
+		// set up selectmenus
+		$('.selectmenu').selectmenu().css({ visibility: 'visible' });
+		
 		// set up validation
         $('.validate').validate();
 		

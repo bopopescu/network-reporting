@@ -453,38 +453,8 @@ var mopub = mopub || {};
                 });
                 
                 
-    ///// Filter by status /////         
-    $('#campaigns-filterOptions-option-all')
-        .click(function(e){
-            $('.campaignData').show();
-            addPlaceholder();
-            refreshAlternatingColor();
-        });
-        
-    $('#campaigns-filterOptions-option-running')
-        .click(function(e){
-            $('.campaignData').hide();
-            $('.campaign-status-Running').show();
-            addPlaceholder();
-            refreshAlternatingColor();
-        });  
-        
-    $('#campaigns-filterOptions-option-paused')
-        .click(function(e){
-            $('.campaignData').hide();
-            $('.campaign-status-Paused').show();
-            addPlaceholder();
-            refreshAlternatingColor();
-        });
+    ///// Filter Campaigns by status and targeted apps /////    
 
-    $('#campaigns-filterOptions-option-scheduled')
-        .click(function(e){
-            $('.campaignData').hide();
-            $('.campaign-status-Scheduled').show();
-            addPlaceholder();
-            refreshAlternatingColor();
-        });              
-                
     function refreshAlternatingColor(){
         $('.campaignData').removeClass('campaignData-alt');
         $('table').each(function(){
@@ -505,15 +475,25 @@ var mopub = mopub || {};
             }
         });
     }
-    // Initialize
-    $('#campaigns-filterOptions-option-all').click();
     
-    ///// Filter by app /////  
-    // $('#campaigns-appFilterOptions').selectmenu();
+    function applyFilters(){
+        statusFilter = $("#campaigns-filterOptions").find(':checked').val()
+        appFilter = $('#campaigns-appFilterOptions').val();
+
+        // Hide all the campaigns, then show the ones that pass the filters
+        $('.campaignData').hide();
+        $('.'+appFilter).filter('.'+statusFilter).show();
+        addPlaceholder();
+        refreshAlternatingColor();
+    }
     
-    $('#campaigns-appFilterOptions').change(function() {
-        $(this).val();
+    $("#campaigns-filterOptions, #campaigns-appFilterOptions").change(function(){
+        applyFilters();
     });
+    
+    
+    // Initialize
+    applyFilters();
                 
     ////////////////////////////////////////////
     //////////  /campaigns/adgroup/ ////////////

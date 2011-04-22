@@ -470,7 +470,7 @@ var mopub = mopub || {};
                 
                 
     ///// Filter Campaigns by status and targeted apps /////    
-
+    
     function refreshAlternatingColor(){
         $('.campaignData').removeClass('campaignData-alt');
         $('table').each(function(){
@@ -506,11 +506,7 @@ var mopub = mopub || {};
     // We filter whenever the user changes the filtering options
     $("#campaigns-filterOptions, #campaigns-appFilterOptions").change(function(){
         applyFilters();
-    });
-    
-    
-    // Initialize - trigger initial filtering
-    $("#campaigns-filterOptions").change();
+    }).change();
                 
     ////////////////////////////////////////////
     //////////  /campaigns/adgroup/ ////////////

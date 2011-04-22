@@ -22,13 +22,14 @@
   <!-- CSS -->
   <link rel="stylesheet" href="/js/mylibs/jquery-ui-1.8.7.custom/css/mopub/jquery-ui-1.8.7.custom.css" />  
   <link rel="stylesheet" href="/css/style.css?v=4">
+  {% block extraCSS %}{% endblock %}
  
   <!-- modernizr -->
   <script src="/js/mylibs/modernizr-1.6.min.js"></script>
    
   <!-- Google load for jquery and jqueryui -->
   <script src="https://www.google.com/jsapi?key=ABQIAAAAbRw2cYJlVhkm8Sy9e32IvhSp_nRSlbw3drc-oo9CvDm6lSB7YhTn-1GvX4YW6_H-c4ZV_1LYTj_jrw" type="text/javascript"></script>
-  <script language="Javascript" type="text/javascript">
+  <script type="text/javascript">
       //<![CDATA[
       google.load("jquery", "1.4.4");
       google.load("jqueryui", "1.8.7");
@@ -62,7 +63,6 @@
       ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
       var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
       })();
-
   </script>
 </head>
 
@@ -205,7 +205,7 @@
           <div id="footer-account">
             Logged in as <a href="{% url account_index %}">{{google_user}}</a>
 {% block adminSelect %}
-	{% if user.is_admin %}
+{% if user.is_admin %}
                   <div style="float:right;padding-left:10px">
                     <form id="admin_user_switch" action="{% url admin_switch_user %}" method="POST">
                       <select name="user_key" id="admin_user_switch_select" onchange='$("#admin_user_switch").submit()'>
@@ -234,7 +234,7 @@
                     options[i].selected = true;
                   }
                   </script>
-	{% endif %}
+{% endif %}
 {% endblock adminSelect %}
             <span class="sep">&middot;</span>
             <a href="{% google_logout_url %}">Log out</a>

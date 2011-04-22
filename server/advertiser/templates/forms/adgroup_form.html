@@ -1,8 +1,4 @@
 {% load filters %}
-<script type='text/javascript' src='/js/countries.js'></script>
-<script type='text/javascript' src='/js/tokenize_in.js'></script>
- <link rel='stylesheet' type='text/css' href='/css/token-input-mopub.css'></link>
- <!-- <link rel='stylesheet' type='text/css' href='/css/token-input-mac.css'></link> -->
 <script type='text/javascript'>
     //
     // All this JS is here because it needs render-time info (see immediately below) to properly pre-populate//format the token inputs
@@ -83,21 +79,21 @@
     });
 </script>
                     <dl class="formFields"> 
-                      <dt><label for="TODO5">Ad Units:</label></dt>
+                      <dt>Ad Units:</dt>
                       <dd> 
                         <ul style="overflow:auto; max-height:200px; list-style: none;padding:5px 10px" class="{% if form.site_keys.errors %}form-error{% endif %}"> 
                         {% for adunit in all_adunits %}   
                         <div class="adunit-Target {{adunit.app_key.app_type}}"> 
-                            <li><input type="checkbox" name="site_keys" value="{{adunit.key}}"{% if adunit.checked %} checked="checked"{% endif %}> {{adunit.app.name}} &gt; {{adunit.name}} </input></li>   
+                            <li><input type="checkbox" name="site_keys" value="{{adunit.key}}"{% if adunit.checked %} checked="checked"{% endif %}/> {{adunit.app.name}} &gt; {{adunit.name}}</li>
                         </div>
-                        {% endfor %}   
-                        </ul>  
+                        {% endfor %}
+                        </ul>
                         {% for error in form.site_keys.errors %}
-                        <div class="form-error-text">{{error}}</div> 
+                        <div class="form-error-text">{{error}}</div>
                         {% endfor %}
                       </dd>
                       <div class="adgroupForm-advanced hidden">
-                        <dt><label for="TODO6">Allocation:</label></dt>
+                        <dt>Allocation:</dt>
                         <dd>
                           <input type="text" class="input-text input-text-number {% if form.allocation_percentage.errors %}form-error{% endif %}" name="{{form.allocation_percentage.name}}" value="{{form.allocation_percentage.value}}"/> % of all 
                           <select name="{{form.allocation_type.name}}">
@@ -109,7 +105,7 @@
                           {% endfor %}
                         </dd>
                         
-                        <dt><label for="TODO7">Frequency Caps:</label></dt>
+                        <dt>Frequency Caps:</dt>
                         <dd>
                           <input name="{{form.daily_frequency_cap.name}}" class="input-text input-text-number {% if form.daily_frequency_cap.errors %}form-error{% endif %}" type="text" value="{{form.daily_frequency_cap.value}}"/> daily impressions per user
                           {% for error in form.daily_frequency_cap.errors %}
@@ -123,34 +119,25 @@
                           <div class="form-error-text">{{error}}</div> 
                           {% endfor %}
                         </dd>
-						<dt><label for=""></label></dt>
-						<dd>
-						</dd>		
- 
-
-	                   <div class="campaignDependent promo">
-	                     <dt><label for="promo_level">Keyword:</label></dt>
-	                     <dd>
-			  				{{ form.keywords.as_widget }}
-	                      <a href="#" id="campaignForm-keyword-helpLink">What's this?</a>
-	                      <div id='campaignForm-keyword-helpContent' class='hidden'>
-	                        <h3>Keywords</h3>
-	                        <p>
-								Keywords may be used to target select requests and user data. Enter one group of keywords per line. Within each line the keywords are ANDed by using the seperator "AND". All lines are otherwised ORed together.
-								<br/><br/>
-								e.g. In order to target 24-year-old males or any 25-year-old you can use  special keywords
-								<br/><br/>
-								m_age:24 AND m_gender:M <br/>
-								m_age:25
-								
-	                        </p>
-	                      </div>
-	                    </dd>
-	                  </div>
-
-                        <dt><label for="TODO9">
-                        Country Targeting:
-                        </label></dt>
+                        <div class="campaignDependent promo">
+                          <dt>Keyword:</dt>
+                          <dd>
+                            {{ form.keywords.as_widget }}
+                            <a href="#" id="campaignForm-keyword-helpLink">What's this?</a>
+                            <div id='campaignForm-keyword-helpContent' class='hidden'>
+                              <h3>Keywords</h3>
+                              <p>
+                                Keywords may be used to target select requests and user data. Enter one group of keywords per line. Within each line the keywords are ANDed by using the seperator "AND". All lines are otherwised ORed together.
+                                <br/><br/>
+                                e.g. In order to target 24-year-old males or any 25-year-old you can use  special keywords
+                                <br/><br/>
+                                m_age:24 AND m_gender:M <br/>
+                                m_age:25
+                              </p>
+                            </div>
+                          </dd>
+                        </div>
+                        <dt>Country Targeting:</dt>
                         <dd>
                           <div id='geo_pred_ta' name='geo_predicates'></div>
                           <!--
@@ -160,10 +147,10 @@
                           {% endfor %}
                         </dd>
                         <div class="countryNumDependent 0 1" style='display:none;'>
-                            <dt><label for="loc">Country Specificity:</label></dt>
+                          <dt>Region Targeting:</dt>
                             <dd>
-                                <span class="radios">
-                                    <input type='radio' class='input-radio' name='location-targeting' value='all' id='advertiser-LocationSpec-all'{% if not form.cities.value %}checked{% endif %}></input>
+                              <span class="radios">
+                                <input type='radio' class='input-radio' name='location-targeting' value='all' id='advertiser-LocationSpec-all' {% if not form.cities.value %}checked{% endif %}/>
                                     <label for='advertiser-LocationSpec-all'>Everywhere</label>
                                     {# <input type='radio' class='input-radio' name='location-targeting' value='state' id='advertiser-LocationSpec-state'></input> #}
                                     {# <label for='advertiser-LocationSpec-state'>State/Province</label> #}
@@ -173,23 +160,22 @@
                             </dd>
                         </div>
                         <div class="locationDependent state" style='display:none;'>
-                            <dt><label for='state_ta'>State/Province:</label></dt>
+                            <dt>State/Province:</dt>
                             <dd><div id='state_ta'></div></dd>
                         </div>
-
                         <div class="locationDependent city" style='display:none;'>
                             {# nest so we can do the dependent stuff and only show if both without any more fancy logic #}
                             <div class="countryNumDependent 1" style='display:none;'>
-                                <dt><label for='city_ta'>City Targeting:</label></dt>
+                                <dt>City Targeting:</dt>
                                 <dd><div id='city_ta'></div></dd>
                             </div>
                             <div class="countryNumDependent 0" style='display:none;'>
-                                <dt><label for='city_ta_fake'>City Targeting:</label></dt>
+                                <dt>City Targeting:</dt>
                                 <dd><div id='city_fake'>Please input a country</div></dd>
                             </div>
                         </div>
 
-                        {# <dt><label for="TODO10">Device Predicates:</label></dt> #}
+                        {# <dt>Device Predicates:</dt> #}
                         {# <dd> #}
                         {#   <textarea name="device_predicates" class="{% if form.device_predicates.errors %}form-error{% endif %}">{% if form.geo_predicates.value %}{{form.device_predicates.value}}{% else %}platform_name=*{% endif %}</textarea> #}
                         {#   <div>platform_name=(*,android,iphone)</div> #}

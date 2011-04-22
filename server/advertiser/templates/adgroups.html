@@ -73,7 +73,7 @@
                         <td class="stats-breakdown-value all"><span class="inner">{{totals.impression_count|withsep}}</span></td>
                         <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
                       </tr>
-                      <tr id="stats-breakdown-clicks">
+                      <tr id="stats-breakdown-revenue">
                         <td class="stats-breakdown-value today"><span class="inner">{{today.revenue|currency}}</span></td>
                         <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.revenue|currency}}</span></td>
                         <td class="stats-breakdown-value all"><span class="inner">{{totals.revenue|currency}}</span></td>
@@ -182,9 +182,9 @@
 					  id="campaigns-guaranteed-{{level.name}}-{{forloop.counter0}}">
                         <th class="campaignData-icon">
                             <input type="checkbox" name="id" value="{{adgroup.key}}"/>
-                            {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9></img>{% endif %}
-                            {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9></img>{% endif %}
-                            {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9></img>{% endif %}
+                            {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9 />{% endif %}
+                            {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
+                            {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
                         </th> 
                         <th class="dataTable-name">
                             <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
@@ -203,9 +203,9 @@
                         </th>
                         <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
                         <td class="dataTable-data numeric">{{adgroup|campaign_status}}<br>
-														   {% if adgroup.percent_delivered %}
-														   <span class="muted">({{adgroup.percent_delivered|floatformat:1}}%)</span></td>
-														   {%endif %}
+                         {% if adgroup.percent_delivered %}
+                         <span class="muted">({{adgroup.percent_delivered|floatformat:1}}%)</span></td>
+                         {%endif %}
                         <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
                         <td class="dataTable-data numeric">{{adgroup.stats.click_count|withsep}}</td>
                         <td class="dataTable-data numeric">{{adgroup.stats.ctr|percentage|withsep}}</td>
@@ -251,9 +251,9 @@
 					id="campaigns-promo-{{forloop.counter0}}">
                     <th class="campaignData-icon">
                       <input type="checkbox" name="id" value="{{adgroup.key}}"/>
-                      {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9></img>{% endif %}
-                      {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9></img>{% endif %}
-                      {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9></img>{% endif %}
+                      {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9 />{% endif %}
+                      {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
+                      {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
                     </th> 
                     <th class="dataTable-name">
                         <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
@@ -317,9 +317,9 @@
 
                     <th class="campaignData-icon">
                       <input type="checkbox" name="id" value="{{adgroup.key}}"/>
-                      {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9></img>{% endif %}
-                      {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9></img>{% endif %}
-                      {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9></img>{% endif %}
+                      {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9 />{% endif %}
+                      {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
+                      {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
                     </th> 
                     <th class="dataTable-name">
                       <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
@@ -372,8 +372,8 @@
                     <th class="campaignData-icon">
                       <input type="checkbox" name="id" value="{{adgroup.key}}"/>
                       {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9></img>{% endif %}
-                      {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9></img>{% endif %}
-                      {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9></img>{% endif %}
+                      {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
+                      {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
                     </th> 
                     <th class="dataTable-name">
                         <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>

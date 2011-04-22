@@ -141,7 +141,6 @@ class AppIndexGeoHandler(RequestHandler):
       return HttpResponseRedirect(reverse('publisher_app_create'))
 
     geo_dict = {}
-    geo_table = []
     totals = StatsModel(date=now) # sum across all days and countries
     
     # hydrate geo count dicts with stats counts on account level
@@ -162,6 +161,7 @@ class AppIndexGeoHandler(RequestHandler):
                                    date=now)
     
     # creates a sorted table based on request count 
+    geo_table = []
     keys = geo_dict.keys()
     keys.sort(lambda x,y: cmp(geo_dict[y].request_count, geo_dict[x].request_count))
     for k in keys:
@@ -170,11 +170,12 @@ class AppIndexGeoHandler(RequestHandler):
     # create copy of geo_dict with counts on log scale
     geo_log_dict = {}
     for c, stats in geo_dict.iteritems():
-        geo_log_dict[c] = StatsModel(country=c,
-                                     request_count=int(math.log(stats.request_count if stats.request_count > 0 else 1)),
-                                     impression_count=int(math.log(stats.impression_count if stats.impression_count > 0 else 1)),
-                                     click_count=int(math.log(stats.click_count if stats.click_count > 0 else 1)),
-                                     date=now)
+      geo_log_dict[c] = StatsModel(country=c,
+                                   # check to see if count is 0 since log 0 is invalid; +0.5 at the end for rounding
+                                   request_count=int(math.log10(stats.request_count if stats.request_count > 0 else 1) + 0.5), 
+                                   impression_count=int(math.log10(stats.impression_count if stats.impression_count > 0 else 1) + 0.5),
+                                   click_count=int(math.log10(stats.click_count if stats.click_count > 0 else 1) + 0.5),
+                                   date=now)
     
     return render_to_response(self.request, 'publisher/index_geo.html', 
       {'geo_dict': geo_dict,

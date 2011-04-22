@@ -10,7 +10,7 @@
   google.load('visualization', '1', {'packages': ['geomap']});
   google.setOnLoadCallback(initMap);
 
-  function initMap() {
+  function initMap() {	
 	// request count data (log10 scale)
     var data_req = new google.visualization.DataTable();
     data_req.addRows({{ geo_log_dict|length }});

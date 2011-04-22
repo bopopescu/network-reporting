@@ -511,7 +511,9 @@ var mopub = mopub || {};
     ///// Filter by app /////  
     // $('#campaigns-appFilterOptions').selectmenu();
     
-    
+    $('#campaigns-appFilterOptions').change(function() {
+        $(this).val();
+    });
                 
     ////////////////////////////////////////////
     //////////  /campaigns/adgroup/ ////////////

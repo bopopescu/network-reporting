@@ -74,7 +74,8 @@ def gen_days(start, end):
 
 def get_hours(days):
     '''Turn a list of days into a list of lists where
-    each list is a list of the hours that make up that day'''
+    each list is a list of date_hours where the date
+    ranges over the given days and the hour is held constant'''
     ret = []
     for hour in range(24):
         ent = []
@@ -90,3 +91,45 @@ def get_days(days):
     '''turn a list of days into a list of lists where
     each list is a single day'''
     return map(lambda x: [x], days)
+
+def get_weeks(days):
+    '''turn a list of days into a list of lists where
+    each list is a week'''
+    #XXX Make sure this is the case!!!
+    #assuming days[0] is first day and days[-1] is last day
+    weeks = []
+    week = []
+    for day in days:
+        if day.weekday() == 0:
+            if len(week) > 0:
+                weeks.append(week)
+            week = [day]
+        else:
+            week.append(day)
+    if len(week) > 0:
+        weeks.append(week)
+    return weeks
+
+def get_months(days):
+    '''turn a list of days into a list of lists where
+    each list is a list of days that make up that month.
+    This is done instead of using the fact that StatsModel
+    rollups are done for the month because if I want to do a
+    day, week, or hour breakdown for a given month it's easier 
+    if we start with a list of days than a single day denoting the month'''
+    months = []
+    this_month = -1
+    month = []
+    for day in days:
+        if this_month != day.month:
+            #first time through
+            if this_month == -1:
+                this_month = day.month
+            #been here before, add old data and start a new month
+            else:
+                months.append(month)
+            month = []
+        month.append(day)
+    if len(month) > 0:
+        months.append(month)
+    return months

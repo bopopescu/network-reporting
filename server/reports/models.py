@@ -28,7 +28,7 @@ CO = 'country'
 TARG = 'targeting' # I don't know what this is
 C_TARG = 'custom targeting' # or this
 
-NAME_STR = "level%d-entry%d"
+NAME_STR = "dim%d-ent%d"
 PUB_D = set((APP, AU))
 ADV_D = set((CAMP, CRTV))
 PRI_D = set((P, CAMP))
@@ -114,7 +114,6 @@ class Report(db.Model):
         if dim in (MO, WEEK, HOUR, DAY):
             type = 'days'
             if dim == MO:
-                date_fmt = 'month'
                 vals = date_magic.get_months(days)
             elif dim == WEEK:
                 vals = date_magic.get_weeks(days)

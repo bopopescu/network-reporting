@@ -26,16 +26,13 @@
           </div>
 {% endif %}
           <section id="advertiser-adgroupEditForm" class="hidden">
-            <a name='adgroupEditForm' class="hidden">adgroupEditForm</a>
             <div>
               <form action="{% url advertiser_campaign_create_ajax %}" method="POST" accept-charset="utf-8" id="campaignAdgroupForm" class="validate">
                 <input type="hidden" name="adgroup_key" value="{{adgroup.key}}"/>
                 <div id="campaignAdgroupForm-fragment">
-                  {{campaign_create_form_fragment}}
+{{campaign_create_form_fragment}}
                 </div>
-                
                 <div class="clear"></div>
-                
                 <div class="form-submit"> 
                   <span class="hidden" id="campaignAdgroupForm-loading"><img src="/images/loading2.gif"/></span>
                   <span class="hidden" id="campaignAdgroupForm-success">Success!</span>
@@ -45,7 +42,6 @@
               </form>
             </div>
           </section>
-          
           <div class="separated" id="chartWrapper">
             <section class="offset nomargin" id="dashboard-stats">
               <div class="stats">
@@ -58,7 +54,7 @@
                         <td class="stats-breakdown-value all"><span class="inner">{{totals.impression_count|withsep}}</span></td>
                         <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
                       </tr>
-                      <tr id="stats-breakdown-clicks">
+                      <tr id="stats-breakdown-revenue">
                         <td class="stats-breakdown-value today"><span class="inner">{{today.revenue|currency}}</span></td>
                         <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.revenue|currency}}</span></td>
                         <td class="stats-breakdown-value all"><span class="inner">{{totals.revenue|currency}}</span></td>
@@ -117,7 +113,6 @@
               <div class="clear"></div>
             </section>
           </div>
-          
           <section id="dashboard-campaigns">
             <form method="post" action="/campaigns/adgroup/{{adgroup.key}}/" id="fake-campaignForm">
                 <input type=hidden name="action" id="action" />
@@ -125,18 +120,13 @@
             <br />
             <h2>Campaign Details</h2>
             <div id="play-pause-bar">
-                <span class="buttonset ui-buttonset" id="campaign-play-pause" style="visibility:visible;">
-                    <input type="radio" name="play-pause-option" value="play" id="play-option" class="ui-helper-hidden-accessible" {% if adgroup.active %}checked{% endif %} />
-                    <label for="play-option" aria-pressed="false" class="ui-button ui-widget ui-state-default ui-button-text-only ui-corner-left" role="button" aria-disabled="false">
-                        Play
-                    </label>
-                    <input type="radio" name="play-pause-option" value="pause" id="pause-option" class="ui-helper-hidden-accessible" {% if not adgroup.active %}checked{% endif %} />
-                    <label for="pause-option" aria-pressed="false" class="ui-button ui-widget ui-state-default ui-button-text-only ui-corner-left" role="button" aria-disabled="false">
-                        Pause
-                    </label>
-                </span>
+              <span class="buttonset ui-buttonset" id="campaign-play-pause" style="visibility:visible;">
+                <input type="radio" name="play-pause-option" value="play" id="play-option" class="ui-helper-hidden-accessible" {% if adgroup.active %}checked{% endif %} />
+                <label for="play-option" aria-pressed="false" class="ui-button ui-widget ui-state-default ui-button-text-only ui-corner-left" role="button" aria-disabled="false">Play</label>
+                <input type="radio" name="play-pause-option" value="pause" id="pause-option" class="ui-helper-hidden-accessible" {% if not adgroup.active %}checked{% endif %} />
+                <label for="pause-option" aria-pressed="false" class="ui-button ui-widget ui-state-default ui-button-text-only ui-corner-left" role="button" aria-disabled="false">Pause</label>
+              </span>
             </div>
-            <br />
             <p style="font-size: 14px;">
               {% if adgroup.active %}
               <img src="/images/active.gif" width="9" height="9"/>
@@ -154,10 +144,9 @@
                 All dates.
                 {% endif %}&nbsp;
                 {% if campaign.budget %}{{campaign.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
-
             </p>
             <h2>Ad Unit Targeting</h2>
-            <table class="campaignData-main dataTable" id="dashboard-apps-columnHeaders">
+            <table class="campaignData-main dataTable" id="dashboard-campaigns-columnHeaders">
               <thead>
                 <tr>
                 <th class="campaignData-icon"></th>
@@ -201,11 +190,11 @@
             </table>
           </section>
             {% ifnotequal campaign.campaign_type "network" %}
-          <section id="dashboard-campaigns">
+          <section>
             <div class="buttonBank buttonBank-right">
               <a class="button" id="advertiser-adgroups-addCreativeButton" href="#">Add a creative</a>
             </div>
-            <h2>Creatives</h2>   
+            <h2>Creatives</h2>
             <section id="advertiser-creativeAddForm" class="hidden">
               <div>
                 <form action="{% url advertiser_creative_create %}" method="POST" accept-charset="utf-8" id="creativeCreateForm" enctype="multipart/form-data">

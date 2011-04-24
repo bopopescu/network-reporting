@@ -555,28 +555,28 @@ var mopub = mopub || {};
       });
     });
     
-    /*---------------------------------------/
-    / Stats Geo Breakdown
-    /---------------------------------------*/
-    $('.stats-breakdown.geo tr').click(function(e) {
-    	var row = $(this);
-    	if(!row.hasClass('active')) {
-    		var table = row.parents('table');
-    		$('tr.active', table).removeClass('active');
-    		row.addClass('active');
-    		var $allMaps = $('#allMaps');
-    		$allMaps.removeClass('map-requests');
-    		$allMaps.removeClass('map-impressions');
-    		$allMaps.removeClass('map-clicks');
-    		$allMaps.addClass();
-    		var metricElement = $('#dashboard-geo-stats .stats-breakdown .active');
-            var metricElementIdComponents = metricElement.attr('id').split('-');
-            var activeMetric = metricElementIdComponents[metricElementIdComponents.length - 1];
-            $allMaps.addClass('map-'+activeMetric);
-    	}
-    });
-    
-    $('#allMaps').addClass('map-requests');
+    // /*---------------------------------------/
+    // / Stats Geo Breakdown
+    // /---------------------------------------*/
+    // $('.stats-breakdown.geo tr').click(function(e) {
+    //  var row = $(this);
+    //  if(!row.hasClass('active')) {
+    //      var table = row.parents('table');
+    //      $('tr.active', table).removeClass('active');
+    //      row.addClass('active');
+    //      var $allMaps = $('#allMaps');
+    //      $allMaps.removeClass('map-requests');
+    //      $allMaps.removeClass('map-impressions');
+    //      $allMaps.removeClass('map-clicks');
+    //      $allMaps.addClass();
+    //      var metricElement = $('#dashboard-geo-stats .stats-breakdown .active');
+    //         var metricElementIdComponents = metricElement.attr('id').split('-');
+    //         var activeMetric = metricElementIdComponents[metricElementIdComponents.length - 1];
+    //         $allMaps.addClass('map-'+activeMetric);
+    //  }
+    // });
+    // 
+    // $('#allMaps').addClass('map-requests');
     
     
     // Set up format selection UI for tablet

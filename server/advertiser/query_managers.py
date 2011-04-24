@@ -90,7 +90,7 @@ class CampaignStatsCounter(object):
 class CreativeQueryManager(CachedQueryManager):
     Model = Creative
 
-    def get_creatives(self,adgroup=None,ad_type=None,ad_types=None,account=None,deleted=False,limit=None):
+    def get_creatives(self,adgroup=None,ad_type=None,ad_types=None,account=None,deleted=False,limit=50):
         creatives = Creative.all()
         if not (deleted == None):
             creatives = creatives.filter("deleted =", deleted)

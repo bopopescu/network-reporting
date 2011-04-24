@@ -1,12 +1,14 @@
 {% extends 'base.html' %} 
 {% load filters %}
 
-{% block extraScripts %}<script src="/js/mopub-advertiser.js?v=14"></script>{% endblock extraScripts %}
-
+{% block extraScripts %}<script src="/js/mopub-advertiser.js?v=14"></script>
+<script src='/js/tokenize_in.js'></script>
+<script src='/js/countries.js'></script>
+{% endblock extraScripts %}
+{% block extraCSS %}<link rel="stylesheet" href="/css/token-input-mopub.css">{% endblock %}
 {% block navLinks %}
             <li><a href="{% url publisher_index %}">Dashboard</a></li>
             <li><a href="{% url advertiser_campaign %}">Campaigns</a></li>{% endblock navLinks %}
-
 {% block pageTitle %}<h1>Campaigns</h1>{% endblock pageTitle %}
 
 {% block messageCenter %}{% endblock messageCenter %}

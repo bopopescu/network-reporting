@@ -42,11 +42,15 @@ def main(app_id="mopub-inc",host="38-aws.latest.mopub-inc.appspot.com"):
             times.append(datetime.datetime(date.year,date.month,date.day,hour))
             
     
-    # accounts = Account.all().fetch(1000)
+    accounts = Account.all().fetch(1000)
     # accounts = accounts[:1]
-    accounts = [Account.get('agltb3B1Yi1pbmNyIgsSB0FjY291bnQiFTEwNjIyMjAxMTg3NzEyNjE0MzA5OQw')]
+    # accounts = [Account.get('agltb3B1Yi1pbmNyIgsSB0FjY291bnQiFTEwNjIyMjAxMTg3NzEyNjE0MzA5OQw')]
     
     for account in accounts:
+        if account.user:
+            print "Account",account.user.email()
+        
+        
         apps = AppQueryManager().get_apps(account=account,limit=1000)
         adunits = AdUnitQueryManager().get_adunits(account=account,limit=1000)
         campaigns = CampaignQueryManager().get_campaigns(account=account,limit=1000)
@@ -85,23 +89,24 @@ def main(app_id="mopub-inc",host="38-aws.latest.mopub-inc.appspot.com"):
             print 'PAGE',page
             # realtime_stats = StatsModel.get(realtime_keys[:LIMIT])
             to_put = []
+            print 'getting %s offline stats'%len(offline_keys[:LIMIT])
             offline_stats = StatsModel.get(offline_keys[:LIMIT])
+            print 'got'
+            cnt = 0
             for realtime_key, offline in zip(realtime_keys[:LIMIT],offline_stats):
+                cnt += 1
                 if not offline: continue
 
                 properties = offline.properties()
-                attrs = dict([(k,getattr(offline,k)) for k in properties])  
+                attrs = dict([(k,getattr(offline,'_'+k)) for k in properties])  
 
                 dynamic_properties = offline.dynamic_properties()
                 attrs.update(dict([(k,getattr(offline,k)) for k in dynamic_properties]))
 
-                # print attrs
                 realtime = StatsModel(key=realtime_key,**attrs)
                 to_put.append(realtime)
-                # for attr,value in attrs.iteritems():
-                #     setattr(realtime,attr,value)
-                # db.put(realtime_stats)    
-            # db.put(to_put)    
+            print 'putting %s offline stats'%len(to_put)
+            db.put(to_put)    
             
             # next page
             page += 1

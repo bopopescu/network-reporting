@@ -201,6 +201,8 @@ class AdAuction(object):
         # 4) throw out ad groups that do not match device and geo predicates
         all_ad_groups = adunit_context.adgroups
         
+        trace_logging.info("All Campaigns Targeted at this AdUnit: %s"%[str(a.name) for a in all_ad_groups])
+        
         trace_logging.info("##############################")
         trace_logging.info("Excluding Ineligible Campaigns")
         trace_logging.info("##############################")
@@ -216,7 +218,7 @@ class AdAuction(object):
         
         all_ad_groups = filter( mega_filter( *ALL_FILTERS ), all_ad_groups )
         for ( func, warn, lst ) in ALL_FILTERS:
-            trace_logging.info( warn % lst )
+            trace_logging.info( warn % [str(a.name) for a in lst] )
         
         # TODO: user based frequency caps (need to add other levels)
         # to add a frequency cap, add it here as follows:
@@ -249,7 +251,7 @@ class AdAuction(object):
         
         for fil in FREQ_FILTERS: 
             func, warn, lst = fil
-            trace_logging.info( warn % lst )
+            trace_logging.info( warn % [str(a.name) for a in lst] )
             
         # calculate the user experiment bucket
         user_bucket = hash(udid+','.join([str( ad_group.key() ) for ad_group in all_ad_groups])) % 100 # user gets assigned a number between 0-99 inclusive

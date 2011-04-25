@@ -1685,6 +1685,20 @@ input.ui-button {
   border: 1px solid #e1edf5
 }
 
+.accountInfoForm-container {
+  position: relative;
+}
+
+.accountInfoForm-left {
+  position:absolute;
+  top:0;
+  left:0;
+  padding:20px;
+}
+
+.accountInfoForm-right {
+  margin-left: 205px;
+}
 /* Homepage */
 
 .mopub-home #nav1 li.active {

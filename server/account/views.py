@@ -34,7 +34,7 @@ class AccountHandler(RequestHandler):
             account = account_form.save(commit=False)
             AccountQueryManager().put_accounts(account)
             adunits = AdUnitQueryManager.get_adunits(account=account)
-            AdUnitContextQueryManager().cache_delete_from_adunits(adunits)
+            AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
             
             if self.account.status == "step3":
                 self.account.status = "step4"

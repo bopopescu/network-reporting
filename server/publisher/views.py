@@ -230,7 +230,7 @@ class AppCreateHandler(RequestHandler):
 
         # update the cache as necessary 
         # replace=True means don't do anything if not already in the cache
-        AdUnitContextQueryManager().cache_delete_from_adunits(adunit)
+        AdUnitContextQueryManager.cache_delete_from_adunits(adunit)
 
         # Check if this is the first ad unit for this account
         if len(AdUnitQueryManager.get_adunits(account=self.account,limit=2)) == 1:      
@@ -262,7 +262,7 @@ class CreateAdUnitHandler(RequestHandler):
       
       # update the cache as necessary 
       # replace=True means don't do anything if not already in the cache
-      AdUnitContextQueryManager().cache_delete_from_adunits(adunit)
+      AdUnitContextQueryManager.cache_delete_from_adunits(adunit)
       
       # Check if this is the first ad unit for this account
       # if Site.gql("where account = :1 limit 2", self.account).count() == 1:
@@ -545,7 +545,7 @@ class AppUpdateAJAXHandler(RequestHandler):
       
       # Delete related adunit contexts from memcache
       adunits = AdUnitQueryManager.get_adunits(app=app)
-      AdUnitContextQueryManager().cache_delete_from_adunits(adunits)
+      AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
       
       return self.json_response(json_dict)
     new_html = self.get(app_form=app_form)
@@ -587,7 +587,7 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
       adunit.account = self.account
       AdUnitQueryManager.put(adunit)
       
-      AdUnitContextQueryManager().cache_delete_from_adunits(adunit)
+      AdUnitContextQueryManager.cache_delete_from_adunits(adunit)
       
       json_dict.update(success=True)
       return self.json_response(json_dict)
@@ -638,7 +638,7 @@ class RemoveAdUnitHandler(RequestHandler):
         AdUnitQueryManager.put(a)
         # delete from cache
         # CachedQueryManager().cache_delete(a)
-        AdUnitContextQueryManager().cache_delete_from_adunits(a)
+        AdUnitContextQueryManager.cache_delete_from_adunits(a)
         
     return HttpResponseRedirect(reverse('publisher_app_show','app_key',a.app_key.key()))
  

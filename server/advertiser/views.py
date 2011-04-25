@@ -264,7 +264,7 @@ class CreateCampaignAJAXHander(RequestHandler):
                 adunits_to_update.update(adgroup.site_keys)
                 if adunits_to_update:
                     adunits = AdUnitQueryManager.get(adunits_to_update)
-                    AdUnitContextQueryManager().cache_delete_from_adunits(adunits)
+                    AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
 
 
                 # Onboarding: user is done after they set up their first campaign
@@ -547,7 +547,7 @@ class PauseAdGroupHandler(RequestHandler):
                 adunits.extend(adgroup.site_keys)
 
             adunits = Site.get(adunits)    
-            AdUnitContextQueryManager().cache_delete_from_adunits(adunits)
+            AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
 
         return HttpResponseRedirect(reverse('advertiser_campaign', kwargs={}))
 
@@ -658,7 +658,7 @@ class AddCreativeHandler(RequestHandler):
                 # update cache
                 adunits = AdUnitQueryManager.get(ad_group.site_keys)
                 if adunits:
-                    AdUnitContextQueryManager().cache_delete_from_adunits(adunits)
+                    AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
 
                 jsonDict.update(success=True)
                 return self.json_response(jsonDict)
@@ -730,7 +730,7 @@ class CreativeManagementHandler(RequestHandler):
             # update cache
             adunits = AdUnitQueryManager.get(c.ad_group.site_keys)
             if adunits:
-                AdUnitContextQueryManager().cache_delete_from_adunits([a for a in adunits if a])
+                AdUnitContextQueryManager.cache_delete_from_adunits([a for a in adunits if a])
 
 
         return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':adgroup_key}))

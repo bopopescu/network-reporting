@@ -6,7 +6,7 @@ from django.core.urlresolvers import reverse
 from common.ragendja.template import render_to_response
 
 from common.utils.decorators import whitelist_login_required
-from common.utils.cachedquerymanager import CachedQueryManager
+from common.utils.query_managers import CachedQueryManager
 
 from account.models import Account
 from account.forms import AccountForm
@@ -33,7 +33,7 @@ class AccountHandler(RequestHandler):
         if account_form.is_valid():
             account = account_form.save(commit=False)
             AccountQueryManager().put_accounts(account)
-            adunits = AdUnitQueryManager().get_adunits(account=account)
+            adunits = AdUnitQueryManager.get_adunits(account=account)
             AdUnitContextQueryManager().cache_delete_from_adunits(adunits)
             
             if self.account.status == "step3":

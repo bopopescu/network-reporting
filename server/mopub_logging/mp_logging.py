@@ -80,7 +80,7 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
         
     # get account name from the adunit
     if not adunit:
-        adunit_context = AdUnitContextQueryManager().cache_get(adunit_id)
+        adunit_context = AdUnitContextQueryManager.cache_get_or_insert(adunit_id)
         adunit = adunit_context.adunit
     
     account_name = str(adunit.account.key())

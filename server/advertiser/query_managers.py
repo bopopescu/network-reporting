@@ -4,7 +4,7 @@ import random
 from google.appengine.api import memcache
 from google.appengine.ext import db
 
-from common.utils.cachedquerymanager import CachedQueryManager
+from common.utils.query_managers import QueryManager, CachedQueryManager
 
 from advertiser.models import Campaign
 from advertiser.models import AdGroup
@@ -15,10 +15,11 @@ from advertiser.models import Creative, TextCreative, \
 
 NAMESPACE = None
 
-class CampaignQueryManager(CachedQueryManager):
+class CampaignQueryManager(QueryManager):
     Model = Campaign
 
-    def get_campaigns(self,account=None,adunit=None,deleted=False,limit=50):
+    @classmethod
+    def get_campaigns(cls,account=None,adunit=None,deleted=False,limit=50):
         campaigns = Campaign.all()
         if not (deleted == None):
             campaigns = campaigns.filter("deleted =",deleted)
@@ -26,15 +27,11 @@ class CampaignQueryManager(CachedQueryManager):
             campaigns = campaigns.filter("account =",account)
         return campaigns.fetch(limit)        
 
-    def put_campaigns(self,campaigns):
-        if isinstance(campaigns, db.Model):
-          return campaigns.put()
-        return db.put(campaigns)
-
-class AdGroupQueryManager(CachedQueryManager):
+class AdGroupQueryManager(QueryManager):
   Model = AdGroup   
       
-  def get_adgroups(self,campaign=None,campaigns=None,adunit=None,account=None,deleted=False,limit=50):
+  @classmethod
+  def get_adgroups(cls,campaign=None,campaigns=None,adunit=None,account=None,deleted=False,limit=50):
       adgroups = AdGroup.all()
       if not (deleted == None):
           adgroups = adgroups.filter("deleted =",deleted)
@@ -52,12 +49,6 @@ class AdGroupQueryManager(CachedQueryManager):
               adunit_key = adunit      
           adgroups = adgroups.filter("site_keys =",adunit_key)
       return adgroups.fetch(limit)
-
-  def put_adgroups(self,adgroups):
-      return db.put(adgroups)
-
-  def delete_adgroups(self, adgroups):
-      return db.delete(adgroups)
       
 class CampaignStatsCounter(object):
   def __init__(self,campaign):
@@ -87,10 +78,11 @@ class CampaignStatsCounter(object):
       key = "cnt_%s_%s"%(str(self.campaign.key()),salt)
       return key
       
-class CreativeQueryManager(CachedQueryManager):
+class CreativeQueryManager(QueryManager):
     Model = Creative
 
-    def get_creatives(self,adgroup=None,ad_type=None,ad_types=None,account=None,deleted=False,limit=50):
+    @classmethod
+    def get_creatives(cls,adgroup=None,ad_type=None,ad_types=None,account=None,deleted=False,limit=50):
         creatives = Creative.all()
         if not (deleted == None):
             creatives = creatives.filter("deleted =", deleted)
@@ -103,19 +95,19 @@ class CreativeQueryManager(CachedQueryManager):
         if ad_type:
             creatives = creatives.filter("ad_type =", ad_type)
 
-        return creatives.fetch(limit)            
-    def put_creatives(self,creatives):
-        return db.put(creatives)
-        
-    def delete_creatives(self,creatives):
-        if isinstance(creatives,db.Model):
+        return creatives.fetch(limit)      
+
+    @classmethod
+    def delete(cls,creatives):
+        """ Instead of deleting the entire object, we set a property to deleted """
+        if isinstance(creatives, cls.Model):
             creatives = [creatives]
         update_list = []    
         for c in creatives:
             c.deleted = True
             update_list.append(c)
-        db.put(update_list)            
-
+        db.put(update_list)
+        
 class TextCreativeQueryManager(CreativeQueryManager):
     Model = TextCreative
 class TextAndTileCreativeQueryManager(CreativeQueryManager):

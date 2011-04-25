@@ -1,6 +1,6 @@
 import logging
 
-from common.utils.cachedquerymanager import CachedQueryManager
+from common.utils.query_managers import CachedQueryManager
 
 from google.appengine.ext import db
 from google.appengine.api import memcache

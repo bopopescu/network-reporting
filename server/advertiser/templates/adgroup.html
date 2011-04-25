@@ -113,7 +113,10 @@
               <div class="clear"></div>
             </section>
           </div>
-          <section id="dashboard-campaigns">
+
+          
+          <section id="dashboard-campaign">
+
             <form method="post" action="/campaigns/adgroup/{{adgroup.key}}/" id="fake-campaignForm">
                 <input type=hidden name="action" id="action" />
             </form>
@@ -161,7 +164,7 @@
               </thead>
               <tbody>
                 {% for adunit in adunits %}
-                <tr class="{% cycle 'campaignData' 'campaignData campaignData-alt' %}" id="adgroup-adunits-{{forloop.counter0}}">
+                <tr class="campaignData alternating-color" id="adgroup-adunits-{{forloop.counter0}}">
                   <td class="campaignData-icon">
                     <a href="{% url publisher_app_show app_key=adunit.app.key %}">
                       <img src="{% if adunit.app.icon %}{{adunit.app.icon|binary_data}}{% else %}/images/noicon.png{% endif %}" alt="Icon" width="45" height="45"/>

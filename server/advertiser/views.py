@@ -48,8 +48,11 @@ class AdGroupIndexHandler(RequestHandler):
             days = StatsModel.get_days(self.start_date, self.date_range)
         else:
             days = StatsModel.lastdays(self.date_range)
-
-        apps = AppQueryManager().get_apps(account=self.account)
+            
+        apps = AppQueryManager().get_apps(account=self.account, alphabetize=True)
+        
+        
+        
         campaigns = CampaignQueryManager().get_campaigns(account=self.account)
         if campaigns:
             adgroups = AdGroupQueryManager().get_adgroups(campaigns=campaigns)
@@ -62,6 +65,14 @@ class AdGroupIndexHandler(RequestHandler):
             # get total for the range
             adgroup.stats = reduce(lambda x, y: x+y, adgroup.all_stats, StatsModel())
             adgroup.percent_delivered = budget_service.percent_delivered(adgroup.campaign)
+            
+            # get targeted apps
+            adgroup.targeted_app_keys = []
+            for adunit_key in adgroup.site_keys:
+                adunit = Site.get(adunit_key)
+                adgroup.targeted_app_keys.append(adunit.app_key.key())
+                # apps.append(adunit.app_key)
+            
 
         promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], adgroups)
         promo_campaigns = sorted(promo_campaigns, lambda x,y: cmp(y.bid, x.bid))

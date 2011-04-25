@@ -243,10 +243,12 @@ class AdUnitContextQueryManager(CachedQueryManager):
 class AppQueryManager(CachedQueryManager):
     Model = App
     
-    def get_apps(self,account=None,deleted=False,limit=50):
+    def get_apps(self,account=None,deleted=False,limit=50, alphabetize=False):
         apps = self.Model.all().filter("deleted =",deleted)
         if account:
             apps = apps.filter("account =",account)
+            if alphabetize:
+                apps = apps.order("name")
         return apps.fetch(limit)  
         
     def put_apps(self,apps):

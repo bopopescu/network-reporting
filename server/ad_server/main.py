@@ -201,6 +201,8 @@ class AdAuction(object):
         # 4) throw out ad groups that do not match device and geo predicates
         all_ad_groups = adunit_context.adgroups
         
+        trace_logging.info("All Campaigns Targeted at this AdUnit: %s"%[str(a.name) for a in all_ad_groups])
+        
         trace_logging.info("##############################")
         trace_logging.info("Excluding Ineligible Campaigns")
         trace_logging.info("##############################")
@@ -216,7 +218,7 @@ class AdAuction(object):
         
         all_ad_groups = filter( mega_filter( *ALL_FILTERS ), all_ad_groups )
         for ( func, warn, lst ) in ALL_FILTERS:
-            trace_logging.info( warn % lst )
+            trace_logging.info( warn % [str(a.name) for a in lst] )
         
         # TODO: user based frequency caps (need to add other levels)
         # to add a frequency cap, add it here as follows:
@@ -249,7 +251,7 @@ class AdAuction(object):
         
         for fil in FREQ_FILTERS: 
             func, warn, lst = fil
-            trace_logging.info( warn % lst )
+            trace_logging.info( warn % [str(a.name) for a in lst] )
             
         # calculate the user experiment bucket
         user_bucket = hash(udid+','.join([str( ad_group.key() ) for ad_group in all_ad_groups])) % 100 # user gets assigned a number between 0-99 inclusive
@@ -461,7 +463,7 @@ class AdHandler(webapp.RequestHandler):
         
         if self.request.get('admin_debug_mode','0') == "1":
             admin_debug_mode = True
-            trace_logging.info_levels = [logging.info,logging.debug,logging.warning,
+            trace_logging.log_levels = [logging.info,logging.debug,logging.warning,
                                         logging.error,logging.critical,]
         else:
             admin_debug_mode = False 
@@ -478,9 +480,9 @@ class AdHandler(webapp.RequestHandler):
         mp_logging.log(self.request,event=mp_logging.REQ_EVENT,adunit=adunit)  
         # mp_logging.log(self.request,event=mp_logging.REQ_EVENT, testing=testing)  
         
-        trace_logging.warning(self.request.headers['User-Agent'] )
+        trace_logging.warning("User Agent: %s"%helpers.get_user_agent(self.request))
         country_re = r'[a-zA-Z][a-zA-Z][-_](?P<ccode>[a-zA-Z][a-zA-Z])'
-        countries = re.findall(country_re, self.request.headers['User-Agent'])
+        countries = re.findall(country_re, helpers.get_user_agent(self.request))
         addr = []
         if len(countries) == 1:
             countries = [c.upper() for c in countries]
@@ -527,7 +529,7 @@ class AdHandler(webapp.RequestHandler):
         
         # TODO: get udid we should hash it if its not already hashed
         udid = self.request.get("udid")
-        user_agent = self.request.headers['User-Agent']
+        user_agent = helpers.get_user_agent(self.request)
         
         # create a unique request id, but only log this line if the user agent is real
         request_id = hashlib.md5("%s:%s" % (self.request.query_string, time.time())).hexdigest()

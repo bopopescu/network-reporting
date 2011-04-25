@@ -480,9 +480,9 @@ class AdHandler(webapp.RequestHandler):
         mp_logging.log(self.request,event=mp_logging.REQ_EVENT,adunit=adunit)  
         # mp_logging.log(self.request,event=mp_logging.REQ_EVENT, testing=testing)  
         
-        trace_logging.warning(self.request.headers['User-Agent'] )
+        trace_logging.warning("User Agent: %s"%helpers.get_user_agent(self.request))
         country_re = r'[a-zA-Z][a-zA-Z][-_](?P<ccode>[a-zA-Z][a-zA-Z])'
-        countries = re.findall(country_re, self.request.headers['User-Agent'])
+        countries = re.findall(country_re, helpers.get_user_agent(self.request))
         addr = []
         if len(countries) == 1:
             countries = [c.upper() for c in countries]
@@ -529,7 +529,7 @@ class AdHandler(webapp.RequestHandler):
         
         # TODO: get udid we should hash it if its not already hashed
         udid = self.request.get("udid")
-        user_agent = self.request.headers['User-Agent']
+        user_agent = helpers.get_user_agent(self.request)
         
         # create a unique request id, but only log this line if the user agent is real
         request_id = hashlib.md5("%s:%s" % (self.request.query_string, time.time())).hexdigest()

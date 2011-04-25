@@ -25,6 +25,7 @@ var mopub = mopub || {};
 			var data = $('.formFields', details);
 			var button = $('.adForm-fields-toggleButton', details);
 			var infobutton = $('.adForm-fields-infoButton', details);
+			var infodialog = $('.accountInfoForm', details);
 			
 			function getButtonTextElement() {
 				var buttonTextElement = $('.ui-button-text', button);
@@ -71,7 +72,7 @@ var mopub = mopub || {};
 			})
 			.click(function(e) {
 				e.preventDefault();
-				$('#accountInfoForm').dialog({
+				infodialog.dialog({
 				  width: 570,
 					buttons: [
 						{

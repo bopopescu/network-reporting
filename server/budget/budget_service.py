@@ -97,7 +97,8 @@ def percent_delivered(campaign, continuous_max_days=14):
     if not campaign.budget:
         return None
         
-    if not campaign.end_date:
+    # Check if the campaign has a budget but no set start or end date
+    if not campaign.end_date or not campaign.start_date:
         daily_logs = _recent_daily_logs(campaign, max_days=continuous_max_days)
         total_budget = campaign.budget * (len(daily_logs) + 1) # for today
     else:

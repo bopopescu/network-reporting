@@ -12,6 +12,8 @@ import datetime
 from reporting.query_managers import StatsModelQueryManager
 from google.appengine.api import memcache
 
+from ad_server.debug_console import trace_logging
+
 class AdUnitContext(object):
     """All the adunit information necessary
     to run the auction. """
@@ -83,7 +85,6 @@ class AdUnitContext(object):
     def fetch_adgroups(cls, adunit, limit=30):
         logging.info("getting adgroups from db")
         adgroups = AdGroup.all().filter("site_keys =",adunit.key()).\
-                                  filter("active =",True).\
                                   filter("deleted =",False).\
                                   fetch(limit)
         return adgroups
@@ -219,19 +220,25 @@ class AdUnitContextQueryManager(CachedQueryManager):
         adunit_context_key = "context:"+str(adunit_key)
         adunit_context = memcache.get(adunit_context_key, namespace="context")
         if adunit_context is None:
+            trace_logging.warning("fetching adunit from db")
             # get adunit from db
             adunit = AdUnit.get(adunit_key)
             # wrap context
             adunit_context = AdUnitContext.wrap(adunit)
             # put context in cache
             memcache.set(str(adunit_context.key()), adunit_context, namespace="context")
+        else:
+            trace_logging.warning("found adunit in cache")    
         return adunit_context
         
     def cache_delete_from_adunits(self, adunits):
         if not isinstance(adunits,list):
           adunits = [adunits]
-
-        return memcache.delete_multi(["context:"+str(adunit.key()) for adunit in adunits],namespace="context")
+        keys = ["context:"+str(adunit.key()) for adunit in adunits]  
+        logging.info("deleting from cache: %s"%keys)
+        success = memcache.delete_multi(keys,namespace="context")
+        logging.info("deleted: %s"%success)
+        return success
 
 class AppQueryManager(CachedQueryManager):
     Model = App

@@ -463,7 +463,7 @@ class AdHandler(webapp.RequestHandler):
         
         if self.request.get('admin_debug_mode','0') == "1":
             admin_debug_mode = True
-            trace_logging.info_levels = [logging.info,logging.debug,logging.warning,
+            trace_logging.log_levels = [logging.info,logging.debug,logging.warning,
                                         logging.error,logging.critical,]
         else:
             admin_debug_mode = False 

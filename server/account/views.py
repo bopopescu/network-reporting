@@ -20,7 +20,7 @@ class AccountHandler(RequestHandler):
     def get(self,account_form=None):
         if self.params.get("skip"):
             self.account.status = "step4"
-            AccountQueryManager().put_accounts(self.account)
+            AccountQueryManager.put_accounts(self.account)
             return HttpResponseRedirect(reverse('advertiser_campaign'))
 
         account_form = account_form or AccountForm(instance=self.account)
@@ -32,13 +32,15 @@ class AccountHandler(RequestHandler):
 
         if account_form.is_valid():
             account = account_form.save(commit=False)
-            AccountQueryManager().put_accounts(account)
+
             adunits = AdUnitQueryManager.get_adunits(account=account)
             AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
+
+            AccountQueryManager.put_accounts(account)
             
             if self.account.status == "step3":
                 self.account.status = "step4"
-                AccountQueryManager().put_accounts(self.account)
+                AccountQueryManager.put_accounts(self.account)
                 return HttpResponseRedirect(reverse('advertiser_campaign'))
         
         return self.get(account_form=account_form)        
@@ -69,7 +71,7 @@ class NewAccountHandler(RequestHandler):
             
             # Go ahead and activate the account
             account.active = True
-            AccountQueryManager().put_accounts(account)
+            AccountQueryManager.put_accounts(account)
             
             # send a reply
             mail.send_mail(sender="MoPub Team <olp@mopub.com>",

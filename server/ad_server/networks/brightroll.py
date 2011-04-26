@@ -82,7 +82,10 @@ class BrightRollServerSide(ServerSide):
         
         click_urls.append(self._getURL(inline.getElementsByTagName("ClickThrough")[0]))
         # this is weird, but what brightroll wants
-        end_urls.append(self._getURL(inline.getElementsByTagName("ClickTracking")[0]))
+        # not always there
+        click_tracking_urls = inline.getElementsByTagName("ClickTracking")
+        if click_tracking_urls:
+            end_urls.append(self._getURL(click_tracking_urls[0]))
         
         # update the params
         self.url_params.update(impression_urls=impression_urls,

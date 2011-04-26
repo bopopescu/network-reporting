@@ -133,7 +133,7 @@ class BrightRollServerSide(ServerSide):
         scripts = """
         <script type="text/javascript">
             window.addEventListener("load", function() { window.location="mopub://finishLoad";}, false);
-            function webviewDidAppear(){playAdVideo();};
+            function webviewDidAppear(){playAdVideo(); %(track_pixels)s;};
             //function webviewDidAppear(){alert(window.innerWidth+" "+window.innerHeight)};
             windowInnerWidth = 320;
         </script>"""  
@@ -697,8 +697,7 @@ template2 = string.Template("""<!DOCTYPE HTML>
 
 
 #### EXAMPLE VAST RESPONSE
-
-# <?xml version="1.0" encoding="UTF-8"?> 
+# sample_response = """<?xml version="1.0" encoding="UTF-8"?> 
 # <VAST version="2.0"> 
 #   <Ad id="brightroll_ad"> 
 #     <InLine> 
@@ -743,3 +742,4 @@ template2 = string.Template("""<!DOCTYPE HTML>
 #     </InLine> 
 #   </Ad> 
 # </VAST>
+# """

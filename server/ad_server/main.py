@@ -711,8 +711,10 @@ class AdHandler(webapp.RequestHandler):
                 #   self.response.headers.add_header("X-Closebutton","None")
                 
             elif c.ad_type == "html_full":
-                params.update(html_data=c.html_data)
-                params.update({"html_data": kwargs["html_data"]})
+                # must pass in parameters to fully render template
+                # TODO: NOT SURE WHY I CAN'T USE: html_data = c.html_data % dict(track_pixels=success)
+                html_data = c.html_data.replace(r'%(track_pixels)s',success)
+                params.update(html_data=html_data)
                 self.response.headers.add_header("X-Scrollable","1")
                 self.response.headers.add_header("X-Interceptlinks","0")
             elif c.ad_type == "text":  

@@ -120,6 +120,24 @@
                 <fieldset class="adForm"> 
                   <div class="buttonBank buttonBank-right">
                     <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
+                    <a class="button button-small adForm-fields-infoButton" href="#">More info</a>
+                    <div class="accountInfoForm hidden">
+                      <div class="accountInfoForm-container">
+                        <div class="accountInfoForm-left">
+                          <h2>JumpTap</h2>
+                          <img src="/images/jumptap_logo_160px.png" />
+                        </div>
+                        <div class="accountInfoForm-right">
+                          <p>Jumptap is the leader in targeted mobile advertising, offering a network of thousands of premium sites and applications.</p>
+                          <ul>
+                            <li>Delivers the highest publisher yield</li>
+                            <li>Widest spectrum of ad units from banners to video and rich media</li>
+                            <li>CPM and CPC solutions available for iPhone, Android, and Mobile Web</li>
+                          </ul>
+                          <a class="linkIcon breadcrumb-back" href="http://www.jumptap.com/sign-up" target="_blank">Sign up at JumpTap<span class="ui-icon ui-icon-arrowthick-1-e"></span></a>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   <legend>Jumptap {% if account.jumptap_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Disabled)</span>{% endif %}</legend> 
                   <dl class="formFields {% if account.jumptap_pub_id %}show{% endif %}"> 

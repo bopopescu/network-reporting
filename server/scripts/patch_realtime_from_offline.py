@@ -51,11 +51,11 @@ def main(app_id="mopub-inc",host="38-aws.latest.mopub-inc.appspot.com"):
             print "Account",account.user.email()
         
         
-        apps = AppQueryManager().get_apps(account=account,limit=1000)
-        adunits = AdUnitQueryManager().get_adunits(account=account,limit=1000)
-        campaigns = CampaignQueryManager().get_campaigns(account=account,limit=1000)
-        adgroups = AdGroupQueryManager().get_adgroups(account=account,limit=1000)
-        creatives = CreativeQueryManager().get_creatives(account=account,limit=1000)
+        apps = AppQueryManager.get_apps(account=account,limit=1000)
+        adunits = AdUnitQueryManager.get_adunits(account=account,limit=1000)
+        campaigns = CampaignQueryManager.get_campaigns(account=account,limit=1000)
+        adgroups = AdGroupQueryManager.get_adgroups(account=account,limit=1000)
+        creatives = CreativeQueryManager.get_creatives(account=account,limit=1000)
         print "Apps: %s"%len(apps)
         print "AdUnits: %s"%len(adunits)
         print "Campaigns: %s"%len(campaigns)

@@ -24,7 +24,9 @@ import datetime
 
 import logging
 
-from publisher.query_managers import AdUnitContext, CreativeCTR, AdUnitContextQueryManager
+from publisher.query_managers import AdUnitContextQueryManager
+  
+from ad_server.optimizer.adunit_context import AdUnitContext, CreativeCTR
   
 class TestOptimizer(unittest.TestCase):
 
@@ -317,8 +319,7 @@ class TestOptimizer(unittest.TestCase):
         self._set_statsmodel_impression_count(self.adunit, self.creative, 1200, date_hour=one_hour_ago)
         
         # Cache it
-        qm = AdUnitContextQueryManager()
-        adunit_context = qm.cache_get(str(self.adunit.key()))
+        adunit_context = AdUnitContextQueryManager.cache_get_or_insert(str(self.adunit.key()))
         
         ctr = self.adunit_context._get_ctr(self.creative, date_hour=self.dt)
         eq_(ctr, 0.5)
@@ -330,8 +331,7 @@ class TestOptimizer(unittest.TestCase):
         self._set_statsmodel_impression_count(self.adunit, self.creative, 1200, date_hour=self.dt)
             
         # Cache context
-        qm = AdUnitContextQueryManager()
-        adunit_context = qm.cache_get(self.adunit.key())
+        adunit_context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key())
             
         new_creative = Creative(account=self.account,
                                            ad_group=self.adgroup,
@@ -345,8 +345,7 @@ class TestOptimizer(unittest.TestCase):
         # get Cache context, make sure it is updated
                       
         # First we get a cache hit, so there is no value for this element
-        qm = AdUnitContextQueryManager()
-        adunit_context = qm.cache_get(self.adunit.key())
+        adunit_context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key())
      
         ctr = adunit_context._get_ctr(new_creative, date_hour=self.dt)
     
@@ -354,10 +353,9 @@ class TestOptimizer(unittest.TestCase):
      
      
         # Clear the cache manually, now we have the information for the new creative
-        qm.cache_delete_from_adunits(self.adunit)
+        AdUnitContextQueryManager.cache_delete_from_adunits(self.adunit)
         
-        qm = AdUnitContextQueryManager()
-        adunit_context = qm.cache_get(self.adunit.key())
+        adunit_context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key())
     
         ctr = adunit_context._get_ctr(new_creative, date_hour=self.dt)
         

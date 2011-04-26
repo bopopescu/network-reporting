@@ -73,7 +73,10 @@ from ad_server.networks.mobfox import MobFoxServerSide
 from ad_server.optimizer import optimizer
 
 from userstore.query_managers import ClickEventManager, AppOpenEventManager
-from publisher.query_managers import AdUnitQueryManager, CreativeCTR, AdUnitContext, AdUnitContextQueryManager
+from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
+
+from ad_server.optimizer.adunit_context import AdUnitContext, CreativeCTR
+
 from advertiser.query_managers import CampaignStatsCounter
 
 from mopub_logging import mp_logging
@@ -474,7 +477,7 @@ class AdHandler(webapp.RequestHandler):
         id = self.request.get("id")
         now = datetime.datetime.now()
         
-        adunit_context = AdUnitContextQueryManager().cache_get(id)
+        adunit_context = AdUnitContextQueryManager.cache_get_or_insert(id)
         adunit = adunit_context.adunit
         
         mp_logging.log(self.request,event=mp_logging.REQ_EVENT,adunit=adunit)  
@@ -861,7 +864,7 @@ class AdImpressionHandler(webapp.RequestHandler):
         # Update budgeting
         # TODO: cache this
         adunit_key = self.request.get('id')
-        adunit_context = AdUnitContextQueryManager().cache_get(adunit_key)
+        adunit_context = AdUnitContextQueryManager.cache_get_or_insert(adunit_key)
         creative_id = self.request.get('cid')
         creative = adunit_context.get_creative_by_key(creative_id)
         if creative.ad_group.bid_strategy == 'cpm':

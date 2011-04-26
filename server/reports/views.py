@@ -16,8 +16,6 @@ from common.utils.decorators import whitelist_login_required
 from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
 from reports.query_managers import ReportQueryManager
-from reports.build_report import build_report
-
 
 
 class ReportIndexHandler(RequestHandler):
@@ -74,7 +72,9 @@ def check_report(request, *args, **kwargs):
 class GenReportHandler(RequestHandler):
     def post(self, report):
         report = ReportQueryMangager(self.account).get_report_by_key(report)
-        build_report(report, self.account)
+        report.data = report.gen_data()
+        report.html = render_to_string('reports/report.html', report.data)
+        report.put()
         return HttpResponse('Report Generation Successful')
     def get(self):
         pass

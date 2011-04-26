@@ -2,6 +2,7 @@ import datetime
 import logging
 import time
 
+from django.template.loader import render_to_string
 from google.appengine.ext import db
 
 
@@ -30,6 +31,9 @@ class ReportQueryManager(CachedQueryManager):
         self.offline = offline
 
         self.obj_cache = {}
+
+    def get_report_by_key(self, report_key):
+        pass
 
     def get_report(self, d1,d2,d3,start,end,view=False, deleted=False):
         '''Given the specs for a report, return that report.  If the report

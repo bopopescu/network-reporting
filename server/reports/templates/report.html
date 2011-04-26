@@ -1,0 +1,42 @@
+<table id='report-table'>
+    <thead>
+        <th>Name</th>
+        <th>Requests</th>
+        <th>Impressions</th>
+        <th>Clicks</th>
+        <th>Conversions</th>
+    </thead>
+    <tbody>
+        {% for key1, value1 in all_stats.items %}
+        <tr id={{key1}} class='level0'>
+            <td class="name">{{value1.name}}</td>
+            <td class="request">{{value1.stats.request_count}}</td>
+            <td class="impression">{{value1.stats.impression_count}}</td>
+            <td class="click">{{value1.stats.click_count}}</td>
+            <td class="conversion">{{value1.stats.conversion_count}}</td>
+        </tr>
+        {% if value1.sub_stats %}
+        {% for key2, value2 in value1.sub_stats.items %}
+        <tr id={{key1}}{{key2}} class='{{key1}} level1'>
+            <td class="name">{{value2.name}}</td>
+            <td class="request">{{value2.stats.request_count}}</td>
+            <td class="impression">{{value2.stats.impression_count}}</td>
+            <td class="click">{{value2.stats.click_count}}</td>
+            <td class="conversion">{{value2.stats.conversion_count}}</td>
+        </tr>
+        {% if value2.sub_stats %}
+        {% for key3, value3 in value2.sub_stats.items %}
+        <tr id={{key1}}{{key2}}{{key3}} class='{{key1}}{{key2}} level2'>
+            <td class="name">{{value3.name}}</td>
+            <td class="request">{{value3.stats.request_count}}</td>
+            <td class="impression">{{value3.stats.impression_count}}</td>
+            <td class="click">{{value3.stats.click_count}}</td>
+            <td class="conversion">{{value3.stats.conversion_count}}</td>
+        </tr>
+        {% endfor %}
+        {% endif %}
+        {% endfor %}
+        {% endif %}
+        {% endfor %}
+    </tbody>
+</table>

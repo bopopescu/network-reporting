@@ -18,6 +18,8 @@ from publisher.models import Site as AdUnit
 
 NAMESPACE = None
 
+CAMP_PRIORITIES = ('gtee', 'gtee_high', 'gtee_low', 'promo', 'network', 'backfill_promo')
+
 class CampaignQueryManager(CachedQueryManager):
     Model = Campaign
 
@@ -29,7 +31,7 @@ class CampaignQueryManager(CachedQueryManager):
             campaigns = campaigns.filter("account =",account)
         return campaigns.fetch(limit)        
     
-    def reports_get_campaigns(self, account=None, publisher=None, advertiser=None, deleted=False):
+    def reports_get_campaigns(self, account=None, publisher=None, advertiser=None, deleted=False, by_priority=False):
         if advertiser:
             # advertiser as list means priority level, return all these camps 
             # because we want stuff for those campaigns individually
@@ -49,11 +51,27 @@ class CampaignQueryManager(CachedQueryManager):
             #adgroups = AdGroup.all().filter('site_keys IN', [a.key() for a in adunits])
             adgroups = [a for a in adgroups if a.deleted == deleted]
             camps = [adgroup.campaign for adgroup in adgroups]
+            if by_priority:
+                temp = []
+                for p in CAMP_PRIORITIES:
+                    priority_camps = [c for c in camps if c.campaign_type == p]
+                    if len(priority_camps) > 0:
+                        temp.append(priority_camps)
+                camps = temp
             return camps
 
         camps = Campaign.all().filter('deleted =', deleted)
         if account:
             camps = camps.filter('account = ', account)
+        #turn a list of campaigns into a list of lists where each list is all
+        #campagins at a given priority level
+        if by_priority:
+            temp = []
+            for p in CAMP_PRIORITIES:
+                priority_camps = [c for c in camps if c.campaign_type == p]
+                if len(priority_camps) > 0:
+                    temp.append(priority_camps)
+            camps = temp
         return camps
 
     def put_campaigns(self,campaigns):

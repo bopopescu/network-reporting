@@ -29,9 +29,6 @@ TARG = 'targeting' # I don't know what this is
 C_TARG = 'custom targeting' # or this
 
 NAME_STR = "dim%d-ent%d"
-PUB_D = set((APP, AU))
-ADV_D = set((CAMP, CRTV))
-PRI_D = set((P, CAMP))
 
 class Report(db.Model):
     name = db.StringProperty()
@@ -89,23 +86,32 @@ class Report(db.Model):
                 logging.error("impossible")
             ret = {}
             manager = StatsModelQueryManager(self.account)
-            vals, type, date_fmt = self.get_vals(pub, adv, days, dim)
+            vals, typ, date_fmt = self.get_vals(pub, adv, days, dim)
             for idx, val in enumerate(vals):
-                if type == 'days':
+                name = None
+                if typ == 'days':
+                    if type(val) != list:
+                        name = str(val)
                     days = val
-                elif type == 'pub':
+                elif typ == 'pub':
+                    name = val.name
                     pub = val
-                elif type == 'adv':
+                elif typ == 'adv':
+                    if type(val) == list:
+                        print val
+                        name = val[0].campaign_type
+                    else:
+                        name = val.name
                     adv = val
                 #days can be a list (actually I think it needs to be) but publisher/advertiser should NOT
                 # going to make new function in SMQM that if given a list for these things it automatically
                 # rolls them up
-                name = NAME_STR % (level, idx) 
+                key = NAME_STR % (level, idx) 
                 stats = manager.get_rollup_for_days(publisher = pub, advertiser = adv, days = days, date_fmt = date_fmt)
                 if last_dim: 
-                    ret[name] = dict(stats = stats)
+                    ret[key] = dict(stats = stats, name = name)
                 else:
-                    ret[name] = dict(stats=stats, sub_stats = gen_helper(pub,adv,days,level+1))
+                    ret[key] = dict(stats=stats, name = name, sub_stats = gen_helper(pub,adv,days,level+1))
             return ret
         return gen_helper(pub, adv, days, 0)
 
@@ -152,9 +158,13 @@ class Report(db.Model):
                                              advertiser = adv,
                                              )
         elif dim == P:
-            return "Not implemented yet"
+            man = CampaignQueryManager()
             type = 'adv'
-            #do priority stuff
+            vals = man.reports_get_campaigns(account = self.account,
+                                             publisher = pub,
+                                             advertiser = adv,
+                                             by_priority = True,
+                                             )
         elif dim == CO:
             return "Not implemented yet"
             type = 'other'

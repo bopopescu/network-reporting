@@ -620,6 +620,7 @@ class AdHandler(webapp.RequestHandler):
             trace_logging.info("##############################")
             trace_logging.info("##############################")
             trace_logging.info("Winner found, rendering: %s" % str(c.name))
+            trace_logging.warning("Creative key: %s" % str(c.key()))
             trace_logging.warning("rendering: %s" % c.ad_type)
             site = kwargs["site"]
             adunit = site
@@ -627,7 +628,18 @@ class AdHandler(webapp.RequestHandler):
             format = adunit.format.split('x')
             network_center = False
             if len(format) < 2:
-                if not c.adgroup.network_type or c.adgroup.network_type in FULL_NETWORKS:
+                ####################################
+                # HACK FOR TUNEWIKI
+                # TODO: We should make this smarter
+                # if the adtype is not html (e.g. image)
+                # then we set the orientation to only landscape
+                # and the format to 480x320
+                ####################################
+                if not c.ad_type == "html":
+                    if adunit.landscape:
+                        self.response.headers.add_header("X-Orientation","l")
+                        format = ("480","320")                        
+                elif not c.adgroup.network_type or c.adgroup.network_type in FULL_NETWORKS:
                     format = (320,480)
                 elif c.adgroup.network_type:
                     #TODO this should be a littttleee bit smarter. This is basically saying default

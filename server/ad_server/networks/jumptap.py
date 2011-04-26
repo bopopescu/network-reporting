@@ -15,13 +15,6 @@ class JumptapServerSide(ServerSide):
    
    
     def get_key_values(self):
-        return {'pub': self.get_pub_id(),
-                #'gateway-ip': '208.54.5.50',  # TODO: This should be the x-forwarded-for header of the device
-                'hid': self.get_udid(),
-                #'site': 'pa_mopub_inc_simpleadsdemo_drd_app',  # TODO: Site ID from Jumptap, ugh
-                #'spot': 'pa_mopub_inc_simpleadsdemo_drd_app_adspot',  # TODO: Spot ID from Jumptap, double ugh
-                'client-ip': self.get_ip(), # Test value: 'client-ip': '208.54.5.50'
-                'v': 'v29' }
         key_values = {'pub': self.get_account().jumptap_pub_id,
                       #'gateway-ip': '208.54.5.50',    # TODO: This should be the x-forwarded-for header of the device
                       'hid': self.get_udid(),

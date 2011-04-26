@@ -239,7 +239,7 @@ class AppCreateHandler(RequestHandler):
         status = "success"
         if self.account.status == "new":
           self.account.status = "step3"  # skip setting 'step2' since the step 2 page is only displayed once
-          AccountQueryManager().put_accounts(self.account)
+          AccountQueryManager.put_accounts(self.account)
           status = "welcome"
         return HttpResponseRedirect(reverse('publisher_generate',kwargs={'adunit_key':adunit.key()})+'?status='+status)
     return self.get(app_form,adunit_form)

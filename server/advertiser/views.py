@@ -270,7 +270,7 @@ class CreateCampaignAJAXHander(RequestHandler):
                 # Onboarding: user is done after they set up their first campaign
                 if self.account.status == "step4":
                     self.account.status = ""
-                    AccountQueryManager().put_accounts(self.account)
+                    AccountQueryManager.put_accounts(self.account)
 
                 json_dict.update(success=True,new_page=reverse('advertiser_adgroup_show',kwargs={'adgroup_key':str(adgroup.key())}))
                 return self.json_response(json_dict)

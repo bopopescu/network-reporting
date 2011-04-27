@@ -18,6 +18,8 @@ from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
 from reports.query_managers import ReportQueryManager
 
+from reports.forms import ReportForm
+
 
 class ReportIndexHandler(RequestHandler):
     def get(self):
@@ -38,15 +40,24 @@ def report_index(request, *args, **kwargs):
 
 
 class AddReportHandler(RequestHandler):
+    TEMPLATE = 'reports/report_create_form.html'
     def get(self):
-        pass
-    #should do this with forms (ugh)
+        report_form = ReportForm()
+        return render_to_response(self.request,
+                                 self.TEMPLATE, 
+                                 dict(report_form=report_form))
+
+    def render(self,template=None,**kwargs):
+        template_name = template or self.TEMPLATE
+        return render_to_string(self.request, template_name=template_name, data=kwargs)
+        
     def post(self, d1, start, end, d2=None, d3=None,name=None, saved=False):
         pass
 
 @whitelist_login_required
 def add_report(request, *args, **kwargs):
     return AddReportHandler()(request, *args, **kwargs)
+
 
 class RequestReportHandler(RequestHandler):
     def get(self):

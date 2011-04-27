@@ -37,21 +37,6 @@ class Account(db.Model):
     def is_admin(self):
         return users.is_current_user_admin()
         
-    def to_sfdc(self):
-        return {'FirstName': (self.first_name or '')[:40],
-                'LastName': (self.last_name or '')[:80],
-                'Title': (self.title or '')[:80],
-                'Company': (self.company or '')[:255], 
-                'City': (self.city or '')[:40],
-                'State': (self.state or '')[:20],
-                'Country': (self.country or '')[:40],
-                'Phone': (self.phone or '')[:40],
-                'HasOptedOutOfEmail': not self.mailing_list,
-                'LeadSource': 'app.mopub.com', 
-                'Impressions_Month__c': str(self.traffic) or "Unknown",
-                'MoPub_Account_ID__c': str(self.key()),
-                'type': 'Lead'}
-        
     def __eq__(self, other):
         if other:
             return str(self.key()) == str(other.key())

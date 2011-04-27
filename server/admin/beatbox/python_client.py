@@ -1,42 +1,73 @@
-from _beatbox import _tPartnerNS, _tSObjectNS, _tSoapNS
+from _beatbox import _tPartnerNS, _tSObjectNS
 from _beatbox import Client as BaseClient
 from marshall import marshall
 from types import TupleType, ListType
 import re
 import copy
-from xmltramp import Namespace, Element
-import sys
-import logging
-import pickle
+from xmltramp import Namespace
 
 _tSchemaInstanceNS = Namespace('http://www.w3.org/2001/XMLSchema-instance')
 _tSchemaNS = Namespace('http://www.w3.org/2001/XMLSchema')
-_tMetadataNS = Namespace('http://soap.sforce.com/2006/04/metadata')
 
+DEFAULT_FIELD_TYPE = "string"
 querytyperegx = re.compile('(?:from|FROM) (\S+)')
+
+class QueryRecord(dict):
+
+    def __getattr__(self, n):
+        try:
+            return self[n]
+        except KeyError:
+            return dict.__getattr__(self, n)
+   
+    def __setattr__(self, n, v):
+        self[n] = v
+
+class QueryRecordSet(list):
+    
+    def __init__(self, records, done, size, **kw):
+        for r in records:
+            self.append(r)
+        self.done = done
+        self.size = size
+        for k, v in kw.items():
+            setattr(self, k, v)
+
+    @property
+    def records(self):
+        return self
+
+    def __getitem__(self, n):
+        if type(n) == type(''):
+            try:
+                return getattr(self, n)
+            except AttributeError, n:
+                raise KeyError
+        else:
+            return list.__getitem__(self, n)
 
 class SObject(object):
 
     def __init__(self, **kw):
         for k, v in kw.items():
-            #print ' init sobject ' + k + ' ' + str(v)
             setattr(self, k, v)
-            
-    def marshall(self, fieldname, xml):
-        field = self.fields[fieldname]
-        return field.marshall(xml)
-    
-    def get(self, key): 
-        return self.__dict__.get(key)
 
-    def __getitem__(self, key):
-        return self.__dict__.get(key)
-    def keys(self):
-        return self.__dict__.keys()
-    
+    def marshall(self, fieldname, xml):
+        if self.fields.has_key(fieldname):
+            field = self.fields[fieldname]
+        else:
+            return marshall(DEFAULT_FIELD_TYPE, fieldname, xml)
+        return field.marshall(xml)
+
+
 class Client(BaseClient):
-#    def __init__(self):
-#        self.describeCache = dict()
+
+    cacheTypeDescriptions = False
+
+    def __init__(self, serverUrl=None, cacheTypeDescriptions=False):
+        BaseClient.__init__(self, serverUrl=serverUrl)
+        self.cacheTypeDescriptions = cacheTypeDescriptions
+        self.typeDescs = {}
 
     def login(self, username, passwd):
         res = BaseClient.login(self, username, passwd)
@@ -45,26 +76,9 @@ class Client(BaseClient):
         data['serverUrl'] = str(res[_tPartnerNS.serverUrl])
         data['sessionId'] = str(res[_tPartnerNS.sessionId])
         data['userId'] = str(res[_tPartnerNS.userId])
-        data['metadataServerUrl'] = str(res[_tPartnerNS.metadataServerUrl])
         data['userInfo'] = _extractUserInfo(res[_tPartnerNS.userInfo])
-        self.describeCache = dict()
         return data
 
-    def useSession(self, sessionId, serverUrl):
-        if ( str(sessionId) == '' or str(serverUrl) == '' ): 
-            raise AttributeError , 'Missing server url or session ID to useSession method'
-        logging.info( sessionId, serverUrl)
-        res = BaseClient.useSession(self, sessionId, serverUrl)
-        #print res.__dict__
-        data = dict()
-#        data['passwordExpired'] = _bool(res[_tPartnerNS.passwordExpired])
-#        data['serverUrl'] = str(res[_tPartnerNS.serverUrl])
-#        data['sessionId'] = str(res[_tPartnerNS.sessionId])
-#        data['userId'] = str(res[_tPartnerNS.userId])
-#        data['userInfo'] = _extractUserInfo(res[_tPartnerNS.userInfo])
-        self.describeCache = dict()
-        return self.getUserInfo()
-    
     def isConnected(self):
         """ First pass at a method to check if we're connected or not """
         if self.__conn and self.__conn._HTTPConnection__state == 'Idle':
@@ -76,15 +90,44 @@ class Client(BaseClient):
         data = dict()
         data['encoding'] = str(res[_tPartnerNS.encoding])
         data['maxBatchSize'] = int(str(res[_tPartnerNS.maxBatchSize]))
+        sobjects = list()
+        for r in res[_tPartnerNS.sobjects:]:
+            d = dict()
+            d['activateable'] = _bool(r[_tPartnerNS.activateable])
+            d['createable'] = _bool(r[_tPartnerNS.createable])
+            d['custom'] = _bool(r[_tPartnerNS.custom])
+            try:
+                d['customSetting'] = _bool(r[_tPartnerNS.customSetting])
+            except KeyError:
+                pass
+            d['deletable'] = _bool(r[_tPartnerNS.deletable])
+            d['deprecatedAndHidden'] = _bool(r[_tPartnerNS.deprecatedAndHidden])
+            try:
+                d['feedEnabled'] = _bool(r[_tPartnerNS.feedEnabled])
+            except KeyError:
+                pass
+            d['keyPrefix'] = str(r[_tPartnerNS.keyPrefix])
+            d['label'] = str(r[_tPartnerNS.label])
+            d['labelPlural'] = str(r[_tPartnerNS.labelPlural])
+            d['layoutable'] = _bool(r[_tPartnerNS.layoutable])
+            d['mergeable'] = _bool(r[_tPartnerNS.mergeable])
+            d['name'] = str(r[_tPartnerNS.name])
+            d['queryable'] = _bool(r[_tPartnerNS.queryable])
+            d['replicateable'] = _bool(r[_tPartnerNS.replicateable])
+            d['retrieveable'] = _bool(r[_tPartnerNS.retrieveable])
+            d['searchable'] = _bool(r[_tPartnerNS.searchable])
+            d['triggerable'] = _bool(r[_tPartnerNS.triggerable])
+            d['undeletable'] = _bool(r[_tPartnerNS.undeletable])
+            d['updateable'] = _bool(r[_tPartnerNS.updateable])
+            sobjects.append(SObject(**d))
+        data['sobjects'] = sobjects
         data['types'] = [str(t) for t in res[_tPartnerNS.types:]]
+        if not data['types']:
+            # BBB for code written against API < 17.0
+            data['types'] = [s.name for s in data['sobjects']]
         return data
 
     def describeSObjects(self, sObjectTypes):
-        if (self.describeCache.has_key(sObjectTypes)):
-            data = list()
-            data.append(self.describeCache[sObjectTypes])
-            return data
-        
         res = BaseClient.describeSObjects(self, sObjectTypes)
         if type(res) not in (TupleType, ListType):
             res = [res]
@@ -92,37 +135,48 @@ class Client(BaseClient):
         for r in res:
             d = dict()
             d['activateable'] = _bool(r[_tPartnerNS.activateable])
+            rawreldata = r[_tPartnerNS.ChildRelationships:]
+            relinfo = [_extractChildRelInfo(cr) for cr in rawreldata]
+            d['ChildRelationships'] = relinfo
             d['createable'] = _bool(r[_tPartnerNS.createable])
             d['custom'] = _bool(r[_tPartnerNS.custom])
+            try:
+                d['customSetting'] = _bool(r[_tPartnerNS.customSetting])
+            except KeyError:
+                pass
             d['deletable'] = _bool(r[_tPartnerNS.deletable])
+            d['deprecatedAndHidden'] = _bool(r[_tPartnerNS.deprecatedAndHidden])
+            try:
+                d['feedEnabled'] = _bool(r[_tPartnerNS.feedEnabled])
+            except KeyError:
+                pass
             fields = r[_tPartnerNS.fields:]
             fields = [_extractFieldInfo(f) for f in fields]
             field_map = dict()
             for f in fields:
                 field_map[f.name] = f
             d['fields'] = field_map
-            rawreldata = r[_tPartnerNS.ChildRelationships:]
-            # why is this list empty ? 
-            # print repr(rawreldata)
-            relinfo = [_extractChildRelInfo(cr) for cr in rawreldata]
-            d['ChildRelationships'] = relinfo
             d['keyPrefix'] = str(r[_tPartnerNS.keyPrefix])
             d['label'] = str(r[_tPartnerNS.label])
             d['labelPlural'] = str(r[_tPartnerNS.labelPlural])
             d['layoutable'] = _bool(r[_tPartnerNS.layoutable])
+            d['mergeable'] = _bool(r[_tPartnerNS.mergeable])
             d['name'] = str(r[_tPartnerNS.name])
             d['queryable'] = _bool(r[_tPartnerNS.queryable])
+            d['recordTypeInfos'] = [_extractRecordTypeInfo(rti) for rti in r[_tPartnerNS.recordTypeInfos:]]
             d['replicateable'] = _bool(r[_tPartnerNS.replicateable])
             d['retrieveable'] = _bool(r[_tPartnerNS.retrieveable])
             d['searchable'] = _bool(r[_tPartnerNS.searchable])
+            try:
+                d['triggerable'] = _bool(r[_tPartnerNS.triggerable])
+            except KeyError:
+                pass
             d['undeletable'] = _bool(r[_tPartnerNS.undeletable])
             d['updateable'] = _bool(r[_tPartnerNS.updateable])
             d['urlDetail'] = str(r[_tPartnerNS.urlDetail])
             d['urlEdit'] = str(r[_tPartnerNS.urlEdit])
             d['urlNew'] = str(r[_tPartnerNS.urlNew])
             data.append(SObject(**d))
-            self.describeCache[str(r[_tPartnerNS.name])] = SObject(**d)
-        
         return data
 
     def create(self, sObjects):
@@ -178,110 +232,92 @@ class Client(BaseClient):
             else:
                 d['errors'] = list()
         return data
-          
-    def query_old(self, fields, sObjectType, conditionExpression=''):
-        #type_data = self.describeSObjects(sObjectType)[0]
-        queryString = 'select %s from %s' % (fields, sObjectType)
-        if conditionExpression: queryString = '%s where %s' % (queryString, conditionExpression)
-        fields = [f.strip() for f in fields.split(',')]
+
+    def queryTypesDescriptions(self, types):
+        """
+        """
+        types = list(types)
+        if types:
+            types_descs = self.describeSObjects(types)
+        else:
+            types_descs = []
+        return dict(map(lambda t, d:(t, d), types, types_descs))
+
+    def _extractRecord(self, r):
+        record = QueryRecord()
+        if r:
+            type_data = self.typeDescs[str(r[_tSObjectNS.type])]
+            for field in r:
+               fname = str(field._name[1]) 
+               if isObject(field):
+                   record[fname] = self._extractRecord(r[field._name:][0])
+               elif isQueryResult(field):
+                   record[fname] = QueryRecordSet(records=[self._extractRecord(rec) for rec in field[_tPartnerNS.records:]],
+                                                  done=field[_tPartnerNS.done],
+                                                  size=int(str(field[_tPartnerNS.size]))
+                                                 )
+               else:
+                   record[fname] = type_data.marshall(fname, r)
+        return record
+
+    def flushTypeDescriptionsCache(self):
+        self.typeDescs = {}
+
+    def query(self, *args, **kw):
+        if len(args) == 1: # full query string
+            queryString = args[0]
+        elif len(args) == 2: # BBB: fields, sObjectType
+            queryString = 'select %s from %s' % (args[0], args[1])
+            if 'conditionalExpression' in kw: # BBB: fields, sObjectType, conditionExpression as kwarg
+                queryString += ' where %s' % (kw['conditionalExpression'])
+        elif len(args) == 3: # BBB: fields, sObjectType, conditionExpression as positional arg
+            whereClause = args[2] and (' where %s' % args[2]) or ''
+            queryString = 'select %s from %s%s' % (args[0], args[1], whereClause)
+        else:
+            raise RuntimeError, "Wrong number of arguments to query method."
+
         res = BaseClient.query(self, queryString)
-        locator = QueryLocator( str(res[_tPartnerNS.queryLocator]), )
-        data = dict(queryLocator = locator,
-            done = _bool(res[_tPartnerNS.done]),
-            records = [self.extractRecord( r )
-                       for r in res[_tPartnerNS.records:]],
-            size = int(str(res[_tPartnerNS.size]))
-            )
+        # calculate the union of the sets of record types from each record
+        types = reduce(lambda a,b: a|b, [getRecordTypes(r) for r in res[_tPartnerNS.records:]], set())
+        if not self.cacheTypeDescriptions:
+            self.flushTypeDescriptionsCache()
+        new_types = types - set(self.typeDescs.keys())
+        if new_types:
+            self.typeDescs.update(self.queryTypesDescriptions(new_types))
+        data = QueryRecordSet(records=[self._extractRecord(r) for r in res[_tPartnerNS.records:]],
+                              done=_bool(res[_tPartnerNS.done]),
+                              size=int(str(res[_tPartnerNS.size])),
+                              queryLocator = str(res[_tPartnerNS.queryLocator]))
         return data
 
-    def extractRecord(self, r):
-        def sobjectType(r):
-            """ find the type of sobject given a query result"""
-            for x in r._dir:
-                if isinstance(x, Element) :
-                    if ( x._name == _tSObjectNS.type):
-                        return x._dir[0] 
-            raise AttributeError, 'No Sobject element type found'        
-        
-        def fieldsList(r):
-            """ list all the field names in this record, skip 
-            type as this is special, and does not get marshaled"""
-            ret= list()
-            for field in r: 
-                f = str(field._name[1:][0])
-                if ( f != 'type' ) : 
-                    ret.append(f)
-            return ret
-        
-        def getFieldByName(fname, r):
-            """ from this record, locate a child by name"""
-            for fld in r:
-                if ( fld._name[1] == fname ) : 
-                    return fld
-            raise KeyError, 'could not locate '+fname+ ' in record'   
-         
-        # begin the extract of information
-        sObjectType =  sobjectType(r)
-        #print 'sobject type  is : ' + sObjectType
-        
-        type_data = self.describeSObjects(sObjectType)[0]
-        
-        data = dict()
-        data['type'] = sObjectType
-        myfields = fieldsList(r)
-        for fname in myfields:
-            try : 
-                data[fname] = type_data.marshall(fname, r)
-            except KeyError :
-                # no key of this type, perhaps this is a query result 
-                # from a related list returned from the server
-                fld = getFieldByName(fname, r)
-                
-                if ( len(fld) == 0 ):  # load a null related list
-                    data[fname] = dict(queryLocator = None,
-                        done = True, records = [], size = int(0) 
-                    )
-                    continue
-                
-                if ( str(fld(_tSchemaInstanceNS.type)) != 'QueryResult' ) :
-                    raise AttributeError, 'Expected QueryResult or Field'
-                
-                # load the populated related list
-                data[fname] = dict(queryLocator = None, done = True,
-                    records = [self.extractRecord(p) 
-                               for p in fld[_tPartnerNS.records:]],
-                    size = int(str(fld[_tPartnerNS.size]))
-                )
-                  
-        #print str(data)        
-        return data
-
-    def query(self, queryString):
-        res = BaseClient.query(self, queryString)
-        locator = QueryLocator( str(res[_tPartnerNS.queryLocator]) )
-        
-        data = dict(queryLocator = locator,
-            done = _bool(res[_tPartnerNS.done]),
-            records = [self.extractRecord( r )
-                       for r in res[_tPartnerNS.records:]],
-            size = int(str(res[_tPartnerNS.size]))
-            )
-        return data
-
-  
     def queryMore(self, queryLocator):
-        locator = queryLocator.locator
-        #sObjectType = queryLocator.sObjectType
-        #fields = queryLocator.fields
+        locator = queryLocator
         res = BaseClient.queryMore(self, locator)
-        locator = QueryLocator( str(res[_tPartnerNS.queryLocator]) )
-        data = dict(queryLocator = locator,
-            done = _bool(res[_tPartnerNS.done]),
-            records = [_extractRecord( r )
-                       for r in res[_tPartnerNS.records:]],
-            size = int(str(res[_tPartnerNS.size]))
-            )
+        # calculate the union of the sets of record types from each record
+        types = reduce(lambda a,b: a|b, [getRecordTypes(r) for r in res[_tPartnerNS.records:]], set())
+        new_types = types - set(self.typeDescs.keys())
+        if new_types:
+            self.typeDescs.update(self.queryTypesDescriptions(new_types))
+        data = QueryRecordSet(records=[self._extractRecord(r) for r in res[_tPartnerNS.records:]],
+                              done=_bool(res[_tPartnerNS.done]),
+                              size=int(str(res[_tPartnerNS.size])),
+                              queryLocator = str(res[_tPartnerNS.queryLocator]))
         return data
+
+    def search(self, sosl):
+        res = BaseClient.search(self, sosl)
+
+        if not self.cacheTypeDescriptions:
+            self.flushTypeDescriptionsCache()
+        # calculate the union of the sets of record types from each record
+        if len(res):
+            types = reduce(lambda a,b: a|b, [getRecordTypes(r) for r in res[_tPartnerNS.searchRecords]], set())
+            new_types = types - set(self.typeDescs.keys())
+            if new_types:
+                self.typeDescs.update(self.queryTypesDescriptions(new_types))
+            return [self._extractRecord(r) for r in res[_tPartnerNS.searchRecords]]
+        else:
+            return []
 
     def delete(self, ids):
         res = BaseClient.delete(self, ids)
@@ -316,7 +352,7 @@ class Client(BaseClient):
                                for e in r[_tPartnerNS.errors:]]
             else:
                 d['errors'] = list()
-            d['isCreated'] = _bool(r[_tPartnerNS.isCreated])
+            d['isCreated'] = d['created'] = _bool(r[_tPartnerNS.created])
         return data
 
     def getDeleted(self, sObjectType, start, end):
@@ -345,12 +381,6 @@ class Client(BaseClient):
         data = _extractUserInfo(res)
         return data
 
-    def executeanonymous(self, code):
-        res = BaseClient.executeanonymous(self, code)
-        data = dict()
-        logging.info( res )
-        return data
-
     def describeTabs(self):
         res = BaseClient.describeTabs(self)
         data = list()
@@ -361,66 +391,11 @@ class Client(BaseClient):
                     logoUrl = str(r[_tPartnerNS.logoUrl]),
                     selected = _bool(r[_tPartnerNS.selected]),
                     tabs=tabs)
+            data.append(d)
         return data
 
     def describeLayout(self, sObjectType):
         raise NotImplementedError
-
-class MetaClient(Client):
-    
-    def __init__(self):
-        self.serverUrl = "https://www.salesforce.com/services/Soap/u/13.0"
-
-    def login(self, username, passwd):
-        res = BaseClient.metalogin(self, username, passwd)
-        logging.info(self.serverUrl)
-        data = dict()
-        data['passwordExpired'] = _bool(res[_tPartnerNS.passwordExpired])
-        data['metadataServerUrl'] = str(res[_tPartnerNS.metadataServerUrl])
-        data['sessionId'] = str(res[_tPartnerNS.sessionId])
-        data['userId'] = str(res[_tPartnerNS.userId])
-        data['userInfo'] = _extractUserInfo(res[_tPartnerNS.userInfo])
-        return data
-    
-    def useSession(self, sessionId, serverUrl):
-        if ( str(sessionId) == '' or str(serverUrl) == '' ): 
-            raise AttributeError , 'Missing server url or session ID to useSession method'
-        logging.info( sessionId, serverUrl)
-        res = BaseClient.useSession(self, sessionId, serverUrl)
-        data = dict()
-        data['sessionId'] = sessionId
-        return data
-
-    def metaupdate(self, metadata):
-        res = BaseClient.metaupdate(self, metadata)
-        return _extractAsyncResult(res)
-    
-    def metacreate(self, metadata):
-        res = BaseClient.metacreate(self, metadata)          
-        return _extractAsyncResult(res)
-
-    def checkstatus(self, id):
-        res = BaseClient.checkstatus(self, id)
-        return _extractAsyncResult(res)
-
-def _extractAsyncResult(res):
-    data = dict()
-    data['done'] = _bool(res[_tMetadataNS.done]);
-    data['id'] = str(res[_tMetadataNS.id]);
-    data['state'] = str(res[_tMetadataNS.state]);
-    data['secondsToWait'] = str(res[_tMetadataNS.secondsToWait]);
-    try:
-        data['statusCode'] = str(res[_tMetadataNS.statusCode]);
-        data['message'] = str(res[_tMetadataNS.message]);
-    except:
-        data['statusCode'] = '0'     
-    logging.info( data )
-    return data
-    
-class QueryLocator(object):
-
-    def __init__(self, locator):
-        self.locator = locator
 
 
 class Field(object):
@@ -438,19 +413,23 @@ class Field(object):
 # ['one','two','three'] becomes 'one;two;three'
 def _prepareSObjects(sObjects):
      def _doPrep(field_dict):
-         """Salesforce expects string to be "apple;orange;pear"
-            so if a field is in Python list format, convert it to string.
-            We also set an array of any list-type fields that should be
-            set to empty, as this is a special case in the Saleforce API,
-            and merely setting the list to an empty string doesn't cause
-            the values to be updated."""
+         """Do some prep work converting python types into formats that
+            Salesforce will accept. This includes converting lists of strings
+            to "apple;orange;pear" format as well as Null-ing any empty lists
+            or None values.
+         """
          fieldsToNull = []
          for k,v in field_dict.items():
+             if v is None:
+                 fieldsToNull.append(k)
+                 field_dict[k] = []
              if hasattr(v,'__iter__'):
                  if len(v) == 0:
                      fieldsToNull.append(k)
                  else:
                      field_dict[k] = ";".join(v)
+         if 'fieldsToNull' in field_dict:
+             raise ValueError, "fieldsToNull should be populated by the client, not the caller."
          field_dict['fieldsToNull'] = fieldsToNull
      
      sObjectsCopy = copy.deepcopy(sObjects)
@@ -514,11 +493,18 @@ def _extractPicklistEntry(pldata):
 
 def _extractChildRelInfo(crdata):
     data = dict()
-    data['cascadeDelete'] = _bool(rel[_tPartnerNS.cascadeDelete])
-    data['childSObject'] = str(rel[_tPartnerNS.childSObject])
-    data['field'] = str(rel[_tPartnerNS.field])
+    data['cascadeDelete'] = _bool(crdata[_tPartnerNS.cascadeDelete])
+    data['childSObject'] = str(crdata[_tPartnerNS.childSObject])
+    data['field'] = str(crdata[_tPartnerNS.field])
     return data
 
+def _extractRecordTypeInfo(rtidata):
+    data = dict()
+    data['available'] = _bool(rtidata[_tPartnerNS.available])
+    data['defaultRecordTypeMapping'] = _bool(rtidata[_tPartnerNS.defaultRecordTypeMapping])
+    data['name'] = str(rtidata[_tPartnerNS.name])
+    data['recordTypeId'] = str(rtidata[_tPartnerNS.recordTypeId])
+    return data
 
 def _extractError(edata):
     data = dict()
@@ -526,7 +512,6 @@ def _extractError(edata):
     data['message'] = str(edata[_tPartnerNS.message])
     data['fields'] = [str(f) for f in edata[_tPartnerNS.fields:]]
     return data
-
 
 def _extractTab(tdata):
     data = dict(
@@ -555,6 +540,24 @@ def _extractUserInfo(res):
             userUiSkin = str(res[_tPartnerNS.userUiSkin]))
     return data
 
+def isObject(xml):
+    try:
+        if xml(_tSchemaInstanceNS.type) == 'sf:sObject':
+            return True
+        else:
+            return False
+    except KeyError:
+        return False
+        
+def isQueryResult(xml):
+    try:
+        if xml(_tSchemaInstanceNS.type) == 'QueryResult':
+            return True
+        else:
+            return False
+    except KeyError:
+        return False
+
 def isnil(xml):
     try:
         if xml(_tSchemaInstanceNS.nil) == 'true':
@@ -563,3 +566,14 @@ def isnil(xml):
             return False
     except KeyError:
         return False
+
+def getRecordTypes(xml):
+    record_types = set() 
+    if xml:
+        record_types.add(str(xml[_tSObjectNS.type]))
+        for field in xml:
+            if isObject(field):
+                record_types.update(getRecordTypes(field))
+            elif isQueryResult(field):
+                record_types.update(reduce(lambda x, y: x|y, [getRecordTypes(r) for r in field[_tPartnerNS.records:]]))
+    return record_types

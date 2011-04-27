@@ -1,8 +1,7 @@
 cron:
-- description: Daily summary email 
-  url: /admin/report
-  schedule: every day 07:00
-  
+- description: Periodic SFDC update... this handles auto responses so keep it timely
+  url: /admin/sfdc/
+  schedule: every 20 minutes
 
 - description: Advance the budget timeslices
   url: /budget/advance/

@@ -27,7 +27,7 @@ TARG = 'targeting' # I don't know what this is
 class ReportForm(mpforms.MPModelForm):
     TEMPLATE = 'reports/forms/report_form.html'
 
-    #these should be widgets, actually use these when doing reporting correctly
+    #TODO these should be widgets, actually use these when doing reporting correctly
     #d1 = mpfields.MPChoiceField(choices=[CHOICES],widget=mpwidgets.MPSelectWidget)
     #d2 = mpfields.MPChoiceField(choices=[CHOICES],widget=mpwidgets.MPSelectWidget)
     #d3 = mpfields.MPChoiceField(choices=[CHOICES],widget=mpwidgets.MPSelectWidget)

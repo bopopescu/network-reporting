@@ -54,7 +54,13 @@ class AddReportHandler(RequestHandler):
         return render_to_string(self.request, template_name=template_name, data=kwargs)
         
     def post(self, d1, start, end, d2=None, d3=None,name=None, saved=False):
-        pass
+        start = datetime.datetime.strptime(start, '%m/%d/%Y').date()
+        end = datetime.datetime.strptime(end, '%m/%d/%Y').date()
+        man = ReportQueryManager(self.account)
+        if saved == "True":
+            saved = True
+        man.add_report(d1, d2, d3, start, end, name=name, saved=saved)
+        return HttpResponseRedirect(reverse('reports_index'))
 
 @whitelist_login_required
 def add_report(request, *args, **kwargs):

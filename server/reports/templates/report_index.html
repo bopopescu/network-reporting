@@ -15,6 +15,7 @@
 <section id="reports-reportAddForm" class="">
     <div>
         <form action="{% url add_report %}" method="POST" accept-charset="utf-8" id="reportCreateForm">
+            <input type='hidden' name='saved' value='True'/>
             <fieldset id="reportAddForm-details" class="alt">
                 <div id="reportAddForm-fragment" class="reportAddForm-fragment">
                     {{report_fragment.as_template}}

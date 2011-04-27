@@ -12,7 +12,6 @@
         });
      }
      addPlaceholder();
-     });
     $('input[name="start"]').datepicker({ minDate:0 });
     $('input[name="end"]').datepicker({ minDate:0 });
 
@@ -24,4 +23,5 @@
             $('#reportCreateForm').submit();
     });
 
- })(this.jQuery);
+ });
+})(this.jQuery);

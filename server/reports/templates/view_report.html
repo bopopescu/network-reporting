@@ -1,10 +1,5 @@
 {% extends 'reports/base.html' %}
 {% load filters %}
-{% block navLinks %}
-            <li><a href="{% url publisher_index %}">Dashboard</a></li>
-            <li><a href="{% url advertiser_campaign %}">Campaigns</a></li>
-            <li class="active"><a href="{% url reports_index %}">Reports</a></li>
-{% endblock navLinks %}
 {% block pageTitle %}
           <div class="breadcrumb">
             <a class="linkIcon breadcrumb-back" href="{% url reports_index %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Reports</a>

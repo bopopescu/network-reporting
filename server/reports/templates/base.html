@@ -8,3 +8,9 @@
     data tables and shit
 {% endcomment %}
 {% endblock extraScripts %}
+
+{% block navLinks %}
+<li><a href="{% url publisher_index %}">Dashboard</a></li>
+<li><a href="{% url advertiser_campaign %}">Campaigns</a></li>
+<li class="active"><a href="{% url reports_index %}">Reports</a></li>
+{% endblock navLinks %}

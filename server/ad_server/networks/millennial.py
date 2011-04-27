@@ -42,7 +42,7 @@ class MillennialServerSide(ServerSide):
   
     def _bid_and_html_for_response(self,response):
       # TODO: do any sort of manipulation here that we want, like resizing the image, LAME
-        trace_logging.warning("Received Millennial Response: %s"%cgi.escape(response.content))
+        trace_logging.warning("Received Millennial Response: %s"%cgi.escape(response.content).replace('\n',''))
         if len(response.content) == 0 or \
           response.status_code != 200 or \
           '<title>404' in response.content: # **See Note below

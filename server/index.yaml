@@ -65,6 +65,12 @@ indexes:
 # automatically uploaded to the admin console when you next deploy
 # your application using appcfg.py.
 
+- kind: App
+  properties:
+  - name: account
+  - name: deleted
+  - name: name
+
 - kind: BudgetDailyLog
   properties:
   - name: budget_slicer

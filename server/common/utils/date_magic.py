@@ -61,7 +61,7 @@ def is_leap_year(d):
 
 def last_seven(d):
     delta = timedelta(days=7)
-    return (d, d-delta)
+    return (d-delta, d)
 
 def gen_days(start, end):
     dt = timedelta(days=1)

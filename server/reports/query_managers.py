@@ -1,8 +1,11 @@
 import datetime
 import logging
+import random
 import time
 
+from django.core.urlresolvers import reverse
 from django.template.loader import render_to_string
+from google.appengine.api import taskqueue
 from google.appengine.ext import db
 
 
@@ -15,6 +18,7 @@ from reports.models import Report
 
 NUM_REP_QS = 1
 REP_Q_NAME = "gen-rep-%02d"
+COMMON_REPORT_DIM_LIST = (('app', 'Apps'), ('adunit', 'Ad Units'), ('campaign', 'Campaigns'))
 
 
 class ReportQueryManager(CachedQueryManager):
@@ -33,9 +37,9 @@ class ReportQueryManager(CachedQueryManager):
         self.obj_cache = {}
 
     def get_report_by_key(self, report_key):
-        pass
+        return Report.get(report_key)
 
-    def get_report(self, d1,d2,d3,start,end,view=False, deleted=False):
+    def get_report(self, d1,d2,d3,start,end,name=None,view=False, deleted=False):
         '''Given the specs for a report, return that report.  If the report
         doesnt exist yet, create an empty one.  If this is a view request, update
         the last_viewed field of the report'''
@@ -47,7 +51,7 @@ class ReportQueryManager(CachedQueryManager):
             report_q = report_q.filter('d3 =', d3)
         report = report_q.get()
         if report is None:
-            report = self.add_report(d1,d2,d3,start,end)
+            report = self.add_report(d1,d2,d3,start,end, name=name)
         elif view:
             report.last_viewed = datetime.datetime.now()
             report.put()
@@ -64,7 +68,7 @@ class ReportQueryManager(CachedQueryManager):
     def get_saved(self, page=0, page_limit=10):
         '''Returns (page_limit) reports starting on 'page'
         '''
-        report_q = Reports.all().filter('account =', self.account).filter('saved =', True).filter('deleted =', False)
+        report_q = Report.all().filter('account =', self.account).filter('saved =', True).filter('deleted =', False)
         reports = report_q.fetch(limit=page_limit,offset=page_limit*page)
         return reports
 
@@ -78,8 +82,8 @@ class ReportQueryManager(CachedQueryManager):
         reports = []
         now = datetime.datetime.now().date()
         start, end = date_magic.last_seven(now)
-        for dim in COMMON_REPORT_DIM_LIST:
-            report = self.get_report(dim,None,None,start,end)
+        for dim,name in COMMON_REPORT_DIM_LIST:
+            report = self.get_report(dim,None,None,start,end, name=name)
             reports.append(report)
         return reports
 
@@ -109,5 +113,10 @@ class ReportQueryManager(CachedQueryManager):
         q_num = random.randint(0, NUM_REP_QS - 1)
         taskqueue.add(url=url,
                       queue_name=REP_Q_NAME % q_num,
-                      params={"report": report})
+                      params={"report": report.key(),
+                              "account": str(self.account),
+                              })
         return report
+
+    def put_report(self, report):
+        report.put()

@@ -1203,8 +1203,8 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
   width: 45px;
 }
 
-.dataTable .appData-icon a img, .dataTable .campaignData-icon a img,
-#appForm-icon img {
+.dataTable .appData-icon a img, .dataTable .campaignData-icon a img, 
+#appForm-icon img, .dataTable .reportData-icon a img {
   -webkit-border-radius:6px;-moz-border-radius:6px
 }
 
@@ -1979,42 +1979,42 @@ td.numeric, th.numeric, .numeric TD {
   text-align: right;
 }
 
-.campaignData {
+.campaignData, .reportData {
   padding: 10px 5px 6px 5px;
   background: #f7f7f7;
 }
 
-.campaignData-alt {
+.campaignData-alt, .reportData-alt {
   background: #fff;
 }
 
-.campaignData-placeholder {
+.campaignData-placeholder, .reportData-placeholder {
   display: table-row;
 }
 
-.campaignData th.dataTable-name {
+.campaignData th.dataTable-name, .reportdata th.dataTable-name {
   width: 200px;
 }
 
-.campaignData-icon {
+.campaignData-icon, .reportData-icon {
   padding-right: 0;
   width: 55px;
 }
 
-.campaignData-icon input {
+.campaignData-icon input, .reportData-icon input {
   margin-left: 5px;
 }
 
-.campaignData-icon img {
+.campaignData-icon img, .reportData-icon img {
   margin: 4px 0 0 4px;
 }
 
-table.campaignData-main {
+table.campaignData-main, table.reportTable {
   margin: 0 0 15px 0;
   width: 100%;
 }
 
-.campaignData-main th, .campaignData-main td {
+.campaignData-main th, .campaignData-main td, .reportTable th, .reportTable td {
   font-size: 14px;
   font-weight: normal;
 }

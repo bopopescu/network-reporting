@@ -1,0 +1,170 @@
+{% extends 'reports/base.html' %}
+{% load filters %}
+{% block navLinks %}
+            <li><a href="{% url publisher_index %}">Dashboard</a></li>
+            <li><a href="{% url advertiser_campaign %}">Campaigns</a></li>
+            <li class="active"><a href="{% url reports_index %}">Reports</a></li>
+{% endblock navLinks %}
+{% block pageTitle %}<h1>Reports</h1>{% endblock pageTitle %}
+{% block dateButtons %}{% endblock dateButtons %}
+{% block messageCenter %}{% endblock messageCenter %}
+{% block content %}
+<div class="buttonBank buttonBank-right">
+    <a class="button" id="reports-addReportButton" href="#">New Report</a>
+</div>
+<section id="reports-reportAddForm" class="hidden">
+    <div>
+        <form action="{% url add_report %}" method="POST" accept-charset="utf-8" id="reportCreateForm">
+            <fieldset id="reportAddForm-details" class="alt">
+                <div id="reportAddForm-fragment" class="reportAddForm-fragment">
+                    {{report_fragment}}
+                </div>
+                <div class='clear'></div>
+                <div class='form-submit'>
+                    <span id='reportCreateForm-success' class='hidden'>Success!</span>
+                    <span class='buttonWrap'><a href='#' class='button' id='reportCreateForm-submit'>Save</a></span>
+                    <span class='buttonWrap'><a href='#' class='button' id='reportCreateForm-cancel'>Cancel</a></span>
+                </div>
+            </fieldset>
+        </form>
+    </div>
+</section>
+<h2>Saved Reports</h2>
+{% for save in saved %}
+<div id='{{save.key}}-edit' class='hidden report-savedEditForm'>
+    <form action='{% url add_report %}' method='POST' accept-charset='utf-8' id='reportEditForm-{{forloop.counter0}}' class='reportEditForm'>
+        <input type='hidden' name='report_key' value='{{save.key}}'/>
+        <fieldset id='reportAddForm-details-{{forloop.counter0}}' class='alt'>
+            <div id='reportEditForm-fragment-{{forloop.counter0}}' class='reportEditForm-fragment'>
+            {% comment %}
+                stuff here about the report fragment w/e i dunno
+            {% endcomment %}
+        </div>
+        <div class='clear'></div>
+        <div class='form-submit'>
+            <span id='reportCreateForm-success' class='hidden reportEditForm-success'>Success!</span>
+            <span class='buttonWrap'><a href='#' class='button reportEditForm-submit' id='reportCreateForm-submit'>Save</a></span>
+            <span class='buttonWrap'><a href='#' class='button reportEditForm-cancel' id='reportCreateForm-cancel'>Cancel</a></span>
+        </div>
+    </fieldset>
+</div>
+{% endfor %}
+<section id='report-savedReports'>
+    <table class='reportData-saved dataTable reportTable' id='reports-saved-columnHeaders'>
+        <thead>
+            <tr>
+                <th class='reportData-icon'></th>
+                <th class='dataTable-name'>Name</th>
+                <th class='dataTable-data numeric'>Details</th>
+                <th class='dataTable-data numeric'>Status</th>
+                <th class='dataTable-data numeric'></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for save in saved %}
+            <tr class="{% cycle 'reportData' 'reportData reportData-alt' %}" id='reports-saved-{{forloop.counter0}}'>
+                <td class='reportData-icon'>
+                    <input type='checkbox' name='reportManagementForm-key' value='{{save.key}}'/>
+                </td>
+                {% comment %}
+                do stuff for editing report on the fly
+                {% endcomment %}
+                <td class='dataTable-data'>{{save.name}}</td>
+                <th class='dataTable-name'>
+                    <a href='{% url view_report report_key=save.key %}'>{{save.name}}</a>
+                </th>
+                <td class='dataTable-data numeric'>{{save.details}}</td>
+                <td id='{{save.key}}-status' class='dataTable-data numeric'>{{save.status}}</td>
+                <td class='dataTable-data numeric'></td>
+            </tr>
+            {% endfor %}
+            <tr class="reportData reportData-placeholder">
+                <th class="reportData-icon"></th>
+                <th class="dataTable-name"><span class="muted">None</span></th>
+                <td class="dataTable-data numeric"></td>
+                <td class="dataTable-data numeric"></td>
+                <td class="dataTable-data numeric"></td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+<h2>Common Reports</h2>
+<section id='report-commonReports'>
+    <table class='reportData-common dataTable reportTable' id='reports-common-columnHeaders'>
+        <thead>
+            <tr>
+                <th class='reportData-icon'></th>
+                <th class='dataTable-name'>Name</th>
+                <th class='dataTable-data numeric'>Details</th>
+                <th class='dataTable-data numeric'>Status</th>
+                <th class='dataTable-data numeric'></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for comm in common %}
+            <tr class="{% cycle 'reportData' 'reportData reportData-alt' %}" id='reports-common-{{forloop.counter0}}'>
+                <td class='reportData-icon'>
+                    {% comment %}
+                    can't delete the "common" reports, nothing really goes here....
+                    {% endcomment %}
+                </td>
+                <th class='dataTable-name'>
+                    <a href='{% url view_report report_key=comm.key %}'>{{comm.name}}</a>
+                </th>
+                <td class='dataTable-data numeric'>{{comm.details}}</td>
+                <td id='{{comm.key}}-status' class='dataTable-data numeric'>{{comm.status}}</td>
+                <td class='dataTable-data numeric'></td>
+            </tr>
+            {% endfor %}
+            <tr class="reportData reportData-placeholder">
+                <th class="reportData-icon"></th>
+                <th class="dataTable-name"><span class="muted">None</span></th>
+                <td class="dataTable-data numeric"></td>
+                <td class="dataTable-data numeric"></td>
+                <td class="dataTable-data numeric"></td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+<h2>Report History</h2>
+<section id='report-historyReports'>
+    <table class='reportData-history dataTable reportTable' id='reports-common-columnHeaders'>
+        <thead>
+            <tr>
+                <th class='reportData-icon'></th>
+                <th class='dataTable-name'>Name</th>
+                <th class='dataTable-data numeric'>Details</th>
+                <th class='dataTable-data numeric'>Status</th>
+                <th class='dataTable-data numeric'>Last Viewed</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for hist in history %}
+            <tr class="{% cycle 'reportData' 'reportData reportData-alt' %}" id='reports-history-{{forloop.counter0}}'>
+                <td class='reportData-icon'>
+                    <input type='checkbox' name='reportManagementForm-key' value='{{hist.key}}'/>
+                </td>
+                {% comment %}
+                do stuff for editing report on the fly
+                {% endcomment %}
+                <th class='dataTable-name'>
+                    <a href='{% url view_report report_key=hist.key %}'>{{hist.name}}</a>
+                </th>
+                <td class='dataTable-data numeric'>{{hist.details}}</td>
+                <td id='{{hist.key}}-status' class='dataTable-data numeric'>{{hist.status}}</td>
+            </tr>
+            {% endfor %}
+            <tr class="reportData reportData-placeholder">
+                <th class="reportData-icon"></th>
+                <th class="dataTable-name"><span class="muted">None</span></th>
+                <td class="dataTable-data numeric"></td>
+                <td class="dataTable-data numeric"></td>
+                <td class="dataTable-data numeric"></td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+                
+
+
+{% endblock content %}

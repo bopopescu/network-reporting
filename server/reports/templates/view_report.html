@@ -1,0 +1,38 @@
+{% extends 'reports/base.html' %}
+{% load filters %}
+{% block navLinks %}
+            <li><a href="{% url publisher_index %}">Dashboard</a></li>
+            <li><a href="{% url advertiser_campaign %}">Campaigns</a></li>
+            <li class="active"><a href="{% url reports_index %}">Reports</a></li>
+{% endblock navLinks %}
+{% block pageTitle %}
+          <div class="breadcrumb">
+            <a class="linkIcon breadcrumb-back" href="{% url reports_index %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Reports</a>
+            <h1>{{report.name}}</h1>
+          </div>
+{% endblock pageTitle %}
+
+{% block dateButtons %}{% endblock dateButtons %}
+
+{% block titleBarRight %}
+    <span class='titlebar-right'>
+        <a class='button' id='reports-view-editReportButton' href='#'>Edit report settings</a>
+    </span>
+{% endblock titleBarRight %}
+
+{% block messageCenter %}{% endblock messageCenter %}
+{% block content %}
+<script type='text/javascript'>
+    $(document).ready(function() {
+        $('#report-table').dataTable();
+    });
+</script>
+<div class='buttonBank buttonBank-right'>
+    <a class='button' id='reports-view-exportReportButton' href='#'>Export</a>
+    <a class='button' id='reports-view-sendReportButton' href='#'>Send</a>
+</div>
+<h2>{{report.name}} Report</h2>
+<div id='table-goes-here' class='tabled'>
+    {{report.html_data|safe}}
+</div>
+{% endblock content %}

@@ -6,6 +6,8 @@ urlpatterns = patterns('reports.views',
         url(r'^view/(?P<report_key>[-\w\.]+)/$', 'view_report', name='view_report'),
         url(r'^$', 'report_index', name='reports_index'),
         url(r'^check/(?P<report_key>[-\w\.]+)/$', 'check_report', name='check_report'),
+        #Gen report is called by the TQ
         url(r'^gen_report/$', 'gen_report', name='generate_reports'),
+        #Add report is when you want to make a new report
         url(r'^add/$', 'add_report', name='add_report')
         )

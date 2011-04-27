@@ -11,6 +11,8 @@ from google.appengine.api import users
 from account.models import Account
 from advertiser.query_managers import CampaignQueryManager, CreativeQueryManager
 from common.utils import date_magic
+from common.properties.dict_property import DictProperty
+from django.utils import simplejson
 from publisher.query_managers import AppQueryManager, AdUnitQueryManager
 from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
@@ -53,13 +55,15 @@ class Report(db.Model):
 
     #the actual report
     # data in JSON (or similar) used for easy exporting
-    data = db.TextProperty()
+    #SUPER SWEET CUSTOM PROPERTY (gogogadget Stack Overflow)
+    data = DictProperty()
     # data in HTML format for webpages so I dont' hvae to do fancy shit (fuck that)
     html_data = db.TextProperty()
 
     # maybe useful for internal analytics//informing users
     completed_at = db.DateTimeProperty()
     
+
     def __str__(self):
         return "Report(d1=%s, d2=%s, d3=%s, start=%s, end=%s)" % (self.d1, self.d2, self.d3, self.start, self.end)
     
@@ -87,6 +91,8 @@ class Report(db.Model):
             ret = {}
             manager = StatsModelQueryManager(self.account)
             vals, typ, date_fmt = self.get_vals(pub, adv, days, dim)
+            if vals is None:
+                return ret
             for idx, val in enumerate(vals):
                 name = None
                 if typ == 'days':
@@ -183,6 +189,21 @@ class Report(db.Model):
         print "\n\nValue is %s for inputs %s" % (vals, (pub,adv, days,dim))
         return vals, type, date_fmt
 
+    @property
+    def details(self):
+        if self.d3:
+            det = "%s > %s > %s" % (self.d1, self.d2, self.d3)
+        elif self.d2:
+            det = "%s > %s" % (self.d1, self.d2)
+        elif self.d1:
+            det = "%s" % self.d1
+        else:
+            det = "how the fuck did you get to this state, at least one dim is required"
+        s_str = self.start.strftime('%m/%d/%y')
+        e_str = self.end.strftime('%m/%d/%y')
+        date = '%s to %s' % (e_str, s_str)
+        return date + "\n" + det.title()
+            
 
 #class ScheduledReport -> has a "next report" time, "report every ____" time, report type, when it's tim
 #   to gen a report, this guy makes report objects

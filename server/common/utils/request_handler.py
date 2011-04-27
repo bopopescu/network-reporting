@@ -33,8 +33,13 @@ class RequestHandler(object):
           self.start_date = date(int(s[0]),int(s[1]),int(s[2]))
         except:
           self.start_date = None
-        
-        self._set_account()
+
+        if self.params.has_key('account'):
+            account_key = self.params['account']
+            if account_key:
+              self.account = AccountQueryManager().get_by_key(account_key)
+        else:
+            self._set_account()
         
         logging.info("final account: %s"%(self.account.key()))  
         logging.info("final account: %s"%repr(self.account.key()))
@@ -46,7 +51,7 @@ class RequestHandler(object):
         if request.method == "GET":
             # Now we can define get/post methods with variables instead of having to get it from the 
             # Query dict every time! hooray!
-            f_args = getargspec(self.get).args
+            f_args = getargspec(self.get)[0]
             for arg in f_args:
                 if not kwargs.has_key(arg) and self.params.has_key(arg):
                     kwargs[arg] = self.params.get(arg)
@@ -54,7 +59,7 @@ class RequestHandler(object):
         elif request.method == "POST":
             # Now we can define get/post methods with variables instead of having to get it from the 
             # Query dict every time! hooray!
-            f_args = getargspec(self.post).args
+            f_args = getargspec(self.post)[0]
             for arg in f_args:
                 if not kwargs.has_key(arg) and self.params.has_key(arg):
                     kwargs[arg] = self.params.get(arg)

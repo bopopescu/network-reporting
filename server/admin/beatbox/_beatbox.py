@@ -1,77 +1,64 @@
 """beatbox: Makes the salesforce.com SOAP API easily accessible."""
 
-__version__ = "0.9"
-__author__ = "Simon Fell, Ron Hess"
+__version__ = '20.0'
+__author__ = "Simon Fell et al"
 __credits__ = "Mad shouts to the sforce possie"
 __copyright__ = "(C) 2006 Simon Fell. GNU GPL 2."
 
-import sys
+import httplib
+import logging
+import socket
 from urlparse import urlparse
 from StringIO import StringIO
 import gzip
 import datetime
 import xmltramp
-import logging
-
 from xmltramp import islst
 from xml.sax.saxutils import XMLGenerator
 from xml.sax.saxutils import quoteattr
 from xml.sax.xmlreader import AttributesNSImpl
 
-from google.appengine.api import urlfetch
-
 # global constants for namespace strings, used during serialization
 _partnerNs = "urn:partner.soap.sforce.com"
 _sobjectNs = "urn:sobject.partner.soap.sforce.com"
 _envNs = "http://schemas.xmlsoap.org/soap/envelope/"
-_metadataNs = "http://soap.sforce.com/2006/04/metadata"
-_xsi = "http://www.w3.org/2001/XMLSchema-instance"
-_wsdl_apexNs = "http://soap.sforce.com/2006/08/apex"
 _noAttrs = AttributesNSImpl({}, {})
+
+DEFAULT_SERVER_URL = 'https://login.salesforce.com/services/Soap/u/20.0'
 
 # global constants for xmltramp namespaces, used to access response data
 _tPartnerNS = xmltramp.Namespace(_partnerNs)
 _tSObjectNS = xmltramp.Namespace(_sobjectNs)
-_tMetadataNS = xmltramp.Namespace(_metadataNs)
 _tSoapNS = xmltramp.Namespace(_envNs)
-_tWsdlApexNS = xmltramp.Namespace(_wsdl_apexNs)
-_xmlns_attrs = AttributesNSImpl({ (None, u'xmlns'): _metadataNs}, {})
-#(None, u'xmlns:ns2'): 'http://soap.sforce.com/2006/04/metadata'
 
 # global config
-gzipRequest=False    # are we going to gzip the request ?
-gzipResponse=False   # are we going to tell teh server to gzip the response ?
+gzipRequest=True    # are we going to gzip the request ?
+gzipResponse=True   # are we going to tell teh server to gzip the response ?
 forceHttp=False     # force all connections to be HTTP, for debugging
 
+logger = logging.getLogger('beatbox')
 
 def makeConnection(scheme, host):
-    try: 
-        if forceHttp or scheme.upper() == 'HTTP':
-            return httplib.HTTPConnection(host)
-        return httplib.HTTPSConnection(host)
-    except NameError:
-        pass 
+    if forceHttp or scheme.upper() == 'HTTP':
+        return httplib.HTTPConnection(host)
+    return httplib.HTTPSConnection(host)
+
 
 # the main sforce client proxy class
 class Client:
-    def __init__(self):
+    def __init__(self, serverUrl=None):
         self.batchSize = 500
-        self.serverUrl = "https://www.salesforce.com/services/Soap/u/14.0"
+        self.serverUrl = serverUrl or DEFAULT_SERVER_URL
         self.__conn = None
-        
+
     def __del__(self):
-        if self.__conn != None:
+        if callable(getattr(self.__conn, 'close', None)):
             self.__conn.close()
-            
+
     # login, the serverUrl and sessionId are automatically handled, returns the loginResult structure       
     def login(self, username, password):
         lr = LoginRequest(self.serverUrl, username, password).post()
         self.useSession(str(lr[_tPartnerNS.sessionId]), str(lr[_tPartnerNS.serverUrl]))
-        return lr
-
-    def metalogin(self, username, password):
-        lr = LoginRequest(self.serverUrl, username, password).post()
-        self.useSession(str(lr[_tPartnerNS.sessionId]), str(lr[_tPartnerNS.metadataServerUrl]))
         return lr
 
     # initialize from an existing sessionId & serverUrl, useful if we're being launched via a custom link   
@@ -88,6 +75,9 @@ class Client:
     def queryMore(self, queryLocator):
         return QueryMoreRequest(self.__serverUrl, self.sessionId, self.batchSize, queryLocator).post(self.__conn)
         
+    def search(self, sosl):
+        return SearchRequest(self.__serverUrl, self.sessionId, self.batchSize, sosl).post(self.__conn)
+        
     def getUpdated(self, sObjectType, start, end):
         return GetUpdatedRequest(self.__serverUrl, self.sessionId, sObjectType, start, end).post(self.__conn)
         
@@ -101,15 +91,6 @@ class Client:
     def create(self, sObjects):
         return CreateRequest(self.__serverUrl, self.sessionId, sObjects).post(self.__conn)
 
-    def metacreate(self,  metadata):
-        return MetaCreateRequest(self.__serverUrl, self.sessionId, metadata).post(self.__conn)
-
-    def checkstatus(self, id):
-       return MetaCheckStatus(self.__serverUrl, self.sessionId, id).post(self.__conn)
-
-    def metaupdate(self, metadata):
-        return MetaUpdateRequest(self.__serverUrl, self.sessionId, metadata).post(self.__conn)
-
     # sObjects can be 1 or a list, returns a single save result or a list
     def update(self, sObjects):
         return UpdateRequest(self.__serverUrl, self.sessionId, sObjects).post(self.__conn)
@@ -122,8 +103,6 @@ class Client:
     def delete(self, ids):
         return DeleteRequest(self.__serverUrl, self.sessionId, ids).post(self.__conn)
 
-    def executeanonymous(self, codeblock):
-        return ExecuteAnnonRequest(self.__serverUrl, self.sessionId, codeblock).post(self.__conn)
     # sObjectTypes can be 1 or a list, returns a single describe result or a list of them
     def describeSObjects(self, sObjectTypes):
         return DescribeSObjectsRequest(self.__serverUrl, self.sessionId, sObjectTypes).post(self.__conn)
@@ -221,9 +200,7 @@ class XmlWriter:
         elif isinstance(s, datetime.date):
             # todo, try isoformat
             s = "%04d-%02d-%02d" % (s.year, s.month, s.day)
-        elif isinstance(s, int):
-            s = str(s)
-        elif isinstance(s, float):
+        elif isinstance(s, (int, float, long)):
             s = str(s)
         self.xg.characters(s)
 
@@ -262,34 +239,26 @@ class SoapWriter(XmlWriter):
         XmlWriter.__init__(self, gzipRequest)
         self.startPrefixMapping("s", _envNs)
         self.startPrefixMapping("p", _partnerNs)
-        self.startPrefixMapping("m", _metadataNs)
         self.startPrefixMapping("o", _sobjectNs)
-        self.startPrefixMapping("w", _wsdl_apexNs)
-        self.startPrefixMapping("xsi", _xsi)
         self.startElement(_envNs, "Envelope")
         
     def endDocument(self):
         self.endElement()  # envelope
         self.endPrefixMapping("o")
         self.endPrefixMapping("p")
-        self.endPrefixMapping("m")
         self.endPrefixMapping("s")
-        self.endPrefixMapping("w")
-        self.endPrefixMapping("xsi")
         return XmlWriter.endDocument(self)  
 
 # processing for a single soap request / response       
 class SoapEnvelope:
-    def __init__(self, serverUrl, operationName, clientId="BeatBox/" + __version__, namespace=_partnerNs):
+    def __init__(self, serverUrl, operationName, clientId="BeatBox/" + __version__):
         self.serverUrl = serverUrl
         self.operationName = operationName
         self.clientId = clientId
-        self.namespace = namespace
-        self.meta = False
-      
+
     def writeHeaders(self, writer):
         pass
- 
+
     def writeBody(self, writer):
         pass
 
@@ -297,18 +266,15 @@ class SoapEnvelope:
         s = SoapWriter()
         s.startElement(_envNs, "Header")
         s.characters("\n")
-        s.startElement(self.namespace , "CallOptions")
-        s.writeStringElement(self.namespace , "client", self.clientId)
+        s.startElement(_partnerNs, "CallOptions")
+        s.writeStringElement(_partnerNs, "client", self.clientId)
         s.endElement()
         s.characters("\n")
         self.writeHeaders(s)
         s.endElement()  # Header
         s.startElement(_envNs, "Body")
         s.characters("\n")
-        if ( self.meta ):
-            s.startElement(None, self.operationName, _xmlns_attrs) 
-        else:
-            s.startElement(self.namespace , self.operationName)
+        s.startElement(_partnerNs, self.operationName)
         self.writeBody(s)
         s.endElement()  # operation
         s.endElement()  # body
@@ -322,35 +288,40 @@ class SoapEnvelope:
     #   todo: check for mU='1' headers
     #   returns the relevant result from the body child
     def post(self, conn=None, alwaysReturnList=False):
+        logger.debug(self.__class__)
         headers = { "User-Agent": "BeatBox/" + __version__,
                     "SOAPAction": "\"\"",
                     "Content-Type": "text/xml; charset=utf-8" }
         if gzipResponse:
             headers['accept-encoding'] = 'gzip'
         if gzipRequest:
-            headers['content-encoding'] = 'gzip'                    
+            headers['content-encoding'] = 'gzip'
         close = False
         (scheme, host, path, params, query, frag) = urlparse(self.serverUrl)
         max_attempts = 3
-        result = None
+        response = None
         attempt = 1
-        logging.info(self.serverUrl)
-        logging.info(self.makeEnvelope())
-        while not result and attempt <= max_attempts:
-            #try:
-                result = urlfetch.fetch(self.serverUrl, self.makeEnvelope(), urlfetch.POST, headers);
-                rawResponse = result.content
-            #except:
-             #   result = None
-             #   attempt += 1
-        #if not result:
-        #    logging.info(sys.exc_info());
-        #    raise 'No response from Salesforce'
-        # logging.info(result.headers); 
-        if result.headers.has_key('content-encoding') and result.headers['content-encoding'] == 'gzip':
+        while not response and attempt <= max_attempts:
+            try:
+                if conn == None:
+                    conn = makeConnection(scheme, host)
+                    close = True
+                conn.request("POST", path, self.makeEnvelope(), headers)
+                response = conn.getresponse()
+                rawResponse = response.read()
+            except (httplib.HTTPException, socket.error):
+                if conn != None:
+                    conn.close()
+                    conn = None
+                    response = None
+                attempt += 1
+        if not response:
+            raise RuntimeError, 'No response from Salesforce'
+        
+        if response.getheader('content-encoding','') == 'gzip':
             rawResponse = gzip.GzipFile(fileobj=StringIO(rawResponse)).read()
-# slow?
-#        logging.info(rawResponse)
+        if close:
+            conn.close()
         tramp = xmltramp.parse(rawResponse)
         try:
             faultString = str(tramp[_tSoapNS.Body][_tSoapNS.Fault].faultstring)
@@ -368,8 +339,8 @@ class SoapEnvelope:
             return result[:]
         else:
             return result[0]
-     
-		 
+    
+
 class LoginRequest(SoapEnvelope):
     def __init__(self, serverUrl, username, password):
         SoapEnvelope.__init__(self, serverUrl, "login")
@@ -386,10 +357,10 @@ class AuthenticatedRequest(SoapEnvelope):
     def __init__(self, serverUrl, sessionId, operationName):
         SoapEnvelope.__init__(self, serverUrl, operationName)
         self.sessionId = sessionId
- 
+
     def writeHeaders(self, s):
-        s.startElement(self.namespace, "SessionHeader")
-        s.writeStringElement(self.namespace, "sessionId", self.sessionId)
+        s.startElement(_partnerNs, "SessionHeader")
+        s.writeStringElement(_partnerNs, "sessionId", self.sessionId)
         s.endElement()
 
     def writeSObjects(self, s, sObjects, elemName="sObjects"):
@@ -404,94 +375,8 @@ class AuthenticatedRequest(SoapEnvelope):
                 if (fn != 'type'):
                     s.writeStringElement(_sobjectNs, fn, sObjects[fn])
             s.endElement()
-
-# for Meta data apply a different namespace     
-class MetaCreateRequest(AuthenticatedRequest):
-    def __init__(self, serverUrl, sessionId, metadata, operationName="create"):
-        logging.info(serverUrl)
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId, operationName)
-        self.__metadata = metadata 
-        self.meta = True
-        self.namespace = _metadataNs
         
-    def writeBody(self, s):
-        attr_vals = { (None, u'xsi:type'): 'ns2:'+ self.__metadata['xsitype'], (None, u'xmlns:ns2'): _metadataNs }       
-        s.startElement(None, "metadata", AttributesNSImpl(attr_vals, { }) )
-        s.characters("\n")
-        
-        for fn in self.__metadata:
-            if ( fn == 'xsitype' ):
-                pass
-            elif ( fn == 'nameField' ):
-                s.startElement(None,'nameField')
-                nameField = self.__metadata[fn];
-                logging.info(nameField)
-                for nf in nameField:    
-                    s.writeStringElement(None, nf, nameField[nf])    
-                s.endElement() # name field
-            elif (fn == 'tabVisibilities'):
-                s.startElement(None,'tabVisibilities')
-                tabVisibilities = self.__metadata[fn];
-                logging.info(tabVisibilities)
-                for nf in tabVisibilities:    
-                    s.writeStringElement(None, nf, tabVisibilities[nf])
-                s.endElement()               
-            else :
-                s.writeStringElement(None, fn, self.__metadata[fn])
- 
-        s.characters("\n")      
-        s.endElement() # metadata 
- 
- 
-class MetaUpdateRequest(AuthenticatedRequest):
-    def __init__(self, serverUrl, sessionId, metadata, operationName="update"):
-        logging.info(serverUrl)
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId, operationName)
-        self.__metadata = metadata 
-        self.meta = True
-        self.namespace = _metadataNs
-        self.currentName = metadata['fullName']
-        
-    def writeBody(self, s):
-        attr_vals = { (None, u'xsi:type'): 'ns2:'+ self.__metadata['xsitype'], (None, u'xmlns:ns2'): _metadataNs }       
-        s.startElement(None, 'UpdateMetadata' )
-        s.writeStringElement(None, 'currentName', self.currentName)
-        s.startElement(None, "metadata", AttributesNSImpl(attr_vals, { }) )
-        s.characters("\n")        
-        
-        for fn in self.__metadata:
-            if ( fn == 'xsitype' ):
-                pass 
-            elif ( fn == 'nameField' ):
-                s.startElement(None,'nameField')
-                nameField = self.__metadata[fn];
-                logging.info(nameField)
-                for nf in nameField:    
-                    s.writeStringElement(None, nf, nameField[nf])    
-                s.endElement() # name field                
-            elif (fn == 'tabVisibilities'):
-                s.startElement(None,'tabVisibilities')
-                tabVisibilities = self.__metadata[fn];
-                logging.info(tabVisibilities)
-                for nf in tabVisibilities:    
-                    s.writeStringElement(None, nf, tabVisibilities[nf])
-                s.endElement()
-            else :
-                s.writeStringElement(None, fn, self.__metadata[fn]) 
-        s.characters("\n")      
-        s.endElement() # updateMetadata
-        s.endElement() # metadata 
-        
-class MetaCheckStatus(AuthenticatedRequest):
-    def __init__(self, serverUrl, sessionId, id):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId, 'checkStatus' )
-        self.__id = id
-        self.meta = True
-        self.namespace = _metadataNs
-        
-    def writeBody(self, s):    
-        s.writeStringElement(None, 'id', self.__id) 
-                            
+                        
 class QueryOptionsRequest(AuthenticatedRequest):
     def __init__(self, serverUrl, sessionId, batchSize, operationName):
         AuthenticatedRequest.__init__(self, serverUrl, sessionId, operationName)
@@ -520,7 +405,16 @@ class QueryMoreRequest(QueryOptionsRequest):
         
     def writeBody(self, s):
         s.writeStringElement(_partnerNs, "queryLocator", self.__queryLocator)
+
+
+class SearchRequest(QueryOptionsRequest):
+    def __init__(self, serverUrl, sessionId, batchSize, sosl):
+        QueryOptionsRequest.__init__(self, serverUrl, sessionId, batchSize, "search")
+        self.__search = sosl
         
+    def writeBody(self, s):
+        s.writeStringElement(_partnerNs, "searchString", self.__search)
+
 
 class GetUpdatedRequest(AuthenticatedRequest):
     def __init__(self, serverUrl, sessionId, sObjectType, start, end, operationName="getUpdated"):
@@ -538,7 +432,8 @@ class GetUpdatedRequest(AuthenticatedRequest):
 class GetDeletedRequest(GetUpdatedRequest):
     def __init__(self, serverUrl, sessionId, sObjectType, start, end):
         GetUpdatedRequest.__init__(self, serverUrl, sessionId, sObjectType, start, end, "getDeleted")
-   
+
+    
 class UpsertRequest(AuthenticatedRequest):
     def __init__(self, serverUrl, sessionId, externalIdName, sObjects):
         AuthenticatedRequest.__init__(self, serverUrl, sessionId, "upsert")
@@ -557,22 +452,13 @@ class UpdateRequest(AuthenticatedRequest):
         
     def writeBody(self, s):
         self.writeSObjects(s, self.__sObjects)
-    
+                
 
 class CreateRequest(UpdateRequest):     
     def __init__(self, serverUrl, sessionId, sObjects):
         UpdateRequest.__init__(self, serverUrl, sessionId, sObjects, "create")
- 
-class ExecuteAnnonRequest(AuthenticatedRequest):
-    def __init__(self, serverUrl, sessionId, codeblock):
-        serverUrl = serverUrl.replace('/u/','/s/')
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId, "executeAnonymous")
-        self.__block = codeblock;
-        self.namespace = _wsdl_apexNs
         
-    def writeBody(self, s):
-        s.writeStringElement(_wsdl_apexNs, "String", self.__block)
-        
+
 class DeleteRequest(AuthenticatedRequest):
     def __init__(self, serverUrl, sessionId, ids):
         AuthenticatedRequest.__init__(self, serverUrl, sessionId, "delete")
@@ -580,7 +466,8 @@ class DeleteRequest(AuthenticatedRequest):
         
     def writeBody(self, s):
         s.writeStringElement(_partnerNs, "id", self.__ids)
-         
+                
+        
 class RetrieveRequest(AuthenticatedRequest):
     def __init__(self, serverUrl, sessionId, fields, sObjectType, ids):
         AuthenticatedRequest.__init__(self, serverUrl, sessionId, "retrieve")

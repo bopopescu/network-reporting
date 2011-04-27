@@ -119,8 +119,6 @@ class AdUnitQueryManager(QueryManager):
         adunits = AdUnit.all().filter("deleted =",deleted)
         if app:
             adunits = adunits.filter("app_key =",app)
-        elif apps:
-            adunits = adunits.filter("app_key in", apps)
         if account:
             adunits = adunits.filter("account =",account)      
         return adunits.fetch(limit)

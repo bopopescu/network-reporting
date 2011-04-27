@@ -12,13 +12,12 @@
 <div class="buttonBank buttonBank-right">
     <a class="button" id="reports-addReportButton" href="#">New Report</a>
 </div>
-
-<section id="reports-reportAddForm" class="hidden">
+<section id="reports-reportAddForm" class="">
     <div>
         <form action="{% url add_report %}" method="POST" accept-charset="utf-8" id="reportCreateForm">
             <fieldset id="reportAddForm-details" class="alt">
                 <div id="reportAddForm-fragment" class="reportAddForm-fragment">
-                    {{report_form.as_template}}
+                    {{report_fragment.as_template}}
                 </div>
                 <div class='clear'></div>
                 <div class='form-submit'>

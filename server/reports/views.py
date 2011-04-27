@@ -16,6 +16,7 @@ from common.utils.request_handler import RequestHandler
 from common.utils.decorators import whitelist_login_required
 from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
+from reports.forms import ReportForm
 from reports.query_managers import ReportQueryManager
 
 from reports.forms import ReportForm
@@ -27,11 +28,12 @@ class ReportIndexHandler(RequestHandler):
         saved = manager.get_saved()
         history = manager.get_history()
         common = manager.get_common_reports()
-        
+        form_frag = ReportForm()
         return render_to_response(self.request, 'reports/report_index.html',
                 dict(saved      = saved,
                      history    = history,
                      common     = common,
+                     report_fragment = form_frag,
                      ))
 
 @whitelist_login_required

@@ -821,7 +821,18 @@ class AdHandler(webapp.RequestHandler):
                 self.response.headers.add_header("X-Height",str(c.height))
             
             # render the HTML body
+            
+            for (key, value) in params.iteritems():
+                if isinstance(value, basestring):
+                    if not isinstance(value, unicode):
+                        trace_logging.warning(value)
+                        decoded = unicode(value, 'utf-8')
+                        params[key] = decoded
+                        trace_logging.warning(decoded)
+                
             rendered_creative = self.TEMPLATES[template_name].safe_substitute(params)
+            rendered_creative.encode('utf-8')
+            
             return rendered_creative
             
             # Otherwise, if there was no creative

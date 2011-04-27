@@ -97,6 +97,10 @@ class ReportQueryManager(CachedQueryManager):
                 name += " > " + d3
             name += ' ' + start.isoformat()
             name += ' -- ' + end.isoformat() 
+        if d2 == '':
+            d2 = None
+        if d3 == '':
+            d3 = None
              
         report = Report(d1 = d1,
                         d2 = d2,

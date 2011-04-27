@@ -1,4 +1,4 @@
-                            <dt><label for="format">Format:</label></dt> 
+                            <dt>Format:</dt> 
                             <dd>
                               <select name="{{form.format.name}}">
                                 <option value="320x50" {% ifequal form.format.value "320x50"%}selected="selected"{% endifequal %}>320 x 50 (Banner)</option>
@@ -17,7 +17,7 @@
                                 <input type="radio" class="input-radio" name="{{form.ad_type.name}}" value="html" id="creativeType-html" {% ifequal form.ad_type.value "html" %}checked="checked"{% endifequal %}/> <label for="creativeType-html">HTML</label> 
                               </span>
                             </dd>
-                            <dt><label for="name">Creative Name:</label></dt>
+                            <dt>Creative Name:</dt>
                             <dd>
                               <input type='text' name="{{form.name.name}}" class="input-text {% if form.name.errors %}form-error{% endif %}" value="{{form.name.value}}" placeholder="My Creative Name"/>
                               {% for error in form.name.errors %}
@@ -25,7 +25,7 @@
                               {% endfor %}
                             </dd>
                             <div class="adTypeDependent text_icon image">
-                              <dt><label for="url">Click URL:</label></dt>
+                              <dt>Click URL:</dt>
                               <dd>
                                 <input type='text' name="{{form.url.name}}" class="input-text {% if form.url.errors %}form-error{% endif %}" value="{{form.url.value}}"/>
                                 <a href="#" id="creativeAddForm-url-helpLink">What's this?</a>

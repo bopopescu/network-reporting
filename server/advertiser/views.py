@@ -28,7 +28,7 @@ from advertiser.forms import CampaignForm, AdGroupForm, \
 from publisher.models import Site, Account, App
 from reporting.models import StatsModel
 
-from common.utils.cachedquerymanager import CachedQueryManager
+from common.utils.query_managers import CachedQueryManager
 from common.utils.request_handler import RequestHandler
 
 from account.query_managers import AccountQueryManager
@@ -48,9 +48,12 @@ class AdGroupIndexHandler(RequestHandler):
             days = StatsModel.get_days(self.start_date, self.date_range)
         else:
             days = StatsModel.lastdays(self.date_range)
-
-        apps = AppQueryManager().get_apps(account=self.account)
-        campaigns = CampaignQueryManager().get_campaigns(account=self.account)
+            
+        apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
+        
+        
+        
+        campaigns = CampaignQueryManager.get_campaigns(account=self.account)
         if campaigns:
             adgroups = AdGroupQueryManager().get_adgroups(campaigns=campaigns)
         else:
@@ -62,6 +65,14 @@ class AdGroupIndexHandler(RequestHandler):
             # get total for the range
             adgroup.stats = reduce(lambda x, y: x+y, adgroup.all_stats, StatsModel())
             adgroup.percent_delivered = budget_service.percent_delivered(adgroup.campaign)
+            
+            # get targeted apps
+            adgroup.targeted_app_keys = []
+            for adunit_key in adgroup.site_keys:
+                adunit = Site.get(adunit_key)
+                adgroup.targeted_app_keys.append(adunit.app_key.key())
+                # apps.append(adunit.app_key)
+            
 
         promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], adgroups)
         promo_campaigns = sorted(promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
@@ -136,7 +147,7 @@ class CreateCampaignAJAXHander(RequestHandler):
         networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["greystripe","GreyStripe",False],\
             ["iAd","iAd",False],["inmobi","InMobi",False],["jumptap","Jumptap",False],["millennial","Millennial Media",False],["mobfox","MobFox",False],['custom', 'Custom Network', False]]
 
-        all_adunits = AdUnitQueryManager().get_adunits(account=self.account)
+        all_adunits = AdUnitQueryManager.get_adunits(account=self.account)
 
         adgroup_form['site_keys'].choices = all_adunits # needed for validation TODO: doesn't actually work
 
@@ -176,7 +187,7 @@ class CreateCampaignAJAXHander(RequestHandler):
     def post(self):
         adgroup_key = self.request.POST.get('adgroup_key')
         if adgroup_key:
-            adgroup = AdGroupQueryManager().get_by_key(adgroup_key)
+            adgroup = AdGroupQueryManager.get(adgroup_key)
             campaign = adgroup.campaign
         else:
             adgroup = None
@@ -191,7 +202,7 @@ class CreateCampaignAJAXHander(RequestHandler):
             adunits_to_update = set()
 
 
-        all_adunits = AdUnitQueryManager().get_adunits(account=self.account)
+        all_adunits = AdUnitQueryManager.get_adunits(account=self.account)
         sk_field = adgroup_form.fields['site_keys']
         sk_field.choices = all_adunits # TODO: doesn't work needed for validation
 
@@ -207,7 +218,7 @@ class CreateCampaignAJAXHander(RequestHandler):
                 adgroup.account = self.account
 
                 # TODO: clean this up in case the campaign succeeds and the adgroup fails
-                CampaignQueryManager().put_campaigns(campaign)
+                AdGroupQueryManager.put(campaign)
                 adgroup.campaign = campaign
                 # TODO: put this in the adgroup form
                 if not adgroup.campaign.campaign_type == 'network':
@@ -215,7 +226,7 @@ class CreateCampaignAJAXHander(RequestHandler):
 
 
              #put adgroup so creative can have a reference to it
-                AdGroupQueryManager().put_adgroups(adgroup)
+                AdGroupQueryManager.put(adgroup)
 
              ##Check if creative exists for this network type, if yes
              #update, if no, delete old and create new
@@ -238,22 +249,22 @@ class CreateCampaignAJAXHander(RequestHandler):
                         #at this point we know that there was an old creative AND it's different from the old creative so
 
                         #and delete the old creative just marks as deleted!
-                        CreativeQueryManager().delete_creatives(adgroup.net_creative)
+                        CreativeQueryManager.put(adgroup.net_creative)
                     #creative should now reference the appropriate creative (new if different, old if the same, updated old if same and custom)
                     creative.account = self.account
                     #put the creative so we can reference it
-                    CreativeQueryManager().put_creatives(creative)
+                    CreativeQueryManager.put(creative)
                     #set adgroup to reference the correct creative
                     adgroup.net_creative = creative.key()
                     #put the adgroup again with the new (or old) creative reference
-                    AdGroupQueryManager().put_adgroups(adgroup)
+                    AdGroupQueryManager.put(adgroup)
 
 
                 # update cache
                 adunits_to_update.update(adgroup.site_keys)
                 if adunits_to_update:
-                    adunits = AdUnitQueryManager().get_by_key(adunits_to_update)
-                    AdUnitContextQueryManager().cache_delete_from_adunits(adunits)
+                    adunits = AdUnitQueryManager.get(adunits_to_update)
+                    AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
 
 
                 # Onboarding: user is done after they set up their first campaign
@@ -285,7 +296,7 @@ class CreateCampaignHandler(RequestHandler):
     #     campaign_form = CampaignForm(data=self.request.POST)
     #     adgroup_form = AdGroupForm(data=self.request.POST)
     #     
-    #     all_adunits = AdUnitQueryManager().get_adunits(account=self.account)
+    #     all_adunits = AdUnitQueryManager.get_adunits(account=self.account)
     #     sk_field = adgroup_form.fields['site_keys']
     #     sk_field.queryset = all_adunits # TODO: doesn't work needed for validation
     #     if campaign_form.is_valid():
@@ -296,12 +307,12 @@ class CreateCampaignHandler(RequestHandler):
     #             adgroup = adgroup_form.save(commit=False)
     #             
     #             # TODO: clean this up in case the campaign succeeds and the adgroup fails
-    #             CampaignQueryManager().put_campaigns(campaign)
+    #             AdGroupQueryManager.put(campaign)
     #             adgroup.campaign = campaign
-    #             AdGroupQueryManager().put_adgroups(adgroup)
+    #             AdGroupQueryManager.put(adgroup)
     #             if campaign.campaign_type == "network":
     #                 creative = adgroup.default_creative()
-    #                 CreativeQueryManager().put_creatives(creative)
+    #                 CreativeQueryManager.put(creative)
     #             
     #             return HttpResponseRedirect(reverse('advertiser_adgroup_show', kwargs={'adgroup_key':str(adgroup.key())}))
     # 
@@ -314,16 +325,16 @@ def campaign_adgroup_create(request,*args,**kwargs):
 class CreateAdGroupHandler(RequestHandler):
     def get(self, campaign_key=None, adgroup_key=None, edit=False, title="Create an Ad Group"):
         if campaign_key:
-            c = CampaignQueryManager().get_by_key(campaign_key)
+            c = AdGroupQueryManager.get(campaign_key)
             adgroup = AdGroup(name="%s Ad Group" % c.name, campaign=c, bid_strategy="cpm", bid=10.0, percent_users=100.0)
         if adgroup_key:
-            adgroup = AdGroupQueryManager().get_by_key(adgroup_key)
+            adgroup = AdGroupQueryManager.get(adgroup_key)
             c = adgroup.campaign
             if not adgroup:
                 raise Http404("AdGroup does not exist")    
         adgroup.budget = c.budget # take budget from campaign for the time being
         f = AdGroupForm(instance=adgroup)
-        adunits = AdUnitQueryManager().get_adunits(account=self.account)
+        adunits = AdUnitQueryManager.get_adunits(account=self.account)
 
         # allow the correct sites to be checked
         for adunit in adunits:
@@ -339,13 +350,13 @@ class CreateAdGroupHandler(RequestHandler):
 
     def post(self, campaign_key=None,adgroup_key=None, edit=False, title="Create an Ad Group"):
 
-        adgroup = AdGroupQueryManager().get_by_key(adgroup_key)
+        adgroup = AdGroupQueryManager.get(adgroup_key)
         campaign = adgroup.campaign
 
         campaign_form = CampaignForm(data=self.request.POST,instance=campaign)
         adgroup_form = AdGroupForm(data=self.request.POST,instance=adgroup)
 
-        all_adunits = AdUnitQueryManager().get_adunits(account=self.account)
+        all_adunits = AdUnitQueryManager.get_adunits(account=self.account)
 
         if campaign_form.is_valid():
             campaign = campaign_form.save(commit=False)
@@ -355,9 +366,9 @@ class CreateAdGroupHandler(RequestHandler):
             if adgroup_form.is_valid():
                 adgroup = adgroup_form.save(commit=False)
                 # TODO: clean this up in case the campaign succeeds and the adgroup fails
-                CampaignQueryManager().put_campaigns(campaign)
+                CampaignQueryManager.put(campaign)
                 adgroup.campaign = campaign
-                AdGroupQueryManager().put_adgroups(adgroup)
+                AdGroupQueryManager.put(adgroup)
                 return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':str(adgroup.key())}))
 
 @whitelist_login_required         
@@ -374,7 +385,7 @@ class PauseHandler(RequestHandler):
         action = self.request.POST.get("action", "pause")
         updated_campaigns = []
         for id_ in self.request.POST.getlist('id') or []:
-            c = CampaignQueryManager().get_by_key(id_)
+            c = CampaignQueryManager.get(id_)
             updated_campaigns.append(c)
             update_objs = []
             if c != None and c.u == self.account.user:
@@ -403,7 +414,7 @@ class PauseHandler(RequestHandler):
                 adunits = []
                 for adgroup in adgroups:
                     adunits.extend(adgroups.site_keys)
-                adunits = AdUnitQueryManager().get_by_key(adunits)    
+                adunits = AdUnitQueryManager.get(adunits)    
                 CachedQueryManager().put(adunits)
         return HttpResponseRedirect(reverse('advertiser_campaign',kwargs={}))
 
@@ -413,7 +424,7 @@ def campaign_pause(request,*args,**kwargs):
 
 class ShowAdGroupHandler(RequestHandler):
     def post(self, adgroup_key):
-        adgroup = AdGroupQueryManager().get_by_key(adgroup_key)
+        adgroup = AdGroupQueryManager.get(adgroup_key)
         opt = self.params.get('action')
         update = False
         if opt == 'play':
@@ -426,7 +437,7 @@ class ShowAdGroupHandler(RequestHandler):
             logging.error("Passed an impossible option")
 
         if update:
-            AdGroupQueryManager().put_adgroups(adgroup)
+            AdGroupQueryManager.put(adgroup)
         return HttpResponseRedirect(reverse('advertiser_adgroup_show', kwargs={'adgroup_key': str(adgroup.key())}))
 
     def get(self, adgroup_key):
@@ -436,13 +447,13 @@ class ShowAdGroupHandler(RequestHandler):
         else:
             days = StatsModel.lastdays(self.date_range)
 
-        adgroup = AdGroupQueryManager().get_by_key(adgroup_key)
+        adgroup = AdGroupQueryManager.get(adgroup_key)
         adgroup.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)
         adgroup.stats = reduce(lambda x, y: x+y, adgroup.all_stats, StatsModel())    
         adgroup.percent_delivered = budget_service.percent_delivered(adgroup.campaign)
     
         # creatives = Creative.gql('where ad_group = :1 and deleted = :2 and ad_type in :3', adgroup, False, ["text", "image", "html"]).fetch(50)
-        creatives = CreativeQueryManager().get_creatives(adgroup=adgroup)
+        creatives = CreativeQueryManager.get_creatives(adgroup=adgroup)
         creatives = list(creatives)
         for c in creatives:
             c.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(advertiser=c, days=days)
@@ -451,12 +462,12 @@ class ShowAdGroupHandler(RequestHandler):
                 c.format = "320x50" # TODO: Should fix DB so that format is always there
             c.size = c.format.partition('x')
     
-        apps = AppQueryManager().get_apps(account=self.account)
+        apps = AppQueryManager.get_apps(account=self.account)
         for a in apps:
             if a.icon:
                 a.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(a.icon)
         
-        adunits = AdUnitQueryManager().get_adunits(keys=adgroup.site_keys)
+        adunits = AdUnitQueryManager.get_adunits(keys=adgroup.site_keys)
         for au in adunits:
             au.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=au,advertiser=adgroup, days=days)
             au.stats = reduce(lambda x, y: x+y, au.all_stats, StatsModel())
@@ -510,7 +521,7 @@ class PauseAdGroupHandler(RequestHandler):
         adgroups = []
         update_objs = []
         for id_ in self.request.POST.getlist('id') or []:
-            a = AdGroupQueryManager().get_by_key(id_)
+            a = AdGroupQueryManager.get(id_)
             adgroups.append(a)
             if a != None and a.campaign.u == self.account.user:
                 if action == "pause":
@@ -530,13 +541,13 @@ class PauseAdGroupHandler(RequestHandler):
                         update_objs.append(creative)
 
         if update_objs:
-            AdGroupQueryManager().put_adgroups(update_objs)
+            AdGroupQueryManager.put(update_objs)
             adunits = []
             for adgroup in adgroups:
                 adunits.extend(adgroup.site_keys)
 
             adunits = Site.get(adunits)    
-            AdUnitContextQueryManager().cache_delete_from_adunits(adunits)
+            AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
 
         return HttpResponseRedirect(reverse('advertiser_campaign', kwargs={}))
 
@@ -562,13 +573,13 @@ class AddCreativeHandler(RequestHandler):
         # TODO: Shouldn't I be able to just cast???                     
         if creative:
             if creative.ad_type == "text":
-                text_creative = TextCreativeQueryManager().get_by_key(creative.key())
+                text_creative = TextCreativeQueryManager.get(creative.key())
             elif creative.ad_type == "text_icon":
-                text_tile_creative = TextAndTileCreativeQueryManager().get_by_key(creative.key())
+                text_tile_creative = TextAndTileCreativeQueryManager.get(creative.key())
             elif creative.ad_type == "image":
-                image_creative = ImageCreativeQueryManager().get_by_key(creative.key())
+                image_creative = ImageCreativeQueryManager.get(creative.key())
             elif creative.ad_type == "html":
-                html_creative = HtmlCreativeQueryManager().get_by_key(creative.key())            
+                html_creative = HtmlCreativeQueryManager.get(creative.key())            
 
         # NOTE: creative is usually None so the default form is actually unbound                     
         base_creative_form = base_creative_form or BaseCreativeForm(instance=creative)
@@ -595,10 +606,10 @@ class AddCreativeHandler(RequestHandler):
         #     return HttpResponse('<textarea>'+simplejson.dumps(json_dict)+'</textarea>',mimetype="text/plain")
 
     def post(self):
-        ad_group = AdGroupQueryManager().get_by_key(self.request.POST.get('adgroup_key'))
+        ad_group = AdGroupQueryManager.get(self.request.POST.get('adgroup_key'))
         creative_key = self.request.POST.get('creative_key')
         if creative_key:
-            creative = CreativeQueryManager().get_by_key(creative_key)
+            creative = CreativeQueryManager.get(creative_key)
         else:
             creative = None
 
@@ -610,13 +621,13 @@ class AddCreativeHandler(RequestHandler):
         # TODO: Shouldn't I be able to just cast???                     
         if creative:
             if creative.ad_type == "text":
-                text_creative = TextCreativeQueryManager().get_by_key(creative.key())
+                text_creative = TextCreativeQueryManager.get(creative.key())
             elif creative.ad_type == "text_icon":
-                text_tile_creative = TextAndTileCreativeQueryManager().get_by_key(creative.key())
+                text_tile_creative = TextAndTileCreativeQueryManager.get(creative.key())
             elif creative.ad_type == "image":
-                image_creative = ImageCreativeQueryManager().get_by_key(creative.key())
+                image_creative = ImageCreativeQueryManager.get(creative.key())
             elif creative.ad_type == "html":
-                html_creative = HtmlCreativeQueryManager().get_by_key(creative.key())            
+                html_creative = HtmlCreativeQueryManager.get(creative.key())            
 
 
         base_creative_form = BaseCreativeForm(data=self.request.POST,instance=creative)
@@ -642,12 +653,12 @@ class AddCreativeHandler(RequestHandler):
                 creative = creative_form.save(commit=False)
                 creative.ad_group = ad_group
                 creative.account = self.account
-                CreativeQueryManager().put_creatives(creative)        
+                CreativeQueryManager.put(creative)        
 
                 # update cache
-                adunits = AdUnitQueryManager().get_by_key(ad_group.site_keys,none=True)
+                adunits = AdUnitQueryManager.get(ad_group.site_keys)
                 if adunits:
-                    AdUnitContextQueryManager().cache_delete_from_adunits(adunits)
+                    AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
 
                 jsonDict.update(success=True)
                 return self.json_response(jsonDict)
@@ -664,7 +675,7 @@ def creative_create(request,*args,**kwargs):
 
 class DisplayCreativeHandler(RequestHandler):
     def get(self, creative_key):
-        c = CreativeQueryManager().get_by_key(creative_key)
+        c = CreativeQueryManager.get(creative_key)
         if c and c.ad_type == "image" and c.image:
             return HttpResponse(c.image,content_type='image/png')
         if c and c.ad_type == "text_icon":
@@ -678,7 +689,7 @@ class DisplayCreativeHandler(RequestHandler):
 
 class CreativeImageHandler(RequestHandler):
     def get(self,creative_key):
-        c = CreativeQueryManager().get_by_key(creative_key)
+        c = CreativeQueryManager.get(creative_key)
         if c and c.image:
             return HttpResponse(c.image,content_type='image/png')
         raise Http404
@@ -697,7 +708,7 @@ class CreativeManagementHandler(RequestHandler):
         update_objs = []
         # TODO: bulk get before for loop
         for creative_key in keys:
-            c = CreativeQueryManager().get_by_key(creative_key)
+            c = CreativeQueryManager.get(creative_key)
             if c != None and c.ad_group.campaign.u == self.account.user: # TODO: clean up dereferences
                 if action == "pause":
                     c.deleted = False
@@ -714,12 +725,12 @@ class CreativeManagementHandler(RequestHandler):
 
         if update_objs:
             # db.put(update_objs)
-            CreativeQueryManager().put_creatives(update_objs)
+            CreativeQueryManager.put(update_objs)
 
             # update cache
-            adunits = AdUnitQueryManager().get_by_key(c.ad_group.site_keys,none=True)
+            adunits = AdUnitQueryManager.get(c.ad_group.site_keys)
             if adunits:
-                AdUnitContextQueryManager().cache_delete_from_adunits([a for a in adunits if a])
+                AdUnitContextQueryManager.cache_delete_from_adunits([a for a in adunits if a])
 
 
         return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':adgroup_key}))
@@ -777,7 +788,7 @@ class AdServerTestHandler(RequestHandler):
             'SL': ('si-SL', '93.103.136.7')       ,
         }
         
-        adunits = AdUnitQueryManager().get_adunits(account=self.account)
+        adunits = AdUnitQueryManager.get_adunits(account=self.account)
         
         return render_to_response(self.request,
                                   'advertiser/adserver_test.html',

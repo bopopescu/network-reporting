@@ -3,7 +3,7 @@ from datetime import timedelta
 
 from google.appengine.ext import db
 
-from common.utils.cachedquerymanager import CachedQueryManager
+from common.utils.query_managers import CachedQueryManager
 from userstore.models import MobileUser, MobileApp, ClickEvent, AppOpenEvent, CLICK_EVENT_NO_APP_ID, DEFAULT_CONVERSION_WINDOW
 
 

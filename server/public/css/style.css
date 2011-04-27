@@ -440,7 +440,7 @@ header nav .active a {
 
 .titlebar-link {
   display: inline-block;
-  margin: 10px 0 0 0;
+  margin: 5px 0 0 0;
 }
 
 #titlebar .breadcrumb {
@@ -1473,6 +1473,35 @@ input.ui-button {
 .ui-datepicker th { font-weight: 300; padding: 3px 0;  }
 .ui-datepicker .ui-datepicker-title { line-height: 1.7em; }
 
+/*Selectmenu from https://github.com/fnagel/jquery-ui - Heavily edited*/
+
+.ui-selectmenu { display: block; display: inline-block; position: relative; height: 1.75em; vertical-align: middle; text-decoration: none; overflow: hidden; zoom: 1; font-size: 12px; text-decoration:none !important; top:-1px;}
+.ui-selectmenu-icon { position:absolute; right:6px; margin-top:-8px; top: 50%; }
+.ui-selectmenu-menu { padding:0; margin:0; list-style:none; position:absolute; top: 0; display: none; overflow: auto; z-index: 1005; font-size: 12px;} /* z-index: 1005 to make selectmenu work with dialog */
+.ui-selectmenu-open { display: block; }
+.ui-selectmenu-menu-popup { margin-top: -1px; }
+.ui-selectmenu-menu-dropdown { }
+.ui-selectmenu-menu li { padding:0; margin:0; display: block; border-top: 1px dotted transparent; border-bottom: 1px dotted transparent; border-right-width: 0 !important; border-left-width: 0 !important; font-weight: normal !important;}
+.ui-selectmenu-menu li a,.ui-selectmenu-status { line-height: 1.4em; display: block; padding: .205em 1em; outline:none; text-decoration:none; }
+.ui-selectmenu-menu li.ui-state-disabled a { cursor: default; }
+.ui-selectmenu-menu li.ui-selectmenu-hasIcon a,
+.ui-selectmenu-hasIcon .ui-selectmenu-status { padding-left: 20px; position: relative; margin-left: 5px; }
+.ui-selectmenu-menu li .ui-icon, .ui-selectmenu-status .ui-icon { position: absolute; top: 1em; margin-top: -8px; left: 0; }
+.ui-selectmenu-status { line-height: 1.4em; }
+.ui-selectmenu-open li.ui-selectmenu-item-focus a { }
+.ui-selectmenu-open li.ui-selectmenu-item-selected { }
+.ui-selectmenu-menu li span,.ui-selectmenu-status span { display:block; margin-bottom: .2em; }
+.ui-selectmenu-menu li .ui-selectmenu-item-header { font-weight: bold; }
+.ui-selectmenu-menu li .ui-selectmenu-item-content { }
+.ui-selectmenu-menu li .ui-selectmenu-item-footer { opacity: .8; }
+/* for optgroups */
+.ui-selectmenu-menu .ui-selectmenu-group { font-size: 1em; }
+.ui-selectmenu-menu .ui-selectmenu-group .ui-selectmenu-group-label { line-height: 1.4em; display:block; padding: .6em .5em 0; font-weight: bold; }
+.ui-selectmenu-menu .ui-selectmenu-group ul { margin: 0; padding: 0; }
+/* IE6 workaround (dotted transparent borders) */
+* html .ui-selectmenu-menu li { border-color: pink; filter:chroma(color=pink); width:100%; }
+* html .ui-selectmenu-menu li a { position: relative }
+
 /*---------------------------------------/
 / Other Plugins
 /---------------------------------------*/
@@ -1525,7 +1554,7 @@ input.ui-button {
   height: 185px;
 }
 
-#dashboard-apps, #dashboard-campaigns {
+#dashboard-apps, #dashboard-campaign {
   margin: 30px 0 0 0;
 }
 
@@ -1921,6 +1950,82 @@ input.ui-button {
 }
 
 
+/* Campaigns */
+
+.campaignData {
+  padding: 10px 5px 6px 5px;
+  background: #f7f7f7;
+}
+
+.campaignData-alt {
+  background: #fff;
+}
+
+.campaignData-placeholder {
+  display: table-row;
+}
+
+.campaignData th.dataTable-name {
+  width: 200px;
+}
+
+.campaignData-icon {
+  padding-right: 0;
+  width: 55px;
+}
+
+.campaignData-icon input {
+  margin-left: 5px;
+}
+
+.campaignData-icon img {
+  margin: 4px 0 0 4px;
+}
+
+table.campaignData-main {
+  margin: 0 0 15px 0;
+  width: 100%;
+}
+
+.campaignData-main th, .campaignData-main td {
+  font-size: 14px;
+  font-weight: normal;
+}
+
+#campaigns-appFilterOptions {
+  display:block;
+  position:relative;
+  right:150px;
+  margin-right: 40px;
+  padding-right: 40px;
+}
+
+#campaigns-control-panel{
+  display:block;
+  width:100%;
+}
+
+#advertisers-addCampaign{
+  position:absolute;
+  margin-top:5px;
+  right:0px;
+}
+
+.center-button-bank{
+  display:inline-block;
+  position:relative;
+  left:210px;
+  background: #F7F7F7;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  border-radius: 10px;
+  padding:5px 40px;
+}
+
+#dashboard-campaigns {
+  margin: 20px 0 0 0;
+}
+
 /****************************************
  * Media Queries
  ****************************************/
@@ -2018,3 +2123,12 @@ table.campaignData-main, table.reportTable {
   font-size: 14px;
   font-weight: normal;
 }
+
+/*.map-requests .map-impressions,
+.map-requests .map-clicks,
+.map-impressions .map-clicks,
+.map-impressions .map-requests,
+.map-clicks .map-impressions,
+.map-clicks .map-requests{
+    display: none;
+}*/

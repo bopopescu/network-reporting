@@ -1,21 +1,13 @@
- 				{% load filters %}
+{% load filters %}
                    <dl class="formFields"> 
                       <dt>Campaign Type:</dt> 
                       <dd> 
                         <span class="radios"> 
-                          {% if form.instance %} 
-                            {% ifequal form.campaign_type.value 'network' %}  
-                          <div class="hidden">
-                            {% endifequal %}  
-                          {% endif %}  
-                          <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="gtee" id="advertiser-CampaignType-gtee" {% if not form.campaign_type.value %}checked="checked"{% endif %}
-                          {% ifequal form.campaign_type.value "gtee" %}checked='checked'{% endifequal %}
-                          /> 
+                          {% if form.instance and form.campaign_type.value == 'network' %}<div class="hidden">{% endif %}  
+                          <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="gtee" id="advertiser-CampaignType-gtee" {% if not form.campaign_type.value %}checked="checked"{% endif %}{% ifequal form.campaign_type.value "gtee" %}checked='checked'{% endifequal %}/> 
                           <label for="advertiser-CampaignType-gtee">Guaranteed</label> 
-                          
-<input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="promo" id="advertiser-CampaignType-promo" {% ifequal form.campaign_type.value "promo" %}checked="checked"{% endifequal %}/> 
-						  <label for="advertiser-CampaignType-promo">Promotional</label> 
-
+<input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="promo" id="advertiser-CampaignType-promo" {% ifequal form.campaign_type.value "promo" %}checked="checked"{% endifequal %}/>
+                          <label for="advertiser-CampaignType-promo">Promotional</label> 
                           {% if form.instance %}
                             {% ifequal form.campaign_type.value 'network' %}
                           <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="network" id="advertiser-CampaignType-network" {% ifequal form.campaign_type.value "network" %}checked="checked"{% endifequal %}/> <label for="advertiser-CampaignType-network">Network</label>
@@ -23,18 +15,8 @@
                           {% else %}
                           <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="network" id="advertiser-CampaignType-network" {% ifequal form.campaign_type.value "network" %}checked="checked"{% endifequal %}/> <label for="advertiser-CampaignType-network">Network</label>
                           {% endif %}
-
-                            
-                          {% if form.instance %} 
-                            {% ifequal form.campaign_type.value 'network' %}  
-                          </div>
-                            {% endifequal %}  
-                          {% endif %}  
-                          {% if form.instance %}
-                          {% ifequal form.campaign_type.value "network" %}
-                          <strong>Network</strong>
-                          {% endifequal %}
-                          {% endif %}
+                          {% if form.instance and form.campaign_type.value == 'network' %}</div>
+                          <strong>Network</strong>{% endif %}
                         </span>
                         <a href="#" id="campaignForm-type-helpLink">What's this?</a>
                         <div id="campaignForm-type-helpContent" class="hidden"> 
@@ -48,7 +30,7 @@
                         </div>
                       </dd>
                       <div class="campaignDependent gtee">
-                        <dt><label for="gtee_level">Priority:</label></dt>
+                        <dt>Priority:</dt>
                         <dd>
                           <select name='gtee_level'>
                             <option value='high' {% ifequal form.gtee_level.value 'high' %}selected{% endifequal %}>High</option>
@@ -65,9 +47,9 @@
                         </dd>
                       </div>
                       <div class="campaignDependent promo">
-                        <dt><label for="promo_level">Priority:</label></dt>
+                        <dt>Priority:</dt>
                         <dd>
-						  {{ form.promo_level.as_widget }}
+{{ form.promo_level.as_widget }}
                           <a href="#" id="campaignForm-promo-priority-helpLink">What's this?</a>
                           <div id='campaignForm-promo-priority-helpContent' class='hidden'>
                             <h3>Priority</h3>
@@ -81,13 +63,13 @@
                       {{ form.name|attrs:'{"placeholder":"Campaign Name"}'  }}
                       {{ form.description|attrs:'{"placeholder":"Campaign for My New App"}' }}
                       <div class="campaignDependent gtee promo backfill_promo">
-                        <dt><label for="">Dates:</label></dt>
+                        <dt>Dates:</dt>
                         <dd>
                           <input type='text' class="input-text input-text-number" name="{{form.start_date.name}}" size="15" value="{{form.start_date.value|date:"m/d/Y"}}" placeholder="Start"/> - 
                           <input type='text' class="input-text input-text-number" name="{{form.end_date.name}}" size="15" value="{{form.end_date.value|date:"m/d/Y"}}"  placeholder="End"/>
                         </dd>
                         {# Belong to AdGroup #}
-                        <dt><label for="TODO2">Rate:</label></dt> 
+                        <dt>Rate:</dt> 
                         <dd> 
                           <select name="bid_strategy" id="adgroupForm-bid_strategy-select">
                             <option value="cpm" id="bid_strategy-cpm" {% ifequal form.bid_strategy.value "cpm"%}selected="selected"{% endifequal %}>CPM</option>
@@ -100,7 +82,7 @@
                         </dd>
                       </div>
                       <div class="campaignDependent gtee">
-                        <dt><label for="TODO1">Delivery Amount:</label></dt>
+                        <dt>Delivery Amount:</dt>
                         <dd>
                           <span class="campaignAdgroupForm-budget" id="campaignAdgroupForm-budget-impressions"><input type='text' name="impressions" value="" class="input-text input-text-number"/> impressions / day</span>
                           <span class="campaignAdgroupForm-budget hidden" id="campaignAdgroupForm-budget-bid"><input type='text' name="{{form.budget.name}}" value="{{form.budget.value}}" class="input-text input-text-number {% if form.budget.errors %}form-error{% endif %}"/> USD / day</span>
@@ -109,13 +91,11 @@
                           <div class="form-error-text">{{error}}</div> 
                           {% endfor %}
                         </dd>
-
-                        {{ form.budget_strategy|label:"Delivery Speed"}}
-
+{{ form.budget_strategy|label:"Delivery Speed"}}
                       </div>
                       <div class="campaignDependent network">
                         {# End Belong to AdGroup #}
-                        <dt><label for="TODO4">Network Type:</label></dt>
+                        <dt>Network Type:</dt>
                         <dd>
                           <select id="network_select" name="network_type">
                             {% for network in networks %}<option class="network_option" value="{{network.0}}" {% if network.2 %}selected="selected"{%endif%}>{{network.1}}</option>
@@ -123,37 +103,37 @@
                           </select>
                         </dd>
                         <div class='networkDependent custom'>
-                            <dt><label for="custom_html">Custom HTML:</label></dt>
-                            <dd>
+                          <dt>Custom HTML:</dt>
+                          <dd>
                             <textarea rows=3 name='custom_html' placeholder='HTML Custom Content'>{{form.custom_html.value}}</textarea>
-                          <a href="#" id="campaignForm-customHtml-helpLink">What's this?</a>
-                            </dd>
+                            <a href="#" id="campaignForm-customHtml-helpLink">What's this?</a>
+                          </dd>
                           <div id='campaignForm-customHtml-helpContent' class='hidden'>
-                              <h3>Custom Network</h3>
-                              MoPub supports custom ad networks if the network provides an HTML snippet for displaying ads.  Select Custom Network then paste the HTML snippet in the box below.
-                              <br/>
-                              <br/>
-                              <h4>AdSense Example:</h4>
-                              The custom HTML snippet for AdSense is:
-                              <br/>
-                              <code> &lt;script type=&quot;text/javascript&quot;&gt;
-                              <br/>
-                              &lt;!--
-                              // XHTML should not attempt to parse these strings, declare them CDATA.<br/>
-                              /* &lt;![CDATA[ */<br/><br/>
+                            <h3>Custom Network</h3>
+                            MoPub supports custom ad networks if the network provides an HTML snippet for displaying ads.  Select Custom Network then paste the HTML snippet in the box below.
+                            <br/>
+                            <br/>
+                            <h4>AdSense Example:</h4>
+                            The custom HTML snippet for AdSense is:
+                            <br/>
+                            <code> &lt;script type=&quot;text/javascript&quot;&gt;
+                            <br/>
+                            &lt;!--
+                            // XHTML should not attempt to parse these strings, declare them CDATA.<br/>
+                            /* &lt;![CDATA[ */<br/><br/>
                             window.googleAfmcRequest = {<br/>
-                                &nbsp;&nbsp;client: 'XXXXXXXXXXXXXX',<br/>
-                                &nbsp;&nbsp;format: '320x50_mb',<br/>
-                                &nbsp;&nbsp;output: 'html',<br/>
-                                &nbsp;&nbsp;slotname: 'XXXXXXXXX',<br/>
+                              &nbsp;&nbsp;client: 'XXXXXXXXXXXXXX',<br/>
+                              &nbsp;&nbsp;format: '320x50_mb',<br/>
+                              &nbsp;&nbsp;output: 'html',<br/>
+                              &nbsp;&nbsp;slotname: 'XXXXXXXXX',<br/>
                             };<br/>
                             /* ]]&gt; */<br/>
                             //--&gt;&lt;/script&gt;<br/>
                             &lt;script type=&quot;text/javascript&quot; src = &quot;http://pagead2.googlesyndication.com/pagead/show_afmc_ads.js&quot;&gt;&lt;/script&gt;
                             </code>
-                            </div>
+                          </div>
                         </div>
-                        <dt><label for="TODO2">Network eCPM:</label></dt> 
+                        <dt>Network eCPM:</dt> 
                         <dd> 
                           <input type="text" class="input-text input-text-number {% if form.bid.errors %}form-error{% endif %}" name="bid" value='{{form.bid.value}}' id="bid-network" /> USD
                           {% for error in form.bid.errors %}

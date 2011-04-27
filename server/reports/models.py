@@ -136,35 +136,35 @@ class Report(db.Model):
                 vals = date_magic.get_hours(days)
         elif dim == APP:
             #basic stuff
-            man = AppQueryManager()
+            man = AppQueryManager
             type = 'pub'
             vals = man.reports_get_apps(account = self.account,
                                         publisher = pub,
                                         advertiser = adv,
                                         )
         elif dim == AU:
-            man = AdUnitQueryManager()
+            man = AdUnitQueryManager
             type = 'pub'
             vals = man.reports_get_adunits(account = self.account,
                                            publisher = pub,
                                            advertiser = adv,
                                            )
         elif dim == CAMP:
-            man = CampaignQueryManager()
+            man = CampaignQueryManager
             type = 'adv'
             vals = man.reports_get_campaigns(account = self.account,
                                              publisher = pub,
                                              advertiser = adv,
                                              )
         elif dim == CRTV:
-            man = CreativeQueryManager()
+            man = CreativeQueryManager
             type = 'adv'
             vals = man.reports_get_creatives(account = self.account,
                                              publisher = pub,
                                              advertiser = adv,
                                              )
         elif dim == P:
-            man = CampaignQueryManager()
+            man = CampaignQueryManager
             type = 'adv'
             vals = man.reports_get_campaigns(account = self.account,
                                              publisher = pub,

@@ -63,7 +63,7 @@ class AppQueryManager(QueryManager):
     def reports_get_apps(cls, account=None, publisher=None, advertiser=None, deleted=False, limit=50):
         '''Given account or pub, or adv or some combination thereof return a list of apps that (correctly) 
         correspond to the inputs and things'''
-        apps = self.Model.all().filter("deleted =", deleted)
+        apps = App.all().filter("deleted =", deleted)
         adunits = []
         #if advertiser is set, restrict apps to be only those apps that advertiser has an effect on
         if advertiser:
@@ -91,13 +91,6 @@ class AppQueryManager(QueryManager):
                 apps.add(adunit.app.key())
             return list(App.get(apps))
             
-            final_apps = []
-            for app in apps:
-                for au in app.adunits:
-                    if au in adunits:
-                        final_apps.append(app)
-                        break
-            return final_apps
         #if publisher has been set then everything makes no sense so just ignore it and pass it back or something
         # huh?
         if publisher:
@@ -105,8 +98,7 @@ class AppQueryManager(QueryManager):
 
         if account:
             apps = apps.filter('account =', account)
-        else:
-            return apps
+        return apps
         
     def put_apps(self,apps):
         return db.put(apps)    
@@ -114,7 +106,7 @@ class AppQueryManager(QueryManager):
 class AdUnitQueryManager(QueryManager):
     Model = AdUnit
     
-   @classmethod
+    @classmethod
     def get_adunits(cls,app=None,account=None,keys=None,deleted=False,limit=50):
         if keys is not None:
             if type(keys) == list and len(keys) == 0:

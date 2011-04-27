@@ -31,8 +31,9 @@ class CampaignQueryManager(QueryManager):
         if account:
             campaigns = campaigns.filter("account =",account)
         return campaigns.fetch(limit)        
-    
-    def reports_get_campaigns(self, account=None, publisher=None, advertiser=None, deleted=False, by_priority=False):
+
+    @classmethod 
+    def reports_get_campaigns(cls, account=None, publisher=None, advertiser=None, deleted=False, by_priority=False):
         if advertiser:
             # advertiser as list means priority level, return all these camps 
             # because we want stuff for those campaigns individually
@@ -147,7 +148,8 @@ class CreativeQueryManager(QueryManager):
     def put_creatives(self,creatives):
         return db.put(creatives)
 
-    def reports_get_creatives(self, account=None, publisher=None, advertiser=None, deleted=False):
+    @classmethod
+    def reports_get_creatives(cls, account=None, publisher=None, advertiser=None, deleted=False):
         adgroups = []
         if advertiser:
             if type(advertiser) != list:

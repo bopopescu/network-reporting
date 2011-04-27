@@ -14,7 +14,7 @@ from google.appengine.ext import db
 from google.appengine.ext import testbed
 
 
-from django.template.loader import render_to_string
+#from django.template.loader import render_to_string
 from advertiser.models import AdGroup, Creative, Campaign
 from account.models import Account
 from publisher.models import App
@@ -201,7 +201,7 @@ class TestReports():
 def simple_mptest():
     tester = TestReports()
     tester.setUp()
-    rep1 = Report(d1='priority', d2='creative', d3='day', start=DATE, end=DATE+datetime.timedelta(days=1), account=tester.account)
+    rep1 = Report(d1='app', start=DATE, end=DATE+datetime.timedelta(days=1), account=tester.account)
     rep2 = Report(d1='campaign', d2='app', d3='day', start=DATE, end=DATE+datetime.timedelta(days=1), account=tester.account)
     rep3 = Report(d1='month', d2='week', d3='campaign', start=DATE, end=DATE+datetime.timedelta(days=1), account=tester.account)
     data1 = rep1.gen_data()
@@ -209,11 +209,8 @@ def simple_mptest():
     data3 = rep3.gen_data()
     print "Report 1: %s" % rep1
     pprint.pprint(data1)
-    print render_to_string('reports/report.html', data1)
     print "\n\nReport 2: %s" % rep2
     pprint.pprint(data2)
-    print render_to_string('reports/report.html', data2)
     print "\n\nReport 3: %s" % rep3
     pprint.pprint(data3)
-    print render_to_string('reports/report.html', data3)
     assert False

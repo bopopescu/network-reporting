@@ -1,7 +1,6 @@
 import logging
 
 from common.utils.query_managers import CachedQueryManager
-from advertiser.query_managers import CampaignStatsCounter
 
 from google.appengine.ext import db
 
@@ -112,11 +111,6 @@ class AdUnitContext(object):
         for adgroup in adgroups:
             campaign = db.get(adgroup.campaign.key())
             campaigns.append(campaign)
-
-        # attach sharded counter to all campaigns for budgetary
-        # @Nafis: is this necessary?
-        for campaign in campaigns:
-            campaign.delivery_counter = CampaignStatsCounter(campaign)
         return campaigns
         
         

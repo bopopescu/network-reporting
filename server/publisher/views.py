@@ -610,23 +610,6 @@ class AppIconHandler(RequestHandler):
 
 def app_icon(request,*args,**kwargs):
   return AppIconHandler()(request,*args,**kwargs)
-    
-# Set up a new user with a default campaign
-class GetStartedHandler(RequestHandler):
-  def get(self):
-    # Check if the user is in the data store and create it if not
-
-    user = self.account.user
-    account = Account.get_by_key_name(user.user_id())
-    if not account:
-      account = Account(key_name=user.user_id(),user=user)
-      AccountQueryManager.put_accounts(account)
-      
-    return HttpResponseRedirect(reverse('publisher_index'))
-
-@whitelist_login_required
-def getstarted(request,*args,**kwargs):
-  return GetStartedHandler()(request,*args,**kwargs)   
 
 class RemoveAdUnitHandler(RequestHandler):
   def post(self):

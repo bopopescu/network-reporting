@@ -77,8 +77,6 @@ from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManag
 
 from ad_server.optimizer.adunit_context import AdUnitContext, CreativeCTR
 
-from advertiser.query_managers import CampaignStatsCounter
-
 from mopub_logging import mp_logging
 from budget import budget_service
 from google.appengine.ext.db import Key

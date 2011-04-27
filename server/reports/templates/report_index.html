@@ -75,7 +75,7 @@
                     <a href='{% url view_report report_key=save.key %}'>{{save.name}}</a>
                 </th>
                 <td class='dataTable-data numeric'>{{save.details}}</td>
-                <td id='{{save.key}}-status' class='dataTable-data numeric'>{{save.status}}</td>
+                <td id='{{save.key}}-status' class='dataTable-data numeric'>{{save.status|title}}</td>
                 <td class='dataTable-data numeric'></td>
             </tr>
             {% endfor %}
@@ -113,7 +113,7 @@
                     <a href='{% url view_report report_key=comm.key %}'>{{comm.name}}</a>
                 </th>
                 <td class='dataTable-data numeric'>{{comm.details}}</td>
-                <td id='{{comm.key}}-status' class='dataTable-data numeric'>{{comm.status}}</td>
+                <td id='{{comm.key}}-status' class='dataTable-data numeric'>{{comm.status|title}}</td>
                 <td class='dataTable-data numeric'></td>
             </tr>
             {% endfor %}
@@ -152,7 +152,7 @@
                     <a href='{% url view_report report_key=hist.key %}'>{{hist.name}}</a>
                 </th>
                 <td class='dataTable-data numeric'>{{hist.details}}</td>
-                <td id='{{hist.key}}-status' class='dataTable-data numeric'>{{hist.status}}</td>
+                <td id='{{hist.key}}-status' class='dataTable-data numeric'>{{hist.status|title}}</td>
             </tr>
             {% endfor %}
             <tr class="reportData reportData-placeholder">

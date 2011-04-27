@@ -1,20 +1,20 @@
-                            <dt><label for="TODO1">Line 1</label></dt>
+                            <dt>Line 1</dt>
                             <dd>
                               <input id='line1' type='text' name="{{form.line1.name}}" class="input-text {% if form.line1.errors %}form-error{% endif %}" value="{{form.line1.value}}"/>
                               {% for error in form.line1.errors %}
                               <div class="form-error-text">{{error}}</div> 
                               {% endfor %}
                             </dd> 
-                            <dt><label for="TODO2">Line 2</label></dt>
+                            <dt>Line 2</dt>
                             <dd>
                               <input id='line2' type='text' name="{{form.line2.name}}" class="input-text {% if form.line2.errors %}form-error{% endif %}" value="{{form.line2.value}}"/>
                               {% for error in form.line2.errors %}
                               <div class="form-error-text">{{error}}</div> 
                               {% endfor %}
                             </dd> 
-                            <dt><label for="TODO2">Image File</label></dt>
+                            <dt>Image File</dt>
                             <dd>
-                              <span style="font-size:smaller;margin-left:5px;">(40 x 40)</span></th><td><div id='image_input_div'><input id='image_input' type='file' name="{{form.image_file.name}}" size="40"/></div><div id='image_input_change' style='display:none;'><a href="#" onclick="changeIcon();return false;">Change</a></div></td></tr>
+                              <span style="font-size:smaller;margin-left:5px;">(40 x 40)</span><div id='image_input_div'><input id='image_input' type='file' name="{{form.image_file.name}}" size="40"/></div><div id='image_input_change' style='display:none;'><a href="#" onclick="changeIcon();return false;">Change</a></div>
                               <input type="hidden" id="app_img" name="app_img"/>
                               {% if form.image_url.value %}
                               <div>
@@ -23,21 +23,21 @@
                               {% endif %}
                             </dd>
                             <div class="creativeForm-advanced-options hidden">
-                              <dt><label for="TODO3">Action Icon</label></dt>
+                              <dt>Action Icon</dt>
                               <dd>
                                 <input type="radio" name="action_icon" value="download_arrow4" onclick="setAction('download_arrow4');" checked/><img src="/images/download_arrow4.png" width="40" heigh="40"/>
                                 <input type="radio" name="action_icon" value="access_arrow" onclick="setAction('access_arrow');"/><img src="/images/access_arrow.png" width="40" heigh="40"/>
                                 <input type="radio" name="action_icon" value="none" onclick="setAction('none');"/> None
                                 <input type="radio" name="action_icon" value="custom" onclick="setAction('custom');" disabled/> Custom
                               </dd>
-                              <dt><label for="TODO4">Color</label></dt> 
+                              <dt>Color</dt> 
                               <dd>
                                 <input type='text' id='color' name="{{form.color.name}}" value="000000" class="input-text {% if form.color.errors %}form-error{% endif %}"/>
                                 {% for error in form.color.errors %}
                                 <div class="form-error-text">{{error}}</div> 
                                 {% endfor %}
                               </dd>
-                              <dt><label for="TODO5">Font Color</label></dt>
+                              <dt>Font Color</dt>
                               <dd>
                                 <input type='text' id='font_color' name="{{form.font_color.name}}" value="FFFFFF" class="input-text {% if form.font_color.errors %}form-error{% endif %}"/>
                                 {% for error in form.font_color.errors %}
@@ -48,7 +48,7 @@
                               <dd>
                                 <input type='checkbox' id='gradient' name="gradient" checked />
                               </dd>
-                              <dt><label for="tracking_url">Impression Tracking Pixel:</label></dt>
+                              <dt>Impression Tracking Pixel:</dt>
                               <dd>
                                 <input type='text' name="{{form.tracking_url.name}}" class="input-text {% if form.tracking_url.errors %}form-error{% endif %}" value="{{form.tracking_url.value}}"/>
                                 {% for error in form.tracking_url.errors %}

@@ -922,5 +922,3 @@ class TestBudgetEndToEnd(unittest.TestCase):
         # We now use our cheap campaign budget
         creative = run_auction(self.budget_ad_unit.key())
         eq_(creative.ad_group.campaign.name, "cheap")
-    
-    

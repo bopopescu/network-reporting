@@ -73,7 +73,10 @@ from ad_server.networks.mobfox import MobFoxServerSide
 from ad_server.optimizer import optimizer
 
 from userstore.query_managers import ClickEventManager, AppOpenEventManager
-from publisher.query_managers import AdUnitQueryManager, CreativeCTR, AdUnitContext, AdUnitContextQueryManager
+from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
+
+from ad_server.optimizer.adunit_context import AdUnitContext, CreativeCTR
+
 from advertiser.query_managers import CampaignStatsCounter
 
 from mopub_logging import mp_logging
@@ -201,6 +204,8 @@ class AdAuction(object):
         # 4) throw out ad groups that do not match device and geo predicates
         all_ad_groups = adunit_context.adgroups
         
+        trace_logging.info("All Campaigns Targeted at this AdUnit: %s"%[str(a.name) for a in all_ad_groups])
+        
         trace_logging.info("##############################")
         trace_logging.info("Excluding Ineligible Campaigns")
         trace_logging.info("##############################")
@@ -216,7 +221,7 @@ class AdAuction(object):
         
         all_ad_groups = filter( mega_filter( *ALL_FILTERS ), all_ad_groups )
         for ( func, warn, lst ) in ALL_FILTERS:
-            trace_logging.info( warn % lst )
+            trace_logging.info( warn % [str(a.name) for a in lst] )
         
         # TODO: user based frequency caps (need to add other levels)
         # to add a frequency cap, add it here as follows:
@@ -249,7 +254,7 @@ class AdAuction(object):
         
         for fil in FREQ_FILTERS: 
             func, warn, lst = fil
-            trace_logging.info( warn % lst )
+            trace_logging.info( warn % [str(a.name) for a in lst] )
             
         # calculate the user experiment bucket
         user_bucket = hash(udid+','.join([str( ad_group.key() ) for ad_group in all_ad_groups])) % 100 # user gets assigned a number between 0-99 inclusive
@@ -461,7 +466,7 @@ class AdHandler(webapp.RequestHandler):
         
         if self.request.get('admin_debug_mode','0') == "1":
             admin_debug_mode = True
-            trace_logging.info_levels = [logging.info,logging.debug,logging.warning,
+            trace_logging.log_levels = [logging.info,logging.debug,logging.warning,
                                         logging.error,logging.critical,]
         else:
             admin_debug_mode = False 
@@ -472,15 +477,15 @@ class AdHandler(webapp.RequestHandler):
         id = self.request.get("id")
         now = datetime.datetime.now()
         
-        adunit_context = AdUnitContextQueryManager().cache_get(id)
+        adunit_context = AdUnitContextQueryManager.cache_get_or_insert(id)
         adunit = adunit_context.adunit
         
         mp_logging.log(self.request,event=mp_logging.REQ_EVENT,adunit=adunit)  
         # mp_logging.log(self.request,event=mp_logging.REQ_EVENT, testing=testing)  
         
-        trace_logging.warning(self.request.headers['User-Agent'] )
+        trace_logging.warning("User Agent: %s"%helpers.get_user_agent(self.request))
         country_re = r'[a-zA-Z][a-zA-Z][-_](?P<ccode>[a-zA-Z][a-zA-Z])'
-        countries = re.findall(country_re, self.request.headers['User-Agent'])
+        countries = re.findall(country_re, helpers.get_user_agent(self.request))
         addr = []
         if len(countries) == 1:
             countries = [c.upper() for c in countries]
@@ -527,7 +532,7 @@ class AdHandler(webapp.RequestHandler):
         
         # TODO: get udid we should hash it if its not already hashed
         udid = self.request.get("udid")
-        user_agent = self.request.headers['User-Agent']
+        user_agent = helpers.get_user_agent(self.request)
         
         # create a unique request id, but only log this line if the user agent is real
         request_id = hashlib.md5("%s:%s" % (self.request.query_string, time.time())).hexdigest()
@@ -615,6 +620,7 @@ class AdHandler(webapp.RequestHandler):
             trace_logging.info("##############################")
             trace_logging.info("##############################")
             trace_logging.info("Winner found, rendering: %s" % str(c.name))
+            trace_logging.warning("Creative key: %s" % str(c.key()))
             trace_logging.warning("rendering: %s" % c.ad_type)
             site = kwargs["site"]
             adunit = site
@@ -622,7 +628,18 @@ class AdHandler(webapp.RequestHandler):
             format = adunit.format.split('x')
             network_center = False
             if len(format) < 2:
-                if not c.adgroup.network_type or c.adgroup.network_type in FULL_NETWORKS:
+                ####################################
+                # HACK FOR TUNEWIKI
+                # TODO: We should make this smarter
+                # if the adtype is not html (e.g. image)
+                # then we set the orientation to only landscape
+                # and the format to 480x320
+                ####################################
+                if not c.ad_type == "html":
+                    if adunit.landscape:
+                        self.response.headers.add_header("X-Orientation","l")
+                        format = ("480","320")                        
+                elif not c.adgroup.network_type or c.adgroup.network_type in FULL_NETWORKS:
                     format = (320,480)
                 elif c.adgroup.network_type:
                     #TODO this should be a littttleee bit smarter. This is basically saying default
@@ -706,8 +723,10 @@ class AdHandler(webapp.RequestHandler):
                 #   self.response.headers.add_header("X-Closebutton","None")
                 
             elif c.ad_type == "html_full":
-                params.update(html_data=c.html_data)
-                params.update({"html_data": kwargs["html_data"]})
+                # must pass in parameters to fully render template
+                # TODO: NOT SURE WHY I CAN'T USE: html_data = c.html_data % dict(track_pixels=success)
+                html_data = c.html_data.replace(r'%(track_pixels)s',success)
+                params.update(html_data=html_data)
                 self.response.headers.add_header("X-Scrollable","1")
                 self.response.headers.add_header("X-Interceptlinks","0")
             elif c.ad_type == "text":  
@@ -859,7 +878,7 @@ class AdImpressionHandler(webapp.RequestHandler):
         # Update budgeting
         # TODO: cache this
         adunit_key = self.request.get('id')
-        adunit_context = AdUnitContextQueryManager().cache_get(adunit_key)
+        adunit_context = AdUnitContextQueryManager.cache_get_or_insert(adunit_key)
         creative_id = self.request.get('cid')
         creative = adunit_context.get_creative_by_key(creative_id)
         if creative.ad_group.bid_strategy == 'cpm':

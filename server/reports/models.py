@@ -201,7 +201,7 @@ class Report(db.Model):
             det = "how the fuck did you get to this state, at least one dim is required"
         s_str = self.start.strftime('%m/%d/%y')
         e_str = self.end.strftime('%m/%d/%y')
-        date = '%s to %s' % (e_str, s_str)
+        date = '%s to %s' % (s_str, e_str)
         return date + "\n" + det.title()
             
 

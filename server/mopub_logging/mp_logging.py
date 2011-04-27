@@ -80,7 +80,7 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
         
     # get account name from the adunit
     if not adunit:
-        adunit_context = AdUnitContextQueryManager().cache_get(adunit_id)
+        adunit_context = AdUnitContextQueryManager.cache_get_or_insert(adunit_id)
         adunit = adunit_context.adunit
     
     account_name = str(adunit.account.key())
@@ -113,7 +113,8 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
     memcache.set(log_key,logging_data,time=MEMCACHE_ALIVE_TIME)
     
     # send to appropriately named task_queue
-    task_name = TASK_NAME%dict(account_name=account_name,time=time_bucket)
+    task_name = TASK_NAME%dict(account_name=account_name.replace('_','1X--X1'), # must escape '_' regex: [a-zA-Z0-9-]{1,500}$   
+                               time=time_bucket)
     
     try:
         account_bucket = hash(account_name)%NUM_TASK_QUEUES

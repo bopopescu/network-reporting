@@ -88,9 +88,13 @@ class GenReportHandler(RequestHandler):
     def post(self, report):
         man = ReportQueryManager(self.account)
         report = man.get_report_by_key(report)
+        report.status = 'pending'
+        man.put(report)
         report.data = report.gen_data()
         logging.warning(report.data)
         report.html_data = loader.render_to_string('reports/report.html', dict(all_stats=report.data))
+        report.status = 'done'
+        report.completed_at = datetime.datetime.now()
         man.put_report(report)
         return HttpResponse('Report Generation Successful')
     def get(self):

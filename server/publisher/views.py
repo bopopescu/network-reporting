@@ -1,4 +1,11 @@
-import logging, os, re, hashlib
+import base64
+import binascii
+import hashlib
+import logging
+import math
+import os
+import re
+
 from datetime import (datetime,
                       time,
                       date,
@@ -10,7 +17,6 @@ urllib.getproxies_macosx_sysconf = lambda: {}
 
 from urllib import urlencode
 from operator import itemgetter
-import base64, binascii
 
 
 from google.appengine.api.urlfetch import fetch
@@ -34,13 +40,13 @@ from common.utils.decorators import whitelist_login_required
 from advertiser.models import Campaign, AdGroup, HtmlCreative
 from publisher.models import Site, Account, App
 from publisher.forms import SiteForm, AppForm, AdUnitForm
-from reporting.models import StatsModel
+from reporting.models import StatsModel, GEO_COUNTS
 
 ## Query Managers
 from account.query_managers import AccountQueryManager
 from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager, \
                                       CreativeQueryManager
-from common.utils.cachedquerymanager import CachedQueryManager
+from common.utils.query_managers import CachedQueryManager
 from publisher.query_managers import AppQueryManager, AdUnitQueryManager, AdUnitContextQueryManager
 from reporting.query_managers import StatsModelQueryManager
 
@@ -59,7 +65,7 @@ class AppIndexHandler(RequestHandler):
     else:
       days = StatsModel.lastdays(self.date_range)
 
-    apps = AppQueryManager().get_apps(self.account)
+    apps = AppQueryManager.get_apps(self.account)
     if len(apps) == 0:
       return HttpResponseRedirect(reverse('publisher_app_create'))
 
@@ -68,7 +74,7 @@ class AppIndexHandler(RequestHandler):
         app.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(app.icon)
 
       # attaching adunits onto the app object
-      app.adunits = AdUnitQueryManager().get_adunits(app=app)
+      app.adunits = AdUnitQueryManager.get_adunits(app=app)
 
       # organize impressions by days
       for adunit in app.adunits:
@@ -121,37 +127,62 @@ def index(request,*args,**kwargs):
 class AppIndexGeoHandler(RequestHandler):
   def get(self):
     # compute start times; start day before today so incomplete days don't mess up graphs
-    days = StatsModel.lastdays(14)
+
+    if self.start_date:
+      days = StatsModel.get_days(self.start_date, self.date_range)
+    else:
+      days = StatsModel.lastdays(self.date_range)
+
+    now = datetime.now()
     
-    apps = AppQueryManager().get_apps(self.account)
+    apps = AppQueryManager.get_apps(self.account)
     
     if len(apps) == 0:
       return HttpResponseRedirect(reverse('publisher_app_create'))
 
-    geo_req = {}  
-    geo_imp = {}
-    geo_clk = {}
-    geo_rev = {}
-    for a in apps:
-      a.adunits = AdUnitQueryManager().get_adunits(app=a)
-      if len(a.adunits) > 0:
-        for adunit in a.adunits:
-          adunit.all_stats = StatsModelQueryManager(self.account,self.offline).get_stats_for_days(publisher=adunit, days=days)
-          for stats in adunit.all_stats:
-            #stats.geo_imp = simplejson.loads(stats.geo_impressions)
-            #stats.geo_clk = simplejson.loads(stats.geo_clicks)
-            #stats.geo_rev = simplejson.loads(stats.geo_revenue)
-            geo_req = dict( (n, geo_req.get(n,0)+stats.geo_requests.get(n,0)) for n in set(geo_req)|set(stats.geo_requests) )
-            #geo_imp = dict( (n, geo_imp.get(n,0)+stats.geo_imp.get(n,0)) for n in set(geo_imp)|set(stats.geo_imp) )
-            #geo_clk = dict( (n, geo_clk.get(n,0)+stats.geo_clk.get(n,0)) for n in set(geo_clk)|set(stats.geo_clk) )
-            #geo_rev = dict( (n, geo_rev.get(n,0)+stats.geo_rev.get(n,0)) for n in set(geo_rev)|set(stats.geo_rev) )
-
-    geo_req = sorted(geo_req.items(), key=itemgetter(1), reverse=True)
-    return render_to_response(self.request,'publisher/index_geo.html', 
-      {'geo_imp': geo_imp,    
-       'geo_clk': geo_clk,
-       'geo_rev': geo_rev,
-       'geo_req': geo_req,
+    geo_dict = {}
+    totals = StatsModel(date=now) # sum across all days and countries
+    
+    # hydrate geo count dicts with stats counts on account level
+    all_stats = StatsModelQueryManager(self.account,self.offline).get_stats_for_days(days=days) 
+    for stats in all_stats:
+      totals = totals + StatsModel(request_count=stats.request_count, 
+                                   impression_count=stats.impression_count, 
+                                   click_count=stats.click_count, 
+                                   user_count=stats.user_count,
+                                   date=now)                                   
+      countries = stats.get_countries()
+      for c in countries:
+        geo_dict[c] = geo_dict.get(c, StatsModel(country=c, date=now)) + \
+                        StatsModel(country=c,  
+                                   request_count=stats.get_geo(c, GEO_COUNTS[0]), 
+                                   impression_count=stats.get_geo(c, GEO_COUNTS[1]), 
+                                   click_count=stats.get_geo(c, GEO_COUNTS[2]), 
+                                   date=now)
+    
+    # creates a sorted table based on request count 
+    geo_table = []
+    keys = geo_dict.keys()
+    keys.sort(lambda x,y: cmp(geo_dict[y].request_count, geo_dict[x].request_count))
+    for k in keys:
+      geo_table.append((k, geo_dict[k]))
+    
+    # create copy of geo_dict with counts on log scale
+    geo_log_dict = {}
+    for c, stats in geo_dict.iteritems():
+      geo_log_dict[c] = StatsModel(country=c,
+                                   # check to see if count is 0 since log 0 is invalid; +0.5 at the end for rounding
+                                   request_count=int(math.log10(stats.request_count if stats.request_count > 0 else 1) + 0.5), 
+                                   impression_count=int(math.log10(stats.impression_count if stats.impression_count > 0 else 1) + 0.5),
+                                   click_count=int(math.log10(stats.click_count if stats.click_count > 0 else 1) + 0.5),
+                                   date=now)
+    
+    return render_to_response(self.request, 'publisher/index_geo.html', 
+      {'geo_dict': geo_dict,
+       'geo_log_dict': geo_log_dict,
+       'geo_table': geo_table,
+       'totals' : totals,
+       'date_range': self.date_range,
        'account': self.account})
 
 @whitelist_login_required     
@@ -169,7 +200,7 @@ class AppCreateHandler(RequestHandler):
   def post(self):
     app = None
     if self.request.POST.get("app_key"):
-      app = AppQueryManager().get_by_key(self.request.POST.get("app_key"))
+      app = AppQueryManager.get(self.request.POST.get("app_key"))
       app_form = AppForm(data=self.request.POST, files = self.request.FILES, instance=app)
     else:
       app_form = AppForm(data=self.request.POST, files = self.request.FILES )
@@ -191,18 +222,18 @@ class AppCreateHandler(RequestHandler):
         adunit.account = self.account
 
         # update the database
-        AppQueryManager().put_apps(app)
+        AppQueryManager.put(app)
         
         adunit.app_key = app
         
-        AdUnitQueryManager().put_adunits(adunit)
+        AdUnitQueryManager.put(adunit)
 
         # update the cache as necessary 
         # replace=True means don't do anything if not already in the cache
-        AdUnitContextQueryManager().cache_delete_from_adunits(adunit)
+        AdUnitContextQueryManager.cache_delete_from_adunits(adunit)
 
         # Check if this is the first ad unit for this account
-        if len(AdUnitQueryManager().get_adunits(account=self.account,limit=2)) == 1:      
+        if len(AdUnitQueryManager.get_adunits(account=self.account,limit=2)) == 1:      
           add_demo_campaign(adunit)
         # Check if this is the first app for this account
         status = "success"
@@ -220,22 +251,22 @@ def app_create(request,*args,**kwargs):
 class CreateAdUnitHandler(RequestHandler):
  def post(self):
     f = SiteForm(data=self.request.POST)
-    a = AppQueryManager().get_by_key(self.request.POST.get('id'))
+    a = AppQueryManager.get(self.request.POST.get('id'))
     if f.is_valid():
       adunit = f.save(commit=False)
       adunit.account = self.account
       adunit.app_key = a
       
       # update the database
-      AdUnitQueryManager().put_adunits(adunit)
+      AdUnitQueryManager.put(adunit)
       
       # update the cache as necessary 
       # replace=True means don't do anything if not already in the cache
-      AdUnitContextQueryManager().cache_delete_from_adunits(adunit)
+      AdUnitContextQueryManager.cache_delete_from_adunits(adunit)
       
       # Check if this is the first ad unit for this account
       # if Site.gql("where account = :1 limit 2", self.account).count() == 1:
-      if len(AdUnitQueryManager().get_adunits(account=self.account,limit=2)) == 1:      
+      if len(AdUnitQueryManager.get_adunits(account=self.account,limit=2)) == 1:      
         add_demo_campaign(adunit)
       return HttpResponseRedirect(reverse('publisher_generate',kwargs={'adunit_key':adunit.key()})+'?status=success')
     else:
@@ -252,7 +283,7 @@ def add_demo_campaign(site):
                  account=site.account,
                  campaign_type="promo",
                  description="Demo campaign for checking that MoPub works for your application")
-    CampaignQueryManager().put_campaigns(c)
+    CampaignQueryManager.put(c)
 
     # Set up a test ad group for this campaign
     ag = AdGroup(name="MoPub Demo Campaign",
@@ -261,7 +292,7 @@ def add_demo_campaign(site):
                  priority_level=3,
                  bid=1.0,
                  site_keys=[site.key()])
-    AdGroupQueryManager().put_adgroups(ag)
+    AdGroupQueryManager.put(ag)
 
     # And set up a default creative
     h = HtmlCreative(ad_type="html",
@@ -270,7 +301,7 @@ def add_demo_campaign(site):
                      format=site.format,
                      name="Demo HTML Creative",
                      html_data="<style type=\"text/css\">body {font-size: 12px;font-family:helvetica,arial,sans-serif;margin:0;padding:0;text-align:center;background:white} .creative_headline {font-size: 18px;} .creative_promo {color: green;text-decoration: none;}</style><div class=\"creative_headline\">Welcome to mopub!</div><div class=\"creative_promo\"><a href=\"http://www.mopub.com\">Click here to test ad</a></div><div>You can now set up a new campaign to serve other ads.</div>")
-    CreativeQueryManager().put_creatives(h)
+    CreativeQueryManager.put(h)
   
 class ShowAppHandler(RequestHandler):
   def get(self,app_key):
@@ -281,13 +312,13 @@ class ShowAppHandler(RequestHandler):
       days = StatsModel.lastdays(self.date_range)
 
     # load the site
-    a = AppQueryManager().get_by_key(app_key)
+    a = AppQueryManager.get(app_key)
     
     # check to see that the user has viewership rights, ow return 404
     if a.account.key() != self.account.key():
       raise Http404
 
-    a.adunits = AdUnitQueryManager().get_adunits(app=a)
+    a.adunits = AdUnitQueryManager.get_adunits(app=a)
     
     # organize impressions by days
     if len(a.adunits) > 0:
@@ -391,19 +422,19 @@ class ExportFileHandler( RequestHandler ):
                     logging.warning("Apps for account is empty")
                 return (stat_names, [manager.get_stat_rollup_for_days(publisher=a, days=days) for a in apps]) 
             elif spec == 'campaigns':
-                camps = CampaignQueryManager().get_campaigns(account=self.account)
+                camps = CampaignQueryManager.get_campaigns(account=self.account)
                 if len(camps) == 0:
                     logging.warning("Campaigns for account is empty")
                 return (stat_names, [manager.get_stat_rollup_for_days(advertiser=c, days=days) for c in camps])
         #Rollups for adgroup data
         elif key_type == 'adgroup':
             if spec == 'creatives':
-                creatives = list(CreativeQueryManager().get_creatives(adgroup=key))
+                creatives = list(CreativeQueryManager.get_creatives(adgroup=key))
                 if len(creatives) == 0:
                     logging.warning("Creatives for adgroup is empty")
                 return (stat_names, [manager.get_stat_rollup_for_days(advertiser=c, days=days) for c in creatives])
             if spec == 'adunits':
-                adunits = map(lambda x: Site.get(x), AdGroupQueryManager().get_by_key(key).site_keys)
+                adunits = map(lambda x: Site.get(x), AdGroupQueryManager.get(key).site_keys)
                 if len(adunits) == 0:
                     logging.warning("Adunits for adgroup is empty")
                 return (stat_names, [manager.get_stat_rollup_for_days(advertiser=key, publisher=a, days=days) for a in adunits]) 
@@ -412,7 +443,7 @@ class ExportFileHandler( RequestHandler ):
         #Rollups + not-rollup for adunit data            
         elif key_type == 'adunit':
             if spec == 'campaigns':
-                adgroups = AdGroupQueryManager().get_adgroups(adunit=key)
+                adgroups = AdGroupQueryManager.get_adgroups(adunit=key)
                 if len(adgroups) == 0:
                     logging.warning("Campaigns for adunit is empty")
                 return (stat_names, [manager.get_stat_rollup_for_days(publisher=key, advertiser=a, days=days) for a in adgroups])
@@ -420,7 +451,7 @@ class ExportFileHandler( RequestHandler ):
                 return (stat_names, manager.get_stats_for_days(publisher=key, days=days))
         #App adunit rollup data
         elif key_type == 'app':
-            adunits = AdUnitQueryManager().get_adunits(app=key)
+            adunits = AdUnitQueryManager.get_adunits(app=key)
             if len(adunits) == 0:
                 logging.warning("Apps is empty")
             return (stat_name, [manager.get_stat_rollup_for_days(publisher=a, days=days) for a in adunits])
@@ -435,7 +466,7 @@ def export_file( request, *args, **kwargs ):
 class AdUnitShowHandler(RequestHandler):
   def get(self,adunit_key):
     # load the site
-    adunit = AdUnitQueryManager().get_by_key(adunit_key)
+    adunit = AdUnitQueryManager.get(adunit_key)
     if adunit.account.key() != adunit.account.key():
       raise Http404
       
@@ -454,7 +485,7 @@ class AdUnitShowHandler(RequestHandler):
     adunit.stats = reduce(lambda x, y: x+y, adunit.all_stats, StatsModel())
 
     # Get all of the ad groups for this site
-    adunit.adgroups = AdGroupQueryManager().get_adgroups(adunit=adunit)
+    adunit.adgroups = AdGroupQueryManager.get_adgroups(adunit=adunit)
     adunit.adgroups = sorted(adunit.adgroups, lambda x,y: cmp(y.bid, x.bid))
     for ag in adunit.adgroups:
       ag.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=adunit,advertiser=ag,days=days)
@@ -497,7 +528,7 @@ class AppUpdateAJAXHandler(RequestHandler):
   def post(self,app_key=None):
     app_key = app_key or self.request.POST.get('app_key')
     if app_key:
-      app = AppQueryManager().get_by_key(app_key)
+      app = AppQueryManager.get(app_key)
     else:
       app = None
 
@@ -508,13 +539,13 @@ class AppUpdateAJAXHandler(RequestHandler):
     if app_form.is_valid():
       app = app_form.save(commit=False)
       app.account = self.account
-      AppQueryManager().put_apps(app)
+      AppQueryManager.put(app)
       
       json_dict.update(success=True)
       
       # Delete related adunit contexts from memcache
-      adunits = AdUnitQueryManager().get_adunits(app=app)
-      AdUnitContextQueryManager().cache_delete_from_adunits(adunits)
+      adunits = AdUnitQueryManager.get_adunits(app=app)
+      AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
       
       return self.json_response(json_dict)
     new_html = self.get(app_form=app_form)
@@ -544,7 +575,7 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
   def post(self,adunit_key=None):
     adunit_key = adunit_key or self.request.POST.get('adunit_key')
     if adunit_key:
-      adunit = AdUnitQueryManager().get_by_key(adunit_key) # Note this gets things from the cache ?
+      adunit = AdUnitQueryManager.get(adunit_key) # Note this gets things from the cache ?
     else:
       adunit = None
 
@@ -554,9 +585,9 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
     if adunit_form.is_valid():
       adunit = adunit_form.save(commit=False)
       adunit.account = self.account
-      AdUnitQueryManager().put_adunits(adunit)
+      AdUnitQueryManager.put(adunit)
       
-      AdUnitContextQueryManager().cache_delete_from_adunits(adunit)
+      AdUnitContextQueryManager.cache_delete_from_adunits(adunit)
       
       json_dict.update(success=True)
       return self.json_response(json_dict)
@@ -601,13 +632,13 @@ class RemoveAdUnitHandler(RequestHandler):
   def post(self):
     ids = self.request.POST.getlist('id')
     for adunit_key in ids:
-      a = AdUnitQueryManager().get_by_key(adunit_key)
+      a = AdUnitQueryManager.get(adunit_key)
       if a != None and a.app_key.account == self.account:
         a.deleted = True
-        AdUnitQueryManager().put_adunits(a)
+        AdUnitQueryManager.put(a)
         # delete from cache
         # CachedQueryManager().cache_delete(a)
-        AdUnitContextQueryManager().cache_delete_from_adunits(a)
+        AdUnitContextQueryManager.cache_delete_from_adunits(a)
         
     return HttpResponseRedirect(reverse('publisher_app_show','app_key',a.app_key.key()))
  
@@ -617,7 +648,7 @@ def adunit_delete(request,*args,**kwargs):
 
 class GenerateHandler(RequestHandler):
   def get(self,adunit_key):
-    adunit = AdUnitQueryManager().get_by_key(adunit_key)
+    adunit = AdUnitQueryManager.get(adunit_key)
     status = self.params.get('status')
     return render_to_response(self.request,'publisher/code.html', {'site': adunit, 'status': status, 'account': self.account})
   

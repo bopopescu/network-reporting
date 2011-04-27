@@ -24,7 +24,15 @@
 {% block content %}
 <script type='text/javascript'>
     $(document).ready(function() {
-        $('#report-table').dataTable();
+            $('#report-table').dataTable({'bJQueryUI':true,
+                'aoColumns':[
+                    {'bSortable': false},
+                    {'bSortable': false},
+                    {'bSortable': false},
+                    {'bSortable': false},
+                    {'bSortable': false}
+                ]
+            });
     });
 </script>
 <div class='buttonBank buttonBank-right'>

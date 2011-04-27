@@ -15,13 +15,16 @@ class JumptapServerSide(ServerSide):
    
    
     def get_key_values(self):
-        return {'pub': self.get_pub_id(),
-                #'gateway-ip': '208.54.5.50',  # TODO: This should be the x-forwarded-for header of the device
-                'hid': self.get_udid(),
-                #'site': 'pa_mopub_inc_simpleadsdemo_drd_app',  # TODO: Site ID from Jumptap, ugh
-                #'spot': 'pa_mopub_inc_simpleadsdemo_drd_app_adspot',  # TODO: Spot ID from Jumptap, double ugh
-                'client-ip': self.get_ip(), # Test value: 'client-ip': '208.54.5.50'
-                'v': 'v29' }
+        key_values = {'pub': self.get_pub_id(),
+                      #'gateway-ip': '208.54.5.50',    # TODO: This should be the x-forwarded-for header of the device
+                      'hid': self.get_udid(),
+                      'client-ip': self.get_ip(), # Test value: 'client-ip': '208.54.5.50'
+                      'v': 'v29' }
+        if self.adunit.app.jumptap_app_id:
+            key_values['site'] = self.adunit.app.jumptap_app_id
+        if self.adunit.jumptap_site_id:
+            key_values['spot'] = self.adunit.jumptap_site_id
+        return key_values
    
     def get_query_string(self):
         query_string = urllib.urlencode(self.get_key_values())       

@@ -22,12 +22,7 @@ class BrightRollServerSide(ServerSide):
     def url(self):
         pub_id = self.get_pub_id() or 3844792 
         return self.base_url + str(pub_id) + '?n=%f'%time.time()
-    
-    @property
-    def url(self):
-        pub_id = self.pub_id or 3844792 
-        return self.base_url + str(pub_id) + '?n=%f'%time.time()
-        
+            
     @property
     def headers(self):
         # TODO: Replace with self.get_appid()
@@ -87,7 +82,10 @@ class BrightRollServerSide(ServerSide):
         
         click_urls.append(self._getURL(inline.getElementsByTagName("ClickThrough")[0]))
         # this is weird, but what brightroll wants
-        end_urls.append(self._getURL(inline.getElementsByTagName("ClickTracking")[0]))
+        # not always there
+        click_tracking_urls = inline.getElementsByTagName("ClickTracking")
+        if click_tracking_urls:
+            end_urls.append(self._getURL(click_tracking_urls[0]))
         
         # update the params
         self.url_params.update(impression_urls=impression_urls,
@@ -135,7 +133,7 @@ class BrightRollServerSide(ServerSide):
         scripts = """
         <script type="text/javascript">
             window.addEventListener("load", function() { window.location="mopub://finishLoad";}, false);
-            function webviewDidAppear(){playAdVideo();};
+            function webviewDidAppear(){playAdVideo(); %(track_pixels)s;};
             //function webviewDidAppear(){alert(window.innerWidth+" "+window.innerHeight)};
             windowInnerWidth = 320;
         </script>"""  
@@ -699,8 +697,7 @@ template2 = string.Template("""<!DOCTYPE HTML>
 
 
 #### EXAMPLE VAST RESPONSE
-
-# <?xml version="1.0" encoding="UTF-8"?> 
+# sample_response = """<?xml version="1.0" encoding="UTF-8"?> 
 # <VAST version="2.0"> 
 #   <Ad id="brightroll_ad"> 
 #     <InLine> 
@@ -745,3 +742,4 @@ template2 = string.Template("""<!DOCTYPE HTML>
 #     </InLine> 
 #   </Ad> 
 # </VAST>
+# """

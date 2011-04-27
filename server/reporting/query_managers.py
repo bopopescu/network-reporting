@@ -8,7 +8,7 @@ from google.appengine.runtime.apiproxy_errors import CapabilityDisabledError
 
 import reporting.models as reporting_models
 
-from common.utils.cachedquerymanager import CachedQueryManager
+from common.utils.query_managers import CachedQueryManager
 from reporting.models import SiteStats, StatsModel
 from advertiser.models import Creative
 from publisher.models import Site as AdUnit

@@ -9,7 +9,6 @@ def get_ctr(adunit_context, creative, min_sample_size=1000, default_ctr=0.03, dt
     least 1000 impressions."""
 
     # Get adunit bundled with additional context - Note: this is passed in
-    # adunit_bundle = AdUnitQueryManager(adunit.key()).get_adunit()
     
     hourly_ctr = adunit_context._get_ctr(creative, 
                                   min_sample_size=min_sample_size, 

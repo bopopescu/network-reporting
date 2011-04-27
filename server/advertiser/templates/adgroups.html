@@ -73,7 +73,7 @@
                         <td class="stats-breakdown-value all"><span class="inner">{{totals.impression_count|withsep}}</span></td>
                         <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
                       </tr>
-                      <tr id="stats-breakdown-clicks">
+                      <tr id="stats-breakdown-revenue">
                         <td class="stats-breakdown-value today"><span class="inner">{{today.revenue|currency}}</span></td>
                         <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.revenue|currency}}</span></td>
                         <td class="stats-breakdown-value all"><span class="inner">{{totals.revenue|currency}}</span></td>
@@ -124,18 +124,28 @@
             </section>
           </div>
           <section id="dashboard-campaigns">
-            <div class="buttonBank buttonBank-right">
-              <span class="buttonset" id="campaigns-filterOptions"> 
-                <input type="radio" name="campaigns-filterOptions-option" value="all" checked="checked" id="campaigns-filterOptions-option-all"/> 
-                <label for="campaigns-filterOptions-option-all">All</label> 
-                <input type="radio" name="campaigns-filterOptions-option" value="running" id="campaigns-filterOptions-option-running"/> 
-                <label for="campaigns-filterOptions-option-running">Running</label> 
-                <input type="radio" name="campaigns-filterOptions-option" value="paused" id="campaigns-filterOptions-option-paused" /> 
-                <label for="campaigns-filterOptions-option-paused">Paused</label> 
-                <input type="radio" name="campaigns-filterOptions-option" value="scheduled" id="campaigns-filterOptions-option-scheduled" /> 
-                <label for="campaigns-filterOptions-option-scheduled">Scheduled</label> 
-              </span>
-              <a class="button" id="advertisers-addCampaign" href="{% url advertiser_campaign_create %}">Add a campaign</a>
+            <div id="campaigns-control-panel">
+              <div class="center-button-bank">
+	
+                <span class="buttonset" id="campaigns-filterOptions"> 
+                  <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-all" checked="checked" id="campaigns-filterOptions-option-all"/> 
+                  <label for="campaigns-filterOptions-option-all">All</label> 
+                  <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Running" id="campaigns-filterOptions-option-running"/> 
+                  <label for="campaigns-filterOptions-option-running">Running</label> 
+                  <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Paused" id="campaigns-filterOptions-option-paused" /> 
+                  <label for="campaigns-filterOptions-option-paused">Paused</label> 
+                  <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Scheduled" id="campaigns-filterOptions-option-scheduled" /> 
+                  <label for="campaigns-filterOptions-option-scheduled">Scheduled</label> 
+                </span>
+              
+              	<select name="campaigns-appFilterOptions" id="campaigns-appFilterOptions"> 
+        					<option id="campaigns-appFilterOptions-option-all" value="campaign-status-all" selected="selected">Show campaigns for all apps</option> 
+  								{% for app in apps %}
+  								<option value="campaign-targeting-{{app.key}}">{{app.name}}</option> 
+  								{% endfor %}
+        				</select>
+              </div>
+               <a class="button" id="advertisers-addCampaign" href="{% url advertiser_campaign_create %}">Add a campaign</a>
             </div>
             
             <div id="adserverTest" style="display:none;">
@@ -165,12 +175,16 @@
                     </thead>
                     <tbody>
                       {% for adgroup in level.adgroups %}
-                      <tr class="campaignData campaign-status-{{adgroup|campaign_status}}" id="campaigns-guaranteed-{{level.name}}-{{forloop.counter0}}">
+
+	                  <tr class="campaignData campaign-status-all campaign-targeting-all
+					  campaign-status-{{adgroup|campaign_status}}
+					  {% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}"
+					  id="campaigns-guaranteed-{{level.name}}-{{forloop.counter0}}">
                         <th class="campaignData-icon">
                             <input type="checkbox" name="id" value="{{adgroup.key}}"/>
-                            {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9></img>{% endif %}
-                            {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9></img>{% endif %}
-                            {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9></img>{% endif %}
+                            {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9 />{% endif %}
+                            {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
+                            {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
                         </th> 
                         <th class="dataTable-name">
                             <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
@@ -189,9 +203,9 @@
                         </th>
                         <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
                         <td class="dataTable-data numeric">{{adgroup|campaign_status}}<br>
-														   {% if adgroup.percent_delivered %}
-														   <span class="muted">({{adgroup.percent_delivered|floatformat:1}}%)</span></td>
-														   {%endif %}
+                         {% if adgroup.percent_delivered %}
+                         <span class="muted">({{adgroup.percent_delivered|floatformat:1}}%)</span></td>
+                         {%endif %}
                         <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
                         <td class="dataTable-data numeric">{{adgroup.stats.click_count|withsep}}</td>
                         <td class="dataTable-data numeric">{{adgroup.stats.ctr|percentage|withsep}}</td>
@@ -231,12 +245,15 @@
                 </thead>
                 <tbody>
                   {% for adgroup in promo %}
-                  <tr class="campaignData campaign-status-{{adgroup|campaign_status}}" id="campaigns-promo-{{forloop.counter0}}">
+                  <tr class="campaignData campaign-status-all campaign-targeting-all
+					campaign-status-{{adgroup|campaign_status}}
+					{% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}"
+					id="campaigns-promo-{{forloop.counter0}}">
                     <th class="campaignData-icon">
                       <input type="checkbox" name="id" value="{{adgroup.key}}"/>
-                      {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9></img>{% endif %}
-                      {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9></img>{% endif %}
-                      {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9></img>{% endif %}
+                      {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9 />{% endif %}
+                      {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
+                      {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
                     </th> 
                     <th class="dataTable-name">
                         <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
@@ -292,15 +309,21 @@
                 </thead>
                 <tbody>
                   {% for adgroup in network %}
-                  <tr class="campaignData campaign-status-{{adgroup|campaign_status}}" id="campaigns-network-{{forloop.counter0}}">
+                  <tr class="campaignData campaign-status-all campaign-targeting-all
+					campaign-status-{{adgroup|campaign_status}}
+					{% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}"
+					
+                   id="campaigns-network-{{forloop.counter0}}">
+
                     <th class="campaignData-icon">
                       <input type="checkbox" name="id" value="{{adgroup.key}}"/>
-                      {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9></img>{% endif %}
-                      {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9></img>{% endif %}
-                      {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9></img>{% endif %}
+                      {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9 />{% endif %}
+                      {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
+                      {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
                     </th> 
                     <th class="dataTable-name">
                       <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
+
                       <span class="muted">{{adgroup.network_type}}</span>
                     </th>
                     <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
@@ -342,12 +365,15 @@
                 </thead>
                 <tbody>
                   {% for adgroup in backfill_promo %}
-                  <tr class="campaignData campaign-status-{{adgroup|campaign_status}}" id="campaigns-promo-{{forloop.counter0}}">
+                  <tr class="campaignData campaign-status-all campaign-targeting-all
+					campaign-status-{{adgroup|campaign_status}}
+					{% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}" 
+					id="campaigns-promo-{{forloop.counter0}}">
                     <th class="campaignData-icon">
                       <input type="checkbox" name="id" value="{{adgroup.key}}"/>
                       {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9></img>{% endif %}
-                      {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9></img>{% endif %}
-                      {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9></img>{% endif %}
+                      {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
+                      {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
                     </th> 
                     <th class="dataTable-name">
                         <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>

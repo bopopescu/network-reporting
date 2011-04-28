@@ -24,17 +24,17 @@ class QueryManager(object):
         
     @classmethod
     def put(cls, objs):
-        if isinstance(objs, cls.Model):
-          return objs.put()
+        if not isinstance(objs, (list, tuple)):
+            objs = [objs]
           
         # Otherwise it is a list
         return db.put(objs)
             
     @classmethod
     def delete(cls, objs):
-        if isinstance(objs, cls.Model):
-          return objs.delete()
-          
+        if not isinstance(objs, (list, tuple)):
+            objs = [objs]
+
         # Otherwise it is a list
         return db.delete(objs)
       

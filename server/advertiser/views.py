@@ -260,7 +260,8 @@ class CreateCampaignAJAXHander(RequestHandler):
                     AdGroupQueryManager.put(adgroup)
 
 
-                # update cache
+                # Delete Cache. We leave this in views.py because we 
+                # must delete the adunits that the adgroup used to have as well
                 adunits_to_update.update(adgroup.site_keys)
                 if adunits_to_update:
                     adunits = AdUnitQueryManager.get(adunits_to_update)
@@ -542,12 +543,6 @@ class PauseAdGroupHandler(RequestHandler):
 
         if update_objs:
             AdGroupQueryManager.put(update_objs)
-            adunits = []
-            for adgroup in adgroups:
-                adunits.extend(adgroup.site_keys)
-
-            adunits = Site.get(adunits)    
-            AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
 
         return HttpResponseRedirect(reverse('advertiser_campaign', kwargs={}))
 
@@ -653,12 +648,7 @@ class AddCreativeHandler(RequestHandler):
                 creative = creative_form.save(commit=False)
                 creative.ad_group = ad_group
                 creative.account = self.account
-                CreativeQueryManager.put(creative)        
-
-                # update cache
-                adunits = AdUnitQueryManager.get(ad_group.site_keys)
-                if adunits:
-                    AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
+                CreativeQueryManager.put(creative)
 
                 jsonDict.update(success=True)
                 return self.json_response(jsonDict)

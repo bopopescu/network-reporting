@@ -62,7 +62,7 @@ class NewAccountHandler(RequestHandler):
             
             # Go ahead and activate the account
             account.active = True
-            AccountQueryManager.put_accounts(account)
+            AccountQueryManager().put_accounts(account)
 
             # Step 2
             return HttpResponseRedirect(reverse('publisher_app_create'))

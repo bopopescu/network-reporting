@@ -21,13 +21,12 @@ from google.appengine.ext.remote_api import remote_api_stub
 sys.path.append(os.getcwd()+'/../../')
 
 import utils
-from log_parser import AD, IMP, CLK, OPEN, REQ
 from publisher.models import Site
 from reporting.models import StatsModel, Pacific_tzinfo
 
 
 # maximum number of objects per batch put
-LIMIT = 100
+LIMIT = 50
 
 account_cache = {}
 stats_model_cache = {}
@@ -73,76 +72,80 @@ def parse_file(input_file):
     
     with open(input_file, 'r') as f:
         for line in f:
-            if '\\' in line:
-                line = line.replace(r'\'', '')
-            mr_key, uniq_count = line.split('\t', 1)
+            try:
+                if '\\' in line:
+                    line = line.replace(r'\'', '')
+                mr_key, uniq_count = line.split('\t', 1)
 
-            uniq_count = int(uniq_count)
-            parts = mr_key.split(':')
-            if len(parts) != 6: continue # only interested in [k:handler:account:pub_id:adv_id:date_hour]
-            handler = parts[1]
-            account = parts[2]
-            pub_key = parts[3]
-            adv_key = parts[4]
-            time_str = parts[5]
-            year = int('20'+time_str[:2])
-            month = int(time_str[2:4])
-            day = int(time_str[4:6])
+                uniq_count = int(uniq_count)
+                parts = mr_key.split(':')
+                if len(parts) != 6: continue # only interested in [k:handler:account:pub_id:adv_id:date_hour]
+                handler = parts[1]
+                account = parts[2]
+                pub_key = parts[3]
+                adv_key = parts[4]
+                time_str = parts[5]
+                year = int('20'+time_str[:2])
+                month = int(time_str[2:4])
+                day = int(time_str[4:6])
 
-            # get key_name of stats_model
-            if len(time_str) == 8:  # resolution to hour
-                hour = int(time_str[6:8])
-                date_hour = datetime(year, month, day, hour, tzinfo=Pacific_tzinfo())
-                stats_key_name = StatsModel.get_key_name(publisher=pub_key, 
-                                                         advertiser=adv_key,
-                                                         date_hour=date_hour,
-                                                         account=account)
-            else:   # resolution to day
-                date = datetime(year, month, day)
-                stats_key_name = StatsModel.get_key_name(publisher=pub_key, 
-                                                         advertiser=adv_key,
-                                                         date=date,
-                                                         account=account)
+                # get key_name of stats_model
+                if len(time_str) == 8:  # resolution to hour
+                    hour = int(time_str[6:8])
+                    date_hour = datetime(year, month, day, hour, tzinfo=Pacific_tzinfo())
+                    stats_key_name = StatsModel.get_key_name(publisher=pub_key, 
+                                                             advertiser=adv_key,
+                                                             date_hour=date_hour,
+                                                             account=account)
+                else:   # resolution to day
+                    date = datetime(year, month, day)
+                    stats_key_name = StatsModel.get_key_name(publisher=pub_key, 
+                                                             advertiser=adv_key,
+                                                             date=date,
+                                                             account=account)
             
-            account_stats_realtime_kn = StatsModel.get_key_name(account=account)
-            account_stats_offline_kn = StatsModel.get_key_name(account=account, offline=True)
-            account_stats_kns = [account_stats_realtime_kn, account_stats_offline_kn]
+                account_stats_realtime_kn = StatsModel.get_key_name(account=account)
+                account_stats_offline_kn = StatsModel.get_key_name(account=account, offline=True)
+                account_stats_kns = [account_stats_realtime_kn, account_stats_offline_kn]
             
-            for account_stats_kn in account_stats_kns:
-                # try to retrieve account_stats from cache
-                if account_stats_kn in account_cache:
-                    account_stats = account_cache[account_stats_kn]
-                else:
-                    account_stats = StatsModel.get_by_key_name(account_stats_kn)
-                    if account_stats:
-                        account_cache[account_stats_kn] = account_stats
-            
-                if account_stats:
-                    # stats_model_cache format: {account_stats: [stats_key_name|account]}
-                    if account_stats in stats_model_cache:
-                        stats_model_cache[account_stats].add(stats_key_name+'|'+account)
+                for account_stats_kn in account_stats_kns:
+                    # try to retrieve account_stats from cache
+                    if account_stats_kn in account_cache:
+                        account_stats = account_cache[account_stats_kn]
                     else:
-                        stats_model_cache[account_stats] = set([stats_key_name+'|'+account])
+                        account_stats = StatsModel.get_by_key_name(account_stats_kn)
+                        if account_stats:
+                            account_cache[account_stats_kn] = account_stats
+            
+                    if account_stats:
+                        # stats_model_cache format: {account_stats: [stats_key_name|account]}
+                        if account_stats in stats_model_cache:
+                            stats_model_cache[account_stats].add(stats_key_name+'|'+account)
+                        else:
+                            stats_model_cache[account_stats] = set([stats_key_name+'|'+account])
                
                     
-            # initialize uniq_user_counts array
-            if stats_key_name+'|'+account in counts_cache:
-                uniq_user_counts = counts_cache[stats_key_name+'|'+account]
-            else: 
-                uniq_user_counts = [0, 0, 0, 0] # [user_count, request_user_count, impression_user_count, click_user_count]
+                # initialize uniq_user_counts array
+                if stats_key_name+'|'+account in counts_cache:
+                    uniq_user_counts = counts_cache[stats_key_name+'|'+account]
+                else: 
+                    uniq_user_counts = [0, 0, 0, 0] # [user_count, request_user_count, impression_user_count, click_user_count]
         
-            if handler == '':
-                uniq_user_counts = update_counts(uniq_user_counts, [uniq_count, 0, 0, 0])                
-            elif handler == AD:
-                uniq_user_counts = update_counts(uniq_user_counts, [0, uniq_count, 0, 0])
-            elif handler == IMP:
-                uniq_user_counts = update_counts(uniq_user_counts, [0, 0, uniq_count, 0])
-            elif handler == CLK:
-                uniq_user_counts = update_counts(uniq_user_counts, [0, 0, 0, uniq_count])
-            elif handler == REQ:
-                uniq_user_counts = update_counts(uniq_user_counts, [0, uniq_count, 0, 0])
-            counts_cache[stats_key_name+'|'+account] = uniq_user_counts
-                
+                if handler == '':
+                    uniq_user_counts = update_counts(uniq_user_counts, [uniq_count, 0, 0, 0])                
+                elif handler == utils.AD:
+                    uniq_user_counts = update_counts(uniq_user_counts, [0, uniq_count, 0, 0])
+                elif handler == utils.IMP:
+                    uniq_user_counts = update_counts(uniq_user_counts, [0, 0, uniq_count, 0])
+                elif handler == utils.CLK:
+                    uniq_user_counts = update_counts(uniq_user_counts, [0, 0, 0, uniq_count])
+                elif handler == utils.REQ:
+                    uniq_user_counts = update_counts(uniq_user_counts, [0, uniq_count, 0, 0])
+                counts_cache[stats_key_name+'|'+account] = uniq_user_counts
+            except Exception, e:
+                # traceback.print_exc()
+                print 'EXCEPTION on line %s -> %s' %(line, e)
+                continue
                 
 
 def main():

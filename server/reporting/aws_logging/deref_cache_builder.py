@@ -25,13 +25,14 @@ from google.appengine.ext.remote_api import remote_api_stub
 # for run_jobflow.sh
 sys.path.append(os.getcwd()+'/../../')
 
-from log_parser import parse_logline, AD, IMP, CLK, OPEN, REQ
+from parse_utils import parse_logline
 from advertiser.models import Campaign, AdGroup, Creative
 from publisher.models import Site as AdUnit, App
 from reporting.models import StatsModel, Pacific_tzinfo
 
 import utils
 
+STATUS_STEP = 100000
 
 # DEREF_CACHE description:
 # global dict containing str(key) mappings among publisher and advertiser models:
@@ -42,11 +43,11 @@ import utils
 #  creative_str: [adgroup_str, campaign_str, account_str]} 
 
 DEREF_CACHE_PICKLE_FILE = 'deref_cache.pkl' 
-if os.path.isfile(DEREF_CACHE_PICKLE_FILE):
+try:
     with open(DEREF_CACHE_PICKLE_FILE, 'rb') as pickle_file:
         DEREF_CACHE = pickle.load(pickle_file)
         print '\nloading deref cache from %s ...\n' %DEREF_CACHE_PICKLE_FILE
-else:
+except:
     print '\ninitializing empty deref cache...\n'
     DEREF_CACHE = {}
 
@@ -153,7 +154,7 @@ def deref_creative(creative_str):
 
 def deref_models(handler, param_dict): 
     # params: 'udid', 'id', 'cid'    # id = adunit, cid = creative  TODO: udid currently not passed in to logs     
-    if handler == REQ:
+    if handler == utils.REQ:
         adunit_str = param_dict.get('id', None)
         creative_str = param_dict.get('cid', None)
 
@@ -163,14 +164,14 @@ def deref_models(handler, param_dict):
 
     
     # params: 'udid', 'id'  # id = adunit
-    elif handler == AD:
+    elif handler == utils.AD:
         adunit_str = param_dict.get('id', None)
         if adunit_str:
             deref_adunit(adunit_str)
 
     
     # params: 'udid', 'id', 'cid'   # id = adunit, cid = creative
-    elif handler == IMP:
+    elif handler == utils.IMP:
         adunit_str = param_dict.get('id', None)
         creative_str = param_dict.get('cid', None)
 
@@ -180,7 +181,7 @@ def deref_models(handler, param_dict):
 
     
     # params: 'udid', 'appid', 'id', 'cid'  # appid = destination app, id = adunit, cid = creative
-    elif handler == CLK:
+    elif handler == utils.CLK:
         dest_app_str = param_dict.get('appid', None)
         adunit_str = param_dict.get('id', None)
         creative_str = param_dict.get('cid', None)
@@ -191,7 +192,7 @@ def deref_models(handler, param_dict):
                 
     
 def deref_logline(logline):
-    logline_dict = parse_logline(logline)
+    logline_dict = parse_logline(logline, parse_ua=False)
     if logline_dict:
         handler = logline_dict.get('path', None)
         param_dict = logline_dict.get('params', None)
@@ -214,8 +215,8 @@ def preprocess_logs(input_file):
             derefed = deref_logline(line)
             if derefed:
                 count += 1
-                if count % 100000 == 0:
-                    print '%ix 100k lines pre-processed successfully' %(count/100000)
+                if count % STATUS_STEP == 0:
+                    print '%ix %ik lines pre-processed successfully' %(count/STATUS_STEP, STATUS_STEP/1000)
             
        
 def main():

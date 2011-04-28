@@ -7,6 +7,7 @@ from google.appengine.api import memcache
 from google.appengine.api import users
 
 from account.models import Account
+from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 
 MEMCACHE_KEY_FORMAT = "k:%(user_id)s"
 

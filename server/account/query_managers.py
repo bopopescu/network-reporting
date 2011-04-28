@@ -36,8 +36,9 @@ class AccountQueryManager(CachedQueryManager):
             memcache.set(str(cls._user_key(user)), account, namespace="account")
         logging.warning("account: %s"%account.key())    
         return account
-                
-    def put_accounts(self,accounts):
+    
+    @classmethod            
+    def put_accounts(cls,accounts):
         if not isinstance(accounts,list):
             accounts = [accounts]
             

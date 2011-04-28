@@ -19,7 +19,9 @@
 {% block content %}
 <script type='text/javascript'>
     $(document).ready(function() {
-            $('#report-table').dataTable({'bJQueryUI':true,
+            $('#report-table').dataTable({
+                'bJQueryUI':true,
+                'bSort': false,
                 'aoColumns':[
                     {'bSortable': false},
                     {'bSortable': false},

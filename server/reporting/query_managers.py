@@ -132,6 +132,7 @@ class StatsModelQueryManager(CachedQueryManager):
                 publishers = publisher
             else:
                 publishers = [publisher]
+
         if advertiser and advertisers:
             logging.error("cannot pass both a single advertiser and multiple advertisers")
         if advertiser and not advertisers:
@@ -139,9 +140,10 @@ class StatsModelQueryManager(CachedQueryManager):
                 advertisers = advertiser
             else:
                 advertisers = [advertiser]
-        if publisher == publishers:
+
+        if type(publisher) != list and publisher == publishers:
             publishers = [publisher]
-        if advertiser == advertisers:
+        if type(advertiser) != list and advertiser == advertisers:
             advertisers = [advertiser]
         stats = []
         for pub in publishers:

@@ -147,10 +147,20 @@ class AdUnitQueryManager(QueryManager):
                     adgroups = adv.adgroups
                 # this is how creatives reference adgroups
                 elif hasattr(adv, 'adgroup'):
-                    adgroups = adv.adgroup
+                    adgroups = [adv.adgroup]
                 else:
+                    #This doesn't make sense (but better safe than sorry!)
                     adgroups = advertiser
                 # iterate over the adgroups (I think this is always just one though...?)
+                # check if iterable
+                try:
+                    #this will throw a type error if not iterable
+                    for a in adgroups:
+                        #if it is iterable who cares, don't waste time iterating over it
+                        break
+                except TypeError:
+                    #make it iterable
+                    adgroups = [adgroups]
                 for ag in adgroups:
                     #iterate over adgroup adunit targets
                     for key in ag.site_keys:

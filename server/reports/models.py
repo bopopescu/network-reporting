@@ -94,10 +94,23 @@ class Report(db.Model):
             if vals is None:
                 return ret
             for idx, val in enumerate(vals):
+#MO = 'month'
+#WEEK = 'week'
+#DAY = 'day'
+#HOUR = 'hour'
                 name = None
                 if typ == 'days':
-                    if type(val) != list:
-                        name = str(val)
+                    if dim == MO:
+                        name = val[0].strftime('%B, %Y')
+                    elif dim == WEEK:
+                        #I think this is the right order...
+                        name = val[0].strftime('%b %d') + ' - ' + val[-1].strftime('%b %d, %Y')
+                    elif dim == DAY:
+                        name = val[0].strftime('%b %d, %Y')
+                    elif dim == HOUR:
+                        name = val[0].strftime('%I:%M %p')
+                    else:
+                        name = 'Impossible State'
                     days = val
                 elif typ == 'pub':
                     name = val.name
@@ -202,7 +215,7 @@ class Report(db.Model):
         s_str = self.start.strftime('%m/%d/%y')
         e_str = self.end.strftime('%m/%d/%y')
         date = '%s to %s' % (s_str, e_str)
-        return date + "\n" + det.title()
+        return date + "<br/>" + det.title()
             
 
 #class ScheduledReport -> has a "next report" time, "report every ____" time, report type, when it's tim

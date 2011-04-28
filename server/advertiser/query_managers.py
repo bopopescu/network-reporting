@@ -160,7 +160,7 @@ class CreativeQueryManager(QueryManager):
         if publisher:
             adunits = [publisher]
             if hasattr(publisher, 'all_adunits'):
-                adunits = publisher.all_adunits
+                adunits = [au for au in publisher.all_adunits]
             pub_ags = AdGroup.all().filter('site_keys IN', adunits)
             pub_ags = [a for a in pub_ags if a.deleted == deleted]
             if adgroups:

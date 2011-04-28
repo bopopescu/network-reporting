@@ -127,14 +127,24 @@ table.display thead th div.DataTables_sort_wrapper span {
 	padding: 2px 0;
 }
 
+tr.level0 {
+    font-size:125%;
+    font-weight: bold;
+}
+
+tr.level1 {
+    font-size:125%;
+}
+
 tr.level0 td.name {
     padding-left:0px;
 }
+
 tr.level1 td.name {
-    padding-left:5px;
+    padding-left:15px;
 }
 tr.level2 td.name {
-    padding-left:10px;
+    padding-left:30px;
 }
 
 .dataTables_length {

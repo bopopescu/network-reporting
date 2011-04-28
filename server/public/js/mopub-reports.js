@@ -12,8 +12,8 @@
         });
      }
      addPlaceholder();
-    $('input[name="start"]').datepicker({ minDate:0 });
-    $('input[name="end"]').datepicker({ minDate:0 });
+    $('input[name="start"]').datepicker();
+    $('input[name="end"]').datepicker();
 
     $('#reportCreateForm-submit')
     .button({
@@ -23,5 +23,22 @@
             $('#reportCreateForm').submit();
     });
 
+    $('#reportCreateForm-cancel').button()
+        .click(function(e) {
+            e.preventDefault();
+            $('#reportCreateForm').slideUp('fast');
+        });
+
+    $('#reports-addReportButton').button({icons: {primary: 'ui-icon-circle-plus'}})
+        .click(function(e){
+                e.preventDefault();
+                var report_form = $('#reports-reportAddForm');
+                if (report_form.is(':hidden')) {
+                    $('#reports-reportAddForm').slideDown('fast');
+                }
+                else {
+                    $('#reports-reportAddForm').slideUp('fast');
+                }
+        });
  });
 })(this.jQuery);

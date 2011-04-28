@@ -91,13 +91,14 @@ class ServerSide(object):
     def bid_and_html_for_response(self,response):
         self.get_pub_id(warn=True) # get the pub id and warn if not present
         if response.status_code == 200:
-            response_tuple = self._bid_and_html_for_response(response)
+            response_tuple = list(self._bid_and_html_for_response(response))
             
             # Encode incoming text
             unencoded = response_tuple[1]
             if isinstance(unencoded, basestring):
                   if not isinstance(unencoded, unicode):
                       response_tuple[1] = unicode(unencoded, 'utf-8')
+            response_tuple = tuple(response_tuple)          
                       
         else:    
             trace_logging.info("Failed to load ad from %s"%self.network_name)    

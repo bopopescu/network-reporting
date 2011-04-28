@@ -98,8 +98,7 @@ class ServerSide(object):
             if isinstance(unencoded, basestring):
                   if not isinstance(unencoded, unicode):
                       response_tuple[1] = unicode(unencoded, 'utf-8')
-            response_tuple = tuple(response_tuple)          
-                      
+            return tuple(response_tuple)          
         else:    
             trace_logging.info("Failed to load ad from %s"%self.network_name)    
             return None

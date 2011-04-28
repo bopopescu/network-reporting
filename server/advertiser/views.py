@@ -197,7 +197,11 @@ class CreateCampaignAJAXHander(RequestHandler):
         adgroup_form = AdGroupForm(data=self.request.POST,instance=adgroup)
 
         # We pre-emptively clear the cache for site keys, as they may be updated
-        adunits_to_update = adgroup.site_keys
+        if adgroup:
+            adunits_to_update = adgroup.site_keys
+        else:
+            adunits_to_update = []
+            
         if adunits_to_update:
             adunits = AdUnitQueryManager.get(adunits_to_update)
             # In general we want to do the cache deletions in the query_managers
@@ -220,7 +224,7 @@ class CreateCampaignAJAXHander(RequestHandler):
                 adgroup.account = self.account
 
                 # TODO: clean this up in case the campaign succeeds and the adgroup fails
-                AdGroupQueryManager.put(campaign)
+                CampaignQueryManager.put(campaign)
                 adgroup.campaign = campaign
                 # TODO: put this in the adgroup form
                 if not adgroup.campaign.campaign_type == 'network':

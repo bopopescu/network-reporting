@@ -57,7 +57,7 @@ class AdGroupQueryManager(QueryManager):
         adunit_keys = []
         
         # Check if we have a non-list of adgroups
-        if isinstance(adgroups, cls.Model):
+        if not isinstance(adgroups, (list, tuple)):
             # If so, make it a list
             adgroups = [adgroups]
             

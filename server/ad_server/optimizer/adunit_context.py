@@ -111,7 +111,8 @@ class AdUnitContext(object):
         for adgroup in adgroups:
             campaign = db.get(adgroup.campaign.key())
             campaigns.append(campaign)
-
+        return campaigns
+        
     def key(self):
         """ Since we want a 1-1 mapping from adunits to adunit_contexts, we
         appropriate the key from the adunit, returns a string. """

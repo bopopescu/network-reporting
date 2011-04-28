@@ -196,11 +196,16 @@ class CreateCampaignAJAXHander(RequestHandler):
         campaign_form = CampaignForm(data=self.request.POST,instance=campaign)
         adgroup_form = AdGroupForm(data=self.request.POST,instance=adgroup)
 
+        # We pre-emptively clear the cache for site keys, as they may be updated
+        adunits_to_update = set()
         if adgroup:
-            adunits_to_update = set(adgroup.site_keys)
-        else:
-            adunits_to_update = set()
-
+            adunits_to_update.update(adgroup.site_keys)
+            
+        if adunits_to_update:
+            adunits = AdUnitQueryManager.get(adunits_to_update)
+            # In general we want to do the cache deletions in the query_managers
+            # file, but here it makes sense to manaully delete it.
+            AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
 
         all_adunits = AdUnitQueryManager.get_adunits(account=self.account)
         sk_field = adgroup_form.fields['site_keys']
@@ -218,7 +223,7 @@ class CreateCampaignAJAXHander(RequestHandler):
                 adgroup.account = self.account
 
                 # TODO: clean this up in case the campaign succeeds and the adgroup fails
-                AdGroupQueryManager.put(campaign)
+                CampaignQueryManager.put(campaign)
                 adgroup.campaign = campaign
                 # TODO: put this in the adgroup form
                 if not adgroup.campaign.campaign_type == 'network':
@@ -247,9 +252,9 @@ class CreateCampaignAJAXHander(RequestHandler):
                     elif adgroup.net_creative:
                         #in this case adgroup.net_creative has evaluated to true BUT the class comparison did NOT.    
                         #at this point we know that there was an old creative AND it's different from the old creative so
-
                         #and delete the old creative just marks as deleted!
                         CreativeQueryManager.put(adgroup.net_creative)
+                        
                     #creative should now reference the appropriate creative (new if different, old if the same, updated old if same and custom)
                     creative.account = self.account
                     #put the creative so we can reference it
@@ -266,7 +271,6 @@ class CreateCampaignAJAXHander(RequestHandler):
                 if adunits_to_update:
                     adunits = AdUnitQueryManager.get(adunits_to_update)
                     AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
-
 
                 # Onboarding: user is done after they set up their first campaign
                 if self.account.status == "step4":

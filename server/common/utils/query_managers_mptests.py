@@ -20,11 +20,14 @@ import datetime
 
 import logging
 
+from advertiser.query_managers import AdGroupQueryManager
+
 from publisher.query_managers import AdUnitContextQueryManager
   
 from ad_server.optimizer.adunit_context import AdUnitContext, CreativeCTR
   
-class TestAccountQueryManager(unittest.TestCase):
+class TestQueryManagers(unittest.TestCase):
+    """ Make sure that adunit_context is appropriately removed from the cache """
 
     def setUp(self):
         # First, create an instance of the Testbed class.
@@ -64,18 +67,41 @@ class TestAccountQueryManager(unittest.TestCase):
                                  tracking_url="test-tracking-url")
         self.creative.put()
         
-        # Set up QM
-        self.smqm = StatsModelQueryManager(self.account)
-        
-        # Roll up adunit context
-        self.adunit_context = AdUnitContext.wrap(self.adunit)
-        
     def tearDown(self):
         self.testbed.deactivate()
         
         
-    def mptest_stats(self):
-        apps = StatsModel.all().fetch(10)
+    def mptest_adgroup_qm(self):
+        context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key())
+        eq_(len(context.adgroups), 1)
         
-        logging.info(apps)
-        eq_(len(apps),0)
+        self.adgroup2 = AdGroup(account=self.account, 
+                               campaign=self.campaign, 
+                               site_keys=[self.adunit.key()],
+                               bid_strategy="cpc",
+                               bid=100.0)
+                
+        context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key())
+        eq_(len(context.adgroups), 1)
+                               
+        # Adds to the datastore and deletes context from cache                       
+        AdGroupQueryManager.put(self.adgroup2)
+        
+        # Now we rebuild with the new adgroup
+        context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key())
+        eq_(len(context.adgroups), 2)
+        
+    def mptest_stats(self):
+        eq_(True, True)
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        

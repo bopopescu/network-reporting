@@ -12,7 +12,7 @@ MEMCACHE_KEY_FORMAT = "k:%(user_id)s"
 
 class AccountQueryManager(CachedQueryManager):
     Model = Account
-    
+
     @classmethod
     def get_current_account(cls,user=None):
         if not user:
@@ -39,10 +39,18 @@ class AccountQueryManager(CachedQueryManager):
     def put_accounts(cls, accounts):
         if not isinstance(accounts,list):
             accounts = [accounts]
-        # delete from cache
+            
+        # Delete from cache
         for account in accounts:
+
+            # Delete cached AdUnitContext
+            adunits = AdUnitQueryManager.get_adunits(account=account)
+            AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
+            
+            # Delete cached Accounts for users
             for user_key in account.all_users:
                 memcache.delete(str(user_key), namespace="account")
+
         return db.put(accounts)    
     
     @classmethod    

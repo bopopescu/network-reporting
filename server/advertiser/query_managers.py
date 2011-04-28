@@ -13,6 +13,8 @@ from advertiser.models import Creative, TextCreative, \
                               HtmlCreative,\
                               ImageCreative
 
+from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
+
 NAMESPACE = None
 
 class CampaignQueryManager(QueryManager):
@@ -63,6 +65,7 @@ class AdGroupQueryManager(QueryManager):
         AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
   
         return db.put(adgroups)
+
       
 class CreativeQueryManager(QueryManager):
     Model = Creative
@@ -93,6 +96,8 @@ class CreativeQueryManager(QueryManager):
             adunits = AdUnitQueryManager.get(creative.ad_group.site_keys)
             if adunits:
                 AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
+                
+        return db.put(creatives)
 
     @classmethod
     def delete(cls,creatives):

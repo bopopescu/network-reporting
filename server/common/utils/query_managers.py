@@ -80,6 +80,8 @@ class CachedQueryManager(QueryManager):
 
     @classmethod
     def cache_put(cls,objs,replace=False):
+        """ This is currently not used due to cache limitations on appengine.
+        However, this can serve as a framework for a standardized cache"""
         if not isinstance(objs,list):
             objs = [objs]
                 
@@ -91,40 +93,10 @@ class CachedQueryManager(QueryManager):
 
     @classmethod
     def cache_delete(cls,objs):
+        """ This is currently not used due to cache limitations on appengine.
+        However, this can serve as a framework for a standardized cache"""
         if not isinstance(objs,list):
             objs = [objs]
         
         return memcache.delete_multi([str(obj.key()) for obj in objs],namespace=NAMESPACE)
         
-    def serialize_entities(self,models):
-     if models is None:
-         return None
-     elif isinstance(models, db.Model):
-         # Just one instance
-         return db.model_to_protobuf(models).Encode()
-     elif isinstance(models,dict):    
-         object_dict = {}
-         for k,model in models.iteritems():
-             object_dict[k] = db.model_to_protobuf(model).Encode()
-         return object_dict
-     else:
-         # A list
-         return [db.model_to_protobuf(x).Encode() for x in models]
-         
-         
-    def deserialize_entities(self,data):
-        if data is None:
-            return None
-        elif isinstance(data, str):
-        # Just one instance
-            return db.model_from_protobuf(entity_pb.EntityProto(data))
-        elif isinstance(data,dict):    
-            object_dict = {}
-            for k,v in data.iteritems():
-                object_dict[k] = db.model_from_protobuf(entity_pb.EntityProto(v))
-            return object_dict
-        else:
-            # list
-            return [db.model_from_protobuf(entity_pb.EntityProto(x)) for x in data]
-            
-            

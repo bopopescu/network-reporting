@@ -1,7 +1,6 @@
 import logging
 
 from common.utils.query_managers import QueryManager, CachedQueryManager
-from advertiser.query_managers import CampaignStatsCounter
 
 from google.appengine.ext import db
 

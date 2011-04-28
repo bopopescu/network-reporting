@@ -77,8 +77,6 @@ from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManag
 
 from ad_server.optimizer.adunit_context import AdUnitContext, CreativeCTR
 
-from advertiser.query_managers import CampaignStatsCounter
-
 from mopub_logging import mp_logging
 from budget import budget_service
 from google.appengine.ext.db import Key
@@ -602,7 +600,7 @@ class AdHandler(webapp.RequestHandler):
                                                         ) 
                                                             
         if jsonp:
-            self.response.out.write('%s(%s)' % (callback, dict(ad=str(rendered_creative), click_url = str(ad_click_url))))
+            self.response.out.write('%s(%s)' % (callback, dict(ad=str(rendered_creative or ''), click_url = str(ad_click_url))))
         elif not (debug or admin_debug_mode):                                                    
             self.response.out.write( rendered_creative )
         else:
@@ -822,6 +820,8 @@ class AdHandler(webapp.RequestHandler):
             
             # render the HTML body
             rendered_creative = self.TEMPLATES[template_name].safe_substitute(params)
+            rendered_creative.encode('utf-8')
+            
             return rendered_creative
             
             # Otherwise, if there was no creative

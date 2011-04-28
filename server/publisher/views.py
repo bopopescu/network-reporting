@@ -239,7 +239,7 @@ class AppCreateHandler(RequestHandler):
         status = "success"
         if self.account.status == "new":
           self.account.status = "step3"  # skip setting 'step2' since the step 2 page is only displayed once
-          AccountQueryManager().put_accounts(self.account)
+          AccountQueryManager.put_accounts(self.account)
           status = "welcome"
         return HttpResponseRedirect(reverse('publisher_generate',kwargs={'adunit_key':adunit.key()})+'?status='+status)
     return self.get(app_form,adunit_form)
@@ -610,23 +610,6 @@ class AppIconHandler(RequestHandler):
 
 def app_icon(request,*args,**kwargs):
   return AppIconHandler()(request,*args,**kwargs)
-    
-# Set up a new user with a default campaign
-class GetStartedHandler(RequestHandler):
-  def get(self):
-    # Check if the user is in the data store and create it if not
-
-    user = self.account.user
-    account = Account.get_by_key_name(user.user_id())
-    if not account:
-      account = Account(key_name=user.user_id(),user=user)
-      AccountQueryManager.put_accounts(account)
-      
-    return HttpResponseRedirect(reverse('publisher_index'))
-
-@whitelist_login_required
-def getstarted(request,*args,**kwargs):
-  return GetStartedHandler()(request,*args,**kwargs)   
 
 class RemoveAdUnitHandler(RequestHandler):
   def post(self):

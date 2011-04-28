@@ -63,7 +63,7 @@ def update_stats(stats_dict,publisher,advertiser,date_hour,country,attribute,req
 class LogTaskHandler(webapp.RequestHandler):
   def get(self):
       # inspect headers of the task
-      retry_count = self.request.headers.get('X-AppEngine-TaskRetryCount',None)
+      retry_count = int(self.request.headers.get('X-AppEngine-TaskRetryCount',"0"))
       task_name = self.request.headers.get('X-AppEngine-TaskName',None)
       queue_name = self.request.headers.get('X-AppEngine-QueueName',None)
       
@@ -184,17 +184,18 @@ class LogTaskHandler(webapp.RequestHandler):
       try:
           query_manager.put_stats(stats_dict.values())
       except:
-          exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
-          mail.send_mail(sender="olp@mopub.com",
-                        to="bugs@mopub.com",
-                        subject="Logging error",
-                        body="account: %s retries: %s task name: %s queue name: %s\n%s"%(account_name,
-                                                                                         retry_count,
-                                                                                         task_name,
-                                                                                         queue_name,
-                                                                                         exception_traceback))
-          logging.error(exception_traceback)
-          raise Exception("need to try transaction again")
+          if retry_count > 0:
+              exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
+              mail.send_mail(sender="olp@mopub.com",
+                            to="bugs@mopub.com",
+                            subject="Logging error",
+                            body="account: %s retries: %s task name: %s queue name: %s\n%s"%(account_name,
+                                                                                             retry_count,
+                                                                                             task_name,
+                                                                                             queue_name,
+                                                                                             exception_traceback))
+              logging.error(exception_traceback)
+              raise Exception("need to try transaction again")
           
       if not tail_index_str or memcache_misses:
           exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))

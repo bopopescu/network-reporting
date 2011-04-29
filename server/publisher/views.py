@@ -494,18 +494,53 @@ class AdUnitShowHandler(RequestHandler):
     # to allow the adunit to be edited
     adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(adunit=adunit)
     
+    
+    
+    promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], adunit.adgroups)
+    promo_campaigns = sorted(promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
+
+    guarantee_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee_high', 'gtee_low', 'gtee'], adunit.adgroups)
+    guarantee_campaigns = sorted(guarantee_campaigns, lambda x,y: cmp(y.bid, x.bid))
+    levels = ('high', '', 'low')
+    gtee_str = "gtee_%s"
+    gtee_levels = []
+    for level in levels:
+        this_level = gtee_str % level if level else "gtee"
+        name = level if level else 'normal'
+        level_camps = filter(lambda x:x.campaign.campaign_type == this_level, guarantee_campaigns)
+        gtee_levels.append(dict(name = name, adgroups = level_camps))
+
+    for level in gtee_levels:
+        if level['name'] == 'normal' and len(gtee_levels[0]['adgroups']) == 0 and len(gtee_levels[2]['adgroups']) == 0: 
+            level['foo'] = True 
+        elif len(level['adgroups']) > 0:
+            level['foo'] = True 
+        else:
+            level['foo'] = False 
+
+    network_campaigns = filter(lambda x: x.campaign.campaign_type in ['network'], adunit.adgroups)
+    network_campaigns = sorted(network_campaigns, lambda x,y: cmp(y.bid, x.bid))
+
+    backfill_promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_promo'], adunit.adgroups)
+    backfill_promo_campaigns = sorted(backfill_promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
+    
+    
       
     # write response
     return render_to_response(self.request,'publisher/show.html', 
-        {'site':adunit,
-         'adunit':adunit,
+        {'site': adunit,
+         'adunit': adunit,
          'today': adunit.all_stats[-1],
          'yesterday': adunit.all_stats[-2],
          'start_date': days[0],
          'date_range': self.date_range,
-         'account':self.account, 
+         'account': self.account, 
          'days': days,
-         'adunit_form_fragment':adunit_form_fragment})
+         'adunit_form_fragment': adunit_form_fragment,
+         'gtee': gtee_levels, 
+         'promo': promo_campaigns,
+         'network': network_campaigns,
+         'backfill_promo': backfill_promo_campaigns})
   
 @whitelist_login_required
 def adunit_show(request,*args,**kwargs):

@@ -10,6 +10,11 @@
 
 {% block titleBarRight %}
             <span class="titlebar-right">
+              	<select name="campaign-status-options" id="campaign-status-options" class="selectmenu"> 
+        					<option value="running" selected="selected">Running</option>
+        					<option value="running" selected="selected">Paused</option>
+        					<option value="running" selected="selected">Archived</option>
+              </select>
               <a class="button" id="advertisers-adgroups-editAdGroupButton" href="{% url advertiser_campaign_edit adgroup_key=adgroup.key %}">Edit campaign settings</a>
             </span>
 {% endblock titleBarRight %}
@@ -97,13 +102,8 @@
             </section>
           </div>
 
-          
           <section id="dashboard-campaign">
-
-            <form method="post" action="/campaigns/adgroup/{{adgroup.key}}/" id="fake-campaignForm">
-                <input type=hidden name="action" id="action" />
-            </form>
-            <br />
+            <h2>Campaign Details</h2>
             <p style="font-size: 14px;">
               {% if adgroup.active %}
               <img src="/images/active.gif" width="9" height="9"/>
@@ -122,7 +122,13 @@
                 {% endif %}&nbsp;
                 {% if campaign.budget %}{{campaign.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
             </p>
+            
+            <div class="buttonBank buttonBank-right">
+              <a class="button button-small" href="/inventory/export/csv/adgroup/{{adgroup.key}}?spec=days">Export CSV</a>
+              <a class="button button-small" href="/inventory/export/xls/adgroup/{{adgroup.key}}?spec=days">Export XLS</a>
+            </div>
             <h2>Ad Unit Targeting</h2>
+            
             <table class="campaignData-main dataTable" id="dashboard-campaigns-columnHeaders">
               <thead>
                 <tr>
@@ -171,6 +177,10 @@
             <div class="buttonBank buttonBank-right">
               <a class="button" id="advertiser-adgroups-addCreativeButton" href="#">Add a creative</a>
             </div>
+            
+            
+            
+            
             <h2>Creatives</h2>
             <section id="advertiser-creativeAddForm" class="hidden">
               <div>
@@ -282,6 +292,10 @@
           </section>
             {% endifnotequal %} {# endifnotequal campaign.campaign_type "network" #}
           
+            {# Form for in-place updating #}
+            <form method="post" action="/campaigns/adgroup/{{adgroup.key}}/" id="fake-campaignForm">
+                <input type=hidden name="action" id="action" />
+            </form>
 <script type="text/javascript">
   creatives = {% if creatives %}true{% else%}false{% endif %};
 </script>

@@ -20,7 +20,7 @@
                     <dt><label for="country">Country:</label></dt>
                     <dd>
                         <select name="{{form.country.name}}">
-                            <option value="" selected>(select one)</option>
+                            <option value="">(select one)</option>
                             {% for c in form.countries %}
                                 <option value="{{c.0}}" {% ifequal form.country.value c.0 %}selected{% endifequal %}>{{c.1}}</option>
                             {% endfor %}

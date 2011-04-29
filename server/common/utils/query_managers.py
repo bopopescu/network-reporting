@@ -4,6 +4,7 @@ from google.appengine.api import memcache
 from google.appengine.ext import db
 from google.appengine.datastore import entity_pb
 
+from common.utils.decorators import wraps_first_arg
 from common.utils import simplejson
 
 NAMESPACE = None
@@ -21,35 +22,26 @@ class QueryManager(object):
             return cls.Model.get(keys)    
         else:
             return db.get(keys)
-        
+    
     @classmethod
+    @wraps_first_arg
     def put(cls, objs):
-        if not isinstance(objs, (list, tuple)):
-            objs = [objs]
-          
         # Otherwise it is a list
         return db.put(objs)
             
     @classmethod
+    @wraps_first_arg
     def delete(cls, objs):
-        if not isinstance(objs, (list, tuple)):
-            objs = [objs]
-
-        # Otherwise it is a list
-        return db.delete(objs)
-      
+        """ Set a property to deleted rather than actually deleting from the db """
+        for obj in objs:
+            obj.deleted = True
+        return cls.put(objs)
         
         
 class CachedQueryManager(QueryManager):
     """ Intelligently uses the datastore for speed """
     Model = None
-    
-    def get_by_key(self,keys):
-        if self.Model:
-            return self.Model.get(keys)    
-        else:
-            return db.get(keys)    
-            
+
     @classmethod
     def cache_get_or_insert(cls,keys):
         """ This is currently not used due to cache limitations on appengine.

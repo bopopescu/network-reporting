@@ -5,6 +5,8 @@ from django.http import HttpResponseRedirect
 from google.appengine.api import users
 from django.core.urlresolvers import reverse
 import warnings
+import inspect
+import logging
 
 #TODO: Rename this function since we no longer use a whitelist
 def whitelist_login_required(function=None):
@@ -55,14 +57,14 @@ def deprecated(func):
 
 
 
-class wraps_nonlists(object):
-    """ Decorator that wraps all nonlist arguments and turns them into lists """
+class wraps_first_arg(object):
+    """ Decorator that wraps all nonlist arguments and turns them into lists.
+    Only works for bound methods """
     def __init__(self, f):
         self.f = f
     def __call__(self, *args):
         args = list(args)
-        for arg_id, arg in enumerate(args):
-            if not isinstance(arg, (list, tuple)):
-                args[arg_id] = [arg]
+        if not isinstance(args[1], (list, tuple)):
+            args[1] = [args[1]]
             
         return self.f(*args)

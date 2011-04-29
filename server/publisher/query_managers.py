@@ -2,7 +2,7 @@ import logging
 
 from common.utils.query_managers import QueryManager, CachedQueryManager
 
-from common.utils.decorators import wraps_nonlists, deprecated
+from common.utils.decorators import wraps_first_arg, deprecated
 
 from google.appengine.ext import db
 
@@ -63,7 +63,7 @@ class AppQueryManager(QueryManager):
         return apps.fetch(limit)    
 
     @classmethod
-    @wraps_nonlists
+    @wraps_first_arg
     def put(cls, apps):
         put_response = db.put(apps)
     
@@ -95,7 +95,7 @@ class AdUnitQueryManager(QueryManager):
         return adunits.fetch(limit)
 
     @classmethod
-    @wraps_nonlists
+    @wraps_first_arg
     def put(cls, adunits):
         if not isinstance(adunits, (list, tuple)):
             adunits = [adunits]

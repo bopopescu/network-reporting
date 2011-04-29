@@ -5,7 +5,7 @@ from google.appengine.api import memcache
 from google.appengine.ext import db
 
 from common.utils.query_managers import QueryManager, CachedQueryManager
-from common.utils.decorators import wraps_nonlists
+from common.utils.decorators import wraps_first_arg
 
 from advertiser.models import Campaign
 from advertiser.models import AdGroup
@@ -31,7 +31,7 @@ class CampaignQueryManager(QueryManager):
         return campaigns.fetch(limit)        
         
     @classmethod
-    @wraps_nonlists
+    @wraps_first_arg
     def put(cls, campaigns):
         put_response = db.put(campaigns)
 
@@ -73,7 +73,7 @@ class AdGroupQueryManager(QueryManager):
         return adgroups.fetch(limit)
         
     @classmethod
-    @wraps_nonlists
+    @wraps_first_arg
     def put(self, adgroups):
         put_response = db.put(adgroups)
         
@@ -107,10 +107,8 @@ class CreativeQueryManager(QueryManager):
         return creatives.fetch(limit)      
 
     @classmethod
+    @wraps_first_arg
     def put(cls, creatives):
-        if not isinstance(creatives, (list, tuple)):
-            creatives = [creatives]
-    
         put_response = db.put(creatives)
     
         for creative in creatives:
@@ -120,18 +118,7 @@ class CreativeQueryManager(QueryManager):
                 AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
                 
         return put_response
-
-    @classmethod
-    def delete(cls,creatives):
-        """ Instead of deleting the entire object, we set a property to deleted """
-        if not isinstance(creatives, (list, tuple)):
-            creatives = [creatives]
-            
-        update_list = []    
-        for c in creatives:
-            c.deleted = True
-            update_list.append(c)
-        db.put(update_list)
+        
         
 class TextCreativeQueryManager(CreativeQueryManager):
     Model = TextCreative

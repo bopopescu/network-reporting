@@ -72,6 +72,9 @@ class TestQueryManagersAdunitContext(unittest.TestCase):
     def tearDown(self):
         self.testbed.deactivate()
         
+        
+    ########## Check that qm.put() clears the adunitcontext ##########
+        
     def mptest_adgroup_qm(self):
         context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key())
         eq_(len(context.adgroups), 1)
@@ -201,6 +204,7 @@ class TestQueryManagersAdunitContext(unittest.TestCase):
         context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key())
         eq_(context.adunit.app_key.name, "Test App Changed")
 
+    ########## Check that object.put() does not clear the adunitcontext ##########
 
     def mptest_adgroup_no_qm(self):
         context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key())
@@ -291,3 +295,79 @@ class TestQueryManagersAdunitContext(unittest.TestCase):
         
         context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key())
         eq_(context.adunit.app_key.name, "Test App")
+        
+        
+    ########## Check wraps_first_arg ##########      
+    def mptest_creative_qm_mult(self):
+
+        context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key())
+        eq_(len(context.creatives), 1)
+
+        self.creative2 = Creative(account=self.account,
+                                 ad_group=self.adgroup,
+                                 tracking_url="test-tracking-url2")
+
+        self.creative3 = Creative(account=self.account,
+                              ad_group=self.adgroup,
+                              tracking_url="test-tracking-url3")
+
+
+        context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key())
+        eq_(len(context.creatives), 1)
+
+        # Adds to the datastore and deletes context from cache                       
+        CreativeQueryManager.put([self.creative2, self.creative3])
+
+        context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key())
+        eq_(len(context.creatives), 3)
+    
+    ########## Check that qm.delete() clears the adunitcontext ##########
+    
+    def mptest_creative_delete_qm(self):
+
+        context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key())
+        eq_(len(context.creatives), 1)
+
+        # Adds to the datastore with deleted = true and deletes context from cache                       
+        CreativeQueryManager.delete(self.creative)
+         
+        # it is no longer in the cache
+        context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key())
+        eq_(len(context.creatives), 0)
+
+        # But it still exists in the db
+        creative = CreativeQueryManager.get(self.creative.key())
+        eq_(creative.deleted, True)
+
+    def mptest_campaign_delete_qm(self):
+
+        context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key())
+        eq_(len(context.campaigns), 1)
+
+        # Adds to the datastore with deleted = true and deletes context from cache                       
+        CampaignQueryManager.delete(self.campaign)
+
+        # it is no longer in the cache
+        context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key())
+        eq_(len(context.campaigns), 0)
+
+        # But it still exists in the db
+        campaign = CampaignQueryManager.get(self.campaign.key())
+        eq_(campaign.deleted, True)
+
+    def mptest_adgroup_delete_qm(self):
+
+        context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key())
+        eq_(len(context.adgroups), 1)
+
+        # Adds to the datastore with deleted = true and deletes context from cache                       
+        AdGroupQueryManager.delete(self.adgroup)
+
+        # it is no longer in the cache
+        context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key())
+        eq_(len(context.adgroups), 0)
+
+        # But it still exists in the db
+        adgroup = AdGroupQueryManager.get(self.adgroup.key())
+        eq_(adgroup.deleted, True)
+

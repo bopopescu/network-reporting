@@ -55,10 +55,10 @@
                       <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
                     </tr>
                     <tr id="stats-breakdown-clicks">
-                      <td class="stats-breakdown-value today"><span class="inner">{{today.click_count|withsep}} <span class="muted unbold">({{today.ctr|percentage}})</span></span></td>
-                      <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.click_count|withsep}} <span class="muted unbold">({{yesterday.ctr|percentage}})</span></span></td>
-                      <td class="stats-breakdown-value all"><span class="inner">{{adunit.stats.click_count|withsep}} <span class="muted unbold">({{adunit.stats.ctr|percentage}})</span></span></td>
-                      <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
+                        <td class="stats-breakdown-value today"><span class="inner"><span class="muted unbold">({{today.ctr|percentage}})</span> {{today.click_count|withsep}}</span></td>
+                        <td class="stats-breakdown-value yesterday"><span class="inner"><span class="muted unbold">({{yesterday.ctr|percentage}})</span> {{yesterday.click_count|withsep}}</span></td>
+                        <td class="stats-breakdown-value all"><span class="inner"><span class="muted unbold">({{adunit.stats.ctr|percentage}})</span> {{adunit.stats.click_count|withsep}}</span></td>
+                        <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
                     </tr>
                     </tr>
                   </tbody>

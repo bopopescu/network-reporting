@@ -82,7 +82,7 @@ class AdUnitContext(object):
         return creatives
         
     @classmethod
-    def fetch_adgroups(cls, adunit, limit=30):
+    def fetch_adgroups(cls, adunit, limit=50):
         logging.info("getting adgroups from db")
         adgroups = AdGroup.all().filter("site_keys =",adunit.key()).\
                                   filter("deleted =",False).\
@@ -110,9 +110,9 @@ class AdUnitContext(object):
         campaigns = []
         for adgroup in adgroups:
             campaign = db.get(adgroup.campaign.key())
-            campaigns.append(campaign)
+            if not campaign.deleted:
+                campaigns.append(campaign)
         return campaigns
-        
         
     def key(self):
         """ Since we want a 1-1 mapping from adunits to adunit_contexts, we

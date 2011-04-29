@@ -228,10 +228,6 @@ class AppCreateHandler(RequestHandler):
         
         AdUnitQueryManager.put(adunit)
 
-        # update the cache as necessary 
-        # replace=True means don't do anything if not already in the cache
-        AdUnitContextQueryManager.cache_delete_from_adunits(adunit)
-
         # Check if this is the first ad unit for this account
         if len(AdUnitQueryManager.get_adunits(account=self.account,limit=2)) == 1:      
           add_demo_campaign(adunit)
@@ -542,11 +538,7 @@ class AppUpdateAJAXHandler(RequestHandler):
       AppQueryManager.put(app)
       
       json_dict.update(success=True)
-      
-      # Delete related adunit contexts from memcache
-      adunits = AdUnitQueryManager.get_adunits(app=app)
-      AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
-      
+
       return self.json_response(json_dict)
     new_html = self.get(app_form=app_form)
     json_dict.update(success=False,html=new_html)    
@@ -587,8 +579,6 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
       adunit.account = self.account
       AdUnitQueryManager.put(adunit)
       
-      AdUnitContextQueryManager.cache_delete_from_adunits(adunit)
-      
       json_dict.update(success=True)
       return self.json_response(json_dict)
     new_html = self.get(adunit_form=adunit_form)
@@ -619,9 +609,6 @@ class RemoveAdUnitHandler(RequestHandler):
       if a != None and a.app_key.account == self.account:
         a.deleted = True
         AdUnitQueryManager.put(a)
-        # delete from cache
-        # CachedQueryManager().cache_delete(a)
-        AdUnitContextQueryManager.cache_delete_from_adunits(a)
         
     return HttpResponseRedirect(reverse('publisher_app_show','app_key',a.app_key.key()))
  

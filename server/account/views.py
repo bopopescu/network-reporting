@@ -31,6 +31,7 @@ class AccountHandler(RequestHandler):
 
         if account_form.is_valid():
             account = account_form.save(commit=False)
+
             AccountQueryManager.put_accounts(account)
             
             if self.account.status == "step3":

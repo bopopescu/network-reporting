@@ -197,17 +197,10 @@ class CreateCampaignAJAXHander(RequestHandler):
         adgroup_form = AdGroupForm(data=self.request.POST,instance=adgroup)
 
         # We pre-emptively clear the cache for site keys, as they may be updated
+        adunits_to_update = set()
         if adgroup:
-            adunits_to_update = adgroup.site_keys
-        else:
-            adunits_to_update = []
+            adunits_to_update.update(adgroup.site_keys)
             
-        if adunits_to_update:
-            adunits = AdUnitQueryManager.get(adunits_to_update)
-            # In general we want to do the cache deletions in the query_managers
-            # file, but here it makes sense to manaully delete it.
-            AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
-
         all_adunits = AdUnitQueryManager.get_adunits(account=self.account)
         sk_field = adgroup_form.fields['site_keys']
         sk_field.choices = all_adunits # TODO: doesn't work needed for validation
@@ -265,6 +258,12 @@ class CreateCampaignAJAXHander(RequestHandler):
                     #put the adgroup again with the new (or old) creative reference
                     AdGroupQueryManager.put(adgroup)
 
+                # Delete Cache. We leave this in views.py because we 
+                # must delete the adunits that the adgroup used to have as well
+                adunits_to_update.update(adgroup.site_keys)
+                if adunits_to_update:
+                    adunits = AdUnitQueryManager.get(adunits_to_update)
+                    AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
 
                 # Onboarding: user is done after they set up their first campaign
                 if self.account.status == "step4":
@@ -286,40 +285,20 @@ def campaign_adgroup_create_ajax(request,*args,**kwargs):
 
 # Wrapper for the AJAX handler
 class CreateCampaignHandler(RequestHandler):
-    def get(self,campaign_form=None, adgroup_form=None):
-        campaign_create_form_fragment = CreateCampaignAJAXHander(self.request).get()
-        return render_to_response(self.request,'advertiser/new.html', {"campaign_create_form_fragment": campaign_create_form_fragment})
+    def get(self,campaign_form=None, adgroup_form=None, adgroup_key=None):
+        adgroup = None
+        if adgroup_key:
+            adgroup = AdGroupQueryManager.get(adgroup_key)
+            if not adgroup:
+                raise Http404("AdGroup does not exist")
 
-    # TODO: this should not get called    
-    # def post(self):
-    #     campaign_form = CampaignForm(data=self.request.POST)
-    #     adgroup_form = AdGroupForm(data=self.request.POST)
-    #     
-    #     all_adunits = AdUnitQueryManager.get_adunits(account=self.account)
-    #     sk_field = adgroup_form.fields['site_keys']
-    #     sk_field.queryset = all_adunits # TODO: doesn't work needed for validation
-    #     if campaign_form.is_valid():
-    #         campaign = campaign_form.save(commit=False)
-    #         campaign.u = self.account.user
-    #         
-    #         if adgroup_form.is_valid():
-    #             adgroup = adgroup_form.save(commit=False)
-    #             
-    #             # TODO: clean this up in case the campaign succeeds and the adgroup fails
-    #             AdGroupQueryManager.put(campaign)
-    #             adgroup.campaign = campaign
-    #             AdGroupQueryManager.put(adgroup)
-    #             if campaign.campaign_type == "network":
-    #                 creative = adgroup.default_creative()
-    #                 CreativeQueryManager.put(creative)
-    #             
-    #             return HttpResponseRedirect(reverse('advertiser_adgroup_show', kwargs={'adgroup_key':str(adgroup.key())}))
-    # 
-    #     return self.get(campaign_form,adgroup_form)
+        campaign_create_form_fragment = CreateCampaignAJAXHander(self.request).get(adgroup=adgroup)
+        return render_to_response(self.request,'advertiser/new.html', {"adgroup_key": adgroup_key,
+            "campaign_create_form_fragment": campaign_create_form_fragment})
 
 @whitelist_login_required         
 def campaign_adgroup_create(request,*args,**kwargs):
-    return CreateCampaignHandler()(request,*args,**kwargs)            
+    return CreateCampaignHandler()(request,*args,**kwargs)         
 
 class CreateAdGroupHandler(RequestHandler):
     def get(self, campaign_key=None, adgroup_key=None, edit=False, title="Create an Ad Group"):
@@ -646,12 +625,7 @@ class AddCreativeHandler(RequestHandler):
                 creative = creative_form.save(commit=False)
                 creative.ad_group = ad_group
                 creative.account = self.account
-                CreativeQueryManager.put(creative)        
-
-                # update cache
-                adunits = AdUnitQueryManager.get(ad_group.site_keys)
-                if adunits:
-                    AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
+                CreativeQueryManager.put(creative)
 
                 jsonDict.update(success=True)
                 return self.json_response(jsonDict)
@@ -719,12 +693,6 @@ class CreativeManagementHandler(RequestHandler):
         if update_objs:
             # db.put(update_objs)
             CreativeQueryManager.put(update_objs)
-
-            # update cache
-            adunits = AdUnitQueryManager.get(c.ad_group.site_keys)
-            if adunits:
-                AdUnitContextQueryManager.cache_delete_from_adunits([a for a in adunits if a])
-
 
         return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':adgroup_key}))
 

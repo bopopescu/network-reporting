@@ -554,7 +554,7 @@ var mopub = mopub || {};
         }
       });
     
-    $('#creativeAddForm-url-helpLink').click(function(e) {
+    $('.creativeAddForm-url-helpLink').click(function(e) {
       e.preventDefault();
       $('#creativeAddForm-url-helpContent').dialog({ 
         buttons: { "Close": function() { $(this).dialog("close"); } }

@@ -54,7 +54,14 @@ def percentage(value):
     if value:
         return "%1.2f%%" % ((value or 0) * 100)
     else:
-        return "0.00%"	
+        return "0.00%"
+        
+@register.filter
+def percentage_rounded(value):
+    if value:
+        return "%1.0f%%" % ((value or 0) * 100)
+    else:
+        return "0%"        
   
 @register.filter
 def withsep(x):

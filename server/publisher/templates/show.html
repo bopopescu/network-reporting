@@ -17,6 +17,8 @@
             There are no campaigns targeting this ad unit.  To show ads here, set up a new ad campaign or add this ad unit to an existing campaign on the <a href="{% url advertiser_campaign %}">Campaigns</a> page.
           </div>
 {% endif %}
+
+          <h2>Real-time stats from {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h2>
           <section id="dashboard-adunitEditForm" class="hidden">
             <div>
               <a name="adunitForm" class="hidden">anchor</a>
@@ -53,10 +55,11 @@
                       <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
                     </tr>
                     <tr id="stats-breakdown-clicks">
-                      <td class="stats-breakdown-value today"><span class="inner">{{today.click_count|withsep}}</span></td>
-                      <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.click_count|withsep}}</span></td>
-                      <td class="stats-breakdown-value all"><span class="inner">{{adunit.stats.click_count|withsep}}</span></td>
+                      <td class="stats-breakdown-value today"><span class="inner">{{today.click_count|withsep}} ({{today.ctr|percentage}})</span></td>
+                      <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.click_count|withsep}} ({{yesterday.ctr|percentage}})</span></td>
+                      <td class="stats-breakdown-value all"><span class="inner">{{adunit.stats.click_count|withsep}} ({{adunit.stats.ctr|percentage}})</span></td>
                       <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
+                    </tr>
                     </tr>
                   </tbody>
                 </table>
@@ -87,7 +90,7 @@
                       { '{{adunit.name|safe|addslashes}}': [{% for t in adunit.all_stats %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
                     ],
                     'clicks': [
-                      { '{{adunit.name|safe|addslashes}}': [{% for t in adunit.all_stats %}{{t.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
+                      { '{{adunit.name|safe|addslashes}}': [{% for t in adunit.all_stats %}{y: {{t.click_count}}, name: '{{t.ctr|percentage}}'}{% if not forloop.last %},{% endif %} {% endfor %}] }
                     ]
                   };
                 </script>
@@ -99,7 +102,7 @@
           <div class="clear"></div>
 
           <section id="dashboard-apps">
-            <h2>Campaigns</h2>
+            <h2>Campaigns targeting {{adunit.name}}</h2>
             <div class="appData-columnHeaders">
               <table class="dataTable" id="dashboard-campaigns-columnHeaders">
                 <thead>
@@ -157,56 +160,5 @@
               {% endif %}
             </div>
             
-          </section>
-
-          <section id="dashboard-apps">
-            <h2>Daily Counts</h2>            
-            <div class="appData-columnHeaders">
-              <table class="dataTable" id="dashboard-apps-columnHeaders">
-                <thead>
-                  <tr>
-                    <th class="appData-icon"></th>
-                    <th class="dataTable-name">&nbsp;</th>
-                    <th class="dataTable-data numeric">Requests</th>
-                    <th class="dataTable-data numeric">Impressions</th>
-                    <th class="dataTable-data numeric">Clicks</th>
-                    <th class="dataTable-data numeric">CTR</th>
-                  </tr>
-                </thead>
-              </table>
-            </div>
-            <div class="appData" id="dashboard-app-0">
-              <table class="dataTable appData-main" id="dashboard-app-0-main">
-                <tbody>
-                  <tr>
-                    <td class="appData-icon-none"></td>
-                    <th class="dataTable-name">Totals</th>
-                    <td class="dataTable-data numeric">{{adunit.stats.request_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adunit.stats.impression_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adunit.stats.click_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adunit.stats.ctr|percentage}}</td>
-                  </tr>
-                </tbody>
-              </table>
-              <div class="appData-details" id="dashboard-app-0-details">
-                <div class="appData-details-inner show">
-                  <table class="dataTable">
-                    <tbody>
-                      {% for s in adunit.all_stats reversed %}<tr>
-                        <th class="dataTable-name">{{s.date|format_date}}</th>
-                        <td class="dataTable-data numeric">{{s.request_count|withsep}}</td>
-                        <td class="dataTable-data numeric">{{s.impression_count|withsep}}</td>
-                        <td class="dataTable-data numeric">{{s.click_count|withsep}}</td>
-                        <td class="dataTable-data numeric">{{s.ctr|percentage}}</td>
-                      </tr>
-                      {% endfor %}
-                    </tbody>
-                  </table>
-                </div>
-                <a class="button button-small appData-details-toggleButton" href="#">Hide details</a>
-                <a class="button button-small" href="/inventory/export/csv/adunit/{{adunit.key}}?spec=days">Export CSV</a>
-                <a class="button button-small" href="/inventory/export/xls/adunit/{{adunit.key}}?spec=days">Export XLS</a>
-              </div>
-            </div>
           </section>
 {% endblock content %}

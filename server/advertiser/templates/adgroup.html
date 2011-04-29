@@ -3,7 +3,7 @@
 {% block pageTitle %}
           <div class="breadcrumb">
             <a class="linkIcon breadcrumb-back" href="{% url advertiser_campaign %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Campaigns</a>
-            <h1>{{adgroup.name}} <span class="muted">({{adgroup|campaign_status}})</span></h1>
+            <h1>{{adgroup.name}}</h1>
           </div>
 {% endblock pageTitle %}
 {% block messageCenter %}{% endblock messageCenter %}
@@ -104,15 +104,6 @@
                 <input type=hidden name="action" id="action" />
             </form>
             <br />
-            <h2>Campaign Details</h2>
-            <div id="play-pause-bar">
-              <span class="buttonset ui-buttonset" id="campaign-play-pause" style="visibility:visible;">
-                <input type="radio" name="play-pause-option" value="play" id="play-option" class="ui-helper-hidden-accessible" {% if adgroup.active %}checked{% endif %} />
-                <label for="play-option" aria-pressed="false" class="ui-button ui-widget ui-state-default ui-button-text-only ui-corner-left" role="button" aria-disabled="false">Play</label>
-                <input type="radio" name="play-pause-option" value="pause" id="pause-option" class="ui-helper-hidden-accessible" {% if not adgroup.active %}checked{% endif %} />
-                <label for="pause-option" aria-pressed="false" class="ui-button ui-widget ui-state-default ui-button-text-only ui-corner-left" role="button" aria-disabled="false">Pause</label>
-              </span>
-            </div>
             <p style="font-size: 14px;">
               {% if adgroup.active %}
               <img src="/images/active.gif" width="9" height="9"/>
@@ -290,60 +281,7 @@
             </section>
           </section>
             {% endifnotequal %} {# endifnotequal campaign.campaign_type "network" #}
-          <h2>Daily Counts</h2>            
-          <div>
-            <table class="dataTable" id="dashboard-apps-columnHeaders">
-              <thead>
-                <tr>
-                  <th class="campaignData-icon"></th>
-                  <th class="dataTable-name">&nbsp;</th>
-                  <th class="dataTable-data numeric">Impressions</th>
-                  <th class="dataTable-data numeric">Clicks</th>
-                  <th class="dataTable-data numeric">CTR</th>
-                  <th class="dataTable-data numeric">Revenue</th>
-                  <th class="dataTable-data numeric">Conv</th>
-                  <th class="dataTable-data numeric">CPA</th>
-                </tr>
-              </thead>
-            </table>
-          </div>
-          <div class="appData" id="dashboard-app-0" style="padding-right:0;padding-left:0">
-            <table class="dataTable appData-main" id="dashboard-app-0-main">
-              <tbody>
-                <tr>
-                  <td class="appData-icon-none"></td>
-                  <th class="dataTable-name">Totals</th>
-                  <td class="dataTable-data numeric">{{totals.impression_count|withsep}}</td>
-                  <td class="dataTable-data numeric">{{totals.click_count|withsep}}</td>
-                  <td class="dataTable-data numeric">{{totals.ctr|percentage}}</td>
-                  <td class="dataTable-data numeric">{{totals.revenue|currency}}</td>
-                  <td class="dataTable-data numeric">{{totals.conversion_count|withsep}} ({{totals.conv_rate|percentage}})</td>
-                  <td class="dataTable-data numeric">{{totals.cpa|currency}}</td>
-                </tr>
-              </tbody>
-            </table>
-            <div class="appData-details" id="dashboard-app-0-details">
-              <div class="appData-details-inner hidden">
-                <table class="dataTable">
-                  <tbody>
-                    {% for s in adgroup.all_stats reversed %}<tr>
-                      <th class="dataTable-name">{{s.date|format_date}}</th>
-                      <td class="dataTable-data numeric">{{s.impression_count|withsep}}</td>
-                      <td class="dataTable-data numeric">{{s.click_count|withsep}}</td>
-                      <td class="dataTable-data numeric">{{s.ctr|percentage}}</td>
-                      <td class="dataTable-data numeric">{{s.revenue|currency}}</td>
-                      <td class="dataTable-data numeric">{{s.conversion_count|withsep}} ({{s.conv_rate|percentage}})</td>
-                      <td class="dataTable-data numeric">{{s.cpa|currency}}</td>
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-              </div>
-              <a class="button button-small appData-details-toggleButton" href="#">Hide details</a>
-              <a class="button button-small" href="/inventory/export/csv/adgroup/{{adgroup.key}}?spec=days">Export CSV</a>
-              <a class="button button-small" href="/inventory/export/xls/adgroup/{{adgroup.key}}?spec=days">Export XLS</a>
-            </div>
-          </div>
+          
 <script type="text/javascript">
   creatives = {% if creatives %}true{% else%}false{% endif %};
 </script>

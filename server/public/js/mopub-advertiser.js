@@ -430,15 +430,6 @@ var mopub = mopub || {};
         e.preventDefault();
         $('#campaignForm').find("#action").attr("value","delete").end().submit();
     });
-
-    $('input[name="play-pause-option"]')
-        //change not click because this should only do anything on change
-        .change(function(e) {
-                e.preventDefault();
-                var val = $(this).val();
-                $('#fake-campaignForm').find('#action').attr('value', val).end().submit();
-                });
-                
                 
     ///// Filter Campaigns by status and targeted apps /////    
     

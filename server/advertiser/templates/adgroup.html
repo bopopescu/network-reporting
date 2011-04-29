@@ -10,7 +10,7 @@
 
 {% block titleBarRight %}
             <span class="titlebar-right">
-              <a class="button" id="advertisers-adgroups-editAdGroupButton" href="#">Edit campaign settings</a>
+              <a class="button" href="{% url advertiser_campaign_edit adgroup_key=adgroup.key %}">Edit campaign settings</a>
             </span>
 {% endblock titleBarRight %}
 
@@ -25,23 +25,6 @@
             This campaign will need to have at least one <strong>Creative</strong> in order to serve.  Set up a creative below.
           </div>
 {% endif %}
-          <section id="advertiser-adgroupEditForm" class="hidden">
-            <div>
-              <form action="{% url advertiser_campaign_create_ajax %}" method="POST" accept-charset="utf-8" id="campaignAdgroupForm" class="validate">
-                <input type="hidden" name="adgroup_key" value="{{adgroup.key}}"/>
-                <div id="campaignAdgroupForm-fragment">
-{{campaign_create_form_fragment}}
-                </div>
-                <div class="clear"></div>
-                <div class="form-submit"> 
-                  <span class="hidden" id="campaignAdgroupForm-loading"><img src="/images/loading2.gif"/></span>
-                  <span class="hidden" id="campaignAdgroupForm-success">Success!</span>
-                  <span class="buttonWrap"><a href="#" class="button" id="adgroupEditForm-submit">Save</a></span> 
-                  <span class="buttonWrap"><a href="#" class="button" id="adgroupEditForm-cancel">Cancel</a></span> 
-                </div>
-              </form>
-            </div>
-          </section>
           <div class="separated" id="chartWrapper">
             <section class="offset nomargin" id="dashboard-stats">
               <div class="stats">

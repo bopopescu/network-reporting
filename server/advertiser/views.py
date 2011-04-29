@@ -286,40 +286,24 @@ def campaign_adgroup_create_ajax(request,*args,**kwargs):
 
 # Wrapper for the AJAX handler
 class CreateCampaignHandler(RequestHandler):
-    def get(self,campaign_form=None, adgroup_form=None):
-        campaign_create_form_fragment = CreateCampaignAJAXHander(self.request).get()
-        return render_to_response(self.request,'advertiser/new.html', {"campaign_create_form_fragment": campaign_create_form_fragment})
+    def get(self,campaign_form=None, adgroup_form=None, adgroup_key=None):
+        adgroup = None
+        if adgroup_key:
+            adgroup = AdGroupQueryManager.get(adgroup_key)
+            if not adgroup:
+                raise Http404("AdGroup does not exist")
 
-    # TODO: this should not get called    
-    # def post(self):
-    #     campaign_form = CampaignForm(data=self.request.POST)
-    #     adgroup_form = AdGroupForm(data=self.request.POST)
-    #     
-    #     all_adunits = AdUnitQueryManager.get_adunits(account=self.account)
-    #     sk_field = adgroup_form.fields['site_keys']
-    #     sk_field.queryset = all_adunits # TODO: doesn't work needed for validation
-    #     if campaign_form.is_valid():
-    #         campaign = campaign_form.save(commit=False)
-    #         campaign.u = self.account.user
-    #         
-    #         if adgroup_form.is_valid():
-    #             adgroup = adgroup_form.save(commit=False)
-    #             
-    #             # TODO: clean this up in case the campaign succeeds and the adgroup fails
-    #             AdGroupQueryManager.put(campaign)
-    #             adgroup.campaign = campaign
-    #             AdGroupQueryManager.put(adgroup)
-    #             if campaign.campaign_type == "network":
-    #                 creative = adgroup.default_creative()
-    #                 CreativeQueryManager.put(creative)
-    #             
-    #             return HttpResponseRedirect(reverse('advertiser_adgroup_show', kwargs={'adgroup_key':str(adgroup.key())}))
-    # 
-    #     return self.get(campaign_form,adgroup_form)
+        campaign_create_form_fragment = CreateCampaignAJAXHander(self.request).get(adgroup=adgroup)
+        return render_to_response(self.request,'advertiser/new.html', {"adgroup_key": adgroup_key,
+            "campaign_create_form_fragment": campaign_create_form_fragment})
 
 @whitelist_login_required         
 def campaign_adgroup_create(request,*args,**kwargs):
-    return CreateCampaignHandler()(request,*args,**kwargs)            
+    return CreateCampaignHandler()(request,*args,**kwargs)         
+
+@whitelist_login_required         
+def campaign_edit(request,*args,**kwargs):
+    return CreateCampaignHandler()(request,*args,**kwargs)         
 
 class CreateAdGroupHandler(RequestHandler):
     def get(self, campaign_key=None, adgroup_key=None, edit=False, title="Create an Ad Group"):

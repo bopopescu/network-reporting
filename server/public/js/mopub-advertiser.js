@@ -410,37 +410,6 @@ var mopub = mopub || {};
     
     $('#advertisers-addCampaign')
       .button({ icons : {primary : 'ui-icon-circle-plus'} });
-    
-    $('#advertisers-adgroups-editAdGroupButton')
-      .button({ icons: { primary: "ui-icon-wrench" } })
-      .click(function(e){
-        e.preventDefault();
-        var form = $('#advertiser-adgroupEditForm');
-        if (form.is(":hidden")) {
-          $('#advertiser-adgroupEditForm').slideDown('fast');          
-        }
-        else {
-          $('#advertiser-adgroupEditForm').slideUp('fast');
-        }
-      });
-    
-    $('#adgroupEditForm-cancel')
-      .click(function(e){
-        e.preventDefault();
-        $('#advertiser-adgroupEditForm').slideUp('fast',function(){
-          $('#advertisers-adgroups-editAdGroupButton').show();
-        });
-      });
-      
-    $('#adgroupEditForm-submit')
-      .button({ 
-        icons: { secondary: "ui-icon-circle-triangle-e" } 
-      })
-      .click(function(e){
-        e.preventDefault();
-        $('#campaignAdgroupForm-loading').show();
-        $('#campaignAdgroupForm').submit();
-      });
 
     $('#campaignForm-pause')
       .click(function(e) {

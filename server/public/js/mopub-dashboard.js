@@ -121,7 +121,9 @@ var mopub = mopub || {};
               if(activeMetric == 'revenue') {
                 text = '$' + Highcharts.numberFormat(this.value, 0);
               } else {
-                if (this.value > 1000000) {
+                if (this.value > 1000000000) {
+                  return Highcharts.numberFormat(this.value / 1000000000, 0) + "B";
+                } else if (this.value > 1000000) {
                   return Highcharts.numberFormat(this.value / 1000000, 0) + "M";
                 } else if (this.value > 1000) {
                   return Highcharts.numberFormat(this.value / 1000, 0) + "K";
@@ -144,6 +146,7 @@ var mopub = mopub || {};
             }
             else if (activeMetric == 'clicks') {
               value = Highcharts.numberFormat(this.y, 0) + ' ' + activeMetric + " (" + this.point.name + ")";
+              total = Highcharts.numberFormat(this.total, 0) + ' total ' + activeMetric;
             }
             else {
               value = Highcharts.numberFormat(this.y, 0) + ' ' + activeMetric;

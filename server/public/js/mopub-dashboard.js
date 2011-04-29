@@ -112,7 +112,8 @@ var mopub = mopub || {};
         },
         legend: {
           verticalAlign: "bottom",
-          y: -7
+          y: -7,
+          enabled: (chartSeries.length > 1)
         },
         yAxis: {
           labels: {

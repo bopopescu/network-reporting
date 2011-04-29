@@ -358,6 +358,7 @@ class ShowAppHandler(RequestHandler):
          'app_form_fragment':app_form_fragment,
          'adunit_form_fragment':adunit_form_fragment,
          'start_date': days[0],
+         'end_date': days[-1],
          'date_range': self.date_range,
          'today': today,
          'yesterday': yesterday,
@@ -494,8 +495,7 @@ class AdUnitShowHandler(RequestHandler):
     
     # to allow the adunit to be edited
     adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(adunit=adunit)
-    
-      
+          
     # write response
     return render_to_response(self.request,'publisher/show.html', 
         {'site':adunit,
@@ -503,6 +503,7 @@ class AdUnitShowHandler(RequestHandler):
          'today': adunit.all_stats[-1],
          'yesterday': adunit.all_stats[-2],
          'start_date': days[0],
+         'end_date': days[-1],
          'date_range': self.date_range,
          'account':self.account, 
          'days': days,

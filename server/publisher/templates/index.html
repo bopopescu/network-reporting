@@ -121,7 +121,7 @@
                     <th class="dataTable-name"><span class="inner"><a href="{% url publisher_app_show app_key=a.key %}">{{a.name}}</a> <span class="muted unbold">({% ifequal a.app_type "iphone" %}iOS{% endifequal %}{% ifequal a.app_type "android" %}Android{% endifequal %}{% ifequal a.app_type "mweb" %}Mobile Web{% endifequal %})</span></span></th>
                     <td class="dataTable-data numeric">{{a.stats.request_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{a.stats.impression_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{a.stats.fill_rate|percentage}}</td>
+                    <td class="dataTable-data numeric">{{a.stats.fill_rate|percentage_rounded}}</td>
                     <td class="dataTable-data numeric">{{a.stats.click_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{a.stats.ctr|percentage}}</td>
                   </tr>
@@ -136,7 +136,7 @@
                         <th class="dataTable-name"><span class="inner"><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a></span></th>
                         <td class="dataTable-data numeric">{{au.stats.request_count|withsep}}</td>
                         <td class="dataTable-data numeric">{{au.stats.impression_count|withsep}}</td>
-                        <td class="dataTable-data numeric">{{au.stats.fill_rate|percentage}}</td>
+                        <td class="dataTable-data numeric">{{au.stats.fill_rate|percentage_rounded}}</td>
                         <td class="dataTable-data numeric">{{au.stats.click_count|withsep}}</td>
                         <td class="dataTable-data numeric">{{au.stats.ctr|percentage}}</td>
                       </tr>

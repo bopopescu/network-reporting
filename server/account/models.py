@@ -9,8 +9,14 @@ class Account(db.Model):
     user = db.UserProperty() # admin user for this account
     date_added = db.DateTimeProperty(auto_now_add=True)
     all_users = db.ListProperty(db.Key)    
+    first_name = db.StringProperty()
+    last_name = db.StringProperty()
+    title = db.StringProperty()
     company = db.StringProperty()
     phone = db.PhoneNumberProperty()
+    city = db.StringProperty()
+    state = db.StringProperty()
+    country = db.StringProperty()
     traffic = db.FloatProperty()
     mailing_list = db.BooleanProperty(default=False)
     
@@ -30,7 +36,7 @@ class Account(db.Model):
     
     def is_admin(self):
         return users.is_current_user_admin()
-
+        
     def __eq__(self, other):
         if other:
             return str(self.key()) == str(other.key())

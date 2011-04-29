@@ -6,6 +6,7 @@
 *.pkl
 *.swp
 *.swo
+*.deduped
 server/test_data
 server/test_data/basic_test.datastore
 *.datastore

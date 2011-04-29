@@ -30,6 +30,8 @@ from reporting.query_managers import StatsModelQueryManager
 
 from google.appengine.api import taskqueue
 
+from admin import beatbox
+
 MEMCACHE_KEY = "jpayne:admin/d:render_p"
 
 @login_required
@@ -163,3 +165,53 @@ def dashboard(request, *args, **kwargs):
     page = AdminPage.get_by_stats_source(offline=offline)
     loading = loading or page.loading
     return render_to_response(request,'admin/d.html',{'page': page, 'loading': loading})
+        
+@login_required
+def update_sfdc_leads(request, *args, **kwargs):
+    #
+    # a convenience function that maps accounts > SFDC fields
+    #
+    def account_to_sfdc(a):
+        apps = App.gql("where account = :1", a).fetch(100)
+        return {'FirstName': (a.first_name or '')[:40],
+                'LastName': (a.last_name or a.user.nickname() if a.user else '')[:80],
+                'Email': a.user.email() if a.user else '',
+                'Title': (a.title or '')[:80],
+                'Company': (a.company or a.user.email() if a.user else '')[:255], 
+                'City': (a.city or '')[:40],
+                'State': (a.state or '')[:20],
+                'Country': (a.country or '')[:40],
+                'Phone': (a.phone or '')[:40],
+                'Mailing_List__c': a.mailing_list,
+                'Apps__c': "\n".join(app.name for app in apps),
+                'Number_of_Apps__c': len(apps),
+                'iTunesURL__c': max(app.url for app in apps) if apps else None,
+                'LeadSource': 'app.mopub.com', 
+                'Impressions_Month__c': str(a.traffic) or "Unknown",
+                'MoPub_Account_ID__c': str(a.key()),
+                'MoPub_Signup_Date__c': a.date_added,
+                'type': 'Lead'}
+    
+    # This is gnarly
+    user = "jim@mopub.com"
+    pw = "fhaaCohb0hXCNSQnreJUPhHbgKYNaQf00"
+
+    # Login to SFDC as Jim
+    sforce = beatbox.PythonClient()
+    try:
+        login_result = sforce.login(user, pw)
+    except beatbox.SoapFaultError, errorInfo:
+        print "Login failed: %s %s" % (errorInfo.faultCode, errorInfo.faultString)
+        return
+    
+    # Create/update the recent leads...  
+    start_date = datetime.date.today() - datetime.timedelta(days=30)
+    accounts = Account.gql("where date_added >= :1", start_date).fetch(1000)
+    results = ""
+    while len(accounts) > 0:
+        create_result = sforce.upsert('MoPub_Account_ID__c', [account_to_sfdc(a) for a in accounts[:200]])
+        results += str(create_result)
+        accounts[:200] = []
+
+    # Cool
+    return HttpResponse(results)

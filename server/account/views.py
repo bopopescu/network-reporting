@@ -24,8 +24,7 @@ class AccountHandler(RequestHandler):
             return HttpResponseRedirect(reverse('advertiser_campaign'))
 
         account_form = account_form or AccountForm(instance=self.account)
-        return render_to_response(self.request,'account/account.html', {'account': self.account,
-                                                                                                                                        'account_form': account_form})
+        return render_to_response(self.request,'account/account.html', {'account': self.account, 'account_form': account_form})
 
     def post(self):
         account_form = AccountForm(data=self.request.POST, instance=self.account)
@@ -48,10 +47,6 @@ def index(request,*args,**kwargs):
 
 class NewAccountHandler(RequestHandler):
     def get(self,account_form=None):
-        mail.send_mail(sender="olp@mopub.com",
-                                     to="beta@mopub.com",
-                                     subject="New User",
-                                     body="%s has signed up for an account."%self.request.user.email)
         account_form = account_form or AccountForm(instance=self.account)
         return render_to_response(self.request,'account/new_account.html',{'account': self.account,
                                                                            'account_form' : account_form })
@@ -67,23 +62,9 @@ class NewAccountHandler(RequestHandler):
             
             # Go ahead and activate the account
             account.active = True
-            AccountQueryManager.put_accounts(account)
-            
-            # send a reply
-            mail.send_mail(sender="MoPub Team <olp@mopub.com>",
-                             reply_to="sales@mopub.com",
-                             to="self.request.user.email",
-                             subject="Welcome to MoPub",
-                             body="""Hello from MoPub!
+            AccountQueryManager().put_accounts(account)
 
-MoPub is designed to help mobile publishers monetize their apps more 
-effectively. If you have any questions during the setup process,
-please don't hesitate to email our sales department at sales@mopub.com.
-
-Thanks,
-The MoPub Team
-""")
-            
+            # Step 2
             return HttpResponseRedirect(reverse('publisher_app_create'))
 
         return self.get(account_form=account_form)

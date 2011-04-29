@@ -1,32 +1,34 @@
 #!/bin/bash
-PATH=$PATH:/usr/local/bin:~/google_appengine
+PATH=.:$PATH:/usr/local/bin:~/google_appengine
+echo $PATH
 
 TIMESTAMP=`date +"%Y-%m%d-%H%M"`
 DAYSTAMP=`date +"%Y-%m%d"`
 
 APP_DIR=~/mopub/server
-LOG_ROOT_DIR=~/aws_logs
+LOG_ROOT_DIR=~/aws_logs #-$DAYSTAMP
 LOG_DIR=$LOG_ROOT_DIR/logs-$TIMESTAMP # to minute resolution, so every run is siloed completely
 
-S3_BUCKET=mopub-aws-logging
-S3_LOG_DIR=s3://$S3_BUCKET/logs-$DAYSTAMP
+S3_BUCKET=s3://mopub-aws-logging
+S3_LOG_DIR=$S3_BUCKET/logs-$DAYSTAMP
 
 LOGFILE=aws-logfile-$TIMESTAMP
 LOCAL_LOGFILE=$LOG_DIR/$LOGFILE
 S3_LOGFILE=$S3_LOG_DIR/$LOGFILE
 
-SPLIT_SIZE=10000000
+SPLIT_SIZE=5000000
 
 # start timestamp
 OVERALL_START_TIME=$(date +%s)
 echo
 echo
-echo `date +"%D"` `date +"%T"`
+echo BEGIN: `date +"%D"` `date +"%T"`
 echo
 echo
 
 mkdir $LOG_ROOT_DIR
 mkdir $LOG_DIR
+
 
 # download logs from GAE
 START_TIME=$(date +%s)
@@ -39,31 +41,34 @@ echo
 echo "downloading GAE logs took" $((STOP_TIME-START_TIME)) "seconds"
 
 
-# preprocess logs for unique user count
-echo "preprocessing logs: dereferencing models for uniq user counts..."
-START_TIME=$(date +%s)
-python $APP_DIR/reporting/aws_logging/log_preprocessor.py -f $LOG_ROOT_DIR/request-logfile -o $LOCAL_LOGFILE.pp
-STOP_TIME=$(date +%s)
+# download deref cache from S3 (if it exists) and replace local one
 echo
-echo "preprocessing logs took" $((STOP_TIME-START_TIME)) "seconds"
+echo "downloading existing deref cache from S3..."
+s3cmd get --force $S3_BUCKET/code2/deref_cache.pkl $APP_DIR/reporting/aws_logging/deref_cache.pkl 
+
+
+# build up deref cache for log preprocessing
+echo
+python $APP_DIR/reporting/aws_logging/deref_cache_builder.py -f $LOG_ROOT_DIR/request-logfile 
+
+
+# upload updated deref cache to S3
+echo
+echo "uploading" $APP_DIR/reporting/aws_logging/deref_cache.pkl "to" $S3_BUCKET/code2/ "..."
+s3cmd put $APP_DIR/reporting/aws_logging/deref_cache.pkl $S3_BUCKET/code2/ 
 
 
 # split input files
 echo
-echo "splitting " $LOG_ROOT_DIR/request-logfile "..."
+echo "splitting" $LOG_ROOT_DIR/request-logfile "..."
 split -l $SPLIT_SIZE $LOG_ROOT_DIR/request-logfile $LOG_DIR/chunk-$TIMESTAMP.
-echo "splitting " $LOCAL_LOGFILE.pp "..."
-split -l $SPLIT_SIZE $LOCAL_LOGFILE.pp $LOG_DIR/pp-chunk-$TIMESTAMP.
 
 
 # upload new logs to S3
 START_TIME=$(date +%s)
 echo
-echo "uploading" $LOG_DIR/chunk-$TIMESTAMP".* to" $S3_LOG_DIR/$LOGFILE/ "..."
-s3cmd put $LOG_DIR/chunk-$TIMESTAMP.* $S3_LOG_DIR/$LOGFILE/
-echo
-echo "uploading" $LOG_DIR/pp-chunk-$TIMESTAMP".* to" $S3_LOG_DIR/$LOGFILE/ "..."
-s3cmd put $LOG_DIR/pp-chunk-$TIMESTAMP.* $S3_LOG_DIR/$LOGFILE/
+echo "uploading" $LOG_DIR/chunk-$TIMESTAMP".* to" $S3_LOGFILE.raw/ "..."
+s3cmd put $LOG_DIR/chunk-$TIMESTAMP.* $S3_LOGFILE.raw/
 STOP_TIME=$(date +%s)
 echo
 echo "uploading logs to S3 took" $((STOP_TIME-START_TIME)) "seconds"
@@ -73,28 +78,28 @@ echo "uploading logs to S3 took" $((STOP_TIME-START_TIME)) "seconds"
 START_TIME=$(date +%s)
 echo
 echo "submitting EMR job..."
-python $APP_DIR/reporting/aws_logging/job_submitter.py -l $LOG_DIR -r $S3_LOG_DIR/$LOGFILE -o $S3_LOGFILE -n 100
+python $APP_DIR/reporting/aws_logging/job_submitter.py -i $S3_LOGFILE -n 50
 STOP_TIME=$(date +%s)
 echo "EMR job took" $((STOP_TIME-START_TIME)) "seconds"
 
 
-# remove local preprocessed log file - this file can be much larger than raw downloaded logs
+# remove local chunk files to save space
 echo
-echo "removing" $LOG_DIR/chunk-$TIMESTAMP".*"
-rm $LOG_DIR/chunk-$TIMESTAMP.*
+echo "deleting local chunk log files at" $LOG_DIR
+rm $LOG_DIR/*
+
+
+# remove raw logs in S3
 echo
-echo "removing" $LOG_DIR/pp-chunk-$TIMESTAMP".*"
-rm $LOG_DIR/pp-chunk-$TIMESTAMP.*
-echo
-echo "removing" $LOCAL_LOGFILE.pp
-rm $LOCAL_LOGFILE.pp
+echo "deleting raw logs at" $S3_LOGFILE.raw
+s3cmd del --recursive $S3_LOGFILE.raw
 
 
 # download log counts output files from S3 and merge them into one
 START_TIME=$(date +%s)
 echo
 echo "downloading log counts output files from S3..."
-s3cmd get $S3_LOGFILE.out/part-* $LOG_DIR
+s3cmd get $S3_LOGFILE.dd.out/part-* $LOG_DIR
 STOP_TIME=$(date +%s)
 echo "downloading log counts S3 output files took" $((STOP_TIME-START_TIME)) "seconds"
 echo
@@ -104,10 +109,10 @@ cat $LOG_DIR/part-* > $LOCAL_LOGFILE.stats
 
 # deleting local and remote log counts S3 output files 
 echo
-echo "deleting local log counts S3 part files at" $LOG_DIR
+echo "deleting local log counts S3 part files at" $LOG_DIR.dd.out
 rm -rf $LOG_DIR/part-*
-echo "deleting remote log counts S3 part files at" $S3_LOGFILE.out
-s3cmd del --recursive $S3_LOGFILE.out
+echo "deleting remote log counts S3 part files at" $S3_LOGFILE.dd.out
+s3cmd del --recursive $S3_LOGFILE.dd.out
 
 
 # download uniq user counts output files from S3 and merge them into one
@@ -124,7 +129,7 @@ cat $LOG_DIR/part-* > $LOCAL_LOGFILE.uu.stats
 
 # deleting local and remote uniq user counts S3 output files 
 echo
-echo "deleting local uniq user counts S3 part files at" $LOG_DIR
+echo "deleting local uniq user counts S3 part files at" $LOG_DIR.pp.out
 rm -rf $LOG_DIR/part-*
 echo "deleting remote uniq user counts S3 part files at" $S3_LOGFILE.pp.out
 s3cmd del --recursive $S3_LOGFILE.pp.out
@@ -164,5 +169,3 @@ echo
 echo `date +"%D"` `date +"%T"`    "total runtime:" $(((OVERALL_STOP_TIME-OVERALL_START_TIME)/60)) "minutes and" $(((OVERALL_STOP_TIME-OVERALL_START_TIME)%60)) "seconds"
 echo
 echo 
-
-

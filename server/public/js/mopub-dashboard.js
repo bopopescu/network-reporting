@@ -531,6 +531,28 @@ var mopub = mopub || {};
       $('#appForm input[name="img_url"]').val('');
     });
     
+    // Delete link
+    $('#dashboard-delete-link').click(function(e){
+      e.preventDefault();
+      $('#dashboard-delete-modal').dialog({
+        buttons: [
+          {
+            text: 'Delete',
+            click: function() {
+              $(this).dialog('close');
+              $('#dashboard-deleteForm').submit();
+            }
+          },
+          {
+            text: 'Cancel',
+            click: function() {
+              $(this).dialog('close');
+            }
+          }
+        ]
+      });
+    });
+
     /*---------------------------------------/
     / Ad Unit Form
     /---------------------------------------*/

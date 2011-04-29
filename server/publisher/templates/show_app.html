@@ -182,7 +182,11 @@
           
           <div style="margin-top: 1em">
               <div class="buttonBank buttonBank-right">
-                  <form method="post" name="deleteForm" action="{% url publisher_app_delete app_key=app.key %}"><a onclick="document.deleteForm.submit(); return false;" href="#">Remove from app</a></form>
+                  <form method="post" id="dashboard-deleteForm" action="{% url publisher_app_delete app_key=app.key %}"><a href="#" id="dashboard-delete-link">Remove app from dashboard</a></form>
+                  <div id="dashboard-delete-modal" class="hidden">
+                    <h2>Remove confirmation</h2>
+                    <p>Are you sure you want to remove {{app.name}} from the dashboard?</p>
+                  </div>
               </div>
           </div>
 {% endblock content %}

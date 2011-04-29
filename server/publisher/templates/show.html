@@ -166,7 +166,11 @@
           
           <div style="margin-top: 1em;">
               <div class="buttonBank buttonBank-right">
-                  <form method="post" name="deleteForm" action="{% url publisher_adunit_delete adunit_key=adunit.key %}"><a onclick="document.deleteForm.submit(); return false;" href="#">Remove from app</a></form>
+                  <form method="post" id="dashboard-deleteForm" action="{% url publisher_adunit_delete adunit_key=adunit.key %}"><a href="#" id="dashboard-delete-link">Remove ad unit from dashboard</a></form>
+                  <div id="dashboard-delete-modal" class="hidden">
+                    <h2>Remove confirmation</h2>
+                    <p>Are you sure you want to remove {{adunit.name}} from the dashboard?</p>
+                  </div>
               </div>
           </div>
           

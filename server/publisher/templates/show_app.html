@@ -23,8 +23,8 @@
                   </div>
                   <div class="form-submit"> 
                     <span class="hidden" id="appEditForm-loading"><img src="/images/loading2.gif"/></span>
-                    <span class="buttonWrap"><a href="#" class="button" id="appEditForm-submit">Save</a></span> 
                     <span class="buttonWrap"><a href="#" class="button" id="appEditForm-cancel">Cancel</a></span> 
+                    <span class="buttonWrap"><a href="#" class="button" id="appEditForm-submit">Save</a></span> 
                   </div> 
                 </fieldset>
               </form>
@@ -120,8 +120,8 @@
                     </div>
                     <div class="form-submit"> 
                       <span class="hidden" id="adunitForm-loading"><img src="/images/loading2.gif"/></span>
-                      <span class="buttonWrap"><a href="#" class="button" id="adunitAddForm-submit">Save</a></span> 
                       <span class="buttonWrap"><a href="#" class="button" id="adunitAddForm-cancel">Cancel</a></span> 
+                      <span class="buttonWrap"><a href="#" class="button" id="adunitAddForm-submit">Save</a></span> 
                     </div> 
                   </fieldset>
                 </form>
@@ -177,4 +177,12 @@
               </div>
             </div>
           </section>
+          
+          <div class="clear"></div>
+          
+          <div style="margin-top: 1em">
+              <div class="buttonBank buttonBank-right">
+                  <form method="post" name="deleteForm" action="{% url publisher_app_delete app_key=app.key %}"><a onclick="document.deleteForm.submit(); return false;" href="#">Remove from dashboard</a></form>
+              </div>
+          </div>
 {% endblock content %}

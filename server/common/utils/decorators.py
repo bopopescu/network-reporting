@@ -4,6 +4,7 @@ from django.conf import settings
 from django.http import HttpResponseRedirect
 from google.appengine.api import users
 from django.core.urlresolvers import reverse
+import warnings
 
 #TODO: Rename this function since we no longer use a whitelist
 def whitelist_login_required(function=None):
@@ -28,7 +29,6 @@ def whitelist_login_required(function=None):
 
   return login_required_wrapper
 
-
 def webdec():
     #if we want to include stuff inside this webdec, have a field day
     def outer_wrap( f ):
@@ -39,3 +39,30 @@ def webdec():
             return f( **kwargs )
         return inner_wrap
     return outer_wrap
+
+def deprecated(func):
+    """This is a decorator which can be used to mark functions
+    as deprecated. It will result in a warning being emitted
+    when the function is used."""
+    def new_func(*args, **kwargs):
+        warnings.warn("Call to deprecated function %s." % func.__name__,
+                      category=DeprecationWarning)
+        return func(*args, **kwargs)
+    new_func.__name__ = func.__name__
+    new_func.__doc__ = func.__doc__
+    new_func.__dict__.update(func.__dict__)
+    return new_func
+
+
+
+class wraps_nonlists(object):
+    """ Decorator that wraps all nonlist arguments and turns them into lists """
+    def __init__(self, f):
+        self.f = f
+    def __call__(self, *args):
+        args = list(args)
+        for arg_id, arg in enumerate(args):
+            if not isinstance(arg, (list, tuple)):
+                args[arg_id] = [arg]
+            
+        return self.f(*args)

@@ -5,6 +5,7 @@ from google.appengine.api import memcache
 from google.appengine.ext import db
 
 from common.utils.query_managers import QueryManager, CachedQueryManager
+from common.utils.decorators import wraps_nonlists
 
 from advertiser.models import Campaign
 from advertiser.models import AdGroup
@@ -28,6 +29,25 @@ class CampaignQueryManager(QueryManager):
         if account:
             campaigns = campaigns.filter("account =",account)
         return campaigns.fetch(limit)        
+        
+    @classmethod
+    @wraps_nonlists
+    def put(cls, campaigns):
+        put_response = db.put(campaigns)
+
+        # Clear cache
+        adunits = []
+        for campaign in campaigns:
+            logging.info(campaign.name)
+            for adgroup in campaign.adgroups:
+                logging.info(adgroup.name)
+                adunits.extend(adgroup.site_keys)
+                
+        adunits = AdUnitQueryManager.get(adunits)    
+        AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
+
+        return put_response
+    
 
 class AdGroupQueryManager(QueryManager):
     Model = AdGroup   
@@ -53,9 +73,9 @@ class AdGroupQueryManager(QueryManager):
         return adgroups.fetch(limit)
         
     @classmethod
+    @wraps_nonlists
     def put(self, adgroups):
-        if not isinstance(adgroups, (list, tuple)):
-            adgroups = [adgroups]
+        put_response = db.put(adgroups)
         
         # Clear cache
         adunits = []
@@ -64,7 +84,7 @@ class AdGroupQueryManager(QueryManager):
         adunits = AdUnitQueryManager.get(adunits)    
         AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
   
-        return db.put(adgroups)
+        return put_response
 
       
 class CreativeQueryManager(QueryManager):
@@ -91,13 +111,15 @@ class CreativeQueryManager(QueryManager):
         if not isinstance(creatives, (list, tuple)):
             creatives = [creatives]
     
+        put_response = db.put(creatives)
+    
         for creative in creatives:
             # update cache
             adunits = AdUnitQueryManager.get(creative.ad_group.site_keys)
             if adunits:
                 AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
                 
-        return db.put(creatives)
+        return put_response
 
     @classmethod
     def delete(cls,creatives):

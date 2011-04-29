@@ -201,12 +201,6 @@ class CreateCampaignAJAXHander(RequestHandler):
         if adgroup:
             adunits_to_update.update(adgroup.site_keys)
             
-        if adunits_to_update:
-            adunits = AdUnitQueryManager.get(adunits_to_update)
-            # In general we want to do the cache deletions in the query_managers
-            # file, but here it makes sense to manaully delete it.
-            AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
-
         all_adunits = AdUnitQueryManager.get_adunits(account=self.account)
         sk_field = adgroup_form.fields['site_keys']
         sk_field.choices = all_adunits # TODO: doesn't work needed for validation
@@ -263,7 +257,6 @@ class CreateCampaignAJAXHander(RequestHandler):
                     adgroup.net_creative = creative.key()
                     #put the adgroup again with the new (or old) creative reference
                     AdGroupQueryManager.put(adgroup)
-
 
                 # Delete Cache. We leave this in views.py because we 
                 # must delete the adunits that the adgroup used to have as well
@@ -720,12 +713,6 @@ class CreativeManagementHandler(RequestHandler):
         if update_objs:
             # db.put(update_objs)
             CreativeQueryManager.put(update_objs)
-
-            # update cache
-            adunits = AdUnitQueryManager.get(c.ad_group.site_keys)
-            if adunits:
-                AdUnitContextQueryManager.cache_delete_from_adunits([a for a in adunits if a])
-
 
         return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':adgroup_key}))
 

@@ -35,15 +35,6 @@ class Campaign(db.Model):
     t = db.DateTimeProperty(auto_now_add=True)
 
     @property
-    def _estimated_qps(self):
-        return 0
-    
-    @property
-    def counter_shards(self):
-        #TODO: this should be a function of estimated qps
-        return 1
-
-    @property
     def owner_key(self):
         return None
 

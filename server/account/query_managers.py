@@ -2,6 +2,8 @@ import logging
 
 from common.utils.query_managers import CachedQueryManager
 
+from common.utils.decorators import wraps_nonlists
+from advertiser.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 from google.appengine.ext import db
 from google.appengine.api import memcache
 from google.appengine.api import users
@@ -36,9 +38,8 @@ class AccountQueryManager(CachedQueryManager):
         return account
                 
     @classmethod
+    @wraps_nonlists
     def put_accounts(cls, accounts):
-        if not isinstance(accounts,list):
-            accounts = [accounts]
             
         # Delete from cache
         for account in accounts:

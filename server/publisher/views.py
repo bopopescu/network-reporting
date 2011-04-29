@@ -114,6 +114,7 @@ class AppIndexHandler(RequestHandler):
       {'apps': apps,
        'graph_apps': graph_apps,
        'start_date': days[0],
+       'end_date': days[-1],
        'date_range': self.date_range,
        'today': today,
        'yesterday': yesterday,

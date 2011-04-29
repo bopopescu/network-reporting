@@ -27,7 +27,7 @@
                   <div class="buttonBank buttonBank-right">
                     <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
                   </div>
-                  <legend>AdMob {% if account.admob_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Disabled)</span>{% endif %}</legend>
+                  <legend>AdMob {% if account.admob_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Not configured)</span>{% endif %}</legend>
                   <dl class="formFields {% if account.admob_pub_id %}show{% endif %}"> 
                     <dt><label for="appForm-adUnitName">AdMob Publisher ID:</label></dt> 
                     <dd><input type="text" class="input-text" name="admob_pub_id" value="{{account.admob_pub_id|default_if_none:""}}"  placeholder="ex: a14cdb1922f35xx"/></dd> 
@@ -38,7 +38,7 @@
                   <div class="buttonBank buttonBank-right">
                     <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
                   </div>
-                  <legend>AdSense {% if account.adsense_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Disabled)</span>{% endif %}</legend>
+                  <legend>AdSense {% if account.adsense_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Not configured)</span>{% endif %}</legend>
                   <dl class="formFields {% if account.adsense_pub_id %}show{% endif %}"> 
                     <dt><label for="appForm-adUnitName">AdSense Publisher ID:</label></dt> 
                     <dd><input type="text" class="input-text" name="adsense_pub_id" value="{{account.adsense_pub_id|default_if_none:""}}"  placeholder="ex: ca-mb-pub-5592664190023789"/></dd> 
@@ -52,7 +52,7 @@
                   <div class="buttonBank buttonBank-right">
                     <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
                   </div>
-                  <legend>BrightRoll {% if account.brightroll_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Disabled)</span>{% endif %}</legend> 
+                  <legend>BrightRoll {% if account.brightroll_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Not configured)</span>{% endif %}</legend> 
                   <dl class="formFields {% if account.brightroll_pub_id %}show{% endif %}"> 
                     <dt><label for="appForm-adUnitName">BrightRoll Publisher ID:</label></dt> 
                     <dd><input type="text" class="input-text" name="brightroll_pub_id" value="{{account.brightroll_pub_id|default_if_none:""}}" placeholder="ex: 3836789"/></dd> 
@@ -63,7 +63,7 @@
                   <div class="buttonBank buttonBank-right">
                     <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
                   </div>
-                  <legend>Greystripe {% if account.greystripe_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Disabled)</span>{% endif %}</legend> 
+                  <legend>Greystripe {% if account.greystripe_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Not configured)</span>{% endif %}</legend> 
                   <dl class="formFields {% if account.greystripe_pub_id %}show{% endif %}"> 
                     <dt><label for="appForm-adUnitName">Greystripe Publisher ID:</label></dt> 
                     <dd><input type="text" class="input-text" name="greystripe_pub_id" value="{{account.greystripe_pub_id|default_if_none:""}}" placeholder="ex: 3705265e-1025-4873-9352-7b1e4986xxxx" /></dd> 
@@ -74,7 +74,7 @@
                   <div class="buttonBank buttonBank-right">
                     <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
                   </div>
-                  <legend>InMobi {% if account.inmobi_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Disabled)</span>{% endif %}</legend> 
+                  <legend>InMobi {% if account.inmobi_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Not configured)</span>{% endif %}</legend> 
                   <dl class="formFields {% if account.inmobi_pub_id %}show{% endif %}"> 
                     <dt><label for="appForm-adUnitName">InMobi Publisher ID:</label></dt> 
                     <dd><input type="text" class="input-text" name="inmobi_pub_id" value="{{account.inmobi_pub_id|default_if_none:""}}" placeholder="ex: 4028cb962b75ff06012b792fc5fb6789" /></dd> 
@@ -85,7 +85,7 @@
                   <div class="buttonBank buttonBank-right">
                     <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
                   </div>
-                  <legend>Jumptap {% if account.jumptap_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Disabled)</span>{% endif %}</legend> 
+                  <legend>Jumptap {% if account.jumptap_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Not configured)</span>{% endif %}</legend> 
                   <dl class="formFields {% if account.jumptap_pub_id %}show{% endif %}"> 
                     <dt><label for="appForm-adUnitName">Jumptap Publisher ID:</label></dt> 
                     <dd><input type="text" class="input-text" name="jumptap_pub_id" value="{{account.jumptap_pub_id|default_if_none:""}}"  placeholder="ex: pa_company_inc"/></dd> 
@@ -96,7 +96,7 @@
                   <div class="buttonBank buttonBank-right">
                     <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
                   </div>
-                  <legend>Millenial Media {% if account.millenial_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Disabled)</span>{% endif %}</legend> 
+                  <legend>Millenial Media {% if account.millenial_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Not configured)</span>{% endif %}</legend> 
                   <dl class="formFields {% if account.millenial_pub_id %}show{% endif %}"> 
                     <dt><label for="appForm-adUnitName">Millenial Publisher ID:</label></dt> 
                     <dd><input type="text" class="input-text" name="millenial_pub_id" value="{{account.millenial_pub_id|default_if_none:""}}"  placeholder="ex: 36789"/></dd> 
@@ -107,7 +107,7 @@
                   <div class="buttonBank buttonBank-right">
                     <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
                   </div>
-                  <legend>MobFox {% if account.mobfox_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Disabled)</span>{% endif %}</legend> 
+                  <legend>MobFox {% if account.mobfox_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Not configured)</span>{% endif %}</legend> 
                   <dl class="formFields {% if account.mobfox_pub_id %}show{% endif %}"> 
                     <dt><label for="appForm-adUnitName">MobFox Publisher ID:</label></dt> 
                     <dd><input type="text" class="input-text" name="mobfox_pub_id" value="{{account.mobfox_pub_id|default_if_none:""}}"  placeholder="ex: 008048afe367bf4ce82ae95363c4xxxx"/></dd> 

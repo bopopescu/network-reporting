@@ -52,9 +52,9 @@ def currency_no_symbol(value):
 @register.filter
 def percentage(value):
     if value:
-        return "%1.1f%%" % ((value or 0) * 100)
+        return "%1.2f%%" % ((value or 0) * 100)
     else:
-        return "0.0%"	
+        return "0.00%"	
   
 @register.filter
 def withsep(x):
@@ -73,7 +73,7 @@ def format_date(value):
 @register.filter
 def format_date_compact(value):
     if value:
-        return value.strftime("%m/%d")
+        return "%d/%d" % (value.month, value.day)
     else:
         return ""
   

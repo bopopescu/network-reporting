@@ -301,10 +301,6 @@ class CreateCampaignHandler(RequestHandler):
 def campaign_adgroup_create(request,*args,**kwargs):
     return CreateCampaignHandler()(request,*args,**kwargs)         
 
-@whitelist_login_required         
-def campaign_edit(request,*args,**kwargs):
-    return CreateCampaignHandler()(request,*args,**kwargs)         
-
 class CreateAdGroupHandler(RequestHandler):
     def get(self, campaign_key=None, adgroup_key=None, edit=False, title="Create an Ad Group"):
         if campaign_key:

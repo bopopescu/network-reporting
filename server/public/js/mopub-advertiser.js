@@ -410,6 +410,8 @@ var mopub = mopub || {};
     
     $('#advertisers-addCampaign')
       .button({ icons : {primary : 'ui-icon-circle-plus'} });
+    
+    $('#advertisers-adgroups-editAdGroupButton').button({ icons: { primary: "ui-icon-wrench" } });
 
     $('#campaignForm-pause')
       .click(function(e) {

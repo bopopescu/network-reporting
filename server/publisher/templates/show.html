@@ -100,43 +100,34 @@
 
           <section id="dashboard-apps">
             <h2>Campaigns</h2>
-            <div class="appData-columnHeaders">
-              <table class="dataTable" id="dashboard-campaigns-columnHeaders">
-                <thead>
-                  <tr>
-                    <th class="appData-icon"></th>
-                    <th class="dataTable-name">&nbsp;</th>
-                    <th class="dataTable-data numeric">Revenue</th>
-                    <th class="dataTable-data numeric">Impressions</th>
-                    <th class="dataTable-data numeric">Clicks</th>
-                    <th class="dataTable-data numeric">CTR</th>
-                  </tr>
-                </thead>
-              </table>
-            </div>
-
+	
             <div>
               {% if adunit.adgroups %}
-
+              
 			  <div class="appData alternating-color">	
-	              <table class="dataTable appData-main">
-	                <tbody>
-	                  <tr>
-	                    <td class="appData-icon-none"></td>
-	                    <th class="dataTable-name">Guaranteed</th>
-	                  </tr>
-	                </tbody>
-	              </table>   
-				  <div class="appData-details">
+				<div class="appData-details noneg">
 	                <div class="appData-details-inner show">
-	                  <table class="dataTable">
+	                  <table class="dataTable appData-main">
+						<thead>
+							<tr>
+							    <th class="dataTable-name big">Guaranteed</th>
+				                <th class="dataTable-data numeric special">Revenue</th>
+				                <th class="dataTable-data numeric special">Attempts</th>
+				                <th class="dataTable-data numeric special">Impressions</th>
+				                <th class="dataTable-data numeric special">Fillrate</th>
+				                <th class="dataTable-data numeric special">Clicks</th>
+				                <th class="dataTable-data numeric special">CTR</th>
+							</tr>
+			            </thead>
 	                    <tbody>
 						  {% for level in gtee %}
 						  {% for ag in level.adgroups %}
 	 					  <tr>
 	                        <th class="dataTable-name"><span class="inner"><a href="{% url advertiser_adgroup_show adgroup_key=ag.key %}">{{ag.name}} (priority: {{level.name}})</a>{% if not ag.active %}<span class="muted"> (Paused)</span>{% endif %}</span></th>
 	                        <td class="dataTable-data numeric">{{ag.stats.revenue|currency}}</td>
+							<td class="dataTable-data numeric">&nbsp;</td>
 	                        <td class="dataTable-data numeric">{{ag.stats.impression_count|withsep}}</td>
+							<td class="dataTable-data numeric">&nbsp;</td>
 	                        <td class="dataTable-data numeric">{{ag.stats.click_count|withsep}}</td>
 	                        <td class="dataTable-data numeric">{{ag.stats.ctr|percentage}}</td>
 	                      </tr>
@@ -145,93 +136,108 @@
 	                    </tbody>
 	                  </table>
 	                </div>       
-	              </div>
+                </div>
 			  </div>	
 
-			  <div class="appData alternating-color">
-	              <table class="dataTable appData-main">
-	                <tbody>
-	                  <tr>
-	                    <td class="appData-icon-none"></td>
-	                    <th class="dataTable-name">Promotional</th>
-	                  </tr>
-	                </tbody>
-	              </table>
-				  <div class="appData-details">
+			  <div class="appData alternating-color">	
+				<div class="appData-details noneg">
 	                <div class="appData-details-inner show">
-	                  <table class="dataTable">
+	                  <table class="dataTable appData-main">
+						<thead>
+							<tr>
+							    <th class="dataTable-name big">Promotional</th>
+				                <th class="dataTable-data numeric special">Revenue</th>
+				                <th class="dataTable-data numeric special">Attempts</th>
+				                <th class="dataTable-data numeric special">Impressions</th>
+				                <th class="dataTable-data numeric special">Fillrate</th>
+				                <th class="dataTable-data numeric special">Clicks</th>
+				                <th class="dataTable-data numeric special">CTR</th>
+							</tr>
+			            </thead>
 	                    <tbody>
-	                      {% for ag in promo %}
-	 					  <tr>
-	                        <th class="dataTable-name"><span class="inner"><a href="{% url advertiser_adgroup_show adgroup_key=ag.key %}">{{ag.name}}</a>{% if not ag.active %}<span class="muted"> (Paused)</span>{% endif %}</span></th>
-	                        <td class="dataTable-data numeric">{{ag.stats.revenue|currency}}</td>
-	                        <td class="dataTable-data numeric">{{ag.stats.impression_count|withsep}}</td>
-	                        <td class="dataTable-data numeric">{{ag.stats.click_count|withsep}}</td>
-	                        <td class="dataTable-data numeric">{{ag.stats.ctr|percentage}}</td>
-	                      </tr>
-	                      {% endfor %}
-	                    </tbody>
+                          {% for ag in promo %}
+                          <tr>
+                            <th class="dataTable-name"><span class="inner"><a href="{% url advertiser_adgroup_show adgroup_key=ag.key %}">{{ag.name}}</a>{% if not ag.active %}<span class="muted"> (Paused)</span>{% endif %}</span></th>
+                            <td class="dataTable-data numeric">{{ag.stats.revenue|currency}}</td>
+                            <td class="dataTable-data numeric">&nbsp;</td>
+                            <td class="dataTable-data numeric">{{ag.stats.impression_count|withsep}}</td>
+                            <td class="dataTable-data numeric">&nbsp;</td>
+                            <td class="dataTable-data numeric">{{ag.stats.click_count|withsep}}</td>
+                            <td class="dataTable-data numeric">{{ag.stats.ctr|percentage}}</td>
+                          </tr>
+                          {% endfor %}
+                        </tbody>
 	                  </table>
-	                </div>
-	              </div>
- 			  </div>
+	                </div>       
+                </div>
+			  </div>	
 
-			  <div class="appData alternating-color">
-	              <table class="dataTable appData-main">
-	                <tbody>
-	                  <tr>
-	                    <td class="appData-icon-none"></td>
-	                    <th class="dataTable-name">Network</th>
-	                  </tr>
-	                </tbody>
-	              </table>
-				  <div class="appData-details">
+			  <div class="appData alternating-color">	
+				<div class="appData-details noneg">
 	                <div class="appData-details-inner show">
-	                  <table class="dataTable">
+	                  <table class="dataTable appData-main">
+						<thead>
+							<tr>
+							    <th class="dataTable-name big">Network</th>
+				                <th class="dataTable-data numeric special">Revenue</th>
+				                <th class="dataTable-data numeric special">Attempts</th>
+				                <th class="dataTable-data numeric special">Impressions</th>
+				                <th class="dataTable-data numeric special">Fillrate</th>
+				                <th class="dataTable-data numeric special">Clicks</th>
+				                <th class="dataTable-data numeric special">CTR</th>
+							</tr>
+			            </thead>
 	                    <tbody>
-	                      {% for ag in network %}
-	 					  <tr>
-	                        <th class="dataTable-name"><span class="inner"><a href="{% url advertiser_adgroup_show adgroup_key=ag.key %}">{{ag.name}}</a>{% if not ag.active %}<span class="muted"> (Paused)</span>{% endif %}</span></th>
-	                        <td class="dataTable-data numeric">{{ag.stats.revenue|currency}}</td>
-	                        <td class="dataTable-data numeric">{{ag.stats.impression_count|withsep}}</td>
-	                        <td class="dataTable-data numeric">{{ag.stats.click_count|withsep}}</td>
-	                        <td class="dataTable-data numeric">{{ag.stats.ctr|percentage}}</td>
-	                      </tr>
-	                      {% endfor %}
-	                    </tbody>
+                          {% for ag in network %}
+                          <tr>
+                            <th class="dataTable-name"><span class="inner"><a href="{% url advertiser_adgroup_show adgroup_key=ag.key %}">{{ag.name}}</a>{% if not ag.active %}<span class="muted"> (Paused)</span>{% endif %}</span></th>
+                            <td class="dataTable-data numeric">&nbsp;</td>
+                            <td class="dataTable-data numeric">{{ag.stats.request_count|withsep}}</td>
+                            <td class="dataTable-data numeric">{{ag.stats.impression_count|withsep}}</td>
+                            <td class="dataTable-data numeric">{{ag.stats.fill_rate|percentage}}</td>
+                            <td class="dataTable-data numeric">{{ag.stats.click_count|withsep}}</td>
+                            <td class="dataTable-data numeric">{{ag.stats.ctr|percentage}}</td>
+                          </tr>
+                          {% endfor %}
+                        </tbody>
 	                  </table>
-	                </div>
-	              </div>
-			  </div>
+	                </div>       
+                </div>
+			  </div>	
 
-			  <div class="appData alternating-color">
-				  <table class="dataTable appData-main">
-	                <tbody>
-	                  <tr>
-	                    <td class="appData-icon-none"></td>
-	                    <th class="dataTable-name">Backfill Promotional</th>
-	                  </tr>
-	                </tbody>
-	              </table>
-				  <div class="appData-details">
-	                <div class="appData-details-inner show">
-	                  <table class="dataTable">
-	                    <tbody>
+              <div class="appData alternating-color">	
+  				<div class="appData-details noneg">
+  	                <div class="appData-details-inner show">
+  	                  <table class="dataTable appData-main">
+  						<thead>
+  							<tr>
+  							    <th class="dataTable-name big">Backfill Promotional</th>
+  				                <th class="dataTable-data numeric special">Revenue</th>
+  				                <th class="dataTable-data numeric special">Attempts</th>
+  				                <th class="dataTable-data numeric special">Impressions</th>
+  				                <th class="dataTable-data numeric special">Fillrate</th>
+  				                <th class="dataTable-data numeric special">Clicks</th>
+  				                <th class="dataTable-data numeric special">CTR</th>
+  							</tr>
+  			            </thead>
+  	                    <tbody>
 	                      {% for ag in backfill_promo %}
 	 					  <tr>
 	                        <th class="dataTable-name"><span class="inner"><a href="{% url advertiser_adgroup_show adgroup_key=ag.key %}">{{ag.name}}</a>{% if not ag.active %}<span class="muted"> (Paused)</span>{% endif %}</span></th>
 	                        <td class="dataTable-data numeric">{{ag.stats.revenue|currency}}</td>
+							<td class="dataTable-data numeric">&nbsp;</td>
 	                        <td class="dataTable-data numeric">{{ag.stats.impression_count|withsep}}</td>
+							<td class="dataTable-data numeric">&nbsp;</td>
 	                        <td class="dataTable-data numeric">{{ag.stats.click_count|withsep}}</td>
 	                        <td class="dataTable-data numeric">{{ag.stats.ctr|percentage}}</td>
 	                      </tr>
 	                      {% endfor %}
 	                    </tbody>
-	                  </table>
-	                </div>
-	              </div>
-			  </div>
-
+  	                  </table>
+  	                </div>       
+                  </div>
+  			  </div>
+  			  
 			  {% else %}
               <table class="dataTable appData-main">
                 <tbody>

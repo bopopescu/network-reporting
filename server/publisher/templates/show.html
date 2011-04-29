@@ -160,7 +160,7 @@
           </section>
 
           <section id="dashboard-apps">
-            <h2>Daily Counts</h2>            
+            <!-- <h2>Daily Counts</h2>            
             <div class="appData-columnHeaders">
               <table class="dataTable" id="dashboard-apps-columnHeaders">
                 <thead>
@@ -207,6 +207,11 @@
                 <a class="button button-small" href="/inventory/export/csv/adunit/{{adunit.key}}?spec=days">Export CSV</a>
                 <a class="button button-small" href="/inventory/export/xls/adunit/{{adunit.key}}?spec=days">Export XLS</a>
               </div>
-            </div>
+            </div> -->
+			<div>
+			  <a class="button button-small appData-details-toggleButton" href="#">Hide details</a>
+              <a class="button button-small" href="/inventory/export/csv/adunit/{{adunit.key}}?spec=days">Export CSV</a>
+              <a class="button button-small" href="/inventory/export/xls/adunit/{{adunit.key}}?spec=days">Export XLS</a>	
+			</div>
           </section>
 {% endblock content %}

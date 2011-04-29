@@ -1216,7 +1216,13 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
 
 .appData-main th, .appData-main td {
   padding-top: 0;
-  font-size: 15px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.appData-main .dataTable-name {
+  padding-top: 0;
+  font-size: 14px;
   font-weight: 600;
 }
 

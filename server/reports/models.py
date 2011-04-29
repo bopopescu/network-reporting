@@ -4,6 +4,8 @@ import logging
 from datetime import datetime
 
 #appengine imports
+from django.template import loader
+from django.utils import simplejson
 from google.appengine.ext import db
 from google.appengine.api import users
 
@@ -12,7 +14,6 @@ from account.models import Account
 from advertiser.query_managers import CampaignQueryManager, CreativeQueryManager
 from common.utils import date_magic
 from common.properties.dict_property import DictProperty
-from django.utils import simplejson
 from publisher.query_managers import AppQueryManager, AdUnitQueryManager
 from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
@@ -27,21 +28,35 @@ WEEK = 'week'
 DAY = 'day'
 HOUR = 'hour'
 CO = 'country'
+DEV = 'device'
+OS = 'os'
+KEY = 'kw'
 TARG = 'targeting' # I don't know what this is
 C_TARG = 'custom targeting' # or this
+
+ALL_COUNTRY = []
+ALL_DEVICE = []
+ALL_OS = []
 
 NAME_STR = "dim%d-ent%d"
 
 class Report(db.Model):
+    #standard
+    account = db.ReferenceProperty(Account, collection_name='reports')
+    created_at = db.DateTimeProperty(auto_now_add=True)
+
+    #about this report
     name = db.StringProperty()
     status = db.StringProperty(choices=['created', 'pending','done'], default='created')
     deleted = db.BooleanProperty(default=False)
     saved = db.BooleanProperty(default=False)
-
-    account = db.ReferenceProperty(Account, collection_name='reports')
-
-    created_at = db.DateTimeProperty(auto_now_add=True)
+    
+    #timign stuff
+    last_run = db.DateTimeProperty()
     last_viewed = db.DateTimeProperty()
+
+    #for overwriting reports
+    parent_rep = db.ReferenceProperty() 
 
     # defines the Report
     d1 = db.StringProperty(required=True) 
@@ -49,16 +64,19 @@ class Report(db.Model):
     d3 = db.StringProperty() 
     start = db.DateProperty(required=True)
     end = db.DateProperty(required=True)
+    #This is kind of like a bastard scheduled report.
+    #It will be possible to schedule reports which run regularly.
+    #This is saying the report has a regular interval, but is run irregularly
+    date_interval = db.StringProperty(choices=['thisw', 'lastw', 'thismo', 'lastmo', 'today', 'yesterday'])
+
+    #Default to offline stats
+    offline = db.BooleanProperty(default=True)
 
     #schedule stuff
     #scheduled_report = db.ReferenceProperty(ScheduledReport, collection_name = 'created_reports')
 
     #the actual report
-    # data in JSON (or similar) used for easy exporting
-    #SUPER SWEET CUSTOM PROPERTY (gogogadget Stack Overflow)
     data = DictProperty()
-    # data in HTML format for webpages so I dont' hvae to do fancy shit (fuck that)
-    html_data = db.TextProperty()
 
     # maybe useful for internal analytics//informing users
     completed_at = db.DateTimeProperty()
@@ -71,8 +89,11 @@ class Report(db.Model):
         #pagination stuff for pagination later?
         pub = None
         adv = None
+        country = None
+        device = None
+        op_sys = None
         days = date_magic.gen_days(self.start,self.end) 
-        def gen_helper(pub, adv, days, level):
+        def gen_helper(pub, adv, days, country, device, op_sys, level):
             last_dim = False
             if level == 0:
                 if self.d2 is None:
@@ -89,28 +110,23 @@ class Report(db.Model):
                 dim = 9001
                 logging.error("impossible")
             ret = {}
-            manager = StatsModelQueryManager(self.account)
-            vals, typ, date_fmt = self.get_vals(pub, adv, days, dim)
+            manager = StatsModelQueryManager(self.account, offline=True) #offline=self.offline)
+            vals, typ, date_fmt = self.get_vals(pub, adv, days, country, device, op_sys, dim)
             if vals is None:
                 return ret
             for idx, val in enumerate(vals):
-#MO = 'month'
-#WEEK = 'week'
-#DAY = 'day'
-#HOUR = 'hour'
                 name = None
-                if typ == 'days':
-                    if dim == MO:
-                        name = val[0].strftime('%B, %Y')
-                    elif dim == WEEK:
-                        #I think this is the right order...
-                        name = val[0].strftime('%b %d') + ' - ' + val[-1].strftime('%b %d, %Y')
-                    elif dim == DAY:
-                        name = val[0].strftime('%b %d, %Y')
-                    elif dim == HOUR:
-                        name = val[0].strftime('%I:%M %p')
-                    else:
-                        name = 'Impossible State'
+                if typ == 'co':
+                    name = "<<COUNTRY NAME HERE>>"
+                    country = val
+                elif typ == 'dev':
+                    name = '<<DEVICE NAME HERE>>'
+                    device = val
+                elif typ == 'os':
+                    name = '<<OS NAME HERE>>'
+                    op_sys = val
+                elif typ == 'days':
+                    name = date_magic.date_name(val[0], dim)
                     days = val
                 elif typ == 'pub':
                     name = val.name
@@ -123,10 +139,16 @@ class Report(db.Model):
                         name = val.name
                     adv = val
                 #days can be a list (actually I think it needs to be) but publisher/advertiser should NOT
-                # going to make new function in SMQM that if given a list for these things it automatically
                 # rolls them up
                 key = NAME_STR % (level, idx) 
-                stats = manager.get_rollup_for_days(publisher = pub, advertiser = adv, days = days, date_fmt = date_fmt)
+                stats = manager.get_rollup_for_days(publisher = pub,
+                                                    advertiser = adv,
+                                                    country = country,
+                                                    device = device,
+                                                    op_sys = op_sys,
+                                                    days = days,
+                                                    date_fmt = date_fmt
+                                                    )
                 if last_dim: 
                     ret[key] = dict(stats = stats, name = name)
                 else:
@@ -135,6 +157,7 @@ class Report(db.Model):
         return gen_helper(pub, adv, days, 0)
 
     def get_vals(self, pub, adv, days, dim):
+        #This gets the list of values to iterate over for this level of the breakdown.  Country, device, OS, and keywords are irrelevant because they are independent of everythign else
         date_fmt = 'date'
         if dim in (MO, WEEK, HOUR, DAY):
             type = 'days'
@@ -185,9 +208,17 @@ class Report(db.Model):
                                              by_priority = True,
                                              )
         elif dim == CO:
-            return "Not implemented yet"
-            type = 'other'
-            #do country stuff
+            type = 'co'
+            vals = ALL_COUNTRY 
+            #countries are indepent of publisher//advertiser
+        elif dim == DEV:
+            type = 'dev'
+            vals = ALL_DEVICE
+            #devices are indepent of publisher//advertiser
+        elif dim == OS:
+            type = 'os'
+            vals = ALL_OS
+            #OS's are indepent of publisher//advertiser
         elif dim == TARG:
             return "Not implemented yet"
             type = 'other'
@@ -202,6 +233,10 @@ class Report(db.Model):
         print "\n\nValue is %s for inputs %s" % (vals, (pub,adv, days,dim))
         return vals, type, date_fmt
 
+    @property
+    def html_data(self):
+        return loader.render_to_string('reports/report.html', dict(all_stats=self.data))
+    
     @property
     def details(self):
         if self.d3:
@@ -220,4 +255,3 @@ class Report(db.Model):
 
 #class ScheduledReport -> has a "next report" time, "report every ____" time, report type, when it's tim
 #   to gen a report, this guy makes report objects
-

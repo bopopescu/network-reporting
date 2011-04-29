@@ -26,7 +26,7 @@
     $('#reportCreateForm-cancel').button()
         .click(function(e) {
             e.preventDefault();
-            $('#reportCreateForm').slideUp('fast');
+            $('#reports-reportAddForm').slideUp('fast');
         });
 
     $('#reports-addReportButton').button({icons: {primary: 'ui-icon-circle-plus'}})

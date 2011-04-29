@@ -124,7 +124,7 @@ class StatsModelQueryManager(CachedQueryManager):
         return reduce(lambda x,y: x+y, stats, StatsModel())
 
 
-    def get_rollup_for_days(self, publisher=None, publishers=None, advertiser=None, advertisers=None, days=None, num_days=None,account=None, country=None, offline=False, date_fmt='date'):
+    def get_rollup_for_days(self, publisher=None, publishers=None, advertiser=None, advertisers=None, days=None, num_days=None,account=None, country=None, device=None, op_sys=None, offline=False, date_fmt='date'):
         if publisher and publishers:
             logging.error("cannot pass both a single publisher and multiple publishers")
         if publisher and not publishers:
@@ -145,14 +145,24 @@ class StatsModelQueryManager(CachedQueryManager):
             publishers = [publisher]
         if type(advertiser) != list and advertiser == advertisers:
             advertisers = [advertiser]
+
         stats = []
         for pub in publishers:
             for adv in advertisers:
-                stats += self.get_stats_for_days(publisher=pub, advertiser=adv, days=days, num_days=num_days, account=account, country=country, offline=offline, date_fmt=date_fmt)
+                stats += self.get_stats_for_days(publisher = pub, 
+                                                 advertiser = adv, 
+                                                 days = days, 
+                                                 num_days = num_days, 
+                                                 account = account, 
+                                                 country = country, 
+                                                 device = device,
+                                                 op_sys = op_sys,
+                                                 offline = offline, 
+                                                 date_fmt = date_fmt)
         return reduce(lambda x,y: x+y, stats, StatsModel())
 
 
-    def get_stats_for_days(self, publisher=None, publishers=None, advertiser=None, days=None, num_days=None, account=None, country=None, offline=False, date_fmt='date'):
+    def get_stats_for_days(self, publisher=None, publishers=None, advertiser=None, days=None, num_days=None, account=None, country=None, device=None, op_sys=None, offline=False, date_fmt='date'):
         """ Gets the stats for a specific pairing. Definitions:
             advertiser_group: Either Campaign, AdGroup or Creative
             publisher_group: Either App, or Site(AdUnit)"""
@@ -190,6 +200,8 @@ class StatsModelQueryManager(CachedQueryManager):
                                                              account=account,
                                                              date=d,
                                                              country=country,
+                                                             device=device,
+                                                             op_sys=op_sys,
                                                              offline=offline,
                                                              date_fmt=date_fmt),
                                       parent=parent)
@@ -202,6 +214,8 @@ class StatsModelQueryManager(CachedQueryManager):
                                                              account=account,
                                                              date=d,
                                                              country=country,
+                                                             device=device,
+                                                             op_sys=op_sys,
                                                              offline=offline,
                                                              date_fmt=date_fmt),
                                       parent=parent)

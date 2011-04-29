@@ -189,7 +189,7 @@ class StatsModel(db.Expando):
 
     
     @classmethod
-    def get_key_name(cls,publisher=None,advertiser=None,date=None,date_hour=None,account=None,offline=False,country=None, month=None, date_fmt='date'):
+    def get_key_name(cls,publisher=None,advertiser=None,date=None,date_hour=None,account=None,offline=False,country=None, device=None, op_sys=None,month=None, date_fmt='date'):
         if publisher or advertiser or date_hour or date or month or country:
             if isinstance(publisher,db.Model):
                 publisher = publisher.key()

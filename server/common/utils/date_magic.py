@@ -133,3 +133,22 @@ def get_months(days):
     if len(month) > 0:
         months.append(month)
     return months
+
+MO = 'month'
+WEEK = 'week'
+DAY = 'day'
+HOUR = 'hour'
+
+def date_name(day, dim):
+    if dim == MO:
+        name = val[0].strftime('%B, %Y')
+    elif dim == WEEK:
+        #I think this is the right order...
+        name = val[0].strftime('%b %d') + ' - ' + val[-1].strftime('%b %d, %Y')
+    elif dim == DAY:
+        name = val[0].strftime('%b %d, %Y')
+    elif dim == HOUR:
+        name = val[0].strftime('%I:%M %p')
+    else:
+        name = 'Impossible State'
+    return name

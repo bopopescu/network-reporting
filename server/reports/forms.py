@@ -18,19 +18,23 @@ MO = 'month'
 WEEK = 'week'
 DAY = 'day'
 HOUR = 'hour'
-CHOICES = [(APP, 'App'), (AU, 'Ad Unit'), (CAMP, 'Campaign'), (CRTV, 'Creative'), (P, 'Priority'), (MO, 'Month'), (WEEK, 'Week'), (DAY, 'Day'), (HOUR, 'Hour')]
-#not implemented
 CO = 'country'
+DEV = 'device'
+OS = 'os'
+KEY = 'kw'
+CHOICES = [(APP, 'App'), (AU, 'Ad Unit'), (CAMP, 'Campaign'), (CRTV, 'Creative'), (P, 'Priority'), (MO, 'Month'), (WEEK, 'Week'), (DAY, 'Day'), (HOUR, 'Hour'), (CO, 'Country'),] #(DEV, 'Device'), (OS, 'Operating System'), (KEY, 'Keywords')]
 TARG = 'targeting' # I don't know what this is
 
 
 class ReportForm(mpforms.MPModelForm):
     TEMPLATE = 'reports/forms/report_form.html'
+    d1 = mpfields.MPChoiceField(choices=[CHOICES],widget=mpwidgets.MPSelectWidget(attrs={'class': 'selectmenu',
+                      'id'   : 'd1'}))
+    d2 = mpfields.MPChoiceField(choices=[CHOICES],widget=mpwidgets.MPSelectWidget(attrs={'class': 'selectmenu',
+                      'id'   : 'd2'}))
+    d3 = mpfields.MPChoiceField(choices=[CHOICES],widget=mpwidgets.MPSelectWidget(attrs={'class': 'selectmenu',
+                      'id'   : 'd3'}))
 
-    #TODO these should be widgets, actually use these when doing reporting correctly
-    #d1 = mpfields.MPChoiceField(choices=[CHOICES],widget=mpwidgets.MPSelectWidget)
-    #d2 = mpfields.MPChoiceField(choices=[CHOICES],widget=mpwidgets.MPSelectWidget)
-    #d3 = mpfields.MPChoiceField(choices=[CHOICES],widget=mpwidgets.MPSelectWidget)
     class Meta:
         model = Report
         fields = ('d1', 'd2', 'd3', 'start', 'end', 'name')

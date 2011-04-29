@@ -59,7 +59,7 @@ def update_models():
     
     for account_stats, stats_key_names in stats_model_cache.iteritems():   
         stats_key_names = list(stats_key_names)
-        print "uniq user: putting models for account %s ..." % (repr(account_stats.key()))
+        print "uniq user: putting models for account", account_stats.account.key().name() 
         while stats_key_names:
             db.run_in_transaction(txn, account_stats, stats_key_names[:LIMIT])
             stats_key_names = stats_key_names[LIMIT:]

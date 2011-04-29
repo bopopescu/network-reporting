@@ -169,7 +169,7 @@ def deref_models(logline_dict):
                     # NOTE: put adv_models before put_models since there's a bug where account_str is NOT guaranteed to get retrieved from adv_models
                     [adgroup_str, campaign_str, account_str] = adv_models
                     [app_str, account_str] = pub_models
-                    return "&%s=%s&%s=%s&%s=%s&%s=%s&%s=%s&%s=%s" % ('adunit', adunit_str, 'app', app_str, \
+                    return "%s=%s\t%s=%s\t%s=%s\t%s=%s\t%s=%s\t%s=%s" % ('adunit', adunit_str, 'app', app_str, \
                                                                      'creative', creative_str, 'adgroup', adgroup_str, 'campaign', campaign_str, \
                                                                      'account', account_str)
         
@@ -180,7 +180,7 @@ def deref_models(logline_dict):
                 pub_models = deref_adunit(adunit_str)
                 if pub_models:
                     [app_str, account_str] = pub_models
-                    return "&%s=%s&%s=%s&%s=%s" % ('adunit', adunit_str, 'app', app_str, 'account', account_str)
+                    return "%s=%s\t%s=%s\t%s=%s" % ('adunit', adunit_str, 'app', app_str, 'account', account_str)
         
         # params: 'udid', 'id', 'cid'   # id = adunit, cid = creative
         if handler == IMP:
@@ -194,7 +194,7 @@ def deref_models(logline_dict):
                     # NOTE: put adv_models before put_models since there's a bug where account_str is NOT guaranteed to get retrieved from adv_models
                     [adgroup_str, campaign_str, account_str] = adv_models
                     [app_str, account_str] = pub_models
-                    return "&%s=%s&%s=%s&%s=%s&%s=%s&%s=%s&%s=%s" % ('adunit', adunit_str, 'app', app_str, \
+                    return "%s=%s\t%s=%s\t%s=%s\t%s=%s\t%s=%s\t%s=%s" % ('adunit', adunit_str, 'app', app_str, \
                                                                      'creative', creative_str, 'adgroup', adgroup_str, 'campaign', campaign_str, \
                                                                      'account', account_str)
         
@@ -211,7 +211,7 @@ def deref_models(logline_dict):
                     # NOTE: put adv_models before put_models since there's a bug where account_str is NOT guaranteed to get retrieved from adv_models
                     [adgroup_str, campaign_str, account_str] = adv_models
                     [app_str, account_str] = pub_models
-                    return "&%s=%s&%s=%s&%s=%s&%s=%s&%s=%s&%s=%s&%s=%s" % ('dest_app', dest_app_str, \
+                    return "%s=%s\t%s=%s\t%s=%s\t%s=%s\t%s=%s\t%s=%s\t%s=%s" % ('dest_app', dest_app_str, \
                                                                            'adunit', adunit_str, 'app', app_str, \
                                                                            'creative', creative_str, 'adgroup', adgroup_str, 'campaign', campaign_str, \
                                                                            'account', account_str)
@@ -220,7 +220,7 @@ def deref_models(logline_dict):
         if handler == OPEN:
             dest_app_str = param_dict.get('id', None)
             if dest_app_str:
-                return "&%s=%s" % ('dest_app', dest_app_str)
+                return "%s=%s" % ('dest_app', dest_app_str)
                    
     return None
 
@@ -229,18 +229,28 @@ def preprocess_logline(logline):
     logline_dict = parse_logline(logline)
     if logline_dict:
         param_dict = logline_dict.get('params', None)
-        if 'udid' in param_dict:# and 'account' in param_dict:    # unique user count requires udid and account
-            new_params = deref_models(logline_dict)
-            if new_params:
-                old_qs = logline_dict['qs']
-                new_logline = logline.replace(old_qs, old_qs + new_params)            
-                return new_logline
+        handler = logline_dict.get('path', None)
+
+        # ex: 14/Mar/2011:15:04:09 -0700
+        log_date = logline_dict.get('date', None)
+        log_time = logline_dict.get('time', None)
+        
+        if param_dict and handler and log_date and log_time:
+            if 'udid' in param_dict:    # unique user count requires udid 
+                new_params = deref_models(logline_dict)
+                if new_params:
+                    new_logline = 'udid=%s\thandler=%s\tdate=%s\ttime=%s\t%s\n' \
+                                    %(param_dict['udid'], handler, log_date, log_time, new_params)
+                    return new_logline
     return None
 
 
 def preprocess_logs(input_file, output_file):
     if not output_file:
-        output_file = input_file + ".pp"  # .pp for preprocessed
+        if input_file.endswith('.deduped'):
+            output_file = input_file.replace('.deduped', '.pp')
+        else:
+            output_file = input_file + '.pp'  # .pp for preprocessed
     with open(input_file, 'r') as in_stream:
         with open(output_file, 'w') as out_stream:
             count = 0
@@ -250,7 +260,7 @@ def preprocess_logs(input_file, output_file):
                     out_stream.write(pp_line)
                     count += 1
                     if count % 100000 == 0:
-                        print "%ix 100k lines pre-processed successfully" %(count/100000)
+                        print '%ix 100k lines pre-processed successfully' %(count/100000)
             
        
 def main():

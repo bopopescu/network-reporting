@@ -9,6 +9,7 @@ from google.appengine.api import memcache
 from google.appengine.api import users
 
 from account.models import Account
+from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 
 MEMCACHE_KEY_FORMAT = "k:%(user_id)s"
 
@@ -36,11 +37,10 @@ class AccountQueryManager(CachedQueryManager):
             memcache.set(str(cls._user_key(user)), account, namespace="account")
         logging.warning("account: %s"%account.key())    
         return account
-                
+
     @classmethod
     @wraps_nonlists
     def put_accounts(cls, accounts):
-            
         # Delete from cache
         for account in accounts:
 

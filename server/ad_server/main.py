@@ -600,7 +600,7 @@ class AdHandler(webapp.RequestHandler):
                                                         ) 
                                                             
         if jsonp:
-            self.response.out.write('%s(%s)' % (callback, dict(ad=str(rendered_creative), click_url = str(ad_click_url))))
+            self.response.out.write('%s(%s)' % (callback, dict(ad=str(rendered_creative or ''), click_url = str(ad_click_url))))
         elif not (debug or admin_debug_mode):                                                    
             self.response.out.write( rendered_creative )
         else:

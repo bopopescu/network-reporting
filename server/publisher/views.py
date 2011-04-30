@@ -114,6 +114,7 @@ class AppIndexHandler(RequestHandler):
       {'apps': apps,
        'graph_apps': graph_apps,
        'start_date': days[0],
+       'end_date': days[-1],
        'date_range': self.date_range,
        'today': today,
        'yesterday': yesterday,
@@ -353,6 +354,7 @@ class ShowAppHandler(RequestHandler):
          'app_form_fragment':app_form_fragment,
          'adunit_form_fragment':adunit_form_fragment,
          'start_date': days[0],
+         'end_date': days[-1],
          'date_range': self.date_range,
          'today': today,
          'yesterday': yesterday,
@@ -489,8 +491,7 @@ class AdUnitShowHandler(RequestHandler):
     
     # to allow the adunit to be edited
     adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(adunit=adunit)
-    
-      
+          
     # write response
     return render_to_response(self.request,'publisher/show.html', 
         {'site':adunit,
@@ -498,6 +499,7 @@ class AdUnitShowHandler(RequestHandler):
          'today': adunit.all_stats[-1],
          'yesterday': adunit.all_stats[-2],
          'start_date': days[0],
+         'end_date': days[-1],
          'date_range': self.date_range,
          'account':self.account, 
          'days': days,
@@ -602,19 +604,30 @@ def app_icon(request,*args,**kwargs):
   return AppIconHandler()(request,*args,**kwargs)
 
 class RemoveAdUnitHandler(RequestHandler):
-  def post(self):
-    ids = self.request.POST.getlist('id')
-    for adunit_key in ids:
-      a = AdUnitQueryManager.get(adunit_key)
-      if a != None and a.app_key.account == self.account:
-        a.deleted = True
-        AdUnitQueryManager.put(a)
-        
-    return HttpResponseRedirect(reverse('publisher_app_show','app_key',a.app_key.key()))
+    def post(self, adunit_key):
+        a = AdUnitQueryManager.get(adunit_key)
+        if a != None and a.app_key.account == self.account:
+            a.deleted = True
+            AdUnitQueryManager.put(a)
+
+        return HttpResponseRedirect(reverse('publisher_app_show', kwargs={'app_key': a.app.key()}))
+
+@whitelist_login_required
+def publisher_adunit_delete(request,*args,**kwargs):
+    return RemoveAdUnitHandler()(request,*args,**kwargs)
+
+class RemoveAppHandler(RequestHandler):
+    def post(self, app_key):
+        a = AppQueryManager.get(app_key)
+        if a != None and a.account == self.account:
+            a.deleted = True
+            AppQueryManager.put(a)
+    
+        return HttpResponseRedirect(reverse('publisher_index'))
  
 @whitelist_login_required
-def adunit_delete(request,*args,**kwargs):
-  return RemoveAdUnitHandler()(request,*args,**kwargs)
+def app_delete(request,*args,**kwargs):
+    return RemoveAppHandler()(request,*args,**kwargs)
 
 class GenerateHandler(RequestHandler):
   def get(self,adunit_key):

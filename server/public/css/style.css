@@ -1032,7 +1032,7 @@ label.error {
 
 .stats-breakdown td.stats-breakdown-value .inner {
   display: block;
-  padding: 6px 8px 0 10px;
+  padding: 7px 8px 1px 10px;
   height: 29px;
   -webkit-border-top-left-radius: 5px;
   -webkit-border-bottom-left-radius: 5px;
@@ -1049,7 +1049,7 @@ label.error {
 
 .stats-breakdown th.stats-breakdown-name .inner {
   display: block;
-  padding: 6px 10px 0 0;
+  padding: 8px 10px 0 0;
   height: 29px;
   background: url(../images/layout/stats-breakdown-pointer.png) no-repeat 100% -3px;
 }
@@ -1154,7 +1154,7 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
   font-size: 14px;
   text-align: left;
   vertical-align: top;
-  padding: 8px 15px 7px 0;
+  padding: 8px 0 7px 0;
 }
 
 .dataTable thead th {
@@ -1163,7 +1163,7 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
   text-transform: uppercase;
   color: #555;
   vertical-align: bottom;
-  padding: 0 15px 8px 0;
+  padding: 0 0 8px 0;
 }
 
 .dataTable-name {
@@ -1194,7 +1194,7 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
 }
 
 .appData-columnHeaders {
-  padding: 0 0 0 10px;
+  padding: 10px 10px 0 10px;
 }
 
 .dataTable .appData-icon {
@@ -1215,7 +1215,13 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
 
 .appData-main th, .appData-main td {
   padding-top: 0;
-  font-size: 15px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.appData-main .dataTable-name {
+  padding-top: 0;
+  font-size: 14px;
   font-weight: 600;
 }
 
@@ -1242,46 +1248,6 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
   background: url(../images/layout/hr-dots.png) repeat-x top left;
 }
 
-/*
-.appData {
-  padding: 15px;
-  background: #f7f7f7;
-}
-
-.appData-alt {
-  background: #fff;
-}
-
-.appData-columnHeaders {
-  padding: 0 0 0 15px;
-}
-
-.dataTable .appData-icon {
-  padding-right: 12px;
-  width: 45px;
-}
-
-.appData-main th, .appData-main td {
-  padding-top: 0;
-  font-size: 18px;
-  font-weight: 600;
-}
-
-.appData-details {
-  margin: -28px 0 0 57px;
-}
-
-.appData-details .dataTable {
-  margin: 4px 0 7px 0;
-  background: url(../images/layout/hr-dots.png) repeat-x bottom left;
-}
-
-.appData-details .dataTable th,
-.appData-details .dataTable td {
-  font-weight: normal;
-  background: url(../images/layout/hr-dots.png) repeat-x top left;
-}
-*/
 
 /* Chart */
 

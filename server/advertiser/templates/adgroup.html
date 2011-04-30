@@ -46,7 +46,29 @@
                 <div class="stats-breakdown">
                   <table>
                     <tbody>
-                      <tr class="active" id="stats-breakdown-impressions">
+                    {% if campaign.gtee %}
+                        <tr class="active" id="stats-breakdown-revenue">
+                            <td class="stats-breakdown-value today"><span class="inner">{{today.revenue|currency}}</span></td>
+                            <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.revenue|currency}}</span></td>
+                            <td class="stats-breakdown-value all"><span class="inner">{{totals.revenue|currency}}</span></td>
+                            <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
+                        </tr>
+                    {% endif %} {% if campaign.promo %}
+                        <tr class="active" id="stats-breakdown-conversions">
+                            <td class="stats-breakdown-value today"><span class="inner">{{today.conversion_count|withsep}}</span></td>
+                            <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.conversion_count|withsep}}</span></td>
+                            <td class="stats-breakdown-value all"><span class="inner">{{totals.conversion_count|withsep}}</span></td>
+                            <th class="stats-breakdown-name"><span class="inner">Conversions</span></th>
+                        </tr>
+                    {% endif %} {% if campaign.network %}
+                        <tr class="active" id="stats-breakdown-attempts">
+                            <td class="stats-breakdown-value today"><span class="inner">{{today.request_count|withsep}}</span></td>
+                            <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.request_count|withsep}}</span></td>
+                            <td class="stats-breakdown-value all"><span class="inner">{{totals.request_count|withsep}}</span></td>
+                            <th class="stats-breakdown-name"><span class="inner">Attempts</span></th>
+                        </tr>
+                    {% endif %}
+                      <tr id="stats-breakdown-impressions">
                         <td class="stats-breakdown-value today"><span class="inner">{{today.impression_count|withsep}}</span></td>
                         <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.impression_count|withsep}}</span></td>
                         <td class="stats-breakdown-value all"><span class="inner">{{totals.impression_count|withsep}}</span></td>
@@ -94,7 +116,20 @@
                       ],
                       'users': [{% for a in graph_adunits %}
                         { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                      ]
+                      ],
+                      {% if campaign.gtee %}
+                            'revenue': [{% for a in graph_adunits %}
+                                { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.revenue}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                              ]
+                        {% endif %} {% if campaign.promo %}
+                            'conversions': [{% for a in graph_adunits %}
+                                { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.conversion_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                              ]
+                        {% endif %} {% if campaign.network %}
+                            'attempts': [{% for a in graph_adunits %}
+                                { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                              ]
+                        {% endif %}
                     };
                   </script>
                 </div>
@@ -121,7 +156,7 @@
                 {% endif %} {% if not campaign.start_date and not campaign.end_date %}
                 All dates.
                 {% endif %}&nbsp;
-                {% if campaign.budget %}{{campaign.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
+                {% if campaign.gtee %}{% if campaign.budget %}{{campaign.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}{% endif %}
             </div>
            </section>
             
@@ -148,9 +183,9 @@
                         {% endif %} {% if campaign.network %}
                         <th class="dataTable-data numeric">Attempts</th>
                         <th class="dataTable-data numeric">Impressions</th>
+                        <th class="dataTable-data numeric">Fillrate</th>
                         <th class="dataTable-data numeric">Clicks</th>
                         <th class="dataTable-data numeric">CTR</th>
-                        <th class="dataTable-data numeric">Fillrate</th>
                         {% endif %}
                       </tr>
                     </thead>
@@ -179,9 +214,9 @@
                         {% endif %} {% if campaign.network %}
                         <td class="dataTable-data numeric">{{a.stats.request_count|withsep}}</td>
                         <td class="dataTable-data numeric">{{a.stats.impression_count|withsep}}</td>
+                        <td class="dataTable-data numeric">{{a.stats.fill_rate|percentage}}</td>
                         <td class="dataTable-data numeric">{{a.stats.click_count|withsep}}</td>
                         <td class="dataTable-data numeric">{{a.stats.ctr|percentage}}</td>
-                        <td class="dataTable-data numeric">{{a.stats.fill_rate|percentage}}</td>
                         {% endif %}
                       </tr>
                     </tbody>
@@ -209,9 +244,9 @@
                             {% endif %} {% if campaign.network %}
                             <td class="dataTable-data numeric">{{au.stats.request_count|withsep}}</td>
                             <td class="dataTable-data numeric">{{au.stats.impression_count|withsep}}</td>
+                            <td class="dataTable-data numeric">{{au.stats.fill_rate|percentage}}</td>
                             <td class="dataTable-data numeric">{{au.stats.click_count|withsep}}</td>
                             <td class="dataTable-data numeric">{{au.stats.ctr|percentage}}</td>
-                            <td class="dataTable-data numeric">{{au.stats.fill_rate|percentage}}</td>
                             {% endif %}
                           </tr>
                           {% endfor %}
@@ -289,9 +324,9 @@
                     {% endif %} {% if campaign.network %}
                     <th class="dataTable-data numeric">Attempts</th>
                     <th class="dataTable-data numeric">Impressions</th>
+                    <th class="dataTable-data numeric">Fillrate</th>
                     <th class="dataTable-data numeric">Clicks</th>
                     <th class="dataTable-data numeric">CTR</th>
-                    <th class="dataTable-data numeric">Fillrate</th>
                     {% endif %}
                    </tr>
                 </thead>
@@ -340,9 +375,9 @@
                     {% endif %} {% if campaign.network %}
                     <td class="dataTable-data numeric">{{c.stats.request_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{c.stats.impression_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{c.stats.fill_rate|percentage}}</td>
                     <td class="dataTable-data numeric">{{c.stats.click_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{c.stats.ctr|percentage}}</td>
-                    <td class="dataTable-data numeric">{{c.stats.fill_rate|percentage}}</td>
                     {% endif %}
                   {% endfor %}
                 </tbody>

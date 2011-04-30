@@ -457,7 +457,7 @@ class ShowAdGroupHandler(RequestHandler):
                 app = AppQueryManager.get(au.app_key.key())
                 app.adunits = [au]
                 if app.icon:
-                    app.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(a.icon)
+                    app.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(app.icon)
                 apps[au.app_key.key()] = app
             else:
                 app.adunits += [au]

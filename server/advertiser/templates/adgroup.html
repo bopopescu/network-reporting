@@ -38,6 +38,8 @@
             This campaign will need to have at least one <strong>Creative</strong> in order to serve.  Set up a creative below.
           </div>
 {% endif %}
+
+          <h2>Real-time stats from {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h2>
           <div class="separated" id="chartWrapper">
             <section class="offset nomargin" id="dashboard-stats">
               <div class="stats">
@@ -50,17 +52,11 @@
                         <td class="stats-breakdown-value all"><span class="inner">{{totals.impression_count|withsep}}</span></td>
                         <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
                       </tr>
-                      <tr id="stats-breakdown-revenue">
-                        <td class="stats-breakdown-value today"><span class="inner">{{today.revenue|currency}}</span></td>
-                        <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.revenue|currency}}</span></td>
-                        <td class="stats-breakdown-value all"><span class="inner">{{totals.revenue|currency}}</span></td>
-                        <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
-                      </tr>
                       <tr id="stats-breakdown-clicks">
-                        <td class="stats-breakdown-value today"><span class="inner">{{today.click_count|withsep}}</span></td>
-                        <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.click_count|withsep}}</span></td>
-                        <td class="stats-breakdown-value all"><span class="inner">{{totals.click_count|withsep}}</span></td>
-                        <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
+                          <td class="stats-breakdown-value today"><span class="inner"><span class="muted unbold">({{today.ctr|percentage}})</span> {{today.click_count|withsep}}</span></td>
+                          <td class="stats-breakdown-value yesterday"><span class="inner"><span class="muted unbold">({{yesterday.ctr|percentage}})</span> {{yesterday.click_count|withsep}}</span></td>
+                          <td class="stats-breakdown-value all"><span class="inner"><span class="muted unbold">({{totals.ctr|percentage}})</span> {{adunit.stats.click_count|withsep}}</span></td>
+                          <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
                       </tr>
                       <tr id="stats-breakdown-users">
                         <td class="stats-breakdown-value today"><span class="inner">{{today.user_count|withsep}}</span></td>
@@ -93,11 +89,8 @@
                       'impressions': [{% for a in graph_adunits %}
                         { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                       ],
-                      'revenue': [{% for a in graph_adunits %}
-                        { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.revenue}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                      ],
                       'clicks': [{% for a in graph_adunits %}
-                        { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                        { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{y: {{stat.click_count}}, name: '{{stat.ctr|percentage}}'}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                       ],
                       'users': [{% for a in graph_adunits %}
                         { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}

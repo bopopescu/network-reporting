@@ -465,7 +465,6 @@ class ShowAdGroupHandler(RequestHandler):
         if len(adunits) > 4:
               graph_adunits[3] = Site(name='Others')
               graph_adunits[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[au.all_stats for au in adunits[3:]])]
-    
 
         if not adgroup.network_type:  
             # In order to have add creative
@@ -492,6 +491,7 @@ class ShowAdGroupHandler(RequestHandler):
                                     'adunits' : adunits,
                                     'graph_adunits': graph_adunits,
                                     'start_date': days[0],
+                                    'end_date': days[-1],
                                     'creative_fragment':creative_fragment,
                                     'campaign_create_form_fragment':campaign_create_form_fragment})
     

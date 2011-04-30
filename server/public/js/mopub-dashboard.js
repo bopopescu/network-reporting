@@ -112,16 +112,27 @@ var mopub = mopub || {};
         },
         legend: {
           verticalAlign: "bottom",
-          y: -7
+          y: -7,
+          enabled: (chartSeries.length > 1)
         },
         yAxis: {
           labels: {
             formatter: function() {
-              var text = Highcharts.numberFormat(this.value, 0);
               if(activeMetric == 'revenue') {
-                text = '$' + text;
+                text = '$' + Highcharts.numberFormat(this.value, 0);
+              } else {
+                if (this.value > 1000000000) {
+                  return Highcharts.numberFormat(this.value / 1000000000, 0) + "B";
+                } else if (this.value > 1000000) {
+                  return Highcharts.numberFormat(this.value / 1000000, 0) + "M";
+                } else if (this.value > 1000) {
+                  return Highcharts.numberFormat(this.value / 1000, 0) + "K";
+                } else if (this.value > 0) {
+                  return Highcharts.numberFormat(this.value, 0);
+                } else {
+                  return "0";
+                }
               }
-              return text;
             }
           }
         },
@@ -132,6 +143,10 @@ var mopub = mopub || {};
             if(activeMetric == 'revenue') {
               value = '$' + Highcharts.numberFormat(this.y, 0);
               total = '$' + Highcharts.numberFormat(this.total, 0) + ' total';
+            }
+            else if (activeMetric == 'clicks') {
+              value = Highcharts.numberFormat(this.y, 0) + ' ' + activeMetric + " (" + this.point.name + ")";
+              total = Highcharts.numberFormat(this.total, 0) + ' total ' + activeMetric;
             }
             else {
               value = Highcharts.numberFormat(this.y, 0) + ' ' + activeMetric;
@@ -516,6 +531,28 @@ var mopub = mopub || {};
       $('#appForm input[name="img_url"]').val('');
     });
     
+    // Delete link
+    $('#dashboard-delete-link').click(function(e){
+      e.preventDefault();
+      $('#dashboard-delete-modal').dialog({
+        buttons: [
+          {
+            text: 'Delete',
+            click: function() {
+              $(this).dialog('close');
+              $('#dashboard-deleteForm').submit();
+            }
+          },
+          {
+            text: 'Cancel',
+            click: function() {
+              $(this).dialog('close');
+            }
+          }
+        ]
+      });
+    });
+
     /*---------------------------------------/
     / Ad Unit Form
     /---------------------------------------*/

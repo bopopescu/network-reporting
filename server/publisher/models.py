@@ -72,9 +72,9 @@ class Site(db.Model):
     # TODO: figure out how to expose this
     adsense_channel_id = db.StringProperty()
     
-    name = db.StringProperty(required=True,default='Banner Ad')
+    name = db.StringProperty(required=True, default='Banner Ad')
     url = db.StringProperty()
-    description = db.TextProperty(default='General Purpose Banner Ad')
+    description = db.TextProperty()
     width = db.FloatProperty()
     height = db.FloatProperty()
     

@@ -100,7 +100,21 @@
 
           <section id="dashboard-apps">
             <h2>Campaigns</h2>
-	
+            
+            <div class="buttonBank buttonBank-right">
+              <a class="button" id="advertisers-testAdServer" href="#">Run Auction</a>
+            </div>
+            
+            <div id="adserverTest" style="display:none;">
+              <iframe height="480" width="350" id="adserverTest-iFrame" scrolling="no">
+              </iframe>    
+              <div id="adserverTest-iFrame-src" style="display:none;">{% url advertiser_adserver_test %}?id={{adunit.key}}</div>    
+            </div>
+	        
+
+            
+
+	        
             <div>
               {% if adunit.adgroups %}
               
@@ -123,7 +137,7 @@
 						  {% for level in gtee %}
 						  {% for ag in level.adgroups %}
 	 					  <tr>
-	                        <th class="dataTable-name"><span class="inner"><a href="{% url advertiser_adgroup_show adgroup_key=ag.key %}">{{ag.name}} (priority: {{level.name}})</a>{% if not ag.active %}<span class="muted"> (Paused)</span>{% endif %}</span></th>
+	                        <th class="dataTable-name"><span class="inner"><a href="{% url advertiser_adgroup_show adgroup_key=ag.key %}">{{ag.name}} {% if level.name != "normal" %} (priority: {{level.name}}) {% endif %}</a>{% if not ag.active %}<span class="muted"> (Paused)</span>{% endif %}</span></th>
 	                        <td class="dataTable-data numeric">{{ag.stats.revenue|currency}}</td>
 							<td class="dataTable-data numeric">&nbsp;</td>
 	                        <td class="dataTable-data numeric">{{ag.stats.impression_count|withsep}}</td>

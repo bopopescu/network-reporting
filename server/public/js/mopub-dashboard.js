@@ -592,6 +592,17 @@ var mopub = mopub || {};
         }).first().click(); //initialize by activating the first
       });
 
+
+      $('#advertisers-testAdServer')
+        .button({ icons : {secondary : 'ui-icon-circle-triangle-e'} })
+        .click(function(e) {
+         e.preventDefault();
+         $('#adserverTest').dialog({ 
+           buttons: { "Close": function() { $(this).dialog("close"); } }
+         });
+         $('#adserverTest-iFrame').attr('src',$('#adserverTest-iFrame-src').text());
+      });
+
       //initialize checked elements
       $("#adunit-device_format_phone").parent().children().filter(':checked').click().each(function(){
         var deviceFormat = $(this).val(); //either tablet or phone
@@ -599,6 +610,7 @@ var mopub = mopub || {};
         $(container).find('.possible-format').click(); 
       });
   });
+  
 })(this.jQuery);
 
 

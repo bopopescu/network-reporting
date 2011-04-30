@@ -99,10 +99,8 @@
           <div class="clear"></div>
 
           <section id="dashboard-apps">
-            <h2>Campaigns</h2>
-            
             <div class="buttonBank buttonBank-right">
-              <a class="button" id="advertisers-testAdServer" href="#">Run Auction</a>
+              <a class="button" id="advertisers-testAdServer" href="#">Test Ad</a>
             </div>
             
             <div id="adserverTest" style="display:none;">
@@ -111,9 +109,7 @@
               <div id="adserverTest-iFrame-src" style="display:none;">{% url advertiser_adserver_test %}?id={{adunit.key}}</div>    
             </div>
 	        
-
-            
-
+	        <h2>Campaigns</h2>
 	        
             <div>
               {% if adunit.adgroups %}
@@ -123,15 +119,15 @@
 	                <div class="appData-details-inner show">
 	                  <table class="dataTable appData-main">
 						<thead>
-							<tr>
-							    <th class="dataTable-name big">Guaranteed</th>
-				                <th class="dataTable-data numeric special">Revenue</th>
-				                <th class="dataTable-data numeric special">Attempts</th>
-				                <th class="dataTable-data numeric special">Impressions</th>
-				                <th class="dataTable-data numeric special">Fillrate</th>
-				                <th class="dataTable-data numeric special">Clicks</th>
-				                <th class="dataTable-data numeric special">CTR</th>
-							</tr>
+						  <tr>
+						    <th class="dataTable-name big">Guaranteed</th>
+			                <th class="dataTable-data numeric special">Revenue</th>
+			                <th class="dataTable-data numeric special">Attempts</th>
+			                <th class="dataTable-data numeric special">Impressions</th>
+			                <th class="dataTable-data numeric special">Fillrate</th>
+			                <th class="dataTable-data numeric special">Clicks</th>
+			                <th class="dataTable-data numeric special">CTR</th>
+						  </tr>
 			            </thead>
 	                    <tbody>
 						  {% for level in gtee %}
@@ -158,15 +154,15 @@
 	                <div class="appData-details-inner show">
 	                  <table class="dataTable appData-main">
 						<thead>
-							<tr>
-							    <th class="dataTable-name big">Promotional</th>
-				                <th class="dataTable-data numeric special">Revenue</th>
-				                <th class="dataTable-data numeric special">Attempts</th>
-				                <th class="dataTable-data numeric special">Impressions</th>
-				                <th class="dataTable-data numeric special">Fillrate</th>
-				                <th class="dataTable-data numeric special">Clicks</th>
-				                <th class="dataTable-data numeric special">CTR</th>
-							</tr>
+						  <tr>
+						    <th class="dataTable-name big">Promotional</th>
+			                <th class="dataTable-data numeric special">Revenue</th>
+			                <th class="dataTable-data numeric special">Attempts</th>
+			                <th class="dataTable-data numeric special">Impressions</th>
+			                <th class="dataTable-data numeric special">Fillrate</th>
+			                <th class="dataTable-data numeric special">Clicks</th>
+			                <th class="dataTable-data numeric special">CTR</th>
+						  </tr>
 			            </thead>
 	                    <tbody>
                           {% for ag in promo %}
@@ -191,15 +187,15 @@
 	                <div class="appData-details-inner show">
 	                  <table class="dataTable appData-main">
 						<thead>
-							<tr>
-							    <th class="dataTable-name big">Network</th>
-				                <th class="dataTable-data numeric special">Revenue</th>
-				                <th class="dataTable-data numeric special">Attempts</th>
-				                <th class="dataTable-data numeric special">Impressions</th>
-				                <th class="dataTable-data numeric special">Fillrate</th>
-				                <th class="dataTable-data numeric special">Clicks</th>
-				                <th class="dataTable-data numeric special">CTR</th>
-							</tr>
+						  <tr>
+						    <th class="dataTable-name big">Network</th>
+			                <th class="dataTable-data numeric special">Revenue</th>
+			                <th class="dataTable-data numeric special">Attempts</th>
+			                <th class="dataTable-data numeric special">Impressions</th>
+			                <th class="dataTable-data numeric special">Fillrate</th>
+			                <th class="dataTable-data numeric special">Clicks</th>
+			                <th class="dataTable-data numeric special">CTR</th>
+						  </tr>
 			            </thead>
 	                    <tbody>
                           {% for ag in network %}
@@ -224,15 +220,15 @@
   	                <div class="appData-details-inner show">
   	                  <table class="dataTable appData-main">
   						<thead>
-  							<tr>
-  							    <th class="dataTable-name big">Backfill Promotional</th>
-  				                <th class="dataTable-data numeric special">Revenue</th>
-  				                <th class="dataTable-data numeric special">Attempts</th>
-  				                <th class="dataTable-data numeric special">Impressions</th>
-  				                <th class="dataTable-data numeric special">Fillrate</th>
-  				                <th class="dataTable-data numeric special">Clicks</th>
-  				                <th class="dataTable-data numeric special">CTR</th>
-  							</tr>
+  						  <tr>
+						    <th class="dataTable-name big">Backfill Promotional</th>
+			                <th class="dataTable-data numeric special">Revenue</th>
+			                <th class="dataTable-data numeric special">Attempts</th>
+			                <th class="dataTable-data numeric special">Impressions</th>
+			                <th class="dataTable-data numeric special">Fillrate</th>
+			                <th class="dataTable-data numeric special">Clicks</th>
+			                <th class="dataTable-data numeric special">CTR</th>
+  						  </tr>
   			            </thead>
   	                    <tbody>
 	                      {% for ag in backfill_promo %}

@@ -461,14 +461,29 @@ var mopub = mopub || {};
     }
     
     function hideEmptyDirects(){
+        var somethingToDisplay = false;
          $.each([$('#campaignDataTable-direct-high'),
-                 $('#campaignDataTable-direct-low')], function(){
+                 $('#campaignDataTable-direct-low'),
+                 $('#campaignDataTable-direct-normal')],function(){
                      $(this).show();
-                     var visible = $(this).find('.campaignData:visible');
-                     if (visible.length === 0){
-                         $(this).hide();
-                     }
                  });
+        
+        function hideIfEmpty(){
+             var visible = $(this).find('.campaignData:visible');
+             if (visible.length === 0){
+                 $(this).hide();
+             }else{
+                 somethingToDisplay = true;
+             }
+        }
+        $.each([$('#campaignDataTable-direct-high'),
+                 $('#campaignDataTable-direct-low')],
+                 hideIfEmpty);
+        console.log(somethingToDisplay)
+        if(somethingToDisplay){
+             $.each([$('#campaignDataTable-direct-normal')],
+                         hideIfEmpty);
+        }        
     }
     
     function applyFilters(){
@@ -478,6 +493,7 @@ var mopub = mopub || {};
         // Hide all the campaigns, then show the ones that pass the filters
         $('.campaignData').hide();
         $('.'+appFilter).filter('.'+statusFilter).show();
+        
         hideEmptyDirects();
         addPlaceholder();
         refreshAlternatingColor();

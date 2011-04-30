@@ -28,7 +28,7 @@
 {% endblock titleBarRight %}
 
 {% block content %}
-{% if not adunits %}
+{% if not apps %}
           <div class="alertMessage error">
             This campaign is not targeted at any <strong>Ad Units</strong>.  In order for this campaign to deliver, you will need to target at least one Ad Unit.
           </div>
@@ -123,64 +123,112 @@
                 {% endif %}&nbsp;
                 {% if campaign.budget %}{{campaign.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
             </p>
+
+           </section>
             
-            <div class="buttonBank buttonBank-right">
-              <a class="button button-small" href="/inventory/export/csv/adgroup/{{adgroup.key}}?spec=days">Export CSV</a>
-              <a class="button button-small" href="/inventory/export/xls/adgroup/{{adgroup.key}}?spec=days">Export XLS</a>
-            </div>
-            <h2>Ad Unit Targeting</h2>
-            
-            <table class="campaignData-main dataTable" id="dashboard-campaigns-columnHeaders">
-              <thead>
-                <tr>
-                <th class="campaignData-icon"></th>
-                <th class="dataTable-name">Name</th>
-                <th class="dataTable-data numeric">Impressions</th>
-                <th class="dataTable-data numeric">Clicks</th>
-                <th class="dataTable-data numeric">CTR</th>
-                <th class="dataTable-data numeric">Revenue</th>
-                <th class="dataTable-data numeric">Conv</th>
-                <th class="dataTable-data numeric">CPA</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for adunit in adunits %}
-                <tr class="campaignData alternating-color" id="adgroup-adunits-{{forloop.counter0}}">
-                  <td class="campaignData-icon">
-                    <a href="{% url publisher_app_show app_key=adunit.app.key %}">
-                      <img src="{% if adunit.app.icon %}{{adunit.app.icon|binary_data}}{% else %}/images/noicon.png{% endif %}" alt="Icon" width="45" height="45"/>
-                    </a>
-                  </td> 
-                  <th class="dataTable-name">
-                    <a href="{% url publisher_app_show app_key=adunit.app.key %}">{{adunit.app.name}}</a><br/>
-                    <span class="smaller"><a href="{% url publisher_adunit_show adunit_key=adunit.key %}">{{adunit.name}}</a></span>
-                  </th>
-                  <td class="dataTable-data numeric">{{adunit.stats.impression_count|withsep}}</td>
-                  <td class="dataTable-data numeric">{{adunit.stats.click_count|withsep}}</td>
-                  <td class="dataTable-data numeric">{{adunit.stats.ctr|percentage}}</td>
-                  <td class="dataTable-data numeric">{{adunit.stats.revenue|currency}}</td>
-                  <td class="dataTable-data numeric">{{adunit.stats.conversion_count|withsep}} ({{adunit.stats.conv_rate|percentage}})</td>
-                  <td class="dataTable-data numeric">{{adunit.stats.cpa|currency}}</td>
-                </tr>
-                {% empty %}
-                <tr class="campaignData" id="adgroup-adunits-0">
-                  <td class="campaignData-icon">
-                  </td>
-                  <th class="dataTable-name">
-                    <span class="muted">None</span>
-                  </th>
+           <section id="dashboard-apps">
+                <h2>Targeting breakdown</h2>
+                <div class="appData-columnHeaders">
+                  <table class="dataTable" id="dashboard-apps-columnHeaders" width="100%">
+                    <thead>
+                      <tr>
+                        <th class="appData-icon"></th>
+                        <th class="dataTable-name"></th>
+                        {% if campaign.gtee %}
+                        <th class="dataTable-data numeric">&nbsp;</th>
+                        <th class="dataTable-data numeric">Impressions</th>
+                        <th class="dataTable-data numeric">Clicks</th>
+                        <th class="dataTable-data numeric">CTR</th>
+                        <th class="dataTable-data numeric">Revenue</th>
+                        {% endif %} {% if campaign.promo %}
+                        <th class="dataTable-data numeric">&nbsp;</th>
+                        <th class="dataTable-data numeric">Impressions</th>
+                        <th class="dataTable-data numeric">Clicks</th>
+                        <th class="dataTable-data numeric">CTR</th>
+                        <th class="dataTable-data numeric">Conv</th>
+                        {% endif %} {% if campaign.network %}
+                        <th class="dataTable-data numeric">Attempts</th>
+                        <th class="dataTable-data numeric">Impressions</th>
+                        <th class="dataTable-data numeric">Clicks</th>
+                        <th class="dataTable-data numeric">CTR</th>
+                        <th class="dataTable-data numeric">Fillrate</th>
+                        {% endif %}
+                      </tr>
+                    </thead>
+                  </table>
+                </div>
+                {% for a in apps %}
+                <div class="{% cycle 'appData' 'appData appData-alt' %}" id="dashboard-app-{{forloop.counter0}}">
+                  <table class="dataTable appData-main" id="dashboard-app-{{forloop.counter0}}-main">
+                    <tbody>
+                      <tr>
+                        <td class="appData-icon"><a href="{% url publisher_app_show app_key=a.key %}"><img src="{% if a.icon_url %}{{a.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" /></a></td>
+                        <th class="dataTable-name"><span class="inner"><a href="{% url publisher_app_show app_key=a.key %}">{{a.name}}</a> <span class="muted unbold">({% ifequal a.app_type "iphone" %}iOS{% endifequal %}{% ifequal a.app_type "android" %}Android{% endifequal %}{% ifequal a.app_type "mweb" %}Mobile Web{% endifequal %})</span></span></th>
+
+                        {% if campaign.gtee %}
+                        <td class="dataTable-data numeric">&nbsp;</td>
+                        <td class="dataTable-data numeric">{{a.stats.impression_count|withsep}}</td>
+                        <td class="dataTable-data numeric">{{a.stats.click_count|withsep}}</td>
+                        <td class="dataTable-data numeric">{{a.stats.ctr|percentage}}</td>
+                        <td class="dataTable-data numeric">{{a.stats.revenue|currency}}</td>
+                        {% endif %} {% if campaign.promo %}
+                        <td class="dataTable-data numeric">&nbsp;</td>
+                        <td class="dataTable-data numeric">{{a.stats.impression_count|withsep}}</td>
+                        <td class="dataTable-data numeric">{{a.stats.click_count|withsep}}</td>
+                        <td class="dataTable-data numeric">{{a.stats.ctr|percentage}}</td>
+                        <td class="dataTable-data numeric">{{a.stats.conversion_count|withsep}} ({{a.stats.conv_rate|percentage}})</td>
+                        {% endif %} {% if campaign.network %}
+                        <td class="dataTable-data numeric">{{a.stats.request_count|withsep}}</td>
+                        <td class="dataTable-data numeric">{{a.stats.impression_count|withsep}}</td>
+                        <td class="dataTable-data numeric">{{a.stats.click_count|withsep}}</td>
+                        <td class="dataTable-data numeric">{{a.stats.ctr|percentage}}</td>
+                        <td class="dataTable-data numeric">{{a.stats.fill_rate|percentage}}</td>
+                        {% endif %}
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div class="appData-details" id="dashboard-app-{{forloop.counter0}}-details">
+                    <div class="appData-details-inner show">
+                      <table class="dataTable">
+                        <tbody>
+                          {% for au in a.adunits %}
+                          <tr>
+                            <th class="dataTable-name"><span class="inner"><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a></span></th>
+                            
+                            {% if campaign.gtee %}
+                            <td class="dataTable-data numeric">&nbsp;</td>
+                            <td class="dataTable-data numeric">{{au.stats.impression_count|withsep}}</td>
+                            <td class="dataTable-data numeric">{{au.stats.click_count|withsep}}</td>
+                            <td class="dataTable-data numeric">{{au.stats.ctr|percentage}}</td>
+                            <td class="dataTable-data numeric">{{au.stats.revenue|currency}}</td>
+                            {% endif %} {% if campaign.promo %}
+                            <td class="dataTable-data numeric">&nbsp;</td>
+                            <td class="dataTable-data numeric">{{au.stats.impression_count|withsep}}</td>
+                            <td class="dataTable-data numeric">{{au.stats.click_count|withsep}}</td>
+                            <td class="dataTable-data numeric">{{au.stats.ctr|percentage}}</td>
+                            <td class="dataTable-data numeric">{{au.stats.conversion_count|withsep}} ({{a.stats.conv_rate|percentage}})</td>
+                            {% endif %} {% if campaign.network %}
+                            <td class="dataTable-data numeric">{{au.stats.request_count|withsep}}</td>
+                            <td class="dataTable-data numeric">{{au.stats.impression_count|withsep}}</td>
+                            <td class="dataTable-data numeric">{{au.stats.click_count|withsep}}</td>
+                            <td class="dataTable-data numeric">{{au.stats.ctr|percentage}}</td>
+                            <td class="dataTable-data numeric">{{au.stats.fill_rate|percentage}}</td>
+                            {% endif %}
+                          </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
                 {% endfor %}
-              </tbody>
-            </table>
           </section>
-            {% ifnotequal campaign.campaign_type "network" %}
+              
+          {% ifnotequal campaign.campaign_type "network" %}
           <section>
             <div class="buttonBank buttonBank-right">
               <a class="button" id="advertiser-adgroups-addCreativeButton" href="#">Add a creative</a>
             </div>
-            
-            
-            
             
             <h2>Creatives</h2>
             <section id="advertiser-creativeAddForm" class="hidden">

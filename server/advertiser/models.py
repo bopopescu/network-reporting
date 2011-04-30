@@ -55,6 +55,14 @@ class Campaign(db.Model):
         if self.stats: return self.stats.revenue / self.budget
         else: return 1
 
+    def gtee(self):
+        return self.campaign_type in ['gtee', 'gtee_high', 'gtee_low']
+        
+    def promo(self):
+        return self.campaign_type in ['promo', 'backfill_promo']
+        
+    def network(self):
+        return self.campaign_type in ['network']
         
         
 class AdGroup(db.Model):

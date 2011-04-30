@@ -437,7 +437,7 @@ class ShowAdGroupHandler(RequestHandler):
         adgroup.stats = reduce(lambda x, y: x+y, adgroup.all_stats, StatsModel())    
         adgroup.percent_delivered = budget_service.percent_delivered(adgroup.campaign)
     
-        # creatives = Creative.gql('where ad_group = :1 and deleted = :2 and ad_type in :3', adgroup, False, ["text", "image", "html"]).fetch(50)
+        # Load creatives and populate
         creatives = CreativeQueryManager.get_creatives(adgroup=adgroup)
         creatives = list(creatives)
         for c in creatives:
@@ -447,25 +447,32 @@ class ShowAdGroupHandler(RequestHandler):
                 c.format = "320x50" # TODO: Should fix DB so that format is always there
             c.size = c.format.partition('x')
     
-        apps = AppQueryManager.get_apps(account=self.account)
-        for a in apps:
-            if a.icon:
-                a.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(a.icon)
-        
+        # Load all adunits that this thing is targeting right now 
         adunits = AdUnitQueryManager.get_adunits(keys=adgroup.site_keys)
+        apps = {}
         for au in adunits:
+            app = apps.get(au.app_key.key())
+            if not app:
+                app = AppQueryManager.get(au.app_key.key())
+                app.adunits = [au]
+                if app.icon:
+                    app.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(a.icon)
+                apps[app.key()] = app
+            else:
+                app.adunits += [au]
+
             au.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=au,advertiser=adgroup, days=days)
             au.stats = reduce(lambda x, y: x+y, au.all_stats, StatsModel())
-            au.app = App.get(au.app_key.key())
 
+        # Figure out the top 4 ad units for the graph
         adunits = sorted(adunits, key=lambda adunit: adunit.stats.impression_count, reverse=True)
-
         graph_adunits = adunits[0:4]
       
         if len(adunits) > 4:
               graph_adunits[3] = Site(name='Others')
               graph_adunits[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[au.all_stats for au in adunits[3:]])]
 
+        # Load creatives if we are supposed to 
         if not adgroup.network_type:  
             # In order to have add creative
             creative_handler = AddCreativeHandler(self.request)
@@ -480,15 +487,14 @@ class ShowAdGroupHandler(RequestHandler):
         # In order to make the edit page
         campaign_create_form_fragment = CreateCampaignAJAXHander(self.request).get(adgroup=adgroup)
     
-        return render_to_response(self.request,'advertiser/adgroup.html', 
+        return render_to_response(self.request, 'advertiser/adgroup.html', 
                                     {'campaign': adgroup.campaign,
-                                    'apps': apps,
+                                    'apps': apps.values(),
                                     'adgroup': adgroup, 
                                     'creatives': creatives,
                                     'totals': reduce(lambda x, y: x+y.stats, adunits, StatsModel()),
                                     'today': reduce(lambda x, y: x+y, [a.all_stats[-1] for a in graph_adunits], StatsModel()),
                                     'yesterday': reduce(lambda x, y: x+y, [a.all_stats[-2] for a in graph_adunits], StatsModel()),
-                                    'adunits' : adunits,
                                     'graph_adunits': graph_adunits,
                                     'start_date': days[0],
                                     'end_date': days[-1],

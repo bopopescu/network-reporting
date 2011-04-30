@@ -471,10 +471,6 @@ var mopub = mopub || {};
                 
     ///// Filter Campaigns by status and targeted apps /////    
     
-    $('#campaigns-appFilterOptions').selectmenu({
-        maxHeight: 300,
-        width:184,
-    })
     
     function refreshAlternatingColor(){
         $('.campaignData').removeClass('campaignData-alt');
@@ -496,22 +492,183 @@ var mopub = mopub || {};
             }
         });
     }
-    
+    function get_radio_label(value) {
+        return "campaigns-filterOptions-option-"+value.split("campaign-status-")[1];
+    }
+
+    function checkFilterHash() {
+        var hash = window.location.hash.split('&');
+        var statusFilter, appFilter;
+        if (hash[0].indexOf('status') != -1) {
+            statusFilter = hash[0];
+            appFilter = hash[1];
+        }
+        else {
+            statusFilter = hash[1];
+            appFilter = hash[0];
+        }
+        try {
+            //assuming hash values are correct here
+            statusFilter = statusFilter.split('status:')[1];
+            appFilter = appFilter.split('app:')[1];
+        }
+        catch(err) {
+            // Someone fucked with the hash values, just ignore it
+            return;
+        }
+        var statusRadio = $('input[value="'+statusFilter+'"]');
+        var statusLabel = $('label[for="'+get_radio_label(statusFilter)+'"]');
+        var appOpt = $('option[value="'+appFilter+'"]');
+        //Use the right value
+        appOpt.attr('selected', 'selected');
+        //Do the right value
+        statusRadio.click();
+        //Show the right value
+        statusLabel.click();
+
+
+    }
+    checkFilterHash();
+    function addCommas(nStr)
+    {
+        nStr += '';
+        x = nStr.split('.');
+        x1 = x[0];
+        x2 = x.length > 1 ? '.' + x[1] : '';
+        var rgx = /(\d+)(\d{3})/;
+        while (rgx.test(x1)) {
+            x1 = x1.replace(rgx, '$1' + ',' + '$2');
+        }
+        return x1 + x2;
+    }
+    function calcRollups() {
+        //rollup gtee's 
+        if ($('.gtee-placeholder').is(":visible")) {
+            $('#gtee-rollups').hide();
+        }
+        else {
+            $('#gtee-rollups').show();
+            var gtee_imp, gtee_clk, gtee_rev;
+            gtee_imp = gtee_clk = gtee_rev = 0;
+            $('.gtee-imp:visible').each(function() {
+                    gtee_imp += parseInt($(this).text().replace(/,/g,''), 10);
+                    });
+            $('.gtee-clk:visible').each(function() {
+                    gtee_clk += parseInt($(this).text().replace(/,/g,''), 10);
+                    });
+            //Yuuuckkkkk
+            $('tr.gtee_row:visible td.gtee-rev').each(function() {
+                    gtee_rev += parseInt($(this).text().replace(/,/g,''), 10);
+                    });
+
+            $('#gtee-total-imp').text(addCommas(gtee_imp));
+            $('#gtee-total-clk').text(addCommas(gtee_clk));
+            $('#gtee-total-rev').text('$'+addCommas(Math.round(gtee_rev*100)/100));
+            console.log(gtee_rev);
+            var gtee_ctr;
+            if (gtee_clk === 0) {
+                gtee_ctr = '0.0%';
+            }
+            else {
+                gtee_ctr = Math.round(gtee_clk/gtee_imp* 1000)/10 + '%';
+            }
+            $('#gtee-total-ctr').text(gtee_ctr);
+        }
+
+
+        if ($('.promo-placeholder').is(":visible")) {
+            $('#promo-rollups').hide();
+        }
+        else {
+            $('#promo-rollups').show();
+            var promo_imp, promo_clk, promo_conv;
+            promo_imp = promo_clk = promo_conv = 0;
+            $('.promo-imp:visible').each(function() {
+                    promo_imp += parseInt($(this).text().replace(/,/g,''), 10);
+                    });
+            $('.promo-clk:visible').each(function() {
+                    promo_clk += parseInt($(this).text().replace(/,/g,''), 10);
+                    });
+            $('.promo-conv:visible').each(function() {
+                    promo_conv += parseInt($(this).text().replace(/,/g,''), 10);
+                    });
+
+            $("#promo-total-imp").text(addCommas(promo_imp));
+            $("#promo-total-clk").text(addCommas(promo_clk));
+            $("#promo-total-conv").text(addCommas(promo_conv));
+            var promo_ctr;
+            if (promo_clk === 0) {
+                promo_ctr = '0.0%';
+            }
+            else {
+                promo_ctr = Math.round(promo_clk/promo_imp* 1000)/10 + '%';
+            }
+            $("#promo-total-ctr").text(promo_ctr);
+        }
+
+
+
+        if ($('.network-placeholder').is(":visible")) {
+            $('#network-rollups').hide();
+        }
+        else {
+            $('#network-rollups').show();
+            var net_imp, net_clk, net_req;
+            net_imp = net_clk = net_req = 0;
+            $('.network-imp').each(function() {
+                    net_imp += parseInt($(this).text().replace(/,/g,''), 10);
+                    });
+            $('.network-clk').each(function() {
+                    net_clk += parseInt($(this).text().replace(/,/g,''), 10);
+                    });
+            $('.network-req').each(function() {
+                    net_req += parseInt($(this).text().replace(/,/g,''), 10);
+                    });
+            $("#network-total-imp").text(addCommas(net_imp));
+            $("#network-total-clk").text(addCommas(net_clk));
+            var net_ctr;
+            if (net_clk === 0) {
+                net_ctr = '0.0%';
+            }
+            else {
+                net_ctr = Math.round(net_clk/net_imp* 1000)/10 + '%';
+            }
+            $("#network-total-ctr").text(net_ctr);
+            var net_fill;
+            if (net_imp === 0) {
+                net_fill = '0.0%';
+            }
+            else {
+                net_fill = Math.round(net_imp/net_req* 1000)/10 + '%';
+            }
+            $('#network-total-fill').text(net_fill + ' (' + addCommas(net_req) + ')');
+        }
+    }
+
     function applyFilters(){
         var statusFilter = $("#campaigns-filterOptions").find(':checked').val();
         var appFilter = $('#campaigns-appFilterOptions').val();
-
+        window.location.hash = "status:" + statusFilter + "&app:" + appFilter;
         // Hide all the campaigns, then show the ones that pass the filters
         $('.campaignData').hide();
         $('.'+appFilter).filter('.'+statusFilter).show();
         addPlaceholder();
         refreshAlternatingColor();
+        calcRollups();
     }
     
     // We filter whenever the user changes the filtering options
     $("#campaigns-filterOptions, #campaigns-appFilterOptions").change(function(){
         applyFilters();
-    }).change();
+    });
+    applyFilters();
+
+    //jQuery magic last
+    $('#campaigns-appFilterOptions').selectmenu({
+        style: 'popup',
+        maxHeight: 300,
+        width:184
+    });
                 
     ////////////////////////////////////////////
     //////////  /campaigns/adgroup/ ////////////

@@ -2124,6 +2124,13 @@ table.campaignData-main {
   font-weight: normal;
 }
 
+/*make select ul look like select menu */
+ul.ui-selectmenu-menu {
+    -moz-box-shadow: 0px 10px 35px -4px #888;
+    -webkit-box-shadow: 0px 10px 35px -4px #888;
+    box-shadow: 0px 10px 35px -4px #888;
+}
+
 /*.map-requests .map-impressions,
 .map-requests .map-clicks,
 .map-impressions .map-clicks,
@@ -2132,3 +2139,5 @@ table.campaignData-main {
 .map-clicks .map-requests{
     display: none;
 }*/
+
+

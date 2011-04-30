@@ -70,7 +70,8 @@ class AdGroupIndexHandler(RequestHandler):
             adgroup.targeted_app_keys = []
             for adunit_key in adgroup.site_keys:
                 adunit = Site.get(adunit_key)
-                adgroup.targeted_app_keys.append(adunit.app_key.key())
+                if adunit:
+                    adgroup.targeted_app_keys.append(adunit.app_key.key())
                 # apps.append(adunit.app_key)
             
 

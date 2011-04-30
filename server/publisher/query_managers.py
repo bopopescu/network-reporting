@@ -83,7 +83,8 @@ class AdUnitQueryManager(QueryManager):
             if type(keys) == list and len(keys) == 0:
                 return []
             elif len(keys) > 0:
-                return cls.Model.get(keys)
+                objs = cls.Model.get(keys)
+                return [obj for obj in objs if obj.deleted == deleted]
             else:
                 logging.error('len is negative?')
 

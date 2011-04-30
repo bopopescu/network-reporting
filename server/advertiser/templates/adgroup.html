@@ -10,11 +10,19 @@
 
 {% block titleBarRight %}
             <span class="titlebar-right">
+              {% if adgroup.active %}
               	<select name="campaign-status-options" id="campaign-status-options" class="selectmenu"> 
-        					<option value="running" selected="selected">Running</option>
-        					<option value="running" selected="selected">Paused</option>
-        					<option value="running" selected="selected">Archived</option>
+              	  <option value="play" selected="selected">Running</option>
+              	  <option value="pause">Pause</option>
+            	    <option value="delete">Delete</option>
               </select>
+              {% else %}
+              	<select name="campaign-status-options" id="campaign-status-options" class="selectmenu"> 
+              	  <option value="pause" selected="selected">Paused</option>
+              	  <option value="play">Resume</option>
+            	    <option value="delete">Delete</option>
+              </select>
+              {% endif %}
               <a class="button" id="advertisers-adgroups-editAdGroupButton" href="{% url advertiser_campaign_edit adgroup_key=adgroup.key %}">Edit campaign settings</a>
             </span>
 {% endblock titleBarRight %}

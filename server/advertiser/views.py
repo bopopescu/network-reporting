@@ -411,6 +411,12 @@ class ShowAdGroupHandler(RequestHandler):
         elif opt == 'pause':
             adgroup.active = False
             update = True
+        elif opt == "delete":   
+            adgroup.deleted = True
+            AdGroupQueryManager.put(adgroup)
+            # TODO: Flash a message saying we deleted the campaign
+            return HttpResponseRedirect(reverse('advertiser_campaign'))
+            
         else:
             logging.error("Passed an impossible option")
 

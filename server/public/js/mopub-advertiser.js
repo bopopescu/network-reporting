@@ -453,12 +453,22 @@ var mopub = mopub || {};
         $('table').each(function(){
             // Show them where there is nothing else
             var visible = $(this).find('.campaignData:visible');
-            // alert(visible.length);
             if (visible.length === 0){
                 var placeholder = $(this).find('.campaignData-placeholder');
                 placeholder.show();
             }
         });
+    }
+    
+    function hideEmptyDirects(){
+         $.each([$('#campaignDataTable-direct-high'),
+                 $('#campaignDataTable-direct-low')], function(){
+                     $(this).show();
+                     var visible = $(this).find('.campaignData:visible');
+                     if (visible.length === 0){
+                         $(this).hide();
+                     }
+                 });
     }
     
     function applyFilters(){
@@ -468,6 +478,7 @@ var mopub = mopub || {};
         // Hide all the campaigns, then show the ones that pass the filters
         $('.campaignData').hide();
         $('.'+appFilter).filter('.'+statusFilter).show();
+        hideEmptyDirects();
         addPlaceholder();
         refreshAlternatingColor();
     }
@@ -541,13 +552,15 @@ var mopub = mopub || {};
         });
       });
 
+    //////// Set up the status buttons at the top ///////
     $('#campaign-status-options')
       .change(function(e) {
-          var val = $(this).val();
-          console.log(val);
+          var val = $(this).val();  
           $('#fake-campaignForm').find('#action').attr('value', val).end().submit();
           });
-
+          
+     // Delete redunundant first option
+     $('#campaign-status-options-menu').find('li').first().hide();
     
     /*---------------------------------------/
     / Chart

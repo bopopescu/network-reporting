@@ -597,6 +597,7 @@ class AdHandler(webapp.RequestHandler):
                                                         request_id          = request_id, 
                                                         v                   = int(self.request.get('v') or 0),
                                                         track_url           = track_url,
+                                                        debug               = debug,
                                                         ) 
                                                             
         if jsonp:
@@ -696,6 +697,9 @@ class AdHandler(webapp.RequestHandler):
                 # self.response.headers.add_header("X-Launchpage","http://googleads.g.doubleclick.net")
             elif c.ad_type == "admob":
                 params.update({"title": ','.join(kwargs["q"]), "w": format[0], "h": format[1], "client": kwargs["site"].account.admob_pub_id})
+                debug = kwargs["debug"]
+                params.update(test_mode='true' if debug else 'false')
+                # params.update(test_ad='<a href="http://m.google.com" target="_top"><img src="/images/admob_test.png"/></a>' if debug else '')
                 self.response.headers.add_header("X-Launchpage","http://c.admob.com/")
             elif c.ad_type == "text_icon":
                 if c.image:

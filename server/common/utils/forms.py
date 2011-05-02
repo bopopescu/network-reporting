@@ -41,14 +41,16 @@ class MPBoundField(BoundField):
 
     def add_attrs(self, attrs):
         for key in attrs.keys():
+            if key == "label":
+                self.add_label(attrs[key])
+                continue
             if self.attrs.get(key):
                 self.attrs[key] = attrs[key] + ' ' + self.attrs[key]
             else:
                 self.attrs[key] = attrs[key]     
 
     def add_label(self, label):
-        self.field.label = label   
-       
+        self.label = label
 
     @property
     def value(self):

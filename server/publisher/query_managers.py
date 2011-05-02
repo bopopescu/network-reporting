@@ -2,6 +2,8 @@ import logging
 
 from common.utils.query_managers import QueryManager, CachedQueryManager
 
+from common.utils.decorators import wraps_first_arg, deprecated
+
 from google.appengine.ext import db
 
 from publisher.models import App
@@ -12,7 +14,7 @@ from reporting.query_managers import StatsModelQueryManager
 from google.appengine.api import memcache
 from ad_server.debug_console import trace_logging
 from ad_server.optimizer.adunit_context import AdUnitContext, CreativeCTR
-        
+
 class AdUnitContextQueryManager(CachedQueryManager):
     """ Keeps an up-to-date version of the AdUnit Context in memcache.
     Deleted from memcache whenever its components are updated."""
@@ -102,6 +104,18 @@ class AppQueryManager(QueryManager):
     def put_apps(self,apps):
         return db.put(apps)    
 
+    @classmethod
+    @wraps_first_arg
+    def put(cls, apps):
+        put_response = db.put(apps)
+    
+        # Clear cache
+        for app in apps:
+            adunits = AdUnitQueryManager.get_adunits(app=app)
+            AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
+    
+        return put_response
+        
 class AdUnitQueryManager(QueryManager):
     Model = AdUnit
     
@@ -111,7 +125,8 @@ class AdUnitQueryManager(QueryManager):
             if type(keys) == list and len(keys) == 0:
                 return []
             elif len(keys) > 0:
-                return cls.Model.get(keys)
+                objs = cls.Model.get(keys)
+                return [obj for obj in objs if obj.deleted == deleted]
             else:
                 logging.error('len is negative?')
 
@@ -208,3 +223,14 @@ class AdUnitQueryManager(QueryManager):
             return None
         else:  
             return self.adunit
+    @classmethod
+    @wraps_first_arg
+    def put(cls, adunits):
+        if not isinstance(adunits, (list, tuple)):
+            adunits = [adunits]
+
+        put_response = db.put(adunits)
+        AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
+        
+        return put_response
+    

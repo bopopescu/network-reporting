@@ -26,8 +26,8 @@ from django.core.mail import send_mail, EmailMessage
 def website_root(request,*args,**kwargs):
     return HttpResponseRedirect("/inventory")
 
-@webdec()
-def droid_market_search(qs):
+# @webdec()
+def droid_market_search(request, qs):
     qs = qs.replace(' ', '+')
     url = MARKET_URL % qs
     import logging

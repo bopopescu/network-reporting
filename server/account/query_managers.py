@@ -2,6 +2,8 @@ import logging
 
 from common.utils.query_managers import CachedQueryManager
 
+from common.utils.decorators import wraps_first_arg
+from advertiser.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 from google.appengine.ext import db
 from google.appengine.api import memcache
 from google.appengine.api import users
@@ -13,9 +15,7 @@ MEMCACHE_KEY_FORMAT = "k:%(user_id)s"
 
 class AccountQueryManager(CachedQueryManager):
     Model = Account
-    def get_by_key_name(self,name):
-        return self.Model.get_by_key_name(name)
-        
+
     @classmethod
     def get_current_account(cls,user=None):
         if not user:
@@ -37,15 +37,13 @@ class AccountQueryManager(CachedQueryManager):
             memcache.set(str(cls._user_key(user)), account, namespace="account")
         logging.warning("account: %s"%account.key())    
         return account
-    
-    @classmethod            
-    def put_accounts(cls,accounts):
-        if not isinstance(accounts,list):
-            accounts = [accounts]
-            
+
+    @classmethod
+    @wraps_first_arg
+    def put_accounts(cls, accounts):
         # Delete from cache
         for account in accounts:
-            
+
             # Delete cached AdUnitContext
             adunits = AdUnitQueryManager.get_adunits(account=account)
             AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
@@ -53,7 +51,7 @@ class AccountQueryManager(CachedQueryManager):
             # Delete cached Accounts for users
             for user_key in account.all_users:
                 memcache.delete(str(user_key), namespace="account")
-                
+
         return db.put(accounts)    
     
     @classmethod    

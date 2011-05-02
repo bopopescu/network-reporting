@@ -23,14 +23,15 @@
                   </div>
                   <div class="form-submit"> 
                     <span class="hidden" id="appEditForm-loading"><img src="/images/loading2.gif"/></span>
-                    <span class="buttonWrap"><a href="#" class="button" id="appEditForm-submit">Save</a></span> 
                     <span class="buttonWrap"><a href="#" class="button" id="appEditForm-cancel">Cancel</a></span> 
+                    <span class="buttonWrap"><a href="#" class="button" id="appEditForm-submit">Save</a></span> 
                   </div> 
                 </fieldset>
               </form>
             </div>
           </section>
           
+          <h2>Real-time stats from {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h2>
           <section class="offset nomargin" id="dashboard-stats">
             <div class="stats">
               <div class="stats-breakdown">
@@ -49,9 +50,9 @@
                       <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
                     </tr>
                     <tr id="stats-breakdown-clicks">
-                      <td class="stats-breakdown-value today"><span class="inner">{{today.click_count|withsep}}</span></td>
-                      <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.click_count|withsep}}</span></td>
-                      <td class="stats-breakdown-value all"><span class="inner">{{app.stats.click_count|withsep}}</span></td>
+                      <td class="stats-breakdown-value today"><span class="inner"><span class="muted unbold">({{today.ctr|percentage}})</span> {{today.click_count|withsep}}</span></td>
+                      <td class="stats-breakdown-value yesterday"><span class="inner"><span class="muted unbold">({{yesterday.ctr|percentage}})</span> {{yesterday.click_count|withsep}}</span></td>
+                      <td class="stats-breakdown-value all"><span class="inner"><span class="muted unbold">({{app.stats.ctr|percentage}})</span> {{app.stats.click_count|withsep}}</span></td>
                       <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
                     </tr>
                     <tr id="stats-breakdown-users">
@@ -89,7 +90,7 @@
                       { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                     ],
                     'clicks': [{% for au in app.graph_adunits %}
-                      { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                      { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{y: {{t.click_count}}, name: '{{t.ctr|percentage}}'}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                     ],
                     'users': [{% for au in app.graph_adunits %}
                       { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
@@ -107,7 +108,7 @@
             <div class="buttonBank buttonBank-right">
               <a class="button" id="dashboard-apps-addAdUnitButton" href="#">Add an ad unit</a>
             </div>
-            <h2>Ad Units</h2>
+            <h2>Ad units</h2>
             
             <section id="dashboard-adunitAddForm" class="hidden">
               <div>
@@ -119,8 +120,8 @@
                     </div>
                     <div class="form-submit"> 
                       <span class="hidden" id="adunitForm-loading"><img src="/images/loading2.gif"/></span>
-                      <span class="buttonWrap"><a href="#" class="button" id="adunitAddForm-submit">Save</a></span> 
                       <span class="buttonWrap"><a href="#" class="button" id="adunitAddForm-cancel">Cancel</a></span> 
+                      <span class="buttonWrap"><a href="#" class="button" id="adunitAddForm-submit">Save</a></span> 
                     </div> 
                   </fieldset>
                 </form>
@@ -135,6 +136,7 @@
                     <th class="dataTable-name">&nbsp;</th>
                     <th class="dataTable-data numeric">Requests</th>
                     <th class="dataTable-data numeric">Impressions</th>
+                    <th class="dataTable-data numeric">Fillrate</th>
                     <th class="dataTable-data numeric">Clicks</th>
                     <th class="dataTable-data numeric">CTR</th>
                   </tr>
@@ -149,6 +151,7 @@
                     <th class="dataTable-name">Totals</th>
                     <td class="dataTable-data numeric">{{app.stats.request_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{app.stats.impression_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{app.stats.fill_rate|percentage_rounded}}</td>
                     <td class="dataTable-data numeric">{{app.stats.click_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{app.stats.ctr|percentage}}</td>
                   </tr>
@@ -163,6 +166,7 @@
                         <th class="dataTable-name"><span class="inner"><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a></span></th>
                         <td class="dataTable-data numeric">{{au.stats.request_count|withsep}}</td>
                         <td class="dataTable-data numeric">{{au.stats.impression_count|withsep}}</td>
+                        <td class="dataTable-data numeric">{{au.stats.fill_rate|percentage_rounded}}</td>
                         <td class="dataTable-data numeric">{{au.stats.click_count|withsep}}</td>
                         <td class="dataTable-data numeric">{{au.stats.ctr|percentage}}</td>
                       </tr>
@@ -173,4 +177,16 @@
               </div>
             </div>
           </section>
+          
+          <div class="clear"></div>
+          
+          <div style="margin-top: 1em">
+              <div class="buttonBank buttonBank-right">
+                  <form method="post" id="dashboard-deleteForm" action="{% url publisher_app_delete app_key=app.key %}"><a href="#" id="dashboard-delete-link">Remove app from dashboard</a></form>
+                  <div id="dashboard-delete-modal" class="hidden">
+                    <h2>Remove confirmation</h2>
+                    <p>Are you sure you want to remove {{app.name}} from the dashboard?</p>
+                  </div>
+              </div>
+          </div>
 {% endblock content %}

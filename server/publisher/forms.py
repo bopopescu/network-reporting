@@ -11,8 +11,6 @@ from common.utils import fields as mpfields
 from common.utils import widgets as mpwidgets 
 from publisher.models import Site, App
 
-
-
 class AppForm(mpforms.MPModelForm):
     TEMPLATE = 'publisher/forms/app_form.html'
 
@@ -73,9 +71,9 @@ ANIMATION_CHOICES = (
 )
 
 DEVICE_FORMAT_CHOICES = (
-             (u'phone', 'Phone'),
-             (u'tablet', 'Tablet'),
-     )
+        (u'phone', 'Phone'),
+        (u'tablet', 'Tablet'),
+)
 
 class AdUnitForm(mpforms.MPModelForm):
     TEMPLATE = 'publisher/forms/adunit_form.html'

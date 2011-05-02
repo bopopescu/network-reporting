@@ -145,7 +145,7 @@
                     <th class="dataTable-name">Totals</th> 
                     <td class="dataTable-data numeric">{{totals.request_count|withsep}}</td> 
                     <td class="dataTable-data numeric">{{totals.impression_count|withsep}}</td> 
-                    <td class="dataTable-data numeric">{{totals.fill_rate|percentage|withsep}}</td> 
+                    <td class="dataTable-data numeric">{{totals.fill_rate|percentage_rounded}}</td> 
                     <td class="dataTable-data numeric">{{totals.click_count|withsep}}</td> 
 					<td class="dataTable-data numeric">{{totals.ctr|percentage|withsep}}</td> 
                   </tr> 
@@ -161,7 +161,7 @@
 	                        <th class="dataTable-name">{{pair.0|country_code_to_name}}</th> 
 	                        <td class="dataTable-data numeric">{{pair.1.request_count|withsep}}</td> 
 	                        <td class="dataTable-data numeric">{{pair.1.impression_count|withsep}}</td> 
-	                        <td class="dataTable-data numeric">{{pair.1.fill_rate|percentage|withsep}}</td> 
+	                        <td class="dataTable-data numeric">{{pair.1.fill_rate|percentage_rounded}}</td> 
 	                        <td class="dataTable-data numeric">{{pair.1.click_count|withsep}}</td> 
 							<td class="dataTable-data numeric">{{pair.1.ctr|percentage|withsep}}</td>
 	                      </tr> 

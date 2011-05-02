@@ -15,7 +15,6 @@ from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManag
 
 from common.utils.request_handler import RequestHandler
 
-
 class AccountHandler(RequestHandler):
     def get(self,account_form=None):
         if self.params.get("skip"):
@@ -31,6 +30,7 @@ class AccountHandler(RequestHandler):
 
         if account_form.is_valid():
             account = account_form.save(commit=False)
+
             AccountQueryManager.put_accounts(account)
             
             if self.account.status == "step3":
@@ -39,7 +39,6 @@ class AccountHandler(RequestHandler):
                 return HttpResponseRedirect(reverse('advertiser_campaign'))
         
         return self.get(account_form=account_form)        
-        # return render_to_response(self.request,'account/account.html', {'account': self.account})
 
 @whitelist_login_required         
 def index(request,*args,**kwargs):

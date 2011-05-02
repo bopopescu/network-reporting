@@ -19,10 +19,6 @@
               <span class="ui-icon ui-icon-arrow-1-e"></span> 
               <span class="stepProgress-step stepProgress-active">Step 4: Ad campaigns</span> 
             </div>
-    {% else %}        
-            <span class="titlebar-right">
-              <a class="button" id="advertisers-testAdServer" href="#">Run Auction</a>
-            </span>
     {% endifequal %}
             
 {% endblock titleBarRight %}
@@ -63,6 +59,7 @@
             Before you set up your ad campaigns, we recommend that you set up your App inventory.  Visit the <a href="{% url publisher_index %}">Dashboard</a> to add your Apps.
           </div>
 {% endif %}
+           {% comment %}
           <div class="separated">
             <section class="offset nomargin" id="dashboard-stats">
               <div class="stats">
@@ -125,6 +122,7 @@
               <div class="clear"></div>
             </section>
           </div>
+          {% endcomment %}
           <section id="dashboard-campaigns">
             <div id="campaigns-control-panel">
               <div class="center-button-bank">
@@ -132,16 +130,16 @@
                 <span class="buttonset" id="campaigns-filterOptions"> 
                   <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-all" checked="checked" id="campaigns-filterOptions-option-all"/> 
                   <label for="campaigns-filterOptions-option-all">All</label> 
-                  <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Running" id="campaigns-filterOptions-option-running"/> 
-                  <label for="campaigns-filterOptions-option-running">Running</label> 
-                  <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Paused" id="campaigns-filterOptions-option-paused" /> 
-                  <label for="campaigns-filterOptions-option-paused">Paused</label> 
-                  <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Scheduled" id="campaigns-filterOptions-option-scheduled" /> 
-                  <label for="campaigns-filterOptions-option-scheduled">Scheduled</label> 
+                  <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Running" id="campaigns-filterOptions-option-Running"/> 
+                  <label for="campaigns-filterOptions-option-Running">Running</label> 
+                  <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Paused" id="campaigns-filterOptions-option-Paused" /> 
+                  <label for="campaigns-filterOptions-option-Paused">Paused</label> 
+                  <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Scheduled" id="campaigns-filterOptions-option-Scheduled" /> 
+                  <label for="campaigns-filterOptions-option-Scheduled">Scheduled</label> 
                 </span>
               
               	<select name="campaigns-appFilterOptions" id="campaigns-appFilterOptions"> 
-        					<option id="campaigns-appFilterOptions-option-all" value="campaign-status-all" selected="selected">Show campaigns for all apps</option> 
+        					<option id="campaigns-appFilterOptions-option-all" value="campaign-status-all">All Apps</option>
   								{% for app in apps %}
   								<option value="campaign-targeting-{{app.key}}">{{app.name}}</option> 
   								{% endfor %}
@@ -159,6 +157,27 @@
             <form method="post" action="{% url advertiser_bid_pause %}" id="campaignForm">
               <input type="hidden" name="action" id="action"/>
               <h2>Guaranteed</h2>
+              <div id='gtee-rollups' class="rollupAlert">
+                  <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
+                      <thead>
+                          <tr>
+                              <th width=25%>Impressions</th>
+                              <th width=25%>Clicks</th>
+                              <th width=25%>CTR</th>
+                              <th width=25%>Revenue</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          <tr>
+                              <td id='gtee-total-imp'></td>
+                              <td id='gtee-total-clk'></td>
+                              <td id='gtee-total-ctr'></td>
+                              <td id='gtee-total-rev'></td>
+                          </tr>
+                      </tbody>
+                  </table>
+              </div>
+
               {% for level in gtee %}
               {% if level.foo %} 
               <table class="dataTable campaignData-main" id="campaignDataTable-direct-{{level.name}}">
@@ -178,7 +197,7 @@
                     <tbody>
                       {% for adgroup in level.adgroups %}
 
-	                  <tr class="campaignData campaign-status-all campaign-targeting-all
+	                  <tr class="campaignData gtee_row campaign-status-all campaign-targeting-all
 					  campaign-status-{{adgroup|campaign_status}}
 					  {% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}"
 					  id="campaigns-guaranteed-{{level.name}}-{{forloop.counter0}}">
@@ -208,14 +227,15 @@
                          {% if adgroup.percent_delivered %}
                          <span class="muted">({{adgroup.percent_delivered|floatformat:1}}%)</span></td>
                          {%endif %}
-                        <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
-                        <td class="dataTable-data numeric">{{adgroup.stats.click_count|withsep}}</td>
-                        <td class="dataTable-data numeric">{{adgroup.stats.ctr|percentage|withsep}}</td>
-                        <td class="dataTable-data numeric">{{adgroup.stats.conversion_count|withsep}} ({{adgroup.stats.conv_rate|percentage}})</td>
-                        <td class="dataTable-data numeric">{{adgroup.stats.cpa|currency}}</td>
+                        <td class='gtee-rev' style='display:none;'>{{adgroup.stats.revenue}}</td>
+                        <td class="dataTable-data numeric gtee-imp">{{adgroup.stats.impression_count|withsep}}</td>
+                        <td class="dataTable-data numeric gtee-clk">{{adgroup.stats.click_count|withsep}}</td>
+                        <td class="dataTable-data numeric gtee-ctr">{{adgroup.stats.ctr|percentage|withsep}}</td>
+                        <td class="dataTable-data numeric gtee-conv">{{adgroup.stats.conversion_count|withsep}} ({{adgroup.stats.conv_rate|percentage}})</td>
+                        <td class="dataTable-data numeric gtee-cpa">{{adgroup.stats.cpa|currency}}</td>
                       </tr>
                       {% endfor %}
-                      <tr class="campaignData campaignData-placeholder">
+                      <tr class="campaignData campaignData-placeholder gtee-placeholder">
                         <th class="campaignData-icon"></th>
                         <th class="dataTable-name"><span class="muted">None</span></th>
                         <td class="dataTable-data numeric"></td>
@@ -231,6 +251,27 @@
                 </tbody>
               </table>
               <h2>Promotional</h2>
+              <div id='promo-rollups' class="rollupAlert">
+                  <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
+                      <thead>
+                          <tr>
+                              <th width=25%>Impressions</th>
+                              <th width=25%>Clicks</th>
+                              <th width=25%>CTR</th>
+                              <th width=25%>Conversions</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          <tr>
+                              <td id='promo-total-imp'></td>
+                              <td id='promo-total-clk'></td>
+                              <td id='promo-total-ctr'></td>
+                              <td id='promo-total-conv'></td>
+                              <td></td>
+                          </tr>
+                      </tbody>
+                  </table>
+              </div>
               <table class="dataTable campaignData-main">
                 <thead>
                   <tr>
@@ -274,14 +315,14 @@
                     </th>
                     <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
                     <td class="dataTable-data numeric">{{adgroup|campaign_status}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.click_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.ctr|percentage|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.conversion_count|withsep}} ({{adgroup.stats.conv_rate|percentage}})</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.cpa|currency}}</td>
+                    <td class="dataTable-data numeric promo-imp">{{adgroup.stats.impression_count|withsep}}</td>
+                    <td class="dataTable-data numeric promo-clk">{{adgroup.stats.click_count|withsep}}</td>
+                    <td class="dataTable-data numeric promo-ctr">{{adgroup.stats.ctr|percentage|withsep}}</td>
+                    <td class="dataTable-data numeric promo-conv">{{adgroup.stats.conversion_count|withsep}} ({{adgroup.stats.conv_rate|percentage}})</td>
+                    <td class="dataTable-data numeric promo-cpa">{{adgroup.stats.cpa|currency}}</td>
                   </tr>
                   {% endfor %}
-                  <tr class="campaignData campaignData-placeholder">
+                  <tr class="campaignData campaignData-placeholder promo-placeholder">
                     <th class="campaignData-icon"></th>
                     <th class="dataTable-name"><span class="muted">None</span></th>
                     <td class="dataTable-data numeric"></td>
@@ -295,13 +336,33 @@
                 </tbody>
               </table>
               <h2>Network</h2>
+              <div id='network-rollups' class="rollupAlert">
+                  <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
+                      <thead>
+                          <tr>
+                              <th width=25%>Impressions</th>
+                              <th width=25%>Clicks</th>
+                              <th width=25%>CTR</th>
+                              <th width=25%>Fill Rate (Attempts)</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          <tr>
+                              <td id='network-total-imp'></td>
+                              <td id='network-total-clk'></td>
+                              <td id='network-total-ctr'></td>
+                              <td id='network-total-fill'></td>
+                          </tr>
+                      </tbody>
+                  </table>
+              </div>
               <table class="dataTable campaignData-main">
                 <thead>
                   <tr>
                     <th class="campaignData-icon"></th>
                     <th class="dataTable-name">Name</th>
                     <th class="dataTable-data numeric">eCPM</th>
-                    <th class="dataTable-data numeric">Requests</th>
+                    <th class="dataTable-data numeric">Attempts</th>
                     <th class="dataTable-data numeric">Impressions</th>
                     <th class="dataTable-data numeric">Fillrate</th>
                     <th class="dataTable-data numeric">Clicks</th>
@@ -328,16 +389,16 @@
 
                       <span class="muted">{{adgroup.network_type}}</span>
                     </th>
-                    <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.request_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.fill_rate|percentage|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.click_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.ctr|percentage|withsep}}</td>
+                    <td class="dataTable-data numeric network-cpm">{{adgroup.bid|currency}}</td>
+                    <td class="dataTable-data numeric network-req">{{adgroup.stats.request_count|withsep}}</td>
+                    <td class="dataTable-data numeric network-imp">{{adgroup.stats.impression_count|withsep}}</td>
+                    <td class="dataTable-data numeric network-fill">{{adgroup.stats.fill_rate|percentage|withsep}}</td>
+                    <td class="dataTable-data numeric network-clk">{{adgroup.stats.click_count|withsep}}</td>
+                    <td class="dataTable-data numeric network-ctr">{{adgroup.stats.ctr|percentage|withsep}}</td>
                     <td class="dataTable-data numeric">&nbsp;</td>
                   </tr>
                   {% endfor %}
-                  <tr class="campaignData campaignData-placeholder">
+                  <tr class="campaignData campaignData-placeholder network-placeholder">
                     <th class="campaignData-icon"></th>
                     <th class="dataTable-name"><span class="muted">None</span></th>
                     <td class="dataTable-data numeric"></td>
@@ -351,6 +412,26 @@
                 </tbody>
               </table>
               <h2>Backfill Promotional</h2>
+              <div id='bfill-rollups' class="rollupAlert">
+                  <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
+                      <thead>
+                          <tr>
+                              <th width=25%>Impressions</th>
+                              <th width=25%>Clicks</th>
+                              <th width=25%>CTR</th>
+                              <th width=25%>Conversions</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          <tr>
+                              <td id='bfill-total-imp'></td>
+                              <td id='bfill-total-clk'></td>
+                              <td id='bfill-total-ctr'></td>
+                              <td id='bfill-total-conv'></td>
+                          </tr>
+                      </tbody>
+                  </table>
+              </div>
               <table class="dataTable campaignData-main">
                 <thead>
                   <tr>
@@ -394,14 +475,14 @@
                     </th>
                     <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
                     <td class="dataTable-data numeric">{{adgroup|campaign_status}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.click_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.ctr|percentage|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.conversion_count|withsep}} ({{adgroup.stats.conv_rate|percentage}})</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.cpa|currency}}</td>
+                    <td class="dataTable-data numeric bfill-imp">{{adgroup.stats.impression_count|withsep}}</td>
+                    <td class="dataTable-data numeric bfill-clk">{{adgroup.stats.click_count|withsep}}</td>
+                    <td class="dataTable-data numeric bfill-ctr">{{adgroup.stats.ctr|percentage|withsep}}</td>
+                    <td class="dataTable-data numeric bfill-conv">{{adgroup.stats.conversion_count|withsep}} ({{adgroup.stats.conv_rate|percentage}})</td>
+                    <td class="dataTable-data numeric bfill-cpa">{{adgroup.stats.cpa|currency}}</td>
                   </tr>
                   {% endfor %}
-                  <tr class="campaignData campaignData-placeholder">
+                  <tr class="campaignData campaignData-placeholder bfill-placeholder">
                     <th class="campaignData-icon"></th>
                     <th class="dataTable-name"><span class="muted">None</span></th>
                     <td class="dataTable-data numeric"></td>
@@ -418,7 +499,6 @@
               <div class="form-submit-left"> 
                 <span class="buttonWrap"><a class="button" id="campaignForm-pause">Pause</a>
                 <a class="button" id="campaignForm-resume">Resume</a>
-                <a class="button" id="campaignForm-delete">Delete</a></span> 
               </div> 
             </form> 
           </section>

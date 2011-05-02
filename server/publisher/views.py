@@ -310,48 +310,77 @@ class ShowAppHandler(RequestHandler):
       days = StatsModel.lastdays(self.date_range)
 
     # load the site
-    a = AppQueryManager.get(app_key)
+    app = AppQueryManager.get(app_key)
     
     # check to see that the user has viewership rights, ow return 404
-    if a.account.key() != self.account.key():
+    if app.account.key() != self.account.key():
       raise Http404
 
-    a.adunits = AdUnitQueryManager.get_adunits(app=a)
+    app.adunits = AdUnitQueryManager.get_adunits(app=app)
     
     # organize impressions by days
-    if len(a.adunits) > 0:
-      for adunit in a.adunits:
-        adunit.all_stats = StatsModelQueryManager(self.account,self.offline).get_stats_for_days(publisher=adunit,days=days)
+    if len(app.adunits) > 0:
+      for adunit in app.adunits:
+        adunit.all_stats = StatsModelQueryManager(self.account,self.offline).get_stats_for_days(publisher=adunit, days=days)
         adunit.stats = reduce(lambda x, y: x+y, adunit.all_stats, StatsModel())
       
-    a.adunits = sorted(a.adunits, key=lambda adunit: adunit.stats.request_count, reverse=True)
+    app.adunits = sorted(app.adunits, key=lambda adunit: adunit.stats.request_count, reverse=True)
       
-    app_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=a,days=days)
+    app_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=app, days=days)
 
-    help_text = 'Create an Ad Unit below' if len(a.adunits) == 0 else None
+    help_text = 'Create an Ad Unit below' if len(app.adunits) == 0 else None
     
-    if a.icon:
-      a.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(a.icon)
+    if app.icon:
+      app.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(app.icon)
 
     # In the graph, only show the top 3 ad units and bundle the rest if there are more than 4
-    a.graph_adunits = a.adunits[0:4]
-    if len(a.adunits) > 4:
-      a.graph_adunits[3] = Site(name='Others')
-      a.graph_adunits[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[au.all_stats for au in a.adunits[3:]])]
+    app.graph_adunits = app.adunits[0:4]
+    if len(app.adunits) > 4:
+      app.graph_adunits[3] = Site(name='Others')
+      app.graph_adunits[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[au.all_stats for au in app.adunits[3:]])]
     # in order to make the app editable
-    app_form_fragment = AppUpdateAJAXHandler(self.request).get(app=a)
+    app_form_fragment = AppUpdateAJAXHandler(self.request).get(app=app)
     # in order to have a creat adunit form
-    adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(app=a)
+    adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(app=app)
     
     today = app_stats[-1]
     yesterday = app_stats[-2]
-    a.stats = reduce(lambda x, y: x+y, app_stats, StatsModel())
+    app.stats = reduce(lambda x, y: x+y, app_stats, StatsModel())
     # this is the max active users over the date range
     # NOT total unique users
-    a.stats.user_count = max([sm.user_count for sm in app_stats])
+    app.stats.user_count = max([sm.user_count for sm in app_stats])
+
+    # get adgroups targeting this app
+    app.adgroups = AdGroupQueryManager.get_adgroups(app=app)
+        
+    for ag in app.adgroups:
+      ag.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=app,advertiser=ag,days=days)
+      ag.stats = reduce(lambda x, y: x+y, ag.all_stats, StatsModel())
+      ag.percent_delivered = budget_service.percent_delivered(ag.campaign)
+    
+    promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], app.adgroups)
+    promo_campaigns = sorted(promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
+
+    guarantee_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee_high', 'gtee_low', 'gtee'], app.adgroups)
+    guarantee_campaigns = sorted(guarantee_campaigns, lambda x,y: cmp(y.bid, x.bid))
+    levels = ('high', '', 'low')
+    gtee_str = "gtee_%s"
+    gtee_levels = []
+    for level in levels:
+        this_level = gtee_str % level if level else "gtee"
+        name = level if level else 'normal'
+        level_camps = filter(lambda x:x.campaign.campaign_type == this_level, guarantee_campaigns)
+        gtee_levels.append(dict(name = name, adgroups = level_camps))
+
+    network_campaigns = filter(lambda x: x.campaign.campaign_type in ['network'], app.adgroups)
+    network_campaigns = sorted(network_campaigns, lambda x,y: cmp(y.bid, x.bid))
+
+    backfill_promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_promo'], app.adgroups)
+    backfill_promo_campaigns = sorted(backfill_promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
+
 
     return render_to_response(self.request,'publisher/show_app.html', 
-        {'app': a,  
+        {'app': app,  
          'app_form_fragment':app_form_fragment,
          'adunit_form_fragment':adunit_form_fragment,
          'start_date': days[0],
@@ -360,7 +389,11 @@ class ShowAppHandler(RequestHandler):
          'today': today,
          'yesterday': yesterday,
          'account': self.account,
-         'helptext': help_text})
+         'helptext': help_text,
+         'gtee': gtee_levels, 
+         'promo': promo_campaigns,
+         'network': network_campaigns,
+         'backfill_promo': backfill_promo_campaigns})
          
 
 @whitelist_login_required
@@ -508,14 +541,6 @@ class AdUnitShowHandler(RequestHandler):
         name = level if level else 'normal'
         level_camps = filter(lambda x:x.campaign.campaign_type == this_level, guarantee_campaigns)
         gtee_levels.append(dict(name = name, adgroups = level_camps))
-
-    for level in gtee_levels:
-        if level['name'] == 'normal' and len(gtee_levels[0]['adgroups']) == 0 and len(gtee_levels[2]['adgroups']) == 0: 
-            level['foo'] = True 
-        elif len(level['adgroups']) > 0:
-            level['foo'] = True 
-        else:
-            level['foo'] = False 
 
     network_campaigns = filter(lambda x: x.campaign.campaign_type in ['network'], adunit.adgroups)
     network_campaigns = sorted(network_campaigns, lambda x,y: cmp(y.bid, x.bid))

@@ -208,10 +208,11 @@ def update_sfdc_leads(request, *args, **kwargs):
     start_date = datetime.date.today() - datetime.timedelta(days=30)
     accounts = Account.gql("where date_added >= :1", start_date).fetch(1000)
     results = ""
+    BATCH_SIZE = 5      # this is so low because we cannot override the urlfetch timeout easily w/ beatbox, so only have 5 seconds to do it
     while len(accounts) > 0:
-        create_result = sforce.upsert('MoPub_Account_ID__c', [account_to_sfdc(a) for a in accounts[:200]])
+        create_result = sforce.upsert('MoPub_Account_ID__c', [account_to_sfdc(a) for a in accounts[:BATCH_SIZE]])
         results += str(create_result)
-        accounts[:200] = []
+        accounts[:BATCH_SIZE] = []
 
     # Cool
     return HttpResponse(results)

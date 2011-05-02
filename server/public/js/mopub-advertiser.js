@@ -528,7 +528,6 @@ var mopub = mopub || {};
             $('#gtee-total-imp').text(addCommas(gtee_imp));
             $('#gtee-total-clk').text(addCommas(gtee_clk));
             $('#gtee-total-rev').text('$'+addCommas(Math.round(gtee_rev*100)/100));
-            console.log(gtee_rev);
             var gtee_ctr;
             if (gtee_clk === 0) {
                 gtee_ctr = '0.0%';
@@ -875,6 +874,7 @@ var mopub = mopub || {};
     // set up dateOptions
     $('#dashboard-dateOptions input').click(function() {
       var option = $(this).val();
+      var hash = document.location.hash;
       if(option == 'custom') {
         $('#dashboard-dateOptions-custom-modal').dialog({
           width: 570,
@@ -892,8 +892,8 @@ var mopub = mopub || {};
                 var from_year=from_date.getFullYear();
                 
                 $(this).dialog("close");
-                var location = document.location.href.replace(/\?.*/,'');
-                document.location.href = location+'?r='+num_days+'&s='+from_year+"-"+from_month+"-"+from_day;
+                var location = document.location.href.replace(hash, '').replace(/\?.*/,'');
+                document.location.href = location+'?r='+num_days+'&s='+from_year+"-"+from_month+"-"+from_day + hash;
               }
             },
             {
@@ -907,8 +907,8 @@ var mopub = mopub || {};
       }
       else {
         // Tell server about selected option to get new data
-        var location = document.location.href.replace(/\?.*/,'');
-        document.location.href = location+'?r=' + option;
+        var location = document.location.href.replace(hash,'').replace(/\?.*/,'');
+        document.location.href = location+'?r=' + option + hash;
       }
     });
     

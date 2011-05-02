@@ -575,7 +575,37 @@ var mopub = mopub || {};
             $('#gtee-total-ctr').text(gtee_ctr);
         }
 
+        
+        if ($('.bfill-placeholder').is(":visible")) {
+            $('#bfill-rollups').hide();
+        }
+        else {
+            $('#bfill-rollups').show();
+            var bfill_imp, bfill_clk, bfill_conv;
+            bfill_imp = bfill_clk = bfill_conv = 0;
+            $('.bfill-imp:visible').each(function() {
+                    bfill_imp += parseInt($(this).text().replace(/,/g,''), 10);
+                    });
+            $('.bfill-clk:visible').each(function() {
+                    bfill_clk += parseInt($(this).text().replace(/,/g,''), 10);
+                    });
+            $('.bfill-conv:visible').each(function() {
+                    bfill_conv += parseInt($(this).text().replace(/,/g,''), 10);
+                    });
 
+            $("#bfill-total-imp").text(addCommas(bfill_imp));
+            $("#bfill-total-clk").text(addCommas(bfill_clk));
+            $("#bfill-total-conv").text(addCommas(bfill_conv));
+            var bfill_ctr;
+            if (bfill_clk === 0) {
+                bfill_ctr = '0.0%';
+            }
+            else {
+                bfill_ctr = Math.round(bfill_clk/bfill_imp* 1000)/10 + '%';
+            }
+            $("#bfill-total-ctr").text(bfill_ctr);
+        }
+        
         if ($('.promo-placeholder').is(":visible")) {
             $('#promo-rollups').hide();
         }

@@ -658,7 +658,6 @@ var mopub = mopub || {};
         $.each([$('#campaignDataTable-direct-high'),
                  $('#campaignDataTable-direct-low')],
                  hideIfEmpty);
-        console.log(somethingToDisplay)
         if(somethingToDisplay){
              $.each([$('#campaignDataTable-direct-normal')],
                          hideIfEmpty);

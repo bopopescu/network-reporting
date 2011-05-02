@@ -1,6 +1,4 @@
 # !/usr/bin/env python
-
-# TODO: PLEASE HAVE THIS FIX DJANGO PROBLEMS
 from appengine_django import LoadDjango
 LoadDjango()
 import os
@@ -9,7 +7,6 @@ from django.conf import settings
 os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 # Force Django to reload its settings.
 settings._target = None
-# END TODO: PLEASE HAVE THIS FIX DJANGO PROBLEMS
 
 import wsgiref.handlers
 import cgi
@@ -88,16 +85,18 @@ from ad_server.debug_console import trace_logging
 ###################
 from ad_server.handlers import TestHandler
 
-
-
 TEST_MODE = "3uoijg2349ic(TEST_MODE)kdkdkg58gjslaf"
 
-# figure out if we're on production server
+# Figure out if we're on a production server
 from google.appengine.api import apiproxy_stub_map
 have_appserver = bool(apiproxy_stub_map.apiproxy.GetStub('datastore_v3'))
 on_production_server = have_appserver and \
     not os.environ.get('SERVER_SOFTWARE', '').lower().startswith('devel')
 DEBUG = not on_production_server
+
+
+############## CONSTANTS ###############
+
 
 CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gzip(gfe)"]
 MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7PnE6cH9_PX7OoeIIr5FjnTA'
@@ -113,20 +112,14 @@ SERVER_SIDE_DICT = {"millennial":MillennialServerSide,
                     "greystripe":GreyStripeServerSide,
                     "mobfox":MobFoxServerSide,}
 
-# TODO: Logging is fucked up with unicode characters
-
-# DOMAIN = 'localhost:8080'
-#
-# Ad auction logic
-# The core of the whole damn thing
-#
-
-## Key functions
+############## HELPER FUNCTIONS ################
 def memcache_key_for_date(udid,datetime,db_key):
   return '%s:%s:%s'%(udid,datetime.strftime('%y%m%d'),db_key)
 
 def memcache_key_for_hour(udid,datetime,db_key):
   return '%s:%s:%s'%(udid,datetime.strftime('%y%m%d%H'),db_key)
+
+################### AUCTION ##################
 
 class AdAuction(object):
     MAX_ADGROUPS = 30
@@ -156,16 +149,6 @@ class AdAuction(object):
                 rpc.serverside = server_side
                 rpcs.append(rpc)
         return rpcs if multiple else rpcs[0]    
-          # 
-          # # ... do other things ...
-          # 
-          # try:
-          #     result = rpc.get_result()
-          #     if result.status_code == 200:
-          #         response = mmServerSide.html_for_response(result)
-          #         self.response.out.write("%s<br/> %s"%(mmServerSide.url,response))
-          # except urlfetch.DownloadError:
-          #   self.response.out.write("%s<br/> %s"%(mmServerSide.url,"response not fast enough"))
         
     # Runs the auction itself.  Returns the winning creative, or None if no creative matched
     @classmethod
@@ -231,7 +214,7 @@ class AdAuction(object):
                   ( 'hourly',   memcache_key_for_hour ),
                   )
         
-        #Pull ALL keys (Before prioritizing) and batch get. This is slightly (according to test timings) 
+        # Pull ALL keys (Before prioritizing) and batch get. This is slightly (according to test timings) 
         # better than filtering based on priority 
         user_keys = []
         for adgroup in all_ad_groups:

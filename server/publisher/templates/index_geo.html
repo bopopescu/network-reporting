@@ -11,37 +11,37 @@
   google.setOnLoadCallback(initMap);
 
   function initMap() {	
-	// request count data (log10 scale)
+	// request count data 
     var data_req = new google.visualization.DataTable();
-    data_req.addRows({{ geo_log_dict|length }});
+    data_req.addRows({{ geo_dict|length }});
     data_req.addColumn('string', 'Country');
-    data_req.addColumn('number', 'Requests (log10 scale)');
+    data_req.addColumn('number', 'Requests');
     data_req.addColumn('string', 'HoverText');
-    {% for key, value in geo_log_dict.iteritems %}
+    {% for key, value in geo_dict.iteritems %}
     data_req.setValue({{ forloop.counter0 }}, 0, '{{ key }}');
     data_req.setValue({{ forloop.counter0 }}, 1, {{ value.request_count }});
     data_req.setValue({{ forloop.counter0 }}, 2, '{{ key }}');
     {% endfor %}
 	
-	// impression count data (log10 scale)
+	// impression count data 
 	var data_imp = new google.visualization.DataTable();
-    data_imp.addRows({{ geo_log_dict|length }});
+    data_imp.addRows({{ geo_dict|length }});
     data_imp.addColumn('string', 'Country');
-    data_imp.addColumn('number', 'Impressions (log10 scale)');
+    data_imp.addColumn('number', 'Impressions');
     data_imp.addColumn('string', 'HoverText');
-    {% for key, value in geo_log_dict.iteritems %}
+    {% for key, value in geo_dict.iteritems %}
     data_imp.setValue({{ forloop.counter0 }}, 0, '{{ key }}');
     data_imp.setValue({{ forloop.counter0 }}, 1, {{ value.impression_count }});
     data_imp.setValue({{ forloop.counter0 }}, 2, '{{ key }}');
     {% endfor %}
 	
-	// click count data (log10 scale)
+	// click count data 
 	var data_clk = new google.visualization.DataTable();
-    data_clk.addRows({{ geo_log_dict|length }});
+    data_clk.addRows({{ geo_dict|length }});
     data_clk.addColumn('string', 'Country');
-    data_clk.addColumn('number', 'Clicks (log10 scale)');
+    data_clk.addColumn('number', 'Clicks');
     data_clk.addColumn('string', 'HoverText');
-    {% for key, value in geo_log_dict.iteritems %}
+    {% for key, value in geo_dict.iteritems %}
     data_clk.setValue({{ forloop.counter0 }}, 0, '{{ key }}');
     data_clk.setValue({{ forloop.counter0 }}, 1, {{ value.click_count }});
     data_clk.setValue({{ forloop.counter0 }}, 2, '{{ key }}');
@@ -103,17 +103,17 @@
                   </tr>
                 </tbody>
               </table>
-			  <div id="allMaps">
+			        <div id="allMaps">
 	              <div class="map-requests map-image" style="margin-left:205px;height:355px;border:1px solid #EBF2F7;">
 	                <div id="map_canvas_req"></div>
 	              </div>
-				  <div class="map-impressions map-image" style="margin-left:205px;height:355px;border:1px solid #EBF2F7;">
+				        <div class="map-impressions map-image" style="margin-left:205px;height:355px;border:1px solid #EBF2F7;">
 	                <div id="map_canvas_imp" ></div>
 	              </div>
-				  <div class="map-clicks map-image" style="margin-left:205px;height:355px;border:1px solid #EBF2F7;">
+				        <div class="map-clicks map-image" style="margin-left:205px;height:355px;border:1px solid #EBF2F7;">
 	                <div id="map_canvas_clk"></div>
 	              </div>
-			  </div>
+			        </div>
             </div>
             <div class="clear"></div>
           </section>
@@ -123,14 +123,14 @@
           <section id="dashboard-apps"> 
             <h2>Country Counts</h2>            
             <div class="appData-columnHeaders"> 
-              <table class="dataTable" id="dashboard-apps-columnHeaders"> 
+              <table class="dataTable appData-main" id="dashboard-apps-columnHeaders"> 
                 <thead> 
                   <tr> 
-                    <th class="appData-icon"></th> 
+                    <th class="appData-icon-none"></th> 
                     <th class="dataTable-name">&nbsp;</th> 
                     <th class="dataTable-data numeric">Requests</th> 
                     <th class="dataTable-data numeric">Impressions</th> 
-					<th class="dataTable-data numeric">Fillrate</th> 
+					          <th class="dataTable-data numeric">Fillrate</th> 
                     <th class="dataTable-data numeric">Clicks</th> 
                     <th class="dataTable-data numeric">CTR</th> 
                   </tr> 
@@ -141,39 +141,44 @@
               <table class="dataTable appData-main" id="dashboard-app-0-main"> 
                 <tbody> 
                   <tr> 
-                    <td class="appData-icon-none"></td> 
+                    <th class="appData-icon-none"></th> 
                     <th class="dataTable-name">Totals</th> 
                     <td class="dataTable-data numeric">{{totals.request_count|withsep}}</td> 
                     <td class="dataTable-data numeric">{{totals.impression_count|withsep}}</td> 
                     <td class="dataTable-data numeric">{{totals.fill_rate|percentage_rounded}}</td> 
                     <td class="dataTable-data numeric">{{totals.click_count|withsep}}</td> 
-					<td class="dataTable-data numeric">{{totals.ctr|percentage|withsep}}</td> 
+					          <td class="dataTable-data numeric">{{totals.ctr|percentage|withsep}}</td> 
                   </tr> 
                 </tbody> 
-              </table> 
-              <div class="appData-details" id="dashboard-app-0-details"> 
+              </table>             
+              
+              <div class="appData-details noneg" id="dashboard-app-0-details"> 
                 <div class="appData-details-inner show"> 
                   <table class="dataTable"> 
                     <tbody> 
-	                  {% for pair in geo_table %}
-						{% if pair.0|country_code_to_name %}
-	                      <tr> 
-	                        <th class="dataTable-name">{{pair.0|country_code_to_name}}</th> 
-	                        <td class="dataTable-data numeric">{{pair.1.request_count|withsep}}</td> 
-	                        <td class="dataTable-data numeric">{{pair.1.impression_count|withsep}}</td> 
-	                        <td class="dataTable-data numeric">{{pair.1.fill_rate|percentage_rounded}}</td> 
-	                        <td class="dataTable-data numeric">{{pair.1.click_count|withsep}}</td> 
-							<td class="dataTable-data numeric">{{pair.1.ctr|percentage|withsep}}</td>
-	                      </tr> 
-						{% endif %}
-  					  {% endfor %}
+                    {% for pair in geo_table %}
+                    {% if pair.0|country_code_to_name %}
+                      <tr> 
+                        <th class="appData-icon-none"></th> 
+                        <th class="dataTable-name">{{pair.0|country_code_to_name}}</th> 
+                        <td class="dataTable-data numeric">{{pair.1.request_count|withsep}}</td> 
+                        <td class="dataTable-data numeric">{{pair.1.impression_count|withsep}}</td> 
+                        <td class="dataTable-data numeric">{{pair.1.fill_rate|percentage_rounded}}</td> 
+                        <td class="dataTable-data numeric">{{pair.1.click_count|withsep}}</td> 
+                        <td class="dataTable-data numeric">{{pair.1.ctr|percentage|withsep}}</td>
+                      </tr> 
+                    {% endif %}
+                    {% endfor %}
                     </tbody> 
                   </table> 
                 </div> 
-                <a class="button button-small appData-details-toggleButton" href="#">Hide details</a> 
-                <a class="button button-small" href="/inventory/export/csv/agltb3B1Yi1pbmNyDAsSBFNpdGUYwZ0LDA">Export CSV</a> 
-                <a class="button button-small" href="/inventory/export/xls/agltb3B1Yi1pbmNyDAsSBFNpdGUYwZ0LDA">Export XLS</a> 
               </div> 
             </div> 
           </section> 
+                    
+          <div>
+            <a class="button button-small appData-details-toggleButton" href="#">Hide details</a> 
+            <a class="button button-small" href="/inventory/export/csv/agltb3B1Yi1pbmNyDAsSBFNpdGUYwZ0LDA">Export CSV</a> 
+            <a class="button button-small" href="/inventory/export/xls/agltb3B1Yi1pbmNyDAsSBFNpdGUYwZ0LDA">Export XLS</a> 
+          </div>
 {% endblock content %}

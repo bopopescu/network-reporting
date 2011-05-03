@@ -149,6 +149,15 @@ class CreateCampaignAJAXHander(RequestHandler):
             ["iAd","iAd",False],["inmobi","InMobi",False],["jumptap","Jumptap",False],["millennial","Millennial Media",False],["mobfox","MobFox",False],['custom', 'Custom Network', False]]
 
         all_adunits = AdUnitQueryManager.get_adunits(account=self.account)
+        # sorts by app name, then adunit name
+        def adunit_cmp(adunit_1, adunit_2):
+            app_cmp = cmp(adunit_1.app.name, adunit_2.app.name) 
+            if not app_cmp:
+                return cmp(adunit_1.name, adunit_2.name)
+            else:
+                return app_cmp
+                    
+        all_adunits.sort(adunit_cmp)
 
         adgroup_form['site_keys'].choices = all_adunits # needed for validation TODO: doesn't actually work
 

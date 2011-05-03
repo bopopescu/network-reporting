@@ -1984,6 +1984,11 @@ input.ui-button {
   background: #fff;
 }
 
+.creativeData {
+  padding: 10px 5px 6px 5px;
+  background: #f7f7f7;
+}
+
 .campaignData-placeholder {
   display: table-row;
 }

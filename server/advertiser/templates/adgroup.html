@@ -332,7 +332,7 @@
                 </thead>
                 <tbody>
                   {% for c in creatives %}
-                  <tr class="{% cycle 'campaignData' 'campaignData campaignData-alt' %}" id="adgroup-creatives-{{forloop.counter0}}">
+                  <tr class="creativeData alternating-color" id="adgroup-creatives-{{forloop.counter0}}">
                     <td class="campaignData-icon">
                       <input type="checkbox" name="creativeManagementForm-key" value="{{c.key}}"/>
                       {% if c.deleted %}

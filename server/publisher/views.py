@@ -379,7 +379,7 @@ class ShowAppHandler(RequestHandler):
     backfill_promo_campaigns = sorted(backfill_promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
 
 
-    return render_to_response(self.request,'publisher/show_app.html', 
+    return render_to_response(self.request,'publisher/app.html', 
         {'app': app,  
          'app_form_fragment':app_form_fragment,
          'adunit_form_fragment':adunit_form_fragment,
@@ -550,7 +550,7 @@ class AdUnitShowHandler(RequestHandler):
     
     
     # write response
-    return render_to_response(self.request,'publisher/show.html', 
+    return render_to_response(self.request,'publisher/adunit.html', 
         {'site': adunit,
          'adunit': adunit,
          'today': adunit.all_stats[-1],

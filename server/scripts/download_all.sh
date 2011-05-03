@@ -17,24 +17,34 @@ echo $1
 #     rm -rf datastore5
 #     rm -rf datastore6
 # fi
+
+
+# 
+# appcfg.py upload_data --email=olp@mopub.com --filename=datastore0 --application=mopub-experimental --url=http://mopub-experimental.appspot.com/remote_api --passin
+
+
+DESTINATION_URL="http://mopub-experimental.appspot.com/remote_api"
+DESTINATION_APP="mopub-experimental"
+DESTINATION_PASS="N47935"
+
 echo N47935 | appcfg.py download_data --application=mopub-inc --url=http://mopub-inc.appspot.com/remote_api --filename=datastore0 --email=olp@mopub.com --passin --kind=User
-echo bar | appcfg.py upload_data --email=foobar@nowhere.com --filename=datastore0 --application=mopub-inc --url=http://localhost:8000/remote_api --passin
+echo $DESTINATION_PASS | appcfg.py upload_data --email=olp@mopub.com --filename=datastore0 --application=$DESTINATION_APP --url=$DESTINATION_URL --passin
 
 echo N47935 | appcfg.py download_data --application=mopub-inc --url=http://mopub-inc.appspot.com/remote_api --filename=datastore1 --email=olp@mopub.com --passin --kind=Account
-echo bar | appcfg.py upload_data --email=foobar@nowhere.com --filename=datastore1 --application=mopub-inc --url=http://localhost:8000/remote_api --passin
+echo $DESTINATION_PASS | appcfg.py upload_data --email=olp@mopub.com --filename=datastore1 --application=$DESTINATION_APP --url=$DESTINATION_URL --passin
 
 echo N47935 | appcfg.py download_data --application=mopub-inc --url=http://mopub-inc.appspot.com/remote_api --filename=datastore2 --email=olp@mopub.com --passin --kind=App
-echo bar | appcfg.py upload_data --email=foobar@nowhere.com --filename=datastore2 --application=mopub-inc --url=http://localhost:8000/remote_api --passin
+echo $DESTINATION_PASS | appcfg.py upload_data --email=olp@mopub.com --filename=datastore2 --application=$DESTINATION_APP --url=$DESTINATION_URL --passin
 
 echo N47935 | appcfg.py download_data --application=mopub-inc --url=http://mopub-inc.appspot.com/remote_api --filename=datastore3 --email=olp@mopub.com --passin --kind=Site
-echo bar | appcfg.py upload_data --email=foobar@nowhere.com --filename=datastore3 --application=mopub-inc --url=http://localhost:8000/remote_api --passin
+echo $DESTINATION_PASS | appcfg.py upload_data --email=olp@mopub.com --filename=datastore3 --application=$DESTINATION_APP --url=$DESTINATION_URL --passin
 
 echo N47935 | appcfg.py download_data --application=mopub-inc --url=http://mopub-inc.appspot.com/remote_api --filename=datastore4 --email=olp@mopub.com --passin --kind=Campaign
-echo bar | appcfg.py upload_data --email=foobar@nowhere.com --filename=datastore4 --application=mopub-inc --url=http://localhost:8000/remote_api --passin
+echo $DESTINATION_PASS | appcfg.py upload_data --email=olp@mopub.com --filename=datastore4 --application=$DESTINATION_APP --url=$DESTINATION_URL --passin
 
 echo N47935 | appcfg.py download_data --application=mopub-inc --url=http://mopub-inc.appspot.com/remote_api --filename=datastore5 --email=olp@mopub.com --passin --kind=AdGroup
-echo bar | appcfg.py upload_data --email=foobar@nowhere.com --filename=datastore5 --application=mopub-inc --url=http://localhost:8000/remote_api --passin
+echo $DESTINATION_PASS | appcfg.py upload_data --email=olp@mopub.com --filename=datastore5 --application=$DESTINATION_APP --url=$DESTINATION_URL --passin
 
 echo N47935 | appcfg.py download_data --application=mopub-inc --url=http://mopub-inc.appspot.com/remote_api --filename=datastore6 --email=olp@mopub.com --passin --kind=Creative
-echo bar | appcfg.py upload_data --email=foobar@nowhere.com --filename=datastore6 --application=mopub-inc --url=http://localhost:8000/remote_api --passin
+echo $DESTINATION_PASS | appcfg.py upload_data --email=olp@mopub.com --filename=datastore6 --application=$DESTINATION_APP --url=$DESTINATION_URL --passin
 

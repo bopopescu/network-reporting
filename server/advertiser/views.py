@@ -120,6 +120,7 @@ class AdGroupIndexHandler(RequestHandler):
                                   {'adgroups':adgroups,
                                    'graph_adgroups': graph_adgroups,
                                    'start_date': days[0],
+                                   'end_date':days[-1],
                                    'date_range': self.date_range,
                                    'apps' : apps,
                                    'totals': reduce(lambda x, y: x+y.stats, adgroups, StatsModel()),

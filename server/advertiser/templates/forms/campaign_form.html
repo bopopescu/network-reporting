@@ -79,6 +79,13 @@
                           {% for error in form.bid.errors %}
                           <div class="form-error-text">{{error}}</div> 
                           {% endfor %}
+                          <span class='campaignDependent promo'>
+                              <a class='whatsthis' id='promo-cpm-helpLink' href='#'>What's this?</a>
+                              <div id='promo-cpm-helpContent' class='hidden'>
+                                <h3>Promotional CPM</h3>
+                                <p>MoPub uses CPM to prioritize which promotional campaign will be displayed.  To raise the priority of a campaign, increase the CPM.</p>
+                              </div>
+                          </span>
                         </dd>
                       </div>
                       <div class="campaignDependent gtee">

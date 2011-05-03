@@ -41,11 +41,10 @@
                 }
         });
 
-    $('#reports-view-editReportButton').button({icons: {primary: 'ui-icon-circle-plus'}})
+    $('#reports-view-editReportButton').button({icons: {primary: 'ui-icon-wrench'}})
         .click(function(e) {
                 e.preventDefault();
-                //get key
-                //var report_form = get form
+                var report_form = $('#reportForm-container');
                 report_form.dialog({width:1000});
                 });
  });

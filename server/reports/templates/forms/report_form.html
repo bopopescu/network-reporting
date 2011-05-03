@@ -1,60 +1,20 @@
 {% load filters %}
-{% comment %}
-{{ form.name.as_widget }}
-{{ form.d1.as_widget|label:"thang"}}
-{{ form.d2.as_widget }}
-{{ form.d3.as_widget }}
-THIS IS HOW IT SHOULD BE DONE
-{% endcomment %}
 
 <dl class='formFields'>
     <dt>Report Name:</dt>
     <dd>
-    <input type='text' name='name' placeholder='Report Name'></input></dd>
+    <input type='text' name='name' value='{{form.name.value}}' placeholder='Report Name'></input></dd>
     <dt>Report Breakdown:</dt>
     <dd>
-    <select name='d1' id='reportForm-d1-select'>
-        <option value='' id='reportForm-d1-none'>-------</option>
-        <option value='app' id='reportForm-d1-app-opt'>App</option>
-        <option value='adunit' id='reportForm-d1-adunit-opt'>Ad Unit</option>
-        <option value='campaign' id='reportForm-d1-campaign-opt'>Campaign</option>
-        <option value='creative' id='reportForm-d1-creative-opt'>Creative</option>
-        <option value='priority' id='reportForm-d1-priority-opt'>Priority</option>
-        <option value='month' id='reportForm-d1-month-opt'>Month</option>
-        <option value='week' id='reportForm-d1-week-opt'>Week</option>
-        <option value='day' id='reportForm-d1-day-opt'>Day</option>
-        <option value='hour' id='reportForm-d1-hour-opt'>Hour</option>
-    </select>
-    &nbsp;
-    >
-    &nbsp;
-    <select name='d2' id='reportForm-d2-select'>
-        <option value='' id='reportForm-d2-none'>-------</option>
-        <option value='app' id='reportForm-d2-app-opt'>App</option>
-        <option value='adunit' id='reportForm-d2-adunit-opt'>Ad Unit</option>
-        <option value='campaign' id='reportForm-d2-campaign-opt'>Campaign</option>
-        <option value='creative' id='reportForm-d2-creative-opt'>Creative</option>
-        <option value='priority' id='reportForm-d2-priority-opt'>Priority</option>
-        <option value='month' id='reportForm-d2-month-opt'>Month</option>
-        <option value='week' id='reportForm-d2-week-opt'>Week</option>
-        <option value='day' id='reportForm-d2-day-opt'>Day</option>
-        <option value='hour' id='reportForm-d2-hour-opt'>Hour</option>
-    </select>
-    &nbsp;
-    >
-    &nbsp;
-    <select name='d3' id='reportForm-d3-select'>
-        <option value='' id='reportForm-d3-none'>-------</option>
-        <option value='app' id='reportForm-d3-app-opt'>App</option>
-        <option value='adunit' id='reportForm-d3-adunit-opt'>Ad Unit</option>
-        <option value='campaign' id='reportForm-d3-campaign-opt'>Campaign</option>
-        <option value='creative' id='reportForm-d3-creative-opt'>Creative</option>
-        <option value='priority' id='reportForm-d3-priority-opt'>Priority</option>
-        <option value='month' id='reportForm-d3-month-opt'>Month</option>
-        <option value='week' id='reportForm-d3-week-opt'>Week</option>
-        <option value='day' id='reportForm-d3-day-opt'>Day</option>
-        <option value='hour' id='reportForm-d3-hour-opt'>Hour</option>
-    </select>
+    {{ form.d1|attrs:'{"class":"dim-selectmenu","id":"d1"}'|raw }}
+    <span id="d2-show">
+    &nbsp;>&nbsp;
+    {{ form.d2|attrs:'{"class":"dim-selectmenu","id":"d2"}'|raw }}
+    </span>
+    <span id='d3-show'>
+    &nbsp;>&nbsp;
+    {{ form.d2|attrs:'{"class":"dim-selectmenu","id":"d3"}'|raw }}
+    </span>
     </dd>
     <dt>Dates</dt>
     <dd>

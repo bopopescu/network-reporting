@@ -115,8 +115,10 @@ class ViewReportHandler(RequestHandler):
     def get(self, report_key, *args, **kwargs):
         man = ReportQueryManager(self.account)
         report = man.get_report_by_key(report_key)
+        report_frag = ReportForm(instance=report)
         return render_to_response(self.request, 'reports/view_report.html',
-                dict(report=report))
+                dict(report=report,
+                     report_fragment = report_frag,))
     def post(self, *args, **kwargs):
         logging.warning("\n\nApathy\n\n")
         return

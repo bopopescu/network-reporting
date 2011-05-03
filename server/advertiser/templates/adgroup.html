@@ -53,20 +53,21 @@
                             <td class="stats-breakdown-value all"><span class="inner">{{totals.revenue|currency}}</span></td>
                             <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
                         </tr>
-                    {% endif %} {% if campaign.network %}
-                        <tr class="active" id="stats-breakdown-attempts">
-                            <td class="stats-breakdown-value today"><span class="inner">{{today.request_count|withsep}}</span></td>
-                            <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.request_count|withsep}}</span></td>
-                            <td class="stats-breakdown-value all"><span class="inner">{{totals.request_count|withsep}}</span></td>
-                            <th class="stats-breakdown-name"><span class="inner">Attempts</span></th>
-                        </tr>
-                    {% endif %}
-                      <tr {% if campaign.promo %} class="active" {% endif %} id="stats-breakdown-impressions">
+                    {% endif %} 
+                      <tr {% if campaign.promo or campaign.network %} class="active" {% endif %} id="stats-breakdown-impressions">
                         <td class="stats-breakdown-value today"><span class="inner">{{today.impression_count|withsep}}</span></td>
                         <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.impression_count|withsep}}</span></td>
                         <td class="stats-breakdown-value all"><span class="inner">{{totals.impression_count|withsep}}</span></td>
                         <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
                       </tr>
+                  {% if campaign.network %}
+                      <tr id="stats-breakdown-attempts">
+                          <td class="stats-breakdown-value today"><span class="inner">{{today.request_count|withsep}}</span></td>
+                          <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.request_count|withsep}}</span></td>
+                          <td class="stats-breakdown-value all"><span class="inner">{{totals.request_count|withsep}}</span></td>
+                          <th class="stats-breakdown-name"><span class="inner">Attempts</span></th>
+                      </tr>
+                  {% endif %}
                       <tr id="stats-breakdown-clicks">
                           <td class="stats-breakdown-value today"><span class="inner"><span class="muted unbold">({{today.ctr|percentage}})</span> {{today.click_count|withsep}}</span></td>
                           <td class="stats-breakdown-value yesterday"><span class="inner"><span class="muted unbold">({{yesterday.ctr|percentage}})</span> {{yesterday.click_count|withsep}}</span></td>

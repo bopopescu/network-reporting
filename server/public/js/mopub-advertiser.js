@@ -449,13 +449,13 @@ var mopub = mopub || {};
         $('table').each(function(){
             // Show them where there is nothing else
             var visible = $(this).find('.campaignData:visible');
-            // alert(visible.length);
             if (visible.length === 0){
                 var placeholder = $(this).find('.campaignData-placeholder');
                 placeholder.show();
             }
         });
     }
+
     function get_radio_label(value) {
         return "campaigns-filterOptions-option-"+value.split("campaign-status-")[1];
     }
@@ -638,6 +638,32 @@ var mopub = mopub || {};
         }
     }
 
+    
+    function hideEmptyDirects(){
+        var somethingToDisplay = false;
+         $.each([$('#campaignDataTable-direct-high'),
+                 $('#campaignDataTable-direct-low'),
+                 $('#campaignDataTable-direct-normal')],function(){
+                     $(this).show();
+                 });
+        
+        function hideIfEmpty(){
+             var visible = $(this).find('.campaignData:visible');
+             if (visible.length === 0){
+                 $(this).hide();
+             }else{
+                 somethingToDisplay = true;
+             }
+        }
+        $.each([$('#campaignDataTable-direct-high'),
+                 $('#campaignDataTable-direct-low')],
+                 hideIfEmpty);
+        if(somethingToDisplay){
+             $.each([$('#campaignDataTable-direct-normal')],
+                         hideIfEmpty);
+        }        
+    }
+
     function applyFilters(){
         var statusFilter = $("#campaigns-filterOptions").find(':checked').val();
         var appFilter = $('#campaigns-appFilterOptions').val();
@@ -645,6 +671,8 @@ var mopub = mopub || {};
         // Hide all the campaigns, then show the ones that pass the filters
         $('.campaignData').hide();
         $('.'+appFilter).filter('.'+statusFilter).show();
+        
+        hideEmptyDirects();
         addPlaceholder();
         refreshAlternatingColor();
         calcRollups();
@@ -727,13 +755,15 @@ var mopub = mopub || {};
         });
       });
 
+    //////// Set up the status buttons at the top ///////
     $('#campaign-status-options')
       .change(function(e) {
-          var val = $(this).val();
-          console.log(val);
+          var val = $(this).val();  
           $('#fake-campaignForm').find('#action').attr('value', val).end().submit();
           });
-
+          
+     // Delete redunundant first option
+     $('#campaign-status-options-menu').find('li').first().hide();
     
     /*---------------------------------------/
     / Chart
@@ -802,11 +832,11 @@ var mopub = mopub || {};
               if(activeMetric == 'revenue') {
                 text = '$' + Highcharts.numberFormat(this.value, 0);
               } else {
-                if (this.value > 1000000000) {
+                if (this.value >= 1000000000) {
                   return Highcharts.numberFormat(this.value / 1000000000, 0) + "B";
-                } else if (this.value > 1000000) {
+                } else if (this.value >= 1000000) {
                   return Highcharts.numberFormat(this.value / 1000000, 0) + "M";
-                } else if (this.value > 1000) {
+                } else if (this.value >= 1000) {
                   return Highcharts.numberFormat(this.value / 1000, 0) + "K";
                 } else if (this.value > 0) {
                   return Highcharts.numberFormat(this.value, 0);

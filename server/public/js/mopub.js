@@ -311,8 +311,4 @@ var mopub = mopub || {};
     log = function(){ return; }
   }
 
-
-          
-
-    
 })(this.jQuery);

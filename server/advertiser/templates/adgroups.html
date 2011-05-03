@@ -4,7 +4,7 @@
 
 {% block navLinks %}
 <li><a href="{% url publisher_index %}">Dashboard</a></li>
-<li class="active"><a href="{% url advertiser_campaign %}">Campaigns</a></li>{% endblock navLinks %}
+<li class="active"><a href="{% url advertiser_campaign %}">Campaign</a></li>{% endblock navLinks %}
 {% block pageTitle %}<h1>{% ifequal account.status 'step4' %}Step 4: Set up an ad campaign{% else %}Campaigns{% endifequal %}</h1>{% endblock pageTitle %}
 {% block titleBarRight %}
     {% ifequal account.status 'step4' %}

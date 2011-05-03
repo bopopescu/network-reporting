@@ -379,14 +379,19 @@
     		    </div>
 
 			      {% else %}
-            <table class="dataTable appData-main">
-              <tbody>
-                <tr>
-                  <td class="campaignData-icon"></td>
-                  <th class="dataTable-name"><span class="muted">None</span></th>
-                </tr>
-              </tbody>
-            </table>
+			      <div class="appData alternating-color">	
+    				<div class="appData-details noneg">
+    	      <div class="appData-details-inner show">
+    	        <table class="dataTable appData-main">
+    						<thead>
+    						  <tr>
+    						    <th class="dataTable-name big"><span class="muted">No campaigns targeting {{app.name}}</span></th>
+    						  </tr>
+    			      </thead>
+    			    </table>
+    			  <div>
+    			  <div>
+    			  <div>    			      
             {% endif %}
             </div>                  	      
           </section>

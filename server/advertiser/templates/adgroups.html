@@ -57,7 +57,7 @@
             Before you set up your ad campaigns, we recommend that you set up your App inventory.  Visit the <a href="{% url publisher_index %}">Dashboard</a> to add your Apps.
           </div>
 {% endif %}
-           {% comment %}
+          <h2>Real-time stats from {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h2>
           <div class="separated">
             <section class="offset nomargin" id="dashboard-stats">
               <div class="stats">
@@ -120,7 +120,6 @@
               <div class="clear"></div>
             </section>
           </div>
-          {% endcomment %}
           <section id="dashboard-campaigns">
             <div id="campaigns-control-panel">
               <div class="center-button-bank">

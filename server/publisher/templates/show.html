@@ -2,7 +2,7 @@
 {% block pageTitle %}
           <div class="breadcrumb">
             <a class="linkIcon breadcrumb-back" href="{% url publisher_app_show app_key=adunit.app_key.key %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to App</a>
-            <h1>{{adunit.name}}</h1>
+            <h1>Ad Unit: {{adunit.name}}</h1>
           </div>{% endblock pageTitle %}
 {% block titleBarRight %}
             <span class="titlebar-right">
@@ -17,8 +17,6 @@
             There are no campaigns targeting this ad unit.  To show ads here, set up a new ad campaign or add this ad unit to an existing campaign on the <a href="{% url advertiser_campaign %}">Campaigns</a> page.
           </div>
 {% endif %}
-
-          <h2>Real-time stats from {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h2>
           <section id="dashboard-adunitEditForm" class="hidden">
             <div>
               <a name="adunitForm" class="hidden">anchor</a>
@@ -38,6 +36,7 @@
             </div>
           </section>
           <section class="offset nomargin" id="dashboard-stats">
+            <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
             <div class="stats">
               <div class="stats-breakdown">
                 <table>
@@ -112,7 +111,7 @@
               <div id="adserverTest-iFrame-src" style="display:none;">{% url advertiser_adserver_test %}?id={{adunit.key}}</div>    
             </div>
 	        
-    	      <h2>Campaigns targeting {{adunit.name}}</h2>
+    	      <h2>Campaigns Targeting {{adunit.name}}</h2>
 	        
             <div>
             {% if adunit.adgroups %}

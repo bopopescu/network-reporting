@@ -1081,6 +1081,11 @@ label.error {
   width:205px;
 }
 
+.stats-chart-title{
+text-align: center;
+margin: -12px 0 8px 0;
+}
+
 .stats-chart {
   margin-left: 205px;
   width: 695px;

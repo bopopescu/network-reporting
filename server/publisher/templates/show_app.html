@@ -2,7 +2,7 @@
 {% block pageTitle %}
           <div class="breadcrumb">
             <a class="linkIcon breadcrumb-back" href="{% url publisher_index %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Dashboard</a>
-            <h1>{{app.name}}</h1>
+            <h1>App: {{app.name}}</h1>
           </div>
 {% endblock pageTitle %}
 {% block messageCenter %}{% endblock messageCenter %}
@@ -30,9 +30,8 @@
               </form>
             </div>
           </section>
-          
-          <h2>Real-time stats from {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h2>
           <section class="offset nomargin" id="dashboard-stats">
+            <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
             <div class="stats">
               <div class="stats-breakdown">
                 <table>

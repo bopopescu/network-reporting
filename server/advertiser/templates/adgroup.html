@@ -3,7 +3,7 @@
 {% block pageTitle %}
           <div class="breadcrumb">
             <a class="linkIcon breadcrumb-back" href="{% url advertiser_campaign %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Campaigns</a>
-            <h1>{{adgroup.name}}</h1>
+            <h1>Campaign: {{adgroup.name}}</h1>
           </div>
 {% endblock pageTitle %}
 {% block messageCenter %}{% endblock messageCenter %}
@@ -38,10 +38,9 @@
             This campaign will need to have at least one <strong>Creative</strong> in order to serve.  Set up a creative below.
           </div>
 {% endif %}
-
-          <h2>Real-time stats from {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h2>
           <div class="separated" id="chartWrapper">
             <section class="offset nomargin" id="dashboard-stats">
+               <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
               <div class="stats">
                 <div class="stats-breakdown">
                   <table>
@@ -161,7 +160,7 @@
            </section>
             
            <section id="dashboard-apps">
-                <h2>Targeting breakdown</h2>
+                <h2>Targeting Breakdown <span class="muted">({{start_date|format_date_compact}} to {{end_date|format_date_compact}})</span></h2>
                 <div class="appData-columnHeaders">
                   <table class="dataTable" id="dashboard-apps-columnHeaders" width="100%">
                     <thead>

@@ -22,7 +22,7 @@ CO = 'country'
 DEV = 'device'
 OS = 'os'
 KEY = 'kw'
-CHOICES = [('None','--------'), (APP, 'App'), (AU, 'Ad Unit'), (CAMP, 'Campaign'), (CRTV, 'Creative'), (P, 'Priority'), (MO, 'Month'), (WEEK, 'Week'), (DAY, 'Day'), (HOUR, 'Hour'), (CO, 'Country'),] #(DEV, 'Device'), (OS, 'Operating System'), (KEY, 'Keywords')]
+CHOICES = [('','------------'), (APP, 'App'), (AU, 'Ad Unit'), (CAMP, 'Campaign'), (CRTV, 'Creative'), (P, 'Priority'), (MO, 'Month'), (WEEK, 'Week'), (DAY, 'Day'), (HOUR, 'Hour'), (CO, 'Country'),] #(DEV, 'Device'), (OS, 'Operating System'), (KEY, 'Keywords')]
 TARG = 'targeting' # I don't know what this is
 
 

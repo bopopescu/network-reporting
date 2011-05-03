@@ -47,5 +47,10 @@
                 var report_form = $('#reportForm-container');
                 report_form.dialog({width:1000});
                 });
+    $('.dim-selectmenu').selectmenu({
+        style: 'popup',
+        maxHeight:300,
+        width:100
+    });
  });
 })(this.jQuery);

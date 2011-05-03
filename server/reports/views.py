@@ -96,7 +96,6 @@ class GenReportHandler(RequestHandler):
     def post(self, report):
         man = ReportQueryManager(self.account)
         report = man.get_report_by_key(report)
-        report.status = 'pending'
         man.put(report)
         report.data = report.gen_data()
         logging.warning(report.data)

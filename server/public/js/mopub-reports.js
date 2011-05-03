@@ -40,5 +40,13 @@
                     $('#reports-reportAddForm').slideUp('fast');
                 }
         });
+
+    $('#reports-view-editReportButton').button({icons: {primary: 'ui-icon-circle-plus'}})
+        .click(function(e) {
+                e.preventDefault();
+                //get key
+                //var report_form = get form
+                report_form.dialog({width:1000});
+                });
  });
 })(this.jQuery);

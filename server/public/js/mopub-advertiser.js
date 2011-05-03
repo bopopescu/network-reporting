@@ -616,11 +616,11 @@ var mopub = mopub || {};
               if(activeMetric == 'revenue') {
                 text = '$' + Highcharts.numberFormat(this.value, 0);
               } else {
-                if (this.value > 1000000000) {
+                if (this.value >= 1000000000) {
                   return Highcharts.numberFormat(this.value / 1000000000, 0) + "B";
-                } else if (this.value > 1000000) {
+                } else if (this.value >= 1000000) {
                   return Highcharts.numberFormat(this.value / 1000000, 0) + "M";
-                } else if (this.value > 1000) {
+                } else if (this.value >= 1000) {
                   return Highcharts.numberFormat(this.value / 1000, 0) + "K";
                 } else if (this.value > 0) {
                   return Highcharts.numberFormat(this.value, 0);

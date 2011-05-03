@@ -53,13 +53,6 @@
                             <td class="stats-breakdown-value all"><span class="inner">{{totals.revenue|currency}}</span></td>
                             <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
                         </tr>
-                    {% endif %} {% if campaign.promo %}
-                        <tr class="active" id="stats-breakdown-conversions">
-                            <td class="stats-breakdown-value today"><span class="inner">{{today.conversion_count|withsep}}</span></td>
-                            <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.conversion_count|withsep}}</span></td>
-                            <td class="stats-breakdown-value all"><span class="inner">{{totals.conversion_count|withsep}}</span></td>
-                            <th class="stats-breakdown-name"><span class="inner">Conversions</span></th>
-                        </tr>
                     {% endif %} {% if campaign.network %}
                         <tr class="active" id="stats-breakdown-attempts">
                             <td class="stats-breakdown-value today"><span class="inner">{{today.request_count|withsep}}</span></td>
@@ -68,7 +61,7 @@
                             <th class="stats-breakdown-name"><span class="inner">Attempts</span></th>
                         </tr>
                     {% endif %}
-                      <tr id="stats-breakdown-impressions">
+                      <tr {% if campaign.promo %} class="active" {% endif %} id="stats-breakdown-impressions">
                         <td class="stats-breakdown-value today"><span class="inner">{{today.impression_count|withsep}}</span></td>
                         <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.impression_count|withsep}}</span></td>
                         <td class="stats-breakdown-value all"><span class="inner">{{totals.impression_count|withsep}}</span></td>
@@ -80,6 +73,14 @@
                           <td class="stats-breakdown-value all"><span class="inner"><span class="muted unbold">({{totals.ctr|percentage}})</span> {{adunit.stats.click_count|withsep}}</span></td>
                           <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
                       </tr>
+                  {% if campaign.promo %}
+                      <tr id="stats-breakdown-conversions">
+                          <td class="stats-breakdown-value today"><span class="inner">{{today.conversion_count|withsep}}</span></td>
+                          <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.conversion_count|withsep}}</span></td>
+                          <td class="stats-breakdown-value all"><span class="inner">{{totals.conversion_count|withsep}}</span></td>
+                          <th class="stats-breakdown-name"><span class="inner">Conversions</span></th>
+                      </tr>
+                  {% endif %}
                       <tr id="stats-breakdown-users">
                         <td class="stats-breakdown-value today"><span class="inner">{{today.user_count|withsep}}</span></td>
                         <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.user_count|withsep}}</span></td>

@@ -849,6 +849,10 @@ dl.formFields.thin {
   margin: 1px 0 0 8px;
 }
 
+.formFields .helper-text {
+  margin-top: 3px;
+}
+
 .ie7 .formFields-field-help, .ie6 .formFields-field-help {
   display: inline;
 }

@@ -646,6 +646,8 @@ class AdHandler(webapp.RequestHandler):
                     #an ad network that doesn't serve fulls
                     network_center = True
                     format = (300, 250)
+                else:
+                    format = (320,480)    
           
             template_name = c.ad_type
             #css to center things

@@ -47,10 +47,218 @@
                 var report_form = $('#reportForm-container');
                 report_form.dialog({width:1000});
                 });
-    $('.dim-selectmenu').selectmenu({
+    var selects = $('.dim-selectmenu').selectmenu({
         style: 'popup',
         maxHeight:300,
         width:100
     });
+    d1_sel = $(selects[0]);
+    d2_sel = $(selects[1]);
+    d3_sel = $(selects[2]);
+
+    $('#d1').change(
+        function(e) {
+            e.preventDefault();
+            d1_validate($(this));
+            d2_validate($('#d2'));
+        });
+
+
+    function d1_validate(obj) {
+            var idx = obj.selectmenu('index');
+            //start with everything enabled
+            for (var i = 0; i < 11; i++) {
+                d3_sel.selectmenu('enable', i);
+                d2_sel.selectmenu('enable', i);
+            }
+            var d2_idx = d2_sel.selectmenu("index");
+            var d3_idx = d3_sel.selectmenu("index");
+            $('#d2-show').show();
+            switch(obj.val()) {
+                case '':
+                    d2_sel.selectmenu("index", 0);
+                    d3_sel.selectmenu("index", 0);
+                    $('#d2-show').hide();
+                    $('#d3-show').hide();
+                    break;
+                case 'adunit':
+                    if (d2_idx == 2) {
+                        d2_sel.selectmenu("index", 0);
+                    }
+                    if (d3_idx == 2) {
+                        d3_sel.selectmenu("index", 0);
+                    }
+                    d2_sel.selectmenu('disable', '2');
+                    d3_sel.selectmenu('disable', '2');
+
+                case 'app':
+                    if (d2_idx == 1) {
+                        d2_sel.selectmenu("index", 0);
+                    }
+                    if (d3_idx == 1) {
+                        d3_sel.selectmenu("index", 0);
+                    }
+                    d2_sel.selectmenu('disable', '1');
+                    d3_sel.selectmenu('disable', '1');
+                    break;
+
+                case 'creative':
+                    if (d2_idx == 4) {
+                        d2_sel.selectmenu("index", 0);
+                    }
+                    if (d3_idx == 4) {
+                        d3_sel.selectmenu("index", 0);
+                    }
+                    d2_sel.selectmenu('disable', '4');
+                    d3_sel.selectmenu('disable', '4');
+
+                case 'campaign':
+                    if (d2_idx == 3) {
+                        d2_sel.selectmenu("index", 0);
+                    }
+                    if (d3_idx == 3) {
+                        d3_sel.selectmenu("index", 0);
+                    }
+                    d2_sel.selectmenu('disable', '3');
+                    d3_sel.selectmenu('disable', '3');
+
+                case 'priority':
+                    if (d2_idx == 5) {
+                        d2_sel.selectmenu("index", 0);
+                    }
+                    if (d3_idx == 5) {
+                        d3_sel.selectmenu("index", 0);
+                    }
+                    d2_sel.selectmenu('disable', '5');
+                    d3_sel.selectmenu('disable', '5');
+                    break;
+                case 'hour':
+                    if (d2_idx == 9) {
+                        d2_sel.selectmenu("index", 0);
+                    }
+                    if (d3_idx == 9) {
+                        d3_sel.selectmenu("index", 0);
+                    }
+                    d2_sel.selectmenu('disable', '9');
+                    d3_sel.selectmenu('disable', '9');
+                case 'day':
+                    if (d2_idx == 8) {
+                        d2_sel.selectmenu("index", 0);
+                    }
+                    if (d3_idx == 8) {
+                        d3_sel.selectmenu("index", 0);
+                    }
+                    d2_sel.selectmenu('disable', '8');
+                    d3_sel.selectmenu('disable', '8');
+                case 'week':
+                    if (d2_idx == 7) {
+                        d2_sel.selectmenu("index", 0);
+                    }
+                    if (d3_idx == 7) {
+                        d3_sel.selectmenu("index", 0);
+                    }
+                    d2_sel.selectmenu('disable', '7');
+                    d3_sel.selectmenu('disable', '7');
+                case 'month':
+                    if (d2_idx == 6) {
+                        d2_sel.selectmenu("index", 0);
+                    }
+                    if (d3_idx == 6) {
+                        d3_sel.selectmenu("index", 0);
+                    }
+                    d2_sel.selectmenu('disable', '6');
+                    d3_sel.selectmenu('disable', '6');
+                    break;
+                case 'country':
+                    if (d2_idx == 10) {
+                        d2_sel.selectmenu("index", 0);
+                    }
+                    if (d3_idx == 10) {
+                        d3_sel.selectmenu("index", 0);
+                    }
+                    d2_sel.selectmenu('disable', '10');
+                    d3_sel.selectmenu('disable', '10');
+                    break;
+                default:
+                    break;
+            }
+    }
+    $('#d2').change(
+        function(e) {
+            e.preventDefault();
+            d1_validate($('#d1'));
+            d2_validate($(this));
+        });
+
+    function d2_validate(obj) {
+        var idx = obj.selectmenu('index');
+        //start with everything enabled
+        var d3_idx = d3_sel.selectmenu("index");
+        $('#d3-show').show();
+        switch(obj.val()) {
+            case '':
+                d3_sel.selectmenu("index", 0);
+                $('#d3-show').hide();
+                break;
+            case 'adunit':
+                if (d3_idx == 2) {
+                    d3_sel.selectmenu("index", 0);
+                }
+                d3_sel.selectmenu('disable', '2');
+            case 'app':
+                if (d3_idx == 1) {
+                    d3_sel.selectmenu("index", 0);
+                }
+                d3_sel.selectmenu('disable', '1');
+                break;
+
+            case 'creative':
+                if (d3_idx == 4) {
+                    d3_sel.selectmenu("index", 0);
+                }
+                d3_sel.selectmenu('disable', '4');
+            case 'campaign':
+                if (d3_idx == 3) {
+                    d3_sel.selectmenu("index", 0);
+                }
+                d3_sel.selectmenu('disable', '3');
+            case 'priority':
+                if (d3_idx == 5) {
+                    d3_sel.selectmenu("index", 0);
+                }
+                d3_sel.selectmenu('disable', '5');
+                break;
+
+            case 'hour':
+                if (d3_idx == 9) {
+                    d3_sel.selectmenu("index", 0);
+                }
+                d3_sel.selectmenu('disable', '9');
+            case 'day':
+                if (d3_idx == 8) {
+                    d3_sel.selectmenu("index", 0);
+                }
+                d3_sel.selectmenu('disable', '8');
+            case 'week':
+                if (d3_idx == 7) {
+                    d3_sel.selectmenu("index", 0);
+                }
+                d3_sel.selectmenu('disable', '7');
+            case 'month':
+                if (d3_idx == 6) {
+                    d3_sel.selectmenu("index", 0);
+                }
+                d3_sel.selectmenu('disable', '6');
+                break;
+            case 'country':
+                if (d3_idx == 10) {
+                    d3_sel.selectmenu("index", 0);
+                }
+                d3_sel.selectmenu('disable', '10');
+                break;
+            default:
+                break;
+        }
+    }
  });
 })(this.jQuery);

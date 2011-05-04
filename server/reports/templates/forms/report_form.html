@@ -7,13 +7,13 @@
     <dt>Report Breakdown:</dt>
     <dd>
     {{ form.d1|attrs:'{"class":"dim-selectmenu","id":"d1"}'|raw }}
-    <span id="d2-show">
+    <span id="d2-show" class='hidden'>
     &nbsp;>&nbsp;
     {{ form.d2|attrs:'{"class":"dim-selectmenu","id":"d2"}'|raw }}
-    </span>
-    <span id='d3-show'>
+    <span id='d3-show' class='hidden'>
     &nbsp;>&nbsp;
     {{ form.d2|attrs:'{"class":"dim-selectmenu","id":"d3"}'|raw }}
+    </span>
     </span>
     </dd>
     <dt>Dates</dt>

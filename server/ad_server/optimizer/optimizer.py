@@ -2,6 +2,12 @@ from advertiser.models import Creative
 from publisher.models import Site as AdUnit
 import datetime
 import logging
+import random
+
+from ad_server.debug_console import trace_logging
+
+SAMPLING_FRACTION = .03 # We use a default sampling rate of 3 per 100
+SAMPLING_ECPM = .50 # We use 50 cents as a representative ecpm
 
 def get_ctr(adunit_context, creative, min_sample_size=1000, default_ctr=0.03, dt=datetime.datetime.now()):
     """ Returns the appropriate click through rate for a given adunit-creative
@@ -36,3 +42,20 @@ def get_ecpm(adunit_context, creative, min_sample_size=1000, default_ctr=0.03, d
         return float(ctr * creative.ad_group.cpc * 1000) 
     elif creative.ad_group.cpm is not None:
         return float(creative.ad_group.cpm) 
+        
+        
+def get_ecpms(adunit_context, creatives, sampling_fraction=SAMPLING_FRACTION, sampling_ecpm=SAMPLING_ECPM):
+    """ Returns a dict: k=creative, v=ecpm, 
+    With some probability, it insteadreturns a constant for all values"""
+    rand_dec = random.random()
+    use_sampling_constant = (rand_dec < sampling_fraction)
+    ecpm_dict = {}
+    trace_logging.warning("Sampled from adunit: %s" % str(adunit_context.adunit.key()))
+    for c in creatives:
+        if use_sampling_constant:
+            ecpm = sampling_ecpm
+        else:
+            ecpm = get_ecpm(adunit_context, c)
+        ecpm_dict[c] = ecpm
+        
+    return ecpm_dict

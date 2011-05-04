@@ -265,7 +265,7 @@ class AdAuction(object):
         trace_logging.info(" Beginning Auction")
         trace_logging.info("#####################")
         
-        # if any ad groups were returned, find the creatives that match the requested format in all candidates
+        # If any ad groups were returned, find the creatives that match the requested format in all candidates
         if len(all_ad_groups) > 0:
             trace_logging.info("All Eligible Campaigns: %s"%[str(a.name) for a in all_ad_groups])
             all_creatives = adunit_context.creatives
@@ -280,12 +280,10 @@ class AdAuction(object):
                         continue
                     players = adunit_context.get_creatives_for_adgroups(eligible_adgroups)
                     
-                    # construct dict: k=player, v=ecpm
-                    player_ecpm_dict = {}
-                    for p in players:
-                        ecpm = optimizer.get_ecpm(adunit_context, p)
-                        player_ecpm_dict[p] = ecpm
-                        trace_logging.warning(" Player eCPM: %s" % ecpm)
+                    # Construct dict: k=player, v=ecpm
+                    player_ecpm_dict = optimizer.get_ecpms(adunit_context,
+                                                           players,
+                                                           sampling_fraction=0.0)
 
                     players.sort(lambda x,y: cmp(player_ecpm_dict[y], player_ecpm_dict[x]))
         
@@ -465,12 +463,13 @@ class AdHandler(webapp.RequestHandler):
         adunit = adunit_context.adunit
         
         # # Send a fraction of the traffic to the experimental servers
-        experimental_fraction = 0.5
+        
+        experimental_fraction = adunit.app_key.experimental_fraction or 0.0
+
         rand_dec = random.random() # Between 0 and 1
         if (not redirected and rand_dec < experimental_fraction):
             query_string = self.request.url.split("/m/ad?")[1] + "&redir=1"
             exp_url = "http://mopub-experimental.appspot.com/m/ad?" + query_string
-            exp_url = "http://localhost:9999/m/ad?" + query_string
             trace_logging.info("Redirected to experimental server: " + exp_url)
             self.redirect(exp_url)
         

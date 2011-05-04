@@ -59,6 +59,8 @@ class AddReportHandler(RequestHandler):
         man = ReportQueryManager(self.account)
         if saved == "True":
             saved = True
+        else:
+            saved = False
         man.add_report(d1, d2, d3, start, end, name=name, saved=saved)
         return HttpResponseRedirect(reverse('reports_index'))
 
@@ -71,7 +73,6 @@ class RequestReportHandler(RequestHandler):
     def get(self):
         return None
         
-    #shoudl do this with forms...
     def post(self, d1, start, end, d2=None, d3=None):
         manager = ReportQueryManager(self.account)
         rep = manager.get_report(d1, d2, d3, start, end, view=True)

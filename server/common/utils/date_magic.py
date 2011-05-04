@@ -139,7 +139,7 @@ WEEK = 'week'
 DAY = 'day'
 HOUR = 'hour'
 
-def date_name(day, dim):
+def date_name(val, dim):
     if dim == MO:
         name = val[0].strftime('%B, %Y')
     elif dim == WEEK:

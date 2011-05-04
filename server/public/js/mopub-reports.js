@@ -43,15 +43,34 @@
 
     $('#reports-view-editReportButton').button({icons: {primary: 'ui-icon-wrench'}})
         .click(function(e) {
-                e.preventDefault();
-                var report_form = $('#reportForm-container');
-                report_form.dialog({width:1000});
-                });
+            e.preventDefault();
+            var report_form = $('#reportForm-container');
+            console.log(report_form);
+            report_form.dialog({width:750});
+        });
+
+    $('#reportCreateForm-cancel').
+        button()
+        .click(function(e) {
+            e.preventDefault();
+            $(this).parents('#reportForm-container')
+            .dialog('close');
+        });
+    
+    $('#reportCreateForm-submit')
+        .button()
+        .click(function(e) {
+            e.preventDefault();
+            $(this).parents('form').submit();
+        });
+
+
     var selects = $('.dim-selectmenu').selectmenu({
         style: 'popup',
         maxHeight:300,
         width:100
     });
+
     d1_sel = $(selects[0]);
     d2_sel = $(selects[1]);
     d3_sel = $(selects[2]);

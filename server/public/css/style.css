@@ -1993,12 +1993,12 @@ input.ui-button {
 
 /* Campaigns */
 
-.campaignData {
+.campaignData, .reportData {
   padding: 10px 5px 6px 5px;
   background: #f7f7f7;
 }
 
-.campaignData-alt {
+.campaignData-alt, .reportData-alt {
   background: #fff;
 }
 
@@ -2007,33 +2007,33 @@ input.ui-button {
   background: #f7f7f7;
 }
 
-.campaignData-placeholder {
+.campaignData-placeholder, .reportData-placeholder {
   display: table-row;
 }
 
-.campaignData th.dataTable-name {
+.campaignData th.dataTable-name, .reportData th.dataTable-name {
   width: 200px;
 }
 
-.campaignData-icon {
+.campaignData-icon, .reportData-icon {
   padding-right: 0;
   width: 55px;
 }
 
-.campaignData-icon input {
+.campaignData-icon input, .reportData-icon input {
   margin-left: 5px;
 }
 
-.campaignData-icon img {
+.campaignData-icon img, .reportData-icon img {
   margin: 4px 0 0 4px;
 }
 
-table.campaignData-main {
+table.campaignData-main, table.reportData-table {
   margin: 0 0 15px 0;
   width: 100%;
 }
 
-.campaignData-main th, .campaignData-main td {
+.campaignData-main th, .campaignData-main td, .reportData-table th, .reportData-table td {
   font-size: 13px;
   font-weight: normal;
 }

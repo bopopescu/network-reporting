@@ -110,7 +110,7 @@ class Report(db.Model):
                 dim = 9001
                 logging.error("impossible")
             ret = {}
-            manager = StatsModelQueryManager(self.account, offline=True) #offline=self.offline)
+            manager = StatsModelQueryManager(self.account, offline=False)#True) #offline=self.offline)
             vals, typ, date_fmt = self.get_vals(pub, adv, days, country, device, op_sys, dim)
             if vals is None:
                 return ret
@@ -126,7 +126,7 @@ class Report(db.Model):
                     name = '<<OS NAME HERE>>'
                     op_sys = val
                 elif typ == 'days':
-                    name = date_magic.date_name(val[0], dim)
+                    name = date_magic.date_name(val, dim)
                     days = val
                 elif typ == 'pub':
                     name = val.name
@@ -152,11 +152,11 @@ class Report(db.Model):
                 if last_dim: 
                     ret[key] = dict(stats = stats, name = name)
                 else:
-                    ret[key] = dict(stats=stats, name = name, sub_stats = gen_helper(pub,adv,days,level+1))
+                    ret[key] = dict(stats=stats, name = name, sub_stats = gen_helper(pub,adv,days, country, device, op_sys, level+1))
             return ret
-        return gen_helper(pub, adv, days, 0)
+        return gen_helper(pub, adv, days, country, device, op_sys, 0)
 
-    def get_vals(self, pub, adv, days, dim):
+    def get_vals(self, pub, adv, days, country, device, op_sys, dim):
         #This gets the list of values to iterate over for this level of the breakdown.  Country, device, OS, and keywords are irrelevant because they are independent of everythign else
         date_fmt = 'date'
         if dim in (MO, WEEK, HOUR, DAY):

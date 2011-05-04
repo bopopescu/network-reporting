@@ -16,7 +16,7 @@
 <section id="reports-reportAddForm" class='hidden'>
     <div>
         <form action="{% url add_report %}" method="POST" accept-charset="utf-8" id="reportCreateForm">
-            <input type='hidden' name='saved' value='False'/>
+            <input type='hidden' name='saved' value='True' />
             <fieldset id="reportAddForm-details" class="alt">
                 <div id="reportAddForm-fragment" class="reportAddForm-fragment">
                     {{report_fragment.as_template}}
@@ -51,7 +51,7 @@
 </div>
 {% endfor %}
 <section id='report-savedReports'>
-    <table class='reportData-saved dataTable reportTable' id='reports-saved-columnHeaders'>
+    <table class='reportData-table reportData-saved dataTable reportTable' id='reports-saved-columnHeaders'>
         <thead>
             <tr>
                 <th class='reportData-icon'></th>
@@ -90,7 +90,7 @@
 </section>
 <h2>Common Reports</h2>
 <section id='report-commonReports'>
-    <table class='reportData-common dataTable reportTable' id='reports-common-columnHeaders'>
+    <table class='reportData-table reportData-common dataTable reportTable' id='reports-common-columnHeaders'>
         <thead>
             <tr>
                 <th class='reportData-icon'></th>
@@ -128,7 +128,7 @@
 </section>
 <h2>Report History</h2>
 <section id='report-historyReports'>
-    <table class='reportData-history dataTable reportTable' id='reports-common-columnHeaders'>
+    <table class='reportData-table reportData-history dataTable reportTable' id='reports-common-columnHeaders'>
         <thead>
             <tr>
                 <th class='reportData-icon'></th>

@@ -37,7 +37,7 @@ class RequestHandler(object):
         if self.params.has_key('account'):
             account_key = self.params['account']
             if account_key:
-              self.account = AccountQueryManager().get_by_key(account_key)
+              self.account = AccountQueryManager.get(account_key)
         else:
             self._set_account()
         

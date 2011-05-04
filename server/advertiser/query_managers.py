@@ -103,7 +103,7 @@ class AdGroupQueryManager(QueryManager):
     @classmethod
     def get_adgroups(cls, campaign=None, campaigns=None, adunit=None, app=None, account=None, deleted=False, limit=50):
         adgroups = AdGroup.all()
-        if deleted:
+        if not (deleted == None):
             adgroups = adgroups.filter("deleted =",deleted)
         if account:
             adgroups = adgroups.filter("account =",account)      

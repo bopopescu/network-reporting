@@ -1533,6 +1533,13 @@ input.ui-button {
 * html .ui-selectmenu-menu li { border-color: pink; filter:chroma(color=pink); width:100%; }
 * html .ui-selectmenu-menu li a { position: relative }
 
+/*make select ul look like select menu */
+ul.ui-selectmenu-menu {
+  -moz-box-shadow: 0px 10px 35px -4px #888;
+  -webkit-box-shadow: 0px 10px 35px -4px #888;
+  box-shadow: 0px 10px 35px -4px #888;
+}
+
 /*---------------------------------------/
 / Other Plugins
 /---------------------------------------*/
@@ -2042,6 +2049,18 @@ table.campaignData-main {
   font-weight: normal;
 }
 
+.campaignData-rollup {
+  background: #EDF3F7;
+  color: #444;
+  margin-bottom: 20px;
+  padding: 5px;
+  border: none;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+}
+
+
 #campaigns-appFilterOptions {
   display:block;
   position:relative;
@@ -2140,23 +2159,8 @@ td.numeric, th.numeric, .numeric TD {
   text-align: right;
 }
 
-.rollupAlert {
-    background: #EDf3f7;
-    color: #444;
-    margin: 0 0 30px 0;
-    padding: 10px 14px 14px 14px;
-    border: 1px solid #99BBD1;
-    -webkit-border-radius: 5px;
-    -moz-border-radius: 5px;
-    border-radius: 5px;
-}
 
-/*make select ul look like select menu */
-ul.ui-selectmenu-menu {
-    -moz-box-shadow: 0px 10px 35px -4px #888;
-    -webkit-box-shadow: 0px 10px 35px -4px #888;
-    box-shadow: 0px 10px 35px -4px #888;
-}
+
 
 /*.map-requests .map-impressions,
 .map-requests .map-clicks,

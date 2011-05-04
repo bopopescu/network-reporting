@@ -46,16 +46,18 @@ def get_ecpm(adunit_context, creative, min_sample_size=1000, default_ctr=0.03, d
         
 def get_ecpms(adunit_context, creatives, sampling_fraction=SAMPLING_FRACTION, sampling_ecpm=SAMPLING_ECPM):
     """ Returns a dict: k=creative, v=ecpm, 
-    With some probability, it insteadreturns a constant for all values"""
+    With some probability, it instead returns a constant for all values"""
     rand_dec = random.random()
     use_sampling_constant = (rand_dec < sampling_fraction)
     ecpm_dict = {}
     trace_logging.warning("Sampled from adunit: %s" % str(adunit_context.adunit.key()))
-    for c in creatives:
-        if use_sampling_constant:
+    if use_sampling_constant:
+        for c in creatives:
             ecpm = sampling_ecpm
-        else:
+            ecpm_dict[c] = ecpm
+    else:
+        for c in creatives:
             ecpm = get_ecpm(adunit_context, c)
-        ecpm_dict[c] = ecpm
+            ecpm_dict[c] = ecpm
         
     return ecpm_dict

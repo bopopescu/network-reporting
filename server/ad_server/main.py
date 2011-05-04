@@ -161,9 +161,9 @@ class AdAuction(object):
         ll 		= kw['ll']
         testing = kw["testing"]
         addr    = kw['addr']
-        
         udid = kw["udid"]
         user_agent = kw["user_agent"]
+        experimental = kw["experimental"]
         
         keywords = kw["q"]
         geo_predicates = AdAuction.geo_predicates_for_rgeocode(addr)
@@ -280,10 +280,15 @@ class AdAuction(object):
                         continue
                     players = adunit_context.get_creatives_for_adgroups(eligible_adgroups)
                     
+                    # For now we only use sampling on the experimental server
+                    sampling_fraction = 0.0
+                    if experimental:
+                        sampling_fraction = 0.03
+                    
                     # Construct dict: k=player, v=ecpm
                     player_ecpm_dict = optimizer.get_ecpms(adunit_context,
                                                            players,
-                                                           sampling_fraction=0.0)
+                                                           sampling_fraction=sampling_fraction)
 
                     players.sort(lambda x,y: cmp(player_ecpm_dict[y], player_ecpm_dict[x]))
         
@@ -455,7 +460,7 @@ class AdHandler(webapp.RequestHandler):
         trace_logging.response = self.response
         
         id = self.request.get("id")
-        redirected = self.request.get("redir")
+        experimental = self.request.get("exp")
         now = datetime.datetime.now()
         
         # Get or create all the relevant database information for auction
@@ -463,12 +468,11 @@ class AdHandler(webapp.RequestHandler):
         adunit = adunit_context.adunit
         
         # # Send a fraction of the traffic to the experimental servers
-        
         experimental_fraction = adunit.app_key.experimental_fraction or 0.0
 
         rand_dec = random.random() # Between 0 and 1
-        if (not redirected and rand_dec < experimental_fraction):
-            query_string = self.request.url.split("/m/ad?")[1] + "&redir=1"
+        if (not experimental and rand_dec < experimental_fraction):
+            query_string = self.request.url.split("/m/ad?")[1] + "&exp=1"
             exp_url = "http://mopub-experimental.appspot.com/m/ad?" + query_string
             trace_logging.info("Redirected to experimental server: " + exp_url)
             self.redirect(exp_url)
@@ -541,7 +545,8 @@ class AdHandler(webapp.RequestHandler):
 	    						  now=now,
 	    						  testing=testing,
 	    						  user_agent=user_agent,
-	    						  adunit_context=adunit_context)
+	    						  adunit_context=adunit_context,
+	    						  experimental=experimental)
         # output the request_id and the winning creative_id if an impression happened
         if c:
             user_adgroup_daily_key = memcache_key_for_date(udid,now,c.ad_group.key())

@@ -1081,6 +1081,11 @@ label.error {
   width:205px;
 }
 
+.stats-chart-title{
+text-align: center;
+margin: -12px 0 8px 0;
+}
+
 .stats-chart {
   margin-left: 205px;
   width: 695px;
@@ -1209,7 +1214,6 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
 
 .dataTable .appData-icon-none {
   margin-right: 11px;
-  height:45px;
   width: 15px;
 }
 
@@ -1984,6 +1988,11 @@ input.ui-button {
   background: #fff;
 }
 
+.creativeData {
+  padding: 10px 5px 6px 5px;
+  background: #f7f7f7;
+}
+
 .campaignData-placeholder {
   display: table-row;
 }
@@ -2047,6 +2056,12 @@ table.campaignData-main {
 
 #dashboard-campaigns {
   margin: 20px 0 0 0;
+}
+
+/* New Campaign */
+
+#campaignForm-details{
+  padding-top:0px;
 }
 
 /****************************************

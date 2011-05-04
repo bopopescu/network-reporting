@@ -16,9 +16,8 @@
             The next step is to set up your ad networks.  Visit your <a href="{% url account_index %}">Account</a> page to enable your ad networks.
           </div>
 {% endifequal %}
-
-          <h2>Real-time stats from {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h2>
           <section class="offset nomargin" id="dashboard-stats">
+            <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
             <div class="stats">
               <div class="stats-breakdown">
                 <table>

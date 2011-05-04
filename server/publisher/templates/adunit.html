@@ -1,38 +1,42 @@
 {% extends 'publisher/base.html' %}{% load filters %}
 {% block pageTitle %}
           <div class="breadcrumb">
-            <a class="linkIcon breadcrumb-back" href="{% url publisher_index %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Dashboard</a>
-            <h1>{{app.name}}</h1>
-          </div>
-{% endblock pageTitle %}
-{% block messageCenter %}{% endblock messageCenter %}
+            <a class="linkIcon breadcrumb-back" href="{% url publisher_app_show app_key=adunit.app_key.key %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to App</a>
+            <h1>Ad Unit: {{adunit.name}}</h1>
+          </div>{% endblock pageTitle %}
 {% block titleBarRight %}
-<span class="titlebar-right">
-  <a class="button" id="dashboard-apps-editAppButton" href="#">Edit app settings</a>
-</span>
+            <span class="titlebar-right">
+              <a class="button" id="dashboard-apps-editAdUnitButton" href="#">Edit ad unit settings</a>
+              <a class="linkIcon" href="{% url publisher_generate adunit_key=adunit.key %}">Get code snippet <span class="ui-icon ui-icon-triangle-1-e"></span></a>
+            </span>
 {% endblock titleBarRight %}
+{% block messageCenter %}{% endblock messageCenter %}
 
-{% block content %}
-          <section id="dashboard-appEditForm" class="hidden">
+{% block content %}{% if not adunit.adgroups %}
+          <div class="alertMessage">
+            There are no campaigns targeting this ad unit.  To show ads here, set up a new ad campaign or add this ad unit to an existing campaign on the <a href="{% url advertiser_campaign %}">Campaigns</a> page.
+          </div>
+{% endif %}
+          <section id="dashboard-adunitEditForm" class="hidden">
             <div>
-              <a name="appForm" class="hidden">anchor</a>
-              <form action="{% url publisher_app_update_ajax app_key=app.key %}" enctype='multipart/form-data' method="POST" accept-charset="utf-8" id="appForm" class="appEditForm">
+              <a name="adunitForm" class="hidden">anchor</a>
+              <form action="{% url publisher_adunit_update_ajax %}" method="POST" accept-charset="utf-8" id="adunitAddForm" class="adunitEditForm validate">
                 <fieldset id="appForm-details" class="alt">
-                  <div id="appForm-fragment">
-{{app_form_fragment}}
-                  </div>
+                  <input type="hidden" name="adunit_key" value="{{adunit.key}}"/>
+                  <div id="adunitForm-fragment">
+                    {{adunit_form_fragment}}
+                  </div>  
                   <div class="form-submit"> 
-                    <span class="hidden" id="appEditForm-loading"><img src="/images/loading2.gif"/></span>
-                    <span class="buttonWrap"><a href="#" class="button" id="appEditForm-cancel">Cancel</a></span> 
-                    <span class="buttonWrap"><a href="#" class="button" id="appEditForm-submit">Save</a></span> 
+                    <span class="hidden" id="adunitForm-loading"><img src="/images/loading2.gif"/></span>
+                    <span class="buttonWrap"><a href="#" class="button" id="adunitEditForm-cancel">Cancel</a></span> 
+                    <span class="buttonWrap"><a href="#" class="button" id="adunitEditForm-submit">Save</a></span> 
                   </div> 
                 </fieldset>
               </form>
             </div>
           </section>
-          
-          <h2>Real-time stats from {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h2>
           <section class="offset nomargin" id="dashboard-stats">
+            <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
             <div class="stats">
               <div class="stats-breakdown">
                 <table>
@@ -40,26 +44,21 @@
                     <tr class="active" id="stats-breakdown-requests">
                       <td class="stats-breakdown-value today"><span class="inner">{{today.request_count|withsep}}</span></td>
                       <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.request_count|withsep}}</span></td>
-                      <td class="stats-breakdown-value all"><span class="inner">{{app.stats.request_count|withsep}}</span></td>
+                      <td class="stats-breakdown-value all"><span class="inner">{{adunit.stats.request_count|withsep}}</span></td>
                       <th class="stats-breakdown-name"><span class="inner">Requests</span></th>
                     </tr>
                     <tr id="stats-breakdown-impressions">
                       <td class="stats-breakdown-value today"><span class="inner">{{today.impression_count|withsep}}</span></td>
                       <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.impression_count|withsep}}</span></td>
-                      <td class="stats-breakdown-value all"><span class="inner">{{app.stats.impression_count|withsep}}</span></td>
+                      <td class="stats-breakdown-value all"><span class="inner">{{adunit.stats.impression_count|withsep}}</span></td>
                       <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
                     </tr>
                     <tr id="stats-breakdown-clicks">
-                      <td class="stats-breakdown-value today"><span class="inner"><span class="muted unbold">({{today.ctr|percentage}})</span> {{today.click_count|withsep}}</span></td>
-                      <td class="stats-breakdown-value yesterday"><span class="inner"><span class="muted unbold">({{yesterday.ctr|percentage}})</span> {{yesterday.click_count|withsep}}</span></td>
-                      <td class="stats-breakdown-value all"><span class="inner"><span class="muted unbold">({{app.stats.ctr|percentage}})</span> {{app.stats.click_count|withsep}}</span></td>
-                      <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
+                        <td class="stats-breakdown-value today"><span class="inner"><span class="muted unbold">({{today.ctr|percentage}})</span> {{today.click_count|withsep}}</span></td>
+                        <td class="stats-breakdown-value yesterday"><span class="inner"><span class="muted unbold">({{yesterday.ctr|percentage}})</span> {{yesterday.click_count|withsep}}</span></td>
+                        <td class="stats-breakdown-value all"><span class="inner"><span class="muted unbold">({{adunit.stats.ctr|percentage}})</span> {{adunit.stats.click_count|withsep}}</span></td>                    
+                        <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
                     </tr>
-                    <tr id="stats-breakdown-users">
-                      <td class="stats-breakdown-value today"><span class="inner">{{today.user_count|withsep}}</span></td>
-                      <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.user_count|withsep}}</span></td>
-                      <td class="stats-breakdown-value all"><span class="inner">{{app.stats.user_count|withsep}}</span></td>
-                      <th class="stats-breakdown-name"><span class="inner">Users</span></th>
                     </tr>
                   </tbody>
                 </table>
@@ -83,17 +82,14 @@
                     //pointStart: 1294963200000,
                     pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
                     pointInterval: 86400000,
-                    'requests': [{% for au in app.graph_adunits %}
-                      { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                    'requests': [
+                      { '{{adunit.name|safe|addslashes}}': [{% for t in adunit.all_stats %}{{t.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
                     ],
-                    'impressions': [{% for au in app.graph_adunits %}
-                      { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                    'impressions': [
+                      { '{{adunit.name|safe|addslashes}}': [{% for t in adunit.all_stats %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
                     ],
-                    'clicks': [{% for au in app.graph_adunits %}
-                      { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{y: {{t.click_count}}, name: '{{t.ctr|percentage}}'}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                    ],
-                    'users': [{% for au in app.graph_adunits %}
-                      { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                    'clicks': [
+                      { '{{adunit.name|safe|addslashes}}': [{% for t in adunit.all_stats %}{y: {{t.click_count}}, name: '{{t.ctr|percentage}}'}{% if not forloop.last %},{% endif %} {% endfor %}] }
                     ]
                   };
                 </script>
@@ -101,88 +97,25 @@
             </div>
             <div class="clear"></div>
           </section>
-          
+
           <div class="clear"></div>
-          
+
           <section id="dashboard-apps">
             <div class="buttonBank buttonBank-right">
-              <a class="button" id="dashboard-apps-addAdUnitButton" href="#">Add an ad unit</a>
-            </div>
-            <h2>Ad units</h2>
-            
-            <section id="dashboard-adunitAddForm" class="hidden">
-              <div>
-                <a name="adunitForm" class="hidden">anchor</a>
-                <form action="{% url publisher_adunit_update_ajax %}" method="POST" accept-charset="utf-8" id="adunitAddForm">
-                  <fieldset id="adunitForm-details" class="alt">
-                    <div id="adunitForm-fragment">
-                      {{adunit_form_fragment}}
-                    </div>
-                    <div class="form-submit"> 
-                      <span class="hidden" id="adunitForm-loading"><img src="/images/loading2.gif"/></span>
-                      <span class="buttonWrap"><a href="#" class="button" id="adunitAddForm-cancel">Cancel</a></span> 
-                      <span class="buttonWrap"><a href="#" class="button" id="adunitAddForm-submit">Save</a></span> 
-                    </div> 
-                  </fieldset>
-                </form>
-              </div>
-            </section>
-            
-            <div class="appData-columnHeaders">
-              <table class="dataTable" id="dashboard-apps-columnHeaders">
-                <thead>
-                  <tr>
-                    <th class="appData-icon"></th>
-                    <th class="dataTable-name">&nbsp;</th>
-                    <th class="dataTable-data numeric">Requests</th>
-                    <th class="dataTable-data numeric">Impressions</th>
-                    <th class="dataTable-data numeric">Fillrate</th>
-                    <th class="dataTable-data numeric">Clicks</th>
-                    <th class="dataTable-data numeric">CTR</th>
-                  </tr>
-                </thead>
-              </table>
-            </div>
-            <div class="appData" id="dashboard-app-0">
-              <table class="dataTable appData-main" id="dashboard-app-0-main">
-                <tbody>
-                  <tr>
-                    <td class="appData-icon"><a href="#"><img src="{% if app.icon_url %}{{app.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" /></a></td>
-                    <th class="dataTable-name">Totals</th>
-                    <td class="dataTable-data numeric">{{app.stats.request_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{app.stats.impression_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{app.stats.fill_rate|percentage_rounded}}</td>
-                    <td class="dataTable-data numeric">{{app.stats.click_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{app.stats.ctr|percentage}}</td>
-                  </tr>
-                </tbody>
-              </table>
-              <div class="appData-details" id="dashboard-app-0-details">
-                <div class="appData-details-inner show">
-                  <table class="dataTable">
-                    <tbody>
-                      {% for au in app.adunits %}
-                      <tr>
-                        <th class="dataTable-name"><span class="inner"><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a></span></th>
-                        <td class="dataTable-data numeric">{{au.stats.request_count|withsep}}</td>
-                        <td class="dataTable-data numeric">{{au.stats.impression_count|withsep}}</td>
-                        <td class="dataTable-data numeric">{{au.stats.fill_rate|percentage_rounded}}</td>
-                        <td class="dataTable-data numeric">{{au.stats.click_count|withsep}}</td>
-                        <td class="dataTable-data numeric">{{au.stats.ctr|percentage}}</td>
-                      </tr>
-                      {% endfor %}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              <a class="button" id="advertisers-testAdServer" href="#">Test Ad</a>
             </div>
             
-            <div class="divSpacer"></div>
-            
-            <h2>Campaigns targeting {{app.name}}</h2>
+            <div id="adserverTest" style="display:none;">
+              <iframe height="480" width="350" id="adserverTest-iFrame" scrolling="no">
+              </iframe>    
+              <div id="adserverTest-iFrame-src" style="display:none;">{% url advertiser_adserver_test %}?id={{adunit.key}}</div>    
+            </div>
+	        
+    	      <h2>Campaigns Targeting {{adunit.name}}</h2>
+	        
             <div>
-            {% if app.adgroups %}
-
+            {% if adunit.adgroups %}
+              
     			  <div class="appData alternating-color">	
     				<div class="appData-details noneg">
     	      <div class="appData-details-inner show">
@@ -221,7 +154,7 @@
                           {% if adgroup.percent_delivered %}({{adgroup.percent_delivered|floatformat:1}}%){%endif %}
                       </span>
                     </th> 
-
+        
                     <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
                     <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>
       	            <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
@@ -315,7 +248,7 @@
                     </th> 
 
                     <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
-                    <td class="dataTable-data numeric">{{agadgroup..stats.request_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{adgroup.stats.request_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{adgroup.stats.fill_rate|percentage}}</td>
                     <td class="dataTable-data numeric">{{adgroup.stats.click_count|withsep}}</td>
@@ -378,34 +311,34 @@
             </div>       
             </div>
     		    </div>
-
+  			  
 			      {% else %}
-			      <div class="appData alternating-color">	
-    				<div class="appData-details noneg">
-    	      <div class="appData-details-inner show">
-    	        <table class="dataTable appData-main">
-    						<thead>
-    						  <tr>
-    						    <th class="dataTable-name big"><span class="muted">No campaigns targeting {{app.name}}</span></th>
-    						  </tr>
-    			      </thead>
-    			    </table>
-    			  <div>
-    			  <div>
-    			  <div>    			      
+            <table class="dataTable appData-main">
+              <tbody>
+                <tr>
+                  <td class="campaignData-icon"></td>
+                  <th class="dataTable-name"><span class="muted">None</span></th>
+                </tr>
+              </tbody>
+            </table>
             {% endif %}
-            </div>                  	      
+            </div>            
           </section>
           
           <div class="clear"></div>
           
-          <div style="margin-top: 1em">
-              <div class="buttonBank buttonBank-right">
-                  <form method="post" id="dashboard-deleteForm" action="{% url publisher_app_delete app_key=app.key %}"><a href="#" id="dashboard-delete-link">Remove app from dashboard</a></form>
-                  <div id="dashboard-delete-modal" class="hidden">
-                    <h2>Remove confirmation</h2>
-                    <p>Are you sure you want to remove {{app.name}} from the dashboard?</p>
-                  </div>
+          <div style="margin-top: 1em;">
+            <div class="buttonBank buttonBank-right">
+              <form method="post" id="dashboard-deleteForm" action="{% url publisher_adunit_delete adunit_key=adunit.key %}"><a href="#" id="dashboard-delete-link">Remove ad unit from dashboard</a></form>
+              <div id="dashboard-delete-modal" class="hidden">
+                <h2>Remove confirmation</h2>
+                <p>Are you sure you want to remove {{adunit.name}} from the app?</p>
               </div>
+            </div>
           </div>
+          
+		  <div>
+       <a class="button button-small" href="/inventory/export/csv/adunit/{{adunit.key}}?spec=days">Export CSV</a>
+       <a class="button button-small" href="/inventory/export/xls/adunit/{{adunit.key}}?spec=days">Export XLS</a>	
+		  </div>
 {% endblock content %}

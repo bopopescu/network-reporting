@@ -121,11 +121,11 @@ var mopub = mopub || {};
               if(activeMetric == 'revenue') {
                 text = '$' + Highcharts.numberFormat(this.value, 0);
               } else {
-                if (this.value > 1000000000) {
+                if (this.value >= 1000000000) {
                   return Highcharts.numberFormat(this.value / 1000000000, 0) + "B";
-                } else if (this.value > 1000000) {
+                } else if (this.value >= 1000000) {
                   return Highcharts.numberFormat(this.value / 1000000, 0) + "M";
-                } else if (this.value > 1000) {
+                } else if (this.value >= 1000) {
                   return Highcharts.numberFormat(this.value / 1000, 0) + "K";
                 } else if (this.value > 0) {
                   return Highcharts.numberFormat(this.value, 0);
@@ -285,13 +285,13 @@ var mopub = mopub || {};
         else
           $('#dashboard-adunitEditForm').slideDown('fast');
       });
-    $('#dashboard-apps-toggleAllButton')
-      .button({ 
-        icons: { primary: "ui-icon-triangle-2-n-s" } 
-      })
-      .click(function(e) {
-        e.preventDefault();
-      });
+    // $('#dashboard-apps-toggleAllButton')
+    //   .button({ 
+    //     icons: { primary: "ui-icon-triangle-2-n-s" } 
+    //   })
+    //   .click(function(e) {
+    //     e.preventDefault();
+    //   });
     
     $('#appEditForm-submit')
       .button({ 
@@ -386,21 +386,21 @@ var mopub = mopub || {};
     });
     
     // set up toggle all app details button
-    $('#dashboard-apps-toggleAllButton').click(function(e) {
-      e.preventDefault();
-      var hiddenAppDetails = $('.appData-details .hide').parents('.appData-details');
-      var shownAppDetails = $('.appData-details .show').parents('.appData-details');
-      if(hiddenAppDetails.length > 0) {
-        hiddenAppDetails.each(function() {
-          $('.appData-details-toggleButton', $(this)).click();
-        });
-      }
-      else {
-        shownAppDetails.each(function() {
-          $('.appData-details-toggleButton', $(this)).click();
-        });
-      }
-    });
+    // $('#dashboard-apps-toggleAllButton').click(function(e) {
+    //   e.preventDefault();
+    //   var hiddenAppDetails = $('.appData-details .hide').parents('.appData-details');
+    //   var shownAppDetails = $('.appData-details .show').parents('.appData-details');
+    //   if(hiddenAppDetails.length > 0) {
+    //     hiddenAppDetails.each(function() {
+    //       $('.appData-details-toggleButton', $(this)).click();
+    //     });
+    //   }
+    //   else {
+    //     shownAppDetails.each(function() {
+    //       $('.appData-details-toggleButton', $(this)).click();
+    //     });
+    //   }
+    // });
 
     /*---------------------------------------/
     / App Details Form

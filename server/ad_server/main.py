@@ -152,29 +152,31 @@ class AdAuction(object):
         
     # Runs the auction itself.  Returns the winning creative, or None if no creative matched
     @classmethod
-    def run(cls, **kw):
-        now = kw["now"]
-        site = kw["site"]
-        adunit = kw["site"]
-        adunit_context = kw["adunit_context"]
-        request = kw["request"]
-        ll 		= kw['ll']
-        testing = kw["testing"]
-        addr    = kw['addr']
-        udid = kw["udid"]
-        user_agent = kw["user_agent"]
-        experimental = kw["experimental"]
-        
-        keywords = kw["q"]
+    def run(cls, request=None,
+  		         site=None,
+  		         q=None,
+  		         addr=None,
+  		         excluded_creatives=None,
+  		         udid=None,
+  		         ll=None,
+  		         request_id=None,
+  		         now=None,
+  		         testing=None,
+  		         user_agent=None,
+  		         adunit_context=None,
+  		         experimental=None):
+        adunit = site
+        keywords = q
         geo_predicates = AdAuction.geo_predicates_for_rgeocode(addr)
-        
+        exclude_params = excluded_creatives
+
         #if only one geo_pred (it's a country) check to see if this country has multiple
         #possible codes.  If it does, get all of them and use them all
         if len(addr) == 1 and ACCEPTED_MULTI_COUNTRY.has_key(addr[0]):
             geo_predicates = reduce(lambda x,y: x+y, [AdAuction.geo_predicates_for_rgeocode([address]) for address in ACCEPTED_MULTI_COUNTRY[addr[0]]])
         
-        device_predicates = AdAuction.device_predicates_for_request(kw["request"])
-        exclude_params = kw["excluded_creatives"]
+        device_predicates = AdAuction.device_predicates_for_request(request)
+        
         excluded_predicates = AdAuction.exclude_predicates_params(exclude_params)
         trace_logging.warning("keywords=%s, geo_predicates=%s, device_predicates=%s" % (keywords, geo_predicates, device_predicates))
         
@@ -281,14 +283,15 @@ class AdAuction(object):
                     players = adunit_context.get_creatives_for_adgroups(eligible_adgroups)
                     
                     # For now we only use sampling on the experimental server
-                    sampling_fraction = 0.0
                     if experimental:
-                        sampling_fraction = 0.03
-                    
-                    # Construct dict: k=player, v=ecpm
-                    player_ecpm_dict = optimizer.get_ecpms(adunit_context,
-                                                           players,
-                                                           sampling_fraction=sampling_fraction)
+                        # Construct dict: k=player, v=ecpm
+                        player_ecpm_dict = optimizer.get_ecpms(adunit_context,
+                                                               players)
+                    else:
+                        # Construct dict: k=player, v=ecpm
+                        player_ecpm_dict = optimizer.get_ecpms(adunit_context,
+                                                               players,
+                                                               sampling_fraction=0.0)
 
                     players.sort(lambda x,y: cmp(player_ecpm_dict[y], player_ecpm_dict[x]))
         
@@ -469,11 +472,12 @@ class AdHandler(webapp.RequestHandler):
         
         # # Send a fraction of the traffic to the experimental servers
         experimental_fraction = adunit.app_key.experimental_fraction or 0.0
-
+        # If we are not already on the experimental server, redirect some fraction
         rand_dec = random.random() # Between 0 and 1
         if (not experimental and rand_dec < experimental_fraction):
             query_string = self.request.url.split("/m/ad?")[1] + "&exp=1"
             exp_url = "http://mopub-experimental.appspot.com/m/ad?" + query_string
+            # exp_url = "http://localhost:9999/m/ad?" + query_string
             trace_logging.info("Redirected to experimental server: " + exp_url)
             self.redirect(exp_url)
         
@@ -596,8 +600,9 @@ class AdHandler(webapp.RequestHandler):
                                                         request_id          = request_id, 
                                                         v                   = int(self.request.get('v') or 0),
                                                         track_url           = track_url,
-                                                       ) 
-                                                            
+                                                        debug               = debug,
+                                                        ) 
+                                      
         if jsonp:
             self.response.out.write('%s(%s)' % (callback, dict(ad=str(rendered_creative or ''), click_url = str(ad_click_url))))
         elif not (debug or admin_debug_mode):                                                    
@@ -635,7 +640,10 @@ class AdHandler(webapp.RequestHandler):
                 if not c.ad_type == "html":
                     if adunit.landscape:
                         self.response.headers.add_header("X-Orientation","l")
-                        format = ("480","320")                        
+                        format = ("480","320")
+                    else:
+                        format = (320,480)    
+                                                
                 elif not c.adgroup.network_type or c.adgroup.network_type in FULL_NETWORKS:
                     format = (320,480)
                 elif c.adgroup.network_type:
@@ -695,6 +703,9 @@ class AdHandler(webapp.RequestHandler):
                 # self.response.headers.add_header("X-Launchpage","http://googleads.g.doubleclick.net")
             elif c.ad_type == "admob":
                 params.update({"title": ','.join(kwargs["q"]), "w": format[0], "h": format[1], "client": kwargs["site"].account.admob_pub_id})
+                debug = kwargs["debug"]
+                params.update(test_mode='true' if debug else 'false')
+                # params.update(test_ad='<a href="http://m.google.com" target="_top"><img src="/images/admob_test.png"/></a>' if debug else '')
                 self.response.headers.add_header("X-Launchpage","http://c.admob.com/")
             elif c.ad_type == "text_icon":
                 if c.image:

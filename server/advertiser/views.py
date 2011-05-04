@@ -120,6 +120,7 @@ class AdGroupIndexHandler(RequestHandler):
                                   {'adgroups':adgroups,
                                    'graph_adgroups': graph_adgroups,
                                    'start_date': days[0],
+                                   'end_date':days[-1],
                                    'date_range': self.date_range,
                                    'apps' : apps,
                                    'totals': reduce(lambda x, y: x+y.stats, adgroups, StatsModel()),
@@ -149,6 +150,15 @@ class CreateCampaignAJAXHander(RequestHandler):
             ["iAd","iAd",False],["inmobi","InMobi",False],["jumptap","Jumptap",False],["millennial","Millennial Media",False],["mobfox","MobFox",False],['custom', 'Custom Network', False]]
 
         all_adunits = AdUnitQueryManager.get_adunits(account=self.account)
+        # sorts by app name, then adunit name
+        def adunit_cmp(adunit_1, adunit_2):
+            app_cmp = cmp(adunit_1.app.name, adunit_2.app.name) 
+            if not app_cmp:
+                return cmp(adunit_1.name, adunit_2.name)
+            else:
+                return app_cmp
+                    
+        all_adunits.sort(adunit_cmp)
 
         adgroup_form['site_keys'].choices = all_adunits # needed for validation TODO: doesn't actually work
 
@@ -295,6 +305,7 @@ class CreateCampaignHandler(RequestHandler):
 
         campaign_create_form_fragment = CreateCampaignAJAXHander(self.request).get(adgroup=adgroup)
         return render_to_response(self.request,'advertiser/new.html', {"adgroup_key": adgroup_key,
+            "adgroup":adgroup,
             "campaign_create_form_fragment": campaign_create_form_fragment})
 
 @whitelist_login_required         

@@ -4,7 +4,7 @@
 
 {% block navLinks %}
 <li><a href="{% url publisher_index %}">Dashboard</a></li>
-<li class="active"><a href="{% url advertiser_campaign %}">Campaigns</a></li>{% endblock navLinks %}
+<li class="active"><a href="{% url advertiser_campaign %}">Campaign</a></li>{% endblock navLinks %}
 {% block pageTitle %}<h1>{% ifequal account.status 'step4' %}Step 4: Set up an ad campaign{% else %}Campaigns{% endifequal %}</h1>{% endblock pageTitle %}
 {% block titleBarRight %}
     {% ifequal account.status 'step4' %}
@@ -17,6 +17,10 @@
               <span class="ui-icon ui-icon-arrow-1-e"></span> 
               <span class="stepProgress-step stepProgress-active">Step 4: Ad campaigns</span> 
             </div>
+    {% else %}        
+        <span class="titlebar-right">
+            <a class="button" id="advertisers-testAdServer" href="#">Test Campaigns</a>
+        </span>
     {% endifequal %}
             
 {% endblock titleBarRight %}
@@ -57,9 +61,9 @@
             Before you set up your ad campaigns, we recommend that you set up your App inventory.  Visit the <a href="{% url publisher_index %}">Dashboard</a> to add your Apps.
           </div>
 {% endif %}
-           {% comment %}
           <div class="separated">
             <section class="offset nomargin" id="dashboard-stats">
+              <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
               <div class="stats">
                 <div class="stats-breakdown">
                   <table>
@@ -120,7 +124,6 @@
               <div class="clear"></div>
             </section>
           </div>
-          {% endcomment %}
           <section id="dashboard-campaigns">
             <div id="campaigns-control-panel">
               <div class="center-button-bank">

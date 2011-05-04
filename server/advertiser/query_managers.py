@@ -53,7 +53,7 @@ class AdGroupQueryManager(QueryManager):
     Model = AdGroup   
         
     @classmethod
-    def get_adgroups(cls,campaign=None,campaigns=None,adunit=None,account=None,deleted=False,limit=50):
+    def get_adgroups(cls, campaign=None, campaigns=None, adunit=None, app=None, account=None, deleted=False, limit=50):
         adgroups = AdGroup.all()
         if not (deleted == None):
             adgroups = adgroups.filter("deleted =",deleted)
@@ -64,12 +64,23 @@ class AdGroupQueryManager(QueryManager):
             adgroups = adgroups.filter("campaign IN",campaigns)
         elif campaign:      
             adgroups = adgroups.filter("campaign =",campaign)      
+
         if adunit:
             if isinstance(adunit,db.Model):
                 adunit_key = adunit.key()
             else:
                 adunit_key = adunit      
             adgroups = adgroups.filter("site_keys =",adunit_key)
+        
+        if app:
+            adgroups_dict = {}
+            adunits = AdUnitQueryManager.get_adunits(app=app)
+            for adunit in adunits:
+                adgroups_per_adunit = cls.get_adgroups(adunit=adunit, limit=limit)
+                for adgroup in adgroups_per_adunit:
+                    adgroups_dict[adgroup.key()] = adgroup
+            return adgroups_dict.values()[:limit]
+            
         return adgroups.fetch(limit)
         
     @classmethod

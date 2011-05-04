@@ -849,6 +849,10 @@ dl.formFields.thin {
   margin: 1px 0 0 8px;
 }
 
+.formFields .helper-text {
+  margin-top: 3px;
+}
+
 .ie7 .formFields-field-help, .ie6 .formFields-field-help {
   display: inline;
 }
@@ -1081,6 +1085,11 @@ label.error {
   width:205px;
 }
 
+.stats-chart-title{
+text-align: center;
+margin: -12px 0 8px 0;
+}
+
 .stats-chart {
   margin-left: 205px;
   width: 695px;
@@ -1209,7 +1218,6 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
 
 .dataTable .appData-icon-none {
   margin-right: 11px;
-  height:45px;
   width: 15px;
 }
 
@@ -1749,6 +1757,20 @@ input.ui-button {
   border: 1px solid #e1edf5
 }
 
+.accountInfoForm-container {
+  position: relative;
+}
+
+.accountInfoForm-left {
+  position:absolute;
+  top:0;
+  left:0;
+  padding:20px;
+}
+
+.accountInfoForm-right {
+  margin-left: 205px;
+}
 /* Homepage */
 
 .mopub-home #nav1 li.active {
@@ -1984,6 +2006,11 @@ input.ui-button {
   background: #fff;
 }
 
+.creativeData {
+  padding: 10px 5px 6px 5px;
+  background: #f7f7f7;
+}
+
 .campaignData-placeholder {
   display: table-row;
 }
@@ -2047,6 +2074,12 @@ table.campaignData-main {
 
 #dashboard-campaigns {
   margin: 20px 0 0 0;
+}
+
+/* New Campaign */
+
+#campaignForm-details{
+  padding-top:0px;
 }
 
 /****************************************
@@ -2133,3 +2166,7 @@ ul.ui-selectmenu-menu {
 .map-clicks .map-requests{
     display: none;
 }*/
+
+.divSpacer {
+    margin-top: 20px;
+}

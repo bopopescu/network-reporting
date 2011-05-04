@@ -3,6 +3,13 @@
 {% block navLinks %}
             <li><a href="{% url publisher_index %}">Dashboard</a></li>
             <li class="active"><a href="{% url advertiser_campaign %}">Campaigns</a></li>{% endblock navLinks %}
+{% block pageTitle %}
+  {% if adgroup %}
+    <h1>Edit Campaign: {{ adgroup.campaign.name }} </h1>
+  {% else %}
+    <h1>New Campaign</h1>
+  {% endif %}
+{% endblock pageTitle %}
 {% block messageCenter %}{% endblock %}
 {% block dateButtons %}{% endblock %}
 {% block content %}

@@ -53,11 +53,9 @@ def get_ecpms(adunit_context, creatives, sampling_fraction=SAMPLING_FRACTION, sa
     trace_logging.warning("Sampled from adunit: %s" % str(adunit_context.adunit.key()))
     if use_sampling_constant:
         for c in creatives:
-            ecpm = sampling_ecpm
-            ecpm_dict[c] = ecpm
+            ecpm_dict[c] = sampling_ecpm
     else:
         for c in creatives:
-            ecpm = get_ecpm(adunit_context, c)
-            ecpm_dict[c] = ecpm
+            ecpm_dict[c] = get_ecpm(adunit_context, c)
         
     return ecpm_dict

@@ -637,7 +637,10 @@ class AdHandler(webapp.RequestHandler):
                 if not c.ad_type == "html":
                     if adunit.landscape:
                         self.response.headers.add_header("X-Orientation","l")
-                        format = ("480","320")                        
+                        format = ("480","320")
+                    else:
+                        format = (320,480)    
+                                                
                 elif not c.adgroup.network_type or c.adgroup.network_type in FULL_NETWORKS:
                     format = (320,480)
                 elif c.adgroup.network_type:
@@ -646,8 +649,6 @@ class AdHandler(webapp.RequestHandler):
                     #an ad network that doesn't serve fulls
                     network_center = True
                     format = (300, 250)
-                else:
-                    format = (320,480)    
           
             template_name = c.ad_type
             #css to center things

@@ -472,12 +472,23 @@ class AdHandler(webapp.RequestHandler):
         
         # # Send a fraction of the traffic to the experimental servers
         experimental_fraction = adunit.app_key.experimental_fraction or 0.0
+        
         # If we are not already on the experimental server, redirect some fraction
         rand_dec = random.random() # Between 0 and 1
         if (not experimental and rand_dec < experimental_fraction):
+            
+            # Create new id for alternate server
+            experimental_app ="mopub-experimental"
+            old_key = db.Key(id)
+            new_key = db.Key.from_path(old_key.kind(), old_key.id_or_name(), _app=experimental_app )
+            new_id = str(new_key)
+            
             query_string = self.request.url.split("/m/ad?")[1] + "&exp=1"
-            exp_url = "http://mopub-experimental.appspot.com/m/ad?" + query_string
-            # exp_url = "http://localhost:9999/m/ad?" + query_string
+            exp_url = "http://" + experimental_app + ".appspot.com/m/ad?" + query_string
+            # exp_url = "http://localhost:8081/m/ad?" + query_string
+            
+            exp_url = exp_url.replace(id, new_id) # Splice in proper id
+            
             trace_logging.info("Redirected to experimental server: " + exp_url)
             self.redirect(exp_url)
         

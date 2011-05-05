@@ -9,8 +9,7 @@ class AccountForm(mpforms.MPModelForm):
     countries = ISO_COUNTRIES
     states = US_STATES
     
-    phone = mpfields.MPTextField(label="Phone #", required=False)
-    
+    phone = mpfields.MPTextField(label="Phone #", required=False)    
     class Meta:
         model = Account
         exclude = ('user', 'all_users', 'date_added', 'active', 'status')

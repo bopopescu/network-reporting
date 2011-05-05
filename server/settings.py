@@ -87,9 +87,9 @@ MIDDLEWARE_CLASSES = (
 # Django authentication
 # 'django.contrib.auth.middleware.AuthenticationMiddleware',
 # Google authentication
-'common.ragendja.auth.middleware.GoogleAuthenticationMiddleware',
+# 'common.ragendja.auth.middleware.GoogleAuthenticationMiddleware',
 # Hybrid Django/Google authentication
-#'ragendja.auth.middleware.HybridAuthenticationMiddleware',
+'common.ragendja.auth.middleware.HybridAuthenticationMiddleware',
 'django.middleware.common.CommonMiddleware',
 'django.middleware.locale.LocaleMiddleware',
 # 'ragendja.sites.dynamicsite.DynamicSiteIDMiddleware',
@@ -132,10 +132,14 @@ INSTALLED_APPS = (
      'admin',
      'common_templates',
      'budget',
+     'registration',
 )
 
 #TEST_RUNNER = 'django_nose.NoseTestSuitRunner'
 
 IGNORE_APP_URLSAUTO = ('website')
+
+AUTH_USER_MODULE = 'account.models'
+ACCOUNT_ACTIVATION_DAYS = 14
 
 from common.ragendja.settings_post import *

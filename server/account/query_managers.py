@@ -1,6 +1,6 @@
 import logging
 
-from common.utils.query_managers import CachedQueryManager
+from common.utils.query_managers import CachedQueryManager, QueryManager
 
 from common.utils.decorators import wraps_first_arg
 from advertiser.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
@@ -8,7 +8,7 @@ from google.appengine.ext import db
 from google.appengine.api import memcache
 from google.appengine.api import users
 
-from account.models import Account
+from account.models import Account, User
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 
 MEMCACHE_KEY_FORMAT = "k:%(user_id)s"
@@ -100,3 +100,9 @@ class AccountQueryManager(CachedQueryManager):
         # delete old account as long as the accounts aren't the same
         # if not new_account.key() == old_account.key():
         #     old_account.delete()
+
+class UserQueryManager(QueryManager):
+    
+    @classmethod
+    def get_by_email(cls,email):
+        return cls.get_by_email(email)       

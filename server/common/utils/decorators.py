@@ -18,7 +18,7 @@ def whitelist_login_required(function=None):
     from google.appengine.api import users
     from account.query_managers import AccountQueryManager
     return users.is_current_user_admin() or AccountQueryManager.get_current_account().active
-  
+
   
   def login_required_wrapper(request, *args, **kw):
     if not request.user.is_authenticated():

@@ -1013,6 +1013,11 @@ label.error {
   width: 205px;
 }
 
+.stats-breakdown-4 {
+  top: -8px;
+}
+
+
 
 .stats-breakdown table {
   width: 205px;

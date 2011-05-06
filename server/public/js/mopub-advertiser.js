@@ -870,7 +870,7 @@ var mopub = mopub || {};
               total = Highcharts.numberFormat(this.total, 0) + ' total ' + activeMetric;
             }
             else if (activeMetric == 'ctr') {
-              value = Highcharts.numberFormat(this.y, 2) + "% click through";
+              value = Highcharts.numberFormat(this.y*100, 2) + "% click through";
               total = "";
             }
             else {

@@ -125,8 +125,11 @@ def main():
     
     # Create the new leads...  
     while len(companies) > 0:
-        create_result = sforce.upsert('iTunes_Artist_Name__c', [v.to_sfdc() for v in companies[:200]])
-        print create_result
+        try:
+            create_result = sforce.upsert('iTunes_Artist_Name__c', [v.to_sfdc() for v in companies[:200]])
+            print create_result
+        except:
+            print "Could not insert some records in this batch."
         companies[:200] = []
     
 if __name__ == '__main__':

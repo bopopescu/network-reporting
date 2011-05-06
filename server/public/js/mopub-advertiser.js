@@ -539,7 +539,7 @@ var mopub = mopub || {};
                 gtee_ctr = formatPercentage(0);
             }
             else {
-                gtee_ctr = decimalPlaces(gtee_clk/gtee_imp, 2);
+                gtee_ctr = formatPercentage(gtee_clk/gtee_imp, 2);
             }
             $('#gtee-total-ctr').text(gtee_ctr);
         }

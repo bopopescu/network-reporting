@@ -841,7 +841,7 @@ var mopub = mopub || {};
               else if(activeMetric == 'ctr') {
                 text = Highcharts.numberFormat(this.value, 0) + '%';
               } 
-              else{
+              else {
                 if (this.value >= 1000000000) {
                   return Highcharts.numberFormat(this.value / 1000000000, 0) + "B";
                 } else if (this.value >= 1000000) {

@@ -87,9 +87,9 @@
                         <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
                       </tr>
                       <tr id="stats-breakdown-ctr">
-                        <td class="stats-breakdown-value today"><span class="inner">{{today.click_count|withsep}}</span></td>
-                        <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.click_count|withsep}}</span></td>
-                        <td class="stats-breakdown-value all"><span class="inner">{{totals.click_count|withsep}}</span></td>
+                        <td class="stats-breakdown-value today"><span class="inner">{{today.ctr|percentage}}</span></td>
+                        <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.ctr|percentage}}</span></td>
+                        <td class="stats-breakdown-value all"><span class="inner">{{totals.ctr|percentage}}</span></td>
                         <th class="stats-breakdown-name"><span class="inner">CTR</span></th>
                       </tr>
                     </tbody>

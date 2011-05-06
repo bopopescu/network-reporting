@@ -298,7 +298,8 @@ var mopub = mopub || {};
       cacheImage.src = arguments[i];
       cache.push(cacheImage);
     }
-    log(cache);
+    // Commented out for cleanliness
+    // log(cache); 
   };
   
   // helper fn for console logging

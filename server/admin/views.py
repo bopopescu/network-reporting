@@ -208,12 +208,15 @@ def update_sfdc_leads(request, *args, **kwargs):
         return
     
     # Create/update the recent leads...  
-    start_date = datetime.date.today() - datetime.timedelta(days=)
+    start_date = datetime.date.today() - datetime.timedelta(days=DAYS_BACK)
     accounts = Account.gql("where date_added >= :1", start_date).fetch(ACCOUNT_FETCH_MAX)
     results = ""
     while len(accounts) > 0:
-        create_result = sforce.upsert('MoPub_Account_ID__c', [account_to_sfdc(a) for a in accounts[:BATCH_SIZE]])
-        results += str(create_result)
+        try:
+            create_result = sforce.upsert('MoPub_Account_ID__c', [account_to_sfdc(a) for a in accounts[:BATCH_SIZE]])
+            results += str(create_result)
+        except:
+            logging.info("Submit into SFDC failed for %d records" % BATCH_SIZE)
         accounts[:BATCH_SIZE] = []
 
     # Cool

@@ -196,8 +196,9 @@ class LogTaskHandler(webapp.RequestHandler):
                                                                                              exception_traceback))
               logging.error(exception_traceback)
               raise Exception("need to try transaction again")
-          
-      if not tail_index_str or memcache_misses:
+      
+      # only email if we miss alot (more than .1% or more than 1)      
+      if not tail_index_str or (memcache_misses > 1 and float(memcache_misses)/float(tail_index) > 0.001):
           exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
           
           message = "Account: %s time: %s tail: %s misses: %s retry: %s\nmemcache_stats_starts:%s\nmemcache_stats:%s"%(account_name,time_bucket,

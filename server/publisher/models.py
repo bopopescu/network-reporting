@@ -30,6 +30,7 @@ class App(db.Model):
     
     exchange_creative = db.ReferenceProperty(Creative)
     
+    experimental_fraction = db.FloatProperty(default=0.0)
   
     def get_owner(self):
         return None

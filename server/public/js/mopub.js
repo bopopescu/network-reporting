@@ -271,6 +271,17 @@ var mopub = mopub || {};
 				}
 			}
 		});
+
+	/*---------------------------------------/
+	/ What's This?-ifier 
+	/---------------------------------------*/
+
+      $('.whatsthis').click(function(e) {
+          e.preventDefault();
+          $('#'+$(this).attr('id').replace('helpLink', 'helpContent')).dialog({
+            buttons: { "Close": function() { $(this).dialog('close');} }
+          });
+      });
 		
 	});
 	
@@ -290,7 +301,6 @@ var mopub = mopub || {};
     log(cache);
   };
   
-  
   // helper fn for console logging
   var log;
 
@@ -300,5 +310,5 @@ var mopub = mopub || {};
   } else {
     log = function(){ return; }
   }
-    
+
 })(this.jQuery);

@@ -192,26 +192,31 @@ def update_sfdc_leads(request, *args, **kwargs):
                 'MoPub_Signup_Date__c': a.date_added,
                 'type': 'Lead'}
     
-    # This is gnarly
-    user = "jim@mopub.com"
-    pw = "fhaaCohb0hXCNSQnreJUPhHbgKYNaQf00"
+    # Gnarly constants
+    USER = "jim@mopub.com"
+    PW = "fhaaCohb0hXCNSQnreJUPhHbgKYNaQf00"
+    BATCH_SIZE = 1      # this is so low because we cannot override the urlfetch timeout easily w/ beatbox, so only have 5 seconds to do it
+    DAYS_BACK = 7       # only update 7 days of recent users at a time
+    ACCOUNT_FETCH_MAX = 1000   # maximum number of records to pull out of Account table
 
     # Login to SFDC as Jim
     sforce = beatbox.PythonClient()
     try:
-        login_result = sforce.login(user, pw)
+        login_result = sforce.login(USER, PW)
     except beatbox.SoapFaultError, errorInfo:
         print "Login failed: %s %s" % (errorInfo.faultCode, errorInfo.faultString)
         return
     
     # Create/update the recent leads...  
-    start_date = datetime.date.today() - datetime.timedelta(days=30)
-    accounts = Account.gql("where date_added >= :1", start_date).fetch(1000)
+    start_date = datetime.date.today() - datetime.timedelta(days=DAYS_BACK)
+    accounts = Account.gql("where date_added >= :1", start_date).fetch(ACCOUNT_FETCH_MAX)
     results = ""
-    BATCH_SIZE = 5      # this is so low because we cannot override the urlfetch timeout easily w/ beatbox, so only have 5 seconds to do it
     while len(accounts) > 0:
-        create_result = sforce.upsert('MoPub_Account_ID__c', [account_to_sfdc(a) for a in accounts[:BATCH_SIZE]])
-        results += str(create_result)
+        try:
+            create_result = sforce.upsert('MoPub_Account_ID__c', [account_to_sfdc(a) for a in accounts[:BATCH_SIZE]])
+            results += str(create_result)
+        except:
+            logging.info("Submit into SFDC failed for %d records" % BATCH_SIZE)
         accounts[:BATCH_SIZE] = []
 
     # Cool

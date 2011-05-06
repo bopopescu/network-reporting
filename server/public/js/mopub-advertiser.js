@@ -773,7 +773,7 @@ var mopub = mopub || {};
       $('#dashboard-stats-chart').removeClass('chart-loading').addClass('chart-error');
     }
     
-    function setupDashboardStatsChart() {
+    function setupDashboardStatsChart(seriesType) {
       // get active metric from breakdown
       var metricElement = $('#dashboard-stats .stats-breakdown .active');
       var metricElementIdComponents = metricElement.attr('id').split('-');
@@ -811,7 +811,7 @@ var mopub = mopub || {};
       this.trafficChart = new Highcharts.Chart({
         chart: {
           renderTo: 'dashboard-stats-chart',
-          defaultSeriesType: 'area',
+          defaultSeriesType: seriesType,
           marginTop: 0,
           marginBottom: 55
         },
@@ -887,14 +887,23 @@ var mopub = mopub || {};
       $('#dashboard-stats-chart').removeClass('chart-loading');
     }
     if ($('#dashboard-stats').length){
-      setupDashboardStatsChart();
+      setupDashboardStatsChart('area');
     }
+
     // Use breakdown to switch charts
-    $('.stats-breakdown tr').click(function(e) {
+    $('.stats-breakdown tr:not(#stats-breakdown-ctr)').click(function(e) {
       $('#dashboard-stats-chart').fadeOut('fast', function() {
-        setupDashboardStatsChart();
+        setupDashboardStatsChart('area');
         $(this).fadeIn('fast');
       });
+    });
+    
+    // Remove the standard click handler and replace it
+    $('#stats-breakdown-ctr').click(function(){
+        $('#dashboard-stats-chart').fadeOut('fast', function(){
+            setupDashboardStatsChart('line');
+            $(this).fadeIn('fast');
+        });
     });
     
     /*---------------------------------------/

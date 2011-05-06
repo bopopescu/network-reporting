@@ -181,9 +181,8 @@ class StatsModelQueryManager(CachedQueryManager):
         days_len = len(days)
         stats = StatsModel.get(keys) # db get
         #since pubs iterates more than once around days, stats might be too long
-        #but it shoudl only iterate on MULTIPLES of days_len, so ct mod days_len
-        #should be right
-        #Hackery to turn date obj into datetime obj  PYTHON WHY DONT YOU DO THIS FOR ME
+        #but it should only iterate on MULTIPLES of days_len, so ct mod days_len
+
         stats = [s or StatsModel(date=datetime.datetime.combine(days[ct%days_len],datetime.time())) for ct,s in enumerate(stats)]
         return stats            
     

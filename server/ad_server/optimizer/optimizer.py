@@ -6,7 +6,7 @@ import random
 
 from ad_server.debug_console import trace_logging
 
-SAMPLING_FRACTION = .03 # We use a default sampling rate of 3 per 100
+SAMPLING_FRACTION = .25 # We use a default sampling rate of 3 per 100
 SAMPLING_ECPM = .50 # We use 50 cents as a representative ecpm
 
 def get_ctr(adunit_context, creative, min_sample_size=1000, default_ctr=0.03, dt=datetime.datetime.now()):

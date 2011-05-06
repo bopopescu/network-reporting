@@ -779,6 +779,8 @@ var mopub = mopub || {};
       var metricElementIdComponents = metricElement.attr('id').split('-');
       var activeMetric = metricElementIdComponents[metricElementIdComponents.length - 1];
 
+      console.log(activeMetric);
+
       // get data
       var data = mopub.dashboardStatsChartData;
       if(typeof data == 'undefined') {
@@ -831,7 +833,12 @@ var mopub = mopub || {};
             formatter: function() {
               if(activeMetric == 'revenue') {
                 text = '$' + Highcharts.numberFormat(this.value, 0);
-              } else {
+              }
+              else if(activeMetric == 'ctr') {
+                text = Highcharts.numberFormat(this.value, 0) + '%';
+                console.log(text);
+              } 
+              else{
                 if (this.value >= 1000000000) {
                   return Highcharts.numberFormat(this.value / 1000000000, 0) + "B";
                 } else if (this.value >= 1000000) {
@@ -859,6 +866,10 @@ var mopub = mopub || {};
               value = Highcharts.numberFormat(this.y, 0) + ' ' + activeMetric + " (" + this.point.name + ")";
               total = Highcharts.numberFormat(this.total, 0) + ' total ' + activeMetric;
             }
+            else if (activeMetric == 'ctr') {
+              value = Highcharts.numberFormat(this.y, 2) + "%";
+              total = "";
+            }
             else {
               value = Highcharts.numberFormat(this.y, 0) + ' ' + activeMetric;
               total = Highcharts.numberFormat(this.total, 0) + ' total ' + activeMetric;
@@ -867,7 +878,7 @@ var mopub = mopub || {};
             text += '<span style="font-size: 14px;">' + Highcharts.dateFormat('%A, %B %e, %Y', this.x) + '</span><br/>';
             text += '<span style="padding: 0; font-weight: 600; color: ' + this.series.color + '">' + this.series.name + '</span>' + ': <strong style="font-weight: 600;">' + value + '</strong><br/>';
             
-            if(chartSeries.length > 1) {
+            if((chartSeries.length > 1) && (total != "")) {
               text += '<span style="font-size: 12px; color: #666;">';
               if(this.total > 0) {
                 text += '(' + Highcharts.numberFormat(this.percentage, 0) + '% of ' + total + ')';

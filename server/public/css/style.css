@@ -2055,7 +2055,8 @@ table.campaignData-main {
 }
 
 .campaignData-rollup {
-  background: #EDF3F7;
+/*  background: #F5F9FC;*/
+  background: #EBF2F7;
   color: #444;
   margin-bottom: 20px;
   padding: 5px;

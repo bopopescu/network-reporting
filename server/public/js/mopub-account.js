@@ -9,6 +9,8 @@ var mopub = mopub || {};
 	// dom ready
 	$(document).ready(function() {
 		
+		$('.button-show').button({icons: { secondary: "ui-icon-triangle-1-s" }});
+		$('.button-hide').button({icons: { secondary: "ui-icon-triangle-1-n" }});
 		// Submit button
 		$('#accountForm-submit')
 			.button({ 

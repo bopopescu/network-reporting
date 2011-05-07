@@ -508,7 +508,7 @@ var mopub = mopub || {};
     
     function formatPercentage(number){
       // We round to two decimal places
-      return number.toFixed(2) + '%';
+      return (number*100).toFixed(2) + '%';
     }
     
     function calcRollups() {

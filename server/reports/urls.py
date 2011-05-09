@@ -9,5 +9,7 @@ urlpatterns = patterns('reports.views',
         #Gen report is called by the TQ
         url(r'^gen_report/$', 'gen_report', name='generate_reports'),
         #Add report is when you want to make a new report
-        url(r'^add/$', 'add_report', name='add_report')
+        url(r'^add/$', 'add_report', name='add_report'),
+        url(r'^run/(?P<report_key>[-\w\.]+)/$', 'run_report', name='run_report'),
+        url(r'^save/(?P<report_key>[-\w\.]+)/$', 'save_report', name='save_report'),
         )

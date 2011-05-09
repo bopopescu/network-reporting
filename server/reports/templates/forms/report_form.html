@@ -1,25 +1,29 @@
 {% load filters %}
 
 <dl class='formFields'>
+    {% if form.save_as %}
     <dt>Report Name:</dt>
     <dd>
     <input type='text' name='name' value='{{form.name.value}}' placeholder='Report Name'></input></dd>
+    {% endif %}
     <dt>Report Breakdown:</dt>
     <dd>
     {{ form.d1|attrs:'{"class":"dim-selectmenu","id":"d1"}'|raw }}
-    <span id="d2-show" class='hidden'>
+    <span id="d2-show" {% if not form.d2.value %}class='hidden'{% endif %}>
     &nbsp;>&nbsp;
     {{ form.d2|attrs:'{"class":"dim-selectmenu","id":"d2"}'|raw }}
-    <span id='d3-show' class='hidden'>
+    <span id='d3-show' {% if not form.d3.value %}class='hidden'{% endif %}>
     &nbsp;>&nbsp;
     {{ form.d3|attrs:'{"class":"dim-selectmenu","id":"d3"}'|raw }}
     </span>
     </span>
     </dd>
-    <dt>Dates</dt>
+    <dt>Dates:</dt>
     <dd>
-        <input type='text' class='input-text input-text-number' name='{{form.start.name}}' size='15' value='{{form.start.value|date:'m/d/Y'}}' placeholder='Start'/> -
-        <input type='text' class='input-text input-text-number' name='{{form.end.name}}' size='15' value='{{form.end.value|date:'m/d/Y'}}' placeholder='End'/>
+        {{ form.interval|attrs:'{"class":"int-selectmenu","id":"interval"}'|raw }}
+        &nbsp;&nbsp;
+        <input id='start-input' type='text' class='input-text input-text-number date-field' name='{{form.start.name}}' size='15' value='{{form.start.value|date:'m/d/Y'}}' placeholder='Start'/> -
+        <input id='end-input' type='text' class='input-text input-text-number date-field' name='{{form.end.name}}' size='15' value='{{form.end.value|date:'m/d/Y'}}' placeholder='End'/>
     </dd>
         
         

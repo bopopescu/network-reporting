@@ -175,7 +175,6 @@ class CreativeQueryManager(QueryManager):
                 advertiser = [advertiser]
             for adv in advertiser:
                 adgroups += adv.adgroups
-
         if publisher:
             adunits = [publisher]
             if hasattr(publisher, 'all_adunits'):
@@ -183,12 +182,12 @@ class CreativeQueryManager(QueryManager):
             pub_ags = AdGroup.all().filter('site_keys IN', adunits)
             pub_ags = [a for a in pub_ags if a.deleted == deleted]
             if adgroups:
-                if len(pub_ags) >= len(adgroups):
-                    adgroups = [a for a in pub_ags if a in adgroups]
-                elif len(pub_ags) < len(adgroups):
-                    adgroups = [a for a in adgroups if a in pub_ags]
-                else:
-                    logging.error("That's Impossible")
+                final = []
+                for pub_ag in pub_ags:
+                    for ag in adgroups:
+                        if pub_ag.key() == ag.key():
+                            final.append(pub_ag)
+                adgroups = final
             else:
                 adgroups = pub_ags
         if adgroups:

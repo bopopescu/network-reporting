@@ -1186,6 +1186,9 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
 .dataTable-data {
   width: 75px;
 }
+.dataTable-date {
+  width: 175px;
+}
 
 /* App data */
 

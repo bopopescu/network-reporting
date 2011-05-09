@@ -23,6 +23,18 @@
             $('#reportCreateForm').submit();
     });
 
+    $('#reports-view-runReportButton').button({
+        icons: {secondary: 'ui-icon-circle-triangle-e' }})
+
+    $('#reports-view-saveReportButton')
+    .button({
+        icons: {secondary: 'ui-icon-circle-check'}})
+    .click(function(e) {
+        e.preventDefault();
+        console.log("clicky");
+        $.ajax({url:'http://' + window.location.host + '/reports/save/' + $('#reportKey').val() + '/'})
+    })
+
     $('#reportCreateForm-cancel').button()
         .click(function(e) {
             e.preventDefault();
@@ -64,6 +76,82 @@
             $(this).parents('form').submit();
         });
 
+    $('.int-selectmenu').selectmenu({
+        style: 'popup',
+        maxHeight:300,
+        width:115
+    });
+
+    function fix_date(dte) {
+        if (dte < 10) {
+            return '0' + dte;
+        }
+        return dte;
+    }
+
+    function format_date(dte) {
+        return fix_date(dte.getMonth() + 1) + '/' + fix_date(dte.getDate()) + '/' + dte.getFullYear();
+    }
+
+
+    var update = true;
+    $('#interval')
+        .change(function(e) {
+            update = false;
+            var val = $(this).val();
+            var today = new Date();
+            if (val != 'custom') {
+                var one_day = 1000*60*60*24
+                switch (val) {
+                    case 'today':
+                        var dte = format_date(today); 
+                        $('#end-input').val(dte);
+                        $('#start-input').val(dte);
+                        break;
+                    case 'yesterday':
+                        today.setTime(today.getTime() - one_day);
+                        var dte = format_date(today); 
+                        $('#end-input').val(dte);
+                        $('#start-input').val(dte);
+                        break;
+                    case '7days':
+                        var dte = format_date(today); 
+                        $('#end-input').val(dte);
+                        today.setTime(today.getTime() - (7*one_day));
+                        dte = format_date(today); 
+                        $('#start-input').val(dte);
+                        break;
+                    case 'lmonth':
+                        var this_mo = today.getMonth();
+                        while (today.getMonth() == this_mo) {
+                            today.setTime(today.getTime() - one_day);
+                        }
+                        var dte = format_date(today); 
+                        $('#end-input').val(dte);
+                        today.setDate(1);
+                        dte = format_date(today); 
+                        $('#start-input').val(dte);
+                        break;
+                }
+            }
+            else {
+                return;
+            }
+        }).change();
+
+    $('.date-field')
+        .focus(function(e) {
+            update = true;
+        })
+        .change(function(e) {
+            if (update) {
+                $('#interval').selectmenu('index', 4);
+            }
+            else {
+                update = true;
+                return;
+            }
+        })
 
     var selects = $('.dim-selectmenu').selectmenu({
         style: 'popup',

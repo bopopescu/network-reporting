@@ -94,6 +94,12 @@ indexes:
   - name: active
   - name: budget
 
+- kind: Report
+  properties:
+  - name: schedule
+  - name: created_at
+    direction: desc
+
 - kind: SiteStats
   properties:
   - name: owner

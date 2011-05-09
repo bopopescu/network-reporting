@@ -16,7 +16,7 @@
 <section id="reports-reportAddForm" class='hidden'>
     <div>
         <form action="{% url add_report %}" method="POST" accept-charset="utf-8" id="reportCreateForm">
-            <input type='hidden' name='saved' value='True' />
+            <input type='hidden' name='saved' value='False' />
             <fieldset id="reportAddForm-details" class="alt">
                 <div id="reportAddForm-fragment" class="reportAddForm-fragment">
                     {{report_fragment.as_template}}
@@ -31,25 +31,6 @@
         </form>
     </div>
 </section>
-{% for save in saved %}
-<div id='{{save.key}}-edit' class='hidden report-savedEditForm'>
-    <form action='{% url add_report %}' method='POST' accept-charset='utf-8' id='reportEditForm-{{forloop.counter0}}' class='reportEditForm'>
-        <input type='hidden' name='report_key' value='{{save.key}}'/>
-        <fieldset id='reportAddForm-details-{{forloop.counter0}}' class='alt'>
-            <div id='reportEditForm-fragment-{{forloop.counter0}}' class='reportEditForm-fragment'>
-            {% comment %}
-                stuff here about the report fragment w/e i dunno
-            {% endcomment %}
-        </div>
-        <div class='clear'></div>
-        <div class='form-submit'>
-            <span id='reportCreateForm-success' class='hidden reportEditForm-success'>Success!</span>
-            <span class='buttonWrap'><a href='#' class='button reportEditForm-submit' id='reportCreateForm-submit'>Save</a></span>
-            <span class='buttonWrap'><a href='#' class='button reportEditForm-cancel' id='reportCreateForm-cancel'>Cancel</a></span>
-        </div>
-    </fieldset>
-</div>
-{% endfor %}
 <section id='report-savedReports'>
     <table class='reportData-table reportData-saved dataTable reportTable' id='reports-saved-columnHeaders'>
         <thead>
@@ -57,24 +38,24 @@
                 <th class='reportData-icon'></th>
                 <th class='dataTable-name'>Name</th>
                 <th class='dataTable-name'>Details</th>
-                <th class='dataTable-data numeric'>Status</th>
+                <th class='dataTable-date'>Last Run</th>
                 <th class='dataTable-data numeric'></th>
             </tr>
         </thead>
         <tbody>
-            {% for save in saved %}
-            <tr class="{% cycle 'reportData' 'reportData reportData-alt' %}" id='reports-saved-{{forloop.counter0}}'>
+            {% for report in scheduled %}
+            <tr class="{% cycle 'reportData' 'reportData reportData-alt' %}" id='reports-reportd-{{forloop.counter0}}'>
                 <td class='reportData-icon'>
-                    <input type='checkbox' name='reportManagementForm-key' value='{{save.key}}'/>
+                    <input type='checkbox' name='reportManagementForm-key' value='{{report.key}}'/>
                 </td>
                 {% comment %}
                 do stuff for editing report on the fly
                 {% endcomment %}
                 <th class='dataTable-name'>
-                    <a href='{% url view_report report_key=save.key %}'>{{save.name}}</a>
+                    <a href='{% url view_report report_key=report.key %}'>{{report.name}}</a>
                 </th>
-                <td class='dataTable-name'>{{save.details|safe}}</td>
-                <td id='{{save.key}}-status' class='dataTable-data numeric'>{{save.status|title}}</td>
+                <td class='dataTable-name'>{{report.details|safe}}</td>
+                <td id='{{report.key}}-status' class='dataTable-date'>{{report.last_run|date:'N j, Y f a'}}</td>
                 <td class='dataTable-data numeric'></td>
             </tr>
             {% endfor %}
@@ -82,89 +63,10 @@
                 <th class="reportData-icon"></th>
                 <th class="dataTable-name"><span class="muted">None</span></th>
                 <td class="dataTable-data numeric"></td>
-                <td class="dataTable-data numeric"></td>
-                <td class="dataTable-data numeric"></td>
-            </tr>
-        </tbody>
-    </table>
-</section>
-<h2>Common Reports</h2>
-<section id='report-commonReports'>
-    <table class='reportData-table reportData-common dataTable reportTable' id='reports-common-columnHeaders'>
-        <thead>
-            <tr>
-                <th class='reportData-icon'></th>
-                <th class='dataTable-name'>Name</th>
-                <th class='dataTable-name'>Details</th>
-                <th class='dataTable-data numeric'>Status</th>
-                <th class='dataTable-data numeric'></th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for comm in common %}
-            <tr class="{% cycle 'reportData' 'reportData reportData-alt' %}" id='reports-common-{{forloop.counter0}}'>
-                <td class='reportData-icon'>
-                    {% comment %}
-                    can't delete the "common" reports, nothing really goes here....
-                    {% endcomment %}
-                </td>
-                <th class='dataTable-name'>
-                    <a href='{% url view_report report_key=comm.key %}'>{{comm.name}}</a>
-                </th>
-                <td class='dataTable-name'>{{comm.details|safe}}</td>
-                <td id='{{comm.key}}-status' class='dataTable-data numeric'>{{comm.status|title}}</td>
-                <td class='dataTable-data numeric'></td>
-            </tr>
-            {% endfor %}
-            <tr class="reportData reportData-placeholder">
-                <th class="reportData-icon"></th>
-                <th class="dataTable-name"><span class="muted">None</span></th>
-                <td class="dataTable-data numeric"></td>
-                <td class="dataTable-data numeric"></td>
+                <td class="dataTable-date"></td>
                 <td class="dataTable-data numeric"></td>
             </tr>
         </tbody>
     </table>
 </section>
-<h2>Report History</h2>
-<section id='report-historyReports'>
-    <table class='reportData-table reportData-history dataTable reportTable' id='reports-common-columnHeaders'>
-        <thead>
-            <tr>
-                <th class='reportData-icon'></th>
-                <th class='dataTable-name'>Name</th>
-                <th class='dataTable-name'>Details</th>
-                <th class='dataTable-data numeric'>Status</th>
-                <th class='dataTable-data numeric'>Last Viewed</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for hist in history %}
-            <tr class="{% cycle 'reportData' 'reportData reportData-alt' %}" id='reports-history-{{forloop.counter0}}'>
-                <td class='reportData-icon'>
-                    <input type='checkbox' name='reportManagementForm-key' value='{{hist.key}}'/>
-                </td>
-                {% comment %}
-                do stuff for editing report on the fly
-                {% endcomment %}
-                <th class='dataTable-name'>
-                    <a href='{% url view_report report_key=hist.key %}'>{{hist.name}}</a>
-                </th>
-                <td class='dataTable-name'>{{hist.details|safe}}</td>
-                <td id='{{hist.key}}-status' class='dataTable-data numeric'>{{hist.status|title}}</td>
-            </tr>
-            {% endfor %}
-            <tr class="reportData reportData-placeholder">
-                <th class="reportData-icon"></th>
-                <th class="dataTable-name"><span class="muted">None</span></th>
-                <td class="dataTable-data numeric"></td>
-                <td class="dataTable-data numeric"></td>
-                <td class="dataTable-data numeric"></td>
-            </tr>
-        </tbody>
-    </table>
-</section>
-                
-
-
 {% endblock content %}

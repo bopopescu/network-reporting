@@ -20,7 +20,7 @@ to '/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine
 //////////////////////////////////////////
 
 To edit the datastore, use the following from your server directory:
-$ dev_appserver.py --datastore_path=test_data/basic_test.datastore .
+$ dev_appserver.py --datastore_path=test_data/basic_test.datastore --port=8080 .
 
 then go to:
 http://localhost:8080/_ah/admin/datastore

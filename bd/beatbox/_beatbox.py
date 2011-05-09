@@ -388,6 +388,21 @@ class QueryOptionsRequest(AuthenticatedRequest):
         s.writeStringElement(_partnerNs, "batchSize", self.batchSize)
         s.endElement()
         
+class AssignmentRuleHeaderRequest(AuthenticatedRequest):
+    def __init__(self, context, sessionId, operationName):
+        AuthenticatedRequest.__init__(self, context, sessionId, operationName)
+        self.use_default_assignment_rule = True
+        self.assignment_rule_id = None
+
+    def writeHeaders(self, s):
+        AuthenticatedRequest.writeHeaders(self, s)
+        s.startElement(_partnerNs, "AssignmentRuleHeader")
+        if self.use_default_assignment_rule is True:
+            s.writeStringElement(_partnerNs, "useDefaultRule", "true")
+        elif self.assignment_rule_id is not None:
+            s.writeStringElement(_partnerNs, "assignmentRuleID", self.assignment_rule_id)
+        s.endElement()
+
         
 class QueryRequest(QueryOptionsRequest):
     def __init__(self, serverUrl, sessionId, batchSize, soql):
@@ -434,9 +449,9 @@ class GetDeletedRequest(GetUpdatedRequest):
         GetUpdatedRequest.__init__(self, serverUrl, sessionId, sObjectType, start, end, "getDeleted")
 
     
-class UpsertRequest(AuthenticatedRequest):
+class UpsertRequest(AssignmentRuleHeaderRequest):
     def __init__(self, serverUrl, sessionId, externalIdName, sObjects):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId, "upsert")
+        AssignmentRuleHeaderRequest.__init__(self, serverUrl, sessionId, "upsert")
         self.__externalIdName = externalIdName
         self.__sObjects = sObjects
         
@@ -445,9 +460,9 @@ class UpsertRequest(AuthenticatedRequest):
         self.writeSObjects(s, self.__sObjects)
 
 
-class UpdateRequest(AuthenticatedRequest):
+class UpdateRequest(AssignmentRuleHeaderRequest):
     def __init__(self, serverUrl, sessionId, sObjects, operationName="update"):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId, operationName)
+        AssignmentRuleHeaderRequest.__init__(self, serverUrl, sessionId, operationName)
         self.__sObjects = sObjects
         
     def writeBody(self, s):

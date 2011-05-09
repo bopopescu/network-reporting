@@ -19,6 +19,10 @@
               <span class="ui-icon ui-icon-arrow-1-e"></span> 
               <span class="stepProgress-step stepProgress-active">Step 4: Ad campaigns</span> 
             </div>
+    {% else %}        
+        <span class="titlebar-right">
+            <a class="button" id="advertisers-testAdServer" href="#">Test Campaigns</a>
+        </span>
     {% endifequal %}
             
 {% endblock titleBarRight %}
@@ -63,7 +67,7 @@
             <section class="offset nomargin" id="dashboard-stats">
               <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
               <div class="stats">
-                <div class="stats-breakdown">
+                <div class="stats-breakdown stats-breakdown-4">
                   <table>
                     <tbody>
                       <tr class="active" id="stats-breakdown-impressions">
@@ -83,6 +87,12 @@
                         <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.click_count|withsep}}</span></td>
                         <td class="stats-breakdown-value all"><span class="inner">{{totals.click_count|withsep}}</span></td>
                         <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
+                      </tr>
+                      <tr id="stats-breakdown-ctr">
+                        <td class="stats-breakdown-value today"><span class="inner">{{today.ctr|percentage}}</span></td>
+                        <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.ctr|percentage}}</span></td>
+                        <td class="stats-breakdown-value all"><span class="inner">{{totals.ctr|percentage}}</span></td>
+                        <th class="stats-breakdown-name"><span class="inner">CTR</span></th>
                       </tr>
                     </tbody>
                   </table>
@@ -114,6 +124,9 @@
                       ],
                       'clicks': [{% for a in graph_adgroups %}
                         { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                      ],
+                      'ctr': [{% for a in graph_adgroups %}
+                        { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.ctr}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                       ],
                     };
                   </script>
@@ -156,7 +169,7 @@
             <form method="post" action="{% url advertiser_bid_pause %}" id="campaignForm">
               <input type="hidden" name="action" id="action"/>
               <h2>Guaranteed</h2>
-              <div id='gtee-rollups' class="rollupAlert">
+              <div id='gtee-rollups' class="campaignData-rollup">
                   <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
                       <thead>
                           <tr>
@@ -250,7 +263,7 @@
                 </tbody>
               </table>
               <h2>Promotional</h2>
-              <div id='promo-rollups' class="rollupAlert">
+              <div id='promo-rollups' class="campaignData-rollup">
                   <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
                       <thead>
                           <tr>
@@ -335,7 +348,7 @@
                 </tbody>
               </table>
               <h2>Network</h2>
-              <div id='network-rollups' class="rollupAlert">
+              <div id='network-rollups' class="campaignData-rollup">
                   <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
                       <thead>
                           <tr>
@@ -411,7 +424,7 @@
                 </tbody>
               </table>
               <h2>Backfill Promotional</h2>
-              <div id='bfill-rollups' class="rollupAlert">
+              <div id='bfill-rollups' class="campaignData-rollup">
                   <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
                       <thead>
                           <tr>

@@ -1,24 +1,24 @@
 import logging 
-from math import ( atan2,
+from math import (atan2,
                    cos,
                    sin,
                    sqrt,
                    pow,
                    pi
-                   )
+                  )
 from budget import budget_service
 from reporting.models import StatsModel
 
 from common.constants import (VALID_FULL_FORMATS,     
                               VALID_TABLET_FULL_FORMATS,
-                              )
+                             )
 ###############################
 # BASIC INCLUSION FILTERS
 #
 # --- Each filter function is a function which takes some arguments (or none) necessary 
 #       for the filter to work its magic. log_mesg is the message that will be logged 
 #       for the associated objects that eval'd to false.
-# --- ALL FILTER GENERATOR FUNCTIONS MUST RETURN ( filter_function, log_mesg, [] )
+# --- ALL FILTER GENERATOR FUNCTIONS MUST RETURN (filter_function, log_mesg, [])
 # --- The empty list is the list that will contain all elt's for which the 
 # --- Filters should return TRUE if the element being tested should be kept
 #       
@@ -26,21 +26,20 @@ from common.constants import (VALID_FULL_FORMATS,
 
 def budget_filter():
     log_mesg = "Removed due to being over budget: %s"
-    def real_filter( a ):
+    def real_filter(a):
         # Check if we need smoothing, if so, use budgeting
         return (budget_service.has_budget(a.campaign, a.bid/1000))
-    return ( real_filter, log_mesg, [] )
+    return (real_filter, log_mesg, [])
 
 def active_filter():
     log_mesg = "Removed due to inactivity: %s"
-    def real_filter( a ):
-        # WTF: which is it? adgroup or campaign?!?!
-        return ( a.active and a.campaign.active and ( a.campaign.start_date  <= StatsModel.today() if a.campaign.start_date else True ) and ( StatsModel.today() <= a.campaign.end_date if a.campaign.end_date else True ) )
-    return ( real_filter, log_mesg, [] )
+    def real_filter(a):
+        return (a.active and a.campaign.active and (a.campaign.start_date  <= StatsModel.today() if a.campaign.start_date else True) and (StatsModel.today() <= a.campaign.end_date if a.campaign.end_date else True))
+    return (real_filter, log_mesg, [])
 
-def kw_filter( keywords ):
+def kw_filter(keywords):
     log_mesg = "Removed due to keyword mismatch: %s"
-    def real_filter( adgroup ):
+    def real_filter(adgroup):
         # if there are no keywords then we don't need to exclude
         if not adgroup.keywords:
             return True 
@@ -59,26 +58,26 @@ def kw_filter( keywords ):
                 keyword_match = True 
                 break
         return keyword_match # return False if there is a match and vice versa        
-    return ( real_filter, log_mesg, [] )
+    return (real_filter, log_mesg, [])
 
 
-def geo_filter( geo_preds ):
+def geo_filter(geo_preds):
     log_mesg = "Removed due to geo mismatch: %s"
-    def real_filter( a ):
-        return ( set( geo_preds ).intersection( a.geographic_predicates ) > set() )
-    return ( real_filter, log_mesg, [] )
+    def real_filter(a):
+        return (set(geo_preds).intersection(a.geographic_predicates) > set())
+    return (real_filter, log_mesg, [])
 
-def device_filter( dev_preds ):
+def device_filter(dev_preds):
     log_mesg = "Removed due to device mismatch: %s"
-    def real_filter( a ):
-        return ( set( dev_preds ).intersection( a.device_predicates ) > set() )
-    return ( real_filter, log_mesg, [] )
+    def real_filter(a):
+        return (set(dev_preds).intersection(a.device_predicates) > set())
+    return (real_filter, log_mesg, [])
 
-def mega_filter( *filters ): 
-    def actual_filter( a ):
-        for ( f, msg, lst ) in filters:
-            if not f( a ):
-                lst.append( a )
+def mega_filter(*filters): 
+    def actual_filter(a):
+        for (f, msg, lst) in filters:
+            if not f(a):
+                lst.append(a)
                 return False
         return True
     return actual_filter
@@ -89,9 +88,9 @@ def mega_filter( *filters ):
 #
 ######################################
 
-def format_filter( format ):
-    log_mesg = "Removed due to format mismatch, expected " + str( format ) + ": %s"
-    def real_filter( creative ):
+def format_filter(format):
+    log_mesg = "Removed due to format mismatch, expected " + str(format) + ": %s"
+    def real_filter(creative):
         if not format or not creative.format:
             return True 
         if creative.multi_format:
@@ -108,20 +107,20 @@ def format_filter( format ):
             else:
                 return creative.format in VALID_TABLET_FULL_FORMATS
         return creative.format == format
-    return ( real_filter, log_mesg, [] )
+    return (real_filter, log_mesg, [])
 
-def exclude_filter( excl_params ):
+def exclude_filter(excl_params):
     log_mesg = "Removed due to exclusion parameters: %s"
     # NOTE: we are excluding on ad type not the creative id
-    def real_filter( creative ):
+    def real_filter(creative):
         return not creative.ad_type in excl_params 
-    return ( real_filter, log_mesg, [] )
+    return (real_filter, log_mesg, [])
 
-def ecpm_filter( winning_ecpm, creative_ecpm_dict ):
+def ecpm_filter(winning_ecpm, creative_ecpm_dict):
     log_mesg = "Removed due to low eCPM: %s"
-    def real_filter( creative ):
+    def real_filter(creative):
         return creative_ecpm_dict[creative] >= winning_ecpm
-    return ( real_filter, log_mesg, [] )
+    return (real_filter, log_mesg, [])
 
 ##############################################
 #
@@ -130,39 +129,39 @@ def ecpm_filter( winning_ecpm, creative_ecpm_dict ):
 ##############################################
 
 
-def freq_filter( type, key_func, udid, now, frq_dict ):
+def freq_filter(type, key_func, udid, now, frq_dict):
     """Function for constructing a frequency filter
     Super generic, made this way since all frequencies are just
      -verify frequency cap, if yes make sure we're not over it, otherwise carry on
     so I just made a way to generate them"""
     
     log_mesg = "Removed due to " + type + " frequency cap: %s"
-    def real_filter( a ):
-        a_key = key_func( udid, now, a.key() )
+    def real_filter(a):
+        a_key = key_func(udid, now, a.key())
         #This is why all frequency cap attributes must follow the same naming convention, otherwise this
         #trick doesn't work
         try:
-            frq_cap = getattr( a, '%s_frequency_cap' % type ) 
+            frq_cap = getattr(a, '%s_frequency_cap' % type) 
         except:
             frq_cap = 0
 
-        if frq_cap and ( a_key in frq_dict ):
-            imp_cnt = int( frq_dict[ a_key ] )
+        if frq_cap and (a_key in frq_dict):
+            imp_cnt = int(frq_dict[ a_key ])
         else:
             imp_cnt = 0
         #Log the current counts and cap
-        logging.warning( "%s imps: %s, freq cap: %s" % ( type.title(), imp_cnt, frq_cap ) )
-        return ( not frq_cap or imp_cnt < frq_cap )
-    return ( real_filter, log_mesg, [] )
+        logging.warning("%s imps: %s, freq cap: %s" % (type.title(), imp_cnt, frq_cap))
+        return (not frq_cap or imp_cnt < frq_cap)
+    return (real_filter, log_mesg, [])
 
 #this is identical to mega_filter except it logs the adgroup 
-def all_freq_filter( *filters ):
-    def actual_filter( a ):
+def all_freq_filter(*filters):
+    def actual_filter(a):
         #print the adgroup title so the counts/cap printing in the acutal filter don't confuse things
-        logging.warning( "Adgroup: %s" % a )
+        logging.warning("Adgroup: %s" % a)
         for f, msg, lst in filters:
-            if not f( a ):
-                lst.append( a )
+            if not f(a):
+                lst.append(a)
                 return False
         return True
     return actual_filter

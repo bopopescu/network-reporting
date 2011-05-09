@@ -145,9 +145,10 @@ def all_user_dropdown(request,value=1000):
     from google.appengine.ext import db
     value = int(value)
     htmls = []
-    for account in Account.all().order("user").fetch(value):
-        if account.user:
-            htmls.append('<option value="%s">%s</option>'%(account.key(),account.user.email()))
+    accounts = Account.all().order("user").fetch(value)
+    for account in accounts:
+        if account.mpuser:
+            htmls.append('<option value="%s">%s</option>'%(account.key(),account.mpuser.email))
     return mark_safe('\n'.join(htmls))
 
 @register.filter

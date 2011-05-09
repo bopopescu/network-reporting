@@ -17,9 +17,8 @@ class AccountQueryManager(CachedQueryManager):
     Model = Account
 
     @classmethod
-    def get_current_account(cls,user=None):
-        if not user:
-            user = users.get_current_user()
+    def get_current_account(cls,request=None,user=None):
+        user = request.user
         # try to fetch the account for this user from memcache      
         account = memcache.get(str(cls._user_key(user)), namespace="account")    
         
@@ -32,7 +31,7 @@ class AccountQueryManager(CachedQueryManager):
             # create the user
             if not account:
                 logging.warning("account needs to be created")
-                account = Account(user=user, all_users=[cls._user_key(user)], status="new")    
+                account = Account(mpuser=user, all_users=[cls._user_key(user)], status="new")    
                 account.put()
             memcache.set(str(cls._user_key(user)), account, namespace="account")
         logging.warning("account: %s"%account.key())    
@@ -56,7 +55,7 @@ class AccountQueryManager(CachedQueryManager):
     
     @classmethod    
     def _user_key(cls,user):
-        return db.Key.from_path("User", user.user_id())     
+        return user.key()
 
 
     # only to be used for migrations that are manual    
@@ -102,7 +101,6 @@ class AccountQueryManager(CachedQueryManager):
         #     old_account.delete()
 
 class UserQueryManager(QueryManager):
-    
     @classmethod
     def get_by_email(cls,email):
-        return cls.get_by_email(email)       
+        return User.get_by_email(email)       

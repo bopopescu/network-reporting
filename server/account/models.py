@@ -1,37 +1,30 @@
 from django.utils.translation import ugettext_lazy as _
+from django.contrib.auth.models import UserManager
 
 from google.appengine.ext import db
 from google.appengine.api import users
-from common.ragendja.auth.models import EmailUser
+from common.ragendja.auth import hybrid_models
+
 
 
 import logging
 
-class User(EmailUser):
-    """Default User class that mimics Django's User class."""
-    # properties defined in the various abstract super classes
-    # last_login = db.DateTimeProperty(verbose_name=_('last login'))
-    # date_joined = db.DateTimeProperty(auto_now_add=True,
-    #     verbose_name=_('date joined'))
-    # is_active = db.BooleanProperty(default=True, verbose_name=_('active'))
-    # is_staff = db.BooleanProperty(default=False,
-    #     verbose_name=_('staff status'))
-    # is_superuser = db.BooleanProperty(default=False,
-    #     verbose_name=_('superuser status'))
-    # password = db.StringProperty(default=UNUSABLE_PASSWORD,
-    #     verbose_name=_('password'))
-    # email = db.EmailProperty(required=True, verbose_name=_('e-mail address'))
-    # # This can be used to distinguish between banned users and unfinished
-    # # registrations
-    # is_banned = db.BooleanProperty(default=False,
-    #     verbose_name=_('banned status'))    
-    first_name = db.StringProperty()
-    last_name = db.StringProperty()
+class MPUserManager(UserManager):
+    def filter(self,*args,**kwargs):
+        from account.query_managers import UserQueryManager
+        for kwarg_key in kwargs:
+            if 'email' in kwarg_key:
+                email = kwargs[kwarg_key]
+                user = UserQueryManager.get_by_email(email)
+                return [user] if user else []
+                
+
+class User(hybrid_models.User):
     title = db.StringProperty()
     company = db.StringProperty()
     phone = db.PhoneNumberProperty()
     
-    user = db.UserProperty()
+    # objects = MPUserManager()
 
     def __init__(self, parent=None, key_name=None, **kwargs):
         if not key_name and not kwargs.get('key',None):
@@ -39,7 +32,15 @@ class User(EmailUser):
             if email:
                 key_name = self.get_key_name(email)
         return super(User,self).__init__(parent=parent,key_name=key_name,**kwargs)
+    
+    @property
+    def id(self):
+        return str(self.key())    
         
+    @property
+    def is_admin(self):
+        return self.is_staff    
+                
     @classmethod
     def get_key_name(cls, email):
         return 'k:'+email.lower().\
@@ -59,18 +60,17 @@ class User(EmailUser):
     def kind(cls):
         return "MPUser"
         
-    # class Meta:
-    #     verbose_name = _('user')
-    #     verbose_name_plural = _('users')
-            
     def __unicode__(self):
-        return self.get_full_name()
+        return "MPUser: "+self.email
         
+    def __repr__(self):
+        return unicode(self)    
 #
 # The main account
 #
 class Account(db.Model):
     user = db.UserProperty() # admin user for this account
+    mpuser = db.ReferenceProperty(User)
     date_added = db.DateTimeProperty(auto_now_add=True)
     all_users = db.ListProperty(db.Key)    
     first_name = db.StringProperty()

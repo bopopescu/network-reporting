@@ -722,7 +722,7 @@ a.mutedLink:hover {
   margin: 0 15px 0 0;
 }
 
-.input-text, textarea {
+.input-text, textarea{
   padding: 1px 2px 2px 3px;
   border: 1px solid #eaeaea;
   border-top-color: #b9b9b9;

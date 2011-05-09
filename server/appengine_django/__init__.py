@@ -591,9 +591,14 @@ def InstallAuthentication(settings):
     django_middleware.AuthenticationMiddleware = AuthenticationMiddleware
     from django.contrib.auth import decorators as django_decorators
     from appengine_django.auth.decorators import login_required
-    django_decorators.login_required = login_required
+    # django_decorators.login_required = login_required
     from django.contrib import auth as django_auth
     from django.contrib.auth import tests as django_tests
+    # Hack Nafis
+    from django.contrib.auth import forms as django_forms
+    from appengine_django.auth import forms as auth_helper_forms
+    django_forms.PasswordResetForm = auth_helper_forms.PasswordResetForm
+    
     django_auth.suite = unittest.TestSuite
     django_tests.suite = unittest.TestSuite
     logging.debug("Installing authentication framework")

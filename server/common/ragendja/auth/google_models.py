@@ -32,9 +32,9 @@ class User(GoogleUserTraits):
     """Extended User class that provides support for Google login_required."""
     user = db.UserProperty(required=True)
 
-    # class Meta:
-    #     verbose_name = _('user')
-    #     verbose_name_plural = _('users')
+    class Meta:
+        verbose_name = _('user')
+        verbose_name_plural = _('users')
 
     @property
     def username(self):

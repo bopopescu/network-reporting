@@ -40,7 +40,7 @@ class AccountHandler(RequestHandler):
         
         return self.get(account_form=account_form)        
 
-@whitelist_login_required         
+@login_required         
 def index(request,*args,**kwargs):
     return AccountHandler()(request,*args,**kwargs)
 

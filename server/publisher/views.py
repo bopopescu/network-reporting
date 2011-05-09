@@ -122,7 +122,7 @@ class AppIndexHandler(RequestHandler):
        'totals': totals,
        'account': self.account})
 
-@whitelist_login_required     
+# @whitelist_login_required
 def index(request,*args,**kwargs):
   return AppIndexHandler()(request,*args,**kwargs)     
 
@@ -187,7 +187,7 @@ class AppIndexGeoHandler(RequestHandler):
        'date_range': self.date_range,
        'account': self.account})
 
-@whitelist_login_required     
+# @whitelist_login_required     
 def index_geo(request,*args,**kwargs):
   return AppIndexGeoHandler()(request,*args,**kwargs)     
 
@@ -242,7 +242,7 @@ class AppCreateHandler(RequestHandler):
         return HttpResponseRedirect(reverse('publisher_generate',kwargs={'adunit_key':adunit.key()})+'?status='+status)
     return self.get(app_form,adunit_form)
 
-@whitelist_login_required  
+# @whitelist_login_required  
 def app_create(request,*args,**kwargs):
   return AppCreateHandler()(request,*args,**kwargs)
     
@@ -270,7 +270,7 @@ class CreateAdUnitHandler(RequestHandler):
     else:
       print f.errors
 
-@whitelist_login_required  
+# @whitelist_login_required  
 def adunit_create(request,*args,**kwargs):
   return CreateAdUnitHandler()(request,*args,**kwargs)   
 
@@ -396,7 +396,7 @@ class ShowAppHandler(RequestHandler):
          'backfill_promo': backfill_promo_campaigns})
          
 
-@whitelist_login_required
+# @whitelist_login_required
 def app_show(request,*args,**kwargs):
   return ShowAppHandler()(request,*args,**kwargs)   
 
@@ -489,7 +489,7 @@ class ExportFileHandler( RequestHandler ):
             return (stat_name, [manager.get_stat_rollup_for_days(publisher=a, days=days) for a in adunits])
 
 
-@whitelist_login_required
+# @whitelist_login_required
 def export_file( request, *args, **kwargs ):
     return ExportFileHandler()( request, *args, **kwargs )
 
@@ -566,7 +566,7 @@ class AdUnitShowHandler(RequestHandler):
          'network': network_campaigns,
          'backfill_promo': backfill_promo_campaigns})
   
-@whitelist_login_required
+# @whitelist_login_required
 def adunit_show(request,*args,**kwargs):
   return AdUnitShowHandler()(request,*args,**kwargs)   
 
@@ -607,7 +607,7 @@ class AppUpdateAJAXHandler(RequestHandler):
     json_dict.update(success=False,html=new_html)    
     return self.json_response(json_dict)  
 
-@whitelist_login_required
+# @whitelist_login_required
 def app_update_ajax(request,*args,**kwargs):
   return AppUpdateAJAXHandler()(request,*args,**kwargs)   
 
@@ -673,7 +673,7 @@ class RemoveAdUnitHandler(RequestHandler):
 
         return HttpResponseRedirect(reverse('publisher_app_show', kwargs={'app_key': a.app.key()}))
 
-@whitelist_login_required
+# @whitelist_login_required
 def publisher_adunit_delete(request,*args,**kwargs):
     return RemoveAdUnitHandler()(request,*args,**kwargs)
 
@@ -686,7 +686,7 @@ class RemoveAppHandler(RequestHandler):
     
         return HttpResponseRedirect(reverse('publisher_index'))
  
-@whitelist_login_required
+# @whitelist_login_required
 def app_delete(request,*args,**kwargs):
     return RemoveAppHandler()(request,*args,**kwargs)
 

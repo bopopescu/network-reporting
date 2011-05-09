@@ -10,9 +10,10 @@ class User(GoogleUserTraits):
     first_name = db.StringProperty()
     last_name = db.StringProperty()
 
-    # class Meta:
-    #     verbose_name = _('user')
-    #     verbose_name_plural = _('users')
+    class Meta:
+        abstract = True
+        verbose_name = _('user')
+        verbose_name_plural = _('users')
 
     @classmethod
     def create_djangouser_for_user(cls, user):

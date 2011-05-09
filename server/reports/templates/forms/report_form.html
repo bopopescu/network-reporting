@@ -8,15 +8,15 @@
     {% endif %}
     <dt>Report Breakdown:</dt>
     <dd>
-    {{ form.d1|attrs:'{"class":"dim-selectmenu","id":"d1"}'|raw }}
-    <span id="d2-show" {% if not form.d2.value %}class='hidden'{% endif %}>
-    &nbsp;>&nbsp;
-    {{ form.d2|attrs:'{"class":"dim-selectmenu","id":"d2"}'|raw }}
-    <span id='d3-show' {% if not form.d3.value %}class='hidden'{% endif %}>
-    &nbsp;>&nbsp;
-    {{ form.d3|attrs:'{"class":"dim-selectmenu","id":"d3"}'|raw }}
-    </span>
-    </span>
+        {{ form.d1|attrs:'{"class":"dim-selectmenu","id":"d1"}'|raw }}
+        <span id="d2-show" {% if not form.d2.value %}class='hidden'{% endif %}>
+            &nbsp;>&nbsp;
+            {{ form.d2|attrs:'{"class":"dim-selectmenu","id":"d2"}'|raw }}
+            <span id='d3-show' {% if not form.d3.value %}class='hidden'{% endif %}>
+                &nbsp;>&nbsp;
+                {{ form.d3|attrs:'{"class":"dim-selectmenu","id":"d3"}'|raw }}
+            </span>
+        </span>
     </dd>
     <dt>Dates:</dt>
     <dd>

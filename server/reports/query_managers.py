@@ -122,10 +122,21 @@ class ReportQueryManager(CachedQueryManager):
         return reports
 
     def new_report(self, report):
+        #do stuff w/ report interval here
+        #last month shouldn't just arbitrarily pick some days
         if type(report) == str or type(report) == unicode:
             report = self.get_report_by_key(report, sched=False).schedule
         dt = datetime.timedelta(days=report.days) 
+        one_day = datetime.timedelta(days=1)
         now = datetime.datetime.now().date()
+        if report.interval:
+            if interval == 'yesterday':
+                now = datetime.datetime.now().date() - one_day 
+            elif interval == 'lmonth':
+                start, end = date_magic.last_month(now)
+                now = end.date()
+                dt = end.date() - start.date()
+            
         new_report = Report(start = now - dt,
                             end = now,
                             account = self.account,

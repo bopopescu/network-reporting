@@ -6320,10 +6320,6 @@
 		}
 
         function array_splice(ins_at, array_to_splice, array_to_add) {
-            console.log("array splicing");
-            console.log(ins_at);
-            console.log(array_to_splice);
-            console.log(array_to_add);
             for (var idx = 0; idx < array_to_add.length; idx++) {
                 array_to_splice.splice(ins_at+idx+1, 0, array_to_add[idx]);
             }

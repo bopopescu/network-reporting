@@ -57,7 +57,7 @@ class ScheduledReport(db.Model):
     end = db.DateProperty(required=True)
     days = db.IntegerProperty(required=True)
     #daily, weekly, monthly
-    interval = db.StringProperty(choices=['today','yesterday', '7days', 'lmonth', 'custom'])
+    interval = db.StringProperty(choices=['today','yesterday', '7days', 'lmonth', 'custom'], default='custom')
 
     @property
     def most_recent(self):
@@ -260,7 +260,6 @@ class Report(db.Model):
         else:
             logging.error("cry me a river ohh ohhhhh")
             return None, None
-        logging.warning("\n\nValue is %s for inputs %s" % (vals, (pub,adv, days,dim)))
         return vals, type, date_fmt
 
     @property

@@ -50,7 +50,7 @@ class AddReportHandler(RequestHandler):
         template_name = template or self.TEMPLATE
         return render_to_string(self.request, template_name=template_name, data=kwargs)
         
-    def post(self, d1, end, days=None, start=None, d2=None, d3=None,name=None, saved=False):
+    def post(self, d1, end, days=None, start=None, d2=None, d3=None,name=None, saved=False, interval=None):
         end = datetime.datetime.strptime(end, '%m/%d/%Y').date()
         if start:
             start = datetime.datetime.strptime(start, '%m/%d/%Y').date()
@@ -60,7 +60,16 @@ class AddReportHandler(RequestHandler):
             saved = True
         else:
             saved = False
-        report = man.add_report(d1, d2, d3, end, days, name=name, saved=saved)
+        logging.warning('\n\n\n%s\n\n\n' % saved)
+        report = man.add_report(d1, 
+                                d2,
+                                d3, 
+                                end, 
+                                days, 
+                                name=name, 
+                                saved=saved, 
+                                interval = interval
+                                )
         return HttpResponseRedirect('/reports/view/'+str(report.key()))
 
 @whitelist_login_required
@@ -137,6 +146,7 @@ class SaveReportHandler(RequestHandler):
         report.schedule.saved = True
         man.put_report(report.schedule)
         return HttpResponse('K')
+
 
 @whitelist_login_required
 def save_report(request, *args, **kwargs):

@@ -57,24 +57,45 @@
         .click(function(e) {
             e.preventDefault();
             var report_form = $('#reportForm-container');
-            console.log(report_form);
             report_form.dialog({width:750});
         });
 
-    $('#reportCreateForm-cancel').
-        button()
+    $('#reports-view-saveAsReportButton').button({icons: {secondary: 'ui-icon-check'}})
+        .click(function(e) {
+            e.preventDefault();
+            $('#reportFormSaveAs-container').dialog({width:750});
+        });
+
+    $('#reportCreateForm-cancel')
+        .button()
         .click(function(e) {
             e.preventDefault();
             $(this).parents('#reportForm-container')
             .dialog('close');
         });
-    
+
+    $('#reportUpdateForm-cancel')
+        .button()
+        .click(function(e) {
+            e.preventDefault();
+            $(this).parents('#reportFormSaveAs-container')
+            .dialog('close');
+        });
+
     $('#reportCreateForm-submit')
         .button()
         .click(function(e) {
             e.preventDefault();
             $(this).parents('form').submit();
         });
+
+    $('#reportUpdateForm-submit')
+        .button()
+        .click(function(e) {
+            e.preventDefault();
+            $(this).parents('form').submit();
+        });
+
 
     $('.int-selectmenu').selectmenu({
         style: 'popup',
@@ -151,7 +172,7 @@
                 update = true;
                 return;
             }
-        })
+        });
 
     var selects = $('.dim-selectmenu').selectmenu({
         style: 'popup',

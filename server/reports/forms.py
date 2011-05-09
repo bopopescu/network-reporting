@@ -45,6 +45,10 @@ class ReportForm(mpforms.MPModelForm):
         if instance and instance.days:
             dt = timedelta(days=instance.days)
             initial.update(start=instance.end-dt)
+            kwargs.update(initial = initial)
+        if instance and not instance.interval:
+            initial.update(interval='custom')
+            kwargs.update(initial = initial)
         super(ReportForm, self).__init__(*args, **kwargs)
 
 

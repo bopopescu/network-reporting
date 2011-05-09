@@ -42,3 +42,8 @@ class Account(db.Model):
             return str(self.key()) == str(other.key())
         else:
             return False
+            
+class NetworkConfig(db.Model):
+    pass
+    
+            

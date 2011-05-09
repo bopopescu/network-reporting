@@ -826,6 +826,13 @@ dl.formFields.thin {
   width: 440px;
 }
 
+.formFields .formIndent {
+  margin: 0 0 0 20px;
+}
+.formFields .formIndent dd{
+  width: 420px;
+}
+
 .formFields.thin dd {
   width: 250px;
 }

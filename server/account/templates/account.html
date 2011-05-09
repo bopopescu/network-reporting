@@ -143,19 +143,17 @@
                   <dl class="formFields {% if account.jumptap_pub_id %}show{% endif %}"> 
                     <dt><label for="appForm-adUnitName">Jumptap Publisher ID:</label></dt> 
                     <dd><input type="text" class="input-text" name="jumptap_pub_id" value="{{account.jumptap_pub_id|default_if_none:""}}"  placeholder="ex: pa_company_inc"/></dd>
-                    <dt>Angry Birds:</dt>
-                    <dd><input type="text" class="input-text" name="jumptap_pub_id" value="{{account.jumptap_pub_id|default_if_none:""}}"  placeholder="ex: pa_company_inc_app"/> <a class="button button-small button-hide" href="#">Hide ad units</a></dd>
-                    <dt></dt>
-                    <dd>Angry Birds > Top Banner<br/><input type="text" class="input-text" name="jumptap_pub_id" value="{{account.jumptap_pub_id|default_if_none:""}}"  placeholder="ex: pa_company_inc_app_site"/></dd>
-                    <dt></dt>
-                    <dd>Angry Birds > Interstitial<br/><input type="text" class="input-text" name="jumptap_pub_id" value="{{account.jumptap_pub_id|default_if_none:""}}"  placeholder="ex: pa_company_inc_app_site"/></dd>
-                    <dt>Slice It:</dt>
-                    <dd><input type="text" class="input-text" name="jumptap_pub_id" value="{{account.jumptap_pub_id|default_if_none:""}}"  placeholder="ex: pa_company_inc_app"/> <a class="button button-small button-show" href="#">Show ad units</a></dd>
-                    <dt>HeadingOut:</dt>
-                    <dd><input type="text" class="input-text" name="jumptap_pub_id" value="{{account.jumptap_pub_id|default_if_none:""}}"  placeholder="ex: pa_company_inc_app"/> <a class="button button-small button-show" href="#">Show ad units</a></dd>
-                    <dt>Friendly:</dt>
-                    <dd><input type="text" class="input-text" name="jumptap_pub_id" value="{{account.jumptap_pub_id|default_if_none:""}}"  placeholder="ex: pa_company_inc_app"/> <a class="button button-small button-show" href="#">Show ad units</a></dd>
-                    <dt><a class="button button-small button-hide" href="#">Hide apps</a></dt>
+                    <div class="adForm-apps hidden">
+                      <dt>Angry Birds:</dt>
+                      <dd><input type="text" class="input-text" name="jumptap_pub_id" value="{{account.jumptap_pub_id|default_if_none:""}}"  placeholder="ex: pa_company_inc_app"/></dd>
+                      <dt>Slice It:</dt>
+                      <dd><input type="text" class="input-text" name="jumptap_pub_id" value="{{account.jumptap_pub_id|default_if_none:""}}"  placeholder="ex: pa_company_inc_app"/> <a class="button button-small button-show" href="#">Show ad units</a></dd>
+                      <dt>HeadingOut:</dt>
+                      <dd><input type="text" class="input-text" name="jumptap_pub_id" value="{{account.jumptap_pub_id|default_if_none:""}}"  placeholder="ex: pa_company_inc_app"/> <a class="button button-small button-show" href="#">Show ad units</a></dd>
+                      <dt>Friendly:</dt>
+                      <dd><input type="text" class="input-text" name="jumptap_pub_id" value="{{account.jumptap_pub_id|default_if_none:""}}"  placeholder="ex: pa_company_inc_app"/> <a class="button button-small button-show" href="#">Show ad units</a></dd>
+                    </div>
+                    <dt><a class="button button-small adForm-fields-appButton" href="#">Show apps</a></dt>
                     <dd>&nbsp;</dd>
                     <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.jumptap.com/" target="_blank">Go to Jumptap<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
                   </dl> 

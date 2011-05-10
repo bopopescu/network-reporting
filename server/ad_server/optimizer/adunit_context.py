@@ -50,7 +50,13 @@ class AdUnitContext(object):
         # Triggers dereferencing of references so we can cache the whole object
         # We ask both Account and App for an arbitrary property 
         self.adunit.account.active
-        self.adunit.app_key.deleted
+        self.adunit.app_key.active
+        
+        # We also dereference the network configs
+        self.adunit.account.network_config.admob_pub_id
+        self.adunit.app.network_config.admob_pub_id
+        self.adunit.network_config.admob_pub_id
+        
 
 
     def _get_ctr(self, creative, date=datetime.date.today(), date_hour=None, min_sample_size=1000):

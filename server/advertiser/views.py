@@ -107,7 +107,8 @@ class AdGroupIndexHandler(RequestHandler):
     
         help_text = None
         if network_campaigns:
-            if not (self.account.adsense_pub_id or self.account.admob_pub_id):
+            if not (self.account.network_config.adsense_pub_id or
+                    self.account.network_config.admob_pub_id):
                 help_text = 'Provide your ad network publisher IDs on the <a href="%s">account page</a>'%reverse('account_index')
 
         graph_adgroups = adgroups[0:4]

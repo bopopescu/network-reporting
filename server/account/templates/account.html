@@ -11,7 +11,7 @@
             </div>{% endifequal %}{% endblock titleBarRight %}
 
 {% block content %}
-          <section> 
+          <section id="account-section"> 
             <div class="content-main">
 {% ifequal status 'welcome' %}
               <div class="alertMessage">
@@ -49,6 +49,21 @@
                   <dl class="formFields {% if account.network_config.admob_pub_id %}show{% endif %}"> 
                     <dt><label for="appForm-adUnitName">AdMob Publisher ID:</label></dt> 
                     <dd><input type="text" class="input-text" name="admob_pub_id" value="{{account.network_config.admob_pub_id|default_if_none:""}}"  placeholder="ex: a14cdb1922f35xx"/></dd> 
+                    
+                    
+                     <div class="adForm-apps hidden">
+                        {% for app in apps%}
+
+                        <dt>{{app.name}}:</dt>
+                        <dd><input type="text" class="input-text" name="{{app.key}}-admob_pub_id" value="{{app.network_config.admob_pub_id|default_if_none:""}}"  placeholder="ex: a14cdb1922f35xx"/></dd>
+                        {% endfor %}
+
+                      </div>
+                      <dt><a class="button button-small adForm-fields-appButton" href="#">Show apps</a></dt>
+                      <dd>&nbsp;</dd>
+                    
+                    
+                    
                     <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.admob.com/" target="_blank">Go to AdMob<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
                   </dl>
                 </fieldset> 
@@ -144,14 +159,12 @@
                     <dt><label for="appForm-adUnitName">Jumptap Publisher ID:</label></dt> 
                     <dd><input type="text" class="input-text" name="jumptap_pub_id" value="{{account.network_config.jumptap_pub_id|default_if_none:""}}"  placeholder="ex: pa_company_inc"/></dd>
                     <div class="adForm-apps hidden">
-                      <dt>Angry Birds:</dt>
-                      <dd><input type="text" class="input-text" name="jumptap_pub_id" value="{{account.network_config.jumptap_pub_id|default_if_none:""}}"  placeholder="ex: pa_company_inc_app"/></dd>
-                      <dt>Slice It:</dt>
-                      <dd><input type="text" class="input-text" name="jumptap_pub_id" value="{{account.network_config.jumptap_pub_id|default_if_none:""}}"  placeholder="ex: pa_company_inc_app"/> <a class="button button-small button-show" href="#">Show ad units</a></dd>
-                      <dt>HeadingOut:</dt>
-                      <dd><input type="text" class="input-text" name="jumptap_pub_id" value="{{account.network_config.jumptap_pub_id|default_if_none:""}}"  placeholder="ex: pa_company_inc_app"/> <a class="button button-small button-show" href="#">Show ad units</a></dd>
-                      <dt>Friendly:</dt>
-                      <dd><input type="text" class="input-text" name="jumptap_pub_id" value="{{account.network_config.jumptap_pub_id|default_if_none:""}}"  placeholder="ex: pa_company_inc_app"/> <a class="button button-small button-show" href="#">Show ad units</a></dd>
+                      {% for app in apps%}
+                      
+                      <dt>{{app.name}}:</dt>
+                      <dd><input type="text" class="input-text" name="{{app.key}}-jumptap_pub_id" value="{{app.network_config.jumptap_pub_id|default_if_none:""}}"  placeholder="ex: pa_company_inc_app"/></dd>
+                      {% endfor %}
+                      
                     </div>
                     <dt><a class="button button-small adForm-fields-appButton" href="#">Show apps</a></dt>
                     <dd>&nbsp;</dd>
@@ -184,6 +197,15 @@
                   <dl class="formFields {% if account.network_config.millenial_pub_id %}show{% endif %}"> 
                     <dt><label for="appForm-adUnitName">Millenial Publisher ID:</label></dt> 
                     <dd><input type="text" class="input-text" name="millenial_pub_id" value="{{account.network_config.millenial_pub_id|default_if_none:""}}"  placeholder="ex: 36789"/></dd> 
+                    <div class="adForm-apps hidden">
+                      {% for app in apps%}
+                        <dt>{{app.name}}:</dt>
+                        <dd><input type="text" class="input-text" name="{{app.key}}-millenial_pub_id" value="{{app.network_config.millenial_pub_id|default_if_none:""}}"  placeholder="ex: pa_company_inc_app"/></dd>
+                      {% endfor %}
+                      
+                    </div>
+                    <dt><a class="button button-small adForm-fields-appButton" href="#">Show apps</a></dt>
+                    <dd>&nbsp;</dd>
                     <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.millennialmedia.com" target="_blank">Go to Millennial Media<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
                   </dl> 
                 </fieldset> 

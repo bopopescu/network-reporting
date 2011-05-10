@@ -9,10 +9,10 @@ from common.utils.decorators import whitelist_login_required
 from common.utils.query_managers import CachedQueryManager
 
 from account.models import Account
-from account.forms import AccountForm
+from account.forms import AccountForm, NetworkConfigForm
 from account.query_managers import AccountQueryManager
-from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
-
+from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager, AppQueryManager
+import logging
 from common.utils.request_handler import RequestHandler
 
 class AccountHandler(RequestHandler):
@@ -23,15 +23,35 @@ class AccountHandler(RequestHandler):
             return HttpResponseRedirect(reverse('advertiser_campaign'))
 
         account_form = account_form or AccountForm(instance=self.account)
-        return render_to_response(self.request,'account/account.html', {'account': self.account, 'account_form': account_form})
+        apps_for_account = AppQueryManager.get_apps(account=self.account)
+        
+        return render_to_response(self.request,'account/account.html', {'account': self.account, 
+                                                                        'account_form': account_form,
+                                                                        "apps": apps_for_account})
 
     def post(self):
         account_form = AccountForm(data=self.request.POST, instance=self.account)
-
+        network_config_form = NetworkConfigForm(data=self.request.POST, instance=self.account.network_config)
+        
         if account_form.is_valid():
             account = account_form.save(commit=False)
+            network_config = network_config_form.save(commit=False)
+            AccountQueryManager.update_config_and_put(account, network_config)
 
-            AccountQueryManager.put_accounts(account)
+            apps_for_account = AppQueryManager.get_apps(account=self.account)
+            # Build app level pub_ids
+            for app in apps_for_account:
+                app_network_config_data = {}
+                for (key, value) in self.request.POST.iteritems():
+                    app_key_identifier = key.split('-')
+                    if app_key_identifier[0] == str(app.key()):
+                        app_network_config_data[app_key_identifier[1]] = value
+                
+                logging.warning("link" + unicode(app.name) + " " + str(app_network_config_data))
+                app_form = NetworkConfigForm(data=app_network_config_data, instance=app.network_config)
+                app_network_config = app_form.save(commit=False)
+                AppQueryManager.update_config_and_put(app, app_network_config)
+                        
             
             if self.account.status == "step3":
                 self.account.status = "step4"

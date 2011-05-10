@@ -1,7 +1,7 @@
 from django import forms
 from common.utils import forms as mpforms
 from common.utils import fields as mpfields
-from account.models import Account
+from account.models import Account, NetworkConfig
 from common.constants import (ISO_COUNTRIES, US_STATES)
 
 class AccountForm(mpforms.MPModelForm):
@@ -14,3 +14,8 @@ class AccountForm(mpforms.MPModelForm):
     class Meta:
         model = Account
         exclude = ('user', 'all_users', 'date_added', 'active', 'status')
+        
+class NetworkConfigForm(mpforms.MPModelForm):
+    
+    class Meta:
+        model = NetworkConfig

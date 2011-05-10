@@ -6,7 +6,6 @@ import logging
 
 class NetworkConfig(db.Model):
     """ The set of ids for all the different networks """
-
     admob_pub_id = db.StringProperty()
     adsense_pub_id = db.StringProperty()
     brightroll_pub_id = db.StringProperty()
@@ -39,9 +38,17 @@ class Account(db.Model):
     adsense_test_mode = db.BooleanProperty(default=False)
     
     network_config = db.ReferenceProperty(NetworkConfig,
-                            collection_name="accounts",
-                            default=NetworkConfig())
+                            collection_name="accounts")
     
+    # Still here for transfering
+    admob_pub_id = db.StringProperty()
+    adsense_pub_id = db.StringProperty()
+    brightroll_pub_id = db.StringProperty()
+    greystripe_pub_id = db.StringProperty()
+    inmobi_pub_id = db.StringProperty()
+    jumptap_pub_id = db.StringProperty()
+    millenial_pub_id = db.StringProperty()
+    mobfox_pub_id = db.StringProperty()
     
     def is_admin(self):
         return users.is_current_user_admin()

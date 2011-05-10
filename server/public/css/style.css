@@ -1780,6 +1780,10 @@ ul.ui-selectmenu-menu {
   position: relative;
 }
 
+#account-section .formFields{
+  margin: 0;
+}
+
 .accountInfoForm-left {
   position:absolute;
   top:0;

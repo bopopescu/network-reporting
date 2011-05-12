@@ -21,7 +21,7 @@ class InMobiServerSide(ServerSide):
         return self.base_url
   
     def get_inmobi_user_agent(self):
-        ua = self.get_user_agent();
+        ua = self.get_user_agent()
         if "Android" in ua:
             return 'InMobi_AndroidSDK=1.1 (Specs)'
         if "iPad" in ua:

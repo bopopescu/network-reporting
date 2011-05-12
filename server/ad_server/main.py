@@ -735,6 +735,10 @@ class AdHandler(webapp.RequestHandler):
             elif c.ad_type == "html":
                 params.update(html_data=c.html_data)
                 params.update({"html_data": kwargs["html_data"], "w": format[0], "h": format[1]})
+                # add the launchpage header for inmobi in case they have dynamic ads that use
+                # window.location = 'http://some.thing/asdf'
+                if c.adgroup.network_type == "inmobi":
+                    self.response.headers.add_header("X-Launchpage","http://c.w.mkhoj.com")
                 
                 # HACK FOR RUSSEL's INTERSTITIAL
                 # if str(c.key()) == "agltb3B1Yi1pbmNyEAsSCENyZWF0aXZlGPmNGAw":

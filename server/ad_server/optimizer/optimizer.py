@@ -32,6 +32,14 @@ def get_ctr(adunit_context, creative, min_sample_size=1000, default_ctr=0.03, dt
     if not daily_ctr is None:
         return daily_ctr
         
+    # # If there is no valid daily ctr, fall back to weekly
+    # weekly_ctr = adunit_context._get_ctr_for_week(creative,
+    #                                 min_sample_size=min_sample_size,
+    #                                 week_end_date = dt.date())
+    # 
+    # if not weekly_ctr is None:
+    #     return weekly_ctr
+    # 
     else:
         return default_ctr
         
@@ -50,12 +58,15 @@ def get_ecpms(adunit_context, creatives, sampling_fraction=SAMPLING_FRACTION, sa
     rand_dec = random.random()
     use_sampling_constant = (rand_dec < sampling_fraction)
     ecpm_dict = {}
-    trace_logging.warning("Sampled from adunit: %s" % str(adunit_context.adunit.key()))
     if use_sampling_constant:
+        trace_logging.warning("Sampled from adunit: %s - Using default ecpms" % str(adunit_context.adunit.key()))
         for c in creatives:
             ecpm_dict[c] = sampling_ecpm
     else:
+        trace_logging.info("calculating ecpms for adunit creatives:")
         for c in creatives:
-            ecpm_dict[c] = get_ecpm(adunit_context, c)
+            ecpm = get_ecpm(adunit_context, c)
+            trace_logging.info("    %s: %s" % (str(c.name), str(ecpm)))
+            ecpm_dict[c] = ecpm
         
     return ecpm_dict

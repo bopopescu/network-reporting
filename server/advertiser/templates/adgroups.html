@@ -65,7 +65,7 @@
             <section class="offset nomargin" id="dashboard-stats">
               <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
               <div class="stats">
-                <div class="stats-breakdown">
+                <div class="stats-breakdown stats-breakdown-4">
                   <table>
                     <tbody>
                       <tr class="active" id="stats-breakdown-impressions">
@@ -85,6 +85,12 @@
                         <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.click_count|withsep}}</span></td>
                         <td class="stats-breakdown-value all"><span class="inner">{{totals.click_count|withsep}}</span></td>
                         <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
+                      </tr>
+                      <tr id="stats-breakdown-ctr">
+                        <td class="stats-breakdown-value today"><span class="inner">{{today.ctr|percentage}}</span></td>
+                        <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.ctr|percentage}}</span></td>
+                        <td class="stats-breakdown-value all"><span class="inner">{{totals.ctr|percentage}}</span></td>
+                        <th class="stats-breakdown-name"><span class="inner">CTR</span></th>
                       </tr>
                     </tbody>
                   </table>
@@ -116,6 +122,9 @@
                       ],
                       'clicks': [{% for a in graph_adgroups %}
                         { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                      ],
+                      'ctr': [{% for a in graph_adgroups %}
+                        { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.ctr}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                       ],
                     };
                   </script>

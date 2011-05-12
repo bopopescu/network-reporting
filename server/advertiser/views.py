@@ -467,6 +467,11 @@ class ShowAdGroupHandler(RequestHandler):
             if not app:
                 app = AppQueryManager.get(au.app_key.key())
                 app.adunits = [au]
+                app.all_stats = StatsModelQueryManager(self.account,offline=self.offline).\
+                                        get_stats_for_days(publisher=app,
+                                                           advertiser=adgroup,
+                                                           days=days)
+                app.stats = reduce(lambda x, y: x+y, app.all_stats, StatsModel())                                           
                 if app.icon:
                     app.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(app.icon)
                 apps[au.app_key.key()] = app

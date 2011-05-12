@@ -505,6 +505,12 @@ var mopub = mopub || {};
         }
         return x1 + x2;
     }
+    
+    function formatPercentage(number){
+      // We round to two decimal places
+      return (number*100).toFixed(2) + '%';
+    }
+    
     function calcRollups() {
         //rollup gtee's 
         if ($('.gtee-placeholder').is(":visible")) {
@@ -530,10 +536,10 @@ var mopub = mopub || {};
             $('#gtee-total-rev').text('$'+addCommas(Math.round(gtee_rev*100)/100));
             var gtee_ctr;
             if (gtee_clk === 0) {
-                gtee_ctr = '0.0%';
+                gtee_ctr = formatPercentage(0);
             }
             else {
-                gtee_ctr = Math.round(gtee_clk/gtee_imp* 1000)/10 + '%';
+                gtee_ctr = formatPercentage(gtee_clk/gtee_imp, 2);
             }
             $('#gtee-total-ctr').text(gtee_ctr);
         }
@@ -561,10 +567,10 @@ var mopub = mopub || {};
             $("#bfill-total-conv").text(addCommas(bfill_conv));
             var bfill_ctr;
             if (bfill_clk === 0) {
-                bfill_ctr = '0.0%';
+                bfill_ctr = formatPercentage(0);
             }
             else {
-                bfill_ctr = Math.round(bfill_clk/bfill_imp* 1000)/10 + '%';
+                bfill_ctr = formatPercentage(bfill_clk/bfill_imp);
             }
             $("#bfill-total-ctr").text(bfill_ctr);
         }
@@ -591,10 +597,10 @@ var mopub = mopub || {};
             $("#promo-total-conv").text(addCommas(promo_conv));
             var promo_ctr;
             if (promo_clk === 0) {
-                promo_ctr = '0.0%';
+                promo_ctr = formatPercentage(0);
             }
             else {
-                promo_ctr = Math.round(promo_clk/promo_imp* 1000)/10 + '%';
+                promo_ctr = formatPercentage(promo_clk/promo_imp);
             }
             $("#promo-total-ctr").text(promo_ctr);
         }
@@ -621,18 +627,18 @@ var mopub = mopub || {};
             $("#network-total-clk").text(addCommas(net_clk));
             var net_ctr;
             if (net_clk === 0) {
-                net_ctr = '0.0%';
+                net_ctr = formatPercentage(0);
             }
             else {
-                net_ctr = Math.round(net_clk/net_imp* 1000)/10 + '%';
+                net_ctr = formatPercentage(net_clk/net_imp);
             }
             $("#network-total-ctr").text(net_ctr);
             var net_fill;
             if (net_imp === 0) {
-                net_fill = '0.0%';
+                net_fill = formatPercentage(0);
             }
             else {
-                net_fill = Math.round(net_imp/net_req* 1000)/10 + '%';
+                net_fill = formatPercentage(net_imp/net_req);
             }
             $('#network-total-fill').text(net_fill + ' (' + addCommas(net_req) + ')');
         }
@@ -773,7 +779,7 @@ var mopub = mopub || {};
       $('#dashboard-stats-chart').removeClass('chart-loading').addClass('chart-error');
     }
     
-    function setupDashboardStatsChart() {
+    function setupDashboardStatsChart(seriesType) {
       // get active metric from breakdown
       var metricElement = $('#dashboard-stats .stats-breakdown .active');
       var metricElementIdComponents = metricElement.attr('id').split('-');
@@ -811,7 +817,7 @@ var mopub = mopub || {};
       this.trafficChart = new Highcharts.Chart({
         chart: {
           renderTo: 'dashboard-stats-chart',
-          defaultSeriesType: 'area',
+          defaultSeriesType: seriesType,
           marginTop: 0,
           marginBottom: 55
         },
@@ -831,7 +837,11 @@ var mopub = mopub || {};
             formatter: function() {
               if(activeMetric == 'revenue') {
                 text = '$' + Highcharts.numberFormat(this.value, 0);
-              } else {
+              }
+              else if(activeMetric == 'ctr') {
+                text = Highcharts.numberFormat(this.value, 0) + '%';
+              } 
+              else {
                 if (this.value >= 1000000000) {
                   return Highcharts.numberFormat(this.value / 1000000000, 0) + "B";
                 } else if (this.value >= 1000000) {
@@ -856,8 +866,12 @@ var mopub = mopub || {};
               total = '$' + Highcharts.numberFormat(this.total, 0) + ' total';
             }
             else if (activeMetric == 'clicks') {
-              value = Highcharts.numberFormat(this.y, 0) + ' ' + activeMetric + " (" + this.point.name + ")";
+              value = Highcharts.numberFormat(this.y, 0) + ' ' + activeMetric;
               total = Highcharts.numberFormat(this.total, 0) + ' total ' + activeMetric;
+            }
+            else if (activeMetric == 'ctr') {
+              value = Highcharts.numberFormat(this.y*100, 2) + "% click through";
+              total = "";
             }
             else {
               value = Highcharts.numberFormat(this.y, 0) + ' ' + activeMetric;
@@ -867,7 +881,7 @@ var mopub = mopub || {};
             text += '<span style="font-size: 14px;">' + Highcharts.dateFormat('%A, %B %e, %Y', this.x) + '</span><br/>';
             text += '<span style="padding: 0; font-weight: 600; color: ' + this.series.color + '">' + this.series.name + '</span>' + ': <strong style="font-weight: 600;">' + value + '</strong><br/>';
             
-            if(chartSeries.length > 1) {
+            if((chartSeries.length > 1) && (total != "")) {
               text += '<span style="font-size: 12px; color: #666;">';
               if(this.total > 0) {
                 text += '(' + Highcharts.numberFormat(this.percentage, 0) + '% of ' + total + ')';
@@ -887,14 +901,23 @@ var mopub = mopub || {};
       $('#dashboard-stats-chart').removeClass('chart-loading');
     }
     if ($('#dashboard-stats').length){
-      setupDashboardStatsChart();
+      setupDashboardStatsChart('area');
     }
+
     // Use breakdown to switch charts
-    $('.stats-breakdown tr').click(function(e) {
+    $('.stats-breakdown tr:not(#stats-breakdown-ctr)').click(function(e) {
       $('#dashboard-stats-chart').fadeOut('fast', function() {
-        setupDashboardStatsChart();
+        setupDashboardStatsChart('area');
         $(this).fadeIn('fast');
       });
+    });
+    
+    // Remove the standard click handler and replace it
+    $('#stats-breakdown-ctr').click(function(){
+        $('#dashboard-stats-chart').fadeOut('fast', function(){
+            setupDashboardStatsChart('line');
+            $(this).fadeIn('fast');
+        });
     });
     
     /*---------------------------------------/

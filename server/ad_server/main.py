@@ -488,9 +488,8 @@ class AdHandler(webapp.RequestHandler):
             # exp_url = "http://localhost:8081/m/ad?" + query_string
             
             exp_url = exp_url.replace(id, new_id) # Splice in proper id
-            
             trace_logging.info("Redirected to experimental server: " + exp_url)
-            self.redirect(exp_url)
+            return self.redirect(exp_url)
         
         mp_logging.log(self.request, event=mp_logging.REQ_EVENT, adunit=adunit)  
         

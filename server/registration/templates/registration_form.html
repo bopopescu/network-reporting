@@ -1,0 +1,47 @@
+{% extends "registration/base.html" %}
+{% load googletags %}
+
+
+{% block pageTitle %}<h1>Register</h1>{% endblock %}
+{% block dateButtons %}{% endblock dateButtons %}
+
+{% block content %}
+<div class="content-main">
+    <form action="" method="POST" accept-charset="utf-8" id="accountForm">
+      {% csrf_token %}
+      <fieldset id="appForm-details"> 
+          {% block helper_text %}
+          <legend>Get started with MoPub</legend> 
+          <p>
+            Help us serve you better by filling out the following information, or <span> <a href="{% google_login_url '/account/register/google/' %}">Login with your Google Account</a></span>  
+            
+          </p>
+          {% endblock helper_text %}
+          {{ form.as_template }}
+      </fieldset>
+      <div class="form-submit">
+        <span class="buttonWrap"><a href="#" class="button" id="accountForm-submit">Continue</a></span>
+      </div>
+    </form>
+</div>
+
+<!-- Google Code for Signup Conversion Page -->
+<script type="text/javascript">
+/* <![CDATA[ */
+var google_conversion_id = 1008928244;
+var google_conversion_language = "en";
+var google_conversion_format = "1";
+var google_conversion_color = "ffffff";
+var google_conversion_label = "p4MqCISEogIQ9IuM4QM";
+var google_conversion_value = 0;
+/* ]]> */
+</script>
+<script type="text/javascript" src="http://www.googleadservices.com/pagead/conversion.js">
+</script>
+<noscript>
+<div style="display:inline;">
+<img height="1" width="1" style="border-style:none;" alt="" src="http://www.googleadservices.com/pagead/conversion/1008928244/?label=p4MqCISEogIQ9IuM4QM&amp;guid=ON&amp;script=0"/>
+</div>
+</noscript>
+
+{% endblock %}

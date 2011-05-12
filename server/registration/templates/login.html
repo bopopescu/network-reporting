@@ -1,0 +1,35 @@
+{% extends "registration/base.html" %}
+{% load googletags %}
+
+{% block pageTitle %}<h1>Account - Login</h1>{% endblock %}
+
+{% block content %}
+<div class="content-main">
+    <form action="" method="POST" accept-charset="utf-8" id="accountForm">
+      {% csrf_token %}
+      <fieldset id="appForm-details"> 
+        <legend>Welcome Back!</legend> 
+        <p>
+          Please enter your email and password to log back in to MoPub
+        </p>
+        <dl class="formFields"> 
+            <div>Forgot your password? <a href="{% url auth_password_reset %}">Reset your password here</a>.</div>
+            {% for error in form.non_field_errors %}
+            <span class="error">{{ error }}</span>
+            {% endfor %}
+            <dt>Email: </dt>
+            <dd>
+                {{form.username}}
+            </dd>
+            <dt>Password: </dt>
+            <dd>{{form.password}}</dd>
+        </dl>                      
+      </fieldset>
+      <div class="clear"></div>
+      <div class="form-submit">
+        <span class="buttonWrap"><a href="#" class="button" id="accountForm-submit">Continue</a></span>
+        <span> &nbsp;or <a href="{% google_login_url %}">Login with your Google Account</a></span>  
+      </div>
+    </form>
+</div>
+{% endblock content %}

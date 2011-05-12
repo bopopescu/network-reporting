@@ -130,9 +130,9 @@ class ReportQueryManager(CachedQueryManager):
         one_day = datetime.timedelta(days=1)
         now = datetime.datetime.now().date()
         if report.interval:
-            if interval == 'yesterday':
+            if report.interval == 'yesterday':
                 now = datetime.datetime.now().date() - one_day 
-            elif interval == 'lmonth':
+            elif report.interval == 'lmonth':
                 start, end = date_magic.last_month(now)
                 now = end.date()
                 dt = end.date() - start.date()
@@ -153,6 +153,8 @@ class ReportQueryManager(CachedQueryManager):
         return new_report
 
     def add_report(self, d1, d2, d3, end, days, name=None, saved=False,interval=None):
+        if interval is None:
+            interval = 'custom'
         '''Create a new scheduled report with the given specs
         and create a new report to run'''
         if name is None:

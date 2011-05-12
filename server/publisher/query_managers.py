@@ -64,7 +64,9 @@ class AppQueryManager(QueryManager):
     def reports_get_apps(cls, account=None, publisher=None, advertiser=None, deleted=False, limit=50):
         '''Given account or pub, or adv or some combination thereof return a list of apps that (correctly) 
         correspond to the inputs and things'''
-        apps = App.all().filter("deleted =", deleted)
+        apps = App.all()
+        if deleted is not None:
+            apps = apps.filter("deleted =", deleted)
         adunits = []
         #if advertiser is set, restrict apps to be only those apps that advertiser has an effect on
         if advertiser:
@@ -153,7 +155,7 @@ class AdUnitQueryManager(QueryManager):
             #make advertiser a list (this has to do with how I plan on implementing network priority
             # and stuff) if it isn't already one
             temp_aus = []
-            if not type(advertiser) == list:
+            if not isinstance(advertiser, list):
                 advertiser = [advertiser]
             for adv in advertiser:
                 # this is how campaigns reference adgroups

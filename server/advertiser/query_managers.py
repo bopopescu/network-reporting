@@ -6,6 +6,7 @@ from google.appengine.ext import db
 
 from common.utils.query_managers import QueryManager, CachedQueryManager
 from common.utils.decorators import wraps_first_arg
+from common.constants import CAMPAIGN_LEVELS
 
 from advertiser.models import Campaign
 from advertiser.models import AdGroup
@@ -14,13 +15,10 @@ from advertiser.models import Creative, TextCreative, \
                               HtmlCreative,\
                               ImageCreative
 
-from publisher.models import App
-from publisher.models import Site as AdUnit
+from publisher.models import App, AdUnit
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 
 NAMESPACE = None
-
-CAMP_PRIORITIES = ('gtee', 'gtee_high', 'gtee_low', 'promo', 'network', 'backfill_promo')
 
 class CampaignQueryManager(QueryManager):
     Model = Campaign
@@ -71,26 +69,27 @@ class CampaignQueryManager(QueryManager):
                 #if it's not an adunit, make it  
                 adunits = publisher.all_adunits
             adgroups = AdGroup.all().filter('site_keys IN', [a for a in adunits])
-            #adgroups = AdGroup.all().filter('site_keys IN', [a.key() for a in adunits])
-            adgroups = [a for a in adgroups if a.deleted == deleted]
+            if deleted is not None:
+                adgroups = [a for a in adgroups if a.deleted == deleted]
             camps = [adgroup.campaign for adgroup in adgroups]
             if by_priority:
                 temp = []
-                for p in CAMP_PRIORITIES:
+                for p in CAMPAIGN_LEVELS:
                     priority_camps = [c for c in camps if c.campaign_type == p]
                     if len(priority_camps) > 0:
                         temp.append(priority_camps)
                 camps = temp
             return camps
 
-        camps = Campaign.all().filter('deleted =', deleted)
+        if deleted is not None:
+            camps = Campaign.all().filter('deleted =', deleted)
         if account:
             camps = camps.filter('account = ', account)
         #turn a list of campaigns into a list of lists where each list is all
         #campagins at a given priority level
         if by_priority:
             temp = []
-            for p in CAMP_PRIORITIES:
+            for p in CAMPAIGN_LEVELS:
                 priority_camps = [c for c in camps if c.campaign_type == p]
                 if len(priority_camps) > 0:
                     temp.append(priority_camps)
@@ -170,8 +169,9 @@ class CreativeQueryManager(QueryManager):
     @classmethod
     def reports_get_creatives(cls, account=None, publisher=None, advertiser=None, deleted=False):
         adgroups = []
+        #Advertiser will always be a campaign or a list of campaigns
         if advertiser:
-            if type(advertiser) != list:
+            if not isinstance(advertiser, list):
                 advertiser = [advertiser]
             for adv in advertiser:
                 adgroups += adv.adgroups
@@ -180,7 +180,10 @@ class CreativeQueryManager(QueryManager):
             if hasattr(publisher, 'all_adunits'):
                 adunits = [au for au in publisher.all_adunits]
             pub_ags = AdGroup.all().filter('site_keys IN', adunits)
-            pub_ags = [a for a in pub_ags if a.deleted == deleted]
+            if deleted is not None:
+                pub_ags = [a for a in pub_ags if a.deleted == deleted]
+            #collect all the adgroups for the publisher and the advertiser
+            #make sure to only take the intersection of the sets
             if adgroups:
                 final = []
                 for pub_ag in pub_ags:
@@ -192,7 +195,9 @@ class CreativeQueryManager(QueryManager):
                 adgroups = pub_ags
         if adgroups:
             return reduce(lambda x, y: x+y, [[c for c in ag.creatives] for ag in adgroups])
-        crtvs = Creative.all().filter('deleted =', deleted).filter('account =', account)
+        crtvs = Creative.all().filter('account =', account)
+        if deleted is not None:
+            crtvs = crtvs.filter('deleted =', deleted)
         return crtvs
 
         

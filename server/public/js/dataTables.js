@@ -6319,6 +6319,8 @@
 			}
 		}
 
+
+        //NICK HACKKKKKKKKK
         function array_splice(ins_at, array_to_splice, array_to_add) {
             for (var idx = 0; idx < array_to_add.length; idx++) {
                 array_to_splice.splice(ins_at+idx+1, 0, array_to_add[idx]);
@@ -6923,6 +6925,7 @@
 			/* Initialisation complete - table can be drawn */
 			oSettings.bInitialised = true;
 
+            //NICK Begin datatable hackery
             oSettings.treeData = treeData(oSettings);
 			
 			/* Check if we need to initialise the table (it might not have been handed off to the

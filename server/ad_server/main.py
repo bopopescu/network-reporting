@@ -43,6 +43,7 @@ from common.utils import simplejson
 from common.utils import helpers
 from common.constants import (FULL_NETWORKS,
                               ACCEPTED_MULTI_COUNTRY,
+                              CAMPAIGN_LEVELS,
                              )
 
 from string import Template
@@ -101,7 +102,6 @@ DEBUG = not on_production_server
 CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gzip(gfe)"]
 MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7PnE6cH9_PX7OoeIIr5FjnTA'
 FREQ_ATTR = '%s_frequency_cap'
-CAMPAIGN_LEVELS = ('gtee_high', 'gtee', 'gtee_low', 'promo', 'network','backfill_promo')
 NATIVE_REQUESTS = ['admob','adsense','iAd','custom']
 
 SERVER_SIDE_DICT = {"millennial":MillennialServerSide,

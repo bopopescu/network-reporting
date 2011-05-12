@@ -128,7 +128,7 @@ class StatsModelQueryManager(CachedQueryManager):
         if publisher and publishers:
             logging.error("cannot pass both a single publisher and multiple publishers")
         if publisher and not publishers:
-            if type(publisher) == list:
+            if isinstance(publisher, list):
                 publishers = publisher
             else:
                 publishers = [publisher]
@@ -136,14 +136,14 @@ class StatsModelQueryManager(CachedQueryManager):
         if advertiser and advertisers:
             logging.error("cannot pass both a single advertiser and multiple advertisers")
         if advertiser and not advertisers:
-            if type(advertiser) == list:
+            if isinstance(advertiser, list):
                 advertisers = advertiser
             else:
                 advertisers = [advertiser]
 
-        if type(publisher) != list and publisher == publishers:
+        if not isinstance(publisher, list) and publisher == publishers:
             publishers = [publisher]
-        if type(advertiser) != list and advertiser == advertisers:
+        if not isinstance(advertiser, list) and advertiser == advertisers:
             advertisers = [advertiser]
 
         stats = []

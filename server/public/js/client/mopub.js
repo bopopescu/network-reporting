@@ -2,15 +2,26 @@
 	MoPub Client JS
 */
 var mopub_click_url;
+function redo_tags(frame) {
+    var a_tags = frame.document.getElementsByTagName('a');
+    for (var idx = 0; idx < a_tags.length; idx++) {
+        var curr = a_tags[idx];
+        if (curr.href != '#') {
+            curr.href = mopub_click_url + '&r=' + curr.href;
+        }
+    }
+}
 
 function mp_cb(data) {
+    mopub_click_url = data.click_url;
     var iframe = document.getElementById('mopub-iframe');
     iframe = (iframe.contentWindow) ? iframe.contentWindow : (iframe.contentDocument.document);
     iframe.document.open();
     iframe.document.write(data.ad);
+    redo_tags(iframe);
     iframe.document.close();
-    mopub_click_url = data.click_url;
 }
+
 (function(){
     var c_name = "mopub-udid-cookie";
     if (window.mopub_ad_unit == null) {
@@ -27,12 +38,13 @@ function mp_cb(data) {
         script = scripts[scripts.length - 1];
     var mopub_url = document.createElement("a");
     mopub_url.href = script.src;
-    
-    var mopub_ad_url = "http://"+mopub_url.hostname;
+   
+
+    var mopub_site_url = "http://"+mopub_url.hostname;
     if (mopub_url.port != "0")
-        mopub_ad_url += ":"+mopub_url.port;
+        mopub_site_url += ":"+mopub_url.port;
     // TODO: add version    
-    mopub_ad_url += "/m/ad?id="+mopub_ad_unit + "&udid=M0B1LEWEBC00KIE:" + get_session();
+    var mopub_ad_url = mopub_site_url + "/m/ad?id="+mopub_ad_unit + "&udid=M0B1LEWEBC00KIE:" + get_session();
 
     if (window.mopub_keywords != null)
         mopub_ad_url += "&q="+escape(window.mopub_keywords);
@@ -40,7 +52,7 @@ function mp_cb(data) {
 
 
     //init openx cursor tracking magic
-    document.write('<script type="text/javascript" src="http://ads.mopub.com/js/openx.js?v=1"></script>');
+    document.write('<script type="text/javascript" src="' + mopub_site_url + '/js/clicktracker.js?v=18"></script>');
     //iframe for ad
     document.write('<iframe id="mopub-iframe" frameborder="0" hspace="0" marginheight="0" marginwidth="0" scrolling="no" vspace="0"'
                    + ' width="'+window.mopub_ad_width+'"'

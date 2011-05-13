@@ -200,7 +200,7 @@
                     <div class="adForm-apps hidden">
                       {% for app in apps%}
                         <dt>{{app.name}}:</dt>
-                        <dd><input type="text" class="input-text" name="{{app.key}}-millennial_pub_id" value="{{app.network_config.millennial_pub_id|default_if_none:""}}"  placeholder="ex: pa_company_inc_app"/></dd>
+                        <dd><input type="text" class="input-text" name="{{app.key}}-millennial_pub_id" value="{{app.network_config.millennial_pub_id|default_if_none:""}}"  placeholder="ex: 36789"/></dd>
                       {% endfor %}
                       
                     </div>

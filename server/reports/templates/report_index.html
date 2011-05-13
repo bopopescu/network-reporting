@@ -55,7 +55,7 @@
                     <a href='{% url view_report report_key=report.key %}'>{{report.name}}</a>
                 </th>
                 <td class='dataTable-name'>{{report.details|safe}}</td>
-                <td id='{{report.key}}-status' class='dataTable-date'>{{report.last_run|date:'N j, Y f a'}}</td>
+                <td id='{{report.key}}-status' class='dataTable-date'>{{report.last_run|date:'N j, Y \<\b\r /\> f a'|safe}}</td>
                 <td class='dataTable-data numeric'></td>
             </tr>
             {% endfor %}

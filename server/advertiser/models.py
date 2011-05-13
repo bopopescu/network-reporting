@@ -84,7 +84,7 @@ class AdGroup(db.Model):
     # if CPM: bid = cost per 1000 impressions
     # if CPC: bid = cost per 1 click
     bid = db.FloatProperty(default=0.05)
-    bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpm")
+    bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpc")
 
     # state of this ad group
     active = db.BooleanProperty(default=True)

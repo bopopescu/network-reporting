@@ -561,6 +561,16 @@ class AdHandler(webapp.RequestHandler):
 	    						  user_agent=user_agent,
 	    						  adunit_context=adunit_context,
 	    						  experimental=experimental)
+        
+        # add timer and animations for the ad 
+        # only send to client if there should be a refresh
+        # animation_type = random.randint(0,6)
+        # self.response.headers.add_header("X-Animation",str(animation_type))    
+        
+        refresh = adunit.refresh_interval
+        if refresh:
+            self.response.headers.add_header("X-Refreshtime",str(refresh))
+        
         # output the request_id and the winning creative_id if an impression happened
         if c:
             user_adgroup_daily_key = memcache_key_for_date(udid,now,c.ad_group.key())
@@ -568,15 +578,6 @@ class AdHandler(webapp.RequestHandler):
             trace_logging.warning("user_adgroup_daily_key: %s"%user_adgroup_daily_key)
             trace_logging.warning("user_adgroup_hourly_key: %s"%user_adgroup_hourly_key)
             memcache.offset_multi({user_adgroup_daily_key:1,user_adgroup_hourly_key:1}, key_prefix='', namespace=None, initial_value=0)
-                  
-            # add timer and animations for the ad 
-            refresh = adunit.refresh_interval
-            # only send to client if there should be a refresh
-            if refresh:
-                self.response.headers.add_header("X-Refreshtime",str(refresh))
-            # animation_type = random.randint(0,6)
-            # self.response.headers.add_header("X-Animation",str(animation_type))    
-        
         
             # create an ad clickthrough URL
             appid = c.conv_appid or ''
@@ -735,6 +736,10 @@ class AdHandler(webapp.RequestHandler):
             elif c.ad_type == "html":
                 params.update(html_data=c.html_data)
                 params.update({"html_data": kwargs["html_data"], "w": format[0], "h": format[1]})
+                # add the launchpage header for inmobi in case they have dynamic ads that use
+                # window.location = 'http://some.thing/asdf'
+                if c.adgroup.network_type == "inmobi":
+                    self.response.headers.add_header("X-Launchpage","http://c.w.mkhoj.com")
                 
                 # HACK FOR RUSSEL's INTERSTITIAL
                 # if str(c.key()) == "agltb3B1Yi1pbmNyEAsSCENyZWF0aXZlGPmNGAw":

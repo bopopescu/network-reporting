@@ -708,11 +708,11 @@ class AdHandler(webapp.RequestHandler):
           
           
             if c.ad_type == "adsense":
-                params.update({"title": ','.join(kwargs["q"]), "adsense_format": '300x250_as', "w": format[0], "h": format[1], "client": kwargs["site"].get_pub_id("adsense")})
+                params.update({"title": ','.join(kwargs["q"]), "adsense_format": '300x250_as', "w": format[0], "h": format[1], "client": kwargs["site"].get_pub_id("adsense_pub_id")})
                 params.update(channel_id=kwargs["site"].adsense_channel_id or '')
                 # self.response.headers.add_header("X-Launchpage","http://googleads.g.doubleclick.net")
             elif c.ad_type == "admob":
-                params.update({"title": ','.join(kwargs["q"]), "w": format[0], "h": format[1], "client": kwargs["site"].get_pub_id("admob")})
+                params.update({"title": ','.join(kwargs["q"]), "w": format[0], "h": format[1], "client": kwargs["site"].get_pub_id("admob_pub_id")})
                 debug = kwargs["debug"]
                 params.update(test_mode='true' if debug else 'false')
                 # params.update(test_ad='<a href="http://m.google.com" target="_top"><img src="/images/admob_test.png"/></a>' if debug else '')
@@ -786,9 +786,9 @@ class AdHandler(webapp.RequestHandler):
                 self.response.headers.add_header("X-Adtype", str(c.ad_type))
                 self.response.headers.add_header("X-Backfill", str(c.ad_type))
                 
-                trace_logging.warning('pub id:%s'%kwargs["site"].get_pub_id("adsense"))
+                trace_logging.warning('pub id:%s'%kwargs["site"].get_pub_id("adsense_pub_id"))
                 header_dict = {
-                  "Gclientid":str(kwargs["site"].get_pub_id("adsense")),
+                  "Gclientid":str(kwargs["site"].get_pub_id("adsense_pub_id")),
                   "Gcompanyname":str(kwargs["site"].account.adsense_company_name),
                   "Gappname":str(kwargs["site"].app_key.adsense_app_name),
                   "Gappid":"0",

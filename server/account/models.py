@@ -12,7 +12,7 @@ class NetworkConfig(db.Model):
     greystripe_pub_id = db.StringProperty()
     inmobi_pub_id = db.StringProperty()
     jumptap_pub_id = db.StringProperty()
-    millenial_pub_id = db.StringProperty()
+    millennial_pub_id = db.StringProperty()
     mobfox_pub_id = db.StringProperty()
 
 
@@ -47,7 +47,7 @@ class Account(db.Model):
     greystripe_pub_id = db.StringProperty()
     inmobi_pub_id = db.StringProperty()
     jumptap_pub_id = db.StringProperty()
-    millenial_pub_id = db.StringProperty()
+    millennial_pub_id = db.StringProperty()
     mobfox_pub_id = db.StringProperty()
     
     def is_admin(self):

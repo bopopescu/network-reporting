@@ -106,10 +106,6 @@ class AdGroupIndexHandler(RequestHandler):
         adgroups = sorted(adgroups, key=lambda adgroup: adgroup.stats.impression_count, reverse=True)
     
         help_text = None
-        if network_campaigns:
-            if not (self.account.network_config.adsense_pub_id or
-                    self.account.network_config.admob_pub_id):
-                help_text = 'Provide your ad network publisher IDs on the <a href="%s">account page</a>'%reverse('account_index')
 
         graph_adgroups = adgroups[0:4]
         if len(adgroups) > 4:

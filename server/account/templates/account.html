@@ -193,14 +193,14 @@
                       </div>
                     </div>
                   </div>
-                  <legend>Millenial Media {% if account.network_config.millenial_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Not configured)</span>{% endif %}</legend> 
-                  <dl class="formFields {% if account.network_config.millenial_pub_id %}show{% endif %}"> 
-                    <dt><label for="appForm-adUnitName">Millenial Publisher ID:</label></dt> 
-                    <dd><input type="text" class="input-text" name="millenial_pub_id" value="{{account.network_config.millenial_pub_id|default_if_none:""}}"  placeholder="ex: 36789"/></dd> 
+                  <legend>Millennial Media {% if account.network_config.millennial_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Not configured)</span>{% endif %}</legend> 
+                  <dl class="formFields {% if account.network_config.millennial_pub_id %}show{% endif %}"> 
+                    <dt><label for="appForm-adUnitName">Millennial Publisher ID:</label></dt> 
+                    <dd><input type="text" class="input-text" name="millennial_pub_id" value="{{account.network_config.millennial_pub_id|default_if_none:""}}"  placeholder="ex: 36789"/></dd> 
                     <div class="adForm-apps hidden">
                       {% for app in apps%}
                         <dt>{{app.name}}:</dt>
-                        <dd><input type="text" class="input-text" name="{{app.key}}-millenial_pub_id" value="{{app.network_config.millenial_pub_id|default_if_none:""}}"  placeholder="ex: pa_company_inc_app"/></dd>
+                        <dd><input type="text" class="input-text" name="{{app.key}}-millennial_pub_id" value="{{app.network_config.millennial_pub_id|default_if_none:""}}"  placeholder="ex: pa_company_inc_app"/></dd>
                       {% endfor %}
                       
                     </div>

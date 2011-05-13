@@ -154,20 +154,19 @@ class Site(db.Model):
     def owner_name(self):
         return "app_key"
         
-    def get_pub_id(self, network_name):
+    def get_pub_id(self, pub_id_attr):
         """ Look up the pub string in all levels """
-        pub_attr_string = network_name + "_pub_id"
         
         # If not found, return None
-        adunit_level_id = getattr(self.network_config, pub_attr_string, None)
+        adunit_level_id = getattr(self.network_config, pub_id_attr, None)
         if adunit_level_id:
             return adunit_level_id
-        
-        app_level_id = getattr(self.app.network_config, pub_attr_string, None)
+
+        app_level_id = getattr(self.app.network_config, pub_id_attr, None)
         if app_level_id:
             return app_level_id
         
-        account_level_id = getattr(self.account.network_config, pub_attr_string, None)
+        account_level_id = getattr(self.account.network_config, pub_id_attr, None)
         if account_level_id:
             return account_level_id
         

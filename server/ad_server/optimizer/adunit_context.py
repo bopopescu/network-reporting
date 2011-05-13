@@ -50,12 +50,15 @@ class AdUnitContext(object):
         # Triggers dereferencing of references so we can cache the whole object
         # We ask both Account and App for an arbitrary property 
         self.adunit.account.active
-        self.adunit.app_key.active
+        self.adunit.app_key.deleted
         
         # We also dereference the network configs
-        self.adunit.account.network_config.admob_pub_id
-        self.adunit.app.network_config.admob_pub_id
-        self.adunit.network_config.admob_pub_id
+        if self.adunit.account.network_config:
+            self.adunit.account.network_config.admob_pub_id
+        if self.adunit.app.network_config:
+            self.adunit.app.network_config.admob_pub_id
+        if self.adunit.network_config:
+            self.adunit.network_config.admob_pub_id
         
 
 

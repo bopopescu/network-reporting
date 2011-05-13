@@ -2,6 +2,7 @@
  
  $(document).ready(function() {
 
+
      function addPlaceholder() {
         $('.reportData-placeholder').hide();
         $('table').each(function() {
@@ -12,8 +13,20 @@
         });
      }
      addPlaceholder();
-    $('input[name="start"]').datepicker();
-    $('input[name="end"]').datepicker();
+
+    $('input[name="start"]').datepicker().change(function (e) {
+        var dte = $(this).val().split("/");
+        dte = new Date(parseInt(dte[2]), parseInt(dte[0])-1, parseInt(dte[1]));
+        console.log(dte);
+        $('input[name="end"]').datepicker('option', 'minDate', dte);
+    });
+    $('input[name="end"]').datepicker({maxDate: new Date()}).change(function (e) {
+        var dte = $(this).val().split("/");
+        dte = new Date(parseInt(dte[2]), parseInt(dte[0])-1, parseInt(dte[1]));
+        console.log(dte);
+        $('input[name="start"]').datepicker('option', 'maxDate', dte);
+    });
+
 
     $('#reportCreateForm-submit')
     .button({
@@ -24,7 +37,7 @@
     });
 
     $('#reports-view-runReportButton').button({
-        icons: {secondary: 'ui-icon-circle-triangle-e' }})
+        icons: {secondary: 'ui-icon-circle-triangle-e' }});
 
     $('#reports-view-saveReportButton')
     .button({
@@ -32,7 +45,7 @@
     .click(function(e) {
         e.preventDefault();
         console.log("clicky");
-        $.ajax({url:'http://' + window.location.host + '/reports/save/' + $('#reportKey').val() + '/'})
+        $.ajax({url:'http://' + window.location.host + '/reports/save/' + $('#reportKey').val() + '/'});
     })
 
     $('#reportCreateForm-cancel').button()
@@ -56,6 +69,8 @@
     $('#reports-view-editReportButton').button({icons: {primary: 'ui-icon-wrench'}})
         .click(function(e) {
             e.preventDefault();
+            $('#reportCreateForm-submit').button('option', 'label', 'Run').button('option', 'icons', {secondary: 'ui-icon-circle-triangle-e'}); 
+            $('#saveAs').val('False');
             var report_form = $('#reportForm-container');
             report_form.dialog({width:750});
         });
@@ -63,13 +78,16 @@
     $('#reports-view-saveAsReportButton').button({icons: {secondary: 'ui-icon-check'}})
         .click(function(e) {
             e.preventDefault();
-            $('#reportFormSaveAs-container').dialog({width:750});
+            $('#reportCreateForm-submit').button('option', 'label', 'Save As').button('option', 'icons', {secondary: 'ui-icon-check'});
+            $('#saveAs').val('True');
+            $('#reportForm-container').dialog({width:750});
         });
 
     $('#reportCreateForm-cancel')
         .button()
         .click(function(e) {
             e.preventDefault();
+            revert_state(form_state);
             $(this).parents('#reportForm-container')
             .dialog('close');
         });
@@ -184,12 +202,53 @@
     d2_sel = $(selects[1]);
     d3_sel = $(selects[2]);
 
+    function revert_state(state) {
+        d1_sel.selectmenu('index', state.d1);
+        d1_validate($('#d1'));
+        d2_sel.selectmenu('index', state.d2);
+        d2_validate($('#d2'));
+        d3_sel.selectmenu('index', state.d3);
+        $('#end-input').val(state.end); 
+        $('#start-input').val(state.start); 
+        $('#interval').selectmenu('index', state.interv);
+        $("#reportName-input").val(state.name);
+    }
+
+    function get_form_state() {
+        return build_state( sel_state(d1_sel),
+                            sel_state(d2_sel),
+                            sel_state(d3_sel),
+                            sel_state($('#interval')), 
+                            $('#end-input').val(), 
+                            $('#start-input').val(), 
+                            $('#reportName-input').val()
+                            )
+    }
+    function build_state(d1, d2, d3, interv, end, start, name) {
+        return {d1: d1,
+                d2: d2,
+                d3: d3,
+                interv: interv,
+                end: end,
+                start: start,
+                name: name,
+                }
+    }
+    function sel_state(obj) {
+        return obj.selectmenu('index');
+    }
+    //Get the state of the form so we go back to this on cancel
+    var form_state = get_form_state();
+
+
+
+    var form_state;
     $('#d1').change(
         function(e) {
             e.preventDefault();
             d1_validate($(this));
             d2_validate($('#d2'));
-        });
+        }).change();
 
 
     function d1_validate(obj) {

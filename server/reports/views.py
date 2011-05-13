@@ -56,11 +56,10 @@ class AddReportHandler(RequestHandler):
             start = datetime.datetime.strptime(start, '%m/%d/%Y').date()
             days = (end - start).days
         man = ReportQueryManager(self.account)
-        if saved == "True":
+        if saved == "True" or saved == 'true':
             saved = True
         else:
             saved = False
-        logging.warning('\n\n\n%s\n\n\n' % saved)
         report = man.add_report(d1, 
                                 d2,
                                 d3, 
@@ -93,8 +92,14 @@ def request_report(request, *args, **kwargs):
 
 
 class CheckReportHandler(RequestHandler):
-    def get(self):
-        pass
+    def get(self, report_key):
+        man = ReportQueryManager(self.account)
+        report = man.get_report_by_key(report_key)
+        data = report.html_data
+        if data is None:
+            data = 'none'
+        ret = dict(data = data)
+        return HttpResponse(simplejson.dumps(ret), mimetype='application/json')
 
 @whitelist_login_required
 def check_report(request, *args, **kwargs):

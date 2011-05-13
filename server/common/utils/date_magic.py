@@ -148,7 +148,7 @@ def date_name(val, dim):
     elif dim == DAY:
         name = val[0].strftime('%b %d, %Y')
     elif dim == HOUR:
-        name = val[0].strftime('%I:%M %p')
+        name = val[0].strftime('%H:%M')
     else:
         name = 'Impossible State'
     return name

@@ -116,14 +116,14 @@ tr {
 }
 
 table#report-table tr.level0 td.name {
-    padding-left:0px;
+    padding-left:5px;
 }
 
 table#report-table tr.level1 td.name {
-    padding-left:15px;
+    padding-left:20px;
 }
 table#report-table tr.level2 td.name {
-    padding-left:30px;
+    padding-left:35px;
 }
 
 .dataTables_length {

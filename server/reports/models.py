@@ -65,11 +65,11 @@ class ScheduledReport(db.Model):
         #get the most recent report created by this scheduler
     @property
     def details(self):
-        return self.most_recent.details
+        return self.most_recent.details(self.interval)
 
     @property
     def date_details(self):
-        return self.most_recent.date_details
+        return self.most_recent.date_details(self.interval)
     
     @property
     def dim_details(self):
@@ -122,8 +122,9 @@ class Report(db.Model):
         country = None
         device = None
         op_sys = None
+        date_fmt = None
         days = date_magic.gen_days(self.start,self.end) 
-        def gen_helper(pub, adv, days, country, device, op_sys, level):
+        def gen_helper(pub, adv, days, country, device, op_sys, date_fmt, level):
             last_dim = False
             if level == 0:
                 if self.d2 is None:
@@ -141,7 +142,7 @@ class Report(db.Model):
                 logging.error("impossible")
             ret = {}
             manager = StatsModelQueryManager(self.account, offline=False)#True) #offline=self.offline)
-            vals, typ, date_fmt = self.get_vals(pub, adv, days, country, device, op_sys, dim)
+            vals, typ, date_fmt = self.get_vals(pub, adv, days, country, device, op_sys, dim, date_fmt)
             if vals is None:
                 return ret
             for idx, val in enumerate(vals):
@@ -182,14 +183,18 @@ class Report(db.Model):
                 if last_dim: 
                     ret[key] = dict(stats = stats, name = name)
                 else:
-                    ret[key] = dict(stats=stats, name = name, sub_stats = gen_helper(pub,adv,days, country, device, op_sys, level+1))
+                    ret[key] = dict(stats=stats, name = name, sub_stats = gen_helper(pub,adv,days, country, device, op_sys,date_fmt, level+1))
             return ret
-        return gen_helper(pub, adv, days, country, device, op_sys, 0)
+        return gen_helper(pub, adv, days, country, device, op_sys, date_fmt, 0)
 
-    def get_vals(self, pub, adv, days, country, device, op_sys, dim):
+    def get_vals(self, pub, adv, days, country, device, op_sys, dim, date_fmt=None):
         #This gets the list of values to iterate over for this level of the breakdown.  Country, device, OS, and keywords are irrelevant because they are independent of everythign else
-        date_fmt = 'date'
+        if date_fmt is None:
+            #use preset format if it exists, otherwise use 'date'
+            date_fmt = 'date'
         if dim in (MO, WEEK, HOUR, DAY):
+            #assume it's not hour right away, if it is 'date_hour' it'll fix itself
+            date_fmt = 'date'
             type = 'days'
             if dim == MO:
                 vals = date_magic.get_months(days)
@@ -264,17 +269,32 @@ class Report(db.Model):
 
     @property
     def html_data(self):
-        return loader.render_to_string('reports/report.html', dict(all_stats=self.data))
+        if self.data:
+            return loader.render_to_string('reports/report.html', dict(all_stats=self.data))
+        else:
+            return None
     
     @property
     def details(self):
-        return self.dim_details + "<br/>" + self.date_details
+        def detail_helper(interval):
+            return self.dim_details + "<br/>" + self.date_details(interval)
+        return detail_helper
 
     @property
     def date_details(self):
-        s_str = self.start.strftime('%m/%d/%y')
-        e_str = self.end.strftime('%m/%d/%y')
-        return '%s to %s' % (s_str, e_str)
+        def date_helper(interval):
+            if interval == 'custom':
+                s_str = self.start.strftime('%m/%d/%y')
+                e_str = self.end.strftime('%m/%d/%y')
+                return '%s to %s' % (s_str, e_str)
+            else: 
+                if interval == '7days':
+                    return 'Last 7 days'
+                elif interval == 'lmonth':
+                    return 'Last month'
+                else:
+                    return interval.title()
+        return date_helper
     
     @property
     def dim_details(self):

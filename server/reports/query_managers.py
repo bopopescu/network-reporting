@@ -165,8 +165,16 @@ class ReportQueryManager(CachedQueryManager):
                 name += " > " + d2
             if d3:
                 name += " > " + d3
-            name += ' ' + start.isoformat()
-            name += ' -- ' + end.isoformat() 
+            name += ' -'
+            if interval == 'custom':
+                name += ' ' + start.isoformat()
+                name += ' -- ' + end.isoformat() 
+            elif interval == '7days':
+                name += ' Last 7 days'
+            elif interval == 'lmonth':
+                name += ' Last month'
+            else:
+                name += ' ' + interval.title()
             name = name.title()
         if d2 == '':
             d2 = None

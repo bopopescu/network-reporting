@@ -54,6 +54,7 @@ from google.appengine.api import taskqueue
 from google.appengine.ext import webapp, db
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
+from google.appengine.api import images
 
 from publisher.models import *
 from advertiser.models import *
@@ -731,8 +732,9 @@ class AdHandler(webapp.RequestHandler):
                 self.response.headers.add_header("X-Launchpage","http://adsx.greystripe.com/openx/www/delivery/ck.php")
                 template_name = "html"
             elif c.ad_type == "image":
+                img = images.Image(c.image)
                 params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
-                params.update({"w": format[0], "h": format[1]})
+                params.update({"w": img.width, "h": img.height, "w2":img.width/2.0, "h2":img.height/2.0})
             elif c.ad_type == "html":
                 params.update(html_data=c.html_data)
                 params.update({"html_data": kwargs["html_data"], "w": format[0], "h": format[1]})

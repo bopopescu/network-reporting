@@ -207,10 +207,4 @@ def simple_mptest():
     data1 = rep1.gen_data()
     data2 = rep2.gen_data()
     data3 = rep3.gen_data()
-    print "Report 1: %s" % rep1
-    pprint.pprint(data1)
-    print "\n\nReport 2: %s" % rep2
-    pprint.pprint(data2)
-    print "\n\nReport 3: %s" % rep3
-    pprint.pprint(data3)
-    assert False
+    assert True

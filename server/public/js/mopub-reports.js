@@ -17,13 +17,11 @@
     $('input[name="start"]').datepicker().change(function (e) {
         var dte = $(this).val().split("/");
         dte = new Date(parseInt(dte[2]), parseInt(dte[0])-1, parseInt(dte[1]));
-        console.log(dte);
         $('input[name="end"]').datepicker('option', 'minDate', dte);
     });
     $('input[name="end"]').datepicker({maxDate: new Date()}).change(function (e) {
         var dte = $(this).val().split("/");
         dte = new Date(parseInt(dte[2]), parseInt(dte[0])-1, parseInt(dte[1]));
-        console.log(dte);
         $('input[name="start"]').datepicker('option', 'maxDate', dte);
     });
 
@@ -44,7 +42,6 @@
         icons: {secondary: 'ui-icon-circle-check'}})
     .click(function(e) {
         e.preventDefault();
-        console.log("clicky");
         $.ajax({url:'http://' + window.location.host + '/reports/save/' + $('#reportKey').val() + '/'});
     })
 

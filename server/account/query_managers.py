@@ -1,6 +1,6 @@
 import logging
 
-from common.utils.query_managers import CachedQueryManager
+from common.utils.query_managers import CachedQueryManager, QueryManager
 
 from common.utils.decorators import wraps_first_arg
 from advertiser.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
@@ -37,6 +37,13 @@ class AccountQueryManager(CachedQueryManager):
             memcache.set(str(cls._user_key(user)), account, namespace="account")
         logging.warning("account: %s"%account.key())    
         return account
+
+    @classmethod
+    def update_config_and_put(cls, account, network_config):
+        """ Updates the network config and the associated account"""
+        db.put(network_config)
+        account.network_config = network_config
+        cls.put_accounts(account)
 
     @classmethod
     @wraps_first_arg
@@ -100,3 +107,5 @@ class AccountQueryManager(CachedQueryManager):
         # delete old account as long as the accounts aren't the same
         # if not new_account.key() == old_account.key():
         #     old_account.delete()
+        
+

@@ -1,7 +1,7 @@
 from google.appengine.ext import db
 from google.appengine.api import users
 
-from account.models import Account
+from account.models import Account, NetworkConfig
 from advertiser.models import Creative
 
 # 
@@ -31,6 +31,8 @@ class App(db.Model):
     exchange_creative = db.ReferenceProperty(Creative)
     
     experimental_fraction = db.FloatProperty(default=0.0)
+    
+    network_config = db.ReferenceProperty(NetworkConfig, collection_name="apps")
   
     def get_owner(self):
         return None
@@ -110,12 +112,16 @@ class Site(db.Model):
     # creation time
     t = db.DateTimeProperty(auto_now_add=True)
     
-    # Allows the site to reject ads if their eCPM does not 
-    # exceed a given threshold, on a per-priority level basis
-    # TODO Make this actually do something 
+    network_config = db.ReferenceProperty(NetworkConfig, collection_name="adunits")
+    
+
     def threshold_cpm(self, priority_level):
+        """ Allows the site to reject ads if their eCPM does not 
+        exceed a given threshold, on a per-priority level basis
+        TODO Make this actually do something """
         return 0
     
+    # Now we can access app_key using app
     def _get_app(self):
         return self.app_key
     def _set_app(self, value):
@@ -147,6 +153,24 @@ class Site(db.Model):
     @property
     def owner_name(self):
         return "app_key"
+        
+    def get_pub_id(self, pub_id_attr):
+        """ Look up the pub string in all levels """
+        
+        # If not found, return None
+        adunit_level_id = getattr(self.network_config, pub_id_attr, None)
+        if adunit_level_id:
+            return adunit_level_id
+
+        app_level_id = getattr(self.app.network_config, pub_id_attr, None)
+        if app_level_id:
+            return app_level_id
+        
+        account_level_id = getattr(self.account.network_config, pub_id_attr, None)
+        if account_level_id:
+            return account_level_id
+        
+
 ###############
 # rename Site #
 ###############

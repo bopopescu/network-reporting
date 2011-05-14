@@ -826,6 +826,13 @@ dl.formFields.thin {
   width: 440px;
 }
 
+.formFields .formIndent {
+  margin: 0 0 0 20px;
+}
+.formFields .formIndent dd{
+  width: 420px;
+}
+
 .formFields.thin dd {
   width: 250px;
 }
@@ -1782,6 +1789,10 @@ ul.ui-selectmenu-menu {
 
 .accountInfoForm-container {
   position: relative;
+}
+
+#account-section .formFields{
+  margin: 0;
 }
 
 .accountInfoForm-left {

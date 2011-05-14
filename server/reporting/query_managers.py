@@ -159,7 +159,6 @@ class StatsModelQueryManager(CachedQueryManager):
                                                  op_sys = op_sys,
                                                  offline = offline, 
                                                  date_fmt = date_fmt)
-        logging.warning("\n\n\n\n\n%s\n\n\n" % stats)
         return reduce(lambda x,y: x+y, stats, StatsModel())
 
 

@@ -49,19 +49,14 @@ class ServerSide(object):
     def get_ip(self):
         """gets ths ip from either a query parameter or the header"""
         return helpers.get_ip(self.request)
-
-    def get_adunit(self):
-        return self.adunit
-
-    def get_account(self):
-        return self.adunit.account
     
     def get_user_agent(self):
         """gets the user agent from either a query paramter or the header"""
         return helpers.get_user_agent(self.request)
         
     def get_pub_id(self,warn=False):
-        pub_id = getattr(self.get_account(),self.pub_id_attr)
+        """ Gets the most specifically defined pub id """
+        pub_id = self.adunit.get_pub_id(self.pub_id_attr)
         if warn and not pub_id:
             trace_logging.info(self.no_pub_id_warning%self.network_name)  
         return pub_id

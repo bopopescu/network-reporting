@@ -737,7 +737,7 @@ class AdHandler(webapp.RequestHandler):
                 params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
                 
                 # if full screen we don't need to center
-                if (img.width == 480.0 and img.height == 320.0 ) or (img.width == 320.0 and img.height == 480.0):
+                if (not "full" in adunit.format) or ((img.width == 480.0 and img.height == 320.0 ) or (img.width == 320.0 and img.height == 480.0)):
                     css_class = ""
                 else:
                     css_class = "center"    

@@ -654,6 +654,7 @@ class AdHandler(webapp.RequestHandler):
                         self.response.headers.add_header("X-Orientation","l")
                         format = ("480","320")
                     else:
+                        self.response.headers.add_header("X-Orientation","p")
                         format = (320,480)    
                                                 
                 elif not c.adgroup.network_type or c.adgroup.network_type in FULL_NETWORKS:
@@ -734,7 +735,14 @@ class AdHandler(webapp.RequestHandler):
             elif c.ad_type == "image":
                 img = images.Image(c.image)
                 params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
-                params.update({"w": img.width, "h": img.height, "w2":img.width/2.0, "h2":img.height/2.0})
+                
+                # if full screen we don't need to center
+                if (img.width == 480.0 and img.height == 320.0 ) or (img.width == 320.0 and img.height == 480.0):
+                    css_class = ""
+                else:
+                    css_class = "center"    
+                
+                params.update({"w": img.width, "h": img.height, "w2":img.width/2.0, "h2":img.height/2.0, "class":css_class})
             elif c.ad_type == "html":
                 params.update(html_data=c.html_data)
                 params.update({"html_data": kwargs["html_data"], "w": format[0], "h": format[1]})

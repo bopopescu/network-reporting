@@ -1,9 +1,7 @@
 from string import Template
-
+    
 image = Template("""<html>
-                        <head>
-                          <style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: ${w}px;height: ${h}px;}.creative_headline {font-size: 20px;}.creative .creative_url a {color: green;text-decoration: none;}
-                          </style>
+                        <head>                          
                           $finishLoad
                           <script>
                             function webviewDidClose(){} 
@@ -19,9 +17,11 @@ image = Template("""<html>
                                 }
                           </style>
                         </head>
-                        <body class= style="margin:0;padding:0;">
-                          <div class="center">    
-                              <a href="$url" target="_top"><img src="$image_url" width="$w" height="$h"/></a>
-                          </div>
+                        <body style="padding:0;margin:0;">
+                          <div class="outer" id="outer">    
+                              <div class="${class}">    
+                                  <a href="$url" target="_top"><img src="$image_url" width="$w" height="$h"/></a>
+                              </div>
+                          </div>      
                           $trackingPixel
                         </body></html> """)

@@ -158,7 +158,12 @@ def remaining_ts_budget(campaign):
 
         key = _make_campaign_ts_budget_key(campaign)    
 
-        ts_init_budget = budget_slicer.timeslice_snapshot
+        
+        ts_init_budget = budget_slicer.timeslice_snapshot or 0.0
+
+        if ts_init_budget is None:
+            # If no timeslice has been initialized, start with a full batch
+            ts_init_budget = campaign.timeslice_budget
 
         memcache_budget = _to_memcache_int(ts_init_budget)
         memcache.add(key, memcache_budget, namespace="budget")

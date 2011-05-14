@@ -159,7 +159,7 @@ def remaining_ts_budget(campaign):
         key = _make_campaign_ts_budget_key(campaign)    
 
         
-        ts_init_budget = budget_slicer.timeslice_snapshot or 0.0
+        ts_init_budget = budget_slicer.timeslice_snapshot
 
         if ts_init_budget is None:
             # If no timeslice has been initialized, start with a full batch

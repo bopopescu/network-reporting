@@ -1202,6 +1202,9 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
 .dataTable-data {
   width: 75px;
 }
+.dataTable-date {
+  width: 175px;
+}
 
 /* App data */
 
@@ -1223,8 +1226,8 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
   width: 45px;
 }
 
-.dataTable .appData-icon a img, .dataTable .campaignData-icon a img,
-#appForm-icon img {
+.dataTable .appData-icon a img, .dataTable .campaignData-icon a img, 
+#appForm-icon img, .dataTable .reportData-icon a img {
   -webkit-border-radius:6px;-moz-border-radius:6px
 }
 
@@ -1352,6 +1355,14 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
   font-size: 24px;
   font-weight: 300;
 }
+
+.loading-text {
+  width: 100%;
+  text-align: center;
+  font-size: 24px;
+  font-weight: 300;
+}
+
 
 .chart-loading .chart-loading-text,
 .chart-error .chart-error-text {
@@ -2020,12 +2031,12 @@ ul.ui-selectmenu-menu {
 
 /* Campaigns */
 
-.campaignData {
+.campaignData, .reportData {
   padding: 10px 5px 6px 5px;
   background: #f7f7f7;
 }
 
-.campaignData-alt {
+.campaignData-alt, .reportData-alt {
   background: #fff;
 }
 
@@ -2034,33 +2045,33 @@ ul.ui-selectmenu-menu {
   background: #f7f7f7;
 }
 
-.campaignData-placeholder {
+.campaignData-placeholder, .reportData-placeholder {
   display: table-row;
 }
 
-.campaignData th.dataTable-name {
+.campaignData th.dataTable-name, .reportData th.dataTable-name {
   width: 200px;
 }
 
-.campaignData-icon {
+.campaignData-icon, .reportData-icon {
   padding-right: 0;
   width: 55px;
 }
 
-.campaignData-icon input {
+.campaignData-icon input, .reportData-icon input {
   margin-left: 5px;
 }
 
-.campaignData-icon img {
+.campaignData-icon img, .reportData-icon img {
   margin: 4px 0 0 4px;
 }
 
-table.campaignData-main {
+table.campaignData-main, table.reportData-table {
   margin: 0 0 15px 0;
   width: 100%;
 }
 
-.campaignData-main th, .campaignData-main td {
+.campaignData-main th, .campaignData-main td, .reportData-table th, .reportData-table td {
   font-size: 13px;
   font-weight: normal;
 }

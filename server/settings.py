@@ -132,6 +132,7 @@ INSTALLED_APPS = (
      'admin',
      'common_templates',
      'budget',
+     'reports',
 )
 
 #TEST_RUNNER = 'django_nose.NoseTestSuitRunner'

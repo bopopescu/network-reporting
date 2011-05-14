@@ -9,6 +9,7 @@ then
     nosetests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --where='./budget/tests' --without-sandbox
     nosetests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --where='./ad_server/optimizer/tests' --without-sandbox
     nosetests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --where='./common/utils' --without-sandbox
+    nosetests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --where='./reports/tests' --without-sandbox # --with-coverage  
     nosetests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --where='./account/tests' --without-sandbox
     
     # System Tests (Must live in server root dir for some reason TODO: Fix this)

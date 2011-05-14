@@ -173,8 +173,9 @@ class StatsModel(db.Expando):
         return self.__str__()
                     
     def __str__(self):
-        return  "StatsModel(date=%s, pub=%s, adv=%s, account=%s, country=%s, offline=%s, %s,%s,%s,%s)"%(
+        return  "StatsModel(date=%s, date_hour=%s, pub=%s, adv=%s, account=%s, country=%s, offline=%s, %s,%s,%s,%s)"%(
                                                           self.date,
+                                                          self.date_hour,
                                                           StatsModel.publisher.get_value_for_datastore(self),
                                                           StatsModel.advertiser.get_value_for_datastore(self),    
                                                           StatsModel.account.get_value_for_datastore(self),
@@ -188,20 +189,26 @@ class StatsModel(db.Expando):
 
     
     @classmethod
-    def get_key_name(cls,publisher=None,advertiser=None,date=None,date_hour=None,account=None,offline=False,country=None, month=None):
+    def get_key_name(cls,publisher=None,advertiser=None,date=None,date_hour=None,account=None,offline=False,country=None, device=None, op_sys=None,month=None, date_fmt='date'):
         if publisher or advertiser or date_hour or date or month or country:
             if isinstance(publisher,db.Model):
                 publisher = publisher.key()
             if isinstance(advertiser,db.Model):
                 advertiser = advertiser.key()    
             
-            if date_hour:
+            if date:
+                if date_fmt == 'date':
+                    date_str = date.strftime('%y%m%d')
+                elif date_fmt == 'date_hour':
+                    date_str = date.strftime('%y%m%d%H')
+                elif date_fmt == 'month':
+                    date_str = date.strftime('%y%m')
+        
+            elif date_hour and not date_fmt == 'date_hour':
                 date_str = date_hour.strftime('%y%m%d%H')
-            elif date:
-                date_str = date.strftime('%y%m%d')
-            elif month:
-                date_str = month.strftime('%y%m')     
-            
+
+            elif month and not date_fmt == 'month':
+                date_str = month.strftime('%y%m')
             if not country:    
                 return 'k:%(publisher)s:%(advertiser)s:%(date)s'%dict(date=date_str,
                                                                       publisher=publisher or '',

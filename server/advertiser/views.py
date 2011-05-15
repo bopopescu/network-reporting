@@ -220,7 +220,6 @@ class CreateCampaignAJAXHander(RequestHandler):
 
         if campaign_form.is_valid():
             campaign = campaign_form.save(commit=False)
-            campaign.u = self.account.user
             campaign.account = self.account
 
             if adgroup_form.is_valid():
@@ -350,7 +349,6 @@ class CreateAdGroupHandler(RequestHandler):
 
         if campaign_form.is_valid():
             campaign = campaign_form.save(commit=False)
-            campaign.u = self.account.user
             campaign.account = self.account
 
             if adgroup_form.is_valid():
@@ -378,7 +376,7 @@ class PauseHandler(RequestHandler):
             c = CampaignQueryManager.get(id_)
             updated_campaigns.append(c)
             update_objs = []
-            if c != None and c.u == self.account.user:
+            if c != None and c.account == self.account:
                 if action == "pause":
                     c.active = False
                     c.deleted = False
@@ -531,7 +529,7 @@ class PauseAdGroupHandler(RequestHandler):
         for id_ in self.request.POST.getlist('id') or []:
             a = AdGroupQueryManager.get(id_)
             adgroups.append(a)
-            if a != None and a.campaign.u == self.account.user:
+            if a != None and a.campaign.account == self.account:
                 if action == "pause":
                     a.active = False
                     a.deleted = False
@@ -706,7 +704,7 @@ class CreativeManagementHandler(RequestHandler):
         # TODO: bulk get before for loop
         for creative_key in keys:
             c = CreativeQueryManager.get(creative_key)
-            if c != None and c.ad_group.campaign.u == self.account.user: # TODO: clean up dereferences
+            if c != None and c.ad_group.campaign.account == self.account: # TODO: clean up dereferences
                 if action == "pause":
                     c.deleted = False
                     c.active = False

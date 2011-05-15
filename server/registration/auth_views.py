@@ -131,7 +131,7 @@ def password_reset(request, is_admin_site=False, template_name='registration/pas
         form = password_reset_form()
     return render_to_response(template_name, {
         'form': form,
-    }, context_instance=RequestContext(request))
+    }, context_instance=RequestContext(request))        
 
 def password_reset_done(request, template_name='registration/password_reset_done.html'):
     return render_to_response(template_name, context_instance=RequestContext(request))
@@ -174,6 +174,43 @@ def password_reset_confirm(request, uidb36=None, token=None, template_name='regi
         form = None
     context_instance['form'] = form
     return render_to_response(template_name, context_instance=context_instance)
+
+@login_required    
+def migrate_user(request, template_name='registration/password_reset_confirm.html',
+                           token_generator=default_token_generator, set_password_form=SetPasswordForm,
+                           post_reset_redirect=None):
+    """
+    View that checks the hash in a password reset link and presents a
+    form for entering a new password.
+    """
+    if post_reset_redirect is None:
+       post_reset_redirect = reverse('auth_password_reset_complete')
+       
+    user = request.user
+       
+    context_instance = RequestContext(request)
+
+    if user is not None:
+       context_instance['validlink'] = True
+       if request.method == 'POST':
+           form = set_password_form(user, request.POST)
+           if form.is_valid():
+               form.save()
+               # logs the user in automatically, instead of forcing them to 
+               # manually enter new login info
+               login_user = authenticate(username=user.username, 
+                                         password=form.cleaned_data['new_password1'])
+               auth_login(request, login_user)
+               return HttpResponseRedirect(post_reset_redirect)
+       else:
+           form = set_password_form(None)
+    else:
+       context_instance['validlink'] = False
+       form = None
+    context_instance['form'] = form
+    context_instance['unlink'] = True
+    return render_to_response(template_name, context_instance=context_instance)
+                           
 
 def password_reset_complete(request, template_name='registration/password_reset_complete.html'):
     return render_to_response(template_name, context_instance=RequestContext(request,

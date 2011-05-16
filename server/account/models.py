@@ -89,6 +89,9 @@ class Account(db.Model):
     all_mpusers = db.ListProperty(db.Key)
     date_added = db.DateTimeProperty(auto_now_add=True)
 
+    first_name = db.StringProperty()
+    last_name = db.StringProperty()
+    title = db.StringProperty()
     company = db.StringProperty()
     phone = db.PhoneNumberProperty()
     country = db.StringProperty()

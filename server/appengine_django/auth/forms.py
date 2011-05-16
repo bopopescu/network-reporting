@@ -47,4 +47,4 @@ class PasswordResetForm(django_forms.PasswordResetForm):
             logging.info("message: %s"%t.render(Context(c)))
             
             send_mail(_("Password reset on %s") % site_name,
-                t.render(Context(c)), None, [user.email])
+                t.render(Context(c)), 'welcome@mopub.com', [user.email])

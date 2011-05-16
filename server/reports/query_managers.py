@@ -24,7 +24,7 @@ COMMON_REPORT_DIM_LIST = (('app', 'Apps'), ('adunit', 'Ad Units'), ('campaign', 
 class ReportQueryManager(CachedQueryManager):
     Model = Report
 
-    def __init__(self, account, offline=False):
+    def __init__(self, account=None, offline=False):
         if isinstance(account, db.Key):
             self.account = account
         elif isinstance(account, db.Model):
@@ -142,6 +142,7 @@ class ReportQueryManager(CachedQueryManager):
                             account = self.account,
                             schedule = report,
                             )
+        report.next_sched_date = date_magic.get_next_day(report.sched_interval, now)
         self.put_report(new_report)
         url = reverse('generate_reports')
         q_num = random.randint(0, NUM_REP_QS - 1)
@@ -152,7 +153,7 @@ class ReportQueryManager(CachedQueryManager):
                               })
         return new_report
 
-    def add_report(self, d1, d2, d3, end, days, name=None, saved=False,interval=None):
+    def add_report(self, d1, d2, d3, end, days, name=None, saved=False,interval=None, sched_interval=None):
         if interval is None:
             interval = 'custom'
         '''Create a new scheduled report with the given specs
@@ -182,12 +183,18 @@ class ReportQueryManager(CachedQueryManager):
             d3 = None
         if not end:
             end = datetime.datetime.now().date()
+        if sched_interval != 'none':
+            next_sched_date =  date_magic.get_next_day(sched_interval)
+        else:
+            next_sched_date = datetime.datetime.now().date()
         sched = ScheduledReport(d1=d1,
                                 d2=d2,
                                 d3=d3,
                                 end=end,
                                 days=days,
                                 interval=interval,
+                                sched_interval = sched_interval,
+                                next_sched_date = next_sched_date,
                                 account=self.account,
                                 name=name,
                                 saved=saved,

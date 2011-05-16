@@ -50,7 +50,7 @@ class AddReportHandler(RequestHandler):
         template_name = template or self.TEMPLATE
         return render_to_string(self.request, template_name=template_name, data=kwargs)
         
-    def post(self, d1, end, days=None, start=None, d2=None, d3=None,name=None, saved=False, interval=None):
+    def post(self, d1, end, days=None, start=None, d2=None, d3=None,name=None, saved=False, interval=None, sched_interval=None):
         end = datetime.datetime.strptime(end, '%m/%d/%Y').date()
         if start:
             start = datetime.datetime.strptime(start, '%m/%d/%Y').date()
@@ -65,9 +65,10 @@ class AddReportHandler(RequestHandler):
                                 d3, 
                                 end, 
                                 days, 
-                                name=name, 
-                                saved=saved, 
-                                interval = interval
+                                name = name, 
+                                saved = saved, 
+                                interval = interval,
+                                sched_interval = sched_interval,
                                 )
         return HttpResponseRedirect('/reports/view/'+str(report.key()))
 
@@ -170,3 +171,14 @@ def run_report(request, *args, **kwargs):
     return RunReportHandler()(request, *args, **kwargs)
 
 
+class ScheduledRunner(RequestHandler):
+    def get(self):
+        man = ReportQueryManager()
+        now = datetime.datetime.now().date()
+        reps = ScheduledReport.all().filter('next_sched_date =', now)
+        for rep in reps:
+            man.new_report(rep)
+        return HttpResponse("Scheduled reports have been created")
+
+def sched_runner(request, *args, **kwargs):
+    return ScheduledRunner()(request, *args, **kwargs)

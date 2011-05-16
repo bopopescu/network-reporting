@@ -2,6 +2,48 @@ from datetime import datetime, time, date, timedelta
 
 DAYS_IN_MONTHS = (31,28,31,30,31,30,31,31,30,31,30,31)
 
+def start_next_month(d):
+    if d.month == 12:
+        return date(d.year+1, 1, 1)
+    else:
+        return date(d.year, d.month+1, 1)
+
+def start_next_week(d):
+    new_d = d
+    delta = timedelta(days=1)
+    if new_d.weekday() == 0:
+        new_d += delta
+    while new_d.weekday() != 0:
+        new_d += delta
+    return new_d
+
+def tomorrow(d):
+    return d + timedelta(days=1)
+
+def start_next_quarter(d):
+    quarter = (d.month-1) / 4
+    if quarter == 0:
+        return date(d.year, 4, 1)
+    elif quarter == 1:
+        return date(d.year, 7, 1)
+    elif quarter == 2:
+        return date(d.year, 10, 1)
+    elif quarter == 3:
+        return date(d.year + 1, 1, 1)
+
+def get_next_day(interv, d=None):
+    if d is None:
+        d = datetime.now().date()
+    if interv == 'daily':
+        return tomorrow(d)
+    elif interv == 'weekly':
+        return start_next_week(d)
+    elif interv == 'monthly':
+        return start_next_month(d)
+    elif interv == 'quarterly':
+        return start_next_quarter(d)
+    return None 
+
 def this_month(d):
     return (start_this_month(d), d)
 

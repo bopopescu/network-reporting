@@ -52,7 +52,7 @@ function mp_cb(data) {
 
 
     //init openx cursor tracking magic
-    document.write('<script type="text/javascript" src="' + mopub_site_url + '/js/clicktracker.js?v=18"></script>');
+    document.write('<script type="text/javascript" src="' + mopub_site_url + '/js/clicktracker.js?v=19"></script>');
     //iframe for ad
     document.write('<iframe id="mopub-iframe" frameborder="0" hspace="0" marginheight="0" marginwidth="0" scrolling="no" vspace="0"'
                    + ' width="'+window.mopub_ad_width+'"'

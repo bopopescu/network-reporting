@@ -5,19 +5,7 @@ from google.appengine.ext import db
 from google.appengine.api import users
 from common.ragendja.auth import hybrid_models
 
-
-
 import logging
-
-class MPUserManager(UserManager):
-    def filter(self,*args,**kwargs):
-        from account.query_managers import UserQueryManager
-        for kwarg_key in kwargs:
-            if 'email' in kwarg_key:
-                email = kwargs[kwarg_key]
-                user = UserQueryManager.get_by_email(email)
-                return [user] if user else []
-                
 
 class User(hybrid_models.User):
     title = db.StringProperty()
@@ -28,8 +16,6 @@ class User(hybrid_models.User):
     city = db.StringProperty()
 
     mailing_list = db.BooleanProperty(default=False)
-    
-    # objects = MPUserManager()
 
     def __init__(self, parent=None, key_name=None, **kwargs):
         if not key_name and not kwargs.get('key',None):

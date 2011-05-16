@@ -191,12 +191,12 @@ def index_geo(request,*args,**kwargs):
   return AppIndexGeoHandler()(request,*args,**kwargs)     
 
 class AppCreateHandler(RequestHandler):
-  def get(self, app_form=None,adunit_form=None):
+  def get(self, app_form=None,adunit_form=None,reg_complete=None):
     app_form = app_form or AppForm()
     adunit_form = adunit_form or AdUnitForm(prefix="adunit")
 
     # attach on registration related parameters to the account for template
-    if self.params.get('reg_complete'):
+    if reg_complete:
         self.account.reg_complete = 1
 
     return render_to_response(self.request,'publisher/new_app.html', {"app_form": app_form, 

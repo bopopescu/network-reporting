@@ -1,1 +1,1 @@
-Activation of your {{ site }} account
+Welcome to MoPub!

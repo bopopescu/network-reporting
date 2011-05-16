@@ -1,7 +1,8 @@
 Hi!
-In order to activate your account please visit the following link:
 
-http://{{ site }}{% url registration_activate activation_key=activation_key %}
+You have successfully created your MoPub account. You can log in at any time at http://app.mopub.com{% url django.contrib.auth.views.login %}.
+
+If you have any questions, please email us at support@mopub.com.
 
 Thanks,
-Your {{ site }} team
+MoPub

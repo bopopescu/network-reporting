@@ -26,6 +26,15 @@ def raw(bound_field):
     """
     bound_field.TEMPLATE = 'raw_bound_field.html'
     return bound_field
+
+@register.filter
+def raw_required(bound_field):
+    """
+    Parses a json attrs object from template and passes them to the bound_field
+    """
+    bound_field.TEMPLATE = 'raw_bound_field_required.html'
+    return bound_field
+
     
 @register.filter
 def label(bound_field, label):

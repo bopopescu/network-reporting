@@ -16,23 +16,42 @@ from registration.models import RegistrationProfile
 # lands in trunk, this will no longer be necessary.
 attrs_dict = { 'class': 'required' }
 
+from common.constants import (ISO_COUNTRIES, US_STATES)
 from common.utils import forms as mpforms
 from common.utils import fields as mpfields
+from common.utils import widgets as mpwidgets
 from account.models import Account#, User
-from account.query_managers import UserQueryManager
+from account.query_managers import UserQueryManager,AccountQueryManager
+
 
 class BaseRegistrationForm(mpforms.MPForm):
     TEMPLATE = 'registration/forms/registration_form.html'
     
     first_name = mpfields.MPTextField()
     last_name = mpfields.MPTextField()
-    title = mpfields.MPTextField()
+    title = mpfields.MPTextField(required=False)
     company = mpfields.MPTextField()
-    phone = mpfields.MPTextField() # TODO: make phone number property
+    phone = mpfields.MPTextField(required=False) # TODO: make phone number property
+    country = mpfields.MPChoiceField(choices=ISO_COUNTRIES,widget=mpwidgets.MPSelectWidget)
+    traffic = forms.TypedChoiceField(choices=[("0","Haven't launched yet"),
+                                              ("1","1-10MM"),
+                                              ("10","10-90MM"),
+                                              ("100","90-200MM"),
+                                              ("200","200MM+")],
+                                     widget=mpwidgets.MPSelectWidget,
+                                     coerce=float)
+    
+    mailing_list = forms.BooleanField(label=_(u'I would like to receive occasion product update emails from MoPub'),
+                                      initial=True,
+                                      required=False)
+    tos = forms.BooleanField(widget=forms.CheckboxInput(attrs=attrs_dict),
+                             label=_(u'I have read and agree to the Terms of Service'),
+                             error_messages={ 'required': u"Please accept the terms and conditions in order to start using MoPub" })
+    
     
     
     def __init__(self, *args, **kwargs):
-        self.request = kwargs.pop('request')
+        self.request = kwargs.pop('request',None)
         super(BaseRegistrationForm, self).__init__(*args, **kwargs)
     
     
@@ -59,7 +78,7 @@ class BaseRegistrationForm(mpforms.MPForm):
         """
         if 'password1' in self.cleaned_data and 'password2' in self.cleaned_data:
             if self.cleaned_data['password1'] != self.cleaned_data['password2']:
-                raise forms.ValidationError(_(u'You must type the same password each time'))
+                raise forms.ValidationError(_(u'Please enter the same password for each time.'))
         return self.cleaned_data
     
     def save(self, domain_override=""):
@@ -84,19 +103,34 @@ class MPGoogleRegistrationForm(BaseRegistrationForm):
         self.cleaned_data.update(username=self.request.user.username)
         new_user = self.request.user
         
-        # get property names of the stats model
-        properties = User.properties() # passes back dictionary with key = property names
-        properties = [k for k in properties]
+        def _get_model_params(Model):
+            # get property names of the stats model
+            properties = Model.properties() # passes back dictionary with key = property names
+            properties = [k for k in properties]
+
+            # pull out the appropriate values from the input arguments
+            d = {}
+            for p in properties:
+                value = self.cleaned_data.get(p,None)
+                if value:
+                    d[p] = value
+            return d
         
-        # pull out the appropriate values from the input arguments
-        # and update the user model
-        d = {}
-        for p in properties:
-            value = self.cleaned_data.get(p,None)
-            if value:
-                # e.g. new_user.first_name = 'Nafis'
-                setattr(new_user, p, value)
+        user_details = _get_model_params(User)
+        for prop_name,value in user_details.iteritems():
+            setattr(new_user,prop_name,value)
+        new_user.put()
+        
+        # create new account for this user as well        
+        account_details = _get_model_params(Account)
+        account = AccountQueryManager.get_current_account(user=new_user)
+        for prop_name,value in account_details.iteritems():
+            setattr(account,prop_name,value)
+        account.put()
         return new_user
+        
+class MPUserAccountForm(BaseRegistrationForm):
+    pass        
     
 
 class MPRegistrationForm(BaseRegistrationForm):

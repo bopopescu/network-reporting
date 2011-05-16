@@ -12,4 +12,9 @@ class AccountForm(mpforms.MPModelForm):
     phone = mpfields.MPTextField(label="Phone #", required=False)    
     class Meta:
         model = Account
-        exclude = ('user', 'all_users', 'date_added', 'active', 'status')
+        exclude = ( 'user', 'all_users', 'mpuser','all_mpusers',
+                    'company','phone','country','traffic',
+                    'date_added', 'active', 'status')        
+        
+        
+        

@@ -15,6 +15,7 @@ from django.template import RequestContext
 from registration.forms import RegistrationForm, MPRegistrationForm, MPGoogleRegistrationForm
 from registration.models import RegistrationProfile
 
+from common.ragendja.auth.decorators import google_login_required
 
 def activate(request, activation_key,
              template_name='registration/activate.html',
@@ -147,7 +148,7 @@ def register(request, success_url=None,
                 auth_login(request, login_user)
             return HttpResponseRedirect(success_url or reverse('publisher_app_create')+'?reg_complete=1')
     else:
-        form = form_class()
+        form = form_class(request=request)
     
     if extra_context is None:
         extra_context = {}
@@ -157,7 +158,7 @@ def register(request, success_url=None,
     return render_to_response(template_name,
                               { 'form': form },
                               context_instance=context)
-                    
+@google_login_required                    
 def register_google(request,
                         success_url=None,
                         form_class=MPGoogleRegistrationForm,

@@ -23,6 +23,11 @@ class User(hybrid_models.User):
     title = db.StringProperty()
     company = db.StringProperty()
     phone = db.PhoneNumberProperty()
+    country = db.StringProperty()
+    state = db.StringProperty()
+    city = db.StringProperty()
+
+    mailing_list = db.BooleanProperty(default=False)
     
     # objects = MPUserManager()
 
@@ -56,12 +61,8 @@ class User(hybrid_models.User):
     def get_by_email(cls, email):
         return cls.get(cls.get_key(email))
         
-    @classmethod
-    def kind(cls):
-        return "MPUser"
-        
     def __unicode__(self):
-        return "MPUser: "+self.email
+        return "User: "+self.email
         
     def __repr__(self):
         return unicode(self)    
@@ -70,20 +71,17 @@ class User(hybrid_models.User):
 #
 class Account(db.Model):
     user = db.UserProperty() # admin user for this account
-    mpuser = db.ReferenceProperty(User)
-    date_added = db.DateTimeProperty(auto_now_add=True)
     all_users = db.ListProperty(db.Key)    
-    first_name = db.StringProperty()
-    last_name = db.StringProperty()
-    title = db.StringProperty()
+    
+    mpuser = db.ReferenceProperty(User)
+    all_mpusers = db.ListProperty(db.Key)
+    date_added = db.DateTimeProperty(auto_now_add=True)
+
     company = db.StringProperty()
     phone = db.PhoneNumberProperty()
-    city = db.StringProperty()
-    state = db.StringProperty()
     country = db.StringProperty()
     traffic = db.FloatProperty()
-    mailing_list = db.BooleanProperty(default=False)
-    
+
     active = db.BooleanProperty(default=False)
     status = db.StringProperty()  # Initially storing onboarding status
     

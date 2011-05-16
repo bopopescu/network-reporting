@@ -739,6 +739,10 @@ a.mutedLink:hover {
   width: 70px;
 }
 
+.input-text-half-width {
+  width: 140px;
+}
+
 textarea {
   padding-top: 4px;
 }

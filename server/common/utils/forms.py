@@ -25,7 +25,8 @@ class MPBoundField(BoundField):
 
         context_dict = dict(widget = rendered_widget,
                            errors = self.errors,
-                           label = self.label)
+                           label = self.label,
+                           field = self.field)
         c = Context(context_dict)
         t = loader.get_template(self.TEMPLATE)
         return t.render(c)
@@ -101,7 +102,11 @@ class MPBoundField(BoundField):
             name = self.html_name
         else:
             name = self.html_initial_name
-        return widget.render(name, data, attrs=attrs)    
+        # pass error to mpforms but not to normal django forms    
+        try:
+            return widget.render(name, data, attrs=attrs, errors=self.errors)    
+        except Exception, e:
+            return widget.render(name, data, attrs=attrs)
         return widget.render(name, data, attrs=attrs, errors=bool(self.errors))
         
 

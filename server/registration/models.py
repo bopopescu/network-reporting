@@ -12,6 +12,7 @@ from django.db import models
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext_lazy as _
 
+from account.models import Account
 
 SHA1_RE = re.compile('^[a-f0-9]{40}$')
 
@@ -122,22 +123,33 @@ class RegistrationManager(models.Manager):
         """
         from registration.signals import user_registered
 
-        # get property names of the stats model
-        properties = User.properties() # passes back dictionary with key = property names
-        properties = [k for k in properties]
-        
-        # pull out the appropriate values from the input arguments
-        d = {}
-        for p in properties:
-            value = kwargs.get(p,None)
-            if value:
-                d[p] = value
+        def _get_model_params(Model):
+            # get property names of the stats model
+            properties = Model.properties() # passes back dictionary with key = property names
+            properties = [k for k in properties]
 
-        new_user = User(is_active=active,**d)
+            # pull out the appropriate values from the input arguments
+            d = {}
+            for p in properties:
+                value = kwargs.get(p,None)
+                if value:
+                    d[p] = value
+            return d
         
+        user_details = _get_model_params(User)
+        new_user = User(is_active=active,**user_details)
         password = kwargs.get('password')
         new_user.set_password(password)
         new_user.put()
+        
+        # create new account for this user as well        
+        account_details = _get_model_params(Account)
+        account = Account(mpuser=new_user, 
+                          all_mpusers=[new_user.key()], 
+                          status="new",
+                          **account_details)  
+        account.put()
+        
         
         registration_profile = self.create_profile(new_user)
         

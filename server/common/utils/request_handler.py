@@ -57,5 +57,5 @@ class RequestHandler(object):
             if account_key:
               self.account = AccountQueryManager.get(account_key)
         if not self.account:  
-          self.account = AccountQueryManager.get_current_account(self.request)
+          self.account = AccountQueryManager.get_current_account(self.request,cache=True)
             

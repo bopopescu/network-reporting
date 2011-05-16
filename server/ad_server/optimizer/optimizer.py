@@ -8,8 +8,9 @@ from ad_server.debug_console import trace_logging
 
 SAMPLING_FRACTION = .03 # We use a default sampling rate of 3 per 100
 SAMPLING_ECPM = .50 # We use 50 cents as a representative ecpm
+DEFAULT_CTR=0.005 # 0.5% CTR is rather fair
 
-def get_ctr(adunit_context, creative, min_sample_size=1000, default_ctr=0.03, dt=datetime.datetime.now()):
+def get_ctr(adunit_context, creative, min_sample_size=1000, default_ctr=DEFAULT_CTR, dt=datetime.datetime.now()):
     """ Returns the appropriate click through rate for a given adunit-creative
     pair. Calculates the rate if necessary, always uses a sample size of at 
     least 1000 impressions."""
@@ -44,7 +45,7 @@ def get_ctr(adunit_context, creative, min_sample_size=1000, default_ctr=0.03, dt
         return default_ctr
         
         
-def get_ecpm(adunit_context, creative, min_sample_size=1000, default_ctr=0.03, dt=datetime.datetime.now()):
+def get_ecpm(adunit_context, creative, min_sample_size=1000, default_ctr=DEFAULT_CTR, dt=datetime.datetime.now()):
     if creative.ad_group.cpc is not None:
         ctr = get_ctr(adunit_context, creative, min_sample_size, default_ctr, dt)
         return float(ctr * creative.ad_group.cpc * 1000) 

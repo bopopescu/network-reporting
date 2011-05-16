@@ -52,6 +52,9 @@ def apply_expense(campaign, cost):
 def timeslice_advance(campaign):
     """ Adds a new timeslice's worth of budget and pulls the budget
     expenditures into the database. Executed once per timeslice."""
+    if not campaign.budget:
+        return
+        
     _backup_budgets(campaign)
     
     budget_slicer = BudgetSlicer.get_or_insert_for_campaign(campaign)
@@ -61,7 +64,9 @@ def timeslice_advance(campaign):
             
 def daily_advance(campaign, date=None):
     """ Adds a new timeslice's worth of daily budget, Executed once daily at midnight."""
-    
+    if not campaign.budget:
+        return
+        
     key = _make_campaign_daily_budget_key(campaign)
     
     budget_slicer = BudgetSlicer.get_or_insert_for_campaign(campaign)

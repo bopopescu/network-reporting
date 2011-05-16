@@ -30,7 +30,6 @@ class Campaign(db.Model):
     deleted = db.BooleanProperty(default=False)
     
     # who owns this
-    u = db.UserProperty() 
     account = db.ReferenceProperty(Account)
     t = db.DateTimeProperty(auto_now_add=True)
 

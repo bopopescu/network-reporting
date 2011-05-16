@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required as django_login_required
 from functools import wraps
 from common.ragendja.auth.views import google_redirect_to_login
 from common.ragendja.template import render_to_response

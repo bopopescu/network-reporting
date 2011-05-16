@@ -25,17 +25,14 @@ import logging
 
 from django.core import mail
 from django.core.mail import SMTPConnection
+#Nafis
+from django.core.mail.backends.smtp import EmailBackend
 from django.conf import settings
 
 from google.appengine.api import mail as gmail
 
 
-class GoogleSMTPConnection(SMTPConnection):
-  def __init__(self, host=None, port=None, username=None, password=None,
-               use_tls=None, fail_silently=False):
-    self.use_tls = (use_tls is not None) and use_tls or settings.EMAIL_USE_TLS
-    self.fail_silently = fail_silently
-    self.connection = None
+class GoogleSMTPConnection(EmailBackend):
 
   def open(self):
     self.connection = True

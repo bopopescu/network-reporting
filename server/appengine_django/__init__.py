@@ -579,7 +579,10 @@ def InstallAuthentication(settings):
   try:
     from appengine_django.auth import models as helper_models
     from django.contrib.auth import models
+    from account import models as mp_models
     models.User = helper_models.User
+    # HACK: NAFIS
+    models.User = mp_models.User
     models.Group = helper_models.Group
     models.Permission = helper_models.Permission
     models.Message = helper_models.Message
@@ -587,14 +590,20 @@ def InstallAuthentication(settings):
     from appengine_django.auth.middleware import AuthenticationMiddleware
     django_middleware.AuthenticationMiddleware = AuthenticationMiddleware
     from django.contrib.auth import decorators as django_decorators
-    from appengine_django.auth.decorators import login_required
+    from common.utils.decorators import login_required
     django_decorators.login_required = login_required
     from django.contrib import auth as django_auth
     from django.contrib.auth import tests as django_tests
+    # Hack Nafis
+    from django.contrib.auth import forms as django_forms
+    from appengine_django.auth import forms as auth_helper_forms
+    django_forms.PasswordResetForm = auth_helper_forms.PasswordResetForm
+    
     django_auth.suite = unittest.TestSuite
     django_tests.suite = unittest.TestSuite
     logging.debug("Installing authentication framework")
-  except ImportError:
+  except ImportError, e:
+    logging.info(e)
     logging.debug("No Django authentication support available")
 
 

@@ -1,0 +1,53 @@
+<html>
+<head>
+    <script>
+        window.onload = function() { 
+			if(isIOS3())
+			{
+				var link = document.createElement("a");
+				link.addEventListener("click", function(e)
+				{
+					e.preventDefault();
+					justPlayAdVideo();
+				});
+				document.body.appendChild(link);
+				var clickEvent = document.createEvent("MouseEvents");
+				clickEvent.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+				link.dispatchEvent(clickEvent);
+				document.body.removeChild(link);
+			}
+			else
+			{
+				justPlayVideo();
+			}
+        }
+        function justPlayVideo()
+        {
+          var vid = document.getElementById('asdf');
+          // vid.load();
+          vid.play();
+        }
+        function isIOS3()
+		{
+		    return true;
+			var key = "iPhone OS ";
+			var index = navigator.userAgent.indexOf(key);
+			if (index > -1)
+			{
+				return navigator.userAgent.charAt(index + key.length) == "3";
+			}
+			else
+			{
+				return false;
+			}
+		}
+		
+        
+    </script>
+    
+</head>
+<body>
+    <video id="asdf" src="http://ht-mobile.cdn.turner.com/cnn/big/cartoon_network/cartoon_network_803701.3gp"></video>
+    <script></script>
+</body>        
+</html>

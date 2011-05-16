@@ -1,0 +1,81 @@
+{% load filters %}
+
+<dl class="formFields">
+    {% if form.email and form.password1 and form.password2 %}
+    <dt>
+        Email:
+    </dt>    
+    <dd>
+        {{form.email|raw_required}}
+    </dd>    
+    <dt>
+        {{form.password1.label}}:
+    </dt>    
+    <dd>
+        {{form.password1|raw_required}}
+    </dd>    
+    <dt>
+        {{form.password2.label}}:
+    </dt>    
+    <dd>
+        {{form.password2|raw_required}}
+        {% for error in form.non_field_errors %}
+        <div class="form-error-text">{{error}}</div>
+        {% endfor %}
+    </dd>    
+    {% endif %}
+    <dt>
+        Name:
+    </dt>    
+    <dd>
+        {{form.first_name|attrs:'{"class":"input-text-half-width","placeholder":"First"}'|raw}}
+        {{form.last_name|attrs:'{"class":"input-text-half-width","placeholder":"Last"}'|raw_required}}
+    </dd>    
+    <dt>
+        Company:
+    </dt>    
+    <dd>
+        {{form.company|attrs:'{"placeholder":"Acme Software"}'|raw_required}}
+    </dd>    
+    <dt>
+        Title
+    </dt>    
+    <dd>
+        {{form.title|attrs:'{"placeholder":"Developer"}'|raw}}
+    </dd>    
+    <dt>
+        Phone Number: 
+    </dt>    
+    <dd>
+        {{form.phone|attrs:'{"placeholder":"(555) 555-5555"}'|raw}}
+    </dd>    
+    <dt>
+        Country:
+    </dt>
+    <dd>
+        {{form.country|raw}}
+    </dd>
+    <dt>
+        Traffic:
+    </dt>
+    <dd>
+        {{form.traffic|raw}}
+    </dd>                
+    <dt>
+        {{form.mailing_list.as_widget}}
+    </dt>    
+    <dd>
+        {{form.mailing_list.label}}
+    </dd>    
+    <dt>
+        {{form.tos.as_widget}}
+    </dt>
+    <dd>
+        I agree to the <a href="http://www.mopub.com/terms/">Terms of Service</a> and the <a href="http://www.mopub.com/privacy/">Privacy Policy</a>
+        
+        {% for error in form.tos.errors %}
+        <div class="form-error-text">{{error}}</div> 
+        {% endfor %}
+    </dd>        
+</dl>
+<div class="clear"></div>

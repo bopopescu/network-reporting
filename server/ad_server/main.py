@@ -43,6 +43,7 @@ from common.utils import simplejson
 from common.utils import helpers
 from common.constants import (FULL_NETWORKS,
                               ACCEPTED_MULTI_COUNTRY,
+                              CAMPAIGN_LEVELS,
                              )
 
 from string import Template
@@ -54,6 +55,7 @@ from google.appengine.api import taskqueue
 from google.appengine.ext import webapp, db
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
+from google.appengine.api import images
 
 from publisher.models import *
 from advertiser.models import *
@@ -101,7 +103,6 @@ DEBUG = not on_production_server
 CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gzip(gfe)"]
 MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7PnE6cH9_PX7OoeIIr5FjnTA'
 FREQ_ATTR = '%s_frequency_cap'
-CAMPAIGN_LEVELS = ('gtee_high', 'gtee', 'gtee_low', 'promo', 'network','backfill_promo')
 NATIVE_REQUESTS = ['admob','adsense','iAd','custom']
 
 SERVER_SIDE_DICT = {"millennial":MillennialServerSide,
@@ -653,6 +654,7 @@ class AdHandler(webapp.RequestHandler):
                         self.response.headers.add_header("X-Orientation","l")
                         format = ("480","320")
                     else:
+                        self.response.headers.add_header("X-Orientation","p")
                         format = (320,480)    
                                                 
                 elif not c.adgroup.network_type or c.adgroup.network_type in FULL_NETWORKS:
@@ -709,11 +711,11 @@ class AdHandler(webapp.RequestHandler):
           
           
             if c.ad_type == "adsense":
-                params.update({"title": ','.join(kwargs["q"]), "adsense_format": '300x250_as', "w": format[0], "h": format[1], "client": kwargs["site"].account.adsense_pub_id})
+                params.update({"title": ','.join(kwargs["q"]), "adsense_format": '300x250_as', "w": format[0], "h": format[1], "client": kwargs["site"].get_pub_id("adsense_pub_id")})
                 params.update(channel_id=kwargs["site"].adsense_channel_id or '')
                 # self.response.headers.add_header("X-Launchpage","http://googleads.g.doubleclick.net")
             elif c.ad_type == "admob":
-                params.update({"title": ','.join(kwargs["q"]), "w": format[0], "h": format[1], "client": kwargs["site"].account.admob_pub_id})
+                params.update({"title": ','.join(kwargs["q"]), "w": format[0], "h": format[1], "client": kwargs["site"].get_pub_id("admob_pub_id")})
                 debug = kwargs["debug"]
                 params.update(test_mode='true' if debug else 'false')
                 # params.update(test_ad='<a href="http://m.google.com" target="_top"><img src="/images/admob_test.png"/></a>' if debug else '')
@@ -731,8 +733,16 @@ class AdHandler(webapp.RequestHandler):
                 self.response.headers.add_header("X-Launchpage","http://adsx.greystripe.com/openx/www/delivery/ck.php")
                 template_name = "html"
             elif c.ad_type == "image":
+                img = images.Image(c.image)
                 params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
-                params.update({"w": format[0], "h": format[1]})
+                
+                # if full screen we don't need to center
+                if (not "full" in adunit.format) or ((img.width == 480.0 and img.height == 320.0 ) or (img.width == 320.0 and img.height == 480.0)):
+                    css_class = ""
+                else:
+                    css_class = "center"    
+                
+                params.update({"w": img.width, "h": img.height, "w2":img.width/2.0, "h2":img.height/2.0, "class":css_class})
             elif c.ad_type == "html":
                 params.update(html_data=c.html_data)
                 params.update({"html_data": kwargs["html_data"], "w": format[0], "h": format[1]})
@@ -791,9 +801,9 @@ class AdHandler(webapp.RequestHandler):
                 self.response.headers.add_header("X-Adtype", str(c.ad_type))
                 self.response.headers.add_header("X-Backfill", str(c.ad_type))
                 
-                trace_logging.warning('pub id:%s'%kwargs["site"].account.adsense_pub_id)
+                trace_logging.warning('pub id:%s'%kwargs["site"].get_pub_id("adsense_pub_id"))
                 header_dict = {
-                  "Gclientid":str(kwargs["site"].account.adsense_pub_id),
+                  "Gclientid":str(kwargs["site"].get_pub_id("adsense_pub_id")),
                   "Gcompanyname":str(kwargs["site"].account.adsense_company_name),
                   "Gappname":str(kwargs["site"].app_key.adsense_app_name),
                   "Gappid":"0",

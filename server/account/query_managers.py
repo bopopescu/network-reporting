@@ -39,6 +39,13 @@ class AccountQueryManager(CachedQueryManager):
         return account
 
     @classmethod
+    def update_config_and_put(cls, account, network_config):
+        """ Updates the network config and the associated account"""
+        db.put(network_config)
+        account.network_config = network_config
+        cls.put_accounts(account)
+
+    @classmethod
     @wraps_first_arg
     def put_accounts(cls, accounts):
         # Delete from cache
@@ -99,7 +106,6 @@ class AccountQueryManager(CachedQueryManager):
         # delete old account as long as the accounts aren't the same
         # if not new_account.key() == old_account.key():
         #     old_account.delete()
-
 class UserQueryManager(QueryManager):
     @classmethod
     def get_by_email(cls,email):

@@ -83,3 +83,5 @@ FULL_NETWORKS = ('brightroll',)
 ACCEPTED_MULTI_COUNTRY = {'GB' : ['UK', 'GB'],
                           'UK' : ['UK', 'GB'],
                           }
+
+CAMPAIGN_LEVELS = ('gtee_high', 'gtee', 'gtee_low', 'promo', 'network', 'backfill_promo')

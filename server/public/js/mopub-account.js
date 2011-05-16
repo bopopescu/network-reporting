@@ -37,44 +37,58 @@ var mopub = mopub || {};
 			var button = $('.adForm-fields-toggleButton', details);
 			var infobutton = $('.adForm-fields-infoButton', details);
 			var infodialog = $('.accountInfoForm', details);
+			var appbutton = $('.adForm-fields-appButton', details);
+			var apps = $('.adForm-apps', details);
 			
-			function getButtonTextElement() {
-				var buttonTextElement = $('.ui-button-text', button);
-				if(buttonTextElement.length == 0) buttonTextElement = button;
+			data.togglebutton = button;
+			data.togglebutton.showText = 'Show details';
+			data.togglebutton.hideText = 'Hide details';
+			
+			apps.togglebutton = appbutton;
+			apps.togglebutton.showText = 'Show apps';
+			apps.togglebutton.hideText = 'Hide apps';
+			
+			function getButtonTextElement(buttonElement) {
+				var buttonTextElement = $('.ui-button-text', buttonElement);
+				if(buttonTextElement.length == 0) buttonTextElement = buttonElement;
 				return buttonTextElement;
 			}
+			
+			function setButtonTextElement(buttonElement, text) {
+			  getButtonTextElement(buttonElement).text(text);
+			}
 
-			function didShowData() {
-				data.removeClass('hide');
-				data.addClass('show');
-				button.button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
-				getButtonTextElement().text('Hide details');
+			function didShowContainer(container) {
+				container.removeClass('hide');
+				container.addClass('show');
+				container.togglebutton.button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
+				setButtonTextElement(container.togglebutton, container.togglebutton.hideText);
 			}
 			
-			function didHideData() {
-				data.removeClass('show');
-				data.addClass('hide');
-				button.button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
-				getButtonTextElement().text('Show details');
+			function didHideContainer(container) {
+				container.removeClass('show');
+				container.addClass('hide');
+				container.togglebutton.button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
+				setButtonTextElement(container.togglebutton, container.togglebutton.showText);
 			}
 
-			if(data.hasClass('show')) {
-				didShowData();
+			if (data.hasClass('show')) {
+				didShowContainer(data);
 			}
 			else {
 				data.hide();
-				didHideData();
+				didHideContainer(data);
 			}
 			
 			button.click(function(e) {
 				e.preventDefault();
 				if(data.hasClass('show')) {
 					data.slideUp('fast');
-					didHideData();
+					didHideContainer(data);
 				}
 				else {
 					data.slideDown('fast');
-					didShowData();
+					didShowContainer(data);
 				}
 			});
 			
@@ -94,6 +108,29 @@ var mopub = mopub || {};
 						}
 					]
 				});
+			});
+			
+			if (apps.hasClass('show')) {
+				didShowContainer(apps);
+			}
+			else {
+				apps.hide();
+				didHideContainer(apps);
+			}
+			
+			appbutton.button({
+			  icons: { secondary: "ui-icon-triangle-1-s" }
+			})
+			.click(function(e) {
+			  e.preventDefault();
+				if(apps.hasClass('show')) {
+					apps.slideUp('fast');
+					didHideContainer(apps);
+				}
+				else {
+					apps.slideDown('fast');
+					didShowContainer(apps);
+				}
 			});
 		});
 	});

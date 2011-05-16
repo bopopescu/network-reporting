@@ -49,7 +49,7 @@ class StatsModelQueryManager(CachedQueryManager):
             self.account = account.key()
         else:
             self.account = db.Key(account)
-            
+
         self.offline = offline
             
         self.stats = []
@@ -124,8 +124,45 @@ class StatsModelQueryManager(CachedQueryManager):
         return reduce(lambda x,y: x+y, stats, StatsModel())
 
 
+    def get_rollup_for_days(self, publisher=None, publishers=None, advertiser=None, advertisers=None, days=None, num_days=None,account=None, country=None, device=None, op_sys=None, offline=False, date_fmt='date'):
+        if publisher and publishers:
+            logging.error("cannot pass both a single publisher and multiple publishers")
+        if publisher and not publishers:
+            if isinstance(publisher, list):
+                publishers = publisher
+            else:
+                publishers = [publisher]
 
-    def get_stats_for_days(self, publisher=None, publishers=None, advertiser=None, days=None, num_days=None, account=None, country=None, offline=False):
+        if advertiser and advertisers:
+            logging.error("cannot pass both a single advertiser and multiple advertisers")
+        if advertiser and not advertisers:
+            if isinstance(advertiser, list):
+                advertisers = advertiser
+            else:
+                advertisers = [advertiser]
+
+        if not isinstance(publisher, list) and publisher == publishers:
+            publishers = [publisher]
+        if not isinstance(advertiser, list) and advertiser == advertisers:
+            advertisers = [advertiser]
+
+        stats = []
+        for pub in publishers:
+            for adv in advertisers:
+                stats += self.get_stats_for_days(publisher = pub, 
+                                                 advertiser = adv, 
+                                                 days = days, 
+                                                 num_days = num_days, 
+                                                 account = account, 
+                                                 country = country, 
+                                                 device = device,
+                                                 op_sys = op_sys,
+                                                 offline = offline, 
+                                                 date_fmt = date_fmt)
+        return reduce(lambda x,y: x+y, stats, StatsModel())
+
+
+    def get_stats_for_days(self, publisher=None, publishers=None, advertiser=None, days=None, num_days=None, account=None, country=None, device=None, op_sys=None, offline=False, date_fmt='date'):
         """ Gets the stats for a specific pairing. Definitions:
             advertiser_group: Either Campaign, AdGroup or Creative
             publisher_group: Either App, or Site(AdUnit)"""
@@ -163,7 +200,10 @@ class StatsModelQueryManager(CachedQueryManager):
                                                              account=account,
                                                              date=d,
                                                              country=country,
-                                                             offline=offline),
+                                                             device=device,
+                                                             op_sys=op_sys,
+                                                             offline=offline,
+                                                             date_fmt=date_fmt),
                                       parent=parent)
                         for d in days
                             for publisher in publishers]
@@ -174,7 +214,10 @@ class StatsModelQueryManager(CachedQueryManager):
                                                              account=account,
                                                              date=d,
                                                              country=country,
-                                                             offline=offline),
+                                                             device=device,
+                                                             op_sys=op_sys,
+                                                             offline=offline,
+                                                             date_fmt=date_fmt),
                                       parent=parent)
                         for d in days]
                                

@@ -1,0 +1,16 @@
+{% extends 'base.html' %} 
+{% load filters %}
+{% block extraScripts %}
+<script type='text/javascript' src='/js/mopub-reports.js?v=13'></script>
+{# <script type='text/javascript' src='/js/datatables.min.js'></script> #}
+<script type='text/javascript' src='/js/dataTables.js'></script>
+{% comment %}
+    data tables and shit
+{% endcomment %}
+{% endblock extraScripts %}
+
+{% block navLinks %}
+<li><a href="{% url publisher_index %}">Dashboard</a></li>
+<li><a href="{% url advertiser_campaign %}">Campaigns</a></li>
+<li class="active"><a href="{% url reports_index %}">Reports</a></li>
+{% endblock navLinks %}

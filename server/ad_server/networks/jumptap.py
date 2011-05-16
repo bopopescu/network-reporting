@@ -15,16 +15,26 @@ class JumptapServerSide(ServerSide):
    
    
     def get_key_values(self):
-        key_values = {'pub': self.get_pub_id(),
-                      #'gateway-ip': '208.54.5.50',    # TODO: This should be the x-forwarded-for header of the device
+        key_values = {#'gateway-ip': '208.54.5.50',    # TODO: This should be the x-forwarded-for header of the device
                       'hid': self.get_udid(),
                       'client-ip': self.get_ip(), # Test value: 'client-ip': '208.54.5.50'
                       'v': 'v29' }
-        if self.adunit.app.jumptap_app_id:
-            key_values['site'] = self.adunit.app.jumptap_app_id
-        if self.adunit.jumptap_site_id:
-            key_values['spot'] = self.adunit.jumptap_site_id
+                      
+        # Jumptap uses all levels of pub_ids
+        # 'pub' -- Account Level
+        # 'site' -- App Level
+        # 'spot' -- AdUnit Level
+        pub_id = self.adunit.account.network_config.jumptap_pub_id if self.adunit.account.network_config else None
+        if pub_id:
+            key_values['pub'] = pub_id
+        site_id = self.adunit.app.network_config.jumptap_pub_id if self.adunit.app.network_config else None
+        if site_id:
+            key_values['site'] = site_id
+        spot_id = self.adunit.network_config.jumptap_pub_id if self.adunit.network_config else None
+        if spot_id:
+            key_values['spot'] = spot_id
         return key_values
+
    
     def get_query_string(self):
         query_string = urllib.urlencode(self.get_key_values())       

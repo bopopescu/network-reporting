@@ -9,9 +9,12 @@ then
     nosetests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --where='./budget/tests' --without-sandbox
     nosetests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --where='./ad_server/optimizer/tests' --without-sandbox
     nosetests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --where='./common/utils' --without-sandbox
+    nosetests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --where='./reports/tests' --without-sandbox # --with-coverage  
+    nosetests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --where='./account/tests' --without-sandbox
     
-    # System Tests
-    nosetests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-datastore='./test_data/basic_test.datastore' system_mptests
+    # System Tests (Must live in server root dir for some reason TODO: Fix this)
+    nosetests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' system_mptests
+    nosetests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' network_config_mptests
     nosetests --with-gae --gae-datastore='./test_data/basic_test.datastore' ad_server_tests # --with-coverage
     
 else

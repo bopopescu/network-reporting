@@ -73,7 +73,7 @@ class MPDeviceFormatRadioInput(MPWidget):
      
 class MPSelectWidget(MPWidget):
     TEMPLATE = 'widgets/select.html'
-    DEFAULT_CLASSES = "input-text"
+    DEFAULT_CLASSES = ''
     
     def __init__(self, attrs=None, choices=()):
         super(MPSelectWidget, self).__init__(attrs)

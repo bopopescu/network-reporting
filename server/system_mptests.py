@@ -3,9 +3,6 @@ import sys
 import os
 import datetime
 
-sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine")
-sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/yaml/lib")
-sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/fancy_urllib")
 sys.path.append(os.environ['PWD'])
 
 from account.models import Account
@@ -42,7 +39,9 @@ from budget.models import (BudgetSlicer,
 
 from google.appengine.ext import testbed
 ################# End to End #################
-from ad_server_tests import run_auction
+
+from common.utils.system_test_framework import run_auction, fake_request
+
 
 
 """ This module is where all of our system and end-to-end tests can live. """

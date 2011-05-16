@@ -1,7 +1,7 @@
 from django import forms
 from common.utils import forms as mpforms
 from common.utils import fields as mpfields
-from account.models import Account
+from account.models import Account, NetworkConfig
 from common.constants import (ISO_COUNTRIES, US_STATES)
 
 class AccountForm(mpforms.MPModelForm):
@@ -22,3 +22,8 @@ class AccountForm(mpforms.MPModelForm):
                   "jumptap_pub_id",
                   "millenial_pub_id",
                   "mobfox_pub_id",)        
+        
+class NetworkConfigForm(mpforms.MPModelForm):
+    
+    class Meta:
+        model = NetworkConfig

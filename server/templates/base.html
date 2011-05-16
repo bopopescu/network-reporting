@@ -21,7 +21,7 @@
 
   <!-- CSS -->
   <link rel="stylesheet" href="/js/mylibs/jquery-ui-1.8.7.custom/css/mopub/jquery-ui-1.8.7.custom.css" />  
-  <link rel="stylesheet" href="/css/style.css?v=18">
+  <link rel="stylesheet" href="/css/style.css?v=19">
   {% block extraCSS %}{% endblock %}
  
   <!-- modernizr -->
@@ -84,6 +84,7 @@
             {% block navLinks %}
             <li><a href="{% url publisher_index %}">Dashboard</a></li>
             <li><a href="{% url advertiser_campaign %}">Campaigns</a></li>
+            <li><a href="{% url reports_index %}">Reports</a></li>
             {% endblock navLinks %}
           </ul>
         </nav>

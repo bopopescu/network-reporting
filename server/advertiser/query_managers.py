@@ -6,6 +6,7 @@ from google.appengine.ext import db
 
 from common.utils.query_managers import QueryManager, CachedQueryManager
 from common.utils.decorators import wraps_first_arg
+from common.constants import CAMPAIGN_LEVELS
 
 from advertiser.models import Campaign
 from advertiser.models import AdGroup
@@ -14,6 +15,7 @@ from advertiser.models import Creative, TextCreative, \
                               HtmlCreative,\
                               ImageCreative
 
+from publisher.models import App, AdUnit
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 
 NAMESPACE = None
@@ -48,6 +50,51 @@ class CampaignQueryManager(QueryManager):
 
         return put_response
     
+
+    @classmethod 
+    def reports_get_campaigns(cls, account=None, publisher=None, advertiser=None, deleted=False, by_priority=False):
+        if advertiser:
+            # advertiser as list means priority level, return all these camps 
+            # because we want stuff for those campaigns individually
+            if type(advertiser) == list:
+                return advertiser
+            else:
+                logging.error("this makes no sensssseeeee")
+                return advertiser
+
+        if publisher:
+            #publisher is either an app or an adunit, assume it's an adunit first and make it a list
+            adunits = [publisher]
+            if hasattr(publisher, 'all_adunits'):
+                #if it's not an adunit, make it  
+                adunits = publisher.all_adunits
+            adgroups = AdGroup.all().filter('site_keys IN', [a for a in adunits])
+            if deleted is not None:
+                adgroups = [a for a in adgroups if a.deleted == deleted]
+            camps = [adgroup.campaign for adgroup in adgroups]
+            if by_priority:
+                temp = []
+                for p in CAMPAIGN_LEVELS:
+                    priority_camps = [c for c in camps if c.campaign_type == p]
+                    if len(priority_camps) > 0:
+                        temp.append(priority_camps)
+                camps = temp
+            return camps
+
+        if deleted is not None:
+            camps = Campaign.all().filter('deleted =', deleted)
+        if account:
+            camps = camps.filter('account = ', account)
+        #turn a list of campaigns into a list of lists where each list is all
+        #campagins at a given priority level
+        if by_priority:
+            temp = []
+            for p in CAMPAIGN_LEVELS:
+                priority_camps = [c for c in camps if c.campaign_type == p]
+                if len(priority_camps) > 0:
+                    temp.append(priority_camps)
+            camps = temp
+        return camps
 
 class AdGroupQueryManager(QueryManager):
     Model = AdGroup   
@@ -114,8 +161,46 @@ class CreativeQueryManager(QueryManager):
             creatives = creatives.filter("ad_types IN", ad_types)
         if ad_type:
             creatives = creatives.filter("ad_type =", ad_type)
-
         return creatives.fetch(limit)      
+
+    def put_creatives(self,creatives):
+        return db.put(creatives)
+
+    @classmethod
+    def reports_get_creatives(cls, account=None, publisher=None, advertiser=None, deleted=False):
+        adgroups = []
+        #Advertiser will always be a campaign or a list of campaigns
+        if advertiser:
+            if not isinstance(advertiser, list):
+                advertiser = [advertiser]
+            for adv in advertiser:
+                adgroups += adv.adgroups
+        if publisher:
+            adunits = [publisher]
+            if hasattr(publisher, 'all_adunits'):
+                adunits = [au for au in publisher.all_adunits]
+            pub_ags = AdGroup.all().filter('site_keys IN', adunits)
+            if deleted is not None:
+                pub_ags = [a for a in pub_ags if a.deleted == deleted]
+            #collect all the adgroups for the publisher and the advertiser
+            #make sure to only take the intersection of the sets
+            if adgroups:
+                final = []
+                for pub_ag in pub_ags:
+                    for ag in adgroups:
+                        if pub_ag.key() == ag.key():
+                            final.append(pub_ag)
+                adgroups = final
+            else:
+                adgroups = pub_ags
+        if adgroups:
+            return reduce(lambda x, y: x+y, [[c for c in ag.creatives] for ag in adgroups])
+        crtvs = Creative.all().filter('account =', account)
+        if deleted is not None:
+            crtvs = crtvs.filter('deleted =', deleted)
+        return crtvs
+
+        
 
     @classmethod
     @wraps_first_arg

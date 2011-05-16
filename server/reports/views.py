@@ -18,6 +18,8 @@ from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
 from reports.forms import ReportForm
 from reports.query_managers import ReportQueryManager
+from reports.models import ScheduledReport
+
 
 from reports.forms import ReportForm
 
@@ -109,8 +111,8 @@ def check_report(request, *args, **kwargs):
 
 #Only actual reports call this
 class GenReportHandler(RequestHandler):
-    def post(self, report):
-        man = ReportQueryManager(self.account)
+    def post(self, report, account):
+        man = ReportQueryManager()
         report = man.get_report_by_key(report)
         report.status = 'pending'
         man.put_report(report)

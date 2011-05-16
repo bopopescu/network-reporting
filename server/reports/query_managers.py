@@ -29,6 +29,8 @@ class ReportQueryManager(CachedQueryManager):
             self.account = account
         elif isinstance(account, db.Model):
             self.account = account.key()
+        elif account is None:
+            self.account = None
         else:
             self.account = db.Key(account)
 
@@ -124,7 +126,7 @@ class ReportQueryManager(CachedQueryManager):
     def new_report(self, report):
         #do stuff w/ report interval here
         #last month shouldn't just arbitrarily pick some days
-        if type(report) == str or type(report) == unicode:
+        if isinstance(report, str) or isinstance(report, unicode):
             report = self.get_report_by_key(report, sched=False).schedule
         dt = datetime.timedelta(days=report.days) 
         one_day = datetime.timedelta(days=1)
@@ -136,10 +138,11 @@ class ReportQueryManager(CachedQueryManager):
                 start, end = date_magic.last_month(now)
                 now = end.date()
                 dt = end.date() - start.date()
-            
+
+        account = report.account
         new_report = Report(start = now - dt,
                             end = now,
-                            account = self.account,
+                            account = account,
                             schedule = report,
                             )
         report.next_sched_date = date_magic.get_next_day(report.sched_interval, now)
@@ -149,7 +152,7 @@ class ReportQueryManager(CachedQueryManager):
         taskqueue.add(url=url,
                       queue_name=REP_Q_NAME % q_num,
                       params={"report": new_report.key(),
-                              "account": str(self.account),
+                              "account": account.key(),
                               })
         return new_report
 

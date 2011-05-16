@@ -26,8 +26,8 @@ else
     nosetests --gae-lib-root="$1" --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --where='./common/utils' --without-sandbox
     nosetests --gae-lib-root="$1" --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --where='./reports/tests' --without-sandbox # --with-coverage  
     nosetests --gae-lib-root="$1" --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --where='./account/tests' --without-sandbox
-              --gae-lib-root="$1" 
-    # System T--gae-lib-root="$1" ests (Must live in server root dir for some reason TODO: Fix this)
+    
+    # System Tests (Must live in server root dir for some reason TODO: Fix this)
     nosetests --gae-lib-root="$1" --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' system_mptests
     nosetests --gae-lib-root="$1" --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' network_config_mptests
     nosetests --gae-lib-root="$1" --with-gae --gae-datastore='./test_data/basic_test.datastore' ad_server_tests # --with-coverage

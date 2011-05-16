@@ -17,7 +17,7 @@ class AccountQueryManager(CachedQueryManager):
     Model = Account
 
     @classmethod
-    def get_current_account(cls,request=None,user=None,cache=False):
+    def get_current_account(cls,request=None,user=None,cache=False,create=True):
         user = user or request.user
         # try to fetch the account for this user from memcache    
         if cache:  
@@ -27,18 +27,15 @@ class AccountQueryManager(CachedQueryManager):
         
         # if not in memcache, run the query and put in memcache
         if not account:
-            logging.warning("account not in cache, user: %s" % cls._user_key(user))
             # GQL: get the first account where user in the all_users list
             account = Account.all().filter('all_mpusers =', cls._user_key(user)).get()
             # if no account for this user exists then we need to 
             # create the user
-            if not account:
-                logging.warning("account needs to be created")
+            if not account and create:
                 account = Account(mpuser=user, all_mpusers=[cls._user_key(user)], status="new")    
                 account.put()
             if cache:    
                 memcache.set(str(cls._user_key(user)), account, namespace="account")
-        logging.warning("account: %s"%account.key())    
         return account
 
     @classmethod
@@ -52,9 +49,8 @@ class AccountQueryManager(CachedQueryManager):
             AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
             
             # Delete cached Accounts for users
-            for user_key in account.all_users:
+            for user_key in account.all_mpusers:
                 memcache.delete(str(user_key), namespace="account")
-
         return db.put(accounts)    
     
     @classmethod    

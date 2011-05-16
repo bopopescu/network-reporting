@@ -5,7 +5,6 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.core.urlresolvers import reverse
 from common.ragendja.template import render_to_response
 
-from common.utils.decorators import whitelist_login_required
 from common.utils.query_managers import CachedQueryManager
 
 from account.models import Account
@@ -21,13 +20,11 @@ class AccountHandler(RequestHandler):
             self.account.status = "step4"
             AccountQueryManager.put_accounts(self.account)
             return HttpResponseRedirect(reverse('advertiser_campaign'))
-
         account_form = account_form or AccountForm(instance=self.account)
         return render_to_response(self.request,'account/account.html', {'account': self.account, 'account_form': account_form})
 
     def post(self):
         account_form = AccountForm(data=self.request.POST, instance=self.account)
-
         if account_form.is_valid():
             account = account_form.save(commit=False)
 
@@ -37,7 +34,6 @@ class AccountHandler(RequestHandler):
                 self.account.status = "step4"
                 AccountQueryManager.put_accounts(self.account)
                 return HttpResponseRedirect(reverse('advertiser_campaign'))
-        
         return self.get(account_form=account_form)        
 
 @login_required         

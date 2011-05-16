@@ -590,8 +590,8 @@ def InstallAuthentication(settings):
     from appengine_django.auth.middleware import AuthenticationMiddleware
     django_middleware.AuthenticationMiddleware = AuthenticationMiddleware
     from django.contrib.auth import decorators as django_decorators
-    from appengine_django.auth.decorators import login_required
-    # django_decorators.login_required = login_required
+    from common.utils.decorators import login_required
+    django_decorators.login_required = login_required
     from django.contrib import auth as django_auth
     from django.contrib.auth import tests as django_tests
     # Hack Nafis

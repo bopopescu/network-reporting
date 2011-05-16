@@ -17,8 +17,6 @@ from django.core.urlresolvers import reverse
 from common.ragendja.template import render_to_response, render_to_string
 from django.core.mail import send_mail, EmailMessage
 
-from common.utils.decorators import whitelist_login_required
-
 from advertiser.models import *
 from advertiser.forms import CampaignForm, AdGroupForm
 

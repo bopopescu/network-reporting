@@ -110,12 +110,15 @@ class AdGroupIndexHandler(RequestHandler):
         graph_adgroups = adgroups[0:4]
         if len(adgroups) > 4:
             graph_adgroups[3] = AdGroup(name='Others')
-            graph_adgroups[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[c.all_stats for c in adgroups[3:]])]      
+            graph_adgroups[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[c.all_stats for c in adgroups[3:]])]
+            
+        graph_totals = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[c.all_stats for c in adgroups])]
 
         return render_to_response(self.request, 
                                  'advertiser/adgroups.html', 
                                   {'adgroups':adgroups,
                                    'graph_adgroups': graph_adgroups,
+                                   'graph_totals': graph_totals,
                                    'start_date': days[0],
                                    'end_date':days[-1],
                                    'date_range': self.date_range,

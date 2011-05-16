@@ -126,7 +126,7 @@
                       'ctr':  [
                       {% for a in graph_adgroups %}
                         { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.ctr}}{% if not forloop.last %},{% endif %} {% endfor %}] },{% endfor %}
-                        { 'optimized': [{% for stat in totals %}{{stat.ctr}}{% if not forloop.last %},{% endif %} {% endfor %}] }
+                        { 'Mopub Optimized': [{% for stat in graph_totals %}{{stat.ctr}}{% if not forloop.last %},{% endif %} {% endfor %}] }
                       ],
                     };
                   </script>

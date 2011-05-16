@@ -805,11 +805,18 @@ var mopub = mopub || {};
         $.each(seriesObject, function(name, value) {
           seriesName = name;
           seriesData = value;
+          if (seriesName == 'Mopub Optimized'){
+            seriesLineWidth = 5;
+          } else{
+            seriesLineWidth = 1;
+          }
+          
         });
         chartSeries.push({
           name: seriesName,
           data: seriesData,
-          color: colors[i]
+          color: colors[i],
+          lineWidth: seriesLineWidth,
         });
       });
 

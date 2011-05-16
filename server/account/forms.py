@@ -22,6 +22,8 @@ class AccountForm(mpforms.MPModelForm):
                   "jumptap_pub_id",
                   "millenial_pub_id",
                   "mobfox_pub_id",)        
+
+        exclude = ('user', 'all_users', 'date_added', 'active', 'status')
         
 class NetworkConfigForm(mpforms.MPModelForm):
     

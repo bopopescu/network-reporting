@@ -1,11 +1,17 @@
 {% load filters %}
 <input type="hidden" name="{% if form.prefix %}{{form.prefix}}-{% endif %}{{form.app_key.name}}" value="{{form.app_key.value}}"/>
-<dl class="formFields"> 
+<dl class="formFields formatDependent" id="adunitFormFields"> 
 
 	{{ form.name|attrs:'{"id":"appForm-adUnitName"}' }}
 	{{ form.description|attrs:'{"id":"appForm-adUnitDescription"}' }}
 	{{ form.device_format }}
 	{{ form.format|raw }}
+	<dt class="full_only">
+    	Landscape
+    </dt>
+    <dd class="full_only">
+        {{ form.landscape|raw }}
+    </dd>    	
 	<!-- {{ form.animation_type }}  -->
 	{{ form.refresh_interval|attrs:'{"style":"width:50px;","suffix":"seconds (default: 0 for no refresh)"}' }}
 

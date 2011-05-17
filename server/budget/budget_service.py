@@ -9,10 +9,7 @@ from budget.models import (BudgetSlicer,
                            BudgetSliceLog,
                            BudgetDailyLog
                            )
-   
 
-from ad_server.debug_console import trace_logging
-                        
 """
 A service that determines if a campaign can be shown based upon the defined 
 budget for that campaign. If the budget_type is "evenly", a minute by minute
@@ -31,15 +28,11 @@ def has_budget(campaign, cost):
     
     memcache_daily_budget = remaining_daily_budget(campaign)
     
-    trace_logging.info(str(campaign.name) + " - rdb: " + str(remaining_daily_budget(campaign)))
-    
     if memcache_daily_budget < cost:
         return False
     
     if campaign.budget_strategy == "evenly":
         memcache_ts_budget = remaining_ts_budget(campaign)
-        trace_logging.info(str(campaign.name) + " - rtsb: " + str(remaining_ts_budget(campaign)))
-        
     
         if memcache_ts_budget < cost:
             return False

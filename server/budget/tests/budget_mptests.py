@@ -634,14 +634,27 @@ class TestBudgetUnitTests(unittest.TestCase):
         for i in xrange(budgetmodels.DEFAULT_TIMESLICES*3):
             budget_service.timeslice_advance(self.cheap_c)
 
+        # 3000 remaining
+        eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
+        # We have spent 100 out of 3000 total
+        eq_(budget_service.remaining_daily_budget(self.cheap_c), 2900)
+        
+        # Catastrophic cache failure!!
+        memcache.flush_all()
+    
+        # Should return to the state we had at the last backup (3000)
         eq_(budget_service._apply_if_able(self.cheap_c, 500), True)
         # We have spent 500 out of 2000 total
         eq_(budget_service.remaining_daily_budget(self.cheap_c), 2500)
         
-        # Catastrophic Cache failure
+        # Another advance, backs up to db
+        budget_service.timeslice_advance(self.cheap_c)
+        eq_(budget_service.remaining_daily_budget(self.cheap_c), 2500)
+        
+        # Catastrophic cache failure again!!!
         memcache.flush_all()
     
-        # Should return to the state we had at the beginning of the day
-        eq_(budget_service._apply_if_able(self.cheap_c, 500), True)
+        # Should return to the state we had at the last backup (2500)
+        eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
         # We have spent 500 out of 2000 total
-        eq_(budget_service.remaining_daily_budget(self.cheap_c), 2500)
+        eq_(budget_service.remaining_daily_budget(self.cheap_c), 2400)   

@@ -41,6 +41,13 @@ class Campaign(db.Model):
     @property
     def owner_name(self):
         return None 
+        
+    @property
+    def finite(self):
+        if (self.start_date and self.end_date):
+            return True
+        else:
+            return False
     
     def get_owner(self):
         return None

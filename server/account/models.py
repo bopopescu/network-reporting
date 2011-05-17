@@ -1,5 +1,3 @@
-from django.contrib.auth.models import UserManager
-
 from google.appengine.ext import db
 from google.appengine.api import users
 from common.ragendja.auth import hybrid_models

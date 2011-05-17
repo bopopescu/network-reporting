@@ -16,7 +16,12 @@
           <section> 
             <div class="content-main">{% ifequal account.status "new" %}
               <div class="alertMessage">
-                The first step is to tell us about your apps and set up your ad units. Enter the details of your first app below. You can add more apps and ad units later.
+                {% if account.reg_complete %}
+                <div class="strong">
+                    <h3>Thanks! Your account is all set up. </h3>
+                </div>
+                {% endif %}
+                The next step is to tell us about your apps and set up your ad units. Enter the details of your first app below. You can add more apps and ad units later.
               </div>{% endifequal %}
               <form enctype='multipart/form-data' action="" method="POST" accept-charset="utf-8" id="appForm" class="validate">{% if app_key %}
                 <input type="hidden" name="app_key" value="{{app_key}}"/>{% endif %}

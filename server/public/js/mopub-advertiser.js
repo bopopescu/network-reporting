@@ -805,10 +805,16 @@ var mopub = mopub || {};
         $.each(seriesObject, function(name, value) {
           seriesName = name;
           seriesData = value;
-          if (seriesName == 'Mopub Optimized'){
-            seriesLineWidth = 5;
-          } else{
-            seriesLineWidth = 1;
+          
+          if (seriesType == 'line'){
+             if (seriesName == 'Mopub Optimized'){
+              seriesLineWidth = 4;
+            } else{
+              seriesLineWidth = 2;
+            }
+          }
+          else{
+            seriesLineWidth = 3;
           }
           
         });

@@ -164,7 +164,6 @@ def dashboard(request, *args, **kwargs):
     loading = loading or page.loading
     return render_to_response(request,'admin/d.html',{'page': page, 'loading': loading})
         
-@login_required
 def update_sfdc_leads(request, *args, **kwargs):
     #
     # a convenience function that maps accounts > SFDC fields

@@ -354,19 +354,19 @@ class StatsModelQueryManager(CachedQueryManager):
             
             if attribute == 'advertiser' and not stat.advertiser:
                 return None
-            if attribute == 'publisher' and not stat.publisher:
+            elif attribute == 'publisher' and not stat.publisher:
                 return None
-            if attribute == 'country' and not stat.country:
+            elif attribute == 'country' and not stat.country:
                 return None   
-            if attribute == 'brand_name' and not stat.brand_name:
+            elif attribute == 'brand_name' and not stat.brand_name:
                 return None
-            if attribute == 'marketing_name' and not stat.marketing_name:
+            elif attribute == 'marketing_name' and not stat.marketing_name:
                 return None
-            if attribute == 'device_os' and not stat.device_os:
+            elif attribute == 'device_os' and not stat.device_os:
                 return None
-            if attribute == 'device_os_version' and not stat.device_os_version:
+            elif attribute == 'device_os_version' and not stat.device_os_version:
                 return None
-            if attribute == 'date' and stat.month: # stops at the month rollup
+            elif attribute == 'date' and stat.month: # stops at the month rollup
                 return None
 
             properties = stat.properties()
@@ -395,7 +395,7 @@ class StatsModelQueryManager(CachedQueryManager):
                 prev_stat += new_stat
                 stats_dict[prev_stat.key().name()] = prev_stat
 
-            if attribute == 'advertiser' and stat.advertiser:
+            elif attribute == 'advertiser' and stat.advertiser:
                 # owner_name prop returns a string that's the owner, i.e. creative.owner_name = 'ad_group'
                 stat.advertiser.owner = _get_refprop_from_cache(stat.advertiser, stat.advertiser.owner_name)
                 
@@ -419,7 +419,7 @@ class StatsModelQueryManager(CachedQueryManager):
                     prev_stat.request_count -= new_stat.request_count
                 stats_dict[prev_stat.key().name()] = prev_stat
                             
-            if attribute == 'country' and stat.country:
+            elif attribute == 'country' and stat.country:
                 country = attrs.get('country')
                 attrs.update(country=None)
                 new_stat = StatsModel(**attrs)
@@ -455,7 +455,7 @@ class StatsModelQueryManager(CachedQueryManager):
                 prev_stat += new_stat
                 stats_dict[prev_stat.key().name()] = prev_stat                      
 
-            if attribute == 'brand_name' and stat.brand_name:
+            elif attribute == 'brand_name' and stat.brand_name:
                 attrs.update(brand_name=None)
                 new_stat = StatsModel(**attrs)
 
@@ -476,7 +476,7 @@ class StatsModelQueryManager(CachedQueryManager):
                 prev_stat += new_stat
                 stats_dict[prev_stat.key().name()] = prev_stat                      
 
-            if attribute == 'marketing_name' and stat.marketing_name:
+            elif attribute == 'marketing_name' and stat.marketing_name:
                 attrs.update(marketing_name=None)
                 new_stat = StatsModel(**attrs)
 
@@ -497,7 +497,7 @@ class StatsModelQueryManager(CachedQueryManager):
                 prev_stat += new_stat
                 stats_dict[prev_stat.key().name()] = prev_stat                      
 
-            if attribute == 'device_os' and stat.device_os:
+            elif attribute == 'device_os' and stat.device_os:
                 attrs.update(device_os=None)
                 new_stat = StatsModel(**attrs)
 
@@ -518,7 +518,7 @@ class StatsModelQueryManager(CachedQueryManager):
                 prev_stat += new_stat
                 stats_dict[prev_stat.key().name()] = prev_stat                      
 
-            if attribute == 'device_os_version' and stat.device_os_version:
+            elif attribute == 'device_os_version' and stat.device_os_version:
                 attrs.update(device_os_version=None)
                 new_stat = StatsModel(**attrs)
 
@@ -540,7 +540,7 @@ class StatsModelQueryManager(CachedQueryManager):
                 stats_dict[prev_stat.key().name()] = prev_stat                      
 
 
-            if attribute == 'date':
+            elif attribute == 'date':
                 # NOTE: This is a Pacific TimeZone day
                 if stat.date_hour:
                     day = stat.date_hour.date() # makes date object

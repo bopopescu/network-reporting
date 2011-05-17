@@ -158,8 +158,6 @@ class TestReports():
                         temp_keys[camp].append(adunit.key())
                 #store adunits
                 self.adunits.append(adunit)
-        print temp_keys
-        print '\n\n\n'
         for targets, c_id in zip(temp_keys, range(CAMP_CT)):
             #gen + put camp
             camp = Campaign(name=CAMP_NAME % c_id, account = self.account)
@@ -206,4 +204,5 @@ def simple_mptest():
     data1 = rep1.gen_data()
     data2 = rep2.gen_data()
     data3 = rep3.gen_data()
+    pprint.pprint(data1)
     assert True

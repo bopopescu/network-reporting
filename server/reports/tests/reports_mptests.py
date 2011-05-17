@@ -20,7 +20,6 @@ from account.models import Account
 from publisher.models import App
 from publisher.models import Site as AdUnit
 from reports.models import Report
-from reports.helpers import dict_to_html
 from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
 

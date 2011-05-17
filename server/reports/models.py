@@ -4,7 +4,6 @@ import logging
 from datetime import datetime, timedelta
 
 #appengine imports
-from django.template import loader
 from django.utils import simplejson
 from google.appengine.ext import db
 from google.appengine.api import users
@@ -272,6 +271,7 @@ class Report(db.Model):
 
     @property
     def html_data(self):
+        from django.template import loader
         if self.data:
             return loader.render_to_string('reports/report.html', dict(all_stats=self.data))
         else:

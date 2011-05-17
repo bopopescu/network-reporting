@@ -116,7 +116,6 @@ function adSenseDelivery()
     else
     {
         //.. mac/ie5 and anything else that gets this far
-
         //if there's an existing onload function
         if(typeof window.onload == 'function')
         {
@@ -141,4 +140,4 @@ function adSenseDelivery()
     }
 }
 
-adSenseDelivery();
+//adSenseDelivery();

@@ -124,7 +124,9 @@ class StatsModelQueryManager(CachedQueryManager):
         return reduce(lambda x,y: x+y, stats, StatsModel())
 
 
-    def get_rollup_for_days(self, publisher=None, publishers=None, advertiser=None, advertisers=None, days=None, num_days=None,account=None, country=None, device=None, op_sys=None, offline=False, date_fmt='date'):
+    def get_rollup_for_days(self, publisher=None, publishers=None, advertiser=None, advertisers=None, days=None, num_days=None, account=None,
+                            country=None, brand_name=None, marketing_name=None, device_os=None, device_os_version=None,
+                            offline=False, date_fmt='date'):
         if publisher and publishers:
             logging.error("cannot pass both a single publisher and multiple publishers")
         if publisher and not publishers:
@@ -155,14 +157,18 @@ class StatsModelQueryManager(CachedQueryManager):
                                                  num_days = num_days, 
                                                  account = account, 
                                                  country = country, 
-                                                 device = device,
-                                                 op_sys = op_sys,
+                                                 brand_name=brand_name,
+                                                 marketing_name=marketing_name,
+                                                 device_os=device_os,
+                                                 device_os_version=device_os_version,
                                                  offline = offline, 
                                                  date_fmt = date_fmt)
         return reduce(lambda x,y: x+y, stats, StatsModel())
 
 
-    def get_stats_for_days(self, publisher=None, publishers=None, advertiser=None, days=None, num_days=None, account=None, country=None, device=None, op_sys=None, offline=False, date_fmt='date'):
+    def get_stats_for_days(self, publisher=None, publishers=None, advertiser=None, days=None, num_days=None, account=None, 
+                           country=None, brand_name=None, marketing_name=None, device_os=None, device_os_version=None,
+                           offline=False, date_fmt='date'):
         """ Gets the stats for a specific pairing. Definitions:
             advertiser_group: Either Campaign, AdGroup or Creative
             publisher_group: Either App, or Site(AdUnit)"""
@@ -198,10 +204,12 @@ class StatsModelQueryManager(CachedQueryManager):
                                      StatsModel.get_key_name(publisher=publisher,
                                                              advertiser=advertiser,
                                                              account=account,
-                                                             date=d,
+                                                             date=d,    # date is overloaded; type defined by date_fmt
                                                              country=country,
-                                                             device=device,
-                                                             op_sys=op_sys,
+                                                             brand_name=brand_name,
+                                                             marketing_name=marketing_name,
+                                                             device_os=device_os,
+                                                             device_os_version=device_os_version,
                                                              offline=offline,
                                                              date_fmt=date_fmt),
                                       parent=parent)
@@ -212,10 +220,12 @@ class StatsModelQueryManager(CachedQueryManager):
                                      StatsModel.get_key_name(publisher=publisher,
                                                              advertiser=advertiser,
                                                              account=account,
-                                                             date=d,
+                                                             date=d,    # date is overloaded; type defined by date_fmt
                                                              country=country,
-                                                             device=device,
-                                                             op_sys=op_sys,
+                                                             brand_name=brand_name,
+                                                             marketing_name=marketing_name,
+                                                             device_os=device_os,
+                                                             device_os_version=device_os_version,
                                                              offline=offline,
                                                              date_fmt=date_fmt),
                                       parent=parent)
@@ -306,14 +316,19 @@ class StatsModelQueryManager(CachedQueryManager):
             return None            
         
         
-        def _get_stat(pub=None,adv=None,date_hour=None,date=None,month=None,country=None):
+        def _get_stat(pub=None, adv=None, date_hour=None, date=None, month=None, country=None, 
+                      brand_name=None, marketing_name=None, device_os=None, device_os_version=None):
             """get or creates the stat from the local dictionary"""
             key = StatsModel.get_key_name(publisher=pub,
                                           advertiser=adv,
                                           date=date,
                                           date_hour=date_hour,
                                           month=month,
-                                          country=country) 
+                                          country=country,
+                                          brand_name=brand_name,
+                                          marketing_name=marketing_name,
+                                          device_os=device_os,
+                                          device_os_version=device_os_version) 
 
             if not key in stats_dict:
                 stat =  StatsModel(publisher=pub,
@@ -321,7 +336,11 @@ class StatsModelQueryManager(CachedQueryManager):
                                    date=date,
                                    date_hour=date_hour,
                                    month=month,
-                                   country=country)
+                                   country=country,
+                                   brand_name=brand_name,
+                                   marketing_name=marketing_name,
+                                   device_os=device_os,
+                                   device_os_version=device_os_version) 
                 stats_dict[key] = stat
             else:
                 stat = stats_dict[key]
@@ -335,11 +354,19 @@ class StatsModelQueryManager(CachedQueryManager):
             
             if attribute == 'advertiser' and not stat.advertiser:
                 return None
-            if attribute == 'publisher' and not stat.publisher:
+            elif attribute == 'publisher' and not stat.publisher:
                 return None
-            if attribute == 'country' and not stat.country:
+            elif attribute == 'country' and not stat.country:
                 return None   
-            if attribute == 'date' and stat.month: # stops at the month rollup
+            elif attribute == 'brand_name' and not stat.brand_name:
+                return None
+            elif attribute == 'marketing_name' and not stat.marketing_name:
+                return None
+            elif attribute == 'device_os' and not stat.device_os:
+                return None
+            elif attribute == 'device_os_version' and not stat.device_os_version:
+                return None
+            elif attribute == 'date' and stat.month: # stops at the month rollup
                 return None
 
             properties = stat.properties()
@@ -348,7 +375,7 @@ class StatsModelQueryManager(CachedQueryManager):
             dynamic_properties = stat.dynamic_properties()
             attrs.update(dict([(k,getattr(stat,k)) for k in dynamic_properties]))
                         
-            if attribute == "publisher" and stat.publisher:    
+            if attribute == 'publisher' and stat.publisher:    
                 # owner_name prop returns a string that's the owner, i.e. creative.owner_name = 'ad_group'
                 stat.publisher.owner = _get_refprop_from_cache(stat.publisher, stat.publisher.owner_name)
                 
@@ -360,11 +387,15 @@ class StatsModelQueryManager(CachedQueryManager):
                                       date=new_stat.date,
                                       date_hour=new_stat.date_hour,
                                       month=new_stat.month,
-                                      country=new_stat.country)
+                                      country=new_stat.country,
+                                      brand_name=new_stat.brand_name,
+                                      marketing_name=new_stat.marketing_name,
+                                      device_os=new_stat.device_os,
+                                      device_os_version=new_stat.device_os_version)
                 prev_stat += new_stat
                 stats_dict[prev_stat.key().name()] = prev_stat
 
-            if attribute == "advertiser" and stat.advertiser:
+            elif attribute == 'advertiser' and stat.advertiser:
                 # owner_name prop returns a string that's the owner, i.e. creative.owner_name = 'ad_group'
                 stat.advertiser.owner = _get_refprop_from_cache(stat.advertiser, stat.advertiser.owner_name)
                 
@@ -376,17 +407,20 @@ class StatsModelQueryManager(CachedQueryManager):
                                       date=new_stat.date,
                                       date_hour=new_stat.date_hour,
                                       month=new_stat.month,
-                                      country=new_stat.country)
+                                      country=new_stat.country,
+                                      brand_name=new_stat.brand_name,
+                                      marketing_name=new_stat.marketing_name,
+                                      device_os=new_stat.device_os,
+                                      device_os_version=new_stat.device_os_version)                                      
                 prev_stat += new_stat
                 # if owner is None, undo the increment of request count
                 # publisher-* is already accounted for
                 if not new_stat.advertiser:
                     prev_stat.request_count -= new_stat.request_count
                 stats_dict[prev_stat.key().name()] = prev_stat
-                
-            
-            if attribute == "country" and stat.country:
-                country = attrs.get("country")
+                            
+            elif attribute == 'country' and stat.country:
+                country = attrs.get('country')
                 attrs.update(country=None)
                 new_stat = StatsModel(**attrs)
                 
@@ -413,11 +447,100 @@ class StatsModelQueryManager(CachedQueryManager):
                                       date=new_stat.date,
                                       date_hour=new_stat.date_hour,
                                       month=new_stat.month,
-                                      country=new_stat.country)
+                                      country=new_stat.country,
+                                      brand_name=new_stat.brand_name,
+                                      marketing_name=new_stat.marketing_name,
+                                      device_os=new_stat.device_os,
+                                      device_os_version=new_stat.device_os_version)                                      
                 prev_stat += new_stat
                 stats_dict[prev_stat.key().name()] = prev_stat                      
 
-            if attribute == 'date':
+            elif attribute == 'brand_name' and stat.brand_name:
+                attrs.update(brand_name=None)
+                new_stat = StatsModel(**attrs)
+
+                # we don't need to do a recursive call because
+                # we only have 2 levels, if we want to add something
+                # like regions we'd do it here
+                # make_above_stat(new_stat,'country')
+                prev_stat = _get_stat(pub=new_stat.publisher,
+                                      adv=new_stat.advertiser,
+                                      date=new_stat.date,
+                                      date_hour=new_stat.date_hour,
+                                      month=new_stat.month,
+                                      country=new_stat.country,
+                                      brand_name=new_stat.brand_name,
+                                      marketing_name=new_stat.marketing_name,
+                                      device_os=new_stat.device_os,
+                                      device_os_version=new_stat.device_os_version)                                      
+                prev_stat += new_stat
+                stats_dict[prev_stat.key().name()] = prev_stat                      
+
+            elif attribute == 'marketing_name' and stat.marketing_name:
+                attrs.update(marketing_name=None)
+                new_stat = StatsModel(**attrs)
+
+                # we don't need to do a recursive call because
+                # we only have 2 levels, if we want to add something
+                # like regions we'd do it here
+                # make_above_stat(new_stat,'country')
+                prev_stat = _get_stat(pub=new_stat.publisher,
+                                      adv=new_stat.advertiser,
+                                      date=new_stat.date,
+                                      date_hour=new_stat.date_hour,
+                                      month=new_stat.month,
+                                      country=new_stat.country,
+                                      brand_name=new_stat.brand_name,
+                                      marketing_name=new_stat.marketing_name,
+                                      device_os=new_stat.device_os,
+                                      device_os_version=new_stat.device_os_version)                                      
+                prev_stat += new_stat
+                stats_dict[prev_stat.key().name()] = prev_stat                      
+
+            elif attribute == 'device_os' and stat.device_os:
+                attrs.update(device_os=None)
+                new_stat = StatsModel(**attrs)
+
+                # we don't need to do a recursive call because
+                # we only have 2 levels, if we want to add something
+                # like regions we'd do it here
+                # make_above_stat(new_stat,'country')
+                prev_stat = _get_stat(pub=new_stat.publisher,
+                                      adv=new_stat.advertiser,
+                                      date=new_stat.date,
+                                      date_hour=new_stat.date_hour,
+                                      month=new_stat.month,
+                                      country=new_stat.country,
+                                      brand_name=new_stat.brand_name,
+                                      marketing_name=new_stat.marketing_name,
+                                      device_os=new_stat.device_os,
+                                      device_os_version=new_stat.device_os_version)                                      
+                prev_stat += new_stat
+                stats_dict[prev_stat.key().name()] = prev_stat                      
+
+            elif attribute == 'device_os_version' and stat.device_os_version:
+                attrs.update(device_os_version=None)
+                new_stat = StatsModel(**attrs)
+
+                # we don't need to do a recursive call because
+                # we only have 2 levels, if we want to add something
+                # like regions we'd do it here
+                # make_above_stat(new_stat,'country')
+                prev_stat = _get_stat(pub=new_stat.publisher,
+                                      adv=new_stat.advertiser,
+                                      date=new_stat.date,
+                                      date_hour=new_stat.date_hour,
+                                      month=new_stat.month,
+                                      country=new_stat.country,
+                                      brand_name=new_stat.brand_name,
+                                      marketing_name=new_stat.marketing_name,
+                                      device_os=new_stat.device_os,
+                                      device_os_version=new_stat.device_os_version)                                      
+                prev_stat += new_stat
+                stats_dict[prev_stat.key().name()] = prev_stat                      
+
+
+            elif attribute == 'date':
                 # NOTE: This is a Pacific TimeZone day
                 if stat.date_hour:
                     day = stat.date_hour.date() # makes date object
@@ -438,30 +561,31 @@ class StatsModelQueryManager(CachedQueryManager):
                                       date=new_stat.date,
                                       date_hour=new_stat.date_hour,
                                       month=new_stat.month,
-                                      country=new_stat.country)
+                                      country=new_stat.country,
+                                      brand_name=new_stat.brand_name,
+                                      marketing_name=new_stat.marketing_name,
+                                      device_os=new_stat.device_os,
+                                      device_os_version=new_stat.device_os_version)                                      
                 prev_stat += new_stat
                 stats_dict[prev_stat.key().name()] = prev_stat
         
-        # publisher roll ups
-        for stat in stats:
-            make_above_stat(stat,'publisher')
-                
-        # # advertiser rollups        
-        stats = stats_dict.values()
-        for stat in stats:
-            make_above_stat(stat,'advertiser')
-            
-        # country rollups
-        stats = stats_dict.values()
-        for stat in stats:
-            make_above_stat(stat,'country')
-            
-        # remove all the country level stats
+        
+        # attributes to roll up
+        attr_rollup_list = ['publisher', 'advertiser', 'country', 'brand_name', 'marketing_name', 'device_os', 'device_os_version']
+        
+        # roll each attribute up
+        for attr in attr_rollup_list:
+            stats = stats_dict.values()
+            for stat in stats:
+                make_above_stat(stat, attr)
+                            
+        # if not offline, remove all the country level stats
         # because we are storing this data in dynamic properties
-        stats = stats_dict.values()
-        for stat in stats:
-            if stat.country:
-                del stats_dict[stat.key().name()]
+        if not offline:
+            stats = stats_dict.values()
+            for stat in stats:
+                if stat.country:
+                    del stats_dict[stat.key().name()]
         
         # time rollups
         if not offline: # do not rollup on date if it's offline, since aws-logging data is already cumulative

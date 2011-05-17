@@ -204,7 +204,7 @@ class StatsModelQueryManager(CachedQueryManager):
                                      StatsModel.get_key_name(publisher=publisher,
                                                              advertiser=advertiser,
                                                              account=account,
-                                                             date=d,
+                                                             date=d,    # date is overloaded; type defined by date_fmt
                                                              country=country,
                                                              brand_name=brand_name,
                                                              marketing_name=marketing_name,
@@ -220,7 +220,7 @@ class StatsModelQueryManager(CachedQueryManager):
                                      StatsModel.get_key_name(publisher=publisher,
                                                              advertiser=advertiser,
                                                              account=account,
-                                                             date=d,
+                                                             date=d,    # date is overloaded; type defined by date_fmt
                                                              country=country,
                                                              brand_name=brand_name,
                                                              marketing_name=marketing_name,

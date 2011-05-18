@@ -172,7 +172,7 @@ def update_sfdc_leads(request, *args, **kwargs):
     def account_to_sfdc(a):
         apps = App.gql("where account = :1", a).fetch(100)
         return {'FirstName': (a.first_name or '')[:40],
-                'LastName': (a.last_name or a.user.nickname() if a.user else '')[:80],
+                'LastName': (a.last_name or a.mpuser.last_name if a.user else '')[:80],
                 'Email': a.user.email() if a.user else '',
                 'Title': (a.title or '')[:80],
                 'Company': (a.company or a.user.email() if a.user else '')[:255], 

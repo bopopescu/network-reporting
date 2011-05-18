@@ -46,7 +46,6 @@ var mopub = mopub || {};
 			apps.togglebutton = appbutton;
 			apps.togglebutton.showText = 'Show apps';
 			apps.togglebutton.hideText = 'Hide apps';
-
 			function getButtonTextElement(buttonElement) {
 				var buttonTextElement = $('.ui-button-text', buttonElement);
 				if(buttonTextElement.length == 0) buttonTextElement = buttonElement;

@@ -407,7 +407,10 @@ class AdMobCreative(Creative):
     pass
 
 class AdMobNativeCreative(AdMobCreative):
-    pass
+
+    @property
+    def multi_format(self):
+        return ('728x90', '320x50', 'full' ,)
 
 class MillennialCreative(Creative):
     
@@ -416,7 +419,10 @@ class MillennialCreative(Creative):
         return ('728x90', '320x50', '300x250',)
 
 class MillennialNativeCreative(MillennialCreative):
-    pass
+
+    @property
+    def multi_format(self):
+        return ('728x90', '320x50', 'full' ,)
 
 class InMobiCreative(Creative):
    

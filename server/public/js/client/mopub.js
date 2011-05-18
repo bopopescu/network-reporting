@@ -13,8 +13,9 @@ function redo_tags(frame) {
 }
 
 function mp_cb(data) {
+    ufid = data.ufid;
     mopub_click_url = data.click_url;
-    var iframe = document.getElementById('mopub-iframe');
+    var iframe = document.getElementById('mopub-iframe-'+ufid);
     iframe = (iframe.contentWindow) ? iframe.contentWindow : (iframe.contentDocument.document);
     iframe.document.open();
     iframe.document.write(data.ad);
@@ -23,6 +24,16 @@ function mp_cb(data) {
 }
 
 (function(){
+
+    function gen_key() {
+        var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012345678';
+        var text = '';
+        for( var i=0; i < 20; i++ ) {
+            text += possible.charAt(Math.floor(Math.random() * possible.length));
+        }
+        return text;
+    }
+
     var c_name = "mopub-udid-cookie";
     if (window.mopub_ad_unit == null) {
         console.log("MoPub load failed. mopub_ad_unit needs to be defined.");
@@ -44,7 +55,9 @@ function mp_cb(data) {
     if (mopub_url.port != "0")
         mopub_site_url += ":"+mopub_url.port;
     // TODO: add version    
-    var mopub_ad_url = mopub_site_url + "/m/ad?id="+mopub_ad_unit + "&udid=M0B1LEWEBC00KIE:" + get_session();
+    var ufid = gen_key();
+    var mopub_ad_url = mopub_site_url + "/m/ad?id="+mopub_ad_unit + "&udid=M0B1LEWEBC00KIE:" + get_session() + '&ufid=' + ufid;
+
 
     if (window.mopub_keywords != null)
         mopub_ad_url += "&q="+escape(window.mopub_keywords);
@@ -54,7 +67,7 @@ function mp_cb(data) {
     //init openx cursor tracking magic
     document.write('<script type="text/javascript" src="' + mopub_site_url + '/js/clicktracker.js?v=19"></script>');
     //iframe for ad
-    document.write('<iframe id="mopub-iframe" frameborder="0" hspace="0" marginheight="0" marginwidth="0" scrolling="no" vspace="0"'
+    document.write('<iframe id="mopub-iframe-' + ufid + '" frameborder="0" hspace="0" marginheight="0" marginwidth="0" scrolling="no" vspace="0"'
                    + ' width="'+window.mopub_ad_width+'"'
                    + ' height="'+window.mopub_ad_height+'"'
                    + ' src="about:blank">');
@@ -91,15 +104,6 @@ function mp_cb(data) {
         }
         //get it
         return get_cookie(c_name);
-    }
-
-    function gen_key() {
-        var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012345678';
-        var text = '';
-        for( var i=0; i < 20; i++ ) {
-            text += possible.charAt(Math.floor(Math.random() * possible.length));
-        }
-        return text;
     }
 
 })();

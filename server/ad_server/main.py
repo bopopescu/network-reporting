@@ -440,6 +440,8 @@ class AdHandler(webapp.RequestHandler):
     }
     
     def get(self):
+
+        ufid = self.request.get('ufid', None)
         
         if self.request.get('jsonp', '0') == '1':
             jsonp = True
@@ -616,7 +618,7 @@ class AdHandler(webapp.RequestHandler):
                                                         ) 
                                       
         if jsonp:
-            self.response.out.write('%s(%s)' % (callback, dict(ad=str(rendered_creative or ''), click_url = str(ad_click_url))))
+            self.response.out.write('%s(%s)' % (callback, dict(ad=str(rendered_creative or ''), click_url = str(ad_click_url), ufid=str(ufid))))
         elif not (debug or admin_debug_mode):                                                    
             self.response.out.write(rendered_creative)
         else:
@@ -731,7 +733,10 @@ class AdHandler(webapp.RequestHandler):
                   params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
                 if c.action_icon:
                     #c.url can be undefined, don't want it to break
-                    params["action_icon_div"] = '<div style="padding-top:5px;position:absolute;top:0;right:0;"><a href="'+(c.url or '#')+'" target="_top"><img src="http://app.mopub.com/images/'+c.action_icon+'.png" width=40 height=40/></a></div>'
+                    icon_div = '<div style="padding-top:5px;position:absolute;top:0;right:0;"><a href="'+(c.url or '#')+'" target="_top">'
+                    if c.action_icon:
+                        icon_div += '<img src="http://app.mopub.com/images/'+c.action_icon+'.png" width=40 height=40/></a></div>'
+                   params["action_icon_div"] = icon_div 
                 # self.response.headers.add_header("X-Adtype", str('html'))
             elif c.ad_type == "greystripe":
                 params.update(html_data=c.html_data)

@@ -352,6 +352,8 @@ class AdAuction(object):
                                                 bid = server_tuple[0]
                                                 response = server_tuple[1]
                                                 winning_creative = winner
+                                                
+                                                # We set the payload of the creative to be what we get back from the network
                                                 winning_creative.html_data = response
                                             
                                                 if len(server_tuple) == 4:
@@ -608,15 +610,14 @@ class AdHandler(webapp.RequestHandler):
           
         # render the creative 
         rendered_creative = self.render_creative(c, 
-                                                        site                = site, 
-                                                        q                   = q, 
-                                                        addr                = addr,
-                                                        excluded_creatives  = excluded_creatives, 
-                                                        request_id          = request_id, 
-                                                        v                   = int(self.request.get('v') or 0),
-                                                        track_url           = track_url,
-                                                        debug               = debug,
-                                                        ) 
+                                          site = site, 
+                                          keywords = q, 
+                                          addr = addr,
+                                          excluded_creatives = excluded_creatives, 
+                                          request_id = request_id, 
+                                          version_number = int(self.request.get('v') or 0),
+                                          track_url = track_url,
+                                          debug = debug) 
                                       
         if jsonp:
             self.response.out.write('%s(%s)' % (callback, dict(ad=str(rendered_creative or ''), click_url = str(ad_click_url), ufid=str(ufid))))
@@ -627,7 +628,16 @@ class AdHandler(webapp.RequestHandler):
             trace_logging.render()
         
           
-    def render_creative(self, c, track_url=None, **kwargs):
+    def render_creative(self, c, 
+                      site = None, 
+                      keywords = None, 
+                      addr = None,
+                      excluded_creatives = None, 
+                      request_id = None, 
+                      version_number = None,
+                      track_url = None,
+                      debug = False):
+        """ Returns a rendered HTML creative """
         self.TEMPLATES = TEMPLATES
         if c:
             # rename network so its sensical
@@ -639,7 +649,7 @@ class AdHandler(webapp.RequestHandler):
             trace_logging.info("Winner found, rendering: %s" % str(c.name))
             trace_logging.warning("Creative key: %s" % str(c.key()))
             trace_logging.warning("rendering: %s" % c.ad_type)
-            site = kwargs["site"]
+
             adunit = site
             
             format = adunit.format.split('x')
@@ -680,7 +690,11 @@ class AdHandler(webapp.RequestHandler):
                               margin-top: -%dpx !important; \
                               } \
                       </style>"
-            params = kwargs
+                      
+            # TOMTODO: Fix this
+            # params = kwargs
+            params = {}
+            
             params.update(c.__dict__.get("_entity"))
             #Line1/2 None check biznass 
             if params.has_key('line1'):
@@ -720,12 +734,11 @@ class AdHandler(webapp.RequestHandler):
             success += 'document.body.appendChild(hid_span);'
           
             if c.ad_type == "adsense":
-                params.update({"title": ','.join(kwargs["q"]), "adsense_format": '300x250_as', "w": format[0], "h": format[1], "client": kwargs["site"].get_pub_id("adsense_pub_id")})
-                params.update(channel_id=kwargs["site"].adsense_channel_id or '')
+                params.update({"title": ','.join(keywords), "adsense_format": '300x250_as', "w": format[0], "h": format[1], "client": site.get_pub_id("adsense_pub_id")})
+                params.update(channel_id=site.adsense_channel_id or '')
                 # self.response.headers.add_header("X-Launchpage","http://googleads.g.doubleclick.net")
             elif c.ad_type == "admob":
-                params.update({"title": ','.join(kwargs["q"]), "w": format[0], "h": format[1], "client": kwargs["site"].get_pub_id("admob_pub_id")})
-                debug = kwargs["debug"]
+                params.update({"title": ','.join(keywords), "w": format[0], "h": format[1], "client": site.get_pub_id("admob_pub_id")})
                 params.update(test_mode='true' if debug else 'false')
                 # params.update(test_ad='<a href="http://m.google.com" target="_top"><img src="/images/admob_test.png"/></a>' if debug else '')
                 self.response.headers.add_header("X-Launchpage","http://c.admob.com/")
@@ -742,9 +755,7 @@ class AdHandler(webapp.RequestHandler):
                     params['action_icon_div'] = ''
                 # self.response.headers.add_header("X-Adtype", str('html'))
             elif c.ad_type == "greystripe":
-                params.update(html_data=c.html_data)
-                # TODO: Why is html data here twice?
-                params.update({"html_data": kwargs["html_data"], "w": format[0], "h": format[1]})
+                params.update({"html_data": c.html_data, "w": format[0], "h": format[1]})
                 self.response.headers.add_header("X-Launchpage","http://adsx.greystripe.com/openx/www/delivery/ck.php")
                 template_name = "html"
             elif c.ad_type == "image":
@@ -759,8 +770,7 @@ class AdHandler(webapp.RequestHandler):
                 
                 params.update({"w": img.width, "h": img.height, "w2":img.width/2.0, "h2":img.height/2.0, "class":css_class})
             elif c.ad_type == "html":
-                params.update(html_data=c.html_data)
-                params.update({"html_data": kwargs["html_data"], "w": format[0], "h": format[1]})
+                params.update({"html_data": c.html_data, "w": format[0], "h": format[1]})
                 # add the launchpage header for inmobi in case they have dynamic ads that use
                 # window.location = 'http://some.thing/asdf'
                 if c.adgroup.network_type == "inmobi":
@@ -781,12 +791,12 @@ class AdHandler(webapp.RequestHandler):
                 self.response.headers.add_header("X-Productid","pixel_001")
               
               
-            if kwargs["q"] or kwargs["addr"]:
-                params.update(title=','.join(kwargs["q"]+list(kwargs["addr"])))
+            if keywords or addr:
+                params.update(title=','.join(keywords + list(addr)))
             else:
                 params.update(title='')
            
-            if kwargs["v"] >= 2:  
+            if version_number >= 2:  
                 params.update(finishLoad='<script>function finishLoad(){window.location="mopub://finishLoad";} window.onload = function(){finishLoad();} </script>')
                 # extra parameters used only by admob template
                 #add in the success tracking pixel
@@ -836,15 +846,15 @@ class AdHandler(webapp.RequestHandler):
                 self.response.headers.add_header("X-Adtype", str(c.ad_type))
                 self.response.headers.add_header("X-Backfill", str(c.ad_type))
                 
-                trace_logging.warning('pub id:%s'%kwargs["site"].get_pub_id("adsense_pub_id"))
+                trace_logging.warning('pub id:%s' % site.get_pub_id("adsense_pub_id"))
                 header_dict = {
-                  "Gclientid":str(kwargs["site"].get_pub_id("adsense_pub_id")),
-                  "Gcompanyname":str(kwargs["site"].account.adsense_company_name),
-                  "Gappname":str(kwargs["site"].app_key.adsense_app_name),
+                  "Gclientid":str(site.get_pub_id("adsense_pub_id")),
+                  "Gcompanyname":str(site.account.adsense_company_name),
+                  "Gappname":str(site.app_key.adsense_app_name),
                   "Gappid":"0",
-                  "Gkeywords":str(kwargs["site"].keywords or ''),
+                  "Gkeywords":str(site.keywords or ''),
                   "Gtestadrequest":"0",
-                  "Gchannelids":str(kwargs["site"].adsense_channel_id or ''),        
+                  "Gchannelids":str(site.adsense_channel_id or ''),        
                 # "Gappwebcontenturl":,
                   "Gadtype":"GADAdSenseTextImageAdType", #GADAdSenseTextAdType,GADAdSenseImageAdType,GADAdSenseTextImageAdType
                   "Gtestadrequest":"0",
@@ -877,8 +887,8 @@ class AdHandler(webapp.RequestHandler):
             else:  
                 self.response.headers.add_header("X-Adtype", str('html'))
               
-            if kwargs["q"] or kwargs["addr"]:
-                params.update(title=','.join(kwargs["q"]+list(kwargs["addr"])))
+            if keywords or addr:
+                params.update(title=','.join(keywords + list(addr)))
             else:
                params.update(title='')
             self.response.headers.add_header("X-Backfill", str('html'))

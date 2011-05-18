@@ -61,7 +61,11 @@ def _build_ad_querystring(udid, keys, ad_id, v = 3, dt = datetime.now(), ll=None
 def fake_request(adunit_key, dt=datetime.now(), ll=None):
     return Request(_fake_environ(_build_ad_querystring(UDID, '', adunit_key, dt=dt, ll=ll)))
 
-def run_auction(adunit_key, simulate_client_success=True, dt = datetime.now(), ll=None,):
+def run_auction(adunit_key, 
+                simulate_client_success=True, 
+                
+                dt = datetime.now(), 
+                ll=None):
     """For use by other tests. Takes an adunit_key and returns the
     creative that won the CPM battle, if success = True, also simulates client callback"""
     

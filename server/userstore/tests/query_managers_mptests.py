@@ -5,6 +5,7 @@ from time import sleep
 from datetime import datetime, timedelta
 
 sys.path.append(os.environ['PWD'])
+import common.utils.test.setup
 
 from google.appengine.ext import db
 from nose.tools import assert_equals, assert_not_equals, assert_true, assert_false, assert_raises

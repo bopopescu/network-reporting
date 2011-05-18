@@ -81,6 +81,7 @@ from budget import budget_service
 from google.appengine.ext.db import Key
 
 from ad_server.debug_console import trace_logging
+from ad_server import memcache_mangler
 
 ###################
 # Import Handlers #
@@ -1067,11 +1068,6 @@ class TestHandler(webapp.RequestHandler):
         trace_logging.info("%s"%self.request.headers["User-Agent"])  
         self.response.out.write("hello world")
         
-# TODO: clears the cache USE WITH FEAR
-class ClearHandler(webapp.RequestHandler):
-    def get(self):
-        self.response.out.write(memcache.flush_all())
-    
 class PurchaseHandler(webapp.RequestHandler):
     def post(self):
         trace_logging.info(self.request.get("receipt"))
@@ -1086,7 +1082,7 @@ def main():
                                           ('/m/open', AppOpenHandler),
                                           ('/m/track', AppOpenHandler),
                                           ('/m/test', TestHandler),
-                                          ('/m/clear', ClearHandler),
+                                          ('/m/clear', memcache_mangler.ClearHandler),
                                           ('/m/purchase', PurchaseHandler),
                                           ('/m/req',AdRequestHandler),], 
                                           debug=DEBUG)

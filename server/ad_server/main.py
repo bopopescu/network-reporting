@@ -440,6 +440,8 @@ class AdHandler(webapp.RequestHandler):
     }
     
     def get(self):
+
+        ufid = self.request.get('ufid', None)
         
         if self.request.get('jsonp', '0') == '1':
             jsonp = True
@@ -616,7 +618,7 @@ class AdHandler(webapp.RequestHandler):
                                                         ) 
                                       
         if jsonp:
-            self.response.out.write('%s(%s)' % (callback, dict(ad=str(rendered_creative or ''), click_url = str(ad_click_url))))
+            self.response.out.write('%s(%s)' % (callback, dict(ad=str(rendered_creative or ''), click_url = str(ad_click_url), ufid=str(ufid))))
         elif not (debug or admin_debug_mode):                                                    
             self.response.out.write(rendered_creative)
         else:
@@ -679,6 +681,13 @@ class AdHandler(webapp.RequestHandler):
                       </style>"
             params = kwargs
             params.update(c.__dict__.get("_entity"))
+            #Line1/2 None check biznass 
+            if params.has_key('line1'):
+                if params['line1'] is None:
+                    params['line1'] = ''
+            if params.has_key('line2'):
+                if params['line2'] is None:
+                    params['line2'] = ''
             #centering non-full ads in fullspace
             if network_center:
                 params.update({'network_style': style % tuple(a/2 for a in format)})
@@ -709,7 +718,6 @@ class AdHandler(webapp.RequestHandler):
                 params.update(trackingPixel='<span style="display:none;"><img src="%s"/></span>'%track_url)
             success += 'document.body.appendChild(hid_span);'
           
-          
             if c.ad_type == "adsense":
                 params.update({"title": ','.join(kwargs["q"]), "adsense_format": '300x250_as', "w": format[0], "h": format[1], "client": kwargs["site"].get_pub_id("adsense_pub_id")})
                 params.update(channel_id=kwargs["site"].adsense_channel_id or '')
@@ -724,7 +732,13 @@ class AdHandler(webapp.RequestHandler):
                 if c.image:
                   params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
                 if c.action_icon:
-                  params["action_icon_div"] = '<div style="padding-top:5px;position:absolute;top:0;right:0;"><a href="'+c.url+'" target="_top"><img src="/images/'+c.action_icon+'.png" width=40 height=40/></a></div>'
+                    #c.url can be undefined, don't want it to break
+                    icon_div = '<div style="padding-top:5px;position:absolute;top:0;right:0;"><a href="'+(c.url or '#')+'" target="_top">'
+                    if c.action_icon:
+                        icon_div += '<img src="http://' + self.request.host + '/images/'+c.action_icon+'.png" width=40 height=40/></a></div>'
+                    params["action_icon_div"] = icon_div 
+                else:
+                    params['action_icon_div'] = ''
                 # self.response.headers.add_header("X-Adtype", str('html'))
             elif c.ad_type == "greystripe":
                 params.update(html_data=c.html_data)

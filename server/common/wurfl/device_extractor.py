@@ -6,7 +6,43 @@ from wurfl import devices
 
 DEFAULT_VALUE = 'N/A'
 DEVICES_PICKLE_FILE = 'devices.pkl'
+
+# dict containing all device info from WURFL
+# k: devid
+# v: [brand_name, marketing_name, os, os_version]
 device_dict = {}
+
+
+# 10 dicts covering the mapping and reverse-mapping relationships among the properties
+# dict name convention: <key>_<list of values>_dict
+
+# uni-directional
+brand_marketing_dict = {}
+os_osversion_dict = {}
+
+# bi-directional
+brand_os_dict = {}
+os_brand_dict = {}
+
+# bi-directional
+marketing_osversion_dict = {}
+osversion_marketing_dict = {}
+
+# bi-directional
+brand_osversion_dict = {}
+osversion_brand_dict = {}
+
+# bi-directional
+marketing_os_dict = {}
+os_marketing_dict = {}
+
+# list of pairs mapping dict name to dict
+dict_list = [('brand_marketing_dict', brand_marketing_dict), ('os_osversion_dict', os_osversion_dict),
+               ('brand_os_dict', brand_os_dict), ('os_brand_dict', os_brand_dict),
+               ('marketing_osversion_dict', marketing_osversion_dict), ('osversion_marketing_dict', osversion_marketing_dict),
+               ('brand_osversion_dict', brand_osversion_dict), ('osversion_brand_dict', osversion_brand_dict),
+               ('marketing_os_dict', marketing_os_dict), ('os_marketing_dict', os_marketing_dict)]
+
 
 
 def main():
@@ -22,8 +58,48 @@ def main():
             print "%s\t%s" % (devid, info)
     print "%i devices extracted from WURFL file" % (len(device_dict))
     
-    with open(DEVICES_PICKLE_FILE, 'w') as pickle_file:
-        pickle.dump(device_dict, pickle_file)
+    create_mappings()
+    pickle_dicts()
+
+
+
+def pickle_dicts():
+    for (name, d) in dict_list:
+        print 'pickling %s ...' %(name)
+        with open(name+'.pkl', 'w') as pickle_file:
+            pickle.dump(d, pickle_file)
+
+
+def update(d, k, v):
+    if k in d:
+        d[k].add(v)
+    else:
+        d[k] = set([v])
+
+
+def create_mappings():
+    # populate mapping and reverse-mapping dicts from device_dict
+    for devid, [brand_name, marketing_name, os, os_version] in device_dict.iteritems():
+        update(brand_marketing_dict, brand_name, marketing_name)
+        update(os_osversion_dict, os, os_version)
+        
+        update(brand_os_dict, brand_name, os)
+        update(os_brand_dict, os, brand_name)
+        
+        update(marketing_osversion_dict, marketing_name, os_version)
+        update(osversion_marketing_dict, os_version, marketing_name)
+
+        update(brand_osversion_dict, brand_name, os_version)
+        update(osversion_brand_dict, os_version, brand_name)
+
+        update(marketing_os_dict, marketing_name, os)
+        update(os_marketing_dict, os, marketing_name)
+
+    # for each dict, convert the value from set to list
+    for (name, d) in dict_list:
+        print 'converting values from set to list in %s ...' %(name)
+        for k, v in d.iteritems():
+            d[k] = list(v)
 
 
 def get_device_info(devid):

@@ -26,7 +26,7 @@ python wurfl2python.py wurfl_no_locale.xml
 echo
 echo "extracting out device info..."
 echo "input:  wurfl.py"
-echo "output: devices.pkl"
+echo "output: 10 pickle files"
 python device_extractor.py
 
 

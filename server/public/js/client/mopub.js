@@ -56,7 +56,7 @@ function mp_cb(data) {
         mopub_site_url += ":"+mopub_url.port;
     // TODO: add version    
     var ufid = gen_key();
-    var mopub_ad_url = mopub_site_url + "/m/ad?id="+mopub_ad_unit + "&udid=M0B1LEWEBC00KIE:" + get_session() + '&ufid=' + ufid;
+    var mopub_ad_url = mopub_site_url + "/m/ad?id="+mopub_ad_unit + "&udid=MOBILEWEBCOOKIE:" + get_session() + '&ufid=' + ufid;
 
 
     if (window.mopub_keywords != null)

@@ -119,8 +119,20 @@ class GenReportHandler(RequestHandler):
         report.completed_at = datetime.datetime.now()
         man.put_report(report)
         return HttpResponse('Report Generation Successful')
-    def get(self):
-        pass
+
+    def get(self, report):
+        man = ReportQueryManager(self.account)
+        report = man.get_report_by_key(report)
+        report.status = 'pending'
+        man.put_report(report)
+        sched = report.schedule
+        sched.last_run = datetime.datetime.now()
+        man.put_report(sched)
+        report.data = report.gen_data()
+        report.status = 'done'
+        report.completed_at = datetime.datetime.now()
+        man.put_report(report)
+        return HttpResponse('Report Generation Successful')
 
 def gen_report(request, *args, **kwargs):
     return GenReportHandler()(request, *args, **kwargs)

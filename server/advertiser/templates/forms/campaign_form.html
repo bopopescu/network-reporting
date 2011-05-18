@@ -146,7 +146,7 @@
                           
                           <select name="bid_strategy" id="adgroupForm-bid_strategy-select-network">
                             <option value="cpc" {% ifequal form.bid_strategy.value "cpc"%}selected="selected"{% endifequal %}>CPC</option>
-                            <option value="cpm" {% ifequal form.bid_strategy.value "cpm"%}selected="selected"{% endifequal %}>CPM</option>
+                            <option value="cpm" {% ifequal form.bid_strategy.value "cpm"%}selected="selected"{% endifequal %}>eCPM</option>
                           </select>
                           @ 
                           <input type="text" class="input-text input-text-number {% if form.bid.errors %}form-error{% endif %}" name="bid" value="{{form.bid.value}}" id="bid-network"/> USD
@@ -163,7 +163,9 @@
                             <h4>Cost Per Click</h4>
                             <p>MoPub uses the CPC from the ad networks along with realtime CTR statistics from your app to calculate eCPM. Because ad network CTR is highly variable, this allows us to constantly display the most profitable ads. 
                             </p>
-                            <h4>Cost Per Mille</h4>  
+                            <p>You can find your CPC on the ad network's site.  
+                            </p>
+                            <h4>Estimated Cost Per Mille</h4>  
                                Using a static CPM disables automatic eCPM calculation. This is useful for users who have a preexisting contract with a specific ad network.  </p>
                           </div>
                         </dd> 

@@ -233,8 +233,6 @@ class StatsModel(db.Expando):
                 key_name_str += ':%s' % (device_os or '')
                 key_name_str += ':%s' % (device_os_version or '')
             
-            # figuring out the time portion of the key name string
-            # if date is passed in, its value is overloaded and actually depends on date_fmt
             if date:
                 if date_fmt == 'date':
                     date_str = date.strftime('%y%m%d')
@@ -242,7 +240,6 @@ class StatsModel(db.Expando):
                     date_str = date.strftime('%y%m%d%H')
                 elif date_fmt == 'month':
                     date_str = date.strftime('%y%m')
-            
             elif date_hour and not date_fmt == 'date_hour':
                 date_str = date_hour.strftime('%y%m%d%H')
 

@@ -58,7 +58,6 @@ function mp_cb(data) {
     var ufid = gen_key();
     var mopub_ad_url = mopub_site_url + "/m/ad?id="+mopub_ad_unit + "&udid=MOBILEWEBCOOKIE:" + get_session() + '&ufid=' + ufid;
 
-
     if (window.mopub_keywords != null)
         mopub_ad_url += "&q="+escape(window.mopub_keywords);
     mopub_ad_url += '&jsonp=1&callback=mp_cb';

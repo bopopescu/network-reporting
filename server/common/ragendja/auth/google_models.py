@@ -7,7 +7,14 @@ from common.ragendja.auth.models import EmailUserTraits
 class GoogleUserTraits(EmailUserTraits):
     @classmethod
     def get_djangouser_for_user(cls, user):
-        django_user = cls.all().filter('user =', user).get()
+        from account.query_managers import UserQueryManager
+
+        user_email = user.email()
+        if user_email:
+            django_user = UserQueryManager.get_by_email(user_email)
+        else:
+            django_user = None
+                
         if django_user:
             if getattr(settings, 'AUTH_ADMIN_USER_AS_SUPERUSER', True):
                 is_admin = users.is_current_user_admin()

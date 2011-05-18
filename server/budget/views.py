@@ -4,7 +4,6 @@ from django.utils import simplejson
 from common.ragendja.template import render_to_response, render_to_string, JSONResponse
 
 # from common.ragendja.auth.decorators import google_login_required as login_required
-from common.utils.decorators import whitelist_login_required
 from budget import budget_service
 
 from advertiser.models import ( Campaign,

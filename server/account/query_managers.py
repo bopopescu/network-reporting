@@ -8,7 +8,7 @@ from google.appengine.ext import db
 from google.appengine.api import memcache
 from google.appengine.api import users
 
-from account.models import Account
+from account.models import Account, User
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 
 MEMCACHE_KEY_FORMAT = "k:%(user_id)s"
@@ -17,25 +17,25 @@ class AccountQueryManager(CachedQueryManager):
     Model = Account
 
     @classmethod
-    def get_current_account(cls,user=None):
-        if not user:
-            user = users.get_current_user()
-        # try to fetch the account for this user from memcache      
-        account = memcache.get(str(cls._user_key(user)), namespace="account")    
+    def get_current_account(cls,request=None,user=None,cache=False,create=True):
+        user = user or request.user
+        # try to fetch the account for this user from memcache    
+        if cache:  
+            account = memcache.get(str(cls._user_key(user)), namespace="account")    
+        else:
+            account = None    
         
         # if not in memcache, run the query and put in memcache
         if not account:
-            logging.warning("account not in cache, user: %s" % cls._user_key(user))
             # GQL: get the first account where user in the all_users list
-            account = Account.all().filter('all_users =', cls._user_key(user)).get()
+            account = Account.all().filter('all_mpusers =', cls._user_key(user)).get()
             # if no account for this user exists then we need to 
             # create the user
-            if not account:
-                logging.warning("account needs to be created")
-                account = Account(user=user, all_users=[cls._user_key(user)], status="new")    
+            if not account and create:
+                account = Account(mpuser=user, all_mpusers=[cls._user_key(user)], status="new")    
                 account.put()
-            memcache.set(str(cls._user_key(user)), account, namespace="account")
-        logging.warning("account: %s"%account.key())    
+            if cache:    
+                memcache.set(str(cls._user_key(user)), account, namespace="account")
         return account
 
     @classmethod
@@ -56,14 +56,13 @@ class AccountQueryManager(CachedQueryManager):
             AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
             
             # Delete cached Accounts for users
-            for user_key in account.all_users:
+            for user_key in account.all_mpusers:
                 memcache.delete(str(user_key), namespace="account")
-
         return db.put(accounts)    
     
     @classmethod    
     def _user_key(cls,user):
-        return db.Key.from_path("User", user.user_id())     
+        return user.key()
 
 
     # only to be used for migrations that are manual    
@@ -107,5 +106,7 @@ class AccountQueryManager(CachedQueryManager):
         # delete old account as long as the accounts aren't the same
         # if not new_account.key() == old_account.key():
         #     old_account.delete()
-        
-
+class UserQueryManager(QueryManager):
+    @classmethod
+    def get_by_email(cls,email):
+        return User.get_by_email(email)       

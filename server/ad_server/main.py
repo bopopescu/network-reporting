@@ -735,8 +735,8 @@ class AdHandler(webapp.RequestHandler):
                     #c.url can be undefined, don't want it to break
                     icon_div = '<div style="padding-top:5px;position:absolute;top:0;right:0;"><a href="'+(c.url or '#')+'" target="_top">'
                     if c.action_icon:
-                        icon_div += '<img src="http://app.mopub.com/images/'+c.action_icon+'.png" width=40 height=40/></a></div>'
-                   params["action_icon_div"] = icon_div 
+                        icon_div += '<img src="http://' + self.request.host + '/images/'+c.action_icon+'.png" width=40 height=40/></a></div>'
+                    params["action_icon_div"] = icon_div 
                 # self.response.headers.add_header("X-Adtype", str('html'))
             elif c.ad_type == "greystripe":
                 params.update(html_data=c.html_data)

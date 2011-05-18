@@ -9,6 +9,17 @@ var mopub = mopub || {};
 	// dom ready
 	$(document).ready(function() {
 		
+		// Hack to add the correct class to input fields
+		$('input:text').addClass('input-text');
+	    $('input:password').addClass('input-text');
+	    
+
+		$(".button.continue")
+    		.button({ 
+    			icons: { secondary: "ui-icon-circle-triangle-e" } 
+    		})
+
+		
 		// Submit button
 		$('#accountForm-submit')
 			.button({ 
@@ -28,6 +39,14 @@ var mopub = mopub || {};
 			var infodialog = $('.accountInfoForm', details);
 			var appbutton = $('.adForm-fields-appButton', details);
 			var apps = $('.adForm-apps', details);
+			
+			data.togglebutton = button;
+			data.togglebutton.showText = 'Show details';
+			data.togglebutton.hideText = 'Hide details';
+			
+			apps.togglebutton = appbutton;
+			apps.togglebutton.showText = 'Show apps';
+			apps.togglebutton.hideText = 'Hide apps';
 			
 			data.togglebutton = button;
 			data.togglebutton.showText = 'Show details';

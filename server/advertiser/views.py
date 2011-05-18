@@ -17,7 +17,6 @@ from django.utils import simplejson
 from common.ragendja.template import render_to_response, render_to_string, JSONResponse
 
 # from common.ragendja.auth.decorators import google_login_required as login_required
-from common.utils.decorators import whitelist_login_required
 
 from advertiser.models import *
 from advertiser.forms import CampaignForm, AdGroupForm, \
@@ -130,7 +129,7 @@ class AdGroupIndexHandler(RequestHandler):
                                    'account': self.account,
                                    'helptext':help_text })
 
-@whitelist_login_required     
+@login_required
 def adgroups(request,*args,**kwargs):
     return AdGroupIndexHandler()(request,*args,**kwargs)
 
@@ -217,7 +216,6 @@ class CreateCampaignAJAXHander(RequestHandler):
 
         if campaign_form.is_valid():
             campaign = campaign_form.save(commit=False)
-            campaign.u = self.account.user
             campaign.account = self.account
 
             if adgroup_form.is_valid():
@@ -286,7 +284,7 @@ class CreateCampaignAJAXHander(RequestHandler):
         json_dict.update(success=False,html=new_html)
         return self.json_response(json_dict)    
 
-@whitelist_login_required     
+@login_required     
 def campaign_adgroup_create_ajax(request,*args,**kwargs):
     return CreateCampaignAJAXHander()(request,*args,**kwargs)      
 
@@ -305,7 +303,7 @@ class CreateCampaignHandler(RequestHandler):
             "adgroup":adgroup,
             "campaign_create_form_fragment": campaign_create_form_fragment})
 
-@whitelist_login_required         
+@login_required         
 def campaign_adgroup_create(request,*args,**kwargs):
     return CreateCampaignHandler()(request,*args,**kwargs)         
 
@@ -347,7 +345,6 @@ class CreateAdGroupHandler(RequestHandler):
 
         if campaign_form.is_valid():
             campaign = campaign_form.save(commit=False)
-            campaign.u = self.account.user
             campaign.account = self.account
 
             if adgroup_form.is_valid():
@@ -358,11 +355,11 @@ class CreateAdGroupHandler(RequestHandler):
                 AdGroupQueryManager.put(adgroup)
                 return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':str(adgroup.key())}))
 
-@whitelist_login_required         
+@login_required         
 def campaign_adgroup_new(request,*args,**kwargs):
     return CreateAdGroupHandler()(request,*args,**kwargs)            
 
-@whitelist_login_required
+@login_required
 def campaign_adgroup_edit(request,*args,**kwargs):
     kwargs.update(title="Edit Ad Group",edit=True)
     return CreateAdGroupHandler()(request,*args,**kwargs)    
@@ -375,7 +372,7 @@ class PauseHandler(RequestHandler):
             c = CampaignQueryManager.get(id_)
             updated_campaigns.append(c)
             update_objs = []
-            if c != None and c.u == self.account.user:
+            if c != None and c.account == self.account:
                 if action == "pause":
                     c.active = False
                     c.deleted = False
@@ -405,7 +402,7 @@ class PauseHandler(RequestHandler):
                 CachedQueryManager().put(adunits)
         return HttpResponseRedirect(reverse('advertiser_campaign',kwargs={}))
 
-@whitelist_login_required
+@login_required
 def campaign_pause(request,*args,**kwargs):
     return PauseHandler()(request,*args,**kwargs)
 
@@ -515,7 +512,7 @@ class ShowAdGroupHandler(RequestHandler):
                                     'creative_fragment':creative_fragment,
                                     'campaign_create_form_fragment':campaign_create_form_fragment})
     
-@whitelist_login_required   
+@login_required   
 def campaign_adgroup_show(request,*args,**kwargs):    
     return ShowAdGroupHandler()(request,*args,**kwargs)
 
@@ -528,7 +525,7 @@ class PauseAdGroupHandler(RequestHandler):
         for id_ in self.request.POST.getlist('id') or []:
             a = AdGroupQueryManager.get(id_)
             adgroups.append(a)
-            if a != None and a.campaign.u == self.account.user:
+            if a != None and a.campaign.account == self.account:
                 if action == "pause":
                     a.active = False
                     a.deleted = False
@@ -550,7 +547,7 @@ class PauseAdGroupHandler(RequestHandler):
 
         return HttpResponseRedirect(reverse('advertiser_campaign', kwargs={}))
 
-@whitelist_login_required
+@login_required
 def bid_pause(request,*args,**kwargs):
     return PauseAdGroupHandler()(request,*args,**kwargs)
 
@@ -663,7 +660,7 @@ class AddCreativeHandler(RequestHandler):
         return self.json_response(jsonDict)
 
 
-@whitelist_login_required
+@login_required
 def creative_create(request,*args,**kwargs):
     return AddCreativeHandler()(request,*args,**kwargs)    
 
@@ -703,7 +700,7 @@ class CreativeManagementHandler(RequestHandler):
         # TODO: bulk get before for loop
         for creative_key in keys:
             c = CreativeQueryManager.get(creative_key)
-            if c != None and c.ad_group.campaign.u == self.account.user: # TODO: clean up dereferences
+            if c != None and c.ad_group.campaign.account == self.account: # TODO: clean up dereferences
                 if action == "pause":
                     c.deleted = False
                     c.active = False
@@ -723,7 +720,7 @@ class CreativeManagementHandler(RequestHandler):
 
         return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':adgroup_key}))
 
-@whitelist_login_required    
+@login_required    
 def creative_manage(request,*args,**kwargs):
     return CreativeManagementHandler()(request,*args,**kwargs)
 
@@ -786,6 +783,6 @@ class AdServerTestHandler(RequestHandler):
                                    'device_to_user_agent': simplejson.dumps(device_to_user_agent),
                                    'country_to_locale_ip': simplejson.dumps(country_to_locale_ip)})
 
-@whitelist_login_required
+@login_required
 def adserver_test(request,*args,**kwargs):
     return AdServerTestHandler()(request,*args,**kwargs)

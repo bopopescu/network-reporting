@@ -254,16 +254,6 @@
                   </dl> 
                 </fieldset> 
                 
-                <h2>Basic account settings</h2>
-                <p>
-                  
-                </p>
-                <fieldset id="appForm-details" class="alt">
-                  <dl class="formFields">
-{{account_form.as_template }}
-                  </dl>
-                </fieldset>  
-
                 <div class="form-submit"> 
 {% ifequal account.status 'step3' %}
                   <a class="button" id="accountForm-skip" href="{% url account_index %}?skip=true">Skip this step</a>

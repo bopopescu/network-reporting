@@ -11,7 +11,6 @@ var mopub = mopub || {};
 (function($){
 	// dom ready
 	$(document).ready(function() {
-		
 		/*---------------------------------------/
 		/ UI Stuff
 		/---------------------------------------*/
@@ -311,5 +310,4 @@ var mopub = mopub || {};
   } else {
     log = function(){ return; }
   }
-
 })(this.jQuery);

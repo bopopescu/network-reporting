@@ -9,11 +9,19 @@ class AccountForm(mpforms.MPModelForm):
     countries = ISO_COUNTRIES
     states = US_STATES
     
-    phone = mpfields.MPTextField(label="Phone #", required=False)
-    
+    phone = mpfields.MPTextField(label="Phone #", required=False)    
     class Meta:
         model = Account
-        exclude = ('user', 'all_users', 'date_added', 'active', 'status')
+        fields = ("admob_pub_id",
+                  "adsense_pub_id",
+                  "adsense_company_name",
+                  "adsense_test_mode",
+                  "brightroll_pub_id",
+                  "greystripe_pub_id",
+                  "inmobi_pub_id",
+                  "jumptap_pub_id",
+                  "millenial_pub_id",
+                  "mobfox_pub_id",)        
         
 class NetworkConfigForm(mpforms.MPModelForm):
     

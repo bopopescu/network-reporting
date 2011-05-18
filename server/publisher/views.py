@@ -34,12 +34,11 @@ from django.utils import simplejson
 from common.ragendja.template import render_to_response, render_to_string, JSONResponse
 
 # from common.ragendja.auth.decorators import google_login_required as login_required
-from common.utils.decorators import whitelist_login_required
 
 ## Models
 from advertiser.models import Campaign, AdGroup, HtmlCreative
 from publisher.models import Site, Account, App
-from publisher.forms import SiteForm, AppForm, AdUnitForm
+from publisher.forms import AppForm, AdUnitForm
 from reporting.models import StatsModel, GEO_COUNTS
 
 ## Query Managers
@@ -122,7 +121,7 @@ class AppIndexHandler(RequestHandler):
        'totals': totals,
        'account': self.account})
 
-@whitelist_login_required     
+@login_required
 def index(request,*args,**kwargs):
   return AppIndexHandler()(request,*args,**kwargs)     
 
@@ -187,14 +186,19 @@ class AppIndexGeoHandler(RequestHandler):
        'date_range': self.date_range,
        'account': self.account})
 
-@whitelist_login_required     
+@login_required     
 def index_geo(request,*args,**kwargs):
   return AppIndexGeoHandler()(request,*args,**kwargs)     
 
 class AppCreateHandler(RequestHandler):
-  def get(self, app_form=None,adunit_form=None):
+  def get(self, app_form=None,adunit_form=None,reg_complete=None):
     app_form = app_form or AppForm()
     adunit_form = adunit_form or AdUnitForm(prefix="adunit")
+
+    # attach on registration related parameters to the account for template
+    if reg_complete:
+        self.account.reg_complete = 1
+
     return render_to_response(self.request,'publisher/new_app.html', {"app_form": app_form, 
                                                                       "adunit_form":adunit_form,  
                                                                       "account": self.account})
@@ -242,13 +246,13 @@ class AppCreateHandler(RequestHandler):
         return HttpResponseRedirect(reverse('publisher_generate',kwargs={'adunit_key':adunit.key()})+'?status='+status)
     return self.get(app_form,adunit_form)
 
-@whitelist_login_required  
+@login_required  
 def app_create(request,*args,**kwargs):
   return AppCreateHandler()(request,*args,**kwargs)
     
 class CreateAdUnitHandler(RequestHandler):
  def post(self):
-    f = SiteForm(data=self.request.POST)
+    f = AdUnitForm(data=self.request.POST)
     a = AppQueryManager.get(self.request.POST.get('id'))
     if f.is_valid():
       adunit = f.save(commit=False)
@@ -270,7 +274,7 @@ class CreateAdUnitHandler(RequestHandler):
     else:
       print f.errors
 
-@whitelist_login_required  
+@login_required  
 def adunit_create(request,*args,**kwargs):
   return CreateAdUnitHandler()(request,*args,**kwargs)   
 
@@ -396,7 +400,7 @@ class ShowAppHandler(RequestHandler):
          'backfill_promo': backfill_promo_campaigns})
          
 
-@whitelist_login_required
+@login_required
 def app_show(request,*args,**kwargs):
   return ShowAppHandler()(request,*args,**kwargs)   
 
@@ -489,7 +493,7 @@ class ExportFileHandler( RequestHandler ):
             return (stat_name, [manager.get_stat_rollup_for_days(publisher=a, days=days) for a in adunits])
 
 
-@whitelist_login_required
+@login_required
 def export_file( request, *args, **kwargs ):
     return ExportFileHandler()( request, *args, **kwargs )
 
@@ -566,7 +570,7 @@ class AdUnitShowHandler(RequestHandler):
          'network': network_campaigns,
          'backfill_promo': backfill_promo_campaigns})
   
-@whitelist_login_required
+@login_required
 def adunit_show(request,*args,**kwargs):
   return AdUnitShowHandler()(request,*args,**kwargs)   
 
@@ -607,7 +611,7 @@ class AppUpdateAJAXHandler(RequestHandler):
     json_dict.update(success=False,html=new_html)    
     return self.json_response(json_dict)  
 
-@whitelist_login_required
+@login_required
 def app_update_ajax(request,*args,**kwargs):
   return AppUpdateAJAXHandler()(request,*args,**kwargs)   
 
@@ -673,7 +677,7 @@ class RemoveAdUnitHandler(RequestHandler):
 
         return HttpResponseRedirect(reverse('publisher_app_show', kwargs={'app_key': a.app.key()}))
 
-@whitelist_login_required
+@login_required
 def publisher_adunit_delete(request,*args,**kwargs):
     return RemoveAdUnitHandler()(request,*args,**kwargs)
 
@@ -686,7 +690,7 @@ class RemoveAppHandler(RequestHandler):
     
         return HttpResponseRedirect(reverse('publisher_index'))
  
-@whitelist_login_required
+@login_required
 def app_delete(request,*args,**kwargs):
     return RemoveAppHandler()(request,*args,**kwargs)
 
@@ -696,6 +700,6 @@ class GenerateHandler(RequestHandler):
     status = self.params.get('status')
     return render_to_response(self.request,'publisher/code.html', {'site': adunit, 'status': status, 'account': self.account})
   
-@whitelist_login_required
+@login_required
 def generate(request,*args,**kwargs):
   return GenerateHandler()(request,*args,**kwargs) 

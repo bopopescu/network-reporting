@@ -1,6 +1,8 @@
 import os
 import sys
+
 sys.path.append(os.environ['PWD'])
+import common.utils.test.setup
 
 from advertiser.models import AdGroup
 from ad_server.filters.filters import kw_filter

@@ -1,3 +1,10 @@
+try:
+    from functools import update_wrapper, wraps
+except ImportError:
+    from django.utils.functional import update_wrapper, wraps  # Python 2.4 fallback.
+
+from django.utils.decorators import available_attrs
+from django.utils.http import urlquote
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.contrib.auth.decorators import user_passes_test
 from django.conf import settings
@@ -9,27 +16,46 @@ import inspect
 import logging
 
 #TODO: Rename this function since we no longer use a whitelist
-def whitelist_login_required(function=None):
-  """Implementation of Django's login_required decorator.
-
-  The login redirect URL is always set to request.path
-  """
-  def user_is_active(u):
-    from google.appengine.api import users
+def user_passes_test(test_func, login_url=None, redirect_field_name=REDIRECT_FIELD_NAME):
+    """
+    Decorator for views that checks that the user passes the given test,
+    redirecting to the log-in page if necessary. The test should be a callable
+    that takes the user object and returns True if the user passes.
+    """
     from account.query_managers import AccountQueryManager
-    return users.is_current_user_admin() or AccountQueryManager.get_current_account().active
-  
-  
-  def login_required_wrapper(request, *args, **kw):
-    if not request.user.is_authenticated():
-      return HttpResponseRedirect(users.create_login_url(request.path))
+    
+    if not login_url:
+        from django.conf import settings
+        login_url = settings.LOGIN_URL
 
-    if user_is_active(request.user):
-      return function(request, *args, **kw)
-    else:
-      return HttpResponseRedirect(reverse('account_new'))
+    def decorator(view_func):
+        def _wrapped_view(request, *args, **kwargs):
+            if test_func(request.user):
+                # check to see if an account has already been setup
+                account = AccountQueryManager.get_current_account(user=request.user,create=False)
+                if account:
+                    return view_func(request, *args, **kwargs)
+                else:
+                    return HttpResponseRedirect(reverse('registration_register_google'))    
+            path = urlquote(request.get_full_path())
+            tup = login_url, redirect_field_name, path
+            return HttpResponseRedirect('%s?%s=%s' % tup)
+        return wraps(view_func, assigned=available_attrs(view_func))(_wrapped_view)
+    return decorator
 
-  return login_required_wrapper
+
+def login_required(function=None, redirect_field_name=REDIRECT_FIELD_NAME):
+    """
+    Decorator for views that checks that the user is logged in, redirecting
+    to the log-in page if necessary.
+    """
+    actual_decorator = user_passes_test(
+        lambda u: u.is_authenticated(),
+        redirect_field_name=redirect_field_name
+    )
+    if function:
+        return actual_decorator(function)
+    return actual_decorator
 
 def webdec():
     #if we want to include stuff inside this webdec, have a field day

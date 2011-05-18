@@ -4,6 +4,7 @@ import os
 import datetime
 
 sys.path.append(os.environ['PWD'])
+import common.utils.test.setup
 
 from account.models import Account
 

@@ -13,7 +13,6 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 
 from common.ragendja.template import render_to_response, render_to_string, JSONResponse
 from common.utils.request_handler import RequestHandler
-from common.utils.decorators import whitelist_login_required
 from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
 from reports.forms import ReportForm
@@ -33,7 +32,7 @@ class ReportIndexHandler(RequestHandler):
                      report_fragment = form_frag,
                      ))
 
-@whitelist_login_required
+@login_required
 def report_index(request, *args, **kwargs):
     return ReportIndexHandler()(request, *args, **kwargs)
 
@@ -71,7 +70,7 @@ class AddReportHandler(RequestHandler):
                                 )
         return HttpResponseRedirect('/reports/view/'+str(report.key()))
 
-@whitelist_login_required
+@login_required
 def add_report(request, *args, **kwargs):
     return AddReportHandler()(request, *args, **kwargs)
 
@@ -85,8 +84,7 @@ class RequestReportHandler(RequestHandler):
         rep = manager.get_report(d1, d2, d3, start, end, view=True)
         #redirect to view handler
 
-
-@whitelist_login_required
+@login_required
 def request_report(request, *args, **kwargs):
     return RequestReportHandler()(request, *args, **kwargs)
 
@@ -101,7 +99,7 @@ class CheckReportHandler(RequestHandler):
         ret = dict(data = data)
         return HttpResponse(simplejson.dumps(ret), mimetype='application/json')
 
-@whitelist_login_required
+@login_required
 def check_report(request, *args, **kwargs):
     return CheckReportHandler()(request, *args, **kwargs)
 
@@ -139,7 +137,7 @@ class ViewReportHandler(RequestHandler):
     def post(self, report_key, save=False):
         return
 
-@whitelist_login_required
+@login_required
 def view_report(request, *args, **kwargs):
     return ViewReportHandler()(request, *args, **kwargs)
 
@@ -152,8 +150,7 @@ class SaveReportHandler(RequestHandler):
         man.put_report(report.schedule)
         return HttpResponse('K')
 
-
-@whitelist_login_required
+@login_required
 def save_report(request, *args, **kwargs):
     return SaveReportHandler()(request, *args, **kwargs)
 
@@ -165,7 +162,7 @@ class RunReportHandler(RequestHandler):
         report = man.new_report(report_key)
         return HttpResponseRedirect('/reports/view/'+str(report.schedule.key()))
 
-@whitelist_login_required
+@login_required
 def run_report(request, *args, **kwargs):
     return RunReportHandler()(request, *args, **kwargs)
 

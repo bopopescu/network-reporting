@@ -13,6 +13,8 @@ from google.appengine.api import users
 from account.models import Account
 from advertiser.query_managers import CampaignQueryManager, CreativeQueryManager
 from common.utils import date_magic
+#import lots of dicts and things
+from common.utils.wurfl import WurflQueryManager
 from common.properties.dict_property import DictProperty
 from publisher.query_managers import AppQueryManager, AdUnitQueryManager
 from reporting.models import StatsModel
@@ -28,8 +30,10 @@ WEEK = 'week'
 DAY = 'day'
 HOUR = 'hour'
 CO = 'country'
-DEV = 'device'
+MAR = 'marketing'
+BRND = 'brand'
 OS = 'os'
+OS_VER = 'os_ver'
 KEY = 'kw'
 TARG = 'targeting' # I don't know what this is
 C_TARG = 'custom targeting' # or this
@@ -153,12 +157,18 @@ class Report(db.Model):
                 if typ == 'co':
                     name = "<<COUNTRY NAME HERE>>"
                     country = val
-                elif typ == 'dev':
-                    name = '<<DEVICE NAME HERE>>'
-                    device = val
+                elif typ == 'mar':
+                    name = '' #get market name
+                    market = val
+                elif typ == 'brnd':
+                    name = '' #get brand name
+                    brand = val
                 elif typ == 'os':
-                    name = '<<OS NAME HERE>>'
-                    op_sys = val
+                    name = '' #get os name
+                    os = val
+                elif typ == 'os_ver':
+                    name = '' #get os_ver name
+                    os_ver = val
                 elif typ == 'days':
                     name = date_magic.date_name(val, dim)
                     days = val
@@ -252,14 +262,32 @@ class Report(db.Model):
             typ = 'co'
             vals = ALL_COUNTRY 
             #countries are indepent of publisher//advertiser
-        elif dim == DEV:
-            typ = 'dev'
-            vals = ALL_DEVICE
-            #devices are indepent of publisher//advertiser
+        elif dim == MAR:
+            man = WurflQueryManager
+            typ = 'mar'
+            vals = man.reports_get_marketing(os = os,
+                                             os_ver = os_ver,
+                                             brand = brand)
+        elif dim == BRND:
+            man = WurflQueryManager
+            typ = 'brnd'
+            vals = man.reports_get_brand(os = os,
+                                         os_ver = os_ver,
+                                         )
         elif dim == OS:
+            man = WurflQueryManager
             typ = 'os'
-            vals = ALL_OS
-            #OS's are indepent of publisher//advertiser
+            vals = man.reports_get_marketing(brand = brand,
+                                             market = market,
+                                             )
+        elif dim == OS_VER:
+            man = WurflQueryManager
+            typ = 'os_ver'
+            vals = man.reports_get_marketing(os = os,
+                                             brand = brand,
+                                             market = market,
+                                             )
+
         elif dim == TARG:
             return "Not implemented yet"
             typ = 'other'

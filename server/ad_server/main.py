@@ -103,7 +103,7 @@ DEBUG = not on_production_server
 CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gzip(gfe)"]
 MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7PnE6cH9_PX7OoeIIr5FjnTA'
 FREQ_ATTR = '%s_frequency_cap'
-NATIVE_REQUESTS = ['admob','adsense','iAd','custom']
+NATIVE_REQUESTS = ['admob','adsense','iAd','custom','admob_native','millennial_native']
 
 SERVER_SIDE_DICT = {"millennial":MillennialServerSide,
                     "appnexus":AppNexusServerSide,
@@ -810,6 +810,26 @@ class AdHandler(webapp.RequestHandler):
                 self.response.headers.add_header("X-Adtype", str(c.ad_type))
                 self.response.headers.add_header("X-Backfill", str(c.ad_type))        
                 self.response.headers.add_header("X-Failurl",self.request.url+'&exclude='+str(c.ad_type))
+
+            elif str(c.ad_type) == "admob_native":
+                if "full" in adunit.format:
+                    self.response.headers.add_header("X-Adtype", "interstitial")
+                    self.response.headers.add_header("X-Fulladtype", "admob_full")
+                else:
+                    self.response.headers.add_header("X-Adtype", str(c.ad_type))
+                    self.response.headers.add_header("X-Backfill", str(c.ad_type))
+                self.response.headers.add_header("X-Failurl", self.request.url+'&exclude='+str(c.ad_type))
+                self.response.headers.add_header("X-Nativeparams", '{"adUnitID":"'+adunit.get_pub_id("admob_pub_id")+'"}')
+
+            elif str(c.ad_type) == "millennial_native":
+                if "full" in adunit.format:
+                    self.response.headers.add_header("X-Adtype", "interstitial")
+                    self.response.headers.add_header("X-Fulladtype", "millennial_full")
+                else:
+                    self.response.headers.add_header("X-Adtype", str(c.ad_type))
+                    self.response.headers.add_header("X-Backfill", str(c.ad_type))
+                self.response.headers.add_header("X-Failurl", self.request.url+'&exclude='+str(c.ad_type))
+                self.response.headers.add_header("X-Nativeparams", '{"adUnitID":'+adunit.get_pub_id("millennial_pub_id")+'"}')
                 
             elif str(c.ad_type) == "adsense":
                 self.response.headers.add_header("X-Adtype", str(c.ad_type))

@@ -626,8 +626,7 @@ class AdHandler(webapp.RequestHandler):
         else:
             trace_logging.rendered_creative = rendered_creative
             trace_logging.render()
-        
-          
+
     def render_creative(self, c, 
                       site = None, 
                       keywords = None, 
@@ -721,9 +720,7 @@ class AdHandler(webapp.RequestHandler):
             # because we send the client the HTML, and THEN send requests to admob for content, just becaues our HTML 
             # (in this case the tracking pixel) works, DOESNT mean that admob has successfully returned a creative.
             # Because of the admob pixel has to be added AFTER the admob ad actually loads, this is done via javascript.
-            # It's hella generic and not all clean and jQuery'd because (in theory) this will work on all platforms 
-            # that support javascript (blackberry brower bs i'm looking at you)
-          
+
             success = hidden_span
             success += tracking_pix % dict(name = 'first', src = track_url)
             if c.tracking_url:

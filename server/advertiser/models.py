@@ -85,7 +85,7 @@ class AdGroup(db.Model):
 
     # the priority level at which this ad group should be auctioned
     priority_level = db.IntegerProperty(default=1)
-    network_type = db.StringProperty(choices=["adsense", "iAd", "admob","millennial","appnexus","inmobi","mobfox","jumptap","brightroll","greystripe", "custom"])
+    network_type = db.StringProperty(choices=["adsense", "iAd", "admob","millennial","appnexus","inmobi","mobfox","jumptap","brightroll","greystripe", "custom", "admob_native", "millennial_native"])
 
     # Note that bid has different meaning depending on the bidding strategy.
     # if CPM: bid = cost per 1000 impressions
@@ -201,7 +201,8 @@ class AdGroup(db.Model):
         elif self.network_type == 'appnexus': c = AppNexusCreative(name="appnexus dummy",ad_type="html",format="320x50",format_predicates=["format=300x250"])
         elif self.network_type == 'mobfox' : c = MobFoxCreative(name="mobfox dummy",ad_type="html",format="320x50",format_predicates=["format=320x50"])
         elif self.network_type == 'custom': c = CustomCreative(name='custom', ad_type='html', format='', format_predicates=['format=*'], html_data=custom_html) 
-        
+        elif self.network_type == 'admob_native': c = AdMobNativeCreative(name="admob native dummy",ad_type="admob_native",format="320x50",format_predicates=["format=320x50"])
+        elif self.network_type == 'millennial_native': c = MillennialNativeCreative(name="millennial native dummy",ad_type="millennial_native",format="320x50",format_predicates=["format=320x50"])
         if c: c.ad_group = self
         return c
     
@@ -250,7 +251,7 @@ class Creative(polymodel.PolyModel):
     deleted = db.BooleanProperty(default=False)
 
     # the creative type helps the ad server render the right thing if the creative wins the auction
-    ad_type = db.StringProperty(choices=["text", "text_icon", "image", "iAd", "adsense", "admob", "greystripe", "html", "html_full", "clear"], default="image")
+    ad_type = db.StringProperty(choices=["text", "text_icon", "image", "iAd", "adsense", "admob", "greystripe", "html", "html_full", "clear", "admob_native", "millennial_native"], default="image")
 
     # tracking pixel
     tracking_url = db.StringProperty()
@@ -406,12 +407,18 @@ class AdSenseCreative(Creative):
 class AdMobCreative(Creative):
     pass
 
+class AdMobNativeCreative(AdMobCreative):
+    pass
+
 class MillennialCreative(Creative):
     
     @property
     def multi_format(self):
         return ('728x90', '320x50', '300x250',)
-   
+
+class MillennialNativeCreative(MillennialCreative):
+    pass
+
 class InMobiCreative(Creative):
    
     @property

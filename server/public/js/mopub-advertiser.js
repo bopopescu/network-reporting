@@ -139,6 +139,7 @@ var mopub = mopub || {};
     data: { ajax: true },
     dataType: 'json',
     success: function(jsonData, statusText, xhr, $form) {
+	console.log(jsonData);
       $('#campaignAdgroupForm-loading').hide();
       if (jsonData.success){
         $('#campaignAdgroupForm-success').show(); // show message

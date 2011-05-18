@@ -5,10 +5,11 @@ import sys
 import traceback
 
 
-# for EMR so log_parser and deref_cache.pkl can be found within each task
+# for EMR so imported modules can be found within each task
 sys.path.append('.')
 
-from log_parser import parse_logline, AD, IMP, CLK, OPEN, REQ
+import utils
+from parse_utils import parse_logline
 
 
 # DEREF_CACHE description:
@@ -33,7 +34,7 @@ except:
 
 def deref_models(handler, param_dict): 
     # params: 'udid', 'id', 'cid'    # id = adunit, cid = creative  TODO: udid currently not passed in to logs     
-    if handler == REQ:
+    if handler == utils.REQ:
         adunit_str = param_dict.get('id', None)
         creative_str = param_dict.get('cid', None)
 
@@ -49,7 +50,7 @@ def deref_models(handler, param_dict):
                                                                  'account', account_str)
     
     # params: 'udid', 'id'  # id = adunit
-    elif handler == AD:
+    elif handler == utils.AD:
         adunit_str = param_dict.get('id', None)
         if adunit_str:
             pub_models = DEREF_CACHE.get(adunit_str, None)
@@ -58,7 +59,7 @@ def deref_models(handler, param_dict):
                 return "%s=%s,%s=%s,%s=%s" % ('adunit', adunit_str, 'app', app_str, 'account', account_str)
     
     # params: 'udid', 'id', 'cid'   # id = adunit, cid = creative
-    elif handler == IMP:
+    elif handler == utils.IMP:
         adunit_str = param_dict.get('id', None)
         creative_str = param_dict.get('cid', None)
 
@@ -74,7 +75,7 @@ def deref_models(handler, param_dict):
                                                                  'account', account_str)
     
     # params: 'udid', 'appid', 'id', 'cid'  # appid = destination app, id = adunit, cid = creative
-    elif handler == CLK:
+    elif handler == utils.CLK:
         dest_app_str = param_dict.get('appid', None)
         adunit_str = param_dict.get('id', None)
         creative_str = param_dict.get('cid', None)
@@ -92,7 +93,7 @@ def deref_models(handler, param_dict):
                                                                        'account', account_str)
         
     # params: 'udid', 'id'   # id = mobile_appid
-    elif handler == OPEN:
+    elif handler == utils.OPEN:
         dest_app_str = param_dict.get('id', None)
         if dest_app_str:
             return "%s=%s" % ('dest_app', dest_app_str)
@@ -101,7 +102,7 @@ def deref_models(handler, param_dict):
 
     
 def preprocess_logline(logline):
-    logline_dict = parse_logline(logline)
+    logline_dict = parse_logline(logline, parse_ua=False)
     if logline_dict:
         handler = logline_dict.get('path', None)
         param_dict = logline_dict.get('params', None)

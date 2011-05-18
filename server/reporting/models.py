@@ -71,40 +71,55 @@ class StatsModel(db.Expando):
 
     # offline
     offline = db.BooleanProperty(default=False)
+    
+    # mobile device and os info
+    brand_name = db.StringProperty()
+    marketing_name = db.StringProperty() # if marketing_name field is blank from WURFL search, the model_name field is used instead
+    device_os = db.StringProperty()
+    device_os_version = db.StringProperty()
+    
             
     def __init__(self, parent=None, key_name=None, **kwargs):
-        if not key_name and not kwargs.get('key',None):
+        if not key_name and not kwargs.get('key', None):
             
             # rewrite the publisher, advertiser in case they are strings or unicode to db.Key()
-            publisher = kwargs.get('publisher',None)
-            advertiser = kwargs.get('advertiser',None)            
+            publisher = kwargs.get('publisher', None)
+            advertiser = kwargs.get('advertiser', None)            
             publisher = self._force_key(publisher)
             advertiser = self._force_key(advertiser)
-            account = kwargs.get('account',None)
+            account = kwargs.get('account', None)
             account = self._force_key(account)
-            offline = kwargs.get('offline',False)
-            country = kwargs.get('country',None)
+            offline = kwargs.get('offline', False)
+            country = kwargs.get('country', None)
             if country:
                 country = country.upper()
+                        
             kwargs.update(publisher=publisher,advertiser=advertiser,account=account,country=country)
 
+            brand_name = kwargs.get('brand_name', None)
+            marketing_name = kwargs.get('marketing_name', None)
+            device_os = kwargs.get('device_os', None)
+            device_os_version = kwargs.get('device_os_version', None)
             
-            # grab the date and make key name
             date = kwargs.get('date',None)
             date_hour = kwargs.get('date_hour',None)
             month = kwargs.get('month',None)
             
-
             key_name = self.get_key_name(publisher=publisher,
                                          advertiser=advertiser,
+                                         account=account,
                                          date=date,
                                          date_hour=date_hour,
                                          month=month,
                                          country=country,
-                                         account=account,
+                                         brand_name=brand_name,
+                                         marketing_name=marketing_name,
+                                         device_os=device_os,
+                                         device_os_version=device_os_version,
                                          offline=offline)
-
+        
         return super(StatsModel,self).__init__(parent=parent,key_name=key_name,**kwargs)
+        
         
 
     def update_geo(self,country,geo_type,value):
@@ -140,6 +155,10 @@ class StatsModel(db.Expando):
                           date_hour=self.date_hour or s.date_hour,
                           month=self.month or s.month,
                           country=self.country or s.country,
+                          brand_name=self.brand_name or s.brand_name,
+                          marketing_name=self.marketing_name or s.marketing_name,
+                          device_os=self.device_os or s.device_os,
+                          device_os_version=self.device_os_version or s.device_os_version,
                           request_count=self.request_count + s.request_count,
                           impression_count=self.impression_count + s.impression_count,
                           click_count=self.click_count + s.click_count,
@@ -173,29 +192,49 @@ class StatsModel(db.Expando):
         return self.__str__()
                     
     def __str__(self):
-        return  "StatsModel(date=%s, date_hour=%s, pub=%s, adv=%s, account=%s, country=%s, offline=%s, %s,%s,%s,%s)"%(
-                                                          self.date,
-                                                          self.date_hour,
-                                                          StatsModel.publisher.get_value_for_datastore(self),
-                                                          StatsModel.advertiser.get_value_for_datastore(self),    
-                                                          StatsModel.account.get_value_for_datastore(self),
-                                                          self.country,
-                                                          self.offline,
-                                                          self.request_count,
-                                                          self.impression_count,
-                                                          self.click_count,
-                                                          self.conversion_count,
-                                                          )
+        return  "StatsModel(date=%s, pub=%s, adv=%s, account=%s, \
+                 country=%s, brand_name=%s, marketing_name=%s, device_os=%s, device_os_version=%s, \
+                 offline=%s, %s,%s,%s,%s)" % (self.date,
+                                              StatsModel.publisher.get_value_for_datastore(self),
+                                              StatsModel.advertiser.get_value_for_datastore(self),    
+                                              StatsModel.account.get_value_for_datastore(self),
+                                              self.country,
+                                              self.brand_name,
+                                              self.marketing_name,
+                                              self.device_os,
+                                              self.device_os_version,
+                                              self.offline,
+                                              self.request_count,
+                                              self.impression_count,
+                                              self.click_count,
+                                              self.conversion_count,
+                                              )
 
     
     @classmethod
-    def get_key_name(cls,publisher=None,advertiser=None,date=None,date_hour=None,account=None,offline=False,country=None, device=None, op_sys=None,month=None, date_fmt='date'):
-        if publisher or advertiser or date_hour or date or month or country:
-            if isinstance(publisher,db.Model):
-                publisher = publisher.key()
-            if isinstance(advertiser,db.Model):
-                advertiser = advertiser.key()    
+    def get_key_name(cls, publisher=None, advertiser=None, account=None,
+                     date_hour=None, date=None, month=None,
+                     country=None, brand_name=None, marketing_name=None, device_os=None, device_os_version=None,
+                     offline=False, date_fmt='date'):
+        if publisher or advertiser or date_hour or date or month:
+            key_name_str = ''
             
+            if isinstance(publisher, db.Model):
+                publisher = publisher.key()
+            if isinstance(advertiser, db.Model):
+                advertiser = advertiser.key()                
+            key_name_str += 'k:%s:%s' % (publisher or '', advertiser or '')
+
+            # these parameters must all be appended if any of them has a value (neither None nor empty-string)
+            if country or brand_name or marketing_name or device_os or device_os_version:
+                key_name_str += ':%s' % ((country or '').upper())
+                key_name_str += ':%s' % (brand_name or '')
+                key_name_str += ':%s' % (marketing_name or '')
+                key_name_str += ':%s' % (device_os or '')
+                key_name_str += ':%s' % (device_os_version or '')
+            
+            # figuring out the time portion of the key name string
+            # if date is passed in, its value is overloaded and actually depends on date_fmt
             if date:
                 if date_fmt == 'date':
                     date_str = date.strftime('%y%m%d')
@@ -203,22 +242,16 @@ class StatsModel(db.Expando):
                     date_str = date.strftime('%y%m%d%H')
                 elif date_fmt == 'month':
                     date_str = date.strftime('%y%m')
-        
+            
             elif date_hour and not date_fmt == 'date_hour':
                 date_str = date_hour.strftime('%y%m%d%H')
 
             elif month and not date_fmt == 'month':
                 date_str = month.strftime('%y%m')
-            if not country:    
-                return 'k:%(publisher)s:%(advertiser)s:%(date)s'%dict(date=date_str,
-                                                                      publisher=publisher or '',
-                                                                      advertiser=advertiser or '')
-            else:
-                country = country.upper()
-                return 'k:%(publisher)s:%(advertiser)s:%(country)s:%(date)s'%dict(date=date_str,
-                                                                      publisher=publisher or '',
-                                                                      advertiser=advertiser or '',
-                                                                      country=country)                                                           
+            
+            key_name_str += ':%s' % (date_str)            
+            return key_name_str            
+
         else:
             if offline:
                 return 'k:%s_offline'%account    
@@ -227,8 +260,17 @@ class StatsModel(db.Expando):
             
             
     @classmethod
-    def get_key(cls, publisher,advertiser,date=None,date_hour=None,account=None,offline=False,country=None,month=None):
-        return db.Key.from_path(cls.kind(),cls.get_key_name(publisher,advertiser,date,date_hour,account,offline,country,month))
+    def get_key(cls, publisher, advertiser, account=None, 
+                date_hour=None, date=None, month=None,
+                country=None, brand_name=None, marketing_name=None, device_os=None, device_os_version=None,
+                offline=False):
+        return db.Key.from_path(cls.kind(), 
+                                cls.get_key_name(publisher=publisher, advertiser=advertiser, account=account,
+                                                 date_hour=date_hour, date=date, month=month, 
+                                                 country=country, 
+                                                 brand_name=brand_name, marketing_name=marketing_name, 
+                                                 device_os=device_os, device_os_version=device_os_version,
+                                                 offline=offline))
             
     def _force_key(self,prop):
         if prop:

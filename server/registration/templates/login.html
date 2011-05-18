@@ -19,7 +19,7 @@
             <dt>Email: </dt>
             <dd>
                 <input type="text" name="username" class="{% if form.username.errors %}error{% endif %}" value="{{form.data.username}}"/>
-                <!-- {{form.username}} --><span class={% if form.username.errors %}"error"{% else %}"muted"{% endif %}>(Required)</span>
+                <span class={% if form.username.errors %}"error"{% else %}"muted"{% endif %}>(Required)</span>
             </dd>
             <dt>Password: </dt>
             <dd><input type="password" name="password" class="{% if form.password.errors %}error{% endif %}" value="{{form.data.password}}"/> <span class={% if form.password.errors %}"error"{% else %}"muted"{% endif %}>(Required)</span></dd>

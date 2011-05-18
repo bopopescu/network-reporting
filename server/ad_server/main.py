@@ -1,12 +1,16 @@
 # !/usr/bin/env python
-from appengine_django import LoadDjango
-LoadDjango()
-import os
-from django.conf import settings
-
-os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
-# Force Django to reload its settings.
-settings._target = None
+from appengine_django import InstallAppengineHelperForDjango
+InstallAppengineHelperForDjango()
+# 
+# 
+# from appengine_django import LoadDjango
+# LoadDjango()
+# import os
+# from django.conf import settings
+# 
+# os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+# # Force Django to reload its settings.
+# settings._target = None
 
 import wsgiref.handlers
 import cgi
@@ -830,7 +834,7 @@ class AdHandler(webapp.RequestHandler):
                     self.response.headers.add_header("X-Adtype", str(c.ad_type))
                     self.response.headers.add_header("X-Backfill", str(c.ad_type))
                 self.response.headers.add_header("X-Failurl", self.request.url+'&exclude='+str(c.ad_type))
-                self.response.headers.add_header("X-Nativeparams", '{"adUnitID":'+adunit.get_pub_id("millennial_pub_id")+'"}')
+                self.response.headers.add_header("X-Nativeparams", '{"adUnitID":"'+adunit.get_pub_id("millennial_pub_id")+'"}')
                 
             elif str(c.ad_type) == "adsense":
                 self.response.headers.add_header("X-Adtype", str(c.ad_type))

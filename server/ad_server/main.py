@@ -681,7 +681,7 @@ class AdHandler(webapp.RequestHandler):
                       </style>"
             params = kwargs
             params.update(c.__dict__.get("_entity"))
-            #None check shit
+            #Line1/2 None check biznass 
             if params.has_key('line1'):
                 if params['line1'] is None:
                     params['line1'] = ''
@@ -737,6 +737,8 @@ class AdHandler(webapp.RequestHandler):
                     if c.action_icon:
                         icon_div += '<img src="http://' + self.request.host + '/images/'+c.action_icon+'.png" width=40 height=40/></a></div>'
                     params["action_icon_div"] = icon_div 
+                else:
+                    params['action_icon_div'] = ''
                 # self.response.headers.add_header("X-Adtype", str('html'))
             elif c.ad_type == "greystripe":
                 params.update(html_data=c.html_data)

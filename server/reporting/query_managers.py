@@ -124,9 +124,22 @@ class StatsModelQueryManager(CachedQueryManager):
         return reduce(lambda x,y: x+y, stats, StatsModel())
 
 
-    def get_rollup_for_days(self, publisher=None, publishers=None, advertiser=None, advertisers=None, days=None, num_days=None, account=None,
-                            country=None, brand_name=None, marketing_name=None, device_os=None, device_os_version=None,
-                            offline=False, date_fmt='date'):
+    def get_rollup_for_days(self, 
+                            publisher=None, 
+                            publishers=None, 
+                            advertiser=None, 
+                            advertisers=None, 
+                            days=None, 
+                            num_days=None, 
+                            account=None,
+                            country=None, 
+                            brand_name=None, 
+                            marketing_name=None, 
+                            device_os=None, 
+                            device_os_version=None,
+                            offline=False, 
+                            date_fmt='date'):
+
         if publisher and publishers:
             logging.error("cannot pass both a single publisher and multiple publishers")
         if publisher and not publishers:

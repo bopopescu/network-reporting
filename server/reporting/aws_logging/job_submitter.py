@@ -20,10 +20,10 @@ UNIQ_USER_MAPPER = S3_CODE_DIR + '/uniq_user_mapper.py'
 
 
 NUM_INSTANCES = 1
-# MASTER_INSTANCE_TYPE = 'm1.large'
-# SLAVE_INSTANCE_TYPE = 'm1.large'
-MASTER_INSTANCE_TYPE = 'm1.small'
-SLAVE_INSTANCE_TYPE = 'm1.small'
+MASTER_INSTANCE_TYPE = 'm1.large'
+SLAVE_INSTANCE_TYPE = 'm1.large'
+# MASTER_INSTANCE_TYPE = 'm1.small'
+# SLAVE_INSTANCE_TYPE = 'm1.small'
 KEEP_ALIVE = False
     
 
@@ -88,9 +88,8 @@ def main():
         output=options.input_dir+'.pp.out',
     )
     
-    #try to find an existing jobflow in waiting mode
+    # try to find an existing jobflow in waiting mode
     jobid = get_waiting_jobflow(conn)
-    jobid = None
     
     if jobid:
         conn.add_jobflow_steps(jobid, [dedup_step, preprocess_step, count_step, uniq_user_count_step])

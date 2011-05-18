@@ -3,6 +3,7 @@
 echo $1
 if [ -z "$1" ] # if $1 does not exist
 then
+    nosetests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --where='./ad_server/tests' --without-sandbox
     nosetests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --where='./userstore/tests' #--with-coverage
     nosetests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --where='./reporting/tests' --without-sandbox # --with-coverage 
     nosetests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --where='./ad_server/filters/tests' --without-sandbox # --with-coverage  

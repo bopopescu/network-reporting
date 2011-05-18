@@ -84,7 +84,6 @@ class RequestReportHandler(RequestHandler):
         rep = manager.get_report(d1, d2, d3, start, end, view=True)
         #redirect to view handler
 
-
 @login_required
 def request_report(request, *args, **kwargs):
     return RequestReportHandler()(request, *args, **kwargs)
@@ -150,7 +149,6 @@ class SaveReportHandler(RequestHandler):
         report.schedule.saved = True
         man.put_report(report.schedule)
         return HttpResponse('K')
-
 
 @login_required
 def save_report(request, *args, **kwargs):

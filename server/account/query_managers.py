@@ -109,4 +109,4 @@ class AccountQueryManager(CachedQueryManager):
 class UserQueryManager(QueryManager):
     @classmethod
     def get_by_email(cls,email):
-        return User.get_by_email(email)       
+        return User.get_by_email(email)

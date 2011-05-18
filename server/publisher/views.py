@@ -38,7 +38,7 @@ from common.ragendja.template import render_to_response, render_to_string, JSONR
 ## Models
 from advertiser.models import Campaign, AdGroup, HtmlCreative
 from publisher.models import Site, Account, App
-from publisher.forms import SiteForm, AppForm, AdUnitForm
+from publisher.forms import AppForm, AdUnitForm
 from reporting.models import StatsModel, GEO_COUNTS
 
 ## Query Managers
@@ -252,7 +252,7 @@ def app_create(request,*args,**kwargs):
     
 class CreateAdUnitHandler(RequestHandler):
  def post(self):
-    f = SiteForm(data=self.request.POST)
+    f = AdUnitForm(data=self.request.POST)
     a = AppQueryManager.get(self.request.POST.get('id'))
     if f.is_valid():
       adunit = f.save(commit=False)

@@ -15,8 +15,6 @@ class User(hybrid_models.User):
     state = db.StringProperty()
     city = db.StringProperty()
 
-    mailing_list = db.BooleanProperty(default=False)
-
     def __init__(self, parent=None, key_name=None, **kwargs):
         if not key_name and not kwargs.get('key',None):
             email = kwargs.get('email',None)
@@ -55,7 +53,6 @@ class User(hybrid_models.User):
 #
 # The main account
 #
-
 class NetworkConfig(db.Model):
     """ The set of ids for all the different networks """
     admob_pub_id = db.StringProperty()

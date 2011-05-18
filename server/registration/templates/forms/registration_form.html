@@ -9,13 +9,13 @@
         {{form.email|raw_required}}
     </dd>    
     <dt>
-        {{form.password1.label}}:
+        Password:
     </dt>    
     <dd>
         {{form.password1|raw_required}}
     </dd>    
     <dt>
-        {{form.password2.label}}:
+        Password (again):
     </dt>    
     <dd>
         {{form.password2|raw_required}}
@@ -23,13 +23,18 @@
         <div class="form-error-text">{{error}}</div>
         {% endfor %}
     </dd>    
+    <dt>
+    </dt>
+    <dd>
+    </dd>        
     {% endif %}
     <dt>
         Name:
     </dt>    
     <dd>
-        {{form.first_name|attrs:'{"class":"input-text-half-width","placeholder":"First"}'|raw}}
-        {{form.last_name|attrs:'{"class":"input-text-half-width","placeholder":"Last"}'|raw_required}}
+        {{form.first_name|attrs:'{"class":"input-text-half-width","placeholder":"First"}'|widget_only}}
+        {{form.last_name|attrs:'{"class":"input-text-half-width","placeholder":"Last"}'|widget_only}}
+        <span class={% if form.first_name.errors or form.last_name.errors %}"error"{% else %}"muted"{% endif %}>(Required)</span>
     </dd>    
     <dt>
         Company:
@@ -38,7 +43,7 @@
         {{form.company|attrs:'{"placeholder":"Acme Software"}'|raw_required}}
     </dd>    
     <dt>
-        Title
+        Title:
     </dt>    
     <dd>
         {{form.title|attrs:'{"placeholder":"Developer"}'|raw}}

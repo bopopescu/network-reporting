@@ -10,29 +10,30 @@
       <fieldset id="appForm-details"> 
         <legend>Welcome Back!</legend> 
         <p>
-          Please enter your email and password to log back in to MoPub
+          Enter your email and password to log back in to MoPub
         </p>
         <dl class="formFields"> 
-            <div>Forgot your password? <a href="{% url auth_password_reset %}">Reset your password here</a>.</div>
             {% for error in form.non_field_errors %}
-            <span class="error">{{ error }}</span>
+            <span class="error">{{ error }}</span> 
             {% endfor %}
             <dt>Email: </dt>
             <dd>
-                {{form.username}}
+                <input type="text" name="username" class="{% if form.username.errors %}error{% endif %}" value="{{form.data.username}}"/>
+                <!-- {{form.username}} --><span class={% if form.username.errors %}"error"{% else %}"muted"{% endif %}>(Required)</span>
             </dd>
             <dt>Password: </dt>
-            <dd>{{form.password}}</dd>
+            <dd><input type="password" name="password" class="{% if form.password.errors %}error{% endif %}" value="{{form.data.password}}"/> <span class={% if form.password.errors %}"error"{% else %}"muted"{% endif %}>(Required)</span></dd>
             <dt></dt>
             <dd>
-                Don't have an account yet? <a href="{% url registration_register %}">Register here</a> for a mopub account.
+                <div>Forgot your password? <a href="{% url auth_password_reset %}">Reset your password here</a>.</div>
+                <div>Don't have an account yet? <a href="{% url registration_register %}">Register here</a> for a MoPub account.</div>
             </dd>    
         </dl>                      
       </fieldset>
       <div class="clear"></div>
       <div class="form-submit">
-        <span class="buttonWrap"><a href="#" class="button" id="accountForm-submit">Continue</a></span>
-        <span> &nbsp;or <a href="{% google_login_url %}">Login with your Google Account</a></span>  
+        <span class="buttonWrap"><a href="#" class="button" id="accountForm-submit">Login</a></span>
+        <span> &nbsp;or <a href="{% google_login_url %}">Log In with your Google Account</a></span>  
       </div>
     </form>
 </div>

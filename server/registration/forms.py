@@ -41,7 +41,7 @@ class BaseRegistrationForm(mpforms.MPForm):
                                      widget=mpwidgets.MPSelectWidget,
                                      coerce=float)
     
-    mailing_list = forms.BooleanField(label=_(u'I would like to receive occasion product update emails from MoPub'),
+    mailing_list = forms.BooleanField(label=_(u'I would like to receive occasional product update emails from MoPub'),
                                       initial=True,
                                       required=False)
     tos = forms.BooleanField(widget=forms.CheckboxInput(attrs=attrs_dict),
@@ -136,13 +136,9 @@ class MPUserAccountForm(BaseRegistrationForm):
 class MPRegistrationForm(BaseRegistrationForm):
     
     
-    email = forms.EmailField(widget=forms.TextInput(attrs=dict(attrs_dict,
-                                                               maxlength=75)),
-                             label=_(u'email address'))
-    password1 = forms.CharField(widget=forms.PasswordInput(attrs=attrs_dict, render_value=False),
-                                label=_(u'password'))
-    password2 = forms.CharField(widget=forms.PasswordInput(attrs=attrs_dict, render_value=False),
-                                label=_(u'password (again)'))
+    email = forms.EmailField(widget=mpwidgets.MPTextInput)
+    password1 = forms.CharField(widget=mpwidgets.MPPasswordInput,)
+    password2 = forms.CharField(widget=mpwidgets.MPPasswordInput,)
     
     def save(self, domain_override=""):
         """

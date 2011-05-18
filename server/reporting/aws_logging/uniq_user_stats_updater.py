@@ -1,14 +1,3 @@
-# !/usr/bin/env python
-from appengine_django import LoadDjango
-LoadDjango()
-import os
-from django.conf import settings
-
-os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
-# Force Django to reload its settings.
-settings._target = None
-
-
 import os
 import sys
 import time
@@ -17,6 +6,12 @@ import traceback
 from datetime import datetime
 from optparse import OptionParser
 
+
+# add mopub root to path
+sys.path.append(os.getcwd()+'/../../')
+
+
+# for ubuntu EC2
 sys.path.append("/home/ubuntu/mopub/server")
 sys.path.append("/home/ubuntu/mopub/server/reporting")
 sys.path.append("/home/ubuntu/google_appengine")
@@ -25,11 +20,19 @@ sys.path.append("/home/ubuntu/google_appengine/lib/webob")
 sys.path.append("/home/ubuntu/google_appengine/lib/yaml/lib")
 sys.path.append("/home/ubuntu/google_appengine/lib/fancy_urllib")
 
+
+# appengine_django is located in /home/ubuntu/mopub/server
+from appengine_django import LoadDjango
+LoadDjango()
+from django.conf import settings
+
+os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+# Force Django to reload its settings.
+settings._target = None
+
+
 from google.appengine.ext import db
 from google.appengine.ext.remote_api import remote_api_stub
-
-# for run_jobflow.sh
-sys.path.append(os.getcwd()+'/../../')
 
 import utils
 from publisher.models import Site

@@ -4,6 +4,7 @@ import logging
 from datetime import datetime, timedelta
 
 #appengine imports
+from django.template import loader
 from django.utils import simplejson
 from google.appengine.ext import db
 from google.appengine.api import users
@@ -122,11 +123,14 @@ class Report(db.Model):
         pub = None
         adv = None
         country = None
-        device = None
-        op_sys = None
+        brand = None
+        market = None
+        os = None
+        os_ver = None
+
         date_fmt = None
         days = date_magic.gen_days(self.start,self.end) 
-        def gen_helper(pub, adv, days, country, device, op_sys, date_fmt, level):
+        def gen_helper(pub, adv, days, country, brand, market, os, os_ver, date_fmt, level):
             last_dim = False
             if level == 0:
                 if self.d2 is None:
@@ -144,7 +148,7 @@ class Report(db.Model):
                 logging.error("impossible")
             ret = {}
             manager = StatsModelQueryManager(self.account, offline=False)#True) #offline=self.offline)
-            vals, typ, date_fmt = self.get_vals(pub, adv, days, country, device, op_sys, dim, date_fmt)
+            vals, typ, date_fmt = self.get_vals(pub, adv, days, country, brand, market, os, os_ver, dim, date_fmt)
             if vals is None:
                 return ret
             for idx, val in enumerate(vals):
@@ -177,27 +181,30 @@ class Report(db.Model):
                 stats = manager.get_rollup_for_days(publisher = pub,
                                                     advertiser = adv,
                                                     country = country,
-                                                    device = device,
-                                                    op_sys = op_sys,
+                                                    brand_name = brand,
+                                                    marketing_name = market, 
+                                                    device_os = os,
+                                                    device_os_version = os_ver,
                                                     days = days,
                                                     date_fmt = date_fmt
                                                     )
                 if last_dim: 
                     ret[key] = dict(stats = stats, name = name)
                 else:
-                    ret[key] = dict(stats=stats, name = name, sub_stats = gen_helper(pub,adv,days, country, device, op_sys,date_fmt, level+1))
+                    ret[key] = dict(stats=stats, name = name, sub_stats = gen_helper(pub,adv,days, country, brand, market, os, os_ver, date_fmt, level+1))
             return ret
-        return gen_helper(pub, adv, days, country, device, op_sys, date_fmt, 0)
+        return gen_helper(pub, adv, days, country, brand, market, os, os_ver, date_fmt, 0)
 
-    def get_vals(self, pub, adv, days, country, device, op_sys, dim, date_fmt=None):
+    def get_vals(self, pub, adv, days, country, brand, market, os, os_ver, dim, date_fmt=None):
         #This gets the list of values to iterate over for this level of the breakdown.  Country, device, OS, and keywords are irrelevant because they are independent of everythign else
+        typ = None
         if date_fmt is None:
             #use preset format if it exists, otherwise use 'date'
             date_fmt = 'date'
         if dim in (MO, WEEK, HOUR, DAY):
             #assume it's not hour right away, if it is 'date_hour' it'll fix itself
             date_fmt = 'date'
-            type = 'days'
+            typ = 'days'
             if dim == MO:
                 vals = date_magic.get_months(days)
             elif dim == WEEK:
@@ -210,64 +217,64 @@ class Report(db.Model):
         elif dim == APP:
             #basic stuff
             man = AppQueryManager
-            type = 'pub'
+            typ = 'pub'
             vals = man.reports_get_apps(account = self.account,
                                         publisher = pub,
                                         advertiser = adv,
                                         )
         elif dim == AU:
             man = AdUnitQueryManager
-            type = 'pub'
+            typ = 'pub'
             vals = man.reports_get_adunits(account = self.account,
                                            publisher = pub,
                                            advertiser = adv,
                                            )
         elif dim == CAMP:
             man = CampaignQueryManager
-            type = 'adv'
+            typ = 'adv'
             vals = man.reports_get_campaigns(account = self.account,
                                              publisher = pub,
                                              advertiser = adv,
                                              )
         elif dim == CRTV:
             man = CreativeQueryManager
-            type = 'adv'
+            typ = 'adv'
             vals = man.reports_get_creatives(account = self.account,
                                              publisher = pub,
                                              advertiser = adv,
                                              )
         elif dim == P:
             man = CampaignQueryManager
-            type = 'adv'
+            typ = 'adv'
             vals = man.reports_get_campaigns(account = self.account,
                                              publisher = pub,
                                              advertiser = adv,
                                              by_priority = True,
                                              )
         elif dim == CO:
-            type = 'co'
+            typ = 'co'
             vals = ALL_COUNTRY 
             #countries are indepent of publisher//advertiser
         elif dim == DEV:
-            type = 'dev'
+            typ = 'dev'
             vals = ALL_DEVICE
             #devices are indepent of publisher//advertiser
         elif dim == OS:
-            type = 'os'
+            typ = 'os'
             vals = ALL_OS
             #OS's are indepent of publisher//advertiser
         elif dim == TARG:
             return "Not implemented yet"
-            type = 'other'
+            typ = 'other'
             #do 'targeting' stuff
         elif dim == C_TARG:
             return "Not implemented yet"
-            type = 'other'
+            typ = 'other'
             #do 'custom targeting' stuff
         else:
             logging.error("cry me a river ohh ohhhhh")
             return None, None
-        return vals, type, date_fmt
+        return vals, typ, date_fmt
 
     @property
     def html_data(self):

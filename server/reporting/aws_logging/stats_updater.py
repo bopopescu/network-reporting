@@ -26,6 +26,7 @@ from reporting.models import StatsModel, Pacific_tzinfo
 from reporting.query_managers import StatsModelQueryManager
 
 
+
 account_cache = {}
 stats_qm_cache = {}
 
@@ -44,7 +45,9 @@ def put_models():
     clear_cache()
            
            
-def update_model(adunit_key, creative_key=None, counts=None, date=None, date_hour=None):    
+def update_model(adunit_key=None, creative_key=None, 
+                 country_code=None, brand_name=None, marketing_name=None, device_os=None, device_os_version=None, 
+                 counts=None, date_hour=None, date=None):    
     global stats_qm_cache
     global account_cache
             
@@ -56,7 +59,8 @@ def update_model(adunit_key, creative_key=None, counts=None, date=None, date_hou
                 creative_key = db.Key(creative_key)
             else:
                 creative_key = None
-    
+            
+            # get or insert account from account_cache
             if adunit_key in account_cache:
                 account = account_cache[adunit_key]
             else:
@@ -66,15 +70,25 @@ def update_model(adunit_key, creative_key=None, counts=None, date=None, date_hou
                     print 'adunit %s has no account' % (adunit_key)
                     return False
                 account_cache[adunit_key] = account 
-                
+            
+            # get or insert stats_qm from stats_qm_cache
             if str(account.key()) in stats_qm_cache:
                 stats_qm = stats_qm_cache[str(account.key())]
             else:
                 stats_qm = StatsModelQueryManager(account)
                 stats_qm_cache[str(account.key())] = stats_qm
-                    
-    
-            stats = StatsModel(publisher=adunit_key, advertiser=creative_key, date=date, date_hour=date_hour, offline=True)
+                
+            stats = StatsModel(publisher=adunit_key, 
+                               advertiser=creative_key, 
+                               country=country_code,
+                               brand_name=brand_name,
+                               marketing_name=marketing_name,
+                               device_os=device_os,
+                               device_os_version=device_os_version,
+                               date=date, 
+                               date_hour=date_hour, 
+                               offline=True)
+
             stats.request_count = counts[0]
             stats.impression_count = counts[1]
             stats.click_count = counts[2]
@@ -86,34 +100,58 @@ def update_model(adunit_key, creative_key=None, counts=None, date=None, date_hou
             print 'adunit_key and counts should not be None'
             return False
     except Exception, e:
-        #traceback.print_exc()
-        print 'EXCEPTION on adunit key %s: %s' %(adunit_key, e)
+        # traceback.print_exc()
+        print 'EXCEPTION on adunit key %s -> %s' %(adunit_key, e)
         return False
              
     
 def parse_and_update_models(input_file):
     with open(input_file, 'r') as f:
         for line in f:
-            if '\\' in line:
-                line = line.replace(r'\'', '')
-            key_name, counts = line.split('\t', 1)
-            counts = eval(counts)
-            parts = key_name.split(':')
-            if len(parts) != 4: continue # only interested in [k:pub_id:adv_id:date_hour]
-            adunit_key = parts[1]
-            creative_key = parts[2]
-            time_str = parts[3]
-            year = int('20'+time_str[:2])
-            month = int(time_str[2:4])
-            day = int(time_str[4:6])
+            try:
+                # handles un-escaping by mrjob local testing
+                if '\\' in line:
+                    line = line.replace(r'\'', '')
+                
+                # k = k:adunit_id:creative_id:country_code:brand_name:marketing_name:device_os:device_os_version:time
+                # v = [req_count, imp_count, clk_count, conv_count, user_count]
+                key_name, counts = line.split('\t', 1)
 
-            if len(time_str) == 8:  # resolution to hour
-                hour = int(time_str[6:8])
-                date_hour = datetime(year, month, day, hour, tzinfo=Pacific_tzinfo())
-                update_model(adunit_key, creative_key, counts, date_hour=date_hour)
-            else:   # resolution to day
-                date = datetime(year, month, day)
-                update_model(adunit_key, creative_key, counts, date=date)
+                # parse out key_name
+                parts = key_name.split(':')
+                if len(parts) != 9: continue 
+                adunit_key = parts[1]
+                creative_key = parts[2]
+
+                country_code = parts[3]            
+                brand_name = parts[4] 
+                marketing_name = parts[5]            
+                device_os = parts[6]
+                device_os_version = parts[7]
+
+                time_str = parts[8]
+                year = int('20'+time_str[:2])
+                month = int(time_str[2:4])
+                day = int(time_str[4:6])
+            
+                # eval counts as list of ints
+                counts = eval(counts)
+
+                if len(time_str) == 8:  # resolution to hour
+                    hour = int(time_str[6:8])
+                    date_hour = datetime(year, month, day, hour, tzinfo=Pacific_tzinfo())
+                    update_model(adunit_key=adunit_key, creative_key=creative_key, 
+                                 country_code=country_code, brand_name=brand_name, marketing_name=marketing_name, device_os=device_os, device_os_version=device_os_version,
+                                 counts=counts, date_hour=date_hour)
+                else:   # resolution to day
+                    date = datetime(year, month, day)
+                    update_model(adunit_key=adunit_key, creative_key=creative_key, 
+                                 country_code=country_code, brand_name=brand_name, marketing_name=marketing_name, device_os=device_os, device_os_version=device_os_version, 
+                                 counts=counts, date=date)
+            except Exception, e:
+                # traceback.print_exc()
+                print 'EXCEPTION on line %s -> %s' %(line, e)
+                continue
         
 
 def main():

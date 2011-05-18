@@ -1,0 +1,18 @@
+{% extends "registration/base.html" %}
+
+{% block pageTitle %}<h1>Account - Logged out</h1>{% endblock %}
+
+{% block content %}
+<div class="content-main">
+    <fieldset id="appForm-details"> 
+        <legend>You have been successfully logged out.</legend> 
+        <p>
+            You can log back in at any time.
+        </p>
+    </fieldset>    
+    <div class="form-submit">
+        <span class="buttonWrap"><a href="{% url django.contrib.auth.views.login %}" class="button continue">Log Back In</a></span>
+    </div>
+    </form>
+</div>
+{% endblock content %}

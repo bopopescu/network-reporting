@@ -13,3 +13,5 @@ server/test_data/basic_test.datastore
 server/.coverage
 server/nosetests.xml
 counts.csv
+
+server/common/wurfl/*.xml

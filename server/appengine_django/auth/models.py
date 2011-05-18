@@ -16,6 +16,7 @@
 App Engine compatible models for the Django authentication framework.
 """
 
+from django.conf import settings
 from django.core import mail
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
@@ -29,7 +30,6 @@ from google.appengine.ext import db
 from common.utils import djangoforms
 
 from appengine_django.models import BaseModel
-
 
 class User(BaseModel):
   """A model with the same attributes and methods as a Django user model.
@@ -160,7 +160,7 @@ class User(BaseModel):
     return self._profile_cache
 
   def is_admin(self):
-    return users.is_current_user_admin()
+    return users.is_current_user_admin()    
 
 class Group(BaseModel):
   """Group model not fully implemented yet."""

@@ -218,7 +218,8 @@ class ReportQueryManager(CachedQueryManager):
                       queue_name=REP_Q_NAME % q_num,
                       params={"report": report.key(),
                               "account": str(self.account),
-                              })
+                              },
+                      )
         return sched 
 
     def put_report(self, report):

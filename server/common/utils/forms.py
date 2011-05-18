@@ -25,7 +25,8 @@ class MPBoundField(BoundField):
 
         context_dict = dict(widget = rendered_widget,
                            errors = self.errors,
-                           label = self.label)
+                           label = self.label,
+                           field = self.field)
         c = Context(context_dict)
         t = loader.get_template(self.TEMPLATE)
         return t.render(c)
@@ -68,6 +69,80 @@ class MPBoundField(BoundField):
            else:
                value = self.data
         return value if value != None else ''
+        
+    def as_widget(self, widget=None, attrs=None, only_initial=False):
+        """
+        Renders the field by rendering the passed widget, adding any HTML
+        attributes passed as attrs.  If no widget is specified, then the
+        field's default widget will be used.
+        """
+        if not widget:
+            widget = self.field.widget
+
+        attrs = attrs or {}
+        auto_id = self.auto_id
+        if auto_id and 'id' not in attrs and 'id' not in widget.attrs:
+            if not only_initial:
+                attrs['id'] = auto_id
+            else:
+                attrs['id'] = self.html_initial_id
+
+        if not self.form.is_bound:
+            data = self.form.initial.get(self.name, self.field.initial)
+            if callable(data):
+                data = data()
+        else:
+            if isinstance(self.field, FileField) and self.data is None:
+                data = self.form.initial.get(self.name, self.field.initial)
+            else:
+                data = self.data
+        data = self.field.prepare_value(data)
+
+        if not only_initial:
+            name = self.html_name
+        else:
+            name = self.html_initial_name
+        # pass error to mpforms but not to normal django forms    
+        try:
+            return widget.render(name, data, attrs=attrs, errors=self.errors)    
+        except Exception, e:
+            return widget.render(name, data, attrs=attrs)
+        return widget.render(name, data, attrs=attrs, errors=bool(self.errors))
+        
+
+class MPForm(forms.Form):
+    TEMPLATE = ''
+
+    def __iter__(self):
+        for name, field in self.fields.items():
+            yield MPBoundField(self, field, name)
+
+    def __getitem__(self, name):
+        "Returns a BoundField with the given name."
+        try:
+            field = self.fields[name]
+        except KeyError:
+            raise KeyError('Key %r not found in Form' % name)
+        return MPBoundField(self, field, name)    
+    
+    def add_context(self,context):
+      if not hasattr(self,'_extra_context'):
+        self._extra_context = {}
+      self._extra_context.update(context)  
+        
+    def as_template(self):
+      "Helper function for producing fields data from form."
+      bound_fields = [MPBoundField(self, field, name) for name, field in self.fields.items()]
+      context_dict = dict(form = self, bound_fields = bound_fields)
+      if hasattr(self,'_extra_context'):
+        context_dict.update(self._extra_context)
+      c = Context(context_dict)
+      # TODO: check for template ... if template does not exist
+      # we could just get_template_from_string to some default
+      # or we could pass in the template name ... whatever we want
+      # import pdb; pdb.set_trace()
+      t = loader.get_template(self.TEMPLATE)
+      return t.render(c)
 
 class MPModelForm(forms.ModelForm):
     TEMPLATE = 'advertiser/forms/form.html'

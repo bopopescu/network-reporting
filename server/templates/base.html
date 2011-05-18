@@ -46,7 +46,7 @@
   
   <!-- MoPub -->
   <script src="/js/mopub.js?v=15"></script>
-  {% block extraScripts %}<script src="/js/mopub-dashboard.js?v=15"></script>{% endblock extraScripts %}
+  {% block extraScripts %}<script src="/js/mopub-dashboard.js?v=16"></script>{% endblock extraScripts %}
   
   <!--[if lt IE 7 ]>
     <script src="/js/mylibs/dd_belatedpng.js"></script>
@@ -93,7 +93,9 @@
           <ul>
             <li><a href="{% url account_index %}">Your account</a></li>
             <li><a href="http://www.mopub.com/resources/" target="_blank">Help</a></li>
-            <li><a href="{% google_logout_url %}">Log out</a></li>
+            <li><a href="{% url django.contrib.auth.views.logout %}">Log out</a></li>
+            <!-- <li><a href="{% google_login_url %}">Google Log In</a></li>
+            <li><a href="{% url django.contrib.auth.views.login %}">Hybrid Log In</a></li> -->
           </ul>
         </nav>
       </div>
@@ -204,7 +206,9 @@
             </ul>         
           </div>
           <div id="footer-account">
-            Logged in as <a href="{% url account_index %}">{{google_user}}</a>
+            {% if user.is_authenticated %}  
+            Logged in as <a href="{% url account_index %}">{{user.email}}</a>
+            {% endif %}
 {% block adminSelect %}
 {% if user.is_admin %}
                   <div style="float:right;padding-left:10px">
@@ -237,8 +241,10 @@
                   </script>
 {% endif %}
 {% endblock adminSelect %}
+            {% if user.is_authenticated %}  
             <span class="sep">&middot;</span>
-            <a href="{% google_logout_url %}">Log out</a>
+            <a href="{% url django.contrib.auth.views.logout %}">Log out</a>
+            {% endif %}
           </div>
         </div>
       </div>

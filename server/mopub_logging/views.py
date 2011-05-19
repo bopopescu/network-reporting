@@ -3,8 +3,11 @@ import datetime
 import traceback
 import sys
 
-from appengine_django import LoadDjango
-LoadDjango()
+from appengine_django import InstallAppengineHelperForDjango
+InstallAppengineHelperForDjango()
+
+# from appengine_django import LoadDjango
+# LoadDjango()
 
 from google.appengine.ext import db
 from google.appengine.ext import webapp

@@ -13,8 +13,8 @@
           {% block helper_text %}
           <legend>Get started with MoPub</legend> 
           <p>
-            Help us serve you better by filling out the following information, or <span> <a href="{% google_login_url '/account/register/google/' %}">Register with your Google Account</a></span>  
-            
+            <div>Help us serve you better by filling out the following information, or <span> <a href="{% google_login_url '/account/register/google/' %}">register with your Google Account</a></span>.</div>
+            <div>Already have an account? <a href="{% url django.contrib.auth.views.login %}">Log in here.</a></div>
           </p>
           {% endblock helper_text %}
           {{ form.as_template }}

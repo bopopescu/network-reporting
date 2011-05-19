@@ -34,6 +34,16 @@ def raw_required(bound_field):
     """
     bound_field.TEMPLATE = 'raw_bound_field_required.html'
     return bound_field
+    
+@register.filter
+def raw_required_with_errors(bound_field):
+    bound_field.TEMPLATE = 'raw_bound_field_required_with_errors.html'
+    return bound_field
+
+@register.filter
+def widget_only(bound_field):
+    bound_field.TEMPLATE = 'widget_only.html'
+    return bound_field
 
     
 @register.filter

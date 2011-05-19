@@ -19,13 +19,14 @@ from google.appengine.ext.webapp import ( Request,
                                           Response,
                                           )
                                           
-from server.ad_server.main import  ( AdHandler,
-                                     AdAuction,
-                                     AdClickHandler,
+from server.ad_server.main import  ( AdClickHandler,
                                      AppOpenHandler,
                                      TestHandler,
                                      )
-                                     
+
+from server.ad_server.handlers.adhandler import AdHandler                                     
+from server.ad_server.ad_auction import AdAuction
+
 ############# Integration Tests #############
 import unittest
 from nose.tools import eq_
@@ -375,7 +376,7 @@ class TestBudgetEndToEnd(unittest.TestCase):
 
 
     def mptest_native_network_failure_cascade(self):
-        """ Native adnetwork failures should properly cascade"""
+        """ Native adnetwork failures should properly cascade """
         
         # first_creative = run_auction(self.adunit.key())
         # rendered_creative = AdHandler().render_creative(first_creative)

@@ -23,13 +23,14 @@ from google.appengine.ext.webapp import (Request,
                                          Response,
                                          )
                                          
-from server.ad_server.main import  (AdHandler,
-                                     AdImpressionHandler,
-                                     AdClickHandler,
-                                     AdAuction,
+from server.ad_server.main import  (AdImpressionHandler,
                                      AdClickHandler,
                                      AppOpenHandler,
                                     )
+                                    
+from server.ad_server.handlers.adhandler import AdHandler     
+from server.ad_server.ad_auction import AdAuction
+
 from time import mktime
 import logging
 from google.appengine.ext.db import Key

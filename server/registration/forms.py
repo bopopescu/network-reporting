@@ -66,7 +66,7 @@ class BaseRegistrationForm(mpforms.MPForm):
         model = User
         user = UserQueryManager.get_by_email(self.cleaned_data['email'].lower())
         if user:
-            raise forms.ValidationError(_(u'This email already has been registered. Enter a new email or <a href="%s">Log in</a>.'%reverse('django.contrib.auth.views.login')))
+            raise forms.ValidationError(_(u'This email has already registered for a MoPub account. Enter a new email or <a href="%s">Log in</a>.'%reverse('django.contrib.auth.views.login')))
         return self.cleaned_data['email']
         
 

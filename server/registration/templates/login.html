@@ -5,6 +5,8 @@
 
 {% block content %}
 <div class="content-main">
+  
+  <div id="login-left">
     <form action="" method="POST" accept-charset="utf-8" id="accountForm">
       {% csrf_token %}
       <fieldset id="appForm-details"> 
@@ -13,28 +15,36 @@
           Enter your email and password to log back in to MoPub
         </p>
         <dl class="formFields"> 
-            {% for error in form.non_field_errors %}
-            <span class="error">{{ error }}</span> 
-            {% endfor %}
             <dt>Email: </dt>
             <dd>
                 <input type="text" name="username" class="{% if form.username.errors %}error{% endif %}" value="{{form.data.username}}"/>
                 <span class={% if form.username.errors %}"error"{% else %}"muted"{% endif %}>(Required)</span>
             </dd>
             <dt>Password: </dt>
-            <dd><input type="password" name="password" class="{% if form.password.errors %}error{% endif %}" value="{{form.data.password}}"/> <span class={% if form.password.errors %}"error"{% else %}"muted"{% endif %}>(Required)</span></dd>
-            <dt></dt>
-            <dd>
-                <div>Forgot your password? <a href="{% url auth_password_reset %}">Reset your password here</a>.</div>
-                <div>Don't have an account yet? <a href="{% url registration_register %}">Register here</a> for a MoPub account.</div>
-            </dd>    
+            <dd><input type="password" name="password" class="{% if form.password.errors %}error{% endif %}" value="{{form.data.password}}"/> <span class={% if form.password.errors %}"error"{% else %}"muted"{% endif %}>(Required)</span></dd> 
         </dl>                      
       </fieldset>
+      {% for error in form.non_field_errors %}
+      <span class="error">{{ error }}</span> 
+      {% endfor %}
       <div class="clear"></div>
       <div class="form-submit">
-        <span class="buttonWrap"><a href="#" class="button" id="accountForm-submit">Login</a></span>
-        <span> &nbsp;or <a href="{% google_login_url %}">Log In with your Google Account</a></span>  
+        <span class="buttonWrap"><a href="#" class="button" id="accountForm-submit">Login</a></span> 
       </div>
+
     </form>
+  </div>
+  <div id="google-login-divider">
+  </div>
+  
+  <a id="google-login" class="button" href="{% google_login_url %}">
+    Log in with your Google Account
+  </a>
+  
+  <div id="login-bottom">
+     <div>Forgot your password? <a href="{% url auth_password_reset %}">Reset your password here</a>.</div>
+      <div>Don't have an account yet? <a href="{% url registration_register %}">Register here</a> for a MoPub account.</div>
+  </div>
+    
 </div>
 {% endblock content %}

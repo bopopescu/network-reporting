@@ -12,14 +12,16 @@ sys.path.append(os.getcwd()+'/../../')
 
 
 # for ubuntu EC2
-sys.path.append("/home/ubuntu/mopub/server")
-sys.path.append("/home/ubuntu/mopub/server/reporting")
-sys.path.append("/home/ubuntu/google_appengine")
-sys.path.append("/home/ubuntu/google_appengine/lib/antlr3")
-sys.path.append("/home/ubuntu/google_appengine/lib/django_1_2")
-sys.path.append("/home/ubuntu/google_appengine/lib/webob")
-sys.path.append("/home/ubuntu/google_appengine/lib/yaml/lib")
-sys.path.append("/home/ubuntu/google_appengine/lib/fancy_urllib")
+sys.path.append('/home/ubuntu/mopub/server')
+sys.path.append('/home/ubuntu/mopub/server/reporting')
+sys.path.append('/home/ubuntu/google_appengine')
+sys.path.append('/home/ubuntu/google_appengine/lib/antlr3')
+sys.path.append('/home/ubuntu/google_appengine/lib/django_1_2')
+sys.path.append('/home/ubuntu/google_appengine/lib/fancy_urllib')
+sys.path.append('/home/ubuntu/google_appengine/lib/ipaddr')
+sys.path.append('/home/ubuntu/google_appengine/lib/webob')
+sys.path.append('/home/ubuntu/google_appengine/lib/yaml/lib')
+
 
 
 from appengine_django import InstallAppengineHelperForDjango
@@ -49,7 +51,7 @@ def clear_cache():
 
 def put_models():
     for qm in stats_qm_cache.values():
-        print "putting models for account", qm.account.name()
+        print 'putting models for account', qm.account.name()
         qm.put_stats(offline=True)
     clear_cache()
            
@@ -174,12 +176,12 @@ def main():
     host = '38-aws.latest.mopub-inc.appspot.com'
     remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', utils.auth_func, host)
     
-    print "processing %s for GAE datastore..." %options.input_file
+    print 'processing %s for GAE datastore...' %options.input_file
     parse_and_update_models(options.input_file)
     put_models()
    
     elapsed = time.time() - start
-    print "updating GAE datastore took %i minutes and %i seconds" % (elapsed/60, elapsed%60)
+    print 'updating GAE datastore took %i minutes and %i seconds' % (elapsed/60, elapsed%60)
     
 
 if __name__ == '__main__':

@@ -12,14 +12,15 @@ sys.path.append(os.getcwd()+'/../../')
 
 
 # for ubuntu EC2
-sys.path.append("/home/ubuntu/mopub/server")
-sys.path.append("/home/ubuntu/mopub/server/reporting")
-sys.path.append("/home/ubuntu/google_appengine")
-sys.path.append("/home/ubuntu/google_appengine/lib/antlr3")
-sys.path.append("/home/ubuntu/google_appengine/lib/django_1_2")
-sys.path.append("/home/ubuntu/google_appengine/lib/webob")
-sys.path.append("/home/ubuntu/google_appengine/lib/yaml/lib")
-sys.path.append("/home/ubuntu/google_appengine/lib/fancy_urllib")
+sys.path.append('/home/ubuntu/mopub/server')
+sys.path.append('/home/ubuntu/mopub/server/reporting')
+sys.path.append('/home/ubuntu/google_appengine')
+sys.path.append('/home/ubuntu/google_appengine/lib/antlr3')
+sys.path.append('/home/ubuntu/google_appengine/lib/django_1_2')
+sys.path.append('/home/ubuntu/google_appengine/lib/fancy_urllib')
+sys.path.append('/home/ubuntu/google_appengine/lib/ipaddr')
+sys.path.append('/home/ubuntu/google_appengine/lib/webob')
+sys.path.append('/home/ubuntu/google_appengine/lib/yaml/lib')
 
 
 from appengine_django import InstallAppengineHelperForDjango
@@ -58,16 +59,16 @@ def update_models():
             else:
                 print 'stats_model should not be None: %s'%stats_key_name
         
-        print "uniq user: putting %i models..." % (len(put_list))
+        print 'uniq user: putting %i models...' % (len(put_list))
         put_keys = db.put(put_list)
         fail_count = len(put_list) - len(put_keys)
         if fail_count > 0:
-            print "uniq user: %i models failed on batch put" %fail_count
+            print 'uniq user: %i models failed on batch put' %fail_count
     
     
     for account_stats, stats_key_names in stats_model_cache.iteritems():   
         stats_key_names = list(stats_key_names)
-        print "uniq user: putting models for account", account_stats.account.key().name() 
+        print 'uniq user: putting models for account', account_stats.account.key().name() 
         while stats_key_names:
             db.run_in_transaction(txn, account_stats, stats_key_names[:LIMIT])
             stats_key_names = stats_key_names[LIMIT:]
@@ -168,12 +169,12 @@ def main():
     host = '38-aws.latest.mopub-inc.appspot.com'
     remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', utils.auth_func, host)
     
-    print "uniq user: processing %s for GAE datastore..." %options.input_file
+    print 'uniq user: processing %s for GAE datastore...' %options.input_file
     parse_file(options.input_file)
     update_models()
    
     elapsed = time.time() - start
-    print "uniq user: updating GAE datastore took %i minutes and %i seconds" % (elapsed/60, elapsed%60)
+    print 'uniq user: updating GAE datastore took %i minutes and %i seconds' % (elapsed/60, elapsed%60)
     
 
 if __name__ == '__main__':

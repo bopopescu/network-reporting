@@ -24,14 +24,8 @@ sys.path.append("/home/ubuntu/google_appengine/lib/yaml/lib")
 sys.path.append("/home/ubuntu/google_appengine/lib/fancy_urllib")
 
 
-# appengine_django is located in /home/ubuntu/mopub/server
-from appengine_django import LoadDjango
-LoadDjango()
-from django.conf import settings
-
-os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
-# Force Django to reload its settings.
-settings._target = None
+from appengine_django import InstallAppengineHelperForDjango
+InstallAppengineHelperForDjango()
 
 
 from google.appengine.ext import db

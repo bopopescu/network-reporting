@@ -1,20 +1,7 @@
-
 # !/usr/bin/env python
-import wsgiref.handlers
-import cgi
-import logging
+
 import os
-import re
-import hashlib
-import traceback
 import random
-import hashlib
-import time
-import base64, binascii
-import urllib
-import datetime
-# 
-# urllib.getproxies_macosx_sysconf = lambda: {}
 
 from ad_server.filters.filters import (budget_filter,
                                     active_filter,
@@ -29,7 +16,7 @@ from ad_server.filters.filters import (budget_filter,
                                     all_freq_filter,
                                     lat_lon_filter,
                                    )
-from ad_server.adserver_templates import TEMPLATES
+# from ad_server.adserver_templates import TEMPLATES
                                     
 from common.utils import simplejson
 from common.utils import helpers
@@ -49,8 +36,6 @@ from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.api import images
 
-from publisher.models import *
-from advertiser.models import *
 from reporting.models import StatsModel
 
 from ad_server.networks.appnexus import AppNexusServerSide

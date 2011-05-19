@@ -1,56 +1,24 @@
 # !/usr/bin/env python
-import wsgiref.handlers
-import cgi
-import logging
 import os
 import re
 import hashlib
-import traceback
 import random
-import hashlib
 import time
-import base64, binascii
 import urllib
 import datetime
-# 
-# urllib.getproxies_macosx_sysconf = lambda: {}
 
 from ad_server.adserver_templates import TEMPLATES
                                     
-from common.utils import simplejson
 from common.utils import helpers
-from common.constants import (FULL_NETWORKS,
-                              ACCEPTED_MULTI_COUNTRY,
-                              CAMPAIGN_LEVELS,
-                             )
-
-from string import Template
-from urllib import urlencode, unquote
-#from datetime import datetime
 
 from google.appengine.api import users, urlfetch, memcache
-from google.appengine.api import taskqueue
+
 from google.appengine.ext import webapp, db
-from google.appengine.ext.webapp import template
-from google.appengine.ext.webapp.util import run_wsgi_app
-from google.appengine.api import images
 
 from publisher.models import *
 from advertiser.models import *
-from reporting.models import StatsModel
 
-from ad_server.networks.appnexus import AppNexusServerSide
-from ad_server.networks.brightroll import BrightRollServerSide
-from ad_server.networks.greystripe import GreyStripeServerSide
-from ad_server.networks.inmobi import InMobiServerSide
-from ad_server.networks.jumptap import JumptapServerSide
-from ad_server.networks.millennial import MillennialServerSide
-from ad_server.networks.mobfox import MobFoxServerSide
-from ad_server.optimizer import optimizer
-
-from userstore.query_managers import ClickEventManager, AppOpenEventManager
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
-
 from ad_server.optimizer.adunit_context import AdUnitContext, CreativeCTR
 
 from mopub_logging import mp_logging

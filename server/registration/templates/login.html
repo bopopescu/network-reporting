@@ -18,15 +18,21 @@
             <dt>Email: </dt>
             <dd>
                 <input type="text" name="username" class="{% if form.username.errors %}error{% endif %}" value="{{form.data.username}}"/>
-                <span class={% if form.username.errors %}"error"{% else %}"muted"{% endif %}>(Required)</span>
+                {% if form.username.errors %}<span class="error">(Required)</span>{% endif %}
             </dd>
             <dt>Password: </dt>
-            <dd><input type="password" name="password" class="{% if form.password.errors %}error{% endif %}" value="{{form.data.password}}"/> <span class={% if form.password.errors %}"error"{% else %}"muted"{% endif %}>(Required)</span></dd> 
+            <dd>
+                <input type="password" name="password" class="{% if form.password.errors %}error{% endif %}" value="{{form.data.password}}"/>
+                {% if form.username.errors %}<span class="error">(Required)</span>{% endif %}
+            </dd>    
         </dl>                      
       </fieldset>
       {% for error in form.non_field_errors %}
       <span class="error">{{ error }}</span> 
       {% endfor %}
+      <div>Forgot your password? <a href="{% url auth_password_reset %}">Reset your password here</a>.</div>
+      <div>Don't have an account yet? <a href="{% url registration_register %}">Register here</a> for a MoPub account.</div>
+      
       <div class="clear"></div>
       <div class="form-submit">
         <span class="buttonWrap"><a href="#" class="button" id="accountForm-submit">Login</a></span> 
@@ -41,10 +47,10 @@
     Log in with your Google Account
   </a>
   
-  <div id="login-bottom">
-     <div>Forgot your password? <a href="{% url auth_password_reset %}">Reset your password here</a>.</div>
+  <!-- <div id="login-bottom">
+      <div>Forgot your password? <a href="{% url auth_password_reset %}">Reset your password here</a>.</div>
       <div>Don't have an account yet? <a href="{% url registration_register %}">Register here</a> for a MoPub account.</div>
-  </div>
+  </div> -->
     
 </div>
 {% endblock content %}

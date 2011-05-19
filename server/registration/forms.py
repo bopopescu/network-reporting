@@ -61,10 +61,12 @@ class BaseRegistrationForm(mpforms.MPForm):
         in use.
         
         """
+        from django.core.urlresolvers import reverse
+        
         model = User
         user = UserQueryManager.get_by_email(self.cleaned_data['email'].lower())
         if user:
-            raise forms.ValidationError(_(u'This email already has an account.'))
+            raise forms.ValidationError(_(u'This email has already registered for a MoPub account. Enter a new email address or <a href="%s">Log in</a>.'%reverse('django.contrib.auth.views.login')))
         return self.cleaned_data['email']
         
 

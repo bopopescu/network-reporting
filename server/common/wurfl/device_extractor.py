@@ -16,9 +16,13 @@ device_dict = {}
 # 10 dicts covering the mapping and reverse-mapping relationships among the properties
 # dict name convention: <key>_<list of values>_dict
 
-# uni-directional
+# bi-directional
 brand_marketing_dict = {}
+marketing_brand_dict = {}
+
+# bi-directional
 os_osversion_dict = {}
+osversion_os_dict = {}
 
 # bi-directional
 brand_os_dict = {}
@@ -37,11 +41,12 @@ marketing_os_dict = {}
 os_marketing_dict = {}
 
 # list of pairs mapping dict name to dict
-dict_list = [('brand_marketing_dict', brand_marketing_dict), ('os_osversion_dict', os_osversion_dict),
-               ('brand_os_dict', brand_os_dict), ('os_brand_dict', os_brand_dict),
-               ('marketing_osversion_dict', marketing_osversion_dict), ('osversion_marketing_dict', osversion_marketing_dict),
-               ('brand_osversion_dict', brand_osversion_dict), ('osversion_brand_dict', osversion_brand_dict),
-               ('marketing_os_dict', marketing_os_dict), ('os_marketing_dict', os_marketing_dict)]
+dict_list = [('brand_marketing_dict', brand_marketing_dict), ('marketing_brand_dict', marketing_brand_dict),
+             ('os_osversion_dict', os_osversion_dict), ('osversion_os_dict', osversion_os_dict),
+             ('brand_os_dict', brand_os_dict), ('os_brand_dict', os_brand_dict),
+             ('marketing_osversion_dict', marketing_osversion_dict), ('osversion_marketing_dict', osversion_marketing_dict),
+             ('brand_osversion_dict', brand_osversion_dict), ('osversion_brand_dict', osversion_brand_dict),
+             ('marketing_os_dict', marketing_os_dict), ('os_marketing_dict', os_marketing_dict)]
 
 
 
@@ -81,7 +86,10 @@ def create_mappings():
     # populate mapping and reverse-mapping dicts from device_dict
     for devid, [brand_name, marketing_name, os, os_version] in device_dict.iteritems():
         update(brand_marketing_dict, brand_name, marketing_name)
+        update(marketing_brand_dict, marketing_name, brand_name)
+
         update(os_osversion_dict, os, os_version)
+        update(osversion_os_dict, os_version, os)
         
         update(brand_os_dict, brand_name, os)
         update(os_brand_dict, os, brand_name)

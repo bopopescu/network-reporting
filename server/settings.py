@@ -152,7 +152,6 @@ LOGIN_REDIRECT_URL = '/inventory/'
 LOGIN_REQUIRED_PREFIXES = (
     '/inventory/',
     '/campaigns/',
-    '/reports/',
 )
 
 ACCOUNT_ACTIVATION_DAYS = 14

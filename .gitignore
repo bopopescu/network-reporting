@@ -3,7 +3,6 @@
 *.tmproj
 *.log
 *.pp
-*.pkl
 *.swp
 *.swo
 *.deduped
@@ -12,4 +11,8 @@ server/test_data/basic_test.datastore
 *.datastore
 server/.coverage
 server/nosetests.xml
+server/reporting/aws_logging/deref_cache.pkl
+server/common/wurfl/*.xml
 counts.csv
+
+server/common/wurfl/*.xml

@@ -4,6 +4,7 @@ import logging
 import datetime
 
 sys.path.append(os.environ['PWD'])
+import common.utils.test.setup
 
 from google.appengine.ext import db
 from nose.tools import assert_equals

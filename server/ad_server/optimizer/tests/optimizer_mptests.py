@@ -1,6 +1,7 @@
 import os
 import sys
 sys.path.append(os.environ['PWD'])
+import common.utils.test.setup
 
 import unittest
 from nose.tools import eq_

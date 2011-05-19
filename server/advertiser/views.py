@@ -143,7 +143,7 @@ class CreateCampaignAJAXHander(RequestHandler):
         campaign_form = campaign_form or CampaignForm(instance=campaign)
         adgroup_form = adgroup_form or AdGroupForm(instance=adgroup)
         networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["greystripe","GreyStripe",False],\
-            ["iAd","iAd",False],["inmobi","InMobi",False],["jumptap","Jumptap",False],["millennial","Millennial Media",False],["mobfox","MobFox",False],['custom', 'Custom Network', False]]
+            ["iAd","iAd",False],["inmobi","InMobi",False],["jumptap","Jumptap",False],["millennial","Millennial Media",False],["mobfox","MobFox",False],['custom', 'Custom Network', False], ['admob_native', 'AdMob Native', False], ['millennial_native', 'Millennial Media Native', False]]
 
         all_adunits = AdUnitQueryManager.get_adunits(account=self.account)
         # sorts by app name, then adunit name
@@ -251,9 +251,9 @@ class CreateCampaignAJAXHander(RequestHandler):
                             creative.html_data = html_data
                     elif adgroup.net_creative:
                         #in this case adgroup.net_creative has evaluated to true BUT the class comparison did NOT.    
-                        #at this point we know that there was an old creative AND it's different from the old creative so
+                        #at this point we know that there was an old creative AND it's different from the new creative so
                         #and delete the old creative just marks as deleted!
-                        CreativeQueryManager.put(adgroup.net_creative)
+                        CreativeQueryManager.delete(adgroup.net_creative)
                         
                     #creative should now reference the appropriate creative (new if different, old if the same, updated old if same and custom)
                     creative.account = self.account
@@ -281,7 +281,7 @@ class CreateCampaignAJAXHander(RequestHandler):
 
         new_html = self.get(campaign_form=campaign_form,
                                                 adgroup_form=adgroup_form)
-        json_dict.update(success=False,html=new_html)        
+        json_dict.update(success=False,html=new_html)
         return self.json_response(json_dict)    
 
 @login_required     

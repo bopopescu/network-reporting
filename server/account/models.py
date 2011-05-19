@@ -1,5 +1,4 @@
 from django.utils.translation import ugettext_lazy as _
-from django.contrib.auth.models import UserManager
 
 from google.appengine.ext import db
 from google.appengine.api import users

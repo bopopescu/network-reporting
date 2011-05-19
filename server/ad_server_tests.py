@@ -1,11 +1,10 @@
+########## Set up Django ###########
 import sys
 import os
+import datetime
 
-sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine")
-sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/yaml/lib")
-sys.path.append("/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/fancy_urllib")
 sys.path.append(os.environ['PWD'])
-
+import common.utils.test.setup
 
 from advertiser.models import (Campaign,
                                 AdGroup,

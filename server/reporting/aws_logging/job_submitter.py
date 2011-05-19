@@ -3,23 +3,28 @@ import os
 import time
 from optparse import OptionParser
 
+from boto.emr.bootstrap_action import BootstrapAction
 from boto.emr.connection import EmrConnection
 from boto.emr.step import StreamingStep
 
 
-S3_BUCKET = 'mopub-aws-logging'
-LOG_URI = 's3://' + S3_BUCKET + '/jobflow_logs'
-DEDUP_MAPPER = 's3://' + S3_BUCKET + '/code2/dedup_mapper.py'
-PREPROCESS_MAPPER = 's3://' + S3_BUCKET + '/code2/preprocess_mapper.py'
-LOG_MAPPER = 's3://' + S3_BUCKET + '/code2/log_mapper.py'
-LOG_REDUCER = 's3://' + S3_BUCKET + '/code2/log_reducer.py'
-UNIQ_USER_MAPPER = 's3://' + S3_BUCKET + '/code2/uniq_user_mapper.py'
+S3_BUCKET = 's3://mopub-aws-logging'
+LOG_URI = S3_BUCKET + '/jobflow_logs'
+
+S3_CODE_DIR = S3_BUCKET + '/code3'
+DEDUP_MAPPER = S3_CODE_DIR + '/dedup_mapper.py'
+PREPROCESS_MAPPER = S3_CODE_DIR + '/preprocess_mapper.py'
+LOG_MAPPER = S3_CODE_DIR + '/log_mapper.py'
+LOG_REDUCER = S3_CODE_DIR + '/log_reducer.py'
+UNIQ_USER_MAPPER = S3_CODE_DIR + '/uniq_user_mapper.py'
 
 
 NUM_INSTANCES = 1
 MASTER_INSTANCE_TYPE = 'm1.large'
 SLAVE_INSTANCE_TYPE = 'm1.large'
-KEEP_ALIVE = True
+# MASTER_INSTANCE_TYPE = 'm1.small'
+# SLAVE_INSTANCE_TYPE = 'm1.small'
+KEEP_ALIVE = False
     
 
 
@@ -43,6 +48,11 @@ def main():
         
     conn = EmrConnection('AKIAJKOJXDCZA3VYXP3Q', 'yjMKFo61W0mMYhMgphqa+Lc2WX74+g9fP+FVeyoH')
 
+    bootstrap_step = BootstrapAction(
+        name='bootstrap step',
+        path=S3_CODE_DIR+'/bootstrap.sh',
+        bootstrap_action_args=None)
+
     dedup_step = StreamingStep(
         name='dedup step',
         mapper=DEDUP_MAPPER,
@@ -55,7 +65,7 @@ def main():
         name='preprocess step',
         mapper=PREPROCESS_MAPPER,
         reducer='aggregate',
-        cache_files=['s3://' + S3_BUCKET + '/code2/log_parser.py#log_parser.py', 's3://' + S3_BUCKET + '/code2/deref_cache.pkl#deref_cache.pkl'],
+        cache_files=[S3_CODE_DIR+'/utils.py#utils.py', S3_CODE_DIR+'/parse_utils.py#parse_utils.py', S3_CODE_DIR+'/wurfl.py#wurfl.py', S3_CODE_DIR+'/deref_cache.pkl#deref_cache.pkl'],
         input=options.input_dir+'.dd',
         output=options.input_dir+'.pp',
     )
@@ -64,7 +74,7 @@ def main():
         name='log count step',
         mapper=LOG_MAPPER,
         reducer=LOG_REDUCER,
-        cache_files=['s3://' + S3_BUCKET + '/code2/log_parser.py#log_parser.py'],
+        cache_files=[S3_CODE_DIR+'/utils.py#utils.py', S3_CODE_DIR+'/parse_utils.py#parse_utils.py', S3_CODE_DIR+'/wurfl.py#wurfl.py'],
         input=options.input_dir+'.dd',
         output=options.input_dir+'.dd.out',
     )
@@ -73,14 +83,14 @@ def main():
         name='uniq user count step',
         mapper=UNIQ_USER_MAPPER,
         reducer='aggregate',
-        cache_files=['s3://' + S3_BUCKET + '/code2/log_parser.py#log_parser.py'],
+        cache_files=[S3_CODE_DIR+'/utils.py#utils.py', S3_CODE_DIR + '/parse_utils.py#parse_utils.py'],
         input=options.input_dir+'.pp',
         output=options.input_dir+'.pp.out',
     )
     
-    #try to find an existing jobflow in waiting mode
+    # try to find an existing jobflow in waiting mode
     jobid = get_waiting_jobflow(conn)
-
+    
     if jobid:
         conn.add_jobflow_steps(jobid, [dedup_step, preprocess_step, count_step, uniq_user_count_step])
         print 'added step to waiting jobflow:', jobid
@@ -93,6 +103,7 @@ def main():
         jobid = conn.run_jobflow(
             name='log parsing job',
             steps=[dedup_step, preprocess_step, count_step, uniq_user_count_step],
+            bootstrap_actions=[bootstrap_step],
             log_uri=LOG_URI,
             num_instances=options.num_instances,
             master_instance_type=MASTER_INSTANCE_TYPE,

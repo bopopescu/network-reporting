@@ -87,11 +87,12 @@ MIDDLEWARE_CLASSES = (
 # Django authentication
 # 'django.contrib.auth.middleware.AuthenticationMiddleware',
 # Google authentication
-'common.ragendja.auth.middleware.GoogleAuthenticationMiddleware',
+# 'common.ragendja.auth.middleware.GoogleAuthenticationMiddleware',
 # Hybrid Django/Google authentication
-#'ragendja.auth.middleware.HybridAuthenticationMiddleware',
+'common.ragendja.auth.middleware.HybridAuthenticationMiddleware',
 'django.middleware.common.CommonMiddleware',
 'django.middleware.locale.LocaleMiddleware',
+'common.ragendja.middleware.LoginRequiredMiddleware',
 # 'ragendja.sites.dynamicsite.DynamicSiteIDMiddleware',
 # 'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
 # 'django.contrib.redirects.middleware.RedirectFallbackMiddleware',
@@ -132,10 +133,27 @@ INSTALLED_APPS = (
      'admin',
      'common_templates',
      'budget',
+     'registration',
+     'reports',
 )
 
 #TEST_RUNNER = 'django_nose.NoseTestSuitRunner'
 
 IGNORE_APP_URLSAUTO = ('website')
+
+AUTHENTICATION_BACKENDS = ('common.ragendja.auth.backends.MPModelBackend',)
+
+AUTH_USER_MODULE = 'account.models'
+
+LOGIN_URL = '/account/login/'
+LOGOUT_URL = '/account/logout/'
+LOGIN_REDIRECT_URL = '/inventory/'
+
+LOGIN_REQUIRED_PREFIXES = (
+    '/inventory/',
+    '/campaigns/',
+)
+
+ACCOUNT_ACTIVATION_DAYS = 14
 
 from common.ragendja.settings_post import *

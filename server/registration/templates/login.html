@@ -1,0 +1,56 @@
+{% extends "registration/base.html" %}
+{% load googletags %}
+
+{% block pageTitle %}<h1>Account - Login</h1>{% endblock %}
+
+{% block content %}
+<div class="content-main">
+  
+  <div id="login-left">
+    <form action="" method="POST" accept-charset="utf-8" id="accountForm">
+      {% csrf_token %}
+      <fieldset id="appForm-details"> 
+        <legend>Welcome Back!</legend> 
+        <p>
+          Enter your email and password to log back in to MoPub
+        </p>
+        <dl class="formFields"> 
+            <dt>Email: </dt>
+            <dd>
+                <input type="text" name="username" class="{% if form.username.errors %}error{% endif %}" value="{{form.data.username}}"/>
+                {% if form.username.errors %}<span class="error">(Required)</span>{% endif %}
+            </dd>
+            <dt>Password: </dt>
+            <dd>
+                <input type="password" name="password" class="{% if form.password.errors %}error{% endif %}" value="{{form.data.password}}"/>
+                {% if form.username.errors %}<span class="error">(Required)</span>{% endif %}
+            </dd>    
+        </dl>                      
+      </fieldset>
+      {% for error in form.non_field_errors %}
+      <span class="error">{{ error }}</span> 
+      {% endfor %}
+      <div>Forgot your password? <a href="{% url auth_password_reset %}">Reset your password here</a>.</div>
+      <div>Don't have an account yet? <a href="{% url registration_register %}">Register here</a> for a MoPub account.</div>
+      
+      <div class="clear"></div>
+      <div class="form-submit">
+        <span class="buttonWrap"><a href="#" class="button" id="accountForm-submit">Login</a></span> 
+      </div>
+
+    </form>
+  </div>
+  <div id="google-login-divider">
+  </div>
+  
+  <a id="google-login" class="button" href="{% google_login_url %}">
+    Log in with your Google Account
+  </a>
+  
+  <!-- <div id="login-bottom">
+      <div>Forgot your password? <a href="{% url auth_password_reset %}">Reset your password here</a>.</div>
+      <div>Don't have an account yet? <a href="{% url registration_register %}">Register here</a> for a MoPub account.</div>
+  </div> -->
+    
+</div>
+{% endblock content %}

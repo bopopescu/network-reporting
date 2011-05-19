@@ -17,8 +17,6 @@ from django.core.urlresolvers import reverse
 from common.ragendja.template import render_to_response, render_to_string
 from django.core.mail import send_mail, EmailMessage
 
-from common.utils.decorators import whitelist_login_required
-
 from advertiser.models import *
 from advertiser.forms import CampaignForm, AdGroupForm
 
@@ -124,7 +122,7 @@ def dashboard_prep(request, *args, **kwargs):
         "apps": apps,
         "unique_apps": unique_apps, 
         "new_users": new_users,
-        "mailing_list": [a for a in new_users if a.mailing_list]}
+        "mailing_list": [a for a in new_users if a.mpuser.mailing_list]}
 
     page = AdminPage(offline=offline,
                      html=render_to_string(request,'admin/pre_render.html',render_params),
@@ -173,16 +171,16 @@ def update_sfdc_leads(request, *args, **kwargs):
     #
     def account_to_sfdc(a):
         apps = App.gql("where account = :1", a).fetch(100)
-        return {'FirstName': (a.first_name or '')[:40],
-                'LastName': (a.last_name or a.user.nickname() if a.user else '')[:80],
-                'Email': a.user.email() if a.user else '',
-                'Title': (a.title or '')[:80],
-                'Company': (a.company or a.user.email() if a.user else '')[:255], 
-                'City': (a.city or '')[:40],
-                'State': (a.state or '')[:20],
+        return {'FirstName': (a.mpuser.first_name or '')[:40],
+                'LastName': (a.mpuser.last_name or '')[:80],
+                'Email': a.mpuser.email or '',
+                'Title': (a.mpuser.title or '')[:80],
+                'Company': (a.company or a.mpuser.email or '')[:255], 
+                'City': (a.mpuser.city or '')[:40],
+                'State': (a.mpuser.state or '')[:20],
                 'Country': (a.country or '')[:40],
                 'Phone': (a.phone or '')[:40],
-                'Mailing_List__c': a.mailing_list,
+                'Mailing_List__c': a.mpuser.mailing_list,
                 'Apps__c': "\n".join(app.name for app in apps),
                 'Number_of_Apps__c': len(apps),
                 'iTunesURL__c': max(app.url for app in apps) if apps else None,

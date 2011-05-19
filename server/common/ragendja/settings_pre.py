@@ -46,6 +46,7 @@ EMAIL_HOST_PASSWORD = 'password'
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = 'user@localhost'
 SERVER_EMAIL = 'user@localhost'
+EMAIL_BACKEND = 'appengine_django.mail.GoogleSMTPConnection'
 
 LOGIN_REQUIRED_PREFIXES = ()
 NO_LOGIN_REQUIRED_PREFIXES = ()

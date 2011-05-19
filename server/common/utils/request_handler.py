@@ -1,9 +1,13 @@
 import logging
 
+
 from account.query_managers import AccountQueryManager
+from account.models import Account
+
 from google.appengine.api import users
 from google.appengine.ext import db
-from account.models import Account
+
+from inspect import getargspec
 
 
 class RequestHandler(object):
@@ -29,8 +33,13 @@ class RequestHandler(object):
           self.start_date = date(int(s[0]),int(s[1]),int(s[2]))
         except:
           self.start_date = None
-        
-        self._set_account()
+
+        if self.params.has_key('account'):
+            account_key = self.params['account']
+            if account_key:
+              self.account = AccountQueryManager.get(account_key)
+        else:
+            self._set_account()
         
         logging.info("final account: %s"%(self.account.key()))  
         logging.info("final account: %s"%repr(self.account.key()))
@@ -40,8 +49,20 @@ class RequestHandler(object):
         self.offline = True if self.offline == "1" else False
 
         if request.method == "GET":
+            # Now we can define get/post methods with variables instead of having to get it from the 
+            # Query dict every time! hooray!
+            f_args = getargspec(self.get)[0]
+            for arg in f_args:
+                if not kwargs.has_key(arg) and self.params.has_key(arg):
+                    kwargs[arg] = self.params.get(arg)
             return self.get(*args,**kwargs)
         elif request.method == "POST":
+            # Now we can define get/post methods with variables instead of having to get it from the 
+            # Query dict every time! hooray!
+            f_args = getargspec(self.post)[0]
+            for arg in f_args:
+                if not kwargs.has_key(arg) and self.params.has_key(arg):
+                    kwargs[arg] = self.params.get(arg)
             return self.post(*args,**kwargs)    
     def get(self):
         pass
@@ -55,7 +76,7 @@ class RequestHandler(object):
           if users.is_current_user_admin():
             account_key = self.request.COOKIES.get("account_impersonation",None)
             if account_key:
-              self.account =     AccountQueryManager.get(account_key)
+              self.account = AccountQueryManager.get(account_key)
         if not self.account:  
-          self.account = AccountQueryManager.get_current_account()
+          self.account = AccountQueryManager.get_current_account(self.request,cache=True)
             

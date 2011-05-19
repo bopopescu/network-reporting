@@ -1,16 +1,27 @@
 from string import Template
-
+    
 image = Template("""<html>
-                        <head>
-                          <style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: ${w}px;height: ${h}px;}.creative_headline {font-size: 20px;}.creative .creative_url a {color: green;text-decoration: none;}
-                          </style>
+                        <head>                          
                           $finishLoad
                           <script>
                             function webviewDidClose(){} 
                             function webviewDidAppear(){} 
                           </script>
+                          <style type='text/css'>
+                            .center {
+                                position: fixed;
+                                top: 50%;
+                                left: 50%;
+                                margin-left: -${w2}px !important;
+                                margin-top: -${h2}px !important;
+                                }
+                          </style>
                         </head>
-                        <body style="margin: 0;width:${w}px;height:${h}px;padding:0;">\
-                          <a href="$url" target="_top"><img src="$image_url" width="$w" height="$h"/></a>
+                        <body style="padding:0;margin:0;">
+                          <div class="outer" id="outer">    
+                              <div class="${class}">    
+                                  <a href="$url" target="_top"><img src="$image_url" width="$w" height="$h"/></a>
+                              </div>
+                          </div>      
                           $trackingPixel
                         </body></html> """)

@@ -66,6 +66,9 @@ class MPTextarea(MPWidget):
 class MPTextInput(MPWidget):
     TEMPLATE = 'widgets/text_input.html'
     DEFAULT_CLASSES = "input-text"
+    
+class MPPasswordInput(MPTextInput):
+    TEMPLATE = 'widgets/password_input.html'    
 
 class MPDeviceFormatRadioInput(MPWidget):
     TEMPLATE = 'widgets/adunit_device_format.html'
@@ -73,7 +76,7 @@ class MPDeviceFormatRadioInput(MPWidget):
      
 class MPSelectWidget(MPWidget):
     TEMPLATE = 'widgets/select.html'
-    DEFAULT_CLASSES = "input-text"
+    DEFAULT_CLASSES = ''
     
     def __init__(self, attrs=None, choices=()):
         super(MPSelectWidget, self).__init__(attrs)

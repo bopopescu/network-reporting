@@ -5,12 +5,13 @@ from common.ragendja.auth.google_models import GoogleUserTraits
 class User(GoogleUserTraits):
     """User class that provides support for Django and Google @login_required."""
     user = db.UserProperty()
-    username = db.StringProperty(required=True, verbose_name=_('username'))
-    email = db.EmailProperty(verbose_name=_('e-mail address'))
-    first_name = db.StringProperty(verbose_name=_('first name'))
-    last_name = db.StringProperty(verbose_name=_('last name'))
+    username = db.StringProperty(required=True)
+    email = db.EmailProperty()
+    first_name = db.StringProperty()
+    last_name = db.StringProperty()
 
     class Meta:
+        abstract = True
         verbose_name = _('user')
         verbose_name_plural = _('users')
 

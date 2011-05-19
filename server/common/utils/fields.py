@@ -39,8 +39,7 @@ class MPFloatField(FloatField):
     widget = mpwidgets.MPNumberInput
 
 class MPChoiceField(ChoiceField):
-    widget = mpwidgets.MPRadioWidget
-    
+    widget = mpwidgets.MPRadioWidget    
     
 class MPModelMultipleChoiceField(ModelChoiceField):
     """A MultipleChoiceField whose choices are a model QuerySet."""

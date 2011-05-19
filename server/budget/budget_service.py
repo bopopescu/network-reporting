@@ -9,7 +9,7 @@ from budget.models import (BudgetSlicer,
                            BudgetSliceLog,
                            BudgetDailyLog
                            )
-                        
+
 """
 A service that determines if a campaign can be shown based upon the defined 
 budget for that campaign. If the budget_type is "evenly", a minute by minute
@@ -27,6 +27,7 @@ def has_budget(campaign, cost):
         return True
     
     memcache_daily_budget = remaining_daily_budget(campaign)
+    
     if memcache_daily_budget < cost:
         return False
     
@@ -81,7 +82,11 @@ def daily_advance(campaign, date=None):
                       )
     daily_log.put()
         
-    memcache.set(key, _to_memcache_int(campaign.budget), namespace="budget")
+    if campaign.finite:
+        summed_budget = rem_daily_budget + campaign.budget
+        memcache.set(key, _to_memcache_int(summed_budget), namespace="budget")
+    else:
+        memcache.set(key, _to_memcache_int(campaign.budget), namespace="budget")
     
     # We backup immediately in order to set a new daily snapshot
     _backup_budgets(campaign)

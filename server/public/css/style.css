@@ -722,7 +722,7 @@ a.mutedLink:hover {
   margin: 0 15px 0 0;
 }
 
-.input-text, textarea {
+.input-text, textarea{
   padding: 1px 2px 2px 3px;
   border: 1px solid #eaeaea;
   border-top-color: #b9b9b9;
@@ -737,6 +737,10 @@ a.mutedLink:hover {
 
 .input-text-number {
   width: 70px;
+}
+
+.input-text-half-width {
+  width: 140px;
 }
 
 textarea {
@@ -1202,6 +1206,9 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
 .dataTable-data {
   width: 75px;
 }
+.dataTable-date {
+  width: 175px;
+}
 
 /* App data */
 
@@ -1223,8 +1230,8 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
   width: 45px;
 }
 
-.dataTable .appData-icon a img, .dataTable .campaignData-icon a img,
-#appForm-icon img {
+.dataTable .appData-icon a img, .dataTable .campaignData-icon a img, 
+#appForm-icon img, .dataTable .reportData-icon a img {
   -webkit-border-radius:6px;-moz-border-radius:6px
 }
 
@@ -1352,6 +1359,14 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
   font-size: 24px;
   font-weight: 300;
 }
+
+.loading-text {
+  width: 100%;
+  text-align: center;
+  font-size: 24px;
+  font-weight: 300;
+}
+
 
 .chart-loading .chart-loading-text,
 .chart-error .chart-error-text {
@@ -2020,12 +2035,12 @@ ul.ui-selectmenu-menu {
 
 /* Campaigns */
 
-.campaignData {
+.campaignData, .reportData {
   padding: 10px 5px 6px 5px;
   background: #f7f7f7;
 }
 
-.campaignData-alt {
+.campaignData-alt, .reportData-alt {
   background: #fff;
 }
 
@@ -2034,33 +2049,33 @@ ul.ui-selectmenu-menu {
   background: #f7f7f7;
 }
 
-.campaignData-placeholder {
+.campaignData-placeholder, .reportData-placeholder {
   display: table-row;
 }
 
-.campaignData th.dataTable-name {
+.campaignData th.dataTable-name, .reportData th.dataTable-name {
   width: 200px;
 }
 
-.campaignData-icon {
+.campaignData-icon, .reportData-icon {
   padding-right: 0;
   width: 55px;
 }
 
-.campaignData-icon input {
+.campaignData-icon input, .reportData-icon input {
   margin-left: 5px;
 }
 
-.campaignData-icon img {
+.campaignData-icon img, .reportData-icon img {
   margin: 4px 0 0 4px;
 }
 
-table.campaignData-main {
+table.campaignData-main, table.reportData-table {
   margin: 0 0 15px 0;
   width: 100%;
 }
 
-.campaignData-main th, .campaignData-main td {
+.campaignData-main th, .campaignData-main td, .reportData-table th, .reportData-table td {
   font-size: 13px;
   font-weight: normal;
 }
@@ -2116,6 +2131,41 @@ table.campaignData-main {
 
 #campaignForm-details{
   padding-top:0px;
+}
+
+/* Login */
+
+#login-left, #login-left .fieldset{
+  width:450px;
+}
+#login-left dl.formFields{
+  width:600px;
+}
+
+#login-left dt{
+  width:50px;
+}
+
+
+#google-login{
+  width:300px;
+  height:56px;
+  font-size:22px;
+  display:block;
+  position:absolute;
+  left:550px;
+  top:41px;
+}
+
+#google-login-divider{
+  width:300px;
+  height:106px;
+  font-size:22px;
+  display:block;
+  position:absolute;
+  left:500px;
+  top:16px;
+  border-left:2px solid whiteSmoke;
 }
 
 /****************************************

@@ -1,12 +1,16 @@
 # !/usr/bin/env python
-from appengine_django import LoadDjango
-LoadDjango()
-import os
-from django.conf import settings
-
-os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
-# Force Django to reload its settings.
-settings._target = None
+from appengine_django import InstallAppengineHelperForDjango
+InstallAppengineHelperForDjango()
+# 
+# 
+# from appengine_django import LoadDjango
+# LoadDjango()
+# import os
+# from django.conf import settings
+# 
+# os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+# # Force Django to reload its settings.
+# settings._target = None
 
 import wsgiref.handlers
 import cgi
@@ -43,6 +47,7 @@ from common.utils import simplejson
 from common.utils import helpers
 from common.constants import (FULL_NETWORKS,
                               ACCEPTED_MULTI_COUNTRY,
+                              CAMPAIGN_LEVELS,
                              )
 
 from string import Template
@@ -54,6 +59,7 @@ from google.appengine.api import taskqueue
 from google.appengine.ext import webapp, db
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
+from google.appengine.api import images
 
 from publisher.models import *
 from advertiser.models import *
@@ -79,6 +85,7 @@ from budget import budget_service
 from google.appengine.ext.db import Key
 
 from ad_server.debug_console import trace_logging
+from ad_server import memcache_mangler
 
 ###################
 # Import Handlers #
@@ -101,8 +108,7 @@ DEBUG = not on_production_server
 CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gzip(gfe)"]
 MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7PnE6cH9_PX7OoeIIr5FjnTA'
 FREQ_ATTR = '%s_frequency_cap'
-CAMPAIGN_LEVELS = ('gtee_high', 'gtee', 'gtee_low', 'promo', 'network','backfill_promo')
-NATIVE_REQUESTS = ['admob','adsense','iAd','custom']
+NATIVE_REQUESTS = ['admob','adsense','iAd','custom','admob_native','millennial_native']
 
 SERVER_SIDE_DICT = {"millennial":MillennialServerSide,
                     "appnexus":AppNexusServerSide,
@@ -439,6 +445,8 @@ class AdHandler(webapp.RequestHandler):
     }
     
     def get(self):
+
+        ufid = self.request.get('ufid', None)
         
         if self.request.get('jsonp', '0') == '1':
             jsonp = True
@@ -615,7 +623,7 @@ class AdHandler(webapp.RequestHandler):
                                                         ) 
                                       
         if jsonp:
-            self.response.out.write('%s(%s)' % (callback, dict(ad=str(rendered_creative or ''), click_url = str(ad_click_url))))
+            self.response.out.write('%s(%s)' % (callback, dict(ad=str(rendered_creative or ''), click_url = str(ad_click_url), ufid=str(ufid))))
         elif not (debug or admin_debug_mode):                                                    
             self.response.out.write(rendered_creative)
         else:
@@ -653,6 +661,7 @@ class AdHandler(webapp.RequestHandler):
                         self.response.headers.add_header("X-Orientation","l")
                         format = ("480","320")
                     else:
+                        self.response.headers.add_header("X-Orientation","p")
                         format = (320,480)    
                                                 
                 elif not c.adgroup.network_type or c.adgroup.network_type in FULL_NETWORKS:
@@ -677,6 +686,13 @@ class AdHandler(webapp.RequestHandler):
                       </style>"
             params = kwargs
             params.update(c.__dict__.get("_entity"))
+            #Line1/2 None check biznass 
+            if params.has_key('line1'):
+                if params['line1'] is None:
+                    params['line1'] = ''
+            if params.has_key('line2'):
+                if params['line2'] is None:
+                    params['line2'] = ''
             #centering non-full ads in fullspace
             if network_center:
                 params.update({'network_style': style % tuple(a/2 for a in format)})
@@ -707,7 +723,6 @@ class AdHandler(webapp.RequestHandler):
                 params.update(trackingPixel='<span style="display:none;"><img src="%s"/></span>'%track_url)
             success += 'document.body.appendChild(hid_span);'
           
-          
             if c.ad_type == "adsense":
                 params.update({"title": ','.join(kwargs["q"]), "adsense_format": '300x250_as', "w": format[0], "h": format[1], "client": kwargs["site"].get_pub_id("adsense_pub_id")})
                 params.update(channel_id=kwargs["site"].adsense_channel_id or '')
@@ -722,7 +737,13 @@ class AdHandler(webapp.RequestHandler):
                 if c.image:
                   params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
                 if c.action_icon:
-                  params["action_icon_div"] = '<div style="padding-top:5px;position:absolute;top:0;right:0;"><a href="'+c.url+'" target="_top"><img src="/images/'+c.action_icon+'.png" width=40 height=40/></a></div>'
+                    #c.url can be undefined, don't want it to break
+                    icon_div = '<div style="padding-top:5px;position:absolute;top:0;right:0;"><a href="'+(c.url or '#')+'" target="_top">'
+                    if c.action_icon:
+                        icon_div += '<img src="http://' + self.request.host + '/images/'+c.action_icon+'.png" width=40 height=40/></a></div>'
+                    params["action_icon_div"] = icon_div 
+                else:
+                    params['action_icon_div'] = ''
                 # self.response.headers.add_header("X-Adtype", str('html'))
             elif c.ad_type == "greystripe":
                 params.update(html_data=c.html_data)
@@ -731,8 +752,16 @@ class AdHandler(webapp.RequestHandler):
                 self.response.headers.add_header("X-Launchpage","http://adsx.greystripe.com/openx/www/delivery/ck.php")
                 template_name = "html"
             elif c.ad_type == "image":
+                img = images.Image(c.image)
                 params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
-                params.update({"w": format[0], "h": format[1]})
+                
+                # if full screen we don't need to center
+                if (not "full" in adunit.format) or ((img.width == 480.0 and img.height == 320.0 ) or (img.width == 320.0 and img.height == 480.0)):
+                    css_class = ""
+                else:
+                    css_class = "center"    
+                
+                params.update({"w": img.width, "h": img.height, "w2":img.width/2.0, "h2":img.height/2.0, "class":css_class})
             elif c.ad_type == "html":
                 params.update(html_data=c.html_data)
                 params.update({"html_data": kwargs["html_data"], "w": format[0], "h": format[1]})
@@ -786,6 +815,26 @@ class AdHandler(webapp.RequestHandler):
                 self.response.headers.add_header("X-Adtype", str(c.ad_type))
                 self.response.headers.add_header("X-Backfill", str(c.ad_type))        
                 self.response.headers.add_header("X-Failurl",self.request.url+'&exclude='+str(c.ad_type))
+
+            elif str(c.ad_type) == "admob_native":
+                if "full" in adunit.format:
+                    self.response.headers.add_header("X-Adtype", "interstitial")
+                    self.response.headers.add_header("X-Fulladtype", "admob_full")
+                else:
+                    self.response.headers.add_header("X-Adtype", str(c.ad_type))
+                    self.response.headers.add_header("X-Backfill", str(c.ad_type))
+                self.response.headers.add_header("X-Failurl", self.request.url+'&exclude='+str(c.ad_type))
+                self.response.headers.add_header("X-Nativeparams", '{"adUnitID":"'+adunit.get_pub_id("admob_pub_id")+'"}')
+
+            elif str(c.ad_type) == "millennial_native":
+                if "full" in adunit.format:
+                    self.response.headers.add_header("X-Adtype", "interstitial")
+                    self.response.headers.add_header("X-Fulladtype", "millennial_full")
+                else:
+                    self.response.headers.add_header("X-Adtype", str(c.ad_type))
+                    self.response.headers.add_header("X-Backfill", str(c.ad_type))
+                self.response.headers.add_header("X-Failurl", self.request.url+'&exclude='+str(c.ad_type))
+                self.response.headers.add_header("X-Nativeparams", '{"adUnitID":"'+adunit.get_pub_id("millennial_pub_id")+'"}')
                 
             elif str(c.ad_type) == "adsense":
                 self.response.headers.add_header("X-Adtype", str(c.ad_type))
@@ -1023,11 +1072,6 @@ class TestHandler(webapp.RequestHandler):
         trace_logging.info("%s"%self.request.headers["User-Agent"])  
         self.response.out.write("hello world")
         
-# TODO: clears the cache USE WITH FEAR
-class ClearHandler(webapp.RequestHandler):
-    def get(self):
-        self.response.out.write(memcache.flush_all())
-    
 class PurchaseHandler(webapp.RequestHandler):
     def post(self):
         trace_logging.info(self.request.get("receipt"))
@@ -1042,7 +1086,7 @@ def main():
                                           ('/m/open', AppOpenHandler),
                                           ('/m/track', AppOpenHandler),
                                           ('/m/test', TestHandler),
-                                          ('/m/clear', ClearHandler),
+                                          ('/m/clear', memcache_mangler.ClearHandler),
                                           ('/m/purchase', PurchaseHandler),
                                           ('/m/req',AdRequestHandler),], 
                                           debug=DEBUG)

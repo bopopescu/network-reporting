@@ -26,6 +26,25 @@ def raw(bound_field):
     """
     bound_field.TEMPLATE = 'raw_bound_field.html'
     return bound_field
+
+@register.filter
+def raw_required(bound_field):
+    """
+    Parses a json attrs object from template and passes them to the bound_field
+    """
+    bound_field.TEMPLATE = 'raw_bound_field_required.html'
+    return bound_field
+    
+@register.filter
+def raw_required_with_errors(bound_field):
+    bound_field.TEMPLATE = 'raw_bound_field_required_with_errors.html'
+    return bound_field
+
+@register.filter
+def widget_only(bound_field):
+    bound_field.TEMPLATE = 'widget_only.html'
+    return bound_field
+
     
 @register.filter
 def label(bound_field, label):
@@ -145,9 +164,10 @@ def all_user_dropdown(request,value=1000):
     from google.appengine.ext import db
     value = int(value)
     htmls = []
-    for account in Account.all().order("user").fetch(value):
-        if account.user:
-            htmls.append('<option value="%s">%s</option>'%(account.key(),account.user.email()))
+    accounts = Account.all().order("user").fetch(value)
+    for account in accounts:
+        if account.mpuser:
+            htmls.append('<option value="%s">%s</option>'%(account.key(),account.mpuser.email))
     return mark_safe('\n'.join(htmls))
 
 @register.filter

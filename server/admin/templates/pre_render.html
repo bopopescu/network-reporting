@@ -110,7 +110,7 @@
     	<tbody>
     	{% for a in new_users %}
         	<tr>
-        		<td><a href="mailto:{{a.user.email}}">{{a.user.email}}</a></td>
+        		<td><a href="mailto:{{a.mpuser.email}}">{{a.mpuser.email}}</a></td>
         		<td>{{a.date_added}}</td>
         		<td>{{a.mailing_list}}</td>
         	</tr>
@@ -119,5 +119,5 @@
     </table>
     
     <h3>Paste these people into MailChimp</h3>        
-    <form><textarea>{% for a in mailing_list %}{{a.user.email}} {% endfor %}</textarea></form>
+    <form><textarea>{% for a in mailing_list %}{{a.mpuser.email}} {% endfor %}</textarea></form>
 </section>

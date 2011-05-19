@@ -12,10 +12,11 @@ from google.appengine.api import users
 #mopub imports
 from account.models import Account
 from advertiser.query_managers import CampaignQueryManager, CreativeQueryManager
+from common.constants import ISO_COUNTRIES
 from common.utils import date_magic
 #import lots of dicts and things
-from common.wurfl.query_managers import WurflQueryManager
 from common.properties.dict_property import DictProperty
+from common.wurfl.query_managers import WurflQueryManager
 from publisher.query_managers import AppQueryManager, AdUnitQueryManager
 from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
@@ -155,19 +156,18 @@ class Report(db.Model):
             for idx, val in enumerate(vals):
                 name = None
                 if typ == 'co':
-                    name = "<<COUNTRY NAME HERE>>"
-                    country = val
+                    country, name = val
                 elif typ == 'mar':
-                    name = '' #get market name
+                    name = WurflQueryManager.get_market_name(val) #get market name
                     market = val
                 elif typ == 'brnd':
-                    name = '' #get brand name
+                    name = WurflQueryManager.get_brand_name(val) #get brand name
                     brand = val
                 elif typ == 'os':
-                    name = '' #get os name
+                    name = WurflQueryManager.get_os_name(val) #get os name
                     os = val
                 elif typ == 'os_ver':
-                    name = '' #get os_ver name
+                    name = WurflQueryManager.get_osver_name(val) #get os_ver name
                     os_ver = val
                 elif typ == 'days':
                     name = date_magic.date_name(val, dim)
@@ -260,7 +260,7 @@ class Report(db.Model):
                                              )
         elif dim == CO:
             typ = 'co'
-            vals = ALL_COUNTRY 
+            vals = ISO_COUNTRIES 
             #countries are indepent of publisher//advertiser
         elif dim == MAR:
             man = WurflQueryManager

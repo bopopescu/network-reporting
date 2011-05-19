@@ -10,20 +10,39 @@ from common.utils import fields as mpfields
 from common.utils import widgets as mpwidgets
 from reports.models import Report, ScheduledReport
 
-APP = 'app'
-AU = 'adunit'
-CAMP = 'campaign'
-CRTV = 'creative'
-P = 'priority'
+#NONE = '--------' (this is for my sanity) #0
+APP = 'app' #1
+AU = 'adunit' #2
+P = 'priority' #3
+CAMP = 'campaign' #4
+CRTV = 'creative' #5
+#Need to move priority to 3, camp to 4, crtv to 5
 MO = 'month' #6
 WEEK = 'week' #7
 DAY = 'day' #8
 HOUR = 'hour' #9
 CO = 'country' #10
-DEV = 'device' #11
+#device is now just marketing name
+DEV = 'marketing' #11
 OS = 'os' #12
-KEY = 'kw' #13
-CHOICES = [('','------------'), (APP, 'App'), (AU, 'Ad Unit'), (CAMP, 'Campaign'), (CRTV, 'Creative'), (P, 'Priority'), (MO, 'Month'), (WEEK, 'Week'), (DAY, 'Day'), (HOUR, 'Hour'),]# (CO, 'Country'), (DEV, 'Device'), (OS, 'Operating System'), (KEY, 'Keywords')]
+OS_VER = 'os_ver' #13
+KEY = 'kw' #14
+CHOICES = [('','------------'), 
+           (APP, 'App'), 
+           (AU, 'Ad Unit'), 
+           (CAMP, 'Campaign'), 
+           (CRTV, 'Creative'), 
+           (P, 'Priority'), 
+           (MO, 'Month'), 
+           (WEEK, 'Week'), 
+           (DAY, 'Day'), 
+           (HOUR, 'Hour'), 
+           (CO, 'Country'), 
+           (DEV, 'Device'), 
+           (OS, 'OS'), 
+           (OS_VER, 'OS Version'),
+           ]
+           #(KEY, 'Keywords')]
 TARG = 'targeting' # I don't know what this is
 
 INT_CHCES = [('today', 'Today'), ('yesterday', 'Yesterday'), ('7days', 'Last 7 days'), ('lmonth', 'Last month'), ('custom', 'Custom')]

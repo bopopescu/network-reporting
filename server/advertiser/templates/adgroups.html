@@ -125,8 +125,10 @@
                       'clicks': [{% for a in graph_adgroups %}
                         { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                       ],
-                      'ctr': [{% for a in graph_adgroups %}
-                        { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.ctr}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                      'ctr':  [
+                      {% for a in graph_adgroups %}
+                        { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.ctr}}{% if not forloop.last %},{% endif %} {% endfor %}] },{% endfor %}
+                        { 'Mopub Optimized': [{% for stat in graph_totals %}{{stat.ctr}}{% if not forloop.last %},{% endif %} {% endfor %}] }
                       ],
                     };
                   </script>

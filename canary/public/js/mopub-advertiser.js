@@ -499,7 +499,8 @@ var mopub = mopub || {};
         chartSeries.push({
           name: seriesName,
           data: seriesData,
-          color: colors[i]
+          color: colors[i],
+          lineWeight: 20,
         });
       });
 

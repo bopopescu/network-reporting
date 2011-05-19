@@ -9,6 +9,11 @@ import urlparse
 
 from optparse import OptionParser
 
+
+# add mopub root to path
+sys.path.append(os.getcwd()+'/../../')
+
+
 # for ubuntu EC2
 sys.path.append("/home/ubuntu/mopub/server")
 sys.path.append("/home/ubuntu/mopub/server/reporting")
@@ -18,19 +23,21 @@ sys.path.append("/home/ubuntu/google_appengine/lib/webob")
 sys.path.append("/home/ubuntu/google_appengine/lib/yaml/lib")
 sys.path.append("/home/ubuntu/google_appengine/lib/fancy_urllib")
 
+
+from appengine_django import InstallAppengineHelperForDjango
+InstallAppengineHelperForDjango()
+
+
 from google.appengine.ext import db
 from google.appengine.ext.db import BadKeyError
 from google.appengine.ext.remote_api import remote_api_stub
 
-# for run_jobflow.sh
-sys.path.append(os.getcwd()+'/../../')
-
+import utils
 from parse_utils import parse_logline
 from advertiser.models import Campaign, AdGroup, Creative
 from publisher.models import Site as AdUnit, App
 from reporting.models import StatsModel, Pacific_tzinfo
 
-import utils
 
 STATUS_STEP = 100000
 

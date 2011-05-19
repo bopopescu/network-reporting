@@ -291,6 +291,7 @@ class StatsModelQueryManager(CachedQueryManager):
             while stats and retries <= MAX_RETRIES:
                 try:
                     db.put(stats[:LIMIT])
+                    print "putting %i models..." %(len(stats[:LIMIT]))
                     stats = stats[LIMIT:]
                     page_count += 1
                     retries = 0

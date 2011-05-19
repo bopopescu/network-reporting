@@ -2133,6 +2133,41 @@ table.campaignData-main, table.reportData-table {
   padding-top:0px;
 }
 
+/* Login */
+
+#login-left, #login-left .fieldset{
+  width:450px;
+}
+#login-left dl.formFields{
+  width:600px;
+}
+
+#login-left dt{
+  width:50px;
+}
+
+
+#google-login{
+  width:300px;
+  height:56px;
+  font-size:22px;
+  display:block;
+  position:absolute;
+  left:550px;
+  top:41px;
+}
+
+#google-login-divider{
+  width:300px;
+  height:106px;
+  font-size:22px;
+  display:block;
+  position:absolute;
+  left:500px;
+  top:16px;
+  border-left:2px solid whiteSmoke;
+}
+
 /****************************************
  * Media Queries
  ****************************************/

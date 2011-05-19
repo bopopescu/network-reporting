@@ -170,6 +170,10 @@ class TestOptimizer(unittest.TestCase):
         # There are 2 impressions for the current hour, so we don't have enough to calculate CTR
         ctr = optimizer.get_ctr(self.adunit_context, self.creative, dt=test_dt, default_ctr=.01)
         eq_(ctr, .01)
+        
+        # Right now we are using a global default CTR of 0.005
+        ctr = optimizer.get_ctr(self.adunit_context, self.creative, dt=test_dt)
+        eq_(ctr, .005)
     
     def mptest_hour_failure_day_success(self):
         """Tests for the case in which the hour has insufficient samples,

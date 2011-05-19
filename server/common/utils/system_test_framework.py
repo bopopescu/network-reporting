@@ -23,13 +23,14 @@ from google.appengine.ext.webapp import (Request,
                                          Response,
                                          )
                                          
-from server.ad_server.main import  (AdHandler,
-                                     AdImpressionHandler,
-                                     AdClickHandler,
-                                     AdAuction,
+from server.ad_server.main import  (AdImpressionHandler,
                                      AdClickHandler,
                                      AppOpenHandler,
                                     )
+                                    
+from server.ad_server.handlers.adhandler import AdHandler     
+from server.ad_server.ad_auction import AdAuction
+
 from time import mktime
 import logging
 from google.appengine.ext.db import Key
@@ -61,7 +62,11 @@ def _build_ad_querystring(udid, keys, ad_id, v = 3, dt = datetime.now(), ll=None
 def fake_request(adunit_key, dt=datetime.now(), ll=None):
     return Request(_fake_environ(_build_ad_querystring(UDID, '', adunit_key, dt=dt, ll=ll)))
 
-def run_auction(adunit_key, simulate_client_success=True, dt = datetime.now(), ll=None,):
+def run_auction(adunit_key, 
+                simulate_client_success=True, 
+                
+                dt = datetime.now(), 
+                ll=None):
     """For use by other tests. Takes an adunit_key and returns the
     creative that won the CPM battle, if success = True, also simulates client callback"""
     

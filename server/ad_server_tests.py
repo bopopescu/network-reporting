@@ -25,14 +25,13 @@ from publisher.models import (App,
                               Site
                               )
 from random import random
-from server.ad_server.main import  (AdHandler,
-                                     AdImpressionHandler,
-                                     AdClickHandler,
-                                     AdAuction,
+from server.ad_server.main import  ( AdImpressionHandler,
                                      AdClickHandler,
                                      AppOpenHandler,
                                      TestHandler,
                                     )
+from server.ad_server.handlers.adhandler import AdHandler                                     
+from server.ad_server.ad_auction import AdAuction
 
 from server.ad_server.filters.filters import ll_dist
 

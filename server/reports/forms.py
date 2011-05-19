@@ -16,7 +16,6 @@ AU = 'adunit' #2
 P = 'priority' #3
 CAMP = 'campaign' #4
 CRTV = 'creative' #5
-#Need to move priority to 3, camp to 4, crtv to 5
 MO = 'month' #6
 WEEK = 'week' #7
 DAY = 'day' #8

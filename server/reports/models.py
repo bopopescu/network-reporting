@@ -14,7 +14,7 @@ from account.models import Account
 from advertiser.query_managers import CampaignQueryManager, CreativeQueryManager
 from common.utils import date_magic
 #import lots of dicts and things
-from common.utils.wurfl import WurflQueryManager
+from common.wurfl.query_managers import WurflQueryManager
 from common.properties.dict_property import DictProperty
 from publisher.query_managers import AppQueryManager, AdUnitQueryManager
 from reporting.models import StatsModel
@@ -277,16 +277,16 @@ class Report(db.Model):
         elif dim == OS:
             man = WurflQueryManager
             typ = 'os'
-            vals = man.reports_get_marketing(brand = brand,
-                                             market = market,
-                                             )
+            vals = man.reports_get_os(brand = brand,
+                                      market = market,
+                                      )
         elif dim == OS_VER:
             man = WurflQueryManager
             typ = 'os_ver'
-            vals = man.reports_get_marketing(os = os,
-                                             brand = brand,
-                                             market = market,
-                                             )
+            vals = man.reports_get_osver(os = os,
+                                         brand = brand,
+                                         market = market,
+                                         )
 
         elif dim == TARG:
             return "Not implemented yet"

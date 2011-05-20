@@ -7,6 +7,8 @@ import time
 import urllib
 import datetime
 
+import binascii
+
 from ad_server.adserver_templates import TEMPLATES
                                     
 from common.utils import helpers
@@ -14,6 +16,7 @@ from common.utils import helpers
 from google.appengine.api import users, urlfetch, memcache
 
 from google.appengine.ext import webapp, db
+from google.appengine.api import images
 
 from publisher.models import *
 from advertiser.models import *
@@ -29,6 +32,7 @@ from ad_server.debug_console import trace_logging
 from ad_server import memcache_mangler
 from ad_server.ad_auction import AdAuction
 from ad_server import frequency_capping
+
 
 TEST_MODE = "3uoijg2349ic(TEST_MODE)kdkdkg58gjslaf"
 

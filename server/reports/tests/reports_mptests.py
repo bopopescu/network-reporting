@@ -184,9 +184,6 @@ class TestReports():
         self.gen_stats()
 
 
-
-
-
 # app, adunit, campaign, creative, priority, month, week, day, hour, country
 
 #priority supercedes campaign and creative
@@ -194,15 +191,14 @@ class TestReports():
 # -- What???
 # targeting, custom targeting
 
+tester = TestReports()
+tester.setUp()
 
 def simple_mptest():
-    tester = TestReports()
-    tester.setUp()
     rep1 = Report(d1='app', start=DATE, end=DATE+datetime.timedelta(days=1), account=tester.account)
     rep2 = Report(d1='campaign', d2='app', d3='day', start=DATE, end=DATE+datetime.timedelta(days=1), account=tester.account)
     rep3 = Report(d1='month', d2='week', d3='campaign', start=DATE, end=DATE+datetime.timedelta(days=1), account=tester.account)
     data1 = rep1.gen_data()
     data2 = rep2.gen_data()
     data3 = rep3.gen_data()
-    pprint.pprint(data1)
     assert True

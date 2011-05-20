@@ -32,8 +32,12 @@ class AdUnitContextQueryManager(CachedQueryManager):
             adunit = AdUnit.get(adunit_key)
             # wrap context
             adunit_context = AdUnitContext.wrap(adunit)
-            # put context in cache
-            memcache.set(str(adunit_context.key()), adunit_context, namespace="context")
+            # put context in cache as long as it will fit
+            # TODO: fix this so we don't need this hack
+            try:
+                memcache.set(str(adunit_context.key()), adunit_context, namespace="context")
+            except:
+                pass    
         else:
             trace_logging.warning("found adunit in cache")    
         return adunit_context

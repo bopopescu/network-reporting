@@ -26,7 +26,6 @@ from common.constants import (FULL_NETWORKS,
                              )
 
 from string import Template
-from urllib import urlencode, unquote
 #from datetime import datetime
 
 from google.appengine.api import users, urlfetch, memcache
@@ -47,7 +46,6 @@ from ad_server.networks.millennial import MillennialServerSide
 from ad_server.networks.mobfox import MobFoxServerSide
 from ad_server.optimizer import optimizer
 
-from userstore.query_managers import ClickEventManager, AppOpenEventManager
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 
 from ad_server.optimizer.adunit_context import AdUnitContext, CreativeCTR

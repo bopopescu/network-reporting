@@ -24,7 +24,7 @@ from server.ad_server.main import  ( AdClickHandler,
                                      TestHandler,
                                      )
 from server.ad_server.handlers.adhandler import AdHandler                                     
-from server.ad_server.ad_auction import AdAuction
+from server.ad_server.auction.ad_auction import AdAuction
                                      
 ############# Integration Tests #############
 import unittest

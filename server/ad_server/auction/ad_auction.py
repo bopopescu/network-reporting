@@ -112,7 +112,7 @@ class AdAuction(object):
     @classmethod
     def run(cls, request=None,
   		         adunit=None,
-  		         keywordz=None,
+  		         keywords=None,
                  country_tuple=[],
   		         excluded_adgroups=None,
   		         udid=None,
@@ -124,7 +124,6 @@ class AdAuction(object):
   		         experimental=None):
         """ Runs the auction to determine the appropriate adunit to display. 
         @returns: [winning_creative, on_fail_exclude_adgroups] """
-        opasdf.asdfoiu.asdofasdf
         # TODO: Clean up variable names
         # TODO: For testability, should not require request
         

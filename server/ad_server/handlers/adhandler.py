@@ -30,7 +30,7 @@ from google.appengine.ext.db import Key
 
 from ad_server.debug_console import trace_logging
 from ad_server import memcache_mangler
-from ad_server.ad_auction import AdAuction
+from ad_server.auction.ad_auction import AdAuction
 from ad_server import frequency_capping
 
 

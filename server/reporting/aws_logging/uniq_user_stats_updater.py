@@ -51,27 +51,48 @@ def update_models():
     def txn(account_stats, stats_key_names):
         put_list = []
 
-        stats_models = StatsModel.get_by_key_name([s.split('|')[0] for s in stats_key_names], parent=account_stats)
-        for stats_key_name, stats_model in zip(stats_key_names, stats_models):
-            if stats_model:
-                stats_model.user_count, stats_model.request_user_count, stats_model.impression_user_count, stats_model.click_user_count = counts_cache[stats_key_name]
-                put_list.append(stats_model)
-            else:
-                print 'stats_model should not be None: %s'%stats_key_name
+        for s in stats_key_names:
+            try:
+                stats_key_name = s.split('|')[0]
+                stats_model = StatsModel.get_by_key_name(stats_key_name, parent=account_stats)
+                if stats_model:
+                    stats_model.user_count, stats_model.request_user_count, stats_model.impression_user_count, stats_model.click_user_count = counts_cache[s]
+                    put_list.append(stats_model)
+                else:
+                    print 'stats_model should not be None: %s'%stats_key_name
+            except Exception, e:
+                # traceback.print_exc()
+                print 'exception on %s -> %s', % (stats_key_name, e)
+                continue
+
         
         print 'uniq user: putting %i models...' % (len(put_list))
         put_keys = db.put(put_list)
-        fail_count = len(put_list) - len(put_keys)
-        if fail_count > 0:
-            print 'uniq user: %i models failed on batch put' %fail_count
+        put_fail_count = len(put_list) - len(put_keys)
+        if put_fail_count > 0:
+            print 'uniq user: %i models failed on batch put' %put_fail_count
     
     
     for account_stats, stats_key_names in stats_model_cache.iteritems():   
+        txn_fail_count = 0
         stats_key_names = list(stats_key_names)
         print 'uniq user: putting models for account', account_stats.account.key().name() 
         while stats_key_names:
-            db.run_in_transaction(txn, account_stats, stats_key_names[:LIMIT])
+            try:
+                db.run_in_transaction(txn, account_stats, stats_key_names[:LIMIT])
+            except:
+                traceback.print_exc()
+                txn_fail_count += 1
+                print 'failed %i times' % (txn_fail_count)
+                if txn_fail_count <= 2:
+                    print 'sleeping for 60 seconds...'
+                    time.sleep(60) # sleep for a minute and try again
+                    continue
+                else:
+                    print 'phuket...moving on to next account'
+                    break # if failed 3 times, break the while loop
             stats_key_names = stats_key_names[LIMIT:]
+            txn_fail_count = 0
             
                     
     

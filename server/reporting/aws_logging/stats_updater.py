@@ -89,6 +89,7 @@ def update_model(adunit_key=None, creative_key=None,
                 stats_qm = StatsModelQueryManager(account)
                 stats_qm_cache[str(account.key())] = stats_qm
                 
+            # create stats model
             stats = StatsModel(publisher=adunit_key, 
                                advertiser=creative_key, 
                                country=country_code,
@@ -104,8 +105,26 @@ def update_model(adunit_key=None, creative_key=None,
             stats.impression_count = counts[1]
             stats.click_count = counts[2]
             stats.conversion_count = counts[3]
-            
+
             stats_qm.accumulate_stats(stats)
+
+        
+            # if any non-basic attribute exists, create basic version of stats model with only basic attributes: pub, adv, country, time
+            if brand_name or marketing_name or device_os or device_os_version:
+                stats_basic = StatsModel(publisher=adunit_key, 
+                                         advertiser=creative_key, 
+                                         country=country_code,
+                                         date=date, 
+                                         date_hour=date_hour, 
+                                         offline=True)
+
+                stats_basic.request_count = counts[0]
+                stats_basic.impression_count = counts[1]
+                stats_basic.click_count = counts[2]
+                stats_basic.conversion_count = counts[3]
+                        
+                stats_qm.accumulate_stats(stats_basic)
+
             return True
         else:
             print 'adunit_key and counts should not be None'

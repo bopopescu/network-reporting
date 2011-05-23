@@ -62,7 +62,7 @@ def update_models():
                     print 'stats_model should not be None: %s'%stats_key_name
             except Exception, e:
                 # traceback.print_exc()
-                print 'exception on %s -> %s', % (stats_key_name, e)
+                print 'exception on %s -> %s' % (stats_key_name, e)
                 continue
 
         

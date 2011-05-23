@@ -23,7 +23,7 @@ from server.ad_server.main import  ( AdClickHandler,
                                      AppOpenHandler,
                                      TestHandler,
                                      )
-
+from server.ad_server.handlers import adhandler
 from server.ad_server.handlers.adhandler import AdHandler                                     
 from server.ad_server.auction.ad_auction import AdAuction
 

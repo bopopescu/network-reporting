@@ -114,7 +114,7 @@ class AdAuction(object):
   		         adunit=None,
   		         keywords=None,
                  country_tuple=[],
-  		         excluded_adgroups=None,
+  		         excluded_adgroups=[],
   		         udid=None,
   		         ll=None,
   		         request_id=None,
@@ -151,13 +151,14 @@ class AdAuction(object):
         trace_logging.info("Excluding Ineligible Campaigns")
         trace_logging.info("##############################")
         
-        # # campaign exclusions... budget + time
-        ALL_FILTERS = (budget_filter(),
+        # We first run filters at the adgroup level
+        ALL_FILTERS = ( exclude_filter(excluded_adgroups),
+                        budget_filter(),
                         active_filter(), 
                         lat_lon_filter(ll),
                         kw_filter(keywords), 
                         geo_filter(geo_predicates), 
-                        device_filter(device_predicates) 
+                        device_filter(device_predicates)
                        ) 
         
         all_ad_groups = filter(mega_filter(*ALL_FILTERS), all_ad_groups)
@@ -271,7 +272,6 @@ class AdAuction(object):
                             # all creatives can target it
                             adunit_format = None if adunit.resizable else adunit.format
                             CRTV_FILTERS = (format_filter(adunit_format), # remove wrong formats
-                                                exclude_filter(excluded_adgroups), # remove excluded adgroups
                                                 ecpm_filter(winning_ecpm, player_ecpm_dict), # remove creatives that aren't tied for first (winning ecpm)
                                                )
                             winners = filter(mega_filter(*CRTV_FILTERS), players)

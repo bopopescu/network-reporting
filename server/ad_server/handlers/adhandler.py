@@ -165,7 +165,7 @@ class AdHandler(webapp.RequestHandler):
         	    						  now=now,
         	    						  user_agent=user_agent,
         	    						  adunit_context=adunit_context,
-                                          # country_tuple=country_tuple, 
+                                          country_tuple=country_tuple, 
         	    						  experimental=experimental)
         
         # Unpack the results of the AdAuction
@@ -388,11 +388,6 @@ class AdHandler(webapp.RequestHandler):
                 self.response.headers.add_header("X-Productid","pixel_001")
               
               
-            if keywords or country_tuple:
-                params.update(title=','.join(keywords + list(country_tuple)))
-            else:
-                params.update(title='')
-           
             if version_number >= 2:  
                 params.update(finishLoad='<script>function finishLoad(){window.location="mopub://finishLoad";} window.onload = function(){finishLoad();} </script>')
                 # extra parameters used only by admob template
@@ -407,6 +402,8 @@ class AdHandler(webapp.RequestHandler):
                 params.update(admob_fail_load='')
                
             
+            
+            
             # indicate to the client the winning creative type, in case it is natively implemented (iad, clear)
             
             if str(creative.ad_type) == "iAd":
@@ -416,9 +413,8 @@ class AdHandler(webapp.RequestHandler):
                 # self.response.headers.add_header("X-Customselector","customEventTest")
                 
                 self.response.headers.add_header("X-Adtype", str(creative.ad_type))
-                self.response.headers.add_header("X-Backfill", str(creative.ad_type))        
-                # self.response.headers.add_header("X-Failurl", self.request.url+'&exclude=' + str(creative.ad_type))
-                self.response.headers.add_header("X-Failurl", self.request.url+'&exclude='.join(on_fail_exclude_adgroups))
+                self.response.headers.add_header("X-Backfill", str(creative.ad_type))
+                self.response.headers.add_header("X-Failurl", _build_fail_url(self.request.url, on_fail_exclude_adgroups))
 
             elif str(creative.ad_type) == "admob_native":
                 if "full" in adunit.format:
@@ -427,7 +423,7 @@ class AdHandler(webapp.RequestHandler):
                 else:
                     self.response.headers.add_header("X-Adtype", str(creative.ad_type))
                     self.response.headers.add_header("X-Backfill", str(creative.ad_type))
-                self.response.headers.add_header("X-Failurl", self.request.url+'&exclude='+str(creative.ad_type))
+                self.response.headers.add_header("X-Failurl", _build_fail_url(self.request.url, on_fail_exclude_adgroups))
                 self.response.headers.add_header("X-Nativeparams", '{"adUnitID":"'+adunit.get_pub_id("admob_pub_id")+'"}')
 
             elif str(creative.ad_type) == "millennial_native":
@@ -437,7 +433,7 @@ class AdHandler(webapp.RequestHandler):
                 else:
                     self.response.headers.add_header("X-Adtype", str(creative.ad_type))
                     self.response.headers.add_header("X-Backfill", str(creative.ad_type))
-                self.response.headers.add_header("X-Failurl", self.request.url+'&exclude='+str(creative.ad_type))
+                self.response.headers.add_header("X-Failurl", _build_fail_url(self.request.url, on_fail_exclude_adgroups))
                 self.response.headers.add_header("X-Nativeparams", '{"adUnitID":"'+adunit.get_pub_id("millennial_pub_id")+'"}')
                 
             elif str(creative.ad_type) == "adsense":
@@ -475,21 +471,16 @@ class AdHandler(webapp.RequestHandler):
                 self.response.headers.add_header("X-Nativeparams", json_string)
                 
                 # add some extra  
-                self.response.headers.add_header("X-Failurl", self.request.url+'&exclude='+str(creative.ad_type))
+                self.response.headers.add_header("X-Failurl", _build_fail_url(self.request.url, on_fail_exclude_adgroups))
                 self.response.headers.add_header("X-Format",'300x250_as')
                
                 self.response.headers.add_header("X-Backgroundcolor","0000FF")
             elif str(creative.ad_type) == 'admob':
-                self.response.headers.add_header("X-Failurl", self.request.url+'&exclude='+str(creative.ad_type))
+                self.response.headers.add_header("X-Failurl", _build_fail_url(self.request.url, on_fail_exclude_adgroups))
                 self.response.headers.add_header("X-Adtype", str('html'))
             else:  
                 self.response.headers.add_header("X-Adtype", str('html'))
               
-            if keywords or country_tuple:
-                params.update(title=','.join(keywords + list(country_tuple)))
-            else:
-               params.update(title='')
-            self.response.headers.add_header("X-Backfill", str('html'))
             
             # pass the creative height and width if they are explicity set
             if creative.width and creative.height and 'full' not in site.format:
@@ -555,3 +546,16 @@ class AdHandler(webapp.RequestHandler):
         exp_url = exp_url.replace(adunit_id, new_id) # Splice in proper id
         trace_logging.info("Redirected to experimental server: " + exp_url)
         return self.redirect(exp_url)
+        
+########### HELPER FUNCTIONS ############
+def _build_fail_url(original_url, on_fail_exclude_adgroups):
+    """ Remove all the old &exclude= substrings and replace them with our new ones """
+    clean_url = re.sub("&exclude=[^&]*", "", original_url)
+    
+    if not on_fail_exclude_adgroups:
+        return clean_url
+    else:
+        return clean_url + '&exclude=' + '&exclude='.join(on_fail_exclude_adgroups)
+    
+    
+    

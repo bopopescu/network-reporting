@@ -12,13 +12,16 @@ sys.path.append(os.getcwd()+'/../../')
 
 
 # for ubuntu EC2
-sys.path.append("/home/ubuntu/mopub/server")
-sys.path.append("/home/ubuntu/mopub/server/reporting")
-sys.path.append("/home/ubuntu/google_appengine")
-sys.path.append("/home/ubuntu/google_appengine/lib/django")
-sys.path.append("/home/ubuntu/google_appengine/lib/webob")
-sys.path.append("/home/ubuntu/google_appengine/lib/yaml/lib")
-sys.path.append("/home/ubuntu/google_appengine/lib/fancy_urllib")
+sys.path.append('/home/ubuntu/mopub/server')
+sys.path.append('/home/ubuntu/mopub/server/reporting')
+sys.path.append('/home/ubuntu/google_appengine')
+sys.path.append('/home/ubuntu/google_appengine/lib/antlr3')
+sys.path.append('/home/ubuntu/google_appengine/lib/django_1_2')
+sys.path.append('/home/ubuntu/google_appengine/lib/fancy_urllib')
+sys.path.append('/home/ubuntu/google_appengine/lib/ipaddr')
+sys.path.append('/home/ubuntu/google_appengine/lib/webob')
+sys.path.append('/home/ubuntu/google_appengine/lib/yaml/lib')
+
 
 
 from appengine_django import InstallAppengineHelperForDjango
@@ -48,7 +51,7 @@ def clear_cache():
 
 def put_models():
     for qm in stats_qm_cache.values():
-        print "putting models for account", qm.account.name()
+        print 'putting models for account', qm.account.name()
         qm.put_stats(offline=True)
     clear_cache()
            
@@ -86,6 +89,7 @@ def update_model(adunit_key=None, creative_key=None,
                 stats_qm = StatsModelQueryManager(account)
                 stats_qm_cache[str(account.key())] = stats_qm
                 
+            # create stats model
             stats = StatsModel(publisher=adunit_key, 
                                advertiser=creative_key, 
                                country=country_code,
@@ -101,8 +105,26 @@ def update_model(adunit_key=None, creative_key=None,
             stats.impression_count = counts[1]
             stats.click_count = counts[2]
             stats.conversion_count = counts[3]
-            
+
             stats_qm.accumulate_stats(stats)
+
+        
+            # if any non-basic attribute exists, create basic version of stats model with only basic attributes: pub, adv, country, time
+            if brand_name or marketing_name or device_os or device_os_version:
+                stats_basic = StatsModel(publisher=adunit_key, 
+                                         advertiser=creative_key, 
+                                         country=country_code,
+                                         date=date, 
+                                         date_hour=date_hour, 
+                                         offline=True)
+
+                stats_basic.request_count = counts[0]
+                stats_basic.impression_count = counts[1]
+                stats_basic.click_count = counts[2]
+                stats_basic.conversion_count = counts[3]
+                        
+                stats_qm.accumulate_stats(stats_basic)
+
             return True
         else:
             print 'adunit_key and counts should not be None'
@@ -173,12 +195,12 @@ def main():
     host = '38-aws.latest.mopub-inc.appspot.com'
     remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', utils.auth_func, host)
     
-    print "processing %s for GAE datastore..." %options.input_file
+    print 'processing %s for GAE datastore...' %options.input_file
     parse_and_update_models(options.input_file)
     put_models()
    
     elapsed = time.time() - start
-    print "updating GAE datastore took %i minutes and %i seconds" % (elapsed/60, elapsed%60)
+    print 'updating GAE datastore took %i minutes and %i seconds' % (elapsed/60, elapsed%60)
     
 
 if __name__ == '__main__':

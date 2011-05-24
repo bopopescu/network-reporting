@@ -8,7 +8,6 @@ from django.template.loader import render_to_string
 from google.appengine.api import taskqueue
 from google.appengine.ext import db
 
-
 from common.utils.query_managers import CachedQueryManager
 from common.utils import date_magic
 from reporting.models import StatsModel

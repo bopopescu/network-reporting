@@ -49,6 +49,17 @@ import urllib
 import urllib2
 
 
+# for Ubuntu EC2
+sys.path.append("/home/ubuntu/google_appengine")
+sys.path.append("/home/ubuntu/google_appengine/lib/antlr3")
+sys.path.append("/home/ubuntu/google_appengine/lib/django")
+sys.path.append("/home/ubuntu/google_appengine/lib/fancy_urllib")
+sys.path.append("/home/ubuntu/google_appengine/lib/graphy")
+sys.path.append("/home/ubuntu/google_appengine/lib/ipaddr")
+sys.path.append("/home/ubuntu/google_appengine/lib/simplejson")
+sys.path.append("/home/ubuntu/google_appengine/lib/webob")
+sys.path.append("/home/ubuntu/google_appengine/lib/yaml/lib")
+
 
 import google
 import hashlib

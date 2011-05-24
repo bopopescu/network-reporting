@@ -109,11 +109,12 @@ def format_filter(format):
         return creative.format == format
     return (real_filter, log_mesg, [])
 
-def exclude_filter(excl_params):
+def exclude_filter(excluded_adgroups):
+    """ We exclude certain adgroups that we have already tried or wish
+    to skip for other reasons """
     log_mesg = "Removed due to exclusion parameters: %s"
-    # NOTE: we are excluding on ad type not the creative id
-    def real_filter(creative):
-        return not creative.ad_type in excl_params 
+    def real_filter(adgroup):
+        return not str(adgroup.key()) in excluded_adgroups
     return (real_filter, log_mesg, [])
 
 def ecpm_filter(winning_ecpm, creative_ecpm_dict):

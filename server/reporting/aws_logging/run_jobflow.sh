@@ -90,12 +90,6 @@ echo "deleting local chunk log files at" $LOG_DIR
 rm $LOG_DIR/*
 
 
-# remove raw logs in S3
-# echo
-# echo "deleting raw logs at" $S3_LOGFILE.raw
-# s3cmd del --recursive $S3_LOGFILE.raw
-
-
 # download log counts output files from S3 and merge them into one
 START_TIME=$(date +%s)
 echo

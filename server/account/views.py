@@ -41,7 +41,7 @@ class AccountHandler(RequestHandler):
             for app in apps_for_account:
                 app_network_config_data = {}
                 for (key, value) in self.request.POST.iteritems():
-                    app_key_identifier = key.split('-')
+                    app_key_identifier = key.split('-__-')
                     if app_key_identifier[0] == str(app.key()):
                         app_network_config_data[app_key_identifier[1]] = value
                 

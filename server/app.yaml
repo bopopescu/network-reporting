@@ -48,10 +48,16 @@ handlers:
 - url: /reports/gen_report/
   script: main.py
   login: admin
+  
+- url: /admin/sfdc/
+  script: main.py
+  login: admin 
+  
 
 - url: /m/clear
   script: ad_server/main.py
   login: admin
+  
 
 - url: /m/.*
   script: ad_server/main.py

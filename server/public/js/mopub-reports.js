@@ -197,8 +197,8 @@
 
     var selects = $('.dim-selectmenu').selectmenu({
         style: 'popup',
-        maxHeight:300,
-        width:100
+        maxHeight:320,
+        width:110
     });
 
     d1_sel = $(selects[0]);
@@ -260,7 +260,7 @@
     function d1_validate(obj) {
             var idx = obj.selectmenu('index');
             //start with everything enabled
-            for (var i = 0; i < 11; i++) {
+            for (var i = 0; i < 14; i++) {
                 d3_sel.selectmenu('enable', i);
                 d2_sel.selectmenu('enable', i);
             }
@@ -374,7 +374,7 @@
                     break;
                 case 'marketing':
                     if (d2_idx == 11) {
-                        d2_sel.selctmenu('index', 0);
+                        d2_sel.selectmenu('index', 0);
                     }
                     if (d3_idx == 11) {
                         d3_sel.selectmenu('index', 0);
@@ -384,7 +384,7 @@
                     break;
                 case 'os_ver':
                     if (d2_idx == 13) {
-                        d2_sel.selctmenu('index', 0);
+                        d2_sel.selectmenu('index', 0);
                     }
                     if (d3_idx == 13) {
                         d3_sel.selectmenu('index', 0);
@@ -393,7 +393,7 @@
                     d3_sel.selectmenu('disable', 13);
                 case 'os':
                     if (d2_idx == 12) {
-                        d2_sel.selctmenu('index', 0);
+                        d2_sel.selectmenu('index', 0);
                     }
                     if (d3_idx == 12) {
                         d3_sel.selectmenu('index', 0);

@@ -2,6 +2,7 @@ import os, sys
 import pprint
 
 sys.path.append(os.environ['PWD'])
+import common.utils.test.setup
 
 import datetime
 import logging
@@ -9,7 +10,7 @@ import random
 
 import unittest
 from nose.tools import eq_
-from google.appengine.api import memcache
+from google.appengine.api import apiproxy_stub_map, memcache
 from google.appengine.ext import db
 from google.appengine.ext import testbed
 
@@ -17,9 +18,11 @@ from google.appengine.ext import testbed
 #from django.template.loader import render_to_string
 from advertiser.models import AdGroup, Creative, Campaign
 from account.models import Account
+from common.utils import date_magic
 from publisher.models import App
 from publisher.models import Site as AdUnit
-from reports.models import Report
+from reports.models import Report, ScheduledReport
+from reports.query_managers import ReportQueryManager
 from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
 
@@ -195,6 +198,7 @@ tester = TestReports()
 tester.setUp()
 
 def simple_mptest():
+    return
     rep1 = Report(d1='app', start=DATE, end=DATE+datetime.timedelta(days=1), account=tester.account)
     rep2 = Report(d1='campaign', d2='app', d3='day', start=DATE, end=DATE+datetime.timedelta(days=1), account=tester.account)
     rep3 = Report(d1='month', d2='week', d3='campaign', start=DATE, end=DATE+datetime.timedelta(days=1), account=tester.account)
@@ -202,3 +206,217 @@ def simple_mptest():
     data2 = rep2.gen_data()
     data3 = rep3.gen_data()
     assert True
+
+#***********************#
+#   SCHEDULED  REPORT   #
+#         TESTS         #
+#***********************#
+
+NOW = datetime.datetime(2011, 1, 1).date()
+one_day = datetime.timedelta(days=1)
+
+def get_scheduled_reps(date):
+    man = ReportQueryManager()
+    reps = ScheduledReport.all().filter('next_sched_date =', date)
+    return [rep for rep in reps]
+
+
+#################
+#  Simple tests #
+#################
+
+man = ReportQueryManager(account=tester.account)
+
+def none_mptest():
+    s = man.add_report('app', None, None, NOW, 4, name='none_test', sched_interval = 'none', testing = True)
+    assert len(get_scheduled_reps(NOW)) == 1
+    assert len(get_scheduled_reps(NOW + one_day)) == 0
+    #set next sched date to be in the past
+    s.next_sched_date = NOW - one_day 
+    s.put()
+    return
+
+def daily_mptest():
+    s = man.add_report('app', None, None, NOW, 4, name='daily_test', sched_interval = 'daily', testing = True)
+    assert len(get_scheduled_reps(NOW)) == 0 
+    assert len(get_scheduled_reps(NOW + one_day)) == 1
+    #set next sched date to be in the past
+    s.next_sched_date = NOW - one_day 
+    s.put()
+    return
+
+def double_daily_mptest():
+    s = man.add_report('app', None, None, NOW, 4, name='dub_daily_test', sched_interval = 'daily', testing = True)
+    def assrt_daily(dte):
+        assert len(get_scheduled_reps(dte)) == 0 
+        assert len(get_scheduled_reps(dte + one_day)) == 1
+
+    assrt_daily(NOW)
+    tom = NOW + one_day
+    s = man.new_report(str(s.most_recent.key()), now=tom, testing=True)
+    assrt_daily(tom)
+
+    #set next sched date to be in the past
+    s.next_sched_date = NOW - one_day 
+    s.put()
+    return
+
+def weekly_mptest():
+    s = man.add_report('app', None, None, NOW, 4, name='weekly_test', sched_interval = 'weekly', testing = True)
+    assert len(get_scheduled_reps(NOW)) == 0 
+    dte = NOW + one_day
+    for i in range(7):
+        if dte.weekday() == 0:
+            assert len(get_scheduled_reps(dte)) == 1
+            break
+        else:
+            assert len(get_scheduled_reps(dte)) == 0
+        dte += one_day
+    #set next sched date to be in the past
+    s.next_sched_date = NOW - one_day 
+    s.put()
+    return 
+    
+def double_weekly_mptest():
+    s = man.add_report('app', None, None, NOW, 4, name='dub_weekly_test', sched_interval = 'weekly', testing = True)
+    def assrt_weekly(dte):
+        assert len(get_scheduled_reps(dte)) == 0 
+        dte = dte + one_day
+        for i in range(7):
+            if dte.weekday() == 0:
+                assert len(get_scheduled_reps(dte)) == 1
+                return dte
+            else:
+                assert len(get_scheduled_reps(dte)) == 0
+            dte += one_day
+
+    next_day = assrt_weekly(NOW)
+    s = man.new_report(str(s.most_recent.key()), now=next_day, testing=True)
+    assrt_weekly(next_day)
+    #set next sched date to be in the past
+    s.next_sched_date = NOW - one_day 
+    s.put()
+    return
+
+def monthly_mptest():
+    s = man.add_report('app', None, None, NOW, 4, name='monthly_test', sched_interval = 'monthly', testing = True)
+    assert len(get_scheduled_reps(NOW)) == 0
+    dte = NOW + one_day
+    while dte.day != 1:
+        assert len(get_scheduled_reps(dte)) == 0
+        dte += one_day
+    assert len(get_scheduled_reps(dte)) == 1
+    #set next sched date to be in the past
+    s.next_sched_date = NOW - one_day 
+    s.put()
+    return
+
+def double_monthly_mptest():
+    s = man.add_report('app', None, None, NOW, 4, name='dub_monthly_test', sched_interval = 'monthly', testing = True)
+    def assrt_monthly(dte):
+        assert len(get_scheduled_reps(dte)) == 0
+        dte = dte + one_day
+        while dte.day != 1:
+            assert len(get_scheduled_reps(dte)) == 0
+            dte += one_day
+        assert len(get_scheduled_reps(dte)) == 1
+        return dte
+    next_day = assrt_monthly(NOW)
+    s = man.new_report(str(s.most_recent.key()), now=next_day, testing=True)
+    assrt_monthly(next_day)
+    #set next sched date to be in the past
+    s.next_sched_date = NOW - one_day 
+    s.put()
+    return
+
+def quarterly_mptest():
+    s = man.add_report('app', None, None, NOW, 4, name='quarterly_test', sched_interval = 'quarterly', testing = True)
+    assert len(get_scheduled_reps(NOW)) == 0
+    end = datetime.datetime(2011, 4, 1).date()
+    dte = NOW + one_day
+    while dte != end:
+        assert len(get_scheduled_reps(dte)) == 0
+        dte += one_day
+    assert len(get_scheduled_reps(dte)) == 1
+    #set next sched date to be in the past
+    s.next_sched_date = NOW - one_day 
+    s.put()
+    return
+
+def double_quarterly_mptest():
+    s = man.add_report('app', None, None, NOW, 4, name='dub_quarterly_test', sched_interval = 'quarterly', testing = True)
+    assert len(get_scheduled_reps(NOW)) == 0
+    end = datetime.datetime(2011, 4, 1).date()
+    dte = NOW + one_day
+    while dte != end:
+        assert len(get_scheduled_reps(dte)) == 0
+        dte += one_day
+    assert len(get_scheduled_reps(dte)) == 1
+
+    s = man.new_report(str(s.most_recent.key()), now=dte, testing=True)
+
+    assert len(get_scheduled_reps(dte)) == 0
+    end = datetime.datetime(2011, 7, 1).date()
+    dte = dte + one_day
+    while dte != end:
+        assert len(get_scheduled_reps(dte)) == 0
+        dte += one_day
+    assert len(get_scheduled_reps(dte)) == 1
+
+    #set next sched date to be in the past
+    s.next_sched_date = NOW - one_day 
+    s.put()
+    return
+
+####################
+# Test transitions #
+####################
+
+def daily_to_weekly_mptest():
+    pass
+
+def daily_to_montly_mptest():
+    pass
+
+def daily_to_quarterly_mptest():
+    pass
+
+def daily_to_none_mptest():
+    pass
+
+def weekly_to_daily_mptest():
+    pass
+
+def weekly_to_montly_mptest():
+    pass
+
+def weekly_to_quarterly_mptest():
+    pass
+
+def weekly_to_none_mptest():
+    pass
+
+def montly_to_daily_mptest():
+    pass
+
+def montly_to_weekly_mptest():
+    pass
+
+def montly_to_quarterly_mptest():
+    pass
+
+def montly_to_none_mptest():
+    pass
+
+def quarterly_to_daily_mptest():
+    pass
+
+def quarterly_to_weekly_mptest():
+    pass
+
+def quarterly_to_montly_mptest():
+    pass
+
+def quarterly_to_none_mptest():
+    pass
+

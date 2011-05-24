@@ -16,8 +16,8 @@ from common.utils.request_handler import RequestHandler
 from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
 from reports.forms import ReportForm
-from reports.query_managers import ReportQueryManager
 from reports.models import ScheduledReport
+from reports.query_managers import ReportQueryManager
 
 
 from reports.forms import ReportForm
@@ -106,21 +106,24 @@ class CheckReportHandler(RequestHandler):
 def check_report(request, *args, **kwargs):
     return CheckReportHandler()(request, *args, **kwargs)
 
+def gen_report_worker(report, account):
+    man = ReportQueryManager()
+    report = man.get_report_by_key(report)
+    report.status = 'pending'
+    man.put_report(report)
+    sched = report.schedule
+    sched.last_run = datetime.datetime.now()
+    man.put_report(sched)
+    report.data = report.gen_data()
+    report.status = 'done'
+    report.completed_at = datetime.datetime.now()
+    man.put_report(report)
+    return
 
 #Only actual reports call this
 class GenReportHandler(RequestHandler):
     def post(self, report, account):
-        man = ReportQueryManager()
-        report = man.get_report_by_key(report)
-        report.status = 'pending'
-        man.put_report(report)
-        sched = report.schedule
-        sched.last_run = datetime.datetime.now()
-        man.put_report(sched)
-        report.data = report.gen_data()
-        report.status = 'done'
-        report.completed_at = datetime.datetime.now()
-        man.put_report(report)
+        gen_report_worker(report, account)
         return HttpResponse('Report Generation Successful')
 
     def get(self, report):

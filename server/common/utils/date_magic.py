@@ -21,7 +21,7 @@ def tomorrow(d):
     return d + timedelta(days=1)
 
 def start_next_quarter(d):
-    quarter = (d.month-1) / 4
+    quarter = (d.month-1) / 3 
     if quarter == 0:
         return date(d.year, 4, 1)
     elif quarter == 1:

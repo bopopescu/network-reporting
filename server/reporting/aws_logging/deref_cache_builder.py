@@ -76,7 +76,7 @@ def deref_app(app_str):
         print 'EXCEPTION on app %s: %s' %(app_str, e)
         return None
     except Exception, e:
-        #traceback.print_exc() # comment out for now; too many ill-formated keys that flood the output logs
+        # traceback.print_exc() 
         return None
 
 
@@ -96,7 +96,8 @@ def deref_adunit(adunit_str):
         print 'EXCEPTION on adunit %s: %s' %(adunit_str, e)
         return None
     except Exception, e:
-        #traceback.print_exc()
+        # print 'ADUNIT_STR:', adunit_str
+        # traceback.print_exc()
         return None
 
 
@@ -115,7 +116,7 @@ def deref_campaign(campaign_str):
         print 'EXCEPTION on campaign %s: %s' %(campaign_str, e)
         return None
     except Exception, e:
-        #traceback.print_exc()
+        # traceback.print_exc()
         return None
 
 
@@ -135,7 +136,7 @@ def deref_adgroup(adgroup_str):
         print 'EXCEPTION on adgroup %s: %s' %(adgroup_str, e)
         return None
     except Exception, e:
-        #traceback.print_exc()
+        # traceback.print_exc()
         return None
 
 
@@ -157,7 +158,8 @@ def deref_creative(creative_str):
         print 'EXCEPTION on creative %s: %s' %(creative_str, e)
         return None
     except Exception, e:
-        #traceback.print_exc()
+        # print 'CREATIVE_STR:', creative_str
+        # traceback.print_exc()
         return None
 
 
@@ -202,6 +204,7 @@ def deref_models(handler, param_dict):
     
 def deref_logline(logline):
     logline_dict = parse_logline(logline, parse_ua=False)
+
     if logline_dict:
         handler = logline_dict.get('path', None)
         param_dict = logline_dict.get('params', None)

@@ -34,7 +34,7 @@ mkdir $LOG_DIR
 # download logs from GAE
 START_TIME=$(date +%s)
 echo
-echo N47935 | appcfg.py --no_cookies --email=olp@mopub.com --passin --append --num_days=1 --verbose request_logs $APP_DIR $LOG_ROOT_DIR/request-logfile
+echo N47935 | ./appcfg.py --no_cookies --email=olp@mopub.com --passin --append --num_days=1 --verbose request_logs $APP_DIR $LOG_ROOT_DIR/request-logfile
 #echo N47935 | appcfg.py --no_cookies --email=olp@mopub.com --passin --num_days=3 request_logs $APP_DIR $LOG_ROOT_DIR/request-logfile
 echo
 STOP_TIME=$(date +%s)
@@ -49,8 +49,8 @@ s3cmd get --force $S3_CODE_DIR/deref_cache.pkl $APP_DIR/reporting/aws_logging/de
 
 
 # build up deref cache for log preprocessing
-echo
-python $APP_DIR/reporting/aws_logging/deref_cache_builder.py -f $LOG_ROOT_DIR/request-logfile 
+# echo
+# python $APP_DIR/reporting/aws_logging/deref_cache_builder.py -f $LOG_ROOT_DIR/request-logfile 
 
 
 # upload updated deref cache to S3

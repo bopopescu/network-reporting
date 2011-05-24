@@ -8,6 +8,7 @@ from django import forms
 from common.utils import forms as mpforms
 from common.utils import fields as mpfields
 from common.utils import widgets as mpwidgets
+from common.utils import date_magic
 from reports.models import Report, ScheduledReport
 
 #NONE = '--------' (this is for my sanity) #0
@@ -45,6 +46,7 @@ CHOICES = [('','------------'),
 TARG = 'targeting' # I don't know what this is
 
 INT_CHCES = [('today', 'Today'), ('yesterday', 'Yesterday'), ('7days', 'Last 7 days'), ('lmonth', 'Last month'), ('custom', 'Custom')]
+SCHED_CHCES = [('none', "Don't schedule"), ('daily', 'Daily'), ('weekly', 'Weekly'), ('monthly', 'Monthly'), ('quarterly', 'Quarterly')]
 
 
 class ReportForm(mpforms.MPModelForm):
@@ -54,6 +56,7 @@ class ReportForm(mpforms.MPModelForm):
     d2 = mpfields.MPChoiceField(choices=CHOICES,widget=mpwidgets.MPSelectWidget())
     d3 = mpfields.MPChoiceField(choices=CHOICES,widget=mpwidgets.MPSelectWidget())
     interval = mpfields.MPChoiceField(choices=INT_CHCES, widget=mpwidgets.MPSelectWidget())
+    sched_interval = mpfields.MPChoiceField(choices=SCHED_CHCES, widget=mpwidgets.MPSelectWidget())
     start = forms.Field()
 
     def __init__(self, save_as=False,*args, **kwargs):
@@ -82,5 +85,5 @@ class ReportForm(mpforms.MPModelForm):
 
     class Meta:
         model = ScheduledReport
-        fields = ('d1', 'd2', 'd3', 'end', 'days', 'name', 'interval')
+        fields = ('d1', 'd2', 'd3', 'end', 'days', 'name', 'interval', 'sched_interval')
 

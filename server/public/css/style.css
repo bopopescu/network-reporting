@@ -2149,8 +2149,7 @@ table.campaignData-main, table.reportData-table {
 
 #google-login{
   width:300px;
-  height:56px;
-  font-size:22px;
+  height:100px;
   display:block;
   position:absolute;
   left:550px;
@@ -2167,6 +2166,19 @@ table.campaignData-main, table.reportData-table {
   top:16px;
   border-left:2px solid whiteSmoke;
 }
+
+a.google-login-button {
+  display: block;
+  width: 150px;
+  height: 22px;
+  background: url('/images/googlecontacts_signin.png');
+  text-indent: -9999px;
+}
+
+a.google-login-button:hover { background-position: 0 -24px; }
+a.google-login-button:active { background-position: 0 -48px; }
+
+
 
 /****************************************
  * Media Queries

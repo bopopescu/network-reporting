@@ -315,7 +315,11 @@ class StatsModelQueryManager(CachedQueryManager):
         # initialize the object dictionary 
         stats_dict = {}
         for stat in stats:
-            stats_dict[stat.key().name()] = stat
+            stat_key_name = stat.key().name() 
+            if stat_key_name in stats_dict:
+                stats_dict[stat_key_name] += stat
+            else:
+                stats_dict[stat_key_name] = stat
         
         
         def _get_refprop_from_cache(entity, prop):
@@ -372,14 +376,6 @@ class StatsModelQueryManager(CachedQueryManager):
                 return None
             elif attribute == 'country' and not stat.country:
                 return None   
-            elif attribute == 'brand_name' and not stat.brand_name:
-                return None
-            elif attribute == 'marketing_name' and not stat.marketing_name:
-                return None
-            elif attribute == 'device_os' and not stat.device_os:
-                return None
-            elif attribute == 'device_os_version' and not stat.device_os_version:
-                return None
             elif attribute == 'date' and stat.month: # stops at the month rollup
                 return None
 
@@ -468,92 +464,7 @@ class StatsModelQueryManager(CachedQueryManager):
                                       device_os_version=new_stat.device_os_version)                                      
                 prev_stat += new_stat
                 stats_dict[prev_stat.key().name()] = prev_stat                      
-
-            elif attribute == 'brand_name' and stat.brand_name:
-                attrs.update(brand_name=None)
-                new_stat = StatsModel(**attrs)
-
-                # we don't need to do a recursive call because
-                # we only have 2 levels, if we want to add something
-                # like regions we'd do it here
-                # make_above_stat(new_stat,'country')
-                prev_stat = _get_stat(pub=new_stat.publisher,
-                                      adv=new_stat.advertiser,
-                                      date=new_stat.date,
-                                      date_hour=new_stat.date_hour,
-                                      month=new_stat.month,
-                                      country=new_stat.country,
-                                      brand_name=new_stat.brand_name,
-                                      marketing_name=new_stat.marketing_name,
-                                      device_os=new_stat.device_os,
-                                      device_os_version=new_stat.device_os_version)                                      
-                prev_stat += new_stat
-                stats_dict[prev_stat.key().name()] = prev_stat                      
-
-            elif attribute == 'marketing_name' and stat.marketing_name:
-                attrs.update(marketing_name=None)
-                new_stat = StatsModel(**attrs)
-
-                # we don't need to do a recursive call because
-                # we only have 2 levels, if we want to add something
-                # like regions we'd do it here
-                # make_above_stat(new_stat,'country')
-                prev_stat = _get_stat(pub=new_stat.publisher,
-                                      adv=new_stat.advertiser,
-                                      date=new_stat.date,
-                                      date_hour=new_stat.date_hour,
-                                      month=new_stat.month,
-                                      country=new_stat.country,
-                                      brand_name=new_stat.brand_name,
-                                      marketing_name=new_stat.marketing_name,
-                                      device_os=new_stat.device_os,
-                                      device_os_version=new_stat.device_os_version)                                      
-                prev_stat += new_stat
-                stats_dict[prev_stat.key().name()] = prev_stat                      
-
-            elif attribute == 'device_os' and stat.device_os:
-                attrs.update(device_os=None)
-                new_stat = StatsModel(**attrs)
-
-                # we don't need to do a recursive call because
-                # we only have 2 levels, if we want to add something
-                # like regions we'd do it here
-                # make_above_stat(new_stat,'country')
-                prev_stat = _get_stat(pub=new_stat.publisher,
-                                      adv=new_stat.advertiser,
-                                      date=new_stat.date,
-                                      date_hour=new_stat.date_hour,
-                                      month=new_stat.month,
-                                      country=new_stat.country,
-                                      brand_name=new_stat.brand_name,
-                                      marketing_name=new_stat.marketing_name,
-                                      device_os=new_stat.device_os,
-                                      device_os_version=new_stat.device_os_version)                                      
-                prev_stat += new_stat
-                stats_dict[prev_stat.key().name()] = prev_stat                      
-
-            elif attribute == 'device_os_version' and stat.device_os_version:
-                attrs.update(device_os_version=None)
-                new_stat = StatsModel(**attrs)
-
-                # we don't need to do a recursive call because
-                # we only have 2 levels, if we want to add something
-                # like regions we'd do it here
-                # make_above_stat(new_stat,'country')
-                prev_stat = _get_stat(pub=new_stat.publisher,
-                                      adv=new_stat.advertiser,
-                                      date=new_stat.date,
-                                      date_hour=new_stat.date_hour,
-                                      month=new_stat.month,
-                                      country=new_stat.country,
-                                      brand_name=new_stat.brand_name,
-                                      marketing_name=new_stat.marketing_name,
-                                      device_os=new_stat.device_os,
-                                      device_os_version=new_stat.device_os_version)                                      
-                prev_stat += new_stat
-                stats_dict[prev_stat.key().name()] = prev_stat                      
-
-
+            
             elif attribute == 'date':
                 # NOTE: This is a Pacific TimeZone day
                 if stat.date_hour:
@@ -585,7 +496,7 @@ class StatsModelQueryManager(CachedQueryManager):
         
         
         # attributes to roll up
-        attr_rollup_list = ['publisher', 'advertiser', 'country', 'brand_name', 'marketing_name', 'device_os', 'device_os_version']
+        attr_rollup_list = ['publisher', 'advertiser', 'country']
         
         # roll each attribute up
         for attr in attr_rollup_list:

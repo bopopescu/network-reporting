@@ -156,20 +156,7 @@ def campaign_status(adgroup):
         return "Scheduled"
     else:
         return "Unknown"
-	
-@register.filter
-def all_user_dropdown(request,value=1000):
-    from django.utils.safestring import mark_safe
-    from account.models import Account
-    from google.appengine.ext import db
-    value = int(value)
-    htmls = []
-    accounts = Account.all().order("user").fetch(value)
-    for account in accounts:
-        if account.mpuser:
-            htmls.append('<option value="%s">%s</option>'%(account.key(),account.mpuser.email))
-    return mark_safe('\n'.join(htmls))
-
+        
 @register.filter
 def binary_data(data):
     return "data:image/png;base64,%s" % binascii.b2a_base64(data)

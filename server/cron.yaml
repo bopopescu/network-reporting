@@ -7,10 +7,15 @@ cron:
   url: /budget/advance/
   schedule: every 1 minutes synchronized
   
+- description: Run all reports scheduled for today
+  url: /reports/daily_sched_runner/
+  login: admin
+  schedule: every day 0:01
+  
 - description: Advance the daily budget
   url: /budget/daily_advance/
   schedule: every day 0:01
-  
+
 - description: Periodic dashboard refresh
   url: /admin/prep/
   schedule: every 30 minutes

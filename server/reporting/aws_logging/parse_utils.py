@@ -91,9 +91,9 @@ def get_user_agent_info(user_agent):
         user_agent = normalize_apple_ua(user_agent)
         
     # pywurfl must take in user_agent as unicode string
-    user_agent = unicode(user_agent)
-        
-    try:    
+    try:
+        user_agent = unicode(user_agent)
+
         device = devices.select_ua(user_agent, search=search_algo)
         
         # retrieve relevant metadata, replace all spaces with _, and return them within dict
@@ -112,8 +112,12 @@ def get_user_agent_info(user_agent):
             info['blurb'] = str(user_agent)           
 
         return info
+    except UnicodeDecodeError:
+        sys.stderr.write('unicode decode error -> %s\n' %user_agent)
+        # traceback.print_exc()
+        return {}
     except:
-        #traceback.print_exc()
+        # traceback.print_exc()
         return {}
 
 

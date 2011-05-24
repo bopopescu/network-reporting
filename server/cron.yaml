@@ -9,7 +9,6 @@ cron:
   
 - description: Run all reports scheduled for today
   url: /reports/daily_sched_runner/
-  login: admin
   schedule: every day 0:01
   
 - description: Advance the daily budget

@@ -215,7 +215,7 @@
 {% if user.is_admin %}
                   <div style="float:right;padding-left:10px">
                     <form id="admin_user_switch" action="{% url admin_switch_user %}" method="POST">
-                      Sudo: <input id="user_switcher" type="text" name="user_email"/>
+                      Sudo: <input id="user_switcher" type="text" name="user_email" placeholder="user@email.com"/>
                     </form>
                   </div>
                   <script type="text/javascript">

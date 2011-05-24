@@ -215,9 +215,7 @@
 {% if user.is_admin %}
                   <div style="float:right;padding-left:10px">
                     <form id="admin_user_switch" action="{% url admin_switch_user %}" method="POST">
-                      <select name="user_key" id="admin_user_switch_select" onchange='$("#admin_user_switch").submit()'>
-                        {{ request|all_user_dropdown }}
-                      </select>
+                      Sudo: <input id="user_switcher" type="text" name="user_email"/>
                     </form>
                   </div>
                   <script type="text/javascript">
@@ -233,13 +231,9 @@
                     }
                     return "";
                   }
-                  var user_key_name = getCookie('account_impersonation');
-                  var options = $('select#admin_user_switch_select option');
-                  var len = options.length;
-                  for (var i = 0; i < len; i++) {
-                    if (options[i].value == user_key_name)
-                    options[i].selected = true;
-                  }
+                  var user_email = getCookie('account_email').slice(1,-1);
+                  var $text_input = $('#user_switcher');
+                  $text_input.val(user_email)
                   </script>
 {% endif %}
 {% endblock adminSelect %}

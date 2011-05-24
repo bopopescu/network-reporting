@@ -83,6 +83,8 @@ from google.appengine.tools import bulkloader
 
 import deref_cache_builder
 
+# DownloadLogs() is around line 960
+
 
 MAX_FILES_TO_CLONE = 100
 LIST_DELIMITER = '\n'
@@ -969,9 +971,6 @@ class LogsRequester(object):
                  (self.config.application, self.version_id))
 
 
-
-
-
     tf = tempfile.TemporaryFile()
     last_offset = None
     try:
@@ -1000,6 +999,7 @@ class LogsRequester(object):
         if of is not sys.stdout:
           of.close()
     finally:
+      deref_cache_builder.pickle_deref_cache()  # pickle deref cache
       tf.close()
     StatusUpdate('Copied %d records.' % line_count)
 

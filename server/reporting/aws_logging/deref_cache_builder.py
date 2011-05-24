@@ -218,8 +218,8 @@ def deref_logline(logline):
                 deref_models(handler, param_dict)
                 return True
     return False
-
-
+        
+        
 def preprocess_logs(input_file):
     with open(input_file, 'r') as in_stream:
         count = 0
@@ -230,6 +230,13 @@ def preprocess_logs(input_file):
                 if count % STATUS_STEP == 0:
                     print '%ix %ik lines pre-processed successfully' %(count/STATUS_STEP, STATUS_STEP/1000)
             
+
+def pickle_deref_cache():
+    print 
+    print 'pickling to %s ...' % (DEREF_CACHE_PICKLE_FILE)
+    with open(DEREF_CACHE_PICKLE_FILE, 'wb') as pickle_file:
+        pickle.dump(DEREF_CACHE, pickle_file)
+
        
 def main():
     start = time.time()
@@ -243,11 +250,8 @@ def main():
     remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', utils.auth_func, host)
     
     preprocess_logs(options.input_file)
-
-    # pickle deref cache 
-    with open(DEREF_CACHE_PICKLE_FILE, 'wb') as pickle_file:
-        pickle.dump(DEREF_CACHE, pickle_file)
-
+    pickle_deref_cache()
+    
     elapsed = time.time() - start
     print 'building deref cache took %i minutes and %i seconds' % (elapsed/60, elapsed%60)
     

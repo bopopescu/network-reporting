@@ -1,6 +1,6 @@
 #!/bin/bash
 PATH=.:$PATH:/usr/local/bin:~/google_appengine
-echo $PATH
+# echo $PATH
 
 TIMESTAMP=`date +"%Y-%m%d-%H%M"`
 DAYSTAMP=`date +"%Y-%m%d"`
@@ -32,20 +32,20 @@ mkdir $LOG_DIR
 
 
 # download logs from GAE
-START_TIME=$(date +%s)
-echo
-echo N47935 | ./appcfg.py --no_cookies --email=olp@mopub.com --passin --append --num_days=1 --verbose request_logs $APP_DIR $LOG_ROOT_DIR/request-logfile
-#echo N47935 | appcfg.py --no_cookies --email=olp@mopub.com --passin --num_days=3 request_logs $APP_DIR $LOG_ROOT_DIR/request-logfile
-echo
-STOP_TIME=$(date +%s)
-echo
-echo "downloading GAE logs took" $((STOP_TIME-START_TIME)) "seconds"
+# START_TIME=$(date +%s)
+# echo
+# echo N47935 | ./appcfg.py --no_cookies --email=olp@mopub.com --passin --append --num_days=1 --verbose request_logs $APP_DIR $LOG_ROOT_DIR/request-logfile
+# #echo N47935 | appcfg.py --no_cookies --email=olp@mopub.com --passin --num_days=3 request_logs $APP_DIR $LOG_ROOT_DIR/request-logfile
+# echo
+# STOP_TIME=$(date +%s)
+# echo
+# echo "downloading GAE logs took" $((STOP_TIME-START_TIME)) "seconds"
 
 
 # download deref cache from S3 (if it exists) and replace local one
-echo
-echo "downloading existing deref cache from S3..."
-s3cmd get --force $S3_CODE_DIR/deref_cache.pkl $APP_DIR/reporting/aws_logging/deref_cache.pkl 
+# echo
+# echo "downloading existing deref cache from S3..."
+# s3cmd get --force $S3_CODE_DIR/deref_cache.pkl $APP_DIR/reporting/aws_logging/deref_cache.pkl 
 
 
 # build up deref cache for log preprocessing

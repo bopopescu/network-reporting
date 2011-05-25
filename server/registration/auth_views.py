@@ -226,7 +226,7 @@ def migrate_user_complete(request, template_name='registration/migrate_user_comp
 def password_change(request, template_name='registration/password_change_form.html',
                     post_change_redirect=None, password_change_form=PasswordChangeForm):
     if post_change_redirect is None:
-        post_change_redirect = reverse('django.contrib.auth.views.password_change_done')
+        post_change_redirect = reverse('auth_password_change_done')
     if request.method == "POST":
         form = password_change_form(user=request.user, data=request.POST)
         if form.is_valid():
@@ -238,5 +238,5 @@ def password_change(request, template_name='registration/password_change_form.ht
         'form': form,
     }, context_instance=RequestContext(request))
 
-def password_change_done(request, template_name='registration/password_change_done.html'):
+def password_change_done(request, template_name='registration/password_reset_complete.html'):
     return render_to_response(template_name, context_instance=RequestContext(request))

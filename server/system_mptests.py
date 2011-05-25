@@ -19,13 +19,14 @@ from google.appengine.ext.webapp import ( Request,
                                           Response,
                                           )
                                           
-from server.ad_server.main import  ( AdHandler,
-                                     AdAuction,
-                                     AdClickHandler,
+from server.ad_server.main import  ( AdClickHandler,
                                      AppOpenHandler,
                                      TestHandler,
                                      )
-                                     
+
+from server.ad_server.handlers.adhandler import AdHandler                                     
+from server.ad_server.auction.ad_auction import AdAuction
+
 ############# Integration Tests #############
 import unittest
 from nose.tools import eq_
@@ -78,11 +79,11 @@ class TestBudgetEndToEnd(unittest.TestCase):
         self.app = App(account=self.account, name="Test App")
         self.app.put()
 
-        self.budget_ad_unit = AdUnit(account=self.account, 
+        self.adunit = AdUnit(account=self.account, 
                                      app_key=self.app, 
                                      name="Test AdUnit",
                                      format=u'320x50')
-        self.budget_ad_unit.put()
+        self.adunit.put()
 
         # Make Expensive Campaign
         self.expensive_c = Campaign(name="expensive",
@@ -93,7 +94,7 @@ class TestBudgetEndToEnd(unittest.TestCase):
         self.expensive_adgroup = AdGroup(account=self.account, 
                                           name="expensive",
                                           campaign=self.expensive_c, 
-                                          site_keys=[self.budget_ad_unit.key()],
+                                          site_keys=[self.adunit.key()],
                                           bid_strategy="cpm",
                                           bid=100000.0) # 100 per click
         self.expensive_adgroup.put()
@@ -116,7 +117,7 @@ class TestBudgetEndToEnd(unittest.TestCase):
         self.cheap_adgroup = AdGroup(account=self.account, 
                               name="cheap",
                               campaign=self.cheap_c, 
-                              site_keys=[self.budget_ad_unit.key()],
+                              site_keys=[self.adunit.key()],
                               bid_strategy="cpm",
                               bid=10000.0)
         self.cheap_adgroup.put()
@@ -190,7 +191,7 @@ class TestBudgetEndToEnd(unittest.TestCase):
         c_g.put()
     
     def mptest_simple_request(self):
-        creative = run_auction(self.budget_ad_unit.key())
+        creative = run_auction(self.adunit.key())
         eq_(creative.ad_group.campaign.name, "expensive")
         
     def mptest_two_requests(self):
@@ -199,14 +200,14 @@ class TestBudgetEndToEnd(unittest.TestCase):
         eq_(budget_service.remaining_daily_budget(self.expensive_c), 1000)
         eq_(budget_service.remaining_ts_budget(self.expensive_c), 100)
     
-        creative = run_auction(self.budget_ad_unit.key())
+        creative = run_auction(self.adunit.key())
         eq_(creative.ad_group.bid, 100000.0)
         eq_(creative.ad_group.campaign.name, "expensive")
     
         eq_(budget_service.remaining_daily_budget(self.expensive_c), 900)
         eq_(budget_service.remaining_ts_budget(self.expensive_c), 0)
     
-        creative = run_auction(self.budget_ad_unit.key())
+        creative = run_auction(self.adunit.key())
         eq_(creative.ad_group.campaign.name, "cheap")
     
       
@@ -217,7 +218,7 @@ class TestBudgetEndToEnd(unittest.TestCase):
         eq_(budget_service.remaining_daily_budget(self.expensive_c), 1000)
         eq_(budget_service.remaining_ts_budget(self.expensive_c), 100)
         
-        creative = run_auction(self.budget_ad_unit.key())
+        creative = run_auction(self.adunit.key())
         eq_(creative.ad_group.bid, 100000.0)
         eq_(creative.ad_group.campaign.name, "expensive")
     
@@ -226,20 +227,20 @@ class TestBudgetEndToEnd(unittest.TestCase):
     
         # We have enough budget for 10 cheap ads
         for i in xrange(10):
-            creative = run_auction(self.budget_ad_unit.key())
+            creative = run_auction(self.adunit.key())
             eq_(creative.ad_group.campaign.name, "cheap")
     
-        creative = run_auction(self.budget_ad_unit.key())
+        creative = run_auction(self.adunit.key())
         eq_(creative, None)
        
     def mptest_multiple_requests_timeslice_advance(self):
         # We have enough budget for one expensive ad
-        creative = run_auction(self.budget_ad_unit.key())
+        creative = run_auction(self.adunit.key())
         eq_(creative.ad_group.campaign.name, "expensive")
     
         # We use half our cheap campaign budget
         for i in xrange(5):
-            creative = run_auction(self.budget_ad_unit.key())
+            creative = run_auction(self.adunit.key())
             eq_(creative.ad_group.campaign.name, "cheap")
     
         # Advance all of our campaigns
@@ -247,25 +248,25 @@ class TestBudgetEndToEnd(unittest.TestCase):
     
     
         # We again have enough budget for one expensive ad
-        creative = run_auction(self.budget_ad_unit.key())
+        creative = run_auction(self.adunit.key())
         eq_(creative.ad_group.campaign.name, "expensive")
     
         # We now have a cheap campaign budget for 15 ads
         for i in xrange(15):
-            creative = run_auction(self.budget_ad_unit.key())
+            creative = run_auction(self.adunit.key())
             eq_(creative.ad_group.campaign.name, "cheap")
     
-        creative = run_auction(self.budget_ad_unit.key())
+        creative = run_auction(self.adunit.key())
         eq_(creative, None)
     
     def mptest_multiple_requests_timeslice_advance_twice(self):
         # We have enough budget for one expensive ad
-        creative = run_auction(self.budget_ad_unit.key())
+        creative = run_auction(self.adunit.key())
         eq_(creative.ad_group.campaign.name, "expensive")
     
         # We use half our cheap campaign budget
         for i in xrange(5):
-            creative = run_auction(self.budget_ad_unit.key())
+            creative = run_auction(self.adunit.key())
             eq_(creative.ad_group.campaign.name, "cheap")
     
         # Advance all of our campaigns
@@ -274,43 +275,43 @@ class TestBudgetEndToEnd(unittest.TestCase):
     
     
         # We again have enough budget for two expensive ads
-        creative = run_auction(self.budget_ad_unit.key())
+        creative = run_auction(self.adunit.key())
         eq_(creative.ad_group.campaign.name, "expensive")
     
-        creative = run_auction(self.budget_ad_unit.key())
+        creative = run_auction(self.adunit.key())
         eq_(creative.ad_group.campaign.name, "expensive")
     
         # We now have a cheap campaign budget for 25 ads
         for i in xrange(25):
-            creative = run_auction(self.budget_ad_unit.key())
+            creative = run_auction(self.adunit.key())
             eq_(creative.ad_group.campaign.name, "cheap")
     
-        creative = run_auction(self.budget_ad_unit.key())
+        creative = run_auction(self.adunit.key())
         eq_(creative, None)
     
     def mptest_multiple_requests_cpc(self):
         self.switch_adgroups_to_cpc()
     
         # We have enough budget for one expensive ad
-        creative = run_auction(self.budget_ad_unit.key())
+        creative = run_auction(self.adunit.key())
         eq_(creative.ad_group.campaign.name, "expensive")
     
         # We have enough budget for 10 cheap ads
         for i in xrange(10):
-            creative = run_auction(self.budget_ad_unit.key())
+            creative = run_auction(self.adunit.key())
             eq_(creative.ad_group.campaign.name, "cheap")
     
-        creative = run_auction(self.budget_ad_unit.key())
+        creative = run_auction(self.adunit.key())
         eq_(creative, None)
     
     def mptest_multiple_requests_timeslice_advance_logging(self):
         # We have enough budget for one expensive ad
-        creative = run_auction(self.budget_ad_unit.key())
+        creative = run_auction(self.adunit.key())
         eq_(creative.ad_group.campaign.name, "expensive")
     
         # We use half our cheap campaign budget
         for i in xrange(5):
-            creative = run_auction(self.budget_ad_unit.key())
+            creative = run_auction(self.adunit.key())
             eq_(creative.ad_group.campaign.name, "cheap")
     
         # Advance all of our campaigns
@@ -322,15 +323,15 @@ class TestBudgetEndToEnd(unittest.TestCase):
         eq_(last_log.spending, 50)
     
         # We again have enough budget for one expensive ad
-        creative = run_auction(self.budget_ad_unit.key())
+        creative = run_auction(self.adunit.key())
         eq_(creative.ad_group.campaign.name, "expensive")
     
         # We now have a cheap campaign budget for 15 ads
         for i in xrange(15):
-            creative = run_auction(self.budget_ad_unit.key())
+            creative = run_auction(self.adunit.key())
             eq_(creative.ad_group.campaign.name, "cheap")
     
-        creative = run_auction(self.budget_ad_unit.key())
+        creative = run_auction(self.adunit.key())
         eq_(creative, None)
     
         # Advance all of our campaigns
@@ -357,7 +358,7 @@ class TestBudgetEndToEnd(unittest.TestCase):
         eq_(self.expensive_c.budget, 1000)
         eq_(budget_service.remaining_daily_budget(self.cheap_c),1000)     
     
-        creative = run_auction(self.budget_ad_unit.key())
+        creative = run_auction(self.adunit.key())
         eq_(creative.ad_group.campaign.name, "expensive")
     
     
@@ -366,9 +367,15 @@ class TestBudgetEndToEnd(unittest.TestCase):
     
         # We have enough budget for 10 expensive ads
         for i in xrange(9):
-            creative = run_auction(self.budget_ad_unit.key())
+            creative = run_auction(self.adunit.key())
             eq_(creative.ad_group.campaign.name, "expensive")
     
         # We now use our cheap campaign budget
-        creative = run_auction(self.budget_ad_unit.key())
+        creative = run_auction(self.adunit.key())
         eq_(creative.ad_group.campaign.name, "cheap")
+
+
+
+        
+        
+        

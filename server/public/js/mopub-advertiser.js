@@ -33,10 +33,16 @@ var mopub = mopub || {};
         $('option#bid_strategy-cpm').attr('selected','selected'); // make the network bid cpm by default
         $('#bid-max').attr('name','bid-max'); // rename so we dont have duplicates
         $('#bid-network').attr('name','bid');
+        
+        $('#adgroupForm-bid_strategy-select').attr('name','bid_strategy_std'); // rename so we don't have duplicates
+        $('#adgroupForm-bid_strategy-select-network').attr('name','bid_strategy');
       }
       else{
         $('#bid-network').attr('name','bid-network'); // rename so we dont have duplicates
         $('#bid-max').attr('name','bid');
+        
+        $('#adgroupForm-bid_strategy-select').attr('name','bid_strategy'); // rename so we don't have duplicates
+        $('#adgroupForm-bid_strategy-select-network').attr('name','bid_strategy_network');
       }    
     }).filter(':checked').click(); // make sure we're in sync when the page loads
 
@@ -806,11 +812,24 @@ var mopub = mopub || {};
         $.each(seriesObject, function(name, value) {
           seriesName = name;
           seriesData = value;
+          
+          if (seriesType == 'line'){
+             if (seriesName == 'Mopub Optimized'){
+              seriesLineWidth = 4;
+            } else{
+              seriesLineWidth = 2;
+            }
+          }
+          else{
+            seriesLineWidth = 3;
+          }
+          
         });
         chartSeries.push({
           name: seriesName,
           data: seriesData,
-          color: colors[i]
+          color: colors[i],
+          lineWidth: seriesLineWidth,
         });
       });
 

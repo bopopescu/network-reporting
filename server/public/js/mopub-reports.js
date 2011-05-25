@@ -117,6 +117,12 @@
         maxHeight:300,
         width:115
     });
+    
+    $('#sched_interval').selectmenu({
+        style:'popup',
+        maxHeight:300,
+        width:135,
+    });
 
     function fix_date(dte) {
         if (dte < 10) {
@@ -208,6 +214,7 @@
         $('#end-input').val(state.end); 
         $('#start-input').val(state.start); 
         $('#interval').selectmenu('index', state.interv);
+        $('#sched_interval').selectmenu('index', state.sched_interv);
         $("#reportName-input").val(state.name);
     }
 
@@ -216,16 +223,18 @@
                             sel_state(d2_sel),
                             sel_state(d3_sel),
                             sel_state($('#interval')), 
+                            sel_state($('#sched_interval')),
                             $('#end-input').val(), 
                             $('#start-input').val(), 
                             $('#reportName-input').val()
                             )
     }
-    function build_state(d1, d2, d3, interv, end, start, name) {
+    function build_state(d1, d2, d3, interv, sched_interv, end, start, name) {
         return {d1: d1,
                 d2: d2,
                 d3: d3,
                 interv: interv,
+                sched_interv: sched_interv,
                 end: end,
                 start: start,
                 name: name,

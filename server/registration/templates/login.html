@@ -25,32 +25,28 @@
                 <input type="password" name="password" class="{% if form.password.errors %}error{% endif %}" value="{{form.data.password}}"/>
                 {% if form.username.errors %}<span class="error">(Required)</span>{% endif %}
             </dd>    
-        </dl>                      
+            <dt>&nbsp;</dt>
+            <dd>
+              <span class="buttonWrap"><a href="#" class="button" id="accountForm-submit">Log in</a></span> or <a href="{% url registration_register %}">register for a MoPub account</a>
+            </dd>
+            <dt>&nbsp;</dt>
+            <dd>
+              <a href="#">Forgot your password?</a>
+            </dd>
+        </dl>
+                              
       </fieldset>
       {% for error in form.non_field_errors %}
       <span class="error">{{ error }}</span> 
       {% endfor %}
-      <div>Forgot your password? <a href="{% url auth_password_reset %}">Reset your password here</a>.</div>
-      <div>Don't have an account yet? <a href="{% url registration_register %}">Register here</a> for a MoPub account.</div>
-      
-      <div class="clear"></div>
-      <div class="form-submit">
-        <span class="buttonWrap"><a href="#" class="button" id="accountForm-submit">Login</a></span> 
-      </div>
-
     </form>
   </div>
   <div id="google-login-divider">
   </div>
-  
-  <a id="google-login" class="button" href="{% google_login_url %}">
-    Log in with your Google Account
-  </a>
-  
-  <!-- <div id="login-bottom">
-      <div>Forgot your password? <a href="{% url auth_password_reset %}">Reset your password here</a>.</div>
-      <div>Don't have an account yet? <a href="{% url registration_register %}">Register here</a> for a MoPub account.</div>
-  </div> -->
-    
+  <div id="google-login">
+    <p>Or log in to MoPub with your Google Account</p>
+    <a class="google-login-button" href="{% google_login_url %}">&nbsp;</a>
+  </div>
+ 
 </div>
 {% endblock content %}

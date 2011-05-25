@@ -9,28 +9,37 @@ import urlparse
 
 from optparse import OptionParser
 
+
+# add mopub root to path
+sys.path.append(os.getcwd()+'/../../')
+
+
 # for ubuntu EC2
-sys.path.append("/home/ubuntu/mopub/server")
-sys.path.append("/home/ubuntu/mopub/server/reporting")
-sys.path.append("/home/ubuntu/google_appengine")
-sys.path.append("/home/ubuntu/google_appengine/lib/django")
-sys.path.append("/home/ubuntu/google_appengine/lib/webob")
-sys.path.append("/home/ubuntu/google_appengine/lib/yaml/lib")
-sys.path.append("/home/ubuntu/google_appengine/lib/fancy_urllib")
+sys.path.append('/home/ubuntu/mopub/server')
+sys.path.append('/home/ubuntu/mopub/server/reporting')
+sys.path.append('/home/ubuntu/google_appengine')
+sys.path.append('/home/ubuntu/google_appengine/lib/antlr3')
+sys.path.append('/home/ubuntu/google_appengine/lib/django_1_2')
+sys.path.append('/home/ubuntu/google_appengine/lib/fancy_urllib')
+sys.path.append('/home/ubuntu/google_appengine/lib/ipaddr')
+sys.path.append('/home/ubuntu/google_appengine/lib/webob')
+sys.path.append('/home/ubuntu/google_appengine/lib/yaml/lib')
+
+
+from appengine_django import InstallAppengineHelperForDjango
+InstallAppengineHelperForDjango()
+
 
 from google.appengine.ext import db
 from google.appengine.ext.db import BadKeyError
 from google.appengine.ext.remote_api import remote_api_stub
 
-# for run_jobflow.sh
-sys.path.append(os.getcwd()+'/../../')
-
+import utils
 from parse_utils import parse_logline
 from advertiser.models import Campaign, AdGroup, Creative
 from publisher.models import Site as AdUnit, App
 from reporting.models import StatsModel, Pacific_tzinfo
 
-import utils
 
 STATUS_STEP = 100000
 
@@ -64,7 +73,7 @@ def deref_app(app_str):
         DEREF_CACHE[app_str] = [account_str]
         return [account_str]
     except BadKeyError, e:
-        print "EXCEPTION on app %s: %s" %(app_str, e)
+        print 'EXCEPTION on app %s: %s' %(app_str, e)
         return None
     except Exception, e:
         #traceback.print_exc() # comment out for now; too many ill-formated keys that flood the output logs
@@ -84,7 +93,7 @@ def deref_adunit(adunit_str):
         DEREF_CACHE[adunit_str] = [app_str, account_str]
         return [app_str, account_str]
     except BadKeyError, e:
-        print "EXCEPTION on adunit %s: %s" %(adunit_str, e)
+        print 'EXCEPTION on adunit %s: %s' %(adunit_str, e)
         return None
     except Exception, e:
         #traceback.print_exc()
@@ -103,7 +112,7 @@ def deref_campaign(campaign_str):
         DEREF_CACHE[campaign_str] = [account_str]
         return [account_str]
     except BadKeyError, e:
-        print "EXCEPTION on campaign %s: %s" %(campaign_str, e)
+        print 'EXCEPTION on campaign %s: %s' %(campaign_str, e)
         return None
     except Exception, e:
         #traceback.print_exc()
@@ -123,7 +132,7 @@ def deref_adgroup(adgroup_str):
         DEREF_CACHE[adgroup_str] = [campaign_str, account_str]
         return [campaign_str, account_str]
     except BadKeyError, e:
-        print "EXCEPTION on adgroup %s: %s" %(adgroup_str, e)
+        print 'EXCEPTION on adgroup %s: %s' %(adgroup_str, e)
         return None
     except Exception, e:
         #traceback.print_exc()
@@ -145,7 +154,7 @@ def deref_creative(creative_str):
             DEREF_CACHE[creative_str] = [adgroup_str, campaign_str, account_str]
             return [adgroup_str, campaign_str, account_str]
     except BadKeyError, e:
-        print "EXCEPTION on creative %s: %s" %(creative_str, e)
+        print 'EXCEPTION on creative %s: %s' %(creative_str, e)
         return None
     except Exception, e:
         #traceback.print_exc()

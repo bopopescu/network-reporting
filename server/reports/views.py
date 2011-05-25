@@ -16,7 +16,9 @@ from common.utils.request_handler import RequestHandler
 from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
 from reports.forms import ReportForm
+from reports.models import ScheduledReport
 from reports.query_managers import ReportQueryManager
+
 
 from reports.forms import ReportForm
 
@@ -49,7 +51,7 @@ class AddReportHandler(RequestHandler):
         template_name = template or self.TEMPLATE
         return render_to_string(self.request, template_name=template_name, data=kwargs)
         
-    def post(self, d1, end, days=None, start=None, d2=None, d3=None,name=None, saved=False, interval=None):
+    def post(self, d1, end, days=None, start=None, d2=None, d3=None,name=None, saved=False, interval=None, sched_interval=None):
         end = datetime.datetime.strptime(end, '%m/%d/%Y').date()
         if start:
             start = datetime.datetime.strptime(start, '%m/%d/%Y').date()
@@ -64,9 +66,10 @@ class AddReportHandler(RequestHandler):
                                 d3, 
                                 end, 
                                 days, 
-                                name=name, 
-                                saved=saved, 
-                                interval = interval
+                                name = name, 
+                                saved = saved, 
+                                interval = interval,
+                                sched_interval = sched_interval,
                                 )
         return HttpResponseRedirect('/reports/view/'+str(report.key()))
 
@@ -103,21 +106,24 @@ class CheckReportHandler(RequestHandler):
 def check_report(request, *args, **kwargs):
     return CheckReportHandler()(request, *args, **kwargs)
 
+def gen_report_worker(report, account):
+    man = ReportQueryManager()
+    report = man.get_report_by_key(report)
+    report.status = 'pending'
+    man.put_report(report)
+    sched = report.schedule
+    sched.last_run = datetime.datetime.now()
+    man.put_report(sched)
+    report.data = report.gen_data()
+    report.status = 'done'
+    report.completed_at = datetime.datetime.now()
+    man.put_report(report)
+    return
 
 #Only actual reports call this
 class GenReportHandler(RequestHandler):
-    def post(self, report):
-        man = ReportQueryManager(self.account)
-        report = man.get_report_by_key(report)
-        report.status = 'pending'
-        man.put_report(report)
-        sched = report.schedule
-        sched.last_run = datetime.datetime.now()
-        man.put_report(sched)
-        report.data = report.gen_data()
-        report.status = 'done'
-        report.completed_at = datetime.datetime.now()
-        man.put_report(report)
+    def post(self, report, account):
+        gen_report_worker(report, account)
         return HttpResponse('Report Generation Successful')
 
     def get(self, report):
@@ -179,3 +185,14 @@ def run_report(request, *args, **kwargs):
     return RunReportHandler()(request, *args, **kwargs)
 
 
+class ScheduledRunner(RequestHandler):
+    def get(self):
+        man = ReportQueryManager()
+        now = datetime.datetime.now().date()
+        reps = ScheduledReport.all().filter('next_sched_date =', now)
+        for rep in reps:
+            man.new_report(rep)
+        return HttpResponse("Scheduled reports have been created")
+
+def sched_runner(request, *args, **kwargs):
+    return ScheduledRunner()(request, *args, **kwargs)

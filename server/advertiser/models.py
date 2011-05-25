@@ -437,7 +437,9 @@ class BrightRollCreative(Creative):
     pass
 
 class JumptapCreative(Creative):
-    pass
+    @property
+    def multi_format(self):
+        return ('728x90', '320x50', '300x250')
 
 class GreyStripeCreative(Creative):
    

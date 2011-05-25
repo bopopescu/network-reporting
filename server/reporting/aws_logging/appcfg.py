@@ -1197,6 +1197,7 @@ def CopyReversedLines(instream, outstream, blocksize=2**16):
     if lines:
       line_count += len(lines)
       data = ''.join(lines).replace('\0', '\n\t')
+      print 'writing to log file'
       outstream.write(data)
   return line_count
 

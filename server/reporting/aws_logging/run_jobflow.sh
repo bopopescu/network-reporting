@@ -54,9 +54,9 @@ echo "downloading GAE logs took" $((STOP_TIME-START_TIME)) "seconds"
 
 
 # upload updated deref cache to S3
-echo
-echo "uploading" $APP_DIR/reporting/aws_logging/deref_cache.pkl "to" $S3_CODE_DIR/ "..."
-s3cmd put $APP_DIR/reporting/aws_logging/deref_cache.pkl $S3_CODE_DIR/ 
+#echo
+#echo "uploading" $APP_DIR/reporting/aws_logging/deref_cache.pkl "to" $S3_CODE_DIR/ "..."
+#s3cmd put $APP_DIR/reporting/aws_logging/deref_cache.pkl $S3_CODE_DIR/ 
 
 
 # split input files
@@ -73,6 +73,12 @@ s3cmd put $LOG_DIR/chunk-$TIMESTAMP.* $S3_LOGFILE.raw/
 STOP_TIME=$(date +%s)
 echo
 echo "uploading logs to S3 took" $((STOP_TIME-START_TIME)) "seconds"
+
+
+# upload updated deref cache to S3
+echo
+echo "uploading" $APP_DIR/reporting/aws_logging/deref_cache.pkl "to" $S3_CODE_DIR/ "..."
+s3cmd put $APP_DIR/reporting/aws_logging/deref_cache.pkl $S3_CODE_DIR/ 
 
 
 # submit and run job

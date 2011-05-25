@@ -12,6 +12,7 @@ import binascii
 from ad_server.adserver_templates import TEMPLATES
                                     
 from common.utils import helpers
+from common.constants import FULL_NETWORKS
 
 from google.appengine.api import users, urlfetch, memcache
 

@@ -98,7 +98,26 @@
                     <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.brightroll.com/" target="_blank">Go to BrightRoll<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
                   </dl> 
                 </fieldset> 
-                <fieldset class="adForm"> 
+				<fieldset class="adForm"> 
+                  <div class="buttonBank buttonBank-right">
+                    <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
+                  </div>
+                  <legend>eJam {% if account.network_config.ejam_pub_id %}<span class="success unbold">(Enabled)</span>{% else %}<span class="muted unbold">(Not configured)</span>{% endif %}</legend> 
+                  <dl class="formFields {% if account.network_config.ejam_pub_id %}show{% endif %}"> 
+                    <dt><label for="appForm-adUnitName">eJam Zone ID:</label></dt> 
+                    <dd><input type="text" class="input-text" name="ejam_pub_id" value="{{account.network_config.ejam_pub_id|default_if_none:""}}" placeholder="ex: 23710" /></dd> 
+                    <div class="adForm-apps hidden">
+                      {% for app in apps%}
+                      <dt>{{app.name}}:</dt>
+                      <dd><input type="text" class="input-text" name="{{app.key}}-__-ejam_pub_id" value="{{app.network_config.ejam_pub_id|default_if_none:""}}"  placeholder="ex: 23710"/></dd>
+                      {% endfor %}
+                    </div>
+                    <dt><a class="button button-small adForm-fields-appButton" href="#">Show apps</a></dt>
+                    <dd>&nbsp;</dd>
+                    <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.ejam.com/" target="_blank">Go to eJam<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
+                  </dl> 
+                </fieldset>
+                <fieldset class="adForm alt"> 
                   <div class="buttonBank buttonBank-right">
                     <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
                   </div>
@@ -118,8 +137,8 @@
                     
                     <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.greystripe.com/" target="_blank">Go to Greystripe<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
                   </dl> 
-                </fieldset> 
-                <fieldset class="adForm alt"> 
+                </fieldset>
+                <fieldset class="adForm"> 
                   <div class="buttonBank buttonBank-right">
                     <a class="button button-small adForm-fields-infoButton" href="#">More info</a>
                     <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
@@ -156,7 +175,7 @@
                     <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.inmobi.com/" target="_blank">Go to InMobi<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
                   </dl> 
                 </fieldset> 
-                <fieldset class="adForm"> 
+                <fieldset class="adForm alt"> 
                   <div class="buttonBank buttonBank-right">
                     <a class="button button-small adForm-fields-infoButton" href="#">More info</a>
                     <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
@@ -195,7 +214,7 @@
                     <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.jumptap.com/" target="_blank">Go to Jumptap<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
                   </dl> 
                 </fieldset> 
-                <fieldset class="adForm alt"> 
+                <fieldset class="adForm"> 
                   <div class="buttonBank buttonBank-right">
                     <a class="button button-small adForm-fields-infoButton" href="#">More info</a>
                     <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
@@ -233,7 +252,7 @@
                     <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.millennialmedia.com" target="_blank">Go to Millennial Media<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
                   </dl> 
                 </fieldset> 
-                <fieldset class="adForm"> 
+                <fieldset class="adForm alt"> 
                   <div class="buttonBank buttonBank-right">
                     <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
                   </div>

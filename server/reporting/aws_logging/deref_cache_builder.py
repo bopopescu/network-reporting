@@ -76,7 +76,7 @@ def deref_app(app_str):
         print 'EXCEPTION on app %s: %s' %(app_str, e)
         return None
     except Exception, e:
-        #traceback.print_exc() # comment out for now; too many ill-formated keys that flood the output logs
+        # traceback.print_exc() 
         return None
 
 
@@ -96,7 +96,8 @@ def deref_adunit(adunit_str):
         print 'EXCEPTION on adunit %s: %s' %(adunit_str, e)
         return None
     except Exception, e:
-        #traceback.print_exc()
+        # print 'ADUNIT_STR:', adunit_str
+        # traceback.print_exc()
         return None
 
 
@@ -115,7 +116,7 @@ def deref_campaign(campaign_str):
         print 'EXCEPTION on campaign %s: %s' %(campaign_str, e)
         return None
     except Exception, e:
-        #traceback.print_exc()
+        # traceback.print_exc()
         return None
 
 
@@ -135,7 +136,7 @@ def deref_adgroup(adgroup_str):
         print 'EXCEPTION on adgroup %s: %s' %(adgroup_str, e)
         return None
     except Exception, e:
-        #traceback.print_exc()
+        # traceback.print_exc()
         return None
 
 
@@ -157,7 +158,8 @@ def deref_creative(creative_str):
         print 'EXCEPTION on creative %s: %s' %(creative_str, e)
         return None
     except Exception, e:
-        #traceback.print_exc()
+        # print 'CREATIVE_STR:', creative_str
+        # traceback.print_exc()
         return None
 
 
@@ -202,6 +204,7 @@ def deref_models(handler, param_dict):
     
 def deref_logline(logline):
     logline_dict = parse_logline(logline, parse_ua=False)
+
     if logline_dict:
         handler = logline_dict.get('path', None)
         param_dict = logline_dict.get('params', None)
@@ -215,8 +218,8 @@ def deref_logline(logline):
                 deref_models(handler, param_dict)
                 return True
     return False
-
-
+        
+        
 def preprocess_logs(input_file):
     with open(input_file, 'r') as in_stream:
         count = 0
@@ -227,6 +230,13 @@ def preprocess_logs(input_file):
                 if count % STATUS_STEP == 0:
                     print '%ix %ik lines pre-processed successfully' %(count/STATUS_STEP, STATUS_STEP/1000)
             
+
+def pickle_deref_cache():
+    print 
+    print 'pickling to %s ...' % (DEREF_CACHE_PICKLE_FILE)
+    with open(DEREF_CACHE_PICKLE_FILE, 'wb') as pickle_file:
+        pickle.dump(DEREF_CACHE, pickle_file)
+
        
 def main():
     start = time.time()
@@ -240,11 +250,8 @@ def main():
     remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', utils.auth_func, host)
     
     preprocess_logs(options.input_file)
-
-    # pickle deref cache 
-    with open(DEREF_CACHE_PICKLE_FILE, 'wb') as pickle_file:
-        pickle.dump(DEREF_CACHE, pickle_file)
-
+    pickle_deref_cache()
+    
     elapsed = time.time() - start
     print 'building deref cache took %i minutes and %i seconds' % (elapsed/60, elapsed%60)
     

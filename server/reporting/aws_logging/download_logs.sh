@@ -1,7 +1,7 @@
 #!/bin/bash
-PATH=.:$PATH:/usr/local/bin:~/google_appengine
-echo $PATH
-pwd
+PATH=~/mopub/server/reporting/aws_logging:$PATH:/usr/local/bin:~/google_appengine
+# echo $PATH
+# pwd
 
 
 APP_DIR=~/mopub/server

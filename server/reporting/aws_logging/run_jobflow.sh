@@ -1,5 +1,5 @@
 #!/bin/bash
-PATH=.:$PATH:/usr/local/bin:~/google_appengine
+PATH=~/mopub/server/reporting/aws_logging:$PATH:/usr/local/bin:~/google_appengine
 # echo $PATH
 
 TIMESTAMP=`date +"%Y-%m%d-%H%M"`

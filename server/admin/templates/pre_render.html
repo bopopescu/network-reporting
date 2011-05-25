@@ -84,7 +84,7 @@
 		</thead>
 		{% for a in apps %}
 		<tr class="alternating-color">
-			<td><a href="{% url publisher_app_show app_key=a.publisher.key %}">{{a.publisher.name|truncate:50}}</a></td>
+			<td><a href="{% url admin_switch_user %}?user_email={{a.account.mpuser.email}}&amp;next={% url publisher_app_show app_key=a.publisher.key %}">{{a.publisher.name|truncate:50}}</a></td>
 			<td><a href="mailto:{{a.publisher.account.mpuser.email}}">{{a.publisher.account.mpuser.email}}</a></td>
 			<td class="numeric">{{a.request_count|withsep}}</td>
 			<td class="numeric">{{a.impression_count|withsep}}</td>
@@ -112,7 +112,7 @@
         	<tr>
         		<td><a href="mailto:{{a.mpuser.email}}">{{a.mpuser.email}}</a></td>
         		<td>{{a.date_added}}</td>
-        		<td>{{a.mailing_list}}</td>
+        		<td>{{a.mpuser.mailing_list}}</td>
         	</tr>
     	{% endfor %}
     	</tbody>	

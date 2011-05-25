@@ -22,6 +22,9 @@ from publisher.models import *
 from advertiser.models import *
 
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
+from userstore.query_managers import ClickEventManager, AppOpenEventManager
+
+from urllib import unquote
 
 from mopub_logging import mp_logging
 from budget import budget_service
@@ -37,6 +40,8 @@ from ad_server.handlers import TestHandler
 from ad_server.handlers import adhandler
 
 TEST_MODE = "3uoijg2349ic(TEST_MODE)kdkdkg58gjslaf"
+from userstore.models import CLICK_EVENT_NO_APP_ID
+
 
 # Figure out if we're on a production server
 from google.appengine.api import apiproxy_stub_map

@@ -2,6 +2,7 @@
 
 import os
 import random
+import datetime
 
 from ad_server.filters.filters import (budget_filter,
                                     active_filter,
@@ -26,7 +27,6 @@ from common.constants import (FULL_NETWORKS,
                              )
 
 from string import Template
-from urllib import urlencode, unquote
 #from datetime import datetime
 
 from google.appengine.api import users, urlfetch, memcache
@@ -47,7 +47,6 @@ from ad_server.networks.millennial import MillennialServerSide
 from ad_server.networks.mobfox import MobFoxServerSide
 from ad_server.optimizer import optimizer
 
-from userstore.query_managers import ClickEventManager, AppOpenEventManager
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 
 from ad_server.optimizer.adunit_context import AdUnitContext, CreativeCTR
@@ -109,34 +108,34 @@ class AdAuction(object):
                 rpcs.append(rpc)
         return rpcs if multiple else rpcs[0]    
         
-    # Runs the auction itself.  Returns the winning creative, or None if no creative matched
+
     @classmethod
     def run(cls, request=None,
-  		         site=None,
-  		         q=None,
-  		         addr=None,
-  		         excluded_creatives=None,
+  		         adunit=None,
+  		         keywords=None,
+                 country_tuple=[],
+  		         excluded_adgroups=[],
   		         udid=None,
   		         ll=None,
   		         request_id=None,
-  		         now=None,
-  		         testing=None,
+  		         now=datetime.datetime.now(),
   		         user_agent=None,
   		         adunit_context=None,
   		         experimental=None):
-        adunit = site
-        keywords = q
-        geo_predicates = AdAuction.geo_predicates_for_rgeocode(addr)
-        exclude_params = excluded_creatives
+        """ Runs the auction to determine the appropriate adunit to display. 
+        @returns: [winning_creative, on_fail_exclude_adgroups] """
+        # TODO: Clean up variable names
+        # TODO: For testability, should not require request
+        
+        geo_predicates = AdAuction.geo_predicates_for_rgeocode(country_tuple)
 
         #if only one geo_pred (it's a country) check to see if this country has multiple
         #possible codes.  If it does, get all of them and use them all
-        if len(addr) == 1 and ACCEPTED_MULTI_COUNTRY.has_key(addr[0]):
-            geo_predicates = reduce(lambda x,y: x+y, [AdAuction.geo_predicates_for_rgeocode([address]) for address in ACCEPTED_MULTI_COUNTRY[addr[0]]])
+        if len(country_tuple) == 1 and ACCEPTED_MULTI_COUNTRY.has_key(country_tuple[0]):
+            geo_predicates = reduce(lambda x,y: x+y, [AdAuction.geo_predicates_for_rgeocode([country_tupleess]) for country_tupleess in ACCEPTED_MULTI_COUNTRY[country_tuple[0]]])
         
         device_predicates = AdAuction.device_predicates_for_request(request)
         
-        excluded_predicates = AdAuction.exclude_predicates_params(exclude_params)
         trace_logging.warning("keywords=%s, geo_predicates=%s, device_predicates=%s" % (keywords, geo_predicates, device_predicates))
         
         # Matching strategy: 
@@ -152,14 +151,15 @@ class AdAuction(object):
         trace_logging.info("Excluding Ineligible Campaigns")
         trace_logging.info("##############################")
         
-        # # campaign exclusions... budget + time
-        ALL_FILTERS     = (budget_filter(),
-                            active_filter(), 
-        					lat_lon_filter(ll),
-                            kw_filter(keywords), 
-                            geo_filter(geo_predicates), 
-                            device_filter(device_predicates) 
-                           ) 
+        # We first run filters at the adgroup level
+        ALL_FILTERS = ( exclude_filter(excluded_adgroups),
+                        budget_filter(),
+                        active_filter(), 
+                        lat_lon_filter(ll),
+                        kw_filter(keywords), 
+                        geo_filter(geo_predicates), 
+                        device_filter(device_predicates)
+                       ) 
         
         all_ad_groups = filter(mega_filter(*ALL_FILTERS), all_ad_groups)
         for (func, warn, lst) in ALL_FILTERS:
@@ -202,17 +202,17 @@ class AdAuction(object):
         user_bucket = hash(udid+','.join([str(ad_group.key()) for ad_group in all_ad_groups])) % 100 # user gets assigned a number between 0-99 inclusive
         trace_logging.warning("the user bucket is: #%d"%user_bucket)
         
-    # determine in which ad group the user falls into to
-    # otherwise give creatives in the other adgroups a shot
-    # TODO: fix the stagger method how do we get 3 ads all at 100%
-    # currently we just mod by 100 such that there is wrapping
+        # determine in which ad group the user falls into to
+        # otherwise give creatives in the other adgroups a shot
+        # TODO: fix the stagger method how do we get 3 ads all at 100%
+        # currently we just mod by 100 such that there is wrapping
         start_bucket = 0
         winning_ad_groups = []
       
-    # sort the ad groups by the percent of users desired, this allows us 
-    # to do the appropriate wrapping of the number line if they are nicely behaved
-    # TODO: finalize this so that we can do things like 90% and 15%. We need to decide
-    # what happens in this case, unclear what the intent of this is.
+        # sort the ad groups by the percent of users desired, this allows us 
+        # to do the appropriate wrapping of the number line if they are nicely behaved
+        # TODO: finalize this so that we can do things like 90% and 15%. We need to decide
+        # what happens in this case, unclear what the intent of this is.
         all_ad_groups.sort(lambda x,y: cmp(x.percent_users if x.percent_users else 100.0,y.percent_users if y.percent_users else 100.0))
         for ad_group in all_ad_groups:
             percent_users = ad_group.percent_users if not (ad_group.percent_users is None) else 100.0
@@ -225,6 +225,9 @@ class AdAuction(object):
         trace_logging.info("#####################")
         trace_logging.info(" Beginning Auction")
         trace_logging.info("#####################")
+        
+        # Initialize on_fail_exclude_adgroups to include all the previously excluded agdgroups
+        on_fail_exclude_adgroups = excluded_adgroups
         
         # If any ad groups were returned, find the creatives that match the requested format in all candidates
         if len(all_ad_groups) > 0:
@@ -253,12 +256,12 @@ class AdAuction(object):
                                                                sampling_fraction=0.0)
 
                     players.sort(lambda x,y: cmp(player_ecpm_dict[y], player_ecpm_dict[x]))
-        
+                
                     while players:
                         winning_ecpm = player_ecpm_dict[players[0]]
                         trace_logging.info("Trying to get creatives: %s"%[str(c.name).replace("dummy","") if c.name else c.name for c in players])
                         trace_logging.warning("auction at priority=%s: %s, max eCPM=%s" % (p, players, winning_ecpm))
-                        if winning_ecpm >= site.threshold_cpm(p):
+                        if winning_ecpm >= adunit.threshold_cpm(p):
         
                             # exclude according to the exclude parameter must do this after determining adgroups
                             # so that we maintain the correct order for user bucketing
@@ -267,9 +270,8 @@ class AdAuction(object):
                             # TODO: move format and exclude above players (right now we're doing the same thing twice)
                             # if the adunit is resizable then its format doesn't really matter
                             # all creatives can target it
-                            site_format = None if site.resizable else site.format
-                            CRTV_FILTERS = (format_filter(site_format), # remove wrong formats
-                                                exclude_filter(exclude_params), # remove exclude parameter
+                            adunit_format = None if adunit.resizable else adunit.format
+                            CRTV_FILTERS = (format_filter(adunit_format), # remove wrong formats
                                                 ecpm_filter(winning_ecpm, player_ecpm_dict), # remove creatives that aren't tied for first (winning ecpm)
                                                )
                             winners = filter(mega_filter(*CRTV_FILTERS), players)
@@ -295,11 +297,13 @@ class AdAuction(object):
                                         # if native, log native request
                                         if winner.ad_type in NATIVE_REQUESTS:
                                             mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, udid=udid)
-                                        return winning_creative
+                                        # A native request could potential fail and must be excluded from subsequent requests    
+                                        on_fail_exclude_adgroups.append(str(winning_creative.adgroup.key()))
+                                        return [winning_creative, on_fail_exclude_adgroups]
                                     # if the adgroup requires an RPC    
                                     else:
                                         trace_logging.info('Attemping ad network request: %s ...'%winner.adgroup.network_type.title())
-                                        rpc = AdAuction.request_third_party_server(request,site,winner.adgroup)
+                                        rpc = AdAuction.request_third_party_server(request, adunit, winner.adgroup)
                                         # log a network "request"
                                         mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, udid=udid)
                                         try:
@@ -318,11 +322,14 @@ class AdAuction(object):
                                                     height = server_tuple[3]
                                                     winning_creative.width = width
                                                     winning_creative.height = height
-                                                return winning_creative
+                                                return [winning_creative, on_fail_exclude_adgroups]
                                         except Exception,e:
                                             import traceback, sys
                                             exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
                                             trace_logging.warning(exception_traceback)
+                                            
+                                        # Network request has failed. We won't try it again
+                                        on_fail_exclude_adgroups.append(str(winner.adgroup.key()))
                             else:
                                 # remove players of the current winning e_cpm
                                 trace_logging.warning('current players: %s'%players)
@@ -339,7 +346,7 @@ class AdAuction(object):
         
         # nothing... failed auction
         trace_logging.warning("auction failed, returning None")
-        return None
+        return [None, on_fail_exclude_adgroups]
         
     @classmethod
     def geo_predicates_for_rgeocode(c, r):
@@ -376,6 +383,3 @@ class AdAuction(object):
         # TODO: does this always work for any format
         return ["format=%dx%d" % (f[0], f[1]), "format=*"]
     
-    @classmethod
-    def exclude_predicates_params(c,params):
-        return ["exclude=%s"%param for param in params]    

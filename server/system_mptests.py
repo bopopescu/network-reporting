@@ -25,7 +25,7 @@ from server.ad_server.main import  ( AdClickHandler,
                                      )
 
 from server.ad_server.handlers.adhandler import AdHandler                                     
-from server.ad_server.ad_auction import AdAuction
+from server.ad_server.auction.ad_auction import AdAuction
 
 ############# Integration Tests #############
 import unittest
@@ -375,14 +375,7 @@ class TestBudgetEndToEnd(unittest.TestCase):
         eq_(creative.ad_group.campaign.name, "cheap")
 
 
-    def mptest_native_network_failure_cascade(self):
-        """ Native adnetwork failures should properly cascade """
-        
-        # first_creative = run_auction(self.adunit.key())
-        # rendered_creative = AdHandler().render_creative(first_creative)
-        # 
-        # 
-        # first_client_response = simulate_client(auction_response)
+
         
         
         

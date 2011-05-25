@@ -29,7 +29,7 @@ admob = Template("""<html><head>
                         <script>
                             var ad = _admob.fetchAd(document.getElementById('admob_ad'));                                                                         
                             var POLLING_FREQ = 500;
-                            var MAX_POLL = 2000;
+                            var MAX_POLL = 5000;
                             var polling_timeout = 0;                                                                                                              
                             var polling_func = function() {                                                                                                       
                              if(ad.adEl.height == 48) {                                                                                                           

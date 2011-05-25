@@ -25,5 +25,9 @@
         <input id='start-input' type='text' class='input-text input-text-number date-field' name='{{form.start.name}}' size='15' value='{{form.start.value|date:'m/d/Y'}}' placeholder='Start'/> -
         <input id='end-input' type='text' class='input-text input-text-number date-field' name='{{form.end.name}}' size='15' value='{{form.end.value|date:'m/d/Y'}}' placeholder='End'/>
     </dd>
+    <dt>Schedule:</dt>
+    <dd>
+        {{ form.sched_interval|attrs:'{"class":"sched-int-selectmenu", "id": "sched_interval"}'|raw}}
+    </dd>
         
         

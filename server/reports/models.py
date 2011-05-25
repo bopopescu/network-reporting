@@ -58,6 +58,9 @@ class ScheduledReport(db.Model):
     days = db.IntegerProperty(required=True)
     #daily, weekly, monthly
     interval = db.StringProperty(choices=['today','yesterday', '7days', 'lmonth', 'custom'], default='custom')
+    sched_interval = db.StringProperty(choices = ['none', 'daily', 'weekly', 'monthly', 'quarterly'], default='none')
+    next_sched_date = db.DateProperty(default=datetime.now().date())
+
 
     @property
     def most_recent(self):

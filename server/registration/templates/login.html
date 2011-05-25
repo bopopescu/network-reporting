@@ -33,7 +33,7 @@
             <dd>
               <a href="#">Forgot your password?</a>
             </dd>
-        </dl>                      
+        </dl>
       </fieldset>
       {% for error in form.non_field_errors %}
       <span class="error">{{ error }}</span> 
@@ -42,7 +42,6 @@
   </div>
   <div id="google-login-divider">
   </div>
-  
   <div id="google-login">
     <p>Or log in to MoPub with your Google Account</p>
     <a class="google-login-button" href="{% google_login_url %}">&nbsp;</a>

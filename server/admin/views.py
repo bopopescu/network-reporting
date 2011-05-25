@@ -23,6 +23,7 @@ from advertiser.forms import CampaignForm, AdGroupForm
 from admin.models import AdminPage
 from publisher.models import Site, Account, App
 from reporting.models import SiteStats,StatsModel
+from account.query_managers import AccountQueryManager, UserQueryManager
 from publisher.query_managers import AppQueryManager
 from reporting.query_managers import StatsModelQueryManager
 
@@ -35,19 +36,21 @@ MEMCACHE_KEY = "jpayne:admin/d:render_p"
 @login_required
 def admin_switch_user(request,*args,**kwargs):
     params = request.POST or request.GET
-    url = request.META["HTTP_REFERER"]
+    url = params.get('next',None) or request.META["HTTP_REFERER"]
     
     # redirect where the request came from
     response = HttpResponseRedirect(url)
     
     # drop a cookie of the email is the admin user is trying to impersonate
     if users.is_current_user_admin():
-    	user_key = params.get('user_key',None)
+    	email = params.get('user_email',None)
     	set_cookie = False
-    	if user_key:
-    	  account = Account.get(user_key)
+    	if email:
+    	  user = UserQueryManager.get_by_email(email)
+    	  account = AccountQueryManager.get_current_account(user=user)
     	  if account:
-    		response.set_cookie('account_impersonation',params.get('user_key'))
+    		response.set_cookie('account_impersonation',str(account.key()))
+    		response.set_cookie('account_email',str(account.mpuser.email))
     		set_cookie = True
     	if not set_cookie:
     	  response.delete_cookie('account_impersonation')	 
@@ -164,7 +167,6 @@ def dashboard(request, *args, **kwargs):
     loading = loading or page.loading
     return render_to_response(request,'admin/d.html',{'page': page, 'loading': loading})
         
-@login_required
 def update_sfdc_leads(request, *args, **kwargs):
     #
     # a convenience function that maps accounts > SFDC fields

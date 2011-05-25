@@ -12,4 +12,5 @@ urlpatterns = patterns('reports.views',
         url(r'^add/$', 'add_report', name='add_report'),
         url(r'^run/(?P<report_key>[-\w\.]+)/$', 'run_report', name='run_report'),
         url(r'^save/(?P<report_key>[-\w\.]+)/$', 'save_report', name='save_report'),
+        url(r'^daily_sched_runner/$', 'sched_runner', name='sched_runner'),
         )

@@ -54,6 +54,7 @@ from common.utils.request_handler import RequestHandler
 from common.constants import *
 from budget import budget_service
 
+from common.utils.decorators import cache_page_until_post, clear_cached_pages_if_post
 
 class AppIndexHandler(RequestHandler):
   def get(self):
@@ -122,6 +123,7 @@ class AppIndexHandler(RequestHandler):
        'account': self.account})
 
 @login_required
+@cache_page_until_post(5*60)
 def index(request,*args,**kwargs):
   return AppIndexHandler()(request,*args,**kwargs)     
 
@@ -187,6 +189,7 @@ class AppIndexGeoHandler(RequestHandler):
        'account': self.account})
 
 @login_required     
+@clear_cached_pages_if_post
 def index_geo(request,*args,**kwargs):
   return AppIndexGeoHandler()(request,*args,**kwargs)     
 
@@ -247,6 +250,7 @@ class AppCreateHandler(RequestHandler):
     return self.get(app_form,adunit_form)
 
 @login_required  
+@clear_cached_pages_if_post
 def app_create(request,*args,**kwargs):
   return AppCreateHandler()(request,*args,**kwargs)
     

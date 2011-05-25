@@ -11,6 +11,7 @@ from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 
 from django.contrib.auth.decorators import login_required
+from common.utils.decorators import cache_page_until_post, clear_cached_pages_if_post
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
 from django.utils import simplejson
@@ -38,6 +39,8 @@ from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager,
 from publisher.query_managers import AdUnitQueryManager, AppQueryManager, AdUnitContextQueryManager
 from reporting.query_managers import StatsModelQueryManager
 from budget import budget_service
+
+from django.views.decorators.cache import cache_page
 
 
 class AdGroupIndexHandler(RequestHandler):
@@ -133,6 +136,7 @@ class AdGroupIndexHandler(RequestHandler):
                                    'helptext':help_text })
 
 @login_required
+@cache_page_until_post(5*60)
 def adgroups(request,*args,**kwargs):
     return AdGroupIndexHandler()(request,*args,**kwargs)
 
@@ -288,6 +292,7 @@ class CreateCampaignAJAXHander(RequestHandler):
         return self.json_response(json_dict)    
 
 @login_required     
+@clear_cached_pages_if_post
 def campaign_adgroup_create_ajax(request,*args,**kwargs):
     return CreateCampaignAJAXHander()(request,*args,**kwargs)      
 
@@ -306,7 +311,8 @@ class CreateCampaignHandler(RequestHandler):
             "adgroup":adgroup,
             "campaign_create_form_fragment": campaign_create_form_fragment})
 
-@login_required         
+@login_required      
+@clear_cached_pages_if_post   
 def campaign_adgroup_create(request,*args,**kwargs):
     return CreateCampaignHandler()(request,*args,**kwargs)         
 
@@ -358,11 +364,13 @@ class CreateAdGroupHandler(RequestHandler):
                 AdGroupQueryManager.put(adgroup)
                 return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':str(adgroup.key())}))
 
-@login_required         
+@login_required
+@clear_cached_pages_if_post         
 def campaign_adgroup_new(request,*args,**kwargs):
     return CreateAdGroupHandler()(request,*args,**kwargs)            
 
 @login_required
+@clear_cached_pages_if_post
 def campaign_adgroup_edit(request,*args,**kwargs):
     kwargs.update(title="Edit Ad Group",edit=True)
     return CreateAdGroupHandler()(request,*args,**kwargs)    
@@ -406,6 +414,7 @@ class PauseHandler(RequestHandler):
         return HttpResponseRedirect(reverse('advertiser_campaign',kwargs={}))
 
 @login_required
+@clear_cached_pages_if_post
 def campaign_pause(request,*args,**kwargs):
     return PauseHandler()(request,*args,**kwargs)
 
@@ -516,6 +525,7 @@ class ShowAdGroupHandler(RequestHandler):
                                     'campaign_create_form_fragment':campaign_create_form_fragment})
     
 @login_required   
+@cache_page_until_post(5*60)
 def campaign_adgroup_show(request,*args,**kwargs):    
     return ShowAdGroupHandler()(request,*args,**kwargs)
 
@@ -551,6 +561,7 @@ class PauseAdGroupHandler(RequestHandler):
         return HttpResponseRedirect(reverse('advertiser_campaign', kwargs={}))
 
 @login_required
+@clear_cached_pages_if_post
 def bid_pause(request,*args,**kwargs):
     return PauseAdGroupHandler()(request,*args,**kwargs)
 
@@ -664,6 +675,7 @@ class AddCreativeHandler(RequestHandler):
 
 
 @login_required
+@clear_cached_pages_if_post
 def creative_create(request,*args,**kwargs):
     return AddCreativeHandler()(request,*args,**kwargs)    
 
@@ -724,6 +736,7 @@ class CreativeManagementHandler(RequestHandler):
         return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':adgroup_key}))
 
 @login_required    
+@clear_cached_pages_if_post
 def creative_manage(request,*args,**kwargs):
     return CreativeManagementHandler()(request,*args,**kwargs)
 

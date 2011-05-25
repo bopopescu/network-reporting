@@ -65,58 +65,47 @@ def cache_page_until_post(time=5*60):
     """ Caches a page until it expires or a post occurs in the session. """
     def wrap(view):
         def new_view(request, *args, **kw):
-            try:
-                # Do the standard caching
-                return cache_page(view, time)(request, *args, **kw)
-            finally:
-                # Also add the caching key to a list
-                page_key = get_cache_key(request)
             
-                # Add the cached page's key to the list of all the pages
-                # we have cached since the last POST 
-                session_cache_key = build_session_cache_key(request)
+            if request.method == "POST":
+                # If we are POSTing, clear the cache
+                session_cache_key = _build_session_cache_key(request)
+
+                session_cache_key_set = memcache.get(session_cache_key, namespace="user_page_cache") or set()
+                for key in session_cache_key_set:
+                    memcache.delete(key)
+
+                memcache.delete(session_cache_key, namespace="user_page_cache")
+                return view(request, *args, **kw)
+                
+            else:
+                # If we are not POSTing, add to cache
+                try:
+                    # Do the standard caching
+                    return cache_page(view, time)(request, *args, **kw)
+                finally:
+                    # Also add the caching key to a list
+                    page_key = get_cache_key(request)
+                    
+                    if page_key:
+                        # Add the cached page's key to the list of all the pages
+                        # we have cached since the last POST 
+                        session_cache_key = _build_session_cache_key(request)
             
-                session_cache_key_set = memcache.get(session_cache_key)
-                if session_cache_key_set is None:
-                    session_cache_key_set = set()
-                session_cache_key_set.add(page_key)
+                        session_cache_key_set = memcache.get(session_cache_key, namespace="user_page_cache")
+                        if session_cache_key_set is None:
+                            session_cache_key_set = set()
+                        session_cache_key_set.add(page_key)
             
-                memcache.set(session_cache_key,
-                             session_cache_key_set)
-            
-            
+                        memcache.set(session_cache_key,
+                                     session_cache_key_set, namespace="user_page_cache")
+
         return new_view
     return wrap
     
-def build_session_cache_key(request):
-    
-    # username = request.user.key()
-    username = "fake"
+def _build_session_cache_key(request):
+    """ We have a different key for each user"""
+    username = request.user.key()
     return str(username)
-    
-def clear_cached_pages_if_post(view):
-    """ This function changes some pertinent data and must clear the pages 
-         in the session cache. """
-         
-    def new_view(request, *args, **kw):
-        import logging
-        logging.warning("methodX" + str(request.method))
-        if request.method != "POST":
-            return view(request, *args, **kw)
-            
-        session_cache_key = build_session_cache_key(request)
-        
-        session_cache_key_set = memcache.get(session_cache_key) or set()
-        import logging
-        logging.warning("log1" + str(session_cache_key_set))
-        for key in session_cache_key_set:
-            
-            memcache.delete(key)
-        
-        memcache.delete(session_cache_key)
-        return view(request, *args, **kw)
-        
-    return new_view
 
 
 def deprecated(func):

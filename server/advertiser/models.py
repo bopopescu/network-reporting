@@ -84,7 +84,7 @@ class AdGroup(db.Model):
 
     # the priority level at which this ad group should be auctioned
     priority_level = db.IntegerProperty(default=1)
-    network_type = db.StringProperty(choices=["adsense", "iAd", "admob","millennial","appnexus","inmobi","mobfox","jumptap","brightroll","greystripe", "custom", "admob_native", "millennial_native"])
+    network_type = db.StringProperty(choices=["adsense", "iAd", "admob","millennial","ejam","appnexus","inmobi","mobfox","jumptap","brightroll","greystripe", "custom", "admob_native", "millennial_native"])
 
     # Note that bid has different meaning depending on the bidding strategy.
     # if CPM: bid = cost per 1000 impressions
@@ -193,6 +193,7 @@ class AdGroup(db.Model):
         elif self.network_type == 'iAd': c = iAdCreative(name="iAd dummy",ad_type="iAd", format="320x50", format_predicates=["format=320x50"])
         elif self.network_type == 'admob': c = AdMobCreative(name="admob dummy",ad_type="admob", format="320x50", format_predicates=["format=320x50"])
         elif self.network_type == 'brightroll': c = BrightRollCreative(name="brightroll dummy",ad_type="html_full", format="full",format_predicates=["format=*"])
+        elif self.network_type == 'ejam': c = EjamCreative(name="ejam dummy",ad_type="html",format="320x50",format_predicates=["format=320x50"])
         elif self.network_type == 'jumptap': c = JumptapCreative(name="jumptap dummy",ad_type="html", format="320x50",format_predicates=["format=320x50"])
         elif self.network_type == 'millennial': c = MillennialCreative(name="millennial dummy",ad_type="html",format="320x50", format_predicates=["format=320x50"]) # TODO: make sure formats are right
         elif self.network_type == 'inmobi': c = InMobiCreative(name="inmobi dummy",ad_type="html",format="320x50", format_predicates=["format=320x50"]) # TODO: make sure formats are right
@@ -423,6 +424,9 @@ class MillennialNativeCreative(MillennialCreative):
     @property
     def multi_format(self):
         return ('728x90', '320x50', 'full' ,)
+
+class EjamCreative(Creative):
+    pass
 
 class InMobiCreative(Creative):
    

@@ -12,6 +12,7 @@ import binascii
 from ad_server.adserver_templates import TEMPLATES
                                     
 from common.utils import helpers
+from common.constants import FULL_NETWORKS
 
 from google.appengine.api import users, urlfetch, memcache
 
@@ -272,7 +273,7 @@ class AdHandler(webapp.RequestHandler):
                         self.response.headers.add_header("X-Orientation","p")
                         format = (320,480)    
                                                 
-                elif not creative.adgroup.network_type or c.adgroup.network_type in FULL_NETWORKS:
+                elif not creative.adgroup.network_type or creative.adgroup.network_type in FULL_NETWORKS:
                     format = (320,480)
                 elif creative.adgroup.network_type:
                     #TODO this should be a littttleee bit smarter. This is basically saying default

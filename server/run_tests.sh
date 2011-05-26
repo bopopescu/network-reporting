@@ -10,7 +10,6 @@ then
     nosetests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --where='./userstore/tests'
     # nosetests ./userstore/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./'
     
-    
     nosetests ./reporting/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox 
     nosetests ./budget/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox
     nosetests ./account/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox
@@ -48,4 +47,3 @@ else
     nosetests network_config_mptests --with-coverage --with-xunit --gae-lib-root="$1" --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox
     nosetests ad_server_tests --with-coverage --with-xunit --gae-lib-root="$1" --gae-datastore='./test_data/basic_test.datastore' --with-gae --gae-application='./' --without-sandbox
 fi
-

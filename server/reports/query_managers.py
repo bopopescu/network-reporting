@@ -8,7 +8,6 @@ from django.template.loader import render_to_string
 from google.appengine.api import taskqueue
 from google.appengine.ext import db
 
-
 from common.utils.query_managers import CachedQueryManager
 from common.utils import date_magic
 from reporting.models import StatsModel
@@ -20,15 +19,33 @@ NUM_REP_QS = 1
 REP_Q_NAME = "gen-rep-%02d"
 COMMON_REPORT_DIM_LIST = (('app', 'Apps'), ('adunit', 'Ad Units'), ('campaign', 'Campaigns'))
 
+#I couldn't import this because it was causing circular imports and all other kinds of hell
+def gen_report_worker(report, account, end=None):
+    if end is None:
+        end = datetime.datetime.now()
+    man = ReportQueryManager()
+    report = man.get_report_by_key(report)
+    report.status = 'pending'
+    man.put_report(report)
+    sched = report.schedule
+    sched.last_run = datetime.datetime.now() 
+    man.put_report(sched)
+    report.data = report.gen_data()
+    report.status = 'done'
+    report.completed_at = datetime.datetime.now()
+    man.put_report(report)
+    return
 
 class ReportQueryManager(CachedQueryManager):
     Model = Report
 
-    def __init__(self, account, offline=False):
+    def __init__(self, account=None, offline=False):
         if isinstance(account, db.Key):
             self.account = account
         elif isinstance(account, db.Model):
             self.account = account.key()
+        elif account is None:
+            self.account = None
         else:
             self.account = db.Key(account)
 
@@ -121,38 +138,46 @@ class ReportQueryManager(CachedQueryManager):
             reports.append(report)
         return reports
 
-    def new_report(self, report):
+    def new_report(self, report, now=None, testing=False):
         #do stuff w/ report interval here
         #last month shouldn't just arbitrarily pick some days
-        if type(report) == str or type(report) == unicode:
+        if isinstance(report, str) or isinstance(report, unicode):
             report = self.get_report_by_key(report, sched=False).schedule
         dt = datetime.timedelta(days=report.days) 
         one_day = datetime.timedelta(days=1)
-        now = datetime.datetime.now().date()
+        if now is None:
+            now = datetime.datetime.now().date()
         if report.interval:
             if report.interval == 'yesterday':
-                now = datetime.datetime.now().date() - one_day 
+                now = now - one_day 
             elif report.interval == 'lmonth':
                 start, end = date_magic.last_month(now)
                 now = end.date()
                 dt = end.date() - start.date()
-            
+
+        account = report.account
         new_report = Report(start = now - dt,
                             end = now,
-                            account = self.account,
+                            account = account,
                             schedule = report,
                             )
+        report.next_sched_date = date_magic.get_next_day(report.sched_interval, now)
+        self.put_report(report)
         self.put_report(new_report)
-        url = reverse('generate_reports')
-        q_num = random.randint(0, NUM_REP_QS - 1)
-        taskqueue.add(url=url,
-                      queue_name=REP_Q_NAME % q_num,
-                      params={"report": new_report.key(),
-                              "account": str(self.account),
-                              })
+        if testing:
+            gen_report_worker(new_report.key(), account.key(), end=now)
+            return report
+        else:
+            url = reverse('generate_reports')
+            q_num = random.randint(0, NUM_REP_QS - 1)
+            taskqueue.add(url=url,
+                          queue_name=REP_Q_NAME % q_num,
+                          params={"report": new_report.key(),
+                                  "account": account.key(),
+                                  })
         return new_report
 
-    def add_report(self, d1, d2, d3, end, days, name=None, saved=False,interval=None):
+    def add_report(self, d1, d2, d3, end, days, name=None, saved=False,interval=None, sched_interval=None, testing=False):
         if interval is None:
             interval = 'custom'
         '''Create a new scheduled report with the given specs
@@ -182,12 +207,24 @@ class ReportQueryManager(CachedQueryManager):
             d3 = None
         if not end:
             end = datetime.datetime.now().date()
+        if sched_interval != 'none':
+            if testing:
+                next_sched_date =  date_magic.get_next_day(sched_interval, d = end)
+            else:
+                next_sched_date =  date_magic.get_next_day(sched_interval)
+        else:
+            if testing:
+                next_sched_date = end
+            else:
+                next_sched_date = datetime.datetime.now().date()
         sched = ScheduledReport(d1=d1,
                                 d2=d2,
                                 d3=d3,
                                 end=end,
                                 days=days,
                                 interval=interval,
+                                sched_interval = sched_interval,
+                                next_sched_date = next_sched_date,
                                 account=self.account,
                                 name=name,
                                 saved=saved,
@@ -202,14 +239,18 @@ class ReportQueryManager(CachedQueryManager):
                         schedule = sched,
                         )
         report.put()
-        url = reverse('generate_reports')
-        q_num = random.randint(0, NUM_REP_QS - 1)
-        taskqueue.add(url=url,
-                      queue_name=REP_Q_NAME % q_num,
-                      params={"report": report.key(),
-                              "account": str(self.account),
-                              },
-                      )
+        #if in test mode don't use a TQ because they're stupid and don't work
+        if testing:
+            gen_report_worker(report.key(), self.account, end=end)
+        else:
+            url = reverse('generate_reports')
+            q_num = random.randint(0, NUM_REP_QS - 1)
+            taskqueue.add(url=url,
+                          queue_name=REP_Q_NAME % q_num,
+                          params={"report": report.key(),
+                                  "account": str(self.account),
+                                  },
+                          )
         return sched 
 
     def put_report(self, report):

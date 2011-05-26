@@ -101,40 +101,31 @@ def log_generator(campaign):
     """Returns a generator function for the list of most recent logs"""
     slicer = BudgetSlicer.get_or_insert_for_campaign(campaign)
     return slicer.timeslice_logs.order("-end_date")
-        
-def percent_delivered(campaign, continuous_max_days=14):
-    """ Gives the percent of the budget that has been delivered over a certain number of days"""
-    if not campaign.budget:
+     
+    
+def percent_delivered(campaign):
+    """ Gives the percent of the budget that has been delivered.
+    Gives the percent of the daily budget that has been delivered so far today """
+    if not (campaign.budget and campaign.finite):
         return None
         
-    # Check if the campaign has a budget but no set start or end date
-    if not campaign.end_date or not campaign.start_date:
-        daily_logs = _recent_daily_logs(campaign, max_days=continuous_max_days)
-        total_budget = campaign.budget * (len(daily_logs) + 1) # for today
-    else:
-        daily_logs = _recent_daily_logs(campaign, max_days=100)
+    # The number of days in the campaign, inclusive
+    num_days = (campaign.end_date - campaign.start_date).days + 1
+    logging.warning(num_days)
+    total_budget = campaign.budget * num_days
         
-        # The number of days in the campaign, inclusive
-        num_days = (campaign.end_date - campaign.start_date).days + 1
-        logging.warning(num_days)
-        total_budget = campaign.budget * num_days
-        
-        
-    previous_spending = sum([log.spending for log in daily_logs])
-
-    today_spending = total_delivered(campaign)
-    total_spending = today_spending + previous_spending
+    logging.error("total: %s" % total_budget)
+    logging.error("remaining: %s" % remaining_daily_budget(campaign))
     
+    total_spending = total_budget - remaining_daily_budget(campaign)
     
     return (total_spending / total_budget) * 100
-    
-def total_delivered(campaign):
-    if not campaign.budget:
-        return None
-    return campaign.budget - remaining_daily_budget(campaign)
+
     
 def remaining_daily_budget(campaign):
-    """ Gets or inserts the remaining daily budget """
+    """ Gets or inserts the remaining daily budget.
+    This budget can increase past campaign.budget only
+    if this is a finite campaign """
     key = _make_campaign_daily_budget_key(campaign)
 
     memcache_budget = memcache.get(key, namespace="budget")
@@ -179,6 +170,22 @@ def remaining_ts_budget(campaign):
         memcache.add(key, memcache_budget, namespace="budget")
 
     return _from_memcache_int(memcache_budget)        
+    
+    
+def get_spending_for_date_range(campaign, start_date, end_date):
+    slicer = BudgetSlicer.get_or_insert_for_campaign(campaign)
+    
+    # daily_logs = slicer.daily_logs
+    # for log in daily_logs:
+    #     logging.error("log date: %s spending: %s" % ( log.date, log.spending))
+    
+    daily_logs = slicer.daily_logs.filter("date >=", start_date).filter("date <=", end_date)
+    
+    for log in daily_logs:
+        logging.error("log spending: " + str(log.spending))
+    
+    return sum([log.spending for log in daily_logs])
+    
 ################ HELPER FUNCTIONS ###################
 
 def _make_campaign_ts_budget_key(campaign):
@@ -223,7 +230,6 @@ def _backup_budgets(campaign):
     budget_slicer.timeslice_snapshot = mem_budget + budget_slicer.timeslice_budget
     budget_slicer.daily_snapshot = rem_daily_budget
     budget_slicer.put()
-
 
 def _recent_daily_logs(campaign, max_days=14):
     """ Returns a list of recent daily logs sorted by date"""

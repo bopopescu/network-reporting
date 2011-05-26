@@ -490,95 +490,131 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(daily_logs[0].spending, 950)
         eq_(daily_logs[1].spending, 900)
         
-    def mptest_recent_daily_logs(self):
-        # Each campaign has $1000 total budget
-        self.expensive_c.budget_strategy = "allatonce"
-        self.expensive_c.put()
-
-        self.cheap_c.budget_strategy = "allatonce"
-        self.cheap_c.put()
-
-        eq_(budget_service._apply_if_able(self.cheap_c, 500), True)
-        eq_(budget_service.remaining_daily_budget(self.cheap_c), 500)
-
-        # We have only one day
-        eq_(budget_service.percent_delivered(self.cheap_c),50)
-
-        budget_service.daily_advance(self.cheap_c)
-       
-        # We have one day at 50, and a new empty one
-        eq_(budget_service.percent_delivered(self.cheap_c),25)
-        
-        eq_(budget_service._apply_if_able(self.cheap_c, 500), True)
-        eq_(budget_service.remaining_daily_budget(self.cheap_c), 500)
-
-        # We have two days at 50
-        eq_(budget_service.percent_delivered(self.cheap_c),50)
-
-        eq_(budget_service._apply_if_able(self.cheap_c, 500), True)
-        eq_(budget_service.remaining_daily_budget(self.cheap_c), 0)
-
-        eq_(budget_service.percent_delivered(self.cheap_c),75)
-    
-    def mptest_recent_daily_logs_mult(self):
-        # Each campaign has $1000 total budget
-        self.expensive_c.budget_strategy = "allatonce"
-        self.expensive_c.put()
-
-        self.cheap_c.budget_strategy = "allatonce"
-        self.cheap_c.put()
-
-        eq_(budget_service._apply_if_able(self.cheap_c, 900), True)
-        eq_(budget_service.remaining_daily_budget(self.cheap_c), 100)
-        
-        # We have only one day
-        eq_(budget_service.percent_delivered(self.cheap_c),90)
-
-        for i in xrange(15):
-            budget_service.daily_advance(self.cheap_c)
-            eq_(budget_service._apply_if_able(self.cheap_c, 950), True)
-            eq_(budget_service.remaining_daily_budget(self.cheap_c), 50)
+    def mptest_get_spending_for_date_range(self):
+        # The campaign has a $1000 daily budget, and goes for 1 days inclusive -> $1,000
+         self.cheap_c.budget_strategy = "allatonce"
+         self.cheap_c.start_date = datetime.date(1987,4,4)
+         self.cheap_c.end_date = datetime.date(1987,4,4)
+         self.cheap_c.put()
 
 
-        # Check logs
+         eq_(budget_service._apply_if_able(self.cheap_c, 500), True)    
 
-        # We use the full 14 days
-        eq_(budget_service.percent_delivered(self.cheap_c),95)
+         eq_(budget_service.remaining_daily_budget(self.cheap_c), 500)
+
+         # The end of the second day
+         budget_service.daily_advance(self.cheap_c, date=datetime.date(1987,4,5))
+
    
-    def mptest_total_delivered(self):
-        # Each campaign has $1000 total budget
-        self.expensive_c.budget_strategy = "allatonce"
-        self.expensive_c.put()
 
+         second_spending = budget_service.get_spending_for_date_range(self.cheap_c,
+                                                    datetime.date(1987,4,5),
+                                                    datetime.date(1987,4,5))
+         eq_(second_spending, 500)
+
+         total_spending = budget_service.get_spending_for_date_range(self.cheap_c,
+                                                    datetime.date(1987,4,4),
+                                                    datetime.date(1987,4,5))
+         eq_(total_spending, 500)
+       
+        
+        
+    def mptest_get_spending_for_date_range_mult(self):
+        # The campaign has a $1000 daily budget, and goes for 1 days inclusive -> $1,000
+         self.cheap_c.budget_strategy = "allatonce"
+         self.cheap_c.start_date = datetime.date(1987,4,4)
+         self.cheap_c.end_date = datetime.date(1987,4,4)
+         self.cheap_c.put()
+
+         eq_(budget_service.remaining_daily_budget(self.cheap_c), 1000)
+
+         eq_(budget_service._apply_if_able(self.cheap_c, 500), True)    
+
+         eq_(budget_service.remaining_daily_budget(self.cheap_c), 500)
+         
+         # The end of the first day
+         budget_service.daily_advance(self.cheap_c, date=datetime.date(1987,4,4))
+         
+         spending = budget_service.get_spending_for_date_range(self.cheap_c,
+                                                    datetime.date(1987,4,4),
+                                                    datetime.date(1987,4,4))
+        
+         eq_(spending, 500)
+         
+         eq_(budget_service._apply_if_able(self.cheap_c, 500), True)    
+       
+         eq_(budget_service.remaining_daily_budget(self.cheap_c), 1000)
+        
+         # The end of the second day
+         budget_service.daily_advance(self.cheap_c, date=datetime.date(1987,4,5))
+         
+         first_spending = budget_service.get_spending_for_date_range(self.cheap_c,
+                                                    datetime.date(1987,4,4),
+                                                    datetime.date(1987,4,4))
+         eq_(first_spending, 500)
+        
+         second_spending = budget_service.get_spending_for_date_range(self.cheap_c,
+                                                    datetime.date(1987,4,5),
+                                                    datetime.date(1987,4,5))
+         eq_(second_spending, 500)
+         
+         total_spending = budget_service.get_spending_for_date_range(self.cheap_c,
+                                                    datetime.date(1987,4,4),
+                                                    datetime.date(1987,4,5))
+         eq_(total_spending, 1000)
+        
+        
+    def test_percent_delivered_finite(self):
+        # The campaign has a $1000 daily budget, and goes for 1 days inclusive -> $1,000
         self.cheap_c.budget_strategy = "allatonce"
+        self.cheap_c.start_date = datetime.date(1987,4,4)
+        self.cheap_c.end_date = datetime.date(1987,4,4)
         self.cheap_c.put()
 
-        eq_(budget_service._apply_if_able(self.cheap_c, 500), True)
-        eq_(budget_service.total_delivered(self.cheap_c), 500)
+        eq_(budget_service.remaining_daily_budget(self.cheap_c), 1000)
 
-        budget_service.daily_advance(self.cheap_c)
-
-        eq_(budget_service._apply_if_able(self.cheap_c, 500), True)
-        eq_(budget_service.total_delivered(self.cheap_c), 500)
-
-        eq_(budget_service._apply_if_able(self.cheap_c, 500), True)
-        eq_(budget_service.remaining_daily_budget(self.cheap_c), 0)
+        eq_(budget_service.percent_delivered(self.cheap_c), 0.0)
         
-    def mptest_percent_delivered_dates(self):
+        eq_(budget_service._apply_if_able(self.cheap_c, 500), True)    
+        
+        eq_(budget_service.remaining_daily_budget(self.cheap_c), 500)
+        
+        # We have delivered 50.0%
+        eq_(budget_service.percent_delivered(self.cheap_c), 50.0)
+
+        # The end of the first day
+        budget_service.daily_advance(self.cheap_c, date=datetime.date(1987,4,4))
+
+        # We have still delivered 50.0%
+        eq_(budget_service.percent_delivered(self.cheap_c), 50.0)
+    
+    def test_percent_delivered_finite_ten_days(self):
         # The campaign has a $1000 daily budget, and goes for 10 days inclusive -> $10,000
-        self.cheap_c.budget_strategy = "allatonce"
+        self.cheap_c.budget_strategy = "evenly"
         self.cheap_c.start_date = datetime.date(1987,4,4)
         self.cheap_c.end_date = datetime.date(1987,4,13)
         self.cheap_c.put()
 
         eq_(budget_service.percent_delivered(self.cheap_c), 0.0)
-        
+
         eq_(budget_service._apply_if_able(self.cheap_c, 500), True)    
+        # We have delivered 5.0%
         eq_(budget_service.percent_delivered(self.cheap_c), 5.0)
 
         # The end of the first day
         budget_service.daily_advance(self.cheap_c, date=datetime.date(1987,4,4))
+
+        eq_(budget_service._apply_if_able(self.cheap_c, 1000), True) 
+           
+        # We have delivered 15.0%
+        eq_(budget_service.percent_delivered(self.cheap_c), 15.0)
     
+        # The end of the second day
+        budget_service.daily_advance(self.cheap_c, date=datetime.date(1987,4,5))
+
+        # We have still delivered 15.0%
+        eq_(budget_service.percent_delivered(self.cheap_c), 50.0)
+        
     def mptest_percent_delivered_none(self):
          # The campaign has a $1000 daily budget, and goes for 10 days inclusive -> $10,000
          self.cheap_c.budget_strategy = "allatonce"

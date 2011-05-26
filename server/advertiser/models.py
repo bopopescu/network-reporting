@@ -242,6 +242,11 @@ class AdGroup(db.Model):
             return self.bid
         return None
  
+    @property
+    def e_cpm(self):
+        pass
+ 
+ 
 class Creative(polymodel.PolyModel):
     name = db.StringProperty()
     
@@ -285,13 +290,6 @@ class Creative(polymodel.PolyModel):
     @property
     def multi_format(self):
             return None
-
-    # DEPRECATED: see comment above
-    # predicts a CTR for this ad.    We use 1% for now.
-    # TODO: implement this in a better way
-    # def p_ctr(self):
-    #     return 0.01
-        
     
     def _get_adgroup(self):
             return self.ad_group        
@@ -300,15 +298,13 @@ class Creative(polymodel.PolyModel):
             self.ad_group = value
             
     adgroup = property(_get_adgroup,_set_adgroup)
-            
-
+        
     def get_owner(self):
         return self.ad_group
 
     def set_owner(self, value):
         self.ad_group = value
   
-    
     def _get_width(self):
         if hasattr(self,'_width'):
             return self._width

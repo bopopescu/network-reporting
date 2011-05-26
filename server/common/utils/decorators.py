@@ -17,6 +17,8 @@ import warnings
 import inspect
 import logging
 
+from django.views.decorators.vary import vary_on_headers, vary_on_cookie
+
 from django.utils.cache import get_cache_key
 
 #TODO: Rename this function since we no longer use a whitelist
@@ -64,6 +66,9 @@ def login_required(function=None, redirect_field_name=REDIRECT_FIELD_NAME):
 def cache_page_until_post(time=5*60):
     """ Caches a page until it expires or a post occurs in the session. """
     def wrap(view):
+        
+        @cache_page(time)
+        @vary_on_cookie
         def new_view(request, *args, **kw):
             
             if request.method == "POST":
@@ -81,7 +86,7 @@ def cache_page_until_post(time=5*60):
                 # If we are not POSTing, add to cache
                 try:
                     # Do the standard caching
-                    return cache_page(view, time)(request, *args, **kw)
+                    return view(request, *args, **kw)
                 finally:
                     # Also add the caching key to a list
                     page_key = get_cache_key(request)

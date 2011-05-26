@@ -55,7 +55,8 @@ def put_models():
         qm.put_stats(offline=True)
     clear_cache()
            
-           
+
+# this function is also being used by reports.tests.reports_mptests.py         
 def update_model(adunit_key=None, creative_key=None, 
                  country_code=None, brand_name=None, marketing_name=None, device_os=None, device_os_version=None, 
                  counts=None, date_hour=None, date=None):    

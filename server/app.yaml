@@ -1,5 +1,5 @@
 application: mopub-inc
-version: 38
+version: 38-aws
 runtime: python
 api_version: 1
 default_expiration: "10d"
@@ -65,6 +65,11 @@ handlers:
 - url: /_ah/queue/.*
   script: mopub_logging/views.py
   login: admin  
+
+
+- url: /offline/.*
+  script: reporting/aws_logging/blob_test.py
+
 
 - url: /.*
   script: main.py

@@ -15,16 +15,18 @@ from django.views.decorators.cache import cache_page
 
 class RequestHandler(object):
     """ Does some basic work and redirects a view to get and post appropriately """
-    def __init__(self,request=None):
-      if request:
-        self.request = request
-        self._set_account()    
+    def __init__(self,request=None, cache=True):
+        self.cache = cache
 
-      super(RequestHandler,self).__init__()  
+        if request:
+            self.request = request
+            self._set_account()    
+
+        super(RequestHandler,self).__init__()  
 
     def __call__(self,request,cache_time=5*60, *args,**kwargs):
         
-        @cache_page_until_post(time=cache_time)
+
         def mp_view(request, *args, **kwargs):
             """ We wrap all the business logic of the request Handler here
                 in order to be able to properly use the cache decorator """
@@ -74,7 +76,10 @@ class RequestHandler(object):
                         kwargs[arg] = self.params.get(arg)
                 return self.post(*args,**kwargs)    
         
-        return mp_view(request, *args, **kwargs)
+        if self.cache:
+            return cache_page_until_post(time=cache_time)(mp_view)(request, *args, **kwargs)
+        else:
+            mp_view(request, *args, **kwargs)
   
   
     def get(self):

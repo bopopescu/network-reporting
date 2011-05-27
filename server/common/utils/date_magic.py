@@ -114,12 +114,12 @@ def gen_days(start, end):
         days.append(temp)
     return days
 
-def get_hours(days):
+def get_hours(days, hpd = 24):
     '''Turn a list of days into a list of lists where
     each list is a list of date_hours where the date
     ranges over the given days and the hour is held constant'''
     ret = []
-    for hour in range(24):
+    for hour in range(hpd):
         ent = []
         for day in days:
             date = day.day

@@ -17,3 +17,78 @@ def get_user_agent(request):
     
 def get_ip(request):
     return request.get('ip') or request.remote_addr
+
+# dte:pub:adv:CC:BN:MN:OS:OSVER
+STAT_KEY = "%s:%s:%s:%s:%s:%s:%s:%s"
+
+def build_key(stat):
+    #doesn't really matter since this will be consistent among all these 
+    #stat objs.  
+    dte = stat.date or stat.date_hour
+    pub = str(stat.publisher.key()) if stat.publisher else '*'
+    adv = str(stat.advertiser.key()) if stat.advertiser else '*'
+    cc = stat.country or '*'
+    bn = stat.brand_name or '*'
+    mn = stat.marketing_name or '*'
+    os = stat.device_os or '*'
+    osver = stat.device_os_version or '*'
+    return STAT_KEY % (dte, pub, adv, cc, bn, mn, os, osver)
+
+def build_keys(stat):
+    dte = stat.date or stat.date_hour
+    if stat.publisher:
+        pubs = [str(stat.publisher.key()), '*']
+    else:
+        pubs = ['*']
+    if stat.advertiser:
+        advs = [str(stat.advertiser.key()), '*']
+    else:
+        advs = ['*']
+    if stat.country:
+        ccs = [stat.country, '*']
+    else:
+        ccs = ['*']
+    if stat.brand_name:
+        bns = [stat.brand_name, '*']
+    else:
+        bns = ['*']
+    if stat.marketing_name:
+        mns = [stat.marketing_name, '*']
+    else:
+        mns = ['*']
+    if stat.device_os:
+        oss = [stat.device_os, '*']
+    else:
+        oss = ['*']
+    if stat.device_os_version:
+        osvers = [stat.device_os_version, '*']
+    else:
+        osvers = ['*']
+    keys = []
+    for pub in pubs:
+        for adv in advs:
+            for cc in ccs:
+                for bn in bns:
+                    for mn in mns:
+                        for os in oss:
+                            for osver in osvers:
+                                keys.append(STAT_KEY % (dte, pub, adv, cc, bn, mn, os, osver))
+    return keys
+
+def been_seen(stat, seen):
+    keys = build_keys(stat)
+    if len(set(keys).intersection(set(seen))) != 0:
+        return True
+    else:
+        return False
+
+def dedupe_stats(stats):
+    seen = []
+    final = []
+    for stat in stats:
+        if not been_seen(stat, seen):
+            seen += [build_key(stat)]
+            final.append(stat)
+    return final
+
+

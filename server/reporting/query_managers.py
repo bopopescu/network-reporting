@@ -9,6 +9,8 @@ from google.appengine.runtime.apiproxy_errors import CapabilityDisabledError
 import reporting.models as reporting_models
 
 from common.utils.query_managers import CachedQueryManager
+from common.utils import date_magic
+from common.utils.helpers import dedupe_stats
 from reporting.models import SiteStats, StatsModel
 from advertiser.models import Creative
 from publisher.models import Site as AdUnit
@@ -137,9 +139,13 @@ class StatsModelQueryManager(CachedQueryManager):
                             marketing_name=None, 
                             device_os=None, 
                             device_os_version=None,
-                            offline=False, 
                             date_fmt='date'):
 
+        offline=self.offline
+        #offline doesn't do day rollups
+        if date_fmt == 'date' and offline == True:
+            days = reduce(lambda x, y: x+y, date_magic.get_hours(days, 4))#4 is for testing
+            date_fmt = 'date_hour'
         if publisher and publishers:
             logging.error("cannot pass both a single publisher and multiple publishers")
         if publisher and not publishers:
@@ -178,6 +184,64 @@ class StatsModelQueryManager(CachedQueryManager):
                                                  date_fmt = date_fmt)
         return reduce(lambda x,y: x+y, stats, StatsModel())
 
+    def get_device_stats_for_days(self, publisher = None, publishers=None, advertiser=None, days=None, num_days=None,
+                                  account=None, country=None, brand_name=None, marketing_name=None, device_os=None,
+                                  device_os_version=None, offline=False, date_fmt='date'):
+        offline = offline or self.offline
+        if isinstance(publisher,db.Model):
+          publisher = publisher.key()
+          
+        if isinstance(advertiser,db.Model):
+          advertiser = advertiser.key()
+
+        if num_days:
+            days = StatsModel.lastdays(num_days)
+        else:
+            days = days or []
+        
+        account = account or self.account
+
+        if not publishers and publisher:
+            publishers = [publisher]
+
+        if not publishers:
+            publishers = []
+        
+        stats = StatsModel.all().filter('account =', account)
+
+        stats = stats.filter('brand_name =', brand_name)
+        stats = stats.filter('marketing_name =', marketing_name)
+        stats = stats.filter('device_os =', device_os)
+        stats = stats.filter('device_os_version =', device_os_version)
+        #if brand_name:
+        #    stats = stats.filter('brand_name =', brand_name)
+        #if marketing_name:
+        #    stats = stats.filter('marketing_name =', marketing_name)
+        #if device_os:
+        #    stats = stats.filter('device_os =', device_os)
+        #if device_os_version:
+        #    stats = stats.filter('device_os_version =', device_os_version)
+#        if publishers:
+        #stats = stats.filter('publisher in', publishers)
+#        if country:
+#
+#        if publishers:
+        stats = stats.filter('publisher in', publishers)
+#        if country:
+        stats = stats.filter('country =', country)
+#        if advertiser:
+        stats = stats.filter('advertiser =', advertiser)
+
+        if date_fmt == 'date':
+            stats = stats.filter('date in', days)
+        elif date_fmt == 'date_hour':
+            stats = stats.filter('date_hour in', days)
+
+        return stats
+        return dedupe_stats(stats)
+
+         
+
 
     def get_stats_for_days(self, publisher=None, publishers=None, advertiser=None, days=None, num_days=None, account=None, 
                            country=None, brand_name=None, marketing_name=None, device_os=None, device_os_version=None,
@@ -185,6 +249,21 @@ class StatsModelQueryManager(CachedQueryManager):
         """ Gets the stats for a specific pairing. Definitions:
             advertiser_group: Either Campaign, AdGroup or Creative
             publisher_group: Either App, or Site(AdUnit)"""
+        if (brand_name is not None) or (marketing_name is not None) or (device_os is not None) or (device_os_version is not None):
+            return self.get_device_stats_for_days(publisher = publisher,
+                                                  publishers = publishers,
+                                                  advertiser = advertiser,
+                                                  days = days,
+                                                  num_days = num_days,
+                                                  account = account,
+                                                  country = country,
+                                                  brand_name = brand_name,
+                                                  marketing_name = marketing_name,
+                                                  device_os = device_os,
+                                                  device_os_version = device_os_version,
+                                                  offline = offline,
+                                                  date_fmt = date_fmt
+                                                  )
         offline = offline or self.offline
         if isinstance(publisher,db.Model):
           publisher = publisher.key()
@@ -243,7 +322,6 @@ class StatsModelQueryManager(CachedQueryManager):
                                                              date_fmt=date_fmt),
                                       parent=parent)
                         for d in days]
-                               
         days_len = len(days)
         stats = StatsModel.get(keys) # db get
         #since pubs iterates more than once around days, stats might be too long

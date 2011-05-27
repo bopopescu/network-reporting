@@ -123,7 +123,11 @@ class Report(db.Model):
     def __str__(self):
         return "Report(d1=%s, d2=%s, d3=%s, start=%s, end=%s)" % (self.d1, self.d2, self.d3, self.start, self.end)
     
-    def gen_data(self, page_num=0, per_page=100):
+    def gen_data(self, page_num=0, per_page=100, wurfl_dicts = None, countries = None):
+        if wurfl_dicts is None:
+            wurfl_man = WurflQueryManager()
+        else:
+            wurfl_man = WurflQueryManager(dicts = wurfl_dicts)
         #pagination stuff for pagination later?
         pub = None
         adv = None
@@ -152,8 +156,8 @@ class Report(db.Model):
                 dim = 9001
                 logging.error("impossible")
             ret = {}
-            manager = StatsModelQueryManager(self.account, offline=False)#True) #offline=self.offline)
-            vals, typ, date_fmt = self.get_vals(pub, adv, days, country, brand, market, os, os_ver, dim, date_fmt)
+            manager = StatsModelQueryManager(self.account, offline=True) #offline=self.offline)
+            vals, typ, date_fmt = self.get_vals(pub, adv, days, country, brand, market, os, os_ver, dim, date_fmt, wurfl_man = wurfl_man, countries = countries)
             if vals is None:
                 return ret
             for idx, val in enumerate(vals):
@@ -161,16 +165,16 @@ class Report(db.Model):
                 if typ == 'co':
                     country, name = val
                 elif typ == 'mar':
-                    name = WurflQueryManager.get_market_name(val) #get market name
+                    name = wurfl_man.get_market_name(val) #get market name
                     market = val
                 elif typ == 'brnd':
-                    name = WurflQueryManager.get_brand_name(val) #get brand name
+                    name = wurfl_man.get_brand_name(val) #get brand name
                     brand = val
                 elif typ == 'os':
-                    name = WurflQueryManager.get_os_name(val) #get os name
+                    name = wurfl_man.get_os_name(val) #get os name
                     os = val
                 elif typ == 'os_ver':
-                    name = WurflQueryManager.get_osver_name(val) #get os_ver name
+                    name = wurfl_man.get_osver_name(val) #get os_ver name
                     os_ver = val
                 elif typ == 'days':
                     name = date_magic.date_name(val, dim)
@@ -199,13 +203,13 @@ class Report(db.Model):
                                                     date_fmt = date_fmt
                                                     )
                 if last_dim: 
-                    ret[key] = dict(stats = stats, name = name)
+                    ret[key] = dict(stats = stats, name = name, key = val)
                 else:
-                    ret[key] = dict(stats=stats, name = name, sub_stats = gen_helper(pub,adv,days, country, brand, market, os, os_ver, date_fmt, level+1))
+                    ret[key] = dict(stats=stats, name = name, key = val, sub_stats = gen_helper(pub,adv,days, country, brand, market, os, os_ver, date_fmt, level+1))
             return ret
         return gen_helper(pub, adv, days, country, brand, market, os, os_ver, date_fmt, 0)
 
-    def get_vals(self, pub, adv, days, country, brand, market, os, os_ver, dim, date_fmt=None):
+    def get_vals(self, pub, adv, days, country, brand, market, os, os_ver, dim, date_fmt=None, wurfl_man=None, countries = None):
         #This gets the list of values to iterate over for this level of the breakdown.  Country, device, OS, and keywords are irrelevant because they are independent of everythign else
         typ = None
         if date_fmt is None:
@@ -263,28 +267,31 @@ class Report(db.Model):
                                              )
         elif dim == CO:
             typ = 'co'
-            vals = ISO_COUNTRIES 
+            if countries is None:
+                vals = ISO_COUNTRIES 
+            else:
+                vals = countries
             #countries are indepent of publisher//advertiser
         elif dim == MAR:
-            man = WurflQueryManager
+            man = wurfl_man
             typ = 'mar'
             vals = man.reports_get_marketing(os = os,
                                              os_ver = os_ver,
                                              brand = brand)
         elif dim == BRND:
-            man = WurflQueryManager
+            man = wurfl_man 
             typ = 'brnd'
             vals = man.reports_get_brand(os = os,
                                          os_ver = os_ver,
                                          )
         elif dim == OS:
-            man = WurflQueryManager
+            man =  wurfl_man
             typ = 'os'
             vals = man.reports_get_os(brand = brand,
                                       market = market,
                                       )
         elif dim == OS_VER:
-            man = WurflQueryManager
+            man =  wurfl_man
             typ = 'os_ver'
             vals = man.reports_get_osver(os = os,
                                          brand = brand,

@@ -238,12 +238,13 @@
                         </th>
 
                         {% if adgroup.cpc %}
-                        <td class="dataTable-data numeric dataTable-ecpm">Approx: {{adgroup.e_cpm|currency}}
+                        <td class="dataTable-data numeric dataTable-ecpm">
+                          <div class="dataTable-campaign-ecpm">{{adgroup.summed_stats.e_cpm|currency}}</div>
                         <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"> What's this?
                           </a>
                         </td>
                         {% else %}
-                        <td class="dataTable-data numeric dataTable-ecpm">{{adgroup.e_cpm|currency}}</td>
+                        <td class="dataTable-data numeric dataTable-ecpm">{{adgroup.summed_stats.e_cpm|currency}}</td>
                         {% endif %}
                         
                         <td class="dataTable-data numeric">{{adgroup|campaign_status}}<br>
@@ -337,10 +338,11 @@
                         </span>
                     </th>
                         {% if adgroup.cpm %}
-                        <td class="dataTable-data numeric dataTable-ecpm">{{adgroup.e_cpm|currency}}</td>
+                        <td class="dataTable-data numeric dataTable-ecpm">{{adgroup.summed_stats.e_cpm|currency}}</td>
                         {% endif %}
                         {% if adgroup.cpc %}
-                        <td class="dataTable-data numeric dataTable-ecpm">Approx: {{adgroup.e_cpm|currency}}
+                        <td class="dataTable-data numeric dataTable-ecpm">
+                          <div class="dataTable-campaign-ecpm">{{adgroup.summed_stats.e_cpm|currency}}</div>
                         <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"> What's this?
                           </a>
                         </td>
@@ -422,12 +424,13 @@
                       <span class="muted">{{adgroup.network_type}}</span>
                     </th>
                     {% if adgroup.cpc %}
-                    <td class="dataTable-data numeric dataTable-ecpm">Approx: {{adgroup.e_cpm|currency}}
+                    <td class="dataTable-data numeric dataTable-ecpm">
+                      <div class="dataTable-campaign-ecpm">{{adgroup.summed_stats.e_cpm|currency}}</div>
                       <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"> What's this?
                       </a>
                     </td>
                     {% else %}
-                    <td class="dataTable-data numeric dataTable-ecpm">{{adgroup.e_cpm|currency}}</td>
+                    <td class="dataTable-data numeric dataTable-ecpm">{{adgroup.summed_stats.e_cpm|currency}}</td>
                     {% endif %}
                     <td class="dataTable-data numeric network-req">{{adgroup.summed_stats.request_count|withsep}}</td>
                     <td class="dataTable-data numeric network-imp">{{adgroup.summed_stats.impression_count|withsep}}</td>
@@ -513,12 +516,13 @@
                         </span>
                     </th>
                     {% if adgroup.cpc %}
-                    <td class="dataTable-data numeric dataTable-ecpm">Approx: {{adgroup.e_cpm|currency}}
+                    <td class="dataTable-data numeric dataTable-ecpm">
+                      <div class="dataTable-campaign-ecpm">{{adgroup.summed_stats.e_cpm|currency}}</div>
                         <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"> What's this?
                           </a>
                     </td>
                     {% else %}
-                    <td class="dataTable-data numeric dataTable-ecpm">{{adgroup.e_cpm|currency}}</td>
+                    <td class="dataTable-data numeric dataTable-ecpm">{{adgroup.summed_stats.e_cpm|currency}}</td>
                     {% endif %}
                         
                     <td class="dataTable-data numeric">{{adgroup|campaign_status}}</td>
@@ -555,6 +559,7 @@
             <h3>Revenue Optimized Campaign eCPM</h3>
             <p>We calculate the <strong>eCPM</strong> for CPC campaigns by combining the CPC of the campaign with our CTR calculated in real time. </p>
             <p> This number may vary over time. This is perfectly natural and our system will adjust to these fluctuations in real time. </p>
+            <p> Campaigns that have not yet begun use the average CTR of the entire app to calculate eCPM. </p>        
           </div>
           
 {% endblock content %}

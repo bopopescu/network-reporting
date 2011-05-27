@@ -177,14 +177,15 @@ def _calc_and_attach_e_cpm(adgroups_with_stats, app_level_summed_stats):
     """ Requires that adgroups already have attached stats """
     for adgroup in adgroups_with_stats:
         
-        if adgroup.cpm:
-            adgroup.summed_stats.e_cpm = adgroup.cpm
-            
-        elif adgroup.cpc:
+        if adgroup.cpc:
             app_level_ctr = app_level_summed_stats.ctr
             e_ctr = adgroup.summed_stats.ctr or app_level_ctr or DEFAULT_CTR
 
             adgroup.summed_stats.e_cpm = float(e_ctr) * float(adgroup.cpc) * 1000
+            
+        else:
+            adgroup.summed_stats.e_cpm = adgroup.cpm
+            
     return adgroups_with_stats
 
 @login_required

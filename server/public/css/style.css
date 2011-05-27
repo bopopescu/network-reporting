@@ -1213,6 +1213,10 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
 .dataTable-ecpm {
   width:100px;
 }
+.dataTable-campaign-ecpm {
+  color: #53a600;
+/*  font-weight: bold;*/
+}
 
 /* App data */
 

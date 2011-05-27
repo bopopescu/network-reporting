@@ -110,16 +110,8 @@ var mopub = mopub || {};
 				});
 			});
 			
-			if (apps.hasClass('show')) {
-				didShowContainer(apps);
-			}
-			else {
-				apps.hide();
-				didHideContainer(apps);
-			}
-			
 			appbutton.button({
-			  icons: { secondary: "ui-icon-triangle-1-s" }
+			  icons: { primary: "ui-icon-triangle-1-s" }
 			})
 			.click(function(e) {
 			  e.preventDefault();
@@ -131,7 +123,16 @@ var mopub = mopub || {};
 					apps.slideDown('fast');
 					didShowContainer(apps);
 				}
-			});
+			}).click();
+			
+            if (apps.hasClass('show')) {
+                didShowContainer(apps);
+            }
+            else {
+                apps.hide();
+                didHideContainer(apps);
+            }
+			
 		});
 	});
 })(this.jQuery);

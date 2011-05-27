@@ -136,53 +136,51 @@ def update_model(adunit_key=None, creative_key=None,
         return False
              
     
-def parse_and_update_models(input_file):
-    with open(input_file, 'r') as f:
-        for line in f:
-            try:
-                # handles un-escaping by mrjob local testing
-                if '\\' in line:
-                    line = line.replace(r'\'', '')
-                
-                # k = k:adunit_id:creative_id:country_code:brand_name:marketing_name:device_os:device_os_version:time
-                # v = [req_count, imp_count, clk_count, conv_count, user_count]
-                key_name, counts = line.split('\t', 1)
+def parse_line(line):
+    try:
+        # handles un-escaping by mrjob local testing
+        if '\\' in line:
+            line = line.replace(r'\'', '')
+        
+        # k = k:adunit_id:creative_id:country_code:brand_name:marketing_name:device_os:device_os_version:time
+        # v = [req_count, imp_count, clk_count, conv_count, user_count]
+        key_name, counts = line.split('\t', 1)
 
-                # parse out key_name
-                parts = key_name.split(':')
-                if len(parts) != 9: continue 
-                adunit_key = parts[1]
-                creative_key = parts[2]
+        # parse out key_name
+        parts = key_name.split(':')
+        if len(parts) != 9: return 
+        adunit_key = parts[1]
+        creative_key = parts[2]
 
-                country_code = parts[3]            
-                brand_name = parts[4] 
-                marketing_name = parts[5]            
-                device_os = parts[6]
-                device_os_version = parts[7]
+        country_code = parts[3]            
+        brand_name = parts[4] 
+        marketing_name = parts[5]            
+        device_os = parts[6]
+        device_os_version = parts[7]
 
-                time_str = parts[8]
-                year = int('20'+time_str[:2])
-                month = int(time_str[2:4])
-                day = int(time_str[4:6])
-            
-                # eval counts as list of ints
-                counts = eval(counts)
+        time_str = parts[8]
+        year = int('20'+time_str[:2])
+        month = int(time_str[2:4])
+        day = int(time_str[4:6])
+    
+        # eval counts as list of ints
+        counts = eval(counts)
 
-                if len(time_str) == 8:  # resolution to hour
-                    hour = int(time_str[6:8])
-                    date_hour = datetime(year, month, day, hour, tzinfo=Pacific_tzinfo())
-                    update_model(adunit_key=adunit_key, creative_key=creative_key, 
-                                 country_code=country_code, brand_name=brand_name, marketing_name=marketing_name, device_os=device_os, device_os_version=device_os_version,
-                                 counts=counts, date_hour=date_hour)
-                else:   # resolution to day
-                    date = datetime(year, month, day)
-                    update_model(adunit_key=adunit_key, creative_key=creative_key, 
-                                 country_code=country_code, brand_name=brand_name, marketing_name=marketing_name, device_os=device_os, device_os_version=device_os_version, 
-                                 counts=counts, date=date)
-            except Exception, e:
-                # traceback.print_exc()
-                print 'EXCEPTION on line %s -> %s' %(line, e)
-                continue
+        if len(time_str) == 8:  # resolution to hour
+            hour = int(time_str[6:8])
+            date_hour = datetime(year, month, day, hour, tzinfo=Pacific_tzinfo())
+            update_model(adunit_key=adunit_key, creative_key=creative_key, 
+                         country_code=country_code, brand_name=brand_name, marketing_name=marketing_name, device_os=device_os, device_os_version=device_os_version,
+                         counts=counts, date_hour=date_hour)
+        else:   # resolution to day
+            date = datetime(year, month, day)
+            update_model(adunit_key=adunit_key, creative_key=creative_key, 
+                         country_code=country_code, brand_name=brand_name, marketing_name=marketing_name, device_os=device_os, device_os_version=device_os_version, 
+                         counts=counts, date=date)
+    except Exception, e:
+        # traceback.print_exc()
+        print 'EXCEPTION on line %s -> %s' %(line, e)
+
         
 
 def main():
@@ -192,12 +190,22 @@ def main():
     parser.add_option('-f', '--input_file', dest='input_file')
     (options, args) = parser.parse_args()
     
+    if not options.input_file:
+        sys.exit('\nERROR: input file must be specified\n')   
+    
+    if not os.path.exists(options.input_file):
+        sys.exit('\nERROR: input file does not exist\n')
+        
     app_id = 'mopub-inc'
     host = '38-aws.latest.mopub-inc.appspot.com'
     remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', utils.auth_func, host)
     
     print 'processing %s for GAE datastore...' %options.input_file
-    parse_and_update_models(options.input_file)
+    
+    with open(options.input_file, 'r') as f:
+        for line in f:
+            parse_line(line)
+
     put_models()
    
     elapsed = time.time() - start

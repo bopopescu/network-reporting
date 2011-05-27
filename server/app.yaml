@@ -53,12 +53,10 @@ handlers:
   script: main.py
   login: admin 
   
-
 - url: /m/clear
   script: ad_server/main.py
   login: admin
   
-
 - url: /m/.*
   script: ad_server/main.py
 
@@ -66,10 +64,8 @@ handlers:
   script: mopub_logging/views.py
   login: admin  
 
-
 - url: /offline/.*
   script: reporting/aws_logging/blob_server.py
-
 
 - url: /.*
   script: main.py

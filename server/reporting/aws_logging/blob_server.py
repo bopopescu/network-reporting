@@ -49,7 +49,8 @@ class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
     def post(self):
         upload_files = self.get_uploads('file')  # 'file' is file upload field in the form
         blob_info = upload_files[0]
-        self.redirect('/offline/serve/%s' % blob_info.key())
+        self.response.out.write(str(blob_info.key()))
+        # self.redirect('/offline/serve/%s' % blob_info.key())
 
 
 class ServeHandler(blobstore_handlers.BlobstoreDownloadHandler):

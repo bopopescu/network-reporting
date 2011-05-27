@@ -1210,6 +1210,10 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
   width: 175px;
 }
 
+.dataTable-ecpm {
+  width:100px;
+}
+
 /* App data */
 
 .appData {

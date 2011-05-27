@@ -192,14 +192,14 @@
                   </table>
               </div>
 
-              {% for level in gtee %}
-              {% if level.foo %} 
+              {% for level in guarantee_levels %}
+              {% if level.display %} 
               <table class="dataTable campaignData-main" id="campaignDataTable-direct-{{level.name}}">
                     <thead>
                       <tr>
                         <th class="campaignData-icon"></th>
                         <th class="dataTable-name">{{level.name}} Priority</th>
-                        <th class="dataTable-data numeric">CPM</th>
+                        <th class="dataTable-data numeric">eCPM</th>
                         <th class="dataTable-data numeric">Status</th>
                         <th class="dataTable-data numeric">Impressions</th>
                         <th class="dataTable-data numeric">Clicks</th>
@@ -236,17 +236,26 @@
                                 {% if adgroup.campaign.budget %}{{adgroup.campaign.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
                             </span>
                         </th>
-                        <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
+
+                        {% if adgroup.cpc %}
+                        <td class="dataTable-data numeric dataTable-ecpm">Approx: {{adgroup.e_cpm|currency}}
+                        <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"> What's this?
+                          </a>
+                        </td>
+                        {% else %}
+                        <td class="dataTable-data numeric dataTable-ecpm">{{adgroup.e_cpm|currency}}</td>
+                        {% endif %}
+                        
                         <td class="dataTable-data numeric">{{adgroup|campaign_status}}<br>
                          {% if adgroup.percent_delivered %}
                          <span class="muted">({{adgroup.percent_delivered|floatformat:1}}%)</span></td>
-                         {%endif %}
-                        <td class='gtee-rev' style='display:none;'>{{adgroup.stats.revenue}}</td>
-                        <td class="dataTable-data numeric gtee-imp">{{adgroup.stats.impression_count|withsep}}</td>
-                        <td class="dataTable-data numeric gtee-clk">{{adgroup.stats.click_count|withsep}}</td>
-                        <td class="dataTable-data numeric gtee-ctr">{{adgroup.stats.ctr|percentage|withsep}}</td>
-                        <td class="dataTable-data numeric gtee-conv">{{adgroup.stats.conversion_count|withsep}} ({{adgroup.stats.conv_rate|percentage}})</td>
-                        <td class="dataTable-data numeric gtee-cpa">{{adgroup.stats.cpa|currency}}</td>
+                         {% endif %}
+                        <td class='gtee-rev' style='display:none;'>{{adgroup.summed_stats.revenue}}</td>
+                        <td class="dataTable-data numeric gtee-imp">{{adgroup.summed_stats.impression_count|withsep}}</td>
+                        <td class="dataTable-data numeric gtee-clk">{{adgroup.summed_stats.click_count|withsep}}</td>
+                        <td class="dataTable-data numeric gtee-ctr">{{adgroup.summed_stats.ctr|percentage|withsep}}</td>
+                        <td class="dataTable-data numeric gtee-conv">{{adgroup.summed_stats.conversion_count|withsep}} ({{adgroup.summed_stats.conv_rate|percentage}})</td>
+                        <td class="dataTable-data numeric gtee-cpa">{{adgroup.summed_stats.cpa|currency}}</td>
                       </tr>
                       {% endfor %}
                       <tr class="campaignData campaignData-placeholder gtee-placeholder">
@@ -291,7 +300,7 @@
                   <tr>
                     <th class="campaignData-icon"></th>
                     <th class="dataTable-name">Name</th>
-                    <th class="dataTable-data numeric">CPM</th>
+                    <th class="dataTable-data numeric">eCPM</th>
                     <th class="dataTable-data numeric">Status</th>
                     <th class="dataTable-data numeric">Impressions</th>
                     <th class="dataTable-data numeric">Clicks</th>
@@ -327,13 +336,22 @@
                             {% if adgroup.campaign.budget %}{{adgroup.campaign.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
                         </span>
                     </th>
-                    <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
+                        {% if adgroup.cpm %}
+                        <td class="dataTable-data numeric dataTable-ecpm">{{adgroup.e_cpm|currency}}</td>
+                        {% endif %}
+                        {% if adgroup.cpc %}
+                        <td class="dataTable-data numeric dataTable-ecpm">Approx: {{adgroup.e_cpm|currency}}
+                        <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"> What's this?
+                          </a>
+                        </td>
+                        {% endif %}
+                        
                     <td class="dataTable-data numeric">{{adgroup|campaign_status}}</td>
-                    <td class="dataTable-data numeric promo-imp">{{adgroup.stats.impression_count|withsep}}</td>
-                    <td class="dataTable-data numeric promo-clk">{{adgroup.stats.click_count|withsep}}</td>
-                    <td class="dataTable-data numeric promo-ctr">{{adgroup.stats.ctr|percentage|withsep}}</td>
-                    <td class="dataTable-data numeric promo-conv">{{adgroup.stats.conversion_count|withsep}} ({{adgroup.stats.conv_rate|percentage}})</td>
-                    <td class="dataTable-data numeric promo-cpa">{{adgroup.stats.cpa|currency}}</td>
+                    <td class="dataTable-data numeric promo-imp">{{adgroup.summed_stats.impression_count|withsep}}</td>
+                    <td class="dataTable-data numeric promo-clk">{{adgroup.summed_stats.click_count|withsep}}</td>
+                    <td class="dataTable-data numeric promo-ctr">{{adgroup.summed_stats.ctr|percentage|withsep}}</td>
+                    <td class="dataTable-data numeric promo-conv">{{adgroup.summed_stats.conversion_count|withsep}} ({{adgroup.summed_stats.conv_rate|percentage}})</td>
+                    <td class="dataTable-data numeric promo-cpa">{{adgroup.summed_stats.cpa|currency}}</td>
                   </tr>
                   {% endfor %}
                   <tr class="campaignData campaignData-placeholder promo-placeholder">
@@ -403,12 +421,19 @@
 
                       <span class="muted">{{adgroup.network_type}}</span>
                     </th>
-                    <td class="dataTable-data numeric network-cpm">{{adgroup.bid|currency}}</td>
-                    <td class="dataTable-data numeric network-req">{{adgroup.stats.request_count|withsep}}</td>
-                    <td class="dataTable-data numeric network-imp">{{adgroup.stats.impression_count|withsep}}</td>
-                    <td class="dataTable-data numeric network-fill">{{adgroup.stats.fill_rate|percentage|withsep}}</td>
-                    <td class="dataTable-data numeric network-clk">{{adgroup.stats.click_count|withsep}}</td>
-                    <td class="dataTable-data numeric network-ctr">{{adgroup.stats.ctr|percentage|withsep}}</td>
+                    {% if adgroup.cpc %}
+                    <td class="dataTable-data numeric dataTable-ecpm">Approx: {{adgroup.e_cpm|currency}}
+                      <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"> What's this?
+                      </a>
+                    </td>
+                    {% else %}
+                    <td class="dataTable-data numeric dataTable-ecpm">{{adgroup.e_cpm|currency}}</td>
+                    {% endif %}
+                    <td class="dataTable-data numeric network-req">{{adgroup.summed_stats.request_count|withsep}}</td>
+                    <td class="dataTable-data numeric network-imp">{{adgroup.summed_stats.impression_count|withsep}}</td>
+                    <td class="dataTable-data numeric network-fill">{{adgroup.summed_stats.fill_rate|percentage|withsep}}</td>
+                    <td class="dataTable-data numeric network-clk">{{adgroup.summed_stats.click_count|withsep}}</td>
+                    <td class="dataTable-data numeric network-ctr">{{adgroup.summed_stats.ctr|percentage|withsep}}</td>
                     <td class="dataTable-data numeric">&nbsp;</td>
                   </tr>
                   {% endfor %}
@@ -451,7 +476,7 @@
                   <tr>
                     <th class="campaignData-icon"></th>
                     <th class="dataTable-name">Name</th>
-                    <th class="dataTable-data numeric">CPM</th>
+                    <th class="dataTable-data numeric">eCPM</th>
                     <th class="dataTable-data numeric">Status</th>
                     <th class="dataTable-data numeric">Impressions</th>
                     <th class="dataTable-data numeric">Clicks</th>
@@ -487,13 +512,21 @@
                             {% if adgroup.campaign.budget %}{{adgroup.campaign.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
                         </span>
                     </th>
-                    <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
+                    {% if adgroup.cpc %}
+                    <td class="dataTable-data numeric dataTable-ecpm">Approx: {{adgroup.e_cpm|currency}}
+                        <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"> What's this?
+                          </a>
+                    </td>
+                    {% else %}
+                    <td class="dataTable-data numeric dataTable-ecpm">{{adgroup.e_cpm|currency}}</td>
+                    {% endif %}
+                        
                     <td class="dataTable-data numeric">{{adgroup|campaign_status}}</td>
-                    <td class="dataTable-data numeric bfill-imp">{{adgroup.stats.impression_count|withsep}}</td>
-                    <td class="dataTable-data numeric bfill-clk">{{adgroup.stats.click_count|withsep}}</td>
-                    <td class="dataTable-data numeric bfill-ctr">{{adgroup.stats.ctr|percentage|withsep}}</td>
-                    <td class="dataTable-data numeric bfill-conv">{{adgroup.stats.conversion_count|withsep}} ({{adgroup.stats.conv_rate|percentage}})</td>
-                    <td class="dataTable-data numeric bfill-cpa">{{adgroup.stats.cpa|currency}}</td>
+                    <td class="dataTable-data numeric bfill-imp">{{adgroup.summed_stats.impression_count|withsep}}</td>
+                    <td class="dataTable-data numeric bfill-clk">{{adgroup.summed_stats.click_count|withsep}}</td>
+                    <td class="dataTable-data numeric bfill-ctr">{{adgroup.summed_stats.ctr|percentage|withsep}}</td>
+                    <td class="dataTable-data numeric bfill-conv">{{adgroup.summed_stats.conversion_count|withsep}} ({{adgroup.summed_stats.conv_rate|percentage}})</td>
+                    <td class="dataTable-data numeric bfill-cpa">{{adgroup.summed_stats.cpa|currency}}</td>
                   </tr>
                   {% endfor %}
                   <tr class="campaignData campaignData-placeholder bfill-placeholder">
@@ -516,4 +549,12 @@
               </div> 
             </form> 
           </section>
+          
+          {# Help Content #}
+          <div id="campaign-ecpm-helpContent" class="hidden"> 
+            <h3>Revenue Optimized Campaign eCPM</h3>
+            <p>We calculate the <strong>eCPM</strong> for CPC campaigns by combining the CPC of the campaign with our CTR calculated in real time. </p>
+            <p> This number may vary over time. This is perfectly natural and our system will adjust to these fluctuations in real time. </p>
+          </div>
+          
 {% endblock content %}

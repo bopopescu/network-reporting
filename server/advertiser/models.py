@@ -188,6 +188,7 @@ class AdGroup(db.Model):
     device_predicates = db.StringListProperty(default=["platform_name=*"])
     
     def default_creative(self, custom_html=None):
+        # TODO: These should be moved to ad_server/networks or some such
         c = None
         if self.network_type == 'adsense': c = AdSenseCreative(name="adsense dummy",ad_type="adsense", format="320x50", format_predicates=["format=*"])
         elif self.network_type == 'iAd': c = iAdCreative(name="iAd dummy",ad_type="iAd", format="320x50", format_predicates=["format=320x50"])
@@ -243,8 +244,20 @@ class AdGroup(db.Model):
         return None
  
     @property
+    def ctr(self):
+        """ Calculates the current ctr for a campaign """
+        return 0.03
+ 
+    @property
     def e_cpm(self):
-        pass
+        """ Uses the ctr and cpc to estimate e_cpm """
+        cpm = self.cpm
+        if cpm is not None:
+            return cpm
+        
+        cpc = self.cpc
+        if cpc is not None:
+            return cpc*self.ctr*1000
  
  
 class Creative(polymodel.PolyModel):

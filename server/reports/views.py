@@ -141,7 +141,7 @@ class GenReportHandler(RequestHandler):
         return HttpResponse('Report Generation Successful')
 
 def gen_report(request, *args, **kwargs):
-    return GenReportHandler()(request, *args, **kwargs)
+    return GenReportHandler()(request, use_cache=False *args, **kwargs)
 
 #Only scheduled reports get viewed
 class ViewReportHandler(RequestHandler):

@@ -63,6 +63,14 @@ def login_required(function=None, redirect_field_name=REDIRECT_FIELD_NAME):
         return actual_decorator(function)
     return actual_decorator
 
+def conditionally(dec, cond):
+    """ Add a decorator if some condition is met """
+    def new_dec(f):
+        if not cond:
+            return f
+        return dec(f)
+    return new_dec
+
 def cache_page_until_post(time=5*60):
     """ Caches a page until it expires or a post occurs in the session. """
     def wrap(view):

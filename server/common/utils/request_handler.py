@@ -9,22 +9,26 @@ from google.appengine.ext import db
 
 from inspect import getargspec
 
-from common.utils.decorators import cache_page_until_post
+from common.utils.decorators import cache_page_until_post, conditionally
 from django.views.decorators.cache import cache_page
 
 
 class RequestHandler(object):
     """ Does some basic work and redirects a view to get and post appropriately """
     def __init__(self,request=None):
-      if request:
-        self.request = request
-        self._set_account()    
+        if request:
+            self.request = request
+            self._set_account()    
 
-      super(RequestHandler,self).__init__()  
+        super(RequestHandler,self).__init__()  
 
-    def __call__(self,request,cache_time=5*60, *args,**kwargs):
+    def __call__(self,request, cache_time=5*60, use_cache=True, *args,**kwargs):
         
-        @cache_page_until_post(time=cache_time)
+        # Initialize our caching decorator
+        cache_dec = cache_page_until_post(time=cache_time)
+        
+        # Apply the caching decorator conditionally
+        @conditionally(cache_dec, use_cache)
         def mp_view(request, *args, **kwargs):
             """ We wrap all the business logic of the request Handler here
                 in order to be able to properly use the cache decorator """
@@ -74,6 +78,7 @@ class RequestHandler(object):
                         kwargs[arg] = self.params.get(arg)
                 return self.post(*args,**kwargs)    
         
+        # Execute our newly decorated view
         return mp_view(request, *args, **kwargs)
   
   

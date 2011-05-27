@@ -9,6 +9,19 @@ from optparse import OptionParser
 # add mopub root to path
 sys.path.append(os.getcwd()+'/../../')
 
+
+# for ubuntu EC2
+sys.path.append('/home/ubuntu/mopub/server')
+# sys.path.append('/home/ubuntu/mopub/server/reporting')
+# sys.path.append('/home/ubuntu/google_appengine')
+# sys.path.append('/home/ubuntu/google_appengine/lib/antlr3')
+# sys.path.append('/home/ubuntu/google_appengine/lib/django_1_2')
+# sys.path.append('/home/ubuntu/google_appengine/lib/fancy_urllib')
+# sys.path.append('/home/ubuntu/google_appengine/lib/ipaddr')
+# sys.path.append('/home/ubuntu/google_appengine/lib/webob')
+# sys.path.append('/home/ubuntu/google_appengine/lib/yaml/lib')
+
+
 from appengine_django import InstallAppengineHelperForDjango
 InstallAppengineHelperForDjango()
 

@@ -68,7 +68,7 @@ handlers:
 
 
 - url: /offline/.*
-  script: reporting/aws_logging/blob_test.py
+  script: reporting/aws_logging/blob_server.py
 
 
 - url: /.*

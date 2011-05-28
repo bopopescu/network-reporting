@@ -50,6 +50,8 @@ var mopub = mopub || {};
             var network = $(this).val();
             $('.networkDependent').hide();
             $('.'+network+'.networkDependent').show();
+            $('.networkDependent2').hide();
+            $('.'+network+'.networkDependent2').show();
             if (network == 'iAd') {
                 $('div.adunit-Target.mweb')
                 .hide()

@@ -144,7 +144,7 @@ class StatsModelQueryManager(CachedQueryManager):
         offline=self.offline
         #offline doesn't do day rollups
         if date_fmt == 'date' and offline == True:
-            days = reduce(lambda x, y: x+y, date_magic.get_hours(days, 4))#4 is for testing
+            days = reduce(lambda x, y: x+y, date_magic.get_hours(days, 24))#4 is for testing
             date_fmt = 'date_hour'
         if publisher and publishers:
             logging.error("cannot pass both a single publisher and multiple publishers")

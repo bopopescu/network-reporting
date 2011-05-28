@@ -699,6 +699,10 @@ a.mutedLink:hover {
   color: #5d8c00
 }
 
+.partial{
+    color: #C60;
+}
+
 .error, .critical {
   color: #cc2929;
 }

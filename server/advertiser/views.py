@@ -202,7 +202,8 @@ class CreateCampaignAJAXHander(RequestHandler):
         campaign_form = campaign_form or CampaignForm(instance=campaign)
         adgroup_form = adgroup_form or AdGroupForm(instance=adgroup)
         networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["ejam","eJam",False],["greystripe","GreyStripe",False],\
-            ["iAd","iAd",False],["inmobi","InMobi",False],["jumptap","Jumptap",False],["millennial","Millennial Media",False],["mobfox","MobFox",False],['custom', 'Custom Network', False], ['admob_native', 'AdMob Native', False], ['millennial_native', 'Millennial Media Native', False]]
+            ["iAd","iAd",False],["inmobi","InMobi",False],["jumptap","Jumptap",False],["millennial","Millennial Media",False],["mobfox","MobFox",False],\
+            ['custom','Custom Network', False], ['custom_native','Custom Native Network', False],['admob_native', 'AdMob Native', False], ['millennial_native', 'Millennial Media Native', False]]
 
         all_adunits = AdUnitQueryManager.get_adunits(account=self.account)
         # sorts by app name, then adunit name
@@ -222,6 +223,7 @@ class CreateCampaignAJAXHander(RequestHandler):
         campaign_form.bid    = adgroup_form['bid']
         campaign_form.bid_strategy = adgroup_form['bid_strategy']
         campaign_form.custom_html = adgroup_form['custom_html']
+        campaign_form.custom_method = adgroup_form['custom_method']
 
         adunit_keys = adgroup_form['site_keys'].value or []
         adunit_str_keys = [unicode(k) for k in adunit_keys]
@@ -298,6 +300,8 @@ class CreateCampaignAJAXHander(RequestHandler):
                     html_data = None
                     if adgroup.network_type == 'custom':
                         html_data = adgroup_form['custom_html'].value
+                    elif adgroup.network_type == 'custom_native':
+                        html_data = adgroup_form['custom_method'].value
                     #build default creative with custom_html data if custom or none if anything else
                     creative = adgroup.default_creative(html_data)
                     if adgroup.net_creative and creative.__class__ == adgroup.net_creative.__class__:
@@ -307,6 +311,8 @@ class CreateCampaignAJAXHander(RequestHandler):
                         if adgroup.network_type == 'custom':
                             #if the network is a custom one, the creative might be the same, but the data might be new, set the old
                             #creative to have the (possibly) new data
+                            creative.html_data = html_data
+                        elif adgroup.network_type == 'custom_native':
                             creative.html_data = html_data
                     elif adgroup.net_creative:
                         #in this case adgroup.net_creative has evaluated to true BUT the class comparison did NOT.    

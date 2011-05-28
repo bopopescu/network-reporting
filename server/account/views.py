@@ -23,9 +23,37 @@ class AccountHandler(RequestHandler):
         account_form = account_form or AccountForm(instance=self.account)
         apps_for_account = AppQueryManager.get_apps(account=self.account)
         
-        return render_to_response(self.request,'account/account.html', {'account': self.account, 
-                                                                        'account_form': account_form,
-                                                                        "apps": apps_for_account})
+        networks = ['admob_status','adsense_status','brightroll_status','ejam_status','greystripe_status','inmobi_status','jumptap_status','millennial_status','mobfox_status']
+        network_config_status = {}
+        def _get_net_status(account,network):
+            status = 0
+            # eg. account.admob_pub_id
+            if getattr(account.network_config,network[:-6]+'pub_id',None):
+                for app in apps_for_account:
+                    if getattr(app.network_config,network[:-6]+'pub_id',None):
+                        status = 2
+                        return status
+                status = 1
+                return status
+            broke = False
+            for app in apps_for_account:
+                if  not getattr(app.network_config,network[:-6]+'pub_id',None):
+                    broke = True
+                else:
+                    status = 3
+            if not broke:
+                return 4
+            else:
+                return status
+            
+        for network in networks:
+            network_config_status[network] = _get_net_status(self.account,network)
+          
+      
+        return render_to_response(self.request,'account/account.html', dict({'account': self.account, 
+                                                                      'account_form': account_form,
+                                                                      "apps": apps_for_account}.items() + network_config_status.items()))
+
 
     def post(self):
         account_form = AccountForm(data=self.request.POST, instance=self.account)

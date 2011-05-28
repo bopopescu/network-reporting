@@ -9,6 +9,7 @@ from html_full import html_full
 from admob_native import admob_native
 from millennial_native import millennial_native
 from string import Template
+from custom_native import custom_native
 
 TEMPLATES = {
         "admob"     : admob,
@@ -21,5 +22,6 @@ TEMPLATES = {
         "text"      : text,
         "text_icon" : text_icon,
         "admob_native" : admob_native,
+        "custom_native" : custom_native,
         "millennial_native" : millennial_native
         }

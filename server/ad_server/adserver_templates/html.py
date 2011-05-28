@@ -4,7 +4,11 @@ html = Template("""<html><head><title>$title</title>
                         $finishLoad
                         <script type="text/javascript">
                           function webviewDidClose(){}
-                          function webviewDidAppear(){}
+                          function webviewDidAppear(){
+                              if(typeof webviewDidAppearHelper == 'function') { 
+                                webviewDidAppearHelper(); 
+                              }
+                          }
                           window.addEventListener("load", function() {
                             var links = document.getElementsByTagName('a');
                             for(var i=0; i < links.length; i++) {

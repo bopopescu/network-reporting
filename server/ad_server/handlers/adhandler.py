@@ -12,6 +12,7 @@ import binascii
 from ad_server.adserver_templates import TEMPLATES
                                     
 from common.utils import helpers
+from common.constants import FULL_NETWORKS
 
 from google.appengine.api import users, urlfetch, memcache
 
@@ -192,7 +193,7 @@ class AdHandler(webapp.RequestHandler):
             appid = creative.conv_appid or ''
             ad_click_url = "http://%s/m/aclk?id=%s&cid=%s&c=%s&req=%s&udid=%s&appid=%s" % (self.request.host, adunit_id, creative.key(), creative.key(),request_id, udid, appid)
             # ad an impression tracker URL
-            track_url = "http://%s/m/imp?id=%s&cid=%s&udid=%s&appid=%s" % (self.request.host, adunit_id, creative.key(), udid, appid)
+            track_url = "http://%s/m/imp?id=%s&cid=%s&udid=%s&appid=%s&random=%s" % (self.request.host, adunit_id, creative.key(), udid, appid, random.random())
             cost_tracker = "&rev=%.07f" 
             if creative.adgroup.bid_strategy == 'cpm':
                 cost_tracker = cost_tracker % (float(creative.adgroup.bid)/1000)
@@ -200,7 +201,7 @@ class AdHandler(webapp.RequestHandler):
             elif creative.adgroup.bid_strategy == 'cpc':
                 cost_tracker = cost_tracker % creative.adgroup.bid
                 ad_click_url += cost_tracker
-        
+            
             self.response.headers.add_header("X-Clickthrough", str(ad_click_url))
             self.response.headers.add_header("X-Imptracker", str(track_url))
             
@@ -272,7 +273,7 @@ class AdHandler(webapp.RequestHandler):
                         self.response.headers.add_header("X-Orientation","p")
                         format = (320,480)    
                                                 
-                elif not creative.adgroup.network_type or c.adgroup.network_type in FULL_NETWORKS:
+                elif not creative.adgroup.network_type or creative.adgroup.network_type in FULL_NETWORKS:
                     format = (320,480)
                 elif creative.adgroup.network_type:
                     #TODO this should be a littttleee bit smarter. This is basically saying default
@@ -327,6 +328,7 @@ class AdHandler(webapp.RequestHandler):
             success = hidden_span
             success += tracking_pix % dict(name = 'first', src = track_url)
             if creative.tracking_url:
+                creative.tracking_url += '&random=%s'%random.random()
                 success += tracking_pix % dict(name = 'second', src = creative.tracking_url) 
                 params.update(trackingPixel='<span style="display:none;"><img src="%s"/><img src="%s"/></span>'% (creative.tracking_url, track_url))
             else:
@@ -475,6 +477,12 @@ class AdHandler(webapp.RequestHandler):
                 self.response.headers.add_header("X-Format",'300x250_as')
                
                 self.response.headers.add_header("X-Backgroundcolor","0000FF")
+            elif creative.ad_type == "custom_native":
+                creative.html_data = creative.html_data.rstrip(":")
+                params.update({"method": creative.html_data})
+                self.response.headers.add_header("X-Adtype", "custom")
+                self.response.headers.add_header("X-Customselector",creative.html_data)
+
             elif str(creative.ad_type) == 'admob':
                 self.response.headers.add_header("X-Failurl", _build_fail_url(self.request.url, on_fail_exclude_adgroups))
                 self.response.headers.add_header("X-Adtype", str('html'))

@@ -19,14 +19,12 @@ from common.ragendja.template import render_to_response, JSONResponse
 from common.constants import (  MARKET_SEARCH_KEY,
                                 MARKET_URL,
                                 )
-from common.utils.decorators import webdec
 
 from django.core.mail import send_mail, EmailMessage
 
 def website_root(request,*args,**kwargs):
     return HttpResponseRedirect("/inventory")
 
-# @webdec()
 def droid_market_search(request, qs):
     qs = qs.replace(' ', '+')
     url = MARKET_URL % qs

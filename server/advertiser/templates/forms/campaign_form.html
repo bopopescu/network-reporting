@@ -109,6 +109,8 @@
                             {% endfor %}
                           </select>
                         </dd>
+
+
                         <div class='networkDependent custom'>
                           <dt>Custom HTML:</dt>
                           <dd>
@@ -140,6 +142,16 @@
                             </code>
                           </div>
                         </div>
+
+						<div class='networkDependent custom_native'>
+                          <dt>Custom method:</dt>
+                          <dd>
+							<input type="text" class="input-text" name="custom_method" placeholder='loadNativeSDK:' value='{{form.custom_method.value}}' />
+                          </dd>
+						</div>
+
+
+
                         <dt>Network Rate:</dt> 
                         <dd> 
                           

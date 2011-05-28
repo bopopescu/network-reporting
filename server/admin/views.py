@@ -30,10 +30,12 @@ from reporting.query_managers import StatsModelQueryManager
 from google.appengine.api import taskqueue
 
 from admin import beatbox
+from common.utils.decorators import cache_page_until_post
 
 MEMCACHE_KEY = "jpayne:admin/d:render_p"
 
 @login_required
+@cache_page_until_post()
 def admin_switch_user(request,*args,**kwargs):
     params = request.POST or request.GET
     url = params.get('next',None) or request.META["HTTP_REFERER"]

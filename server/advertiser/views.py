@@ -11,6 +11,7 @@ from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 
 from django.contrib.auth.decorators import login_required
+from common.utils.decorators import cache_page_until_post
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
 from django.utils import simplejson
@@ -39,8 +40,12 @@ from publisher.query_managers import AdUnitQueryManager, AppQueryManager, AdUnit
 from reporting.query_managers import StatsModelQueryManager
 from budget import budget_service
 
+from django.views.decorators.cache import cache_page
+
+from ad_server.optimizer.optimizer import DEFAULT_CTR
 
 class AdGroupIndexHandler(RequestHandler):
+
     def get(self):
         # Set start date if passed in, otherwise get most recent days
         if self.start_date:
@@ -50,20 +55,36 @@ class AdGroupIndexHandler(RequestHandler):
             
         apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
         
-        
-        
         campaigns = CampaignQueryManager.get_campaigns(account=self.account)
         if campaigns:
             adgroups = AdGroupQueryManager().get_adgroups(campaigns=campaigns)
         else:
             adgroups = []
     
+        # Roll up and attach various stats to adgroups
         for adgroup in adgroups:
-            # get stats for date range
-            adgroup.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)
-            # get total for the range
-            adgroup.stats = reduce(lambda x, y: x+y, adgroup.all_stats, StatsModel())
+            # Get stats for date range:
+            # request_count
+            # impression_count
+            # fill_rate
+            # click_count
+            adgroup.all_stats = StatsModelQueryManager(self.account, offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)
+
+            # Get total for the range
+            adgroup.summed_stats = reduce(lambda x, y: x+y, adgroup.all_stats, StatsModel())
+
             adgroup.percent_delivered = budget_service.percent_delivered(adgroup.campaign)
+            
+            
+        
+        # Graph totals are the summed counts across all the adgroups   
+        app_level_stats = _calc_app_level_stats(adgroups)
+        app_level_summed_stats = reduce(lambda x, y: x+y, app_level_stats, StatsModel())
+        
+        
+        adgroups = _calc_and_attach_e_cpm(adgroups, app_level_summed_stats)
+    
+        for adgroup in adgroups:
             
             # get targeted apps
             adgroup.targeted_app_keys = []
@@ -73,36 +94,13 @@ class AdGroupIndexHandler(RequestHandler):
                     adgroup.targeted_app_keys.append(adunit.app_key.key())
                 # apps.append(adunit.app_key)
             
-
-        promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], adgroups)
-        promo_campaigns = sorted(promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
+        # Due to weirdness, network_campaigns and backfill_promo_campaigns are actually lists of adgroups
+        sorted_campaign_groups = _sort_campaigns(adgroups)
+        promo_campaigns, guaranteed_campaigns, network_campaigns, backfill_promo_campaigns = sorted_campaign_groups
+       
+        guarantee_levels = _sort_guarantee_levels(guaranteed_campaigns)
     
-        guarantee_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee_high', 'gtee_low', 'gtee'], adgroups)
-        guarantee_campaigns = sorted(guarantee_campaigns, lambda x,y: cmp(y.bid, x.bid))
-        levels = ('high', '', 'low')
-        gtee_str = "gtee_%s"
-        gtee_levels = []
-        for level in levels:
-            this_level = gtee_str % level if level else "gtee"
-            name = level if level else 'normal'
-            level_camps = filter(lambda x:x.campaign.campaign_type == this_level, guarantee_campaigns)
-            gtee_levels.append(dict(name = name, adgroups = level_camps))
-
-        for level in gtee_levels:
-            if level['name'] == 'normal' and len(gtee_levels[0]['adgroups']) == 0 and len(gtee_levels[2]['adgroups']) == 0: 
-                level['foo'] = True 
-            elif len(level['adgroups']) > 0:
-                level['foo'] = True 
-            else:
-                level['foo'] = False 
-
-        network_campaigns = filter(lambda x: x.campaign.campaign_type in ['network'], adgroups)
-        network_campaigns = sorted(network_campaigns, lambda x,y: cmp(y.bid, x.bid))
-    
-        backfill_promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_promo'], adgroups)
-        backfill_promo_campaigns = sorted(backfill_promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
-    
-        adgroups = sorted(adgroups, key=lambda adgroup: adgroup.stats.impression_count, reverse=True)
+        adgroups = sorted(adgroups, key=lambda adgroup: adgroup.summed_stats.impression_count, reverse=True)
     
         help_text = None
 
@@ -111,26 +109,84 @@ class AdGroupIndexHandler(RequestHandler):
             graph_adgroups[3] = AdGroup(name='Others')
             graph_adgroups[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[c.all_stats for c in adgroups[3:]])]
             
-        graph_totals = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[c.all_stats for c in adgroups])]
+        
 
         return render_to_response(self.request, 
                                  'advertiser/adgroups.html', 
                                   {'adgroups':adgroups,
                                    'graph_adgroups': graph_adgroups,
-                                   'graph_totals': graph_totals,
+                                   'graph_totals': app_level_stats,
                                    'start_date': days[0],
                                    'end_date':days[-1],
                                    'date_range': self.date_range,
                                    'apps' : apps,
-                                   'totals': reduce(lambda x, y: x+y.stats, adgroups, StatsModel()),
+                                   'totals': reduce(lambda x, y: x+y.summed_stats, adgroups, StatsModel()),
                                    'today': reduce(lambda x, y: x+y, [c.all_stats[-1] for c in graph_adgroups], StatsModel()),
                                    'yesterday': reduce(lambda x, y: x+y, [c.all_stats[-2] for c in graph_adgroups], StatsModel()),
-                                   'gtee': gtee_levels, 
+                                   'guarantee_levels': guarantee_levels, 
                                    'promo': promo_campaigns,
                                    'network': network_campaigns,
                                    'backfill_promo': backfill_promo_campaigns,
                                    'account': self.account,
                                    'helptext':help_text })
+
+####### Helpers for campaign page #######
+
+def _sort_guarantee_levels(guaranteed_campaigns):
+    """ Sort guaranteed campaigns according to levels """
+    levels = ('high', '', 'low')
+    gtee_str = "gtee_%s"
+    gtee_levels = []
+    for level in levels:
+        this_level = gtee_str % level if level else "gtee"
+        name = level if level else 'normal'
+        level_camps = filter(lambda x:x.campaign.campaign_type == this_level, guaranteed_campaigns)
+        gtee_levels.append(dict(name = name, adgroups = level_camps))
+    
+    # Determine which gtee_levels to display
+    for level in gtee_levels:
+        if level['name'] == 'normal' and len(gtee_levels[0]['adgroups']) == 0 and len(gtee_levels[2]['adgroups']) == 0: 
+            level['display'] = True 
+        elif len(level['adgroups']) > 0:
+            level['display'] = True 
+        else:
+            level['display'] = False 
+    return gtee_levels
+
+
+def _sort_campaigns(adgroups):
+    promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], adgroups)
+    promo_campaigns = sorted(promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
+
+    guaranteed_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee_high', 'gtee_low', 'gtee'], adgroups)
+    guaranteed_campaigns = sorted(guaranteed_campaigns, lambda x,y: cmp(y.bid, x.bid))
+ 
+    network_campaigns = filter(lambda x: x.campaign.campaign_type in ['network'], adgroups)
+    network_campaigns = sorted(network_campaigns, lambda x,y: cmp(y.bid, x.bid))
+
+    backfill_promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_promo'], adgroups)
+    backfill_promo_campaigns = sorted(backfill_promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
+    
+    return [promo_campaigns, guaranteed_campaigns, network_campaigns, backfill_promo_campaigns]
+
+def _calc_app_level_stats(adgroups):
+    return [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[c.all_stats for c in adgroups])]
+
+
+def _calc_and_attach_e_cpm(adgroups_with_stats, app_level_summed_stats):
+    """ Requires that adgroups already have attached stats """
+    for adgroup in adgroups_with_stats:
+        
+        if adgroup.cpc:
+            app_level_ctr = app_level_summed_stats.ctr
+            e_ctr = adgroup.summed_stats.ctr or app_level_ctr or DEFAULT_CTR
+
+            adgroup.summed_stats.e_cpm = float(e_ctr) * float(adgroup.cpc) * 1000
+            
+        else:
+            adgroup.summed_stats.e_cpm = adgroup.cpm
+            
+    return adgroups_with_stats
 
 @login_required
 def adgroups(request,*args,**kwargs):
@@ -145,8 +201,9 @@ class CreateCampaignAJAXHander(RequestHandler):
             campaign = campaign or adgroup.campaign
         campaign_form = campaign_form or CampaignForm(instance=campaign)
         adgroup_form = adgroup_form or AdGroupForm(instance=adgroup)
-        networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["greystripe","GreyStripe",False],\
-            ["iAd","iAd",False],["inmobi","InMobi",False],["jumptap","Jumptap",False],["millennial","Millennial Media",False],["mobfox","MobFox",False],['custom', 'Custom Network', False], ['admob_native', 'AdMob Native', False], ['millennial_native', 'Millennial Media Native', False]]
+        networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["ejam","eJam",False],["greystripe","GreyStripe",False],\
+            ["iAd","iAd",False],["inmobi","InMobi",False],["jumptap","Jumptap",False],["millennial","Millennial Media",False],["mobfox","MobFox",False],\
+            ['custom','Custom Network', False], ['custom_native','Custom Native Network', False],['admob_native', 'AdMob Native', False], ['millennial_native', 'Millennial Media Native', False]]
 
         all_adunits = AdUnitQueryManager.get_adunits(account=self.account)
         # sorts by app name, then adunit name
@@ -166,6 +223,7 @@ class CreateCampaignAJAXHander(RequestHandler):
         campaign_form.bid    = adgroup_form['bid']
         campaign_form.bid_strategy = adgroup_form['bid_strategy']
         campaign_form.custom_html = adgroup_form['custom_html']
+        campaign_form.custom_method = adgroup_form['custom_method']
 
         adunit_keys = adgroup_form['site_keys'].value or []
         adunit_str_keys = [unicode(k) for k in adunit_keys]
@@ -242,6 +300,8 @@ class CreateCampaignAJAXHander(RequestHandler):
                     html_data = None
                     if adgroup.network_type == 'custom':
                         html_data = adgroup_form['custom_html'].value
+                    elif adgroup.network_type == 'custom_native':
+                        html_data = adgroup_form['custom_method'].value
                     #build default creative with custom_html data if custom or none if anything else
                     creative = adgroup.default_creative(html_data)
                     if adgroup.net_creative and creative.__class__ == adgroup.net_creative.__class__:
@@ -251,6 +311,8 @@ class CreateCampaignAJAXHander(RequestHandler):
                         if adgroup.network_type == 'custom':
                             #if the network is a custom one, the creative might be the same, but the data might be new, set the old
                             #creative to have the (possibly) new data
+                            creative.html_data = html_data
+                        elif adgroup.network_type == 'custom_native':
                             creative.html_data = html_data
                     elif adgroup.net_creative:
                         #in this case adgroup.net_creative has evaluated to true BUT the class comparison did NOT.    
@@ -306,7 +368,7 @@ class CreateCampaignHandler(RequestHandler):
             "adgroup":adgroup,
             "campaign_create_form_fragment": campaign_create_form_fragment})
 
-@login_required         
+@login_required      
 def campaign_adgroup_create(request,*args,**kwargs):
     return CreateCampaignHandler()(request,*args,**kwargs)         
 
@@ -329,7 +391,7 @@ class CreateAdGroupHandler(RequestHandler):
             adunit.checked = adunit.key() in adgroup.site_keys
 
         # TODO: Clean up this hacked shit 
-        networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["jumptap","Jumptap",False],["greystripe","GreyStripe",False],["iAd","iAd",False],["inmobi","InMobi",False],["millennial","Millennial Media",False],["mobfox","MobFox",False]]
+        networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["ejam","eJam",False],["jumptap","Jumptap",False],["greystripe","GreyStripe",False],["iAd","iAd",False],["inmobi","InMobi",False],["millennial","Millennial Media",False],["mobfox","MobFox",False]]
         for n in networks:
             if adgroup.network_type == n[0]:
                 n[2] = True
@@ -357,8 +419,8 @@ class CreateAdGroupHandler(RequestHandler):
                 adgroup.campaign = campaign
                 AdGroupQueryManager.put(adgroup)
                 return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':str(adgroup.key())}))
-
-@login_required         
+                
+@login_required
 def campaign_adgroup_new(request,*args,**kwargs):
     return CreateAdGroupHandler()(request,*args,**kwargs)            
 

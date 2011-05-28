@@ -40,6 +40,7 @@ from reporting.models import StatsModel
 
 from ad_server.networks.appnexus import AppNexusServerSide
 from ad_server.networks.brightroll import BrightRollServerSide
+from ad_server.networks.ejam import EjamServerSide
 from ad_server.networks.greystripe import GreyStripeServerSide
 from ad_server.networks.inmobi import InMobiServerSide
 from ad_server.networks.jumptap import JumptapServerSide
@@ -68,6 +69,7 @@ SERVER_SIDE_DICT = {"millennial":MillennialServerSide,
                     "appnexus":AppNexusServerSide,
                     "inmobi":InMobiServerSide,
                     "brightroll":BrightRollServerSide,
+                    "ejam":EjamServerSide,
                     "jumptap":JumptapServerSide,
                     "greystripe":GreyStripeServerSide,
                     "mobfox":MobFoxServerSide,}
@@ -75,7 +77,7 @@ SERVER_SIDE_DICT = {"millennial":MillennialServerSide,
 CRAWLERS = ["Mediapartners-Google,gzip(gfe)", "Mediapartners-Google,gzip(gfe),gzip(gfe)"]
 MAPS_API_KEY = 'ABQIAAAAgYvfGn4UhlHdbdEB0ZyIFBTJQa0g3IQ9GZqIMmInSLzwtGDKaBRdEi7PnE6cH9_PX7OoeIIr5FjnTA'
 FREQ_ATTR = '%s_frequency_cap'
-NATIVE_REQUESTS = ['admob','adsense','iAd','custom','admob_native','millennial_native']
+NATIVE_REQUESTS = ['admob','adsense','iAd','custom','custom_native','admob_native','millennial_native']
 
 ################### AUCTION ##################
 

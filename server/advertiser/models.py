@@ -243,22 +243,6 @@ class AdGroup(db.Model):
             return self.bid
         return None
  
-    @property
-    def ctr(self):
-        """ Calculates the current ctr for a campaign """
-        return 0.03
- 
-    @property
-    def e_cpm(self):
-        """ Uses the ctr and cpc to estimate e_cpm """
-        cpm = self.cpm
-        if cpm is not None:
-            return cpm
-        
-        cpc = self.cpc
-        if cpc is not None:
-            return cpc*self.ctr*1000
- 
  
 class Creative(polymodel.PolyModel):
     name = db.StringProperty()

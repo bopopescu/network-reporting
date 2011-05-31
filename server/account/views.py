@@ -41,7 +41,7 @@ class AccountHandler(RequestHandler):
                     broke = True
                 else:
                     status = 3
-            if not broke:
+            if not broke and len(apps_for_account)!=0:
                 return 4
             else:
                 return status

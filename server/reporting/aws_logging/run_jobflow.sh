@@ -42,6 +42,12 @@ echo
 echo "downloading GAE logs took" $((STOP_TIME-START_TIME)) "seconds"
 
 
+# download deref cache from S3 (if it exists) and replace local one
+echo
+echo "downloading existing deref cache from S3..."
+s3cmd get --force $S3_CODE_DIR/deref_cache.pkl $APP_DIR/reporting/aws_logging/deref_cache.pkl
+
+
 # split input files
 echo
 echo "splitting" $LOG_ROOT_DIR/request-logfile "..."

@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import urllib2
+import traceback
 
 from datetime import datetime
 from optparse import OptionParser
@@ -27,6 +28,7 @@ InstallAppengineHelperForDjango()
 
 from google.appengine.ext import blobstore
 from google.appengine.ext.remote_api import remote_api_stub
+from google.appengine.api import urlfetch
 
 from poster.encode import multipart_encode
 from poster.streaminghttp import register_openers
@@ -34,17 +36,18 @@ from poster.streaminghttp import register_openers
 import stats_updater
 import uniq_user_stats_updater
 import utils
-from blob_server import URL_HANDLER_PATH
+from blob_server import URL_HANDLER_PATH, UPDATE_STATS_HANDLER_PATH
 
-    
 
-HOST = 'http://38-aws.latest.mopub-inc.appspot.com'
+BACKEND = 'stats-updater'
+# APP = '38-aws.latest.mopub-inc'     
+APP = 'mopub-inc'     
+HOST = 'http://%s.%s.appspot.com' % (BACKEND, APP)
 # HOST = 'http://localhost:8003'
 
 
 def upload_stats_file(stats_file):
     start = time.time()
-    
     
     # Register the streaming http handlers with urllib2
     register_openers()
@@ -80,31 +83,60 @@ def upload_stats_file(stats_file):
     elapsed = time.time() - start
     print
     print 'uploading %s to GAE blobstore took %i minutes and %i seconds' % (stats_file, elapsed/60, elapsed%60)
-    print
     
     return blob_key
 
 
-def process_stats_file(blob_key, uniq_user=False):
-    blob_reader = blobstore.BlobReader(blob_key)
+def start_blob_processing_request(blob_key, blob_type='log_counts'):
+    start = time.time()
+        
+    url = HOST + UPDATE_STATS_HANDLER_PATH + '?blob_key=%s&blob_type=%s' % (blob_key, blob_type)
+    print
+    print 'pinging %s ...' % (url)
+    process_blob_request = urllib2.Request(url)
+    # response = urllib2.urlopen(process_blob_request).read() 
     
-    # Read one line (up to and including a '\n' character) at a time.
-    for line in blob_reader:
-        if uniq_user:
-            uniq_user_stats_updater.parse_line(line)
-        else:
-            stats_updater.parse_line(line)
-
-    if uniq_user:
-        uniq_user_stats_updater.update_models()
-    else:
-        stats_updater.put_models()
-
+    urllib2.urlopen(process_blob_request)
+    # print
+    # print response
     
+    elapsed = time.time() - start
+    print
+    print 'updating GAE datastore with blob type %s took %i minutes and %i seconds' % (blob_type, elapsed/60, elapsed%60)
+    
+
+
+def async_start_blob_processing_request(blob_key, blob_type='log_counts'):
+    start = time.time()
+
+
+    url = HOST + UPDATE_STATS_HANDLER_PATH + '?blob_key=%s&blob_type=%s' % (blob_key, blob_type)
+    print
+    print 'async call to %s ...' % (url)
+
+    rpc = urlfetch.create_rpc()
+    urlfetch.make_fetch_call(rpc, url)
+
+    try:
+        result = rpc.get_result()
+        text = result.content
+        print text
+        print result.status_code
+    except urlfetch.DownloadError, e:
+        traceback.print_exc()
+        # print 'exception:', e
+
+
+    elapsed = time.time() - start
+    print
+    print 'updating GAE datastore with blob type %s took %i minutes and %i seconds' % (blob_type, elapsed/60, elapsed%60)
+
+
 
 def main():
     parser = OptionParser()
     parser.add_option('-f', '--input_file', dest='input_file')
+    parser.add_option('-b', '--blobstore', action='store_true', dest='blobstore', default=False)
     (options, args) = parser.parse_args()
     
     if not options.input_file:
@@ -114,17 +146,18 @@ def main():
         sys.exit('\nERROR: input file does not exist\n') 
 
 
-    app_id = 'mopub-inc'
-    host = '38-aws.latest.mopub-inc.appspot.com'
-    remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', utils.auth_func, host)
-
-
     blob_key = upload_stats_file(options.input_file)
 
     if options.input_file.endswith('.uu.stats'):
-        process_stats_file(blob_key, uniq_user=True)
-    else:
-        process_stats_file(blob_key)
+        if options.blobstore:   # run stats_updater on GAE backend
+            start_blob_processing_request(blob_key, 'uniq_user')
+        else:
+            uniq_user_stats_updater.process_blob_stats_file(blob_key)
+    else:   # run stats_updater on local machine
+        if options.blobstore:
+            async_start_blob_processing_request(blob_key, 'log_counts')
+        else:
+            stats_updater.process_blob_stats_file(blob_key)
     
     
 

@@ -1,3 +1,5 @@
+from __future__ import with_statement
+
 import os
 import sys
 import time
@@ -22,14 +24,12 @@ sys.path.append('/home/ubuntu/google_appengine/lib/ipaddr')
 sys.path.append('/home/ubuntu/google_appengine/lib/webob')
 sys.path.append('/home/ubuntu/google_appengine/lib/yaml/lib')
 
-
-
 from appengine_django import InstallAppengineHelperForDjango
 InstallAppengineHelperForDjango()
 
-
+from google.appengine.ext import blobstore
 from google.appengine.ext import db
-from google.appengine.ext.remote_api import remote_api_stub
+
 
 import utils
 from publisher.models import Site
@@ -181,8 +181,31 @@ def parse_line(line):
         # traceback.print_exc()
         print 'EXCEPTION on line %s -> %s' %(line, e)
 
-        
 
+def process_blob_stats_file(blob_key):
+    print 'processing blob stats file %s ...' %blob_key
+    setup_remote_api()
+    blob_reader = blobstore.BlobReader(blob_key)
+    for line in blob_reader:
+        parse_line(line)
+    put_models()        
+
+
+def process_input_file(input_file):
+    print 'processing stats file %s ...' %input_file
+    with open(input_file, 'r') as f:
+        for line in f:
+            parse_line(line)
+    put_models()
+
+
+def setup_remote_api():
+    from google.appengine.ext.remote_api import remote_api_stub
+    app_id = 'mopub-inc'
+    host = '38-aws.latest.mopub-inc.appspot.com'
+    remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', utils.auth_func, host)
+    
+    
 def main():
     start = time.time()
     
@@ -196,17 +219,8 @@ def main():
     if not os.path.exists(options.input_file):
         sys.exit('\nERROR: input file does not exist\n')
         
-    app_id = 'mopub-inc'
-    host = '38-aws.latest.mopub-inc.appspot.com'
-    remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', utils.auth_func, host)
-    
-    print 'processing %s for GAE datastore...' %options.input_file
-    
-    with open(options.input_file, 'r') as f:
-        for line in f:
-            parse_line(line)
-
-    put_models()
+    setup_remote_api()
+    process_input_file(options.input_file)
    
     elapsed = time.time() - start
     print 'updating GAE datastore took %i minutes and %i seconds' % (elapsed/60, elapsed%60)

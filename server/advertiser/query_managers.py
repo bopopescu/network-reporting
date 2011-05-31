@@ -20,6 +20,14 @@ from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManag
 
 NAMESPACE = None
 
+MAX_ALLOWABLE_QUERIES = 30
+
+def chunks(l, n):
+    """ Yield successive n-sized chunks from l.
+    """
+    for i in xrange(0, len(l), n):
+        yield l[i:i+n]
+
 class CampaignQueryManager(QueryManager):
     Model = Campaign
 
@@ -108,7 +116,15 @@ class AdGroupQueryManager(QueryManager):
             adgroups = adgroups.filter("account =",account)      
             
         if campaigns:
-            adgroups = adgroups.filter("campaign IN",campaigns)
+            # if the number of campaigns is greater than 30 we must "chunk" the query
+            if len(campaigns) > MAX_ALLOWABLE_QUERIES:
+                total_adgroups = []
+                for sub_campaigns in chunks(campaigns,MAX_ALLOWABLE_QUERIES):
+                    total_adgroups += adgroups.filter("campaign IN", sub_campaigns).\
+                                        fetch(limit)
+                return adgroups    
+            else:    
+                adgroups = adgroups.filter("campaign IN",campaigns)
         elif campaign:      
             adgroups = adgroups.filter("campaign =",campaign)      
 

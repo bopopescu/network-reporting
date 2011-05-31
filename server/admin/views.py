@@ -78,7 +78,7 @@ def dashboard_prep(request, *args, **kwargs):
     start_date = datetime.date.today() - datetime.timedelta(days=30) # NOTE: change
     apps = AppQueryManager.get_apps(limit=1000)    
     # get all the daily stats for the undeleted apps
-    app_stats = StatsModelQueryManager(None,offline=offline).get_stats_for_apps(apps=apps,num_days=30)
+    # app_stats = StatsModelQueryManager(None,offline=offline).get_stats_for_apps(apps=apps,num_days=30)
 
     # accumulate individual site stats into daily totals 
     unique_apps = {}

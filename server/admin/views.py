@@ -33,7 +33,7 @@ from admin import beatbox
 from common.utils.decorators import cache_page_until_post
 
 MEMCACHE_KEY = "jpayne:admin/d:render_p"
-NUM_DAYS = 10
+NUM_DAYS = 14
 
 @login_required
 @cache_page_until_post()

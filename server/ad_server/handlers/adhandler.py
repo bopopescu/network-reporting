@@ -482,6 +482,12 @@ class AdHandler(webapp.RequestHandler):
                 self.response.headers.add_header("X-Format",'300x250_as')
                
                 self.response.headers.add_header("X-Backgroundcolor","0000FF")
+            elif creative.ad_type == "custom_native":
+                creative.html_data = creative.html_data.rstrip(":")
+                params.update({"method": creative.html_data})
+                self.response.headers.add_header("X-Adtype", "custom")
+                self.response.headers.add_header("X-Customselector",creative.html_data)
+
             elif str(creative.ad_type) == 'admob':
                 self.response.headers.add_header("X-Failurl", _build_fail_url(self.request.url, on_fail_exclude_adgroups))
                 self.response.headers.add_header("X-Adtype", str('html'))

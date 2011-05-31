@@ -122,7 +122,7 @@ class AdGroupQueryManager(QueryManager):
                 for sub_campaigns in chunks(campaigns,MAX_ALLOWABLE_QUERIES):
                     total_adgroups += adgroups.filter("campaign IN", sub_campaigns).\
                                         fetch(limit)
-                return adgroups    
+                return total_adgroups    
             else:    
                 adgroups = adgroups.filter("campaign IN",campaigns)
         elif campaign:      

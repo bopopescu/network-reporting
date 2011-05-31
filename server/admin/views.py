@@ -97,7 +97,9 @@ def dashboard_prep(request, *args, **kwargs):
             d[k] += v
     
     # go and do it
-    for app_stat in app_stats:
+    for app in apps:
+        app_stat = StatsModelQueryManager(None,offline=offline).get_stats_for_apps(apps=[app],num_days=30)[0]
+        
         # add this site stats to the total for the day and increment user count
         if app_stat.date:
             user_count = totals[str(app_stat.date)].user_count + 1

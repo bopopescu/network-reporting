@@ -272,6 +272,25 @@ def _backup_budgets(campaign):
 
 ################ TESTING FUNCTIONS ###################
 
+def _get_log_for_date(campaign, date):
+    
+    slicer = BudgetSlicer.get_or_insert_for_campaign(campaign)
+    daily_log = slicer.daily_logs.filter("date =", date).get()
+    
+    return daily_log
+
+def _fudge_spending_for_date(campaign, date, spending):
+    """ Fudges the amount that was spent, for testing or fixing bugs """
+    slicer = BudgetSlicer.get_or_insert_for_campaign(campaign)
+    daily_log = _get_log_for_date(campaign, date)
+    if not daily_log:
+        daily_log = BudgetDailyLog(budget_slicer=slicer,
+                          initial_daily_budget=float(spending),
+                          remaining_daily_budget = 0.0,
+                          date=date)
+    daily_log.put()
+
+
 def _get_spending_for_date(campaign, date):
     
     slicer = BudgetSlicer.get_or_insert_for_campaign(campaign)

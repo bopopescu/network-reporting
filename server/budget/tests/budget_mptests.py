@@ -772,3 +772,6 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
         # We have spent 500 out of 2000 total
         eq_(budget_service.remaining_daily_budget(self.cheap_c), 2400)   
+
+    def mptest_fudge_budget(self):
+        pass

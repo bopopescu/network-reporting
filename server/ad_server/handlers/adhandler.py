@@ -336,7 +336,7 @@ class AdHandler(webapp.RequestHandler):
             success += 'document.body.appendChild(hid_span);'
           
             if creative.ad_type == "adsense":
-                params.update({"title": ','.join(keywords), "adsense_format": '300x250_as', "w": format[0], "h": format[1], "client": site.get_pub_id("adsense_pub_id")})
+                params.update({"title": ','.join(keywords), "adsense_format": '320x50_mb', "w": format[0], "h": format[1], "client": site.get_pub_id("adsense_pub_id")})
                 params.update(channel_id=site.adsense_channel_id or '')
                 # self.response.headers.add_header("X-Launchpage","http://googleads.g.doubleclick.net")
             elif creative.ad_type == "admob":

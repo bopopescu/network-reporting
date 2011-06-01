@@ -699,6 +699,10 @@ a.mutedLink:hover {
   color: #5d8c00
 }
 
+.partial{
+    color: #C60;
+}
+
 .error, .critical {
   color: #cc2929;
 }
@@ -1208,6 +1212,14 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
 }
 .dataTable-date {
   width: 175px;
+}
+
+.dataTable-ecpm {
+  width:100px;
+}
+.dataTable-campaign-ecpm {
+  color: #53a600;
+/*  font-weight: bold;*/
 }
 
 /* App data */
@@ -2177,8 +2189,6 @@ a.google-login-button {
 
 a.google-login-button:hover { background-position: 0 -24px; }
 a.google-login-button:active { background-position: 0 -48px; }
-
-
 
 /****************************************
  * Media Queries

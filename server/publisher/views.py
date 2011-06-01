@@ -54,6 +54,7 @@ from common.utils.request_handler import RequestHandler
 from common.constants import *
 from budget import budget_service
 
+from common.utils.decorators import cache_page_until_post
 
 class AppIndexHandler(RequestHandler):
   def get(self):

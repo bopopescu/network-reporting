@@ -4,7 +4,15 @@ html = Template("""<html><head><title>$title</title>
                         $finishLoad
                         <script type="text/javascript">
                           function webviewDidClose(){}
-                          function webviewDidAppear(){}
+                          function webviewDidAppear(){
+                              // calls a user defined function if it exists
+                              // useful for starting animations, videos, etc
+                              // this would exist as part of the html for the 
+                              // "html" creative
+                              if(typeof webviewDidAppearHelper == 'function') { 
+                                webviewDidAppearHelper(); 
+                              }
+                          }
                           window.addEventListener("load", function() {
                             var links = document.getElementsByTagName('a');
                             for(var i=0; i < links.length; i++) {

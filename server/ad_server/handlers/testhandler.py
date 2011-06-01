@@ -4,6 +4,7 @@ from ad_server.networks.brightroll import BrightRollServerSide
 from ad_server.networks.jumptap import JumptapServerSide
 from ad_server.networks.mobfox import MobFoxServerSide
 from ad_server.networks.inmobi import InMobiServerSide
+from ad_server.networks.ejam import EjamServerSide
 
 from google.appengine.api import urlfetch
 from google.appengine.ext import webapp

@@ -105,6 +105,7 @@ class AdGroupForm(mpforms.MPModelForm):
     geo = forms.Field(widget=forms.MultipleHiddenInput, required=False)
     device_predicates = mpfields.MPTextareaField(required=False)
     custom_html = mpfields.MPTextareaField(required=False)
+    custom_method = mpfields.MPTextField(required=False)
     cities = forms.Field(widget=forms.MultipleHiddenInput, required=False)
     
     class Meta:
@@ -137,6 +138,10 @@ class AdGroupForm(mpforms.MPModelForm):
                 initial = {}
             if instance.network_type == 'custom' and instance.net_creative:
                 initial.update(custom_html = instance.net_creative.html_data)
+
+            if instance.network_type == 'custom_native' and instance.net_creative:
+                initial.update(custom_method = instance.net_creative.html_data)
+                
             cities = []
             for city in instance.cities:
                 cities.append(str(city))

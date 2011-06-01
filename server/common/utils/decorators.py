@@ -3,17 +3,23 @@ try:
 except ImportError:
     from django.utils.functional import update_wrapper, wraps  # Python 2.4 fallback.
 
+from django.views.decorators.cache import cache_page
+
 from django.utils.decorators import available_attrs
 from django.utils.http import urlquote
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.contrib.auth.decorators import user_passes_test
 from django.conf import settings
 from django.http import HttpResponseRedirect
-from google.appengine.api import users
+from google.appengine.api import users, memcache
 from django.core.urlresolvers import reverse
 import warnings
 import inspect
 import logging
+
+from django.views.decorators.vary import vary_on_headers, vary_on_cookie
+
+from django.utils.cache import get_cache_key
 
 #TODO: Rename this function since we no longer use a whitelist
 def user_passes_test(test_func, login_url=None, redirect_field_name=REDIRECT_FIELD_NAME):
@@ -57,16 +63,63 @@ def login_required(function=None, redirect_field_name=REDIRECT_FIELD_NAME):
         return actual_decorator(function)
     return actual_decorator
 
-def webdec():
-    #if we want to include stuff inside this webdec, have a field day
-    def outer_wrap( f ):
-        def inner_wrap( request, *args, **kwargs ):
-            #do things with the request and stuf here
-            #Lots of cool things can be done here,
-            #ideally f( blah ) returns a dictionary, which is then used to render the appropriate template.  This way we don't have to keep writing render_to_template blah blah blah, right now since we DO do that, just return it
-            return f( **kwargs )
-        return inner_wrap
-    return outer_wrap
+def conditionally(dec, cond):
+    """ Add a decorator if some condition is met """
+    def new_dec(f):
+        if not cond:
+            return f
+        return dec(f)
+    return new_dec
+
+def cache_page_until_post(time=5*60):
+    """ Caches a page until it expires or a post occurs in the session. """
+    def wrap(view):
+        
+        @cache_page(time)
+        @vary_on_cookie
+        def new_view(request, *args, **kw):
+            
+            if request.method == "POST":
+                # If we are POSTing, clear the cache
+                session_cache_key = _build_session_cache_key(request)
+
+                session_cache_key_set = memcache.get(session_cache_key, namespace="user_page_cache") or set()
+                for key in session_cache_key_set:
+                    memcache.delete(key)
+
+                memcache.delete(session_cache_key, namespace="user_page_cache")
+                return view(request, *args, **kw)
+                
+            else:
+                # If we are not POSTing, add to cache
+                try:
+                    # Do the standard caching
+                    return view(request, *args, **kw)
+                finally:
+                    # Also add the caching key to a list
+                    page_key = get_cache_key(request)
+                    
+                    if page_key:
+                        # Add the cached page's key to the list of all the pages
+                        # we have cached since the last POST 
+                        session_cache_key = _build_session_cache_key(request)
+            
+                        session_cache_key_set = memcache.get(session_cache_key, namespace="user_page_cache")
+                        if session_cache_key_set is None:
+                            session_cache_key_set = set()
+                        session_cache_key_set.add(page_key)
+            
+                        memcache.set(session_cache_key,
+                                     session_cache_key_set, namespace="user_page_cache")
+
+        return new_view
+    return wrap
+    
+def _build_session_cache_key(request):
+    """ We have a different key for each user"""
+    username = request.user.key()
+    return str(username)
+
 
 def deprecated(func):
     """This is a decorator which can be used to mark functions

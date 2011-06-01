@@ -39,6 +39,7 @@ var mopub = mopub || {};
 			var infodialog = $('.accountInfoForm', details);
 			var appbutton = $('.adForm-fields-appButton', details);
 			var apps = $('.adForm-apps', details);
+			
 			data.togglebutton = button;
 			data.togglebutton.showText = 'Show details';
 			data.togglebutton.hideText = 'Hide details';
@@ -46,6 +47,7 @@ var mopub = mopub || {};
 			apps.togglebutton = appbutton;
 			apps.togglebutton.showText = 'Show apps';
 			apps.togglebutton.hideText = 'Hide apps';
+
 			function getButtonTextElement(buttonElement) {
 				var buttonTextElement = $('.ui-button-text', buttonElement);
 				if(buttonTextElement.length == 0) buttonTextElement = buttonElement;
@@ -108,16 +110,8 @@ var mopub = mopub || {};
 				});
 			});
 			
-			if (apps.hasClass('show')) {
-				didShowContainer(apps);
-			}
-			else {
-				apps.hide();
-				didHideContainer(apps);
-			}
-			
 			appbutton.button({
-			  icons: { secondary: "ui-icon-triangle-1-s" }
+			  icons: { primary: "ui-icon-triangle-1-s" }
 			})
 			.click(function(e) {
 			  e.preventDefault();
@@ -129,7 +123,16 @@ var mopub = mopub || {};
 					apps.slideDown('fast');
 					didShowContainer(apps);
 				}
-			});
+			}).click();
+			
+            if (apps.hasClass('show')) {
+                didShowContainer(apps);
+            }
+            else {
+                apps.hide();
+                didHideContainer(apps);
+            }
+			
 		});
 	});
 })(this.jQuery);

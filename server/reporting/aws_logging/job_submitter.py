@@ -24,18 +24,23 @@ MASTER_INSTANCE_TYPE = 'm1.large'
 SLAVE_INSTANCE_TYPE = 'm1.large'
 # MASTER_INSTANCE_TYPE = 'm1.small'
 # SLAVE_INSTANCE_TYPE = 'm1.small'
-KEEP_ALIVE = False
+KEEP_ALIVE = True
     
 
 
 def get_waiting_jobflow(conn):
-    waiting_jobflow_ids = conn.describe_jobflows([u'WAITING'])
-    if len(waiting_jobflow_ids) > 0:
-        jobid = waiting_jobflow_ids[0].jobflowid
-        print 'found waiting jobflow:', jobid
-        return jobid
-    else:
-        return None
+    waiting_jobflows = conn.describe_jobflows([u'WAITING'])
+    for jobflow in waiting_jobflows:
+        jobid = jobflow.jobflowid
+        num_steps = len(jobflow.steps)
+        print 'found waiting jobflow %s with %i steps completed' % (jobid, num_steps)
+        
+        if num_steps > 250:
+            print 'num of steps near limit of 256: terminating jobflow %s ...' % (jobid)
+            conn.terminate_jobflow(jobid)
+        else:
+            return jobid
+    return None
 
     
 def main():

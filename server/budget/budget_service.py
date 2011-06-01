@@ -134,11 +134,10 @@ def percent_delivered(campaign, today=datetime.date.today()):
     # The number of days in the campaign, inclusive
     num_days = (campaign.end_date - campaign.start_date).days + 1
     total_budget = campaign.budget * num_days
-    
-    
-    logging.error("percent del date: %s" % today)
-    logging.error("total: %s" % total_budget)
-    logging.error("remaining: %s" % remaining_daily_budget(campaign))
+     
+    # logging.error("percent del date: %s" % today)
+    # logging.error("total: %s" % total_budget)
+    # logging.error("remaining: %s" % remaining_daily_budget(campaign))
     
     total_spending = get_spending_for_date_range(campaign,
                                             campaign.start_date,

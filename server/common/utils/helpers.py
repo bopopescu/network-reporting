@@ -1,4 +1,4 @@
-import re
+import re, logging
 import reporting.models as reporting_models
 
 # matches sequence: space, 2 char, - or _, 2 char, 0 or more ;, followed by char that's not a char, number, - or _
@@ -91,4 +91,9 @@ def dedupe_stats(stats):
             final.append(stat)
     return final
 
+def chunks(list, chunk_size):
+    '''Generator function that creates chunk_size lists from list
+    '''
+    for idx in xrange(0, len(list), chunk_size):
+        yield list[idx:idx+chunk_size]
 

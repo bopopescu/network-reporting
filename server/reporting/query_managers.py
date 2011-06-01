@@ -1,6 +1,7 @@
 import datetime
 import logging
 import time
+import copy
 
 from google.appengine.ext import db
 from google.appengine.ext.db import InternalError, Timeout
@@ -10,7 +11,7 @@ import reporting.models as reporting_models
 
 from common.utils.query_managers import CachedQueryManager
 from common.utils import date_magic
-from common.utils.helpers import dedupe_stats
+from common.utils.helpers import (dedupe_stats, chunks)
 from reporting.models import SiteStats, StatsModel
 from advertiser.models import Creative
 from publisher.models import Site as AdUnit
@@ -209,35 +210,30 @@ class StatsModelQueryManager(CachedQueryManager):
         
         stats = StatsModel.all().filter('account =', account)
 
-        stats = stats.filter('brand_name =', brand_name)
-        stats = stats.filter('marketing_name =', marketing_name)
-        stats = stats.filter('device_os =', device_os)
-        stats = stats.filter('device_os_version =', device_os_version)
-        #if brand_name:
-        #    stats = stats.filter('brand_name =', brand_name)
-        #if marketing_name:
-        #    stats = stats.filter('marketing_name =', marketing_name)
-        #if device_os:
-        #    stats = stats.filter('device_os =', device_os)
-        #if device_os_version:
-        #    stats = stats.filter('device_os_version =', device_os_version)
-#        if publishers:
-        #stats = stats.filter('publisher in', publishers)
-#        if country:
-#
-#        if publishers:
-        stats = stats.filter('publisher in', publishers)
-#        if country:
-        stats = stats.filter('country =', country)
-#        if advertiser:
-        stats = stats.filter('advertiser =', advertiser)
+        if brand_name:
+            stats = stats.filter('brand_name =', brand_name)
+        if marketing_name:
+            stats = stats.filter('marketing_name =', marketing_name)
+        if device_os:
+            stats = stats.filter('device_os =', device_os)
+        if device_os_version:
+            stats = stats.filter('device_os_version =', device_os_version)
+        if publishers:
+            stats = stats.filter('publisher in', publishers)
+        if country:
+            stats = stats.filter('country =', country)
+        if advertiser:
+            stats = stats.filter('advertiser =', advertiser)
 
-        if date_fmt == 'date':
-            stats = stats.filter('date in', days)
-        elif date_fmt == 'date_hour':
-            stats = stats.filter('date_hour in', days)
+        all_day_stats = []
+        for c_days in chunks(days, 10):
+            copy_stats = copy.deepcopy(stats)
+            if date_fmt == 'date':
+                all_day_stats.append(copy_stats.filter('date in', c_days).fetch(1000))
+            elif date_fmt == 'date_hour':
+                all_day_stats.append(copy_stats.filter('date_hour in', c_days).fetch(1000))
 
-        return stats
+        stats = reduce(lambda x,y: x + y, all_day_stats)
         return dedupe_stats(stats)
 
          

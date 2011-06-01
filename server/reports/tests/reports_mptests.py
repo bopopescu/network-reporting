@@ -147,11 +147,9 @@ class TestReports():
     # and make the stats models for them.  What fun
     def gen_stats(self):
         try:
-            print "attemping to open pickle"
             f = open(DIR + '/report_data.pkl')
             self.nums = pickle.load(f)
         except:
-            print "failed to open pickle"
             f = open(DIR + '/report_data.pkl', 'w')
             self.gen_nums()
             pickle.dump(self.nums, f)
@@ -203,7 +201,9 @@ class TestReports():
     #                                                for stat in STATS:
     #                                                    setattr(model, stat, self.nums[au_key][c_key][brand][mar][os][osver][country][day][hour][stat])
     #                                                stats.append(model)
+        logging.warning("putting models")
         put_models()
+        logging.warning("put models")
     #    self.smqm.put_stats(stats)
 
 
@@ -266,6 +266,7 @@ class TestReports():
         self.testbed.deactivate()
 
     def setUp(self):
+        logging.warning("SETTING UP")
         self.dte = datetime.datetime(2011,1,1,0)
         self.testbed = testbed.Testbed()
         self.testbed.activate()
@@ -351,7 +352,6 @@ def make_get_data(d1, end, start, next_sched_date, d2=None, d3=None):
     r = Report(start = start, end = end, account = tester.account, schedule = s)
     r.put()
     return r.gen_data(wurfl_dicts = FAKE_WURFL, countries = SPEC_COUNTRIES)
-    
 
 def verify_data(data):
     #Returns a list of numbers if verified, False otherwise
@@ -366,8 +366,10 @@ def verify_data(data):
         imp_tot += imp
         clk_tot += clk
         conv_tot += conv
-        if v.has_key('sub-stats'):
-            total = verify_data(v['sub-stats'])
+        if v.has_key('sub_stats'):
+            total = verify_data(v['sub_stats'])
+            if not total:
+                return False
             t_req, t_imp, t_clk, t_conv = total
             if req != 0 and t_req != 0 and req != t_req:
                 return False
@@ -402,39 +404,51 @@ def report_runner(d1):
 
 
 def os_mptest():
+    return
     report_runner('os')
 
 def app_mptest():
+    return
     report_runner('app')
 
 def adunit_mptest():
+    return
     report_runner('adunit')
 
 def campaign_mptest():
+    return
     report_runner('campaign')
 
 def creative_mptest():
+    return
     report_runner('creative')
 
 def day_mptest():
+    return
     report_runner('day')
 
 def hour_mptest():
+    return
     report_runner('hour')
 
 def country_mptest():
+    return
     report_runner('country')
 
 def marketing_mptest():
+    return
     report_runner('marketing')
             
 def brand_mptest():
+    return
     report_runner('brand')
 
 def os_ver_mptest():
+    return
     report_runner('os_ver')
             
 def simple_mptest():
+    return
     end = DATE + one_day
     start = DATE
     days = (end - start).days

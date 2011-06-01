@@ -57,6 +57,369 @@ indexes:
 
 - kind: StatsModel
   properties:
+  - name: account
+  - name: date_hour
+  - name: marketing_name
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: marketing_name
+  - name: device_os
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: marketing_name
+  - name: device_os
+  - name: device_os_version
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: marketing_name
+  - name: device_os
+  - name: advertiser
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: marketing_name
+  - name: device_os
+  - name: publisher
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: marketing_name
+  - name: device_os
+  - name: country
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: marketing_name
+  - name: device_os_version
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: marketing_name
+  - name: device_os_version
+  - name: device_os
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: marketing_name
+  - name: device_os_version
+  - name: advertiser
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: marketing_name
+  - name: device_os_version
+  - name: publisher
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: marketing_name
+  - name: device_os_version
+  - name: country
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: marketing_name
+  - name: advertiser
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: marketing_name
+  - name: advertiser
+  - name: device_os
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: marketing_name
+  - name: advertiser
+  - name: device_os_version
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: marketing_name
+  - name: advertiser
+  - name: publisher
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: marketing_name
+  - name: advertiser
+  - name: country
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: marketing_name
+  - name: publisher
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: marketing_name
+  - name: publisher
+  - name: device_os
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: marketing_name
+  - name: publisher
+  - name: device_os_version
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: marketing_name
+  - name: publisher
+  - name: advertiser
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: marketing_name
+  - name: publisher
+  - name: country
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: marketing_name
+  - name: country
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: marketing_name
+  - name: country
+  - name: device_os
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: marketing_name
+  - name: country
+  - name: device_os_version
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: marketing_name
+  - name: country
+  - name: advertiser
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: marketing_name
+  - name: country
+  - name: publisher
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: device_os
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: device_os
+  - name: marketing_name
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: device_os
+  - name: marketing_name
+  - name: device_os_version
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: device_os
+  - name: marketing_name
+  - name: advertiser
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: device_os
+  - name: marketing_name
+  - name: publisher
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: device_os
+  - name: marketing_name
+  - name: country
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: device_os
+  - name: device_os_version
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: device_os
+  - name: device_os_version
+  - name: marketing_name
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: device_os
+  - name: device_os_version
+  - name: advertiser
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: device_os
+  - name: device_os_version
+  - name: publisher
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: device_os
+  - name: device_os_version
+  - name: country
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: device_os
+  - name: advertiser
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: device_os
+  - name: advertiser
+  - name: marketing_name
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: device_os
+  - name: advertiser
+  - name: device_os_version
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: device_os
+  - name: advertiser
+  - name: publisher
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: device_os
+  - name: advertiser
+  - name: country
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: device_os
+  - name: publisher
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: device_os
+  - name: publisher
+  - name: marketing_name
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: device_os
+  - name: publisher
+  - name: device_os_version
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: device_os
+  - name: publisher
+  - name: advertiser
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: device_os
+  - name: publisher
+  - name: country
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: device_os
+  - name: country
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: device_os
+  - name: country
+  - name: marketing_name
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: device_os
+  - name: country
+  - name: device_os_version
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: device_os
+  - name: country
+  - name: advertiser
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: device_os
+  - name: country
+  - name: publisher
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: device_os_version
+
+- kind: StatsModel
+  properties:
+  - name: account
+  - name: date_hour
+  - name: device_os_version
+  - name: marketing_name
+
+- kind: StatsModel
+  properties:
   - name: publisher
   - name: advertiser
   - name: account

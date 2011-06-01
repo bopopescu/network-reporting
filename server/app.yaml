@@ -66,5 +66,8 @@ handlers:
   script: mopub_logging/views.py
   login: admin  
 
+- url: /offline/.*
+  script: reporting/aws_logging/blob_server.py
+    
 - url: /.*
   script: main.py

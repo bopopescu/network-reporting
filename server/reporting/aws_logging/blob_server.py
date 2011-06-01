@@ -1,6 +1,8 @@
 #!/usr/bin/env python
+import logging
 import os
 import sys
+import time
 import urllib
 
 
@@ -26,6 +28,8 @@ from google.appengine.ext import webapp
 from google.appengine.ext.webapp import blobstore_handlers
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
+from google.appengine.api import taskqueue
+from google.appengine.api import logservice
 
 from reporting.aws_logging import stats_updater 
 from reporting.aws_logging import uniq_user_stats_updater
@@ -57,38 +61,67 @@ class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
         # self.redirect('/offline/serve/%s' % blob_info.key())
 
 
-class ServeHandler(blobstore_handlers.BlobstoreDownloadHandler):
-    def get(self, resource):
-        resource = str(urllib.unquote(resource))
-        blob_info = blobstore.BlobInfo.get(resource)
-        self.send_blob(blob_info)
+# class ServeHandler(blobstore_handlers.BlobstoreDownloadHandler):
+#     def get(self, resource):
+#         resource = str(urllib.unquote(resource))
+#         blob_info = blobstore.BlobInfo.get(resource)
+#         self.send_blob(blob_info)
 
 
-class UpdateStatsHandler(webapp.RequestHandler):
+class StatsWorker(webapp.RequestHandler):
     def get(self):
+        start = time.time()
+        
         blob_key = self.request.get('blob_key')
-        blob_type = self.request.get('type', 'log_counts')
+        blob_type = self.request.get('blob_type', 'log_counts')
         blob_reader = blobstore.BlobReader(blob_key)
+        logging.error('processing task: %s, %s' %(blob_key, blob_type))
+        logservice.flush()
         
         if blob_type == 'log_counts':
             for line in blob_reader:
                 stats_updater.parse_line(line)
             stats_updater.put_models()        
-            self.response.out.write('log counts updates done')
+            # self.response.out.write('log counts updates done')
+            logging.error('log counts updates done')
+            logservice.flush()
         elif blob_type == 'uniq_user':
             for line in blob_reader:
                 uniq_user_stats_updater.parse_line(line)
-            uniq_user_stats_updater.update_models()        
-            self.response.out.write('uniq user updates done')
+            uniq_user_stats_updater.update_models()       
+            # self.response.out.write('uniq user updates done')
+            logging.error('uniq user updates done') 
+            logservice.flush()
         else:
-            self.response.out.write('invalid blob type (accepts: "log_counts" or "uniq_user")')
+            # self.response.out.write('invalid blob type (accepts: "log_counts" or "uniq_user")')
+            logging.error('invalid blob type (accepts: "log_counts" or "uniq_user")')
+            logservice.flush()
+            
+        elapsed = time.time() - start
+        logging.error('updating GAE datastore with blob %s took %i minutes and %i seconds' % (blob_key, elapsed/60, elapsed%60))
+        logservice.flush()
+        
 
+
+class UpdateStatsHandler(webapp.RequestHandler):
+    def get(self):
+        blob_key = self.request.get('blob_key')
+        blob_type = self.request.get('blob_type', 'log_counts')
+        q = taskqueue.add(queue_name='stats-updater',
+                      method='get',
+                      url='/offline/worker', 
+                      params={'blob_key': blob_key, 'blob_type': blob_type},
+                      target='stats-updater')
+        self.response.out.write('processing task for blob %s and type %s is added to task queue %s' % (blob_key, blob_type, q.name))
+        
+        
 
 def main():
     application = webapp.WSGIApplication(
           [(URL_HANDLER_PATH, UrlHandler),
            ('/offline/upload', UploadHandler),
-           ('/offline/serve/([^/]+)?', ServeHandler),
+           # ('/offline/serve/([^/]+)?', ServeHandler),
+           ('/offline/worker', StatsWorker),
            (UPDATE_STATS_HANDLER_PATH, UpdateStatsHandler),
           ], debug=True)
     run_wsgi_app(application)

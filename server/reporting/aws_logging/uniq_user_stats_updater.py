@@ -196,7 +196,7 @@ def process_input_file(input_file):
 def setup_remote_api():
     from google.appengine.ext.remote_api import remote_api_stub
     app_id = 'mopub-inc'
-    host = '38-aws.latest.mopub-inc.appspot.com'
+    host = '38-aws2.latest.mopub-inc.appspot.com'
     remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', utils.auth_func, host)
         
                     

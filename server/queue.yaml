@@ -120,3 +120,9 @@ queue:
 - name: daily-budget-advance
   rate: 100/s
   bucket_size: 100
+
+- name: stats-updater
+  rate: 10/s
+  bucket_size: 10
+  retry_parameters:
+    task_retry_limit: 1

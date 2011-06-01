@@ -295,7 +295,7 @@ class StatsModelQueryManager(CachedQueryManager):
                     stats = stats[LIMIT:]
                     page_count += 1
                     retries = 0
-                except (InternalError, Timeout, CapabilityDisabledError):
+                except: # (InternalError, Timeout, CapabilityDisabledError):
                     retries += 1
             return [s.key() for s in all_stats[:LIMIT*page_count]] # only return the ones that were successully batch put
 

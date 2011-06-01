@@ -4,6 +4,7 @@ import os
 import sys
 import time
 import traceback
+import logging
 
 from datetime import datetime
 from optparse import OptionParser
@@ -29,6 +30,7 @@ InstallAppengineHelperForDjango()
 
 from google.appengine.ext import blobstore
 from google.appengine.ext import db
+from google.appengine.api import logservice
 
 
 import utils
@@ -41,6 +43,17 @@ from reporting.query_managers import StatsModelQueryManager
 account_cache = {}
 stats_qm_cache = {}
 
+def log_it(msg, level='info'):
+    # if level == 'debug':
+    #     logging.debug(msg)
+    # elif level == 'error':
+    #     logging.error(msg)
+    # else:
+    #     logging.info(msg)
+
+    logging.error(msg)
+    logservice.flush()
+    
 
 def clear_cache():
     global account_cache
@@ -52,6 +65,7 @@ def clear_cache():
 def put_models():
     for qm in stats_qm_cache.values():
         print 'putting models for account', qm.account.name()
+        log_it('putting models for account %s' %(qm.account.name()))
         qm.put_stats(offline=True)
     clear_cache()
            
@@ -80,6 +94,7 @@ def update_model(adunit_key=None, creative_key=None,
                 account = adunit.account
                 if account is None:
                     print 'adunit %s has no account' % (adunit_key)
+                    log_it('adunit %s has no account' % (adunit_key), 'debug')
                     return False
                 account_cache[adunit_key] = account 
             
@@ -129,10 +144,12 @@ def update_model(adunit_key=None, creative_key=None,
             return True
         else:
             print 'adunit_key and counts should not be None'
+            log_it('adunit_key and counts should not be None', 'error')
             return False
     except Exception, e:
         # traceback.print_exc()
         print 'EXCEPTION on adunit key %s -> %s' %(adunit_key, e)
+        log_it('EXCEPTION on adunit key %s -> %s' %(adunit_key, e), 'error')
         return False
              
     
@@ -180,10 +197,12 @@ def parse_line(line):
     except Exception, e:
         # traceback.print_exc()
         print 'EXCEPTION on line %s -> %s' %(line, e)
+        log_it('EXCEPTION on line %s -> %s' %(line, e), 'error')
 
 
 def process_blob_stats_file(blob_key):
     print 'processing blob stats file %s ...' %blob_key
+    # logging.info('processing blob stats file %s ...' %blob_key)
     setup_remote_api()
     blob_reader = blobstore.BlobReader(blob_key)
     for line in blob_reader:
@@ -193,6 +212,7 @@ def process_blob_stats_file(blob_key):
 
 def process_input_file(input_file):
     print 'processing stats file %s ...' %input_file
+    # logging.info('processing stats file %s ...' %input_file)
     with open(input_file, 'r') as f:
         for line in f:
             parse_line(line)
@@ -202,7 +222,7 @@ def process_input_file(input_file):
 def setup_remote_api():
     from google.appengine.ext.remote_api import remote_api_stub
     app_id = 'mopub-inc'
-    host = '38-aws.latest.mopub-inc.appspot.com'
+    host = '38-aws2.latest.mopub-inc.appspot.com'
     remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', utils.auth_func, host)
     
     

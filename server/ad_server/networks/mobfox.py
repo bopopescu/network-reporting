@@ -21,6 +21,17 @@ class MobFoxServerSide(ServerSide):
     @property
     def url(self):
         return self.base_url
+        
+    def _device_overide(self):
+        ua = self.get_user_agent().lower()
+        if 'ipad' in ua:
+            return 'ipad_app'
+        elif 'iphone' in ua:     
+            return 'iphone_app'
+        elif 'android' in ua:
+            return 'android_app'  
+        else:
+            return 'wap'          
 
     @property  
     def payload(self):
@@ -34,6 +45,7 @@ class MobFoxServerSide(ServerSide):
                 # 'latitude': , # lat
                 # 'int_cat': , # MobFox category type
                 'v': 'api_mopub',
+                'device_override' : self._device_overide(),
               }
               
         return urllib.urlencode(data) + '&' + self._add_extra_headers()

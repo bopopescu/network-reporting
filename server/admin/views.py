@@ -33,6 +33,7 @@ from admin import beatbox
 from common.utils.decorators import cache_page_until_post
 
 MEMCACHE_KEY = "jpayne:admin/d:render_p"
+NUM_DAYS = 14
 
 @login_required
 @cache_page_until_post()
@@ -73,12 +74,12 @@ def dashboard_prep(request, *args, **kwargs):
     db.run_in_transaction(_txn)    
     
     
-    days = StatsModel.lastdays(30)
+    days = StatsModel.lastdays(NUM_DAYS)
     # gets all undeleted applications
-    start_date = datetime.date.today() - datetime.timedelta(days=30) # NOTE: change
+    start_date = datetime.date.today() - datetime.timedelta(days=NUM_DAYS) # NOTE: change
     apps = AppQueryManager.get_apps(limit=1000)    
     # get all the daily stats for the undeleted apps
-    app_stats = StatsModelQueryManager(None,offline=offline).get_stats_for_apps(apps=apps,num_days=30)
+    # app_stats = StatsModelQueryManager(None,offline=offline).get_stats_for_apps(apps=apps,num_days=30)
 
     # accumulate individual site stats into daily totals 
     unique_apps = {}
@@ -97,14 +98,16 @@ def dashboard_prep(request, *args, **kwargs):
             d[k] += v
     
     # go and do it
-    for app_stat in app_stats:
-        # add this site stats to the total for the day and increment user count
-        if app_stat.date:
-            user_count = totals[str(app_stat.date)].user_count + 1
-            _incr_dict(totals,str(app_stat.date),app_stat)
-            totals[str(app_stat.date)].user_count = user_count
-        if app_stat._publisher:
-            _incr_dict(unique_apps,str(app_stat._publisher),app_stat)
+    for app in apps:
+        app_stats = StatsModelQueryManager(None,offline=offline).get_stats_for_apps(apps=[app],num_days=NUM_DAYS)
+        for app_stat in app_stats:
+            # add this site stats to the total for the day and increment user count
+            if app_stat.date:
+                user_count = totals[str(app_stat.date)].user_count + 1
+                _incr_dict(totals,str(app_stat.date),app_stat)
+                totals[str(app_stat.date)].user_count = user_count
+            if app_stat._publisher:
+                _incr_dict(unique_apps,str(app_stat._publisher),app_stat)
     
     # organize daily stats by date
     total_stats = totals.values()

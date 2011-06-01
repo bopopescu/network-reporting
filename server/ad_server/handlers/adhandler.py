@@ -11,7 +11,7 @@ import binascii
 
 from ad_server.adserver_templates import TEMPLATES
                                     
-from common.utils import helpers
+from common.utils import helpers, simplejson
 from common.constants import FULL_NETWORKS
 
 from google.appengine.api import users, urlfetch, memcache
@@ -157,17 +157,17 @@ class AdHandler(webapp.RequestHandler):
           
         # Run the ad auction to get the creative to display
         ad_auction_results = AdAuction.run(request = self.request,
-        	    						  adunit = site,
-        	    						  keywords=q, 
-        	    						  excluded_adgroups=excluded_adgroups, 
-        	    						  udid=udid, 
-        	    						  ll = ll,
-        	    						  request_id=request_id, 
-        	    						  now=now,
-        	    						  user_agent=user_agent,
-        	    						  adunit_context=adunit_context,
+                                          adunit = site,
+                                          keywords=q, 
+                                          excluded_adgroups=excluded_adgroups, 
+                                          udid=udid, 
+                                          ll = ll,
+                                          request_id=request_id, 
+                                          now=now,
+                                          user_agent=user_agent,
+                                          adunit_context=adunit_context,
                                           country_tuple=country_tuple, 
-        	    						  experimental=experimental)
+                                          experimental=experimental)
         
         # Unpack the results of the AdAuction
         creative, on_fail_exclude_adgroups = ad_auction_results
@@ -336,7 +336,7 @@ class AdHandler(webapp.RequestHandler):
             success += 'document.body.appendChild(hid_span);'
           
             if creative.ad_type == "adsense":
-                params.update({"title": ','.join(keywords), "adsense_format": '300x250_as', "w": format[0], "h": format[1], "client": site.get_pub_id("adsense_pub_id")})
+                params.update({"title": ','.join(keywords), "adsense_format": '320x50_mb', "w": format[0], "h": format[1], "client": site.get_pub_id("adsense_pub_id")})
                 params.update(channel_id=site.adsense_channel_id or '')
                 # self.response.headers.add_header("X-Launchpage","http://googleads.g.doubleclick.net")
             elif creative.ad_type == "admob":
@@ -436,7 +436,12 @@ class AdHandler(webapp.RequestHandler):
                     self.response.headers.add_header("X-Adtype", str(creative.ad_type))
                     self.response.headers.add_header("X-Backfill", str(creative.ad_type))
                 self.response.headers.add_header("X-Failurl", _build_fail_url(self.request.url, on_fail_exclude_adgroups))
-                self.response.headers.add_header("X-Nativeparams", '{"adUnitID":"'+adunit.get_pub_id("millennial_pub_id")+'"}')
+                nativeparams_dict = {
+                    "adUnitID":adunit.get_pub_id("millennial_pub_id"),
+                    "adWidth":adunit.get_width(),
+                    "adHeight":adunit.get_height()
+                }
+                self.response.headers.add_header("X-Nativeparams", simplejson.dumps(nativeparams_dict))
                 
             elif str(creative.ad_type) == "adsense":
                 self.response.headers.add_header("X-Adtype", str(creative.ad_type))

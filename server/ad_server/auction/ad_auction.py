@@ -100,6 +100,7 @@ class AdAuction(object):
                 
                 rpc = urlfetch.create_rpc(2) # maximum delay we are willing to accept is 2000 ms
                 payload = server_side.payload
+                trace_logging.warning("payload: %s"%payload)
                 if payload == None:
                     urlfetch.make_fetch_call(rpc, server_side.url, headers=server_side.headers)
                 else:
@@ -304,7 +305,7 @@ class AdAuction(object):
                                         return [winning_creative, on_fail_exclude_adgroups]
                                     # if the adgroup requires an RPC    
                                     else:
-                                        trace_logging.info('Attemping ad network request: %s ...'%winner.adgroup.network_type.title())
+                                        trace_logging.info('Attempting ad network request: %s ...'%winner.adgroup.network_type.title())
                                         rpc = AdAuction.request_third_party_server(request, adunit, winner.adgroup)
                                         # log a network "request"
                                         mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, udid=udid)

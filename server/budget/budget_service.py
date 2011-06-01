@@ -1,7 +1,6 @@
 from google.appengine.api import memcache
 import datetime
 from advertiser.models import ( Campaign,
-                                AdGroup,
                                 )
 import logging
 
@@ -64,10 +63,11 @@ def timeslice_advance(campaign):
     key = _make_campaign_ts_budget_key(campaign)
     memcache.incr(key, _to_memcache_int(budget_slicer.timeslice_budget), namespace="budget")
             
-def daily_advance(campaign, new_date=None):
+def daily_advance(campaign, new_date=datetime.date.today()):
     """ Adds a new timeslice's worth of daily budget, logs the daily spending and initializes a new log
     Executed once daily just after midnight.
     """
+    today = new_date
     if not campaign.budget:
         return
         
@@ -77,7 +77,6 @@ def daily_advance(campaign, new_date=None):
     rem_daily_budget = remaining_daily_budget(campaign)
     
     # Since we execute near midnight, 2 hours from now must be the accurate day
-    today = new_date or (datetime.datetime.now() + datetime.timedelta(hours=2)).date()
     
     yesterday = today - datetime.timedelta(days=1)
     
@@ -135,7 +134,9 @@ def percent_delivered(campaign, today=datetime.date.today()):
     # The number of days in the campaign, inclusive
     num_days = (campaign.end_date - campaign.start_date).days + 1
     total_budget = campaign.budget * num_days
-        
+    
+    
+    logging.error("percent del date: %s" % today)
     logging.error("total: %s" % total_budget)
     logging.error("remaining: %s" % remaining_daily_budget(campaign))
     

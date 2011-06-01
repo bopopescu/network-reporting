@@ -1,8 +1,6 @@
 #!/bin/bash
 #
-# This script works. Just type in your GAE username/password when prompted in the first download command. 
-# Then type in a blank password to upload to your local machine.
-# -Jim, 2/24/2011
+# This script transfers our datastore from mopub-inc to mopub-experimental
 
 pushd ~/tmp
 
@@ -47,4 +45,7 @@ echo $DESTINATION_PASS | appcfg.py upload_data --email=olp@mopub.com --filename=
 
 echo N47935 | appcfg.py download_data --application=mopub-inc --url=http://mopub-inc.appspot.com/remote_api --filename=datastore6 --email=olp@mopub.com --passin --kind=Creative
 echo $DESTINATION_PASS | appcfg.py upload_data --email=olp@mopub.com --filename=datastore6 --application=$DESTINATION_APP --url=$DESTINATION_URL --passin
+
+echo N47935 | appcfg.py download_data --application=mopub-inc --url=http://mopub-inc.appspot.com/remote_api --filename=datastore7 --email=olp@mopub.com --passin --kind=NetworkConfig
+echo $DESTINATION_PASS | appcfg.py upload_data --email=olp@mopub.com --filename=datastore7 --application=$DESTINATION_APP --url=$DESTINATION_URL --passin
 

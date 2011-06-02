@@ -28,16 +28,17 @@ def kw_filter_mptest():
         assert f(adgroup) == match
         
 def custom_format_filter_mptest():
-    adunit1 = AdUnit(format="custom", custom_width=120., custom_height=200.)
-    adunit2 = AdUnit(format="custom", custom_width=320., custom_height=50.)
-    adunit3 = AdUnit(format="custom", custom_width=400., custom_height=500.)
-    creative1 = Creative(format="custom", custom_width=120., custom_height=200.)
-    creative2 = Creative(format="custom", custom_width=300., custom_height=400.)
+    adunit1 = AdUnit(format="custom", custom_width=120, custom_height=200)
+    adunit2 = AdUnit(format="custom", custom_width=320, custom_height=50)
+    adunit3 = AdUnit(format="320x50")
+    creative1 = Creative(format="custom", custom_width=120, custom_height=200)
+    creative2 = Creative(format="custom", custom_width=320, custom_height=50)
     creative3 = Creative(format="320x50")
     real_filter1, msg, l = format_filter(adunit1)
     real_filter2, msg, l = format_filter(adunit2)
     real_filter3, msg, l = format_filter(adunit3)
     assert(real_filter1(creative1))
     assert(not real_filter1(creative2))
+    assert(real_filter2(creative2))
     assert(not real_filter2(creative3))
-    assert(not real_filter3(creative3))
+    assert(not real_filter3(creative2))

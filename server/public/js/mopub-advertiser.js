@@ -708,7 +708,6 @@ var mopub = mopub || {};
     //////////  /campaigns/adgroup/ ////////////
     ////////////////////////////////////////////
     
-    
     $('#creativeCreateForm-submit')
       .button({ 
         icons: { secondary: "ui-icon-circle-triangle-e" } 
@@ -722,7 +721,7 @@ var mopub = mopub || {};
     $('#creativeCreateForm-cancel')
       .button()
       .click(function(e) {
-        e.preventDefault();
+          e.preventDefault();
         $('#advertiser-creativeAddForm').slideUp('fast', function() {
           $('#advertiser-adgroups-addCreativeButton').show();
         });
@@ -751,6 +750,16 @@ var mopub = mopub || {};
         buttons: { "Close": function() { $(this).dialog("close"); } }
       });
     }); 
+    
+    $('.format-options').change(function(e) {
+        e.preventDefault();
+          if ($(this).val()=="custom"){
+              $(this).parents("form").find('.customc_only').show();
+              }
+          else{
+              $(this).parents("form").find('.customc_only').hide();
+          }
+      }).change();
 
     $('#creativeAddForm input[name="creative_type"]').click(function(e) {
       $('#creativeCreate-text_icon').hide();

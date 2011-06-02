@@ -247,6 +247,8 @@ class AdGroup(db.Model):
  
 class Creative(polymodel.PolyModel):
     name = db.StringProperty()
+    custom_width = db.FloatProperty()
+    custom_height = db.FloatProperty()
     
     ad_group = db.ReferenceProperty(AdGroup,collection_name="creatives")
 
@@ -304,6 +306,8 @@ class Creative(polymodel.PolyModel):
         self.ad_group = value
   
     def _get_width(self):
+        if self.custom_width:
+            return self.custom_width
         if hasattr(self,'_width'):
             return self._width
         width = 0 
@@ -317,6 +321,8 @@ class Creative(polymodel.PolyModel):
     width = property(_get_width,_set_width)      
          
     def _get_height(self):
+        if self.custom_height:
+            return self.custom_height
         if hasattr(self,'_height'):
             return self._height
             

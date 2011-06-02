@@ -476,6 +476,7 @@ class ShowAdGroupHandler(RequestHandler):
         adgroup = AdGroupQueryManager.get(adgroup_key)
         opt = self.params.get('action')
         update = False
+        campaign = adgroup.campaign
         if opt == 'play':
             adgroup.active = True
             update = True
@@ -484,7 +485,9 @@ class ShowAdGroupHandler(RequestHandler):
             update = True
         elif opt == "delete":   
             adgroup.deleted = True
+            campaign.deleted = True
             AdGroupQueryManager.put(adgroup)
+            CampaignQueryManager.put(campaign)
             # TODO: Flash a message saying we deleted the campaign
             return HttpResponseRedirect(reverse('advertiser_campaign'))
             
@@ -492,6 +495,9 @@ class ShowAdGroupHandler(RequestHandler):
             logging.error("Passed an impossible option")
 
         if update:
+            campaign.active = adgroup.active
+            campaign.deleted = adgroup.deleted
+            CampaignQueryManager.put(campaign)
             AdGroupQueryManager.put(adgroup)
         return HttpResponseRedirect(reverse('advertiser_adgroup_show', kwargs={'adgroup_key': str(adgroup.key())}))
 

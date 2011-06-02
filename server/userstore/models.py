@@ -100,7 +100,11 @@ class AppOpenEvent(db.Model):
                 parent = MobileApp.get_db_key(udid, mobile_appid)
         super(AppOpenEvent, self).__init__(parent=parent, key_name=key_name, **kwargs)
   
-  
+
+class VirtualGood(db.Model):
+    udid = db.StringProperty(required=True)
+    mobile_appid = db.StringProperty()  
+    
 
   
   

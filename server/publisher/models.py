@@ -79,8 +79,8 @@ class Site(db.Model):
     name = db.StringProperty(required=True, default='Banner Ad')
     url = db.StringProperty()
     description = db.TextProperty()
-    custom_width = db.FloatProperty()
-    custom_height = db.FloatProperty()
+    custom_width = db.IntegerProperty()
+    custom_height = db.IntegerProperty()
     
     device_format = db.StringProperty(default='phone', choices=DEVICE_FORMAT_CHOICES)
     format = db.StringProperty(choices=FORMAT_CHOICES) #TODO: we should use this w/o explicity using height, width

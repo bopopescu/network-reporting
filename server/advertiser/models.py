@@ -254,8 +254,8 @@ class AdGroup(db.Model):
  
 class Creative(polymodel.PolyModel):
     name = db.StringProperty()
-    custom_width = db.FloatProperty()
-    custom_height = db.FloatProperty()
+    custom_width = db.IntegerProperty()
+    custom_height = db.IntegerProperty()
     
     ad_group = db.ReferenceProperty(AdGroup,collection_name="creatives")
 

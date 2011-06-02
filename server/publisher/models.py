@@ -122,6 +122,24 @@ class Site(db.Model):
         TODO Make this actually do something """
         return 0
     
+    def get_height(self):
+        if self.height: 
+            return self.height
+        dimensions = self.format.split('x')
+        if len(dimensions) > 1: 
+            return int(dimensions[1])
+        else:
+            return 0
+
+    def get_width(self):
+        if self.width: 
+            return self.width
+        dimensions = self.format.split('x')
+        if len(dimensions) > 1: 
+            return int(dimensions[0])
+        else:
+            return 0
+    
     # Now we can access app_key using app
     def _get_app(self):
         return self.app_key
@@ -170,7 +188,6 @@ class Site(db.Model):
         account_level_id = getattr(self.account.network_config, pub_id_attr, None)
         if account_level_id:
             return account_level_id
-        
 
 ###############
 # rename Site #

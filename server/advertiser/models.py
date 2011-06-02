@@ -426,7 +426,7 @@ class MillennialNativeCreative(MillennialCreative):
 
     @property
     def multi_format(self):
-        return ('728x90', '320x50', 'full' ,)
+        return ('728x90', '320x50', '300x250', 'full' ,)
 
 class EjamCreative(Creative):
     pass

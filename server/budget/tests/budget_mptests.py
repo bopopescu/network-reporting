@@ -262,6 +262,28 @@ class TestBudgetUnitTests(unittest.TestCase):
         
         eq_(budget_service.remaining_ts_budget(self.cheap_c),499)
 
+
+
+    def mptest_remaining_daily_budget_planned(self):
+        """ We have a planned campaign for tomorrow, make sure budget
+            is correct """
+            
+        # The campaign has a $1000 daily budget, and goes for 1 day
+        self.cheap_c.budget_strategy = "evenly"
+        self.cheap_c.start_date = datetime.date(1987,4,4)
+        self.cheap_c.end_date = datetime.date(1987,4,4)
+        self.cheap_c.put()
+    
+        # Today is datetime.date(1987,4,2)
+        
+        # After advancing to datetime.date(1987,4,3) we should still have no budget
+        budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,3))
+        eq_(budget_service._apply_if_able(self.cheap_c, 100), False)
+        
+        # After advancing to datetime.date(1987,4,4) we should have a budget
+        budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,4))
+        eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
+        
     def mptest_cache_failure_then_spend(self):
         eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
         eq_(budget_service.remaining_ts_budget(self.cheap_c), 99)
@@ -352,28 +374,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         
         last_log = slicer.timeslice_logs.order("-end_date").get()
         eq_(last_log.spending, 1)
-        
-    def mptest_budget_logging_multiple(self):
-        eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
-        eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
-        eq_(budget_service.remaining_ts_budget(self.cheap_c), 98)
-
-        budget_service._advance_all()
-        
-
-        last_log = budget_service.last_log(self.cheap_c)
-        eq_(last_log.spending, 2)    
- 
-        eq_(budget_service._apply_if_able(self.cheap_c, 10), True)
-        eq_(budget_service._apply_if_able(self.cheap_c, 10), True)
-        eq_(budget_service.remaining_ts_budget(self.cheap_c), 178)
-
-        budget_service._advance_all()
-        
-
-        last_log = budget_service.last_log(self.cheap_c)
-        eq_(last_log.spending, 20)    
- 
+   
     def mptest_very_expensive(self):
          eq_(budget_service._apply_if_able(self.cheap_c, 10000), False)
          
@@ -490,30 +491,21 @@ class TestBudgetUnitTests(unittest.TestCase):
          self.cheap_c.end_date = datetime.date(1987,4,4)
          self.cheap_c.put()
 
-         eq_(budget_service.remaining_daily_budget(self.cheap_c), 1000)
+         # Today is datetime.date(1987,4,3)
+         today = datetime.date(1987,4,3)
+         eq_(budget_service._apply_if_able(self.cheap_c, 500, today=today), False)    
 
-         eq_(budget_service._apply_if_able(self.cheap_c, 500), True)    
-
-         eq_(budget_service.remaining_daily_budget(self.cheap_c), 500)
 
          # The end of the first day
          budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,4))
 
          eq_(budget_service._apply_if_able(self.cheap_c, 500), True)    
 
-         eq_(budget_service.remaining_daily_budget(self.cheap_c), 1000)
+         eq_(budget_service.remaining_daily_budget(self.cheap_c), 500)
 
          # The end of the second day
          budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,5))
 
-
-
-         slicer = BudgetSlicer.get_or_insert_for_campaign(self.cheap_c)
-         daily_log = slicer.daily_logs.filter("date =", datetime.date(1987,4,4)).get()
-
-         eq_(daily_log.initial_daily_budget, 1500)
-         eq_(daily_log.remaining_daily_budget, 1000)
-         
          
          second_spending = budget_service._get_spending_for_date(self.cheap_c,
                                                       datetime.date(1987,4,4))
@@ -525,7 +517,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         # The campaign has a $1000 daily budget, and goes for 1 days inclusive -> $1,000
         self.cheap_c.budget_strategy = "allatonce"
         self.cheap_c.start_date = datetime.date(1987,4,4)
-        self.cheap_c.end_date = datetime.date(1987,4,4)
+        self.cheap_c.end_date = datetime.date(1987,4,7)
         self.cheap_c.put()
         
         eq_(budget_service.remaining_daily_budget(self.cheap_c), 1000)
@@ -729,8 +721,8 @@ class TestBudgetUnitTests(unittest.TestCase):
             budget_service.timeslice_advance(self.cheap_c)
         
         eq_(budget_service._apply_if_able(self.cheap_c, 500), True)
-        # We have spent 500 out of 2000 total
-        eq_(budget_service.remaining_daily_budget(self.cheap_c), 1500)
+        # We have spent 500 out of 1000 total
+        eq_(budget_service.remaining_daily_budget(self.cheap_c), 500)
         
     def mptest_remaining_daily_budget_finite_cache_failure(self):
         # We have a campaign that was set to begin several days ago 
@@ -748,30 +740,59 @@ class TestBudgetUnitTests(unittest.TestCase):
         for i in xrange(budgetmodels.DEFAULT_TIMESLICES*3):
             budget_service.timeslice_advance(self.cheap_c)
 
-        # 3000 remaining
+        # 2000 remaining
         eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
-        # We have spent 100 out of 3000 total
-        eq_(budget_service.remaining_daily_budget(self.cheap_c), 2900)
+        # We have spent 100 out of 2000 total
+        eq_(budget_service.remaining_daily_budget(self.cheap_c), 1900)
         
         # Catastrophic cache failure!!
         memcache.flush_all()
     
-        # Should return to the state we had at the last backup (3000)
+        # Should return to the state we had at the last backup (2000)
         eq_(budget_service._apply_if_able(self.cheap_c, 500), True)
         # We have spent 500 out of 2000 total
-        eq_(budget_service.remaining_daily_budget(self.cheap_c), 2500)
+        eq_(budget_service.remaining_daily_budget(self.cheap_c), 1500)
         
         # Another advance, backs up to db
         budget_service.timeslice_advance(self.cheap_c)
-        eq_(budget_service.remaining_daily_budget(self.cheap_c), 2500)
+        eq_(budget_service.remaining_daily_budget(self.cheap_c), 1500)
         
         # Catastrophic cache failure again!!!
         memcache.flush_all()
     
-        # Should return to the state we had at the last backup (2500)
+        # Should return to the state we had at the last backup (1500)
         eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
         # We have spent 500 out of 2000 total
-        eq_(budget_service.remaining_daily_budget(self.cheap_c), 2400)   
+        eq_(budget_service.remaining_daily_budget(self.cheap_c), 1400)   
 
     def mptest_fudge_budget(self):
-        pass
+        # We have a campaign that was set to begin several days ago 
+        # but is only beginning now. 
+
+        # The campaign has a $1000 daily budget, and goes for 10 days inclusive -> $10,000
+        self.cheap_c.budget_strategy = "evenly"
+        self.cheap_c.start_date = datetime.date(1987,4,4)
+        self.cheap_c.end_date = datetime.date(1987,4,13)
+        self.cheap_c.put()
+
+        # It was set up but now the date is the 10th. No daily_advances have taken place
+        
+     
+        
+        budget_service._fudge_spending_for_date(self.cheap_c,
+                                                datetime.date(1987,4,5),
+                                                700.0)
+        
+        total_spending = budget_service.get_spending_for_date_range(self.cheap_c,
+                                                   datetime.date(1987,4,2),
+                                                   datetime.date(1987,4,13))
+        eq_(total_spending, 700)
+        
+        eq_(budget_service._apply_if_able(self.cheap_c, 100), True)   
+         
+        total_spending = budget_service.get_spending_for_date_range(self.cheap_c,
+                                                   datetime.date(1987,4,2),
+                                                   datetime.date(1987,4,13))
+        # eq_(total_spending, 800)
+        
+        

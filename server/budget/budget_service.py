@@ -101,7 +101,7 @@ def daily_advance(campaign, new_date=datetime.date.today()):
         
     # Finite campaigns should be 0.0 when not active and can roll over
     if campaign.finite:
-        # We the campaign has not begun or is expired, set it to 0.0
+        # If the campaign has not begun or is expired, set it to 0.0
         if new_date > campaign.end_date or new_date < campaign.start_date:
             new_initial_budget = 0.0
         # The first day should have a normal daily budget
@@ -109,8 +109,7 @@ def daily_advance(campaign, new_date=datetime.date.today()):
             new_initial_budget = campaign.budget
         # During the campaign we allow unspent budget to roll over
         else:
-            summed_budget = rem_daily_budget + campaign.budget
-            new_initial_budget = summed_budget
+            new_initial_budget = rem_daily_budget + campaign.budget
     
     # Non-finite campaigns do not roll over
     else:

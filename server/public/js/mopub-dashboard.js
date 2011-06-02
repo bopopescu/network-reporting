@@ -588,7 +588,7 @@ var mopub = mopub || {};
         }    
         
         var $custom_onlys = $(".custom_only");
-        if ($(this).attr("id") == "appForm-adUnitFormat-custom-tablet" || $(this).attr("id") == "appForm-adUnitFormat-custom"){
+        if ($(this).attr("id") == "appForm-adUnitFormat-tablet-custom" || $(this).attr("id") == "appForm-adUnitFormat-custom"){
             $custom_onlys.show();
         }
         else{
@@ -655,7 +655,7 @@ var mopub = mopub || {};
             }    
             
             var $custom_onlys = $(".custom_only");
-            if ($(this).attr("id") == "appForm-adUnitFormat-custom-tablet" || $(this).attr("id") == "appForm-adUnitFormat-custom"){
+            if ($(this).attr("id") == "appForm-adUnitFormat-tablet-custom" || $(this).attr("id") == "appForm-adUnitFormat-custom"){
                 $custom_onlys.show();
             }
             else{

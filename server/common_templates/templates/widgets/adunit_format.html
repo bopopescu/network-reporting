@@ -29,9 +29,11 @@
 
 	  <div class="adForm-phone-format adForm-format"> 
         <div class="adForm-format-name"> 
-          <input type="radio" class="input-radio" name="{{name}}" value="custom" id="appForm-adUnitFormat-custom"/> 
+          <input type="radio" class="input-radio {% ifequal value 'full' %}possible-format{% endifequal %}" name="{{name}}" value="custom" id="appForm-adUnitFormat-custom"/> 
           <label for="appForm-adUnitFormat-custom">Custom</label> 
         </div> 
+        <img class="adForm-format-image" src="/images/setup/ad-format-custom.png" alt="Custom ad" /> 
+        
       </div>
 
     </div>
@@ -68,8 +70,8 @@
       </div> 
 
 	<div class="adForm-format-name"> 
-        <input type="radio" class="input-radio" name="{{name}}" value="custom" id="appForm-adUnitFormat-custom-tablet"/> 
-        <label for="appForm-adUnitFormat-custom-tablet">Custom</label>
+        <input type="radio" class="input-radio {% ifequal value 'custom' %}possible-format{% endifequal %}" name="{{name}}" value="custom" id="appForm-adUnitFormat-tablet-custom"/> 
+        <label for="appForm-adUnitFormat-tablet-custom">Custom</label>
       </div> 
     </div>
 
@@ -79,6 +81,7 @@
       <img class="adForm-format-image" src="/images/setup/ad-format-tablet-wide-skyscraper.png" alt="Wide Skyscraper ad" /> 
       <img class="adForm-format-image" src="/images/setup/ad-format-tablet-full.png" alt="Fullscreen ad" /> 
       <img class="adForm-format-image" src="/images/setup/ad-format-tablet-banner.png" alt="Fullscreen ad" /> 
+      <img class="adForm-format-image" src="/images/setup/ad-format-tablet-custom.png" alt="Custom ad">
     </div>
   </dd>
 </div>

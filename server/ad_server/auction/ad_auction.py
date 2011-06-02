@@ -101,6 +101,7 @@ class AdAuction(object):
                 rpc = urlfetch.create_rpc(2) # maximum delay we are willing to accept is 2000 ms
                 payload = server_side.payload
                 trace_logging.warning("payload: %s"%payload)
+                trace_logging.warning("headers: %s"%server_side.headers)
                 if payload == None:
                     urlfetch.make_fetch_call(rpc, server_side.url, headers=server_side.headers)
                 else:

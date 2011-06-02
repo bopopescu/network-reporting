@@ -70,6 +70,13 @@ class Campaign(db.Model):
     def network(self):
         return self.campaign_type in ['network']
         
+    def is_active_for_date(self, date):
+        """ Start and end dates are inclusive """
+        if date >= self.start_date:
+            if date <= self.end_date:
+                return True
+        return False
+        
         
 class AdGroup(db.Model):
     campaign = db.ReferenceProperty(Campaign,collection_name="adgroups")

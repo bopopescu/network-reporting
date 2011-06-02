@@ -496,6 +496,7 @@ class AdHandler(webapp.RequestHandler):
               
             
             # pass the creative height and width if they are explicity set
+            trace_logging.warning("creative size:%s"%creative.format)
             if creative.width and creative.height and 'full' not in site.format:
                 self.response.headers.add_header("X-Width", str(creative.width))
                 self.response.headers.add_header("X-Height", str(creative.height))

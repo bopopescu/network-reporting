@@ -316,11 +316,7 @@ class TestBudgetEndToEnd(unittest.TestCase):
     
         # Advance all of our campaigns
         budget_service._advance_all()
-    
-    
-        # We spent 50.0 on cheap_c last timeslice
-        last_log = budget_service.last_log(self.cheap_c)
-        eq_(last_log.spending, 50)
+
     
         # We again have enough budget for one expensive ad
         creative = run_auction(self.adunit.key())
@@ -337,16 +333,7 @@ class TestBudgetEndToEnd(unittest.TestCase):
         # Advance all of our campaigns
         budget_service._advance_all()
     
-    
-        # We spent 150.0 on cheap_c last timeslice
-        last_log = budget_service.last_log(self.cheap_c)
-        eq_(last_log.spending, 150)
-    
-        # Test the generator function:
-        log_generator = budget_service.log_generator(self.cheap_c)
-    
-        eq_(log_generator[0].spending,150)
-        eq_(log_generator[1].spending,50)
+
     
     def mptest_allatonce(self):
         self.expensive_c.budget_strategy = "allatonce"

@@ -54,6 +54,7 @@ class StatsModelQueryManager(CachedQueryManager):
             
         self.stats = []
         self.obj_cache = {}
+        self.all_stats_deltas = [StatsModel()]
         
     def get_stats_for_apps(self, apps, num_days=30):
         days = StatsModel.lastdays(num_days)
@@ -269,6 +270,8 @@ class StatsModelQueryManager(CachedQueryManager):
         
         all_stats_deltas = self._place_stats_under_account(all_stats_deltas, offline=offline)
         
+        self.all_stats_deltas = all_stats_deltas
+    
         # get or insert from db in order to update as transaction
         def _txn(stats, offline):
             return self._update_db(stats, offline)

@@ -189,7 +189,7 @@ class LogTaskHandler(webapp.RequestHandler):
       except:
           if retry_count > 0:
               exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
-              total_stats = stats_dict.values()
+              total_stats = query_manager.all_stats_deltas
               number_of_stats = len(total_stats)
               max_countries = max([len(stat.get_countries()) for stat in total_stats])
               

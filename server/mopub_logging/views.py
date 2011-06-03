@@ -189,21 +189,25 @@ class LogTaskHandler(webapp.RequestHandler):
       except:
           if retry_count > 0:
               exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
+              total_stats = query_manager.all_stats_deltas
+              number_of_stats = len(total_stats)
+              max_countries = max([len(stat.get_countries()) for stat in total_stats])
+              
               mail.send_mail(sender="olp@mopub.com",
                             to="bugs@mopub.com",
                             subject="Logging error",
-                            body="account: %s retries: %s task name: %s queue name: %s\n%s"%(account_name,
+                            body="account: %s retries: %s task name: %s queue name: %s number of stats: %s max countries: %s \n\n%s"%(account_name,
                                                                                              retry_count,
                                                                                              task_name,
                                                                                              queue_name,
+                                                                                             number_of_stats,
+                                                                                             max_countries,
                                                                                              exception_traceback))
               logging.error(exception_traceback)
               raise Exception("need to try transaction again")
       
       # only email if we miss alot (more than .1% or more than 1)      
       if not tail_index_str or (memcache_misses > 1 and float(memcache_misses)/float(tail_index) > 0.001):
-          exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
-          
           message = "Account: %s time: %s tail: %s misses: %s retry: %s\nmemcache_stats_starts:%s\nmemcache_stats:%s"%(account_name,time_bucket,
                                                                                   tail_index_str,memcache_misses,retry_count,
                                                                                   memcache_stats_start,memcache_stats)

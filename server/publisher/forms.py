@@ -84,10 +84,4 @@ class AdUnitForm(mpforms.MPModelForm):
     class Meta:
         model = Site
         fields = ('name','description','app_key','ad_type', 'backfill', 'backfill_threshold_cpm','keywords',
-        'width','height', 'device_format', 'format','adsense_channel_id','refresh_interval','landscape')
- 
- 
-class SiteForm(forms.ModelForm):
-    class Meta:
-        model = Site
-        fields = ('name', 'description', 'ad_type', 'backfill', 'backfill_threshold_cpm', 'keywords','width','height','format','adsense_channel_id')
+        'custom_width','custom_height', 'device_format', 'format','adsense_channel_id','refresh_interval','landscape')

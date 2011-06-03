@@ -274,8 +274,7 @@ class AdAuction(object):
                             # TODO: move format and exclude above players (right now we're doing the same thing twice)
                             # if the adunit is resizable then its format doesn't really matter
                             # all creatives can target it
-                            adunit_format = None if adunit.resizable else adunit.format
-                            CRTV_FILTERS = (format_filter(adunit_format), # remove wrong formats
+                            CRTV_FILTERS = (format_filter(adunit), # remove wrong formats
                                                 ecpm_filter(winning_ecpm, player_ecpm_dict), # remove creatives that aren't tied for first (winning ecpm)
                                                )
                             winners = filter(mega_filter(*CRTV_FILTERS), players)

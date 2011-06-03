@@ -201,13 +201,11 @@ def remaining_ts_budget(campaign):
 def get_spending_for_date_range(campaign, start_date, end_date, today=datetime.date.today()):
     """ Gets the spending for a date range (inclusive). Uses realtime budget information for
         campaigns that are currently in progress. """
-    slicer = BudgetSlicer.get_or_insert_for_campaign(campaign)
-
-    daily_logs = slicer.daily_logs.filter("date >=", start_date).filter("date <=", end_date)
+    daily_logs = _get_daily_logs_for_date_range(campaign, start_date, end_date, today=today)
     
-    logging.warning("dlogs: %s" % daily_logs.get())
-    logging.warning("today: %s" % today)
-    logging.warning("sdate: %s" % campaign.start_date)
+    # logging.warning("dlogs: %s" % daily_logs.get())
+    # logging.warning("today: %s" % today)
+    # logging.warning("sdate: %s" % campaign.start_date)
     # If there are no results, check if today is the start date
     if not daily_logs.get():
         if today == campaign.start_date:
@@ -225,6 +223,19 @@ def get_spending_for_date_range(campaign, start_date, end_date, today=datetime.d
     return total_spending
     
 ################ HELPER FUNCTIONS ###################
+
+
+def _get_daily_logs_for_date_range(campaign, start_date, end_date, today=datetime.date.today()):
+    slicer = BudgetSlicer.get_or_insert_for_campaign(campaign)
+    daily_logs = slicer.daily_logs.filter("date >=", start_date).filter("date <=", end_date)
+    return daily_logs
+    
+def _get_ts_logs_for_date(campaign, date):
+    slicer = BudgetSlicer.get_or_insert_for_campaign(campaign)
+    min_dt = datetime.datetime.combine(date,datetime.time.min)
+    max_dt = datetime.datetime.combine(date,datetime.time.max)
+    ts_logs = slicer.timeslice_logs.filter("end_date >=", min_dt).filter("end_date <=", max_dt)
+    return ts_logs
 
 def _make_campaign_ts_budget_key(campaign):
     """Returns a unique budget key based upon campaign.key """

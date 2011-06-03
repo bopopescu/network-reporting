@@ -188,11 +188,52 @@ class TestHandler(webapp.RequestHandler):
         self.response.out.write("hello world")
         
 class PurchaseHandler(webapp.RequestHandler):
+    def get(self):
+        return self.post()
+    
     def post(self):
+        from google.appengine.api import taskqueue
         trace_logging.info(self.request.get("receipt"))
         trace_logging.info(self.request.get("udid"))
+        mp_logging.log_inapp_purchase(request=self.request,
+                                      event=mp_logging.INAPP_EVENT,
+                                      udid=self.request.get('udid'),
+                                      receipt=self.request.get('receipt'),
+                                      mobile_appid=self.request.get('appid'),)
         self.response.out.write("OK")    
         
+class PurchaseHandlerTxn(webapp.RequestHandler):
+    def post(self):
+        import base64
+        import urllib2
+        from common.utils import simplejson
+        from userstore.query_managers import InAppPurchaseEventManager
+        # verify the receipt with apple
+        
+        url = "https://buy.itunes.apple.com/verifyReceipt"
+        # sandbox
+        # url = "https://sandbox.itunes.apple.com/verifyReceipt"
+
+        udid = self.request.get('udid')
+        receipt_data = self.request.get('receipt')
+        receipt_dict = {"receipt-data":base64.encodestring(str(receipt_data))}
+        data = simplejson.dumps(receipt_dict)
+        req = urllib2.Request(url, data)
+        resp = urllib2.urlopen(req)
+        page = resp.read()
+        json_response = simplejson.loads(page)
+        logging.info('inapp receipt: %s'%json_response)
+        if (json_response['status']==0):
+            receipt_dict = json_response.get('receipt')
+            logging.info('receipt dict: %s'%receipt_dict)
+            InAppPurchaseEventManager().log_inapp_purchase_event(transaction_id=receipt_dict['transaction_id'],
+                                                        udid=self.request.get('udid'),
+                                                        receipt=simplejson.dumps(receipt_dict),
+                                                        time=datetime.datetime.fromtimestamp(float(self.request.get('time'))),
+                                                        mobile_appid=self.request.get('mobile_appid'))
+        else:
+            logging.error("invalid receipt")                                                
+                                                        
 
 def main():
     application = webapp.WSGIApplication([('/m/ad', adhandler.AdHandler), 
@@ -203,6 +244,7 @@ def main():
                                           ('/m/test', TestHandler),
                                           ('/m/clear', memcache_mangler.ClearHandler),
                                           ('/m/purchase', PurchaseHandler),
+                                          ('/m/purchase_txn', PurchaseHandlerTxn),
                                           ('/m/req',AdRequestHandler),], 
                                           debug=DEBUG)
     run_wsgi_app(application)

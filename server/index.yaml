@@ -107,6 +107,11 @@ indexes:
   properties:
   - name: budget_slicer
   - name: end_date
+
+- kind: BudgetSliceLog
+  properties:
+  - name: budget_slicer
+  - name: end_date
     direction: desc
 
 - kind: Campaign

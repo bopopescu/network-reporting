@@ -13,6 +13,12 @@ class ClearHandler(webapp.RequestHandler):
         key = self.request.get("key")
         namespace = self.request.get("namespace") or None
         if key is "flush":
-            self.response.out.write(memcache.flush_all())
+            memcache.flush_all()
+            self.response.out.write("Memcache has been flushed")
         else:
-            self.response.out.write(memcache.delete(key, namespace=namespace))
+            deleted = memcache.delete(key, namespace=namespace)
+            if deleted == 2:
+                output = "Success"
+            elif deleted == 1:
+                output = "Failed, Entry did not exist"
+            self.response.out.write(output)

@@ -120,3 +120,7 @@ queue:
 - name: daily-budget-advance
   rate: 100/s
   bucket_size: 100
+
+- name: inapp-recorder-00
+  rate: 100/s
+  bucket_size: 100

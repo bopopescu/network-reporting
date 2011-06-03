@@ -21,6 +21,7 @@ DEFAULT_CONVERSION_WINDOW = 14 # days
 
 class MobileUser(db.Model):
     udid = db.StringProperty(required=True)
+    num_purchases = db.IntegerProperty(default=0)
 
     def __init__(self, parent=None, key_name=None, **kwargs):
         if not key_name and not kwargs.get('key', None):
@@ -40,6 +41,7 @@ class MobileApp(db.Model):
     latest_click_adunit = db.StringProperty()
     latest_click_creative = db.StringProperty()
     opened = db.BooleanProperty(default=False)
+    num_purchases = db.IntegerProperty(default=0)
 
     def __init__(self, parent=None, key_name=None, **kwargs):
         udid = get_required_param('udid', kwargs)
@@ -100,9 +102,46 @@ class AppOpenEvent(db.Model):
                 parent = MobileApp.get_db_key(udid, mobile_appid)
         super(AppOpenEvent, self).__init__(parent=parent, key_name=key_name, **kwargs)
   
-  
 
-  
-  
-
-
+class InAppPurchaseEvent(db.Model):
+    udid = db.StringProperty(required=True)
+    mobile_appid = db.StringProperty()
+    receipt = db.TextProperty()
+    time = db.DateTimeProperty(required=True,auto_now_add=True)
+    transaction_id = db.StringProperty(required=True)
+    
+    def __init__(self, parent=None, key_name=None, **kwargs):
+        udid = get_required_param('udid', kwargs)
+        mobile_appid = kwargs.get('mobile_appid', None)
+        transaction_id = get_required_param('transaction_id',kwargs)
+        check_required_param('time', kwargs)
+        check_required_param('receipt', kwargs)
+    
+        if not kwargs.get('key', None):
+            if not parent:
+                if mobile_appid:
+                    parent = MobileApp.get_db_key(udid, mobile_appid)
+                else:
+                    kwargs['mobile_appid'] = CLICK_EVENT_NO_APP_ID
+                    parent = MobileUser.get_db_key(udid)
+                if not key_name:
+                    key_name = get_key_name(transaction_id)
+                    
+        super(InAppPurchaseEvent, self).__init__(parent=parent, key_name=key_name, **kwargs)    
+        
+    @classmethod
+    def get_db_key(cls, transaction_id, udid, mobile_appid=None):
+        if mobile_appid:
+            parent = MobileApp.get_db_key(udid, mobile_appid)
+        else:
+            parent = MobileUser.get_db_key(udid)
+        
+        return Key.from_path(cls.kind(), get_key_name(transaction_id),parent=parent)
+        
+    
+    
+    def __repr__(self):
+        return 'InAppPurchaseEvent(udid=%s, mobile_appid=%s, reciept=%s, time=%s)'%(self.udid,
+                                                                                    self.mobile_appid,
+                                                                                    self.receipt,
+                                                                                    self.time)    

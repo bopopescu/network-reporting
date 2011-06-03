@@ -222,7 +222,7 @@ class PurchaseHandlerTxn(webapp.RequestHandler):
         page = resp.read()
         json_response = simplejson.loads(page)
         logging.info('inapp receipt: %s'%json_response)
-        if (json_response['status']!=0):
+        if (json_response['status']==0):
             receipt_dict = json_response.get('receipt')
             logging.info('receipt dict: %s'%receipt_dict)
             InAppPurchaseEventManager().log_inapp_purchase_event(transaction_id=receipt_dict['transaction_id'],

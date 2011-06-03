@@ -123,8 +123,8 @@ class Site(db.Model):
         return 0
     
     def get_height(self):
-        if self.height: 
-            return self.height
+        if self.format == 'custom' and self.custom_height: 
+            return self.custom_height
         dimensions = self.format.split('x')
         if len(dimensions) > 1: 
             return int(dimensions[1])
@@ -132,8 +132,8 @@ class Site(db.Model):
             return 0
 
     def get_width(self):
-        if self.width: 
-            return self.width
+        if self.format == 'custom' and self.custom_width: 
+            return self.custom_width
         dimensions = self.format.split('x')
         if len(dimensions) > 1: 
             return int(dimensions[0])

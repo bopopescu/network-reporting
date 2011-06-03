@@ -201,7 +201,7 @@ class CreateCampaignAJAXHander(RequestHandler):
             campaign = campaign or adgroup.campaign
         campaign_form = campaign_form or CampaignForm(instance=campaign)
         adgroup_form = adgroup_form or AdGroupForm(instance=adgroup)
-        networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["ejam","eJam",False],["greystripe","GreyStripe",False],\
+        networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["chartboost","ChartBoost",False],["ejam","eJam",False],["greystripe","GreyStripe",False],\
             ["iAd","iAd",False],["inmobi","InMobi",False],["jumptap","Jumptap",False],["millennial","Millennial Media",False],["mobfox","MobFox",False],\
             ['custom','Custom Network', False], ['custom_native','Custom Native Network', False],['admob_native', 'AdMob Native', False], ['millennial_native', 'Millennial Media Native', False]]
 
@@ -391,7 +391,7 @@ class CreateAdGroupHandler(RequestHandler):
             adunit.checked = adunit.key() in adgroup.site_keys
 
         # TODO: Clean up this hacked shit 
-        networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["ejam","eJam",False],["jumptap","Jumptap",False],["greystripe","GreyStripe",False],["iAd","iAd",False],["inmobi","InMobi",False],["millennial","Millennial Media",False],["mobfox","MobFox",False]]
+        networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["chartboost","ChartBoost",False],["ejam","eJam",False],["jumptap","Jumptap",False],["greystripe","GreyStripe",False],["iAd","iAd",False],["inmobi","InMobi",False],["millennial","Millennial Media",False],["mobfox","MobFox",False]]
         for n in networks:
             if adgroup.network_type == n[0]:
                 n[2] = True

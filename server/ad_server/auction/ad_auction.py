@@ -40,6 +40,7 @@ from reporting.models import StatsModel
 
 from ad_server.networks.appnexus import AppNexusServerSide
 from ad_server.networks.brightroll import BrightRollServerSide
+from ad_server.networks.chartboost import ChartBoostServerSide
 from ad_server.networks.ejam import EjamServerSide
 from ad_server.networks.greystripe import GreyStripeServerSide
 from ad_server.networks.inmobi import InMobiServerSide
@@ -69,6 +70,7 @@ SERVER_SIDE_DICT = {"millennial":MillennialServerSide,
                     "appnexus":AppNexusServerSide,
                     "inmobi":InMobiServerSide,
                     "brightroll":BrightRollServerSide,
+                    "chartboost":ChartBoostServerSide,
                     "ejam":EjamServerSide,
                     "jumptap":JumptapServerSide,
                     "greystripe":GreyStripeServerSide,

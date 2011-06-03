@@ -90,7 +90,7 @@ def mega_filter(*filters):
 
 def format_filter(adunit):
     adunit_format = None if adunit.resizable else adunit.format
-    log_mesg = "Removed due to format mismatch, expected " + str(format) + ": %s"
+    log_mesg = "Removed due to format mismatch, expected " + str(adunit_format) + ": %s"
     def real_filter(creative):
         if not adunit_format or not creative.format:
             return True 

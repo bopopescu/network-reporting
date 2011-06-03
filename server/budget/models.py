@@ -71,7 +71,11 @@ class BudgetSliceLog(db.Model):
       
       @property
       def spending(self):
-          return self.initial_memcache_budget - self.final_memcache_budget
+          try:
+              return self.initial_memcache_budget - self.final_memcache_budget
+          except TypeError:
+              raise NoSpendingForIncompleteLogError
+         
 
 class BudgetDailyLog(db.Model):
     budget_slicer = db.ReferenceProperty(BudgetSlicer,collection_name="daily_logs")

@@ -123,6 +123,9 @@ def daily_advance(campaign, new_date=datetime.date.today()):
                       )
     daily_log.put()
     
+    # Now that we have a new initial budget, we can 
+    
+    
     # We backup immediately in order to set a new timeslice snapshot
     _backup_budgets(campaign)
     

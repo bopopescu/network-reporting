@@ -765,9 +765,10 @@ class TestBudgetUnitTests(unittest.TestCase):
         # We have spent 500 out of 2000 total
         eq_(budget_service.remaining_daily_budget(self.cheap_c), 1400)   
 
-    def mptest_fudge_budget(self):
-        # We have a campaign that was set to begin several days ago 
-        # but is only beginning now. 
+    def mptest_timeslices_preplanned(self):
+        """ If a campaign is preplanned, it should not build up a timeslice
+            budget surplus. Makes sure that preplanned campaigns still have a 
+            smooth delivery. """
 
         # The campaign has a $1000 daily budget, and goes for 10 days inclusive -> $10,000
         self.cheap_c.budget_strategy = "evenly"
@@ -775,24 +776,44 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.cheap_c.end_date = datetime.date(1987,4,13)
         self.cheap_c.put()
 
-        # It was set up but now the date is the 10th. No daily_advances have taken place
+        # Start on 1987/4/3
+        # Advance the budget 1 day (and 10 timeslices)
+        budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,4))
+        for i in xrange(budgetmodels.DEFAULT_TIMESLICES):
+            budget_service.timeslice_advance(self.cheap_c)
+
+        # Advance the budget to the second day of the campaign
+        budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,5))
+
+        # The first two days' budget should be spread across this day. each timeslice is worth $200
+
+        eq_(budget_service._apply_if_able(self.cheap_c, 500), False)
+        budget_service.timeslice_advance(self.cheap_c)
+        budget_service.timeslice_advance(self.cheap_c)
         
-     
-        
-        budget_service._fudge_spending_for_date(self.cheap_c,
-                                                datetime.date(1987,4,5),
-                                                700.0)
-        
-        total_spending = budget_service.get_spending_for_date_range(self.cheap_c,
-                                                   datetime.date(1987,4,2),
-                                                   datetime.date(1987,4,13))
-        eq_(total_spending, 700)
-        
-        eq_(budget_service._apply_if_able(self.cheap_c, 100), True)   
-         
-        total_spending = budget_service.get_spending_for_date_range(self.cheap_c,
-                                                   datetime.date(1987,4,2),
-                                                   datetime.date(1987,4,13))
-        # eq_(total_spending, 800)
+        # We have $600
         
         
+        # We have spent 500 out of 1000 total
+        eq_(budget_service.remaining_daily_budget(self.cheap_c), 500)
+
+
+    def mptest_timeslices_underdelivering(self):
+        """ We have a campaign that does not deliver for the first half of the
+            campaign. The second half should therefore deliver at twice the 
+            regular speed. """
+
+        # The campaign has a $1000 daily budget, and goes for 10 days inclusive -> $10,000
+        self.cheap_c.budget_strategy = "evenly"
+        self.cheap_c.start_date = datetime.date(1987,4,4)
+        self.cheap_c.end_date = datetime.date(1987,4,13)
+        self.cheap_c.put()
+
+        # Advance the budget 1 day (and 10 timeslices)
+        budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,4))
+        for i in xrange(budgetmodels.DEFAULT_TIMESLICES):
+            budget_service.timeslice_advance(self.cheap_c)
+
+        eq_(budget_service._apply_if_able(self.cheap_c, 500), True)
+        # We have spent 500 out of 1000 total
+        eq_(budget_service.remaining_daily_budget(self.cheap_c), 500)

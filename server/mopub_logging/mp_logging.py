@@ -32,6 +32,8 @@ NUM_REQ_QUEUES = 10
 INAPP_QUEUE_NAME = 'inapp-recorder-%02d'
 NUM_INAPP_QUEUS = 1
 
+MAX_TASK_ADDS = 100
+
 def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,creative_id=None,udid=None,user_agent=None,testing=False):
     # if this is the second request because of a 
     # native failure we just bail in order to 
@@ -119,12 +121,17 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
     # send to appropriately named task_queue
     task_name = TASK_NAME%dict(account_name=account_name.replace('_','1X--X1'), # must escape '_' regex: [a-zA-Z0-9-]{1,500}$   
                                time=time_bucket)
-    
+
+    # because we have limited task queue API calls we only try adding
+    # to the queue up to MAX_TASK_ADDS time, most are dupes anyway                           
+    if log_index > MAX_TASK_ADDS:
+        return
+        
     try:
         account_bucket = hash(account_name)%NUM_TASK_QUEUES
         task_queue_name = TASK_QUEUE_NAME_FORMAT%account_bucket
         logging.info('task: %s\n queue: %s'%(task_name,task_queue_name))
-        
+    
         t = taskqueue.Task(name=task_name,params={'account_name':account_name,'time':time_bucket},countdown=TIME_BUCKET*1.10,method='GET')
         if not testing:
             t.add(task_queue_name)

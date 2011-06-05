@@ -206,6 +206,7 @@ class LogTaskHandler(webapp.RequestHandler):
       except:
           if retry_count > 0:
               exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
+              base_number_of_stats = len(stats_dict.values())
               total_stats = query_manager.all_stats_deltas
               number_of_stats = len(total_stats)
               max_countries = max([len(stat.get_countries()) for stat in total_stats])
@@ -213,10 +214,11 @@ class LogTaskHandler(webapp.RequestHandler):
               mail.send_mail(sender="olp@mopub.com",
                             to="bugs@mopub.com",
                             subject="Logging error",
-                            body="account: %s retries: %s task name: %s queue name: %s number of stats: %s max countries: %s \n\n%s"%(account_name,
+                            body="account: %s retries: %s task name: %s queue name: %s base stats: %s total number of stats: %s max countries: %s \n\n%s"%(account_name,
                                                                                              retry_count,
                                                                                              task_name,
                                                                                              queue_name,
+                                                                                             base_number_of_stats,
                                                                                              number_of_stats,
                                                                                              max_countries,
                                                                                              exception_traceback))

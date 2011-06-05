@@ -48,6 +48,18 @@ queue:
 - name: bulk-log-processor-09
   rate: 100/s
   bucket_size: 100
+  
+- name: bulk-log-processor-overflow-00
+  rate: 100/s
+  bucket_size: 100 
+  
+- name: bulk-log-processor-overflow-01
+  rate: 100/s
+  bucket_size: 100 
+  
+- name: bulk-log-processor-overflow-02
+  rate: 100/s
+  bucket_size: 100 
 
 - name: network-request-00
   rate: 100/s

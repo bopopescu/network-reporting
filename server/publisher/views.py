@@ -95,7 +95,10 @@ class AppIndexHandler(RequestHandler):
     totals_list = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(days=days)
     
     today = totals_list[-1]
-    yesterday = totals_list[-2]
+    try:
+        yesterday = totals_list[-2]
+    except IndexError:
+        yesterday = StatsModel()    
     totals = reduce(lambda x, y: x+y, totals_list, StatsModel())
     # this is the max active users over the date range
     # NOT total unique users
@@ -360,7 +363,10 @@ class ShowAppHandler(RequestHandler):
     adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(app=app)
     
     today = app_stats[-1]
-    yesterday = app_stats[-2]
+    try:
+        yesterday = app_stats[-2]
+    except IndexError:
+        yesterday = StatsModel()    
     app.stats = reduce(lambda x, y: x+y, app_stats, StatsModel())
     # this is the max active users over the date range
     # NOT total unique users
@@ -565,12 +571,18 @@ class AdUnitShowHandler(RequestHandler):
     backfill_promo_campaigns = sorted(backfill_promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
     
     
+    today = adunit.all_stats[-1]
+    try:
+        yesterday = adunit.all_stats[-2]
+    except:
+        yesterday = StatsModel()    
+    
     # write response
     return render_to_response(self.request,'publisher/adunit.html', 
         {'site': adunit,
          'adunit': adunit,
-         'today': adunit.all_stats[-1],
-         'yesterday': adunit.all_stats[-2],
+         'today': today,
+         'yesterday': yesterday,
          'start_date': days[0],
          'end_date': days[-1],
          'date_range': self.date_range,

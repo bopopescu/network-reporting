@@ -109,7 +109,10 @@ class AdGroupIndexHandler(RequestHandler):
             graph_adgroups[3] = AdGroup(name='Others')
             graph_adgroups[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[c.all_stats for c in adgroups[3:]])]
             
-        
+        try:
+            yesterday = reduce(lambda x, y: x+y, [c.all_stats[-2] for c in graph_adgroups], StatsModel())
+        except IndexError: 
+            yesterday = StatsModel()
 
         return render_to_response(self.request, 
                                  'advertiser/adgroups.html', 
@@ -122,7 +125,7 @@ class AdGroupIndexHandler(RequestHandler):
                                    'apps' : apps,
                                    'totals': reduce(lambda x, y: x+y.summed_stats, adgroups, StatsModel()),
                                    'today': reduce(lambda x, y: x+y, [c.all_stats[-1] for c in graph_adgroups], StatsModel()),
-                                   'yesterday': reduce(lambda x, y: x+y, [c.all_stats[-2] for c in graph_adgroups], StatsModel()),
+                                   'yesterday': yesterday,
                                    'guarantee_levels': guarantee_levels, 
                                    'promo': promo_campaigns,
                                    'network': network_campaigns,
@@ -568,6 +571,11 @@ class ShowAdGroupHandler(RequestHandler):
     
         # In order to make the edit page
         campaign_create_form_fragment = CreateCampaignAJAXHander(self.request).get(adgroup=adgroup)
+        
+        try:
+            yesterday = reduce(lambda x, y: x+y, [a.all_stats[-2] for a in graph_adunits], StatsModel())
+        except:
+            yesterday = StatsModel()    
     
         return render_to_response(self.request, 'advertiser/adgroup.html', 
                                     {'campaign': adgroup.campaign,
@@ -576,7 +584,7 @@ class ShowAdGroupHandler(RequestHandler):
                                     'creatives': creatives,
                                     'totals': reduce(lambda x, y: x+y.stats, adunits, StatsModel()),
                                     'today': reduce(lambda x, y: x+y, [a.all_stats[-1] for a in graph_adunits], StatsModel()),
-                                    'yesterday': reduce(lambda x, y: x+y, [a.all_stats[-2] for a in graph_adunits], StatsModel()),
+                                    'yesterday': yesterday,
                                     'graph_adunits': graph_adunits,
                                     'start_date': days[0],
                                     'end_date': days[-1],

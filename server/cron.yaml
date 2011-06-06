@@ -2,10 +2,12 @@ cron:
 - description: Periodic SFDC update... this handles auto responses so keep it timely
   url: /admin/sfdc/
   schedule: every 10 minutes
+  timezone: America/Los_Angeles
 
 - description: Advance the budget timeslices
   url: /budget/advance/
   schedule: every 1 minutes synchronized
+  timezone: America/Los_Angeles
   
 - description: Run all reports scheduled for today
   url: /reports/daily_sched_runner/
@@ -20,7 +22,9 @@ cron:
 - description: Periodic dashboard refresh
   url: /admin/prep/
   schedule: every 30 minutes
+  timezone: America/Los_Angeles
   
 - description: Periodic dashboard refresh (offline)
   url: /admin/prep/?offline=1
   schedule: every 30 minutes  
+  timezone: America/Los_Angeles

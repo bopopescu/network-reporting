@@ -1,4 +1,4 @@
-import logging, os, re, datetime, hashlib
+import logging, os, re, datetime, hashlib, string
 
 from urllib import urlencode
 from copy import deepcopy
@@ -576,7 +576,17 @@ class ShowAdGroupHandler(RequestHandler):
             yesterday = reduce(lambda x, y: x+y, [a.all_stats[-2] for a in graph_adunits], StatsModel())
         except:
             yesterday = StatsModel()    
-    
+        
+        message = []
+        if adgroup.network_type:
+            if not getattr(self.account.network_config,adgroup.network_type+'_pub_id'):
+                for app in apps.values():
+                    if app.network_config and not getattr(app.network_config,adgroup.network_type+'_pub_id'):
+                        message.append("The application "+app.name+" needs to have a <strong>"+adgroup.network_type.title()+" Network ID</strong> in order to serve. Specify a "+adgroup.network_type.title()+" Network ID on <a href=%s>your account</a> page."%reverse("account_index"))
+        if message == []:
+            message = None
+        else:
+            message = string.join(message,"<br/>")
         return render_to_response(self.request, 'advertiser/adgroup.html', 
                                     {'campaign': adgroup.campaign,
                                     'apps': apps.values(),
@@ -589,7 +599,8 @@ class ShowAdGroupHandler(RequestHandler):
                                     'start_date': days[0],
                                     'end_date': days[-1],
                                     'creative_fragment':creative_fragment,
-                                    'campaign_create_form_fragment':campaign_create_form_fragment})
+                                    'campaign_create_form_fragment':campaign_create_form_fragment,
+                                    'message': message})
     
 @login_required   
 def campaign_adgroup_show(request,*args,**kwargs):    

@@ -17,3 +17,10 @@ def get_user_agent(request):
     
 def get_ip(request):
     return request.get('ip') or request.remote_addr
+    
+def chunks(l, n):
+    """ Yield successive n-sized chunks from l.
+    """
+    for i in xrange(0, len(l), n):
+        yield l[i:i+n]
+    

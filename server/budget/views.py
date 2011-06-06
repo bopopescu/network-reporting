@@ -123,7 +123,7 @@ def budget_view(request, adgroup_key):
                                                                one_month_ago,
                                                                today)
                                                                 
-    ts_logs = budget_service._get_ts_logs_for_date(camp, today)
+    ts_logs = budget_service._get_ts_logs_for_date(camp, today).fetch(200)
     
                                                 
     

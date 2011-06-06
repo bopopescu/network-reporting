@@ -10,10 +10,12 @@ cron:
 - description: Run all reports scheduled for today
   url: /reports/daily_sched_runner/
   schedule: every day 0:01
+  timezone: America/Los_Angeles
   
 - description: Advance the daily budget
   url: /budget/daily_advance/
   schedule: every day 0:01
+  timezone: America/Los_Angeles
 
 - description: Periodic dashboard refresh
   url: /admin/prep/

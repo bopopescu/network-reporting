@@ -74,13 +74,9 @@ def daily_advance(campaign, new_date=datetime.date.today()):
     today = new_date
     if not campaign.budget:
         return
-        
-    key = _make_campaign_daily_budget_key(campaign)
     
     budget_slicer = BudgetSlicer.get_or_insert_for_campaign(campaign)
     rem_daily_budget = remaining_daily_budget(campaign)
-    
-    # Since we execute near midnight, 2 hours from now must be the accurate day
     
     yesterday = today - datetime.timedelta(days=1)
     
@@ -91,7 +87,7 @@ def daily_advance(campaign, new_date=datetime.date.today()):
         yesterday_log.put()
     except AttributeError:
         # If the log was not initialized, then this is a new campaign and
-        # we build a new one. We assume there was no rollover budget
+        # we build a new one.
         yesterday_log = BudgetDailyLog(budget_slicer=budget_slicer,
                           initial_daily_budget=campaign.budget,
                           remaining_daily_budget = rem_daily_budget,
@@ -99,23 +95,10 @@ def daily_advance(campaign, new_date=datetime.date.today()):
                           )
         yesterday_log.put()
         
-    # Finite campaigns should be 0.0 when not active and can roll over
-    if campaign.finite:
-        # If the campaign has not begun or is expired, set it to 0.0
-        if new_date > campaign.end_date or new_date < campaign.start_date:
-            new_initial_budget = 0.0
-        # The first day should have a normal daily budget
-        elif new_date == campaign.start_date:
-            new_initial_budget = campaign.budget
-        # During the campaign we allow unspent budget to roll over
-        else:
-            new_initial_budget = rem_daily_budget + campaign.budget
-    
-    # Non-finite campaigns do not roll over
-    else:
-        new_initial_budget = campaign.budget
-    
-    memcache.set(key, _to_memcache_int(new_initial_budget), namespace="budget")
+    # For now, all campaigns have only a daily budget. There is no rolling over
+    new_initial_budget = campaign.budget    
+    daily_budget_key = _make_campaign_daily_budget_key(campaign)
+    memcache.set(daily_budget_key, _to_memcache_int(new_initial_budget), namespace="budget")
     
     daily_log = BudgetDailyLog(budget_slicer=budget_slicer,
                       initial_daily_budget=new_initial_budget,
@@ -123,7 +106,15 @@ def daily_advance(campaign, new_date=datetime.date.today()):
                       )
     daily_log.put()
     
-    # We backup immediately in order to set a new timeslice snapshot
+    # We reset the timeslice snapshot to 0.0
+    
+    budget_slicer.timeslice_snapshot = 0.0
+    ts_budget_key = _make_campaign_ts_budget_key(campaign)
+    memcache.set(ts_budget_key, _to_memcache_int(0.0), namespace="budget")
+    
+    budget_slicer.put()
+    
+    # We backup immediately in order to set a new daily snapshot
     _backup_budgets(campaign)
     
   

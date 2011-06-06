@@ -1,4 +1,4 @@
-import logging, os, re, datetime, hashlib, string
+import logging, os, re, datetime, hashlib
 
 from urllib import urlencode
 from copy import deepcopy
@@ -586,7 +586,7 @@ class ShowAdGroupHandler(RequestHandler):
         if message == []:
             message = None
         else:
-            message = string.join(message,"<br/>")
+            message = "<br/>".join(message)
         return render_to_response(self.request, 'advertiser/adgroup.html', 
                                     {'campaign': adgroup.campaign,
                                     'apps': apps.values(),

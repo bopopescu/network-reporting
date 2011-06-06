@@ -121,7 +121,7 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
                         inst=instance_id)
     
     # bail early if the memcache increment failed
-    if log_index is None: 
+    if log_index is None or log_index == '': 
         return
     
     # put the log data into appropriate place

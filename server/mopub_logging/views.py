@@ -87,12 +87,21 @@ class LogTaskHandler(webapp.RequestHandler):
       memcache_stats = None
       # grab parameters from the message of the task
       account_name = self.request.get("account_name")
+      account_shard = self.request.get("account_shard")
       time_bucket = int(self.request.get("time"))
+      
 
       head_index = 1 # starts at one for a particular time_bucket
 
       # get the last index for a given time bucket
-      tail_key = mp_logging.INDEX_KEY_FORMAT%dict(account_name=account_name,time=time_bucket)
+      
+      # for a brief moment there will be tasks that were put in without an associated shard
+      if account_shard is None:
+          tail_key = mp_logging.INDEX_KEY_FORMAT_OLD%dict(account_name=account_name,time=time_bucket)
+      else:
+          tail_key = mp_logging.INDEX_KEY_FORMAT%dict(account_name=account_name,
+                                                      account_shard=int(account_shard),
+                                                      time=time_bucket)
       tail_index_str = memcache.get(tail_key)
       if not tail_index_str:
           memcache_stats = memcache_stats or memcache.get_stats()
@@ -109,8 +118,14 @@ class LogTaskHandler(webapp.RequestHandler):
       while start <= tail_index: 
           # get another MAX_KEYS or go to the end
           stop = start + MAX_KEYS - 1 if (start+MAX_KEYS-1) < tail_index else tail_index
-          keys = [mp_logging.LOG_KEY_FORMAT%dict(account_name=account_name,time=time_bucket,log_index=i) 
-                   for i in range(start,stop+1)]
+          
+          # if this is an old task we don't use the shard to make the keys
+          if account_shard is None:
+              keys = [mp_logging.LOG_KEY_FORMAT_OLD%dict(account_name=account_name,time=time_bucket,log_index=i) 
+                       for i in range(start,stop+1)]
+          else:
+              keys = [mp_logging.LOG_KEY_FORMAT%dict(account_name=account_name,account_shard=int(account_shard),time=time_bucket,log_index=i) 
+                       for i in range(start,stop+1)]
 
           logging.info("we have %d keys (start:%s stop:%s)"%(len(keys),start,stop))
           

@@ -89,6 +89,8 @@ class Account(db.Model):
     adsense_company_name = db.StringProperty()
     adsense_test_mode = db.BooleanProperty(default=False)
     
+    number_shards = db.IntegerProperty(default=1)
+    
     network_config = db.ReferenceProperty(NetworkConfig,
                             collection_name="accounts")
     

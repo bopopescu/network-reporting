@@ -22,6 +22,8 @@ def setup_models():
     
     # create 1 account, app
     account = Account.get_by_id(1)
+    account.number_shards = 4
+    account.put()
         
     app = App(key_name='app',name='app',account=account)
     app.put()

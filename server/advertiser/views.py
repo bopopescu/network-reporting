@@ -580,8 +580,9 @@ class ShowAdGroupHandler(RequestHandler):
         message = []
         if adgroup.network_type:
             # gets rid of _native_ in admob_native_pub_id to become admob_pub_id
-            if '_native_' in adgroup.network_type:
-                adgroup_network_type = adgroup.network_type.replace('_native_','_')
+            logging.info('\n\n\n\nasdfasdf: '+adgroup.network_type)
+            if '_native' in adgroup.network_type:
+                adgroup_network_type = adgroup.network_type.replace('_native','')
             else:
                 adgroup_network_type = adgroup.network_type    
             

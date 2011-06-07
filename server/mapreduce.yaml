@@ -1,0 +1,9 @@
+mapreduce:
+- name: Report Generator
+  mapper:
+    input_reader: mapreduce.input_readers.DatastoreInputReader
+    handler: reports.mapreduce.process
+    params:
+    - name: entity_kind
+      default: reporting.models.StatsModel
+

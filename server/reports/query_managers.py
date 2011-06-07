@@ -14,6 +14,7 @@ from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
 
 from reports.models import Report, ScheduledReport
+from reports.rep_mapreduce import ReportMRPipeline
 
 NUM_REP_QS = 1
 REP_Q_NAME = "gen-rep-%02d"
@@ -168,13 +169,15 @@ class ReportQueryManager(CachedQueryManager):
             gen_report_worker(new_report.key(), account.key(), end=now)
             return report
         else:
-            url = reverse('generate_reports')
-            q_num = random.randint(0, NUM_REP_QS - 1)
-            taskqueue.add(url=url,
-                          queue_name=REP_Q_NAME % q_num,
-                          params={"report": new_report.key(),
-                                  "account": account.key(),
-                                  })
+            #url = reverse('generate_reports')
+            #q_num = random.randint(0, NUM_REP_QS - 1)
+            #taskqueue.add(url=url,
+            #              queue_name=REP_Q_NAME % q_num,
+            #              params={"report": new_report.key(),
+            #                      "account": account.key(),
+            #                      })
+            pipe = ReportMRPipeline(new_report)
+            pipe.start()
         return new_report
 
     def add_report(self, d1, d2, d3, end, days, name=None, saved=False,interval=None, sched_interval=None, testing=False):
@@ -243,14 +246,17 @@ class ReportQueryManager(CachedQueryManager):
         if testing:
             gen_report_worker(report.key(), self.account, end=end)
         else:
-            url = reverse('generate_reports')
-            q_num = random.randint(0, NUM_REP_QS - 1)
-            taskqueue.add(url=url,
-                          queue_name=REP_Q_NAME % q_num,
-                          params={"report": report.key(),
-                                  "account": str(self.account),
-                                  },
-                          )
+        #    url = reverse('generate_reports')
+        #    q_num = random.randint(0, NUM_REP_QS - 1)
+        #    taskqueue.add(url=url,
+        #                  queue_name=REP_Q_NAME % q_num,
+        #                  params={"report": report.key(),
+        #                          "account": str(self.account),
+        #                          },
+        #                  target='report-generator',
+        #                  )
+            pipe = ReportMRPipeline(report)
+            pipe.start()
         return sched 
 
     def put_report(self, report):

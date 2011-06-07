@@ -11,7 +11,7 @@ import reporting.models as reporting_models
 
 from common.utils.query_managers import CachedQueryManager
 from common.utils import date_magic
-from common.utils.helpers import (dedupe_stats, chunks)
+from common.utils.helpers import (dedupe_and_add, chunks)
 from reporting.models import SiteStats, StatsModel
 from advertiser.models import Creative
 from publisher.models import Site as AdUnit
@@ -225,16 +225,30 @@ class StatsModelQueryManager(CachedQueryManager):
         if advertiser:
             stats = stats.filter('advertiser =', advertiser)
 
-        all_day_stats = []
+        all_day_stats = None
+        dedupe_list = []
         for c_days in chunks(days, 10):
             copy_stats = copy.deepcopy(stats)
             if date_fmt == 'date':
-                all_day_stats.append(copy_stats.filter('date in', c_days).fetch(1000))
+                if all_day_stats:
+                    temp = dedupe_and_add(copy_stats.filter('date in', c_days).fetch(100), dedupe_list)
+                    if temp:
+                        all_day_stats += temp
+                    temp = None
+                else:
+                    all_day_stats = dedupe_and_add(copy_stats.filter('date in', c_days).fetch(100), dedupe_list)
             elif date_fmt == 'date_hour':
-                all_day_stats.append(copy_stats.filter('date_hour in', c_days).fetch(1000))
+                if all_day_stats:
+                    temp = dedupe_and_add(copy_stats.filter('date_hour in', c_days).fetch(100), dedupe_list)
+                    if temp:
+                        all_day_stats += temp
+                    temp = None
+                else:
+                    all_day_stats = dedupe_and_add(copy_stats.filter('date_hour in', c_days).fetch(100), dedupe_list)
+            print "All day stats: %s" % all_day_stats
 
-        stats = reduce(lambda x,y: x + y, all_day_stats)
-        return dedupe_stats(stats)
+        print "returning %s" % all_day_stats
+        return [all_day_stats]
 
          
 

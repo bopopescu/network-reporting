@@ -54,7 +54,7 @@ else:
     CRTV_CT = 2 #per campaign
     STATS_FOR_DAYS = 5 
 
-IOS = 'iOS'
+IOS = 'iPhone_OS'
 DRD = 'Android'
 HTC = 'HTC'
 EVO = 'Evo'
@@ -448,7 +448,6 @@ def os_ver_mptest():
     report_runner('os_ver')
             
 def simple_mptest():
-    return
     end = DATE + one_day
     start = DATE
     days = (end - start).days
@@ -461,8 +460,8 @@ def simple_mptest():
 #    pprint.pprint(d2)
     print "\n\n"
     d3 = make_get_data('campaign', end, start, sched_past, d2='os')
-#    pprint.pprint(d3)
-    assert True
+    pprint.pprint(d3)
+    assert False
     return
     rep2 = Report(d1='campaign', d2='app', d3='day', start=DATE, end=DATE+datetime.timedelta(days=1), account=tester.account)
     rep3 = Report(d1='month', d2='week', d3='campaign', start=DATE, end=DATE+datetime.timedelta(days=1), account=tester.account)

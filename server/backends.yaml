@@ -3,3 +3,6 @@ backends:
   # options: dynamic
   options: public
 
+- name: report-generator 
+  # options: dynamic
+  options: public

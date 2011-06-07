@@ -55,6 +55,21 @@ ALL_STATS =   ( SIT_STAT,
                 CPC_STAT,
                 )
 
+APP = 'app'
+AU = 'adunit'
+CAMP = 'campaign'
+CRTV = 'creative'
+P = 'priority'
+MO = 'month'
+WEEK = 'week'
+DAY = 'day'
+HOUR = 'hour'
+CO = 'country'
+MAR = 'marketing'
+BRND = 'brand'
+OS = 'os'
+OS_VER = 'os_ver'
+KEY = 'kw'
 #I don't have special characters because this is going into a regex and I'm lazy
 MARKET_SEARCH_KEY = "klfaa3dadfkfl28903uagnOMGSOSECRETkd938lvkjval8f285had9a834"
 MARKET_URL = "https://market.android.com/search?q=%s&c=apps"

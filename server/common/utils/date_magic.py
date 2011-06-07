@@ -105,14 +105,17 @@ def last_seven(d):
     delta = timedelta(days=7)
     return (d-delta, d)
 
-def gen_days(start, end):
+def gen_days(start, end, hours=False):
     dt = timedelta(days=1)
     temp = start
     days = [temp]
     while temp != end:
         temp = temp + dt
         days.append(temp)
-    return days
+    if hours:
+        return get_hours(days)
+    else:
+        return days
 
 def get_hours(days, hpd = 24):
     '''Turn a list of days into a list of lists where

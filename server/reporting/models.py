@@ -1,5 +1,6 @@
 from google.appengine.ext import db
 from publisher.models import Site
+from advertiser.models import Creative
 from account.models import Account
 
 import datetime
@@ -346,6 +347,16 @@ offline=%s, %s,%s,%s,%s)" % (self.date or self.date_hour,
         else:
             return 0
 
+    @property
+    def is_rollup(self):
+        #Make sure all values are set, any values not set imply a rollup on that value
+        if self.publisher and self.advertiser and self.date_hour and self.country and self.brand_name and self.marketin_name and self.device_os and self.device_os_version:
+            return False
+        else:
+            #If publisher isn't an adunit or advertiser isn't a creative
+            if self.publisher.kind() != Site.kind() or self.advertiser.kinds() != Creative.kind():
+                return False
+            return True
 # 
 # Tracks statistics for a site for a particular day - clicks and impressions are aggregated
 # into this object

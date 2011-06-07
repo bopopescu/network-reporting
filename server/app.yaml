@@ -12,6 +12,9 @@ builtins:
 
 
 handlers:
+- url: /mapreduce(/.*)?
+  script: mapreduce/main.py
+  login: admin
   
 - url: /robots.txt
   static_files: public/robots.txt

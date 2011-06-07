@@ -82,14 +82,24 @@ def been_seen(stat, seen):
     else:
         return False
 
-def dedupe_stats(stats):
-    seen = []
+def dedupe_stats(stats, seen):
     final = []
     for stat in stats:
         if not been_seen(stat, seen):
             seen += [build_key(stat)]
             final.append(stat)
     return final
+
+def dedupe_and_add(stats, list):
+    real_stats = dedupe_stats(stats, list)
+    if real_stats:
+        return reduce(lambda x,y: x+y, real_stats)
+    else:
+        return reporting_models.StatsModel() 
+
+    
+
+
 
 def chunks(list, chunk_size):
     '''Generator function that creates chunk_size lists from list

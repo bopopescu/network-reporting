@@ -30,7 +30,10 @@ class WurflQueryManager():
             if len(brand) == 1:
                 brand = brand[0]
             else:
-                brand = 'Googly Moogly'
+                if len(brand) == 0:
+                    brand = ''
+                else:
+                    brand = reduce(lambda x,y: x + ' ' + y, brand)
         brand = brand.replace('_', ' ')
         market = market.replace("_", ' ')
         return brand + ' ' + market
@@ -41,7 +44,10 @@ class WurflQueryManager():
             if len(os) == 1:
                 os = os[0]
             else:
-                os = 'GLaDOS'
+                if len(os) == 0:
+                    os = ''
+                else:
+                    os = reduce(lambda x,y: x + ' ' + y, os)
         os = os.replace('_', ' ')
         osver = osver.replace("_", ' ')
         return os + ' ' + osver 
@@ -64,7 +70,7 @@ class WurflQueryManager():
             os_mars = self.OSVER_MAR[os_ver]
         #brand, os, and os_ver are all None, return all marketing names (fuuucckkkk)
         if brand is None and os is None and os_ver is None:
-            return reduce(lambda x, y: x+y, self.BRAND_MAR.values())
+            return self.OS_MAR['Android'] + self.OS_MAR['iPhone_OS']
         #return only those names in both the os set and the brand set
         if os_mars and brand_mars:
             ret = []
@@ -86,9 +92,9 @@ class WurflQueryManager():
             return self.OSVER_BRAND[os_ver]
         elif os:
             return self.OS_BRAND[os]
-        #both are none, return all
+        #both are none, return all, using keys ensures uniqueness
         else:
-            return reduce(lambda x,y: x+y, self.OS_BRAND.values())
+            return self.OS_BRAND['Android'] + self.OS_BRAND['iPhone_OS']
 
     def reports_get_os(self, brand, market):
         if market:
@@ -96,7 +102,7 @@ class WurflQueryManager():
         elif brand:
             return self.BRAND_OS[brand]
         else:
-            return reduce(lambda x,y: x+y, self.BRAND_OS.values())
+            return ['Android', 'iPhone_OS']
 
     def reports_get_osver(self, brand, market, os):
         os_osvers = None
@@ -109,7 +115,7 @@ class WurflQueryManager():
             brand_osvers = self.MAR_OSVER[market]
         #brand, market, and os are all None, return all os_vers (fuuucckkkk)
         if brand is None and market is None and os is None:
-            return reduce(lambda x, y: x+y, self.BRAND_OSVER.values())
+            return self.OS_OSVER['Android'] + self.OS_OSVER['iPhone_OS']
         #return only those names in both the os set and the brand set
         if os_osvers and brand_osvers:
             ret = []

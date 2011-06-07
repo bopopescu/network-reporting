@@ -295,6 +295,7 @@ class Creative(polymodel.PolyModel):
     def _set_adgroup(self,value):
             self.ad_group = value
             
+    #whoever did this you rule
     adgroup = property(_get_adgroup,_set_adgroup)
         
     def get_owner(self):

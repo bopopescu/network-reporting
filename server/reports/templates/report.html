@@ -8,6 +8,7 @@
     </thead>
     <tbody>
         {% for key1, value1 in all_stats.items %}
+        {% if value1.stats.request_count != 0 or value1.stats.impression_count != 0 or value1.stats.click_count != 0 or value1.stats.conversion_count != 0 %}
         <tr id={{key1}} class='level0'>
             <td class="name">{{value1.name}}</td>
             <td class="request dataTable-data numeric">{{value1.stats.request_count}}</td>
@@ -36,6 +37,7 @@
         {% endfor %}
         {% endif %}
         {% endfor %}
+        {% endif %}
         {% endif %}
         {% endfor %}
     </tbody>

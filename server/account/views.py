@@ -23,7 +23,7 @@ class AccountHandler(RequestHandler):
         account_form = account_form or AccountForm(instance=self.account)
         apps_for_account = AppQueryManager.get_apps(account=self.account)
         
-        networks = ['admob_status','adsense_status','brightroll_status','ejam_status','greystripe_status','inmobi_status','jumptap_status','millennial_status','mobfox_status']
+        networks = ['admob_status','adsense_status','brightroll_status','chartboost_status','ejam_status','greystripe_status','inmobi_status','jumptap_status','millennial_status','mobfox_status']
         network_config_status = {}
         def _get_net_status(account,network):
             status = 0

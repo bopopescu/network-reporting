@@ -9,13 +9,15 @@ from budget import budget_service
 from advertiser.models import ( Campaign,
                                 AdGroup,
                                 )
+import logging
+import datetime
+
 # For taskqueue                                
 from google.appengine.api import taskqueue
 from google.appengine.ext import db
 from google.appengine.ext import webapp
 from advertiser.models import Campaign
-import logging
-
+from budget.models import NoSpendingForIncompleteLogError, BudgetSlicer
 
 # The constraints: 
 # The maximum bucket size is 100
@@ -96,18 +98,6 @@ def advance_worker(request, daily=False):
     return HttpResponse('Worker Succeeded')
 
 
-def log_data(request, campaign_key):
-    
-    camp = Campaign.get(campaign_key)
-    
-    recent_logs = budget_service.log_generator(camp).order('-end_date').fetch(60)
-    log_array = [log.spending for log in recent_logs]
-    
-    # put in order of least to most recent
-    log_array.reverse()
-    
-    return HttpResponse(simplejson.dumps(log_array))
-    
 def chart(request, campaign_key):
     camp = Campaign.get(campaign_key)
     
@@ -115,3 +105,83 @@ def chart(request, campaign_key):
                 'campaign': camp}
     
     return render_to_response(request,'budget/chart.html', context)
+    
+    
+
+def budget_view(request, adgroup_key):
+    adgroup = AdGroup.get(adgroup_key)
+
+    camp = adgroup.campaign
+    
+    remaining_daily_budget = budget_service.remaining_daily_budget(camp)
+    remaining_ts_budget = budget_service.remaining_ts_budget(camp)
+        
+    today = datetime.date.today()
+    one_month_ago = today - datetime.timedelta(days=30)
+    
+    daily_logs = budget_service._get_daily_logs_for_date_range(camp,
+                                                               one_month_ago,
+                                                               today)
+                                                                
+    ts_logs = budget_service._get_ts_logs_for_date(camp, today).fetch(200)
+    
+                                                
+    
+    def format_spending(log):
+        try:
+            log.delivery = log.spending
+        except NoSpendingForIncompleteLogError:
+            log.delivery = "Incomplete"
+        return log
+        
+    def format_spending_ts(log):
+        try:
+            log.delivery = log.spending
+        except NoSpendingForIncompleteLogError:
+            log.delivery = "Incomplete"
+        log.time = log.end_date.time()
+        return log
+        
+    ts_logs = [format_spending_ts(log) for log in ts_logs]
+    daily_logs = [format_spending(log) for log in daily_logs]
+         
+    #### Build budgetslicer address ####
+    # prefix = "http://localhost:8080/_ah/admin/datastore/edit?key="
+    prefix = "https://appengine.google.com/datastore/edit?app_id=mopub-inc&namespace=&key="
+
+    budget_slicer = BudgetSlicer.get_or_insert_for_campaign(camp)
+    budget_slicer_url = prefix + str(budget_slicer.key())
+           
+           
+    #### Build memcache clearing urls ####
+    # clear_prefix = "http://localhost:8080"
+    clear_prefix = "http://app.mopub.com"
+    
+    daily_key = budget_service._make_campaign_daily_budget_key(camp)
+    ts_key = budget_service._make_campaign_ts_budget_key(camp)
+    
+    clear_memcache_daily_url = clear_prefix + "/m/clear?key=" + daily_key + "&namespace=budget"
+    clear_memcache_ts_url = clear_prefix + "/m/clear?key=" + ts_key + "&namespace=budget"      
+            
+            
+            
+    context =  {'campaign': camp,
+                'remaining_daily_budget': remaining_daily_budget,
+                'remaining_ts_budget': remaining_ts_budget,
+                'daily_logs': daily_logs,
+                'ts_logs': ts_logs,
+                'today': today,
+                'one_month_ago': one_month_ago,
+                'budget_slicer_url': budget_slicer_url,
+                'clear_memcache_daily_url': clear_memcache_daily_url,
+                'clear_memcache_ts_url': clear_memcache_ts_url}
+
+
+
+    
+    return render_to_response(request,'budget/budget_view.html', context)
+    
+    
+    
+    
+    

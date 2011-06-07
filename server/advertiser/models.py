@@ -70,6 +70,13 @@ class Campaign(db.Model):
     def network(self):
         return self.campaign_type in ['network']
         
+    def is_active_for_date(self, date):
+        """ Start and end dates are inclusive """
+        if date >= self.start_date:
+            if date <= self.end_date:
+                return True
+        return False
+        
         
 class AdGroup(db.Model):
     campaign = db.ReferenceProperty(Campaign,collection_name="adgroups")
@@ -84,7 +91,7 @@ class AdGroup(db.Model):
 
     # the priority level at which this ad group should be auctioned
     priority_level = db.IntegerProperty(default=1)
-    network_type = db.StringProperty(choices=["adsense", "iAd", "admob","millennial","ejam","appnexus","inmobi","mobfox","jumptap","brightroll","greystripe", "custom", "custom_native", "admob_native", "millennial_native"])
+    network_type = db.StringProperty(choices=["adsense", "iAd", "admob","millennial","ejam","chartboost","appnexus","inmobi","mobfox","jumptap","brightroll","greystripe", "custom", "custom_native", "admob_native", "millennial_native"])
 
     # Note that bid has different meaning depending on the bidding strategy.
     # if CPM: bid = cost per 1000 impressions
@@ -194,6 +201,7 @@ class AdGroup(db.Model):
         elif self.network_type == 'iAd': c = iAdCreative(name="iAd dummy",ad_type="iAd", format="320x50", format_predicates=["format=320x50"])
         elif self.network_type == 'admob': c = AdMobCreative(name="admob dummy",ad_type="admob", format="320x50", format_predicates=["format=320x50"])
         elif self.network_type == 'brightroll': c = BrightRollCreative(name="brightroll dummy",ad_type="html_full", format="full",format_predicates=["format=*"])
+        elif self.network_type == 'chartboost': c = ChartBoostCreative(name="chartboost dummy",ad_type="html",format="320x50",format_predicates=["format=320x50"])
         elif self.network_type == 'ejam': c = EjamCreative(name="ejam dummy",ad_type="html",format="320x50",format_predicates=["format=320x50"])
         elif self.network_type == 'jumptap': c = JumptapCreative(name="jumptap dummy",ad_type="html", format="320x50",format_predicates=["format=320x50"])
         elif self.network_type == 'millennial': c = MillennialCreative(name="millennial dummy",ad_type="html",format="320x50", format_predicates=["format=320x50"]) # TODO: make sure formats are right
@@ -247,6 +255,8 @@ class AdGroup(db.Model):
  
 class Creative(polymodel.PolyModel):
     name = db.StringProperty()
+    custom_width = db.IntegerProperty()
+    custom_height = db.IntegerProperty()
     
     ad_group = db.ReferenceProperty(AdGroup,collection_name="creatives")
 
@@ -304,6 +314,8 @@ class Creative(polymodel.PolyModel):
         self.ad_group = value
   
     def _get_width(self):
+        if self.custom_width:
+            return self.custom_width
         if hasattr(self,'_width'):
             return self._width
         width = 0 
@@ -317,6 +329,8 @@ class Creative(polymodel.PolyModel):
     width = property(_get_width,_set_width)      
          
     def _get_height(self):
+        if self.custom_height:
+            return self.custom_height
         if hasattr(self,'_height'):
             return self._height
             
@@ -421,6 +435,9 @@ class MillennialNativeCreative(MillennialCreative):
     @property
     def multi_format(self):
         return ('728x90', '320x50', '300x250', 'full' ,)
+
+class ChartBoostCreative(Creative):
+    pass
 
 class EjamCreative(Creative):
     pass

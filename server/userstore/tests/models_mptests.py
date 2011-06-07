@@ -9,7 +9,7 @@ import common.utils.test.setup
 from google.appengine.ext import db
 from nose.tools import assert_equals, assert_not_equals, assert_true, assert_raises
 
-from userstore.models import MobileUser, MobileApp, ClickEvent, AppOpenEvent, CLICK_EVENT_NO_APP_ID, DEFAULT_CONVERSION_WINDOW
+from userstore.models import MobileUser, MobileApp, ClickEvent, AppOpenEvent, InAppPurchaseEvent, CLICK_EVENT_NO_APP_ID, DEFAULT_CONVERSION_WINDOW
 
 
 SAMPLE_UDID1 = 'udid1'
@@ -25,6 +25,7 @@ def clear_datastore():
     db.delete(MobileApp.all())
     db.delete(ClickEvent.all())
     db.delete(AppOpenEvent.all())
+    db.delete(InAppPurchaseEvent.all())
 
     
 def mobile_user_model_mptests():
@@ -168,14 +169,56 @@ def app_open_event_model_mptests():
 
     # cleanup
     clear_datastore()
-
+    
+def inapp_event_model_mptests():
+    #initialization
+    SAMPLE_RECEIPT1 = "{'receipt1':'i am'}"
+    SAMPLE_RECEIPT2 = "{'receipt2':'i am'}"
+    
+    SAMPLE_TRANSACTION_ID1 = "TRANSACTION1"
+    SAMPLE_TRANSACTION_ID2 = "TRANSACTION2"
 
     
-                  
+    dt = datetime.now()
+
+    # required properties check
+    assert_raises(NameError, InAppPurchaseEvent)
+    assert_raises(NameError, InAppPurchaseEvent,
+                  udid=SAMPLE_UDID1, receipt=SAMPLE_RECEIPT1, transaction_id=SAMPLE_TRANSACTION_ID1) # missing time
+    assert_raises(NameError, InAppPurchaseEvent,
+                  time=dt, receipt=SAMPLE_RECEIPT1, transaction_id=SAMPLE_TRANSACTION_ID1) # missing udid
+    assert_raises(NameError, InAppPurchaseEvent,
+                time=dt, udid=SAMPLE_UDID1, transaction_id=SAMPLE_TRANSACTION_ID1) # missing receipt
+    assert_raises(NameError, InAppPurchaseEvent,
+                time=dt, udid=SAMPLE_UDID1, receipt=SAMPLE_RECEIPT2) # missing receipt
+
+
+    # creation, one with mobile_appid and one without
+    inapp1 = InAppPurchaseEvent(udid=SAMPLE_UDID1, time=dt, receipt=SAMPLE_RECEIPT1, transaction_id=SAMPLE_TRANSACTION_ID1)
+    inapp2 = InAppPurchaseEvent(udid=SAMPLE_UDID2, mobile_appid=SAMPLE_MOBILE_APPID1, time=dt, receipt=SAMPLE_RECEIPT2, transaction_id=SAMPLE_TRANSACTION_ID2)
+    db.put([inapp1, inapp2])
+
+     # fetch count check
+    assert_equals(InAppPurchaseEvent.all().count(), 2)
+    fetched_inapp1 = InAppPurchaseEvent.all().fetch(2)[0]
+    fetched_inapp2 = InAppPurchaseEvent.all().fetch(2)[1]
+
+    # udid and key check
+    assert_equals(fetched_inapp1.udid, SAMPLE_UDID1)
+    assert_equals(fetched_inapp1.mobile_appid, CLICK_EVENT_NO_APP_ID)
+    assert_equals(fetched_inapp1.time, dt)
+    assert_equals(fetched_inapp2.udid, SAMPLE_UDID2)    
+    assert_equals(fetched_inapp2.mobile_appid, SAMPLE_MOBILE_APPID1)
+    assert_equals(fetched_inapp2.time, dt)
+    assert_equals(fetched_inapp1.key(), inapp1.key())
+    assert_equals(fetched_inapp2.key(), inapp2.key())
+    assert_not_equals(inapp1.key(), inapp2.key())
+
+    # parent key check
+    assert_true(fetched_inapp1.parent_key() is not None)
+    assert_true(fetched_inapp2.parent_key() is not None)
+    assert_not_equals(fetched_inapp1.parent_key(), fetched_inapp2.parent_key())
+
+    # cleanup
+    clear_datastore()
     
-
-
-
-    
-
-

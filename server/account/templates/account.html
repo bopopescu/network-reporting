@@ -104,7 +104,31 @@
                     <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.brightroll.com/" target="_blank">Go to BrightRoll<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
                   </dl> 
                 </fieldset> 
-				<fieldset class="adForm"> 
+                <fieldset class="adForm"> 
+                  <div class="buttonBank buttonBank-right">
+                    <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
+                  </div>
+                  <legend>ChartBoost {% if chartboost_status == 1 or chartboost_status == 2 or chartboost_status == 4 %}<span class="success unbold">(Enabled)</span>{% endif %}
+					{% if chartboost_status == 3 %}<span class ="partial unbold">(Partially enabled)</span>{% endif %}
+					{% if chartboost_status == 0 %}<span class="muted unbold">(Not configured)</span>{% endif %}</legend> 
+                  <dl class="formFields {% if chartboost_status != 0 %}show{% endif %}">
+                    <dt><label for="appForm-adUnitName">ChartBoost Publisher ID:</label></dt> 
+                    <dd><input type="text" class="input-text" name="chartboost_pub_id" value="{{account.network_config.chartboost_pub_id|default_if_none:""}}" placeholder="ex: 4cf55942bb93162f4500006g"/></dd>
+                    
+                    <div class="adForm-apps {% if chartboost_status == 2 or chartboost_status == 3 or chartboost_status == 4 %} {% else %} show {% endif %}">
+                      {% for app in apps%}
+
+                      <dt>{{app.name}}:</dt>
+                      <dd><input type="text" class="input-text" name="{{app.key}}-__-chartboost_pub_id" value="{{app.network_config.chartboost_pub_id|default_if_none:""}}"  placeholder="ex: 4cf55942bb93162f4500006g"/></dd>
+                      {% endfor %}
+                    </div>
+                    <dt><a class="button button-small adForm-fields-appButton" href="#"></a></dt>
+                    <dd>&nbsp;</dd>
+                     
+                    <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.chartboost.com/" target="_blank">Go to ChartBoost<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
+                  </dl> 
+                </fieldset>
+				<fieldset class="adForm alt"> 
                   <div class="buttonBank buttonBank-right">
                     <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
                   </div>
@@ -125,7 +149,7 @@
                     <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.ejam.com/" target="_blank">Go to eJam<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
                   </dl> 
                 </fieldset>
-                <fieldset class="adForm alt"> 
+                <fieldset class="adForm"> 
                   <div class="buttonBank buttonBank-right">
                     <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
                   </div>
@@ -148,7 +172,7 @@
                     <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.greystripe.com/" target="_blank">Go to Greystripe<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
                   </dl> 
                 </fieldset>
-                <fieldset class="adForm"> 
+                <fieldset class="adForm alt"> 
                   <div class="buttonBank buttonBank-right">
                     <a class="button button-small adForm-fields-infoButton" href="#">More info</a>
                     <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
@@ -187,7 +211,7 @@
                     <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.inmobi.com/" target="_blank">Go to InMobi<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
                   </dl> 
                 </fieldset> 
-                <fieldset class="adForm alt"> 
+                <fieldset class="adForm"> 
                   <div class="buttonBank buttonBank-right">
                     <a class="button button-small adForm-fields-infoButton" href="#">More info</a>
                     <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
@@ -228,7 +252,7 @@
                     <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.jumptap.com/" target="_blank">Go to Jumptap<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
                   </dl> 
                 </fieldset> 
-                <fieldset class="adForm"> 
+                <fieldset class="adForm alt"> 
                   <div class="buttonBank buttonBank-right">
                     <a class="button button-small adForm-fields-infoButton" href="#">More info</a>
                     <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
@@ -268,7 +292,7 @@
                     <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.millennialmedia.com" target="_blank">Go to Millennial Media<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
                   </dl> 
                 </fieldset> 
-                <fieldset class="adForm alt"> 
+                <fieldset class="adForm"> 
                   <div class="buttonBank buttonBank-right">
                     <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
                   </div>

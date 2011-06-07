@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load filters %}
+{% block pageTitle %}
+       <h1>Admin Budget View for AdGroup: {{campaign.name}}</h1>
+{% endblock pageTitle %}
+{% block dateButtons %}{% endblock dateButtons %}
+{% block messageCenter %}{% endblock messageCenter %}
+
+{% block titleBarRight %}{% endblock titleBarRight %}
+
+{% block content %}
+<h3>
+  <table style="border-spacing:20px 2px; border-collapse:separate">
+    <tr>
+      <td>Base Daily Budget:</td> <td>{{campaign.budget|currency}}</td> 
+      <td><h5> <a href="{{budget_slicer_url}}">View/Edit BudgetSlicer </a> </h5></td>
+    </tr>
+    <tr>
+      <td>Remaining Daily Budget: </td> <td>{{remaining_daily_budget|currency}}</td>
+      <td><h5> <a href="{{clear_memcache_daily_url}}">Clear from memcache and fall back to BudgetSlicer backup</a> </h5></td>
+    </tr>
+    <tr>
+      <td>Timeslice Budget: </td> <td>{{remaining_ts_budget|currency}}</td>
+      <td><h5> <a href="{{clear_memcache_ts_url}}">Clear from memcache and fall back to BudgetSlicer backup</a> </h5></td>
+    </tr>
+  </table>
+
+</h3>
+
+<br>
+<div id="budget-view-graphs">
+  <div style="display:inline-block">
+    <h3 style="margin-left:50px">{{one_month_ago}} - {{today}}</h3>
+    <table style="border-spacing:20px 2px; border-collapse:separate">
+      <tr>
+        <th> Date</th>
+        <th> Delivered</th>
+        <th> Start </th>
+        <th> End </th>
+      </tr>
+      {% for log in daily_logs%}
+      <tr class="alternating-color">
+        <td> {{log.date}}</td>
+        <td> {{log.delivery}}</td>
+        <td> {{log.initial_daily_budget}}</td>
+        <td> {{log.remaining_daily_budget}}</td>
+ 
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+
+  <div style="display:inline-block; float:left">
+    <h3 style="margin-left:50px">Today</h3>
+    <table style="border-spacing:20px 2px; border-collapse:separate">
+      <tr>
+        <th> Time</th>
+        <th> Delivered</th>
+        <th> Start </th>
+        <th> End </th>
+        <th> Rem Daily Budget </th>
+      </tr>
+      {% for log in ts_logs%}
+      <tr class="alternating-color">
+        <td> {{log.end_date}}</td>
+        <td> {{log.delivery}}</td>
+        <td> {{log.initial_memcache_budget}}</td>
+        <td> {{log.final_memcache_budget}}</td>
+        <td> {{log.remaining_daily_budget}}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+</div>
+{% endblock content %}

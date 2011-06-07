@@ -25,10 +25,12 @@ class RequestHandler(object):
     def __call__(self,request, cache_time=5*60, use_cache=True, *args,**kwargs):
         
         # Initialize our caching decorator
-        cache_dec = cache_page_until_post(time=cache_time)
+        # cache_dec = cache_page_until_post(time=cache_time)
         
         # Apply the caching decorator conditionally
-        @conditionally(cache_dec, use_cache)
+        # @conditionally(cache_dec, use_cache)
+        @cache_page_until_post(time=cache_time)
+        # @cache_page(cache_time)
         def mp_view(request, *args, **kwargs):
             """ We wrap all the business logic of the request Handler here
                 in order to be able to properly use the cache decorator """

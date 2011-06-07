@@ -19,6 +19,12 @@ class InMobiServerSide(ServerSide):
     @property
     def url(self):
         return self.base_url
+        
+    def get_user_agent(self):
+        ua = super(InMobiServerSide, self).get_user_agent()
+        if 'iPhone Simulator' in ua:
+            ua = 'Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_0 like Mac OS X; en-US) AppleWebKit/532.9 (KHTML, like Gecko) Version/4.0.5 Mobile/8A293 Safari/6531.22.7'
+        return ua    
   
     def get_inmobi_user_agent(self):
         ua = self.get_user_agent()
@@ -55,8 +61,8 @@ class InMobiServerSide(ServerSide):
         data = {'mk-siteid': self.get_pub_id(),
               'mk-version': 'pr-SPEC-ATATA-2009052',
               'u-id': self.get_udid(),
-              'mk-carrier': self.get_ip(),
-              # 'mk-carrier': '117.97.87.6',  # Test value
+              # 'mk-carrier': self.get_ip(),
+              'mk-carrier': '204.28.127.10',  # Test value
               'mk-ad-slot': self.get_inmobi_ad_size(),
               'h-user-agent': self.get_inmobi_user_agent(),
               'format': 'xml' }
@@ -103,10 +109,11 @@ class InMobiServerSide(ServerSide):
         if re.match("^<!--.*--\>$", response.content) == None and len(response.content) != 0:
             # TODO: do any sort of manipulation here that we want, like resizing the image, LAME
             self.parse_xml(response.content)
+            width, height = self.adunit.get_width(),self.adunit.get_height()
             if 'image_url' in self.url_params:
-                return 0.0, banner_template.safe_substitute(self.url_params)
+                return 0.0, banner_template.safe_substitute(self.url_params), width, height
             elif 'link_text' in self.url_params:
-                return 0.0, text_template.safe_substitute(self.url_params)
+                return 0.0, text_template.safe_substitute(self.url_params), width, height
         trace_logging.info("InMobi failed to return ad")
         raise Exception("InMobi ad is empty")
 

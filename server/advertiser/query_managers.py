@@ -18,6 +18,8 @@ from advertiser.models import Creative, TextCreative, \
 from publisher.models import App, AdUnit
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 
+import copy
+
 NAMESPACE = None
 
 MAX_ALLOWABLE_QUERIES = 30
@@ -120,7 +122,8 @@ class AdGroupQueryManager(QueryManager):
             if len(campaigns) > MAX_ALLOWABLE_QUERIES:
                 total_adgroups = []
                 for sub_campaigns in chunks(campaigns,MAX_ALLOWABLE_QUERIES):
-                    total_adgroups += adgroups.filter("campaign IN", sub_campaigns).\
+                    adgroups_current = copy.deepcopy(adgroups)
+                    total_adgroups += adgroups_current.filter("campaign IN", sub_campaigns).\
                                         fetch(limit)
                 return total_adgroups    
             else:    

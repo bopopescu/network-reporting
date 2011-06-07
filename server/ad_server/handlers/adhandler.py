@@ -97,7 +97,7 @@ class AdHandler(webapp.RequestHandler):
         # If we are not already on the experimental server, redirect some fraction
         rand_dec = random.random() # Between 0 and 1
         if (not experimental and rand_dec < experimental_fraction):
-            return self._redirect_to_experimental("mopub-experimental")
+            return self._redirect_to_experimental("mopub-experimental", adunit_id)
         
         mp_logging.log(self.request, event=mp_logging.REQ_EVENT, adunit=adunit)  
         
@@ -336,7 +336,7 @@ class AdHandler(webapp.RequestHandler):
             success += 'document.body.appendChild(hid_span);'
           
             if creative.ad_type == "adsense":
-                params.update({"title": ','.join(keywords), "adsense_format": '300x250_as', "w": format[0], "h": format[1], "client": site.get_pub_id("adsense_pub_id")})
+                params.update({"title": ','.join(keywords), "adsense_format": '320x50_mb', "w": format[0], "h": format[1], "client": site.get_pub_id("adsense_pub_id")})
                 params.update(channel_id=site.adsense_channel_id or '')
                 # self.response.headers.add_header("X-Launchpage","http://googleads.g.doubleclick.net")
             elif creative.ad_type == "admob":
@@ -496,6 +496,7 @@ class AdHandler(webapp.RequestHandler):
               
             
             # pass the creative height and width if they are explicity set
+            trace_logging.warning("creative size:%s"%creative.format)
             if creative.width and creative.height and 'full' not in site.format:
                 self.response.headers.add_header("X-Width", str(creative.width))
                 self.response.headers.add_header("X-Height", str(creative.height))
@@ -546,7 +547,7 @@ class AdHandler(webapp.RequestHandler):
             trace_logging.error("rgeocode failed to parse %s" % json)
             return ()
             
-    def _redirect_to_experimental(self, experimental_app_name):
+    def _redirect_to_experimental(self, experimental_app_name, adunit_id):
         # Create new id for alternate server
         old_key = db.Key(adunit_id)
         new_key = db.Key.from_path(old_key.kind(), old_key.id_or_name(), _app=experimental_app_name )

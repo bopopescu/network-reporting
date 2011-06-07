@@ -4,7 +4,7 @@ from datetime import timedelta
 from google.appengine.ext import db
 
 from common.utils.query_managers import CachedQueryManager
-from userstore.models import MobileUser, MobileApp, ClickEvent, AppOpenEvent, CLICK_EVENT_NO_APP_ID, DEFAULT_CONVERSION_WINDOW
+from userstore.models import MobileUser, MobileApp, ClickEvent, AppOpenEvent, InAppPurchaseEvent, CLICK_EVENT_NO_APP_ID, DEFAULT_CONVERSION_WINDOW
 
 
 NAMESPACE = None
@@ -28,7 +28,6 @@ class MobileUserManager(CachedQueryManager):
             mobile_user.put()
         return mobile_user
 
-
 class MobileAppManager(CachedQueryManager):
     Model = MobileApp
 
@@ -40,18 +39,25 @@ class MobileAppManager(CachedQueryManager):
             return MobileApp.all().ancestor(MobileUser.get_db_key(udid)).fetch(limit)
 
     def put_mobile_app(self, mobile_app):
-        return db.run_in_transaction(MobileAppManager._insert_mobile_app_transaction, mobile_app.udid, mobile_app.mobile_appid)
+        return db.run_in_transaction(MobileAppManager._insert_mobile_app_txn, mobile_app.udid, mobile_app.mobile_appid)
 
     @staticmethod
-    def get_or_insert(udid, mobile_appid):
+    def get_or_insert(udid, mobile_appid, transaction=True):
+        if transaction:
+            return db.run_in_transaction(MobileAppManager._get_or_insert_txn, udid, mobile_appid)
+        else:
+            return MobileAppManager._get_or_insert_txn(udid, mobile_appid)     
+    
+    @staticmethod
+    def _get_or_insert_txn(udid, mobile_appid):
         mobile_app_db_key = MobileApp.get_db_key(udid, mobile_appid)
         mobile_app = MobileApp.get(mobile_app_db_key)
         if not mobile_app:
-            return db.run_in_transaction(MobileAppManager._insert_mobile_app_transaction, udid, mobile_appid)
+            return MobileAppManager._insert_mobile_app_txn(udid, mobile_appid)
         return mobile_app
 
     @staticmethod
-    def _insert_mobile_app_transaction(udid, mobile_appid):
+    def _insert_mobile_app_txn(udid, mobile_appid):
         mobile_user = MobileUserManager.get_or_insert(udid)
         mobile_app = MobileApp(udid=udid, mobile_appid=mobile_appid)
         mobile_app.put()
@@ -153,8 +159,55 @@ class AppOpenEventManager(CachedQueryManager):
         return None, False    
 
         
+class InAppPurchaseEventManager(CachedQueryManager):            
+    def get_inapp_purchase_event(self, udid, mobile_appid=None, limit=50):
+        inapp_purchase_events = InAppPurchaseEvent.all()
+        # the parent is either a mobile user
+        # or mobile_appid depending on the query
+        # NOTE: this query will return all the inapp events
+        # for a given udid if mobile_appid is None no matter
+        # if its directly placed under an mobileuser or mobileapp
+        if mobile_appid:
+            parent = MobileApp.get_db_key(udid, mobile_appid)
+        else:
+            parent = MobileUser.get_db_key(udid)
+        inapp_purchase_events = inapp_purchase_events.ancestor(parent)
+        return inapp_purchase_events.fetch(limit)
+    
+    def log_inapp_purchase_event(self, transaction_id, udid, time, receipt, mobile_appid=None):
+        return db.run_in_transaction(self._log_inapp_purchase_event, transaction_id, udid, time, receipt, mobile_appid)
+    
+    def _log_inapp_purchase_event(self, transaction_id, udid, time, receipt, mobile_appid=None):
+        # get or create this mobile user
+        # then increment its in app purchase account
+        mobile_user = MobileUserManager.get_or_insert(udid)
+
+        # get or create this mobile app for this user
+        # then increment its in app purchase account        
+        if mobile_appid:
+            # attempt to get mobile app from db
+            mobile_app_db_key = MobileApp.get_db_key(udid, mobile_appid)
+            mobile_app = MobileApp.get(mobile_app_db_key)
+            # if not there, create it and update its num_purchases
+            if not mobile_app:
+                mobile_app = MobileApp(udid=udid, mobile_appid=mobile_appid)
+                mobile_app.put()
+                    
+        # create and put an new inapp purchase event if its new
+        # otherwise return the old one
+        inapp_purchase_event = InAppPurchaseEvent.get(InAppPurchaseEvent.get_db_key(transaction_id, udid, mobile_appid))
+        if not inapp_purchase_event:
+            inapp_purchase_event = InAppPurchaseEvent(udid=udid,time=time,receipt=receipt,mobile_appid=mobile_appid, transaction_id=transaction_id)
+            inapp_purchase_event.put()
             
+            # update num_purchases
+            mobile_user.num_purchases += 1
+            mobile_user.put()
+            
+            if mobile_appid:
+                mobile_app.num_purchases += 1
+                mobile_app.put()
+            
+        return inapp_purchase_event
+        
     
-    
-
-

@@ -67,6 +67,7 @@ class Site(db.Model):
           u'300x250',
           u'160x600',
           u'320x50',
+          u'custom',
       )
     # TODO: Why is this "app_key" and not "app"?
     app_key = db.ReferenceProperty(App, collection_name="all_adunits")
@@ -78,8 +79,8 @@ class Site(db.Model):
     name = db.StringProperty(required=True, default='Banner Ad')
     url = db.StringProperty()
     description = db.TextProperty()
-    width = db.FloatProperty()
-    height = db.FloatProperty()
+    custom_width = db.IntegerProperty()
+    custom_height = db.IntegerProperty()
     
     device_format = db.StringProperty(default='phone', choices=DEVICE_FORMAT_CHOICES)
     format = db.StringProperty(choices=FORMAT_CHOICES) #TODO: we should use this w/o explicity using height, width
@@ -122,8 +123,8 @@ class Site(db.Model):
         return 0
     
     def get_height(self):
-        if self.height: 
-            return self.height
+        if self.format == 'custom' and self.custom_height: 
+            return self.custom_height
         dimensions = self.format.split('x')
         if len(dimensions) > 1: 
             return int(dimensions[1])
@@ -131,8 +132,8 @@ class Site(db.Model):
             return 0
 
     def get_width(self):
-        if self.width: 
-            return self.width
+        if self.format == 'custom' and self.custom_width: 
+            return self.custom_width
         dimensions = self.format.split('x')
         if len(dimensions) > 1: 
             return int(dimensions[0])

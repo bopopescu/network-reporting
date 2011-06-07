@@ -70,9 +70,9 @@ COUNTRY_GEO = "country_name=%s"
 # A valid "format" is one of the accepted entries for format in the site model (I think it's the site model...)
 
 #Valid ad "formats" for smartphone adunits that are set to "full"
-VALID_FULL_FORMATS = ('300x250', 'full', 'full_landscape',)
+VALID_FULL_FORMATS = ('300x250', 'full', 'full_landscape')
 #Valid ad "formats" for tablet adunits that are set to "full"
-VALID_TABLET_FULL_FORMATS = ('300x250','160x600', 'full_tablet', 'full_tablet_landscape',)
+VALID_TABLET_FULL_FORMATS = ('300x250','160x600', 'full_tablet', 'full_tablet_landscape')
 
 #Networks that can serve fullsize ads
 FULL_NETWORKS = ('brightroll',)

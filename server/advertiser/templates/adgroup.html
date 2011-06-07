@@ -35,7 +35,12 @@
 {% endif %}
 {% if not creatives %}
           <div class="alertMessage error">
-            This campaign will need to have at least one <strong>Creative</strong> in order to serve.  Set up a creative below.
+            This campaign needs to have at least one <strong>Creative</strong> in order to serve.  Set up a creative below.
+          </div>
+{% endif %}
+{% if message  %}
+          <div class="alertMessage error">
+            {{message|safe}}
           </div>
 {% endif %}
           <div class="separated" id="chartWrapper">

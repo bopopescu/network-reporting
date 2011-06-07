@@ -96,7 +96,7 @@ class LogTaskHandler(webapp.RequestHandler):
       # get the last index for a given time bucket
       
       # for a brief moment there will be tasks that were put in without an associated shard
-      if account_shard is None:
+      if account_shard is None or account_shard == '':
           tail_key = mp_logging.INDEX_KEY_FORMAT_OLD%dict(account_name=account_name,time=time_bucket)
       else:
           tail_key = mp_logging.INDEX_KEY_FORMAT%dict(account_name=account_name,
@@ -120,7 +120,7 @@ class LogTaskHandler(webapp.RequestHandler):
           stop = start + MAX_KEYS - 1 if (start+MAX_KEYS-1) < tail_index else tail_index
           
           # if this is an old task we don't use the shard to make the keys
-          if account_shard is None:
+          if account_shard is None or account_shard == '':
               keys = [mp_logging.LOG_KEY_FORMAT_OLD%dict(account_name=account_name,time=time_bucket,log_index=i) 
                        for i in range(start,stop+1)]
           else:

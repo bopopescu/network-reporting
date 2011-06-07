@@ -176,7 +176,7 @@ class ReportQueryManager(CachedQueryManager):
             #              params={"report": new_report.key(),
             #                      "account": account.key(),
             #                      })
-            pipe = ReportMRPipeline(new_report)
+            pipe = ReportMRPipeline(str(new_report.key()))
             pipe.start()
         return new_report
 
@@ -255,7 +255,7 @@ class ReportQueryManager(CachedQueryManager):
         #                          },
         #                  target='report-generator',
         #                  )
-            pipe = ReportMRPipeline(report)
+            pipe = ReportMRPipeline(str(report.key()))
             pipe.start()
         return sched 
 

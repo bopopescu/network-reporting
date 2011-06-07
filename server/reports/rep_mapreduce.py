@@ -1,9 +1,20 @@
+import logging
+
+from appengine_django import InstallAppengineHelperForDjango
+InstallAppengineHelperForDjango()
+
 from mapreduce import operation as op
 from mapreduce import context 
 from mapreduce import base_handler
 from mapreduce import mapreduce_pipeline
 from mapreduce import shuffler
+from google.appengine.ext import db
+
+
+from reports.models import Report
+from account.models import Account
 from reporting.models import StatsModel
+
 from common.constants import (APP,
                               AU,
                               CAMP,
@@ -21,8 +32,6 @@ from common.constants import (APP,
                               KEY,
                               )
 from common.utils import date_magic
-                            
-
 
 
 MR1_KEY = '%s'
@@ -121,7 +130,8 @@ def reduce_rep_gen(key, values):
 #account needs to be actual account
 class ReportMRPipeline(base_handler.PipelineBase):
     #run with REPORT not SCHED_REPORT because run report (how a new report is generated for an old sched_report) only updates the start/end for the report, not the sched_report explicitly
-    def run(self, report):
+    def run(self, report_key):
+        report = Report.get(report_key)
         d1 = report.d1
         d2 = report.d2
         d3 = report.d3
@@ -131,8 +141,8 @@ class ReportMRPipeline(base_handler.PipelineBase):
         days = reduce(lambda x,y: x+y, date_magic.gen_days(report.start, report.end, True))
         yield mapreduce_pipeline.MapreducePipeline(
                 'ReportGenerator',
-                'reports.mapreduce.map_rep_gen',
-                'reports.mapreduce.reduce_rep_gen',
+                'reports.rep_mapreduce.map_rep_gen',
+                'reports.rep_mapreduce.reduce_rep_gen',
                 'mapreduce.input_readers.DatastoreInputReader',
                 'mapreduce.output_writers.BlobstoreOutputWriter',
                 mapper_params={

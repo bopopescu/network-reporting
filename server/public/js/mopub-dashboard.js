@@ -579,12 +579,15 @@ var mopub = mopub || {};
         $('.adForm-format-image', formatContainer).css({ opacity: 1 });
         
         var $full_onlys = $(".full_only");
+        var $banner_onlys = $(".banner_only");
         if ($(this).attr("id") == "appForm-adUnitFormat-full-tablet" ||
             $(this).attr("id") == "appForm-adUnitFormat-full"){
                 $full_onlys.show();
+                $banner_onlys.hide();
             }
         else{
                 $full_onlys.hide();
+                $banner_onlys.show();
         }    
         
       }).filter(':checked').click();
@@ -638,12 +641,15 @@ var mopub = mopub || {};
             $(image).show().css({ opacity: 1 });
             
             var $full_onlys = $(".full_only");
+            var $banner_onlys = $(".banner_only");
             if ($(this).attr("id") == "appForm-adUnitFormat-full-tablet" ||
                 $(this).attr("id") == "appForm-adUnitFormat-full"){
                     $full_onlys.show();
+                    $banner_onlys.hide();
                 }
             else{
                     $full_onlys.hide();
+                    $banner_onlys.show();
             }    
             
         }).first().click(); //initialize by activating the first

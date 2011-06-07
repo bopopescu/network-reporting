@@ -20,6 +20,7 @@ import logging
 from django.views.decorators.vary import vary_on_headers, vary_on_cookie
 
 from django.utils.cache import get_cache_key
+# from common.utils.cache import mpcache
 
 #TODO: Rename this function since we no longer use a whitelist
 def user_passes_test(test_func, login_url=None, redirect_field_name=REDIRECT_FIELD_NAME):
@@ -74,43 +75,43 @@ def conditionally(dec, cond):
 def cache_page_until_post(time=5*60):
     """ Caches a page until it expires or a post occurs in the session. """
     def wrap(view):
-        
-        @cache_page(time)
-        @vary_on_cookie
         def new_view(request, *args, **kw):
             
             if request.method == "POST":
                 # If we are POSTing, clear the cache
                 session_cache_key = _build_session_cache_key(request)
-
-                session_cache_key_set = memcache.get(session_cache_key, namespace="user_page_cache") or set()
+                session_cache_key_set = memcache.get(session_cache_key) or set()
                 for key in session_cache_key_set:
                     memcache.delete(key)
-
-                memcache.delete(session_cache_key, namespace="user_page_cache")
+            
+                memcache.delete(session_cache_key)
                 return view(request, *args, **kw)
                 
             else:
                 # If we are not POSTing, add to cache
                 try:
-                    # Do the standard caching
-                    return view(request, *args, **kw)
+                    # Do the standard caching and vary on cookie
+                    cached_view = cache_page(time)(view)
+                    vary_on_cookie_cached_page = vary_on_cookie(cached_view)
+                    return vary_on_cookie_cached_page(request, *args, **kw)
                 finally:
-                    # Also add the caching key to a list
+                    # Also add the caching key to a list - We need to do this
+                    # in the finally clause in order to have the cache_key built
                     page_key = get_cache_key(request)
-                    
+                    logging.info("page_key: %s" % page_key)
                     if page_key:
                         # Add the cached page's key to the list of all the pages
                         # we have cached since the last POST 
                         session_cache_key = _build_session_cache_key(request)
-            
-                        session_cache_key_set = memcache.get(session_cache_key, namespace="user_page_cache")
+                        logging.info("session_cache_key: %s" % session_cache_key)
+                        session_cache_key_set = memcache.get(session_cache_key)
                         if session_cache_key_set is None:
                             session_cache_key_set = set()
                         session_cache_key_set.add(page_key)
             
                         memcache.set(session_cache_key,
-                                     session_cache_key_set, namespace="user_page_cache")
+                                     session_cache_key_set)
+
 
         return new_view
     return wrap
@@ -118,7 +119,7 @@ def cache_page_until_post(time=5*60):
 def _build_session_cache_key(request):
     """ We have a different key for each user"""
     username = request.user.key()
-    return str(username)
+    return "user_space_cache:%s" % str(username)
 
 
 def deprecated(func):

@@ -58,14 +58,6 @@ class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
         upload_files = self.get_uploads('file')  # 'file' is file upload field in the form
         blob_info = upload_files[0]
         self.response.out.write(blob_info.key())
-        # self.redirect('/offline/serve/%s' % blob_info.key())
-
-
-# class ServeHandler(blobstore_handlers.BlobstoreDownloadHandler):
-#     def get(self, resource):
-#         resource = str(urllib.unquote(resource))
-#         blob_info = blobstore.BlobInfo.get(resource)
-#         self.send_blob(blob_info)
 
 
 class StatsWorker(webapp.RequestHandler):
@@ -75,25 +67,27 @@ class StatsWorker(webapp.RequestHandler):
         blob_key = self.request.get('blob_key')
         blob_type = self.request.get('blob_type', 'log_counts')
         blob_reader = blobstore.BlobReader(blob_key)
+        
+        # using error to see it more easily in the GAE logs -- info or debug will get pushed out very quickly
+        # using flush to see it in the logs immediately, since backends uses periodic logging by default
         logging.error('processing task: %s, %s' %(blob_key, blob_type))
         logservice.flush()
         
         if blob_type == 'log_counts':
             for line in blob_reader:
                 stats_updater.parse_line(line)
-            stats_updater.put_models()        
-            # self.response.out.write('log counts updates done')
-            logging.error('log counts updates done')
+            stats_updater.put_models()
+            
+            logging.error('log counts updates done')    
             logservice.flush()
         elif blob_type == 'uniq_user':
             for line in blob_reader:
                 uniq_user_stats_updater.parse_line(line)
             uniq_user_stats_updater.update_models()       
-            # self.response.out.write('uniq user updates done')
+            
             logging.error('uniq user updates done') 
             logservice.flush()
         else:
-            # self.response.out.write('invalid blob type (accepts: "log_counts" or "uniq_user")')
             logging.error('invalid blob type (accepts: "log_counts" or "uniq_user")')
             logservice.flush()
             
@@ -101,7 +95,6 @@ class StatsWorker(webapp.RequestHandler):
         logging.error('updating GAE datastore with blob %s took %i minutes and %i seconds' % (blob_key, elapsed/60, elapsed%60))
         logservice.flush()
         
-
 
 class UpdateStatsHandler(webapp.RequestHandler):
     def get(self):
@@ -120,7 +113,6 @@ def main():
     application = webapp.WSGIApplication(
           [(URL_HANDLER_PATH, UrlHandler),
            ('/offline/upload', UploadHandler),
-           # ('/offline/serve/([^/]+)?', ServeHandler),
            ('/offline/worker', StatsWorker),
            (UPDATE_STATS_HANDLER_PATH, UpdateStatsHandler),
           ], debug=True)

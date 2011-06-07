@@ -1,6 +1,7 @@
 import datetime
 import logging
 import time
+import traceback
 
 from google.appengine.ext import db
 from google.appengine.ext.db import InternalError, Timeout
@@ -288,14 +289,18 @@ class StatsModelQueryManager(CachedQueryManager):
             page_count = 0
             retries = 0
 
+            account_name = self.account.name()
+            
             while stats and retries <= MAX_RETRIES:
                 try:
                     db.put(stats[:LIMIT])
-                    print "putting %i models..." %(len(stats[:LIMIT]))
+                    # print "putting %i models..." %(len(stats[:LIMIT]))
+                    print '%s: %i models' % ((account_name or 'None').rjust(25), len(stats[:LIMIT]))
                     stats = stats[LIMIT:]
                     page_count += 1
                     retries = 0
                 except: # (InternalError, Timeout, CapabilityDisabledError):
+                    traceback.print_exc()
                     retries += 1
             return [s.key() for s in all_stats[:LIMIT*page_count]] # only return the ones that were successully batch put
 

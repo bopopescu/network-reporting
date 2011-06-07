@@ -78,7 +78,6 @@ def upload_stats_file(stats_file):
     print 'blob key:'
     print blob_key
     
-           
     elapsed = time.time() - start
     print
     print 'uploading %s to GAE blobstore took %i minutes and %i seconds' % (stats_file, elapsed/60, elapsed%60)
@@ -86,13 +85,18 @@ def upload_stats_file(stats_file):
     return blob_key
 
 
-def start_blob_processing_request(blob_key, blob_type='log_counts'):    
+def queue_process_blob_request(blob_key, uniq_user=False):
+    if uniq_user:
+        blob_type = 'uniq_user'
+    else:
+        blob_type = 'log_counts'
+        
+    # url to add process task to a taskqueue
     url = HOST + UPDATE_STATS_HANDLER_PATH + '?blob_key=%s&blob_type=%s' % (blob_key, blob_type)
     print
     print 'pinging %s ...' % (url)
     process_blob_request = urllib2.Request(url)
     response = urllib2.urlopen(process_blob_request).read() 
-    # urllib2.urlopen(process_blob_request)
     print
     print response
         
@@ -100,7 +104,6 @@ def start_blob_processing_request(blob_key, blob_type='log_counts'):
 def main():
     parser = OptionParser()
     parser.add_option('-f', '--input_file', dest='input_file')
-    parser.add_option('-b', '--blobstore', action='store_true', dest='blobstore', default=False)
     (options, args) = parser.parse_args()
     
     if not options.input_file:
@@ -109,26 +112,18 @@ def main():
     if not os.path.exists(options.input_file):
         sys.exit('\nERROR: input file does not exist\n') 
 
-
     blob_key = upload_stats_file(options.input_file)
-
 
     start = time.time()
     
     if options.input_file.endswith('.uu.stats'):
-        if options.blobstore:   # run stats_updater on GAE backend
-            start_blob_processing_request(blob_key, 'uniq_user')
-        else:
-            uniq_user_stats_updater.process_blob_stats_file(blob_key)
-    else:   # run stats_updater on local machine
-        if options.blobstore:
-            start_blob_processing_request(blob_key, 'log_counts')
-        else:
-            stats_updater.process_blob_stats_file(blob_key)
-    
+        queue_process_blob_request(blob_key, True)
+    else:   
+        queue_process_blob_request(blob_key)
+        
     elapsed = time.time() - start
     print
-    print 'updating GAE datastore with blob %s took %i minutes and %i seconds' % (blob_key, elapsed/60, elapsed%60)
+    print 'uploading blob %s and queueing processing task took %i minutes and %i seconds' % (blob_key, elapsed/60, elapsed%60)
     
     
 

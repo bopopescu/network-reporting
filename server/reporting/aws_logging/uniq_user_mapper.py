@@ -39,16 +39,19 @@ def generate_kv_pairs(line):
     log_time = param_dict.get('time', None)
         
     if handler and log_date and log_time:
-        # construct datetime object           
-        date_hour = datetime.strptime(log_date + ':' + log_time, '%d/%b/%Y:%H:%M:%S')
+        try:
+            # construct datetime object           
+            date_hour = datetime.strptime(log_date + ':' + log_time, '%d/%b/%Y:%H:%M:%S')
         
-        # resolution is hour            
-        for key, value in generate_pub_adv_combos(handler, param_dict, date_hour.strftime('%y%m%d%H')):
-            yield key, value
+            # resolution is hour            
+            for key, value in generate_pub_adv_combos(handler, param_dict, date_hour.strftime('%y%m%d%H')):
+                yield key, value
 
-        # resolution is day                
-        for key, value in generate_pub_adv_combos(handler, param_dict, date_hour.strftime('%y%m%d')):
-            yield key, value
+            # resolution is day                
+            for key, value in generate_pub_adv_combos(handler, param_dict, date_hour.strftime('%y%m%d')):
+                yield key, value
+        except:
+            yield None, None
     yield None, None
 
 

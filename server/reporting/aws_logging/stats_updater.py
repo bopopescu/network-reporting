@@ -5,10 +5,12 @@ import sys
 import time
 import traceback
 import logging
+import multiprocessing
 
 from datetime import datetime
+from multiprocessing import Pool
+from multiprocessing.pool import ThreadPool
 from optparse import OptionParser
-
 
 # add mopub root to path
 sys.path.append(os.getcwd()+'/../../')
@@ -32,44 +34,62 @@ from google.appengine.ext import blobstore
 from google.appengine.ext import db
 from google.appengine.api import logservice
 
-
 import utils
 from publisher.models import Site
 from reporting.models import StatsModel, Pacific_tzinfo
 from reporting.query_managers import StatsModelQueryManager
 
 
-
 account_cache = {}
 stats_qm_cache = {}
 
-def log_it(msg, level='info'):
-    # if level == 'debug':
-    #     logging.debug(msg)
-    # elif level == 'error':
-    #     logging.error(msg)
-    # else:
-    #     logging.info(msg)
 
-    logging.error(msg)
-    logservice.flush()
-    
-
-def clear_cache():
-    global account_cache
-    account_cache = {}
-    global stats_qm_cache
-    stats_qm_cache = {}
+# def clear_cache():
+#     global account_cache
+#     account_cache = {}
+#     global stats_qm_cache
+#     stats_qm_cache = {}
 
 
-def put_models():
-    for qm in stats_qm_cache.values():
-        print 'putting models for account', qm.account.name()
-        log_it('putting models for account %s' %(qm.account.name()))
-        qm.put_stats(offline=True)
-    clear_cache()
+# def put_models():
+#     for qm in stats_qm_cache.values():
+#         print 'putting models for account', qm.account.name()
+#         log_it('putting models for account %s' %(qm.account.name()))
+#         qm.put_stats(offline=True)
+#     clear_cache()
            
 
+def put_models_by_qm(qm): 
+    try:    
+        qm.put_stats(offline=True)
+        qm.stats = []
+        return 'success: account %s' %(qm.account.name())
+    except KeyboardInterrupt:
+        print 'child process received control-c'
+        pass
+    except:
+        traceback.print_exc()
+        return
+    
+
+def put_models(pool):
+    async_results = pool.map_async(put_models_by_qm, stats_qm_cache.values())
+    try:
+      results = async_results.get(0xFFFF) # set maximum timeout (seconds) to return result when it arrives
+    except:
+        print 'parent process exception'
+        traceback.print_exc() 
+        return
+
+    # print status message from each process
+    print
+    print
+    for i in results:
+      print i
+    print
+    print
+    
+        
 # this function is also being used by reports.tests.reports_mptests.py         
 def update_model(adunit_key=None, creative_key=None, 
                  country_code=None, brand_name=None, marketing_name=None, device_os=None, device_os_version=None, 
@@ -94,7 +114,6 @@ def update_model(adunit_key=None, creative_key=None,
                 account = adunit.account
                 if account is None:
                     print 'adunit %s has no account' % (adunit_key)
-                    log_it('adunit %s has no account' % (adunit_key), 'debug')
                     return False
                 account_cache[adunit_key] = account 
             
@@ -144,12 +163,10 @@ def update_model(adunit_key=None, creative_key=None,
             return True
         else:
             print 'adunit_key and counts should not be None'
-            log_it('adunit_key and counts should not be None', 'error')
             return False
     except Exception, e:
         # traceback.print_exc()
         print 'EXCEPTION on adunit key %s -> %s' %(adunit_key, e)
-        log_it('EXCEPTION on adunit key %s -> %s' %(adunit_key, e), 'error')
         return False
              
     
@@ -197,26 +214,22 @@ def parse_line(line):
     except Exception, e:
         # traceback.print_exc()
         print 'EXCEPTION on line %s -> %s' %(line, e)
-        log_it('EXCEPTION on line %s -> %s' %(line, e), 'error')
 
 
-def process_blob_stats_file(blob_key):
-    print 'processing blob stats file %s ...' %blob_key
-    # logging.info('processing blob stats file %s ...' %blob_key)
-    setup_remote_api()
-    blob_reader = blobstore.BlobReader(blob_key)
-    for line in blob_reader:
-        parse_line(line)
-    put_models()        
-
-
-def process_input_file(input_file):
-    print 'processing stats file %s ...' %input_file
-    # logging.info('processing stats file %s ...' %input_file)
+def process_input_file(input_file, num_workers):
+    print 'processing stats file %s with %i workers' % (input_file, num_workers)
+    # pool = Pool(processes=num_workers)
+    pool = ThreadPool(processes=num_workers)
+    line_count = 0
+    
     with open(input_file, 'r') as f:
         for line in f:
             parse_line(line)
-    put_models()
+            line_count += 1
+            
+            if line_count % 100 == 0: 
+                print "\nMARKER: %i lines\n" %line_count
+                put_models(pool)
 
 
 def setup_remote_api():
@@ -231,6 +244,8 @@ def main():
     
     parser = OptionParser()
     parser.add_option('-f', '--input_file', dest='input_file')
+    parser.add_option('-n', '--num_workers', type='int', dest='num_workers', default=multiprocessing.cpu_count())
+    
     (options, args) = parser.parse_args()
     
     if not options.input_file:
@@ -240,7 +255,7 @@ def main():
         sys.exit('\nERROR: input file does not exist\n')
         
     setup_remote_api()
-    process_input_file(options.input_file)
+    process_input_file(options.input_file, options.num_workers)
    
     elapsed = time.time() - start
     print 'updating GAE datastore took %i minutes and %i seconds' % (elapsed/60, elapsed%60)

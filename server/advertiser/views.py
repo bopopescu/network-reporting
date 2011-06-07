@@ -579,10 +579,16 @@ class ShowAdGroupHandler(RequestHandler):
         
         message = []
         if adgroup.network_type:
-            if not getattr(self.account.network_config,adgroup.network_type+'_pub_id'):
+            # gets rid of _native_ in admob_native_pub_id to become admob_pub_id
+            if '_native_' in adgroup.network_type:
+                adgroup_network_type = adgroup.network_type.replace('_native_','_')
+            else:
+                adgroup_network_type = adgroup.network_type    
+            
+            if not getattr(self.account.network_config,adgroup_network_type+'_pub_id'):
                 for app in apps.values():
-                    if app.network_config and not getattr(app.network_config,adgroup.network_type+'_pub_id'):
-                        message.append("The application "+app.name+" needs to have a <strong>"+adgroup.network_type.title()+" Network ID</strong> in order to serve. Specify a "+adgroup.network_type.title()+" Network ID on <a href=%s>your account</a> page."%reverse("account_index"))
+                    if app.network_config and not getattr(app.network_config,adgroup_network_type+'_pub_id'):
+                        message.append("The application "+app.name+" needs to have a <strong>"+adgroup_network_type.title()+" Network ID</strong> in order to serve. Specify a "+adgroup.network_type.title()+" Network ID on <a href=%s>your account</a> page."%reverse("account_index"))
         if message == []:
             message = None
         else:

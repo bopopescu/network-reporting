@@ -257,6 +257,7 @@ class Creative(polymodel.PolyModel):
     name = db.StringProperty()
     custom_width = db.IntegerProperty()
     custom_height = db.IntegerProperty()
+    landscape = db.BooleanProperty(default=False) # TODO: make this more flexible later
     
     ad_group = db.ReferenceProperty(AdGroup,collection_name="creatives")
 

@@ -101,12 +101,20 @@ def format_filter(adunit):
             if creative.multi_format:
                 return set(creative.multi_format).intersection(set(VALID_FULL_FORMATS)) > set()
             else:
-                return creative.format in VALID_FULL_FORMATS
+                # if the creative is a full screen one, make sure its the correct orientation
+                if creative.format in ['full','full_landscape']:
+                    return creative.landscape == adunit.landscape
+                else:    
+                    return creative.format in VALID_FULL_FORMATS
         if adunit_format == 'full_tablet' or adunit_format == 'full_tablet_landscape':
             if creative.multi_format:
                 return set(creative.multi_format).intersection(set(VALID_TABLET_FULL_FORMATS)) > set()
             else:
-                return creative.format in VALID_TABLET_FULL_FORMATS
+                # if the creative is a full screen one, make sure its the correct orientation
+                if creative.format in ['full_tablet', 'full_tablet']:
+                    return creative.landscape == adunit.landscape
+                else:    
+                    return creative.format in VALID_TABLET_FULL_FORMATS
         if adunit_format == 'custom' and creative.format == 'custom':
             return adunit.custom_width == creative.custom_width and adunit.custom_height == creative.custom_height
         return creative.format == adunit_format

@@ -769,6 +769,13 @@ var mopub = mopub || {};
           else{
               $(this).parents("form").find('.customc_only').hide();
           }
+          if ($(this).val().search(/full/i) != -1){
+              $(this).parents().find('.full_only').show();
+          }
+          else{
+             // $('input[name$=landscape]').removeAttr('checked');
+              $(this).parents().find('.full_only').hide()
+          }
       }).change();
 
     $('#creativeAddForm input[name="creative_type"]').click(function(e) {

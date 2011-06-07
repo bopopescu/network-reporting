@@ -32,15 +32,32 @@
          * and return False
          * if nothing invalid, return True
          */
-
+        var success = 1;
+        $('select.selectmenu-required').each(function() {
+            if ($(this).val() == '') {
+                $(this).selectmenu().addClass('menu-form-error');               
+                /* add class to selectmenu */
+                success = 0;
+            }
+        });
+        $('.date-required').each(function() {
+            if ($(this).val() == '') {
+                $(this).addClass('form-error')
+                success = 0;
+            }
+        });
+        console.log("succes is: ", success);
+        return success;
     }
+    console.log("new4");
 
     $('#reportCreateForm-submit')
     .button({
         icons: {secondary: 'ui-icon-circle-triangle-e' }})
     .click(function(e) {
             e.preventDefault();
-            if (rep_validate($('#reportCreateForm'))) {
+            if (rep_validate($('#reportCreateForm')) == 1) {
+                console.log("wattt");
                 $('#reportCreateForm').submit();
             }
             return;

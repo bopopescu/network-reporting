@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
-from django.contrib.auth.views import login, logout
+from django.contrib.auth.views import login
+from registration.auth_views import logout
 from django.http import HttpResponseRedirect
 from django.utils.translation import ugettext as _
 from google.appengine.api import users

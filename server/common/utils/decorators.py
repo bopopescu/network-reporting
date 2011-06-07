@@ -91,9 +91,10 @@ def cache_page_until_post(time=5*60):
                 # If we are not POSTing, add to cache
                 try:
                     # Do the standard caching and vary on cookie
-                    cached_view = cache_page(time)(view)
-                    vary_on_cookie_cached_page = vary_on_cookie(cached_view)
-                    return vary_on_cookie_cached_page(request, *args, **kw)
+                    vary_on_cookie_view = vary_on_cookie(view)
+                    cached_view = cache_page(time)(vary_on_cookie_view)
+                    
+                    return cached_view(request, *args, **kw)
                 finally:
                     # Also add the caching key to a list - We need to do this
                     # in the finally clause in order to have the cache_key built

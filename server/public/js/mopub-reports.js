@@ -25,13 +25,25 @@
         $('input[name="start"]').datepicker('option', 'maxDate', dte);
     });
 
+    function rep_validate(form) {
+        /* Check a form for selectmenu-required selectmenus
+         * check for date-requireds
+         * If any invalid, flag as invalid (with the pretty red colors)
+         * and return False
+         * if nothing invalid, return True
+         */
+
+    }
 
     $('#reportCreateForm-submit')
     .button({
         icons: {secondary: 'ui-icon-circle-triangle-e' }})
     .click(function(e) {
             e.preventDefault();
-            $('#reportCreateForm').submit();
+            if (rep_validate($('#reportCreateForm'))) {
+                $('#reportCreateForm').submit();
+            }
+            return;
     });
 
     $('#reports-view-runReportButton').button({
@@ -197,8 +209,8 @@
 
     var selects = $('.dim-selectmenu').selectmenu({
         style: 'popup',
-        maxHeight:300,
-        width:100
+        maxHeight:320,
+        width:110
     });
 
     d1_sel = $(selects[0]);
@@ -260,7 +272,7 @@
     function d1_validate(obj) {
             var idx = obj.selectmenu('index');
             //start with everything enabled
-            for (var i = 0; i < 11; i++) {
+            for (var i = 0; i < 14; i++) {
                 d3_sel.selectmenu('enable', i);
                 d2_sel.selectmenu('enable', i);
             }
@@ -296,6 +308,16 @@
                     break;
 
                 case 'creative':
+                    if (d2_idx == 5) {
+                        d2_sel.selectmenu("index", 0);
+                    }
+                    if (d3_idx == 5) {
+                        d3_sel.selectmenu("index", 0);
+                    }
+                    d2_sel.selectmenu('disable', '5');
+                    d3_sel.selectmenu('disable', '5');
+
+                case 'campaign':
                     if (d2_idx == 4) {
                         d2_sel.selectmenu("index", 0);
                     }
@@ -305,7 +327,7 @@
                     d2_sel.selectmenu('disable', '4');
                     d3_sel.selectmenu('disable', '4');
 
-                case 'campaign':
+                case 'priority':
                     if (d2_idx == 3) {
                         d2_sel.selectmenu("index", 0);
                     }
@@ -314,16 +336,6 @@
                     }
                     d2_sel.selectmenu('disable', '3');
                     d3_sel.selectmenu('disable', '3');
-
-                case 'priority':
-                    if (d2_idx == 5) {
-                        d2_sel.selectmenu("index", 0);
-                    }
-                    if (d3_idx == 5) {
-                        d3_sel.selectmenu("index", 0);
-                    }
-                    d2_sel.selectmenu('disable', '5');
-                    d3_sel.selectmenu('disable', '5');
                     break;
                 case 'hour':
                     if (d2_idx == 9) {
@@ -372,6 +384,35 @@
                     d2_sel.selectmenu('disable', '10');
                     d3_sel.selectmenu('disable', '10');
                     break;
+                case 'marketing':
+                    if (d2_idx == 11) {
+                        d2_sel.selectmenu('index', 0);
+                    }
+                    if (d3_idx == 11) {
+                        d3_sel.selectmenu('index', 0);
+                    }
+                    d2_sel.selectmenu('disable', 11);
+                    d3_sel.selectmenu('disable', 11);
+                    break;
+                case 'os_ver':
+                    if (d2_idx == 13) {
+                        d2_sel.selectmenu('index', 0);
+                    }
+                    if (d3_idx == 13) {
+                        d3_sel.selectmenu('index', 0);
+                    }
+                    d2_sel.selectmenu('disable', 13);
+                    d3_sel.selectmenu('disable', 13);
+                case 'os':
+                    if (d2_idx == 12) {
+                        d2_sel.selectmenu('index', 0);
+                    }
+                    if (d3_idx == 12) {
+                        d3_sel.selectmenu('index', 0);
+                    }
+                    d2_sel.selectmenu('disable', 12);
+                    d3_sel.selectmenu('disable', 12);
+                    break;
                 default:
                     break;
             }
@@ -406,20 +447,20 @@
                 break;
 
             case 'creative':
-                if (d3_idx == 4) {
-                    d3_sel.selectmenu("index", 0);
-                }
-                d3_sel.selectmenu('disable', '4');
-            case 'campaign':
-                if (d3_idx == 3) {
-                    d3_sel.selectmenu("index", 0);
-                }
-                d3_sel.selectmenu('disable', '3');
-            case 'priority':
                 if (d3_idx == 5) {
                     d3_sel.selectmenu("index", 0);
                 }
                 d3_sel.selectmenu('disable', '5');
+            case 'campaign':
+                if (d3_idx == 4) {
+                    d3_sel.selectmenu("index", 0);
+                }
+                d3_sel.selectmenu('disable', '4');
+            case 'priority':
+                if (d3_idx == 3) {
+                    d3_sel.selectmenu("index", 0);
+                }
+                d3_sel.selectmenu('disable', '3');
                 break;
 
             case 'hour':
@@ -448,6 +489,23 @@
                     d3_sel.selectmenu("index", 0);
                 }
                 d3_sel.selectmenu('disable', '10');
+                break;
+            case 'marketing':
+                if (d3_idx == 11) {
+                    d3_sel.selectmenu('index', 0);
+                }
+                d3_sel.selectmenu('disable', 11);
+                break;
+            case 'os_ver':
+                if (d3_idx == 13) {
+                    d3_sel.selectmenu('index', 0);
+                }
+                d3_sel.selectmenu('disable', 13);
+            case 'os':
+                if (d3_idx == 12) {
+                    d3_sel.selectmenu('index', 0);
+                }
+                d3_sel.selectmenu('disable', 12);
                 break;
             default:
                 break;

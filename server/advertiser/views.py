@@ -588,7 +588,7 @@ class ShowAdGroupHandler(RequestHandler):
             if not getattr(self.account.network_config,adgroup_network_type+'_pub_id'):
                 for app in apps.values():
                     if app.network_config and not getattr(app.network_config,adgroup_network_type+'_pub_id'):
-                        message.append("The application "+app.name+" needs to have a <strong>"+adgroup_network_type.title()+" Network ID</strong> in order to serve. Specify a "+adgroup.network_type.title()+" Network ID on <a href=%s>your account</a> page."%reverse("account_index"))
+                        message.append("The application "+app.name+" needs to have a <strong>"+adgroup_network_type.title()+" Network ID</strong> in order to serve. Specify a "+adgroup_network_type.title()+" Network ID on <a href=%s>your account</a> page."%reverse("account_index"))
         if message == []:
             message = None
         else:

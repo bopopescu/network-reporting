@@ -1,11 +1,15 @@
+from google.appengine.api.datastore_types import Key
+
 from google.appengine.ext import db
 from publisher.models import Site
 from advertiser.models import Creative
 from account.models import Account
+from common.utils import simplejson
 
 import datetime
 import hashlib
 import logging
+import time
 
 DEFAULT_COUNTRY = 'XX'
 
@@ -79,6 +83,44 @@ class StatsModel(db.Expando):
     device_os = db.StringProperty()
     device_os_version = db.StringProperty()
     
+    
+    @classmethod
+    def from_json(cls,string):
+        props = simplejson.loads(string)
+        attrs = {}
+        for k,p in cls.properties().iteritems():
+            if k in props:
+                if isinstance(p,(db.DateTimeProperty, db.DateProperty)):
+                    attrs[k] = datetime.datetime.fromtimestamp(float(props[k]))
+                else:
+                    attrs[k] = p.make_value_from_form(props[k])
+                del props[k]
+
+        for k in props:
+            attrs[str(k)] = int(props[k])
+        
+        return StatsModel(**attrs)
+    
+    def to_json(self):    
+        SIMPLE_TYPES = (int, long, float, bool, dict, basestring, list, Key)
+        
+        props = {}
+        for k,p in self.properties().iteritems():
+            value = getattr(self,'_%s'%k)
+            if not value:
+                continue
+            if isinstance(value, SIMPLE_TYPES):
+                props[k] = str(value)
+            elif isinstance(value, (datetime.datetime, datetime.date)):
+                props[k] = str(time.mktime(value.timetuple())) 
+            elif isinstance(value, db.Model):
+                props[k] = str(value.key())
+            
+        # dynamic properties are all ints    
+        for k in self.dynamic_properties():
+            props[k] = str(getattr(self,k))
+
+        return simplejson.dumps(props)
             
     def __init__(self, parent=None, key_name=None, **kwargs):
         if not key_name and not kwargs.get('key', None):
@@ -143,8 +185,6 @@ class StatsModel(db.Expando):
             if len(parts) > 1:
                 countries.add(parts[0])
         return list(countries)
-    
-    
         
     def __add__(self,s):
         obj = StatsModel(parent=self.parent_key() or s.parent_key(),

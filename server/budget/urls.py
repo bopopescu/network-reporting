@@ -6,6 +6,5 @@ urlpatterns = patterns('budget.views',
     url(r'^daily_advance/$','daily_budget_advance',name='budget_daily_advance'),
     url(r'^advance_worker/$','advance_worker',name='budget_advance_worker'),
     url(r'^daily_advance_worker/$','daily_advance_worker',name='budget_daily_advance_worker'),
-    url(r'^log_data/(?P<campaign_key>.*)/$','log_data',name='budget_log_data'),
-    url(r'^chart/(?P<campaign_key>.*)/$','chart',name='budget_chart'),
+    url(r'^view/(?P<adgroup_key>.*)/$','budget_view',name='budget_view'),
 )

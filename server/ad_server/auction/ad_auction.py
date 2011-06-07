@@ -40,6 +40,7 @@ from reporting.models import StatsModel
 
 from ad_server.networks.appnexus import AppNexusServerSide
 from ad_server.networks.brightroll import BrightRollServerSide
+from ad_server.networks.chartboost import ChartBoostServerSide
 from ad_server.networks.ejam import EjamServerSide
 from ad_server.networks.greystripe import GreyStripeServerSide
 from ad_server.networks.inmobi import InMobiServerSide
@@ -69,6 +70,7 @@ SERVER_SIDE_DICT = {"millennial":MillennialServerSide,
                     "appnexus":AppNexusServerSide,
                     "inmobi":InMobiServerSide,
                     "brightroll":BrightRollServerSide,
+                    "chartboost":ChartBoostServerSide,
                     "ejam":EjamServerSide,
                     "jumptap":JumptapServerSide,
                     "greystripe":GreyStripeServerSide,
@@ -101,6 +103,7 @@ class AdAuction(object):
                 rpc = urlfetch.create_rpc(2) # maximum delay we are willing to accept is 2000 ms
                 payload = server_side.payload
                 trace_logging.warning("payload: %s"%payload)
+                trace_logging.warning("headers: %s"%server_side.headers)
                 if payload == None:
                     urlfetch.make_fetch_call(rpc, server_side.url, headers=server_side.headers)
                 else:
@@ -273,8 +276,7 @@ class AdAuction(object):
                             # TODO: move format and exclude above players (right now we're doing the same thing twice)
                             # if the adunit is resizable then its format doesn't really matter
                             # all creatives can target it
-                            adunit_format = None if adunit.resizable else adunit.format
-                            CRTV_FILTERS = (format_filter(adunit_format), # remove wrong formats
+                            CRTV_FILTERS = (format_filter(adunit), # remove wrong formats
                                                 ecpm_filter(winning_ecpm, player_ecpm_dict), # remove creatives that aren't tied for first (winning ecpm)
                                                )
                             winners = filter(mega_filter(*CRTV_FILTERS), players)

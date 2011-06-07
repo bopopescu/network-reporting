@@ -17,6 +17,7 @@ class AccountForm(mpforms.MPModelForm):
                   "adsense_company_name",
                   "adsense_test_mode",
                   "brightroll_pub_id",
+                  "chartboost_pub_id",
                   "ejam_pub_id",
                   "greystripe_pub_id",
                   "inmobi_pub_id",

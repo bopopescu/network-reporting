@@ -95,7 +95,10 @@ class AppIndexHandler(RequestHandler):
     totals_list = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(days=days)
     
     today = totals_list[-1]
-    yesterday = totals_list[-2]
+    try:
+        yesterday = totals_list[-2]
+    except IndexError:
+        yesterday = StatsModel()    
     totals = reduce(lambda x, y: x+y, totals_list, StatsModel())
     # this is the max active users over the date range
     # NOT total unique users
@@ -298,12 +301,23 @@ def add_demo_campaign(site):
     AdGroupQueryManager.put(ag)
 
     # And set up a default creative
-    h = HtmlCreative(ad_type="html",
-                     ad_group=ag,
-                     account=site.account,
-                     format=site.format,
-                     name="Demo HTML Creative",
-                     html_data="<style type=\"text/css\">body {font-size: 12px;font-family:helvetica,arial,sans-serif;margin:0;padding:0;text-align:center;background:white} .creative_headline {font-size: 18px;} .creative_promo {color: green;text-decoration: none;}</style><div class=\"creative_headline\">Welcome to mopub!</div><div class=\"creative_promo\"><a href=\"http://www.mopub.com\">Click here to test ad</a></div><div>You can now set up a new campaign to serve other ads.</div>")
+    if site.format == "custom":
+        h = HtmlCreative(ad_type="html",
+                         ad_group=ag,
+                         account=site.account,
+                         custom_height = site.custom_height,
+                         custom_width = site.custom_width,
+                         format=site.format,
+                         name="Demo HTML Creative",
+                         html_data="<style type=\"text/css\">body {font-size: 12px;font-family:helvetica,arial,sans-serif;margin:0;padding:0;text-align:center;background:white} .creative_headline {font-size: 18px;} .creative_promo {color: green;text-decoration: none;}</style><div class=\"creative_headline\">Welcome to mopub!</div><div class=\"creative_promo\"><a href=\"http://www.mopub.com\">Click here to test ad</a></div><div>You can now set up a new campaign to serve other ads.</div>")
+        
+    else:
+        h = HtmlCreative(ad_type="html",
+                         ad_group=ag,
+                         account=site.account,
+                         format=site.format,
+                         name="Demo HTML Creative",
+                         html_data="<style type=\"text/css\">body {font-size: 12px;font-family:helvetica,arial,sans-serif;margin:0;padding:0;text-align:center;background:white} .creative_headline {font-size: 18px;} .creative_promo {color: green;text-decoration: none;}</style><div class=\"creative_headline\">Welcome to mopub!</div><div class=\"creative_promo\"><a href=\"http://www.mopub.com\">Click here to test ad</a></div><div>You can now set up a new campaign to serve other ads.</div>")
     CreativeQueryManager.put(h)
   
 class ShowAppHandler(RequestHandler):
@@ -349,7 +363,10 @@ class ShowAppHandler(RequestHandler):
     adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(app=app)
     
     today = app_stats[-1]
-    yesterday = app_stats[-2]
+    try:
+        yesterday = app_stats[-2]
+    except IndexError:
+        yesterday = StatsModel()    
     app.stats = reduce(lambda x, y: x+y, app_stats, StatsModel())
     # this is the max active users over the date range
     # NOT total unique users
@@ -554,12 +571,18 @@ class AdUnitShowHandler(RequestHandler):
     backfill_promo_campaigns = sorted(backfill_promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
     
     
+    today = adunit.all_stats[-1]
+    try:
+        yesterday = adunit.all_stats[-2]
+    except:
+        yesterday = StatsModel()    
+    
     # write response
     return render_to_response(self.request,'publisher/adunit.html', 
         {'site': adunit,
          'adunit': adunit,
-         'today': adunit.all_stats[-1],
-         'yesterday': adunit.all_stats[-2],
+         'today': today,
+         'yesterday': yesterday,
          'start_date': days[0],
          'end_date': days[-1],
          'date_range': self.date_range,

@@ -46,7 +46,7 @@ parser.add_option("-x", "--host", dest="HOST",type="str",
                 help="HOST NAME.", default='localhost:8080')
                 
 parser.add_option("-a", "--adunit", dest="ADUNIT",type="str",
-                help="ADUNIT KEY", default="agltb3B1Yi1pbmNyCgsSBFNpdGUYAgw")
+                help="ADUNIT KEY", default="agltb3B1Yi1pbmNyCgsSBFNpdGUYZQw")
 
 
 (options, args) = parser.parse_args()

@@ -59,6 +59,7 @@ class NetworkConfig(db.Model):
     admob_pub_id = db.StringProperty()
     adsense_pub_id = db.StringProperty()
     brightroll_pub_id = db.StringProperty()
+    chartboost_pub_id = db.StringProperty()
     ejam_pub_id = db.StringProperty()
     greystripe_pub_id = db.StringProperty()
     inmobi_pub_id = db.StringProperty()
@@ -88,6 +89,8 @@ class Account(db.Model):
     adsense_company_name = db.StringProperty()
     adsense_test_mode = db.BooleanProperty(default=False)
     
+    number_shards = db.IntegerProperty(default=1)
+    
     network_config = db.ReferenceProperty(NetworkConfig,
                             collection_name="accounts")
     
@@ -95,6 +98,7 @@ class Account(db.Model):
     admob_pub_id = db.StringProperty()
     adsense_pub_id = db.StringProperty()
     brightroll_pub_id = db.StringProperty()
+    chartboost_pub_id = db.StringProperty()
     ejam_pud_id = db.StringProperty()
     greystripe_pub_id = db.StringProperty()
     inmobi_pub_id = db.StringProperty()

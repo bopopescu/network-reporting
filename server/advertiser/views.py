@@ -109,7 +109,10 @@ class AdGroupIndexHandler(RequestHandler):
             graph_adgroups[3] = AdGroup(name='Others')
             graph_adgroups[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[c.all_stats for c in adgroups[3:]])]
             
-        
+        try:
+            yesterday = reduce(lambda x, y: x+y, [c.all_stats[-2] for c in graph_adgroups], StatsModel())
+        except IndexError: 
+            yesterday = StatsModel()
 
         return render_to_response(self.request, 
                                  'advertiser/adgroups.html', 
@@ -122,7 +125,7 @@ class AdGroupIndexHandler(RequestHandler):
                                    'apps' : apps,
                                    'totals': reduce(lambda x, y: x+y.summed_stats, adgroups, StatsModel()),
                                    'today': reduce(lambda x, y: x+y, [c.all_stats[-1] for c in graph_adgroups], StatsModel()),
-                                   'yesterday': reduce(lambda x, y: x+y, [c.all_stats[-2] for c in graph_adgroups], StatsModel()),
+                                   'yesterday': yesterday,
                                    'guarantee_levels': guarantee_levels, 
                                    'promo': promo_campaigns,
                                    'network': network_campaigns,
@@ -201,7 +204,7 @@ class CreateCampaignAJAXHander(RequestHandler):
             campaign = campaign or adgroup.campaign
         campaign_form = campaign_form or CampaignForm(instance=campaign)
         adgroup_form = adgroup_form or AdGroupForm(instance=adgroup)
-        networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["ejam","eJam",False],["greystripe","GreyStripe",False],\
+        networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["chartboost","ChartBoost",False],["ejam","eJam",False],["greystripe","GreyStripe",False],\
             ["iAd","iAd",False],["inmobi","InMobi",False],["jumptap","Jumptap",False],["millennial","Millennial Media",False],["mobfox","MobFox",False],\
             ['custom','Custom Network', False], ['custom_native','Custom Native Network', False],['admob_native', 'AdMob Native', False], ['millennial_native', 'Millennial Media Native', False]]
 
@@ -391,7 +394,7 @@ class CreateAdGroupHandler(RequestHandler):
             adunit.checked = adunit.key() in adgroup.site_keys
 
         # TODO: Clean up this hacked shit 
-        networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["ejam","eJam",False],["jumptap","Jumptap",False],["greystripe","GreyStripe",False],["iAd","iAd",False],["inmobi","InMobi",False],["millennial","Millennial Media",False],["mobfox","MobFox",False]]
+        networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["chartboost","ChartBoost",False],["ejam","eJam",False],["jumptap","Jumptap",False],["greystripe","GreyStripe",False],["iAd","iAd",False],["inmobi","InMobi",False],["millennial","Millennial Media",False],["mobfox","MobFox",False]]
         for n in networks:
             if adgroup.network_type == n[0]:
                 n[2] = True
@@ -476,6 +479,7 @@ class ShowAdGroupHandler(RequestHandler):
         adgroup = AdGroupQueryManager.get(adgroup_key)
         opt = self.params.get('action')
         update = False
+        campaign = adgroup.campaign
         if opt == 'play':
             adgroup.active = True
             update = True
@@ -484,7 +488,9 @@ class ShowAdGroupHandler(RequestHandler):
             update = True
         elif opt == "delete":   
             adgroup.deleted = True
+            campaign.deleted = True
             AdGroupQueryManager.put(adgroup)
+            CampaignQueryManager.put(campaign)
             # TODO: Flash a message saying we deleted the campaign
             return HttpResponseRedirect(reverse('advertiser_campaign'))
             
@@ -492,6 +498,9 @@ class ShowAdGroupHandler(RequestHandler):
             logging.error("Passed an impossible option")
 
         if update:
+            campaign.active = adgroup.active
+            campaign.deleted = adgroup.deleted
+            CampaignQueryManager.put(campaign)
             AdGroupQueryManager.put(adgroup)
         return HttpResponseRedirect(reverse('advertiser_adgroup_show', kwargs={'adgroup_key': str(adgroup.key())}))
 
@@ -562,7 +571,29 @@ class ShowAdGroupHandler(RequestHandler):
     
         # In order to make the edit page
         campaign_create_form_fragment = CreateCampaignAJAXHander(self.request).get(adgroup=adgroup)
-    
+        
+        try:
+            yesterday = reduce(lambda x, y: x+y, [a.all_stats[-2] for a in graph_adunits], StatsModel())
+        except:
+            yesterday = StatsModel()    
+        
+        message = []
+        if adgroup.network_type:
+            # gets rid of _native_ in admob_native_pub_id to become admob_pub_id
+            logging.info('\n\n\n\nasdfasdf: '+adgroup.network_type)
+            if '_native' in adgroup.network_type:
+                adgroup_network_type = adgroup.network_type.replace('_native','')
+            else:
+                adgroup_network_type = adgroup.network_type    
+            
+            if not getattr(self.account.network_config,adgroup_network_type+'_pub_id'):
+                for app in apps.values():
+                    if app.network_config and not getattr(app.network_config,adgroup_network_type+'_pub_id'):
+                        message.append("The application "+app.name+" needs to have a <strong>"+adgroup_network_type.title()+" Network ID</strong> in order to serve. Specify a "+adgroup_network_type.title()+" Network ID on <a href=%s>your account</a> page."%reverse("account_index"))
+        if message == []:
+            message = None
+        else:
+            message = "<br/>".join(message)
         return render_to_response(self.request, 'advertiser/adgroup.html', 
                                     {'campaign': adgroup.campaign,
                                     'apps': apps.values(),
@@ -570,12 +601,13 @@ class ShowAdGroupHandler(RequestHandler):
                                     'creatives': creatives,
                                     'totals': reduce(lambda x, y: x+y.stats, adunits, StatsModel()),
                                     'today': reduce(lambda x, y: x+y, [a.all_stats[-1] for a in graph_adunits], StatsModel()),
-                                    'yesterday': reduce(lambda x, y: x+y, [a.all_stats[-2] for a in graph_adunits], StatsModel()),
+                                    'yesterday': yesterday,
                                     'graph_adunits': graph_adunits,
                                     'start_date': days[0],
                                     'end_date': days[-1],
                                     'creative_fragment':creative_fragment,
-                                    'campaign_create_form_fragment':campaign_create_form_fragment})
+                                    'campaign_create_form_fragment':campaign_create_form_fragment,
+                                    'message': message})
     
 @login_required   
 def campaign_adgroup_show(request,*args,**kwargs):    

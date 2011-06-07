@@ -106,4 +106,3 @@ def chunks(list, chunk_size):
     '''
     for idx in xrange(0, len(list), chunk_size):
         yield list[idx:idx+chunk_size]
-

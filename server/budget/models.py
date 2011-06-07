@@ -71,14 +71,26 @@ class BudgetSliceLog(db.Model):
       
       @property
       def spending(self):
-          return self.initial_memcache_budget - self.final_memcache_budget
+          try:
+              return self.initial_memcache_budget - self.final_memcache_budget
+          except TypeError:
+              raise NoSpendingForIncompleteLogError
+         
 
 class BudgetDailyLog(db.Model):
     budget_slicer = db.ReferenceProperty(BudgetSlicer,collection_name="daily_logs")
+    initial_daily_budget = db.FloatProperty()
     remaining_daily_budget = db.FloatProperty()
-    end_datetime = db.DateTimeProperty()
-    date = db.DateProperty
+    date = db.DateProperty()
 
     @property
     def spending(self):
-        return self.budget_slicer.campaign.budget - self.remaining_daily_budget
+        try:
+            return self.initial_daily_budget - self.remaining_daily_budget
+        except TypeError:
+            raise NoSpendingForIncompleteLogError
+
+class NoSpendingForIncompleteLogError(Exception):
+    """ We cannot get spending for logs that are incomplete.
+        This should only occur for today, the day in progress. """
+    pass

@@ -5,6 +5,7 @@ from ad_server.networks.jumptap import JumptapServerSide
 from ad_server.networks.mobfox import MobFoxServerSide
 from ad_server.networks.inmobi import InMobiServerSide
 from ad_server.networks.ejam import EjamServerSide
+from ad_server.networks.chartboost import ChartBoostServerSide
 
 from google.appengine.api import urlfetch
 from google.appengine.ext import webapp

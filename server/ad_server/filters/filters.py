@@ -88,25 +88,28 @@ def mega_filter(*filters):
 #
 ######################################
 
-def format_filter(format):
-    log_mesg = "Removed due to format mismatch, expected " + str(format) + ": %s"
+def format_filter(adunit):
+    adunit_format = None if adunit.resizable else adunit.format
+    log_mesg = "Removed due to format mismatch, expected " + str(adunit_format) + ": %s"
     def real_filter(creative):
-        if not format or not creative.format:
+        if not adunit_format or not creative.format:
             return True 
         if creative.multi_format:
-            if format in creative.multi_format:
+            if adunit_format in creative.multi_format:
                 return True
-        if format == 'full' or format == 'full_landscape':
+        if adunit_format == 'full' or adunit_format == 'full_landscape':
             if creative.multi_format:
                 return set(creative.multi_format).intersection(set(VALID_FULL_FORMATS)) > set()
             else:
                 return creative.format in VALID_FULL_FORMATS
-        if format == 'full_tablet' or format == 'full_tablet_landscape':
+        if adunit_format == 'full_tablet' or adunit_format == 'full_tablet_landscape':
             if creative.multi_format:
                 return set(creative.multi_format).intersection(set(VALID_TABLET_FULL_FORMATS)) > set()
             else:
                 return creative.format in VALID_TABLET_FULL_FORMATS
-        return creative.format == format
+        if adunit_format == 'custom' and creative.format == 'custom':
+            return adunit.custom_width == creative.custom_width and adunit.custom_height == creative.custom_height
+        return creative.format == adunit_format
     return (real_filter, log_mesg, [])
 
 def exclude_filter(excluded_adgroups):

@@ -22,7 +22,7 @@ class RequestHandler(object):
 
         super(RequestHandler,self).__init__()  
 
-    def __call__(self,request, cache_time=5*60, use_cache=False, *args,**kwargs):
+    def __call__(self,request, cache_time=5*60, use_cache=True, *args,**kwargs):
         
         # Initialize our caching decorator
         cache_dec = cache_page_until_post(time=cache_time)

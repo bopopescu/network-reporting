@@ -1,4 +1,5 @@
 from google.appengine.ext import db
+from google.appengine.ext import blobstore 
 from publisher.models import Site
 from account.models import Account
 
@@ -39,6 +40,12 @@ class Pacific_tzinfo(datetime.tzinfo):
             return "PST"
         else:
             return "PDT"
+
+
+class BlobLog(db.Model):
+
+    date = db.DateProperty()
+    blob_key = blobstore.BlobKey()
 
 class StatsModel(db.Expando):
     

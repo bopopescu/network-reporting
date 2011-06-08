@@ -22,6 +22,7 @@ class AccountHandler(RequestHandler):
             return HttpResponseRedirect(reverse('advertiser_campaign'))
         account_form = account_form or AccountForm(instance=self.account)
         apps_for_account = AppQueryManager.get_apps(account=self.account)
+        user = self.account.mpuser
         
         networks = ['admob_status','adsense_status','brightroll_status','chartboost_status','ejam_status','greystripe_status','inmobi_status','jumptap_status','millennial_status','mobfox_status']
         network_config_status = {}
@@ -52,6 +53,7 @@ class AccountHandler(RequestHandler):
       
         return render_to_response(self.request,'account/account.html', dict({'account': self.account, 
                                                                       'account_form': account_form,
+                                                                      'user': user,
                                                                       "apps": apps_for_account}.items() + network_config_status.items()))
 
 

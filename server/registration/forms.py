@@ -44,67 +44,21 @@ class BaseRegistrationForm(mpforms.MPForm):
     mailing_list = forms.BooleanField(label=_(u'I would like to receive occasional product update emails from MoPub'),
                                       initial=True,
                                       required=False)
-    tos = forms.BooleanField(widget=forms.CheckboxInput(attrs=attrs_dict),
-                             label=_(u'I have read and agree to the Terms of Service'),
-                             error_messages={ 'required': u"Please accept the terms and conditions in order to start using MoPub" })
-    
-    
     
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request',None)
         super(BaseRegistrationForm, self).__init__(*args, **kwargs)
     
-    
-    def clean_email(self):
-        """
-        Validate that the email is not already
-        in use.
-        
-        """
-        from django.core.urlresolvers import reverse
-        
-        model = User
-        user = UserQueryManager.get_by_email(self.cleaned_data['email'].lower())
-        if user:
-            raise forms.ValidationError(_(u'This email has already registered for a MoPub account. Enter a new email address or <a href="%s">Log in</a>.'%reverse('django.contrib.auth.views.login')))
-        return self.cleaned_data['email']
-        
-
-    def clean(self):
-        """
-        Verifiy that the values entered into the two password fields
-        match. Note that an error here will end up in
-        ``non_field_errors()`` because it doesn't apply to a single
-        field.
-        
-        """
-        if 'password1' in self.cleaned_data and 'password2' in self.cleaned_data:
-            if self.cleaned_data['password1'] != self.cleaned_data['password2']:
-                raise forms.ValidationError(_(u'Please enter the same password for each time.'))
-        return self.cleaned_data
-    
     def save(self, domain_override=""):
         """
         Create the new ``User`` and ``RegistrationProfile``, and
         returns the ``User`` (by calling
         ``RegistrationProfile.objects.create_inactive_user()``).
-        
-        """
-        new_user = RegistrationProfile.objects.create_inactive_user(**self.cleaned_data)
-        return new_user
-    
 
-class MPGoogleRegistrationForm(BaseRegistrationForm):
-    def save(self, domain_override=""):
-        """
-        Create the new ``User`` and ``RegistrationProfile``, and
-        returns the ``User`` (by calling
-        ``RegistrationProfile.objects.create_inactive_user()``).
-        
         """
         self.cleaned_data.update(username=self.request.user.username)
         new_user = self.request.user
-        
+
         def _get_model_params(Model):
             # get property names of the stats model
             properties = Model.properties() # passes back dictionary with key = property names
@@ -114,29 +68,70 @@ class MPGoogleRegistrationForm(BaseRegistrationForm):
             d = {}
             for p in properties:
                 value = self.cleaned_data.get(p,None)
-                if value:
+                if value is not None:
                     d[p] = value
             return d
-        
+
         user_details = _get_model_params(User)
-        for prop_name,value in user_details.iteritems():
-            setattr(new_user,prop_name,value)
-        new_user.put()
         
+        for prop_name,value in user_details.iteritems():
+            if (value is None or value == ''):
+                setattr(new_user,prop_name,None)
+            else:    
+                setattr(new_user,prop_name,value)
+        new_user.put()
+
         # create new account for this user as well        
         account_details = _get_model_params(Account)
         account = AccountQueryManager.get_current_account(user=new_user)
         for prop_name,value in account_details.iteritems():
-            setattr(account,prop_name,value)
+            if (value is None or value == ''):
+                setattr(new_user,prop_name,None)
+            else:    
+                setattr(account,prop_name,value)
         account.put()
         return new_user
+
+class MPGoogleRegistrationForm(BaseRegistrationForm):
+    tos = forms.BooleanField(widget=forms.CheckboxInput(attrs=attrs_dict),
+                             label=_(u'I have read and agree to the Terms of Service'),
+                             error_messages={ 'required': u"Please accept the terms and conditions in order to start using MoPub" })
+    
+        
+class ChangeSettingsForm(BaseRegistrationForm):
+    TEMPLATE='registration/forms/settings_change_form.html'
+
+    def __init__(self, *args, **kwargs):
+        # dict
+        initial = kwargs.get("initial",{})
+        request = kwargs.get("request")
+            
+        user = request.user
+        account = AccountQueryManager.get_current_account(user=user)
+            
+        initial['first_name'] = user.first_name
+        initial['last_name'] = user.last_name
+        initial['company'] = user.company
+        initial['title']=user.title
+        initial['phone']=user.phone
+        initial['country']=user.country
+        if account.traffic:
+            initial['traffic']=str(int(account.traffic))
+        else:
+            initial['traffic']=None
+        initial['mailing_list']=user.mailing_list
+        initial['tos']=True
+        
+        
+            
+        kwargs.update(initial=initial)
+        super(ChangeSettingsForm, self).__init__(*args, **kwargs)        
         
 class MPUserAccountForm(BaseRegistrationForm):
     pass        
     
 
-class MPRegistrationForm(BaseRegistrationForm):
-    
+class MPRegistrationForm(MPGoogleRegistrationForm):
     
     email = forms.EmailField(widget=mpwidgets.MPTextInput)
     password1 = forms.CharField(widget=mpwidgets.MPPasswordInput,)

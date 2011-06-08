@@ -24,6 +24,8 @@ SENTINEL = '!!!'
 MAX_RETRIES = 3
 
 
+BLOBLOG_KEY = 'blobkey:%s'
+
 class SiteStatsQueryManager(CachedQueryManager):
     def get_sitestats_for_days(self, site=None, owner=None, days=None):
         if isinstance(site,db.Model):
@@ -50,8 +52,9 @@ class BlobLogQueryManager():
         bloblog.put()
         return
 
-    def get_blobkeys_for_days(): 
-        return
+    def get_blobkeys_for_days(days): 
+        #lambda magixxxx
+        return map(lambda day: BLOBLOG_KEY % day.strftime('%y%m%d'), days)
         
 class StatsModelQueryManager(CachedQueryManager):
     Model = StatsModel

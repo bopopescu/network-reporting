@@ -89,7 +89,7 @@ class Report(db.Model):
     start = db.DateProperty(required=True)
     end = db.DateProperty(required=True)
 
-    report_blob = blobstore.BlobKey()
+    report_blob = blobstore.BlobReferenceProperty()
 
     #the actual report
     data = DictProperty()

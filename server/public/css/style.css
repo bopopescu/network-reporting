@@ -838,6 +838,18 @@ dl.formFields.thin {
   width: 50px;
 }
 
+.formFields.flat dt{
+    font-size: 16px;
+    padding: 0 0;
+    text-align:left;
+    width: 120px;
+}
+.formFields.flat dd{
+    line-height:16px;
+    font-size: 16px;
+    padding: 0 0;
+}
+
 .formFields dd {
   display: inline-block;
   margin: 10px 0 0 0;

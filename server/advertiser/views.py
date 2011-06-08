@@ -115,6 +115,9 @@ class AdGroupIndexHandler(RequestHandler):
             if level['display']:   # only get levels to show
                 visible_gtee_adgroups.extend(level['adgroups'])
         
+        # sort visible gtee adgroups by summed impression count
+        visible_gtee_adgroups = sorted(visible_gtee_adgroups, key=lambda adgroup: adgroup.summed_stats.impression_count, reverse=True)
+        
         # if more than 4 visible gtee adgroups, condense 4th and remaining into 'Others'
         graph_gtee_adgroups = visible_gtee_adgroups[0:4]
         if len(visible_gtee_adgroups) > 4:

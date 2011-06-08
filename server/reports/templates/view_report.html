@@ -37,6 +37,9 @@
     </div>
    
     <div id='reportForm-container' style='display: none;'>
+        <div id='formError' class='alertMessage error' style='display:none; width:200px;'>
+            Fields outlined in red are required
+        </div>
         <form action="{% url add_report %}" method="POST" accept-charset="utf-8" id="reportCreateForm">
             <fieldset id="reportAddForm-details" class="alt">
                 <div id="reportAddForm-fragment" class="reportAddForm-fragment">

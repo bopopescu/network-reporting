@@ -32,35 +32,36 @@
          * and return False
          * if nothing invalid, return True
          */
-        var success = 1;
+        var success = true;
+        $('#d1Error').hide();
+        $('#dateError').hide();
         $('select.selectmenu-required').each(function() {
             if ($(this).val() == '') {
-                $(this).selectmenu().addClass('menu-form-error');               
-                /* add class to selectmenu */
-                success = 0;
+                $('#d1Error').show();
+                success = false;
             }
         });
         $('.date-required').each(function() {
             if ($(this).val() == '') {
-                $(this).addClass('form-error')
-                success = 0;
+                $(this).addClass('form-error');
+                $('#dateError').show();
+                success = false;
             }
         });
-        console.log("succes is: ", success);
         return success;
     }
-    console.log("new4");
 
     $('#reportCreateForm-submit')
     .button({
         icons: {secondary: 'ui-icon-circle-triangle-e' }})
     .click(function(e) {
             e.preventDefault();
-            if (rep_validate($('#reportCreateForm')) == 1) {
-                console.log("wattt");
+            if (rep_validate($('#reportCreateForm'))) {
                 $('#reportCreateForm').submit();
             }
-            return;
+            else {
+                $('#formError').show();
+            }
     });
 
     $('#reports-view-runReportButton').button({
@@ -124,13 +125,6 @@
             e.preventDefault();
             $(this).parents('#reportFormSaveAs-container')
             .dialog('close');
-        });
-
-    $('#reportCreateForm-submit')
-        .button()
-        .click(function(e) {
-            e.preventDefault();
-            $(this).parents('form').submit();
         });
 
     $('#reportUpdateForm-submit')
@@ -280,6 +274,9 @@
     var form_state;
     $('#d1').change(
         function(e) {
+            if ($(this).val() != '') {
+                $('#d1Error').hide();
+            }
             e.preventDefault();
             d1_validate($(this));
             d2_validate($('#d2'));

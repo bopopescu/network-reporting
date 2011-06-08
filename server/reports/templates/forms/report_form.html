@@ -9,6 +9,7 @@
     <dt>Report Breakdown:</dt>
     <dd>
         {{ form.d1|attrs:'{"class":"selectmenu-required dim-selectmenu","id":"d1"}'|raw }}
+        <span id='d1Error' style="display:none; color:red;">* Required</span>
         <span id="d2-show" {% if not form.d2.value %}class='hidden'{% endif %}>
             &nbsp;>&nbsp;
             {{ form.d2|attrs:'{"class":"dim-selectmenu","id":"d2"}'|raw }}
@@ -24,6 +25,7 @@
         &nbsp;&nbsp;
         <input id='start-input' type='text' class='date-required input-text input-text-number date-field' name='{{form.start.name}}' size='15' value='{{form.start.value|date:'m/d/Y'}}' placeholder='Start'/> -
         <input id='end-input' type='text' class='date-required input-text input-text-number date-field' name='{{form.end.name}}' size='15' value='{{form.end.value|date:'m/d/Y'}}' placeholder='End'/>
+        <span id='dateError' style="display:none; color:red;">* Required</span>
     </dd>
     <dt>Schedule:</dt>
     <dd>

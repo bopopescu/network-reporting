@@ -1,3 +1,6 @@
+from appengine_django import InstallAppengineHelperForDjango
+InstallAppengineHelperForDjango()
+
 #!/usr/bin/env python
 #
 # Copyright 2010 Google Inc.

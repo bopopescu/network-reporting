@@ -1,14 +1,13 @@
-import logging
-
 from appengine_django import InstallAppengineHelperForDjango
 InstallAppengineHelperForDjango()
+
+import logging
 
 from mapreduce import operation as op
 from mapreduce import context 
 from mapreduce import base_handler
 from mapreduce import mapreduce_pipeline
 from mapreduce import shuffler
-from google.appengine.ext import db
 
 
 from reports.models import Report
@@ -107,14 +106,15 @@ def verify_stat(model, d1, d2, d3, days, account):
 def map_rep_gen(stats_model):
     ctx = context.get()
     params = ctx.mapreduce_spec.mapper.params
-    d1 = params['d1']
-    d2 = d3 = None
-    if params['d2'] is not None:
-        d2 = params['d2']
-    if params['d3'] is not None:
-        d3 = params['d3']
-    days = params['days']
-    acct = params['account']
+    report_key = params['report_key']
+    report = Report.get(report_key)
+    d1 = report.d1
+    d2 = report.d2
+    d3 = report.d3
+    account = report.account
+    #Turn start, end dates into a list of date_hours
+    #reduce turns [[day1hours][day2hours]] into [day1hours, day2hours]
+    days = reduce(lambda x,y: x+y, date_magic.gen_days(report.start, report.end, True))
     if verify_stat(stats_model, d1, d2, d3, days, account):
         for key in build_keys(stats_model, d1, d2, d3):
             yield (key, [stats_model.request_count, stats_model.impression_count, stats_model.click_count, stats_model.conversoin_count]) 
@@ -131,14 +131,6 @@ def reduce_rep_gen(key, values):
 class ReportMRPipeline(base_handler.PipelineBase):
     #run with REPORT not SCHED_REPORT because run report (how a new report is generated for an old sched_report) only updates the start/end for the report, not the sched_report explicitly
     def run(self, report_key):
-        report = Report.get(report_key)
-        d1 = report.d1
-        d2 = report.d2
-        d3 = report.d3
-        account = report.account
-        #Turn start, end dates into a list of date_hours
-        #reduce turns [[day1hours][day2hours]] into [day1hours, day2hours]
-        days = reduce(lambda x,y: x+y, date_magic.gen_days(report.start, report.end, True))
         yield mapreduce_pipeline.MapreducePipeline(
                 'ReportGenerator',
                 'reports.rep_mapreduce.map_rep_gen',
@@ -146,10 +138,7 @@ class ReportMRPipeline(base_handler.PipelineBase):
                 'mapreduce.input_readers.DatastoreInputReader',
                 'mapreduce.output_writers.BlobstoreOutputWriter',
                 mapper_params={
-                'account': account,
-                'days': days,
-                'd1': d1,
-                'd2': d2,
-                'd3': d3,
+                'report_key': report_key,
+                'entity_kind': 'reporting.models.StatsModel',
                 },
                 shards=15)

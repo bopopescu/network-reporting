@@ -125,6 +125,9 @@ def reduce_rep_gen(key, values):
     yield  "%s| %s" % (key, reduce(lambda x,y: [sum(a) for a in zip(x,y)], values))
 
 
+
+
+
 #d1 - d3 are 'dim name'
 #days is all date_hours
 #account needs to be actual account
@@ -142,3 +145,54 @@ class ReportMRPipeline(base_handler.PipelineBase):
                 'entity_kind': 'reporting.models.StatsModel',
                 },
                 shards=15)
+
+def generate_report_map(byte_offset, line_value):
+    """ Mapping portion of mapreduce job
+
+    Args:
+        byte_offset: I have no idea what this is for but I get it from MR
+        line_value: The value of the line
+
+    """
+    ctx = context.get()
+    params = ctx.mapreduce_spec.mapper.params
+    report_key = params['report_key']
+    report = Report.get(report_key)
+    d1 = report.d1
+    d2 = report.d2
+    d3 = report.d3
+    account = report.account
+    #Turn start, end dates into a list of date_hours
+    #reduce turns [[day1hours][day2hours]] into [day1hours, day2hours]
+    days = reduce(lambda x,y: x+y, date_magic.gen_days(report.start, report.end, True))
+
+
+    if verify_stat(stats_model, d1, d2, d3, days, account):
+        for key in build_keys(stats_model, d1, d2, d3):
+            yield (key, [stats_model.request_count, stats_model.impression_count, stats_model.click_count, stats_model.conversoin_count]) 
+
+
+class GenReportPipeline(base_handler.PipelineBase):
+    """ Pipeline for starting a report generation mapreduce job
+        
+        Args:
+            blob_keys: list of blob_keys containing lowest level
+                stats objects
+            report_key: key of the report being generated (not scheduled report)
+    """
+    def run(self, blob_keys, report_key):
+        yield mapreduce_pipeline.MapreducePipeline(
+                'BlobReportGenerator',
+                'reports.rep_mapreduce.generate_report_map',
+                'reports.rep_mapreduce.generate_report_reduce',
+                'mapreduce.input_readers.BlobstoreLineInputReader',
+                'mapreduce.output_writers.BlobstoreOutputWriter',
+                mapper_params={
+                    'report_key': report_key,
+                    'blob_keys': blob_keys,
+                },
+                reducer_params={
+                    'mime_type': 'text/plain',
+                },
+                shards=25)
+

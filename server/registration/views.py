@@ -10,9 +10,9 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext
+from django.contrib.auth.decorators import login_required
 
-
-from registration.forms import RegistrationForm, MPRegistrationForm, MPGoogleRegistrationForm
+from registration.forms import RegistrationForm, MPRegistrationForm, MPGoogleRegistrationForm, ChangeSettingsForm
 from registration.models import RegistrationProfile
 
 from common.ragendja.auth.decorators import google_login_required
@@ -158,6 +158,19 @@ def register(request, success_url=None,
     return render_to_response(template_name,
                               { 'form': form },
                               context_instance=context)
+
+@login_required
+def settings_change(request,
+                      success_url=None,
+                      form_class=ChangeSettingsForm,
+                      template_name='registration/settings_change_form.html',):                    
+  return register(request, 
+                  success_url=reverse('account_index'),
+                  form_class=form_class,
+                  template_name=template_name,
+                  extra_context=None,
+                  auto_login=False)
+                                                  
 @google_login_required                    
 def register_google(request,
                         success_url=None,
@@ -169,4 +182,4 @@ def register_google(request,
                     form_class=form_class,
                     template_name=template_name,
                     extra_context=None,
-                    auto_login=False)         
+                    auto_login=False)

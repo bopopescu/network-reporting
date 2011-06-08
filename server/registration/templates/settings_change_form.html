@@ -1,0 +1,82 @@
+{% extends "registration/base.html" %}
+
+{% block pageTitle %}<h1>Account - Edit settings</h1>{% endblock %}
+
+{% load filters %}
+
+{% block content %}
+<div class="content-main">
+
+<form action="" method="POST" accept-charset="utf-8" id="accountForm">
+<fieldset id="appForm-details"> 
+
+<dl class="formFields">
+    <dt>
+        Name:
+    </dt>
+    <dd>
+        {{form.first_name|attrs:'{"class":"input-text-half-width","placeholder":"First"}'|widget_only}}
+        {{form.last_name|attrs:'{"class":"input-text-half-width","placeholder":"Last"}'|widget_only}}
+        <span class={% if form.first_name.errors or form.last_name.errors %}"error"{% else %}"muted"{% endif %}>(Required)</span>
+    </dd>
+    <dt>
+        Company:
+    </dt>
+    <dd>
+        {{form.company|attrs:'{"placeholder":"Acme Software"}'|raw_required}}
+    </dd>
+    <dt>
+        Title:
+    </dt>
+    <dd>
+        {{form.title|attrs:'{"placeholder":"Developer"}'|raw}}
+    </dd>
+    <dt>
+        Phone Number:
+    </dt>
+    <dd>
+        {{form.phone|attrs:'{"placeholder":"(555) 555-5555"}'|raw}}
+    </dd>
+    <dt>
+        Country:
+    </dt>
+    <dd>
+        {{form.country|raw}}
+    </dd>
+    <dt>
+        Traffic:
+    </dt>
+    <dd>
+        <select id="traffic" name="{{form.traffic.name}}" placeholder="50" class="{% if form.traffic.errors %}form-error{% endif %}">
+            <option value="0">Haven't launched yet</option>
+            <option value="1" {% ifequal form.traffic.value "1" %}selected{% endifequal %}>1-10MM</option>
+            <option value="10" {% ifequal form.traffic.value "10" %}selected{% endifequal %}>10-90MM</option>
+            <option value="100" {% ifequal form.traffic.value "100" %}selected{% endifequal %}>90-200MM</option>
+            <option value="200" {% ifequal form.traffic.value "200" %}selected{% endifequal %}>200MM+</option>
+        </select>
+        {% for error in form.traffic.errors %}
+        <div class="form-error-text">{{error}}</div> 
+        {% endfor %}
+    </dd>
+    <dt>
+        {{form.mailing_list.as_widget}}
+    </dt>
+    <dd>
+        {{form.mailing_list.label}}
+    </dd>
+</dl>
+</fieldset>    
+<div class="clear"></div>
+<div class="form-submit">
+    <a href="{% url auth_password_change %}">Reset your password.</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <span class="buttonWrap">
+        <a href="#" class="button" id="accountForm-submit">
+        Submit Changes
+    </a>
+    </span>
+</div>
+</form>
+</div>
+
+{% endblock content %}
+

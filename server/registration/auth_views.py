@@ -225,7 +225,6 @@ def migrate_user(request, template_name='registration/password_reset_confirm.htm
 def migrate_user_complete(request, template_name='registration/migrate_user_complete.html'):
     return render_to_response(template_name, context_instance=RequestContext(request,
                                                                              {'login_url': settings.LOGIN_URL}))
-                                                                             
 
 @csrf_protect
 @login_required

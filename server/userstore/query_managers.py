@@ -6,6 +6,7 @@ from google.appengine.ext import db
 from common.utils.query_managers import CachedQueryManager
 from userstore.models import MobileUser, MobileApp, ClickEvent, AppOpenEvent, InAppPurchaseEvent, CLICK_EVENT_NO_APP_ID, DEFAULT_CONVERSION_WINDOW
 
+from common.constants import MAX_OBJECTS
 
 NAMESPACE = None
 
@@ -31,7 +32,7 @@ class MobileUserManager(CachedQueryManager):
 class MobileAppManager(CachedQueryManager):
     Model = MobileApp
 
-    def get_mobile_apps(self, udid, mobile_appid=None, limit=50):
+    def get_mobile_apps(self, udid, mobile_appid=None, limit=MAX_OBJECTS):
         if mobile_appid:
             mobile_app_db_key = MobileApp.get_db_key(udid, mobile_appid)
             return [MobileApp.get(mobile_app_db_key)]
@@ -69,7 +70,7 @@ class ClickEventManager(CachedQueryManager):
 
     def get_click_events(self, udid=None, mobile_appid=None, \
                              adunit=None, creative=None, \
-                             limit=50):
+                             limit=MAX_OBJECTS):
         click_events = ClickEvent.all()
         if udid:
             click_events = click_events.filter('udid =', udid)
@@ -107,7 +108,7 @@ class AppOpenEventManager(CachedQueryManager):
 
     def get_app_open_events(self, udid=None, mobile_appid=None, \
                                 conversion_adunit=None, conversion_creative=None, \
-                                limit=50):
+                                limit=MAX_OBJECTS):
         app_open_events = AppOpenEvent.all()
         if udid:
             app_open_events = app_open_events.filter('udid = ', udid)
@@ -160,7 +161,7 @@ class AppOpenEventManager(CachedQueryManager):
 
         
 class InAppPurchaseEventManager(CachedQueryManager):            
-    def get_inapp_purchase_event(self, udid, mobile_appid=None, limit=50):
+    def get_inapp_purchase_event(self, udid, mobile_appid=None, limit=MAX_OBJECTS):
         inapp_purchase_events = InAppPurchaseEvent.all()
         # the parent is either a mobile user
         # or mobile_appid depending on the query

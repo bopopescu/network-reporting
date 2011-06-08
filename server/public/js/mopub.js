@@ -55,6 +55,19 @@ var mopub = mopub || {};
 		// set up validation
         $('.validate').validate();
 		
+		// set up treeview
+    // $(".treeview").treeview({
+    //        animated: "fast",
+    //        collapsed: true,
+    //        unique: true,
+    //        persist: "cookie",
+    //        })
+    // 
+    
+    $(".tree").treeview()
+		
+		
+		
 		// override default jQuery UI dialog options
 		$.extend($.ui.dialog.prototype.options, {
 			modal: true,

@@ -46,8 +46,6 @@ class SiteStatsQueryManager(CachedQueryManager):
 class BlobLogQueryManager():
 
     def put_bloblog(date, blob_key, account=None):
-        if isinstance(blob_key, str):
-            blob_key = blobstore.BlobKey(blob_key)
         bloblog = BlobLog(date = date, blob_key = blob_key)
         bloblog.put()
         return

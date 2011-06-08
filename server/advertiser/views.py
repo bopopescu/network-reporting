@@ -763,8 +763,11 @@ def creative_create(request,*args,**kwargs):
 class DisplayCreativeHandler(RequestHandler):
     def get(self, creative_key):
         c = CreativeQueryManager.get(creative_key)
-        if c and c.ad_type == "image" and c.image:
-            return HttpResponse(c.image,content_type='image/png')
+        if c and c.ad_type == "image":
+            if c.image_blob:
+                return HttpResponse('<img src="%s"/>'%images.get_serving_url(c.image_blob))
+            else:    
+                return HttpResponse(c.image,content_type='image/png')
         if c and c.ad_type == "text_icon":
             if c.image:
                 c.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)

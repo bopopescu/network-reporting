@@ -1,6 +1,7 @@
 import logging
 
 from google.appengine.ext import db
+from google.appengine.ext import blobstore
 from google.appengine.ext.db import polymodel
 from account.models import Account
 # from budget import budget_service
@@ -389,6 +390,7 @@ class HtmlCreative(Creative):
 class ImageCreative(Creative):
     # image properties
     image = db.BlobProperty()
+    image_blob = blobstore.BlobReferenceProperty()
     image_width = db.IntegerProperty()
     image_height = db.IntegerProperty()
 

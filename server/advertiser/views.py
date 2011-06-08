@@ -578,9 +578,8 @@ class ShowAdGroupHandler(RequestHandler):
             yesterday = StatsModel()    
         
         message = []
-        if adgroup.network_type and not 'custom' in adgroup.network_type:
+        if adgroup.network_type and not 'custom' in adgroup.network_type and adgroup.network_type!='iAd':
             # gets rid of _native_ in admob_native_pub_id to become admob_pub_id
-            logging.info('\n\n\n\nasdfasdf: '+adgroup.network_type)
             if '_native' in adgroup.network_type:
                 adgroup_network_type = adgroup.network_type.replace('_native','')
             else:

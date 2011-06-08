@@ -150,6 +150,7 @@ var mopub = mopub || {};
       if (jsonData.success){
         $('#campaignAdgroupForm-success').show(); // show message
         window.location = jsonData.new_page;
+        $('#campaignAdgroupForm-submit').button({'label':'Success...','disabled':true});
       }
       else{
         $('#campaignAdgroupForm-fragment').html(jsonData.html);
@@ -158,7 +159,16 @@ var mopub = mopub || {};
         // clear and reset the hash
         window.location.hash = '';
         window.location.hash = 'adgroupEditForm';
+        $('#campaignAdgroupForm-submit').button({'label':'Continue','disabled':false});
+        
       }
+    },
+    error: function(jqXHR, textStatus, errorThrown){
+        $('#campaignAdgroupForm-submit').button({'label':'Try Again','disabled':false});
+    },
+    // NOTE: I am not sure this will play nicely with jquery validation
+    beforeSubmit: function(arr, $form, options){
+        $('#campaignAdgroupForm-submit').button({'label':'Submitting...','disabled':true});
     } 
   };
   $('#campaignAdgroupForm').ajaxForm(options);

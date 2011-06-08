@@ -3,6 +3,7 @@ import logging
 
 from datetime import datetime, timedelta
 
+from django.template import loader
 #appengine imports
 from google.appengine.ext import db
 from google.appengine.api import users
@@ -76,7 +77,6 @@ class ScheduledReport(db.Model):
     def dim_details(self):
         return self.most_recent.dim_details
 
-    
 
 class Report(db.Model):
     #standard
@@ -88,6 +88,8 @@ class Report(db.Model):
 
     start = db.DateProperty(required=True)
     end = db.DateProperty(required=True)
+
+    report_blob = blobstore.BlobKey()
 
     #the actual report
     data = DictProperty()
@@ -118,7 +120,11 @@ class Report(db.Model):
     
     @property
     def html_data(self):
-        return None
+        if self.report_blob:
+            #magic
+            return loader.render_to_string('reports/report.html', dict(all_stats=magic))
+        else:
+            return None
     #WILL BE USING BLOBSTORE, THIS IS IRRELEVANT
         #if self.data:
         #    return loader.render_to_string('reports/report.html', dict(all_stats=self.data))

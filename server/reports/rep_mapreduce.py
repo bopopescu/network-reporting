@@ -2,18 +2,20 @@ from appengine_django import InstallAppengineHelperForDjango
 InstallAppengineHelperForDjango()
 
 import logging
+import re
 
-from mapreduce import operation as op
-from mapreduce import context 
+#GAE imports
 from mapreduce import base_handler
+from mapreduce import context 
 from mapreduce import mapreduce_pipeline
+from mapreduce import operation as op
 from mapreduce import shuffler
 
-
-from reports.models import Report
+#Mopub imports
 from account.models import Account
-from reporting.models import StatsModel
-
+from advertiser.models import Campaign, Creative, AdGroup
+from publisher.models import App, AdUnit
+from reports.models import Report
 from common.constants import (APP,
                               AU,
                               CAMP,
@@ -30,128 +32,116 @@ from common.constants import (APP,
                               OS_VER,
                               KEY,
                               )
+from common.wurfl.query_managers import WurflQueryManager
 from common.utils import date_magic
+from common.utils.helpers import parse_time
 
 
 MR1_KEY = '%s'
 MR2_KEY = '%s:%s'
 MR3_KEY = '%s:%s:%s'
 
-def get_key(model, dim):
-    '''Given a model and a dimension, return the name that this model
-    has for that dimension'''
+def get_key(line_dict, dim):
+    """ Returns the key for a dim
+
+    Args:
+        line_dict: parsed log line
+        dim: dimension that a key is needed for
+    """
     wurfl_man = WurflQueryManager()
     if APP == dim:
-        return model.publisher.app_key.name
+        return line_dict['adunit'].app_key.name
     if AU == dim:
-        return model.publisher.name
+        return line_dict['adunit'].name
     if CAMP == dim:
-        return model.advertiser.adgroup.campaign.name
+        return line_dict['creative'].adgroup.campaign.name
     if CRTV == dim:
-        return model.advertiser.name
+        return line_dict['creative'].name
     if P == dim:
-        return model.advertiser.adgroup.campaign.campaign_type
+        return line_dict['creative'].adgroup.campaign.campaign_type
     if MO == dim:
-        return date_magic.date_name(model.date_hour, MO)
+        return date_magic.date_name(line_dict['time'], MO)
     if WEEK == dim: 
-        return date_magic.date_name(model.date_hour, WEEK)
+        return date_magic.date_name(line_dict['time'], WEEK)
     if DAY == dim:
-        return date_magic.date_name(model.date_hour, DAY)
+        return date_magic.date_name(line_dict['time'], DAY)
     if HOUR == dim:
-        return date_magic.date_name(model.date_hour, HOUR)
+        return date_magic.date_name(line_dict['time'], HOUR)
     if CO == dim:
         #TODO somehow get the full country name from the 2 letter country code
-        return model.country
+        return line_dict['country']
     if MAR == dim: 
-        return wurfl_man.get_market_name(model.marketing_name)
+        return wurfl_man.get_market_name(line_dict['marketing_name'])
     if BRND == dim:
-        return wurfl_man.get_brand_name(model.brand_name)
+        return wurfl_man.get_brand_name(line_dict['brand_name'])
     if OS == dim:
-        return wurfl_man.get_os_name(model.device_os)
+        return wurfl_man.get_os_name(line_dict['os'])
     if OS_VER == dim:
-        return wurfl_man.get_osver_name(model.device_os_version)
+        return wurfl_man.get_osver_name(line_dict['os_ver'])
 
 
-#the only models that get to build_keys have only date_hours, 
-#pubs are all adunits, and advs are all creatives
-def build_keys(model, d1, d2, d3):
-    d1_key = get_key(model, d1)
-    keys = [MR1_KEY % d1_key]
-    if d2:
-        d2_key = get_key(model, d2)
-        keys.append(MR2_KEY % (d1_key, d2_key))
-    if d3:
-        d3_key = get_key(model, d3)
-        keys.append(MR3_KEY % (d1_key, d2_key, d3_key))
-    return keys
-    
-#Days are always going to be date_hours
+# k = k:adunit_id:creative_id:country_code:brand_name:marketing_name:device_os:device_os_version:time
+# v = [req_count, imp_count, clk_count, conv_count,]# user_count]
+def parse_line(line):
+    """ Takes a line from the stats Blobfile and turns it into a dictionary where values are
+    of the correct type (ie not strings)
 
-#Dont worry about values
-#Always make sure pub is adunit, adv is creative
-def verify_stat(model, d1, d2, d3, days, account):
-    #Verify model is of the correct account
-    if model.account != account:
+    Args:
+        line: the line to be parsed
+    """
+    #Lines have varying amts of whitespace, get rid of all of it
+    re.sub(r'\s','',line)
+    #get the key and value away from each other
+    key, value = line.split('[')
+    #get rid of the trailing bracket
+    value = value.replace(']', '')
+    #ph = k, needed a placeholder 
+    ph, adunit_id, creative_id, country, brand, marketing, os, os_ver, time = key.split(':')
+    time = parse_time(time)
+    req, imp, clk, conv = map(int, value.split(','))
+    au = AdUnit.get(adunit_id)
+    crtv = Creative.get(creative_id)
+    #Huzzah
+    return dict(adunit = au,
+                creative = crtv,
+                country = country,
+                brand_name = brand,
+                marketing_name = marketing,
+                os = os,
+                os_ver = os_ver,
+                time = time,
+                req_count = req,
+                imp_count = imp,
+                clk_count = clk,
+                conv_count = conv,
+                )
+
+
+def verify_line(line_dict, d1, d2, d3, days, account_key):
+    if str(creative.account.key()) != account_key:
         return False
-    #And the SM is in the correct day range
-    if model.date_hour not in days:
+    if line_dict['time'] not in days:
         return False
-    #TODO Check for stupid adunit//app thing because requests are stupid
-    if model.is_rollup:
-        return False
-    #don't have to verify values, just have to properly key them
+    #Eventually, do things with d1, d2, d3 to do something with checking if no creative
     return True
 
+def build_keys(line_dict, d1, d2, d3):
+    d1_key = get_key(line_dict, d1)   
+    keys = [MR1_KEY % d1_key]
+    if d2:
+        d2_key = get_key(line_dict, d2)
+        keys.append(MR2_KEY % (d1_key, d2_key))
+    if d3:
+        d3_key = get_key(line_dict, d3)
+        keys.append(MR3_KEY % (d1_key, d2_key, d3_key))
+    return keys
 
-def map_rep_gen(stats_model):
-    ctx = context.get()
-    params = ctx.mapreduce_spec.mapper.params
-    report_key = params['report_key']
-    report = Report.get(report_key)
-    d1 = report.d1
-    d2 = report.d2
-    d3 = report.d3
-    account = report.account
-    #Turn start, end dates into a list of date_hours
-    #reduce turns [[day1hours][day2hours]] into [day1hours, day2hours]
-    days = reduce(lambda x,y: x+y, date_magic.gen_days(report.start, report.end, True))
-    if verify_stat(stats_model, d1, d2, d3, days, account):
-        for key in build_keys(stats_model, d1, d2, d3):
-            yield (key, [stats_model.request_count, stats_model.impression_count, stats_model.click_count, stats_model.conversoin_count]) 
-
-def reduce_rep_gen(key, values):
-    #zip each pair of values [1,2,3], [5,6,7] becomes [(1,5), (2,6), (3,7)]
-    #sum each pair, and then store them in a list
-    yield  "%s| %s" % (key, reduce(lambda x,y: [sum(a) for a in zip(x,y)], values))
-
-
-
-
-
-#d1 - d3 are 'dim name'
-#days is all date_hours
-#account needs to be actual account
-class ReportMRPipeline(base_handler.PipelineBase):
-    #run with REPORT not SCHED_REPORT because run report (how a new report is generated for an old sched_report) only updates the start/end for the report, not the sched_report explicitly
-    def run(self, report_key):
-        yield mapreduce_pipeline.MapreducePipeline(
-                'ReportGenerator',
-                'reports.rep_mapreduce.map_rep_gen',
-                'reports.rep_mapreduce.reduce_rep_gen',
-                'mapreduce.input_readers.DatastoreInputReader',
-                'mapreduce.output_writers.BlobstoreOutputWriter',
-                mapper_params={
-                'report_key': report_key,
-                'entity_kind': 'reporting.models.StatsModel',
-                },
-                shards=15)
-
-def generate_report_map(byte_offset, line_value):
+def generate_report_map(byte_offset, line):
     """ Mapping portion of mapreduce job
 
     Args:
         byte_offset: I have no idea what this is for but I get it from MR
-        line_value: The value of the line
+        line: The value of the line
 
     """
     ctx = context.get()
@@ -161,15 +151,20 @@ def generate_report_map(byte_offset, line_value):
     d1 = report.d1
     d2 = report.d2
     d3 = report.d3
-    account = report.account
+    account_key = str(report.account.key())
     #Turn start, end dates into a list of date_hours
     #reduce turns [[day1hours][day2hours]] into [day1hours, day2hours]
     days = reduce(lambda x,y: x+y, date_magic.gen_days(report.start, report.end, True))
+    line_dict = parse_line(line)
+    #make sure this is the right everything
+    if verify_line(line_dict, d1, d2, d3, days, account_key):
+        for key in build_keys(line_dict, d1, d2, d3):
+            yield (key, [line_dict['req_count'], line_dict['imp_count'], line_dict['clk_count'], line_dict['conv_count']]) 
 
+def generate_report_reduce(key, values):
+    #zip turns [1,2,3] [4,5,6] into [(1,4), (2,5), (3,6)], map applies sum to all list entries
+    yield '%s|| %s' % (key, reduce(lambda x,y: map(sum, zip(x,y)), values))
 
-    if verify_stat(stats_model, d1, d2, d3, days, account):
-        for key in build_keys(stats_model, d1, d2, d3):
-            yield (key, [stats_model.request_count, stats_model.impression_count, stats_model.click_count, stats_model.conversoin_count]) 
 
 
 class GenReportPipeline(base_handler.PipelineBase):

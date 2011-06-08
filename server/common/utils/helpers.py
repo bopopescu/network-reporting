@@ -1,5 +1,6 @@
 import re, logging
-import reporting.models as reporting_models
+import datetime
+#import reporting.models as reporting_models
 
 # matches sequence: space, 2 char, - or _, 2 char, 0 or more ;, followed by char that's not a char, number, - or _
 COUNTRY_PAT = re.compile(r' [a-zA-Z][a-zA-Z][-_](?P<ccode>[a-zA-Z][a-zA-Z]);*[^a-zA-Z0-9-_]')
@@ -97,12 +98,18 @@ def dedupe_and_add(stats, list):
     else:
         return reporting_models.StatsModel() 
 
-    
-
-
-
 def chunks(list, chunk_size):
     '''Generator function that creates chunk_size lists from list
     '''
     for idx in xrange(0, len(list), chunk_size):
         yield list[idx:idx+chunk_size]
+
+# Must be len 8, must have format YYMMDDHH
+def parse_time(time_str):
+    if len(time_str) != 8:
+        return None
+    year = int(time_str[:2])
+    month = int(time_str[2:4])
+    day = int(time_str[4:6])
+    hour = int(time_str[6:])
+    return datetime.datetime(year=year, month=month, day=day, hour=hour)

@@ -24,8 +24,12 @@
     </dd>
 </div>
 	<!-- {{ form.animation_type }}  -->
-	{{ form.refresh_interval|attrs:'{"style":"width:50px;","suffix":"seconds (default: 0 for no refresh)"}' }}
-
+	<dt class="banner_only">
+    	Refresh interval:
+    </dt>
+	<dd class="banner_only">
+		{{ form.refresh_interval|raw|attrs:'{"style":"width:50px;","suffix":"seconds (default: 0 for no refresh)"}' }}
+	</dd>
   {# <dt>Default keywords:</dt>  #}
   {# <dd>  #}
   {#   <textarea name="{{form.keywords.name}}" id="appForm-adUnitKeywords" rows="3" cols="40" placeholder="e.g. coffee, espresso, cafe, iced tea">{{form.keywords.value}}</textarea>  #}

@@ -4,13 +4,14 @@ import time
 import traceback
 
 from google.appengine.ext import db
+from google.appengine.ext import blobstore
 from google.appengine.ext.db import InternalError, Timeout
 from google.appengine.runtime.apiproxy_errors import CapabilityDisabledError
 
 import reporting.models as reporting_models
 
 from common.utils.query_managers import CachedQueryManager
-from reporting.models import SiteStats, StatsModel
+from reporting.models import SiteStats, StatsModel, BlobLog
 from advertiser.models import Creative
 from publisher.models import Site as AdUnit
 
@@ -39,6 +40,18 @@ class SiteStatsQueryManager(CachedQueryManager):
         stats = SiteStats.get(keys) # db get
         stats = [s or SiteStats() for s in stats]
         return stats
+
+class BlobLogQueryManager():
+
+    def put_bloblog(date, blob_key, account=None):
+        if isinstance(blob_key, str):
+            blob_key = blobstore.BlobKey(blob_key)
+        bloblog = BlobLog(date = date, blob_key = blob_key)
+        bloblog.put()
+        return
+
+    def get_blobkeys_for_days(): 
+        return
         
 class StatsModelQueryManager(CachedQueryManager):
     Model = StatsModel

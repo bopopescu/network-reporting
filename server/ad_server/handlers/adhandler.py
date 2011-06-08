@@ -361,11 +361,11 @@ class AdHandler(webapp.RequestHandler):
                 self.response.headers.add_header("X-Launchpage","http://adsx.greystripe.com/openx/www/delivery/ck.php")
                 template_name = "html"
             elif creative.ad_type == "image":
-                img = images.Image(creative.image)
                 if creative.image_blob:
                     img = images.Image(blob_key=creative.image_blob)
                     params["image_url"] = images.get_serving_url(creative.image_blob)
                 else:      
+                    img = images.Image(creative.image)
                     params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(creative.image)
                 
                 # if full screen we don't need to center

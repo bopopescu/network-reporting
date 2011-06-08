@@ -391,8 +391,8 @@ class ImageCreative(Creative):
     # image properties
     image = db.BlobProperty()
     image_blob = blobstore.BlobReferenceProperty()
-    image_width = db.IntegerProperty()
-    image_height = db.IntegerProperty()
+    image_width = db.IntegerProperty(default=320)
+    image_height = db.IntegerProperty(default=480)
 
     @classmethod
     def get_format_predicates_for_image(c, img):

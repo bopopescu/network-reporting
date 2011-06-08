@@ -52,7 +52,7 @@ var mopub = mopub || {};
 		// set up selectmenus
 		$('.selectmenu').selectmenu().css({ visibility: 'visible' });
 		
-		// set up validation
+		// set up validation to be run on form submit
         $('.validate').validate();
 		
 		// set up treeview

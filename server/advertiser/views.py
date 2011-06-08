@@ -578,17 +578,16 @@ class ShowAdGroupHandler(RequestHandler):
             yesterday = StatsModel()    
         
         message = []
-        if adgroup.network_type and not 'custom' in adgroup.network_type:
+        if adgroup.network_type and not 'custom' in adgroup.network_type and adgroup.network_type!='iAd':
             # gets rid of _native_ in admob_native_pub_id to become admob_pub_id
-            logging.info('\n\n\n\nasdfasdf: '+adgroup.network_type)
             if '_native' in adgroup.network_type:
                 adgroup_network_type = adgroup.network_type.replace('_native','')
             else:
                 adgroup_network_type = adgroup.network_type    
             
-            if not getattr(self.account.network_config,adgroup_network_type+'_pub_id'):
+            if (self.account.network_config and not getattr(self.account.network_config,adgroup_network_type+'_pub_id')) or not self.account.network_config:
                 for app in apps.values():
-                    if app.network_config and not getattr(app.network_config,adgroup_network_type+'_pub_id'):
+                    if (app.network_config and not getattr(app.network_config,adgroup_network_type+'_pub_id')) or not app.network_config:
                         message.append("The application "+app.name+" needs to have a <strong>"+adgroup_network_type.title()+" Network ID</strong> in order to serve. Specify a "+adgroup_network_type.title()+" Network ID on <a href=%s>your account</a> page."%reverse("account_index"))
         if message == []:
             message = None
@@ -764,8 +763,11 @@ def creative_create(request,*args,**kwargs):
 class DisplayCreativeHandler(RequestHandler):
     def get(self, creative_key):
         c = CreativeQueryManager.get(creative_key)
-        if c and c.ad_type == "image" and c.image:
-            return HttpResponse(c.image,content_type='image/png')
+        if c and c.ad_type == "image":
+            if c.image_blob:
+                return HttpResponse('<img src="%s"/>'%images.get_serving_url(c.image_blob))
+            else:    
+                return HttpResponse(c.image,content_type='image/png')
         if c and c.ad_type == "text_icon":
             if c.image:
                 c.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)

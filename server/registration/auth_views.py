@@ -25,11 +25,6 @@ from django.views.decorators.cache import never_cache
 
 from account.query_managers import UserQueryManager
 
-from registration.forms import ChangeSettingsForm
-
-from registration.views import register
-
-
 @csrf_protect
 @never_cache
 def login(request, template_name='registration/login.html',
@@ -230,18 +225,6 @@ def migrate_user(request, template_name='registration/password_reset_confirm.htm
 def migrate_user_complete(request, template_name='registration/migrate_user_complete.html'):
     return render_to_response(template_name, context_instance=RequestContext(request,
                                                                              {'login_url': settings.LOGIN_URL}))
-
-@login_required
-def settings_change(request,
-                        success_url=None,
-                        form_class=ChangeSettingsForm,
-                        template_name='registration/settings_change_form.html',):                    
-    return register(request, 
-                    success_url=reverse('account_index'),
-                    form_class=form_class,
-                    template_name=template_name,
-                    extra_context=None,
-                    auto_login=False)
 
 @csrf_protect
 @login_required

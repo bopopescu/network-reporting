@@ -238,7 +238,7 @@ class TextAndTileCreativeForm(AbstractCreativeForm):
         obj = super(TextAndTileCreativeForm,self).save(commit=False)  
         if self.files.get('image_file',None):
             img = images.Image(self.files.get('image_file').read())
-            obj.image = db.Blob(img.execute_transforms())
+            obj.image = db.Blob(self.files.get('image_file').read())
             obj.image_width = img.width
             obj.image_height = img.height
         if commit:
@@ -279,7 +279,7 @@ class ImageCreativeForm(AbstractCreativeForm):
         obj = super(ImageCreativeForm,self).save(commit=False)  
         if self.files.get('image_file',None):
             img = images.Image(self.files.get('image_file').read())
-            obj.image = db.Blob(img.execute_transforms())
+            obj.image = db.Blob(self.files.get('image_file').read())
             obj.image_width = img.width
             obj.image_height = img.height
         if commit:

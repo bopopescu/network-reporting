@@ -1,3 +1,5 @@
+from __future__ import with_statement
+
 import logging, os, re, datetime, hashlib
 
 from urllib import urlencode
@@ -226,3 +228,32 @@ def update_sfdc_leads(request, *args, **kwargs):
 
     # Cool
     return HttpResponse(results)
+    
+    
+def migrate_image(request, *args, **kwargs):
+    from google.appengine.api import files
+    
+    params = request.POST or request.GET
+    
+    creative_key = params.get('creative_key')
+    creative = Creative.get(creative_key)
+    
+    # Create the file
+    file_name = files.blobstore.create(mime_type='image/png')
+
+    # Open the file and write to it
+    with files.open(file_name, 'a') as f:
+      f.write(creative.image)
+
+    # Finalize the file. Do this before attempting to read it.
+    files.finalize(file_name)
+
+    # Get the file's blob key
+    blob_key = files.blobstore.get_blob_key(file_name)
+    
+    creative.image = None
+    creative.image_blob = blob_key
+    
+    creative.put()
+    
+    return HttpResponse(blob_key)    

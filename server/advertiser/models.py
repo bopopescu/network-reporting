@@ -1,6 +1,7 @@
 import logging
 
 from google.appengine.ext import db
+from google.appengine.ext import blobstore
 from google.appengine.ext.db import polymodel
 from account.models import Account
 # from budget import budget_service
@@ -257,6 +258,7 @@ class Creative(polymodel.PolyModel):
     name = db.StringProperty()
     custom_width = db.IntegerProperty()
     custom_height = db.IntegerProperty()
+    landscape = db.BooleanProperty(default=False) # TODO: make this more flexible later
     
     ad_group = db.ReferenceProperty(AdGroup,collection_name="creatives")
 
@@ -388,6 +390,7 @@ class HtmlCreative(Creative):
 class ImageCreative(Creative):
     # image properties
     image = db.BlobProperty()
+    image_blob = blobstore.BlobReferenceProperty()
     image_width = db.IntegerProperty()
     image_height = db.IntegerProperty()
 

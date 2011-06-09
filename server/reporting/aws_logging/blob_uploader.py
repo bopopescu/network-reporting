@@ -37,6 +37,7 @@ import stats_updater
 import uniq_user_stats_updater
 import utils
 from blob_server import URL_HANDLER_PATH, UPDATE_STATS_HANDLER_PATH
+from reporting.query_managers import BlobLogQueryManager
 
 
 BACKEND = 'stats-updater'
@@ -58,6 +59,7 @@ def upload_stats_file(stats_file):
     # headers contains the necessary Content-Type and Content-Length
     # datagen is a generator object that yields the encoded parameters
     datagen, headers = multipart_encode({"file": open(stats_file)})
+    print headers
 
     # GET request to get secret upload url
     print
@@ -101,6 +103,21 @@ def queue_process_blob_request(blob_key, uniq_user=False):
     print response
         
 
+def update_bloblog_model(date_str, blob_key):
+    qm = BlobLogQueryManager()
+    dt = datetime.strptime(date_str, '%y%m%d').date()
+    put_result = qm.put_bloblog(date=dt, blob_key=blob_key)
+    print put_result
+    
+
+def setup_remote_api():
+    from google.appengine.ext.remote_api import remote_api_stub
+    app_id = 'mopub-inc'
+    host = '38-aws.latest.mopub-inc.appspot.com'
+    remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', utils.auth_func, host)
+
+
+
 def main():
     parser = OptionParser()
     parser.add_option('-f', '--input_file', dest='input_file')
@@ -112,18 +129,24 @@ def main():
     if not os.path.exists(options.input_file):
         sys.exit('\nERROR: input file does not exist\n') 
 
-    blob_key = upload_stats_file(options.input_file)
-
-    start = time.time()
+    date_str = options.input_file.split('-')[2]
+    date_str = date_str.split('.')[0]
+    print date_str
     
-    if options.input_file.endswith('.uu.stats'):
-        queue_process_blob_request(blob_key, True)
-    else:   
-        queue_process_blob_request(blob_key)
-        
-    elapsed = time.time() - start
-    print
-    print 'uploading blob %s and queueing processing task took %i minutes and %i seconds' % (blob_key, elapsed/60, elapsed%60)
+    setup_remote_api()
+    blob_key = upload_stats_file(options.input_file)
+    update_bloblog_model(date_str, blob_key)
+    
+    # start = time.time()
+    # 
+    # if options.input_file.endswith('.uu.stats'):
+    #     queue_process_blob_request(blob_key, True)
+    # else:   
+    #     queue_process_blob_request(blob_key)
+    #     
+    # elapsed = time.time() - start
+    # print
+    # print 'uploading blob %s and queueing processing task took %i minutes and %i seconds' % (blob_key, elapsed/60, elapsed%60)
     
     
 

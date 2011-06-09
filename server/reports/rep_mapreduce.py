@@ -41,6 +41,8 @@ MR1_KEY = '%s'
 MR2_KEY = '%s:%s'
 MR3_KEY = '%s:%s:%s'
 
+glob_acct = None
+
 def get_key(line_dict, dim):
     """ Returns the key for a dim
 
@@ -48,17 +50,17 @@ def get_key(line_dict, dim):
         line_dict: parsed log line
         dim: dimension that a key is needed for
     """
-    wurfl_man = WurflQueryManager()
+    #worry about resolving these when rendering the report, need for speed RIGHT NAO
     if APP == dim:
-        return line_dict['adunit'].app_key.name
+        return line_dict['adunit']
     if AU == dim:
-        return line_dict['adunit'].name
+        return line_dict['adunit']
     if CAMP == dim:
-        return line_dict['creative'].adgroup.campaign.name
+        return line_dict['creative']
     if CRTV == dim:
-        return line_dict['creative'].name
+        return line_dict['creative']
     if P == dim:
-        return line_dict['creative'].adgroup.campaign.campaign_type
+        return line_dict['creative']
     if MO == dim:
         return date_magic.date_name(line_dict['time'], MO)
     if WEEK == dim: 
@@ -71,13 +73,13 @@ def get_key(line_dict, dim):
         #TODO somehow get the full country name from the 2 letter country code
         return line_dict['country']
     if MAR == dim: 
-        return wurfl_man.get_market_name(line_dict['marketing_name'])
+        return line_dict['marketing_name']
     if BRND == dim:
-        return wurfl_man.get_brand_name(line_dict['brand_name'])
+        return line_dict['brand_name']
     if OS == dim:
-        return wurfl_man.get_os_name(line_dict['os'])
+        return line_dict['os']
     if OS_VER == dim:
-        return wurfl_man.get_osver_name(line_dict['os_ver'])
+        return line_dict['os_ver']
 
 
 # k = k:adunit_id:creative_id:country_code:brand_name:marketing_name:device_os:device_os_version:time
@@ -101,8 +103,25 @@ def parse_line(line):
     req, imp, clk, conv = map(int, value.split(','))
     if creative_id == '':
         return None
-    au = AdUnit.get(adunit_id)
-    crtv = Creative.get(creative_id)
+    #don't worry about resolving these just yet
+    au = adunit_id
+    crtv = creative_id
+    #right now we only need to do a DB get if we don't have the acct key
+    global glob_acct
+    if glob_acct is None:
+        try:
+            temp_au = AdUnit.get(adunit_id)
+            glob_acct = str(temp_au.account.key())
+        except:
+            logging.warning("Bad adunit key from log")
+            return None
+    if glob_acct is None:
+        try:
+            temp_crtv = Creative.get(creative_id)
+            glob_acct = str(temp_crtv.account.key())
+        except:
+            logging.warning("Bad creative key from log")
+            return None
     #Huzzah
     return dict(adunit = au,
                 creative = crtv,
@@ -120,9 +139,10 @@ def parse_line(line):
 
 
 def verify_line(line_dict, d1, d2, d3, days, account_key):
+    global glob_acct
     if line_dict is None:
         return False
-    if str(creative.account.key()) != account_key:
+    if glob_acct is None or glob_acct != account_key:
         return False
     if line_dict['time'] not in days:
         return False
@@ -140,7 +160,9 @@ def build_keys(line_dict, d1, d2, d3):
         keys.append(MR3_KEY % (d1_key, d2_key, d3_key))
     return keys
 
-def generate_report_map(byte_offset, line):
+def generate_report_map(data):
+    logging.debug(data)
+    byte_offset, line = data
     """ Mapping portion of mapreduce job
 
     Args:
@@ -161,9 +183,14 @@ def generate_report_map(byte_offset, line):
     days = reduce(lambda x,y: x+y, date_magic.gen_days(report.start, report.end, True))
     line_dict = parse_line(line)
     #make sure this is the right everything
+    logging.debug("verifying")
     if verify_line(line_dict, d1, d2, d3, days, account_key):
+        logging.debug("verified")
         for key in build_keys(line_dict, d1, d2, d3):
+            logging.debug("Yielding...")
             yield (key, [line_dict['req_count'], line_dict['imp_count'], line_dict['clk_count'], line_dict['conv_count']]) 
+     else:
+         logging.debug("Verify failed...")
 
 def generate_report_reduce(key, values):
     #zip turns [1,2,3] [4,5,6] into [(1,4), (2,5), (3,6)], map applies sum to all list entries
@@ -193,5 +220,5 @@ class GenReportPipeline(base_handler.PipelineBase):
                 reducer_params={
                     'mime_type': 'text/plain',
                 },
-                shards=25)
+                shards=35)
 

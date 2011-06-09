@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from django.template import loader
 #appengine imports
 from google.appengine.ext import db
+from google.appengine.ext import blobstore
 from google.appengine.api import users
 
 #mopub imports

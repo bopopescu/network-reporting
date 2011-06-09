@@ -48,18 +48,16 @@ class SiteStatsQueryManager(CachedQueryManager):
 
 class BlobLogQueryManager():
 
-    def put_bloblog(date, blob_key, account=None):
+    def put_bloblog(self, date, blob_key, account=None):
         bloblog = BlobLog(date = date, blob_key = blob_key)
-        bloblog.put()
-        return
+        return bloblog.put()
 
-    def get_blobkeys_for_days(days): 
+    def get_blobkeys_for_days(self, days): 
         #for all the days, turn them into YYMMDD and then use that to construct the key, then with all those keys get all the BlobLogs, then with all those bloblogs, return only a list of the blob_keys associated with them
-        #this comment is longer than the code lul
-        return map(lambda bloblog: bloblog.blob_key, BlobLog.get(map(lambda day: db.Key(BLOBLOG_KEY % day.strftime('%y%m%d')), days)))
+        return map(lambda bloblog: bloblog.blob_key, BlobLog.get_by_key_name([BLOBLOG_KEY % day.strftime('%y%m%d') for day in days]))
         #(for nafis)
         #return [blob.blob_key for blob in BlobLog.get([db.Key(BLOBLOG_KEY % day.strftime('%y%m%d')) for day in days])]
-
+        
 
 class StatsModelQueryManager(CachedQueryManager):
     Model = StatsModel

@@ -10,8 +10,8 @@ LOG_ROOT_DIR=~/aws_logs #-$DAYSTAMP
 LOG_DIR=$LOG_ROOT_DIR/logs-$TIMESTAMP # to minute resolution, so every run is siloed completely
 
 S3_BUCKET=s3://mopub-aws-logging
-S3_CODE_DIR=$S3_BUCKET/code3
-S3_LOG_DIR=$S3_BUCKET/tmp3/logs-$DAYSTAMP
+S3_CODE_DIR=$S3_BUCKET/code4
+S3_LOG_DIR=$S3_BUCKET/tmp4/logs-$DAYSTAMP
 
 LOGFILE=aws-logfile-$TIMESTAMP
 LOCAL_LOGFILE=$LOG_DIR/$LOGFILE
@@ -31,6 +31,12 @@ mkdir $LOG_ROOT_DIR
 mkdir $LOG_DIR
 
 
+# download deref cache from S3 (if it exists) and replace local one
+echo
+echo "downloading existing deref cache from S3..."
+s3cmd get --force $S3_CODE_DIR/deref_cache.pkl $APP_DIR/reporting/aws_logging/deref_cache.pkl
+
+
 # download logs from GAE
 START_TIME=$(date +%s)
 echo
@@ -40,12 +46,6 @@ echo
 STOP_TIME=$(date +%s)
 echo
 echo "downloading GAE logs took" $((STOP_TIME-START_TIME)) "seconds"
-
-
-# download deref cache from S3 (if it exists) and replace local one
-echo
-echo "downloading existing deref cache from S3..."
-s3cmd get --force $S3_CODE_DIR/deref_cache.pkl $APP_DIR/reporting/aws_logging/deref_cache.pkl
 
 
 # split input files
@@ -74,7 +74,7 @@ s3cmd put $APP_DIR/reporting/aws_logging/deref_cache.pkl $S3_CODE_DIR/
 START_TIME=$(date +%s)
 echo
 echo "submitting EMR job..."
-python $APP_DIR/reporting/aws_logging/job_submitter.py -i $S3_LOGFILE -n 10
+python $APP_DIR/reporting/aws_logging/job_submitter.py -i $S3_LOGFILE -n 1#0
 STOP_TIME=$(date +%s)
 echo "EMR job took" $((STOP_TIME-START_TIME)) "seconds"
 
@@ -143,22 +143,22 @@ s3cmd del --recursive $S3_LOGFILE.pp.out
 # echo "updating GAE datastore took" $((STOP_TIME-START_TIME)) "seconds"
 
 
-# uploading stats files to S3
-echo
-echo "uploading log counts stats file to" $S3_LOGFILE.stats
-s3cmd put $LOCAL_LOGFILE.stats $S3_LOGFILE.stats
-echo
-echo "uploading uniq user counts stats file to" $S3_LOGFILE.uu.stats
-s3cmd put $LOCAL_LOGFILE.uu.stats $S3_LOGFILE.uu.stats
-
-
-# uploading stats files to GAE blobstore using Files API
-echo
-echo "uploading log counts stats file to GAE blobstore"
-python $APP_DIR/reporting/aws_logging/blob_uploader.py -f $LOCAL_LOGFILE.stats
-echo
-echo "uploading uniq user counts stats file to GAE blobstore"
-python $APP_DIR/reporting/aws_logging/blob_uploader.py -f $LOCAL_LOGFILE.uu.stats
+# # uploading stats files to S3
+# echo
+# echo "uploading log counts stats file to" $S3_LOGFILE.stats
+# s3cmd put $LOCAL_LOGFILE.stats $S3_LOGFILE.stats
+# echo
+# echo "uploading uniq user counts stats file to" $S3_LOGFILE.uu.stats
+# s3cmd put $LOCAL_LOGFILE.uu.stats $S3_LOGFILE.uu.stats
+# 
+# 
+# # uploading stats files to GAE blobstore using Files API
+# echo
+# echo "uploading log counts stats file to GAE blobstore"
+# python $APP_DIR/reporting/aws_logging/blob_uploader.py -f $LOCAL_LOGFILE.stats
+# echo
+# echo "uploading uniq user counts stats file to GAE blobstore"
+# python $APP_DIR/reporting/aws_logging/blob_uploader.py -f $LOCAL_LOGFILE.uu.stats
 
 
 # end timestamp

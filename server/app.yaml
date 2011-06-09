@@ -60,7 +60,6 @@ handlers:
   script: ad_server/main.py
   login: admin
   
-
 - url: /m/.*
   script: ad_server/main.py
 
@@ -70,6 +69,6 @@ handlers:
 
 - url: /offline/.*
   script: reporting/aws_logging/blob_server.py
-    
+
 - url: /.*
   script: main.py

@@ -2,8 +2,10 @@ import datetime
 import logging
 import time
 import copy
+import traceback
 
 from google.appengine.ext import db
+from google.appengine.ext import blobstore
 from google.appengine.ext.db import InternalError, Timeout
 from google.appengine.runtime.apiproxy_errors import CapabilityDisabledError
 
@@ -12,7 +14,7 @@ import reporting.models as reporting_models
 from common.utils.query_managers import CachedQueryManager
 from common.utils import date_magic
 from common.utils.helpers import (dedupe_and_add, chunks)
-from reporting.models import SiteStats, StatsModel
+from reporting.models import SiteStats, StatsModel, BlobLog
 from advertiser.models import Creative
 from publisher.models import Site as AdUnit
 
@@ -24,6 +26,8 @@ SENTINEL = '!!!'
 # max number of retries for offline batch put
 MAX_RETRIES = 3
 
+
+BLOBLOG_KEY = 'blobkey:%s'
 
 class SiteStatsQueryManager(CachedQueryManager):
     def get_sitestats_for_days(self, site=None, owner=None, days=None):
@@ -41,6 +45,18 @@ class SiteStatsQueryManager(CachedQueryManager):
         stats = SiteStats.get(keys) # db get
         stats = [s or SiteStats() for s in stats]
         return stats
+
+class BlobLogQueryManager():
+
+    def put_bloblog(date, blob_key, account=None):
+        bloblog = BlobLog(date = date, blob_key = blob_key)
+        bloblog.put()
+        return
+
+    def get_blobkeys_for_days(days): 
+        #for all the days, turn them into YYMMDD and then use that to construct the key, then with all those keys get all the BlobLogs, then with all those bloblogs, return only a list of the blob_keys associated with them
+        #this comment is longer than the code lul
+        return map(lambda bloblog: bloblog.blob_key, BlobLog.get(map(lambda day: db.Key(BLOBLOG_KEY % day.strftime('%y%m%d')), days)))
         
 class StatsModelQueryManager(CachedQueryManager):
     Model = StatsModel
@@ -379,14 +395,18 @@ class StatsModelQueryManager(CachedQueryManager):
             page_count = 0
             retries = 0
 
+            account_name = self.account.name()
+            
             while stats and retries <= MAX_RETRIES:
                 try:
                     db.put(stats[:LIMIT])
-                    print "putting %i models..." %(len(stats[:LIMIT]))
+                    # print "putting %i models..." %(len(stats[:LIMIT]))
+                    print '%s: %i models' % ((account_name or 'None').rjust(25), len(stats[:LIMIT]))
                     stats = stats[LIMIT:]
                     page_count += 1
                     retries = 0
-                except (InternalError, Timeout, CapabilityDisabledError):
+                except: # (InternalError, Timeout, CapabilityDisabledError):
+                    traceback.print_exc()
                     retries += 1
             return [s.key() for s in all_stats[:LIMIT*page_count]] # only return the ones that were successully batch put
 

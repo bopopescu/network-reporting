@@ -24,7 +24,7 @@ MASTER_INSTANCE_TYPE = 'm1.large'
 SLAVE_INSTANCE_TYPE = 'm1.large'
 # MASTER_INSTANCE_TYPE = 'm1.small'
 # SLAVE_INSTANCE_TYPE = 'm1.small'
-KEEP_ALIVE = True
+KEEP_ALIVE = False
     
 
 

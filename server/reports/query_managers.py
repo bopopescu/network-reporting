@@ -11,10 +11,10 @@ from google.appengine.ext import db
 from common.utils.query_managers import CachedQueryManager
 from common.utils import date_magic
 from reporting.models import StatsModel
-from reporting.query_managers import StatsModelQueryManager
+from reporting.query_managers import StatsModelQueryManager, BlobLogQueryManager
 
 from reports.models import Report, ScheduledReport
-from reports.rep_mapreduce import ReportMRPipeline
+from reports.rep_mapreduce import GenReportPipeline
 
 NUM_REP_QS = 1
 REP_Q_NAME = "gen-rep-%02d"
@@ -176,7 +176,9 @@ class ReportQueryManager(CachedQueryManager):
             #              params={"report": new_report.key(),
             #                      "account": account.key(),
             #                      })
-            pipe = ReportMRPipeline(str(new_report.key()))
+            bloblogman = BlobLogQueryManager()
+            blob_keys = bloblogman.get_blobkeys_for_days(date_magic.gen_days(now-dt, now))
+            pipe = GenReportPipeline(blob_keys, str(new_report.key()))
             pipe.start()
         return new_report
 
@@ -255,7 +257,9 @@ class ReportQueryManager(CachedQueryManager):
         #                          },
         #                  target='report-generator',
         #                  )
-            pipe = ReportMRPipeline(str(report.key()))
+            bloblogman = BlobLogQueryManager()
+            blob_keys = bloblogman.get_blobkeys_for_days(date_magic.gen_days(end-dt, end))
+            pipe = GenReportPipeline(blob_keys, str(report.key()))
             pipe.start()
         return sched 
 

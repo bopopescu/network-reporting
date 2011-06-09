@@ -1,6 +1,7 @@
 from google.appengine.api.datastore_types import Key
 
 from google.appengine.ext import db
+from google.appengine.ext import blobstore 
 from publisher.models import Site
 from advertiser.models import Creative
 from account.models import Account
@@ -19,6 +20,7 @@ GEO_IMPRESSION_COUNT = 'impression_count'
 GEO_CLICK_COUNT = 'click_count'
 GEO_CONVERSION_COUNT = 'conversion_count'
 GEO_COUNTS = [GEO_REQUEST_COUNT,GEO_IMPRESSION_COUNT,GEO_CLICK_COUNT,GEO_CONVERSION_COUNT]
+BLOBLOG_KEY = 'blobkey:%s'
 
 class Pacific_tzinfo(datetime.tzinfo):
     """Implementation of the Pacific timezone."""
@@ -44,6 +46,18 @@ class Pacific_tzinfo(datetime.tzinfo):
             return "PST"
         else:
             return "PDT"
+
+
+class BlobLog(db.Model):
+
+    date = db.DateProperty()
+    blob_key = blobstore.BlobKey()
+
+    def __init__(self, **kwargs):
+        date = kwargs.get('date', None)
+        key_name = BLOBLOG_KEY % date.strftime('%y%m%d')
+        return super(BlobLog, self).__init__(key_name=key_name, **kwargs)
+
 
 class StatsModel(db.Expando):
     

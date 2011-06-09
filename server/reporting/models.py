@@ -46,11 +46,11 @@ class Pacific_tzinfo(datetime.tzinfo):
 class BlobLog(db.Model):
 
     date = db.DateProperty()
-    blob_key = blobstore.BlobKey()
+    blob_key = db.StringProperty()
 
     def __init__(self, **kwargs):
         date = kwargs.get('date', None)
-        key_name = BLOBLOG_KEY % date.strftime('%y%m%d')
+        key_name = BLOBLOG_KEY % (date.strftime('%y%m%d') if date else 'None')
         return super(BlobLog, self).__init__(key_name=key_name, **kwargs)
 
 

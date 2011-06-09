@@ -155,10 +155,10 @@ s3cmd put $LOCAL_LOGFILE.uu.stats $S3_LOGFILE.uu.stats
 # uploading stats files to GAE blobstore using Files API
 echo
 echo "uploading log counts stats file to GAE blobstore"
-python $APP_DIR/reporting/aws_logging/file_uploader.py -f $LOCAL_LOGFILE.stats
+python $APP_DIR/reporting/aws_logging/blob_uploader.py -f $LOCAL_LOGFILE.stats
 echo
 echo "uploading uniq user counts stats file to GAE blobstore"
-python $APP_DIR/reporting/aws_logging/file_uploader.py -f $LOCAL_LOGFILE.uu.stats
+python $APP_DIR/reporting/aws_logging/blob_uploader.py -f $LOCAL_LOGFILE.uu.stats
 
 
 # end timestamp

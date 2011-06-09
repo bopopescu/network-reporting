@@ -448,7 +448,6 @@ var mopub = mopub || {};
         $('#campaignForm').find("#action").attr("value","delete").end().submit();
     });
     
-    
                 
     ///// Filter Campaigns by status and targeted apps /////    
     

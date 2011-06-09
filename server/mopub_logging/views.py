@@ -227,7 +227,7 @@ class LogTaskHandler(webapp.RequestHandler):
               max_countries = max([len(stat.get_countries()) for stat in total_stats])
               
               mail.send_mail(sender="olp@mopub.com",
-                            to="bugs@mopub.com",
+                            to="olp@mopub.com",
                             subject="Logging error",
                             body="account: %s retries: %s task name: %s queue name: %s base stats: %s total number of stats: %s max countries: %s \n\n%s"%(account_name,
                                                                                              retry_count,
@@ -247,7 +247,7 @@ class LogTaskHandler(webapp.RequestHandler):
                                                                                   memcache_stats_start,memcache_stats)
           
           mail.send_mail(sender="olp@mopub.com",
-                        to="bugs@mopub.com",
+                        to="olp@mopub.com",
                         subject="Logging error (cache miss)",
                         body=message)
           logging.error(message)

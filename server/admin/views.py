@@ -238,6 +238,8 @@ def migrate_image(request, *args, **kwargs):
     creative_key = params.get('creative_key')
     creative = Creative.get(creative_key)
     
+    img = images.Image(creative.image)
+    
     # Create the file
     file_name = files.blobstore.create(mime_type='image/png')
 
@@ -253,6 +255,8 @@ def migrate_image(request, *args, **kwargs):
     
     creative.image = None
     creative.image_blob = blob_key
+    creative.image_height = img.height
+    creative.image_width = img.width
     
     creative.put()
     

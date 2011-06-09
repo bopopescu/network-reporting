@@ -168,7 +168,7 @@ class RegistrationManager(models.Manager):
                                          'expiration_days': settings.ACCOUNT_ACTIVATION_DAYS,
                                          'site': current_site })
             
-            send_mail(subject, message, 'welcome@mopub.com', [new_user.email])
+            send_mail(subject, message, 'welcome@mopub.com', [new_user.email], fail_silently=True)
         # user_registered.send(sender=self.model, user=new_user)
         return new_user
     

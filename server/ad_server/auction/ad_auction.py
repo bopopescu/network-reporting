@@ -300,7 +300,7 @@ class AdAuction(object):
                                     if not winner.adgroup.network_type in SERVER_SIDE_DICT:
                                         winning_creative = winner
                                         # if native, log native request
-                                        if winner.ad_type in NATIVE_REQUESTS:
+                                        if winner.adgroup.network_type in NATIVE_REQUESTS:
                                             mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, udid=udid)
                                         # A native request could potential fail and must be excluded from subsequent requests    
                                         on_fail_exclude_adgroups.append(str(winning_creative.adgroup.key()))

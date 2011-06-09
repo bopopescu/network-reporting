@@ -73,7 +73,13 @@ def login(request, template_name='registration/login.html',
 def logout(request, next_page=None, template_name='registration/logged_out.html', redirect_field_name=REDIRECT_FIELD_NAME):
     "Logs out the user and displays 'You are logged out' message."
     from django.contrib.auth import logout
-    logout(request)
+    # catch errors when the user is logged in with google
+    # account but never used the new mopub login
+    # this is a temporal problem as users migrate
+    try:
+        logout(request)
+    except TypeError:
+        pass    
     if next_page is None:
         redirect_to = request.REQUEST.get(redirect_field_name, '')
         if redirect_to:
@@ -219,7 +225,6 @@ def migrate_user(request, template_name='registration/password_reset_confirm.htm
 def migrate_user_complete(request, template_name='registration/migrate_user_complete.html'):
     return render_to_response(template_name, context_instance=RequestContext(request,
                                                                              {'login_url': settings.LOGIN_URL}))
-                                                                             
 
 @csrf_protect
 @login_required

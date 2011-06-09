@@ -20,6 +20,8 @@ from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManag
 
 import copy
 
+from common.constants import MAX_OBJECTS
+
 NAMESPACE = None
 
 MAX_ALLOWABLE_QUERIES = 30
@@ -34,7 +36,7 @@ class CampaignQueryManager(QueryManager):
     Model = Campaign
 
     @classmethod
-    def get_campaigns(cls,account=None,adunit=None,deleted=False,limit=50):
+    def get_campaigns(cls,account=None,adunit=None,deleted=False,limit=MAX_OBJECTS):
         campaigns = Campaign.all()
         if not (deleted == None):
             campaigns = campaigns.filter("deleted =",deleted)
@@ -110,7 +112,7 @@ class AdGroupQueryManager(QueryManager):
     Model = AdGroup   
         
     @classmethod
-    def get_adgroups(cls, campaign=None, campaigns=None, adunit=None, app=None, account=None, deleted=False, limit=50):
+    def get_adgroups(cls, campaign=None, campaigns=None, adunit=None, app=None, account=None, deleted=False, limit=MAX_OBJECTS):
         adgroups = AdGroup.all()
         if not (deleted == None):
             adgroups = adgroups.filter("deleted =",deleted)
@@ -168,7 +170,7 @@ class CreativeQueryManager(QueryManager):
     Model = Creative
 
     @classmethod
-    def get_creatives(cls,adgroup=None,ad_type=None,ad_types=None,account=None,deleted=False,limit=50):
+    def get_creatives(cls,adgroup=None,ad_type=None,ad_types=None,account=None,deleted=False,limit=MAX_OBJECTS):
         creatives = Creative.all()
         if not (deleted == None):
             creatives = creatives.filter("deleted =", deleted)

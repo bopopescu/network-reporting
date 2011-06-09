@@ -14,7 +14,7 @@ from publisher.models import *
 from reporting.aws_logging import stats_updater
 from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
-from test_utils import add_lists, prepend_list, clear_datastore, debug_key_name
+from test_utils import add_lists, prepend_list, clear_datastore, debug_key_name, debug_helper
 
 AdUnit = Site
 
@@ -293,7 +293,7 @@ def offline_geo_rollup_mptest():
     assert_true(stats_updater.update_model(adunit_key=adunit_id1, counts=us_req_day, date=day, country_code='US'))
     assert_true(stats_updater.update_model(adunit_key=adunit_id1, counts=gb_req_day, date=day, country_code='GB'))
 
-    stats_updater.put_models() 
+    stats_updater.single_thread_put_models() 
                         
     assert_equals(App.all().count(), 1)
     assert_equals(Campaign.all().count(), 1)
@@ -306,6 +306,12 @@ def offline_geo_rollup_mptest():
     for stats in StatsModel.all():
         key_name = stats.key().name()
         if len(key_name.split(':')) == 2: continue # skip the account 
+        
+        # for debugging
+        readable_key_name = debug_key_name(key_name, id_dict)
+        debug_helper(readable_key_name, obj_dict[key_name], [stats.request_count, stats.impression_count, stats.click_count, stats.conversion_count])
+        
+        # assert equality check
         assert_equals(obj_dict[key_name], [stats.request_count, stats.impression_count, stats.click_count, stats.conversion_count])
 
         

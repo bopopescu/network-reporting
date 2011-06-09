@@ -331,15 +331,11 @@ class StatsModelQueryManager(CachedQueryManager):
                 
     def _get_all_rollups(self, stats, offline):
         offline = offline or self.offline
-        
-        # initialize the object dictionary 
+                
+        # # initialize the object dictionary 
         stats_dict = {}
         for stat in stats:
-            stat_key_name = stat.key().name() 
-            if stat_key_name in stats_dict:
-                stats_dict[stat_key_name] += stat
-            else:
-                stats_dict[stat_key_name] = stat
+            stats_dict[stat.key().name()] = stat
         
         
         def _get_refprop_from_cache(entity, prop):
@@ -526,11 +522,12 @@ class StatsModelQueryManager(CachedQueryManager):
                             
         # if not offline, remove all the country level stats
         # because we are storing this data in dynamic properties
-        if not offline:
-            stats = stats_dict.values()
-            for stat in stats:
-                if stat.country:
-                    del stats_dict[stat.key().name()]
+        # if not offline:
+
+        stats = stats_dict.values()
+        for stat in stats:
+            if stat.country:
+                del stats_dict[stat.key().name()]
         
         # time rollups
         if not offline: # do not rollup on date if it's offline, since aws-logging data is already cumulative

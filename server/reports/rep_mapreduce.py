@@ -99,6 +99,8 @@ def parse_line(line):
     ph, adunit_id, creative_id, country, brand, marketing, os, os_ver, time = key.split(':')
     time = parse_time(time)
     req, imp, clk, conv = map(int, value.split(','))
+    if creative_id == '':
+        return None
     au = AdUnit.get(adunit_id)
     crtv = Creative.get(creative_id)
     #Huzzah
@@ -118,6 +120,8 @@ def parse_line(line):
 
 
 def verify_line(line_dict, d1, d2, d3, days, account_key):
+    if line_dict is None:
+        return False
     if str(creative.account.key()) != account_key:
         return False
     if line_dict['time'] not in days:
@@ -163,7 +167,7 @@ def generate_report_map(byte_offset, line):
 
 def generate_report_reduce(key, values):
     #zip turns [1,2,3] [4,5,6] into [(1,4), (2,5), (3,6)], map applies sum to all list entries
-    yield '%s|| %s' % (key, reduce(lambda x,y: map(sum, zip(x,y)), values))
+    yield '%s|| %s' % (key, map(sum, zip(*values)))
 
 
 

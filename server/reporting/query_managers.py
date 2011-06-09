@@ -57,7 +57,10 @@ class BlobLogQueryManager():
         #for all the days, turn them into YYMMDD and then use that to construct the key, then with all those keys get all the BlobLogs, then with all those bloblogs, return only a list of the blob_keys associated with them
         #this comment is longer than the code lul
         return map(lambda bloblog: bloblog.blob_key, BlobLog.get(map(lambda day: db.Key(BLOBLOG_KEY % day.strftime('%y%m%d')), days)))
-        
+        #(for nafis)
+        #return [blob.blob_key for blob in BlobLog.get([db.Key(BLOBLOG_KEY % day.strftime('%y%m%d')) for day in days])]
+
+
 class StatsModelQueryManager(CachedQueryManager):
     Model = StatsModel
     

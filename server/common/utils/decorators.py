@@ -7,7 +7,7 @@ from django.views.decorators.cache import cache_page
 
 from django.utils.decorators import available_attrs
 from django.utils.http import urlquote
-from django.contrib.auth import REDIRECT_FIELD_NAME
+from django.contrib.auth import REDIRECT_FIELD_NAME, logout
 from django.contrib.auth.decorators import user_passes_test
 from django.conf import settings
 from django.http import HttpResponseRedirect
@@ -77,6 +77,9 @@ def cache_page_until_post(time=5*60):
     def wrap(view):
         def new_view(request, *args, **kw):
             
+            if not request.META["USER_EMAIL"] or not request.META["USER_ID"]:
+                return HttpResponseRedirect(settings.LOGIN_URL)
+            
             if request.method == "POST":
                 # If we are POSTing, clear the cache
                 session_cache_key = _build_session_cache_key(request)
@@ -91,7 +94,7 @@ def cache_page_until_post(time=5*60):
                 # If we are not POSTing, add to cache
                 try:
                     # Do the standard caching and vary on cookie
-                    vary_on_cookie_view = vary_on_cookie(view)
+                    vary_on_cookie_view = vary_on_headers('USER_ID')
                     cached_view = cache_page(time)(vary_on_cookie_view)
                     
                     return cached_view(request, *args, **kw)

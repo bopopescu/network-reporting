@@ -12,6 +12,9 @@ from reporting.models import StatsModel
 from common.constants import (VALID_FULL_FORMATS,     
                               VALID_TABLET_FULL_FORMATS,
                              )
+                             
+                             
+from ad_server.parser.useragent_parser import get_os_version, get_os
 ###############################
 # BASIC INCLUSION FILTERS
 #
@@ -77,12 +80,14 @@ def device_filter(dev_preds):
 def os_filter(user_agent):
     log_mesg = "Removed due to OS restrictions: %s"
     def real_filter(a):
-        if user_agent == "iphone":
+        if get_os(user_agent) == "iOS":
             if not a.target_ios:
                 return False
             else:
                 # check versions with 
-                a.ios_version_max
+                user_agent_os_version = get_os_version(user_agent)
+                return (float(a.ios_version_max) >= user_agent_os_version and
+                        float(a.ios_version_min) <= user_agent_os_version)
                 
         else if user_agent == "android":
             if not a.target_android:

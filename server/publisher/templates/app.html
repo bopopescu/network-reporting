@@ -415,11 +415,11 @@
                           <tr>
                               <th class="dataTable-name big">Totals</th>
                               <td class="dataTable-data numeric">&nbsp;</td>     
-                              <td class="dataTable-data numeric">{{app.stats.request_count|withsep}}</td>
-                              <td class="dataTable-data numeric">{{app.stats.impression_count|withsep}}</td>
-                              <td class="dataTable-data numeric">{{app.stats.fill_rate|percentage}}</td>
-                              <td class="dataTable-data numeric">{{app.stats.click_count|withsep}}</td>
-                              <td class="dataTable-data numeric">{{app.stats.ctr|percentage}}</td>
+                              <td class="dataTable-data numeric special"><b>{{app.stats.request_count|withsep}}</b></td>
+                              <td class="dataTable-data numeric special"><b>{{app.stats.impression_count|withsep}}</b></td>
+                              <td class="dataTable-data numeric special"><b>{{app.stats.fill_rate|percentage}}</b></td>
+                              <td class="dataTable-data numeric special"><b>{{app.stats.click_count|withsep}}</b></td>
+                              <td class="dataTable-data numeric special"><b>{{app.stats.ctr|percentage}}</b></td>
                           </tr>
                           {% for s in app.all_stats reversed %}
                           <tr class="appData-details-inner show">

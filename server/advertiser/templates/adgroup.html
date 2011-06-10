@@ -430,10 +430,10 @@
                 <tr>
                     <th class="dataTable-name big">Totals</th>
                     <td class="dataTable-data numeric">&nbsp;</td>     
-                    <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.click_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.ctr|percentage}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>
+                    <td class="dataTable-data numeric"><b>{{adgroup.stats.impression_count|withsep}}</b></td>
+                    <td class="dataTable-data numeric"><b>{{adgroup.stats.click_count|withsep}}</b></td>
+                    <td class="dataTable-data numeric"><b>{{adgroup.stats.ctr|percentage}}</b></td>
+                    <td class="dataTable-data numeric"><b>{{adgroup.stats.revenue|currency}}</b></td>
                 </tr>
                 {% for s in adgroup.all_stats reversed %}
                 <tr class="appData-details-inner show">
@@ -461,10 +461,10 @@
                 <tr>
                     <th class="dataTable-name big">Totals</th>
                     <td class="dataTable-data numeric">&nbsp;</td>     
-                    <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.click_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.ctr|percentage}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.conversion_count|withsep}} ({{adgroup.stats.conv_rate|percentage}})</td>
+                    <td class="dataTable-data numeric"><b>{{adgroup.stats.impression_count|withsep}}</b></td>
+                    <td class="dataTable-data numeric"><b>{{adgroup.stats.click_count|withsep}}</b></td>
+                    <td class="dataTable-data numeric"><b>{{adgroup.stats.ctr|percentage}}</b></td>
+                    <td class="dataTable-data numeric"><b>{{adgroup.stats.conversion_count|withsep}} ({{adgroup.stats.conv_rate|percentage}})</b></td>
                 </tr>
                 {% for s in adgroup.all_stats reversed %}
                 <tr class="appData-details-inner show">
@@ -493,11 +493,11 @@
                 <tr>
                     <th class="dataTable-name big">Totals</th>
                     <td class="dataTable-data numeric">&nbsp;</td>     
-                    <td class="dataTable-data numeric">{{adgroup.stats.request_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.fill_rate|percentage}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.click_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.ctr|percentage}}</td>
+                    <td class="dataTable-data numeric"><b>{{adgroup.stats.request_count|withsep}}</b></td>
+                    <td class="dataTable-data numeric"><b>{{adgroup.stats.impression_count|withsep}}</b></td>
+                    <td class="dataTable-data numeric"><b>{{adgroup.stats.fill_rate|percentage}}</b></td>
+                    <td class="dataTable-data numeric"><b>{{adgroup.stats.click_count|withsep}}</b></td>
+                    <td class="dataTable-data numeric"><b>{{adgroup.stats.ctr|percentage}}</b></td>
                 </tr>
                 {% for s in adgroup.all_stats reversed %}
                 <tr class="appData-details-inner show">

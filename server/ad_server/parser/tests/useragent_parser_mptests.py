@@ -10,8 +10,6 @@ from google.appengine.ext import db
 from google.appengine.ext import testbed
 from ad_server.parser.useragent_parser import get_os_version, get_os
 
-from ad_server.filters.filters import os_filter
-
 
 import logging
 
@@ -52,24 +50,23 @@ class TestUseragentParser(unittest.TestCase):
         user_agent = "Mozilla/5.0(iPad; U; CPU iPhone OS 3_2 like Mac OS X; en-us) AppleWebKit/531.21.10 (KHTML, like Gecko) Version/4.0.4 Mobile/7B314 Safari/531.21.10"
         
         eq_(get_os(user_agent), "iOS")
-        eq_(get_os_version(user_agent), 'iphone__3_2')
+        eq_(get_os_version(user_agent), 3.2)
         
     def mptest_iphone(self):
         user_agent = "Mozilla/5.0 (iPhone; U; CPU iPhone OS 3_0 like Mac OS X; en-us) AppleWebKit/528.18 (KHTML, like Gecko) Version/4.0 Mobile/7A341 Safari/528.16"
 
         eq_(get_os(user_agent), "iOS")
-        eq_(get_os_version(user_agent), 'iphone__3_0')
+        eq_(get_os_version(user_agent), 3.0)
         
         
     def mptest_iphone(self):
         user_agent = "Some android agent"
 
         eq_(get_os(user_agent), "android")
-        eq_(get_os_version(user_agent), 'android__2_0')     
+        eq_(get_os_version(user_agent), 2.1)     
         
-    ################# Integration Tests ################
+
         
-    def mptest_filter(self):
         
         
         

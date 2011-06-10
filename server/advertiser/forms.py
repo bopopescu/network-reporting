@@ -108,13 +108,25 @@ class AdGroupForm(mpforms.MPModelForm):
     custom_method = mpfields.MPTextField(required=False)
     cities = forms.Field(widget=forms.MultipleHiddenInput, required=False)
     
+    ios_version_max = mpfields.MPChoiceField(choices=AdGroup.IOS_VERSION_MAX_CHOICES,
+                                             widget=mpwidgets.MPSelectWidget)
+    ios_version_min = mpfields.MPChoiceField(choices=AdGroup.IOS_VERSION_CHOICES,
+                                             widget=mpwidgets.MPSelectWidget)
+    
+    android_version_max = mpfields.MPChoiceField(choices=AdGroup.ANDROID_VERSION_MAX_CHOICES,
+                                          widget=mpwidgets.MPSelectWidget)
+    android_version_min = mpfields.MPChoiceField(choices=AdGroup.ANDROID_VERSION_CHOICES,
+                                          widget=mpwidgets.MPSelectWidget)
+    
     class Meta:
         model = AdGroup
         fields = ('name', 'network_type', 'priority_level', 'keywords', 
                   'bid', 'bid_strategy', 
                   'percent_users', 'site_keys',
                   'hourly_frequency_cap','daily_frequency_cap','allocation_percentage', 
-                  'allocation_type','budget')
+                  'allocation_type','budget',
+                  'target_ios', 'ios_version_max','ios_version_min',
+                  'target_android', 'android_version_max','android_version_min')
        
     def save( self, commit=True):
         obj = super(AdGroupForm, self).save(commit=False)

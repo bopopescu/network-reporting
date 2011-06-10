@@ -73,6 +73,29 @@ def device_filter(dev_preds):
         return (set(dev_preds).intersection(a.device_predicates) > set())
     return (real_filter, log_mesg, [])
 
+
+def os_filter(user_agent):
+    log_mesg = "Removed due to OS restrictions: %s"
+    def real_filter(a):
+        if user_agent == "iphone":
+            if not a.target_ios:
+                return False
+            else:
+                # check versions with 
+                a.ios_version_max
+                
+        else if user_agent == "android":
+            if not a.target_android:
+                return False
+            else:
+                a.android_version_max
+        
+        
+    return (real_filter, log_mesg, [])
+
+
+
+
 def mega_filter(*filters): 
     def actual_filter(a):
         for (f, msg, lst) in filters:

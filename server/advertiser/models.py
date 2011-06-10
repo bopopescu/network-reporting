@@ -142,17 +142,61 @@ class AdGroup(db.Model):
     )
     devices = db.StringListProperty(default=['any'])
     
-    MIN_OS_CHOICES = (
-        ('any','Any'),
-        ('iphone__2_0','2.0+'),
-        ('iphone__2_1','2.1+'),
-        ('iphone__3_0','3.0+'),
-        ('iphone__3_1','3.1+'),
-        ('iphone__3_2','3.2+'),
-        ('iphone__4_0','4.0+'),
-        ('iphone__4_1','4.1+'),
+    IOS_VERSION_CHOICES = (
+        ('iphone__2_0','2.0'),
+        ('iphone__2_1','2.1'),
+        ('iphone__3_0','3.0'),
+        ('iphone__3_1','3.1'),
+        ('iphone__3_2','3.2'),
+        ('iphone__4_0','4.0'),
+        ('iphone__4_1','4.1'),
+        ('iphone__4_2','4.2'),
+        ('iphone__4_3','4.3'),
     )
-    min_os = db.StringListProperty(default=['any'])
+    
+    IOS_VERSION_MAX_CHOICES = (
+        ('iphone__2_0','2.0'),
+        ('iphone__2_1','2.1'),
+        ('iphone__3_0','3.0'),
+        ('iphone__3_1','3.1'),
+        ('iphone__3_2','3.2'),
+        ('iphone__4_0','4.0'),
+        ('iphone__4_1','4.1'),
+        ('iphone__4_2','4.2'),
+        ('iphone__4_3','4.3'),
+        ('any','No Maximum'),
+    )
+    
+    ANDROID_VERSION_CHOICES = (
+        ('android__1_5','1.5'),
+        ('android__1_6','1.6'),
+        ('android__2_0','2.0'),
+        ('android__2_1','2.1'),
+        ('android__2_2','2.2'),
+        ('android__2_3','2.3'),
+        ('android__3_0','3.0'),
+    )
+    
+    ANDROID_VERSION_MAX_CHOICES = (
+        ('android__1_5','1.5'),
+        ('android__1_6','1.6'),
+        ('android__2_0','2.0'),
+        ('android__2_1','2.1'),
+        ('android__2_2','2.2'),
+        ('android__2_3','2.3'),
+        ('android__3_0','3.0'),
+        ('any','No Maximum'),
+    )
+    
+    
+    # Device Targeting
+    target_ios = db.BooleanProperty(default=True)
+    ios_version_min = db.StringProperty(default='iphone__2_0')
+    ios_version_max = db.StringProperty(default='any')
+    
+    target_android = db.BooleanProperty(default=True)
+    android_version_min = db.StringProperty(default='android__1_5')
+    android_version_max = db.StringProperty(default='any')
     
     
     USER_TYPES = (

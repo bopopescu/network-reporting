@@ -165,6 +165,7 @@ class AdAuction(object):
                         kw_filter(keywords), 
                         geo_filter(geo_predicates), 
                         device_filter(device_predicates)
+                        os_filter(user_agent)
                        ) 
         
         all_ad_groups = filter(mega_filter(*ALL_FILTERS), all_ad_groups)

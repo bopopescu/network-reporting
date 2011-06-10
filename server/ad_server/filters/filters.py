@@ -80,22 +80,22 @@ def device_filter(dev_preds):
 def os_filter(user_agent):
     log_mesg = "Removed due to OS restrictions: %s"
     def real_filter(a):
-        if get_os(user_agent) == "iOS":
+        user_os_name = get_os(user_agent)
+        user_os_version = get_os_version(user_agent)
+        
+        if user_os_name == "iOS":
             if not a.target_ios:
                 return False
             else:
-                # check versions with 
-                user_agent_os_version = get_os_version(user_agent)
-                return (float(a.ios_version_max) >= user_agent_os_version and
-                        float(a.ios_version_min) <= user_agent_os_version)
+                return (float(a.ios_version_max) >= user_os_version and
+                        float(a.ios_version_min) <= user_os_version)
                 
-        else if user_agent == "android":
+        else if user_os_name == "android":
             if not a.target_android:
                 return False
             else:
-                a.android_version_max
-        
-        
+                return (float(a.android_version_max) >= user_os_version and
+                        float(a.android_version_min) <= user_os_version)
     return (real_filter, log_mesg, [])
 
 

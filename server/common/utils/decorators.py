@@ -77,8 +77,21 @@ def cache_page_until_post(time=5*60):
     def wrap(view):
         def new_view(request, *args, **kw):
             
-            if not request.META["USER_EMAIL"] or not request.META["USER_ID"]:
-                return HttpResponseRedirect(settings.LOGIN_URL)
+            logging.warning("HEADERS: %s" % request.META)
+            logging.warning("COOKIES: %s" % request.COOKIES)
+            logging.warning("\n\n\n\n\nUSER_ID: %s" % request.META["USER_ID"])
+            logging.warning("USER_EMAIL: %s" % request.META["USER_EMAIL"])
+            
+            
+            request.META["HTTP_COOKIE"] = '%s=%s; %s=%s'%('sessionid',request.COOKIES['sessionid'], 
+                                                      'csrftoken',request.COOKIES['csrftoken'])
+                                                      
+            logging.warning("HEADERS: %s" % request.META)
+            logging.warning("COOKIES: %s" % request.COOKIES)
+                                                      
+            
+            # if not request.META["USER_EMAIL"] or not request.META["USER_ID"]:
+            #     return HttpResponseRedirect(settings.LOGIN_URL)
             
             if request.method == "POST":
                 # If we are POSTing, clear the cache

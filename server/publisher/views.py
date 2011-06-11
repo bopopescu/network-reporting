@@ -346,6 +346,7 @@ class ShowAppHandler(RequestHandler):
     app.adunits = sorted(app.adunits, key=lambda adunit: adunit.stats.request_count, reverse=True)
       
     app_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=app, days=days)
+    app.all_stats = app_stats
 
     help_text = 'Create an Ad Unit below' if len(app.adunits) == 0 else None
     

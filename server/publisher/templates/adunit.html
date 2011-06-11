@@ -322,7 +322,49 @@
               </tbody>
             </table>
             {% endif %}
-            </div>            
+            </div>
+          </section>            
+
+          <section id="dashboard-apps">
+              <h2>Daily Counts</h2>            
+                 <div class="appData-details noneg">
+                  <table class="dataTable appData-main">
+                      <thead>
+                          <tr>  
+                              <th class="dataTable-name big">&nbsp;</th>
+                              <th class="dataTable-name big">&nbsp;</th>
+                              <th class="dataTable-data numeric special">Requests</th>
+                              <th class="dataTable-data numeric special">Impressions</th>
+                              <th class="dataTable-data numeric special">Fillrate</th>
+                              <th class="dataTable-data numeric special">Clicks</th>
+                              <th class="dataTable-data numeric special">CTR</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          <tr>
+                              <th class="dataTable-name big">Totals</th>
+                              <td class="dataTable-data numeric">&nbsp;</td>     
+                              <td class="dataTable-data numeric"><b>{{adunit.stats.request_count|withsep}}</b></td>
+                              <td class="dataTable-data numeric"><b>{{adunit.stats.impression_count|withsep}}</b></td>
+                              <td class="dataTable-data numeric big"><b>{{adunit.stats.fill_rate|percentage}}</b></td>
+                              <td class="dataTable-data numeric big"><b>{{adunit.stats.click_count|withsep}}</b></td>
+                              <td class="dataTable-data numeric big"><b>{{adunit.stats.ctr|percentage}}</b></td>
+                          </tr>
+                          {% for s in adunit.all_stats reversed %}
+                          <tr class="appData-details-inner show">
+                              <th class="dataTable-name">{{s.date|format_date}}</th>
+                              <td class="dataTable-data numeric">&nbsp;</td>     
+                              <td class="dataTable-data numeric">{{s.request_count|withsep}}</td>
+                              <td class="dataTable-data numeric">{{s.impression_count|withsep}}</td>
+                              <td class="dataTable-data numeric">{{s.fill_rate|percentage}}</td>
+                              <td class="dataTable-data numeric">{{s.click_count|withsep}}</td>
+                              <td class="dataTable-data numeric">{{s.ctr|percentage}}</td>
+                          </tr>
+                          {% endfor %}
+                      </tbody>
+                  </table>
+                  <a class="button button-small appData-details-toggleButton" href="#">Hide details</a>
+              </div>
           </section>
           
           <div class="clear"></div>

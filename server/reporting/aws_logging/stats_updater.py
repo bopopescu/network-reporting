@@ -60,17 +60,12 @@ def put_models_by_qm(qm):
         pass
     except:
         traceback.print_exc()
-        return
+        return 'failed: account %s' %(qm.account.name())
     
 
 def put_models(pool):
     async_results = pool.map_async(put_models_by_qm, stats_qm_cache.values())
-    try:
-      results = async_results.get(0xFFFF) # set maximum timeout (seconds) to return result when it arrives
-    except:
-        print 'parent process exception'
-        traceback.print_exc() 
-        return
+    results = async_results.get(0xFFFF) # set maximum timeout (seconds) to return result when it arrives
 
     # print status message from each process
     print
@@ -175,7 +170,7 @@ def parse_line(line):
 
 
 def process_input_file(input_file, num_workers):
-    print 'processing stats file %s with %i workers' % (input_file, num_workers)
+    print 'processing stats file %s with %i workers...' % (input_file, num_workers)
     # pool = Pool(processes=num_workers)
     pool = ThreadPool(processes=num_workers)
     line_count = 0
@@ -187,8 +182,14 @@ def process_input_file(input_file, num_workers):
 
             if line_count % 100 == 0: 
                 print "\nMARKER: %i lines\n" %line_count
-                put_models(pool)
-                                                                
+                try:
+                    put_models(pool)
+                except KeyboardInterrupt:
+                    print 'controller received control-c'
+                    break
+                except:
+                    traceback.print_exc()
+                                                                                    
                                 
 def setup_remote_api():
     from google.appengine.ext.remote_api import remote_api_stub

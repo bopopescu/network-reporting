@@ -24,8 +24,6 @@ SENTINEL = '!!!'
 MAX_RETRIES = 3
 
 
-BLOBLOG_KEY = 'blobkey:%s'
-
 class SiteStatsQueryManager(CachedQueryManager):
     def get_sitestats_for_days(self, site=None, owner=None, days=None):
         if isinstance(site,db.Model):
@@ -43,10 +41,11 @@ class SiteStatsQueryManager(CachedQueryManager):
         stats = [s or SiteStats() for s in stats]
         return stats
 
+
 class BlobLogQueryManager():
 
     def put_bloblog(self, date, blob_key, account=None):
-        bloblog = BlobLog(date = date, blob_key = blob_key)
+        bloblog = BlobLog(date=date, blob_key=blob_key, account=account)
         return bloblog.put()
 
     def get_blobkeys_for_days(self, days): 

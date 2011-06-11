@@ -74,7 +74,7 @@ s3cmd put $APP_DIR/reporting/aws_logging/deref_cache.pkl $S3_CODE_DIR/
 START_TIME=$(date +%s)
 echo
 echo "submitting EMR job..."
-python $APP_DIR/reporting/aws_logging/job_submitter.py -i $S3_LOGFILE -n 1#0
+python $APP_DIR/reporting/aws_logging/job_submitter.py -i $S3_LOGFILE #-n 10
 STOP_TIME=$(date +%s)
 echo "EMR job took" $((STOP_TIME-START_TIME)) "seconds"
 
@@ -85,26 +85,51 @@ echo "deleting local chunk log files at" $LOG_DIR
 rm $LOG_DIR/*
 
 
-# download log counts output files from S3 and merge them into one
+#### Basic Log Counts ####
+# download basic log counts output files from S3 and merge them into one
 START_TIME=$(date +%s)
 echo
 echo "downloading log counts output files from S3..."
-s3cmd get $S3_LOGFILE.dd.out/part-* $LOG_DIR
+s3cmd get $S3_LOGFILE.basic.dd.out/part-* $LOG_DIR
 STOP_TIME=$(date +%s)
 echo "downloading log counts S3 output files took" $((STOP_TIME-START_TIME)) "seconds"
 echo
-echo "merging output files to" $LOCAL_LOGFILE.stats "..."
-cat $LOG_DIR/part-* > $LOCAL_LOGFILE.stats
+echo "merging output files to" $LOCAL_LOGFILE.basic.lc.stats "..."
+cat $LOG_DIR/part-* > $LOCAL_LOGFILE.basic.lc.stats
 
 
 # deleting local and remote log counts S3 output files 
 echo
-echo "deleting local log counts S3 part files at" $LOG_DIR.dd.out
+echo "deleting local log counts S3 part files at" $LOG_DIR.basic.dd.out
 rm -rf $LOG_DIR/part-*
-echo "deleting remote log counts S3 part files at" $S3_LOGFILE.dd.out
-s3cmd del --recursive $S3_LOGFILE.dd.out
+echo "deleting remote log counts S3 part files at" $S3_LOGFILE.basic.dd.out
+s3cmd del --recursive $S3_LOGFILE.basic.dd.out
+##########################
 
 
+#### Advanced Log Counts ####
+# download advanced log counts output files from S3 and merge them into one
+START_TIME=$(date +%s)
+echo
+echo "downloading log counts output files from S3..."
+s3cmd get $S3_LOGFILE.advanced.dd.out/part-* $LOG_DIR
+STOP_TIME=$(date +%s)
+echo "downloading log counts S3 output files took" $((STOP_TIME-START_TIME)) "seconds"
+echo
+echo "merging output files to" $LOCAL_LOGFILE.adv.lc.stats "..."
+cat $LOG_DIR/part-* > $LOCAL_LOGFILE.adv.lc.stats
+
+
+# deleting local and remote log counts S3 output files 
+echo
+echo "deleting local log counts S3 part files at" $LOG_DIR.advanced.dd.out
+rm -rf $LOG_DIR/part-*
+echo "deleting remote log counts S3 part files at" $S3_LOGFILE.advanced.dd.out
+s3cmd del --recursive $S3_LOGFILE.advanced.dd.out
+############################
+
+
+#### Uniq User ####
 # download uniq user counts output files from S3 and merge them into one
 START_TIME=$(date +%s)
 echo
@@ -123,42 +148,49 @@ echo "deleting local uniq user counts S3 part files at" $LOG_DIR.pp.out
 rm -rf $LOG_DIR/part-*
 echo "deleting remote uniq user counts S3 part files at" $S3_LOGFILE.pp.out
 s3cmd del --recursive $S3_LOGFILE.pp.out
+################
 
 
-# # parse log counts MR output and update StatsModels in GAE datastore
-# START_TIME=$(date +%s)
-# echo
-# echo "updating log counts in GAE datastore..."
-# python $APP_DIR/reporting/aws_logging/stats_updater.py -f $LOCAL_LOGFILE.stats 
-# STOP_TIME=$(date +%s)
-# echo "updating GAE datastore took" $((STOP_TIME-START_TIME)) "seconds"
-# 
-# 
-# # parse uniq user counts MR output and update StatsModels in GAE datastore
-# START_TIME=$(date +%s)
-# echo
-# echo "updating uniq user counts in GAE datastore..."
-# python $APP_DIR/reporting/aws_logging/uniq_user_stats_updater.py -f $LOCAL_LOGFILE.uu.stats 
-# STOP_TIME=$(date +%s)
-# echo "updating GAE datastore took" $((STOP_TIME-START_TIME)) "seconds"
+# split advanced log counts stats file by account: log+YYMMDD+<account>+.adv.lc.stats
+echo
+echo "splitting" $LOCAL_LOGFILE.adv.lc.stats " by day and account..."
+python $APP_DIR/reporting/aws_logging/stats_splitter.py -f $LOCAL_LOGFILE.adv.lc.stats
 
 
-# # uploading stats files to S3
-# echo
-# echo "uploading log counts stats file to" $S3_LOGFILE.stats
-# s3cmd put $LOCAL_LOGFILE.stats $S3_LOGFILE.stats
-# echo
-# echo "uploading uniq user counts stats file to" $S3_LOGFILE.uu.stats
-# s3cmd put $LOCAL_LOGFILE.uu.stats $S3_LOGFILE.uu.stats
-# 
-# 
-# # uploading stats files to GAE blobstore using Files API
-# echo
-# echo "uploading log counts stats file to GAE blobstore"
-# python $APP_DIR/reporting/aws_logging/blob_uploader.py -f $LOCAL_LOGFILE.stats
-# echo
-# echo "uploading uniq user counts stats file to GAE blobstore"
-# python $APP_DIR/reporting/aws_logging/blob_uploader.py -f $LOCAL_LOGFILE.uu.stats
+# update advanced log counts stats files to blobstore and update BlogLog model
+echo
+echo "uploading split files in" $LOG_DIR "to blobstore"
+python $APP_DIR/reporting/aws_logging/blob_uploader.py -d $LOG_DIR
+
+
+# parse basic log counts MR output and update StatsModels in GAE datastore
+START_TIME=$(date +%s)
+echo
+echo "updating log counts in GAE datastore..."
+python $APP_DIR/reporting/aws_logging/stats_updater.py -f $LOCAL_LOGFILE.basic.lc.stats -n 8
+STOP_TIME=$(date +%s)
+echo "updating GAE datastore took" $((STOP_TIME-START_TIME)) "seconds"
+
+
+# parse uniq user counts MR output and update StatsModels in GAE datastore
+START_TIME=$(date +%s)
+echo
+echo "updating uniq user counts in GAE datastore..."
+python $APP_DIR/reporting/aws_logging/uniq_user_stats_updater.py -f $LOCAL_LOGFILE.uu.stats -n 8
+STOP_TIME=$(date +%s)
+echo "updating GAE datastore took" $((STOP_TIME-START_TIME)) "seconds"
+
+
+# uploading stats files to S3
+echo
+echo "uploading basic log counts stats file to" $S3_LOGFILE.basic.lc.stats
+s3cmd put $LOCAL_LOGFILE.basic.lc.stats $S3_LOGFILE.basic.lc.stats
+echo
+echo "uploading advanced log counts stats file to" $S3_LOGFILE.adv.lc.stats
+s3cmd put $LOCAL_LOGFILE.adv.lc.stats $S3_LOGFILE.adv.lc.stats
+echo
+echo "uploading uniq user counts stats file to" $S3_LOGFILE.uu.stats
+s3cmd put $LOCAL_LOGFILE.uu.stats $S3_LOGFILE.uu.stats
 
 
 # end timestamp

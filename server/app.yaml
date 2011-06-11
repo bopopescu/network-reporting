@@ -1,6 +1,6 @@
 application: mopub-inc
 #application: mopub-experimental
-version: 38
+version: 38-attempt
 runtime: python
 api_version: 1
 default_expiration: "10d"
@@ -25,6 +25,10 @@ handlers:
   static_files: public/images/favicon.ico
   upload: public/images/favicon.ico
 
+- url: /m/req
+  static_files: public/dummy/req.txt
+  upload: public/dummy/req.txt
+  
 - url: /css
   static_dir: public/css
 

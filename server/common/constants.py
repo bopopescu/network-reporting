@@ -100,3 +100,5 @@ ACCEPTED_MULTI_COUNTRY = {'GB' : ['UK', 'GB'],
                           }
 
 CAMPAIGN_LEVELS = ('gtee_high', 'gtee', 'gtee_low', 'promo', 'network', 'backfill_promo')
+
+DATE_FMT = '%y%m%d'

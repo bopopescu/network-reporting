@@ -105,10 +105,11 @@ def chunks(list, chunk_size):
         yield list[idx:idx+chunk_size]
 
 # Must be len 8, must have format YYMMDDHH
+# I'm not getting rid of this, but this is stupid, I should've jsut used strftime...duh....
 def parse_time(time_str):
     if len(time_str) != 8:
         return None
-    year = int(time_str[:2])
+    year = 2000 + int(time_str[:2])
     month = int(time_str[2:4])
     day = int(time_str[4:6])
     hour = int(time_str[6:])

@@ -3,6 +3,7 @@ InstallAppengineHelperForDjango()
 
 import logging
 import re
+import datetime
 
 #GAE imports
 from mapreduce import base_handler
@@ -31,6 +32,7 @@ from common.constants import (APP,
                               OS,
                               OS_VER,
                               KEY,
+                              DATE_FMT,
                               )
 from common.wurfl.query_managers import WurflQueryManager
 from common.utils import date_magic
@@ -41,7 +43,7 @@ MR1_KEY = '%s'
 MR2_KEY = '%s:%s'
 MR3_KEY = '%s:%s:%s'
 
-glob_acct = None
+NO_REQUESTS = (CAMP, CRTV, P)
 
 def get_key(line_dict, dim):
     """ Returns the key for a dim
@@ -92,7 +94,7 @@ def parse_line(line):
         line: the line to be parsed
     """
     #Lines have varying amts of whitespace, get rid of all of it
-    re.sub(r'\s','',line)
+    line = re.sub(r'\s','',line)
     #get the key and value away from each other
     key, value = line.split('[')
     #get rid of the trailing bracket
@@ -101,27 +103,15 @@ def parse_line(line):
     ph, adunit_id, creative_id, country, brand, marketing, os, os_ver, time = key.split(':')
     time = parse_time(time)
     req, imp, clk, conv = map(int, value.split(','))
-    if creative_id == '':
-        return None
-    #don't worry about resolving these just yet
+
     au = adunit_id
     crtv = creative_id
-    #right now we only need to do a DB get if we don't have the acct key
-    global glob_acct
-    if glob_acct is None:
-        try:
-            temp_au = AdUnit.get(adunit_id)
-            glob_acct = str(temp_au.account.key())
-        except:
-            logging.warning("Bad adunit key from log")
-            return None
-    if glob_acct is None:
-        try:
-            temp_crtv = Creative.get(creative_id)
-            glob_acct = str(temp_crtv.account.key())
-        except:
-            logging.warning("Bad creative key from log")
-            return None
+    #right now no need for DB get
+    #au = AdUnit.get(adunit_id)
+    #crtv = Creative.get(creative_id)
+
+
+
     #Huzzah
     return dict(adunit = au,
                 creative = crtv,
@@ -139,29 +129,45 @@ def parse_line(line):
 
 
 def verify_line(line_dict, d1, d2, d3, days, account_key):
-    global glob_acct
     if line_dict is None:
         return False
-    if glob_acct is None or glob_acct != account_key:
-        return False
+    try:
+        if str(AdUnit.get(line_dict['adunit']).account.key()) != account_key:
+            return False
+    except:
+        try:
+            if str(Creative.get(line_dict['creative']).account.key()) != account_key:
+                return False
+        except:
+            return False
     if line_dict['time'] not in days:
         return False
-    #Eventually, do things with d1, d2, d3 to do something with checking if no creative
     return True
 
 def build_keys(line_dict, d1, d2, d3):
+    #if we're on a line w/ no creative it's a request line, return what we have
+    if line_dict['creative'] == '' and d1 in NO_REQUESTS:
+        return None
     d1_key = get_key(line_dict, d1)   
     keys = [MR1_KEY % d1_key]
     if d2:
+        if line_dict['creative'] == '' and d2 in NO_REQUESTS:
+            return keys
         d2_key = get_key(line_dict, d2)
         keys.append(MR2_KEY % (d1_key, d2_key))
     if d3:
+        if line_dict['creative'] == '' and d3 in NO_REQUESTS:
+            return keys 
         d3_key = get_key(line_dict, d3)
         keys.append(MR3_KEY % (d1_key, d2_key, d3_key))
     return keys
 
+def agenerate_report_map(data):
+    offset, line = data
+    num = offset % 20
+    yield ('%s' % num, "Hi")
+
 def generate_report_map(data):
-    logging.debug(data)
     byte_offset, line = data
     """ Mapping portion of mapreduce job
 
@@ -172,29 +178,30 @@ def generate_report_map(data):
     """
     ctx = context.get()
     params = ctx.mapreduce_spec.mapper.params
-    report_key = params['report_key']
-    report = Report.get(report_key)
-    d1 = report.d1
-    d2 = report.d2
-    d3 = report.d3
-    account_key = str(report.account.key())
+    d1 = params['d1']
+    d2 = params['d2']
+    d3 = params['d3']
+    start = datetime.datetime.strptime(params['start'], DATE_FMT).date()
+    end = datetime.datetime.strptime(params['end'], DATE_FMT).date()
+    account_key = params['account_key']
+
     #Turn start, end dates into a list of date_hours
     #reduce turns [[day1hours][day2hours]] into [day1hours, day2hours]
-    days = reduce(lambda x,y: x+y, date_magic.gen_days(report.start, report.end, True))
+    days = reduce(lambda x,y: x+y, date_magic.gen_days(start, end, True))
     line_dict = parse_line(line)
     #make sure this is the right everything
-    logging.debug("verifying")
     if verify_line(line_dict, d1, d2, d3, days, account_key):
-        logging.debug("verified")
         for key in build_keys(line_dict, d1, d2, d3):
-            logging.debug("Yielding...")
-            yield (key, [line_dict['req_count'], line_dict['imp_count'], line_dict['clk_count'], line_dict['conv_count']]) 
-     else:
-         logging.debug("Verify failed...")
+            yield (key, '%s' % [line_dict['req_count'], line_dict['imp_count'], line_dict['clk_count'], line_dict['conv_count']]) 
+
+def agenerate_report_reduce(key, values):
+    yield (key, len(values))
 
 def generate_report_reduce(key, values):
+    #yield 'key: %s values: %s\n' % (key, [a for a in values])
+    values = [eval(value) for value in values]
     #zip turns [1,2,3] [4,5,6] into [(1,4), (2,5), (3,6)], map applies sum to all list entries
-    yield '%s|| %s' % (key, map(sum, zip(*values)))
+    yield '%s|| %s\n' % (key, map(sum, zip(*values)))
 
 
 
@@ -206,7 +213,7 @@ class GenReportPipeline(base_handler.PipelineBase):
                 stats objects
             report_key: key of the report being generated (not scheduled report)
     """
-    def run(self, blob_keys, report_key):
+    def run(self, blob_keys, d1, d2, d3, start, end, account_key):
         yield mapreduce_pipeline.MapreducePipeline(
                 'BlobReportGenerator',
                 'reports.rep_mapreduce.generate_report_map',
@@ -214,11 +221,16 @@ class GenReportPipeline(base_handler.PipelineBase):
                 'mapreduce.input_readers.BlobstoreLineInputReader',
                 'mapreduce.output_writers.BlobstoreOutputWriter',
                 mapper_params={
-                    'report_key': report_key,
+                    'd1': d1,
+                    'd2': d2,
+                    'd3': d3,
+                    'start': start,
+                    'end': end,
+                    'account_key': account_key,
                     'blob_keys': blob_keys,
                 },
                 reducer_params={
                     'mime_type': 'text/plain',
                 },
-                shards=35)
+                shards=50)
 

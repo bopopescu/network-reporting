@@ -8,6 +8,7 @@ from django.template.loader import render_to_string
 from google.appengine.api import taskqueue
 from google.appengine.ext import db
 
+from common.constants import DATE_FMT
 from common.utils.query_managers import CachedQueryManager
 from common.utils import date_magic
 from reporting.models import StatsModel
@@ -178,7 +179,7 @@ class ReportQueryManager(CachedQueryManager):
             #                      })
             bloblogman = BlobLogQueryManager()
             blob_keys = bloblogman.get_blobkeys_for_days(date_magic.gen_days(now-dt, now))
-            pipe = GenReportPipeline(blob_keys, str(new_report.key()))
+            pipe = GenReportPipeline(blob_keys, new_report.d1, new_report.d2, new_report.d3, new_report.start.strftime(DATE_FMT), new_report.end.strftime(DATE_FMT), str(account.key()))
             pipe.start()
         return new_report
 
@@ -259,7 +260,8 @@ class ReportQueryManager(CachedQueryManager):
         #                  )
             bloblogman = BlobLogQueryManager()
             blob_keys = bloblogman.get_blobkeys_for_days(date_magic.gen_days(end-dt, end))
-            pipe = GenReportPipeline(blob_keys, str(report.key()))
+            pipe = GenReportPipeline(blob_keys, report.d1, report.d2, report.d3, report.start.strftime(DATE_FMT), report.end.strftime(DATE_FMT), str(report.account.key()))
+
             pipe.start()
         return sched 
 

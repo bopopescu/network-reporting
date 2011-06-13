@@ -8,13 +8,16 @@ from math import (atan2,
                   )
 from budget import budget_service
 from reporting.models import StatsModel
+from ad_server.parser.useragent_parser import get_os
+
 
 from common.constants import (VALID_FULL_FORMATS,     
                               VALID_TABLET_FULL_FORMATS,
+                              MIN_IOS_VERSION, 
+                              MAX_IOS_VERSION, 
+                              MIN_ANDROID_VERSION, 
+                              MAX_ANDROID_VERSION
                              )
-                             
-                             
-from ad_server.parser.useragent_parser import get_os_version, get_os
 ###############################
 # BASIC INCLUSION FILTERS
 #
@@ -76,30 +79,71 @@ def device_filter(dev_preds):
         return (set(dev_preds).intersection(a.device_predicates) > set())
     return (real_filter, log_mesg, [])
 
-
 def os_filter(user_agent):
     log_mesg = "Removed due to OS restrictions: %s"
     def real_filter(a):
-        user_os_name = get_os(user_agent)
-        user_os_version = get_os_version(user_agent)
+        user_os_name, user_os_version = get_os(user_agent)
+        if user_os_name == None:
+            if a.target_ios and a.target_android and a.ios_version_min == MIN_IOS_VERSION and a.ios_version_max == MAX_IOS_VERSION and a.android_version_min == MIN_ANDROID_VERSION and a.android_version_max == MAX_ANDROID_VERSION:
+                return True
+            else:
+                return False
+
+        if user_os_version == None:
+            if user_os_name == 'iOS':
+                if a.target_ios and a.ios_version_min == MIN_IOS_VERSION and a.ios_version_max == MAX_IOS_VERSION:
+                    return True
+                else:
+                    return False
+            elif user_os_name == 'android':
+                if a.target_android and a.android_version_min == MIN_ANDROID_VERSION and a.android_version_max == MAX_ANDROID_VERSION:
+                    return True
+                else:
+                    return False
+                    
+        def in_range(user_nums,max_nums,min_nums):
+            y = max(len(user_nums), len(max_nums), len(min_nums))
+            x = y - min(len(user_nums), len(max_nums), len(min_nums))
+            for n in range(x):
+                if len(user_nums) < y:
+                    user_nums.append('0')
+                if len(max_nums) < y:
+                    max_nums.append('0')
+                if len(min_nums) < y:
+                    min_nums.append('0') 
+            def_less = False
+            def_more = False
+            for i, num in enumerate(user_nums):
+                if not def_less:
+                    if int(num) > int(max_nums[i]):
+                        return False
+                    elif int(num) < int(max_nums[i]):
+                        def_less = True
+                if not def_more:
+                    if int(num) < int(min_nums[i]):
+                        return False
+                    elif int(num) > int(min_nums[i]):
+                        def_more = True
+            return True
         
         if user_os_name == "iOS":
             if not a.target_ios:
                 return False
             else:
-                return (float(a.ios_version_max) >= user_os_version and
-                        float(a.ios_version_min) <= user_os_version)
-                
-        else if user_os_name == "android":
+                user_nums = user_os_version.split('.')
+                max_nums = a.ios_version_max.split('.')
+                min_nums = a.ios_version_min.split('.')
+                return in_range(user_nums,max_nums,min_nums)
+        elif user_os_name == "android":
             if not a.target_android:
                 return False
             else:
-                return (float(a.android_version_max) >= user_os_version and
-                        float(a.android_version_min) <= user_os_version)
+                user_nums = user_os_version.split('.')
+                max_nums = a.android_version_max.split('.')
+                min_nums = a.android_version_min.split('.')
+                return in_range(user_nums,max_nums,min_nums)
+                
     return (real_filter, log_mesg, [])
-
-
-
 
 def mega_filter(*filters): 
     def actual_filter(a):

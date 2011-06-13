@@ -22,8 +22,6 @@ import re
 import urlparse
 import cgi
 
-from common.constants import IOS_VERSION_CHOICES, ANDROID_VERSION_CHOICES
-
 class CampaignForm(mpforms.MPModelForm):
     TEMPLATE = 'advertiser/forms/campaign_form.html'
     gtee_level = forms.Field(widget = forms.Select)
@@ -110,25 +108,13 @@ class AdGroupForm(mpforms.MPModelForm):
     custom_method = mpfields.MPTextField(required=False)
     cities = forms.Field(widget=forms.MultipleHiddenInput, required=False)
     
-    ios_version_max = mpfields.MPChoiceField(choices=IOS_VERSION_CHOICES,
-                                             widget=mpwidgets.MPSelectWidget)
-    ios_version_min = mpfields.MPChoiceField(choices=IOS_VERSION_CHOICES[:-1],
-                                             widget=mpwidgets.MPSelectWidget)
-    
-    android_version_max = mpfields.MPChoiceField(choices=ANDROID_VERSION_CHOICES,
-                                          widget=mpwidgets.MPSelectWidget)
-    android_version_min = mpfields.MPChoiceField(choices=ANDROID_VERSION_CHOICES[:-1],
-                                          widget=mpwidgets.MPSelectWidget)
-    
     class Meta:
         model = AdGroup
         fields = ('name', 'network_type', 'priority_level', 'keywords', 
                   'bid', 'bid_strategy', 
                   'percent_users', 'site_keys',
                   'hourly_frequency_cap','daily_frequency_cap','allocation_percentage', 
-                  'allocation_type','budget',
-                  'target_ios', 'ios_version_max','ios_version_min',
-                  'target_android', 'android_version_max','android_version_min')
+                  'allocation_type','budget')
        
     def save( self, commit=True):
         obj = super(AdGroupForm, self).save(commit=False)

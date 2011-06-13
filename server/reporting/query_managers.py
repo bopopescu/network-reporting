@@ -27,8 +27,6 @@ SENTINEL = '!!!'
 MAX_RETRIES = 3
 
 
-BLOBLOG_KEY = 'blobkey:%s'
-
 class SiteStatsQueryManager(CachedQueryManager):
     def get_sitestats_for_days(self, site=None, owner=None, days=None):
         if isinstance(site,db.Model):
@@ -46,10 +44,11 @@ class SiteStatsQueryManager(CachedQueryManager):
         stats = [s or SiteStats() for s in stats]
         return stats
 
+
 class BlobLogQueryManager():
 
     def put_bloblog(self, date, blob_key, account=None):
-        bloblog = BlobLog(date = date, blob_key = blob_key)
+        bloblog = BlobLog(date=date, blob_key=blob_key, account=account)
         return bloblog.put()
 
     def get_blobkeys_for_days(self, days): 
@@ -423,15 +422,11 @@ class StatsModelQueryManager(CachedQueryManager):
                 
     def _get_all_rollups(self, stats, offline):
         offline = offline or self.offline
-        
-        # initialize the object dictionary 
+                
+        # # initialize the object dictionary 
         stats_dict = {}
         for stat in stats:
-            stat_key_name = stat.key().name() 
-            if stat_key_name in stats_dict:
-                stats_dict[stat_key_name] += stat
-            else:
-                stats_dict[stat_key_name] = stat
+            stats_dict[stat.key().name()] = stat
         
         
         def _get_refprop_from_cache(entity, prop):
@@ -618,11 +613,12 @@ class StatsModelQueryManager(CachedQueryManager):
                             
         # if not offline, remove all the country level stats
         # because we are storing this data in dynamic properties
-        if not offline:
-            stats = stats_dict.values()
-            for stat in stats:
-                if stat.country:
-                    del stats_dict[stat.key().name()]
+        # if not offline:
+
+        stats = stats_dict.values()
+        for stat in stats:
+            if stat.country:
+                del stats_dict[stat.key().name()]
         
         # time rollups
         if not offline: # do not rollup on date if it's offline, since aws-logging data is already cumulative

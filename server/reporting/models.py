@@ -20,7 +20,7 @@ GEO_IMPRESSION_COUNT = 'impression_count'
 GEO_CLICK_COUNT = 'click_count'
 GEO_CONVERSION_COUNT = 'conversion_count'
 GEO_COUNTS = [GEO_REQUEST_COUNT,GEO_IMPRESSION_COUNT,GEO_CLICK_COUNT,GEO_CONVERSION_COUNT]
-BLOBLOG_KEY = 'blobkey:%s'
+
 
 class Pacific_tzinfo(datetime.tzinfo):
     """Implementation of the Pacific timezone."""
@@ -52,12 +52,17 @@ class BlobLog(db.Model):
 
     date = db.DateProperty()
     blob_key = db.StringProperty()
+    account = db.StringProperty()
 
-    def __init__(self,parent=None, key_name=None, **kwargs):
-        if not key_name and not kwargs.get('key', None):
-            date = kwargs.get('date', None)
-            key_name = BLOBLOG_KEY % date.strftime('%y%m%d')
-        return super(BlobLog, self).__init__(parent=parent, key_name=key_name, **kwargs)
+    def __init__(self, **kwargs):
+        date = kwargs.get('date', None)
+        account = kwargs.get('account', None)
+
+        date_str = date.strftime('%y%m%d') if date else 'None'
+        account_str = account or 'None'
+        
+        key_name = 'blobkey:%s:%s' % (date_str, account_str)
+        return super(BlobLog, self).__init__(key_name=key_name, **kwargs)
 
 
 class StatsModel(db.Expando):

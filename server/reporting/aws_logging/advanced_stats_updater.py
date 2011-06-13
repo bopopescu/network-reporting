@@ -9,6 +9,7 @@ import multiprocessing
 
 from datetime import datetime
 from multiprocessing import Pool
+from multiprocessing.pool import ThreadPool
 from optparse import OptionParser
 
 # add mopub root to path
@@ -50,13 +51,44 @@ stats_qm_cache = {}
 #     stats_qm_cache = {}
 
 
-def put_models():
-    for qm in stats_qm_cache.values():
-        print 'putting models for account', qm.account.name()
-        qm.put_stats(offline=True)
-    # clear_cache()
+# def put_models():
+#     for qm in stats_qm_cache.values():
+#         print 'putting models for account', qm.account.name()
+#         log_it('putting models for account %s' %(qm.account.name()))
+#         qm.put_stats(offline=True)
+#     clear_cache()
            
-        
+
+def put_models_by_qm(qm): 
+    try:    
+        qm.put_stats(offline=True)
+        qm.stats = []
+        return 'success: account %s' %(qm.account.name())
+    except KeyboardInterrupt:
+        print 'child process received control-c'
+        pass
+    except:
+        traceback.print_exc()
+        return
+    
+
+def put_models(pool):
+    async_results = pool.map_async(put_models_by_qm, stats_qm_cache.values())
+    try:
+      results = async_results.get(0xFFFF) # set maximum timeout (seconds) to return result when it arrives
+    except:
+        print 'parent process exception'
+        traceback.print_exc() 
+        return
+
+    # print status message from each process
+    print
+    print
+    for i in results:
+      print i
+    print
+    print
+    
         
 # this function is also being used by reports.tests.reports_mptests.py         
 def update_model(adunit_key=None, creative_key=None, 
@@ -184,17 +216,26 @@ def parse_line(line):
         print 'EXCEPTION on line %s -> %s' %(line, e)
 
 
-def process_input_file(input_file):
+def process_input_file(input_file, num_workers):
+    print 'processing stats file %s with %i workers' % (input_file, num_workers)
+    # pool = Pool(processes=num_workers)
+    pool = ThreadPool(processes=num_workers)
+    line_count = 0
+    
     with open(input_file, 'r') as f:
         for line in f:
             parse_line(line)
-    put_models()
+            line_count += 1
+            
+            if line_count % 100 == 0: 
+                print "\nMARKER: %i lines\n" %line_count
+                put_models(pool)
 
 
 def setup_remote_api():
     from google.appengine.ext.remote_api import remote_api_stub
     app_id = 'mopub-inc'
-    host = '38-aws2.latest.mopub-inc.appspot.com'
+    host = '38-aws.latest.mopub-inc.appspot.com'
     remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', utils.auth_func, host)
     
     
@@ -203,6 +244,7 @@ def main():
     
     parser = OptionParser()
     parser.add_option('-f', '--input_file', dest='input_file')
+    parser.add_option('-n', '--num_workers', type='int', dest='num_workers', default=multiprocessing.cpu_count())
     
     (options, args) = parser.parse_args()
     
@@ -213,7 +255,7 @@ def main():
         sys.exit('\nERROR: input file does not exist\n')
         
     setup_remote_api()
-    process_input_file(options.input_file)
+    process_input_file(options.input_file, options.num_workers)
    
     elapsed = time.time() - start
     print 'updating GAE datastore took %i minutes and %i seconds' % (elapsed/60, elapsed%60)

@@ -1,5 +1,5 @@
 application: mopub-inc
-# application: mopub-experimental
+#application: mopub-experimental
 version: 38
 runtime: python
 api_version: 1
@@ -25,6 +25,10 @@ handlers:
   static_files: public/images/favicon.ico
   upload: public/images/favicon.ico
 
+- url: /m/req
+  static_files: public/dummy/req.txt
+  upload: public/dummy/req.txt
+  
 - url: /css
   static_dir: public/css
 

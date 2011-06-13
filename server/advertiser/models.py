@@ -4,9 +4,10 @@ from google.appengine.ext import db
 from google.appengine.ext import blobstore
 from google.appengine.ext.db import polymodel
 from account.models import Account
-from common.constants import IOS_VERSION_CHOICES, ANDROID_VERSION_CHOICES
 
-
+from common.constants import MIN_IOS_VERSION, MAX_IOS_VERSION, MIN_ANDROID_VERSION, MAX_ANDROID_VERSION
+# from budget import budget_service
+#
 # A campaign.    Campaigns have budgetary and time based restrictions.    
 # 
 class Campaign(db.Model):
@@ -143,15 +144,27 @@ class AdGroup(db.Model):
     )
     devices = db.StringListProperty(default=['any'])
     
+    MIN_OS_CHOICES = (
+        ('any','Any'),
+        ('iphone__2_0','2.0+'),
+        ('iphone__2_1','2.1+'),
+        ('iphone__3_0','3.0+'),
+        ('iphone__3_1','3.1+'),
+        ('iphone__3_2','3.2+'),
+        ('iphone__4_0','4.0+'),
+        ('iphone__4_1','4.1+'),
+    )
+    min_os = db.StringListProperty(default=['any'])
     
     # Device Targeting
     target_ios = db.BooleanProperty(default=True)
-    ios_version_min = db.FloatProperty(default=2.0)
-    ios_version_max = db.FloatProperty(default=999.0)
+
+    ios_version_min = db.StringProperty(default=MIN_IOS_VERSION)
+    ios_version_max = db.StringProperty(default=MAX_IOS_VERSION)
     
     target_android = db.BooleanProperty(default=True)
-    android_version_min = db.FloatProperty(default=1.5)
-    android_version_max = db.FloatProperty(default=999.0)
+    android_version_min = db.StringProperty(default=MIN_ANDROID_VERSION)
+    android_version_max = db.StringProperty(default=MAX_ANDROID_VERSION)
     
     
     USER_TYPES = (

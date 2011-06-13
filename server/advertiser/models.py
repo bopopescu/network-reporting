@@ -147,11 +147,11 @@ class AdGroup(db.Model):
     # Device Targeting
     target_ios = db.BooleanProperty(default=True)
     ios_version_min = db.FloatProperty(default=2.0)
-    ios_version_max = db.StringProperty(default=999)
+    ios_version_max = db.FloatProperty(default=999.0)
     
     target_android = db.BooleanProperty(default=True)
-    android_version_min = db.StringProperty(default=1.5)
-    android_version_max = db.StringProperty(default=999)
+    android_version_min = db.FloatProperty(default=1.5)
+    android_version_max = db.FloatProperty(default=999.0)
     
     
     USER_TYPES = (

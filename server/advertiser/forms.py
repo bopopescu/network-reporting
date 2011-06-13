@@ -22,6 +22,8 @@ import re
 import urlparse
 import cgi
 
+from common.constants import IOS_VERSION_CHOICES, ANDROID_VERSION_CHOICES
+
 class CampaignForm(mpforms.MPModelForm):
     TEMPLATE = 'advertiser/forms/campaign_form.html'
     gtee_level = forms.Field(widget = forms.Select)
@@ -126,7 +128,8 @@ class AdGroupForm(mpforms.MPModelForm):
                   'bid', 'bid_strategy', 
                   'percent_users', 'site_keys',
                   'hourly_frequency_cap','daily_frequency_cap','allocation_percentage', 
-                  'allocation_type','budget')
+                  'allocation_type','budget','target_ios', 'ios_version_max','ios_version_min',
+                  'target_android', 'android_version_max','android_version_min')
        
     def save( self, commit=True):
         obj = super(AdGroupForm, self).save(commit=False)

@@ -9,6 +9,7 @@ from budget.models import (BudgetSlicer,
                            BudgetDailyLog,
                            NoSpendingForIncompleteLogError,
                            )
+from budget.tzinfo import Pacific                          
 
 """
 A service that determines if a campaign can be shown based upon the defined 
@@ -20,7 +21,7 @@ test_timeslice = 0
 test_daily_budget = 0
 
 
-def has_budget(campaign, cost, today=datetime.date.today()):
+def has_budget(campaign, cost, today=datetime.datetime.now(tz=Pacific).date()):
     """ Returns True if the cost is less than the budget in the current timeslice.
         Campaigns that have not yet begun always return false"""
     

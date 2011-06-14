@@ -7,7 +7,7 @@ from django.views.decorators.cache import cache_page
 
 from django.utils.decorators import available_attrs
 from django.utils.http import urlquote
-from django.contrib.auth import REDIRECT_FIELD_NAME
+from django.contrib.auth import REDIRECT_FIELD_NAME, logout
 from django.contrib.auth.decorators import user_passes_test
 from django.conf import settings
 from django.http import HttpResponseRedirect
@@ -77,51 +77,60 @@ def cache_page_until_post(time=5*60):
     def wrap(view):
         def new_view(request, *args, **kw):
             
+            page_cache_key = _build_page_cache_key(request)
+            
             if request.method == "POST":
                 # If we are POSTing, clear the cache
                 session_cache_key = _build_session_cache_key(request)
                 session_cache_key_set = memcache.get(session_cache_key) or set()
                 for key in session_cache_key_set:
                     memcache.delete(key)
-            
+                            
                 memcache.delete(session_cache_key)
                 return view(request, *args, **kw)
                 
-            else:
-                # If we are not POSTing, add to cache
-                try:
-                    # Do the standard caching and vary on cookie
-                    vary_on_cookie_view = vary_on_cookie(view)
-                    cached_view = cache_page(time)(vary_on_cookie_view)
-                    
-                    return cached_view(request, *args, **kw)
-                finally:
-                    # Also add the caching key to a list - We need to do this
-                    # in the finally clause in order to have the cache_key built
-                    page_key = get_cache_key(request)
-                    logging.info("page_key: %s" % page_key)
-                    if page_key:
-                        # Add the cached page's key to the list of all the pages
-                        # we have cached since the last POST 
-                        session_cache_key = _build_session_cache_key(request)
-                        logging.info("session_cache_key: %s" % session_cache_key)
-                        session_cache_key_set = memcache.get(session_cache_key)
-                        if session_cache_key_set is None:
-                            session_cache_key_set = set()
-                        session_cache_key_set.add(page_key)
-            
-                        memcache.set(session_cache_key,
-                                     session_cache_key_set)
+            elif request.method == "GET":
+                # If we are GETting, add to cache and also add to list of 
+                # cached pages to delete on POST
+                cached_response = memcache.get(page_cache_key)
+                if cached_response:
+                    return cached_response
+                else:
+                    # Build the response
+                    view_response = view(request, *args, **kw)
+                    memcache.set(page_cache_key, view_response, time=time)
+              
+                    # Add the cached page's key to the list of all the pages
+                    # we have cached since the last POST 
+                    session_cache_key = _build_session_cache_key(request)
+                    logging.info("session_cache_key: %s" % session_cache_key)
+                    session_cache_key_set = memcache.get(session_cache_key)
+                    if session_cache_key_set is None:
+                        session_cache_key_set = set()
+                    session_cache_key_set.add(page_cache_key)
+    
+                    memcache.set(session_cache_key,
+                                 session_cache_key_set)
 
+                    return view_response
 
         return new_view
     return wrap
     
 def _build_session_cache_key(request):
-    """ We have a different key for each user"""
-    username = request.user.key()
-    return "user_space_cache:%s" % str(username)
+    """ Returns a string to key our session cache under. We use the session
+        cache to keep track of what needs to be deleted on a post.
+        We have a different key for each user """
+    session_id = request.COOKIES['sessionid']
+    return "session_cache:%s" % str(session_id)
 
+def _build_page_cache_key(request):
+    """ We key our page_cache off of the session id and the url """
+    # TODO: Should we hash this perhaps? What happens if the qs is very long
+    path = request.path
+    session_id = request.COOKIES['sessionid']
+    query_string = request.META['QUERY_STRING']
+    return "page_cache:%s:%s:%s" % (session_id, path, query_string)
 
 def deprecated(func):
     """This is a decorator which can be used to mark functions

@@ -15,6 +15,9 @@ from common.constants import ISO_COUNTRIES
 from common.utils import date_magic
 #import lots of dicts and things
 from common.properties.dict_property import DictProperty
+from advertiser.models import Creative
+from publisher.models import AdUnit
+from common.wurfl.query_managers import WurflQueryManager
 
 APP = 'app'
 AU = 'adunit'
@@ -39,6 +42,51 @@ ALL_DEVICE = []
 ALL_OS = []
 
 NAME_STR = "dim%d-ent%d"
+
+
+CRTV_DIMS = (CAMP, CRTV, P)
+TIME_DIMS = (MO, WEEK, DAY, HOUR)
+AU_DIMS = (APP, AU)
+WURFL_DIMS = (MAR, BRND, OS, OS_VER)
+
+def build_stat_dict(stats):
+    """ Return a dict that appears like a StatsModel object to django
+        (haha django you are so dumb and easy to fool)
+
+        Args:
+            stats: List of stats, must have len = 5
+        
+        Returns:
+            dict with keys like statsmodel properties
+    """
+    req, att, imp, clk, conv = stats
+    return dict(request_count = req, 
+                attempt_count = att, 
+                impression_count = imp, 
+                click_count = clk, 
+                conversion_count = conv)
+
+def statsify(stats_dict):
+    """ Traverse the dict hierarchy, turning all list entries in all
+        dictionaries into StatsModel-like dictionaries
+
+        Args:
+            stats_dict: dictionary of all stats to be formatted for viewing
+
+        Returns:
+            stats_dict, with objects instead of lists
+    """
+    for k,v in stats_dict.iteritems():
+        #if it's stats, make them object-like
+        if isinstance(v, list):
+            stats_dict[k] = build_stat_dict(v)
+        #elif they're sub_stats, statsify those
+        elif isinstance(v, dict):
+            stats_dict[k] = statsify(v)
+    return stats_dict
+
+
+            
 
 #class ScheduledReport -> has a "next report" time, "report every ____" time, report type, when it's tim
 #   to gen a report, this guy makes report objects
@@ -90,6 +138,7 @@ class Report(db.Model):
     start = db.DateProperty(required=True)
     end = db.DateProperty(required=True)
 
+    #the actual report (As of 6/13/11 with MR)
     report_blob = blobstore.BlobReferenceProperty()
 
     #the actual report
@@ -122,7 +171,7 @@ class Report(db.Model):
     @property
     def html_data(self):
         if self.report_blob:
-            #magic
+            magic = self.parse_report_blob(self.report_blob.open())
             return loader.render_to_string('reports/report.html', dict(all_stats=magic))
         else:
             return None
@@ -163,8 +212,110 @@ class Report(db.Model):
         elif self.d1:
             det = "%s" % self.d1
         else:
-            det = "how the fuck did you get to this state, at least one dim is required"
+            det = "at least one dim is required"
         return det.title()
 
             
+    #keys will either make sense, or be AU, CRTV
+    def parse_report_blob(self, blobreader):
+        final = {}
+        for line in blobreader:
+            #temp now refers to top of the dictionary
+            temp = final
+            keys, vals = line.split('||')
+            keys = keys.split(':')
+            vals = eval(vals)
+            #I'm using list comprehension for you Nafis
+            keys = [self.get_key_name(idx, key) for idx,key in enumerate(keys)]
+            for i,(key,name) in enumerate(keys):
+                #if this key doesn't exist, build that shit
+                if not temp.has_key(key):
+                    #this key doesn't exist, so no previous anything can exist
+                    temp[key] = dict(name = name) 
+                    if (i+1) == len(keys): #last key
+                        temp[key]['stats'] = vals
+                    else: #more keys
+                        temp[key]['sub_stats'] = {}
+                        #change our point of reference into the dict
+                        #kind of like fake recursion
+                        temp = temp[key]['sub_stats']
+                else:
+                    if temp[key]['name'] != name:
+                        logging.warning("I fail at coding")
+                    if (i+1) == len(keys):
+                        #Since we're not doing anything smart-ish with the
+                        #keys in the map/reduce phase (to speed it up by not
+                        #doing Datastore reads) there is a possibility for 
+                        #dupes.  If there are dupes, don't overwrite, sum
+                        if temp[key].has_key('stats'):
+                            temp[key]['stats'] = [sum(zipt) for zipt in zip(vals,temp[key]['stats'])]
+                        else:
+                            temp[key]['stats'] = vals
+                    else:
+                        #if no sub_stats entry, make it
+                        if not temp[key].has_key('sub_stats'):
+                            temp[key]['sub_stats'] = {}
+                        temp = temp[key]['sub_stats']
+        return statsify(final)
 
+    def get_key_name(self, idx, key):
+        """ Turns arbitrary keys and things into human-readable names to 
+            be output to the report
+
+            Args:
+               idx: level of this argument (should always be 0, 1, or 2)
+               key: key string for this dim
+
+            Returns:
+                (key, name) so we can use 'key' for keying into DataTables
+                and name to display
+        """
+        if idx == 0:
+            dim = self.d1
+        elif idx == 1:
+            dim = self.d2
+        elif idx == 2:
+            dim = self.d3
+        else:
+            logging.error("Impossible dim level when rebuilding blob keys")
+            dim = None
+
+        if dim in CRTV_DIMS:
+            crtv = Creative.get(key)
+            if dim == CRTV:
+                return (str(crtv.key()), crtv.name)
+            elif dim == CAMP:
+                camp = crtv.adgroup.campaign
+                return (str(camp.key()), camp.name)
+            elif dim == P:
+                p = crtv.adgroup.campaign.campaign_type
+                if 'gtee' in p:
+                    p = 'guaranteed'
+                return (p, p.title())
+
+        elif dim in AU_DIMS:
+            au = AdUnit.get(key)
+            if dim == AU:
+                return (str(au.key()), au.name)
+            elif dim == APP:
+                app = au.app_key
+                return (str(app.key()), app.name)
+
+        elif dim in TIME_DIMS:
+            #This is cool that this was this easy
+
+            #append dim to key because it's possible that day:hour breakdown
+            #was requested, and the keys will be the same, this way they are uniquely 
+            #ID'd
+            time = datetime.strptime(key,'%y%m%d%H')
+            return (key + dim, date_magic.date_name(time, dim))
+
+        elif dim in WURFL_DIMS:
+            return (key, WurflQueryManager().get_wurfl_name(key, dim))
+
+        elif dim == CO:
+            #TODO This needs to be fixed eventually...
+            # Should be key, country(key) i.e. (US, United States) not (US, US)
+            return (key, key)
+        else:
+            logging.warning("Not handling KW's yet")

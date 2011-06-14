@@ -8,9 +8,10 @@ from django.template.loader import render_to_string
 from google.appengine.api import taskqueue
 from google.appengine.ext import db
 
-from common.constants import DATE_FMT
+from common.constants import DATE_FMT, PIPE_KEY
 from common.utils.query_managers import CachedQueryManager
 from common.utils import date_magic
+from common.utils.helpers import (blob_size, shard_count)
 from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager, BlobLogQueryManager
 
@@ -20,6 +21,7 @@ from reports.rep_mapreduce import GenReportPipeline
 NUM_REP_QS = 1
 REP_Q_NAME = "gen-rep-%02d"
 COMMON_REPORT_DIM_LIST = (('app', 'Apps'), ('adunit', 'Ad Units'), ('campaign', 'Campaigns'))
+
 
 #I couldn't import this because it was causing circular imports and all other kinds of hell
 def gen_report_worker(report, account, end=None):
@@ -166,6 +168,8 @@ class ReportQueryManager(CachedQueryManager):
         report.next_sched_date = date_magic.get_next_day(report.sched_interval, now)
         self.put_report(report)
         self.put_report(new_report)
+
+        report_key = str(new_report.key())
         if testing:
             gen_report_worker(new_report.key(), account.key(), end=now)
             return report
@@ -177,10 +181,26 @@ class ReportQueryManager(CachedQueryManager):
             #              params={"report": new_report.key(),
             #                      "account": account.key(),
             #                      })
-            bloblogman = BlobLogQueryManager()
-            blob_keys = bloblogman.get_blobkeys_for_days(date_magic.gen_days(now-dt, now))
-            pipe = GenReportPipeline(blob_keys, new_report.d1, new_report.d2, new_report.d3, new_report.start.strftime(DATE_FMT), new_report.end.strftime(DATE_FMT), str(account.key()))
-            pipe.start()
+            blob_keys = BlobLogQueryManager.get_blobkeys_for_days(date_magic.gen_days(now-dt, now), str(account.key()))
+
+            shards = shard_count(blob_size(blob_keys)) 
+
+            pipe = GenReportPipeline(blob_keys,
+                                     shards, 
+                                     new_report.d1, 
+                                     new_report.d2, 
+                                     new_report.d3, 
+                                     new_report.start.strftime(DATE_FMT), 
+                                     new_report.end.strftime(DATE_FMT), 
+                                     report_key = report_key,
+                                     )
+
+            key_dict = dict(type = 'GenReportPipeline',
+                            key = report_key)
+            pipe_key = PIPE_KEY % key_dict
+            q_num = random.randint(0, NUM_REP_QS - 1) 
+
+            pipe.start(idempotence_key = pipe_key, queue_name=REP_Q_NAME % q_num)
         return new_report
 
     def add_report(self, d1, d2, d3, end, days, name=None, saved=False,interval=None, sched_interval=None, testing=False):
@@ -245,6 +265,7 @@ class ReportQueryManager(CachedQueryManager):
                         schedule = sched,
                         )
         report.put()
+        report_key = str(report.key())
         #if in test mode don't use a TQ because they're stupid and don't work
         if testing:
             gen_report_worker(report.key(), self.account, end=end)
@@ -258,11 +279,28 @@ class ReportQueryManager(CachedQueryManager):
         #                          },
         #                  target='report-generator',
         #                  )
-            bloblogman = BlobLogQueryManager()
-            blob_keys = bloblogman.get_blobkeys_for_days(date_magic.gen_days(end-dt, end))
-            pipe = GenReportPipeline(blob_keys, report.d1, report.d2, report.d3, report.start.strftime(DATE_FMT), report.end.strftime(DATE_FMT), str(report.account.key()))
+            blob_keys = BlobLogQueryManager.get_blobkeys_for_days(date_magic.gen_days(end-dt, end), str(report.account.key()))
 
-            pipe.start()
+            # Computer number of shards this job will need
+            shards = shard_count(blob_size(blob_keys))
+
+            # create the pipeline
+            pipe = GenReportPipeline(blob_keys, 
+                                     shards, 
+                                     report.d1, 
+                                     report.d2, 
+                                     report.d3, 
+                                     report.start.strftime(DATE_FMT), 
+                                     report.end.strftime(DATE_FMT), 
+                                     report_key = report_key)
+
+            # gen dict for creating a pipeline key
+            key_dict = dict(type = 'GenReportPipeline',
+                            key = report_key)
+            pipe_key = PIPE_KEY % key_dict
+            q_num = random.randint(0, NUM_REP_QS - 1) 
+            #start pipeline w/ specific key + gen_rep queue
+            pipe.start(idempotence_key = pipe_key, queue_name=REP_Q_NAME % q_num)
         return sched 
 
     def put_report(self, report):

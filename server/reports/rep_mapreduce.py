@@ -6,6 +6,7 @@ import re
 import datetime
 
 #GAE imports
+from google.appengine.ext import blobstore
 from mapreduce import base_handler
 from mapreduce import context 
 from mapreduce import mapreduce_pipeline
@@ -13,9 +14,6 @@ from mapreduce import operation as op
 from mapreduce import shuffler
 
 #Mopub imports
-from account.models import Account
-from advertiser.models import Campaign, Creative, AdGroup
-from publisher.models import App, AdUnit
 from reports.models import Report
 from common.constants import (APP,
                               AU,
@@ -34,7 +32,6 @@ from common.constants import (APP,
                               KEY,
                               DATE_FMT,
                               )
-from common.wurfl.query_managers import WurflQueryManager
 from common.utils import date_magic
 from common.utils.helpers import parse_time
 
@@ -64,13 +61,13 @@ def get_key(line_dict, dim):
     if P == dim:
         return line_dict['creative']
     if MO == dim:
-        return date_magic.date_name(line_dict['time'], MO)
+        return line_dict['time']
     if WEEK == dim: 
-        return date_magic.date_name(line_dict['time'], WEEK)
+        return line_dict['time']
     if DAY == dim:
-        return date_magic.date_name(line_dict['time'], DAY)
+        return line_dict['time']
     if HOUR == dim:
-        return date_magic.date_name(line_dict['time'], HOUR)
+        return line_dict['time']
     if CO == dim:
         #TODO somehow get the full country name from the 2 letter country code
         return line_dict['country']
@@ -101,16 +98,12 @@ def parse_line(line):
     value = value.replace(']', '')
     #ph = k, needed a placeholder 
     ph, adunit_id, creative_id, country, brand, marketing, os, os_ver, time = key.split(':')
-    time = parse_time(time)
-    req, imp, clk, conv = map(int, value.split(','))
+    
+    #just keep one obj here, it's easier
+    vals = map(int, value.split(','))
 
     au = adunit_id
     crtv = creative_id
-    #right now no need for DB get
-    #au = AdUnit.get(adunit_id)
-    #crtv = Creative.get(creative_id)
-
-
 
     #Huzzah
     return dict(adunit = au,
@@ -121,26 +114,12 @@ def parse_line(line):
                 os = os,
                 os_ver = os_ver,
                 time = time,
-                req_count = req,
-                imp_count = imp,
-                clk_count = clk,
-                conv_count = conv,
+                vals = vals,
                 )
 
 
-def verify_line(line_dict, d1, d2, d3, days, account_key):
+def verify_line(line_dict, d1, d2, d3, days):
     if line_dict is None:
-        return False
-    try:
-        if str(AdUnit.get(line_dict['adunit']).account.key()) != account_key:
-            return False
-    except:
-        try:
-            if str(Creative.get(line_dict['creative']).account.key()) != account_key:
-                return False
-        except:
-            return False
-    if line_dict['time'] not in days:
         return False
     return True
 
@@ -162,17 +141,12 @@ def build_keys(line_dict, d1, d2, d3):
         keys.append(MR3_KEY % (d1_key, d2_key, d3_key))
     return keys
 
-def agenerate_report_map(data):
-    offset, line = data
-    num = offset % 20
-    yield ('%s' % num, "Hi")
-
 def generate_report_map(data):
     byte_offset, line = data
     """ Mapping portion of mapreduce job
 
     Args:
-        byte_offset: I have no idea what this is for but I get it from MR
+        byte_offset: offset into blob file that line starts on
         line: The value of the line
 
     """
@@ -183,25 +157,22 @@ def generate_report_map(data):
     d3 = params['d3']
     start = datetime.datetime.strptime(params['start'], DATE_FMT).date()
     end = datetime.datetime.strptime(params['end'], DATE_FMT).date()
-    account_key = params['account_key']
 
     #Turn start, end dates into a list of date_hours
     #reduce turns [[day1hours][day2hours]] into [day1hours, day2hours]
     days = reduce(lambda x,y: x+y, date_magic.gen_days(start, end, True))
     line_dict = parse_line(line)
-    #make sure this is the right everything
-    if verify_line(line_dict, d1, d2, d3, days, account_key):
-        for key in build_keys(line_dict, d1, d2, d3):
-            yield (key, '%s' % [line_dict['req_count'], line_dict['imp_count'], line_dict['clk_count'], line_dict['conv_count']]) 
 
-def agenerate_report_reduce(key, values):
-    yield (key, len(values))
+    #make sure this is the right everything
+    if verify_line(line_dict, d1, d2, d3, days):
+        for key in build_keys(line_dict, d1, d2, d3):
+            yield (key, '%s' % line_dict['vals']) 
 
 def generate_report_reduce(key, values):
     #yield 'key: %s values: %s\n' % (key, [a for a in values])
     values = [eval(value) for value in values]
     #zip turns [1,2,3] [4,5,6] into [(1,4), (2,5), (3,6)], map applies sum to all list entries
-    yield '%s|| %s\n' % (key, map(sum, zip(*values)))
+    yield '%s||%s\n' % (key, map(sum, zip(*values)))
 
 
 
@@ -211,9 +182,12 @@ class GenReportPipeline(base_handler.PipelineBase):
         Args:
             blob_keys: list of blob_keys containing lowest level
                 stats objects
-            report_key: key of the report being generated (not scheduled report)
+            shards: number of shards to run this MR job on
+            d*: d* for the report
+            start: start date string for this report
+            end: end date string for this report
     """
-    def run(self, blob_keys, d1, d2, d3, start, end, account_key):
+    def run(self, blob_keys, shards, d1, d2, d3, start, end, *args, **kwargs):
         yield mapreduce_pipeline.MapreducePipeline(
                 'BlobReportGenerator',
                 'reports.rep_mapreduce.generate_report_map',
@@ -226,11 +200,26 @@ class GenReportPipeline(base_handler.PipelineBase):
                     'd3': d3,
                     'start': start,
                     'end': end,
-                    'account_key': account_key,
                     'blob_keys': blob_keys,
                 },
                 reducer_params={
                     'mime_type': 'text/plain',
                 },
-                shards=50)
+                shards=max(shards, 5))
+
+    def finalized(self):
+        if not self.was_aborted and self.pipeline_id == self.root_pipeline_id:
+            report_key = self.kwargs['report_key']
+            outs = self.outputs.default.value[0]
+            for val in outs.split('/'):
+                if val == '' or val == 'blobstore':
+                    continue
+                else:
+                    rep = Report.get(report_key)
+                    rep.report_blob = blobstore.BlobInfo.get(blobstore.BlobKey(val))
+                    rep.put()
+
+
+            #get key, do stuff, magic, etc.
+        
 

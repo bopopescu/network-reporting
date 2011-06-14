@@ -1,10 +1,14 @@
 import re, logging
 import datetime
 #import reporting.models as reporting_models
+from common.constants import (KB, MB, GB)
+
+from google.appengine.ext import blobstore
 
 # matches sequence: space, 2 char, - or _, 2 char, 0 or more ;, followed by char that's not a char, number, - or _
 COUNTRY_PAT = re.compile(r' [a-zA-Z][a-zA-Z][-_](?P<ccode>[a-zA-Z][a-zA-Z]);*[^a-zA-Z0-9-_]')
 
+KB_PER_SHARD = 500
 
 def get_country_code(user_agent):
     m = COUNTRY_PAT.search(user_agent)
@@ -114,3 +118,16 @@ def parse_time(time_str):
     day = int(time_str[4:6])
     hour = int(time_str[6:])
     return datetime.datetime(year=year, month=month, day=day, hour=hour)
+
+def blob_size(blob_keys):
+    if not isinstance(blob_keys, list):
+        blob_keys = [blob_keys]
+    blob_keys = [blobstore.BlobKey(key) for key in blob_keys]
+    blob_infos = blobstore.BlobInfo.get(blob_keys)
+    # gets all the sizes, sums them, returns total size
+    return sum((info.size for info in blob_infos))
+
+
+def shard_count(size):
+    count = size / (KB_PER_SHARD*KB)
+    return min(count, 50)

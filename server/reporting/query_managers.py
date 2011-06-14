@@ -26,6 +26,9 @@ SENTINEL = '!!!'
 # max number of retries for offline batch put
 MAX_RETRIES = 3
 
+#blobkey:date:acct
+BLOBLOG_KEY = 'blobkey:%s:%s'
+
 
 class SiteStatsQueryManager(CachedQueryManager):
     def get_sitestats_for_days(self, site=None, owner=None, days=None):
@@ -51,9 +54,12 @@ class BlobLogQueryManager():
         bloblog = BlobLog(date=date, blob_key=blob_key, account=account)
         return bloblog.put()
 
-    def get_blobkeys_for_days(self, days): 
+    @classmethod
+    def get_blobkeys_for_days(cls, days, account_key): 
         #for all the days, turn them into YYMMDD and then use that to construct the key, then with all those keys get all the BlobLogs, then with all those bloblogs, return only a list of the blob_keys associated with them
-        return map(lambda bloblog: bloblog.blob_key, BlobLog.get_by_key_name([BLOBLOG_KEY % day.strftime('%y%m%d') for day in days]))
+        keys = [BLOBLOG_KEY % (day.strftime('%y%m%d'), account_key) for day in days]
+        return map(lambda bloblog: bloblog.blob_key, BlobLog.get_by_key_name(keys))
+
         #(for nafis)
         #return [blob.blob_key for blob in BlobLog.get([db.Key(BLOBLOG_KEY % day.strftime('%y%m%d')) for day in days])]
         

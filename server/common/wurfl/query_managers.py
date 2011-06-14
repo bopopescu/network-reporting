@@ -11,6 +11,11 @@ from common.wurfl.wurfl_dicts import (BRAND_MAR,
                                      OSVER_MAR,
                                      OSVER_OS,
                                      )
+from common.constants import (MAR,
+                              BRND,
+                              OS,
+                              OS_VER,
+                              )
 
 WURFL_DICTS = [BRAND_MAR, BRAND_OS, BRAND_OSVER, MAR_OS, MAR_OSVER, MAR_BRAND, OS_BRAND, OS_MAR, OS_OSVER, OSVER_BRAND, OSVER_MAR, OSVER_OS]
 
@@ -57,6 +62,16 @@ class WurflQueryManager():
 
     def get_os_name(self, os):
         return os.replace('_', ' ')
+
+    def get_wurfl_name(self, val, dim):
+        if dim == MAR:
+            return self.get_market_name(val)
+        elif dim == BRND:
+            return self.get_brand_name(val)
+        elif dim == OS:
+            return self.get_os_name(val)
+        elif dim == OS_VER:
+            return self.get_osver_name(val)
 
     #need to get brand name attached to marketing name
     def reports_get_marketing(self, os, os_ver, brand):

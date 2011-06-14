@@ -102,3 +102,14 @@ ACCEPTED_MULTI_COUNTRY = {'GB' : ['UK', 'GB'],
 CAMPAIGN_LEVELS = ('gtee_high', 'gtee', 'gtee_low', 'promo', 'network', 'backfill_promo')
 
 DATE_FMT = '%y%m%d'
+
+
+
+#DATA SIZES
+KB = 1024
+MB = 1048576
+GB = 1073741824
+TB = 2**40
+PB = 2**50
+
+PIPE_KEY = 'pipeline--%(type)s--%(key)s'

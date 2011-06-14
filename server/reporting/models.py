@@ -54,14 +54,15 @@ class BlobLog(db.Model):
     blob_key = db.StringProperty()
     account = db.StringProperty()
 
-    def __init__(self, **kwargs):
-        date = kwargs.get('date', None)
-        account = kwargs.get('account', None)
+    def __init__(self, parent=None, key_name=None, **kwargs):
+        if not key_name and not kwargs.get('key', None):
+            date = kwargs.get('date', None)
+            account = kwargs.get('account', None)
 
-        date_str = date.strftime('%y%m%d') if date else 'None'
-        account_str = account or 'None'
-        
-        key_name = 'blobkey:%s:%s' % (date_str, account_str)
+            date_str = date.strftime('%y%m%d') if date else 'None'
+            account_str = account or 'None'
+            key_name = 'blobkey:%s:%s' % (date_str, account_str)
+
         return super(BlobLog, self).__init__(key_name=key_name, **kwargs)
 
 

@@ -249,7 +249,7 @@ class AdHandler(webapp.RequestHandler):
             
             trace_logging.info("##############################")
             trace_logging.info("##############################")
-            trace_logging.info("Winner found, rendering: %s" % str(creative.name))
+            trace_logging.info("Winner found, rendering: %s" % creative.name.encode('utf8'))
             trace_logging.warning("Creative key: %s" % str(creative.key()))
             trace_logging.warning("rendering: %s" % creative.ad_type)
 

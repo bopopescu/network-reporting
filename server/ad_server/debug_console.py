@@ -33,7 +33,7 @@ class DebugConsole(object):
         # log to the console just as before
         logging_type(logline)
         if logging_type in self.log_levels:
-            self.lines.append(logline)
+            self.lines.append(logline.decode('utf8'))
 
     def render(self):
         self.response.out.write("""<html>

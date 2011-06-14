@@ -25,13 +25,43 @@
         $('input[name="start"]').datepicker('option', 'maxDate', dte);
     });
 
+    function rep_validate(form) {
+        /* Check a form for selectmenu-required selectmenus
+         * check for date-requireds
+         * If any invalid, flag as invalid (with the pretty red colors)
+         * and return False
+         * if nothing invalid, return True
+         */
+        var success = true;
+        $('#d1Error').hide();
+        $('#dateError').hide();
+        $('select.selectmenu-required').each(function() {
+            if ($(this).val() == '') {
+                $('#d1Error').show();
+                success = false;
+            }
+        });
+        $('.date-required').each(function() {
+            if ($(this).val() == '') {
+                $(this).addClass('form-error');
+                $('#dateError').show();
+                success = false;
+            }
+        });
+        return success;
+    }
 
     $('#reportCreateForm-submit')
     .button({
         icons: {secondary: 'ui-icon-circle-triangle-e' }})
     .click(function(e) {
             e.preventDefault();
-            $('#reportCreateForm').submit();
+            if (rep_validate($('#reportCreateForm'))) {
+                $('#reportCreateForm').submit();
+            }
+            else {
+                $('#formError').show();
+            }
     });
 
     $('#reports-view-runReportButton').button({
@@ -95,13 +125,6 @@
             e.preventDefault();
             $(this).parents('#reportFormSaveAs-container')
             .dialog('close');
-        });
-
-    $('#reportCreateForm-submit')
-        .button()
-        .click(function(e) {
-            e.preventDefault();
-            $(this).parents('form').submit();
         });
 
     $('#reportUpdateForm-submit')
@@ -251,6 +274,9 @@
     var form_state;
     $('#d1').change(
         function(e) {
+            if ($(this).val() != '') {
+                $('#d1Error').hide();
+            }
             e.preventDefault();
             d1_validate($(this));
             d2_validate($('#d2'));

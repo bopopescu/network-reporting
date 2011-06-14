@@ -108,6 +108,21 @@ class AdGroupIndexHandler(RequestHandler):
         if len(adgroups) > 4:
             graph_adgroups[3] = AdGroup(name='Others')
             graph_adgroups[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[c.all_stats for c in adgroups[3:]])]
+        
+        # create special list of gtee adgroups to show revenue in graph
+        visible_gtee_adgroups = []
+        for level in guarantee_levels:
+            if level['display']:   # only get levels to show
+                visible_gtee_adgroups.extend(level['adgroups'])
+        
+        # sort visible gtee adgroups by summed impression count
+        visible_gtee_adgroups = sorted(visible_gtee_adgroups, key=lambda adgroup: adgroup.summed_stats.impression_count, reverse=True)
+        
+        # if more than 4 visible gtee adgroups, condense 4th and remaining into 'Others'
+        graph_gtee_adgroups = visible_gtee_adgroups[0:4]
+        if len(visible_gtee_adgroups) > 4:
+            graph_gtee_adgroups[3] = AdGroup(name='Others')
+            graph_gtee_adgroups[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[c.all_stats for c in visible_gtee_adgroups[3:]])]
             
         try:
             yesterday = reduce(lambda x, y: x+y, [c.all_stats[-2] for c in graph_adgroups], StatsModel())
@@ -118,6 +133,7 @@ class AdGroupIndexHandler(RequestHandler):
                                  'advertiser/adgroups.html', 
                                   {'adgroups':adgroups,
                                    'graph_adgroups': graph_adgroups,
+                                   'graph_gtee_adgroups': graph_gtee_adgroups,
                                    'graph_totals': app_level_stats,
                                    'start_date': days[0],
                                    'end_date':days[-1],
@@ -578,17 +594,16 @@ class ShowAdGroupHandler(RequestHandler):
             yesterday = StatsModel()    
         
         message = []
-        if adgroup.network_type:
+        if adgroup.network_type and not 'custom' in adgroup.network_type and adgroup.network_type!='iAd':
             # gets rid of _native_ in admob_native_pub_id to become admob_pub_id
-            logging.info('\n\n\n\nasdfasdf: '+adgroup.network_type)
             if '_native' in adgroup.network_type:
                 adgroup_network_type = adgroup.network_type.replace('_native','')
             else:
                 adgroup_network_type = adgroup.network_type    
             
-            if not getattr(self.account.network_config,adgroup_network_type+'_pub_id'):
+            if (self.account.network_config and not getattr(self.account.network_config,adgroup_network_type+'_pub_id')) or not self.account.network_config:
                 for app in apps.values():
-                    if app.network_config and not getattr(app.network_config,adgroup_network_type+'_pub_id'):
+                    if (app.network_config and not getattr(app.network_config,adgroup_network_type+'_pub_id')) or not app.network_config:
                         message.append("The application "+app.name+" needs to have a <strong>"+adgroup_network_type.title()+" Network ID</strong> in order to serve. Specify a "+adgroup_network_type.title()+" Network ID on <a href=%s>your account</a> page."%reverse("account_index"))
         if message == []:
             message = None
@@ -764,8 +779,11 @@ def creative_create(request,*args,**kwargs):
 class DisplayCreativeHandler(RequestHandler):
     def get(self, creative_key):
         c = CreativeQueryManager.get(creative_key)
-        if c and c.ad_type == "image" and c.image:
-            return HttpResponse(c.image,content_type='image/png')
+        if c and c.ad_type == "image":
+            if c.image_blob:
+                return HttpResponse('<img src="%s"/>'%images.get_serving_url(c.image_blob))
+            else:    
+                return HttpResponse(c.image,content_type='image/png')
         if c and c.ad_type == "text_icon":
             if c.image:
                 c.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)

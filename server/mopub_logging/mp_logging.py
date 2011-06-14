@@ -2,10 +2,12 @@ import logging
 import time
 import datetime
 import random
+import urllib
 
 from common.utils import helpers 
 from google.appengine.api import memcache
 from google.appengine.api import taskqueue
+from google.appengine.api import urlfetch
 from publisher.query_managers import AdUnitContextQueryManager
 from reporting import models as reporting_models
 
@@ -79,16 +81,24 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
     # data shows up in the apache-style request logs    
     if adunit_id and creative_id and event == REQ_EVENT:
         logging.info("fire and forget--adunit: %s creative:%s"%(adunit_id,creative_id))
-        task = taskqueue.Task(params=dict(id=adunit_id, cid=creative_id, udid=udid or '', ua=user_agent),
-                              method='GET',
-                              url='/m/req')
-        queue_num = random.randint(0,NUM_REQ_QUEUES-1)                      
-        queue_name = REQ_QUEUE_NAME%queue_num
-
-        try:
-            task.add(queue_name)
-        except Exception, e:
-            logging.warning(e)
+        fire_forget_params = dict(id=adunit_id, cid=creative_id, udid=udid or '', ua=user_agent)
+        # make async internal request to appengine
+        rpc = urlfetch.create_rpc(deadline=2) # in seconds
+        urlfetch.make_fetch_call(rpc=rpc, 
+                                 url="http://38-attempt.mopub-inc.appspot.com/m/req?"+urllib.urlencode(fire_forget_params),
+                                 headers={'X-URLFetch-Service-Id': 'APPSPOT'},
+                                 follow_redirects=False,)
+        
+        # task = taskqueue.Task(params=,
+        #                       method='GET',
+        #                       url='/m/req')
+        # queue_num = random.randint(0,NUM_REQ_QUEUES-1)                      
+        # queue_name = REQ_QUEUE_NAME%queue_num
+        # 
+        # try:
+        #     task.add(queue_name)
+        # except Exception, e:
+        #     logging.warning(e)
                 
         
     # get account name from the adunit

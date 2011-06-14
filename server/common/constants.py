@@ -103,8 +103,6 @@ CAMPAIGN_LEVELS = ('gtee_high', 'gtee', 'gtee_low', 'promo', 'network', 'backfil
 
 DATE_FMT = '%y%m%d'
 
-
-
 #DATA SIZES
 KB = 1024
 MB = 1048576
@@ -113,3 +111,4 @@ TB = 2**40
 PB = 2**50
 
 PIPE_KEY = 'pipeline--%(type)s--%(key)s'
+MAX_OBJECTS=100

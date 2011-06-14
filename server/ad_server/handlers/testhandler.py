@@ -67,4 +67,4 @@ class UDIDHandler(webapp.RequestHandler):
             return
         ss = ServerSide(None)
         mopub_hashed_udid = ss.get_udid(raw_udid)
-        self.response.out.write("MoPub ID: %s"%mopub_hashed_udid)
+        self.response.out.write("MoPub ID: md5:%s"%mopub_hashed_udid)

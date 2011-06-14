@@ -120,6 +120,9 @@ class AppOpenHandler(webapp.RequestHandler):
     # /m/open?v=1&udid=26a85bc239152e5fbc221fe5510e6841896dd9f8&id=agltb3B1Yi1pbmNyDAsSBFNpdGUY6ckDDA
     def get(self):
         udid = self.request.get('udid')
+        # assumes md5 hash as the default
+        # prepends on "md5:" if it is not already there
+        udid = 'md5:' + udid.split('md5:')[-1]
         mobile_appid = self.request.get('id')
         aoe_manager = AppOpenEventManager()
         aoe, conversion_logged = aoe_manager.log_conversion(udid, mobile_appid, time=datetime.datetime.now())

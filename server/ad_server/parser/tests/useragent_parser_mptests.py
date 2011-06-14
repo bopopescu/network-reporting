@@ -72,7 +72,7 @@ class TestUseragentParser(unittest.TestCase):
         assert(filter1(self.recent_android_adgroup))
         
     def mptest_none(self):
-        user_agent = ""
+        user_agent = ''
         assert(get_os(user_agent) == (None,None))
         
         filter1 = os_filter(user_agent)[0]

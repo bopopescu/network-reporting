@@ -4,14 +4,14 @@
 def get_os(user_agent_string):
     """ Returns 'iOS', 'android' or 'other' """
     """ Returns the appropriate float for the os version """
-    if "like Mac OS X" in user_agent_string:
-        user_os_name = 'iOS'
-    elif "Android" in user_agent_string:
-        user_os_name = 'android'
-    else:
-        user_os_name = None
-    
     try:    
+        if "like Mac OS X" in user_agent_string:
+            user_os_name = 'iOS'
+        elif "Android" in user_agent_string:
+            user_os_name = 'android'
+        else:
+            user_os_name = None
+
         if user_os_name == 'android':
             num_start = user_agent_string.find('Android')+8
             num_end = user_agent_string.find(';', num_start)
@@ -30,13 +30,7 @@ def get_os(user_agent_string):
             
         user_os_version = user_agent_string[num_start:num_end]
     except:
+        user_os_name = None
         user_os_version = None
     
-    return user_os_name, user_os_version    
-        
-if __name__ == "__main__":
-    f = open('/Users/kayb/Downloads/ua_samples.txt','r')
-    for line in f:
-        #if get_os(line) == "Unknown" or get_os_version(get_os(line),line) == "Unknown":
-        print line
-        print get_os(line)[0], " ", get_os(line)[1] , "\n"
+    return user_os_name, user_os_version

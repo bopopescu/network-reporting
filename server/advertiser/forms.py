@@ -113,13 +113,13 @@ class AdGroupForm(mpforms.MPModelForm):
     ios_version_max = mpfields.MPChoiceField(choices=IOS_VERSION_CHOICES,
                                              widget=mpwidgets.MPSelectWidget)
 
-    ios_version_min = mpfields.MPChoiceField(choices=IOS_VERSION_CHOICES[:-1],
+    ios_version_min = mpfields.MPChoiceField(choices=IOS_VERSION_CHOICES[1:],
                                              widget=mpwidgets.MPSelectWidget)
 
     android_version_max = mpfields.MPChoiceField(choices=ANDROID_VERSION_CHOICES,
                                           widget=mpwidgets.MPSelectWidget)
 
-    android_version_min = mpfields.MPChoiceField(choices=ANDROID_VERSION_CHOICES[:-1],
+    android_version_min = mpfields.MPChoiceField(choices=ANDROID_VERSION_CHOICES[1:],
                                           widget=mpwidgets.MPSelectWidget)
     
     class Meta:

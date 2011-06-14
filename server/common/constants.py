@@ -5,6 +5,7 @@
 
   
 IOS_VERSION_CHOICES = (
+    ('999','No Maximum'),
     ('2.0','2.0'),
     ('2.1','2.1'),
     ('3.0','3.0'),
@@ -14,10 +15,10 @@ IOS_VERSION_CHOICES = (
     ('4.1','4.1'),
     ('4.2','4.2'),
     ('4.3','4.3'),
-    ('999','No Maximum'),
   )
 
 ANDROID_VERSION_CHOICES = (
+    ('999','No Maximum'),
     ('1.5','1.5'),
     ('1.6','1.6'),
     ('2.0','2.0'),
@@ -25,7 +26,6 @@ ANDROID_VERSION_CHOICES = (
     ('2.2','2.2'),
     ('2.3','2.3'),
     ('3.0','3.0'),
-    ('999','No Maximum'),
   )
   
 MIN_ANDROID_VERSION = '1.5'

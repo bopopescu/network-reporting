@@ -36,7 +36,7 @@ from ad_server import memcache_mangler
 ###################
 # Import Handlers #
 ###################
-from ad_server.handlers import TestHandler
+from ad_server.handlers import TestHandler, UDIDHandler
 from ad_server.handlers import adhandler
 
 TEST_MODE = "3uoijg2349ic(TEST_MODE)kdkdkg58gjslaf"
@@ -242,6 +242,7 @@ def main():
                                           ('/m/open', AppOpenHandler),
                                           ('/m/track', AppOpenHandler),
                                           ('/m/test', TestHandler),
+                                          ('/m/mpid',UDIDHandler),
                                           ('/m/memclear', memcache_mangler.ClearHandler),
                                           ('/m/memshow', memcache_mangler.ShowHandler),
                                           ('/m/purchase', PurchaseHandler),

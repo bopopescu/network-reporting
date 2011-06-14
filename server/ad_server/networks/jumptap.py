@@ -61,5 +61,4 @@ class JumptapServerSide(ServerSide):
             raise Exception("Jumptap ad is empty")
        
         width, height = self._get_size(response.content)
-       
         return 0.0,"<div style='text-align:center'>"+response.content+"</div>", width, height

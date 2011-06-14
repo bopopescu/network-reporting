@@ -511,7 +511,7 @@ class AdHandler(webapp.RequestHandler):
             
             # adds network info to the headers
             if creative.adgroup.network_type:
-                self.response.headers.add_header("X-NetworkType",creative.adgroup.network_type)
+                self.response.headers.add_header("X-Networktype",creative.adgroup.network_type)
             
             
             # render the HTML body

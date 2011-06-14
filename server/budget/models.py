@@ -14,7 +14,14 @@ class BudgetSlicer(db.Model):
 
     @property
     def timeslice_budget(self):
-        return self.campaign.budget / DEFAULT_TIMESLICES * (1.0 + DEFAULT_FUDGE_FACTOR)
+        """ The amount to increase the remaining_timeslice_budget amount by
+        every minute or so  """
+        if campaign.budget_type == "daily":
+            return self.campaign.budget / DEFAULT_TIMESLICES * (1.0 + DEFAULT_FUDGE_FACTOR)
+        elif campaign.budget_type == "full_campaign":
+            remaining_days = "TODO"
+            return self.campaign.full_budget / DEFAULT_TIMESLICES * (1.0 + DEFAULT_FUDGE_FACTOR) / remaining_days
+   
 
     def __init__(self, parent=None, key_name=None, **kwargs):
         if not key_name and not kwargs.get('key', None):

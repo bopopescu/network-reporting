@@ -96,8 +96,14 @@ def daily_advance(campaign, new_date=datetime.date.today()):
                           )
         yesterday_log.put()
         
-    # For now, all campaigns have only a daily budget. There is no rolling over
-    new_initial_budget = campaign.budget    
+    # campaign.budget is the daily budget
+    if campaign.budget_type == "daily":
+        new_initial_budget = campaign.budget   
+    elif campaign.budget_type == "full_campaign":
+        # We calculate the appropriate new daily budget
+        new_initial_budget = _redistribute_budget(campaign)
+        
+        
     daily_budget_key = _make_campaign_daily_budget_key(campaign)
     memcache.set(daily_budget_key, _to_memcache_int(new_initial_budget), namespace="budget")
     

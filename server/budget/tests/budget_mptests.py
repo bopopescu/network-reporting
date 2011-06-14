@@ -820,53 +820,102 @@ class TestBudgetUnitTests(unittest.TestCase):
         # We have spent 500 out of 1000 total
         eq_(budget_service.remaining_daily_budget(self.cheap_c), 500)
         
-        
-    
-########################### FUTURE TESTS ###########################    
-# These will be used after we have campaigns that only have a budget
-# for the entire campaign, rather than days
-# TODO: Implement these and change TODO_test to mptest
-    def TODO_test_remaining_daily_budget_finite_cache_failure_rollover(self):
+
+    def mptest_full_campaign_budget(self):
         # We have a campaign that was set to begin several days ago 
         # but is only beginning now. 
         
-        # The campaign has a $1000 daily budget, and goes for 10 days inclusive -> $10,000
+        # The cheap_campaign has a $1000 daily budget, and goes for 10 days inclusive -> $10,000
+        self.cheap_c.budget_strategy = "allatonce"
+        self.cheap_c.start_date = datetime.date(1987,4,4)
+        self.cheap_c.end_date = datetime.date(1987,4,13)
+        self.cheap_c.budget_type = "full_campaign"
+        self.cheap_c.put()
+        
+        # Advance the budget 
+        budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,4))
+        
+        # 1000 remaining because the 10K budget is split between the 10 remaining days
+        eq_(budget_service.remaining_daily_budget(self.cheap_c), 1000)
+        
+        budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,5))
+        
+        # 1111.11 remaining because the 10K budget is split between the 9 remaining days
+        eq_(budget_service.remaining_daily_budget(self.cheap_c), 10000/9)
+        
+        
+    
+    
+    def mptest_full_campaign_budget_later_end(self):
+        # We have a campaign that was set to begin several days ago 
+        # but is only beginning now. 
+
+        # The cheap_campaign has a $1000 daily budget, and goes for 10 days inclusive -> $10,000
+        self.cheap_c.budget_strategy = "allatonce"
+        self.cheap_c.start_date = datetime.date(1987,4,4)
+        self.cheap_c.end_date = datetime.date(1987,4,13)
+        self.cheap_c.budget_type = "full_campaign"
+        self.cheap_c.put()
+
+        # Advance the budget and spend the full 1000
+        budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,4))
+        eq_(budget_service._apply_if_able(self.cheap_c, 1000), True)
+
+        # 9K budget remains, but before the end of the first day we
+        # change the end date, now the campaign goes for 20 days total, 19 remain
+        self.cheap_c.end_date = datetime.date(1987,4,23)
+        self.cheap_c.put()
+        budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,5))
+        
+        # ~480 remaining because the 10K budget is split between the 19 remaining days
+        eq_(budget_service.remaining_daily_budget(self.cheap_c), 9000/19)
+
+    def mptest_full_campaign_budget_earlier_end(self):
+        pass
+        
+    def mptest_full_campaign_budget_increase_budget(self):
+        pass
+        
+    def mptest_full_campaign_budget_consisten_underdeliver(self):
+        pass
+
+
+    def mptest_full_campaign_budget_earlier_end(self):
+        pass
+        
+        
+        
+    def mptest_full_campaign_budget_evenly(self):
+        # We have a campaign that was set to begin several days ago 
+        # but is only beginning now. 
+
+        # The cheap_campaign has a $1000 daily budget, and goes for 10 days inclusive -> $10,000
         self.cheap_c.budget_strategy = "evenly"
         self.cheap_c.start_date = datetime.date(1987,4,4)
         self.cheap_c.end_date = datetime.date(1987,4,13)
+        self.cheap_c.budget_type = "full_campaign"
         self.cheap_c.put()
-        
-        # Advance the budget 2 days (and 20 timeslices)
+
+        # Advance the budget and the ts budgets
         budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,4))
-        budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,5))
-        for i in xrange(budgetmodels.DEFAULT_TIMESLICES*3):
+        for i in xrange(budgetmodels.DEFAULT_TIMESLICES):
             budget_service.timeslice_advance(self.cheap_c)
+
+        # 1000 remaining because the 10K budget is split between the 10 remaining days
+        eq_(budget_service.remaining_daily_budget(self.cheap_c), 1000)
+
+        # Advance the budget and the ts budgets
+        budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,5))
+        for i in xrange(budgetmodels.DEFAULT_TIMESLICES):
+            budget_service.timeslice_advance(self.cheap_c)
+
+        # 1111.11 remaining because the 10K budget is split between the 9 remaining days
+        eq_(budget_service.remaining_daily_budget(self.cheap_c), 10000/9)
         
-        # 2000 remaining
-        eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
-        # We have spent 100 out of 2000 total
-        eq_(budget_service.remaining_daily_budget(self.cheap_c), 1900)
-        
-        # Catastrophic cache failure!!
-        memcache.flush_all()
-        
-        # Should return to the state we had at the last backup (2000)
-        eq_(budget_service._apply_if_able(self.cheap_c, 500), True)
-        # We have spent 500 out of 2000 total
-        eq_(budget_service.remaining_daily_budget(self.cheap_c), 1500)
-        
-        # Another advance, backs up to db
-        budget_service.timeslice_advance(self.cheap_c)
-        eq_(budget_service.remaining_daily_budget(self.cheap_c), 1500)
-        
-        # Catastrophic cache failure again!!!
-        memcache.flush_all()
-        
-        # Should return to the state we had at the last backup (1500)
-        eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
-        # We have spent 500 out of 2000 total
-        eq_(budget_service.remaining_daily_budget(self.cheap_c), 1400)
- 
+        # We can actually spend all the money, this means the timeslices have 
+        # been advanced properly
+        eq_(budget_service._apply_if_able(self.cheap_c, 1100), True)  
+    
     def TODO_test_get_spending_for_date_range_mult_plus_today_rollover(self):
         # The campaign has a $1000 daily budget, and goes for 1 days inclusive -> $1,000
         self.cheap_c.budget_strategy = "allatonce"

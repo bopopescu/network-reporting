@@ -509,6 +509,11 @@ class AdHandler(webapp.RequestHandler):
                 self.response.headers.add_header("X-Width", str(creative.width))
                 self.response.headers.add_header("X-Height", str(creative.height))
             
+            # adds network info to the headers
+            if creative.adgroup.network_type:
+                self.response.headers.add_header("X-NetworkType",creative.adgroup.network_type)
+            
+            
             # render the HTML body
             rendered_creative = self.TEMPLATES[template_name].safe_substitute(params)
             rendered_creative.encode('utf-8')

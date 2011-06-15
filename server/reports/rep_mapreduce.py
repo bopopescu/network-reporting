@@ -226,6 +226,8 @@ class GenReportPipeline(base_handler.PipelineBase):
             mesg = mail.EmailMessage(sender = 'olp@mopub.com',
                                      subject = 'Your report has completed')
             if user_email:
+                # we can do a lot fancier logic here based on people's names and things 
+                #this is just a really quick and easy way to get it working though
                 mesg_dict = dict(report_key = str(rep.schedule.key()))
                 mesg.to = user_email
                 mesg.body = REPORT_FINISHED_SIMPLE % mesg_dict

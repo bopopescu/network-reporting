@@ -11,7 +11,7 @@ from google.appengine.api import users
 
 #mopub imports
 #from account.models import Account
-from common.constants import ISO_COUNTRIES, REP_KEY
+from common.constants import ISO_COUNTRIES, REP_KEY, CLONE_REP_KEY
 from common.utils import date_magic
 #import lots of dicts and things
 from common.properties.dict_property import DictProperty
@@ -147,7 +147,10 @@ class Report(db.Model):
     # maybe useful for internal analytics//informing users
     completed_at = db.DateTimeProperty()
 
-    def __init__(self, parent=None, key_name=None, **kwargs):
+    #Since we're cloning reports and they would both have the same key_name, no good
+    clone_count = db.IntegerProperty()
+
+    def __init__(self, parent=None, key_name=None, clone_count=0, **kwargs):
         if not key_name and not kwargs.get('key', None):
             sched = kwargs.get('schedule')
             start = kwargs.get('start')
@@ -166,7 +169,16 @@ class Report(db.Model):
                             start = start_str,
                             end = end_str,
                             )
-            key_name = REP_KEY % key_dict
+            if clone_count:
+                key_dict.update(clone_count=clone_count)
+                #Key this so it has a diff key than normal because it's a clone
+                key_name = CLONE_REP_KEY % key_dict 
+                #make this new guy have a higher clone count
+                kwargs.update(clone_count = clone_count + 1)
+            else:
+                #no clone count, set clone_count = 1
+                key_name = REP_KEY % key_dict
+                kwargs.update(clone_count = 1)
         return super(Report, self).__init__(key_name=key_name, **kwargs)
 
     @property

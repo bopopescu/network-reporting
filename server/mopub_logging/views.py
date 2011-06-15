@@ -1,7 +1,9 @@
 import logging
 import datetime
+import time
 import traceback
 import sys
+import urllib
 
 from appengine_django import InstallAppengineHelperForDjango
 InstallAppengineHelperForDjango()
@@ -11,6 +13,7 @@ InstallAppengineHelperForDjango()
 
 from google.appengine.ext import db
 from google.appengine.ext import webapp
+from google.appengine.ext.webapp import blobstore_handlers
 from google.appengine.ext.webapp.util import run_wsgi_app
 
 from google.appengine.api import mail
@@ -20,10 +23,14 @@ from reporting import models as r_models
 from reporting import query_managers
 
 from mopub_logging import mp_logging
+from mopub_logging import log_service
 
 from common.utils import helpers
+from common.utils import simplejson
 
 from google.appengine.api import taskqueue
+from google.appengine.api import files
+from google.appengine.ext.blobstore import BlobInfo
 from google.appengine.datastore import entity_pb
 
 OVERFLOW_TASK_QUEUE_NAME_FORMAT = "bulk-log-processor-overflow-%02d"
@@ -304,6 +311,65 @@ def async_put_models(account_name,stats_models,bucket_size):
                                countdown=5)
             t.add(task_queue_name, transactional=False)
     db.run_in_transaction(_txn)        
+    
+class FinalizeHandler(webapp.RequestHandler):
+    def post(self):
+        return self.get(self)
+
+    def get(self):
+        file_name = self.request.get('file_name')
+        files.finalize(file_name)
+
+class DownloadLogsHandler(webapp.RequestHandler):
+    def post(self):
+        return self.get(self)
+    
+    def get(self, LIMIT=100):
+        date_hour_string = self.request.get('dh')
+        limit = int(self.request.get('limit',LIMIT))
+        start_time_stamp = self.request.get('start_time',None)
+        
+        year = int(date_hour_string[:4])
+        month = int(date_hour_string[4:6])
+        day = int(date_hour_string[6:8])
+        hour = int(date_hour_string[8:10])
+        
+        date_hour = datetime.datetime(year=year, 
+                                      month=month,
+                                      day=day,
+                                      hour=hour)
+        
+        filename = log_service.get_blob_name_for_time(date_hour) + '.log'
+        blob_infos = BlobInfo.all().filter('filename =',filename)
+        if start_time_stamp:
+            start_time = datetime.datetime.fromtimestamp(float(start_time_stamp))
+            blob_infos = blob_infos.filter('creation >=',start_time).order('creation')
+        
+        # fetch the objects from DB
+        blob_infos = blob_infos.fetch(limit+1)
+        
+        blob_keys = [bi.key() for bi in blob_infos]
+        
+        # if there are limit + 1 entries returned
+        # notify the API user where to start next
+        if len(blob_infos) > limit:
+            next_creation_time_stamp = time.mktime(blob_infos[-1].creation.timetuple())
+        else:
+            next_creation_time_stamp = None
+        
+        response_dict = dict(urls=['/files/serve/%s'%urllib.quote(str(bk)) for bk in blob_keys])
+        if next_creation_time_stamp:
+            response_dict.update(start_time=str(next_creation_time_stamp))
+        
+        self.response.out.write(simplejson.dumps(response_dict))
+
+class ServeLogHandler(blobstore_handlers.BlobstoreDownloadHandler):
+    """Actually serves the file"""
+    def get(self, resource):
+        resource = str(urllib.unquote(resource))
+        blob_info = BlobInfo.get(resource)
+        self.send_blob(blob_info)
+        
         
 application = webapp.WSGIApplication([('/_ah/queue/bulk-log-processor', LogTaskHandler),
                                       ('/_ah/queue/bulk-log-processor-00', LogTaskHandler),
@@ -317,6 +383,9 @@ application = webapp.WSGIApplication([('/_ah/queue/bulk-log-processor', LogTaskH
                                       ('/_ah/queue/bulk-log-processor-08', LogTaskHandler),
                                       ('/_ah/queue/bulk-log-processor-09', LogTaskHandler),
                                       ('/_ah/queue/bulk-log-processor/put', StatsModelPutTaskHandler),
+                                      ('/files/finalize', FinalizeHandler),
+                                      ('/files/download', DownloadLogsHandler),
+                                      ('/files/serve/([^/]+)?', ServeLogHandler),
                                      ],
                                      debug=True)
 

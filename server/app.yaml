@@ -1,6 +1,6 @@
 application: mopub-inc
 #application: mopub-experimental
-version: 38
+version: 38-risky
 runtime: python
 api_version: 1
 default_expiration: "10d"
@@ -61,7 +61,10 @@ handlers:
 - url: /m/clear
   script: ad_server/main.py
   login: admin
-  
+
+- url: /files/.*
+  script: mopub_logging/views.py
+  login: admin
 
 - url: /m/.*
   script: ad_server/main.py

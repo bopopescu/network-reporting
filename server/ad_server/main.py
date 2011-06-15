@@ -21,6 +21,8 @@ from google.appengine.api import images
 from publisher.models import *
 from advertiser.models import *
 
+from ad_server import mp_webapp
+
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 from userstore.query_managers import ClickEventManager, AppOpenEventManager
 
@@ -239,19 +241,19 @@ class PurchaseHandlerTxn(webapp.RequestHandler):
                                                         
 
 def main():
-    application = webapp.WSGIApplication([('/m/ad', adhandler.AdHandler), 
-                                          ('/m/imp', AdImpressionHandler),
-                                          ('/m/aclk', AdClickHandler),
-                                          ('/m/open', AppOpenHandler),
-                                          ('/m/track', AppOpenHandler),
-                                          ('/m/test', TestHandler),
-                                          ('/m/mpid',UDIDHandler),
-                                          ('/m/memclear', memcache_mangler.ClearHandler),
-                                          ('/m/memshow', memcache_mangler.ShowHandler),
-                                          ('/m/purchase', PurchaseHandler),
-                                          ('/m/purchase_txn', PurchaseHandlerTxn),
-                                          ('/m/req',AdRequestHandler),], 
-                                          debug=DEBUG)
+    application = mp_webapp.MPLoggingWSGIApplication([('/m/ad', adhandler.AdHandler), 
+                                                  ('/m/imp', AdImpressionHandler),
+                                                  ('/m/aclk', AdClickHandler),
+                                                  ('/m/open', AppOpenHandler),
+                                                  ('/m/track', AppOpenHandler),
+                                                  ('/m/test', TestHandler),
+                                                  ('/m/mpid',UDIDHandler),
+                                                  ('/m/memclear', memcache_mangler.ClearHandler),
+                                                  ('/m/memshow', memcache_mangler.ShowHandler),
+                                                  ('/m/purchase', PurchaseHandler),
+                                                  ('/m/purchase_txn', PurchaseHandlerTxn),
+                                                  ('/m/req',AdRequestHandler),], 
+                                                  debug=DEBUG)
     run_wsgi_app(application)
     # wsgiref.handlers.CGIHandler().run(application)
     

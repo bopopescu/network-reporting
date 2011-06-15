@@ -11,6 +11,8 @@ from ad_server.networks.chartboost import ChartBoostServerSide
 from google.appengine.api import urlfetch
 from google.appengine.ext import webapp
 
+# from ad_server.handlers.requesthandler import MPLoggingRequestHandler
+
 from publisher.models import AdUnit
 
 class TestHandler(webapp.RequestHandler):

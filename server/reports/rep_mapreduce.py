@@ -225,7 +225,7 @@ class GenReportPipeline(base_handler.PipelineBase):
                     rep.put()
             mesg = mail.EmailMessage(sender = 'olp@mopub.com',
                                      subject = 'Your report has completed')
-            if user_email == 'nick@mopub.com':
+            if user_email:
                 mesg_dict = dict(report_key = str(rep.schedule.key()))
                 mesg.to = user_email
                 mesg.body = REPORT_FINISHED_SIMPLE % mesg_dict

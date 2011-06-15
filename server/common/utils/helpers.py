@@ -131,3 +131,22 @@ def blob_size(blob_keys):
 def shard_count(size):
     count = size / (KB_PER_SHARD*KB)
     return min(count, 50)
+
+def clone_entity(ent, **extra_args):
+    """Clones an entity ent, adding or overriding certain attributes
+    as specified by extra_args
+
+    Args:
+        ent: entity to clone
+        extra_args: constructor arguments to override/add to the entity being clone
+
+    Returns:
+        a cloned, possibly updated, version of ent
+    """
+    klass = ent.__class__
+    #build old object property dict
+    props = dict((k, v.__get__(ent, klass)) for k,v in klass.properties().iteritems())
+    #update with new stuff
+    props.update(extra_args)
+    #create new object
+    return klass(**props)

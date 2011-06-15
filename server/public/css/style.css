@@ -1402,6 +1402,11 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
   font-weight: 300;
 }
 
+.loading-center {
+    text-align: center;
+    font-size: 15px;
+    width:100%;
+}
 
 .chart-loading .chart-loading-text,
 .chart-error .chart-error-text {

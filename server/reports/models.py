@@ -11,7 +11,7 @@ from google.appengine.api import users
 
 #mopub imports
 #from account.models import Account
-from common.constants import ISO_COUNTRIES
+from common.constants import ISO_COUNTRIES, REP_KEY
 from common.utils import date_magic
 #import lots of dicts and things
 from common.properties.dict_property import DictProperty
@@ -146,6 +146,28 @@ class Report(db.Model):
 
     # maybe useful for internal analytics//informing users
     completed_at = db.DateTimeProperty()
+
+    def __init__(self, parent=None, key_name=None, **kwargs):
+        if not key_name and not kwargs.get('key', None):
+            sched = kwargs.get('schedule')
+            start = kwargs.get('start')
+            end = kwargs.get('end')
+            acct = kwargs.get('account')
+            start_str = start.strftime('%y%m%d') if start else 'None'
+            end_str = end.strftime('%y%m%d') if end else 'None'
+            acct_key = str(acct) if acct else 'None'
+            d1 = sched.d1
+            d2 = sched.d2
+            d3 = sched.d3
+            key_dict = dict(d1 = d1,
+                            d2 = d2,
+                            d3 = d3,
+                            account = acct_key,
+                            start = start_str,
+                            end = end_str,
+                            )
+            key_name = REP_KEY % key_dict
+        return super(Report, self).__init__(key_name=key_name, **kwargs)
 
     @property
     def d1(self):

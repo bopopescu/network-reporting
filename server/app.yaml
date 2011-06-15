@@ -52,10 +52,6 @@ handlers:
   script: main.py
   login: admin
 
-- url: /reports/gen_report/
-  script: main.py
-  login: admin
-  
 - url: /admin/sfdc/
   script: main.py
   login: admin 

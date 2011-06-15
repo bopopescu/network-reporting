@@ -52,6 +52,7 @@ class AddReportHandler(RequestHandler):
         return render_to_string(self.request, template_name=template_name, data=kwargs)
         
     def post(self, d1, end, days=None, start=None, d2=None, d3=None,name=None, saved=False, interval=None, sched_interval=None):
+
         end = datetime.datetime.strptime(end, '%m/%d/%Y').date()
         if start:
             start = datetime.datetime.strptime(start, '%m/%d/%Y').date()
@@ -70,6 +71,7 @@ class AddReportHandler(RequestHandler):
                                 saved = saved, 
                                 interval = interval,
                                 sched_interval = sched_interval,
+                                user_email = self.request.user.email,
                                 )
         return HttpResponseRedirect('/reports/view/'+str(report.key()))
 
@@ -95,53 +97,20 @@ def request_report(request, *args, **kwargs):
 class CheckReportHandler(RequestHandler):
     def get(self, report_key):
         man = ReportQueryManager(self.account)
+        #Sched is false, this is a standard report
         report = man.get_report_by_key(report_key)
         data = report.html_data
+        ret = {}
         if data is None:
+            #Not going to do this now
+            #ret['map-status'], ret['shuf-status'], ret['red-status'] = MapReduceQueryManager.get_mr_status(type='report', key=report_key)
             data = 'none'
-        ret = dict(data = data)
+        ret['data'] = data
         return HttpResponse(simplejson.dumps(ret), mimetype='application/json')
 
 @login_required
 def check_report(request, *args, **kwargs):
     return CheckReportHandler()(request, *args, **kwargs)
-
-def gen_report_worker(report, account):
-    man = ReportQueryManager()
-    report = man.get_report_by_key(report)
-    report.status = 'pending'
-    man.put_report(report)
-    sched = report.schedule
-    sched.last_run = datetime.datetime.now()
-    man.put_report(sched)
-    report.data = report.gen_data()
-    report.status = 'done'
-    report.completed_at = datetime.datetime.now()
-    man.put_report(report)
-    return
-
-#Only actual reports call this
-class GenReportHandler(RequestHandler):
-    def post(self, report, account):
-        gen_report_worker(report, account)
-        return HttpResponse('Report Generation Successful')
-
-    def get(self, report):
-        man = ReportQueryManager(self.account)
-        report = man.get_report_by_key(report)
-        report.status = 'pending'
-        man.put_report(report)
-        sched = report.schedule
-        sched.last_run = datetime.datetime.now()
-        man.put_report(sched)
-        report.data = report.gen_data()
-        report.status = 'done'
-        report.completed_at = datetime.datetime.now()
-        man.put_report(report)
-        return HttpResponse('Report Generation Successful')
-
-def gen_report(request, *args, **kwargs):
-    return GenReportHandler()(request, use_cache=False, *args, **kwargs)
 
 #Only scheduled reports get viewed
 class ViewReportHandler(RequestHandler):

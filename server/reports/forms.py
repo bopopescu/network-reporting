@@ -63,7 +63,9 @@ class ReportForm(mpforms.MPModelForm):
         instance = kwargs.get('instance', None)
         initial = kwargs.get('initial', {})
         self.save_as = save_as
-        if instance and instance.days:
+        #Initially was just a check, making it an int check since
+        #0 is a valid property, but evals to false
+        if instance and (instance.days or instance.days == 0):
             dt = timedelta(days=instance.days)
             initial.update(start=instance.end-dt)
             kwargs.update(initial = initial)

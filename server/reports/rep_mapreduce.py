@@ -7,11 +7,13 @@ import datetime
 
 #GAE imports
 from google.appengine.ext import blobstore
+from google.appengine.api import mail 
 from mapreduce import base_handler
 from mapreduce import context 
 from mapreduce import mapreduce_pipeline
 from mapreduce import operation as op
 from mapreduce import shuffler
+from mail.mails import REPORT_FINISHED_SIMPLE
 
 #Mopub imports
 from reports.models import Report
@@ -41,6 +43,8 @@ MR2_KEY = '%s:%s'
 MR3_KEY = '%s:%s:%s'
 
 NO_REQUESTS = (CAMP, CRTV, P)
+
+VIEW_REP_URL = 'http://app.mopub.com/reports/view/%(report_key)s/'
 
 def get_key(line_dict, dim):
     """ Returns the key for a dim
@@ -205,21 +209,28 @@ class GenReportPipeline(base_handler.PipelineBase):
                 reducer_params={
                     'mime_type': 'text/plain',
                 },
-                shards=max(shards, 5))
+                shards=max(shards, 3))
 
     def finalized(self):
         if not self.was_aborted and self.pipeline_id == self.root_pipeline_id:
             report_key = self.kwargs['report_key']
+            user_email = self.kwargs['user_email']
+            rep = Report.get(report_key)
             outs = self.outputs.default.value[0]
             for val in outs.split('/'):
                 if val == '' or val == 'blobstore':
                     continue
                 else:
-                    rep = Report.get(report_key)
                     rep.report_blob = blobstore.BlobInfo.get(blobstore.BlobKey(val))
                     rep.put()
+            mesg = mail.EmailMessage(sender = 'olp@mopub.com',
+                                     subject = 'Your report has completed')
+            if user_email == 'nick@mopub.com':
+                mesg_dict = dict(report_key = str(rep.schedule.key()))
+                mesg.to = user_email
+                mesg.body = REPORT_FINISHED_SIMPLE % mesg_dict
+                mesg.send()
 
 
-            #get key, do stuff, magic, etc.
-        
+
 

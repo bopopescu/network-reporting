@@ -111,4 +111,7 @@ TB = 2**40
 PB = 2**50
 
 PIPE_KEY = 'pipeline--%(type)s--%(key)s'
+#NOT SCHEDULED REPORT
+REP_KEY = 'report:%(d1)s:%(d2)s:%(d3)s:%(account)s:%(start)s:%(end)s'
+
 MAX_OBJECTS=100

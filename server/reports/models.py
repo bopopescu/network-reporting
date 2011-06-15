@@ -49,6 +49,8 @@ TIME_DIMS = (MO, WEEK, DAY, HOUR)
 AU_DIMS = (APP, AU)
 WURFL_DIMS = (MAR, BRND, OS, OS_VER)
 
+NO_REQS = CRTV_DIMS
+
 def build_stat_dict(stats):
     """ Return a dict that appears like a StatsModel object to django
         (haha django you are so dumb and easy to fool)
@@ -207,13 +209,11 @@ class Report(db.Model):
         if self.report_blob:
             magic = self.parse_report_blob(self.report_blob.open())
             return loader.render_to_string('reports/report.html', dict(all_stats=magic))
+        #BACKWARDS COMPATIBILITY!
+        elif self.data:
+            return loader.render_to_string('reports/report.html', dict(all_stats=self.data))
         else:
             return None
-    #WILL BE USING BLOBSTORE, THIS IS IRRELEVANT
-        #if self.data:
-        #    return loader.render_to_string('reports/report.html', dict(all_stats=self.data))
-        #else:
-        #    return None
     
     @property
     def details(self):
@@ -251,7 +251,29 @@ class Report(db.Model):
 
             
     #keys will either make sense, or be AU, CRTV
+    """This is a second reduce.  It is possible to construct a worst-case scenario 
+    (tons of creatives, very few campaigns (among others)) where this gets hella slow.
+    This is done this way so the mapreduce NEVER has to touch the datastore to resolve things,
+    all the resolution is done here.  In the future it might makes sense to take this and put it 
+    into a second mapreduce job that's run when the report finalizes.
+    """
     def parse_report_blob(self, blobreader):
+        """ turns a reports report_blob blobstore object into a dictionary
+        
+        Args:
+            blobreader: Line reader for this reports report_blob
+
+        Returns:
+            a dictionary of values in the following format:
+
+            stats_dict = { KEY : 
+                             { 'stats' : [req, att, etc.],
+                               'name'  : <human readable name>,
+                               'sub_stats' : stats_dict (recursiionnnn)
+                              },
+                              ....
+                          }
+        """
         final = {}
         for line in blobreader:
             #temp now refers to top of the dictionary
@@ -261,6 +283,11 @@ class Report(db.Model):
             vals = eval(vals)
             #I'm using list comprehension for you Nafis
             keys = [self.get_key_name(idx, key) for idx,key in enumerate(keys)]
+            req, att = self.get_stats_info(keys)
+            if not req:
+                vals[0] = '---'
+            if not att:
+                vals[1] = '---'
             for i,(key,name) in enumerate(keys):
                 #if this key doesn't exist, build that shit
                 if not temp.has_key(key):
@@ -291,6 +318,27 @@ class Report(db.Model):
                             temp[key]['sub_stats'] = {}
                         temp = temp[key]['sub_stats']
         return statsify(final)
+
+
+    def get_stats_info(self, keys):
+        depth = len(keys)
+        #If any of the dims are an adv, reqs is meaningless
+        req = True
+        att = False
+        if not set((self.d1, self.d2, self.d3)).intersection(set(NO_REQ)):
+            req = False
+        for key, dim in zip(keys,(self.d1, self.d2, self.d3)):
+            if dim in CRTV_DIMS:
+                crtv = Creative.get(key)
+                camp = crtv.adgroup.campaign
+                #doesn't matter if we're crtv, camp, or priority, want to know the
+                #campaign type and if it's a network regardless
+                if crtv.adgroup.campaign.campaign_type == 'network':
+                    att = True
+        return (req, att)
+
+    
+
 
     def get_key_name(self, idx, key):
         """ Turns arbitrary keys and things into human-readable names to 

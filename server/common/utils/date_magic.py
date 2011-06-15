@@ -113,7 +113,7 @@ def gen_days(start, end, hours=False):
         temp = temp + dt
         days.append(temp)
     if hours:
-        return get_hours(days)
+        return reduce(lambda x,y: x+y, get_hours(days))
     else:
         return days
 

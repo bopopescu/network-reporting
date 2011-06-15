@@ -164,7 +164,7 @@ def generate_report_map(data):
 
     #Turn start, end dates into a list of date_hours
     #reduce turns [[day1hours][day2hours]] into [day1hours, day2hours]
-    days = reduce(lambda x,y: x+y, date_magic.gen_days(start, end, True))
+    days = date_magic.gen_days(start, end, True)
     line_dict = parse_line(line)
 
     #make sure this is the right everything

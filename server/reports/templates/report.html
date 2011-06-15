@@ -1,6 +1,7 @@
 <table id='report-table' width=100%>
     <thead>
         <th>Name</th>
+        <th>Attempts</th>
         <th>Requests</th>
         <th>Impressions</th>
         <th>Clicks</th>
@@ -21,7 +22,7 @@
         <tr id={{key1}}{{key2}} class='{{key1}} level1'>
             <td class="name">{{value2.name}}</td>
             <td class="request dataTable-data numeric">{{value2.stats.request_count}}</td>
-            <td class="attempt dataTable-data numeric">{{value3.stats.attempt_count}}</td>
+            <td class="attempt dataTable-data numeric">{{value2.stats.attempt_count}}</td>
             <td class="impression dataTable-data numeric">{{value2.stats.impression_count}}</td>
             <td class="click dataTable-data numeric">{{value2.stats.click_count}}</td>
             <td class="conversion dataTable-data numeric">{{value2.stats.conversion_count}}</td>

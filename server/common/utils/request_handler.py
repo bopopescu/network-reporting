@@ -15,7 +15,8 @@ from django.views.decorators.cache import cache_page
 
 class RequestHandler(object):
     """ Does some basic work and redirects a view to get and post appropriately """
-    def __init__(self,request=None):
+    def __init__(self,request=None, use_cache=True):
+        self.use_cache = use_cache
         if request:
             self.request = request
             self._set_account()    
@@ -23,6 +24,8 @@ class RequestHandler(object):
         super(RequestHandler,self).__init__()  
 
     def __call__(self,request, cache_time=5*60, use_cache=True, *args,**kwargs):
+        if self.use_cache = False:
+            use_cache = False
         
         # Initialize our caching decorator
         cache_dec = cache_page_until_post(time=cache_time)

@@ -44,18 +44,8 @@ class WurflQueryManager():
         return brand + ' ' + market
 
     def get_osver_name(self, osver):
-        os = self.OSVER_OS[osver]
-        if isinstance(os, list):
-            if len(os) == 1:
-                os = os[0]
-            else:
-                if len(os) == 0:
-                    os = ''
-                else:
-                    os = reduce(lambda x,y: x + ' ' + y, os)
-        os = os.replace('_', ' ')
         osver = osver.replace("_", ' ')
-        return os + ' ' + osver 
+        return osver 
 
     def get_brand_name(self, brand):
         return brand.replace('_', ' ')

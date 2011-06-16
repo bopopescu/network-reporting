@@ -110,7 +110,7 @@ class CheckReportHandler(RequestHandler):
 
 @login_required
 def check_report(request, *args, **kwargs):
-    return CheckReportHandler()(request, *args, **kwargs)
+    return CheckReportHandler(use_cache=False)(request, *args, **kwargs)
 
 #Only scheduled reports get viewed
 class ViewReportHandler(RequestHandler):

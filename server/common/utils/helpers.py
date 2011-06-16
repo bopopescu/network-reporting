@@ -4,6 +4,7 @@ import datetime
 from common.constants import (KB, MB, GB)
 
 from google.appengine.ext import blobstore
+from google.appengine.ext import db
 
 # matches sequence: space, 2 char, - or _, 2 char, 0 or more ;, followed by char that's not a char, number, - or _
 COUNTRY_PAT = re.compile(r' [a-zA-Z][a-zA-Z][-_](?P<ccode>[a-zA-Z][a-zA-Z]);*[^a-zA-Z0-9-_]')
@@ -80,6 +81,22 @@ def build_keys(stat):
                                 keys.append(STAT_KEY % (dte, pub, adv, cc, bn, mn, os, osver))
     return keys
 
+def cust_sum(vals):
+    tot = 0
+    cur_type = None
+    for val in vals:
+        if cur_type is None:
+            cur_type = type(val)
+        elif not isinstance(val, cur_type):
+            logging.warning(cur_type)
+            logging.warning(val)
+        if tot == 0 and isinstance(val, str):
+            tot = val
+        elif isinstance(val, int):
+            tot += val
+    return tot
+
+
 def been_seen(stat, seen):
     keys = build_keys(stat)
     if len(set(keys).intersection(set(seen))) != 0:
@@ -150,3 +167,19 @@ def clone_entity(ent, **extra_args):
     props.update(extra_args)
     #create new object
     return klass(**props)
+
+def build_key(template, template_dict):
+    """ I got tired of not knowing what's what when building a key.
+    This takes a dictionary and turns all db.Models into str(db.Model.key()), and all 
+    db.Key()s into str(db.Key())s
+    """
+    new_vals = {}
+    for k,v in template_dict.iteritems():
+        if isinstance(v, db.Model):
+            new_vals[k] = str(v.key())
+        elif isinstance(v, db.Key):
+            new_vals[k] = str(v)
+    template_dict.update(new_vals)
+    return template % template_dict
+
+

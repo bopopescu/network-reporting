@@ -81,8 +81,9 @@ def get_key(line_dict, dim):
         return line_dict['brand_name']
     if OS == dim:
         return line_dict['os']
+    #iPhone:2.2 and Android:2.2 would both yield the same thing, this is wrong
     if OS_VER == dim:
-        return line_dict['os_ver']
+        return line_dict['os'] + '_'+ line_dict['os_ver']
 
 
 # k = k:adunit_id:creative_id:country_code:brand_name:marketing_name:device_os:device_os_version:time
@@ -216,6 +217,7 @@ class GenReportPipeline(base_handler.PipelineBase):
             report_key = self.kwargs['report_key']
             user_email = self.kwargs['user_email']
             rep = Report.get(report_key)
+            rep.completed_at = datetime.datetime.now()
             outs = self.outputs.default.value[0]
             for val in outs.split('/'):
                 if val == '' or val == 'blobstore':
@@ -233,6 +235,36 @@ class GenReportPipeline(base_handler.PipelineBase):
                 mesg.body = REPORT_FINISHED_SIMPLE % mesg_dict
                 mesg.send()
 
+
+
+
+
+
+
+
+def generate_report_map_test(data, d1, d2, d3):
+    byte_offset, line = data
+    """ Mapping portion of mapreduce job
+
+    Args:
+        byte_offset: offset into blob file that line starts on
+        line: The value of the line
+
+    """
+    #Turn start, end dates into a list of date_hours
+    #reduce turns [[day1hours][day2hours]] into [day1hours, day2hours]
+    line_dict = parse_line(line)
+
+    #make sure this is the right everything
+    if verify_line(line_dict, d1, d2, d3, None):
+        for key in build_keys(line_dict, d1, d2, d3):
+            yield (key, '%s' % line_dict['vals']) 
+
+def generate_report_reduce_test(key, values):
+    #yield 'key: %s values: %s\n' % (key, [a for a in values])
+    values = [eval(value) for value in values]
+    #zip turns [1,2,3] [4,5,6] into [(1,4), (2,5), (3,6)], map applies sum to all list entries
+    yield '%s||%s' % (key, map(sum, zip(*values)))
 
 
 

@@ -13,8 +13,10 @@ from google.appengine.api import users
 #from account.models import Account
 from common.constants import ISO_COUNTRIES, REP_KEY, CLONE_REP_KEY
 from common.utils import date_magic
+from common.utils.helpers import cust_sum
 #import lots of dicts and things
 from common.properties.dict_property import DictProperty
+from account.models import Account
 from advertiser.models import Creative
 from publisher.models import AdUnit
 from common.wurfl.query_managers import WurflQueryManager
@@ -49,7 +51,7 @@ TIME_DIMS = (MO, WEEK, DAY, HOUR)
 AU_DIMS = (APP, AU)
 WURFL_DIMS = (MAR, BRND, OS, OS_VER)
 
-NO_REQS = CRTV_DIMS
+NO_REQ = CRTV_DIMS
 
 def build_stat_dict(stats):
     """ Return a dict that appears like a StatsModel object to django
@@ -160,7 +162,15 @@ class Report(db.Model):
             acct = kwargs.get('account')
             start_str = start.strftime('%y%m%d') if start else 'None'
             end_str = end.strftime('%y%m%d') if end else 'None'
-            acct_key = str(acct) if acct else 'None'
+            acct_key = 'None'
+            #Weird instances in DS where :acct_key: is actual model obj in string form, basically not a key
+            if acct:
+                if isinstance(acct, db.Key):
+                    acct_key = str(acct)
+                elif isinstance(acct, Account):
+                    acct_key = str(acct.key())
+                elif isinstance(acct, str):
+                    acct_key = acct
             d1 = sched.d1
             d2 = sched.d2
             d3 = sched.d3
@@ -281,9 +291,9 @@ class Report(db.Model):
             keys, vals = line.split('||')
             keys = keys.split(':')
             vals = eval(vals)
+            req, att = self.get_stats_info(keys)
             #I'm using list comprehension for you Nafis
             keys = [self.get_key_name(idx, key) for idx,key in enumerate(keys)]
-            req, att = self.get_stats_info(keys)
             if not req:
                 vals[0] = '---'
             if not att:
@@ -309,7 +319,7 @@ class Report(db.Model):
                         #doing Datastore reads) there is a possibility for 
                         #dupes.  If there are dupes, don't overwrite, sum
                         if temp[key].has_key('stats'):
-                            temp[key]['stats'] = [sum(zipt) for zipt in zip(vals,temp[key]['stats'])]
+                            temp[key]['stats'] = [cust_sum(zipt) for zipt in zip(vals,temp[key]['stats'])]
                         else:
                             temp[key]['stats'] = vals
                     else:
@@ -325,12 +335,20 @@ class Report(db.Model):
         #If any of the dims are an adv, reqs is meaningless
         req = True
         att = False
-        if not set((self.d1, self.d2, self.d3)).intersection(set(NO_REQ)):
+        #only take all the dims that there are keys for
+        if depth == 1:
+            dim_list = (self.d1,)
+        elif depth == 2:
+            dim_list = (self.d1, self.d2)
+        elif depth == 3:
+            dim_list = (self.d1, self.d2, self.d3)
+        else:
+            logging.warning('Invalid key length')
+        if set(dim_list).intersection(set(NO_REQ)):
             req = False
-        for key, dim in zip(keys,(self.d1, self.d2, self.d3)):
+        for key, dim in zip(keys,dim_list):
             if dim in CRTV_DIMS:
                 crtv = Creative.get(key)
-                camp = crtv.adgroup.campaign
                 #doesn't matter if we're crtv, camp, or priority, want to know the
                 #campaign type and if it's a network regardless
                 if crtv.adgroup.campaign.campaign_type == 'network':
@@ -390,7 +408,8 @@ class Report(db.Model):
             #was requested, and the keys will be the same, this way they are uniquely 
             #ID'd
             time = datetime.strptime(key,'%y%m%d%H')
-            return (key + dim, date_magic.date_name(time, dim))
+            time_key = date_magic.date_key(time, dim)
+            return (time_key + dim, date_magic.date_name(time, dim))
 
         elif dim in WURFL_DIMS:
             return (key, WurflQueryManager().get_wurfl_name(key, dim))

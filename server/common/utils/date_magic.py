@@ -197,3 +197,14 @@ def date_name(val, dim):
     else:
         name = 'Impossible State'
     return name
+
+
+def date_key(time, dim):
+    if dim == MO:
+        return time.strftime('%y%m')
+    elif dim == WEEK:
+        return time.strftime('%y%m%W')
+    elif dim == DAY:
+        return time.strftime('%y%m%d')
+    elif dim == HOUR:
+        return time.strftime('%y%m%d%H')

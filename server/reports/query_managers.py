@@ -7,11 +7,16 @@ from django.core.urlresolvers import reverse
 from django.template.loader import render_to_string
 from google.appengine.api import taskqueue
 from google.appengine.ext import db
+from account.models import Account
 
 from common.constants import DATE_FMT, PIPE_KEY, REP_KEY
 from common.utils.query_managers import CachedQueryManager
 from common.utils import date_magic
-from common.utils.helpers import (blob_size, shard_count, clone_entity)
+from common.utils.helpers import (blob_size, 
+                                  shard_count, 
+                                  clone_entity,
+                                  build_key,
+                                  )
 from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager, BlobLogQueryManager
 
@@ -142,10 +147,10 @@ class ReportQueryManager(CachedQueryManager):
                 now = end.date()
                 dt = end.date() - start.date()
 
-        account = report.account
+        account = report.account.key()
         start = now - dt
         end = now
-        acct_key = str(account.key())
+        acct_key = str(account)
         rep_key_dict = dict(d1 = report.d1,
                             d2 = report.d2,
                             d3 = report.d3,
@@ -153,7 +158,7 @@ class ReportQueryManager(CachedQueryManager):
                             start = start.strftime(DATE_FMT),
                             end = end.strftime(DATE_FMT),
                             )
-        key = REP_KEY % rep_key_dict
+        key = build_key(REP_KEY, rep_key_dict)
         rep = Report.get_by_key_name(key)
         if rep:
             cloned = True
@@ -259,6 +264,7 @@ class ReportQueryManager(CachedQueryManager):
         dt = datetime.timedelta(days=days)
         start = end - dt
         end = end
+        #ACCOUNT IS ACCOUNT KEY
         acct_key = str(self.account)
         rep_key_dict = dict(d1 = d1,
                             d2 = d2,
@@ -267,13 +273,14 @@ class ReportQueryManager(CachedQueryManager):
                             start = start.strftime(DATE_FMT),
                             end = end.strftime(DATE_FMT),
                             )
-        key = REP_KEY % rep_key_dict
+        key = build_key(REP_KEY, rep_key_dict)
         rep = Report.get_by_key_name(key)
         if rep:
             cloned = True
             report = clone_entity(rep, schedule=sched)
         else:
             cloned = False
+            #ACCOUNT IS ACCOUNT KEY
             report = Report(start = start,
                             end = end,
                             account = self.account,

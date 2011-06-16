@@ -325,8 +325,9 @@ class DownloadLogsHandler(webapp.RequestHandler):
     
     def get(self, LIMIT=100):
         date_hour_string = self.request.get('dh')
-        limit = int(self.request.get('limit',LIMIT))
-        start_time_stamp = self.request.get('start_time',None)
+        limit = int(self.request.get('limit', LIMIT))
+        start_time_stamp = self.request.get('start_time', None)
+        start_key = self.request.get('start_key', None)
         
         # date_hour_string = YYYYMMDDHH
         year = int(date_hour_string[:4])
@@ -343,7 +344,11 @@ class DownloadLogsHandler(webapp.RequestHandler):
         blob_infos = BlobInfo.all().filter('filename =',filename)
         if start_time_stamp:
             start_time = datetime.datetime.fromtimestamp(float(start_time_stamp))
-            blob_infos = blob_infos.filter('creation >=',start_time).order('creation')
+            blob_infos = blob_infos.filter('creation >=', start_time).order('creation')
+
+        if start_key:
+            blob_infos = blob_infos.filter('__key__ >=', db.Key(start_key))
+            
         
         # fetch the objects from DB
         blob_infos = blob_infos.fetch(limit+1)
@@ -354,12 +359,19 @@ class DownloadLogsHandler(webapp.RequestHandler):
         # notify the API user where to start next
         if len(blob_infos) > limit:
             next_creation_time_stamp = time.mktime(blob_infos[-1].creation.timetuple())
+            next_key_name = blob_infos[-1].key()
         else:
             next_creation_time_stamp = None
+            next_key_name = None
         
         response_dict = dict(urls=['/files/serve/%s'%urllib.quote(str(bk)) for bk in blob_keys[:-1]])
         if next_creation_time_stamp:
             response_dict.update(start_time=str(next_creation_time_stamp))
+        if next_key_name:
+            # makes pseudo BlobInfo key
+            # next_key is actually a BlobKey which is the key_name for the BlobInfo
+            next_key = db.Key.from_path(BlobInfo.kind(), str(next_key_name), namespace='')
+            response_dict.update(start_key=str(next_key))
         
         self.response.out.write(simplejson.dumps(response_dict))
 

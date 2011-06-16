@@ -130,7 +130,6 @@ def threadproc():
             req_cnt_lock.acquire()
             req_cnt += 1
             url = "http://%s/m/ad?id=%s&udid=%s&reqcnt=%s&inst=%s&test=%s"%(HOST,adunit,uid,req_cnt,INSTANCE_ID,TEST_ID)
-            url = 'http://38-risky.mopub-inc.appspot.com/m/ad?id=agltb3B1Yi1pbmNyDAsSBFNpdGUYydkEDA'
             req_cnt_lock.release()
             
             fail_lock.acquire()

@@ -1,23 +1,27 @@
 from __future__ import with_statement
+
 import datetime
-from common.utils.timezones import Pacific_tzinfo
-from google.appengine.api import files
-from google.appengine.api import taskqueue
 import logging
 import random
 import uuid
+
+from google.appengine.api import files
+from google.appengine.api import taskqueue
+
+from common.utils.timezones import Pacific_tzinfo
+
 
 INSTANCE_ID = str(uuid.uuid1())
 
 # flushes either after MAX_LINES_BEFORE_FLUSH or 
 # MAX_TIME_BEFORE_FLUSH has elapsed since last flush
-# which is the first
+# whichever is the first
 
 MAX_LINES_BEFORE_FLUSH = 10 
 MAX_TIME_BEFORE_FLUSH = 10 # seconds
 
 FILE_QUEUE_NAME = 'file-finalizer-%02d'
-NUM_FILE_QUEUS = 1
+NUM_FILE_QUEUES = 1
 
 class LogService(object):
     def __init__(self):
@@ -61,7 +65,10 @@ class LogService(object):
         self.lines = []
         # update last flush 
         self.last_flush = datetime.datetime.now()    
-        # finalize the file
+        # finalize the file so that it can be readable
+        # this is an appengine specific problem
+        # because files start as writeable then 
+        # go on to be reable, but first must be finalized
         self._finalize_when_appriorate(file_name,
                                        blob_file_name, 
                                        current_time)
@@ -71,15 +78,15 @@ class LogService(object):
         Schedule the file to be finalized at the beginning of the next hour (with a buffer)
         """
         # by using task_names we ensure that each file is only finalized once
-        task_name = ('t-'+'-'+blob_file_name+'-'+INSTANCE_ID).replace('_','1X--X1') # must escape '_'
+        task_name = ('t-'+blob_file_name+'-'+INSTANCE_ID).replace('_','1X--X1') # must escape '_' because not allowed in task names
         execution_time = self._get_execution_time(current_time)
         task = taskqueue.Task(name=task_name, 
                               params=dict(file_name=file_name),
                               method='GET',
                               url='/files/finalize',
-                              # countdown=5*60,)
                               eta=execution_time,)
-        queue_num = random.randint(0,NUM_FILE_QUEUS-1)                      
+        # get the appropriate queue shard                      
+        queue_num = random.randint(0,NUM_FILE_QUEUES-1)                      
         queue_name = FILE_QUEUE_NAME%queue_num
         try:
             task.add(queue_name)

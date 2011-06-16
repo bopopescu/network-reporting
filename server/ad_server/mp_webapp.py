@@ -98,9 +98,6 @@ class MPLoggingWSGIApplication(webapp.WSGIApplication):
         logger.log(apache_string)
 
     def _build_apache_string(self, request, response):
-        # request = self.request
-        # response = self.response
-        
         request_origin = request.remote_addr
         request_user =  request.remote_user
         request_method = request.method
@@ -111,7 +108,7 @@ class MPLoggingWSGIApplication(webapp.WSGIApplication):
         
         # gets data from the response
         response_status_code = response.status
-        response_bytes = 10 # hard coded
+        response_bytes = 10 # TODO: make this not hard coded
         response_datetime = datetime.datetime.now(Pacific_tzinfo())
         
         apache_dict = { 'ip': request_origin,

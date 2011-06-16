@@ -1,8 +1,8 @@
-import logging
 import datetime
+import logging
+import sys
 import time
 import traceback
-import sys
 import urllib
 
 from appengine_django import InstallAppengineHelperForDjango
@@ -11,27 +11,26 @@ InstallAppengineHelperForDjango()
 # from appengine_django import LoadDjango
 # LoadDjango()
 
+from google.appengine.datastore import entity_pb
 from google.appengine.ext import db
-from google.appengine.ext import webapp
-from google.appengine.ext.webapp import blobstore_handlers
-from google.appengine.ext.webapp.util import run_wsgi_app
-
+from google.appengine.api import files
 from google.appengine.api import mail
 from google.appengine.api import memcache
-
-from reporting import models as r_models
-from reporting import query_managers
-
-from mopub_logging import mp_logging
-from mopub_logging import log_service
+from google.appengine.api import taskqueue
+from google.appengine.ext import webapp
+from google.appengine.ext.blobstore import BlobInfo
+from google.appengine.ext.webapp import blobstore_handlers
+from google.appengine.ext.webapp.util import run_wsgi_app
 
 from common.utils import helpers
 from common.utils import simplejson
 
-from google.appengine.api import taskqueue
-from google.appengine.api import files
-from google.appengine.ext.blobstore import BlobInfo
-from google.appengine.datastore import entity_pb
+from mopub_logging import mp_logging
+from mopub_logging import log_service
+
+from reporting import models as r_models
+from reporting import query_managers
+
 
 OVERFLOW_TASK_QUEUE_NAME_FORMAT = "bulk-log-processor-overflow-%02d"
 NUM_OVERFLOW_TASK_QUEUES = 3
@@ -329,6 +328,7 @@ class DownloadLogsHandler(webapp.RequestHandler):
         limit = int(self.request.get('limit',LIMIT))
         start_time_stamp = self.request.get('start_time',None)
         
+        # date_hour_string = YYYYMMDDHH
         year = int(date_hour_string[:4])
         month = int(date_hour_string[4:6])
         day = int(date_hour_string[6:8])
@@ -357,7 +357,7 @@ class DownloadLogsHandler(webapp.RequestHandler):
         else:
             next_creation_time_stamp = None
         
-        response_dict = dict(urls=['/files/serve/%s'%urllib.quote(str(bk)) for bk in blob_keys])
+        response_dict = dict(urls=['/files/serve/%s'%urllib.quote(str(bk)) for bk in blob_keys[:-1]])
         if next_creation_time_stamp:
             response_dict.update(start_time=str(next_creation_time_stamp))
         

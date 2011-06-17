@@ -7,6 +7,7 @@ import uuid
 
 from google.appengine.api import files
 from google.appengine.api import taskqueue
+from google.appengine.runtime import apiproxy_errors
 
 from common.utils.timezones import Pacific_tzinfo
 
@@ -17,8 +18,8 @@ INSTANCE_ID = str(uuid.uuid1())
 # MAX_TIME_BEFORE_FLUSH has elapsed since last flush
 # whichever is the first
 
-MAX_LINES_BEFORE_FLUSH = 10 
-MAX_TIME_BEFORE_FLUSH = 10 # seconds
+MAX_LINES_BEFORE_FLUSH = 100 
+MAX_TIME_BEFORE_FLUSH = 100 # seconds
 
 FILE_QUEUE_NAME = 'file-finalizer-%02d'
 NUM_FILE_QUEUES = 1
@@ -34,7 +35,10 @@ class LogService(object):
         self.lines.append(line)
         
         if self._should_flush():
-            self.flush()
+            try:
+                self.flush()
+            except apiproxy_errors.OverQuotaError as e:
+                logging.error(e)    
             
     def _should_flush(self):
         """

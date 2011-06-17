@@ -24,7 +24,7 @@ class RequestHandler(object):
         super(RequestHandler,self).__init__()  
 
     def __call__(self,request, cache_time=5*60, use_cache=True, *args,**kwargs):
-        if self.use_cache = False:
+        if self.use_cache == False:
             use_cache = False
         
         # Initialize our caching decorator

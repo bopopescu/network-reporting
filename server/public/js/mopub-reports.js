@@ -42,6 +42,7 @@
             }
         });
         $('.date-required').each(function() {
+            $(this).removeClass('form-error');
             if ($(this).val() == '') {
                 $(this).addClass('form-error');
                 $('#dateError').show();

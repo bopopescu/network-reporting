@@ -243,7 +243,7 @@
                     <div class="adForm-apps {% if jumptap_status == 2 or jumptap_status == 3 or jumptap_status == 4 %} {% else %} show {% endif %}">
                       {% for app in apps%}
                       
-                      <dt>{{app.name}}:</dt>
+                      <dt><strong>App</strong> {{app.name}}:</dt>
                       <dd><input type="text" class="input-text" name="{{app.key}}-__-jumptap_pub_id" value="{{app.network_config.jumptap_pub_id|default_if_none:""}}"  placeholder="ex: pa_company_inc_app (Site Alias) "/></dd>
                       <!-- here -->
                       {% for adunit in app.adunits %}

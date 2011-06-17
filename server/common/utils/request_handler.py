@@ -11,6 +11,7 @@ from inspect import getargspec
 
 from common.utils.decorators import cache_page_until_post, conditionally
 from django.views.decorators.cache import cache_page
+from django.conf import settings
 
 
 class RequestHandler(object):
@@ -23,6 +24,9 @@ class RequestHandler(object):
         super(RequestHandler,self).__init__()  
 
     def __call__(self,request, cache_time=5*60, use_cache=True, *args,**kwargs):
+        if settings.DEBUG:
+            use_cache = False
+        
         
         # Initialize our caching decorator
         cache_dec = cache_page_until_post(time=cache_time)

@@ -38,6 +38,8 @@ class AccountHandler(RequestHandler):
                 return status
             broke = False
             for app in apps_for_account:
+                # dynamically attach adunits to app
+                app.adunits = AdUnitQueryManager.get_adunits(app=app)
                 if  not getattr(app.network_config,network[:-6]+'pub_id',None):
                     broke = True
                 else:
@@ -79,8 +81,20 @@ class AccountHandler(RequestHandler):
                 app_form = NetworkConfigForm(data=app_network_config_data, instance=app.network_config)
                 app_network_config = app_form.save(commit=False)
                 AppQueryManager.update_config_and_put(app, app_network_config)
-                        
-            
+                
+                adunits = AdUnitQueryManager.get_adunits(app=app)
+                for adunit in adunits:
+                    adunit_network_config_data = {}
+                    for (key, value) in self.request.POST.iteritems():
+                        adunit_key_identifier = key.split('-_ADUNIT_-')
+                        if adunit_key_identifier[0] == str(adunit.key()):
+                            adunit_network_config_data[adunit_key_identifier[1]] = value
+                    adunit_form = NetworkConfigForm(data=adunit_network_config_data, instance=adunit.network_config)
+                    adunit_network_config = adunit_form.save(commit=False)
+                    AdUnitQueryManager.update_config_and_put(adunit, adunit_network_config)
+                            
+                
+                
             if self.account.status == "step3":
                 self.account.status = "step4"
                 AccountQueryManager.put_accounts(self.account)

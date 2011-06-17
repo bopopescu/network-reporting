@@ -244,7 +244,14 @@
                       {% for app in apps%}
                       
                       <dt>{{app.name}}:</dt>
-                      <dd><input type="text" class="input-text" name="{{app.key}}-__-jumptap_pub_id" value="{{app.network_config.jumptap_pub_id|default_if_none:""}}"  placeholder="ex: pa_company_inc_app"/></dd>
+                      <dd><input type="text" class="input-text" name="{{app.key}}-__-jumptap_pub_id" value="{{app.network_config.jumptap_pub_id|default_if_none:""}}"  placeholder="ex: pa_company_inc_app (Site Alias) "/></dd>
+                      <!-- here -->
+                      {% for adunit in app.adunits %}
+                      <!-- here -->
+                      <dt><strong>AdUnit</strong> {{adunit.name}}:</dt>
+                      <dd><input type="text" class="input-text" name="{{adunit.key}}-_ADUNIT_-jumptap_pub_id" value="{{adunit.network_config.jumptap_pub_id|default_if_none:""}}"  placeholder="ex: pa_company_inc_app_spot (Spot Alias)"/></dd>
+                      {% endfor %}
+                      
                       {% endfor %}
                       
                     </div>

@@ -15,14 +15,17 @@ class Campaign(db.Model):
 
     # budget per day
     budget = db.FloatProperty() 
+    full_budget = db.FloatProperty()
     
     timeslice_snapshot = db.FloatProperty()
     
     # budget per timeslice, determined dynamically
     timeslice_budget = db.FloatProperty()
     
+    current_timeslice = db.IntegerProperty(default = 0)
+    
     # Determines whether we redistribute if we underdeliver during a day
-    budget_type = db.StringProperty(choices=['daily', 'full_campaign'])
+    budget_type = db.StringProperty(choices=['daily', 'full_campaign'], default="daily")
     
     # Determines whether we smooth during a day
     budget_strategy = db.StringProperty(choices=['evenly','allatonce'], default="allatonce")

@@ -10,17 +10,12 @@ class BudgetSlicer(db.Model):
     campaign = db.ReferenceProperty(Campaign)
     timeslice_snapshot = db.FloatProperty()
     daily_snapshot = db.FloatProperty()
-  
 
     @property
     def timeslice_budget(self):
         """ The amount to increase the remaining_timeslice_budget amount by
         every minute or so  """
-        if campaign.budget_type == "daily":
-            return self.campaign.budget / DEFAULT_TIMESLICES * (1.0 + DEFAULT_FUDGE_FACTOR)
-        elif campaign.budget_type == "full_campaign":
-            remaining_days = "TODO"
-            return self.campaign.full_budget / DEFAULT_TIMESLICES * (1.0 + DEFAULT_FUDGE_FACTOR) / remaining_days
+        return self.campaign.budget / DEFAULT_TIMESLICES * (1.0 + DEFAULT_FUDGE_FACTOR)
    
 
     def __init__(self, parent=None, key_name=None, **kwargs):
@@ -36,7 +31,7 @@ class BudgetSlicer(db.Model):
                                             
                     kwargs.update(daily_snapshot = campaign.budget)
                     kwargs.update(timeslice_snapshot = timeslice_snapshot)
-                
+                    
         super(BudgetSlicer, self).__init__(parent=parent,
                                            key_name=key_name,
                                             **kwargs)

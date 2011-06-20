@@ -102,28 +102,31 @@ def os_filter(user_agent):
                     return False
                     
         def in_range(user_nums,max_nums,min_nums):
-            y = max(len(user_nums), len(max_nums), len(min_nums))
-            x = y - min(len(user_nums), len(max_nums), len(min_nums))
-            for n in range(x):
-                if len(user_nums) < y:
-                    user_nums.append('0')
-                if len(max_nums) < y:
-                    max_nums.append('0')
-                if len(min_nums) < y:
-                    min_nums.append('0') 
-            def_less = False
-            def_more = False
+            #Make all lists same length to make comparison easier
+            max_len = max(len(user_nums), len(max_nums), len(min_nums))
+            while len(user_nums) < max_len:
+                user_nums.append('0')
+            while len(max_nums) < max_len:
+                max_nums.append('0')
+            while len(min_nums) < max_len:
+                min_nums.append('0')
+            
+            #Do comparison
+            is_less = False
+            is_more = False
             for i, num in enumerate(user_nums):
-                if not def_less:
+                if not is_less:
                     if int(num) > int(max_nums[i]):
                         return False
                     elif int(num) < int(max_nums[i]):
-                        def_less = True
-                if not def_more:
+                        is_less = True
+                if not is_more:
                     if int(num) < int(min_nums[i]):
                         return False
                     elif int(num) > int(min_nums[i]):
-                        def_more = True
+                        is_more = True
+            
+            #Comparison succeeded            
             return True
         
         if user_os_name == "iOS":

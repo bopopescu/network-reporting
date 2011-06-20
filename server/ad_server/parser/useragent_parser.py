@@ -1,6 +1,3 @@
-
-#from common.constants import IOS_VERSION_CHOICES, ANDROID_VERSION_CHOICES
-
 def get_os(user_agent_string):
     """ Returns 'iOS', 'android' or 'other' """
     """ Returns the appropriate float for the os version """
@@ -30,7 +27,8 @@ def get_os(user_agent_string):
             
         user_os_version = user_agent_string[num_start:num_end]
     except:
-        user_os_name = None
+        if not user_os_name:
+            user_os_name = None
         user_os_version = None
     
     return user_os_name, user_os_version

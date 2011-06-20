@@ -9,7 +9,7 @@ from google.appengine.ext import db
 # matches sequence: space, 2 char, - or _, 2 char, 0 or more ;, followed by char that's not a char, number, - or _
 COUNTRY_PAT = re.compile(r' [a-zA-Z][a-zA-Z][-_](?P<ccode>[a-zA-Z][a-zA-Z]);*[^a-zA-Z0-9-_]')
 
-KB_PER_SHARD = 500
+KB_PER_SHARD = 800
 
 def get_country_code(user_agent):
     m = COUNTRY_PAT.search(user_agent)

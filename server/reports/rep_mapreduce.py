@@ -210,7 +210,7 @@ class GenReportPipeline(base_handler.PipelineBase):
                 reducer_params={
                     'mime_type': 'text/plain',
                 },
-                shards=max(shards, 3))
+                shards=max(shards, 1))
 
     def finalized(self):
         if not self.was_aborted and self.pipeline_id == self.root_pipeline_id:

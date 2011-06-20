@@ -119,6 +119,9 @@ def password_reset(request, is_admin_site=False, template_name='registration/pas
         email_template_name='registration/password_reset_email.html',
         password_reset_form=PasswordResetForm, token_generator=default_token_generator,
         post_reset_redirect=None):
+        
+    from google.appengine.api import users
+        
     if post_reset_redirect is None:
         post_reset_redirect = reverse('auth_password_reset_done')
     if request.method == "POST":
@@ -131,8 +134,13 @@ def password_reset(request, is_admin_site=False, template_name='registration/pas
             opts['request'] = request
             if is_admin_site:
                 opts['domain_override'] = request.META['HTTP_HOST']
-            form.save(**opts)
-            return HttpResponseRedirect(post_reset_redirect)
+            try:    
+                form.save(**opts)
+                return HttpResponseRedirect(post_reset_redirect)
+            except AttributeError:
+                form.mperrors = ["Your account requires you to use your Google Account to <a href='%s'>log in</a>. \
+                                 <br/>If you want to unlink your account first log in then <a href='%s'>migrate</a> your account."%
+                                 (users.create_login_url('/inventory/'),reverse('registration_migrate_user'))]
     else:
         form = password_reset_form()
     return render_to_response(template_name, {

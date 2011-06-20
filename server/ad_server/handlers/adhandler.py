@@ -249,7 +249,7 @@ class AdHandler(webapp.RequestHandler):
             
             trace_logging.info("##############################")
             trace_logging.info("##############################")
-            trace_logging.info("Winner found, rendering: %s" % str(creative.name))
+            trace_logging.info("Winner found, rendering: %s" % creative.name.encode('utf8') if creative.name else 'None')
             trace_logging.warning("Creative key: %s" % str(creative.key()))
             trace_logging.warning("rendering: %s" % creative.ad_type)
 
@@ -508,6 +508,11 @@ class AdHandler(webapp.RequestHandler):
             if creative.width and creative.height and 'full' not in site.format:
                 self.response.headers.add_header("X-Width", str(creative.width))
                 self.response.headers.add_header("X-Height", str(creative.height))
+            
+            # adds network info to the headers
+            if creative.adgroup.network_type:
+                self.response.headers.add_header("X-Networktype",creative.adgroup.network_type)
+            
             
             # render the HTML body
             rendered_creative = self.TEMPLATES[template_name].safe_substitute(params)

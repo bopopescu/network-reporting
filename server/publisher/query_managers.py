@@ -248,4 +248,12 @@ class AdUnitQueryManager(QueryManager):
         AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
         
         return put_response
+        
+    @classmethod
+    def update_config_and_put(cls, adunit, network_config):
+        """ Updates the network config and the associated app"""
+        db.put(network_config)
+        adunit.network_config = network_config
+        cls.put(adunit)
+        
     

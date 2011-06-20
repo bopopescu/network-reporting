@@ -1,7 +1,9 @@
-import logging
 import datetime
-import traceback
+import logging
 import sys
+import time
+import traceback
+import urllib
 
 from appengine_django import InstallAppengineHelperForDjango
 InstallAppengineHelperForDjango()
@@ -9,22 +11,26 @@ InstallAppengineHelperForDjango()
 # from appengine_django import LoadDjango
 # LoadDjango()
 
+from google.appengine.datastore import entity_pb
 from google.appengine.ext import db
-from google.appengine.ext import webapp
-from google.appengine.ext.webapp.util import run_wsgi_app
-
+from google.appengine.api import files
 from google.appengine.api import mail
 from google.appengine.api import memcache
+from google.appengine.api import taskqueue
+from google.appengine.ext import webapp
+from google.appengine.ext.blobstore import BlobInfo
+from google.appengine.ext.webapp import blobstore_handlers
+from google.appengine.ext.webapp.util import run_wsgi_app
+
+from common.utils import helpers
+from common.utils import simplejson
+
+from mopub_logging import mp_logging
+from mopub_logging import log_service
 
 from reporting import models as r_models
 from reporting import query_managers
 
-from mopub_logging import mp_logging
-
-from common.utils import helpers
-
-from google.appengine.api import taskqueue
-from google.appengine.datastore import entity_pb
 
 OVERFLOW_TASK_QUEUE_NAME_FORMAT = "bulk-log-processor-overflow-%02d"
 NUM_OVERFLOW_TASK_QUEUES = 3
@@ -226,10 +232,9 @@ class LogTaskHandler(webapp.RequestHandler):
               number_of_stats = len(total_stats)
               max_countries = max([len(stat.get_countries()) for stat in total_stats])
               
-              mail.send_mail(sender="olp@mopub.com",
-                            to="bugs@mopub.com",
-                            subject="Logging error",
-                            body="account: %s retries: %s task name: %s queue name: %s base stats: %s total number of stats: %s max countries: %s \n\n%s"%(account_name,
+              mail.send_mail_to_admins(sender="olp@mopub.com",
+                                        subject="Logging error",
+                                        body="account: %s retries: %s task name: %s queue name: %s base stats: %s total number of stats: %s max countries: %s \n\n%s"%(account_name,
                                                                                              retry_count,
                                                                                              task_name,
                                                                                              queue_name,
@@ -246,10 +251,9 @@ class LogTaskHandler(webapp.RequestHandler):
                                                                                   tail_index_str,memcache_misses,retry_count,
                                                                                   memcache_stats_start,memcache_stats)
           
-          mail.send_mail(sender="olp@mopub.com",
-                        to="bugs@mopub.com",
-                        subject="Logging error (cache miss)",
-                        body=message)
+          mail.send_mail_to_admins(sender="olp@mopub.com",
+                                    subject="Logging error (cache miss)",
+                                    body=message)
           logging.error(message)
           
 class StatsModelPutTaskHandler(webapp.RequestHandler):
@@ -304,6 +308,78 @@ def async_put_models(account_name,stats_models,bucket_size):
                                countdown=5)
             t.add(task_queue_name, transactional=False)
     db.run_in_transaction(_txn)        
+    
+class FinalizeHandler(webapp.RequestHandler):
+    def post(self):
+        return self.get(self)
+
+    def get(self):
+        file_name = self.request.get('file_name')
+        files.finalize(file_name)
+
+class DownloadLogsHandler(webapp.RequestHandler):
+    def post(self):
+        return self.get(self)
+    
+    def get(self, LIMIT=100):
+        date_hour_string = self.request.get('dh')
+        limit = int(self.request.get('limit', LIMIT))
+        start_time_stamp = self.request.get('start_time', None)
+        start_key = self.request.get('start_key', None)
+        
+        # date_hour_string = YYYYMMDDHH
+        year = int(date_hour_string[:4])
+        month = int(date_hour_string[4:6])
+        day = int(date_hour_string[6:8])
+        hour = int(date_hour_string[8:10])
+        
+        date_hour = datetime.datetime(year=year, 
+                                      month=month,
+                                      day=day,
+                                      hour=hour)
+        
+        filename = log_service.get_blob_name_for_time(date_hour) + '.log'
+        blob_infos = BlobInfo.all().filter('filename =',filename)
+        if start_time_stamp:
+            start_time = datetime.datetime.fromtimestamp(float(start_time_stamp))
+            blob_infos = blob_infos.filter('creation >=', start_time).order('creation')
+
+        if start_key:
+            blob_infos = blob_infos.filter('__key__ >=', db.Key(start_key))
+            
+        
+        # fetch the objects from DB
+        blob_infos = blob_infos.fetch(limit+1)
+        
+        blob_keys = [bi.key() for bi in blob_infos]
+        
+        # if there are limit + 1 entries returned
+        # notify the API user where to start next
+        if len(blob_infos) > limit:
+            next_creation_time_stamp = time.mktime(blob_infos[-1].creation.timetuple())
+            next_key_name = blob_infos[-1].key()
+        else:
+            next_creation_time_stamp = None
+            next_key_name = None
+        
+        response_dict = dict(urls=['/files/serve/%s'%urllib.quote(str(bk)) for bk in blob_keys[:-1]])
+        if next_creation_time_stamp:
+            response_dict.update(start_time=str(next_creation_time_stamp))
+        if next_key_name:
+            # makes pseudo BlobInfo key
+            # next_key is actually a BlobKey which is the key_name for the BlobInfo
+            next_key = db.Key.from_path(BlobInfo.kind(), str(next_key_name), namespace='')
+            response_dict.update(start_key=str(next_key))
+        
+        self.response.out.write(simplejson.dumps(response_dict))
+
+class ServeLogHandler(blobstore_handlers.BlobstoreDownloadHandler):
+    """Actually serves the file"""
+    def get(self, resource):
+        resource = str(urllib.unquote(resource))
+        blob_info = BlobInfo.get(resource)
+        self.send_blob(blob_info)
+        
         
 application = webapp.WSGIApplication([('/_ah/queue/bulk-log-processor', LogTaskHandler),
                                       ('/_ah/queue/bulk-log-processor-00', LogTaskHandler),
@@ -317,6 +393,9 @@ application = webapp.WSGIApplication([('/_ah/queue/bulk-log-processor', LogTaskH
                                       ('/_ah/queue/bulk-log-processor-08', LogTaskHandler),
                                       ('/_ah/queue/bulk-log-processor-09', LogTaskHandler),
                                       ('/_ah/queue/bulk-log-processor/put', StatsModelPutTaskHandler),
+                                      ('/files/finalize', FinalizeHandler),
+                                      ('/files/download', DownloadLogsHandler),
+                                      ('/files/serve/([^/]+)?', ServeLogHandler),
                                      ],
                                      debug=True)
 

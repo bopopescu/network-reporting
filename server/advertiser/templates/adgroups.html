@@ -257,7 +257,8 @@
                                 {% endif %} {% if not adgroup.campaign.start_date and not adgroup.campaign.end_date %}
                                 All dates.
                                 {% endif %}
-                                {% if adgroup.campaign.budget %}{{adgroup.campaign.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
+                                {% ifequal adgroup.campaign.budget_type 'daily' %}{% if adgroup.campaign.budget %}{{adgroup.campaign.budget|currency}} daily budget.{% else %} Unlimited budget.{% endif %}{% endifequal %}
+                                {% ifequal adgroup.campaign.budget_type 'full_campaign' %}{{adgroup.campaign.full_budget|currency}} campaign budget.{% endifequal %}
                             </span>
                         </th>
 
@@ -361,17 +362,16 @@
                             {% if adgroup.campaign.budget %}{{adgroup.campaign.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
                         </span>
                     </th>
-                        {% if adgroup.cpm %}
-                        <td class="dataTable-data numeric dataTable-ecpm">{{adgroup.summed_stats.e_cpm|currency}}</td>
+                    <td class="dataTable-data numeric dataTable-ecpm">
+                        {% if adgroup.bid_strategy == 'cpm' %}
+                        {{adgroup.summed_stats.e_cpm|currency}}</td>
                         {% endif %}
-                        {% if adgroup.cpc %}
-                        <td class="dataTable-data numeric dataTable-ecpm">
+                        {% if adgroup.bid_strategy == 'cpc' %}
                           <div class="dataTable-campaign-ecpm">{{adgroup.summed_stats.e_cpm|currency}}</div>
                         <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"> What's this?
                           </a>
-                        </td>
                         {% endif %}
-                        
+                    </td>    
                     <td class="dataTable-data numeric">{{adgroup|campaign_status}}</td>
                     <td class="dataTable-data numeric promo-imp">{{adgroup.summed_stats.impression_count|withsep}}</td>
                     <td class="dataTable-data numeric promo-clk">{{adgroup.summed_stats.click_count|withsep}}</td>

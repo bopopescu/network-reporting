@@ -136,3 +136,7 @@ queue:
 - name: inapp-recorder-00
   rate: 100/s
   bucket_size: 100
+  
+- name: file-finalizer-00
+  rate: 100/s
+  bucket_size: 100  

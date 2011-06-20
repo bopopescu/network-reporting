@@ -59,14 +59,17 @@
                           </div>
                         </dd>
                       </div>
-
-                      {{ form.name|attrs:'{"placeholder":"Campaign Name"}'  }}
+                      <dt>Name:</dt>
+                      <dd>
+                      {{ form.name|attrs:'{"placeholder":"Campaign Name"}'|raw  }} <span id='fullCampaignError-name' style="display:none; color:#cc2929;">* Required</span>
+                      </dd>
                       {{ form.description|attrs:'{"placeholder":"Campaign for My New App"}' }}
                       <div class="campaignDependent gtee promo backfill_promo">
                         <dt>Dates:</dt>
                         <dd>
                           <input type='text' class="input-text input-text-number" name="{{form.start_date.name}}" size="15" value="{{form.start_date.value|date:"m/d/Y"}}" placeholder="Start"/> - 
                           <input type='text' class="input-text input-text-number" name="{{form.end_date.name}}" size="15" value="{{form.end_date.value|date:"m/d/Y"}}"  placeholder="End"/>
+                          <span id='fullCampaignError-date' style="display:none; color:#cc2929;">* Required for full campaign</span>
                         </dd>
                         {# Belong to AdGroup #}
                         <dt>Rate:</dt> 
@@ -76,6 +79,8 @@
                             <option value="cpc" {% ifequal form.bid_strategy.value "cpc"%}selected="selected"{% endifequal %}>CPC</option>
                           </select>
                           @ <input type="text" class="input-text input-text-number {% if form.bid.errors %}form-error{% endif %}" name="bid" value="{{form.bid.value}}" id="bid-max"/> USD
+                          <span id='fullCampaignError-bid' style="display:none; color:#cc2929;">* Required for full campaign</span>
+                          
                           {% for error in form.bid.errors %}
                           <div class="form-error-text">{{error}}</div> 
                           {% endfor %}
@@ -89,16 +94,33 @@
                         </dd>
                       </div>
                       <div class="campaignDependent gtee">
-                        <dt>Delivery Amount:</dt>
+                        {{ form.budget_type|label:"Budget Type" }}
+                        <div class="budgetDependent full_campaign" >
+                        <dt>Campaign Delivery Amount:</dt>
                         <dd>
-                          <span class="campaignAdgroupForm-budget" id="campaignAdgroupForm-budget-impressions"><input type='text' name="impressions" value="" class="input-text input-text-number"/> impressions / day</span>
-                          <span class="campaignAdgroupForm-budget hidden" id="campaignAdgroupForm-budget-bid"><input type='text' name="{{form.budget.name}}" value="{{form.budget.value}}" class="input-text input-text-number {% if form.budget.errors %}form-error{% endif %}"/> USD / day</span>
+                          <span class="campaignAdgroupForm-budget {% ifequal form.bid_strategy.value "cpc"%}hidden{% endifequal %}" id="campaignAdgroupForm-budget-fullimpressions"><input type='text' name="full_impressions" value="" class="input-text input-text-number"/> total impressions </span>
+                          <span class="campaignAdgroupForm-budget {% ifequal form.bid_strategy.value "cpm"%}hidden{% endifequal %}" id="campaignAdgroupForm-budget-fullbid"><input type='text' name="{{form.full_budget.name}}" value="{{form.full_budget.value}}" class="input-text input-text-number {% if form.budget.errors %}form-error{% endif %}"/> total USD </span>
+                          <span id='fullCampaignError-budget' style="display:none; color:#cc2929;">* Required for full campaign</span>
+                          
+                          <div class="campaignAdgroupForm-budget success helper-text" id="campaignAdgroupForm-budget-display_full"></div>
+                          {% for error in form.budget.errors %}
+                          <div class="form-error-text">{{error}}</div> 
+                          {% endfor %}
+                        </dd>
+                        </div>
+                          <div class="budgetDependent daily">
+                        <dt>Daily Delivery Amount:</dt>
+                        <dd>
+                          <span class="campaignAdgroupForm-budget {% ifequal form.bid_strategy.value "cpc"%}hidden{% endifequal %}" id="campaignAdgroupForm-budget-impressions"><input type='text' name="impressions" value="" class="input-text input-text-number"/> impressions / day</span>
+                          <span class="campaignAdgroupForm-budget {% ifequal form.bid_strategy.value "cpm"%}hidden{% endifequal %}" id="campaignAdgroupForm-budget-bid"><input type='text' name="{{form.budget.name}}" value="{{form.budget.value}}" class="input-text input-text-number {% if form.budget.errors %}form-error{% endif %}"/> USD / day</span>
                           <div class="campaignAdgroupForm-budget success helper-text" id="campaignAdgroupForm-budget-display"></div>
                           {% for error in form.budget.errors %}
                           <div class="form-error-text">{{error}}</div> 
                           {% endfor %}
                         </dd>
-{{ form.budget_strategy|label:"Delivery Speed"}}
+                        </div>
+                        {{ form.budget_strategy|label:"Delivery Speed"}}
+                        
                       </div>
                       <div class="campaignDependent network">
                         {# End Belong to AdGroup #}

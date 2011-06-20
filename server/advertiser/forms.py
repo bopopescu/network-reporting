@@ -17,6 +17,7 @@ from google.appengine.ext import db
 from google.appengine.api import images
 from publisher.models import Site as AdUnit
 
+from budget.budget_service import update_budget
 import logging
 import re
 import urlparse
@@ -29,6 +30,7 @@ class CampaignForm(mpforms.MPModelForm):
     gtee_level = forms.Field(widget = forms.Select)
     promo_level = mpfields.MPChoiceField(choices=[('normal','Normal'),('backfill','Backfill')],widget=mpwidgets.MPSelectWidget)
     budget_strategy = mpfields.MPChoiceField(choices=[('evenly','Spread Evenly'),('allatonce','All at once')],widget=mpwidgets.MPRadioWidget)
+    budget_type = mpfields.MPChoiceField(choices=[('daily','Daily'),('full_campaign','Full Campaign')],widget=mpwidgets.MPRadioWidget)
    
     #priority is now based off of campaign_type, not actually priority
     #gtee has 3 levels, this makes it so the database understands the three different levels of gtee
@@ -60,7 +62,7 @@ class CampaignForm(mpforms.MPModelForm):
                 initial.update(campaign_type=type_)
                 initial.update(promo_level=level)
                 kwargs.update(initial=initial)
-                
+        
         super(CampaignForm, self).__init__(*args, **kwargs)
         
     #same as above, but so the one level of gtee and 3 levels of prioirty
@@ -88,15 +90,20 @@ class CampaignForm(mpforms.MPModelForm):
                     type_ = 'backfill_promo'
                 else:
                     logging.warning("Invalid promo level")
-                obj.campaign_type = type_                  
-                     
+                obj.campaign_type = type_
+            
+            if obj.budget_type == "full_campaign":
+                obj.budget = None
+            else:
+                obj.full_budget = None
         if commit:
             obj.put()
+            update_budget(obj)
         return obj
-  
+    
     class Meta:
       model = Campaign
-      fields = ('name', 'budget_strategy', 'description', 'budget', 'campaign_type', 'start_date', 'end_date', 'gtee_level','promo_level')
+      fields = ('name', 'budget_strategy', 'budget_type', 'full_budget', 'description', 'budget', 'campaign_type', 'start_date', 'end_date', 'gtee_level','promo_level')
   
   
 class AdGroupForm(mpforms.MPModelForm):

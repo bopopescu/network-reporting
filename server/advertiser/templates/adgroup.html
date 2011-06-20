@@ -162,7 +162,8 @@
                 {% endif %} {% if not campaign.start_date and not campaign.end_date %}
                 All dates.
                 {% endif %}&nbsp;
-                {% if campaign.gtee %}{% if campaign.budget %}{{campaign.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}{% endif %}
+                {% if campaign.gtee %}{% ifequal adgroup.campaign.budget_type 'daily' %}{% if adgroup.campaign.budget %}{{adgroup.campaign.budget|currency}} daily budget.{% else %} Unlimited budget.{% endif %}{% endifequal %}
+                {% ifequal adgroup.campaign.budget_type 'full_campaign' %}{{adgroup.campaign.full_budget|currency}} campaign budget.{% endifequal %}{% endif %}
             </div>
            </section>
             

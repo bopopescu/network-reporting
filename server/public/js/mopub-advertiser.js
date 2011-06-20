@@ -165,7 +165,11 @@ var mopub = mopub || {};
     function adgroupFormValidate(form) {
       var success = true;
       $('#formError').hide();
-      $('#fullCampaignError').hide();
+      $('#fullCampaignError-date').hide();
+      $('#fullCampaignError-budget').hide();
+      $('#fullCampaignError-name').hide();
+      $('#fullCampaignError-bid').hide();
+      
       $('#campaignAdgroupForm input[name="start_date"]').removeClass('form-error');
       $('#campaignAdgroupForm input[name="end_date"]').removeClass('form-error');
       $('#campaignAdgroupForm input[name="full_budget"]').removeClass('form-error');
@@ -173,8 +177,7 @@ var mopub = mopub || {};
       $('#campaignAdgroupForm input[name="name"]').removeClass('form-error');
       $('#campaignAdgroupForm input[name="bid"]').removeClass('form-error');
       
-      
-      if ("#budget_type_full_campaign:checked") {
+      if ($("input[name='budget_type']").filter(':checked').val() == "full_campaign" && $("input[name='campaign_type']").filter(':checked').val() == "gtee") {
         if ($('#campaignAdgroupForm input[name="start_date"]').val() == '') {
           $('#campaignAdgroupForm input[name="start_date"]').addClass('form-error');
           $('#fullCampaignError-date').show();

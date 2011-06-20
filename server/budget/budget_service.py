@@ -222,24 +222,24 @@ def get_spending_for_date_range(campaign, start_date, end_date, today=pac_today(
     
     return total_spending
 
-def update_budget(obj):
-    if obj.budget_type:
-        if obj.start_date and pac_today() >= obj.start_date:
-            if not obj.end_date or (obj.end_date and pac_today() <= obj.end_date):
-                if (obj.end_date and obj.full_budget and obj.budget_type == "full_campaign") or obj.budget_type == "daily":
-                    daily_budget_key = _make_campaign_daily_budget_key(obj)
-                    spent_today = get_spending_for_date_range(obj, pac_today(), pac_today())
-                    if obj.budget_type == "full_campaign":
-                        obj.budget = _redistribute_budget(obj, pac_today())
-                    if obj.budget-spent_today < 0:
+def update_budget(campaign):
+    if campaign.budget_type:
+        if campaign.start_date and pac_today() >= campaign.start_date:
+            if not campaign.end_date or (campaign.end_date and pac_today() <= campaign.end_date):
+                if (campaign.end_date and campaign.full_budget and campaign.budget_type == "full_campaign") or campaign.budget_type == "daily":
+                    daily_budget_key = _make_campaign_daily_budget_key(campaign)
+                    spent_today = get_spending_for_date_range(campaign, pac_today(), pac_today())
+                    if campaign.budget_type == "full_campaign":
+                        campaign.budget = _redistribute_budget(campaign, pac_today())
+                    if campaign.budget-spent_today < 0:
                         memcache.set(daily_budget_key, _to_memcache_int(0), namespace="budget")
                     else:
-                        memcache.set(daily_budget_key, _to_memcache_int(obj.budget-spent_today), namespace="budget")
+                        memcache.set(daily_budget_key, _to_memcache_int(campaign.budget-spent_today), namespace="budget")
 
-                    if obj.budget_strategy == "evenly":
-                        ts_key = _make_campaign_ts_budget_key(obj)
-                        budget_slicer = BudgetSlicer.get_or_insert_for_campaign(obj)
-                        lost_timeslice = (obj.current_timeslice)*budget_slicer.timeslice_budget-spent_today
+                    if campaign.budget_strategy == "evenly":
+                        ts_key = _make_campaign_ts_budget_key(campaign)
+                        budget_slicer = BudgetSlicer.get_or_insert_for_campaign(campaign)
+                        lost_timeslice = (campaign.current_timeslice)*budget_slicer.timeslice_budget-spent_today
                         if lost_timeslice < 0:
                             memcache.set(ts_key, _to_memcache_int(0), namespace="budget")
                         else:
@@ -270,8 +270,10 @@ def _make_campaign_daily_budget_key(campaign):
     return 'daily_budget:%s'%(campaign.key())
 
 def _redistribute_budget(campaign,new_date):
+    #Recalculate daily budget for full campaigns in response to changes in end_date or full_budget
     if (new_date-datetime.timedelta(days=1) - campaign.start_date).days >= 0:
-        return (campaign.full_budget-get_spending_for_date_range(campaign, campaign.start_date, new_date-datetime.timedelta(days=1)))/((campaign.end_date-new_date).days+1)
+        spent_before_today = get_spending_for_date_range(campaign, campaign.start_date, new_date-datetime.timedelta(days=1))
+        return (campaign.full_budget-spent_before_today)/((campaign.end_date-new_date).days+1)
     else:
         return campaign.full_budget/((campaign.end_date-new_date).days+1)
         

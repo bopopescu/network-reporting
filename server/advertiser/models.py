@@ -104,7 +104,7 @@ class AdGroup(db.Model):
     # Note that bid has different meaning depending on the bidding strategy.
     # if CPM: bid = cost per 1000 impressions
     # if CPC: bid = cost per 1 click
-    bid = db.FloatProperty(default=0.05, required=True)
+    bid = db.FloatProperty(default=0.05, required=False)
     bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpc")
 
     # state of this ad group

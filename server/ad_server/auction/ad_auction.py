@@ -265,7 +265,7 @@ class AdAuction(object):
                 
                     while players:
                         winning_ecpm = player_ecpm_dict[players[0]]
-                        trace_logging.info("Trying to get creatives: %s"%", ".join([c.name.encode('utf8').replace("dummy","") if c.name else c.name for c in players]))
+                        trace_logging.info("Trying to get creatives: %s"%", ".join([c.name.encode('utf8').replace("dummy","") if c.name else 'None' for c in players]))
                         trace_logging.warning("auction at priority=%s: %s, max eCPM=%s" % (p, players, winning_ecpm))
                         if winning_ecpm >= adunit.threshold_cpm(p):
         
@@ -282,7 +282,7 @@ class AdAuction(object):
                             winners = filter(mega_filter(*CRTV_FILTERS), players)
                             for func, warn, lst in CRTV_FILTERS:
                                 if lst:
-                                    trace_logging.info(warn %", ".join([c.name.encode('utf8').replace("dummy","") if c.name else c.name for c in lst]))
+                                    trace_logging.info(warn %", ".join([c.name.encode('utf8').replace("dummy","") if c.name else '' for c in lst]))
         
                             # if there is a winning/eligible adgroup find the appropriate creative for it
                             winning_creative = None

@@ -130,3 +130,8 @@ indexes:
   - name: owner
   - name: date
     direction: desc
+
+- kind: __BlobInfo__
+  properties:
+  - name: filename
+  - name: creation

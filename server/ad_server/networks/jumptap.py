@@ -18,6 +18,7 @@ class JumptapServerSide(ServerSide):
         key_values = {#'gateway-ip': '208.54.5.50',    # TODO: This should be the x-forwarded-for header of the device
                       'hid': self.get_udid(),
                       'client-ip': self.get_ip(), # Test value: 'client-ip': '208.54.5.50'
+                      'ua': self.get_user_agent(),
                       'v': 'v29' }
                       
         # Jumptap uses all levels of pub_ids
@@ -61,5 +62,4 @@ class JumptapServerSide(ServerSide):
             raise Exception("Jumptap ad is empty")
        
         width, height = self._get_size(response.content)
-       
         return 0.0,"<div style='text-align:center'>"+response.content+"</div>", width, height

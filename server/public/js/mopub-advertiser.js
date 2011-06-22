@@ -114,7 +114,7 @@ var mopub = mopub || {};
 
       }
       calculateAndShowBudget();
-    });
+    }).change();
   $('#campaignAdgroupForm input[name="impressions"]')
     .keyup(function() {
       calculateAndShowBudget();        
@@ -136,7 +136,8 @@ var mopub = mopub || {};
         var budget = $('#campaignAdgroupForm input[name="budget"]').val();
         var impressions = 1000 * budget / rate;
         if (impressions) {
-          $('#campaignAdgroupForm input[name="impressions"]').val(impressions);
+          fixed_impressions = impressions.toFixed()
+          $('#campaignAdgroupForm input[name="impressions"]').val(fixed_impressions);
           calculateAndShowBudget();
         }
       }
@@ -144,7 +145,8 @@ var mopub = mopub || {};
         var budget = $('#campaignAdgroupForm input[name="full_budget"]').val();
         var full_impressions = 1000 * budget / rate;
         if (full_impressions) {
-          $('#campaignAdgroupForm input[name="full_impressions"]').val(full_impressions);
+          fixed_full_impressions = full_impressions.toFixed()
+          $('#campaignAdgroupForm input[name="full_impressions"]').val(fixed_full_impressions);
           calculateAndShowBudget();  
         }
       }

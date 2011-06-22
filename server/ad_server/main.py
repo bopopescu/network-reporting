@@ -94,7 +94,7 @@ class AdClickHandler(webapp.RequestHandler):
         # Update budgeting
         creative = Creative.get(Key(creative_id))
         if creative.ad_group.bid_strategy == 'cpc':
-            budget_service.apply_expense(creative.ad_group.campaign, creative.ad_group.bid/1000)
+            budget_service.apply_expense(creative.ad_group.campaign, creative.ad_group.bid)
 
 
         # if driving download then we use the user datastore

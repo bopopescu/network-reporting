@@ -901,3 +901,44 @@ class AdServerTestHandler(RequestHandler):
 @login_required
 def adserver_test(request,*args,**kwargs):
     return AdServerTestHandler()(request,*args,**kwargs)
+
+class AJAXStatsHandler(RequestHandler):
+    def get(self, start_date=None, date_range=14):
+        if start_date:
+            s = start_date.split('-')
+            start_date = datetime.date(int(s[0]),int(s[1]),int(s[2]))
+            days = StatsModel.get_days(start_date, int(date_range))
+        else:
+            days = StatsModel.lastdays(int(date_range))
+            
+        advs = self.params.getlist('adv')
+        pubs = self.params.getlist('pub')
+                    
+        if not advs:
+            advs = [None]
+        
+        if not pubs:
+            pubs = [None]
+        
+        stats_dict = {}    
+        for adv in advs:
+            for pub in pubs:
+                stats = StatsModelQueryManager(self.account, 
+                                               offline=self.offline).get_stats_for_days(publisher=pub,
+                                                                                        advertiser=adv, 
+                                                                                        days=days)
+                key = "%s||%s"%(pub or '',adv or '')
+                stats_dict[key] = {}
+                stats_dict[key]['daily_stats'] = [s.to_dict() for s in stats]
+                stats_dict[key]['sum'] = sum(stats, StatsModel()).to_dict()
+                
+                                                                                             
+
+        response_dict = {}
+        response_dict['status'] = 200
+        response_dict['all_stats'] = stats_dict
+        return JSONResponse(response_dict)
+
+@login_required
+def stats_ajax(request, *args, **kwargs):
+    return AJAXStatsHandler()(request, *args, **kwargs)

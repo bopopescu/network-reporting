@@ -362,7 +362,21 @@ class StatsModel(db.Expando):
             return self.revenue / float(self.conversion_count)
         else:
             return 0
-
+    
+            
+    def _dict_properties(self):
+        return self.properties().keys()
+               
+    def to_dict(self):
+        properties = self._dict_properties()
+        d = {}
+        for prop_name in properties:
+            value = getattr(self, '_%s'%prop_name, None)
+            if value is not None:
+                if isinstance(value, db.Key):
+                    value = str(value)
+                d[prop_name] = value
+        return d        
 # 
 # Tracks statistics for a site for a particular day - clicks and impressions are aggregated
 # into this object

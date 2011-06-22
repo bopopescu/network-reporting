@@ -152,9 +152,9 @@
               {% else %}
               <img src="/images/paused.gif" width="9" height="9"/>
               {% endif %}
-                This campaign is {% if adgroup.active %}running{% else %}currently paused{% endif %}.&nbsp;
+                {{ adgroup|campaign_status }} - 
                 {% if campaign.start_date and campaign.end_date %}
-                {{campaign.start_date|format_date_compact}}-{{campaign.end_date|format_date_compact}}.
+                From {{campaign.start_date|format_date_compact}}-{{campaign.end_date|format_date_compact}}.
                 {% endif %} {% if campaign.start_date and not campaign.end_date %}
                 Starts {{campaign.start_date|format_date_compact}}.
                 {% endif %} {% if not campaign.start_date and campaign.end_date %}
@@ -162,7 +162,8 @@
                 {% endif %} {% if not campaign.start_date and not campaign.end_date %}
                 All dates.
                 {% endif %}&nbsp;
-                {% if campaign.gtee %}{% if campaign.budget %}{{campaign.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}{% endif %}
+                {% if campaign.gtee %}{% ifequal adgroup.campaign.budget_type 'daily' %}{% if adgroup.campaign.budget %}{{adgroup.campaign.budget|currency}} daily budget.{% else %} Unlimited budget.{% endif %}{% endifequal %}
+                {% ifequal adgroup.campaign.budget_type 'full_campaign' %}{{adgroup.campaign.full_budget|currency}} campaign budget.{% endifequal %}{% endif %}
             </div>
            </section>
             
@@ -410,4 +411,112 @@
 <script type="text/javascript">
   creatives = {% if creatives %}true{% else%}false{% endif %};
 </script>
+
+<section id="dashboard-apps">
+    <h2>Daily Counts</h2>            
+       <div class="appData-details noneg">
+        <table class="dataTable appData-main">
+            {% if campaign.gtee %}
+            <thead>
+                <tr>  
+                    <th class="dataTable-name big">&nbsp;</th>
+                    <th class="dataTable-name big">&nbsp;</th>
+                    <th class="dataTable-data numeric special">Impressions</th>
+                    <th class="dataTable-data numeric special">Clicks</th>
+                    <th class="dataTable-data numeric special">CTR</th>
+                    <th class="dataTable-data numeric special">Revenue</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th class="dataTable-name big">Totals</th>
+                    <td class="dataTable-data numeric">&nbsp;</td>     
+                    <td class="dataTable-data numeric"><b>{{adgroup.stats.impression_count|withsep}}</b></td>
+                    <td class="dataTable-data numeric"><b>{{adgroup.stats.click_count|withsep}}</b></td>
+                    <td class="dataTable-data numeric"><b>{{adgroup.stats.ctr|percentage}}</b></td>
+                    <td class="dataTable-data numeric"><b>{{adgroup.stats.revenue|currency}}</b></td>
+                </tr>
+                {% for s in adgroup.all_stats reversed %}
+                <tr class="appData-details-inner show">
+                    <th class="dataTable-name">{{s.date|format_date}}</th>
+                    <td class="dataTable-data numeric">&nbsp;</td>     
+                    <td class="dataTable-data numeric">{{s.impression_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{s.click_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{s.ctr|percentage}}</td>
+                    <td class="dataTable-data numeric">{{s.revenue|currency}}</td>
+                </tr>
+            </tbody>
+            {% endfor %}
+            {% endif %} {% if campaign.promo %}
+            <thead>
+                <tr>  
+                    <th class="dataTable-name big">&nbsp;</th>
+                    <th class="dataTable-name big">&nbsp;</th>
+                    <th class="dataTable-data numeric special">Impressions</th>
+                    <th class="dataTable-data numeric special">Clicks</th>
+                    <th class="dataTable-data numeric special">CTR</th>
+                    <th class="dataTable-data numeric special">Conv</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th class="dataTable-name big">Totals</th>
+                    <td class="dataTable-data numeric">&nbsp;</td>     
+                    <td class="dataTable-data numeric"><b>{{adgroup.stats.impression_count|withsep}}</b></td>
+                    <td class="dataTable-data numeric"><b>{{adgroup.stats.click_count|withsep}}</b></td>
+                    <td class="dataTable-data numeric"><b>{{adgroup.stats.ctr|percentage}}</b></td>
+                    <td class="dataTable-data numeric"><b>{{adgroup.stats.conversion_count|withsep}} ({{adgroup.stats.conv_rate|percentage}})</b></td>
+                </tr>
+                {% for s in adgroup.all_stats reversed %}
+                <tr class="appData-details-inner show">
+                    <th class="dataTable-name">{{s.date|format_date}}</th>
+                    <td class="dataTable-data numeric">&nbsp;</td>     
+                    <td class="dataTable-data numeric">{{s.impression_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{s.click_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{s.ctr|percentage}}</td>
+                    <td class="dataTable-data numeric">{{s.conversion_count|withsep}} ({{s.conv_rate|percentage}})</td>
+                </tr>    
+            </tbody>
+            {% endfor %}
+            {% endif %} {% if campaign.network %}
+            <thead>
+                <tr>  
+                    <th class="dataTable-name big">&nbsp;</th>
+                    <th class="dataTable-name big">&nbsp;</th>
+                    <th class="dataTable-data numeric special">Attempts</th>
+                    <th class="dataTable-data numeric special">Impressions</th>
+                    <th class="dataTable-data numeric special">Fillrate</th>
+                    <th class="dataTable-data numeric special">Clicks</th>
+                    <th class="dataTable-data numeric special">CTR</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th class="dataTable-name big">Totals</th>
+                    <td class="dataTable-data numeric">&nbsp;</td>     
+                    <td class="dataTable-data numeric"><b>{{adgroup.stats.request_count|withsep}}</b></td>
+                    <td class="dataTable-data numeric"><b>{{adgroup.stats.impression_count|withsep}}</b></td>
+                    <td class="dataTable-data numeric"><b>{{adgroup.stats.fill_rate|percentage}}</b></td>
+                    <td class="dataTable-data numeric"><b>{{adgroup.stats.click_count|withsep}}</b></td>
+                    <td class="dataTable-data numeric"><b>{{adgroup.stats.ctr|percentage}}</b></td>
+                </tr>
+                {% for s in adgroup.all_stats reversed %}
+                <tr class="appData-details-inner show">
+                    <th class="dataTable-name">{{s.date|format_date}}</th>
+                    <td class="dataTable-data numeric">&nbsp;</td>     
+                    <td class="dataTable-data numeric">{{s.request_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{s.impression_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{s.fill_rate|percentage}}</td>
+                    <td class="dataTable-data numeric">{{s.click_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{s.ctr|percentage}}</td>
+                </tr>
+            </tbody>
+            {% endfor %}
+            {% endif %}
+        </table>
+        <a class="button button-small appData-details-toggleButton" href="#">Hide details</a>
+    </div>
+</section>
+
+
 {% endblock content %}

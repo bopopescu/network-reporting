@@ -15,12 +15,19 @@ class Campaign(db.Model):
 
     # budget per day
     budget = db.FloatProperty() 
+    full_budget = db.FloatProperty()
     
     timeslice_snapshot = db.FloatProperty()
     
     # budget per timeslice, determined dynamically
     timeslice_budget = db.FloatProperty()
     
+    current_timeslice = db.IntegerProperty(default = 0)
+    
+    # Determines whether we redistribute if we underdeliver during a day
+    budget_type = db.StringProperty(choices=['daily', 'full_campaign'], default="daily")
+    
+    # Determines whether we smooth during a day
     budget_strategy = db.StringProperty(choices=['evenly','allatonce'], default="allatonce")
     
     # start and end dates 
@@ -97,7 +104,7 @@ class AdGroup(db.Model):
     # Note that bid has different meaning depending on the bidding strategy.
     # if CPM: bid = cost per 1000 impressions
     # if CPC: bid = cost per 1 click
-    bid = db.FloatProperty(default=0.05)
+    bid = db.FloatProperty(default=0.05, required=False)
     bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpc")
 
     # state of this ad group
@@ -391,8 +398,8 @@ class ImageCreative(Creative):
     # image properties
     image = db.BlobProperty()
     image_blob = blobstore.BlobReferenceProperty()
-    image_width = db.IntegerProperty()
-    image_height = db.IntegerProperty()
+    image_width = db.IntegerProperty(default=320)
+    image_height = db.IntegerProperty(default=480)
 
     @classmethod
     def get_format_predicates_for_image(c, img):

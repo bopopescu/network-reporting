@@ -15,6 +15,8 @@ from google.appengine.api import memcache
 from ad_server.debug_console import trace_logging
 from ad_server.optimizer.adunit_context import AdUnitContext, CreativeCTR
 
+from common.constants import MAX_OBJECTS
+
 class AdUnitContextQueryManager(CachedQueryManager):
     """ Keeps an up-to-date version of the AdUnit Context in memcache.
     Deleted from memcache whenever its components are updated."""
@@ -56,7 +58,7 @@ class AppQueryManager(QueryManager):
     Model = App
     
     @classmethod
-    def get_apps(cls,account=None,deleted=False,limit=50, alphabetize=False):
+    def get_apps(cls,account=None,deleted=False,limit=MAX_OBJECTS, alphabetize=False):
         apps = cls.Model.all().filter("deleted =",deleted)
         if account:
             apps = apps.filter("account =",account)
@@ -65,7 +67,7 @@ class AppQueryManager(QueryManager):
         return apps.fetch(limit)    
 
     @classmethod
-    def reports_get_apps(cls, account=None, publisher=None, advertiser=None, deleted=False, limit=50):
+    def reports_get_apps(cls, account=None, publisher=None, advertiser=None, deleted=False, limit=MAX_OBJECTS):
         '''Given account or pub, or adv or some combination thereof return a list of apps that (correctly) 
         correspond to the inputs and things'''
         apps = App.all()
@@ -133,7 +135,7 @@ class AdUnitQueryManager(QueryManager):
     Model = AdUnit
     
     @classmethod
-    def get_adunits(cls,app=None,account=None,keys=None,deleted=False,limit=50):
+    def get_adunits(cls,app=None,account=None,keys=None,deleted=False,limit=MAX_OBJECTS):
         if keys is not None:
             if type(keys) == list and len(keys) == 0:
                 return []
@@ -246,4 +248,12 @@ class AdUnitQueryManager(QueryManager):
         AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
         
         return put_response
+        
+    @classmethod
+    def update_config_and_put(cls, adunit, network_config):
+        """ Updates the network config and the associated app"""
+        db.put(network_config)
+        adunit.network_config = network_config
+        cls.put(adunit)
+        
     

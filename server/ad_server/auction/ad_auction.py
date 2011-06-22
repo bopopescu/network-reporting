@@ -151,7 +151,7 @@ class AdAuction(object):
         # 4) throw out ad groups that do not match device and geo predicates
         all_ad_groups = adunit_context.adgroups
         
-        trace_logging.info("All Campaigns Targeted at this AdUnit: %s"%[str(a.name) for a in all_ad_groups])
+        trace_logging.info("All Campaigns Targeted at this AdUnit: %s"%", ".join([a.name.encode('utf8') for a in all_ad_groups]))
         
         trace_logging.info("##############################")
         trace_logging.info("Excluding Ineligible Campaigns")
@@ -169,7 +169,7 @@ class AdAuction(object):
         
         all_ad_groups = filter(mega_filter(*ALL_FILTERS), all_ad_groups)
         for (func, warn, lst) in ALL_FILTERS:
-            trace_logging.info(warn % [str(a.name) for a in lst])
+            trace_logging.info(warn % ", ".join([a.name.encode('utf8') for a in lst]))
         
         # TODO: user based frequency caps (need to add other levels)
         # to add a frequency cap, add it here as follows:
@@ -202,7 +202,7 @@ class AdAuction(object):
         
         for fil in FREQ_FILTERS: 
             func, warn, lst = fil
-            trace_logging.info(warn % [str(a.name) for a in lst])
+            trace_logging.info(warn % ", ".join([a.name.encode('utf8') for a in lst]))
             
         # calculate the user experiment bucket
         user_bucket = hash(udid+','.join([str(ad_group.key()) for ad_group in all_ad_groups])) % 100 # user gets assigned a number between 0-99 inclusive
@@ -237,7 +237,7 @@ class AdAuction(object):
         
         # If any ad groups were returned, find the creatives that match the requested format in all candidates
         if len(all_ad_groups) > 0:
-            trace_logging.info("All Eligible Campaigns: %s"%[str(a.name) for a in all_ad_groups])
+            trace_logging.info("All Eligible Campaigns: %s"%", ".join([a.name.encode('utf8') for a in all_ad_groups]))
             all_creatives = adunit_context.creatives
             if len(all_creatives) > 0:
                 # for each priority_level, perform an auction among the various creatives 
@@ -245,7 +245,7 @@ class AdAuction(object):
                     trace_logging.info("Trying priority level: %s"%p)
                     #XXX maybe optimize? meh
                     eligible_adgroups = [a for a in all_ad_groups if a.campaign.campaign_type == p]
-                    trace_logging.info("Campaigns of this priority: %s"%[str(a.name) for a in eligible_adgroups])
+                    trace_logging.info("Campaigns of this priority: %s"%", ".join([a.name.encode('utf8') for a in eligible_adgroups]))
                     if not eligible_adgroups:
                         continue
                     players = adunit_context.get_creatives_for_adgroups(eligible_adgroups)
@@ -265,7 +265,7 @@ class AdAuction(object):
                 
                     while players:
                         winning_ecpm = player_ecpm_dict[players[0]]
-                        trace_logging.info("Trying to get creatives: %s"%[str(c.name).replace("dummy","") if c.name else c.name for c in players])
+                        trace_logging.info("Trying to get creatives: %s"%", ".join([c.name.encode('utf8').replace("dummy","") if c.name else 'None' for c in players]))
                         trace_logging.warning("auction at priority=%s: %s, max eCPM=%s" % (p, players, winning_ecpm))
                         if winning_ecpm >= adunit.threshold_cpm(p):
         
@@ -282,15 +282,15 @@ class AdAuction(object):
                             winners = filter(mega_filter(*CRTV_FILTERS), players)
                             for func, warn, lst in CRTV_FILTERS:
                                 if lst:
-                                    trace_logging.info(warn % [str(c.name).replace("dummy","") if c.name else c.name for c in lst])
+                                    trace_logging.info(warn %", ".join([c.name.encode('utf8').replace("dummy","") if c.name else '' for c in lst]))
         
                             # if there is a winning/eligible adgroup find the appropriate creative for it
                             winning_creative = None
         
                             if winners:
-                                trace_logging.warning('winners %s' % [str(w.ad_group.name) for w in winners])
+                                trace_logging.warning('winners %s' %", ".join([w.ad_group.name.encode('utf8') for w in winners]))
                                 random.shuffle(winners)
-                                trace_logging.info('Randomized winning campaigns: %s' % [str(w.ad_group.name) for w in winners])
+                                trace_logging.info('Randomized winning campaigns: %s' % ", ".join([w.ad_group.name.encode('utf8') for w in winners]))
         
                                 # find the actual winner among all the eligble ones
                                 # loop through each of the randomized winners making sure that the data is ready to display
@@ -300,7 +300,7 @@ class AdAuction(object):
                                     if not winner.adgroup.network_type in SERVER_SIDE_DICT:
                                         winning_creative = winner
                                         # if native, log native request
-                                        if winner.ad_type in NATIVE_REQUESTS:
+                                        if winner.adgroup.network_type in NATIVE_REQUESTS:
                                             mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, udid=udid)
                                         # A native request could potential fail and must be excluded from subsequent requests    
                                         on_fail_exclude_adgroups.append(str(winning_creative.adgroup.key()))

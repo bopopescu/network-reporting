@@ -249,7 +249,7 @@ class AdHandler(webapp.RequestHandler):
             
             trace_logging.info("##############################")
             trace_logging.info("##############################")
-            trace_logging.info("Winner found, rendering: %s" % str(creative.name))
+            trace_logging.info("Winner found, rendering: %s" % creative.name.encode('utf8') if creative.name else 'None')
             trace_logging.warning("Creative key: %s" % str(creative.key()))
             trace_logging.warning("rendering: %s" % creative.ad_type)
 
@@ -363,18 +363,22 @@ class AdHandler(webapp.RequestHandler):
             elif creative.ad_type == "image":
                 if creative.image_blob:
                     img = images.Image(blob_key=creative.image_blob)
+                    img_height = creative.image_height
+                    img_width = creative.image_width
                     params["image_url"] = images.get_serving_url(creative.image_blob)
                 else:      
                     img = images.Image(creative.image)
+                    img_width = img.width
+                    img_height = img.height
                     params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(creative.image)
                 
                 # if full screen we don't need to center
-                if (not "full" in adunit.format) or ((img.width == 480.0 and img.height == 320.0 ) or (img.width == 320.0 and img.height == 480.0)):
+                if (not "full" in adunit.format) or ((img_width == 480.0 and img_height == 320.0 ) or (img_width == 320.0 and img_height == 480.0)):
                     css_class = ""
                 else:
                     css_class = "center"    
                 
-                params.update({"w": img.width, "h": img.height, "w2":img.width/2.0, "h2":img.height/2.0, "class":css_class})
+                params.update({"w": img_width, "h": img_height, "w2":img_width/2.0, "h2":img_height/2.0, "class":css_class})
             elif creative.ad_type == "html":
                 params.update({"html_data": creative.html_data, "w": format[0], "h": format[1]})
                 # add the launchpage header for inmobi in case they have dynamic ads that use
@@ -504,6 +508,11 @@ class AdHandler(webapp.RequestHandler):
             if creative.width and creative.height and 'full' not in site.format:
                 self.response.headers.add_header("X-Width", str(creative.width))
                 self.response.headers.add_header("X-Height", str(creative.height))
+            
+            # adds network info to the headers
+            if creative.adgroup.network_type:
+                self.response.headers.add_header("X-Networktype",creative.adgroup.network_type)
+            
             
             # render the HTML body
             rendered_creative = self.TEMPLATES[template_name].safe_substitute(params)

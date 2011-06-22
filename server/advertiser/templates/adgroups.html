@@ -76,12 +76,15 @@
                         <td class="stats-breakdown-value all"><span class="inner">{{totals.impression_count|withsep}}</span></td>
                         <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
                       </tr>
+                      <!-- don't display revenue label and stats if there are no gtee adgroups -->
+                      {% if graph_gtee_adgroups|length > 0 %}
                       <tr id="stats-breakdown-revenue">
                         <td class="stats-breakdown-value today"><span class="inner">{{today.revenue|currency}}</span></td>
                         <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.revenue|currency}}</span></td>
                         <td class="stats-breakdown-value all"><span class="inner">{{totals.revenue|currency}}</span></td>
                         <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
                       </tr>
+                      {% endif %}
                       <tr id="stats-breakdown-clicks">
                         <td class="stats-breakdown-value today"><span class="inner">{{today.click_count|withsep}}</span></td>
                         <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.click_count|withsep}}</span></td>
@@ -111,26 +114,47 @@
                   <div class="chart-loading-text">Loading ...</div>
                   <div class="chart-error-text">Could not load chart</div>
                   <script type="text/javascript">
-                    // chart data
-                    mopub.dashboardStatsChartData = {
-                      //pointStart: 1294963200000,
-                      pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
-                      pointInterval: 86400000,
-                      'impressions': [{% for a in graph_adgroups %}
-                        { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                      ],
-                      'revenue': [{% for a in graph_adgroups %}
-                        { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.revenue}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                      ],
-                      'clicks': [{% for a in graph_adgroups %}
-                        { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                      ],
-                      'ctr':  [
-                      {% for a in graph_adgroups %}
-                        { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.ctr}}{% if not forloop.last %},{% endif %} {% endfor %}] },{% endfor %}
-                        { 'Mopub Optimized': [{% for stat in graph_totals %}{{stat.ctr}}{% if not forloop.last %},{% endif %} {% endfor %}] }
-                      ],
-                    };
+                    // if no gtee adgroups to show, don't display revenue data in graph
+                    {% if graph_gtee_adgroups|length == 0 %}
+                      // chart data
+                      mopub.dashboardStatsChartData = {
+                        //pointStart: 1294963200000,
+                        pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
+                        pointInterval: 86400000,
+                        'impressions': [{% for a in graph_adgroups %}
+                          { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                        ],
+                        'clicks': [{% for a in graph_adgroups %}
+                          { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                        ],
+                        'ctr':  [
+                        {% for a in graph_adgroups %}
+                          { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.ctr}}{% if not forloop.last %},{% endif %} {% endfor %}] },{% endfor %}
+                          { 'Mopub Optimized': [{% for stat in graph_totals %}{{stat.ctr}}{% if not forloop.last %},{% endif %} {% endfor %}] }
+                        ],
+                      };
+                    {% else %}
+                      // chart data
+                      mopub.dashboardStatsChartData = {
+                        //pointStart: 1294963200000,
+                        pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
+                        pointInterval: 86400000,
+                        'impressions': [{% for a in graph_adgroups %}
+                          { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                        ],
+                        'revenue': [{% for a in graph_gtee_adgroups %}
+                          { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.revenue}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                        ],
+                        'clicks': [{% for a in graph_adgroups %}
+                          { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                        ],
+                        'ctr':  [
+                        {% for a in graph_adgroups %}
+                          { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.ctr}}{% if not forloop.last %},{% endif %} {% endfor %}] },{% endfor %}
+                          { 'Mopub Optimized': [{% for stat in graph_totals %}{{stat.ctr}}{% if not forloop.last %},{% endif %} {% endfor %}] }
+                        ],
+                      };
+                    {% endif %}                    
                   </script>
                 </div>
               </div>
@@ -233,7 +257,8 @@
                                 {% endif %} {% if not adgroup.campaign.start_date and not adgroup.campaign.end_date %}
                                 All dates.
                                 {% endif %}
-                                {% if adgroup.campaign.budget %}{{adgroup.campaign.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
+                                {% ifequal adgroup.campaign.budget_type 'daily' %}{% if adgroup.campaign.budget %}{{adgroup.campaign.budget|currency}} daily budget.{% else %} Unlimited budget.{% endif %}{% endifequal %}
+                                {% ifequal adgroup.campaign.budget_type 'full_campaign' %}{{adgroup.campaign.full_budget|currency}} campaign budget.{% endifequal %}
                             </span>
                         </th>
 
@@ -337,17 +362,16 @@
                             {% if adgroup.campaign.budget %}{{adgroup.campaign.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
                         </span>
                     </th>
-                        {% if adgroup.cpm %}
-                        <td class="dataTable-data numeric dataTable-ecpm">{{adgroup.summed_stats.e_cpm|currency}}</td>
+                    <td class="dataTable-data numeric dataTable-ecpm">
+                        {% if adgroup.bid_strategy == 'cpm' %}
+                        {{adgroup.summed_stats.e_cpm|currency}}</td>
                         {% endif %}
-                        {% if adgroup.cpc %}
-                        <td class="dataTable-data numeric dataTable-ecpm">
+                        {% if adgroup.bid_strategy == 'cpc' %}
                           <div class="dataTable-campaign-ecpm">{{adgroup.summed_stats.e_cpm|currency}}</div>
                         <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"> What's this?
                           </a>
-                        </td>
                         {% endif %}
-                        
+                    </td>    
                     <td class="dataTable-data numeric">{{adgroup|campaign_status}}</td>
                     <td class="dataTable-data numeric promo-imp">{{adgroup.summed_stats.impression_count|withsep}}</td>
                     <td class="dataTable-data numeric promo-clk">{{adgroup.summed_stats.click_count|withsep}}</td>

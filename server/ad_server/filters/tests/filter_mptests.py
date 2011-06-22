@@ -70,9 +70,9 @@ def landscape_format_filter_mptest():
     assert(not real_filter2(creative4))
 
     assert(real_filter3(creative3))
-    assert(not real_filter2(creative1))
-    assert(not real_filter2(creative2))
-    assert(not real_filter2(creative4))
+    assert(not real_filter3(creative1))
+    assert(not real_filter3(creative2))
+    assert(not real_filter3(creative4))
 
     assert(real_filter4(creative4))
     assert(not real_filter4(creative1))

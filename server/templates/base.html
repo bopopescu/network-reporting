@@ -21,7 +21,7 @@
 
   <!-- CSS -->
   <link rel="stylesheet" href="/js/mylibs/jquery-ui-1.8.7.custom/css/mopub/jquery-ui-1.8.7.custom.css" />  
-  <link rel="stylesheet" href="/css/style.css?v=22">
+  <link rel="stylesheet" href="/css/style.css?v=24">
   {% block extraCSS %}{% endblock %}
  
   <!-- modernizr -->
@@ -41,12 +41,16 @@
    <!--jQuery UI SelectMenu Plugins TODO: Where should this go? -->
   <script src="/js/mylibs/jquery-ui-1.8.7.custom/development-bundle/ui/jquery.ui.selectmenu.js"></script> 
 
+  <script src="/js/mylibs/jquery.treeview/jquery.treeview.js"></script> 
+  <link rel="stylesheet" href="/js/mylibs/jquery.treeview/jquery.treeview.css" />
+  <script src="/js/mylibs/jquery.cookie.js"></script> 
+
   <!-- Highcharts -->
   <script src="/js/mylibs/highcharts/highcharts.js"></script>
   
   <!-- MoPub -->
-  <script src="/js/mopub.js?v=16"></script>
-  {% block extraScripts %}<script src="/js/mopub-dashboard.js?v=17"></script>{% endblock extraScripts %}
+  <script src="/js/mopub.js?v=19"></script>
+  {% block extraScripts %}<script src="/js/mopub-dashboard.js?v=20"></script>{% endblock extraScripts %}
   
   <!--[if lt IE 7 ]>
     <script src="/js/mylibs/dd_belatedpng.js"></script>

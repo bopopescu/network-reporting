@@ -21,6 +21,8 @@ from google.appengine.api import images
 from publisher.models import *
 from advertiser.models import *
 
+from ad_server import mp_webapp
+
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 from userstore.query_managers import ClickEventManager, AppOpenEventManager
 
@@ -36,7 +38,7 @@ from ad_server import memcache_mangler
 ###################
 # Import Handlers #
 ###################
-from ad_server.handlers import TestHandler
+from ad_server.handlers import TestHandler, UDIDHandler
 from ad_server.handlers import adhandler
 
 TEST_MODE = "3uoijg2349ic(TEST_MODE)kdkdkg58gjslaf"
@@ -92,7 +94,7 @@ class AdClickHandler(webapp.RequestHandler):
         # Update budgeting
         creative = Creative.get(Key(creative_id))
         if creative.ad_group.bid_strategy == 'cpc':
-            budget_service.apply_expense(creative.ad_group.campaign, creative.ad_group.bid/1000)
+            budget_service.apply_expense(creative.ad_group.campaign, creative.ad_group.bid)
 
 
         # if driving download then we use the user datastore
@@ -120,6 +122,9 @@ class AppOpenHandler(webapp.RequestHandler):
     # /m/open?v=1&udid=26a85bc239152e5fbc221fe5510e6841896dd9f8&id=agltb3B1Yi1pbmNyDAsSBFNpdGUY6ckDDA
     def get(self):
         udid = self.request.get('udid')
+        # assumes md5 hash as the default
+        # prepends on "md5:" if it is not already there
+        udid = 'md5:' + udid.split('md5:')[-1]
         mobile_appid = self.request.get('id')
         aoe_manager = AppOpenEventManager()
         aoe, conversion_logged = aoe_manager.log_conversion(udid, mobile_appid, time=datetime.datetime.now())
@@ -236,17 +241,19 @@ class PurchaseHandlerTxn(webapp.RequestHandler):
                                                         
 
 def main():
-    application = webapp.WSGIApplication([('/m/ad', adhandler.AdHandler), 
-                                          ('/m/imp', AdImpressionHandler),
-                                          ('/m/aclk', AdClickHandler),
-                                          ('/m/open', AppOpenHandler),
-                                          ('/m/track', AppOpenHandler),
-                                          ('/m/test', TestHandler),
-                                          ('/m/clear', memcache_mangler.ClearHandler),
-                                          ('/m/purchase', PurchaseHandler),
-                                          ('/m/purchase_txn', PurchaseHandlerTxn),
-                                          ('/m/req',AdRequestHandler),], 
-                                          debug=DEBUG)
+    application = mp_webapp.MPLoggingWSGIApplication([('/m/ad', adhandler.AdHandler), 
+                                                  ('/m/imp', AdImpressionHandler),
+                                                  ('/m/aclk', AdClickHandler),
+                                                  ('/m/open', AppOpenHandler),
+                                                  ('/m/track', AppOpenHandler),
+                                                  ('/m/test', TestHandler),
+                                                  ('/m/mpid',UDIDHandler),
+                                                  ('/m/memclear', memcache_mangler.ClearHandler),
+                                                  ('/m/memshow', memcache_mangler.ShowHandler),
+                                                  ('/m/purchase', PurchaseHandler),
+                                                  ('/m/purchase_txn', PurchaseHandlerTxn),
+                                                  ('/m/req',AdRequestHandler),], 
+                                                  debug=DEBUG)
     run_wsgi_app(application)
     # wsgiref.handlers.CGIHandler().run(application)
     

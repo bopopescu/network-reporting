@@ -136,7 +136,8 @@ def time_ago_in_words(value):
 @register.filter
 def campaign_status(adgroup):
     d = datetime.now().date()
-    if (adgroup.start_date is None or d > adgroup.start_date) and (adgroup.end_date is None or d < adgroup.end_date):
+    campaign = adgroup.campaign
+    if (campaign.start_date is None or d >= campaign.start_date) and (campaign.end_date is None or d <= campaign.end_date):
         if not adgroup.active:
             return "Paused"
         if adgroup.campaign.budget: 
@@ -146,13 +147,14 @@ def campaign_status(adgroup):
                 return "Completed"
             else:
                 # Eligible campaigns have 0% delivery.
-                # They should only last a couple seconds before becoming running campaigns
+                # In production, they should only last a couple seconds
+                # before becoming running campaigns
                 return "Eligible"
         else:
             return "Running"
-    elif adgroup.end_date and d > adgroup.end_date:
-        return "Expired"
-    elif adgroup.start_date and d < adgroup.start_date:
+    elif campaign.end_date and d > campaign.end_date:
+        return "Completed"
+    elif campaign.start_date and d < campaign.start_date:
         return "Scheduled"
     else:
         return "Unknown"

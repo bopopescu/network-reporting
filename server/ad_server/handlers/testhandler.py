@@ -1,3 +1,4 @@
+from ad_server.networks.server_side import ServerSide
 from ad_server.networks.greystripe import GreyStripeServerSide
 from ad_server.networks.millennial import MillennialServerSide
 from ad_server.networks.brightroll import BrightRollServerSide
@@ -57,3 +58,13 @@ class TestHandler(webapp.RequestHandler):
     def post(self):
         logging.info("%s"%self.request.headers["User-Agent"])  
         self.response.out.write("hello world")
+        
+class UDIDHandler(webapp.RequestHandler):
+    def get(self):
+        raw_udid = self.request.get('udid',None)
+        if not raw_udid:
+            self.response.out.write("Provide a raw udid")
+            return
+        ss = ServerSide(None)
+        mopub_hashed_udid = ss.get_udid(raw_udid)
+        self.response.out.write("MoPub ID: md5:%s"%mopub_hashed_udid)

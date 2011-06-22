@@ -67,7 +67,8 @@ def get_ecpms(adunit_context, creatives, sampling_fraction=SAMPLING_FRACTION, sa
         trace_logging.info("calculating ecpms for adunit creatives:")
         for c in creatives:
             ecpm = get_ecpm(adunit_context, c)
-            trace_logging.info("    %s: %s" % (str(c.name), str(ecpm)))
+            creative_name = c.name or 'None'
+            trace_logging.info("    %s: %s" % (creative_name.encode('utf8'), str(ecpm)))
             ecpm_dict[c] = ecpm
         
     return ecpm_dict

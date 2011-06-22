@@ -13,6 +13,7 @@ from google.appengine.api import memcache
 
 from ad_server.debug_console import trace_logging
 
+from common.constants import MAX_OBJECTS
 
 class AdUnitContext(object):
     """All the adunit information necessary
@@ -80,7 +81,7 @@ class AdUnitContext(object):
             # If we couldn't find the creative, return None
             return None
                     
-    def get_creatives_for_adgroups(self,adgroups,limit=30):
+    def get_creatives_for_adgroups(self,adgroups,limit=MAX_OBJECTS):
         """ Get only the creatives for the requested adgroups """
         adgroup_keys = [adgroup.key() for adgroup in adgroups]
         creatives = self.creatives
@@ -91,7 +92,7 @@ class AdUnitContext(object):
         return creatives
         
     @classmethod
-    def fetch_adgroups(cls, adunit, limit=50):
+    def fetch_adgroups(cls, adunit, limit=MAX_OBJECTS):
         logging.info("getting adgroups from db")
         adgroups = AdGroup.all().filter("site_keys =",adunit.key()).\
                                   filter("deleted =",False).\
@@ -99,7 +100,7 @@ class AdUnitContext(object):
         return adgroups
 
     @classmethod
-    def fetch_creatives(cls, adgroups, limit=30):
+    def fetch_creatives(cls, adgroups, limit=MAX_OBJECTS):
         logging.info("getting creatives from db")
         creatives = Creative.all().filter("ad_group IN", adgroups).\
                     filter("active =",True).filter("deleted =",False).\

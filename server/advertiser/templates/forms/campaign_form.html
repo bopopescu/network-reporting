@@ -104,13 +104,9 @@
                             <span class='campaignAdgroupForm-budget' id="campaignAdgroupForm-budget-impressions"><input type='text' name="impressions" value="" class="input-text input-text-number" placeholder="impressions"/></span>
                             <span class='campaignAdgroupForm-budget' id="campaignAdgroupForm-budget-bid"><input type='text' name="{{form.budget.name}}" value="{{form.budget.value}}" class="input-text input-text-number {% if form.budget.errors %}form-error{% endif %}" placeholder="budget"/></span>
                           </span>
-                          <select name="budget_type_cpm" id="adgroupForm-budget_type-select">
-                            <option class="bidStrategyDependent cpm" value="full_campaign" {% ifequal form.budget_type.value "full_campaign"%}selected="selected"{% endifequal %}>total impressions</option>
-                            <option class="bidStrategyDependent cpm" value="daily" {% ifequal form.budget_type.value "daily"%}selected="selected"{% endifequal %}>impressions/day</option>                            
-                          </select>  
-                          <select name="budget_type_cpc">
-                            <option class="bidStrategyDependent cpc" value="full_campaign" {% ifequal form.budget_type.value "full_campaign"%}selected="selected"{% endifequal %}>total USD</option>
-                            <option class="bidStrategyDependent cpc" value="daily" {% ifequal form.budget_type.value "daily"%}selected="selected"{% endifequal %}>USD/day</option>
+                          <select name="budget_type" id="adgroupForm-budget_type-select">
+                            <option value="full_campaign" {% ifequal form.budget_type.value "full_campaign"%}selected="selected"{% endifequal %}></option>
+                            <option value="daily" {% ifequal form.budget_type.value "daily"%}selected="selected"{% endifequal %}></option>
                           </select>
                         </dd>
                       </div>

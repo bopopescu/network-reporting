@@ -64,19 +64,13 @@ var mopub = mopub || {};
                 $('div.adunit-Target:hidden').show();
             }
             }).change();
-    
-    $("#adgroupForm-bid_strategy-select").change( function(e) {
-      var bid_strategy = $(this).val();
-      $('.bidStrategyDependent').hide();
-      $('.bidStrategyDependent .'+bid_strategy).show();
-    }).change();
 
-    $("input[name='budget_type']").click( function(e) {
+    $("#adgroupForm-budget_type-select").change( function(e) {
         var budget_type = $(this).val();
         $('.budgetDependent').hide();
         $('.'+budget_type+'.budgetDependent').show();
         
-    }).filter(':checked').click();
+    }).change();
 
     $('#campaignAdgroupForm input[name="location-targeting"]').click(function(e) {
             var loc_targ = $(this).val();
@@ -105,22 +99,26 @@ var mopub = mopub || {};
           $('.ui-button-text', this).text('Show Advanced Details');
         }
       });
+      
   $('#adgroupForm-bid_strategy-select')
     .change(function() {
       if ($(this).val() == 'cpm') {
         $('.campaignAdgroupForm-budget').hide();
-        $('#campaignAdgroupForm-budget-impressions').show();
         $('#campaignAdgroupForm-budget-fullimpressions').show();
-
+        $('#campaignAdgroupForm-budget-impressions').show();
+        $("#adgroupForm-budget_type-select option[value='full_campaign']").text("total impressions");
+        $("#adgroupForm-budget_type-select option[value='daily']").text("impressions/day");
       }
       else {
         $('.campaignAdgroupForm-budget').hide();
-        $('#campaignAdgroupForm-budget-bid').show();
         $('#campaignAdgroupForm-budget-fullbid').show();
-
+        $('#campaignAdgroupForm-budget-bid').show();
+        $("#adgroupForm-budget_type-select option[value='full_campaign']").text("total USD");
+        $("#adgroupForm-budget_type-select option[value='daily']").text("USD/day");
       }
       calculateAndShowBudget();
     }).change();
+    
   $('#campaignAdgroupForm input[name="impressions"]')
     .keyup(function() {
       calculateAndShowBudget();        

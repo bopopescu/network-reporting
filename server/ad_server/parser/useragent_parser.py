@@ -3,11 +3,20 @@ def get_os(user_agent_string):
     """ Returns the appropriate float for the os version """
 
     user_os_name = None
+    user_model = None
     try:    
         if "like Mac OS X" in user_agent_string:
             user_os_name = 'iOS'
         elif "Android" in user_agent_string:
             user_os_name = 'android'
+        
+        if user_os_name == 'iOS':
+            if "iPod touch" in user_agent_string:
+                user_model = 'iPod touch'
+            elif 'iPhone' in user_agent_string:
+                user_model = 'iPhone'
+            elif 'iPad' in user_agent_string:
+                user_model = 'iPad'
 
         if user_os_name == 'android':
             num_start = user_agent_string.find('Android')+8
@@ -29,4 +38,4 @@ def get_os(user_agent_string):
     except:
         user_os_version = None
     
-    return user_os_name, user_os_version
+    return user_os_name, user_model, user_os_version

@@ -82,16 +82,16 @@ def device_filter(dev_preds):
 def os_filter(user_agent):
     log_mesg = "Removed due to OS restrictions: %s"
     def real_filter(a):
-        user_os_name, user_os_version = get_os(user_agent)
+        user_os_name, user_model, user_os_version = get_os(user_agent)
         if user_os_name == None:
-            if a.target_ios and a.target_android and a.ios_version_min == MIN_IOS_VERSION and a.ios_version_max == MAX_IOS_VERSION and a.android_version_min == MIN_ANDROID_VERSION and a.android_version_max == MAX_ANDROID_VERSION:
+            if a.target_iphone and a.target_ipod and a.target_ipad and a.target_android and a.ios_version_min == MIN_IOS_VERSION and a.ios_version_max == MAX_IOS_VERSION and a.android_version_min == MIN_ANDROID_VERSION and a.android_version_max == MAX_ANDROID_VERSION:
                 return True
             else:
                 return False
 
         if user_os_version == None:
             if user_os_name == 'iOS':
-                if a.target_ios and a.ios_version_min == MIN_IOS_VERSION and a.ios_version_max == MAX_IOS_VERSION:
+                if a.target_iphone and a.target_ipod and a.target_ipad and a.ios_version_min == MIN_IOS_VERSION and a.ios_version_max == MAX_IOS_VERSION:
                     return True
                 else:
                     return False
@@ -129,19 +129,23 @@ def os_filter(user_agent):
             #Comparison succeeded            
             return True
         
+        user_nums = user_os_version.split('.')
         if user_os_name == "iOS":
-            if not a.target_ios:
-                return False
-            else:
-                user_nums = user_os_version.split('.')
-                max_nums = a.ios_version_max.split('.')
-                min_nums = a.ios_version_min.split('.')
-                return in_range(user_nums,max_nums,min_nums)
+            if user_model:
+                if user_model == "iPhone" and not a.target_iphone:
+                    return False
+                elif user_model == "iPad" and not a.target_ipad:
+                    return False
+                elif user_model == "iPod" and not a.target_ipod:
+                    return False
+                else:
+                    max_nums = a.ios_version_max.split('.')
+                    min_nums = a.ios_version_min.split('.')
+                    return in_range(user_nums,max_nums,min_nums)
         elif user_os_name == "android":
             if not a.target_android:
                 return False
             else:
-                user_nums = user_os_version.split('.')
                 max_nums = a.android_version_max.split('.')
                 min_nums = a.android_version_min.split('.')
                 return in_range(user_nums,max_nums,min_nums)

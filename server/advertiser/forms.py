@@ -97,6 +97,7 @@ class CampaignForm(mpforms.MPModelForm):
         if commit:
             obj.put()
             update_budget(obj)
+            obj.put()
         return obj
     
     class Meta:

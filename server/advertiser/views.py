@@ -304,6 +304,9 @@ class CreateCampaignAJAXHander(RequestHandler):
 
                 # TODO: clean this up in case the campaign succeeds and the adgroup fails
                 CampaignQueryManager.put(campaign)
+                
+                budget_service.update_budget(campaign) #Update budget upon changes or set budget from full_budget. Have to put in datastore first.
+                CampaignQueryManager.put(campaign) #And then put in datastore again.
                 adgroup.campaign = campaign
                 # TODO: put this in the adgroup form
                 if not adgroup.campaign.campaign_type == 'network':

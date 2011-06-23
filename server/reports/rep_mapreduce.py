@@ -131,7 +131,7 @@ def verify_line(line_dict, d1, d2, d3, days):
 def build_keys(line_dict, d1, d2, d3):
     #if we're on a line w/ no creative it's a request line, return what we have
     if line_dict['creative'] == '' and d1 in NO_REQUESTS:
-        return None
+        return []
     d1_key = get_key(line_dict, d1)   
     keys = [MR1_KEY % d1_key]
     if d2:

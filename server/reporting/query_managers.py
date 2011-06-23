@@ -58,7 +58,9 @@ class BlobLogQueryManager():
     def get_blobkeys_for_days(cls, days, account_key): 
         #for all the days, turn them into YYMMDD and then use that to construct the key, then with all those keys get all the BlobLogs, then with all those bloblogs, return only a list of the blob_keys associated with them
         keys = [BLOBLOG_KEY % (day.strftime('%y%m%d'), account_key) for day in days]
-        return map(lambda bloblog: bloblog.blob_key, BlobLog.get_by_key_name(keys))
+        # get_by_key_name returns None for every key that doesn't exist, get ride of these Nones
+        return map(lambda bloblog: bloblog.blob_key, filter(lambda bl: bl is not None, BlobLog.get_by_key_name(keys)))
+        # I guess we should also do something involving saying "Hey data you want doesn't exist.."but w/e
 
         #(for nafis)
         #return [blob.blob_key for blob in BlobLog.get([db.Key(BLOBLOG_KEY % day.strftime('%y%m%d')) for day in days])]

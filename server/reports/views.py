@@ -28,6 +28,8 @@ class ReportIndexHandler(RequestHandler):
         manager = ReportQueryManager(self.account)
         saved = manager.get_saved()
         scheduled = manager.get_scheduled()
+        defaults = manager.get_default_reports()
+        scheduled = defaults + scheduled
         form_frag = ReportForm()
         return render_to_response(self.request, 'reports/report_index.html',
                 dict(scheduled  = scheduled,
@@ -198,4 +200,22 @@ def sched_runner(request, *args, **kwargs):
     return ScheduledRunner()(request, *args, **kwargs)
 
 
+class ReportStateUpdater(RequestHandler):
+    def post(self, action='delete'):
+        keys = self.request.POST.getlist('reportChangeStateForm-key') or []
+        logging.warning(action)
+        logging.warning(keys)
+        if keys:
+            qm = ReportQueryManager(self.account)
+            reports = [qm.get_report_by_key(key, sched=True) for key in keys]
+            reports = [update_report(report, action) for report in reports]
+            qm.put_report(reports)
+        return HttpResponseRedirect(reverse('reports_index'))
+
 def update_report_state(request, *args, **kwargs):
+    return ReportStateUpdater()(request, *args, **kwargs)
+
+def update_report(report, action):
+    if action == 'delete':
+        report.deleted = True
+    return report

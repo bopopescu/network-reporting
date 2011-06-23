@@ -33,6 +33,7 @@
 </section>
 <section id='report-savedReports'>
 <form id='reportStateChangeForm' action={% url report_state_change %} method='post'>
+    <input type=hidden id='action' name='action' />
     <table class='reportData-table reportData-saved dataTable reportTable' id='reports-saved-columnHeaders'>
         <thead>
             <tr>
@@ -48,7 +49,7 @@
             {% for report in scheduled %}
             <tr class="{% cycle 'reportData' 'reportData reportData-alt' %}" id='reports-reportd-{{forloop.counter0}}'>
                 <td class='reportData-icon'>
-                    <input type='checkbox' name='reportManagementForm-key' value='{{report.key}}'/>
+                    <input type='checkbox' name='reportChangeStateForm-key' value='{{report.key}}'/>
                 </td>
                 {% comment %}
                 do stuff for editing report on the fly
@@ -72,6 +73,9 @@
             </tr>
         </tbody>
     </table>
+    <div class='form-submit-left'>
+        <a class='button' id='reportStateChangeForm-delete'>Delete</a>
+    </div>
 </form>
 </section>
 {% endblock content %}

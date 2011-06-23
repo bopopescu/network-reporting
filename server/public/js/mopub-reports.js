@@ -553,7 +553,12 @@
         }
     }).change();
 
-
+   
+    $('#reportStateChangeForm-delete')
+        .click(function(e) {
+            e.preventDefault();
+            $('#reportStateChangeForm').find('#action').val('delete').end().submit();
+        });
 
  });
 })(this.jQuery);

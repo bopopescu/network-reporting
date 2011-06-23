@@ -50,6 +50,7 @@ class ScheduledReport(db.Model):
     saved = db.BooleanProperty()
     deleted = db.BooleanProperty(default=False)
     last_run = db.DateTimeProperty()
+    default = db.BooleanProperty(default=False)
 
     d1 = db.StringProperty(required=True) 
     d2 = db.StringProperty() 

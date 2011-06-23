@@ -51,7 +51,9 @@ class AddReportHandler(RequestHandler):
         template_name = template or self.TEMPLATE
         return render_to_string(self.request, template_name=template_name, data=kwargs)
         
-    def post(self, d1, end, days=None, start=None, d2=None, d3=None,name=None, saved=False, interval=None, sched_interval=None):
+    def post(self, d1, end, days=None, start=None, d2=None, d3=None,
+                            name=None, saved=False, interval=None, 
+                            sched_interval=None, recipients=None):
 
         end = datetime.datetime.strptime(end, '%m/%d/%Y').date()
         if start:
@@ -62,6 +64,9 @@ class AddReportHandler(RequestHandler):
             saved = True
         else:
             saved = False
+        
+        recipients = [r.strip() for r in recipients.replace('\r','\n').split('\n')]    
+            
         report = man.add_report(d1, 
                                 d2,
                                 d3, 

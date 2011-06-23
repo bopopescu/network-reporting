@@ -58,6 +58,7 @@ class ReportForm(mpforms.MPModelForm):
     interval = mpfields.MPChoiceField(choices=INT_CHCES, widget=mpwidgets.MPSelectWidget())
     sched_interval = mpfields.MPChoiceField(choices=SCHED_CHCES, widget=mpwidgets.MPSelectWidget())
     start = forms.Field()
+    recipients = mpfields.MPTextareaField()
 
     def __init__(self, save_as=False,*args, **kwargs):
         instance = kwargs.get('instance', None)
@@ -78,6 +79,7 @@ class ReportForm(mpforms.MPModelForm):
     def save(self, commit=True):
         obj = super(ReportForm, self).save(commit=False)
         if obj:
+            logging.info("\n\n\n\n\n:%s"%self.cleaned_data)
             start = self.cleaned_data['start']
             obj.days = obj.end - start
         if commit:
@@ -87,5 +89,5 @@ class ReportForm(mpforms.MPModelForm):
 
     class Meta:
         model = ScheduledReport
-        fields = ('d1', 'd2', 'd3', 'end', 'days', 'name', 'interval', 'sched_interval')
+        fields = ('d1', 'd2', 'd3', 'end', 'days', 'name', 'interval', 'sched_interval', 'recipients')
 

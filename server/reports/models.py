@@ -60,6 +60,7 @@ class ScheduledReport(db.Model):
     interval = db.StringProperty(choices=['today','yesterday', '7days', 'lmonth', 'custom'], default='custom')
     sched_interval = db.StringProperty(choices = ['none', 'daily', 'weekly', 'monthly', 'quarterly'], default='none')
     next_sched_date = db.DateProperty(default=datetime.now().date())
+    email = db.BooleanProperty(default=False)
 
 
     @property
@@ -78,6 +79,13 @@ class ScheduledReport(db.Model):
     def dim_details(self):
         return self.most_recent.dim_details
 
+    @property
+    def schedule_details(self):
+        if self.sched_interval == 'none':
+            return None
+        else:
+            ret = '('+self.sched_interval+')'
+            return ret.title()
     
 
 class Report(db.Model):
@@ -113,7 +121,9 @@ class Report(db.Model):
     def name(self):
         return self.schedule.name
 
-    
+    @property
+    def schedule_details(self):
+        return self.schedule.schedule_details
 
     def __str__(self):
         return "Report(d1=%s, d2=%s, d3=%s, start=%s, end=%s)" % (self.d1, self.d2, self.d3, self.start, self.end)

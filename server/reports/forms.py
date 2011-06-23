@@ -67,5 +67,5 @@ class ReportForm(mpforms.MPModelForm):
 
     class Meta:
         model = ScheduledReport
-        fields = ('d1', 'd2', 'd3', 'end', 'days', 'name', 'interval', 'sched_interval')
+        fields = ('d1', 'd2', 'd3', 'end', 'days', 'name', 'interval', 'sched_interval', 'email')
 

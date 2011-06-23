@@ -196,3 +196,6 @@ class ScheduledRunner(RequestHandler):
 
 def sched_runner(request, *args, **kwargs):
     return ScheduledRunner()(request, *args, **kwargs)
+
+
+def update_report_state(request, *args, **kwargs):

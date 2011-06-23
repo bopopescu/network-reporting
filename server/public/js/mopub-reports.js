@@ -53,6 +53,7 @@
 
     $('#reportCreateForm-submit')
     .button({
+        label: 'Save and Run',
         icons: {secondary: 'ui-icon-circle-triangle-e' }})
     .click(function(e) {
             e.preventDefault();
@@ -67,14 +68,37 @@
     $('#reports-view-runReportButton').button({
         icons: {secondary: 'ui-icon-circle-triangle-e' }});
 
-    $('#reports-view-saveReportButton')
-    .button({
-        icons: {secondary: 'ui-icon-circle-check'}})
-    .click(function(e) {
-        e.preventDefault();
-        $.ajax({url:'http://' + window.location.host + '/reports/save/' + $('#reportKey').val() + '/'});
-    })
+    function ajaxSave() {
+        $.ajax({url:'http://' + window.location.host + '/reports/save/' + $('#reportKey').val() + '/',
+                success: function() { 
+                    $('#reports-view-toIndex').click();
+                    } 
+                });
+    }
 
+    $('#reports-view-saveSelect')
+    .selectmenu({
+        maxHeight:300,
+        width:100,
+     })
+    .change(function(e) {
+        e.preventDefault();
+        var val = $(this).val();
+        if (val == 'sve') {
+        //do nothing
+        }
+        else if (val == 'save') {
+            ajaxSave();
+        }
+        else if (val == 'saveas') {
+            $('#saveAs').val('True');
+            $('#reportForm-container').dialog({width:750});
+        }
+        $(this).selectmenu('index', 0);
+    });
+
+    $('#reports-view-saveSelect-menu').find('li').first().hide();
+                        
     $('#reportCreateForm-cancel').button()
         .click(function(e) {
             e.preventDefault();
@@ -96,19 +120,11 @@
     $('#reports-view-editReportButton').button({icons: {primary: 'ui-icon-wrench'}})
         .click(function(e) {
             e.preventDefault();
-            $('#reportCreateForm-submit').button('option', 'label', 'Run').button('option', 'icons', {secondary: 'ui-icon-circle-triangle-e'}); 
             $('#saveAs').val('False');
             var report_form = $('#reportForm-container');
             report_form.dialog({width:750});
         });
 
-    $('#reports-view-saveAsReportButton').button({icons: {secondary: 'ui-icon-check'}})
-        .click(function(e) {
-            e.preventDefault();
-            $('#reportCreateForm-submit').button('option', 'label', 'Save As').button('option', 'icons', {secondary: 'ui-icon-check'});
-            $('#saveAs').val('True');
-            $('#reportForm-container').dialog({width:750});
-        });
 
     $('#reportCreateForm-cancel')
         .button()
@@ -525,5 +541,19 @@
                 break;
         }
     }
+
+
+    $("#sched_interval")
+    .change(function(e) {
+        $('#email-input').hide();
+        $('.schedule-help').hide();
+        $('.schedule-help.'+$(this).val()).show();
+        if ($(this).val() != 'none') {
+            $('#email-input').show();
+        }
+    }).change();
+
+
+
  });
 })(this.jQuery);

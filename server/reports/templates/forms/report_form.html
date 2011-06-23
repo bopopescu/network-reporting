@@ -30,6 +30,37 @@
     <dt>Schedule:</dt>
     <dd>
         {{ form.sched_interval|attrs:'{"class":"sched-int-selectmenu", "id": "sched_interval"}'|raw}}
+        <div style='padding-top:5px'>
+            &nbsp;
+            &nbsp;
+            <span class='schedule-help daily'>
+                Daily scheduled reports are run every day, 12:00 AM GMT.
+            </span>
+            <span class='schedule-help weekly'>
+                Weekly scheduled reports are run every monday, 12:00 AM GMT.
+            </span>
+            <span class='schedule-help monthly'>
+                Montly scheduled reports are run on the first of every month, 12:00 AM GMT.
+            </span>
+            <span class='schedule-help quarterly'>
+                Quarterly scheduled reports are run at the start of every quarter, 12:00 AM GMT.
+            </span>
+        </div>
     </dd>
+    <div id='email-input'>
+        <dt>
+            Send Report:
+        </dt>
+        <dd>
+            {{form.email|raw}} 
+            &nbsp;&nbsp;<a href='#' id='reports-email-helpLink' class='whatsthis'>What's this?</a>
+        </dd>
+    </div>
+
+    <div id='reports-email-helpContent' class='hidden'>
+        <h3>Emailing Scheduled Reports</h3>
+        <p>If you would like to be emailed with a copy of the report as an attachment <strong>each</strong> time that this report is run.</p>
+    </div>
+
         
         

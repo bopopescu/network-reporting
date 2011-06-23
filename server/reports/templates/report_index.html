@@ -32,12 +32,14 @@
     </div>
 </section>
 <section id='report-savedReports'>
+<form id='reportStateChangeForm' action={% url report_state_change %} method='post'>
     <table class='reportData-table reportData-saved dataTable reportTable' id='reports-saved-columnHeaders'>
         <thead>
             <tr>
                 <th class='reportData-icon'></th>
                 <th class='dataTable-name'>Name</th>
                 <th class='dataTable-name'>Details</th>
+                <th class='dataTable-name'>Scheduled</th>
                 <th class='dataTable-date'>Last Run</th>
                 <th class='dataTable-data numeric'></th>
             </tr>
@@ -55,6 +57,7 @@
                     <a href='{% url view_report report_key=report.key %}'>{{report.name}}</a>
                 </th>
                 <td class='dataTable-name'>{{report.details|safe}}</td>
+                <td class='dataTable-name'>{% if report.sched_interval == 'none' or not report.sched_interval %}{% else %}{{report.sched_interval|capfirst}}{% endif %}</td>
                 <td id='{{report.key}}-status' class='dataTable-date'>{{report.last_run|date:'N j, Y \<\b\r /\> f a'|safe}}</td>
                 <td class='dataTable-data numeric'></td>
             </tr>
@@ -63,10 +66,12 @@
                 <th class="reportData-icon"></th>
                 <th class="dataTable-name"><span class="muted">None</span></th>
                 <td class="dataTable-data numeric"></td>
+                <td class="dataTable-data numeric"></td>
                 <td class="dataTable-date"></td>
                 <td class="dataTable-data numeric"></td>
             </tr>
         </tbody>
     </table>
+</form>
 </section>
 {% endblock content %}

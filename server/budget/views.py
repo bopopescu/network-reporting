@@ -117,7 +117,7 @@ def budget_view(request, adgroup_key):
     remaining_daily_budget = budget_service.remaining_daily_budget(camp)
     remaining_ts_budget = budget_service.remaining_ts_budget(camp)
         
-    today = datetime.date.today(Pacific_tzinfo())
+    today = datetime.datetime.now(Pacific_tzinfo()).date()
     one_month_ago = today - datetime.timedelta(days=30)
     
     daily_logs = budget_service._get_daily_logs_for_date_range(camp,

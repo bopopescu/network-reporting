@@ -78,12 +78,9 @@ class AdGroupIndexHandler(RequestHandler):
             
         
         # Graph totals are the summed counts across all the adgroups   
-        app_level_stats = _calc_app_level_stats(adgroups)
-        app_level_summed_stats = reduce(lambda x, y: x+y, app_level_stats, StatsModel())
-        
-        
-        adgroups = _calc_and_attach_e_cpm(adgroups, app_level_summed_stats)
-    
+        account_level_stats = _calc_app_level_stats(adgroups)
+        account_level_summed_stats = sum(account_level_stats,StatsModel()) 
+        adgroups = _calc_and_attach_e_cpm(adgroups, account_level_summed_stats)
         for adgroup in adgroups:
             
             # get targeted apps
@@ -97,9 +94,9 @@ class AdGroupIndexHandler(RequestHandler):
         # Due to weirdness, network_campaigns and backfill_promo_campaigns are actually lists of adgroups
         sorted_campaign_groups = _sort_campaigns(adgroups)
         promo_campaigns, guaranteed_campaigns, network_campaigns, backfill_promo_campaigns = sorted_campaign_groups
-       
+
         guarantee_levels = _sort_guarantee_levels(guaranteed_campaigns)
-    
+
         adgroups = sorted(adgroups, key=lambda adgroup: adgroup.summed_stats.impression_count, reverse=True)
     
         help_text = None
@@ -125,7 +122,7 @@ class AdGroupIndexHandler(RequestHandler):
             graph_gtee_adgroups[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[c.all_stats for c in visible_gtee_adgroups[3:]])]
             
         try:
-            yesterday = reduce(lambda x, y: x+y, [c.all_stats[-2] for c in graph_adgroups], StatsModel())
+            yesterday = sum([c.all_stats[-2] for c in graph_adgroups], StatsModel())
         except IndexError: 
             yesterday = StatsModel()
 
@@ -134,7 +131,7 @@ class AdGroupIndexHandler(RequestHandler):
                                   {'adgroups':adgroups,
                                    'graph_adgroups': graph_adgroups,
                                    'graph_gtee_adgroups': graph_gtee_adgroups,
-                                   'graph_totals': app_level_stats,
+                                   'graph_totals': account_level_stats,
                                    'start_date': days[0],
                                    'end_date':days[-1],
                                    'date_range': self.date_range,
@@ -189,7 +186,17 @@ def _sort_campaigns(adgroups):
     return [promo_campaigns, guaranteed_campaigns, network_campaigns, backfill_promo_campaigns]
 
 def _calc_app_level_stats(adgroups):
-    return [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[c.all_stats for c in adgroups])]
+    # adgroup1.all_stats = [StatsModel(day=1), StatsModel(day=2), StatsModel(day=3)]
+    # adgroup2.all_stats = [StatsModel(day=1), StatsModel(day=2), StatsModel(day=3)]
+    # adgroup3.all_stats = [StatsModel(day=1), StatsModel(day=2), StatsModel(day=3)]
+    # all_daily_stats = [(StatsModel(day=1),StatsModel(day=1),StatsModel(day=1)),
+    #                    (StatsModel(day=2),StatsModel(day=2),StatsModel(day=2)),
+    #                    (StatsModel(day=3),StatsModel(day=3),StatsModel(day=3))]
+    # returns [StatsModel(day=1)+StatsModel(day=1)+StatsModel(day=1),
+    #          StatsModel(day=2)+StatsModel(day=2)+StatsModel(day=2)),
+    #          StatsModel(day=3)+StatsModel(day=3)+StatsModel(day=3)]
+    all_daily_stats = zip(*[adgroup.all_stats for adgroup in adgroups])
+    return [sum(daily_stats, StatsModel()) for daily_stats in all_daily_stats]
 
 
 def _calc_and_attach_e_cpm(adgroups_with_stats, app_level_summed_stats):

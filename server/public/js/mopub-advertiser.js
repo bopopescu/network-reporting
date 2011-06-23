@@ -64,6 +64,12 @@ var mopub = mopub || {};
                 $('div.adunit-Target:hidden').show();
             }
             }).change();
+    
+    $("#adgroupForm-bid_strategy-select").change( function(e) {
+      var bid_strategy = $(this).val();
+      $('.bidStrategyDependent').hide();
+      $('.bidStrategyDependent .'+bid_strategy).show();
+    }).change();
 
     $("input[name='budget_type']").click( function(e) {
         var budget_type = $(this).val();

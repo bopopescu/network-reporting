@@ -1,6 +1,6 @@
 application: mopub-inc
 #application: mopub-experimental
-version: 38
+version: 38-speed
 runtime: python
 api_version: 1
 default_expiration: "10d"
@@ -9,7 +9,7 @@ builtins:
 - datastore_admin: on
 
 # Turn this on to debug
-# - appstats: on
+- appstats: on
 
 
 handlers:

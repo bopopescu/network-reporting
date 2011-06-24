@@ -244,6 +244,7 @@ def update_budget(campaign):
                             memcache.set(ts_key, _to_memcache_int(0), namespace="budget")
                         else:
                             memcache.set(ts_key, _to_memcache_int(lost_timeslice), namespace="budget")
+                            
                         
                 
 ################ HELPER FUNCTIONS ###################

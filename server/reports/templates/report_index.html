@@ -59,7 +59,7 @@
                 </th>
                 <td class='dataTable-name'>{{report.details|safe}}</td>
                 <td class='dataTable-name'>{% if report.sched_interval == 'none' or not report.sched_interval %}{% else %}{{report.sched_interval|capfirst}}{% endif %}</td>
-                <td id='{{report.key}}-status' class='dataTable-date'>{{report.last_run|date:'N j, Y \<\b\r /\> f a'|safe}}</td>
+                <td id='{{report.key}}-status' class='dataTable-date'>{% if report.data %}{{report.last_run|date:'N j, Y \<\b\r /\> f a'|safe}}{% else %}Pending...{% endif %}</td>
                 <td class='dataTable-data numeric'></td>
             </tr>
             {% endfor %}

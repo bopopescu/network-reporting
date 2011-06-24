@@ -53,26 +53,31 @@ class AddReportHandler(RequestHandler):
         template_name = template or self.TEMPLATE
         return render_to_string(self.request, template_name=template_name, data=kwargs)
         
-    def post(self, d1, end, days=None, start=None, d2=None, d3=None,name=None, saved=False, interval=None, sched_interval=None):
+    def post(self, d1, end, days=None, start=None, d2=None, d3=None,name=None, saved=False, interval=None, sched_interval=None, report_key=None, email=False):
         end = datetime.datetime.strptime(end, '%m/%d/%Y').date()
         if start:
             start = datetime.datetime.strptime(start, '%m/%d/%Y').date()
             days = (end - start).days
         man = ReportQueryManager(self.account)
+        report = None
+        if report_key:
+            report = man.get_report_by_key(report_key)
+            sched = report.schedule
         if saved == "True" or saved == 'true':
-            saved = True
+            sched.email = email
+            sched.sched_interval = sched_interval
+            sched.name = name
+            sched.put()
         else:
-            saved = False
-        report = man.add_report(d1, 
-                                d2,
-                                d3, 
-                                end, 
-                                days, 
-                                name = name, 
-                                saved = saved, 
-                                interval = interval,
-                                sched_interval = sched_interval,
-                                )
+            report = man.add_report(d1, 
+                                    d2,
+                                    d3, 
+                                    end, 
+                                    days, 
+                                    name = name, 
+                                    interval = interval,
+                                    sched_interval = sched_interval,
+                                    )
         return HttpResponseRedirect('/reports/view/'+str(report.key()))
 
 @login_required

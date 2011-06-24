@@ -632,12 +632,12 @@ h5 {
 
 /* Links */
 
-a, a:active, a:visited {
+a, a:active, a:visited,a.no-jqui {
   color: #0090d9;
   text-decoration: none;
 }
 
-a:hover {
+a:hover,a.no-jqui:hover {
   color: #e57300;
   text-decoration: underline;
 }

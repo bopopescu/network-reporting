@@ -37,7 +37,7 @@
                 Daily scheduled reports are run every day, 12:00 AM GMT.
             </span>
             <span class='schedule-help weekly'>
-                Weekly scheduled reports are run every monday, 12:00 AM GMT.
+                Weekly scheduled reports are run every Monday, 12:00 AM GMT.
             </span>
             <span class='schedule-help monthly'>
                 Montly scheduled reports are run on the first of every month, 12:00 AM GMT.
@@ -52,11 +52,10 @@
             Send Report:
         </dt>
         <dd>
-            {{form.email|raw}} 
-            &nbsp;&nbsp;<a href='#' id='reports-email-helpLink' class='whatsthis'>What's this?</a>
+            {{form.email|raw|attrs:'{"id":"email-input-checkbox"}'}}
+            &nbsp;&nbsp;<a href='#' class='no-jqui' id='reports-email-helpLink' class='whatsthis'>What's this?</a>
         </dd>
     </div>
-
     <div id='reports-email-helpContent' class='hidden'>
         <h3>Emailing Scheduled Reports</h3>
         <p>If you would like to be emailed with a copy of the report as an attachment <strong>each</strong> time that this report is run.</p>

@@ -63,6 +63,9 @@ class ScheduledReport(db.Model):
     next_sched_date = db.DateProperty(default=datetime.now().date())
     email = db.BooleanProperty(default=False)
 
+    @property
+    def data(self):
+        return self.most_recent.data
 
     @property
     def most_recent(self):
@@ -87,7 +90,15 @@ class ScheduledReport(db.Model):
         else:
             ret = '('+self.sched_interval+')'
             return ret.title()
-    
+
+    @property
+    def interval_details(self):
+        if self.interval == '7days':
+            return 'Last 7 days'
+        elif self.interval == 'lmonth':
+            return 'Last month'
+        else:
+            return self.interval.title()
 
 class Report(db.Model):
     #standard
@@ -125,6 +136,10 @@ class Report(db.Model):
     @property
     def schedule_details(self):
         return self.schedule.schedule_details
+
+    @property
+    def interval_details(self):
+        return self.schedule.interval_details
 
     def __str__(self):
         return "Report(d1=%s, d2=%s, d3=%s, start=%s, end=%s)" % (self.d1, self.d2, self.d3, self.start, self.end)

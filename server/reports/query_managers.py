@@ -173,7 +173,7 @@ class ReportQueryManager(CachedQueryManager):
                                   })
         return new_report
 
-    def add_report(self, d1, d2, d3, end, days, name=None, saved=False,interval=None, sched_interval=None, default=False, testing=False):
+    def add_report(self, d1, d2, d3, end, days, name=None, saved=True,interval=None, sched_interval=None, default=False, testing=False):
         if interval is None:
             interval = 'custom'
         '''Create a new scheduled report with the given specs

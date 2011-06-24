@@ -83,6 +83,7 @@ class AdGroupIndexHandler(RequestHandler):
         
         
         adgroups = _calc_and_attach_e_cpm(adgroups, app_level_summed_stats)
+        adgroups = _calc_and_attach_osi_success(adgroups)
     
         for adgroup in adgroups:
             
@@ -206,6 +207,14 @@ def _calc_and_attach_e_cpm(adgroups_with_stats, app_level_summed_stats):
             adgroup.summed_stats.e_cpm = adgroup.cpm
             
     return adgroups_with_stats
+
+def _calc_and_attach_osi_success(adgroups):
+    for adgroup in adgroups:
+        if adgroup.campaign.running and adgroup.campaign.budget:
+            adgroup.osi_success = budget_service.get_osi(adgroup.campaign)
+        
+    return adgroups
+
 
 @login_required
 def adgroups(request,*args,**kwargs):

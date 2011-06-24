@@ -69,12 +69,16 @@ class BudgetSliceLog(db.Model):
       initial_memcache_budget = db.FloatProperty()
       final_memcache_budget = db.FloatProperty()
       remaining_daily_budget = db.FloatProperty()
+      actual_spending = db.FloatProperty()
+      desired_spending = db.FloatProperty()
       end_date = db.DateTimeProperty()
       
       @property
       def spending(self):
           try:
-              return self.initial_memcache_budget - self.final_memcache_budget
+              # If actual_spending is None, calculate it
+              return self.actual_spending or (self.initial_memcache_budget - 
+                                              self.final_memcache_budget)
           except TypeError:
               raise NoSpendingForIncompleteLogError
          

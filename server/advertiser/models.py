@@ -4,6 +4,10 @@ from google.appengine.ext import db
 from google.appengine.ext import blobstore
 from google.appengine.ext.db import polymodel
 from account.models import Account
+
+import datetime
+from budget.tzinfo import Pacific
+
 # from budget import budget_service
 #
 # A campaign.    Campaigns have budgetary and time based restrictions.    
@@ -55,6 +59,16 @@ class Campaign(db.Model):
             return True
         else:
             return False
+    
+    @property
+    def running(self):
+        pac_today = datetime.datetime.now(tz=Pacific).date()
+        if ((not self.start_date or self.start_date < pac_today) and 
+            (not self.end_date or self.end_date > pac_today)):
+            if self.active:
+                return True
+                
+        return False
     
     def get_owner(self):
         return None
@@ -260,6 +274,13 @@ class AdGroup(db.Model):
             return self.bid
         return None
  
+    @property
+    def individual_cost(self):
+        """ The smallest atomic bid. """
+        if self.bid_strategy == 'cpc':
+            return self.bid
+        elif self.bid_strategy == 'cpm':
+            return self.bid/1000
  
 class Creative(polymodel.PolyModel):
     name = db.StringProperty()

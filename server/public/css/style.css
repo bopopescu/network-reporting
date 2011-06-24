@@ -2162,6 +2162,14 @@ table.campaignData-main, table.reportData-table {
   margin: 20px 0 0 0;
 }
 
+.osi-success {
+  color: #53a600;
+}
+
+.osi-failure {
+  color: #ac6f6f;
+}
+
 /* New Campaign */
 
 #campaignForm-details{

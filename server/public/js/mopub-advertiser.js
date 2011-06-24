@@ -69,7 +69,14 @@ var mopub = mopub || {};
         var budget_type = $(this).val();
         $('.budgetDependent').hide();
         $('.'+budget_type+'.budgetDependent').show();
-        
+        if ($('#adgroupForm-bid_strategy-select').val() == 'cpm') {
+          if (budget_type == "full_campaign"){
+            $('#campaignAdgroupForm-budget-display_full').show();
+          }
+          if (budget_type == "daily"){
+            $('#campaignAdgroupForm-budget-display').show();
+          }
+        }
     }).change();
 
     $('#campaignAdgroupForm input[name="location-targeting"]').click(function(e) {
@@ -214,6 +221,7 @@ var mopub = mopub || {};
   
   function calculateAndShowBudget() {
     $('#campaignAdgroupForm-budget-display').hide();
+    $('#campaignAdgroupForm-budget-display_full').hide();
     if ($('#adgroupForm-bid_strategy-select').val() == 'cpm') {
         var rate = $('#campaignAdgroupForm input[name="bid"]').val();
         if ($("#adgroupForm-budget_type-select").val() == "daily") {
@@ -225,6 +233,10 @@ var mopub = mopub || {};
             $('#campaignAdgroupForm input[name="budget"]').val(budget);
             $('#campaignAdgroupForm-budget-display').show();
           }
+          else {
+            $('#campaignAdgroupForm-budget-display').html(null);
+            $('#campaignAdgroupForm input[name="budget"]').val(null);
+          }
         }
         else {
           var impressions = $('#campaignAdgroupForm input[name="full_impressions"]').val();
@@ -234,7 +246,10 @@ var mopub = mopub || {};
             $('#campaignAdgroupForm-budget-display_full').html("("+full_budget_fixed +" total USD)");
             $('#campaignAdgroupForm input[name="full_budget"]').val(full_budget);
             $('#campaignAdgroupForm-budget-display_full').show();
-              
+          }
+          else {
+            $('#campaignAdgroupForm-budget-display_full').html(null);
+            $('#campaignAdgroupForm input[name="full_budget"]').val(null);
           }
         }
       }

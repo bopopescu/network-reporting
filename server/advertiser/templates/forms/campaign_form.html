@@ -108,8 +108,12 @@
                             <option value="daily" {% ifequal form.budget_type.value "daily"%}selected="selected"{% endifequal %}></option>
                             <option value="full_campaign" {% ifequal form.budget_type.value "full_campaign"%}selected="selected"{% endifequal %}></option>
                           </select>
-                          <div class="campaignAdgroupForm-budget success helper-text budgetDependent full_campaign" id="campaignAdgroupForm-budget-display_full"></div>
-                          <div class="campaignAdgroupForm-budget success helper-text budgetDependent daily" id="campaignAdgroupForm-budget-display"></div>
+                          <span class='budgetDependent full_campaign'>
+                          <div class="campaignAdgroupForm-budget success helper-text" id="campaignAdgroupForm-budget-display_full"></div>
+                          </span>
+                          <span class='budgetDependent daily'>
+                          <div class="campaignAdgroupForm-budget success helper-text" id="campaignAdgroupForm-budget-display"></div>
+                          </span>
                           <div class='helper-text' id='fullCampaignError-budget' style="display:none; color:#cc2929;">Required when delivery type set to 'total impressions' or 'total USD'</div>
                           {% for error in form.budget.errors %}
                           <div class="form-error-text">{{error}}</div> 

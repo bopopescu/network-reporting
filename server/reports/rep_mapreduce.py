@@ -215,8 +215,8 @@ class GenReportPipeline(base_handler.PipelineBase):
     def finalized(self):
         if not self.was_aborted and self.pipeline_id == self.root_pipeline_id:
             report_key = self.kwargs['report_key']
-            user_email = self.kwargs['user_email']
             rep = Report.get(report_key)
+            scheduled_rep = rep.schedule
             rep.completed_at = datetime.datetime.now()
             outs = self.outputs.default.value[0]
             for val in outs.split('/'):
@@ -227,14 +227,20 @@ class GenReportPipeline(base_handler.PipelineBase):
                     rep.put()
             mesg = mail.EmailMessage(sender = 'olp@mopub.com',
                                      subject = 'Your report has completed')
-            if user_email:
+            mesg_dict = dict(report_key = str(rep.schedule.key()))
+            mesg.body = REPORT_FINISHED_SIMPLE % mesg_dict                
+                                     
+            if scheduled_rep.recipients:
                 # we can do a lot fancier logic here based on people's names and things 
                 #this is just a really quick and easy way to get it working though
-                mesg_dict = dict(report_key = str(rep.schedule.key()))
-                mesg.to = user_email
-                mesg.body = REPORT_FINISHED_SIMPLE % mesg_dict
-                mesg.send()
-
+                for recipient in scheduled_rep.recipient:
+                    mesg.to = scheduled_rep.recipients
+                    # try sending, but ignore of invalid recipients
+                    try:
+                        mesg.send()
+                    except InvalidEmailError:
+                        pass    
+                    
 
 
 

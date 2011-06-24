@@ -259,7 +259,7 @@ class ReportQueryManager(CachedQueryManager):
                                 account=self.account,
                                 name=name,
                                 saved=saved,
-                                recipients=recipients,
+                                recipients=recipients or [],
                                 )
         sched.put()
         dt = datetime.timedelta(days=days)

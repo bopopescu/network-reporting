@@ -28,10 +28,10 @@ class ReportIndexHandler(RequestHandler):
         manager = ReportQueryManager(self.account)
         saved = manager.get_saved()
         scheduled = manager.get_scheduled()
-        form_frag = ReportForm()
+        report_form = ReportForm(initial={'recipients':self.request.user.email})
         return render_to_response(self.request, 'reports/report_index.html',
                 dict(scheduled  = scheduled,
-                     report_fragment = form_frag,
+                     report_fragment = report_form,
                      ))
 
 @login_required
@@ -42,7 +42,7 @@ def report_index(request, *args, **kwargs):
 class AddReportHandler(RequestHandler):
     TEMPLATE = 'reports/report_create_form.html'
     def get(self):
-        report_form = ReportForm()
+        report_form = ReportForm(initial={'recipients':[self.user.email]})
         return render_to_response(self.request,
                                  self.TEMPLATE, 
                                  dict(report_form=report_form))
@@ -65,7 +65,7 @@ class AddReportHandler(RequestHandler):
         else:
             saved = False
         
-        recipients = [r.strip() for r in recipients.replace('\r','\n').split('\n')]    
+        recipients = [r.strip() for r in recipients.replace('\r','\n').replace(',','\n').split('\n') if r]    
             
         report = man.add_report(d1, 
                                 d2,
@@ -76,7 +76,7 @@ class AddReportHandler(RequestHandler):
                                 saved = saved, 
                                 interval = interval,
                                 sched_interval = sched_interval,
-                                user_email = self.request.user.email,
+                                recipients = recipients,
                                 )
         return HttpResponseRedirect('/reports/view/'+str(report.key()))
 

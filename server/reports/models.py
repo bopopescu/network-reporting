@@ -113,7 +113,7 @@ class ScheduledReport(db.Model):
     sched_interval = db.StringProperty(choices = ['none', 'daily', 'weekly', 'monthly', 'quarterly'], default='none')
     next_sched_date = db.DateProperty(default=datetime.now().date())
 
-    recipients = db.StringListProperty()
+    recipients = db.StringListProperty(default=[])
 
     @property
     def most_recent(self):

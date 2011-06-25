@@ -235,7 +235,7 @@ var mopub = mopub || {};
           }
           else {
             $('#campaignAdgroupForm-budget-display').html(null);
-            $('#campaignAdgroupForm input[name="budget"]').val(null);
+           // $('#campaignAdgroupForm input[name="budget"]').val(null);
           }
         }
         else {
@@ -249,7 +249,7 @@ var mopub = mopub || {};
           }
           else {
             $('#campaignAdgroupForm-budget-display_full').html(null);
-            $('#campaignAdgroupForm input[name="full_budget"]').val(null);
+          //  $('#campaignAdgroupForm input[name="full_budget"]').val(null);
           }
         }
       }

@@ -992,7 +992,7 @@ class TestBudgetUnitTests(unittest.TestCase):
 
         budget_service.daily_advance(self.cheap_c, new_date=budget_service.pac_today())
 
-        self.cheap_c.end_date = datetime.date(2011,6,16)
+        self.cheap_c.end_date = budget_service.pac_today()
         self.cheap_c.put()
         budget_service.update_budget(self.cheap_c)
 

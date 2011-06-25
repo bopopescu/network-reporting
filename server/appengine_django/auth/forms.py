@@ -28,7 +28,7 @@ class PasswordResetForm(django_forms.PasswordResetForm):
         import logging
         logging.info("%s %s"%(self.users_cache.user,self.users_cache.has_usable_password()))
         if self.users_cache.user and not self.users_cache.has_usable_password():
-            raise AttributeError('asdf')
+            raise AttributeError('Google User Error')
             
         self.users_cache = [self.users_cache]    
         return email

@@ -305,7 +305,9 @@ def _backup_budgets(campaign):
                       initial_memcache_budget=initial_memcache_budget,
                       final_memcache_budget=final_memcache_budget,
                       remaining_daily_budget=rem_daily_budget,
-                      end_date=datetime.datetime.now()
+                      end_date=datetime.datetime.now(),
+                      desired_spending=budget_slicer.timeslice_budget,
+                      actual_spending=initial_memcache_budget-final_memcache_budget
                       )
     log.put()
     

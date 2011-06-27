@@ -70,6 +70,8 @@ class BudgetSliceLog(db.Model):
       final_memcache_budget = db.FloatProperty()
       remaining_daily_budget = db.FloatProperty()
       end_date = db.DateTimeProperty()
+      actual_spending = db.FloatProperty()
+      desired_spending = db.FloatProperty()
       
       @property
       def spending(self):

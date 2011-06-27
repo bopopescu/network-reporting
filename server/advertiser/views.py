@@ -934,10 +934,20 @@ class AJAXStatsHandler(RequestHandler):
                                                offline=self.offline).get_stats_for_days(publisher=pub,
                                                                                         advertiser=adv, 
                                                                                         days=days)
+                                                                                            
                 key = "%s||%s"%(pub or '',adv or '')
                 stats_dict[key] = {}
                 stats_dict[key]['daily_stats'] = [s.to_dict() for s in stats]
-                stats_dict[key]['sum'] = sum(stats, StatsModel()).to_dict()
+                summed_stats = sum(stats, StatsModel())
+                
+                # adds ECPM if the adgroup is a CPC adgroup
+                if db.Key(adv).kind() == 'AdGroup':
+                    adgroup = AdGroupQueryManager.get(adv)
+                    if adgroup.cpc:
+                        e_ctr = summed_stats.ctr or DEFAULT_CTR
+                        summed_stats.cpm = float(e_ctr) * float(adgroup.cpc) * 1000
+                
+                stats_dict[key]['sum'] = summed_stats.to_dict()
                 
                                                                                              
 

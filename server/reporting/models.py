@@ -347,12 +347,18 @@ class StatsModel(db.Expando):
             return self.date.date()
 
 
-    @property   
-    def cpm(self):
+    def get_cpm(self):
+        if hasattr(self, '_cpm'): return self._cpm
+        
         if self.impression_count > 0:
             return self.revenue * 1000 / float(self.impression_count)
         else:
             return 0
+        
+    def set_cpm(self, value):
+        self._cpm = value
+    
+    cpm = property(get_cpm, set_cpm)            
 
     @property   
     def cpc(self):
@@ -370,14 +376,18 @@ class StatsModel(db.Expando):
     
             
     def _dict_properties(self):
-        return self.properties().keys()
+        model_props = self.properties().keys() 
+        pseudo_props = ['cpa', 'cpc', 'cpm', 'fill_rate', 'conv_rate', 'ctr']
+        return model_props + pseudo_props
                
     def to_dict(self):
         properties = self._dict_properties()
         d = {}
         for prop_name in properties:
-            value = getattr(self, '_%s'%prop_name, None)
+            value = getattr(self, '%s'%prop_name, None)
             if value is not None:
+                if isinstance(value, db.Model):
+                    value = str(value.key())
                 if isinstance(value, db.Key):
                     value = str(value)
                 d[prop_name] = value

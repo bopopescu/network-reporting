@@ -178,7 +178,10 @@ var mopub = mopub || {};
     function adgroupFormValidate(form) {
       var success = true;
       $('#formError').hide();
-      $('#fullCampaignError').hide();
+      $('#fullCampaignError-date').hide();
+      $('#fullCampaignError-budget').hide();
+      $('#fullCampaignError-name').hide();
+      $('#fullCampaignError-bid').hide();
       $('#campaignAdgroupForm input[name="start_date"]').removeClass('form-error');
       $('#campaignAdgroupForm input[name="end_date"]').removeClass('form-error');
       $('#campaignAdgroupForm input[name="full_budget"]').removeClass('form-error');

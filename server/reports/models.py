@@ -218,7 +218,9 @@ class Report(db.Model):
     @property
     def html_data(self):
         if self.report_blob:
+            logging.warning("parsing report blob")
             magic = self.parse_report_blob(self.report_blob.open())
+            logging.warning('\n%s\n' % magic)
             return loader.render_to_string('reports/report.html', dict(all_stats=magic))
         #BACKWARDS COMPATIBILITY!
         elif self.data:
@@ -286,6 +288,7 @@ class Report(db.Model):
                           }
         """
         final = {}
+        memo = {}
         for line in blobreader:
             #temp now refers to top of the dictionary
             temp = final
@@ -294,7 +297,10 @@ class Report(db.Model):
             vals = eval(vals)
             req, att = self.get_stats_info(keys)
             #I'm using list comprehension for you Nafis
-            keys = [self.get_key_name(idx, key) for idx,key in enumerate(keys)]
+            keys = [self.get_key_name(idx, key, memo) for idx,key in enumerate(keys)]
+            # Invalid key somewhere in this line, don't use it
+            if None in keys:
+                continue
             if not req:
                 vals[0] = '---'
             if not att:
@@ -328,6 +334,7 @@ class Report(db.Model):
                         if not temp[key].has_key('sub_stats'):
                             temp[key]['sub_stats'] = {}
                         temp = temp[key]['sub_stats']
+        logging.debug(final)
         return statsify(final)
 
 
@@ -349,17 +356,20 @@ class Report(db.Model):
             req = False
         for key, dim in zip(keys,dim_list):
             if dim in CRTV_DIMS:
-                crtv = Creative.get(key)
+                try:
+                    crtv = Creative.get(key)
                 #doesn't matter if we're crtv, camp, or priority, want to know the
                 #campaign type and if it's a network regardless
-                if crtv.adgroup.campaign.campaign_type == 'network':
-                    att = True
+                    if crtv.adgroup.campaign.campaign_type == 'network':
+                        att = True
+                except:
+                    att = False
         return (req, att)
 
     
 
 
-    def get_key_name(self, idx, key):
+    def get_key_name(self, idx, key, memo):
         """ Turns arbitrary keys and things into human-readable names to 
             be output to the report
 
@@ -382,25 +392,39 @@ class Report(db.Model):
             dim = None
 
         if dim in CRTV_DIMS:
-            crtv = Creative.get(key)
-            if dim == CRTV:
-                return (str(crtv.key()), crtv.name)
-            elif dim == CAMP:
-                camp = crtv.adgroup.campaign
-                return (str(camp.key()), camp.name)
-            elif dim == P:
-                p = crtv.adgroup.campaign.campaign_type
-                if 'gtee' in p:
-                    p = 'guaranteed'
-                return (p, p.title())
+            try:
+                if memo.has_key(key):
+                    crtv = memo[key]
+                else:
+                    crtv = Creative.get(key)
+                    memo[key] = crtv
+                if dim == CRTV:
+                    return (str(crtv.key()), crtv.name)
+                elif dim == CAMP:
+                    camp = crtv.adgroup.campaign
+                    return (str(camp.key()), camp.name)
+                elif dim == P:
+                    p = crtv.adgroup.campaign.campaign_type
+                    if 'gtee' in p:
+                        p = 'guaranteed'
+                    return (p, p.title())
+            except:
+                return None
 
         elif dim in AU_DIMS:
-            au = AdUnit.get(key)
-            if dim == AU:
-                return (str(au.key()), au.name)
-            elif dim == APP:
-                app = au.app_key
-                return (str(app.key()), app.name)
+            try:
+                if memo.has_key(key):
+                    au = memo[key]
+                else:
+                    au = AdUnit.get(key)
+                    memo[key] = au
+                if dim == AU:
+                    return (str(au.key()), au.name)
+                elif dim == APP:
+                    app = au.app_key
+                    return (str(app.key()), app.name)
+            except:
+                return None
 
         elif dim in TIME_DIMS:
             #This is cool that this was this easy
@@ -408,12 +432,22 @@ class Report(db.Model):
             #append dim to key because it's possible that day:hour breakdown
             #was requested, and the keys will be the same, this way they are uniquely 
             #ID'd
-            time = datetime.strptime(key,'%y%m%d%H')
-            time_key = date_magic.date_key(time, dim)
-            return (time_key + dim, date_magic.date_name(time, dim))
+            try:
+                time_key = date_magic.date_key(time, dim)
+                if memo.has_key(time_key):
+                    time = memo[time_key]
+                else:
+                    time = datetime.strptime(key,'%y%m%d%H')
+                    memo[time_key] = time
+                return (time_key + dim, date_magic.date_name(time, dim))
+            except:
+                return None
 
         elif dim in WURFL_DIMS:
-            return (key, WurflQueryManager().get_wurfl_name(key, dim))
+            try:
+                return (key, WurflQueryManager().get_wurfl_name(key, dim))
+            except:
+                return None
 
         elif dim == CO:
             #TODO This needs to be fixed eventually...

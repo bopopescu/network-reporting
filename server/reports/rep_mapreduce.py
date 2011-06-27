@@ -223,6 +223,7 @@ class GenReportPipeline(base_handler.PipelineBase):
                 if val == '' or val == 'blobstore':
                     continue
                 else:
+                    # Kickoff new job reducing this bullshit into something readable
                     rep.report_blob = blobstore.BlobInfo.get(blobstore.BlobKey(val))
                     rep.put()
             mesg = mail.EmailMessage(sender = 'olp@mopub.com',
@@ -233,8 +234,8 @@ class GenReportPipeline(base_handler.PipelineBase):
             if scheduled_rep.recipients:
                 # we can do a lot fancier logic here based on people's names and things 
                 #this is just a really quick and easy way to get it working though
-                for recipient in scheduled_rep.recipient:
-                    mesg.to = scheduled_rep.recipients
+                for recipient in scheduled_rep.recipients:
+                    mesg.to = recipient
                     # try sending, but ignore of invalid recipients
                     try:
                         mesg.send()

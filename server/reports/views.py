@@ -65,7 +65,7 @@ class AddReportHandler(RequestHandler):
         else:
             saved = False
         
-        recipients = [r.strip() for r in recipients.replace('\r','\n').replace(',','\n').split('\n') if r]    
+        recipients = [r.strip() for r in recipients.replace('\r','\n').replace(',','\n').split('\n') if r] if recipients else []    
             
         report = man.add_report(d1, 
                                 d2,

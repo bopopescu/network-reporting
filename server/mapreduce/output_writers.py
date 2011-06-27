@@ -302,11 +302,14 @@ class RecordsPool(object):
 
     # Write data to file.
     start_time = time.time()
-    with files.open(self._filename, "a") as f:
-      f.write(str_buf)
-      if self._ctx:
-        operation.counters.Increment(
-            COUNTER_IO_WRITE_BYTES, len(str_buf))(self._ctx)
+    try:
+        with files.open(self._filename, "a") as f:
+          f.write(str_buf)
+          if self._ctx:
+            operation.counters.Increment(
+                COUNTER_IO_WRITE_BYTES, len(str_buf))(self._ctx)
+    except files.FinalizationError:
+        return
     if self._ctx:
       operation.counters.Increment(
           COUNTER_IO_WRITE_MSEC,

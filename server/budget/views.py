@@ -2,6 +2,7 @@ from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
 from django.utils import simplejson
 from common.ragendja.template import render_to_response, render_to_string, JSONResponse
+from common.utils.timezones import Pacific_tzinfo
 
 # from common.ragendja.auth.decorators import google_login_required as login_required
 from budget import budget_service
@@ -116,7 +117,7 @@ def budget_view(request, adgroup_key):
     remaining_daily_budget = budget_service.remaining_daily_budget(camp)
     remaining_ts_budget = budget_service.remaining_ts_budget(camp)
         
-    today = datetime.date.today()
+    today = datetime.datetime.now(Pacific_tzinfo()).date()
     one_month_ago = today - datetime.timedelta(days=30)
     
     daily_logs = budget_service._get_daily_logs_for_date_range(camp,

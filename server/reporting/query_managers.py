@@ -42,7 +42,7 @@ class SiteStatsQueryManager(CachedQueryManager):
 class StatsModelQueryManager(CachedQueryManager):
     Model = StatsModel
     
-    def __init__(self, account, offline=False):
+    def __init__(self, account, offline=False, include_geo=False):
         if isinstance(account, db.Key):
             self.account = account
         elif isinstance(account, db.Model):
@@ -55,6 +55,7 @@ class StatsModelQueryManager(CachedQueryManager):
         self.stats = []
         self.obj_cache = {}
         self.all_stats_deltas = [StatsModel()]
+        self.include_geo = include_geo
         
     def get_stats_for_apps(self, apps, num_days=30):
         days = StatsModel.lastdays(num_days)
@@ -249,9 +250,15 @@ class StatsModelQueryManager(CachedQueryManager):
         stats = StatsModel.get(keys) # db get
         #since pubs iterates more than once around days, stats might be too long
         #but it should only iterate on MULTIPLES of days_len, so ct mod days_len
-
         stats = [s or StatsModel(date=datetime.datetime.combine(days[ct%days_len],datetime.time())) for ct,s in enumerate(stats)]
-        return stats            
+        
+        final_stats = []
+        for i,stat in enumerate(stats):
+            if not stat:
+                stat = stat or StatsModel(date=datetime.datetime.combine(days[i%days_len],datetime.time()))
+            stat.include_geo = self.include_geo
+            final_stats.append(stat)
+        return final_stats
     
     def accumulate_stats(self, stat):
         self.stats.append(stat)

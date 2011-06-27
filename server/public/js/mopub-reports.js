@@ -134,6 +134,29 @@
             $(this).parents('form').submit();
         });
 
+    $('#reports-view-exportSelect')
+        .change(function(e) {
+            e.preventDefault();
+            var val = $(this).val();
+            if (val != 'exp') {
+                $('#reportExportForm')
+                    .find('#report-exportFtype')
+                    .val(val)
+                    .end()
+                    .submit();
+            }
+            $(this).selectmenu('index', 0);
+        });
+
+    $('#reports-view-exportSelect-menu').find('li').first().hide();
+
+    $('#reports-view-exportButton')
+        .click(function(e) {
+            e.preventDefault();
+            $('#reportExportForm').submit();
+        });
+
+            
 
     $('.int-selectmenu').selectmenu({
         style: 'popup',

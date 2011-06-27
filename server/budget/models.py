@@ -72,6 +72,8 @@ class BudgetSliceLog(db.Model):
       actual_spending = db.FloatProperty()
       desired_spending = db.FloatProperty()
       end_date = db.DateTimeProperty()
+      actual_spending = db.FloatProperty()
+      desired_spending = db.FloatProperty()
       
       @property
       def spending(self):

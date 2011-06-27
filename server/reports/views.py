@@ -13,6 +13,7 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 
 from common.ragendja.template import render_to_response, render_to_string, JSONResponse
 from common.utils.request_handler import RequestHandler
+from common.utils import sswriter
 from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
 from reports.forms import ReportForm
@@ -196,3 +197,13 @@ class ScheduledRunner(RequestHandler):
 
 def sched_runner(request, *args, **kwargs):
     return ScheduledRunner()(request, *args, **kwargs)
+
+
+
+class ReportExporter(RequestHandler):
+    def post(self, report_key, account_key, f_type, *args, **kwargs):
+        return sswriter.write_report(f_type, report_key, account_key)
+
+
+def exporter(request, *args, **kwargs):
+    return ReportExporter()(request, *args, **kwargs)

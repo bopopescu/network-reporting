@@ -40,7 +40,7 @@ class ReportForm(mpforms.MPModelForm):
     interval = mpfields.MPChoiceField(choices=INT_CHCES, widget=mpwidgets.MPSelectWidget())
     sched_interval = mpfields.MPChoiceField(choices=SCHED_CHCES, widget=mpwidgets.MPSelectWidget())
     start = forms.Field()
-    recipients = mpfields.MPTextareaField()
+    recipients = mpfields.MPTextField()
 
     def __init__(self, save_as=False,*args, **kwargs):
         instance = kwargs.get('instance', None)

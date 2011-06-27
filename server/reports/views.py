@@ -195,7 +195,7 @@ class ViewReportHandler(RequestHandler):
     def get(self, report_key, *args, **kwargs):
         man = ReportQueryManager(self.account)
         report = man.get_report_by_key(report_key, sched=True)
-        report_frag = ReportForm(instance=report, save_as=True)
+        report_frag = ReportForm(initial = {'recipients': self.request.user.email}, instance=report, save_as=True)
         return render_to_response(self.request, 'reports/view_report.html',
                 dict(report=report.most_recent,
                      report_fragment = report_frag,))

@@ -2,6 +2,311 @@
 {% load filters %}
 {% load super_if %}
 
+{% block extraScripts %}<script src="/js/mopub-advertiser.js?v=42"></script>
+<script src='/js/tokenize_in.js'></script>
+<script src='/js/countries.js'></script>
+<script>
+    $(function() {
+        var campaignIdsToFetch = {};
+        var fetchedCampaignIds = {};
+        
+        function getCampaignIds() {
+            var dictionary = {};
+            $(".campaignData").each(
+                function() { 
+                    var id = $(this).attr("id");
+                    if (id && id != "") dictionary[id] = {};
+                });
+            return dictionary;
+        }
+        
+        function getNumDays() {
+            return $("input[name=dashboard-dateOptions-option]:checked").val();
+        }
+        
+        function getStartDate() {
+            return null;
+        }
+        
+        function populateCampaignStats(idsToFetch, fetchedIds) {
+            var days = getNumDays();
+            
+            for (var id in idsToFetch) {
+                var url = "/campaigns/stats/ajax?adv=" + id + "&date_range=" + days;
+                $.getJSON(url, function() { 
+                    return function(data) {
+                        updateCampaign(data, idsToFetch, fetchedIds) 
+                    }
+                }());
+            }
+        }
+        
+        function updateCampaign(data, idsToFetch, fetchedIds) {
+            var all_stats = data.all_stats;
+            
+            for (var key in all_stats) {
+                var adgroup_id = key.split("||")[1];
+                var sumStats = all_stats[key]["sum"];
+                var formattedStats = formatStats(sumStats);
+                
+                for (var field in formattedStats) {
+                    updateCampaignField(adgroup_id, field, formattedStats[field]);
+                }
+                
+                // Record adgroup_id as fetched.
+                delete idsToFetch[adgroup_id];
+                fetchedIds[adgroup_id] = all_stats;
+            }
+            
+            var readyForRollups = objectIsEmpty(idsToFetch);
+            if (readyForRollups) {
+                calculateRollupStats();
+                prepareGraph();
+            }
+        }
+        
+        function objectIsEmpty(obj) {
+            for (var key in obj) { 
+                if (obj.hasOwnProperty(key)) return false;
+            }
+            return true;
+        }
+        
+        function formatStats(sumStats) {
+            var results = $.extend(true, {}, sumStats);
+            results.impression_count = addCommas(results.impression_count);
+            results.conversion_count = addCommas(results.conversion_count) + 
+                " (" + formatPercentage(results.conv_rate) + ")";
+            results.request_count = addCommas(results.request_count);
+            results.click_count = addCommas(results.click_count);
+            results.cpa = "$" + results.cpa.toFixed(2);
+            results.cpc = "$" + results.cpc.toFixed(2);
+            results.cpm = "$" + results.cpm.toFixed(2);
+            results.ctr = formatPercentage(results.ctr);
+            results.fill_rate = formatPercentage(results.fill_rate);
+            return results;
+        }
+        
+        function updateCampaignField(adgroup, field, data) {
+            if (!adgroup || adgroup == "") return;
+            
+            var classType = jsonKeyToClassMap[field];
+            if (!classType || classType == "") return;
+            
+            var selector = "#" + adgroup + " ." + classType;
+            $(selector).html(data);
+        };
+        
+        var jsonKeyToClassMap = {
+            revenue: "rev",
+            impression_count: "imp",
+            conversion_count: "conv",
+            request_count: "req",
+            click_count: "clk",
+            cpa: "cpa",
+            cpc: "cpc",
+            cpm: "ecpm",
+            ctr: "ctr",
+            fill_rate: "fill",
+        };
+        
+        function calculateRollupStats() {
+            // No need to calculate rollups when placeholder is visible, since there are no campaigns.
+            if ($('.gtee-placeholder').is(":visible")) {
+                $('#gtee-rollups').hide();
+            }
+            else {
+                $('#gtee-rollups').show();
+                var gtee_imp, gtee_clk, gtee_rev;
+                gtee_imp = gtee_clk = gtee_rev = 0;
+                $('.gtee-imp:visible').each(function() {
+                        gtee_imp += parseInt($(this).text().replace(/,/g,''), 10);
+                        });
+                $('.gtee-clk:visible').each(function() {
+                        gtee_clk += parseInt($(this).text().replace(/,/g,''), 10);
+                        });
+                $('tr.gtee_row:visible td.gtee-rev').each(function() {
+                        gtee_rev += parseInt($(this).text().replace(/,/g,''), 10);
+                        });
+
+                $('#gtee-total-imp').text(addCommas(gtee_imp));
+                $('#gtee-total-clk').text(addCommas(gtee_clk));
+                $('#gtee-total-rev').text('$'+addCommas(Math.round(gtee_rev*100)/100));
+                var gtee_ctr;
+                if (gtee_clk === 0) {
+                    gtee_ctr = formatPercentage(0);
+                }
+                else {
+                    gtee_ctr = formatPercentage(gtee_clk/gtee_imp, 2);
+                }
+                $('#gtee-total-ctr').text(gtee_ctr);
+            }
+
+
+            if ($('.bfill-placeholder').is(":visible")) {
+                $('#bfill-rollups').hide();
+            }
+            else {
+                $('#bfill-rollups').show();
+                var bfill_imp, bfill_clk, bfill_conv;
+                bfill_imp = bfill_clk = bfill_conv = 0;
+                $('.bfill-imp:visible').each(function() {
+                        bfill_imp += parseInt($(this).text().replace(/,/g,''), 10);
+                        });
+                $('.bfill-clk:visible').each(function() {
+                        bfill_clk += parseInt($(this).text().replace(/,/g,''), 10);
+                        });
+                $('.bfill-conv:visible').each(function() {
+                        bfill_conv += parseInt($(this).text().replace(/,/g,''), 10);
+                        });
+
+                $("#bfill-total-imp").text(addCommas(bfill_imp));
+                $("#bfill-total-clk").text(addCommas(bfill_clk));
+                $("#bfill-total-conv").text(addCommas(bfill_conv));
+                var bfill_ctr;
+                if (bfill_clk === 0) {
+                    bfill_ctr = formatPercentage(0);
+                }
+                else {
+                    bfill_ctr = formatPercentage(bfill_clk/bfill_imp);
+                }
+                $("#bfill-total-ctr").text(bfill_ctr);
+            }
+
+            if ($('.promo-placeholder').is(":visible")) {
+                $('#promo-rollups').hide();
+            }
+            else {
+                $('#promo-rollups').show();
+                var promo_imp, promo_clk, promo_conv;
+                promo_imp = promo_clk = promo_conv = 0;
+                $('.promo-imp:visible').each(function() {
+                        promo_imp += parseInt($(this).text().replace(/,/g,''), 10);
+                        });
+                $('.promo-clk:visible').each(function() {
+                        promo_clk += parseInt($(this).text().replace(/,/g,''), 10);
+                        });
+                $('.promo-conv:visible').each(function() {
+                        promo_conv += parseInt($(this).text().replace(/,/g,''), 10);
+                        });
+
+                $("#promo-total-imp").text(addCommas(promo_imp));
+                $("#promo-total-clk").text(addCommas(promo_clk));
+                $("#promo-total-conv").text(addCommas(promo_conv));
+                var promo_ctr;
+                if (promo_clk === 0) {
+                    promo_ctr = formatPercentage(0);
+                }
+                else {
+                    promo_ctr = formatPercentage(promo_clk/promo_imp);
+                }
+                $("#promo-total-ctr").text(promo_ctr);
+            }
+
+
+
+            if ($('.network-placeholder').is(":visible")) {
+                $('#network-rollups').hide();
+            }
+            else {
+                $('#network-rollups').show();
+                var net_imp, net_clk, net_req;
+                net_imp = net_clk = net_req = 0;
+                $('.network-imp').each(function() {
+                        net_imp += parseInt($(this).text().replace(/,/g,''), 10);
+                        });
+                $('.network-clk').each(function() {
+                        net_clk += parseInt($(this).text().replace(/,/g,''), 10);
+                        });
+                $('.network-req').each(function() {
+                        net_req += parseInt($(this).text().replace(/,/g,''), 10);
+                        });
+                $("#network-total-imp").text(addCommas(net_imp));
+                $("#network-total-clk").text(addCommas(net_clk));
+                var net_ctr;
+                if (net_clk === 0) {
+                    net_ctr = formatPercentage(0);
+                }
+                else {
+                    net_ctr = formatPercentage(net_clk/net_imp);
+                }
+                $("#network-total-ctr").text(net_ctr);
+                var net_fill;
+                if (net_imp === 0) {
+                    net_fill = formatPercentage(0);
+                }
+                else {
+                    net_fill = formatPercentage(net_imp/net_req);
+                }
+                $('#network-total-fill').text(net_fill + ' (' + addCommas(net_req) + ')');
+            }
+        }
+    
+        function addCommas(numberString)
+        {
+            numberString += '';
+            x = numberString.split('.');
+            x1 = x[0];
+            x2 = x.length > 1 ? '.' + x[1] : '';
+            var rgx = /(\d+)(\d{3})/;
+            while (rgx.test(x1)) {
+                x1 = x1.replace(rgx, '$1' + ',' + '$2');
+            }
+            return x1 + x2;
+        }
+
+        function formatPercentage(number){
+            // We round to two decimal places
+            return (number*100).toFixed(2) + '%';
+        }
+        
+        function prepareGraph() {
+            /*mopub.dashboardStatsChartData = {
+                pointStart:,
+                pointInterval: 8640000,
+                impressions:,
+                revenue:,
+                clicks:,
+                ctr:,
+            };*/
+        }
+        
+        function populateStatsBreakdowns() {
+            var days = getNumDays();
+            var url = "/campaigns/stats/ajax?date_range=" + days;
+            $.getJSON(url, updateStatsBreakdowns);
+        }
+        
+        function updateStatsBreakdowns(data) {
+            var all_stats = data.all_stats["||"];
+            var daily_stats = all_stats.daily_stats;
+            var today = formatStats(daily_stats[daily_stats.length - 1]);
+            var yesterday = formatStats(daily_stats[daily_stats.length - 2]);
+            var all = formatStats(all_stats.sum);
+            
+            $("#stats-breakdown-impressions .today .inner").html(today.impression_count);
+            $("#stats-breakdown-revenue .today .inner").html("$" + today.revenue.toFixed(2));
+            $("#stats-breakdown-clicks .today .inner").html(today.click_count);
+            $("#stats-breakdown-ctr .today .inner").html(today.ctr);
+            
+            $("#stats-breakdown-impressions .yesterday .inner").html(yesterday.impression_count);
+            $("#stats-breakdown-revenue .yesterday .inner").html("$" + yesterday.revenue.toFixed(2));
+            $("#stats-breakdown-clicks .yesterday .inner").html(yesterday.click_count);
+            $("#stats-breakdown-ctr .yesterday .inner").html(yesterday.ctr);
+            
+            $("#stats-breakdown-impressions .all .inner").html(all.impression_count);
+            $("#stats-breakdown-revenue .all .inner").html("$" + all.revenue.toFixed(2));
+            $("#stats-breakdown-clicks .all .inner").html(all.click_count);
+            $("#stats-breakdown-ctr .all .inner").html(all.ctr);
+        }
+        
+        campaignIdsToFetch = getCampaignIds();
+        populateCampaignStats(campaignIdsToFetch, fetchedCampaignIds);
+        populateStatsBreakdowns();
+    });
+</script>
+{% endblock extraScripts %}
+
 {% block navLinks %}
 <li><a href="{% url publisher_index %}">Dashboard</a></li>
 <li class="active"><a href="{% url advertiser_campaign %}">Campaigns</a></li>
@@ -71,30 +376,30 @@
                   <table>
                     <tbody>
                       <tr class="active" id="stats-breakdown-impressions">
-                        <td class="stats-breakdown-value today"><span class="inner">{{today.impression_count|withsep}}</span></td>
-                        <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.impression_count|withsep}}</span></td>
-                        <td class="stats-breakdown-value all"><span class="inner">{{totals.impression_count|withsep}}</span></td>
+                        <td class="stats-breakdown-value today"><span class="inner"></span></td>
+                        <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
+                        <td class="stats-breakdown-value all"><span class="inner"></span></td>
                         <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
                       </tr>
                       <!-- don't display revenue label and stats if there are no gtee adgroups -->
                       {% if graph_gtee_adgroups|length > 0 %}
                       <tr id="stats-breakdown-revenue">
-                        <td class="stats-breakdown-value today"><span class="inner">{{today.revenue|currency}}</span></td>
-                        <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.revenue|currency}}</span></td>
-                        <td class="stats-breakdown-value all"><span class="inner">{{totals.revenue|currency}}</span></td>
+                        <td class="stats-breakdown-value today"><span class="inner"></span></td>
+                        <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
+                        <td class="stats-breakdown-value all"><span class="inner"></span></td>
                         <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
                       </tr>
                       {% endif %}
                       <tr id="stats-breakdown-clicks">
-                        <td class="stats-breakdown-value today"><span class="inner">{{today.click_count|withsep}}</span></td>
-                        <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.click_count|withsep}}</span></td>
-                        <td class="stats-breakdown-value all"><span class="inner">{{totals.click_count|withsep}}</span></td>
+                        <td class="stats-breakdown-value today"><span class="inner"></span></td>
+                        <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
+                        <td class="stats-breakdown-value all"><span class="inner"></span></td>
                         <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
                       </tr>
                       <tr id="stats-breakdown-ctr">
-                        <td class="stats-breakdown-value today"><span class="inner">{{today.ctr|percentage}}</span></td>
-                        <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.ctr|percentage}}</span></td>
-                        <td class="stats-breakdown-value all"><span class="inner">{{totals.ctr|percentage}}</span></td>
+                        <td class="stats-breakdown-value today"><span class="inner"></span></td>
+                        <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
+                        <td class="stats-breakdown-value all"><span class="inner"></span></td>
                         <th class="stats-breakdown-name"><span class="inner">CTR</span></th>
                       </tr>
                     </tbody>
@@ -164,7 +469,7 @@
           <section id="dashboard-campaigns">
             <div id="campaigns-control-panel">
               <div class="center-button-bank">
-	
+    
                 <span class="buttonset" id="campaigns-filterOptions"> 
                   <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-all" checked="checked" id="campaigns-filterOptions-option-all"/> 
                   <label for="campaigns-filterOptions-option-all">All</label> 
@@ -176,12 +481,12 @@
                   <label for="campaigns-filterOptions-option-Scheduled">Scheduled</label> 
                 </span>
               
-              	<select name="campaigns-appFilterOptions" id="campaigns-appFilterOptions"> 
-        					<option id="campaigns-appFilterOptions-option-all" value="campaign-status-all">All Apps</option>
-  								{% for app in apps %}
-  								<option value="campaign-targeting-{{app.key}}">{{app.name}}</option> 
-  								{% endfor %}
-        				</select>
+                <select name="campaigns-appFilterOptions" id="campaigns-appFilterOptions"> 
+                            <option id="campaigns-appFilterOptions-option-all" value="campaign-status-all">All Apps</option>
+                                {% for app in apps %}
+                                <option value="campaign-targeting-{{app.key}}">{{app.name}}</option> 
+                                {% endfor %}
+                        </select>
               </div>
                <a class="button" id="advertisers-addCampaign" href="{% url advertiser_campaign_create %}">Add a campaign</a>
             </div>
@@ -235,10 +540,10 @@
                     <tbody>
                       {% for adgroup in level.adgroups %}
 
-	                  <tr class="campaignData gtee_row campaign-status-all campaign-targeting-all
-					  campaign-status-{{adgroup|campaign_status}}
-					  {% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}"
-					  id="campaigns-guaranteed-{{level.name}}-{{forloop.counter0}}">
+                      <tr class="campaignData gtee_row campaign-status-all campaign-targeting-all
+                      campaign-status-{{adgroup|campaign_status}}
+                      {% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}"
+                      id="{{adgroup.key}}">
                         <th class="campaignData-icon">
                             <input type="checkbox" name="id" value="{{adgroup.key}}"/>
                             {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9 />{% endif %}
@@ -264,24 +569,24 @@
 
                         {% if adgroup.cpc %}
                         <td class="dataTable-data numeric dataTable-ecpm">
-                          <div class="dataTable-campaign-ecpm">{{adgroup.summed_stats.e_cpm|currency}}</div>
+                          <div class="dataTable-campaign-ecpm ecpm"></div>
                         <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"> What's this?
                           </a>
                         </td>
                         {% else %}
-                        <td class="dataTable-data numeric dataTable-ecpm">{{adgroup.summed_stats.e_cpm|currency}}</td>
+                        <td class="dataTable-data numeric dataTable-ecpm ecpm"></td>
                         {% endif %}
                         
                         <td class="dataTable-data numeric">{{adgroup|campaign_status}}<br>
                          {% if adgroup.percent_delivered %}
                          <span class="muted">({{adgroup.percent_delivered|floatformat:1}}%)</span></td>
                          {% endif %}
-                        <td class='gtee-rev' style='display:none;'>{{adgroup.summed_stats.revenue}}</td>
-                        <td class="dataTable-data numeric gtee-imp">{{adgroup.summed_stats.impression_count|withsep}}</td>
-                        <td class="dataTable-data numeric gtee-clk">{{adgroup.summed_stats.click_count|withsep}}</td>
-                        <td class="dataTable-data numeric gtee-ctr">{{adgroup.summed_stats.ctr|percentage|withsep}}</td>
-                        <td class="dataTable-data numeric gtee-conv">{{adgroup.summed_stats.conversion_count|withsep}} ({{adgroup.summed_stats.conv_rate|percentage}})</td>
-                        <td class="dataTable-data numeric gtee-cpa">{{adgroup.summed_stats.cpa|currency}}</td>
+                        <td class='gtee-rev rev' style='display:none;'></td>
+                        <td class="dataTable-data numeric gtee-imp imp"></td>
+                        <td class="dataTable-data numeric gtee-clk clk"></td>
+                        <td class="dataTable-data numeric gtee-ctr ctr"></td>
+                        <td class="dataTable-data numeric gtee-conv conv"></td>
+                        <td class="dataTable-data numeric gtee-cpa cpa"></td>
                       </tr>
                       {% endfor %}
                       <tr class="campaignData campaignData-placeholder gtee-placeholder">
@@ -337,10 +642,10 @@
                 </thead>
                 <tbody>
                   {% for adgroup in promo %}
-                  <tr class="campaignData campaign-status-all campaign-targeting-all
-					campaign-status-{{adgroup|campaign_status}}
-					{% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}"
-					id="campaigns-promo-{{forloop.counter0}}">
+                  <tr class="campaignData promo_row campaign-status-all campaign-targeting-all
+                    campaign-status-{{adgroup|campaign_status}}
+                    {% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}"
+                    id="{{adgroup.key}}">
                     <th class="campaignData-icon">
                       <input type="checkbox" name="id" value="{{adgroup.key}}"/>
                       {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9 />{% endif %}
@@ -367,17 +672,17 @@
                         {{adgroup.summed_stats.e_cpm|currency}}</td>
                         {% endif %}
                         {% if adgroup.bid_strategy == 'cpc' %}
-                          <div class="dataTable-campaign-ecpm">{{adgroup.summed_stats.e_cpm|currency}}</div>
+                          <div class="dataTable-campaign-ecpm ecpm"></div>
                         <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"> What's this?
                           </a>
                         {% endif %}
                     </td>    
                     <td class="dataTable-data numeric">{{adgroup|campaign_status}}</td>
-                    <td class="dataTable-data numeric promo-imp">{{adgroup.summed_stats.impression_count|withsep}}</td>
-                    <td class="dataTable-data numeric promo-clk">{{adgroup.summed_stats.click_count|withsep}}</td>
-                    <td class="dataTable-data numeric promo-ctr">{{adgroup.summed_stats.ctr|percentage|withsep}}</td>
-                    <td class="dataTable-data numeric promo-conv">{{adgroup.summed_stats.conversion_count|withsep}} ({{adgroup.summed_stats.conv_rate|percentage}})</td>
-                    <td class="dataTable-data numeric promo-cpa">{{adgroup.summed_stats.cpa|currency}}</td>
+                    <td class="dataTable-data numeric promo-imp imp"></td>
+                    <td class="dataTable-data numeric promo-clk clk"></td>
+                    <td class="dataTable-data numeric promo-ctr ctr"></td>
+                    <td class="dataTable-data numeric promo-conv conv"></td>
+                    <td class="dataTable-data numeric promo-cpa cpa"></td>
                   </tr>
                   {% endfor %}
                   <tr class="campaignData campaignData-placeholder promo-placeholder">
@@ -430,11 +735,11 @@
                 </thead>
                 <tbody>
                   {% for adgroup in network %}
-                  <tr class="campaignData campaign-status-all campaign-targeting-all
-					campaign-status-{{adgroup|campaign_status}}
-					{% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}"
-					
-                   id="campaigns-network-{{forloop.counter0}}">
+                  <tr class="campaignData network_row campaign-status-all campaign-targeting-all
+                    campaign-status-{{adgroup|campaign_status}}
+                    {% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}"
+                    
+                   id="{{adgroup.key}}">
 
                     <th class="campaignData-icon">
                       <input type="checkbox" name="id" value="{{adgroup.key}}"/>
@@ -449,18 +754,18 @@
                     </th>
                     {% if adgroup.cpc %}
                     <td class="dataTable-data numeric dataTable-ecpm">
-                      <div class="dataTable-campaign-ecpm">{{adgroup.summed_stats.e_cpm|currency}}</div>
+                      <div class="dataTable-campaign-ecpm ecpm"></div>
                       <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"> What's this?
                       </a>
                     </td>
                     {% else %}
-                    <td class="dataTable-data numeric dataTable-ecpm">{{adgroup.summed_stats.e_cpm|currency}}</td>
+                    <td class="dataTable-data numeric dataTable-ecpm ecpm"></td>
                     {% endif %}
-                    <td class="dataTable-data numeric network-req">{{adgroup.summed_stats.request_count|withsep}}</td>
-                    <td class="dataTable-data numeric network-imp">{{adgroup.summed_stats.impression_count|withsep}}</td>
-                    <td class="dataTable-data numeric network-fill">{{adgroup.summed_stats.fill_rate|percentage|withsep}}</td>
-                    <td class="dataTable-data numeric network-clk">{{adgroup.summed_stats.click_count|withsep}}</td>
-                    <td class="dataTable-data numeric network-ctr">{{adgroup.summed_stats.ctr|percentage|withsep}}</td>
+                    <td class="dataTable-data numeric network-req req"></td>
+                    <td class="dataTable-data numeric network-imp imp"></td>
+                    <td class="dataTable-data numeric network-fill fill"></td>
+                    <td class="dataTable-data numeric network-clk clk"></td>
+                    <td class="dataTable-data numeric network-ctr ctr"></td>
                     <td class="dataTable-data numeric">&nbsp;</td>
                   </tr>
                   {% endfor %}
@@ -514,10 +819,10 @@
                 </thead>
                 <tbody>
                   {% for adgroup in backfill_promo %}
-                  <tr class="campaignData campaign-status-all campaign-targeting-all
-					campaign-status-{{adgroup|campaign_status}}
-					{% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}" 
-					id="campaigns-promo-{{forloop.counter0}}">
+                  <tr class="campaignData bfill_row campaign-status-all campaign-targeting-all
+                    campaign-status-{{adgroup|campaign_status}}
+                    {% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}" 
+                    id="{{adgroup.key}}">
                     <th class="campaignData-icon">
                       <input type="checkbox" name="id" value="{{adgroup.key}}"/>
                       {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9></img>{% endif %}
@@ -541,20 +846,20 @@
                     </th>
                     {% if adgroup.cpc %}
                     <td class="dataTable-data numeric dataTable-ecpm">
-                      <div class="dataTable-campaign-ecpm">{{adgroup.summed_stats.e_cpm|currency}}</div>
+                      <div class="dataTable-campaign-ecpm ecpm"></div>
                         <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"> What's this?
                           </a>
                     </td>
                     {% else %}
-                    <td class="dataTable-data numeric dataTable-ecpm">{{adgroup.summed_stats.e_cpm|currency}}</td>
+                    <td class="dataTable-data numeric dataTable-ecpm ecpm"></td>
                     {% endif %}
                         
                     <td class="dataTable-data numeric">{{adgroup|campaign_status}}</td>
-                    <td class="dataTable-data numeric bfill-imp">{{adgroup.summed_stats.impression_count|withsep}}</td>
-                    <td class="dataTable-data numeric bfill-clk">{{adgroup.summed_stats.click_count|withsep}}</td>
-                    <td class="dataTable-data numeric bfill-ctr">{{adgroup.summed_stats.ctr|percentage|withsep}}</td>
-                    <td class="dataTable-data numeric bfill-conv">{{adgroup.summed_stats.conversion_count|withsep}} ({{adgroup.summed_stats.conv_rate|percentage}})</td>
-                    <td class="dataTable-data numeric bfill-cpa">{{adgroup.summed_stats.cpa|currency}}</td>
+                    <td class="dataTable-data numeric bfill-imp imp"></td>
+                    <td class="dataTable-data numeric bfill-clk clk"></td>
+                    <td class="dataTable-data numeric bfill-ctr ctr"></td>
+                    <td class="dataTable-data numeric bfill-conv conv"></td>
+                    <td class="dataTable-data numeric bfill-cpa cpa"></td>
                   </tr>
                   {% endfor %}
                   <tr class="campaignData campaignData-placeholder bfill-placeholder">

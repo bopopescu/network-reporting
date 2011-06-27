@@ -65,5 +65,19 @@
                                 {% endfor %}
                               </dd>
                             </div>
+                            <dt>Conversion Tracking ID:</dt>  
+                            <dd>
+                              {{ form.conv_appid|attrs:'{"label":"Conversion Tracking ID","placeholder":"399903812 (optional)"}'|raw}}
+                              <a href="#" class="whatsthis" id="creativeConvAppid-url-helpLink">What's this?</a>
+                              <div id="creativeConvAppid-url-helpContent" class="hidden"> 
+                                <h3>Application ID for Conversion Tracking</h3>
+
+                                <p>If you enter an iTunes or Android store URL, MoPub will automatically track conversions for the app when it is opened.</p>
+                                <h4>iTunes App Store ID</h4>
+                                <p>e.g. 399903812 (for <a href="http://itunes.apple.com/us/app/headingout/id399903812?mt=8">Heading Out</a>)</p>
+                                <h4>Android Market package name</h4>
+                                <p>e.g. com.pauloslf.cloudprint (for <a href="https://market.android.com/details?id=com.pauloslf.cloudprint&amp;feature=search_result">Cloud Print</a>)</p>
+                              </div>
+                            </dd>
                             {{ form.tracking_url|attrs:'{"label":"Impression Tracking URL","placeholder":"http://ad.doubleclick.net/adi/N270.maheshdfasite/..."}'}}
                             

@@ -23,7 +23,7 @@ class RequestHandler(object):
 
         super(RequestHandler,self).__init__()  
 
-    def __call__(self,request, cache_time=5*60, use_cache=True, *args,**kwargs):
+    def __call__(self,request, cache_time=5*60, use_cache=False, *args,**kwargs):
         if settings.DEBUG:
             use_cache = False
         

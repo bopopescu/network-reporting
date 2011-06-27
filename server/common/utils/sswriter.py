@@ -1,7 +1,12 @@
 import csv
 import datetime
 
+
+from django.http import HttpResponse
+from google.appengine.ext import db
+
 from common.constants import  *
+from common.utils.pyExcelerator import * 
 #                   (  TABLE_FILE_FORMATS,
 #                                ALL_STATS,
 #                                REQ_STAT,
@@ -13,11 +18,9 @@ from common.constants import  *
 #                                CPM_STAT,
  #                               )
 
-from common.utils.pyExcelerator import * 
-from django.http import HttpResponse
 from reporting.models import SiteStats
 from reporting.query_managers import SiteStatsQueryManager, StatsModelQueryManager
-from google.appengine.ext import db
+from reports.query_managers import ReportQueryManager
 
 DT_TYPES = (datetime.datetime, datetime.time, datetime.date)
 
@@ -139,6 +142,62 @@ def write_stats( f_type, desired_stats, all_stats, site=None, owner=None, days=N
         writer( response )
     return response
         
+def export_writer(file_type, file_name, row_titles, row_data):
+    """ Creates a file, writes data to it, and returns an HttpResponse
+    object for that file 
+
+    Args:
+        file_type: string, type of file to be exported
+        file_name: string, name of file to exported
+        row_titles: list of strings, each string is
+            a header for each row
+        row_data: List of lists of strings, each list of strings is a row
+
+    Returns:
+        HttpResponse object that is a file to be saved by the user
+    """
+    return 
+
+def write_report(file_type, report_key, account):
+    """ Writes a report with key report_key to a file of type file_type
+
+    Args:
+        file_type: xls or csv, type of file to be exported
+        report_key: Key of report that is being exported,
+            MUST BE REPORT.KEY NOT SCHEDULEDREPORT
+        account: Key of account requesting the export
+
+    Returns:
+        An HTTPResponse with content disposition of a file
+    """
+    if file_type == 'csv':
+        response = HttpResponse(mimetype = 'text/csv')
+        row_writer = write_csv_row( response ) 
+    if file_type == 'xls':
+        response = HttpResponse(mimetype = 'application/vnd.ms-excel')
+        row_writer, writer = make_xls_writers()
+    report = ReportQueryManager(account).get_report_by_key(report_key)
+    s_str = report.start.strftime('%m%d%Y')
+    e_str = report.end.strftime('%m%d%Y')
+    f_name = '%s %s-%s.%s' % (report.name, s_str, e_str, file_type)
+    response['Content-disposition'] = 'attachment; filename=%s' % f_name 
+    stats_headers = ['Requests', 'Impressions', 'Clicks', 'Conversions']
+    headers = [report.d1.title()]
+    if report.d2:
+        headers.append(report.d2.title())
+    if report.d3:
+        headers.append(report.d3.title())
+    headers += stats_headers
+    row_writer(headers)
+    for row in report.export_data:
+        # Had to add this because fucked up unicode shit was fucking shit up, wierd if else because non-strings
+        # don't need to be changed
+        row_writer([elt.encode('ascii', 'ignore') if (isinstance(elt, str) or isinstance(elt, unicode)) else elt  for elt in row])
+
+    if file_type == 'xls':
+        writer(response)
+
+    return response
 
         
 

@@ -134,11 +134,14 @@ class ReportQueryManager(CachedQueryManager):
                     reports.append(self.add_report(dim, None, None, None, 7, name=name, saved=True, interval='7days', default=True))
         return reports
                     
-    def new_report(self, report, now=None, testing=False):
+    def new_report(self, report, now=None, testing=False, sched=False):
         #do stuff w/ report interval here
         #last month shouldn't just arbitrarily pick some days
         if isinstance(report, str) or isinstance(report, unicode):
-            report = self.get_report_by_key(report, sched=False).schedule
+            if sched:
+                report = self.get_report_by_key(report, sched=False).schedule
+            else:
+                report = self.get_report_by_key(report, sched=sched)
         dt = datetime.timedelta(days=report.days) 
         one_day = datetime.timedelta(days=1)
         if now is None:
@@ -249,6 +252,38 @@ class ReportQueryManager(CachedQueryManager):
                                   },
                           )
         return sched 
+
+    
+    def clone_report(self, report, sched=False):
+        """ Does exactly what you think it will 
+        
+                Caveat: scheduled reports that are cloned won't be rescheduled
+
+        """
+        if sched:
+            new_report = ScheduledReport(account = report.account,
+                                        name = report.name,
+                                        saved = report.saved,
+                                        deleted = report.deleted,
+                                        last_run = report.last_run,
+                                        d1 = report.d1,
+                                        d2 = report.d2,
+                                        d3 = report.d3,
+                                        end = report.end,
+                                        days = report.days,
+                                        interval = report.interval,
+                                        )
+
+            new_report.put()
+        else:
+            new_report = Report(account = report.account,
+                                schedule = report.schedule,
+                                start = report.start,
+                                end = report.end,
+                                data = report.data
+                                )
+            new_report.put()
+        return new_report
 
     def put_report(self, report):
         if isinstance(report, list):

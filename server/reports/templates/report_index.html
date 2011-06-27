@@ -40,8 +40,8 @@
                 <th class='reportData-icon'></th>
                 <th class='dataTable-name'>Name</th>
                 <th class='dataTable-name'>Details</th>
-                <th class='dataTable-name'>Scheduled</th>
                 <th class='dataTable-date'>Last Run</th>
+                <th class='dataTable-data'>Scheduled</th>
                 <th class='dataTable-data numeric'></th>
             </tr>
         </thead>
@@ -58,8 +58,8 @@
                     <a href='{% url view_report report_key=report.key %}'>{{report.name}}</a>
                 </th>
                 <td class='dataTable-name'>{{report.details|safe}}</td>
-                <td class='dataTable-name'>{% if report.sched_interval == 'none' or not report.sched_interval %}{% else %}{{report.sched_interval|capfirst}}{% endif %}</td>
                 <td id='{{report.key}}-status' class='dataTable-date'>{% if report.data %}{{report.last_run|date:'N j, Y \<\b\r /\> f a'|safe}}{% else %}Pending...{% endif %}</td>
+                <td class='dataTable-data'>{% if report.sched_interval == 'none' or not report.sched_interval %}{% else %}{{report.sched_interval|capfirst}}{% endif %}</td>
                 <td class='dataTable-data numeric'></td>
             </tr>
             {% endfor %}

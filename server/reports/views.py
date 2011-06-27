@@ -53,21 +53,42 @@ class AddReportHandler(RequestHandler):
         template_name = template or self.TEMPLATE
         return render_to_string(self.request, template_name=template_name, data=kwargs)
         
-    def post(self, d1, end, days=None, start=None, d2=None, d3=None,name=None, saved=False, interval=None, sched_interval=None, report_key=None, email=False):
-        end = datetime.datetime.strptime(end, '%m/%d/%Y').date()
+    def post(self, d1, end=None, days=None, start=None, d2=None, d3=None,name=None, saved=False, interval=None, sched_interval=None, report_key=None, email=False):
+        end = datetime.datetime.strptime(end, '%m/%d/%Y').date() if end else None
         if start:
             start = datetime.datetime.strptime(start, '%m/%d/%Y').date()
             days = (end - start).days
         man = ReportQueryManager(self.account)
-        report = None
         if report_key:
             report = man.get_report_by_key(report_key)
             sched = report.schedule
-        if saved == "True" or saved == 'true':
-            sched.email = email
-            sched.sched_interval = sched_interval
-            sched.name = name
-            sched.put()
+            if saved == 'True' or saved == 'true':
+                new_rep = man.clone_report(report)
+                new_sched = man.clone_report(sched, sched=True)
+                new_sched.email = email
+                new_sched.sched_interval = sched_interval
+                new_sched.name = name
+                new_sched.put()
+                new_rep.schedule = new_sched
+                new_rep.put()
+                ##Return to index
+                return HttpResponseRedirect('/reports/')
+            #This is an edit
+            else:
+                if not sched.default:
+                    sched.deleted = True
+                sched.put()
+                report = man.add_report(d1, 
+                                    d2,
+                                    d3, 
+                                    end, 
+                                    days, 
+                                    name = name, 
+                                    interval = interval,
+                                    sched_interval = sched_interval,
+                                    )
+                return HttpResponseRedirect('/reports/view/'+str(report.key()))
+        #Traditional report add
         else:
             report = man.add_report(d1, 
                                     d2,
@@ -78,7 +99,7 @@ class AddReportHandler(RequestHandler):
                                     interval = interval,
                                     sched_interval = sched_interval,
                                     )
-        return HttpResponseRedirect('/reports/view/'+str(report.key()))
+            return HttpResponseRedirect('/reports/view/'+str(report.key()))
 
 @login_required
 def add_report(request, *args, **kwargs):
@@ -193,16 +214,19 @@ def run_report(request, *args, **kwargs):
 
 
 class ScheduledRunner(RequestHandler):
-    def get(self):
+    def get(self, now=None):
         man = ReportQueryManager()
-        now = datetime.datetime.now().date()
+        if now is None:
+            now = datetime.datetime.now().date()
+        else:
+            now = datetime.datetime.strptime(now, '%y%m%d')
         reps = ScheduledReport.all().filter('next_sched_date =', now)
         for rep in reps:
-            man.new_report(rep)
+            man.new_report(rep, sched=True)
         return HttpResponse("Scheduled reports have been created")
 
 def sched_runner(request, *args, **kwargs):
-    return ScheduledRunner()(request, *args, **kwargs)
+    return ScheduledRunner()(request, use_cache=False, *args, **kwargs)
 
 
 class ReportStateUpdater(RequestHandler):
@@ -211,7 +235,7 @@ class ReportStateUpdater(RequestHandler):
         logging.warning(action)
         logging.warning(keys)
         if keys:
-            qm = ReportQueryManager(self.account)
+            qm = ReportQueryManager()
             reports = [qm.get_report_by_key(key, sched=True) for key in keys]
             reports = [update_report(report, action) for report in reports]
             qm.put_report(reports)

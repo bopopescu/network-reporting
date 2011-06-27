@@ -60,16 +60,6 @@ class Campaign(db.Model):
         else:
             return False
     
-    @property
-    def running(self):
-        pac_today = datetime.datetime.now(tz=Pacific).date()
-        if ((not self.start_date or self.start_date < pac_today) and 
-            (not self.end_date or self.end_date > pac_today)):
-            if self.active:
-                return True
-                
-        return False
-    
     def get_owner(self):
         return None
         
@@ -281,6 +271,18 @@ class AdGroup(db.Model):
             return self.bid
         elif self.bid_strategy == 'cpm':
             return self.bid/1000
+            
+    @property
+    def running(self):
+        """ Must be active and have proper start and end dates"""
+        campaign = self.campaign
+        pac_today = datetime.datetime.now(tz=Pacific).date()
+        if ((not campaign.start_date or campaign.start_date < pac_today) and 
+            (not campaign.end_date or campaign.end_date > pac_today)):
+            if self.active and campaign.active:
+                return True
+
+        return False
  
 class Creative(polymodel.PolyModel):
     name = db.StringProperty()

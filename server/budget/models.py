@@ -14,7 +14,7 @@ class BudgetSlicer(db.Model):
     @property
     def timeslice_budget(self):
         """ The amount to increase the remaining_timeslice_budget amount by
-        every minute or so  """
+        every minute or so. This is how much we want to spend on this budget """
         return self.campaign.budget / DEFAULT_TIMESLICES * (1.0 + DEFAULT_FUDGE_FACTOR)
    
 

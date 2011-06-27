@@ -219,7 +219,7 @@ def _calc_and_attach_e_cpm(adgroups_with_stats, app_level_summed_stats):
 
 def _calc_and_attach_osi_success(adgroups):
     for adgroup in adgroups:
-        if adgroup.campaign.running and adgroup.campaign.budget:
+        if adgroup.running and adgroup.campaign.budget:
             adgroup.osi_success = budget_service.get_osi(adgroup.campaign)
         
     return adgroups

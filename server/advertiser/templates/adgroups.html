@@ -273,7 +273,7 @@
                         {% endif %}
                         
                         <td class="dataTable-data numeric">{{adgroup|campaign_status}}<br>
-                         {% if adgroup.campaign.budget and adgroup.campaign.running %}
+                         {% if adgroup.campaign.budget and adgroup.running %}
                            {% if adgroup.osi_success %}
                            <span class='osi-success'> on sched </span>
                            {% else %}  

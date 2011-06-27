@@ -28,10 +28,10 @@ class ReportIndexHandler(RequestHandler):
         manager = ReportQueryManager(self.account)
         saved = manager.get_saved()
         scheduled = manager.get_scheduled()
-        form_frag = ReportForm()
+        report_form = ReportForm(initial={'recipients':self.request.user.email})
         return render_to_response(self.request, 'reports/report_index.html',
                 dict(scheduled  = scheduled,
-                     report_fragment = form_frag,
+                     report_fragment = report_form,
                      ))
 
 @login_required
@@ -42,7 +42,7 @@ def report_index(request, *args, **kwargs):
 class AddReportHandler(RequestHandler):
     TEMPLATE = 'reports/report_create_form.html'
     def get(self):
-        report_form = ReportForm()
+        report_form = ReportForm(initial={'recipients':[self.user.email]})
         return render_to_response(self.request,
                                  self.TEMPLATE, 
                                  dict(report_form=report_form))
@@ -51,7 +51,9 @@ class AddReportHandler(RequestHandler):
         template_name = template or self.TEMPLATE
         return render_to_string(self.request, template_name=template_name, data=kwargs)
         
-    def post(self, d1, end, days=None, start=None, d2=None, d3=None,name=None, saved=False, interval=None, sched_interval=None):
+    def post(self, d1, end, days=None, start=None, d2=None, d3=None,
+                            name=None, saved=False, interval=None, 
+                            sched_interval=None, recipients=None):
 
         end = datetime.datetime.strptime(end, '%m/%d/%Y').date()
         if start:
@@ -62,6 +64,9 @@ class AddReportHandler(RequestHandler):
             saved = True
         else:
             saved = False
+        
+        recipients = [r.strip() for r in recipients.replace('\r','\n').replace(',','\n').split('\n') if r]    
+            
         report = man.add_report(d1, 
                                 d2,
                                 d3, 
@@ -71,7 +76,7 @@ class AddReportHandler(RequestHandler):
                                 saved = saved, 
                                 interval = interval,
                                 sched_interval = sched_interval,
-                                user_email = self.request.user.email,
+                                recipients = recipients,
                                 )
         return HttpResponseRedirect('/reports/view/'+str(report.key()))
 

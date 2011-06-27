@@ -9,7 +9,7 @@ from google.appengine.ext import db
 # matches sequence: space, 2 char, - or _, 2 char, 0 or more ;, followed by char that's not a char, number, - or _
 COUNTRY_PAT = re.compile(r' [a-zA-Z][a-zA-Z][-_](?P<ccode>[a-zA-Z][a-zA-Z]);*[^a-zA-Z0-9-_]')
 
-KB_PER_SHARD = 800
+MB_PER_SHARD = 10
 
 def get_country_code(user_agent):
     m = COUNTRY_PAT.search(user_agent)
@@ -146,7 +146,7 @@ def blob_size(blob_keys):
 
 
 def shard_count(size):
-    count = size / (KB_PER_SHARD*KB)
+    count = size / (MB_PER_SHARD*MB)
     return min(count, 50)
 
 def clone_entity(ent, **extra_args):

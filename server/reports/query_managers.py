@@ -199,7 +199,7 @@ class ReportQueryManager(CachedQueryManager):
             pipe.start(idempotence_key = pipe_key, queue_name=REP_Q_NAME % q_num)
         return new_report
 
-    def add_report(self, d1, d2, d3, end, days, name=None, saved=False,interval=None, sched_interval=None, user_email = None, testing=False):
+    def add_report(self, d1, d2, d3, end, days, name=None, saved=False,interval=None, sched_interval=None, recipients = None, testing=False):
         '''Create a new scheduled report with the given specs
         and create a new report to run
 
@@ -259,6 +259,7 @@ class ReportQueryManager(CachedQueryManager):
                                 account=self.account,
                                 name=name,
                                 saved=saved,
+                                recipients=recipients or [],
                                 )
         sched.put()
         dt = datetime.timedelta(days=days)
@@ -310,7 +311,6 @@ class ReportQueryManager(CachedQueryManager):
                                      report.start.strftime(DATE_FMT), 
                                      report.end.strftime(DATE_FMT), 
                                      report_key = report_key,
-                                     user_email = user_email,
                                      )
 
             key_dict = dict(type = 'GenReportPipeline',

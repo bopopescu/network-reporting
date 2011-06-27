@@ -12,6 +12,7 @@ class BudgetSlicer(db.Model):
     daily_snapshot = db.FloatProperty()
     spent_today = db.FloatProperty(default = 0.)
     spent_in_campaign = db.FloatProperty(default = 0.)
+    current_timeslice = db.IntegerProperty(default = 0)
 
     @property
     def timeslice_budget(self):

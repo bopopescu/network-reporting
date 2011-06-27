@@ -75,7 +75,8 @@ def timeslice_advance(campaign):
     # Update timeslice budget in memory
     key = _make_campaign_ts_budget_key(campaign)
     memcache.incr(key, _to_memcache_int(budget_slicer.timeslice_budget), namespace="budget")
-    campaign.current_timeslice += 1
+    budget_slicer.current_timeslice += 1
+    budget_slicer.put()
             
 def daily_advance(campaign, new_date=pac_today()):
     """ Adds a new timeslice's worth of daily budget, logs the daily spending and initializes a new log
@@ -127,7 +128,7 @@ def daily_advance(campaign, new_date=pac_today()):
     
     budget_slicer.timeslice_snapshot = 0.0
     
-    campaign.current_timeslice = 0
+    budget_slicer.current_timeslice = 0
     
     ts_budget_key = _make_campaign_ts_budget_key(campaign)
     memcache.set(ts_budget_key, _to_memcache_int(0.0), namespace="budget")
@@ -249,7 +250,7 @@ def update_budget(campaign):
                         memcache.set(daily_budget_key, _to_memcache_int(campaign.budget-spent_today), namespace="budget")
 
                     if campaign.budget_strategy == "evenly":
-                        lost_timeslice = (campaign.current_timeslice)*budget_slicer.timeslice_budget-spent_today
+                        lost_timeslice = (budget_slicer.current_timeslice)*budget_slicer.timeslice_budget-spent_today
                         if lost_timeslice < 0:
                             memcache.set(ts_key, _to_memcache_int(0), namespace="budget")
                         else:
@@ -296,7 +297,6 @@ def _make_campaign_daily_budget_key(campaign):
 def _redistribute_budget(campaign,new_date):
     #Recalculate daily budget for full campaigns in response to changes in end_date or full_budget
     budget_slicer = BudgetSlicer.get_or_insert_for_campaign(campaign)
-    print "redistributing", budget_slicer.spent_in_campaign
     if (new_date-datetime.timedelta(days=1) - campaign.start_date).days >= 0:
         return (campaign.full_budget-budget_slicer.spent_in_campaign)/((campaign.end_date-new_date).days+1)
     else:

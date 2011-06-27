@@ -62,6 +62,7 @@ class ScheduledReport(db.Model):
     sched_interval = db.StringProperty(choices = ['none', 'daily', 'weekly', 'monthly', 'quarterly'], default='none')
     next_sched_date = db.DateProperty(default=datetime.now().date())
     email = db.BooleanProperty(default=False)
+    recipients = db.StringListProperty(default=[])
 
     @property
     def data(self):
@@ -140,6 +141,14 @@ class Report(db.Model):
     @property
     def interval_details(self):
         return self.schedule.interval_details
+
+    @property
+    def email(self):
+        return self.schedule.email
+
+    @property
+    def recipients(self):
+        return self.schedule.recipients
 
     def __str__(self):
         return "Report(d1=%s, d2=%s, d3=%s, start=%s, end=%s)" % (self.d1, self.d2, self.d3, self.start, self.end)

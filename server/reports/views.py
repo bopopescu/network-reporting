@@ -7,12 +7,14 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.utils import simplejson
 from django.template import loader
+from google.appengine.api import mail
 from google.appengine.ext import db
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 
 from common.ragendja.template import render_to_response, render_to_string, JSONResponse
 from common.utils.request_handler import RequestHandler
+from mail.mails import REPORT_FINISHED_SIMPLE
 from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
 from reports.forms import ReportForm
@@ -30,10 +32,10 @@ class ReportIndexHandler(RequestHandler):
         scheduled = manager.get_scheduled()
         defaults = manager.get_default_reports()
         scheduled = defaults + scheduled
-        form_frag = ReportForm()
+        report_form = ReportForm(initial={'recipients':self.request.user.email})
         return render_to_response(self.request, 'reports/report_index.html',
                 dict(scheduled  = scheduled,
-                     report_fragment = form_frag,
+                     report_fragment = report_form,
                      ))
 
 @login_required
@@ -53,12 +55,15 @@ class AddReportHandler(RequestHandler):
         template_name = template or self.TEMPLATE
         return render_to_string(self.request, template_name=template_name, data=kwargs)
         
-    def post(self, d1, end=None, days=None, start=None, d2=None, d3=None,name=None, saved=False, interval=None, sched_interval=None, report_key=None, email=False):
+    def post(self, d1, end=None, days=None, start=None, d2=None, d3=None,name=None, saved=False, interval=None, sched_interval=None, report_key=None, email=False, recipients=None):
         end = datetime.datetime.strptime(end, '%m/%d/%Y').date() if end else None
         if start:
             start = datetime.datetime.strptime(start, '%m/%d/%Y').date()
             days = (end - start).days
         man = ReportQueryManager(self.account)
+
+        recipients = [r.strip() for r in recipients.replace('\r', '\n').replace(',','\n').split('\n') if r] if recipients else []
+
         if report_key:
             report = man.get_report_by_key(report_key)
             sched = report.schedule
@@ -86,6 +91,7 @@ class AddReportHandler(RequestHandler):
                                     name = name, 
                                     interval = interval,
                                     sched_interval = sched_interval,
+                                    recipients = recipients,
                                     )
                 return HttpResponseRedirect('/reports/view/'+str(report.key()))
         #Traditional report add
@@ -98,6 +104,7 @@ class AddReportHandler(RequestHandler):
                                     name = name, 
                                     interval = interval,
                                     sched_interval = sched_interval,
+                                    recipients = recipients,
                                     )
             return HttpResponseRedirect('/reports/view/'+str(report.key()))
 
@@ -143,6 +150,18 @@ def gen_report_worker(report, account):
     sched.last_run = datetime.datetime.now()
     man.put_report(sched)
     report.data = report.gen_data()
+    if report.email:
+        mesg = mail.EmailMessage(sender = 'olp@mopub.com',
+                                 subject = 'Your report has completed')
+        mesg_dict = dict(report_key = str(sched.key()))
+        mesg.body = REPORT_FINISHED_SIMPLE % mesg_dict
+        for recip in report.recipients:
+            mesg.to = recip
+            try:
+                mesg.send()
+            except InvalidEmailError:
+                pass
+
     report.status = 'done'
     report.completed_at = datetime.datetime.now()
     man.put_report(report)

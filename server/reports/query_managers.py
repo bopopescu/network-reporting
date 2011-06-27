@@ -135,8 +135,6 @@ class ReportQueryManager(CachedQueryManager):
         return reports
                     
     def new_report(self, report, now=None, testing=False, sched=False):
-        #do stuff w/ report interval here
-        #last month shouldn't just arbitrarily pick some days
         if isinstance(report, str) or isinstance(report, unicode):
             if sched:
                 report = self.get_report_by_key(report, sched=False).schedule
@@ -176,7 +174,7 @@ class ReportQueryManager(CachedQueryManager):
                                   })
         return new_report
 
-    def add_report(self, d1, d2, d3, end, days, name=None, saved=True,interval=None, sched_interval=None, default=False, testing=False):
+    def add_report(self, d1, d2, d3, end, days, name=None, saved=True,interval=None, sched_interval=None, recipients=[], default=False, testing=False):
         if interval is None:
             interval = 'custom'
         '''Create a new scheduled report with the given specs
@@ -228,6 +226,7 @@ class ReportQueryManager(CachedQueryManager):
                                 name=name,
                                 saved=saved,
                                 default=default,
+                                recipients = recipients, 
                                 )
         sched.put()
              

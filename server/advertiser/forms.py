@@ -135,7 +135,7 @@ class AdGroupForm(mpforms.MPModelForm):
                   'bid', 'bid_strategy', 
                   'percent_users', 'site_keys',
                   'hourly_frequency_cap','daily_frequency_cap','allocation_percentage', 
-                  'allocation_type','budget','target_ios', 'ios_version_max','ios_version_min',
+                  'allocation_type','budget', 'target_iphone', 'target_ipod', 'target_ipad', 'ios_version_max','ios_version_min',
                   'target_android', 'android_version_max','android_version_min')
        
     def save( self, commit=True):

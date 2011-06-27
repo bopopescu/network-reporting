@@ -27,7 +27,9 @@ class TestUseragentParser(unittest.TestCase):
         self.testbed.init_memcache_stub()
         
 
-        self.ipad_only_adgroup = AdGroup(target_ios=True,
+        self.ipad_only_adgroup = AdGroup(target_ipad=True,
+                                         target_ipod=False,
+                                         target_iphone=False,
                                          ios_version_min="2.0",
                                          ios_version_max="999",
                                          target_android=False,
@@ -36,7 +38,9 @@ class TestUseragentParser(unittest.TestCase):
         self.ipad_only_adgroup.put()                          
           
           
-        self.recent_android_adgroup = AdGroup(target_ios=False,
+        self.recent_android_adgroup = AdGroup(target_ipad=False,
+                                         target_ipod=False,
+                                         target_iphone=False,
                                          target_android=True,
                                          android_version_min="1.5.1",
                                          android_version_max="1.5.1")
@@ -62,7 +66,7 @@ class TestUseragentParser(unittest.TestCase):
         assert(get_os(user_agent) == ("iOS",'iPhone','2.0'))
         
         filter1 = os_filter(user_agent)[0]
-        assert(filter1(self.ipad_only_adgroup))
+        assert(not filter1(self.ipad_only_adgroup))
         
     def mptest_android(self):
         user_agent = "Mozilla/5.0 (Linux; U; Android 1.5.1; en-us; VM670 Build/FRG83) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1"
@@ -72,10 +76,25 @@ class TestUseragentParser(unittest.TestCase):
         assert(filter1(self.recent_android_adgroup))
         
     def mptest_none(self):
+        """ Everything should pass the default adgroup"""
         user_agent = ''
         assert(get_os(user_agent) == (None,None,None))
         
         filter1 = os_filter(user_agent)[0]
         assert(filter1(self.default_adgroup))
+
+    def mptest_none_to_ipad(self):
+        """ Everything should pass the default adgroup"""
+        user_agent = ''
+        assert(get_os(user_agent) == (None,None,None))
+
+        filter1 = os_filter(user_agent)[0]
+        assert(not filter1(self.ipad_only_adgroup))        
         
+    def mptest_too_low_version(self):
+        user_agent = "Mozilla/5.0 (Linux; U; Android 1.2.1; en-us; VM670 Build/FRG83) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1"
+        assert(get_os(user_agent) == ("android",None,'1.2.1'))
+        
+        filter1 = os_filter(user_agent)[0]
+        assert(not filter1(self.recent_android_adgroup))  
         

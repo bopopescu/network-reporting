@@ -140,28 +140,21 @@
                         <dt>Device Targeting:</dt>
                         
                         <dd>
-                          <div id="ios-versions" style="display:inline-block; width:158px">
-                            {{ form.target_ios|raw }} Target iPhone OS / iOS
-                              <div>
-                                <div style="margin:5px">
+                          <div id="ios-versions" style="display:inline-block; width:400px">
+                            <span style="display:inline-block; width:150px">
+                            {{ form.target_iphone|raw }}iPhone {{ form.target_ipod|raw }}iPod {{ form.target_ipad|raw }}iPad
+                            </span>
                                   <span style="display:inline-block; width:30px">Min:</span>{{ form.ios_version_min|raw }}
-                                </div>
-                                <div style="margin:5px">
+
                                   <span style="display:inline-block; width:30px">Max: </span>{{ form.ios_version_max|raw }}
-                                </div>
-                            </div>
                           </div>
                           
-                          <div id="android-versions" style="display:inline-block; width:158px">
-                             {{ form.target_android|raw }} Target Android
-                               <div>
-                                 <div style="margin:5px">
+                          <div id="android-versions" style="display:inline-block; width:400px">
+                             <span style="display:inline-block; width:150px">
+                             {{ form.target_android|raw }} Android
+                             </span>
                                    <span style="display:inline-block; width:30px">Min:</span>{{ form.android_version_min|raw }}
-                                 </div>
-                                 <div style="margin:5px">
                                    <span style="display:inline-block; width:30px">Max: </span>{{ form.android_version_max|raw }}
-                                 </div>
-                             </div>
                            </div>
                           
                         </dd>

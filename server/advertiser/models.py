@@ -167,7 +167,9 @@ class AdGroup(db.Model):
     min_os = db.StringListProperty(default=['any'])
     
     # Device Targeting
-    target_ios = db.BooleanProperty(default=True)
+    target_iphone = db.BooleanProperty(default=True)
+    target_ipod = db.BooleanProperty(default=True)
+    target_ipad = db.BooleanProperty(default=True)
     ios_version_min = db.StringProperty(default=MIN_IOS_VERSION)
     ios_version_max = db.StringProperty(default=MAX_IOS_VERSION)
     

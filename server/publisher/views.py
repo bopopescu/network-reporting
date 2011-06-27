@@ -149,7 +149,7 @@ class AppIndexGeoHandler(RequestHandler):
     totals = StatsModel(date=now) # sum across all days and countries
     
     # hydrate geo count dicts with stats counts on account level
-    all_stats = StatsModelQueryManager(self.account,self.offline).get_stats_for_days(days=days) 
+    all_stats = StatsModelQueryManager(self.account,self.offline,include_geo=True).get_stats_for_days(days=days) 
     for stats in all_stats:
       totals = totals + StatsModel(request_count=stats.request_count, 
                                    impression_count=stats.impression_count, 

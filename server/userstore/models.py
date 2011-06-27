@@ -16,7 +16,7 @@ from helper import get_key_name, get_required_param, check_required_param
 
 
 CLICK_EVENT_NO_APP_ID = 'NOT_PROVIDED'
-DEFAULT_CONVERSION_WINDOW = 14 # days
+DEFAULT_CONVERSION_WINDOW = 30 # days
 
 
 class MobileUser(db.Model):

@@ -16,7 +16,7 @@ class BudgetSlicer(db.Model):
     @property
     def timeslice_budget(self):
         """ The amount to increase the remaining_timeslice_budget amount by
-        every minute or so  """
+        every minute or so. This is how much we want to spend on this budget """
         return self.campaign.budget / DEFAULT_TIMESLICES * (1.0 + DEFAULT_FUDGE_FACTOR)
    
 
@@ -71,12 +71,18 @@ class BudgetSliceLog(db.Model):
       initial_memcache_budget = db.FloatProperty()
       final_memcache_budget = db.FloatProperty()
       remaining_daily_budget = db.FloatProperty()
+      actual_spending = db.FloatProperty()
+      desired_spending = db.FloatProperty()
       end_date = db.DateTimeProperty()
+      actual_spending = db.FloatProperty()
+      desired_spending = db.FloatProperty()
       
       @property
       def spending(self):
           try:
-              return self.initial_memcache_budget - self.final_memcache_budget
+              # If actual_spending is None, calculate it
+              return self.actual_spending or (self.initial_memcache_budget - 
+                                              self.final_memcache_budget)
           except TypeError:
               raise NoSpendingForIncompleteLogError
          

@@ -126,21 +126,27 @@ def password_reset(request, is_admin_site=False, template_name='registration/pas
         post_reset_redirect = reverse('auth_password_reset_done')
     if request.method == "POST":
         form = password_reset_form(request.POST)
-        if form.is_valid():
-            opts = {}
-            opts['use_https'] = request.is_secure()
-            opts['token_generator'] = token_generator
-            opts['email_template_name'] = email_template_name
-            opts['request'] = request
-            if is_admin_site:
-                opts['domain_override'] = request.META['HTTP_HOST']
-            try:    
-                form.save(**opts)
-                return HttpResponseRedirect(post_reset_redirect)
-            except AttributeError:
-                form.mperrors = ["Your account requires you to use your Google Account to <a href='%s'>log in</a>. \
-                                 <br/>If you want to unlink your account first log in then <a href='%s'>migrate</a> your account."%
-                                 (users.create_login_url('/inventory/'),reverse('registration_migrate_user'))]
+        try:
+            if form.is_valid():
+                opts = {}
+                opts['use_https'] = request.is_secure()
+                opts['token_generator'] = token_generator
+                opts['email_template_name'] = email_template_name
+                opts['request'] = request
+                if is_admin_site:
+                    opts['domain_override'] = request.META['HTTP_HOST']
+                try:    
+                    form.save(**opts)
+                    return HttpResponseRedirect(post_reset_redirect)
+                except AttributeError:
+                    form.mperrors = ["Your account requires you to use your Google Account to <a href='%s'>log in</a>. \
+                                     <br/>If you want to unlink your account first log in then <a href='%s'>migrate</a> your account."%
+                                     (users.create_login_url('/inventory/'),reverse('registration_migrate_user'))]
+        except AttributeError:
+             form.mperrors = ["Your account requires you to use your Google Account to <a href='%s'>log in</a>. \
+                              <br/>If you want to unlink your account first log in then <a href='%s'>migrate</a> your account."%
+                              (users.create_login_url('/inventory/'),reverse('registration_migrate_user'))]
+                                         
     else:
         form = password_reset_form()
     return render_to_response(template_name, {

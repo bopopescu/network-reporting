@@ -98,7 +98,7 @@ class CampaignForm(mpforms.MPModelForm):
                 obj.full_budget = None
         if commit:
             obj.put()
-            update_budget(obj)
+            update_budget(obj, save_campaign = False)
             obj.put()
         return obj
     

@@ -81,12 +81,14 @@ class Campaign(db.Model):
     def network(self):
         return self.campaign_type in ['network']
         
-    def is_active_for_date(self, date):
+    def is_active_for_date(self, dt):
         """ Start and end dates are inclusive """
-        if date >= self.start_date:
-            if date <= self.end_date:
-                return True
-        return False
+        if (self.budget_type == "full_campaign" and dt.date() >= self.start_date and dt.date() <= self.end_date)\
+        or ((self.budget_type == "daily") and ((not self.end_date and self.start_date and self.start_date <= dt.date()) \
+        or (not self.end_date and not self.start_date) \
+        or (not self.start_date and self.end_date and self.end_date >= dt.date()) \
+        or (self.start_date and self.end_date and self.start_date <= dt.date() and self.end_date >= dt.date()))):
+            return True
         
         
 class AdGroup(db.Model):

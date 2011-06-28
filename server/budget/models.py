@@ -21,11 +21,8 @@ class Budget(db.Model):
         every minute or so. This is how much we want to spend on this budget """
         remaining_timeslice = DEFAULT_TIMESLICES-self.current_timeslice
         remaining_budget = self.campaign.budget - self.spent_today
-        if remaining_timeslice <= 0:
-            return 0.
-        else:
-            return remaining_budget / remaining_timeslice * (1.0 + DEFAULT_FUDGE_FACTOR)
-        
+        return remaining_budget / remaining_timeslice * (1.0 + DEFAULT_FUDGE_FACTOR)
+    
     def set_timeslice(self, seconds):
         self.current_timeslice = int(math.floor((DEFAULT_TIMESLICES*seconds)/86400))
     

@@ -276,11 +276,7 @@ def update_budget(campaign, dt = pac_dt(), save_campaign=True):
             campaign.budget = _redistribute_budget(campaign, dt.date())
             budget_slicer.campaign = campaign
             
-        if (campaign.budget_type == "full_campaign" and dt.date() >= campaign.start_date and dt.date() <= campaign.end_date)\
-        or ((campaign.budget_type == "daily" and campaign.budget) and ((not campaign.end_date and campaign.start_date and campaign.start_date <= dt.date()) \
-        or (not campaign.end_date and not campaign.start_date) \
-        or (not campaign.start_date and campaign.end_date and campaign.end_date >= dt.date()) \
-        or (campaign.start_date and campaign.end_date and campaign.start_date <= dt.date() and campaign.end_date >= dt.date()))):
+        if campaign.is_active_for_date(dt) and (campaign.budget_type == "full_campaign" or campaign.budget):
             spent = spent_today(campaign)
             daily_budget_key = _make_campaign_daily_budget_key(campaign)
             ts_key = _make_campaign_ts_budget_key(campaign)

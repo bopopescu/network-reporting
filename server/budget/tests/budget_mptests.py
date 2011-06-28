@@ -780,7 +780,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         # Start on 1987/4/3
         # Advance the budget 1 day (and 10 timeslices)
         budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,4))
-        for i in xrange(budgetmodels.DEFAULT_TIMESLICES-1):
+        for i in xrange(budgetmodels.DEFAULT_TIMESLICES):
             budget_service.timeslice_advance(self.cheap_c)
 
         # Advance the budget to the second day of the campaign
@@ -1020,7 +1020,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         
         # Advance the budget and the ts budgets
         budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,5))
-        for i in xrange(budgetmodels.DEFAULT_TIMESLICES-1):
+        for i in xrange(budgetmodels.DEFAULT_TIMESLICES):
             budget_service.timeslice_advance(self.cheap_c)
         
         # 1111.11 remaining because the 10K budget is split between the 9 remaining days
@@ -1028,7 +1028,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         
         # We can actually spend all the money, this means the timeslices have 
         # been advanced properly
-        eq_(budget_service._apply_if_able(self.cheap_c, 1000), True)
+        eq_(budget_service._apply_if_able(self.cheap_c, 1111.11111), True)
         
     def mptest_timeslice_changes(self):
         self.cheap_c.budget_strategy = "evenly"

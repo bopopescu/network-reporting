@@ -710,8 +710,6 @@ var mopub = mopub || {};
 
     // Hide unneeded li entry
     $('#publisher-app-exportSelect-menu').find('li').first().hide();
-
-
   });
   
 })(this.jQuery);

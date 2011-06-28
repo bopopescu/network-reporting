@@ -26,7 +26,7 @@ from nose.tools import with_setup
 from budget import budget_service
 from google.appengine.api import memcache
 from budget import models as budgetmodels
-from budget.models import (BudgetSlicer,
+from budget.models import (Budget,
                            BudgetSliceLog,
                            BudgetDailyLog,
                            )

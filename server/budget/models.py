@@ -1,11 +1,12 @@
 from google.appengine.ext import db
 from advertiser.models import Campaign
 import logging
+import math
 
 DEFAULT_TIMESLICES = 1440.0 # Timeslices per day
-DEFAULT_FUDGE_FACTOR = 0.1
+DEFAULT_FUDGE_FACTOR = 0.05
 
-class BudgetSlicer(db.Model):
+class Budget(db.Model):
     
     campaign = db.ReferenceProperty(Campaign)
     timeslice_snapshot = db.FloatProperty()
@@ -18,9 +19,16 @@ class BudgetSlicer(db.Model):
     def timeslice_budget(self):
         """ The amount to increase the remaining_timeslice_budget amount by
         every minute or so. This is how much we want to spend on this budget """
-        return self.campaign.budget / DEFAULT_TIMESLICES * (1.0 + DEFAULT_FUDGE_FACTOR)
-   
-
+        remaining_timeslice = DEFAULT_TIMESLICES-self.current_timeslice
+        remaining_budget = self.campaign.budget - self.spent_today
+        if remaining_timeslice <= 0:
+            return 0.
+        else:
+            return remaining_budget / remaining_timeslice * (1.0 + DEFAULT_FUDGE_FACTOR)
+        
+    def set_timeslice(self, seconds):
+        self.current_timeslice = int(math.floor((DEFAULT_TIMESLICES*seconds)/86400))
+        
     def __init__(self, parent=None, key_name=None, **kwargs):
         if not key_name and not kwargs.get('key', None):
             # We are not coming from database
@@ -35,7 +43,7 @@ class BudgetSlicer(db.Model):
                     kwargs.update(daily_snapshot = campaign.budget)
                     kwargs.update(timeslice_snapshot = timeslice_snapshot)
                     
-        super(BudgetSlicer, self).__init__(parent=parent,
+        super(Budget, self).__init__(parent=parent,
                                            key_name=key_name,
                                             **kwargs)
 
@@ -62,13 +70,13 @@ class BudgetSlicer(db.Model):
         def _txn(campaign):
             obj = cls.get_by_campaign(campaign)
             if not obj:
-                obj = BudgetSlicer(**kwargs)
+                obj = Budget(**kwargs)
                 obj.put()
             return obj
         return db.run_in_transaction(_txn,campaign)        
 
 class BudgetSliceLog(db.Model):
-      budget_slicer = db.ReferenceProperty(BudgetSlicer,collection_name="timeslice_logs")
+      budget_slicer = db.ReferenceProperty(Budget,collection_name="timeslice_logs")
       initial_memcache_budget = db.FloatProperty()
       final_memcache_budget = db.FloatProperty()
       remaining_daily_budget = db.FloatProperty()
@@ -89,17 +97,18 @@ class BudgetSliceLog(db.Model):
          
 
 class BudgetDailyLog(db.Model):
-    budget_slicer = db.ReferenceProperty(BudgetSlicer,collection_name="daily_logs")
+    budget_slicer = db.ReferenceProperty(Budget,collection_name="daily_logs")
     initial_daily_budget = db.FloatProperty()
     remaining_daily_budget = db.FloatProperty()
+    spending = db.FloatProperty()
     date = db.DateProperty()
 
-    @property
-    def spending(self):
-        try:
-            return self.initial_daily_budget - self.remaining_daily_budget
-        except TypeError:
-            raise NoSpendingForIncompleteLogError
+    # @property
+    # def spending(self):
+    #     try:
+    #         return self.initial_daily_budget - self.remaining_daily_budget
+    #     except TypeError:
+    #         raise NoSpendingForIncompleteLogError
 
 class NoSpendingForIncompleteLogError(Exception):
     """ We cannot get spending for logs that are incomplete.

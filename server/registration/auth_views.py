@@ -2,7 +2,7 @@
 # COPIED FROM DJANGO 1.2 so that MOPUB can Modify
 #
 
-import re
+import re, logging
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
 # Avoid shadowing the login() view below.

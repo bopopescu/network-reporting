@@ -584,8 +584,6 @@ def InstallAuthentication(settings):
     # HACK: NAFIS
     
     from django.contrib.auth import views
-    from registration import auth_views as mp_auth_views
-    views.login = mp_auth_views.login
     
     models.User = mp_models.User
     models.Group = helper_models.Group
@@ -603,6 +601,9 @@ def InstallAuthentication(settings):
     from django.contrib.auth import forms as django_forms
     from appengine_django.auth import forms as auth_helper_forms
     django_forms.PasswordResetForm = auth_helper_forms.PasswordResetForm
+    from registration import auth_views as mp_auth_views
+    views.login = mp_auth_views.login
+    
     
     django_auth.suite = unittest.TestSuite
     django_tests.suite = unittest.TestSuite

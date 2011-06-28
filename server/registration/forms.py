@@ -270,12 +270,11 @@ class RegistrationFormNoFreeEmail(RegistrationForm):
         
         
 class MPAuthenticationForm(AuthenticationForm):
-    
+    username = forms.CharField(label=_("Username"), max_length=100)    # allow for LONG emails
     
     def clean(self):
         from google.appengine.api import users
         from django.core.urlresolvers import reverse
-        
         username = self.cleaned_data.get('username')
         user = UserQueryManager.get_by_email(username)
 

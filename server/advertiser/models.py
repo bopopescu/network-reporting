@@ -177,6 +177,7 @@ class AdGroup(db.Model):
     android_version_min = db.StringProperty(default=MIN_ANDROID_VERSION)
     android_version_max = db.StringProperty(default=MAX_ANDROID_VERSION)
     
+    target_other = db.BooleanProperty(default=True) # MobileWeb on blackberry etc
     
     USER_TYPES = (
         ('any','Any'),

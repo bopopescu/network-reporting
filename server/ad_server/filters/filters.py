@@ -84,7 +84,7 @@ def os_filter(user_agent):
     def real_filter(a):
         user_os_name, user_model, user_os_version = get_os(user_agent)
         if user_os_name == None:
-            if a.target_iphone and a.target_ipod and a.target_ipad and a.target_android and a.ios_version_min == MIN_IOS_VERSION and a.ios_version_max == MAX_IOS_VERSION and a.android_version_min == MIN_ANDROID_VERSION and a.android_version_max == MAX_ANDROID_VERSION:
+            if a.target_other:
                 return True
             else:
                 return False

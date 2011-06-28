@@ -1,5 +1,5 @@
 def get_os(user_agent_string):
-    """ Returns 'iOS', 'android' or 'other' """
+    """ Returns 'iOS', 'Android' or None if other """
     """ Returns the appropriate float for the os version """
 
     user_os_name = None
@@ -35,6 +35,7 @@ def get_os(user_agent_string):
             int(n)
             
         user_os_version = user_agent_string[num_start:num_end]
+        
     except:
         user_os_version = None
     

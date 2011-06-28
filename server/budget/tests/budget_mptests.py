@@ -1046,7 +1046,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         
         budget_service.update_budget(self.cheap_c, today = datetime.datetime(1987,4,4,2,30,0))
         
-        eq_(budget_service._apply_if_able(self.cheap_c,322.2222), False)
+        eq_(budget_service._apply_if_able(self.cheap_c,322.2222), True)
         eq_(budget_service._apply_if_able(self.cheap_c,1), False)
         
         

@@ -1634,6 +1634,16 @@ ul.ui-selectmenu-menu {
   text-decoration: underline;
 }
 
+.whatsthis{
+
+}
+.whatsthis-icon{
+  background-image:url(../images/what.png);
+  height: 12px;
+  width: 12px;
+  display:inline-block;
+}
+
 /*---------------------------------------/
 / Page-specific Styles
 /---------------------------------------*/

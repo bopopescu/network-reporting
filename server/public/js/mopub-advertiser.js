@@ -143,7 +143,7 @@ var mopub = mopub || {};
     // Initialize impression count on form display
     if ($('#adgroupForm-bid_strategy-select').val() == 'cpm') {
       var rate = $('#campaignAdgroupForm input[name="bid"]').val();
-      if ($("input[name='budget_type']").filter(':checked').val() == "daily") {
+      if ($("#adgroupForm-budget_type-select").val() == "daily") {
         var budget = $('#campaignAdgroupForm input[name="budget"]').val();
         var impressions = 1000 * budget / rate;
         if (impressions) {

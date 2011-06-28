@@ -387,7 +387,7 @@ class StatsModel(db.Expando):
     
             
     def _dict_properties(self):
-        model_props = ['_%s'%prop for prop in self.properties().keys()]
+        model_props = self.properties().keys()
         pseudo_props = ['cpa', 'cpc', 'cpm', 'fill_rate', 'conv_rate', 'ctr', 'percent_delivered']
         return model_props + pseudo_props
                
@@ -395,7 +395,9 @@ class StatsModel(db.Expando):
         properties = self._dict_properties()
         d = {}
         for prop_name in properties:
-            value = getattr(self, '%s'%prop_name, None)
+            value = getattr(self, '_%s'%prop_name, None)
+            if value is None:
+                value = getattr(self, '%s'%prop_name, None)
             if value is not None:
                 if isinstance(value, db.Model):
                     value = str(value.key())

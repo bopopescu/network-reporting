@@ -55,9 +55,15 @@ class AdGroupIndexHandler(RequestHandler):
             
         apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
         
+        # memoize
+        campaigns_dict = {}
+        
         campaigns = CampaignQueryManager.get_campaigns(account=self.account)
+        for campaign in campaigns:
+            campaigns_dict[campaign.key()] = campaign
+            
         if campaigns:
-            adgroups = AdGroupQueryManager().get_adgroups(campaigns=campaigns)
+            adgroups = AdGroupQueryManager().get_adgroups(account=self.account)
         else:
             adgroups = []
     
@@ -68,27 +74,43 @@ class AdGroupIndexHandler(RequestHandler):
             # impression_count
             # fill_rate
             # click_count
-            adgroup.all_stats = StatsModelQueryManager(self.account, offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)
+            # adgroup.all_stats = StatsModelQueryManager(self.account, offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)
 
             # Get total for the range
-            adgroup.summed_stats = reduce(lambda x, y: x+y, adgroup.all_stats, StatsModel())
+            # adgroup.summed_stats = reduce(lambda x, y: x+y, adgroup.all_stats, StatsModel())
+            
+            # derefernce campaign from the local cache
+            adgroup.campaign = campaigns_dict[adgroup._campaign]
 
-            adgroup.percent_delivered = budget_service.percent_delivered(adgroup.campaign)
-            
-            
+            # adgroup.percent_delivered = budget_service.percent_delivered(adgroup.campaign)
+        
+        # memoize    
+        adunits_dict = {}
+        apps_dict = {}    
         
         # Graph totals are the summed counts across all the adgroups   
-        account_level_stats = _calc_app_level_stats(adgroups)
-        account_level_summed_stats = sum(account_level_stats,StatsModel()) 
-        adgroups = _calc_and_attach_e_cpm(adgroups, account_level_summed_stats)
+        # account_level_stats = _calc_app_level_stats(adgroups)
+        # account_level_summed_stats = sum(account_level_stats,StatsModel()) 
+        # adgroups = _calc_and_attach_e_cpm(adgroups, account_level_summed_stats)
         for adgroup in adgroups:
-            
+            logging.info(adunits_dict)
+            adunits = []
+            adunit_keys_to_fetch = []
             # get targeted apps
             adgroup.targeted_app_keys = []
-            for adunit_key in adgroup.site_keys:
-                adunit = Site.get(adunit_key)
+            adunit_keys = [adunit_key for adunit_key in adgroup.site_keys]
+            for adunit_key in adunit_keys:
+                if adunit_key in adunits_dict:
+                    adunits.append(adunits_dict[adunit_key])
+                else:
+                    adunit_keys_to_fetch.append(adunit_key)    
+                    
+            if adunit_keys_to_fetch:
+                adunits += AdUnitQueryManager.get(adunit_keys_to_fetch)
+            for adunit in adunits:
+                adunits_dict[adunit.key()] = adunit
                 if adunit:
-                    adgroup.targeted_app_keys.append(adunit.app_key.key())
+                    adgroup.targeted_app_keys.append(adunit._app_key)
                 # apps.append(adunit.app_key)
             
         # Due to weirdness, network_campaigns and backfill_promo_campaigns are actually lists of adgroups
@@ -97,48 +119,48 @@ class AdGroupIndexHandler(RequestHandler):
 
         guarantee_levels = _sort_guarantee_levels(guaranteed_campaigns)
 
-        adgroups = sorted(adgroups, key=lambda adgroup: adgroup.summed_stats.impression_count, reverse=True)
+        # adgroups = sorted(adgroups, key=lambda adgroup: adgroup.summed_stats.impression_count, reverse=True)
     
         help_text = None
 
-        graph_adgroups = adgroups[0:4]
-        if len(adgroups) > 4:
-            graph_adgroups[3] = AdGroup(name='Others')
-            graph_adgroups[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[c.all_stats for c in adgroups[3:]])]
+        # graph_adgroups = adgroups[0:4]
+        # if len(adgroups) > 4:
+        #     graph_adgroups[3] = AdGroup(name='Others')
+        #     graph_adgroups[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[c.all_stats for c in adgroups[3:]])]
         
         # create special list of gtee adgroups to show revenue in graph
-        visible_gtee_adgroups = []
-        for level in guarantee_levels:
-            if level['display']:   # only get levels to show
-                visible_gtee_adgroups.extend(level['adgroups'])
+        # visible_gtee_adgroups = []
+        # for level in guarantee_levels:
+        #     if level['display']:   # only get levels to show
+        #         visible_gtee_adgroups.extend(level['adgroups'])
         
         # sort visible gtee adgroups by summed impression count
-        visible_gtee_adgroups = sorted(visible_gtee_adgroups, key=lambda adgroup: adgroup.summed_stats.impression_count, reverse=True)
+        # visible_gtee_adgroups = sorted(visible_gtee_adgroups, key=lambda adgroup: adgroup.summed_stats.impression_count, reverse=True)
         
         # if more than 4 visible gtee adgroups, condense 4th and remaining into 'Others'
-        graph_gtee_adgroups = visible_gtee_adgroups[0:4]
-        if len(visible_gtee_adgroups) > 4:
-            graph_gtee_adgroups[3] = AdGroup(name='Others')
-            graph_gtee_adgroups[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[c.all_stats for c in visible_gtee_adgroups[3:]])]
+        # graph_gtee_adgroups = visible_gtee_adgroups[0:4]
+        # if len(visible_gtee_adgroups) > 4:
+        #     graph_gtee_adgroups[3] = AdGroup(name='Others')
+        #     graph_gtee_adgroups[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[c.all_stats for c in visible_gtee_adgroups[3:]])]
             
-        try:
-            yesterday = sum([c.all_stats[-2] for c in graph_adgroups], StatsModel())
-        except IndexError: 
-            yesterday = StatsModel()
+        # try:
+        #     yesterday = sum([c.all_stats[-2] for c in graph_adgroups], StatsModel())
+        # except IndexError: 
+        #     yesterday = StatsModel()
 
         return render_to_response(self.request, 
                                  'advertiser/adgroups.html', 
                                   {'adgroups':adgroups,
-                                   'graph_adgroups': graph_adgroups,
-                                   'graph_gtee_adgroups': graph_gtee_adgroups,
-                                   'graph_totals': account_level_stats,
+                                   # 'graph_adgroups': graph_adgroups,
+                                   # 'graph_gtee_adgroups': graph_gtee_adgroups,
+                                   # 'graph_totals': account_level_stats,
                                    'start_date': days[0],
                                    'end_date':days[-1],
                                    'date_range': self.date_range,
                                    'apps' : apps,
-                                   'totals': reduce(lambda x, y: x+y.summed_stats, adgroups, StatsModel()),
-                                   'today': reduce(lambda x, y: x+y, [c.all_stats[-1] for c in graph_adgroups], StatsModel()),
-                                   'yesterday': yesterday,
+                                   # 'totals': reduce(lambda x, y: x+y.summed_stats, adgroups, StatsModel()),
+                                   # 'today': reduce(lambda x, y: x+y, [c.all_stats[-1] for c in graph_adgroups], StatsModel()),
+                                   # 'yesterday': yesterday,
                                    'guarantee_levels': guarantee_levels, 
                                    'promo': promo_campaigns,
                                    'network': network_campaigns,
@@ -911,6 +933,8 @@ def adserver_test(request,*args,**kwargs):
 
 class AJAXStatsHandler(RequestHandler):
     def get(self, start_date=None, date_range=14):
+        from common.utils.query_managers import QueryManager
+        
         if start_date:
             s = start_date.split('-')
             start_date = datetime.date(int(s[0]),int(s[1]),int(s[2]))
@@ -946,8 +970,22 @@ class AJAXStatsHandler(RequestHandler):
                     if adgroup.cpc:
                         e_ctr = summed_stats.ctr or DEFAULT_CTR
                         summed_stats.cpm = float(e_ctr) * float(adgroup.cpc) * 1000
+                    summed_stats.percent_delivered = budget_service.percent_delivered(adgroup.campaign)
                 
                 stats_dict[key]['sum'] = summed_stats.to_dict()
+                
+                # make name
+                if pub:
+                    pub_name = QueryManager.get(pub).name
+                else:
+                    pub_name = ''
+                    
+                if adv:
+                    adv_name = QueryManager.get(adv).name
+                else:
+                    adv_name = ''        
+                
+                stats_dict[key]['name'] = "%s||%s"%(pub_name, adv_name)
                 
                                                                                              
 

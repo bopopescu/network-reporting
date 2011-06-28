@@ -1,7 +1,5 @@
 import logging 
 
-from ad_server.debug_console import trace_logging
-
 from math import (atan2,
                    cos,
                    sin,
@@ -85,17 +83,7 @@ def device_filter(dev_preds):
 def os_filter(user_agent):
     log_mesg = "Removed due to OS restrictions: %s"
     def real_filter(a):
-        
-        return True
-        
-        trace_logging.warning("init: adgroup key: %s" % a.key())
-        trace_logging.warning("target android: %s" % a.target_android)
-        trace_logging.warning("target iphone: %s" % a.target_iphone)
-        trace_logging.warning("end init - target other: %s" % a.target_other)
-        
         user_os_name, user_model, user_os_version = get_os(user_agent)
-        
-        trace_logging.warning("os: %s, user_model:%s os_vers:%s" % (user_os_name, user_model, user_os_version ))
         
         # If we don't know the user agent
         if user_os_name is None:
@@ -144,18 +132,10 @@ def os_filter(user_agent):
             
             # Comparison succeeded            
             return True
-            
-            
-        trace_logging.warning("adgroup key: %s" % a.key())
-        trace_logging.warning("target android: %s" % a.target_android)
-        trace_logging.warning("target iphone: %s" % a.target_iphone)
-        trace_logging.warning("target other: %s" % a.target_other)
-        
         
         # We know the OS and the os_version
         user_nums = user_os_version.split('.')
         if user_os_name == "iOS":
-            trace_logging.warning("is IOS")
             if user_model:
                 if user_model == "iPhone" and not a.target_iphone:
                     return False
@@ -166,10 +146,8 @@ def os_filter(user_agent):
                 else:
                     max_nums = a.ios_version_max.split('.')
                     min_nums = a.ios_version_min.split('.')
-                    trace_logging.warning("In Range: %s " % in_range(user_nums, max_nums, min_nums) )
                     return in_range(user_nums, max_nums, min_nums)
         elif user_os_name == "android":
-            trace_logging.warning("is android")
             if not a.target_android:
                 return False
             else:

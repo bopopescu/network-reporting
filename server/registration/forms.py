@@ -3,6 +3,7 @@ Forms and validation code for user registration.
 
 """
 
+from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
 from django import forms
 from django.utils.translation import ugettext_lazy as _
@@ -266,3 +267,23 @@ class RegistrationFormNoFreeEmail(RegistrationForm):
         if email_domain in self.bad_domains:
             raise forms.ValidationError(_(u'Registration using free email addresses is prohibited. Please supply a different email address.'))
         return self.cleaned_data['email']
+        
+        
+class MPAuthenticationForm(AuthenticationForm):
+    
+    
+    def clean(self):
+        from google.appengine.api import users
+        from django.core.urlresolvers import reverse
+        
+        username = self.cleaned_data.get('username')
+        user = UserQueryManager.get_by_email(username)
+
+        # if the user is a google account user only
+        if user.user and not user.has_usable_password():
+            raise forms.ValidationError(_("Your account setup requires you to use your Google Account to <a href='%s'>log in</a>. \
+                                         <br/>If you want to unlink your google account, first log in then <a href='%s'>migrate</a> your account."%
+                                         (users.create_login_url('/inventory/'),reverse('registration_migrate_user'))
+                                        ))
+
+        return super(MPAuthenticationForm, self).clean()        

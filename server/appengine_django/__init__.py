@@ -582,6 +582,11 @@ def InstallAuthentication(settings):
     from account import models as mp_models
     models.User = helper_models.User
     # HACK: NAFIS
+    
+    from django.contrib.auth import views
+    from registration import auth_views as mp_auth_views
+    views.login = mp_auth_views.login
+    
     models.User = mp_models.User
     models.Group = helper_models.Group
     models.Permission = helper_models.Permission

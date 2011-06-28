@@ -24,12 +24,13 @@ from django.contrib.auth.models import User
 from django.views.decorators.cache import never_cache
 
 from account.query_managers import UserQueryManager
+from registration.forms import MPAuthenticationForm
 
 @csrf_protect
 @never_cache
 def login(request, template_name='registration/login.html',
           redirect_field_name=REDIRECT_FIELD_NAME,
-          authentication_form=AuthenticationForm):
+          authentication_form=MPAuthenticationForm):
     """Displays the login form and handles the login action."""
 
     redirect_to = request.REQUEST.get(redirect_field_name, '')

@@ -309,9 +309,9 @@ def get_osi(campaign):
         budget that was allotted to it. If there is not enough information
         default to 'on schedule' """  
     last_budgetslice = BudgetSliceLogQueryManager().get_most_recent(campaign)
-    
+    minimum_percentage = .95 # We must deliver at least 95% 
     try:
-        return last_budgetslice.actual_spending >= last_budgetslice.desired_spending 
+        return last_budgetslice.actual_spending >= last_budgetslice.desired_spending*minimum_percentage
     except AttributeError:
         # If there is no log built yet, we return True
         return True

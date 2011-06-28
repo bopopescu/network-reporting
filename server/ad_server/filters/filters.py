@@ -8,9 +8,15 @@ from math import (atan2,
                   )
 from budget import budget_service
 from reporting.models import StatsModel
+from ad_server.parser.useragent_parser import get_os
+
 
 from common.constants import (VALID_FULL_FORMATS,     
                               VALID_TABLET_FULL_FORMATS,
+                              MIN_IOS_VERSION, 
+                              MAX_IOS_VERSION, 
+                              MIN_ANDROID_VERSION, 
+                              MAX_ANDROID_VERSION
                              )
 ###############################
 # BASIC INCLUSION FILTERS
@@ -71,6 +77,79 @@ def device_filter(dev_preds):
     log_mesg = "Removed due to device mismatch: %s"
     def real_filter(a):
         return (set(dev_preds).intersection(a.device_predicates) > set())
+    return (real_filter, log_mesg, [])
+
+def os_filter(user_agent):
+    log_mesg = "Removed due to OS restrictions: %s"
+    def real_filter(a):
+        user_os_name, user_model, user_os_version = get_os(user_agent)
+        if user_os_name == None:
+            if a.target_other:
+                return True
+            else:
+                return False
+
+        if user_os_version == None:
+            if user_os_name == 'iOS':
+                if a.target_iphone and a.target_ipod and a.target_ipad and a.ios_version_min == MIN_IOS_VERSION and a.ios_version_max == MAX_IOS_VERSION:
+                    return True
+                else:
+                    return False
+            elif user_os_name == 'android':
+                if a.target_android and a.android_version_min == MIN_ANDROID_VERSION and a.android_version_max == MAX_ANDROID_VERSION:
+                    return True
+                else:
+                    return False
+                    
+        def in_range(user_nums,max_nums,min_nums):
+            #Make all lists same length to make comparison easier
+            max_len = max(len(user_nums), len(max_nums), len(min_nums))
+            while len(user_nums) < max_len:
+                user_nums.append('0')
+            while len(max_nums) < max_len:
+                max_nums.append('0')
+            while len(min_nums) < max_len:
+                min_nums.append('0')
+            
+            #Do comparison
+            is_less = False
+            is_more = False
+            for i, num in enumerate(user_nums):
+                if not is_less:
+                    if int(num) > int(max_nums[i]):
+                        return False
+                    elif int(num) < int(max_nums[i]):
+                        is_less = True
+                if not is_more:
+                    if int(num) < int(min_nums[i]):
+                        return False
+                    elif int(num) > int(min_nums[i]):
+                        is_more = True
+            
+            #Comparison succeeded            
+            return True
+        
+        user_nums = user_os_version.split('.')
+        if user_os_name == "iOS":
+            if user_model:
+                if user_model == "iPhone" and not a.target_iphone:
+                    return False
+                elif user_model == "iPad" and not a.target_ipad:
+                    return False
+                elif user_model == "iPod" and not a.target_ipod:
+                    return False
+                else:
+                    max_nums = a.ios_version_max.split('.')
+                    min_nums = a.ios_version_min.split('.')
+                    return in_range(user_nums,max_nums,min_nums)
+        elif user_os_name == "android":
+            if not a.target_android:
+                return False
+            else:
+                max_nums = a.android_version_max.split('.')
+                min_nums = a.android_version_min.split('.')
+                return in_range(user_nums,max_nums,min_nums)
+                
     return (real_filter, log_mesg, [])
 
 def mega_filter(*filters): 

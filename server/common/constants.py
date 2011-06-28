@@ -1,4 +1,38 @@
-## Constants wooo
+## Global Constants 
+
+# OS Versions
+
+
+  
+IOS_VERSION_CHOICES = (
+    ('999','No Maximum'),
+    ('2.0','2.0'),
+    ('2.1','2.1'),
+    ('3.0','3.0'),
+    ('3.1','3.1'),
+    ('3.2','3.2'),
+    ('4.0','4.0'),
+    ('4.1','4.1'),
+    ('4.2','4.2'),
+    ('4.3','4.3'),
+  )
+
+ANDROID_VERSION_CHOICES = (
+    ('999','No Maximum'),
+    ('1.5','1.5'),
+    ('1.6','1.6'),
+    ('2.0','2.0'),
+    ('2.1','2.1'),
+    ('2.2','2.2'),
+    ('2.3','2.3'),
+    ('3.0','3.0'),
+  )
+  
+MIN_ANDROID_VERSION = '1.5'
+MAX_ANDROID_VERSION = '999'
+MIN_IOS_VERSION = '2.0'
+MAX_IOS_VERSION = '999'
+
 
 # ISO stuff
 
@@ -87,4 +121,4 @@ ACCEPTED_MULTI_COUNTRY = {'GB' : ['UK', 'GB'],
 
 CAMPAIGN_LEVELS = ('gtee_high', 'gtee', 'gtee_low', 'promo', 'network', 'backfill_promo')
 
-MAX_OBJECTS=100
+MAX_OBJECTS=100 # <-- What is this?

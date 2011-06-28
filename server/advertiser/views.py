@@ -11,7 +11,10 @@ from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 
 from django.contrib.auth.decorators import login_required
+from common.utils import date_magic
+from common.utils import sswriter
 from common.utils.decorators import cache_page_until_post
+from common.utils.helpers import campaign_stats
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
 from django.utils import simplejson
@@ -960,3 +963,34 @@ class AJAXStatsHandler(RequestHandler):
 @login_required
 def stats_ajax(request, *args, **kwargs):
     return AJAXStatsHandler()(request, *args, **kwargs)
+
+class CampaignExporter(RequestHandler):
+    def post(self, adgroup_key, file_type, start, end, *args, **kwargs):
+        start = datetime.datetime.strptime(start,'%m%d%y')
+        end = datetime.datetime.strptime(end,'%m%d%y')
+        days = date_magic.gen_days(start, end)
+        adgroup = AdGroupQueryManager.get(adgroup_key)
+        all_stats = StatsModelQueryManager(self.account, offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)
+        f_name_dict = dict(adgroup_title = adgroup.campaign.name,
+                           start = start.strftime('%b %d'),
+                           end   = end.strftime('%b %d, %Y'),
+                           )
+        # Build
+        f_name = "%(adgroup_title)s Stats,  %(start)s - %(end)s" % f_name_dict
+        # Zip up days w/ corresponding stats object and other stuff
+        data = map(lambda x: [x[0]] + x[1], zip([day.strftime('%a, %b %d, %Y') for day in days], [campaign_stats(stat, adgroup.campaign.campaign_type) for stat in all_stats]))
+        # Row titles
+        c_type = adgroup.campaign.campaign_type
+        titles = ['Date']
+        if c_type == 'network':
+            titles += ['Attempts', 'Impressions', 'Fill Rate', 'Clicks', 'CTR']
+        elif 'gtee' in c_type:
+            titles += ['Impressions', 'Clicks', 'CTR', 'Revenue']
+        elif 'promo' in c_type:
+            titles += ['Impressions', 'Clicks', 'CTR', 'Conversions', 'Conversion Rate']
+        return sswriter.export_writer(file_type, f_name, titles, data)
+
+
+
+def campaign_export(request, *args, **kwargs):
+    return CampaignExporter()(request, *args, **kwargs)

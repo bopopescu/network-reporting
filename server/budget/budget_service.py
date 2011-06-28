@@ -11,7 +11,7 @@ from budget.models import (Budget,
                            )
                            
 from budget.query_managers import BudgetSliceLogQueryManager
-from budget.tzinfo import Pacific   
+from budget.tzinfo import Pacific
 
 """
 A service that determines if a campaign can be shown based upon the defined 
@@ -25,7 +25,7 @@ test_daily_budget = 0
 def pac_today():
     return datetime.datetime.now(tz=Pacific).date()
     
-def pac_time():
+def pac_dt():
     return datetime.datetime.now(tz=Pacific)
     
 def has_budget(campaign, cost, today=pac_today()):
@@ -75,7 +75,7 @@ def timeslice_advance(campaign):
     budget_slicer = Budget.get_or_insert_for_campaign(campaign)
     # Update timeslice budget in memory
     key = _make_campaign_ts_budget_key(campaign)
-    budget_slicer.current_timeslice += 1
+    budget_slicer.advance_timeslice()
 
     spent_this_timeslice = spent_today(campaign)-budget_slicer.spent_today
     budget_slicer.spent_today = spent_today(campaign)
@@ -144,13 +144,13 @@ def daily_advance(campaign, new_date=pac_today()):
     
     budget_slicer.timeslice_snapshot = 0.0
     
-    budget_slicer.current_timeslice = 0
     budget_slicer.spent_today = 0.
     
     ts_budget_key = _make_campaign_ts_budget_key(campaign)
     memcache.set(ts_budget_key, _to_memcache_int(0), namespace="budget")
     
     budget_slicer.put()
+    campaign.put()
     
     # We backup immediately in order to set a new daily snapshot
     _backup_budgets(campaign, spent_this_timeslice=spent_this_timeslice)
@@ -269,7 +269,7 @@ def get_spending_for_date_range(campaign, start_date, end_date, today=pac_today(
     
     return total_spending
 
-def update_budget(campaign, dt = pac_time()):
+def update_budget(campaign, dt = pac_dt(), save_campaign=True):
     if campaign.budget_type:
         budget_slicer = Budget.get_or_insert_for_campaign(campaign)
         if campaign.budget_type == "full_campaign":
@@ -302,6 +302,8 @@ def update_budget(campaign, dt = pac_time()):
                 else:
                     memcache.set(ts_key, _to_memcache_int(remaining_timeslice), namespace="budget")
         budget_slicer.put()
+        if save_campaign:
+            campaign.put()
                     
 def get_osi(campaign):
     """ Returns True if the most recent completed timeslice spent within 95% of the 
@@ -377,7 +379,7 @@ def _backup_budgets(campaign, spent_this_timeslice = None):
     # Make BudgetSliceLog
     initial_memcache_budget = budget_slicer.timeslice_snapshot
     final_memcache_budget = mem_budget
-
+    
     log = BudgetSliceLog(budget_slicer=budget_slicer,
                       initial_memcache_budget=initial_memcache_budget,
                       final_memcache_budget=final_memcache_budget,
@@ -389,6 +391,7 @@ def _backup_budgets(campaign, spent_this_timeslice = None):
     log.put()
     
     # Back up slicer with snapshots in database.
+
     budget_slicer.timeslice_snapshot = budget_slicer.timeslice_budget
     budget_slicer.daily_snapshot = rem_daily_budget
     budget_slicer.put()

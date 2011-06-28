@@ -28,7 +28,11 @@ class Budget(db.Model):
         
     def set_timeslice(self, seconds):
         self.current_timeslice = int(math.floor((DEFAULT_TIMESLICES*seconds)/86400))
-        
+    
+    def advance_timeslice(self):
+        self.current_timeslice += 1
+        self.current_timeslice %= DEFAULT_TIMESLICES
+    
     def __init__(self, parent=None, key_name=None, **kwargs):
         if not key_name and not kwargs.get('key', None):
             # We are not coming from database

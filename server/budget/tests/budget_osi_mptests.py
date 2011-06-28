@@ -73,7 +73,7 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         self.start_date = datetime.date(1987,4,4)
         self.end_date = datetime.date(1987,4,5)
         self.full_c = Campaign(name="full",
-                               budget=2000.0,
+                               full_budget=2000.0,
                                budget_type="full_campaign",
                                start_date=self.start_date,
                                end_date=self.end_date,
@@ -235,7 +235,6 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         """ We change a two day campaign to a four day campaign. 
             It should slow down the delivery."""
     
-        # budget_service.update_budget(self.full_c, dt=datetime.datetime(1987,4,4,0,0,0))
         eq_(budget_service._apply_if_able(self.full_c, 100), True)
         for i in xrange(9):
             budget_service.timeslice_advance(self.full_c)
@@ -245,23 +244,23 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         # the user says that the campaign must last three days.
     
         new_end_date = datetime.date(1987,4,6)
-        self.full_c = Campaign(name="full",
-                               full_budget=2000.0,
-                               budget_type="full_campaign",
-                               start_date=self.start_date,
-                               end_date=new_end_date,
-                               budget_strategy="evenly")
+        self.full_c.end_date=new_end_date
         self.full_c.put()
         dt = datetime.datetime(1987,4,4,23,0,0)
         budget_service.update_budget(self.full_c, dt)
     
-        eq_(self.full_c.budget, 500)
-    
+        eq_(self.full_c.budget, 2000/3.)
+
         budget_service.daily_advance(self.full_c, datetime.date(1987,4,5))
+        budget_service.timeslice_advance(self.full_c)
         
-        # The budget should now only have $1000 to spend over 2 da
-        eq_(budget_service._apply_if_able(self.full_c, 100), False)
-        eq_(budget_service._apply_if_able(self.full_c, 50), False)
+        eq_(self.full_c.budget, 500)
+        
+        # The budget should now only have $1000 to spend over 2 days
+        eq_(budget_service._apply_if_able(self.full_c, 50), True)
+        eq_(budget_service._apply_if_able(self.full_c, 1), False)
+        budget_service.timeslice_advance(self.full_c)
+        
         eq_(budget_service.get_osi(self.full_c), True)
     
         
@@ -277,22 +276,17 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         
         # The last timeslice is about to begin, and the user says that 
         # the campaign must end tomorrow.
+        budget_service.timeslice_advance(self.full_c)
         
         today = self.start_date
         new_end_date = datetime.date(1987,4,4)
-        self.full_c = Campaign(name="full",
-                               full_budget=2000.0,
-                               budget_type="full_campaign",
-                               start_date=self.start_date,
-                               end_date=new_end_date,
-                               budget_strategy="evenly")
+        self.full_c.end_date=new_end_date
         self.full_c.put()
         
-        budget_service.update_budget(self.full_c, datetime.datetime(1987,4,4,23,40))
+        budget_service.update_budget(self.full_c, datetime.datetime(1987,4,4,23,40,0))
         
         # We have spent 900 out of the $2000 total, we should now be able to spend
         # $1100
-        budget_service.timeslice_advance(self.full_c)
         eq_(budget_service._apply_if_able(self.full_c, 1100), True)
         
         

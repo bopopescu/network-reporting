@@ -16,6 +16,7 @@ from ad_server.filters.filters import (budget_filter,
                                     freq_filter,
                                     all_freq_filter,
                                     lat_lon_filter,
+                                    os_filter,
                                    )
 # from ad_server.adserver_templates import TEMPLATES
                                     
@@ -164,7 +165,8 @@ class AdAuction(object):
                         lat_lon_filter(ll),
                         kw_filter(keywords), 
                         geo_filter(geo_predicates), 
-                        device_filter(device_predicates)
+                        device_filter(device_predicates),
+                        os_filter(user_agent),
                        ) 
         
         all_ad_groups = filter(mega_filter(*ALL_FILTERS), all_ad_groups)

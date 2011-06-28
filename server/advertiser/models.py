@@ -5,6 +5,7 @@ from google.appengine.ext import blobstore
 from google.appengine.ext.db import polymodel
 from account.models import Account
 
+from common.constants import MIN_IOS_VERSION, MAX_IOS_VERSION, MIN_ANDROID_VERSION, MAX_ANDROID_VERSION
 import datetime
 from budget.tzinfo import Pacific
 
@@ -165,6 +166,18 @@ class AdGroup(db.Model):
     )
     min_os = db.StringListProperty(default=['any'])
     
+    # Device Targeting
+    target_iphone = db.BooleanProperty(default=True)
+    target_ipod = db.BooleanProperty(default=True)
+    target_ipad = db.BooleanProperty(default=True)
+    ios_version_min = db.StringProperty(default=MIN_IOS_VERSION)
+    ios_version_max = db.StringProperty(default=MAX_IOS_VERSION)
+    
+    target_android = db.BooleanProperty(default=True)
+    android_version_min = db.StringProperty(default=MIN_ANDROID_VERSION)
+    android_version_max = db.StringProperty(default=MAX_ANDROID_VERSION)
+    
+    target_other = db.BooleanProperty(default=True) # MobileWeb on blackberry etc
     
     USER_TYPES = (
         ('any','Any'),

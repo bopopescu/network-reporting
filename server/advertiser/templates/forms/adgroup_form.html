@@ -1,7 +1,9 @@
+
 {% load filters %}
 <script type='text/javascript'>
     //
-    // All this JS is here because it needs render-time info (see immediately below) to properly pre-populate//format the token inputs
+    // All this JS is here because it needs render-time info (see immediately below) to properly pre-populate/format the token inputs
+    // Can we move this to a hidden div or use ajax or some such? 
     //
     var geo_s = 'http://ws.geonames.org/searchJSON?';
     $(document).ready( function () {
@@ -135,31 +137,32 @@
                             </p>
                           </div>
                         </dd>
-                        <!-- <dt>Device Targeting:</dt>
+                        <dt>Device Targeting:</dt>
                         
                         <dd>
-                          <ul class="tree treeview filetree">
-                            <li><span> All devices </span></li>
-                            <li><span> Target devices by OS 
-                              <ul>
-                                <li><span> iPhone OS / iOS (iPhone/iPod Touch/iPad)
-                                  <ul>
-                                    <li><span> 2.0 </span></li>
-                                    <li><span> 2.1 </span></li>
-                                    <li><span> 4.3 </span></li>
-                                  </ul>
-                                </span></li>
-                                <li><span> Android
-                                  <ul>
-                                     <li><span> 1.5 </span></li>
-                                     <li><span> 1.6 </span></li>
-                                     <li><span> 3.0 </span></li>
-                                   </ul>
-                                </span></li>
-                              </ul>
-                            </span></li> 
-                          </ul>
-                        </dd> -->
+                          <div id="target ios" style="display:inline-block; width:400px">
+                            <span style="display:inline-block; width:150px">
+                            {{ form.target_iphone|raw }}iPhone {{ form.target_ipod|raw }}iPod {{ form.target_ipad|raw }}iPad
+                            </span>
+                                  <span style="display:inline-block; width:30px">Min:</span>{{ form.ios_version_min|raw }}
+
+                                  <span style="display:inline-block; width:30px">Max: </span>{{ form.ios_version_max|raw }}
+                          </div>
+                          
+                          <div id="target-android" style="display:inline-block; width:400px">
+                             <span style="display:inline-block; width:150px; padding-top:2px">
+                             {{ form.target_android|raw }} Android
+                             </span>
+                                   <span style="display:inline-block; width:30px">Min:</span>{{ form.android_version_min|raw }}
+                                   <span style="display:inline-block; width:30px">Max: </span>{{ form.android_version_max|raw }}
+                           </div>
+                           <div id="target-other" style="display:inline-block; width:400px">
+                              <span style="display:inline-block; width:150px; padding-top:2px">
+                              {{ form.target_other|raw }} Other
+                              </span> <span class="muted"> (All versions)</span>
+                            </div>
+                          
+                        </dd>
                         
                         <dt>Country Targeting:</dt>
                         <dd>

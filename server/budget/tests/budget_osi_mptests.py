@@ -235,7 +235,7 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         """ We change a two day campaign to a four day campaign. 
             It should slow down the delivery."""
     
-    
+        # budget_service.update_budget(self.full_c, dt=datetime.datetime(1987,4,4,0,0,0))
         eq_(budget_service._apply_if_able(self.full_c, 100), True)
         for i in xrange(9):
             budget_service.timeslice_advance(self.full_c)
@@ -255,6 +255,8 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         dt = datetime.datetime(1987,4,4,23,0,0)
         budget_service.update_budget(self.full_c, dt)
     
+        eq_(self.full_c.budget, 500)
+    
         budget_service.daily_advance(self.full_c, datetime.date(1987,4,5))
         
         # The budget should now only have $1000 to spend over 2 da
@@ -263,35 +265,35 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         eq_(budget_service.get_osi(self.full_c), True)
     
         
-    # def mptest_full_campaign_compressed_dates(self):
-    #     """ We spend a full day's budget as normal, then with one ts left, 
-    #         we set the campaign to be one day instead of two"""
-    #         
-    #     
-    #     eq_(budget_service._apply_if_able(self.full_c, 100), True)
-    #     for i in xrange(8):
-    #         budget_service.timeslice_advance(self.full_c)
-    #         eq_(budget_service._apply_if_able(self.full_c, 100), True)
-    #     
-    #     # The last timeslice is about to begin, and the user says that 
-    #     # the campaign must end tomorrow.
-    #     
-    #     today = self.start_date
-    #     new_end_date = datetime.date(1987,4,4)
-    #     self.full_c = Campaign(name="full",
-    #                            full_budget=2000.0,
-    #                            budget_type="full_campaign",
-    #                            start_date=self.start_date,
-    #                            end_date=new_end_date,
-    #                            budget_strategy="evenly")
-    #     self.full_c.put()
-    #     
-    #     budget_service.update_budget(self.full_c, datetime.datetime(1987,4,4,23,40))
-    #     
-    #     # We have spent 900 out of the $2000 total, we should now be able to spend
-    #     # $1100
-    #     budget_service.timeslice_advance(self.full_c)
-    #     eq_(budget_service._apply_if_able(self.full_c, 1100), True)
-    #     
-    #     
-    #     
+    def mptest_full_campaign_compressed_dates(self):
+        """ We spend a full day's budget as normal, then with one ts left, 
+            we set the campaign to be one day instead of two"""
+            
+        
+        eq_(budget_service._apply_if_able(self.full_c, 100), True)
+        for i in xrange(8):
+            budget_service.timeslice_advance(self.full_c)
+            eq_(budget_service._apply_if_able(self.full_c, 100), True)
+        
+        # The last timeslice is about to begin, and the user says that 
+        # the campaign must end tomorrow.
+        
+        today = self.start_date
+        new_end_date = datetime.date(1987,4,4)
+        self.full_c = Campaign(name="full",
+                               full_budget=2000.0,
+                               budget_type="full_campaign",
+                               start_date=self.start_date,
+                               end_date=new_end_date,
+                               budget_strategy="evenly")
+        self.full_c.put()
+        
+        budget_service.update_budget(self.full_c, datetime.datetime(1987,4,4,23,40))
+        
+        # We have spent 900 out of the $2000 total, we should now be able to spend
+        # $1100
+        budget_service.timeslice_advance(self.full_c)
+        eq_(budget_service._apply_if_able(self.full_c, 1100), True)
+        
+        
+        

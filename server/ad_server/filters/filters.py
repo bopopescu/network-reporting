@@ -1,4 +1,7 @@
 import logging 
+
+from ad_server.debug_console import trace_logging
+
 from math import (atan2,
                    cos,
                    sin,
@@ -82,14 +85,27 @@ def device_filter(dev_preds):
 def os_filter(user_agent):
     log_mesg = "Removed due to OS restrictions: %s"
     def real_filter(a):
+        
+        return True
+        
+        trace_logging.warning("init: adgroup key: %s" % a.key())
+        trace_logging.warning("target android: %s" % a.target_android)
+        trace_logging.warning("target iphone: %s" % a.target_iphone)
+        trace_logging.warning("end init - target other: %s" % a.target_other)
+        
         user_os_name, user_model, user_os_version = get_os(user_agent)
-        if user_os_name == None:
+        
+        trace_logging.warning("os: %s, user_model:%s os_vers:%s" % (user_os_name, user_model, user_os_version ))
+        
+        # If we don't know the user agent
+        if user_os_name is None:
             if a.target_other:
                 return True
             else:
                 return False
-
-        if user_os_version == None:
+        
+        # We do know the OS but we don't know what the os_version is
+        if user_os_version is None:
             if user_os_name == 'iOS':
                 if a.target_iphone and a.target_ipod and a.target_ipad and a.ios_version_min == MIN_IOS_VERSION and a.ios_version_max == MAX_IOS_VERSION:
                     return True
@@ -101,8 +117,8 @@ def os_filter(user_agent):
                 else:
                     return False
                     
-        def in_range(user_nums,max_nums,min_nums):
-            #Make all lists same length to make comparison easier
+        def in_range(user_nums, max_nums, min_nums):
+            # Make all lists same length to make comparison easier
             max_len = max(len(user_nums), len(max_nums), len(min_nums))
             while len(user_nums) < max_len:
                 user_nums.append('0')
@@ -111,7 +127,7 @@ def os_filter(user_agent):
             while len(min_nums) < max_len:
                 min_nums.append('0')
             
-            #Do comparison
+            # Do comparison
             is_less = False
             is_more = False
             for i, num in enumerate(user_nums):
@@ -126,11 +142,20 @@ def os_filter(user_agent):
                     elif int(num) > int(min_nums[i]):
                         is_more = True
             
-            #Comparison succeeded            
+            # Comparison succeeded            
             return True
+            
+            
+        trace_logging.warning("adgroup key: %s" % a.key())
+        trace_logging.warning("target android: %s" % a.target_android)
+        trace_logging.warning("target iphone: %s" % a.target_iphone)
+        trace_logging.warning("target other: %s" % a.target_other)
         
+        
+        # We know the OS and the os_version
         user_nums = user_os_version.split('.')
         if user_os_name == "iOS":
+            trace_logging.warning("is IOS")
             if user_model:
                 if user_model == "iPhone" and not a.target_iphone:
                     return False
@@ -141,14 +166,16 @@ def os_filter(user_agent):
                 else:
                     max_nums = a.ios_version_max.split('.')
                     min_nums = a.ios_version_min.split('.')
-                    return in_range(user_nums,max_nums,min_nums)
+                    trace_logging.warning("In Range: %s " % in_range(user_nums, max_nums, min_nums) )
+                    return in_range(user_nums, max_nums, min_nums)
         elif user_os_name == "android":
+            trace_logging.warning("is android")
             if not a.target_android:
                 return False
             else:
                 max_nums = a.android_version_max.split('.')
                 min_nums = a.android_version_min.split('.')
-                return in_range(user_nums,max_nums,min_nums)
+                return in_range(user_nums, max_nums, min_nums)
                 
     return (real_filter, log_mesg, [])
 

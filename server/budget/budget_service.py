@@ -128,8 +128,6 @@ def daily_advance(campaign, new_date=pac_today()):
         campaign.budget = _redistribute_budget(campaign,new_date)
         budget_slicer.campaign=campaign
     
-    budget_slicer.put()
-        
     new_initial_budget = campaign.budget
     
     daily_budget_key = _make_campaign_daily_budget_key(campaign)
@@ -271,17 +269,18 @@ def get_spending_for_date_range(campaign, start_date, end_date, today=pac_today(
     
     return total_spending
 
-def update_budget(campaign, today = pac_time()):
+def update_budget(campaign, dt = pac_time()):
     if campaign.budget_type:
         budget_slicer = Budget.get_or_insert_for_campaign(campaign)
         if campaign.budget_type == "full_campaign":
-            campaign.budget = _redistribute_budget(campaign, today.date())
+            campaign.budget = _redistribute_budget(campaign, dt.date())
             budget_slicer.campaign = campaign
             
-        if (campaign.budget_type == "full_campaign" and today.date() >= campaign.start_date and today.date() <= campaign.end_date) or (campaign.budget_type == "daily" and not campaign.end_date and not campaign.start_date)\
-        or (campaign.budget_type == "daily" and not campaign.end_date and campaign.start_date and campaign.start_date <= today.date()) \
-        or (campaign.budget_type == "daily" and not campaign.start_date and campaign.end_date and campaign.end_date >= today.date()) \
-        or (campaign.budget_type == "daily" and campaign.start_date and campaign.end_date and campaign.start_date <= today.date() and campaign.end_date >= today.date()):
+        if (campaign.budget_type == "full_campaign" and dt.date() >= campaign.start_date and dt.date() <= campaign.end_date)\
+        or ((campaign.budget_type == "daily" and campaign.budget) and ((not campaign.end_date and campaign.start_date and campaign.start_date <= dt.date()) \
+        or (not campaign.end_date and not campaign.start_date) \
+        or (not campaign.start_date and campaign.end_date and campaign.end_date >= dt.date()) \
+        or (campaign.start_date and campaign.end_date and campaign.start_date <= dt.date() and campaign.end_date >= dt.date()))):
             spent = spent_today(campaign)
             daily_budget_key = _make_campaign_daily_budget_key(campaign)
             ts_key = _make_campaign_ts_budget_key(campaign)
@@ -294,7 +293,7 @@ def update_budget(campaign, today = pac_time()):
                 memcache.set(daily_budget_key, _to_memcache_int(budget_slicer.daily_snapshot), namespace="budget")
 
             if campaign.budget_strategy == "evenly":
-                budget_slicer.set_timeslice(today.hour*60*60+today.minute*60+today.second)
+                budget_slicer.set_timeslice(dt.hour*60*60+dt.minute*60+dt.second)
                 budget_slicer.timeslice_snapshot = budget_slicer.timeslice_budget
                 spent_in_timeslice = spent_today(campaign)-budget_slicer.spent_today
                 remaining_timeslice = budget_slicer.timeslice_budget-spent_in_timeslice

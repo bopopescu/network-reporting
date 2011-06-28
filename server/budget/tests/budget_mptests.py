@@ -952,7 +952,7 @@ class TestBudgetUnitTests(unittest.TestCase):
 
         self.cheap_c.budget = 1200.
         self.cheap_c.put()
-        budget_service.update_budget(self.cheap_c, today=datetime.datetime(1987,4,4,0,0,0))
+        budget_service.update_budget(self.cheap_c, dt=datetime.datetime(1987,4,4,0,0,0))
 
         eq_(budget_service._apply_if_able(self.cheap_c, 200), True)
         eq_(budget_service._apply_if_able(self.cheap_c, 100), False)
@@ -973,7 +973,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         budget_service._apply_if_able(self.cheap_c, 500)
         self.cheap_c.full_budget = 2000.
         self.cheap_c.put()
-        budget_service.update_budget(self.cheap_c, today=datetime.datetime(1987,4,4,0,0,0))
+        budget_service.update_budget(self.cheap_c, dt=datetime.datetime(1987,4,4,0,0,0))
 
         eq_(budget_service._apply_if_able(self.cheap_c, 250), True)
         eq_(budget_service._apply_if_able(self.cheap_c, 50), False)
@@ -993,7 +993,7 @@ class TestBudgetUnitTests(unittest.TestCase):
 
         self.cheap_c.end_date = datetime.date(1987,4,4)
         self.cheap_c.put()
-        budget_service.update_budget(self.cheap_c, today = datetime.datetime(1987,4,4,0,0,0))
+        budget_service.update_budget(self.cheap_c, dt = datetime.datetime(1987,4,4,0,0,0))
 
         eq_(budget_service._apply_if_able(self.cheap_c, 2500), True)
         eq_(budget_service._apply_if_able(self.cheap_c, 100), False)
@@ -1035,8 +1035,9 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.cheap_c.budget_type = "daily"
         self.cheap_c.start_date = datetime.date(1987,4,4)
         self.cheap_c.end_date = self.cheap_c.start_date
+        self.cheap_c.put()
         
-        budget_service.update_budget(self.cheap_c, today = datetime.datetime(1987,4,4,0,0,0))
+        budget_service.update_budget(self.cheap_c, dt = datetime.datetime(1987,4,4,0,0,0))
         
         eq_(budget_service._apply_if_able(self.cheap_c,100), True)
         
@@ -1044,11 +1045,21 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.cheap_c.budget = 3000.
         self.cheap_c.put()
         
-        budget_service.update_budget(self.cheap_c, today = datetime.datetime(1987,4,4,2,30,0))
+        budget_service.update_budget(self.cheap_c, dt = datetime.datetime(1987,4,4,2,30,0))
         
         eq_(budget_service._apply_if_able(self.cheap_c,322.2222), True)
         eq_(budget_service._apply_if_able(self.cheap_c,1), False)
+    
+    def mptest_campaign_starts_midday(self):
+        self.cheap_c.budget_strategy = "evenly"
+        self.cheap_c.budget_type = "daily"
+        self.cheap_c.start_date = datetime.date(1987,4,4)
+        self.cheap_c.end_date = datetime.date(1987,4,4)
+        self.cheap_c.put()
         
+        budget_service.update_budget(self.cheap_c, dt=datetime.datetime(1987,4,4,12,0,0))
+        eq_(budget_service._apply_if_able(self.cheap_c,200), True)
+        eq_(budget_service._apply_if_able(self.cheap_c,1), False)
         
     # def mptest_timeslice_changing_in_the_morning(self):
     #      # We have a campaign that was set to begin several days ago 
@@ -1063,17 +1074,8 @@ class TestBudgetUnitTests(unittest.TestCase):
     #      #self.cheap_c.budget = None
     #      self.cheap_c.put()
     # 
-    #      # Advance the budget and the ts budgets
-    #      budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,4))
-    #      
-    #      # # Oops, the person realizes the campaign should only go for one day
-    #      # # We still want to spend the whole $10,000 but do it in one day.
-    #      # self.cheap_c.end_date = datetime.date(1987,4,4)
-    #      # self.cheap_c.put()
-    #      
-    #      for i in xrange(budgetmodels.DEFAULT_TIMESLICES):
-    #          budget_service.timeslice_advance(self.cheap_c)
-    # 
+    #     budget_service.update_budget(self.cheap_c, dt=datetime.datetime(1987,4,4,0,0,0))
+    #     
     #      # 1000 remaining because the 10K budget is split between the 10 remaining days
     #      eq_(budget_service.remaining_daily_budget(self.cheap_c), 1000)
     # 

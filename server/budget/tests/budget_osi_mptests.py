@@ -187,23 +187,24 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
             the osi to still say it's ok"""
             
             
-        self.cheap_adgroup.bid=30.0
+        self.cheap_adgroup.bid=33.0
         self.cheap_adgroup.put()                    
                
                
-        eq_(self.cheap_adgroup.individual_cost, 30.)
+        eq_(self.cheap_adgroup.individual_cost, 33.)
         
         # We spend 90
-        eq_(budget_service._apply_if_able(self.cheap_c, 30), True)
-        eq_(budget_service._apply_if_able(self.cheap_c, 30), True)
-        eq_(budget_service._apply_if_able(self.cheap_c, 30), True)
+        eq_(budget_service._apply_if_able(self.cheap_c, 33), True)
+        eq_(budget_service._apply_if_able(self.cheap_c, 33), True)
+        eq_(budget_service._apply_if_able(self.cheap_c, 33), True)
         eq_(budget_service._apply_if_able(self.cheap_c, 30), False)                      
                              
         budget_service.timeslice_advance(self.cheap_c)
 
         # We spent the most that we could
 
-        # In the most recent completed timeslice, we spent 200
+        # In the most recent completed timeslice, we spent 99 out of 100
+        # This is within 95% so it is ok
         eq_(budget_service.get_osi(self.cheap_c), True)
 
 

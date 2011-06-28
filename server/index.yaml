@@ -88,29 +88,29 @@ indexes:
 
 - kind: BudgetDailyLog
   properties:
-  - name: budget_slicer
+  - name: budget
   - name: date
 
 - kind: BudgetDailyLog
   properties:
-  - name: budget_slicer
+  - name: budget
   - name: end_date
     direction: desc
 
 - kind: BudgetDailyLog
   properties:
-  - name: budget_slicer
+  - name: budget
   - name: end_datetime
     direction: desc
 
 - kind: BudgetSliceLog
   properties:
-  - name: budget_slicer
+  - name: budget
   - name: end_date
 
 - kind: BudgetSliceLog
   properties:
-  - name: budget_slicer
+  - name: budget
   - name: end_date
     direction: desc
 

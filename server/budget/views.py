@@ -149,8 +149,8 @@ def budget_view(request, adgroup_key):
     # prefix = "http://localhost:8080/_ah/admin/datastore/edit?key="
     prefix = "https://appengine.google.com/datastore/edit?app_id=mopub-inc&namespace=&key="
 
-    budget_slicer = Budget.get_or_insert_for_campaign(camp)
-    budget_slicer_url = prefix + str(budget_slicer.key())
+    budget_obj = Budget.get_or_insert_for_campaign(camp)
+    budget_obj_url = prefix + str(budget_obj.key())
            
            
     #### Build memcache clearing urls ####
@@ -172,7 +172,7 @@ def budget_view(request, adgroup_key):
                 'ts_logs': ts_logs,
                 'today': today,
                 'one_month_ago': one_month_ago,
-                'budget_slicer_url': budget_slicer_url,
+                'budget_obj_url': budget_obj_url,
                 'clear_memcache_daily_url': clear_memcache_daily_url,
                 'clear_memcache_ts_url': clear_memcache_ts_url}
 

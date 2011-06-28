@@ -7,6 +7,6 @@ class BudgetSliceLogQueryManager(QueryManager):
     
     def get_most_recent(self, campaign):
         """ Returns the most recent SliceLog for a campaign. """
-        budget_slicer = Budget.get_or_insert_for_campaign(campaign)
+        budget_obj = Budget.get_or_insert_for_campaign(campaign)
         
-        return budget_slicer.timeslice_logs.order('-end_date').get()
+        return budget_obj.timeslice_logs.order('-end_date').get()

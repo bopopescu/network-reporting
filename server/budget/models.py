@@ -77,7 +77,7 @@ class Budget(db.Model):
         return db.run_in_transaction(_txn,campaign)        
 
 class BudgetSliceLog(db.Model):
-      budget_slicer = db.ReferenceProperty(Budget,collection_name="timeslice_logs")
+      budget = db.ReferenceProperty(Budget,collection_name="timeslice_logs")
       initial_memcache_budget = db.FloatProperty()
       final_memcache_budget = db.FloatProperty()
       remaining_daily_budget = db.FloatProperty()
@@ -98,7 +98,7 @@ class BudgetSliceLog(db.Model):
          
 
 class BudgetDailyLog(db.Model):
-    budget_slicer = db.ReferenceProperty(Budget,collection_name="daily_logs")
+    budget = db.ReferenceProperty(Budget,collection_name="daily_logs")
     initial_daily_budget = db.FloatProperty()
     remaining_daily_budget = db.FloatProperty()
     spending = db.FloatProperty()

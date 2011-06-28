@@ -31,3 +31,7 @@ def campaign_stats(stat, type):
         return [int(stat.impression_count), int(stat.click_count), stat.ctr, stat.revenue]
     elif 'promo' in type:
         return [int(stat.impression_count), int(stat.click_count), stat.ctr, int(stat.conversion_count), stat.conv_rate]
+
+
+def app_stats(stat):
+    return [int(stat.request_count), int(stat.impression_count), stat.fill_rate, int(stat.click_count), stat.ctr]

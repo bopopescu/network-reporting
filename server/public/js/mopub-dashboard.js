@@ -692,6 +692,26 @@ var mopub = mopub || {};
         var container = "#adForm-"+deviceFormat+"-container"
         $(container).find('.possible-format').click(); 
       });
+  
+    // Do Campaign Export Select stuff
+    $('#publisher-app-exportSelect')
+     .change(function(e) {
+        e.preventDefault();
+        var val = $(this).val();
+        if (val != 'exp') {
+            $('#appExportForm')
+                .find('#appExportType')
+                .val(val)
+                .end()
+                .submit();
+        }
+        $(this).selectmenu('index', 0);
+    });
+
+    // Hide unneeded li entry
+    $('#publisher-app-exportSelect-menu').find('li').first().hide();
+
+
   });
   
 })(this.jQuery);

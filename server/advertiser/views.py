@@ -976,7 +976,8 @@ class CampaignExporter(RequestHandler):
                            end   = end.strftime('%b %d, %Y'),
                            )
         # Build
-        f_name = "%(adgroup_title)s Stats,  %(start)s - %(end)s" % f_name_dict
+        f_name = "%(adgroup_title)s CampaignStats,  %(start)s - %(end)s" % f_name_dict
+        f_name = f_name.encode('ascii', 'ignore')
         # Zip up days w/ corresponding stats object and other stuff
         data = map(lambda x: [x[0]] + x[1], zip([day.strftime('%a, %b %d, %Y') for day in days], [campaign_stats(stat, adgroup.campaign.campaign_type) for stat in all_stats]))
         # Row titles

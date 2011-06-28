@@ -150,15 +150,16 @@
                           </div>
                           
                           <div id="target-android" style="display:inline-block; width:400px">
-                             <span style="display:inline-block; width:150px">
+                             <span style="display:inline-block; width:150px; padding-top:2px">
                              {{ form.target_android|raw }} Android
                              </span>
                                    <span style="display:inline-block; width:30px">Min:</span>{{ form.android_version_min|raw }}
                                    <span style="display:inline-block; width:30px">Max: </span>{{ form.android_version_max|raw }}
                            </div>
                            <div id="target-other" style="display:inline-block; width:400px">
-                              <span style="display:inline-block; width:150px">
+                              <span style="display:inline-block; width:150px; padding-top:2px">
                               {{ form.target_other|raw }} Other
+                              </span> <span class="muted"> (All versions)</span>
                             </div>
                           
                         </dd>

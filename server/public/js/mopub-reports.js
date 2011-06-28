@@ -8,7 +8,6 @@
         $('table').each(function() {
             visible = $(this).find('.reportData:visible');
             if (visible.length === 0) {
-                console.log(visible);
                 $(this).find('.reportData-placeholder').show();
             }
         });

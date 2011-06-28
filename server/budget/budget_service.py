@@ -305,13 +305,13 @@ def update_budget(campaign, today = pac_time()):
         budget_slicer.put()
                     
 def get_osi(campaign):
-    """ Returns True if the most recent completed timeslice spent all the
-        budget that was allotted to it. If there is not enough information
-        default to 'on schedule' """  
+    """ Returns True if the most recent completed timeslice spent within 95% of the 
+        desired total. """  
     last_budgetslice = BudgetSliceLogQueryManager().get_most_recent(campaign)
+    successful_delivery = .95
     
     try:
-        return last_budgetslice.actual_spending >= last_budgetslice.desired_spending 
+        return last_budgetslice.actual_spending >= last_budgetslice.desired_spending*successful_delivery 
     except AttributeError:
         # If there is no log built yet, we return True
         return True

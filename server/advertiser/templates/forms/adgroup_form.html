@@ -140,7 +140,7 @@
                         <dt>Device Targeting:</dt>
                         
                         <dd>
-                          <div id="ios-versions" style="display:inline-block; width:400px">
+                          <div id="target ios" style="display:inline-block; width:400px">
                             <span style="display:inline-block; width:150px">
                             {{ form.target_iphone|raw }}iPhone {{ form.target_ipod|raw }}iPod {{ form.target_ipad|raw }}iPad
                             </span>
@@ -149,13 +149,17 @@
                                   <span style="display:inline-block; width:30px">Max: </span>{{ form.ios_version_max|raw }}
                           </div>
                           
-                          <div id="android-versions" style="display:inline-block; width:400px">
+                          <div id="target-android" style="display:inline-block; width:400px">
                              <span style="display:inline-block; width:150px">
                              {{ form.target_android|raw }} Android
                              </span>
                                    <span style="display:inline-block; width:30px">Min:</span>{{ form.android_version_min|raw }}
                                    <span style="display:inline-block; width:30px">Max: </span>{{ form.android_version_max|raw }}
                            </div>
+                           <div id="target-other" style="display:inline-block; width:400px">
+                              <span style="display:inline-block; width:150px">
+                              {{ form.target_other|raw }} Other
+                            </div>
                           
                         </dd>
                         

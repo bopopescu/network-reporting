@@ -387,7 +387,7 @@ class StatsModel(db.Expando):
     
             
     def _dict_properties(self):
-        model_props = self.properties().keys() 
+        model_props = ['_%s'%prop for prop in self.properties().keys()]
         pseudo_props = ['cpa', 'cpc', 'cpm', 'fill_rate', 'conv_rate', 'ctr', 'percent_delivered']
         return model_props + pseudo_props
                

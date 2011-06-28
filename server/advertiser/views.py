@@ -93,7 +93,6 @@ class AdGroupIndexHandler(RequestHandler):
         # account_level_summed_stats = sum(account_level_stats,StatsModel()) 
         # adgroups = _calc_and_attach_e_cpm(adgroups, account_level_summed_stats)
         for adgroup in adgroups:
-            logging.info(adunits_dict)
             adunits = []
             adunit_keys_to_fetch = []
             # get targeted apps

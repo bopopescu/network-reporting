@@ -128,6 +128,7 @@
             results.cpm = "$" + results.cpm.toFixed(2);
             results.ctr = formatPercentage(results.ctr);
             results.fill_rate = formatPercentage(results.fill_rate);
+            results.on_schedule = (results.on_schedule) ? "On time" : "Behind";
             return results;
         }
         
@@ -143,6 +144,7 @@
         
         var jsonKeyToClassMap = {
             status: "status",
+            on_schedule: "on_schedule",
             revenue: "rev",
             impression_count: "imp",
             conversion_count: "conv",
@@ -703,49 +705,6 @@
                 <div class="chart chart-loading stats-chart" id="dashboard-stats-chart">
                   <div class="chart-loading-text">Loading ...</div>
                   <div class="chart-error-text">Could not load chart</div>
-                  <script type="text/javascript">
-                    // if no gtee adgroups to show, don't display revenue data in graph
-                    /*{% if graph_gtee_adgroups|length == 0 %}
-                      // chart data
-                      mopub.dashboardStatsChartData = {
-                        //pointStart: 1294963200000,
-                        pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
-                        pointInterval: 86400000,
-                        'impressions': [{% for a in graph_adgroups %}
-                          { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                        ],
-                        'clicks': [{% for a in graph_adgroups %}
-                          { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                        ],
-                        'ctr':  [
-                        {% for a in graph_adgroups %}
-                          { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.ctr}}{% if not forloop.last %},{% endif %} {% endfor %}] },{% endfor %}
-                          { 'Mopub Optimized': [{% for stat in graph_totals %}{{stat.ctr}}{% if not forloop.last %},{% endif %} {% endfor %}] }
-                        ],
-                      };
-                    {% else %}
-                      // chart data
-                      mopub.dashboardStatsChartData = {
-                        //pointStart: 1294963200000,
-                        pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
-                        pointInterval: 86400000,
-                        'impressions': [{% for a in graph_adgroups %}
-                          { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                        ],
-                        'revenue': [{% for a in graph_gtee_adgroups %}
-                          { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.revenue}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                        ],
-                        'clicks': [{% for a in graph_adgroups %}
-                          { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.click_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                        ],
-                        'ctr':  [
-                        {% for a in graph_adgroups %}
-                          { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.ctr}}{% if not forloop.last %},{% endif %} {% endfor %}] },{% endfor %}
-                          { 'Mopub Optimized': [{% for stat in graph_totals %}{{stat.ctr}}{% if not forloop.last %},{% endif %} {% endfor %}] }
-                        ],
-                      };
-                    {% endif %}   */                 
-                  </script>
                 </div>
               </div>
               <div class="clear"></div>
@@ -755,7 +714,7 @@
             <div id="campaigns-control-panel">
               <div class="center-button-bank">
     
-                <span class="buttonset" id="campaigns-filterOptions"> 
+                <span class="buttonset inactive" id="campaigns-filterOptions"> 
                   <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-all" checked="checked" id="campaigns-filterOptions-option-all"/> 
                   <label for="campaigns-filterOptions-option-all">All</label> 
                   <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Running" id="campaigns-filterOptions-option-Running"/> 
@@ -826,7 +785,6 @@
                       {% for adgroup in level.adgroups %}
 
                       <tr class="campaignData gtee_row campaign-status-all campaign-targeting-all
-                      campaign-status-{{adgroup|campaign_status}}
                       {% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}"
                       id="{{adgroup.key}}">
                         <th class="campaignData-icon">
@@ -854,15 +812,21 @@
 
                         {% if adgroup.cpc %}
                         <td class="dataTable-data numeric dataTable-ecpm">
-                          <div class="dataTable-campaign-ecpm ecpm">--</div>
-                        <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"> What's this?
-                          </a>
+                          <span class="dataTable-campaign-ecpm ecpm">
+                            --
+                            <a href="#" id="campaign-ecpm-helpLink" class="whatsthis">
+                              <div class="whatsthis-icon"></div>
+                            </a>
+                          </span>
                         </td>
                         {% else %}
                         <td class="dataTable-data numeric dataTable-ecpm ecpm">--</td>
                         {% endif %}
                         
-                        <td class="dataTable-data numeric status">Loading...</td>
+                        <td class="dataTable-data numeric">
+                            <div class="status">Loading...</div>
+                            <div class="on_schedule muted"></div>
+                        </td>
                         <td class='gtee-rev rev' style='display:none;'></td>
                         <td class="dataTable-data numeric gtee-imp imp">--</td>
                         <td class="dataTable-data numeric gtee-clk clk">--</td>
@@ -925,7 +889,6 @@
                 <tbody>
                   {% for adgroup in promo %}
                   <tr class="campaignData promo_row campaign-status-all campaign-targeting-all
-                    campaign-status-{{adgroup|campaign_status}}
                     {% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}"
                     id="{{adgroup.key}}">
                     <th class="campaignData-icon">
@@ -951,12 +914,15 @@
                     </th>
                     <td class="dataTable-data numeric dataTable-ecpm">
                         {% if adgroup.bid_strategy == 'cpm' %}
-                        {{adgroup.summed_stats.e_cpm|currency}}</td>
+                        --
                         {% endif %}
                         {% if adgroup.bid_strategy == 'cpc' %}
-                          <div class="dataTable-campaign-ecpm ecpm">--</div>
-                        <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"> What's this?
+                        <span class="dataTable-campaign-ecpm ecpm">
+                          --
+                          <a href="#" id="campaign-ecpm-helpLink" class="whatsthis">
+                            <div class="whatsthis-icon"></div>
                           </a>
+                        </span>  
                         {% endif %}
                     </td>    
                     <td class="dataTable-data numeric">Loading...</td>
@@ -1018,7 +984,6 @@
                 <tbody>
                   {% for adgroup in network %}
                   <tr class="campaignData network_row campaign-status-all campaign-targeting-all
-                    campaign-status-{{adgroup|campaign_status}}
                     {% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}"
                     
                    id="{{adgroup.key}}">
@@ -1036,9 +1001,12 @@
                     </th>
                     {% if adgroup.cpc %}
                     <td class="dataTable-data numeric dataTable-ecpm">
-                      <div class="dataTable-campaign-ecpm ecpm">--</div>
-                      <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"> What's this?
-                      </a>
+                        <span class="dataTable-campaign-ecpm ecpm">
+                          --
+                          <a href="#" id="campaign-ecpm-helpLink" class="whatsthis">
+                            <div class="whatsthis-icon"></div>
+                          </a>
+                        </span>
                     </td>
                     {% else %}
                     <td class="dataTable-data numeric dataTable-ecpm ecpm">--</td>
@@ -1102,7 +1070,6 @@
                 <tbody>
                   {% for adgroup in backfill_promo %}
                   <tr class="campaignData bfill_row campaign-status-all campaign-targeting-all
-                    campaign-status-{{adgroup|campaign_status}}
                     {% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}" 
                     id="{{adgroup.key}}">
                     <th class="campaignData-icon">
@@ -1128,9 +1095,12 @@
                     </th>
                     {% if adgroup.cpc %}
                     <td class="dataTable-data numeric dataTable-ecpm">
-                      <div class="dataTable-campaign-ecpm ecpm">--</div>
-                        <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"> What's this?
+                        <span class="dataTable-campaign-ecpm ecpm">
+                          --
+                          <a href="#" id="campaign-ecpm-helpLink" class="whatsthis">
+                            <div class="whatsthis-icon"></div>
                           </a>
+                        </span>
                     </td>
                     {% else %}
                     <td class="dataTable-data numeric dataTable-ecpm ecpm">--</td>

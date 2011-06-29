@@ -82,7 +82,7 @@ class AdGroupIndexHandler(RequestHandler):
             # derefernce campaign from the local cache
             adgroup.campaign = campaigns_dict[adgroup._campaign]
 
-            adgroup.percent_delivered = budget_service.percent_delivered(adgroup.campaign)
+            #adgroup.percent_delivered = budget_service.percent_delivered(adgroup.campaign)
         
         # memoize    
         adunits_dict = {}
@@ -105,7 +105,6 @@ class AdGroupIndexHandler(RequestHandler):
                     adunit_keys_to_fetch.append(adunit_key)    
                     
             if adunit_keys_to_fetch:
-                logging.info("keys: %s"%[str(k) for k in adunit_keys_to_fetch])
                 adunits += AdUnitQueryManager.get(adunit_keys_to_fetch)
             
             for adunit in adunits:

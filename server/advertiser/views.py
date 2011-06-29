@@ -933,7 +933,8 @@ def adserver_test(request,*args,**kwargs):
 class AJAXStatsHandler(RequestHandler):
     def get(self, start_date=None, date_range=14):
         from common.utils.query_managers import QueryManager
-        
+        from common_templates.templatetags import filters
+
         if start_date:
             s = start_date.split('-')
             start_date = datetime.date(int(s[0]),int(s[1]),int(s[2]))
@@ -969,8 +970,8 @@ class AJAXStatsHandler(RequestHandler):
                     if adgroup.cpc:
                         e_ctr = summed_stats.ctr or DEFAULT_CTR
                         summed_stats.cpm = float(e_ctr) * float(adgroup.cpc) * 1000
-                    summed_stats.percent_delivered = budget_service.percent_delivered(adgroup.campaign)
-                
+                        summed_stats.percent_delivered = adgroup.percent_delivered = budget_service.percent_delivered(adgroup.campaign)
+                        summed_stats.status = filters.campaign_status(adgroup)
                 stats_dict[key]['sum'] = summed_stats.to_dict()
                 
                 # make name

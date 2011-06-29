@@ -21,9 +21,7 @@ To find the default widgets for a property, look in djangoforms
 class MPTextareaField(CharField):
     widget = mpwidgets.MPTextarea
 
-class MPKeywordsField(CharField):
-    widget = mpwidgets.MPTextarea
-
+class MPKeywordsField(MPTextareaField):
     def clean(self,value):
       value = super(MPKeywordsField,self).clean(value)
       if value:

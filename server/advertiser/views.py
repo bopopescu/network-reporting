@@ -935,6 +935,8 @@ class AJAXStatsHandler(RequestHandler):
         from common.utils.query_managers import QueryManager
         from common_templates.templatetags import filters
 
+        import random
+
         if start_date:
             s = start_date.split('-')
             start_date = datetime.date(int(s[0]),int(s[1]),int(s[2]))
@@ -974,7 +976,9 @@ class AJAXStatsHandler(RequestHandler):
                     percent_delivered = 10.0#budget_service.percent_delivered(adgroup.campaign)
                     summed_stats.percent_delivered = percent_delivered
                     adgroup.percent_delivered = percent_delivered
+                    
                     summed_stats.status = filters.campaign_status(adgroup)
+                    summed_stats.on_schedule = True if random.randint(0,1) == 0 else False
                 stats_dict[key]['sum'] = summed_stats.to_dict()
                 
                 # make name

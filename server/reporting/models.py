@@ -378,7 +378,16 @@ class StatsModel(db.Expando):
     def set_status(self, value):
         self._status = value
         
-    status = property(get_status, set_status)        
+    status = property(get_status, set_status)      
+    
+    def get_on_schedule(self):
+        if hasattr(self, '_on_schedule'): return self._on_schedule
+        return None
+        
+    def set_on_schedule(self, value):
+        self._on_schedule = value
+        
+    on_schedule = property(get_on_schedule, set_on_schedule)        
 
     @property   
     def cpc(self):
@@ -397,7 +406,7 @@ class StatsModel(db.Expando):
             
     def _dict_properties(self):
         model_props = self.properties().keys()
-        pseudo_props = ['cpa', 'cpc', 'cpm', 'fill_rate', 'conv_rate', 'ctr', 'percent_delivered', 'status']
+        pseudo_props = ['cpa', 'cpc', 'cpm', 'fill_rate', 'conv_rate', 'ctr', 'on_schedule', 'status']
         return model_props + pseudo_props
                
     def to_dict(self):

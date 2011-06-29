@@ -105,6 +105,12 @@ indexes:
 
 - kind: BudgetSliceLog
   properties:
+  - name: budget_obj
+  - name: end_date
+    direction: desc
+
+- kind: BudgetSliceLog
+  properties:
   - name: budget_slicer
   - name: end_date
 

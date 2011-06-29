@@ -372,7 +372,7 @@ class StatsModel(db.Expando):
     percent_delivered = property(get_percent_delivered, set_percent_delivered)         
     
     def get_status(self):
-        is hasattr(self, '_status'): return self._status
+        if hasattr(self, '_status'): return self._status
         return None
         
     def set_status(self, value):

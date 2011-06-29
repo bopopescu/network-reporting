@@ -970,7 +970,7 @@ class AJAXStatsHandler(RequestHandler):
                     if adgroup.cpc:
                         e_ctr = summed_stats.ctr or DEFAULT_CTR
                         summed_stats.cpm = float(e_ctr) * float(adgroup.cpc) * 1000
-                        summed_stats.percent_delivered = adgroup.percent_delivered = budget_service.percent_delivered(adgroup.campaign)
+                        summed_stats.percent_delivered = adgroup.percent_delivered = 10.0#budget_service.percent_delivered(adgroup.campaign)
                         summed_stats.status = filters.campaign_status(adgroup)
                 stats_dict[key]['sum'] = summed_stats.to_dict()
                 

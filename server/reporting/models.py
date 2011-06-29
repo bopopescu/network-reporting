@@ -77,7 +77,7 @@ class StatsModel(db.Expando):
     device_os = db.StringProperty()
     device_os_version = db.StringProperty()
     
-    include_geo = False
+    include_geo = True
     
     @classmethod
     def from_json(cls,string):

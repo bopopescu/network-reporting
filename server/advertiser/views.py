@@ -1004,4 +1004,4 @@ class AJAXStatsHandler(RequestHandler):
 
 @login_required
 def stats_ajax(request, *args, **kwargs):
-    return AJAXStatsHandler()(request, *args, **kwargs)
+    return AJAXStatsHandler()(request, use_cache=True, *args, **kwargs)

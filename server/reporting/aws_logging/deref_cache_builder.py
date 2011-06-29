@@ -53,10 +53,12 @@ STATUS_STEP = 100000
 
 DEREF_CACHE_PICKLE_FILE = 'deref_cache.pkl' 
 try:
+    print '\nloading deref cache from %s ...' %DEREF_CACHE_PICKLE_FILE
     with open(DEREF_CACHE_PICKLE_FILE, 'rb') as pickle_file:
         DEREF_CACHE = pickle.load(pickle_file)
-        print '\nloading deref cache from %s ...\n' %DEREF_CACHE_PICKLE_FILE
+    print 'loaded %i records\n' % (len(DEREF_CACHE))
 except:
+    traceback.print_exc()
     print '\ninitializing empty deref cache...\n'
     DEREF_CACHE = {}
 

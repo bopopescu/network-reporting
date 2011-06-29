@@ -5,6 +5,7 @@ def main():
     try:
         for line in sys.stdin:
             line = line.strip() # get rid of \n at the end
+            if '??' in line: continue
             print "LongValueSum:%s\t%i" % (line, 1)
     except:
         pass

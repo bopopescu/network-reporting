@@ -113,11 +113,14 @@ def preprocess_logline(logline):
         
         if handler and param_dict and log_date and log_time:
             if 'udid' in param_dict:    # unique user count requires udid 
-                new_params = deref_models(handler, param_dict)
-                if new_params:
-                    new_logline = 'udid=%s,handler=%s,date=%s,time=%s,%s' \
-                                    %(param_dict['udid'], handler, log_date, log_time, new_params)
-                    return new_logline
+                try:
+                    new_params = deref_models(handler, param_dict)
+                    if new_params:
+                        new_logline = 'udid=%s,handler=%s,date=%s,time=%s,%s' \
+                                        %(param_dict['udid'], handler, log_date, log_time, new_params)
+                        return new_logline
+                except:
+                    return None
     return None
 
 

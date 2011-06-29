@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import sys
+import traceback
 
 table = {}
 
@@ -17,14 +18,18 @@ def update_counts(current, delta):
 
 
 def main():
-    try:
-        for line in sys.stdin:
+    for line in sys.stdin:
+        try:
             parse_and_update_table(line)
-    except:
-        pass
+        except:
+            traceback.print_exc()
         
     for key, counts in table.iteritems():
-        print "%s\t%s" % (key, str(counts))
+        try:
+            print "%s\t%s" % (key, str(counts))
+        except:
+            traceback.print_exc()
+        
 
 if __name__ == '__main__':
     main()

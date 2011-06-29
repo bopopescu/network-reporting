@@ -1,15 +1,17 @@
 import datetime
 import logging
 import time
+import traceback
 
 from google.appengine.ext import db
+from google.appengine.ext import blobstore
 from google.appengine.ext.db import InternalError, Timeout
 from google.appengine.runtime.apiproxy_errors import CapabilityDisabledError
 
 import reporting.models as reporting_models
 
 from common.utils.query_managers import CachedQueryManager
-from reporting.models import SiteStats, StatsModel
+from reporting.models import SiteStats, StatsModel, BlobLog
 from advertiser.models import Creative
 from publisher.models import Site as AdUnit
 
@@ -38,11 +40,24 @@ class SiteStatsQueryManager(CachedQueryManager):
         stats = SiteStats.get(keys) # db get
         stats = [s or SiteStats() for s in stats]
         return stats
+
+
+class BlobLogQueryManager():
+
+    def put_bloblog(self, date, blob_key, account=None):
+        bloblog = BlobLog(date=date, blob_key=blob_key, account=account)
+        return bloblog.put()
+
+    def get_blobkeys_for_days(self, days): 
+        #for all the days, turn them into YYMMDD and then use that to construct the key, then with all those keys get all the BlobLogs, then with all those bloblogs, return only a list of the blob_keys associated with them
+        #this comment is longer than the code lul
+        return map(lambda bloblog: bloblog.blob_key, BlobLog.get(map(lambda day: db.Key(BLOBLOG_KEY % day.strftime('%y%m%d')), days)))
+
         
 class StatsModelQueryManager(CachedQueryManager):
     Model = StatsModel
     
-    def __init__(self, account, offline=False, include_geo=False):
+    def __init__(self, account, offline=False):
         if isinstance(account, db.Key):
             self.account = account
         elif isinstance(account, db.Model):
@@ -55,7 +70,6 @@ class StatsModelQueryManager(CachedQueryManager):
         self.stats = []
         self.obj_cache = {}
         self.all_stats_deltas = [StatsModel()]
-        self.include_geo = include_geo
         
     def get_stats_for_apps(self, apps, num_days=30):
         days = StatsModel.lastdays(num_days)
@@ -250,15 +264,9 @@ class StatsModelQueryManager(CachedQueryManager):
         stats = StatsModel.get(keys) # db get
         #since pubs iterates more than once around days, stats might be too long
         #but it should only iterate on MULTIPLES of days_len, so ct mod days_len
+
         stats = [s or StatsModel(date=datetime.datetime.combine(days[ct%days_len],datetime.time())) for ct,s in enumerate(stats)]
-        
-        final_stats = []
-        for i,stat in enumerate(stats):
-            if not stat:
-                stat = stat or StatsModel(date=datetime.datetime.combine(days[i%days_len],datetime.time()))
-            stat.include_geo = self.include_geo
-            final_stats.append(stat)
-        return final_stats
+        return stats            
     
     def accumulate_stats(self, stat):
         self.stats.append(stat)
@@ -278,7 +286,7 @@ class StatsModelQueryManager(CachedQueryManager):
         all_stats_deltas = self._place_stats_under_account(all_stats_deltas, offline=offline)
         
         self.all_stats_deltas = all_stats_deltas
-    
+        
         # get or insert from db in order to update as transaction
         def _txn(stats, offline):
             return self._update_db(stats, offline)
@@ -298,14 +306,18 @@ class StatsModelQueryManager(CachedQueryManager):
             page_count = 0
             retries = 0
 
+            account_name = self.account.name()
+            
             while stats and retries <= MAX_RETRIES:
                 try:
                     db.put(stats[:LIMIT])
-                    print "putting %i models..." %(len(stats[:LIMIT]))
+                    # print "putting %i models..." %(len(stats[:LIMIT]))
+                    print '%s: %i models' % ((account_name or 'None').rjust(25), len(stats[:LIMIT]))
                     stats = stats[LIMIT:]
                     page_count += 1
                     retries = 0
-                except (InternalError, Timeout, CapabilityDisabledError):
+                except: # (InternalError, Timeout, CapabilityDisabledError):
+                    traceback.print_exc()
                     retries += 1
             return [s.key() for s in all_stats[:LIMIT*page_count]] # only return the ones that were successully batch put
 
@@ -321,15 +333,11 @@ class StatsModelQueryManager(CachedQueryManager):
                 
     def _get_all_rollups(self, stats, offline):
         offline = offline or self.offline
-        
+                
         # initialize the object dictionary 
         stats_dict = {}
         for stat in stats:
-            stat_key_name = stat.key().name() 
-            if stat_key_name in stats_dict:
-                stats_dict[stat_key_name] += stat
-            else:
-                stats_dict[stat_key_name] = stat
+            stats_dict[stat.key().name()] = stat
         
         
         def _get_refprop_from_cache(entity, prop):
@@ -514,13 +522,10 @@ class StatsModelQueryManager(CachedQueryManager):
             for stat in stats:
                 make_above_stat(stat, attr)
                             
-        # if not offline, remove all the country level stats
-        # because we are storing this data in dynamic properties
-        if not offline:
-            stats = stats_dict.values()
-            for stat in stats:
-                if stat.country:
-                    del stats_dict[stat.key().name()]
+        stats = stats_dict.values()
+        for stat in stats:
+            if stat.country:
+                del stats_dict[stat.key().name()]
         
         # time rollups
         if not offline: # do not rollup on date if it's offline, since aws-logging data is already cumulative

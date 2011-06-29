@@ -156,7 +156,19 @@ def export_writer(file_type, file_name, row_titles, row_data):
     Returns:
         HttpResponse object that is a file to be saved by the user
     """
-    return 
+    if file_type == 'csv':
+        response = HttpResponse(mimetype = 'text/csv')
+        row_writer = write_csv_row( response ) 
+    if file_type == 'xls':
+        response = HttpResponse(mimetype = 'application/vnd.ms-excel')
+        row_writer, writer = make_xls_writers()
+    response['Content-disposition'] = 'attachment; filename=%s' % file_name
+    row_writer(row_titles)
+    for row in row_data:
+        row_writer(row)
+    if file_type == 'xls':
+        writer(response)
+    return response
 
 def write_report(file_type, report_key, account):
     """ Writes a report with key report_key to a file of type file_type

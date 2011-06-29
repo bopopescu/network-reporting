@@ -82,7 +82,7 @@ class AdGroupIndexHandler(RequestHandler):
             # derefernce campaign from the local cache
             adgroup.campaign = campaigns_dict[adgroup._campaign]
 
-            # adgroup.percent_delivered = budget_service.percent_delivered(adgroup.campaign)
+            adgroup.percent_delivered = budget_service.percent_delivered(adgroup.campaign)
         
         # memoize    
         adunits_dict = {}

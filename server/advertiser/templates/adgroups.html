@@ -7,8 +7,14 @@
 <script src='/js/countries.js'></script>
 <script>
     $(function() {
+        var graphStartDate = Date.UTC({{start_date.year}}, 
+            {{start_date.month|add:"-1"}}, 
+            {{start_date.day}});
         var campaignIdsToFetch = {};
         var fetchedCampaignIds = {};
+        
+        var AJAX_TIMEOUT_MILLISECONDS = 10000;
+        var AJAX_MAX_FAILED_ATTEMPTS = 3;
         
         function getCampaignIds() {
             var dictionary = {};
@@ -21,24 +27,61 @@
         }
         
         function getNumDays() {
-            return $("input[name=dashboard-dateOptions-option]:checked").val();
+            var daysRadioVal = $("input[name=dashboard-dateOptions-option]:checked").val();
+            if (!daysRadioVal || daysRadioVal == "custom") {
+                var currentUrl = document.location.href;
+                var daysRegex = /r=(\d+)&/g;
+                var match = daysRegex.exec(currentUrl);
+                return match[1];
+            }
+            else return daysRadioVal;
         }
         
         function getStartDate() {
-            return null;
+            var currentUrl = document.location.href;
+            var startDateRegex = /s=(.*)(&|#)/g;
+            var match = startDateRegex.exec(currentUrl);
+            if (!match || match.length < 2) return null;
+            else return match[1];
         }
         
         function populateCampaignStats(idsToFetch, fetchedIds) {
             var days = getNumDays();
+            var startDate = getStartDate();
             
             for (var id in idsToFetch) {
-                var url = "/campaigns/stats/ajax?adv=" + id + "&date_range=" + days;
-                $.getJSON(url, function() { 
-                    return function(data) {
-                        updateCampaign(data, idsToFetch, fetchedIds) 
-                    }
-                }());
+                var backoffData = { delay: 1000, failedAttempts: 0 };
+                ajaxFetchCampaign(id, days, startDate, idsToFetch, fetchedIds, backoffData);
             }
+        }
+        
+        function ajaxFetchCampaign(id, days, startDate, idsToFetch, fetchedIds, backoffData) {
+            var url = "/campaigns/stats/ajax/?adv=" + id + 
+                "&date_range=" + days;
+            if (startDate) url += "&start_date=" + startDate;
+            
+            $.ajax({
+                url: url,
+                dataType: 'json',
+                success: function() {
+                    return function(data) {
+                        updateCampaign(data, idsToFetch, fetchedIds);
+                    }
+                }(),
+                error: function() {
+                    backoffData.failedAttempts++;
+                    console.log("failed. num failures for this guy: ", backoffData.failedAttempts);
+                    if (backoffData.failedAttempts > AJAX_MAX_FAILED_ATTEMPTS) {
+                        console.log("maxed out failures, giving up...");
+                        return;
+                    } 
+                    setTimeout(ajaxFetchCampaign(id, days, startDate, idsToFetch, fetchedIds, backoffData),
+                        backoffData.delay);
+                    backoffData.delay *= 1.5;
+                    console.log("next backoff delay is: ", backoffData.delay)
+                },
+                timeout: AJAX_TIMEOUT_MILLISECONDS
+            });
         }
         
         function updateCampaign(data, idsToFetch, fetchedIds) {
@@ -54,13 +97,14 @@
                 }
                 
                 // Record adgroup_id as fetched.
+                console.log("deleting ", adgroup_id)
                 delete idsToFetch[adgroup_id];
-                fetchedIds[adgroup_id] = all_stats;
+                fetchedIds[adgroup_id] = all_stats[key];
             }
             
+            calculateRollupStats();
             var readyForRollups = objectIsEmpty(idsToFetch);
             if (readyForRollups) {
-                calculateRollupStats();
                 prepareGraph();
             }
         }
@@ -98,6 +142,7 @@
         };
         
         var jsonKeyToClassMap = {
+            status: "status",
             revenue: "rev",
             impression_count: "imp",
             conversion_count: "conv",
@@ -110,6 +155,11 @@
             fill_rate: "fill",
         };
         
+        function parseIntFromStatText(statText) {
+            var stat = parseInt(statText.replace(/,/g,''), 10);
+            return (isNaN(stat)) ? 0 : stat;
+        }
+        
         function calculateRollupStats() {
             // No need to calculate rollups when placeholder is visible, since there are no campaigns.
             if ($('.gtee-placeholder').is(":visible")) {
@@ -120,13 +170,13 @@
                 var gtee_imp, gtee_clk, gtee_rev;
                 gtee_imp = gtee_clk = gtee_rev = 0;
                 $('.gtee-imp:visible').each(function() {
-                        gtee_imp += parseInt($(this).text().replace(/,/g,''), 10);
+                        gtee_imp += parseIntFromStatText($(this).text());
                         });
                 $('.gtee-clk:visible').each(function() {
-                        gtee_clk += parseInt($(this).text().replace(/,/g,''), 10);
+                        gtee_clk += parseIntFromStatText($(this).text());
                         });
                 $('tr.gtee_row:visible td.gtee-rev').each(function() {
-                        gtee_rev += parseInt($(this).text().replace(/,/g,''), 10);
+                        gtee_rev += parseIntFromStatText($(this).text());
                         });
 
                 $('#gtee-total-imp').text(addCommas(gtee_imp));
@@ -151,13 +201,13 @@
                 var bfill_imp, bfill_clk, bfill_conv;
                 bfill_imp = bfill_clk = bfill_conv = 0;
                 $('.bfill-imp:visible').each(function() {
-                        bfill_imp += parseInt($(this).text().replace(/,/g,''), 10);
+                        bfill_imp += parseIntFromStatText($(this).text());
                         });
                 $('.bfill-clk:visible').each(function() {
-                        bfill_clk += parseInt($(this).text().replace(/,/g,''), 10);
+                        bfill_clk += parseIntFromStatText($(this).text());
                         });
                 $('.bfill-conv:visible').each(function() {
-                        bfill_conv += parseInt($(this).text().replace(/,/g,''), 10);
+                        bfill_conv += parseIntFromStatText($(this).text());
                         });
 
                 $("#bfill-total-imp").text(addCommas(bfill_imp));
@@ -181,13 +231,13 @@
                 var promo_imp, promo_clk, promo_conv;
                 promo_imp = promo_clk = promo_conv = 0;
                 $('.promo-imp:visible').each(function() {
-                        promo_imp += parseInt($(this).text().replace(/,/g,''), 10);
+                        promo_imp += parseIntFromStatText($(this).text());
                         });
                 $('.promo-clk:visible').each(function() {
-                        promo_clk += parseInt($(this).text().replace(/,/g,''), 10);
+                        promo_clk += parseIntFromStatText($(this).text());
                         });
                 $('.promo-conv:visible').each(function() {
-                        promo_conv += parseInt($(this).text().replace(/,/g,''), 10);
+                        promo_conv += parseIntFromStatText($(this).text());
                         });
 
                 $("#promo-total-imp").text(addCommas(promo_imp));
@@ -213,13 +263,13 @@
                 var net_imp, net_clk, net_req;
                 net_imp = net_clk = net_req = 0;
                 $('.network-imp').each(function() {
-                        net_imp += parseInt($(this).text().replace(/,/g,''), 10);
+                        net_imp += parseIntFromStatText($(this).text());
                         });
                 $('.network-clk').each(function() {
-                        net_clk += parseInt($(this).text().replace(/,/g,''), 10);
+                        net_clk += parseIntFromStatText($(this).text());
                         });
                 $('.network-req').each(function() {
-                        net_req += parseInt($(this).text().replace(/,/g,''), 10);
+                        net_req += parseIntFromStatText($(this).text());
                         });
                 $("#network-total-imp").text(addCommas(net_imp));
                 $("#network-total-clk").text(addCommas(net_clk));
@@ -261,20 +311,96 @@
         }
         
         function prepareGraph() {
-            /*mopub.dashboardStatsChartData = {
-                pointStart:,
-                pointInterval: 8640000,
-                impressions:,
-                revenue:,
-                clicks:,
-                ctr:,
-            };*/
+            var topCampaigns = getTopCampaigns(4);
+            
+            var graphImpStats = getGraphStatsForStatName("impression_count", topCampaigns);
+            var graphRevStats = getGraphStatsForStatName("revenue", topCampaigns);
+            var graphClkStats = getGraphStatsForStatName("click_count", topCampaigns);
+            var graphCtrStats = getGraphStatsForStatName("ctr", topCampaigns);
+            
+            mopub.dashboardStatsChartData = {
+                pointStart: graphStartDate,
+                pointInterval: 86400000,
+                impressions: graphImpStats,
+                revenue: graphRevStats,
+                clicks: graphClkStats,
+                ctr: graphCtrStats
+            };
+            
+            var chartSeriesType = 'area';
+            var activeBreakdownsElem = $('#dashboard-stats .stats-breakdown .active');
+            if (activeBreakdownsElem.attr('id') == 'stats-breakdown-ctr') chartSeriesType = 'line';
+            setupDashboardStatsChart(chartSeriesType);
+        }
+        
+        function getTopCampaigns(numCampaigns) {
+            var campaigns = [];
+            $.each(fetchedCampaignIds, function(key, value) {
+                var dict = {};
+                dict.key = value["name"].replace("||", "");
+                dict.stats = value;
+                campaigns.push(dict);
+            });
+            
+            campaigns.sort(function(a, b) {
+                var impsA = parseInt(a.stats.sum.impression_count);
+                var impsB = parseInt(b.stats.sum.impression_count);
+                if (impsA < impsB) return 1;
+                if (impsA > impsB) return -1;
+                else return 0;
+            });
+            
+            numCampaigns = (numCampaigns < campaigns.length) ? numCampaigns : campaigns.length;
+            return campaigns.slice(0, numCampaigns);
+        }
+        
+        function getGraphStatsForStatName(statName, topCampaigns) {
+            var statsArray = [];
+            
+            for (var i = 0; i < topCampaigns.length; i++) {
+                var campaign = topCampaigns[i];
+                var name = campaign.key;
+                var daily_stats = campaign.stats.daily_stats;
+                var dict = {};
+                dict[name] = $.map(daily_stats, function(dayStats) {
+                    return parseInt(dayStats[statName]);
+                });
+                statsArray.push(dict);
+            }
+            
+            return statsArray;
         }
         
         function populateStatsBreakdowns() {
             var days = getNumDays();
-            var url = "/campaigns/stats/ajax?date_range=" + days;
-            $.getJSON(url, updateStatsBreakdowns);
+            var startDate = getStartDate();
+            var backoffData = { delay: 1000, failedAttempts: 0 };
+            
+            ajaxFetchStatsBreakdowns(days, startDate, backoffData);
+        }
+        
+        function ajaxFetchStatsBreakdowns(days, startDate, backoffData) {
+            var url = "/campaigns/stats/ajax/?date_range=" + days;
+            if (startDate) url += "&start_date=" + startDate;
+            
+            $.ajax({
+                url: url,
+                dataType: 'json',
+                success: updateStatsBreakdowns,
+                error: function() {
+                    backoffData.failedAttempts++;
+                    console.log("failed. num failures for stats breakdowns: ", backoffData.failedAttempts);
+                    if (backoffData.failedAttempts > AJAX_MAX_FAILED_ATTEMPTS) {
+                        console.log("maxed out failures for stats breakdowns, giving up...");
+                        return;
+                    } 
+                    setTimeout(ajaxFetchStatsBreakdowns(days, startDate, backoffData),
+                        backoffData.delay);
+                    backoffData.delay *= 1.5;
+                    console.log("next backoff delay for stats breakdowns is: ", backoffData.delay);
+                },
+                timeout: AJAX_TIMEOUT_MILLISECONDS
+            });
         }
         
         function updateStatsBreakdowns(data) {
@@ -300,9 +426,171 @@
             $("#stats-breakdown-ctr .all .inner").html(all.ctr);
         }
         
+        populateStatsBreakdowns();
         campaignIdsToFetch = getCampaignIds();
         populateCampaignStats(campaignIdsToFetch, fetchedCampaignIds);
-        populateStatsBreakdowns();
+        
+        /*---------------------------------------/
+        / Chart
+        /---------------------------------------*/
+
+        function chartError() {
+          //$('#dashboard-stats-chart').removeClass('chart-loading').addClass('chart-error');
+        }
+
+        function setupDashboardStatsChart(seriesType) {
+          // get active metric from breakdown
+          var metricElement = $('#dashboard-stats .stats-breakdown .active');
+          var metricElementIdComponents = metricElement.attr('id').split('-');
+          var activeMetric = metricElementIdComponents[metricElementIdComponents.length - 1];
+
+          // get data
+          var data = mopub.dashboardStatsChartData;
+          if(typeof data == 'undefined') {
+            chartError();
+            return;
+          }
+
+          // set up series
+          var colors = ['#0090d9', '#e57300', '#53a600', '#444444'];
+          var chartSeries = [];
+          var activeData = data[activeMetric];
+          if(typeof activeData == 'undefined') {
+            chartError();
+            return;
+          }
+          $.each(activeData, function(i, seriesObject) {
+            var seriesName, seriesData;
+            $.each(seriesObject, function(name, value) {
+              seriesName = name;
+              seriesData = value;
+
+              if (seriesType == 'line'){
+                 if (seriesName == 'Mopub Optimized'){
+                  seriesLineWidth = 4;
+                } else{
+                  seriesLineWidth = 2;
+                }
+              }
+              else{
+                seriesLineWidth = 3;
+              }
+
+            });
+            chartSeries.push({
+              name: seriesName,
+              data: seriesData,
+              color: colors[i],
+              lineWidth: seriesLineWidth,
+            });
+          });
+
+          // setup HighCharts chart
+          this.trafficChart = new Highcharts.Chart({
+            chart: {
+              renderTo: 'dashboard-stats-chart',
+              defaultSeriesType: seriesType,
+              marginTop: 0,
+              marginBottom: 55
+            },
+            plotOptions: {
+              series: {
+                pointStart: data.pointStart,
+                pointInterval: data.pointInterval
+              }
+            },
+            legend: {
+              verticalAlign: "bottom",
+              y: -7,
+              enabled: (chartSeries.length > 1)          
+            },
+            yAxis: {
+              labels: {
+                formatter: function() {
+                  if(activeMetric == 'revenue') {
+                    text = '$' + Highcharts.numberFormat(this.value, 0);
+                  }
+                  else if(activeMetric == 'ctr') {
+                    text = Highcharts.numberFormat(this.value, 0) + '%';
+                  } 
+                  else {
+                    if (this.value >= 1000000000) {
+                      return Highcharts.numberFormat(this.value / 1000000000, 0) + "B";
+                    } else if (this.value >= 1000000) {
+                      return Highcharts.numberFormat(this.value / 1000000, 0) + "M";
+                    } else if (this.value >= 1000) {
+                      return Highcharts.numberFormat(this.value / 1000, 0) + "K";
+                    } else if (this.value > 0) {
+                      return Highcharts.numberFormat(this.value, 0);
+                    } else {
+                      return "0";
+                    }
+                  }
+                }
+              }
+            },
+            tooltip: {
+              formatter: function() {
+                var text = '', value = '', total = '';
+
+                if(activeMetric == 'revenue') {
+                  value = '$' + Highcharts.numberFormat(this.y, 0);
+                  total = '$' + Highcharts.numberFormat(this.total, 0) + ' total';
+                }
+                else if (activeMetric == 'clicks') {
+                  value = Highcharts.numberFormat(this.y, 0) + ' ' + activeMetric;
+                  total = Highcharts.numberFormat(this.total, 0) + ' total ' + activeMetric;
+                }
+                else if (activeMetric == 'ctr') {
+                  value = Highcharts.numberFormat(this.y*100, 2) + "% click through";
+                  total = "";
+                }
+                else {
+                  value = Highcharts.numberFormat(this.y, 0) + ' ' + activeMetric;
+                  total = Highcharts.numberFormat(this.total, 0) + ' total ' + activeMetric;
+                }
+
+                text += '<span style="font-size: 14px;">' + Highcharts.dateFormat('%A, %B %e, %Y', this.x) + '</span><br/>';
+                text += '<span style="padding: 0; font-weight: 600; color: ' + this.series.color + '">' + this.series.name + '</span>' + ': <strong style="font-weight: 600;">' + value + '</strong><br/>';
+
+                if((chartSeries.length > 1) && (total != "")) {
+                  text += '<span style="font-size: 12px; color: #666;">';
+                  if(this.total > 0) {
+                    text += '(' + Highcharts.numberFormat(this.percentage, 0) + '% of ' + total + ')';
+                  }
+                  else {
+                    text += '(' + total + ')';
+                  }
+                  text += '</span>';
+                }
+
+                return text;
+              }
+            },
+            series: chartSeries
+          });
+
+          $('#dashboard-stats-chart').removeClass('chart-loading');
+        }
+        if ($('#dashboard-stats').length){
+          setupDashboardStatsChart('area');
+        }
+
+        // Use breakdown to switch charts
+        $('.stats-breakdown tr:not(#stats-breakdown-ctr)').click(function(e) {
+          $('#dashboard-stats-chart').fadeOut('fast', function() {
+            setupDashboardStatsChart('area');
+            $(this).fadeIn('fast');
+          });
+        });
+
+        // Remove the standard click handler and replace it
+        $('#stats-breakdown-ctr').click(function(){
+            $('#dashboard-stats-chart').fadeOut('fast', function(){
+                setupDashboardStatsChart('line');
+                $(this).fadeIn('fast');
+            });
+        });
     });
 </script>
 {% endblock extraScripts %}
@@ -381,15 +669,12 @@
                         <td class="stats-breakdown-value all"><span class="inner"></span></td>
                         <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
                       </tr>
-                      <!-- don't display revenue label and stats if there are no gtee adgroups -->
-                      {% if graph_gtee_adgroups|length > 0 %}
                       <tr id="stats-breakdown-revenue">
                         <td class="stats-breakdown-value today"><span class="inner"></span></td>
                         <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
                         <td class="stats-breakdown-value all"><span class="inner"></span></td>
                         <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
                       </tr>
-                      {% endif %}
                       <tr id="stats-breakdown-clicks">
                         <td class="stats-breakdown-value today"><span class="inner"></span></td>
                         <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
@@ -420,7 +705,7 @@
                   <div class="chart-error-text">Could not load chart</div>
                   <script type="text/javascript">
                     // if no gtee adgroups to show, don't display revenue data in graph
-                    {% if graph_gtee_adgroups|length == 0 %}
+                    /*{% if graph_gtee_adgroups|length == 0 %}
                       // chart data
                       mopub.dashboardStatsChartData = {
                         //pointStart: 1294963200000,
@@ -459,7 +744,7 @@
                           { 'Mopub Optimized': [{% for stat in graph_totals %}{{stat.ctr}}{% if not forloop.last %},{% endif %} {% endfor %}] }
                         ],
                       };
-                    {% endif %}                    
+                    {% endif %}   */                 
                   </script>
                 </div>
               </div>
@@ -569,24 +854,21 @@
 
                         {% if adgroup.cpc %}
                         <td class="dataTable-data numeric dataTable-ecpm">
-                          <div class="dataTable-campaign-ecpm ecpm"></div>
+                          <div class="dataTable-campaign-ecpm ecpm">--</div>
                         <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"> What's this?
                           </a>
                         </td>
                         {% else %}
-                        <td class="dataTable-data numeric dataTable-ecpm ecpm"></td>
+                        <td class="dataTable-data numeric dataTable-ecpm ecpm">--</td>
                         {% endif %}
                         
-                        <td class="dataTable-data numeric">{{adgroup|campaign_status}}<br>
-                         {% if adgroup.percent_delivered %}
-                         <span class="muted">({{adgroup.percent_delivered|floatformat:1}}%)</span></td>
-                         {% endif %}
+                        <td class="dataTable-data numeric status">Loading...</td>
                         <td class='gtee-rev rev' style='display:none;'></td>
-                        <td class="dataTable-data numeric gtee-imp imp"></td>
-                        <td class="dataTable-data numeric gtee-clk clk"></td>
-                        <td class="dataTable-data numeric gtee-ctr ctr"></td>
-                        <td class="dataTable-data numeric gtee-conv conv"></td>
-                        <td class="dataTable-data numeric gtee-cpa cpa"></td>
+                        <td class="dataTable-data numeric gtee-imp imp">--</td>
+                        <td class="dataTable-data numeric gtee-clk clk">--</td>
+                        <td class="dataTable-data numeric gtee-ctr ctr">--</td>
+                        <td class="dataTable-data numeric gtee-conv conv">--</td>
+                        <td class="dataTable-data numeric gtee-cpa cpa">--</td>
                       </tr>
                       {% endfor %}
                       <tr class="campaignData campaignData-placeholder gtee-placeholder">
@@ -672,17 +954,17 @@
                         {{adgroup.summed_stats.e_cpm|currency}}</td>
                         {% endif %}
                         {% if adgroup.bid_strategy == 'cpc' %}
-                          <div class="dataTable-campaign-ecpm ecpm"></div>
+                          <div class="dataTable-campaign-ecpm ecpm">--</div>
                         <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"> What's this?
                           </a>
                         {% endif %}
                     </td>    
-                    <td class="dataTable-data numeric">{{adgroup|campaign_status}}</td>
-                    <td class="dataTable-data numeric promo-imp imp"></td>
-                    <td class="dataTable-data numeric promo-clk clk"></td>
-                    <td class="dataTable-data numeric promo-ctr ctr"></td>
-                    <td class="dataTable-data numeric promo-conv conv"></td>
-                    <td class="dataTable-data numeric promo-cpa cpa"></td>
+                    <td class="dataTable-data numeric">Loading...</td>
+                    <td class="dataTable-data numeric promo-imp imp">--</td>
+                    <td class="dataTable-data numeric promo-clk clk">--</td>
+                    <td class="dataTable-data numeric promo-ctr ctr">--</td>
+                    <td class="dataTable-data numeric promo-conv conv">--</td>
+                    <td class="dataTable-data numeric promo-cpa cpa">--</td>
                   </tr>
                   {% endfor %}
                   <tr class="campaignData campaignData-placeholder promo-placeholder">
@@ -754,18 +1036,18 @@
                     </th>
                     {% if adgroup.cpc %}
                     <td class="dataTable-data numeric dataTable-ecpm">
-                      <div class="dataTable-campaign-ecpm ecpm"></div>
+                      <div class="dataTable-campaign-ecpm ecpm">--</div>
                       <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"> What's this?
                       </a>
                     </td>
                     {% else %}
-                    <td class="dataTable-data numeric dataTable-ecpm ecpm"></td>
+                    <td class="dataTable-data numeric dataTable-ecpm ecpm">--</td>
                     {% endif %}
-                    <td class="dataTable-data numeric network-req req"></td>
-                    <td class="dataTable-data numeric network-imp imp"></td>
-                    <td class="dataTable-data numeric network-fill fill"></td>
-                    <td class="dataTable-data numeric network-clk clk"></td>
-                    <td class="dataTable-data numeric network-ctr ctr"></td>
+                    <td class="dataTable-data numeric network-req req">--</td>
+                    <td class="dataTable-data numeric network-imp imp">--</td>
+                    <td class="dataTable-data numeric network-fill fill">--</td>
+                    <td class="dataTable-data numeric network-clk clk">--</td>
+                    <td class="dataTable-data numeric network-ctr ctr">--</td>
                     <td class="dataTable-data numeric">&nbsp;</td>
                   </tr>
                   {% endfor %}
@@ -846,20 +1128,20 @@
                     </th>
                     {% if adgroup.cpc %}
                     <td class="dataTable-data numeric dataTable-ecpm">
-                      <div class="dataTable-campaign-ecpm ecpm"></div>
+                      <div class="dataTable-campaign-ecpm ecpm">--</div>
                         <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"> What's this?
                           </a>
                     </td>
                     {% else %}
-                    <td class="dataTable-data numeric dataTable-ecpm ecpm"></td>
+                    <td class="dataTable-data numeric dataTable-ecpm ecpm">--</td>
                     {% endif %}
                         
-                    <td class="dataTable-data numeric">{{adgroup|campaign_status}}</td>
-                    <td class="dataTable-data numeric bfill-imp imp"></td>
-                    <td class="dataTable-data numeric bfill-clk clk"></td>
-                    <td class="dataTable-data numeric bfill-ctr ctr"></td>
-                    <td class="dataTable-data numeric bfill-conv conv"></td>
-                    <td class="dataTable-data numeric bfill-cpa cpa"></td>
+                    <td class="dataTable-data numeric status">Loading...</td>
+                    <td class="dataTable-data numeric bfill-imp imp">--</td>
+                    <td class="dataTable-data numeric bfill-clk clk">--</td>
+                    <td class="dataTable-data numeric bfill-ctr ctr">--</td>
+                    <td class="dataTable-data numeric bfill-conv conv">--</td>
+                    <td class="dataTable-data numeric bfill-cpa cpa">--</td>
                   </tr>
                   {% endfor %}
                   <tr class="campaignData campaignData-placeholder bfill-placeholder">

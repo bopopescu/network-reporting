@@ -370,6 +370,15 @@ class StatsModel(db.Expando):
         self._percent_delivered = value
     
     percent_delivered = property(get_percent_delivered, set_percent_delivered)         
+    
+    def get_status(self):
+        is hasattr(self, '_status'): return self._status
+        return None
+        
+    def set_status(self, value):
+        self._status = value
+        
+    status = property(get_status, set_status)        
 
     @property   
     def cpc(self):
@@ -388,7 +397,7 @@ class StatsModel(db.Expando):
             
     def _dict_properties(self):
         model_props = self.properties().keys()
-        pseudo_props = ['cpa', 'cpc', 'cpm', 'fill_rate', 'conv_rate', 'ctr', 'percent_delivered']
+        pseudo_props = ['cpa', 'cpc', 'cpm', 'fill_rate', 'conv_rate', 'ctr', 'percent_delivered', 'status']
         return model_props + pseudo_props
                
     def to_dict(self):

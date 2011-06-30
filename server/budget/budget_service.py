@@ -13,6 +13,10 @@ from budget.models import (Budget,
 from budget.query_managers import BudgetSliceLogQueryManager
 from budget.tzinfo import Pacific
 
+from budget.memcache_budget import (spent_today,
+                                    remaining_daily_budget,
+                                    remaining_ts_budget
+                                    )
 """
 A service that determines if a campaign can be shown based upon the defined 
 budget for that campaign. If the budget_type is "evenly", a minute by minute
@@ -101,7 +105,7 @@ def daily_advance(campaign, new_date=pac_today()):
     try:
         yesterday_log = budget_obj.daily_logs.filter("date =", yesterday).get()
         yesterday_log.remaining_daily_budget = rem_daily_budget
-        yesterday_log.spending = daily_spending
+        yesterday_log.actual_spending = daily_spending
         yesterday_log.put()
     except AttributeError:
         # If the log was not initialized, then this is a new campaign and
@@ -164,65 +168,6 @@ def percent_delivered(campaign, today=pac_today()):
     budget_obj = Budget.get_or_insert_for_campaign(campaign)
     
     return ((budget_obj.spent_in_campaign+spent_today(campaign)) / total_budget) * 100
-
-def remaining_daily_budget(campaign):
-    """ Gets or inserts the remaining daily budget.
-    This budget can increase past campaign.budget only
-    if this is a finite campaign """
-    key = _make_campaign_daily_budget_key(campaign)
-
-    memcache_budget = memcache.get(key, namespace="budget")
-
-    if memcache_budget is None:
-        logging.error("Budget cache miss campaign with key: %s" % key)
-        # If there is a cache miss, we fall back to the previous snapshot
-        budget_obj = Budget.get_or_insert_for_campaign(campaign)
-
-        key = _make_campaign_daily_budget_key(campaign)    
-
-        daily_init_budget = campaign.budget-spent_today(campaign)
-
-        memcache_budget = _to_memcache_int(daily_init_budget)
-        memcache.add(key, memcache_budget, namespace="budget")
-        
-    return _from_memcache_int(memcache_budget)
-
-def remaining_ts_budget(campaign):
-    """ Gets or inserts the remaining timeslice budget """
-    key = _make_campaign_ts_budget_key(campaign)
-
-    memcache_budget = memcache.get(key, namespace="budget")
-
-    if memcache_budget is None:
-        logging.error("cache miss for campaign with key: %s" % key)
-        # If there is a cache miss, we fall back to the previous snapshot
-        budget_obj = Budget.get_or_insert_for_campaign(campaign)
-        
-        key = _make_campaign_ts_budget_key(campaign) 
-        
-        spent_in_timeslice = spent_today(campaign)-budget_obj.spent_today
-        remaining_timeslice = budget_obj.timeslice_budget-spent_in_timeslice
-        
-        memcache_budget = _to_memcache_int(remaining_timeslice)
-        memcache.add(key, memcache_budget, namespace="budget")
-
-    return _from_memcache_int(memcache_budget)        
-    
-def spent_today(campaign):
-    """ Gets or inserts budget spent today"""
-    key = _make_campaign_spent_today_key(campaign)
-    memcache_spent = memcache.get(key, namespace="budget")
-    if memcache_spent is None:
-        logging.error("spending cache miss for campaign with key: %s" % key)
-        budget_obj = Budget.get_or_insert_for_campaign(campaign)
-        spent = budget_obj.spent_today
-        
-        key = _make_campaign_spent_today_key(campaign)
-        
-        memcache_spent =_to_memcache_int(spent)
-        memcache.add(key,memcache_spent, namespace="budget")
-    
-    return _from_memcache_int(memcache_spent)
     
 def get_spending_for_date_range(campaign, start_date, end_date, today=pac_today()):
     """ Gets the spending for a date range (inclusive). Uses realtime budget information for
@@ -239,8 +184,8 @@ def get_spending_for_date_range(campaign, start_date, end_date, today=pac_today(
     
     total_spending = 0.0
     for log in daily_logs:
-        if log.spending:
-            total_spending += log.spending
+        if log.actual_spending:
+            total_spending += log.actual_spending
         else:
             total_spending += spent_today(campaign)
     
@@ -377,7 +322,7 @@ def _get_spending_for_date(campaign, date):
     slicer = Budget.get_or_insert_for_campaign(campaign)
     daily_log = slicer.daily_logs.filter("date =", date).get()
     
-    return daily_log.spending
+    return daily_log.actual_spending
 
 
 def _apply_if_able(campaign, cost, today=pac_today()):

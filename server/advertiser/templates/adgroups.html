@@ -49,10 +49,75 @@
             var days = getNumDays();
             var startDate = getStartDate();
             
-            for (var id in idsToFetch) {
+            var ids = getObjectKeys(idsToFetch);
+            var chunks = chunkArray(ids, 5);
+            for (var i = 0; i < chunks.length; i++) {
+                var backoffData = { delay: 1000, failedAttempts: 0 };
+                ajaxBatchFetchCampaigns(chunks[i], days, startDate, idsToFetch, fetchedIds, backoffData);
+            }
+            
+            /*for (var id in idsToFetch) {
                 var backoffData = { delay: 1000, failedAttempts: 0 };
                 ajaxFetchCampaign(id, days, startDate, idsToFetch, fetchedIds, backoffData);
+            }*/
+        }
+        
+        function getObjectKeys(obj)
+        {
+            var keys = [];
+            for (var i in obj) {
+                if (obj.hasOwnProperty(i)) keys.push(i);
             }
+            return keys;
+        }
+        
+        function chunkArray(array, chunkSize) {
+            var chunks = [];
+            if (!array) return chunks;
+            
+            for (var i = 0; i < array.length; i++) {
+                var elem = array[i];
+                var chunkNumber = Math.floor(i / chunkSize);
+                var indexInChunk = i % chunkSize;
+                if (chunks[chunkNumber] == null) {
+                    chunks[chunkNumber] = [];
+                }
+                chunks[chunkNumber][indexInChunk] = elem;
+            }
+            return chunks;
+        }
+        
+        function ajaxBatchFetchCampaigns(ids, days, startDate, idsToFetch, fetchedIds, backoffData) {
+            var url = "/campaigns/stats/ajax/?";
+            for (var i = 0; i < ids.length; i++) {
+                if (i == 0) url += "adv=" + ids[i];
+                else url += "&adv=" + ids[i];
+            }
+            url += "&date_range=" + days;
+            if (startDate) url += "&start_date=" + startDate;
+            
+            $.ajax({
+                url: url,
+                dataType: 'json',
+                success: function() {
+                    return function(data) {
+                        updateCampaign(data, idsToFetch, fetchedIds);
+                    }
+                }(),
+                error: function() {
+                    backoffData.failedAttempts++;
+                    console.log("failed. num failures for this guy: ", backoffData.failedAttempts);
+                    if (backoffData.failedAttempts > AJAX_MAX_FAILED_ATTEMPTS) {
+                        console.log("maxed out failures, giving up...");
+                        return;
+                    } 
+                    setTimeout(ajaxBatchFetchCampaign(ids, days, startDate, idsToFetch, fetchedIds, backoffData),
+                        backoffData.delay);
+                    backoffData.delay *= 1.5;
+                    console.log("next backoff delay is: ", backoffData.delay)
+                },
+                timeout: AJAX_TIMEOUT_MILLISECONDS
+            });
         }
         
         function ajaxFetchCampaign(id, days, startDate, idsToFetch, fetchedIds, backoffData) {
@@ -95,6 +160,11 @@
                 for (var field in formattedStats) {
                     updateCampaignField(adgroup_id, field, formattedStats[field]);
                 }
+                
+                // Add campaign-status- class.
+                var campaignStatus = formattedStats.status;
+                var selector = "#" + adgroup_id;
+                $(selector).addClass("campaign-status-" + campaignStatus);
                 
                 // Record adgroup_id as fetched.
                 console.log("deleting ", adgroup_id)
@@ -824,7 +894,7 @@
                         {% endif %}
                         
                         <td class="dataTable-data numeric">
-                            <div class="status">Loading...</div>
+                            <div class="status">--</div>
                             <div class="on_schedule muted"></div>
                         </td>
                         <td class='gtee-rev rev' style='display:none;'></td>
@@ -912,7 +982,7 @@
                             {% if adgroup.campaign.budget %}{{adgroup.campaign.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
                         </span>
                     </th>
-                    <td class="dataTable-data numeric dataTable-ecpm">
+                    <td class="dataTable-data numeric dataTable-ecpm ecpm">
                         {% if adgroup.bid_strategy == 'cpm' %}
                         --
                         {% endif %}
@@ -925,7 +995,7 @@
                         </span>  
                         {% endif %}
                     </td>    
-                    <td class="dataTable-data numeric">Loading...</td>
+                    <td class="dataTable-data numeric status">--</td>
                     <td class="dataTable-data numeric promo-imp imp">--</td>
                     <td class="dataTable-data numeric promo-clk clk">--</td>
                     <td class="dataTable-data numeric promo-ctr ctr">--</td>
@@ -1106,7 +1176,7 @@
                     <td class="dataTable-data numeric dataTable-ecpm ecpm">--</td>
                     {% endif %}
                         
-                    <td class="dataTable-data numeric status">Loading...</td>
+                    <td class="dataTable-data numeric status">--</td>
                     <td class="dataTable-data numeric bfill-imp imp">--</td>
                     <td class="dataTable-data numeric bfill-clk clk">--</td>
                     <td class="dataTable-data numeric bfill-ctr ctr">--</td>

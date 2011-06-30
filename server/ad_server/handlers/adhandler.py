@@ -382,6 +382,14 @@ class AdHandler(webapp.RequestHandler):
                 params.update({"w": img_width, "h": img_height, "w2":img_width/2.0, "h2":img_height/2.0, "class":css_class})
             elif creative.ad_type == "html":
                 params.update({"html_data": creative.html_data, "w": format[0], "h": format[1]})
+                
+                if 'full' in adunit.format:
+                    params['trackingPixel'] = ""
+                    trackImpressionHelper = "<script>\nfunction trackImpressionHelper(){\n%s\n}\n</script>"%success
+                    params.update(trackImpressionHelper=trackImpressionHelper)
+                else:
+                    params['trackImpressionHelper'] = ''    
+                
                 # add the launchpage header for inmobi in case they have dynamic ads that use
                 # window.location = 'http://some.thing/asdf'
                 if creative.adgroup.network_type == "inmobi":
@@ -411,9 +419,6 @@ class AdHandler(webapp.RequestHandler):
                 # extra parameters used only by admob template
                 params.update(admob_finish_load=success)
                 params.update(admob_fail_load='')
-               
-            
-            
             
             # indicate to the client the winning creative type, in case it is natively implemented (iad, clear)
             

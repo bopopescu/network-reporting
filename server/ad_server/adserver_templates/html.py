@@ -2,9 +2,16 @@ from string import Template
 
 html = Template("""<html><head><title>$title</title>
                         $finishLoad
+                        $trackImpressionHelper
                         <script type="text/javascript">
                           function webviewDidClose(){}
                           function webviewDidAppear(){
+                              // inserts impression tracking
+                              // when the interstitial is presented on screen
+                              if(typeof trackImpressionHelper == 'function') {
+                                trackImpressionHelper();
+                              }
+                          
                               // calls a user defined function if it exists
                               // useful for starting animations, videos, etc
                               // this would exist as part of the html for the 

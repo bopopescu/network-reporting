@@ -111,7 +111,7 @@
                         console.log("maxed out failures, giving up...");
                         return;
                     } 
-                    setTimeout(ajaxBatchFetchCampaign(ids, days, startDate, idsToFetch, fetchedIds, backoffData),
+                    setTimeout(ajaxBatchFetchCampaigns(ids, days, startDate, idsToFetch, fetchedIds, backoffData),
                         backoffData.delay);
                     backoffData.delay *= 1.5;
                     console.log("next backoff delay is: ", backoffData.delay)

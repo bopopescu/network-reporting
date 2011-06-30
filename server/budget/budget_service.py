@@ -109,7 +109,7 @@ def daily_advance(campaign, new_date=pac_today()):
         yesterday_log = BudgetDailyLog(budget_obj=budget_obj,
                           initial_daily_budget=campaign.budget,
                           remaining_daily_budget = rem_daily_budget,
-                          spending = daily_spending,
+                          actual_spending = daily_spending,
                           date=yesterday,
                           )
         yesterday_log.put()

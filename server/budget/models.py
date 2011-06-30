@@ -78,7 +78,7 @@ class BudgetDailyLog(db.Model):
     budget_obj = db.ReferenceProperty(Budget,collection_name="daily_logs")
     initial_daily_budget = db.FloatProperty()
     remaining_daily_budget = db.FloatProperty()
-    spending = db.FloatProperty()
+    actual_spending = db.FloatProperty()
     date = db.DateProperty()
 
     # @property

@@ -11,6 +11,9 @@ builtins:
 # Turn this on to debug
 - appstats: on
 
+inbound_services:
+- warmup     
+
 
 handlers:
   

@@ -134,7 +134,7 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         most_recent = BudgetSliceLogQueryManager().get_most_recent(self.cheap_c)
         
         # The 50 spending one is not complete, therefore 100 was the most recent
-        eq_(most_recent.spending, 100)
+        eq_(most_recent.actual_spending, 100)
         
         # Now the most recent was 100
         budget_service.timeslice_advance(self.cheap_c)
@@ -191,7 +191,8 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         # Double the daily budget right before an advance
         self.cheap_c.budget = 2000.
         self.cheap_c.put()
-    
+        budget_service.update_budget(self.cheap_c, dt = datetime.datetime(1987,4,4,2,45,0))
+        
         # In the last timeslice, we spent 100%
         eq_(budget_service.get_osi(self.cheap_c), True)
     

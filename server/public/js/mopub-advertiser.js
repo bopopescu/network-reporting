@@ -107,6 +107,29 @@ var mopub = mopub || {};
         }
       });
       
+  // Initialize impression count on form display
+  if ($('#adgroupForm-bid_strategy-select').val() == 'cpm') {
+    var rate = $('#campaignAdgroupForm input[name="bid"]').val();
+    if ($("#adgroupForm-budget_type-select").val() == "daily") {
+      var budget = $('#campaignAdgroupForm input[name="budget"]').val();
+      var impressions = 1000 * budget / rate;
+      if (impressions) {
+        fixed_impressions = impressions.toFixed();
+        $('#campaignAdgroupForm input[name="impressions"]').val(fixed_impressions);
+        calculateAndShowBudget();
+      }
+    }
+    else {
+      var budget = $('#campaignAdgroupForm input[name="full_budget"]').val();
+      var full_impressions = 1000 * budget / rate;
+      if (full_impressions) {
+        fixed_full_impressions = full_impressions.toFixed();
+        $('#campaignAdgroupForm input[name="full_impressions"]').val(fixed_full_impressions);
+        calculateAndShowBudget();  
+      }
+    }
+  }
+      
   $('#adgroupForm-bid_strategy-select')
     .change(function() {
       if ($(this).val() == 'cpm') {
@@ -140,28 +163,6 @@ var mopub = mopub || {};
     .keyup(function() {
       calculateAndShowBudget();        
     });
-    // Initialize impression count on form display
-    if ($('#adgroupForm-bid_strategy-select').val() == 'cpm') {
-      var rate = $('#campaignAdgroupForm input[name="bid"]').val();
-      if ($("#adgroupForm-budget_type-select").val() == "daily") {
-        var budget = $('#campaignAdgroupForm input[name="budget"]').val();
-        var impressions = 1000 * budget / rate;
-        if (impressions) {
-          fixed_impressions = impressions.toFixed()
-          $('#campaignAdgroupForm input[name="impressions"]').val(fixed_impressions);
-          calculateAndShowBudget();
-        }
-      }
-      else {
-        var budget = $('#campaignAdgroupForm input[name="full_budget"]').val();
-        var full_impressions = 1000 * budget / rate;
-        if (full_impressions) {
-          fixed_full_impressions = full_impressions.toFixed()
-          $('#campaignAdgroupForm input[name="full_impressions"]').val(fixed_full_impressions);
-          calculateAndShowBudget();  
-        }
-      }
-    }
   }
     $('#campaignAdgroupForm-submit')
       .button({ icons : {secondary : 'ui-icon-circle-triangle-e'} })
@@ -238,7 +239,7 @@ var mopub = mopub || {};
           }
           else {
             $('#campaignAdgroupForm-budget-display').html(null);
-           // $('#campaignAdgroupForm input[name="budget"]').val(null);
+            $('#campaignAdgroupForm input[name="budget"]').val(null);
           }
         }
         else {
@@ -252,7 +253,7 @@ var mopub = mopub || {};
           }
           else {
             $('#campaignAdgroupForm-budget-display_full').html(null);
-          //  $('#campaignAdgroupForm input[name="full_budget"]').val(null);
+            $('#campaignAdgroupForm input[name="full_budget"]').val(null);
           }
         }
       }

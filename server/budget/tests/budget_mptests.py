@@ -319,33 +319,38 @@ class TestBudgetUnitTests(unittest.TestCase):
         budget_service.apply_expense(self.cheap_c, 1)
         budget_service.apply_expense(self.cheap_c, 1)
         
-        # We lose any apply_expense calls that were queued
+        # New system notices apply_expenses..
         
         eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
-        eq_(budget_service.remaining_ts_budget(self.cheap_c), 99)
+        eq_(budget_service.remaining_ts_budget(self.cheap_c), 97)
 
     def mptest_cache_failure_then_advance(self):
         
         budget_manager = Budget.get_or_insert_for_campaign(self.cheap_c)
-        eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
-        eq_(budget_service.remaining_ts_budget(self.cheap_c), 99)
+        eq_(budget_service.remaining_ts_budget(self.cheap_c), 100)
 
-        eq_(budget_manager.timeslice_snapshot, 100)
-        eq_(budget_service.remaining_ts_budget(self.cheap_c),99)
-        
-        budget_service._delete_memcache(self.cheap_c)
-        eq_(budget_manager.timeslice_snapshot, 100)
-        # Memcache miss -> restart timeslice at last snapshot (100)
+        eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
+
+        eq_(budget_manager.spent_today, 0)
 
         budget_service._advance_all()
-        eq_(budget_manager.timeslice_snapshot, 100)
         
         budget_manager = Budget.get_or_insert_for_campaign(self.cheap_c)
-        eq_(budget_manager.timeslice_snapshot, 111)
+        eq_(budget_manager.spent_today, 100)
         
+        eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
+        
+        budget_service._delete_memcache(self.cheap_c)
+                
+        # Memcache miss -> restart spending at last snapshot (100)
+        budget_service._advance_all()
+        
+        budget_manager = Budget.get_or_insert_for_campaign(self.cheap_c)
+        
+        eq_(budget_manager.spent_today, 100)
         
         eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
-        eq_(budget_service.remaining_ts_budget(self.cheap_c), 110)
+        eq_(budget_service.remaining_ts_budget(self.cheap_c), 111.5)
 
     def mptest_cache_failure_then_advance_multiple_timeslices(self):
         eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
@@ -371,10 +376,10 @@ class TestBudgetUnitTests(unittest.TestCase):
         
         
         slicer = Budget.get_or_insert_for_campaign(self.cheap_c)
-        eq_(slicer.timeslice_snapshot, 111)
+        eq_(slicer.timeslice_budget, 111)
         
         last_log = slicer.timeslice_logs.order("-end_date").get()
-        eq_(last_log.spending, 1)
+        eq_(last_log.actual_spending, 1)
    
     def mptest_very_expensive(self):
          eq_(budget_service._apply_if_able(self.cheap_c, 10000), False)

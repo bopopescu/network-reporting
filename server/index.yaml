@@ -111,11 +111,6 @@ indexes:
 
 - kind: BudgetSliceLog
   properties:
-  - name: budget_slicer
-  - name: date
-
-- kind: BudgetSliceLog
-  properties:
   - name: budget
   - name: end_date
 
@@ -130,6 +125,11 @@ indexes:
   - name: budget_obj
   - name: end_date
     direction: desc
+
+- kind: BudgetSliceLog
+  properties:
+  - name: budget_slicer
+  - name: date
 
 - kind: BudgetSliceLog
   properties:

@@ -1002,6 +1002,9 @@ class AJAXStatsHandler(RequestHandler):
         response_dict['all_stats'] = stats_dict
         return JSONResponse(response_dict)
 
+from django.views.decorators.cache import cache_control
 @login_required
+@cache_control(max_age=60)
 def stats_ajax(request, *args, **kwargs):
+    return HttpResponse("HIHIHI")
     return AJAXStatsHandler()(request, use_cache=True, *args, **kwargs)

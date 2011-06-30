@@ -30,16 +30,17 @@
             var daysRadioVal = $("input[name=dashboard-dateOptions-option]:checked").val();
             if (!daysRadioVal || daysRadioVal == "custom") {
                 var currentUrl = document.location.href;
-                var daysRegex = /r=(\d+)&/g;
+                var daysRegex = /r=(\d+)/g;
                 var match = daysRegex.exec(currentUrl);
-                return match[1];
+                if (!match || match.length < 2) return null;
+                else return match[1];
             }
             else return daysRadioVal;
         }
         
         function getStartDate() {
             var currentUrl = document.location.href;
-            var startDateRegex = /s=(.*)(&|#)/g;
+            var startDateRegex = /s=(\d+\-\d+-\d+)/g;
             var match = startDateRegex.exec(currentUrl);
             if (!match || match.length < 2) return null;
             else return match[1];
@@ -389,6 +390,7 @@
             var graphRevStats = getGraphStatsForStatName("revenue", topCampaigns);
             var graphClkStats = getGraphStatsForStatName("click_count", topCampaigns);
             var graphCtrStats = getGraphStatsForStatName("ctr", topCampaigns);
+            console.log("ctr: ", graphCtrStats);
             
             mopub.dashboardStatsChartData = {
                 pointStart: graphStartDate,

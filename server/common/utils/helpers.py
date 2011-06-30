@@ -2,12 +2,9 @@ import logging
 import re
 import reporting.models as reporting_models
 
-# matches sequence: space, 2 char, - or _, 2 char, 0 or more ;, followed by char that's not a char, number, - or _
-
-
 def get_country_code(headers):
-    logging.info(headers.get('X-AppEngine-country'), reporting_models.DEFAULT_COUNTRY))
-    return headers.get('X-AppEngine-country'), reporting_models.DEFAULT_COUNTRY)
+    logging.info(headers.get('X-AppEngine-country', reporting_models.DEFAULT_COUNTRY))
+    return headers.get('X-AppEngine-country', reporting_models.DEFAULT_COUNTRY)
     
 def get_user_agent(request):
     return request.get('ua') or request.headers['User-Agent']    

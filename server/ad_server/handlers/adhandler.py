@@ -102,9 +102,8 @@ class AdHandler(webapp.RequestHandler):
         mp_logging.log(self.request, event=mp_logging.REQ_EVENT, adunit=adunit)  
         
         trace_logging.warning("User Agent: %s"%helpers.get_user_agent(self.request))
-        country_re = r'[a-zA-Z][a-zA-Z][-_](?P<ccode>[a-zA-Z][a-zA-Z])'
-        countries = re.findall(country_re, helpers.get_user_agent(self.request))
-        country_tuple = []
+
+        countries = [helpers.get_country_code(headers = self.request.headers)]
         if len(countries) == 1:
             countries = [c.upper() for c in countries]
             country_tuple = tuple(countries)

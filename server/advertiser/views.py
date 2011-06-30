@@ -1005,7 +1005,7 @@ class AJAXStatsHandler(RequestHandler):
 from django.views.decorators.cache import cache_control
 from django.views.decorators.vary import vary_on_headers, vary_on_cookie
 
-# @login_required
+@login_required
 @cache_control(max_age=60)
 def stats_ajax(request, *args, **kwargs):
     # return HttpResponse("HEHEH\n")

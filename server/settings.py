@@ -91,7 +91,7 @@ MIDDLEWARE_CLASSES = (
 # Hybrid Django/Google authentication
 'common.ragendja.auth.middleware.HybridAuthenticationMiddleware',
 'django.middleware.common.CommonMiddleware',
-'django.middleware.locale.LocaleMiddleware',
+# 'django.middleware.locale.LocaleMiddleware',
 'common.ragendja.middleware.LoginRequiredMiddleware',
 # 'ragendja.sites.dynamicsite.DynamicSiteIDMiddleware',
 # 'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
@@ -151,7 +151,7 @@ LOGIN_REDIRECT_URL = '/inventory/'
 
 LOGIN_REQUIRED_PREFIXES = (
     '/inventory/',
-    '/campaigns/',
+    # '/campaigns/',
 )
 
 ACCOUNT_ACTIVATION_DAYS = 14

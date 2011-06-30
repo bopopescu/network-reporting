@@ -182,7 +182,7 @@ def remaining_daily_budget(campaign):
 
         daily_init_budget = campaign.budget-spent_today(campaign)
 
-        memcache_budget = _to_memcache_int(max(daily_init_budget,0))
+        memcache_budget = _to_memcache_int(daily_init_budget)
         memcache.add(key, memcache_budget, namespace="budget")
         
     return _from_memcache_int(memcache_budget)
@@ -203,7 +203,7 @@ def remaining_ts_budget(campaign):
         spent_in_timeslice = spent_today(campaign)-budget_obj.spent_today
         remaining_timeslice = budget_obj.timeslice_budget-spent_in_timeslice
         
-        memcache_budget = _to_memcache_int(max(remaining_timeslice,0))
+        memcache_budget = _to_memcache_int(remaining_timeslice)
         memcache.add(key, memcache_budget, namespace="budget")
 
     return _from_memcache_int(memcache_budget)        
@@ -258,14 +258,14 @@ def update_budget(campaign, dt = pac_dt(), save_campaign=True):
             daily_budget_key = _make_campaign_daily_budget_key(campaign)
             ts_key = _make_campaign_ts_budget_key(campaign)
                         
-            memcache.set(daily_budget_key, _to_memcache_int(max(campaign.budget-spent,0)), namespace="budget")
+            memcache.set(daily_budget_key, _to_memcache_int(campaign.budget-spent), namespace="budget")
 
             budget_obj.set_timeslice(dt.hour*60*60+dt.minute*60+dt.second)
             
             if campaign.budget_strategy == "evenly":
                 spent_in_timeslice = spent_today(campaign)-budget_obj.spent_today
                 remaining_timeslice = budget_obj.timeslice_budget-spent_in_timeslice
-                memcache.set(ts_key, _to_memcache_int(max(remaining_timeslice,0)), namespace="budget")
+                memcache.set(ts_key, _to_memcache_int(remaining_timeslice), namespace="budget")
         budget_obj.put()
         if save_campaign:
             campaign.put()
@@ -324,7 +324,7 @@ def _redistribute_budget(campaign,new_date):
 
 def _to_memcache_int(value):
     """multiplies by 10^5 and converts to an int"""
-    return int(value*100000)
+    return int(max(value,0)*100000)
     
 def _from_memcache_int(value):
     value = float(value)

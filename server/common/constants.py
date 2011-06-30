@@ -5,7 +5,7 @@
 
   
 IOS_VERSION_CHOICES = (
-    ('999','No Maximum'),
+    ('999','No Max'),
     ('2.0','2.0'),
     ('2.1','2.1'),
     ('3.0','3.0'),
@@ -18,7 +18,7 @@ IOS_VERSION_CHOICES = (
   )
 
 ANDROID_VERSION_CHOICES = (
-    ('999','No Maximum'),
+    ('999','No Max'),
     ('1.5','1.5'),
     ('1.6','1.6'),
     ('2.0','2.0'),

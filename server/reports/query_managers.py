@@ -17,7 +17,7 @@ from reports.models import Report, ScheduledReport
 
 NUM_REP_QS = 1
 REP_Q_NAME = "gen-rep-%02d"
-COMMON_REPORT_DIM_LIST = (('app', 'Apps'), ('adunit', 'Ad Units'), ('campaign', 'Campaigns'))
+DEFAULT_REPORT_DIM_LIST = (('app', 'Apps'), ('adunit', 'Ad Units'), ('campaign', 'Campaigns'))
 
 #I couldn't import this because it was causing circular imports and all other kinds of hell
 def gen_report_worker(report, account, end=None):
@@ -106,43 +106,40 @@ class ReportQueryManager(CachedQueryManager):
         else:
             return None
 
-    def get_saved(self, page=0, page_limit=10):
+    def get_saved(self, page=0, page_limit=50):
         '''Returns (page_limit) reports starting on 'page'
         '''
         report_q = Report.all().filter('account =', self.account).filter('saved =', True).filter('deleted =', False)
         reports = report_q.fetch(limit=page_limit,offset=page_limit*page)
         return reports
 
-    def get_history(self, page=0, page_limit=10):
+    def get_history(self, page=0, page_limit=50):
         '''Gives a history of ALL reports (saved and unsaved) for the user
         in order of most recently viewed'''
         #Not implemented
         return None
 
-    def get_scheduled(self):
-        reports = []
-        for dim, name in COMMON_REPORT_DIM_LIST:
-            report = self.get_scheduled_report(dim, None, None, None, 7, name)
-            reports.append(report)
-        report_q = ScheduledReport.all().filter('account =', self.account).filter('saved =', True).filter('deleted =', False)
-        for rep in report_q:
-            reports.append(rep)
-        return reports
+    def get_scheduled(self, to_fetch=50):
+        report_q = ScheduledReport.all().filter('account =', self.account).filter('saved =', True).filter('deleted =', False).filter('default =', False)
+        return report_q.fetch(to_fetch)
 
-    def get_common_reports(self):
-        reports = []
-        now = datetime.datetime.now().date()
-        start, end = date_magic.last_seven(now)
-        for dim,name in COMMON_REPORT_DIM_LIST:
-            report = self.get_report(dim,None,None,start,end, name=name)
-            reports.append(report)
+    def get_default_reports(self):
+        # There are three by default, so fetching three should yield three
+        reports = ScheduledReport.all().filter('account =', self.account).filter('deleted =', False).filter('default =', True).fetch(3)
+        if len(reports) != 3:
+            # Well shit
+            report_dim_names = [(str(report.d1), str(report.name)) for report in reports]
+            for (dim, name) in DEFAULT_REPORT_DIM_LIST:
+                if (dim, name) not in report_dim_names:
+                    reports.append(self.add_report(dim, None, None, None, 7, name=name, saved=True, interval='7days', default=True))
         return reports
-
-    def new_report(self, report, now=None, testing=False):
-        #do stuff w/ report interval here
-        #last month shouldn't just arbitrarily pick some days
+                    
+    def new_report(self, report, now=None, testing=False, sched=False):
         if isinstance(report, str) or isinstance(report, unicode):
-            report = self.get_report_by_key(report, sched=False).schedule
+            if sched:
+                report = self.get_report_by_key(report, sched=False).schedule
+            else:
+                report = self.get_report_by_key(report, sched=sched)
         dt = datetime.timedelta(days=report.days) 
         one_day = datetime.timedelta(days=1)
         if now is None:
@@ -177,7 +174,7 @@ class ReportQueryManager(CachedQueryManager):
                                   })
         return new_report
 
-    def add_report(self, d1, d2, d3, end, days, name=None, saved=False,interval=None, sched_interval=None, testing=False):
+    def add_report(self, d1, d2, d3, end, days, name=None, saved=True,interval=None, sched_interval=None, recipients=[], default=False, testing=False):
         if interval is None:
             interval = 'custom'
         '''Create a new scheduled report with the given specs
@@ -228,6 +225,8 @@ class ReportQueryManager(CachedQueryManager):
                                 account=self.account,
                                 name=name,
                                 saved=saved,
+                                default=default,
+                                recipients = recipients, 
                                 )
         sched.put()
              
@@ -253,5 +252,40 @@ class ReportQueryManager(CachedQueryManager):
                           )
         return sched 
 
+    
+    def clone_report(self, report, sched=False):
+        """ Does exactly what you think it will 
+        
+                Caveat: scheduled reports that are cloned won't be rescheduled
+
+        """
+        if sched:
+            new_report = ScheduledReport(account = report.account,
+                                        name = report.name,
+                                        saved = report.saved,
+                                        deleted = report.deleted,
+                                        last_run = report.last_run,
+                                        d1 = report.d1,
+                                        d2 = report.d2,
+                                        d3 = report.d3,
+                                        end = report.end,
+                                        days = report.days,
+                                        interval = report.interval,
+                                        )
+
+            new_report.put()
+        else:
+            new_report = Report(account = report.account,
+                                schedule = report.schedule,
+                                start = report.start,
+                                end = report.end,
+                                data = report.data
+                                )
+            new_report.put()
+        return new_report
+
     def put_report(self, report):
-        report.put()
+        if isinstance(report, list):
+            db.put(report)
+        else:
+            report.put()

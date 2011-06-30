@@ -11,10 +11,13 @@ from boto.emr.step import StreamingStep
 S3_BUCKET = 's3://mopub-aws-logging'
 LOG_URI = S3_BUCKET + '/jobflow_logs'
 
-S3_CODE_DIR = S3_BUCKET + '/code3'
+S3_CODE_DIR = S3_BUCKET + '/code4'
 DEDUP_MAPPER = S3_CODE_DIR + '/dedup_mapper.py'
 PREPROCESS_MAPPER = S3_CODE_DIR + '/preprocess_mapper.py'
-LOG_MAPPER = S3_CODE_DIR + '/log_mapper.py'
+
+BASIC_LOG_MAPPER = S3_CODE_DIR + '/basic_log_mapper.py'
+ADVANCED_LOG_MAPPER = S3_CODE_DIR + '/advanced_log_mapper.py'
+
 LOG_REDUCER = S3_CODE_DIR + '/log_reducer.py'
 UNIQ_USER_MAPPER = S3_CODE_DIR + '/uniq_user_mapper.py'
 
@@ -24,7 +27,7 @@ MASTER_INSTANCE_TYPE = 'm1.large'
 SLAVE_INSTANCE_TYPE = 'm1.large'
 # MASTER_INSTANCE_TYPE = 'm1.small'
 # SLAVE_INSTANCE_TYPE = 'm1.small'
-KEEP_ALIVE = True
+KEEP_ALIVE = False
     
 
 
@@ -48,7 +51,7 @@ def main():
         
     parser = OptionParser()
     parser.add_option('-i', '--input_dir', dest='input_dir')
-    parser.add_option('-n', '--num_instances', dest='num_instances', default=NUM_INSTANCES)
+    parser.add_option('-n', '--num_instances', type='int', dest='num_instances', default=NUM_INSTANCES)
     (options, args) = parser.parse_args()
         
     conn = EmrConnection('AKIAJKOJXDCZA3VYXP3Q', 'yjMKFo61W0mMYhMgphqa+Lc2WX74+g9fP+FVeyoH')
@@ -75,15 +78,26 @@ def main():
         output=options.input_dir+'.pp',
     )
 
-    count_step = StreamingStep(
-        name='log count step',
-        mapper=LOG_MAPPER,
+    # pub:adv:country_code:time (hour & day)
+    basic_count_step = StreamingStep(
+        name='basic log count step',
+        mapper=BASIC_LOG_MAPPER,
         reducer=LOG_REDUCER,
         cache_files=[S3_CODE_DIR+'/utils.py#utils.py', S3_CODE_DIR+'/parse_utils.py#parse_utils.py', S3_CODE_DIR+'/wurfl.py#wurfl.py'],
         input=options.input_dir+'.dd',
-        output=options.input_dir+'.dd.out',
+        output=options.input_dir+'.basic.dd.out',
     )
-    
+
+    # pub:adv:country_code:brand_name:marketing_name:os:os_version:hour
+    advanced_count_step = StreamingStep(
+        name='advanced log count step',
+        mapper=ADVANCED_LOG_MAPPER,
+        reducer=LOG_REDUCER,
+        cache_files=[S3_CODE_DIR+'/utils.py#utils.py', S3_CODE_DIR+'/parse_utils.py#parse_utils.py', S3_CODE_DIR+'/wurfl.py#wurfl.py'],
+        input=options.input_dir+'.dd',
+        output=options.input_dir+'.advanced.dd.out',
+    )
+
     uniq_user_count_step = StreamingStep(
         name='uniq user count step',
         mapper=UNIQ_USER_MAPPER,
@@ -97,7 +111,7 @@ def main():
     jobid = get_waiting_jobflow(conn)
     
     if jobid:
-        conn.add_jobflow_steps(jobid, [dedup_step, preprocess_step, count_step, uniq_user_count_step])
+        conn.add_jobflow_steps(jobid, [dedup_step, preprocess_step, basic_count_step, advanced_count_step, uniq_user_count_step])
         print 'added step to waiting jobflow:', jobid
         
         # wait while jobflow is still in waiting mode
@@ -107,7 +121,7 @@ def main():
     else:   # spin up a new jobflow    
         jobid = conn.run_jobflow(
             name='log parsing job',
-            steps=[dedup_step, preprocess_step, count_step, uniq_user_count_step],
+            steps=[dedup_step, preprocess_step, basic_count_step, advanced_count_step, uniq_user_count_step],
             bootstrap_actions=[bootstrap_step],
             log_uri=LOG_URI,
             num_instances=options.num_instances,

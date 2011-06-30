@@ -11,7 +11,9 @@ server/test_data/basic_test.datastore
 *.datastore
 server/.coverage
 server/nosetests.xml
-server/reporting/aws_logging/deref_cache.pkl
+server/reporting/aws_logging/*.pkl
+server/reporting/aws_logging/*.stats
+server/reporting/aws_logging/*.txt
 server/common/wurfl/*.xml
 counts.csv
 

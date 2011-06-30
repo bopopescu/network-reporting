@@ -1233,7 +1233,24 @@ var mopub = mopub || {};
         });
       }
     });
-  }); 
   
+    // Do Campaign Export Select stuff
+    $('#advertiser-adgroups-exportSelect')
+     .change(function(e) {
+        e.preventDefault();
+        var val = $(this).val();
+        if (val != 'exp') {
+            $('#campaignExportForm')
+                .find('#campaignExportType')
+                .val(val)
+                .end()
+                .submit();
+        }
+        $(this).selectmenu('index', 0);
+    });
 
-})(this.jQuery);
+    // Hide unneeded li entry
+    $('#advertiser-adgroups-exportSelect-menu').find('li').first().hide();
+  }); 
+
+ })(this.jQuery);

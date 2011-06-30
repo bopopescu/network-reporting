@@ -14,7 +14,7 @@ from publisher.models import *
 from reporting.aws_logging import stats_updater
 from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
-from test_utils import add_lists, prepend_list, clear_datastore, debug_key_name
+from test_utils import add_lists, prepend_list, clear_datastore, debug_key_name, debug_helper
 
 AdUnit = Site
 
@@ -22,7 +22,7 @@ AdUnit = Site
 def offline_rollup_mptest():
     # make sure we start unit test with clean slate
     clear_datastore()
-
+    
     # create and put model objects 
     user = users.User(email="test@example.com")
     account = Account(key_name="account",user=user).put()
@@ -248,7 +248,7 @@ def offline_rollup_mptest():
     assert_true(stats_updater.update_model(adunit_key=adunit_id2, creative_key=creative_id1, counts=[100, 90, 80, 70], date_hour=hour1))
     assert_true(stats_updater.update_model(adunit_key=adunit_id2, creative_key=creative_id2, counts=[100, 90, 80, 70], date_hour=hour1))
        
-    stats_updater.put_models()
+    stats_updater.single_thread_put_models()
     
     # hour1             
     assert_true(stats_updater.update_model(adunit_key=adunit_id1, creative_key=creative_id1, counts=a1_c1_hour1, date_hour=hour1))
@@ -266,7 +266,6 @@ def offline_rollup_mptest():
     assert_true(stats_updater.update_model(adunit_key=adunit_id1, counts=a1_hour2, date_hour=hour2))
     assert_true(stats_updater.update_model(adunit_key=adunit_id2, counts=a2_hour2, date_hour=hour2))
 
-
     # day
     assert_true(stats_updater.update_model(adunit_key=adunit_id1, creative_key=creative_id1, counts=a1_c1_day, date=day))
     assert_true(stats_updater.update_model(adunit_key=adunit_id1, creative_key=creative_id2, counts=a1_c2_day, date=day))
@@ -275,7 +274,7 @@ def offline_rollup_mptest():
     assert_true(stats_updater.update_model(adunit_key=adunit_id1, counts=a1_day, date=day))
     assert_true(stats_updater.update_model(adunit_key=adunit_id2, counts=a2_day, date=day))
     
-    stats_updater.put_models() 
+    stats_updater.single_thread_put_models() 
             
             
     assert_equals(App.all().count(), 1)
@@ -289,7 +288,15 @@ def offline_rollup_mptest():
     for stats in StatsModel.all():
         key_name = stats.key().name()
         if len(key_name.split(':')) == 2: continue # skip the account 
+        
+        # for debugging
+        readable_key_name = debug_key_name(key_name, id_dict)
+        debug_helper(readable_key_name, obj_dict[key_name], [stats.request_count, stats.impression_count, stats.click_count, stats.conversion_count])
+
+        # assert equality check
         assert_equals(obj_dict[key_name], [stats.request_count, stats.impression_count, stats.click_count, stats.conversion_count])
+    
+    # assert False
     
     # invalid parameters should return False    
     assert_false(stats_updater.update_model('blah', 'blah', a1_c1_hour2, date_hour=hour1))
@@ -297,4 +304,5 @@ def offline_rollup_mptest():
     assert_false(stats_updater.update_model(None, creative_id1, a1_c1_hour2, date_hour=hour1))
     # counts cannot be None
     assert_false(stats_updater.update_model(adunit_id1, creative_id1, None, date_hour=hour1))
+    
     

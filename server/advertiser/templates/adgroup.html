@@ -411,8 +411,20 @@
 <script type="text/javascript">
   creatives = {% if creatives %}true{% else%}false{% endif %};
 </script>
-
+<form id='campaignExportForm' style='display:none;' method='POST' accept-charset='utf-8' action='{% url campaign_export %}'>
+    <input name='adgroup_key' type='text' value='{{adgroup.key}}' />
+    <input name='file_type' id='campaignExportType' type='text' value='' />
+    <input name='start' value={{start_date|date:"mdy"}} />
+    <input name='end' value={{end_date|date:"mdy"}} />
+</form>
 <section id="dashboard-apps">
+   <div class="buttonBank buttonBank-right">
+       <select name='exportSelect' id='advertiser-adgroups-exportSelect' class='selectmenu'>
+           <option value='exp'>Export</option>
+           <option value='xls'>XLS</option>
+           <option value='csv'>CSV</option>
+       </select>
+    </div>
     <h2>Daily Counts</h2>            
        <div class="appData-details noneg">
         <table class="dataTable appData-main">

@@ -17,4 +17,5 @@ urlpatterns = patterns('advertiser.views',
   url(r'^adserver_test/$','adserver_test', name='advertiser_adserver_test'),
   url(r'^stats/ajax/$', 'stats_ajax', name='stats_ajax'),
   url(r'^$','adgroups',name='advertiser_campaign'),
+  url(r'^export/$', 'campaign_export', name='campaign_export'),
 )

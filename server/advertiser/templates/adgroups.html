@@ -437,7 +437,7 @@
                 var daily_stats = campaign.stats.daily_stats;
                 var dict = {};
                 dict[name] = $.map(daily_stats, function(dayStats) {
-                    return parseInt(dayStats[statName]);
+                    return parseFloat(dayStats[statName]);
                 });
                 statsArray.push(dict);
             }

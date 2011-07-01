@@ -12,6 +12,7 @@
             {{start_date.day}});
         var campaignIdsToFetch = {};
         var fetchedCampaignIds = {};
+        var accountStats = {{account_stats|safe}};
         
         var AJAX_TIMEOUT_MILLISECONDS = 10000;
         var AJAX_MAX_FAILED_ATTEMPTS = 3;
@@ -107,15 +108,12 @@
                 }(),
                 error: function() {
                     backoffData.failedAttempts++;
-                    console.log("failed. num failures for this guy: ", backoffData.failedAttempts);
                     if (backoffData.failedAttempts > AJAX_MAX_FAILED_ATTEMPTS) {
-                        console.log("maxed out failures, giving up...");
                         return;
                     } 
                     setTimeout(ajaxBatchFetchCampaigns(ids, days, startDate, idsToFetch, fetchedIds, backoffData),
                         backoffData.delay);
                     backoffData.delay *= 1.5;
-                    console.log("next backoff delay is: ", backoffData.delay)
                 },
                 timeout: AJAX_TIMEOUT_MILLISECONDS
             });
@@ -136,15 +134,12 @@
                 }(),
                 error: function() {
                     backoffData.failedAttempts++;
-                    console.log("failed. num failures for this guy: ", backoffData.failedAttempts);
                     if (backoffData.failedAttempts > AJAX_MAX_FAILED_ATTEMPTS) {
-                        console.log("maxed out failures, giving up...");
                         return;
                     } 
                     setTimeout(ajaxFetchCampaign(id, days, startDate, idsToFetch, fetchedIds, backoffData),
                         backoffData.delay);
                     backoffData.delay *= 1.5;
-                    console.log("next backoff delay is: ", backoffData.delay)
                 },
                 timeout: AJAX_TIMEOUT_MILLISECONDS
             });
@@ -168,7 +163,6 @@
                 $(selector).addClass("campaign-status-" + campaignStatus);
                 
                 // Record adgroup_id as fetched.
-                console.log("deleting ", adgroup_id)
                 delete idsToFetch[adgroup_id];
                 fetchedIds[adgroup_id] = all_stats[key];
             }
@@ -406,8 +400,6 @@
             var sortedGuaranteed = getSortedGuaranteedCampaignsByRevenue();
             var topGuaranteed = sortedGuaranteed.slice(0, 3);
             var otherGuaranteed = sortedGuaranteed.slice(3, sortedGuaranteed.length);
-            console.log("top:", topGuaranteed);
-            console.log("other:", otherGuaranteed);
             var result = [];
             
             // Get stats for the top campaigns.
@@ -430,7 +422,6 @@
         function getSortedGuaranteedCampaignsByRevenue() {
             var campaigns = [];
             var guaranteed = $(".gtee_row").map(function() { return $(this).attr("id") });
-            console.log(guaranteed);
             
             $.each(fetchedCampaignIds, function(key, value) {
                 if ($.inArray(key, guaranteed) != -1) {
@@ -449,7 +440,6 @@
                 else return 0;
             });
 
-            console.log(campaigns);
             return campaigns;
         }
         
@@ -559,12 +549,13 @@
             else return 'area';
         }
         
-        function populateStatsBreakdowns() {
+        function populateStatsBreakdowns(stats) {
             var days = getNumDays();
             var startDate = getStartDate();
-            var backoffData = { delay: 1000, failedAttempts: 0 };
+            updateStatsBreakdowns(stats);
+            //var backoffData = { delay: 1000, failedAttempts: 0 };
             
-            ajaxFetchStatsBreakdowns(days, startDate, backoffData);
+            //ajaxFetchStatsBreakdowns(days, startDate, backoffData);
         }
         
         function ajaxFetchStatsBreakdowns(days, startDate, backoffData) {
@@ -577,15 +568,12 @@
                 success: updateStatsBreakdowns,
                 error: function() {
                     backoffData.failedAttempts++;
-                    console.log("failed. num failures for stats breakdowns: ", backoffData.failedAttempts);
                     if (backoffData.failedAttempts > AJAX_MAX_FAILED_ATTEMPTS) {
-                        console.log("maxed out failures for stats breakdowns, giving up...");
                         return;
                     } 
                     setTimeout(ajaxFetchStatsBreakdowns(days, startDate, backoffData),
                         backoffData.delay);
                     backoffData.delay *= 1.5;
-                    console.log("next backoff delay for stats breakdowns is: ", backoffData.delay);
                 },
                 timeout: AJAX_TIMEOUT_MILLISECONDS
             });
@@ -624,8 +612,29 @@
             prepareGraph();
         }
         
+        function populateGraphWithAccountStats(stats) {
+            var dailyStats = stats.all_stats["||"].daily_stats;
+            
+            var graphImpStats = [{ "Total": statArrayFromDailyStats(dailyStats, "impression_count")}];
+            var graphRevStats = [{ "Total": statArrayFromDailyStats(dailyStats, "revenue")}];
+            var graphClkStats = [{ "Total": statArrayFromDailyStats(dailyStats, "click_count")}];
+            var graphCtrStats = [{ "Total": statArrayFromDailyStats(dailyStats, "ctr")}];
+            
+            mopub.dashboardStatsChartData = {
+                pointStart: graphStartDate,
+                pointInterval: 86400000,
+                impressions: graphImpStats,
+                revenue: graphRevStats,
+                clicks: graphClkStats,
+                ctr: graphCtrStats
+            };
+            
+            setupDashboardStatsChart(getCurrentChartSeriesType());
+        }
+        
+        populateStatsBreakdowns(accountStats);
+        populateGraphWithAccountStats(accountStats);
         setFilterOptionsDisabled(true);
-        populateStatsBreakdowns();
         campaignIdsToFetch = getCampaignIds();
         populateCampaignStats(campaignIdsToFetch, fetchedCampaignIds);
         
@@ -791,9 +800,6 @@
             });
         });
     });
-</script>
-<script>
-  var account_stats = {{account_stats|safe}};
 </script>
 {% endblock extraScripts %}
 

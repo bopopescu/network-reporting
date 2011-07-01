@@ -103,11 +103,12 @@ class AdGroupIndexHandler(RequestHandler):
         stats_dict[key] = {}
         stats_dict[key]['name'] = "||"
         stats_dict[key]['daily_stats'] = [s.to_dict() for s in stats]
+        summed_stats = sum(stats, StatsModel())
+        stats_dict[key]['sum'] = summed_stats.to_dict()        
+        
         response_dict = {}
         response_dict['status'] = 200
         response_dict['all_stats'] = stats_dict
-        # summed_stats = sum(stats, StatsModel())
-        # stats_dict[key]['sum'] = summed_stats.to_dict()        
         
         for adgroup in adgroups:
             adunits = []

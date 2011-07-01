@@ -421,6 +421,8 @@ class StatsModel(db.Expando):
                     value = str(value.key())
                 if isinstance(value, db.Key):
                     value = str(value)
+                if isinstance(value, datetime.datetime):
+                    value = str(value)    
                 d[prop_name] = value
         return d        
 # 

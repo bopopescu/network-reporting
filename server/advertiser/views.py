@@ -91,7 +91,20 @@ class AdGroupIndexHandler(RequestHandler):
         # Graph totals are the summed counts across all the adgroups   
         # account_level_stats = _calc_app_level_stats(adgroups)
         # account_level_summed_stats = sum(account_level_stats,StatsModel()) 
-        # adgroups = _calc_and_attach_e_cpm(adgroups, account_level_summed_stats)
+        
+        # gets account level stats
+        stats = StatsModelQueryManager(self.account, 
+                                       offline=self.offline).get_stats_for_days(publisher=None,
+                                                                                advertiser=None, 
+                                                                                days=days)
+                                                                                    
+        key = "||"
+        stats_dict = {}
+        stats_dict[key] = {}
+        stats_dict[key]['daily_stats'] = [s.to_dict() for s in stats]
+        # summed_stats = sum(stats, StatsModel())
+        # stats_dict[key]['sum'] = summed_stats.to_dict()        
+        
         for adgroup in adgroups:
             adunits = []
             adunit_keys_to_fetch = []
@@ -154,6 +167,7 @@ class AdGroupIndexHandler(RequestHandler):
                                    # 'graph_adgroups': graph_adgroups,
                                    # 'graph_gtee_adgroups': graph_gtee_adgroups,
                                    # 'graph_totals': account_level_stats,
+                                   'account_stats': simplejson.dumps(stats_dict),
                                    'start_date': days[0],
                                    'end_date':days[-1],
                                    'date_range': self.date_range,

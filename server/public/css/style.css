@@ -2186,6 +2186,11 @@ table.campaignData-main, table.reportData-table {
   padding-top:0px;
 }
 
+#target-by-device{
+  padding-top: 5px;
+  padding-left: 50px;
+}
+
 /* Login */
 
 #login-left, #login-left .fieldset{

@@ -48,6 +48,7 @@ class AdGroupIndexHandler(RequestHandler):
 
     def get(self):
         # Set start date if passed in, otherwise get most recent days
+        self.date_range = int(self.params.get('r','14'))
         if self.start_date:
             days = StatsModel.get_days(self.start_date, self.date_range)
         else:

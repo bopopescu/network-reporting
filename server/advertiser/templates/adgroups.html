@@ -173,11 +173,8 @@
                 fetchedIds[adgroup_id] = all_stats[key];
             }
             
-            calculateRollupStats();
-            var readyForRollups = objectIsEmpty(idsToFetch);
-            if (readyForRollups) {
-                prepareGraph();
-            }
+            var campaignsFullyUpdated = objectIsEmpty(idsToFetch);
+            if (campaignsFullyUpdated) onCampaignsFullyUpdated();
         }
         
         function objectIsEmpty(obj) {
@@ -384,13 +381,10 @@
         }
         
         function prepareGraph() {
-            var topCampaigns = getTopCampaigns(4);
-            
-            var graphImpStats = getGraphStatsForStatName("impression_count", topCampaigns);
-            var graphRevStats = getGraphStatsForStatName("revenue", topCampaigns);
-            var graphClkStats = getGraphStatsForStatName("click_count", topCampaigns);
-            var graphCtrStats = getGraphStatsForStatName("ctr", topCampaigns);
-            console.log("ctr: ", graphCtrStats);
+            var graphImpStats = getGraphImpressionStats();
+            var graphRevStats = getGraphRevenueStats();
+            var graphClkStats = getGraphClickStats();
+            var graphCtrStats = getGraphCtrStats();
             
             mopub.dashboardStatsChartData = {
                 pointStart: graphStartDate,
@@ -401,21 +395,142 @@
                 ctr: graphCtrStats
             };
             
-            var chartSeriesType = 'area';
-            var activeBreakdownsElem = $('#dashboard-stats .stats-breakdown .active');
-            if (activeBreakdownsElem.attr('id') == 'stats-breakdown-ctr') chartSeriesType = 'line';
-            setupDashboardStatsChart(chartSeriesType);
+            setupDashboardStatsChart(getCurrentChartSeriesType());
         }
         
-        function getTopCampaigns(numCampaigns) {
+        function getGraphImpressionStats() {
+            return getGraphAdditiveStatsForStatName("impression_count");
+        }
+        
+        function getGraphRevenueStats() {
+            var sortedGuaranteed = getSortedGuaranteedCampaignsByRevenue();
+            var topGuaranteed = sortedGuaranteed.slice(0, 3);
+            var otherGuaranteed = sortedGuaranteed.slice(3, sortedGuaranteed.length);
+            console.log("top:", topGuaranteed);
+            console.log("other:", otherGuaranteed);
+            var result = [];
+            
+            // Get stats for the top campaigns.
+            $.each(topGuaranteed, function(index, campaign) {
+                var campaignName = campaign.key;
+                var arrayOfDailyStats = campaign.stats.daily_stats;
+                var statsForCampaign = {};
+                statsForCampaign[campaignName] = statArrayFromDailyStats(arrayOfDailyStats, "revenue");
+                result.push(statsForCampaign);
+            });
+            
+            // Get stats for all other campaigns.
+            var statsForOtherCampaigns = sumDailyStatsAcrossCampaigns(otherGuaranteed, "revenue");
+            var otherDict = { "Others": statsForOtherCampaigns };
+            result.push(otherDict);
+            
+            return result;
+        }
+        
+        function getSortedGuaranteedCampaignsByRevenue() {
             var campaigns = [];
+            var guaranteed = $(".gtee_row").map(function() { return $(this).attr("id") });
+            console.log(guaranteed);
+            
+            $.each(fetchedCampaignIds, function(key, value) {
+                if ($.inArray(key, guaranteed) != -1) {
+                    var dict = {};
+                    dict.key = value["name"].replace("||", "");
+                    dict.stats = value;
+                    campaigns.push(dict);
+                }
+            });
+
+            campaigns.sort(function(a, b) {
+                var impsA = parseFloat(a.stats.sum.revenue);
+                var impsB = parseFloat(b.stats.sum.revenue);
+                if (impsA < impsB) return 1;
+                if (impsA > impsB) return -1;
+                else return 0;
+            });
+
+            console.log(campaigns);
+            return campaigns;
+        }
+        
+        function getGraphClickStats() {
+            return getGraphAdditiveStatsForStatName("click_count");
+        }
+        
+        function getGraphCtrStats() {
+            var sortedCampaigns = getSortedCampaignsByImpressions();
+            var topCampaigns = sortedCampaigns.slice(0, 3);
+            var otherCampaigns = sortedCampaigns.slice(3, sortedCampaigns.length);
+            var result = [];
+            
+            // Get stats for the top campaigns.
+            $.each(topCampaigns, function(index, campaign) {
+                var campaignName = campaign.key;
+                var arrayOfDailyStats = campaign.stats.daily_stats;
+                var statsForCampaign = {};
+                statsForCampaign[campaignName] = statArrayFromDailyStats(arrayOfDailyStats, "ctr");
+                result.push(statsForCampaign);
+            });
+            
+            // Get stats for all other campaigns.
+            var statsForOtherCampaigns = dailyCtrAcrossCampaigns(otherCampaigns);
+            var otherDict = { "Others": statsForOtherCampaigns };
+            result.push(otherDict);
+            
+            return result;
+        }
+        
+        function getGraphAdditiveStatsForStatName(statName) {
+            var sortedCampaigns = getSortedCampaignsByImpressions();
+            var topCampaigns = sortedCampaigns.slice(0, 3);
+            var otherCampaigns = sortedCampaigns.slice(3, sortedCampaigns.length);
+            var result = [];
+            
+            // Get stats for the top campaigns.
+            $.each(topCampaigns, function(index, campaign) {
+                var campaignName = campaign.key;
+                var arrayOfDailyStats = campaign.stats.daily_stats;
+                var statsForCampaign = {};
+                statsForCampaign[campaignName] = statArrayFromDailyStats(arrayOfDailyStats, statName);
+                result.push(statsForCampaign);
+            });
+            
+            // Get stats for all other campaigns.
+            var statsForOtherCampaigns = sumDailyStatsAcrossCampaigns(otherCampaigns, statName);
+            var otherDict = { "Others": statsForOtherCampaigns };
+            result.push(otherDict);
+            
+            return result;
+        }
+        
+        function statArrayFromDailyStats(arrayOfDailyStats, statName) {
+            return $.map(arrayOfDailyStats, function(oneDayStats) {
+                return parseFloat(oneDayStats[statName]);
+            });
+        }
+        
+        function sumDailyStatsAcrossCampaigns(campaigns, statName) {
+            var result = [];
+            $.each(campaigns, function(index, campaign) {
+                var arrayOfDailyStats = campaign.stats.daily_stats;
+                $.each(arrayOfDailyStats, function(dayIndex, oneDayStats) {
+                    if (!result[dayIndex]) result[dayIndex] = 0;
+                    result[dayIndex] += parseFloat(oneDayStats[statName]);
+                });
+            });
+            return result;
+        }
+        
+        function getSortedCampaignsByImpressions() {
+            var campaigns = [];
+            
             $.each(fetchedCampaignIds, function(key, value) {
                 var dict = {};
                 dict.key = value["name"].replace("||", "");
                 dict.stats = value;
                 campaigns.push(dict);
             });
-            
+
             campaigns.sort(function(a, b) {
                 var impsA = parseInt(a.stats.sum.impression_count);
                 var impsB = parseInt(b.stats.sum.impression_count);
@@ -423,26 +538,25 @@
                 if (impsA > impsB) return -1;
                 else return 0;
             });
-            
-            numCampaigns = (numCampaigns < campaigns.length) ? numCampaigns : campaigns.length;
-            return campaigns.slice(0, numCampaigns);
+
+            return campaigns;
         }
         
-        function getGraphStatsForStatName(statName, topCampaigns) {
-            var statsArray = [];
+        function dailyCtrAcrossCampaigns(campaigns) {
+            var result = [];
+            var clicks = sumDailyStatsAcrossCampaigns(campaigns, "click_count");
+            var impressions = sumDailyStatsAcrossCampaigns(campaigns, "impression_count");
             
-            for (var i = 0; i < topCampaigns.length; i++) {
-                var campaign = topCampaigns[i];
-                var name = campaign.key;
-                var daily_stats = campaign.stats.daily_stats;
-                var dict = {};
-                dict[name] = $.map(daily_stats, function(dayStats) {
-                    return parseFloat(dayStats[statName]);
-                });
-                statsArray.push(dict);
+            for (var i = 0; i < clicks.length; i++) {
+                result[i] = (clicks[i] / impressions[i]) || 0;
             }
-            
-            return statsArray;
+            return result;
+        }
+        
+        function getCurrentChartSeriesType() {
+            var activeBreakdownsElem = $('#dashboard-stats .stats-breakdown .active');
+            if (activeBreakdownsElem.attr('id') == 'stats-breakdown-ctr') return 'line';
+            else return 'area';
         }
         
         function populateStatsBreakdowns() {
@@ -500,6 +614,17 @@
             $("#stats-breakdown-ctr .all .inner").html(all.ctr);
         }
         
+        function setFilterOptionsDisabled(disabled) {
+            $("#campaigns-filterOptions").buttonset({"disabled": disabled});
+        }
+        
+        function onCampaignsFullyUpdated() {
+            setFilterOptionsDisabled(false);
+            calculateRollupStats();
+            prepareGraph();
+        }
+        
+        setFilterOptionsDisabled(true);
         populateStatsBreakdowns();
         campaignIdsToFetch = getCampaignIds();
         populateCampaignStats(campaignIdsToFetch, fetchedCampaignIds);
@@ -786,7 +911,7 @@
             <div id="campaigns-control-panel">
               <div class="center-button-bank">
     
-                <span class="buttonset inactive" id="campaigns-filterOptions"> 
+                <span class="buttonset" id="campaigns-filterOptions"> 
                   <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-all" checked="checked" id="campaigns-filterOptions-option-all"/> 
                   <label for="campaigns-filterOptions-option-all">All</label> 
                   <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Running" id="campaigns-filterOptions-option-Running"/> 

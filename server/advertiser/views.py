@@ -101,7 +101,10 @@ class AdGroupIndexHandler(RequestHandler):
         key = "||"
         stats_dict = {}
         stats_dict[key] = {}
+        stats_dict[key]['name'] = "||"
         stats_dict[key]['daily_stats'] = [s.to_dict() for s in stats]
+        response_dict['status'] = 200
+        response_dict['all_stats'] = stats_dict
         # summed_stats = sum(stats, StatsModel())
         # stats_dict[key]['sum'] = summed_stats.to_dict()        
         
@@ -167,7 +170,7 @@ class AdGroupIndexHandler(RequestHandler):
                                    # 'graph_adgroups': graph_adgroups,
                                    # 'graph_gtee_adgroups': graph_gtee_adgroups,
                                    # 'graph_totals': account_level_stats,
-                                   'account_stats': simplejson.dumps(stats_dict),
+                                   'account_stats': simplejson.dumps(response_dict),
                                    'start_date': days[0],
                                    'end_date':days[-1],
                                    'date_range': self.date_range,

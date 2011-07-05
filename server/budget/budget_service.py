@@ -184,9 +184,9 @@ def get_spending_for_date_range(campaign, start_date, end_date, today=pac_today(
     
     total_spending = 0.0
     for log in daily_logs:
-        if log.actual_spending:
-            total_spending += log.actual_spending
-        else:
+        try:
+            total_spending += log.spending
+        except NoSpendingForIncompleteLogError:
             total_spending += spent_today(campaign)
     
     return total_spending
@@ -222,7 +222,7 @@ def get_osi(campaign):
     successful_delivery = .95
     
     try:
-        return last_budgetslice.spending >= last_budgetslice.desired_spending*successful_delivery 
+        return last_budgetslice.actual_spending >= last_budgetslice.desired_spending*successful_delivery 
     except AttributeError:
         # If there is no log built yet, we return True
         return True
@@ -322,7 +322,7 @@ def _get_spending_for_date(campaign, date):
     slicer = BudgetSlicer.get_or_insert_for_campaign(campaign)
     daily_log = slicer.daily_logs.filter("date =", date).get()
     
-    return daily_log.actual_spending
+    return daily_log.spending
 
 
 def _apply_if_able(campaign, cost, today=pac_today()):

@@ -152,7 +152,19 @@
             results.cpm = "$" + results.cpm.toFixed(2);
             results.ctr = formatPercentage(results.ctr);
             results.fill_rate = formatPercentage(results.fill_rate);
-            results.on_schedule = (results.on_schedule) ? "On time" : "Behind";
+            
+            if (results.status == "Running") {
+                if (results.on_schedule) {
+                    results.on_schedule = '<span class="osi-success"> On pace ' +
+                        '<a href="#" id="campaign-osi-success-helpLink" class="whatsthis">' + 
+                        '<div class="whatsthis-icon"></div></a></span>';
+                } else {
+                    results.on_schedule = '<span class="osi-failure""> Behind ' +
+                        '<a href="#" id="campaign-osi-failure-helpLink" class="whatsthis">' + 
+                        '<div class="whatsthis-icon"></div></a></span>';
+                }
+            }
+            
             return results;
         }
         
@@ -505,6 +517,13 @@
             var otherDict = { "Others": statsForOtherCampaigns };
             result.push(otherDict);
             
+            // Get stats for MoPub-optimized CTR.
+            var accountDailyStats = accountStats["all_stats"]["||"]["daily_stats"];
+            var mopubOptimized = { 
+                "MoPub Optimized": statArrayFromDailyStats(accountDailyStats, "ctr"),
+            };
+            result.push(mopubOptimized);
+            
             return result;
         }
         
@@ -648,7 +667,7 @@
               seriesData = value;
 
               if (seriesType == 'line'){
-                 if (seriesName == 'Mopub Optimized'){
+                 if (seriesName == 'MoPub Optimized'){
                   seriesLineWidth = 4;
                 } else{
                   seriesLineWidth = 2;

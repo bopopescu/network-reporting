@@ -3,7 +3,7 @@ from advertiser.models import Campaign
 import logging
 import math
 
-DEFAULT_TIMESLICES = 1440.0 # Timeslices per day
+DEFAULT_TIMESLICES = 1440 # Timeslices per day
 DEFAULT_FUDGE_FACTOR = 0.05
 
 
@@ -30,7 +30,7 @@ class BudgetSlicer(db.Model):
         self.current_timeslice = int(math.floor((DEFAULT_TIMESLICES*seconds)/86400))
     
     def advance_timeslice(self):
-        self.current_timeslice = (self.current_timeslice+1)%DEFAULT_TIMESLICES
+        self.current_timeslice = int((self.current_timeslice+1)%DEFAULT_TIMESLICES)
     
     def __init__(self, parent=None, key_name=None, **kwargs):
         if not key_name and not kwargs.get('key', None):

@@ -6,12 +6,28 @@ import math
 DEFAULT_TIMESLICES = 1440.0 # Timeslices per day
 DEFAULT_FUDGE_FACTOR = 0.05
 
+
+###### INTERIM VERSION TO BE DELETED #######
+
 class BudgetSlicer(db.Model):
     
     campaign = db.ReferenceProperty(Campaign)
+<<<<<<< HEAD
     spent_today = db.FloatProperty(default = 0.)
     spent_in_campaign = db.FloatProperty(default = 0.)
     current_timeslice = db.IntegerProperty(default = 0)
+=======
+    
+    # Old models
+    timeslice_snapshot = db.FloatProperty()
+    daily_snapshot = db.FloatProperty()
+    
+    # New Models
+    spent_today = db.FloatProperty(default = 0.)
+    spent_in_campaign = db.FloatProperty(default = 0.)
+    current_timeslice = db.IntegerProperty(default = 0)
+    
+>>>>>>> master
 
     @property
     def timeslice_budget(self):
@@ -66,20 +82,42 @@ class BudgetSlicer(db.Model):
             return obj
         return db.run_in_transaction(_txn,campaign)        
 
+
+
+
 class BudgetSliceLog(db.Model):
-    budget_obj = db.ReferenceProperty(BudgetSlicer,collection_name="timeslice_logs")
-    remaining_daily_budget = db.FloatProperty()
-    actual_spending = db.FloatProperty()
-    desired_spending = db.FloatProperty()
-    end_date = db.DateTimeProperty()
-
-
+      budget_slicer = db.ReferenceProperty(BudgetSlicer,collection_name="timeslice_logs")
+      initial_memcache_budget = db.FloatProperty()
+      final_memcache_budget = db.FloatProperty()
+      remaining_daily_budget = db.FloatProperty()
+      actual_spending = db.FloatProperty()
+      desired_spending = db.FloatProperty()
+      end_date = db.DateTimeProperty()
+      
+      # New Models
+      actual_spending = db.FloatProperty()
+      desired_spending = db.FloatProperty()
+      
+      
+      @property
+      def spending(self):
+          try:
+              # If actual_spending is None, calculate it
+              return self.actual_spending or (self.initial_memcache_budget - 
+                                              self.final_memcache_budget)
+          except TypeError:
+              raise NoSpendingForIncompleteLogError
+         
 class BudgetDailyLog(db.Model):
     budget_obj = db.ReferenceProperty(BudgetSlicer,collection_name="daily_logs")
     initial_daily_budget = db.FloatProperty()
     remaining_daily_budget = db.FloatProperty()
     actual_spending = db.FloatProperty()
     date = db.DateProperty()
+    
+    
+    # New Models
+    actual_spending = db.FloatProperty()
 
     # @property
     # def spending(self):

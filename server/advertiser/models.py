@@ -162,6 +162,8 @@ class AdGroup(db.Model):
     min_os = db.StringListProperty(default=['any'])
     
     # Device Targeting
+    device_targeting = db.BooleanProperty(default=False)
+    
     target_iphone = db.BooleanProperty(default=True)
     target_ipod = db.BooleanProperty(default=True)
     target_ipad = db.BooleanProperty(default=True)
@@ -238,6 +240,22 @@ class AdGroup(db.Model):
     
     def __repr__(self):
         return "AdGroup:'%s'" % self.name
+        
+    @property
+    def uses_default_device_targeting(self):
+        
+        if self.target_iphone == False or \
+        self.target_ipod == False or \
+        self.target_ipad == False or \
+        self.ios_version_min != MIN_IOS_VERSION or \
+        self.ios_version_max != MAX_IOS_VERSION or \
+        self.target_android == False or \
+        self.android_version_min != MIN_ANDROID_VERSION or \
+        self.android_version_max != MAX_ANDROID_VERSION or \
+        self.target_other == False:
+            return False
+        else:
+            return True
         
     @property
     def geographic_predicates(self):

@@ -118,6 +118,8 @@ class AdGroupForm(mpforms.MPModelForm):
     custom_method = mpfields.MPTextField(required=False)
     cities = forms.Field(widget=forms.MultipleHiddenInput, required=False)
     
+    device_targeting = mpfields.MPChoiceField(choices=[(False,'All'),(True,'Filter by device and OS')],widget=mpwidgets.MPRadioWidget)
+    
     ios_version_max = mpfields.MPChoiceField(choices=IOS_VERSION_CHOICES,
                                              widget=mpwidgets.MPSelectWidget)
 
@@ -136,7 +138,9 @@ class AdGroupForm(mpforms.MPModelForm):
                   'bid', 'bid_strategy', 
                   'percent_users', 'site_keys',
                   'hourly_frequency_cap','daily_frequency_cap','allocation_percentage', 
-                  'allocation_type','budget', 'target_iphone', 
+                  'allocation_type','budget', 
+                  "device_targeting",
+                  'target_iphone', 
                   'target_ipod', 'target_ipad', 'ios_version_max','ios_version_min',
                   'target_android', 'android_version_max','android_version_min',
                   'target_other')
@@ -161,12 +165,14 @@ class AdGroupForm(mpforms.MPModelForm):
         if instance:
             if not initial:
                 initial = {}
+                
             if instance.network_type == 'custom' and instance.net_creative:
                 initial.update(custom_html = instance.net_creative.html_data)
 
             if instance.network_type == 'custom_native' and instance.net_creative:
                 initial.update(custom_method = instance.net_creative.html_data)
-                
+            
+            # Set up cities
             cities = []
             for city in instance.cities:
                 cities.append(str(city))
@@ -178,6 +184,9 @@ class AdGroupForm(mpforms.MPModelForm):
             initial.update(cities=cities)
             #initial.update(geo=instance.geo_predicates)
             kwargs.update(initial=initial)
+            
+            
+            
         super(AdGroupForm,self).__init__(*args,**kwargs)    
   
 class AbstractCreativeForm(mpforms.MPModelForm):

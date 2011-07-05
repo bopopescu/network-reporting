@@ -222,7 +222,7 @@ def get_osi(campaign):
     successful_delivery = .95
     
     try:
-        return last_budgetslice.actual_spending >= last_budgetslice.desired_spending*successful_delivery 
+        return last_budgetslice.spending >= last_budgetslice.desired_spending*successful_delivery 
     except AttributeError:
         # If there is no log built yet, we return True
         return True

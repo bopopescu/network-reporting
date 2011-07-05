@@ -83,13 +83,16 @@ def device_filter(dev_preds):
 def os_filter(user_agent):
     log_mesg = "Removed due to OS restrictions: %s"
     def real_filter(a):
-        
+
         # NOTE: This is because of ghetto memcache error, remove this if past July 5th 2011.
         if a.target_ipod is None or a.target_iphone is None or a.target_ipad is None or a.ios_version_min is None or a.ios_version_max is None or a.android_version_min is None or a.android_version_max is None:
             logging.error("adgroup value contained None. Automatically passing.")
             return True
         # ENDNOTE
         
+        # Do not do device targeting if it is turned off
+        if not a.device_targeting:
+            return True
         
         user_os_name, user_model, user_os_version = get_os(user_agent)
         

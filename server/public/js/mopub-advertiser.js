@@ -263,7 +263,6 @@ var mopub = mopub || {};
     data: { ajax: true },
     dataType: 'json',
     success: function(jsonData, statusText, xhr, $form) {
-	console.log(jsonData);
       $('#campaignAdgroupForm-loading').hide();
       if (jsonData.success){
         $('#campaignAdgroupForm-success').show(); // show message
@@ -921,6 +920,17 @@ var mopub = mopub || {};
           
      // Delete redunundant first option
      $('#campaign-status-options-menu').find('li').first().hide();
+
+     // Set up device targeting
+     $("#device_targeting_False").click(function(){
+       $("#target-by-device").slideUp();
+     });
+     $("#device_targeting_True").click(function(){
+       $("#target-by-device").slideDown();
+     });
+     if ($("#device_targeting_True:checked").length === 0) {
+       $("#target-by-device").hide();
+     }
     
     /*---------------------------------------/
     / Chart

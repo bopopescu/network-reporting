@@ -9,6 +9,8 @@ from budget.models import (BudgetSlicer,
                            BudgetDailyLog,
                            NoSpendingForIncompleteLogError,
                            )
+                           
+from budget.query_managers import BudgetSliceLogQueryManager
 from budget.tzinfo import Pacific                          
 
 """
@@ -245,6 +247,19 @@ def update_budget(campaign):
                         else:
                             memcache.set(ts_key, _to_memcache_int(lost_timeslice), namespace="budget")
                         
+                        
+                        
+def get_osi(campaign):
+    """ Returns True if the most recent completed timeslice spent all the
+        budget that was allotted to it. If there is not enough information
+        default to 'on schedule' """  
+    last_budgetslice = BudgetSliceLogQueryManager().get_most_recent(campaign)
+    minimum_percentage = .95 # We must deliver at least 95% 
+    try:
+        return last_budgetslice.actual_spending >= last_budgetslice.desired_spending*minimum_percentage
+    except AttributeError:
+        # If there is no log built yet, we return True
+        return True
                 
 ################ HELPER FUNCTIONS ###################
 
@@ -305,7 +320,9 @@ def _backup_budgets(campaign):
                       initial_memcache_budget=initial_memcache_budget,
                       final_memcache_budget=final_memcache_budget,
                       remaining_daily_budget=rem_daily_budget,
-                      end_date=datetime.datetime.now()
+                      end_date=datetime.datetime.now(),
+                      desired_spending=budget_slicer.timeslice_budget,
+                      actual_spending=initial_memcache_budget-final_memcache_budget
                       )
     log.put()
     

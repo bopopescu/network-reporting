@@ -6,7 +6,7 @@
 
 from mrjob.job import MRJob
 
-import log_mapper 
+import basic_log_mapper 
 import log_reducer 
 
 
@@ -22,7 +22,7 @@ def sum_up(counts):
 
 class LogCountMRJob(MRJob):
     def mapper(self, key, line):
-        hour_k, hour_v, date_k, date_v = log_mapper.generate_kv_pairs(line)
+        hour_k, hour_v, date_k, date_v = basic_log_mapper.generate_kv_pairs(line)
         if hour_k and hour_v and date_k and date_v:
             yield hour_k, eval(hour_v)
             yield date_k, eval(date_v)

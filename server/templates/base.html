@@ -21,7 +21,7 @@
 
   <!-- CSS -->
   <link rel="stylesheet" href="/js/mylibs/jquery-ui-1.8.7.custom/css/mopub/jquery-ui-1.8.7.custom.css" />  
-  <link rel="stylesheet" href="/css/style.css?v=24">
+  <link rel="stylesheet" href="/css/style.css?v=28">
   {% block extraCSS %}{% endblock %}
  
   <!-- modernizr -->
@@ -49,8 +49,8 @@
   <script src="/js/mylibs/highcharts/highcharts.js"></script>
   
   <!-- MoPub -->
-  <script src="/js/mopub.js?v=19"></script>
-  {% block extraScripts %}<script src="/js/mopub-dashboard.js?v=20"></script>{% endblock extraScripts %}
+  <script src="/js/mopub.js?v=20"></script>
+  {% block extraScripts %}<script src="/js/mopub-dashboard.js?v=22"></script>{% endblock extraScripts %}
   
   <!--[if lt IE 7 ]>
     <script src="/js/mylibs/dd_belatedpng.js"></script>
@@ -97,7 +97,7 @@
         <nav id="nav2">
           <ul>
             <li><a href="{% url account_index %}">Your account</a></li>
-            <li><a href="http://www.mopub.com/resources/" target="_blank">Help</a></li>
+            <li><a href="http://help.mopub.com/" target="_blank">Help</a></li>
             {% if user.is_authenticated %}  
             <li><a href="{% url django.contrib.auth.views.logout %}">Log out</a></li>
             {% endif %}

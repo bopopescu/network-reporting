@@ -273,8 +273,13 @@
                         {% endif %}
                         
                         <td class="dataTable-data numeric">{{adgroup|campaign_status}}<br>
-                         {% if adgroup.percent_delivered %}
-                         <span class="muted">({{adgroup.percent_delivered|floatformat:1}}%)</span></td>
+                         {% if adgroup.campaign.budget and adgroup.running %}
+                           {% if adgroup.osi_success %}
+                           <span class='osi-success'> On pace <a href="#" id="campaign-osi-success-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></a>
+                             </a> </span>
+                           {% else %}  
+                           <span class='osi-failure'> Behind <a href="#" id="campaign-osi-failure-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></a></span></td>
+                           {% endif %}
                          {% endif %}
                         <td class='gtee-rev' style='display:none;'>{{adgroup.summed_stats.revenue}}</td>
                         <td class="dataTable-data numeric gtee-imp">{{adgroup.summed_stats.impression_count|withsep}}</td>
@@ -584,6 +589,23 @@
             <p>We calculate the <strong>eCPM</strong> for CPC campaigns by combining the CPC of the campaign with our CTR calculated in real time. </p>
             <p> This number may vary over time. This is perfectly natural and our system will adjust to these fluctuations in real time. </p>
             <p> Campaigns that have not yet begun use the average CTR of the entire app to calculate eCPM. </p>        
+          </div>
+          
+          <div id="campaign-osi-success-helpContent" class="hidden"> 
+            <h3>On Schedule Indicator</h3>
+            <p> The on-schedule indicator tells you that your campaign is on track to hit its budget goal based on current traffic and settings. </p>
+          </div>
+          
+          <div id="campaign-osi-failure-helpContent" class="hidden"> 
+            <h3>Behind Schedule Indicator</h3>
+            <p> The behind-schedule indicator tells you that your campaign is delivering at less than 95% and may not meet its delivery goal. </p>
+            <p> Some possible causes of this problem are:
+              <ul>
+                <li> Format mismatch (e.g. your adunits are 320x50 and your creatives are interstitial) </li>
+                <li> Overly strict frequency capping (e.g. one per person) </li>
+                <li> Insufficient traffic </li>
+              </ul>
+            
           </div>
           
 {% endblock content %}

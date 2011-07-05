@@ -49,7 +49,8 @@ from common.utils.query_managers import CachedQueryManager
 from publisher.query_managers import AppQueryManager, AdUnitQueryManager, AdUnitContextQueryManager
 from reporting.query_managers import StatsModelQueryManager
 
-from common.utils import sswriter
+from common.utils import sswriter, date_magic
+from common.utils.helpers import app_stats
 from common.utils.request_handler import RequestHandler
 from common.constants import *
 from budget import budget_service
@@ -149,7 +150,7 @@ class AppIndexGeoHandler(RequestHandler):
     totals = StatsModel(date=now) # sum across all days and countries
     
     # hydrate geo count dicts with stats counts on account level
-    all_stats = StatsModelQueryManager(self.account,self.offline).get_stats_for_days(days=days) 
+    all_stats = StatsModelQueryManager(self.account,self.offline,include_geo=True).get_stats_for_days(days=days) 
     for stats in all_stats:
       totals = totals + StatsModel(request_count=stats.request_count, 
                                    impression_count=stats.impression_count, 
@@ -728,3 +729,27 @@ class GenerateHandler(RequestHandler):
 @login_required
 def generate(request,*args,**kwargs):
   return GenerateHandler()(request,*args,**kwargs) 
+
+class AppExportHandler(RequestHandler):
+    def post(self, app_key, file_type, start, end):
+        start = datetime.strptime(start,'%m%d%y')
+        end = datetime.strptime(end,'%m%d%y')
+        days = date_magic.gen_days(start, end)
+
+        app = AppQueryManager.get(app_key)
+        all_stats = StatsModelQueryManager(self.account, offline=self.offline).get_stats_for_days(publisher=app, days=days)
+        f_name_dict = dict(app_title = app.name,
+                           start = start.strftime('%b %d'),
+                           end   = end.strftime('%b %d, %Y'),
+                           )
+
+        f_name = "%(app_title)s AppStats,  %(start)s - %(end)s" % f_name_dict
+        f_name = f_name.encode('ascii', 'ignore')
+        data = map(lambda x: [x[0]] + x[1], zip([day.strftime('%a, %b %d, %Y') for day in days], [app_stats(stat) for stat in all_stats]))
+        titles = ['Date', 'Requests', 'Impressions', 'Fill Rate', 'Clicks', 'CTR']
+        return sswriter.export_writer(file_type, f_name, titles, data)
+
+
+
+def app_export(request, *args, **kwargs):
+    return AppExportHandler()(request, *args, **kwargs)

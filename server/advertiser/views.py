@@ -11,7 +11,10 @@ from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 
 from django.contrib.auth.decorators import login_required
+from common.utils import date_magic
+from common.utils import sswriter
 from common.utils.decorators import cache_page_until_post
+from common.utils.helpers import campaign_stats
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
 from django.utils import simplejson
@@ -78,12 +81,12 @@ class AdGroupIndexHandler(RequestHandler):
             
         
         # Graph totals are the summed counts across all the adgroups   
-        app_level_stats = _calc_app_level_stats(adgroups)
-        app_level_summed_stats = reduce(lambda x, y: x+y, app_level_stats, StatsModel())
+
+        account_level_stats = _calc_app_level_stats(adgroups)
+        account_level_summed_stats = sum(account_level_stats,StatsModel()) 
+        adgroups = _calc_and_attach_e_cpm(adgroups, account_level_summed_stats)
+        adgroups = _calc_and_attach_osi_success(adgroups)
         
-        
-        adgroups = _calc_and_attach_e_cpm(adgroups, app_level_summed_stats)
-    
         for adgroup in adgroups:
             
             # get targeted apps
@@ -97,9 +100,9 @@ class AdGroupIndexHandler(RequestHandler):
         # Due to weirdness, network_campaigns and backfill_promo_campaigns are actually lists of adgroups
         sorted_campaign_groups = _sort_campaigns(adgroups)
         promo_campaigns, guaranteed_campaigns, network_campaigns, backfill_promo_campaigns = sorted_campaign_groups
-       
+
         guarantee_levels = _sort_guarantee_levels(guaranteed_campaigns)
-    
+
         adgroups = sorted(adgroups, key=lambda adgroup: adgroup.summed_stats.impression_count, reverse=True)
     
         help_text = None
@@ -125,7 +128,7 @@ class AdGroupIndexHandler(RequestHandler):
             graph_gtee_adgroups[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[c.all_stats for c in visible_gtee_adgroups[3:]])]
             
         try:
-            yesterday = reduce(lambda x, y: x+y, [c.all_stats[-2] for c in graph_adgroups], StatsModel())
+            yesterday = sum([c.all_stats[-2] for c in graph_adgroups], StatsModel())
         except IndexError: 
             yesterday = StatsModel()
 
@@ -134,7 +137,7 @@ class AdGroupIndexHandler(RequestHandler):
                                   {'adgroups':adgroups,
                                    'graph_adgroups': graph_adgroups,
                                    'graph_gtee_adgroups': graph_gtee_adgroups,
-                                   'graph_totals': app_level_stats,
+                                   'graph_totals': account_level_stats,
                                    'start_date': days[0],
                                    'end_date':days[-1],
                                    'date_range': self.date_range,
@@ -189,7 +192,17 @@ def _sort_campaigns(adgroups):
     return [promo_campaigns, guaranteed_campaigns, network_campaigns, backfill_promo_campaigns]
 
 def _calc_app_level_stats(adgroups):
-    return [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[c.all_stats for c in adgroups])]
+    # adgroup1.all_stats = [StatsModel(day=1), StatsModel(day=2), StatsModel(day=3)]
+    # adgroup2.all_stats = [StatsModel(day=1), StatsModel(day=2), StatsModel(day=3)]
+    # adgroup3.all_stats = [StatsModel(day=1), StatsModel(day=2), StatsModel(day=3)]
+    # all_daily_stats = [(StatsModel(day=1),StatsModel(day=1),StatsModel(day=1)),
+    #                    (StatsModel(day=2),StatsModel(day=2),StatsModel(day=2)),
+    #                    (StatsModel(day=3),StatsModel(day=3),StatsModel(day=3))]
+    # returns [StatsModel(day=1)+StatsModel(day=1)+StatsModel(day=1),
+    #          StatsModel(day=2)+StatsModel(day=2)+StatsModel(day=2)),
+    #          StatsModel(day=3)+StatsModel(day=3)+StatsModel(day=3)]
+    all_daily_stats = zip(*[adgroup.all_stats for adgroup in adgroups])
+    return [sum(daily_stats, StatsModel()) for daily_stats in all_daily_stats]
 
 
 def _calc_and_attach_e_cpm(adgroups_with_stats, app_level_summed_stats):
@@ -206,6 +219,14 @@ def _calc_and_attach_e_cpm(adgroups_with_stats, app_level_summed_stats):
             adgroup.summed_stats.e_cpm = adgroup.cpm
             
     return adgroups_with_stats
+
+def _calc_and_attach_osi_success(adgroups):
+    for adgroup in adgroups:
+        if adgroup.running and adgroup.campaign.budget:
+            adgroup.osi_success = budget_service.get_osi(adgroup.campaign)
+        
+    return adgroups
+
 
 @login_required
 def adgroups(request,*args,**kwargs):
@@ -846,7 +867,7 @@ class AdServerTestHandler(RequestHandler):
         device_to_user_agent = {
             'iphone': 'Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_0 like Mac OS X; %s) AppleWebKit/532.9 (KHTML, like Gecko) Version/4.0.5 Mobile/8A293 Safari/6531.22.7',
             'ipad': 'Mozilla/5.0 (iPad; U; CPU OS 3_2 like Mac OS X; %s) AppleWebKit/531.21.10 (KHTML, like Gecko) Version/4.0.4 Mobile/7B334b Safari/531.21.10',
-            'nexus_s': 'Mozilla/5.0 (Linux; U; Android 0.5; %s) AppleWebKit/522+ (KHTML, like Gecko) Safari/419.3',
+            'nexus_s': 'Mozilla/5.0 (Linux; U; Android 2.1; %s) AppleWebKit/522+ (KHTML, like Gecko) Safari/419.3',
             'chrome': 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/525.13 (KHTML, like Gecko) Chrome/0.A.B.C Safari/525.13',
         }
         country_to_locale_ip = {
@@ -901,3 +922,76 @@ class AdServerTestHandler(RequestHandler):
 @login_required
 def adserver_test(request,*args,**kwargs):
     return AdServerTestHandler()(request,*args,**kwargs)
+
+class AJAXStatsHandler(RequestHandler):
+    def get(self, start_date=None, date_range=14):
+        if start_date:
+            s = start_date.split('-')
+            start_date = datetime.date(int(s[0]),int(s[1]),int(s[2]))
+            days = StatsModel.get_days(start_date, int(date_range))
+        else:
+            days = StatsModel.lastdays(int(date_range))
+            
+        advs = self.params.getlist('adv')
+        pubs = self.params.getlist('pub')
+                    
+        if not advs:
+            advs = [None]
+        
+        if not pubs:
+            pubs = [None]
+        
+        stats_dict = {}    
+        for adv in advs:
+            for pub in pubs:
+                stats = StatsModelQueryManager(self.account, 
+                                               offline=self.offline).get_stats_for_days(publisher=pub,
+                                                                                        advertiser=adv, 
+                                                                                        days=days)
+                key = "%s||%s"%(pub or '',adv or '')
+                stats_dict[key] = {}
+                stats_dict[key]['daily_stats'] = [s.to_dict() for s in stats]
+                stats_dict[key]['sum'] = sum(stats, StatsModel()).to_dict()
+                
+                                                                                             
+
+        response_dict = {}
+        response_dict['status'] = 200
+        response_dict['all_stats'] = stats_dict
+        return JSONResponse(response_dict)
+
+@login_required
+def stats_ajax(request, *args, **kwargs):
+    return AJAXStatsHandler()(request, *args, **kwargs)
+
+class CampaignExporter(RequestHandler):
+    def post(self, adgroup_key, file_type, start, end, *args, **kwargs):
+        start = datetime.datetime.strptime(start,'%m%d%y')
+        end = datetime.datetime.strptime(end,'%m%d%y')
+        days = date_magic.gen_days(start, end)
+        adgroup = AdGroupQueryManager.get(adgroup_key)
+        all_stats = StatsModelQueryManager(self.account, offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)
+        f_name_dict = dict(adgroup_title = adgroup.campaign.name,
+                           start = start.strftime('%b %d'),
+                           end   = end.strftime('%b %d, %Y'),
+                           )
+        # Build
+        f_name = "%(adgroup_title)s CampaignStats,  %(start)s - %(end)s" % f_name_dict
+        f_name = f_name.encode('ascii', 'ignore')
+        # Zip up days w/ corresponding stats object and other stuff
+        data = map(lambda x: [x[0]] + x[1], zip([day.strftime('%a, %b %d, %Y') for day in days], [campaign_stats(stat, adgroup.campaign.campaign_type) for stat in all_stats]))
+        # Row titles
+        c_type = adgroup.campaign.campaign_type
+        titles = ['Date']
+        if c_type == 'network':
+            titles += ['Attempts', 'Impressions', 'Fill Rate', 'Clicks', 'CTR']
+        elif 'gtee' in c_type:
+            titles += ['Impressions', 'Clicks', 'CTR', 'Revenue']
+        elif 'promo' in c_type:
+            titles += ['Impressions', 'Clicks', 'CTR', 'Conversions', 'Conversion Rate']
+        return sswriter.export_writer(file_type, f_name, titles, data)
+
+
+
+def campaign_export(request, *args, **kwargs):
+    return CampaignExporter()(request, *args, **kwargs)

@@ -1,6 +1,7 @@
 from google.appengine.api.datastore_types import Key
 
 from google.appengine.ext import db
+from google.appengine.ext import blobstore 
 from publisher.models import Site
 from account.models import Account
 from common.utils import simplejson
@@ -21,6 +22,23 @@ GEO_CONVERSION_COUNT = 'conversion_count'
 GEO_COUNTS = [GEO_REQUEST_COUNT,GEO_IMPRESSION_COUNT,GEO_CLICK_COUNT,GEO_CONVERSION_COUNT]
 
 
+class BlobLog(db.Model):
+
+    date = db.DateProperty()
+    blob_key = db.StringProperty()
+    account = db.StringProperty()
+
+    def __init__(self, **kwargs):
+        date = kwargs.get('date', None)
+        account = kwargs.get('account', None)
+
+        date_str = date.strftime('%y%m%d') if date else 'None'
+        account_str = account or 'None'
+        
+        key_name = 'blobkey:%s:%s' % (date_str, account_str)
+        return super(BlobLog, self).__init__(key_name=key_name, **kwargs)
+        
+        
 class StatsModel(db.Expando):
     
     publisher = db.ReferenceProperty(collection_name='publisher_stats')
@@ -59,6 +77,7 @@ class StatsModel(db.Expando):
     device_os = db.StringProperty()
     device_os_version = db.StringProperty()
     
+    include_geo = True
     
     @classmethod
     def from_json(cls,string):
@@ -163,6 +182,7 @@ class StatsModel(db.Expando):
         return list(countries)
         
     def __add__(self,s):
+        include_geo = s.include_geo and self.include_geo
         obj = StatsModel(parent=self.parent_key() or s.parent_key(),
                           key_name=self.key().name() or self.key.name(),
                           publisher=StatsModel.publisher.get_value_for_datastore(self) or StatsModel.publisher.get_value_for_datastore(s),
@@ -188,18 +208,21 @@ class StatsModel(db.Expando):
                           reqs=self.reqs+s.reqs,
                           offline=self.offline,
                          )
+        obj.include_geo = include_geo
         
         # add dynamic geo properties
-        countries_self = self.get_countries()
-        countries_s = s.get_countries()
-        # all countries
-        countries = set(countries_self).union(set(countries_s))
-        for country in countries:
-            for geo_count in GEO_COUNTS:
-                attribute = '%s_country_%s'%(country,geo_count)
-                # obj.US_country_request_count = self.US_country_request_count + s.US_country_request_count
-                new_value = getattr(self,attribute,0) + getattr(s,attribute,0)
-                setattr(obj,attribute,new_value)
+        if include_geo:
+            countries_self = self.get_countries()
+            countries_s = s.get_countries()
+            # all countries
+            countries = set(countries_self).union(set(countries_s))
+            for country in countries:
+                for geo_count in GEO_COUNTS:
+                    attribute = '%s_country_%s'%(country,geo_count)
+                    # obj.US_country_request_count = self.US_country_request_count + s.US_country_request_count
+                    new_value = getattr(self,attribute,0) + getattr(s,attribute,0)
+                    setattr(obj,attribute,new_value)
+                
         return obj       
                
     def __unicode__(self):
@@ -362,7 +385,21 @@ class StatsModel(db.Expando):
             return self.revenue / float(self.conversion_count)
         else:
             return 0
-
+    
+            
+    def _dict_properties(self):
+        return self.properties().keys()
+               
+    def to_dict(self):
+        properties = self._dict_properties()
+        d = {}
+        for prop_name in properties:
+            value = getattr(self, '_%s'%prop_name, None)
+            if value is not None:
+                if isinstance(value, db.Key):
+                    value = str(value)
+                d[prop_name] = value
+        return d        
 # 
 # Tracks statistics for a site for a particular day - clicks and impressions are aggregated
 # into this object

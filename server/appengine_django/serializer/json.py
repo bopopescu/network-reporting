@@ -18,6 +18,7 @@
 Replacement for the Django JSON encoder that handles microseconds.
 """
 import datetime
+import decimal
 
 from django.utils import datetime_safe
 from django.utils import simplejson

@@ -326,12 +326,11 @@ def rollup_mptest():
         obj = StatsModel.get(stat)
         key_name = obj.key().name()
         if len(key_name.split(':')) == 2: continue # skip the account 
-        # assert that request, impression and click are the same
-
-        assert_equals(obj_dict[key_name][:3], (obj.request_count,obj.impression_count,obj.click_count))
-        # assert that the geo counts are correct as well
         
+        # assert that request, impression and click are the same
+        assert_equals(obj_dict[key_name][:3], (obj.request_count,obj.impression_count,obj.click_count))
 
+        # assert that the geo counts are correct as well
         for country in countries:
             if country in obj_dict[key_name][3]:
                 print key_name, country

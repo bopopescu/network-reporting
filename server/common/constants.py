@@ -1,4 +1,38 @@
-## Constants wooo
+## Global Constants 
+
+# OS Versions
+
+
+  
+IOS_VERSION_CHOICES = (
+    ('999','No Max'),
+    ('2.0','2.0'),
+    ('2.1','2.1'),
+    ('3.0','3.0'),
+    ('3.1','3.1'),
+    ('3.2','3.2'),
+    ('4.0','4.0'),
+    ('4.1','4.1'),
+    ('4.2','4.2'),
+    ('4.3','4.3'),
+  )
+
+ANDROID_VERSION_CHOICES = (
+    ('999','No Max'),
+    ('1.5','1.5'),
+    ('1.6','1.6'),
+    ('2.0','2.0'),
+    ('2.1','2.1'),
+    ('2.2','2.2'),
+    ('2.3','2.3'),
+    ('3.0','3.0'),
+  )
+  
+MIN_ANDROID_VERSION = '1.5'
+MAX_ANDROID_VERSION = '999'
+MIN_IOS_VERSION = '2.0'
+MAX_IOS_VERSION = '999'
+
 
 # ISO stuff
 
@@ -57,7 +91,8 @@ ALL_STATS =   ( SIT_STAT,
 
 #I don't have special characters because this is going into a regex and I'm lazy
 MARKET_SEARCH_KEY = "klfaa3dadfkfl28903uagnOMGSOSECRETkd938lvkjval8f285had9a834"
-MARKET_URL = "https://market.android.com/search?q=%s&c=apps"
+#whoooppssss https w/ no login
+MARKET_URL = "http://market.android.com/search?q=%s&c=apps"
 
 CITY_GEO = "city_name=%s,region_name=%s,country_name=%s"
 REGION_GEO = "region_name=%s,country_name=%s"
@@ -86,4 +121,4 @@ ACCEPTED_MULTI_COUNTRY = {'GB' : ['UK', 'GB'],
 
 CAMPAIGN_LEVELS = ('gtee_high', 'gtee', 'gtee_low', 'promo', 'network', 'backfill_promo')
 
-MAX_OBJECTS=100
+MAX_OBJECTS=100 # <-- What is this?

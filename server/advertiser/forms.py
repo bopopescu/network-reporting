@@ -23,6 +23,8 @@ import re
 import urlparse
 import cgi
 
+from common.constants import IOS_VERSION_CHOICES, ANDROID_VERSION_CHOICES
+
 class CampaignForm(mpforms.MPModelForm):
     TEMPLATE = 'advertiser/forms/campaign_form.html'
     gtee_level = forms.Field(widget = forms.Select)
@@ -115,13 +117,32 @@ class AdGroupForm(mpforms.MPModelForm):
     custom_method = mpfields.MPTextField(required=False)
     cities = forms.Field(widget=forms.MultipleHiddenInput, required=False)
     
+    device_targeting = mpfields.MPChoiceField(choices=[(False,'All'),(True,'Filter by device and OS')],widget=mpwidgets.MPRadioWidget)
+    
+    ios_version_max = mpfields.MPChoiceField(choices=IOS_VERSION_CHOICES,
+                                             widget=mpwidgets.MPSelectWidget)
+
+    ios_version_min = mpfields.MPChoiceField(choices=IOS_VERSION_CHOICES[1:],
+                                             widget=mpwidgets.MPSelectWidget)
+
+    android_version_max = mpfields.MPChoiceField(choices=ANDROID_VERSION_CHOICES,
+                                          widget=mpwidgets.MPSelectWidget)
+
+    android_version_min = mpfields.MPChoiceField(choices=ANDROID_VERSION_CHOICES[1:],
+                                          widget=mpwidgets.MPSelectWidget)
+    
     class Meta:
         model = AdGroup
         fields = ('name', 'network_type', 'priority_level', 'keywords', 
                   'bid', 'bid_strategy', 
                   'percent_users', 'site_keys',
                   'hourly_frequency_cap','daily_frequency_cap','allocation_percentage', 
-                  'allocation_type','budget')
+                  'allocation_type','budget', 
+                  "device_targeting",
+                  'target_iphone', 
+                  'target_ipod', 'target_ipad', 'ios_version_max','ios_version_min',
+                  'target_android', 'android_version_max','android_version_min',
+                  'target_other')
        
     def save( self, commit=True):
         obj = super(AdGroupForm, self).save(commit=False)
@@ -143,12 +164,14 @@ class AdGroupForm(mpforms.MPModelForm):
         if instance:
             if not initial:
                 initial = {}
+                
             if instance.network_type == 'custom' and instance.net_creative:
                 initial.update(custom_html = instance.net_creative.html_data)
 
             if instance.network_type == 'custom_native' and instance.net_creative:
                 initial.update(custom_method = instance.net_creative.html_data)
-                
+            
+            # Set up cities
             cities = []
             for city in instance.cities:
                 cities.append(str(city))
@@ -160,12 +183,15 @@ class AdGroupForm(mpforms.MPModelForm):
             initial.update(cities=cities)
             #initial.update(geo=instance.geo_predicates)
             kwargs.update(initial=initial)
+            
+            
+            
         super(AdGroupForm,self).__init__(*args,**kwargs)    
   
 class AbstractCreativeForm(mpforms.MPModelForm):
     def save(self,commit=True):
         obj = super(AbstractCreativeForm,self).save(commit=False)  
-        if obj.url:
+        if not obj.conv_appid and obj.url:
             obj.conv_appid = self._get_appid(obj.url)
             
         if commit:
@@ -209,7 +235,7 @@ class BaseCreativeForm(AbstractCreativeForm):
 
     class Meta:
         model = Creative
-        fields = ('ad_type','name','tracking_url','url','display_url','format','custom_height','custom_width','landscape')
+        fields = ('ad_type','name','tracking_url','url','display_url','format','custom_height','custom_width','landscape', 'conv_appid')
                     
 class TextCreativeForm(AbstractCreativeForm):
     TEMPLATE = 'advertiser/forms/text_creative_form.html'
@@ -217,7 +243,7 @@ class TextCreativeForm(AbstractCreativeForm):
     class Meta:
         model = TextCreative
         fields = ('headline','line1','line2') + \
-                 ('ad_type','name','tracking_url','url','display_url','format','custom_height','custom_width','landscape')
+                 ('ad_type','name','tracking_url','url','display_url','format','custom_height','custom_width','landscape', 'conv_appid')
         
 class TextAndTileCreativeForm(AbstractCreativeForm):
     TEMPLATE = 'advertiser/forms/text_tile_creative_form.html'
@@ -227,7 +253,7 @@ class TextAndTileCreativeForm(AbstractCreativeForm):
     
     class Meta:
         model = TextAndTileCreative
-        fields = ('line1','line2', 'ad_type','name','tracking_url','url','format','custom_height','custom_width','landscape')
+        fields = ('line1','line2', 'ad_type','name','tracking_url','url','format','custom_height','custom_width','landscape', 'conv_appid')
       
     def __init__(self, *args,**kwargs):
         instance = kwargs.get('instance',None)
@@ -259,7 +285,7 @@ class HtmlCreativeForm(AbstractCreativeForm):
     class Meta:
         model = HtmlCreative
         fields = ('html_data',) + \
-                 ('ad_type','name','tracking_url','url','display_url','format','custom_height','custom_width','landscape')
+                 ('ad_type','name','tracking_url','url','display_url','format','custom_height','custom_width','landscape', 'conv_appid')
                
 class ImageCreativeForm(AbstractCreativeForm):
     TEMPLATE = 'advertiser/forms/image_creative_form.html'
@@ -269,7 +295,7 @@ class ImageCreativeForm(AbstractCreativeForm):
     
     class Meta:
         model = ImageCreative
-        fields = ('ad_type','name','tracking_url','url','display_url','format','custom_height','custom_width','landscape') 
+        fields = ('ad_type','name','tracking_url','url','display_url','format','custom_height','custom_width','landscape', 'conv_appid') 
         
     def __init__(self, *args,**kwargs):
         instance = kwargs.get('instance',None)

@@ -4,6 +4,11 @@ from google.appengine.ext import db
 from google.appengine.ext import blobstore
 from google.appengine.ext.db import polymodel
 from account.models import Account
+
+from common.constants import MIN_IOS_VERSION, MAX_IOS_VERSION, MIN_ANDROID_VERSION, MAX_ANDROID_VERSION
+import datetime
+from budget.tzinfo import Pacific
+
 # from budget import budget_service
 #
 # A campaign.    Campaigns have budgetary and time based restrictions.    
@@ -161,6 +166,20 @@ class AdGroup(db.Model):
     )
     min_os = db.StringListProperty(default=['any'])
     
+    # Device Targeting
+    device_targeting = db.BooleanProperty(default=False)
+    
+    target_iphone = db.BooleanProperty(default=True)
+    target_ipod = db.BooleanProperty(default=True)
+    target_ipad = db.BooleanProperty(default=True)
+    ios_version_min = db.StringProperty(default=MIN_IOS_VERSION)
+    ios_version_max = db.StringProperty(default=MAX_IOS_VERSION)
+    
+    target_android = db.BooleanProperty(default=True)
+    android_version_min = db.StringProperty(default=MIN_ANDROID_VERSION)
+    android_version_max = db.StringProperty(default=MAX_ANDROID_VERSION)
+    
+    target_other = db.BooleanProperty(default=True) # MobileWeb on blackberry etc.
     
     USER_TYPES = (
         ('any','Any'),
@@ -228,6 +247,22 @@ class AdGroup(db.Model):
         return "AdGroup:'%s'" % self.name
         
     @property
+    def uses_default_device_targeting(self):
+        
+        if self.target_iphone == False or \
+        self.target_ipod == False or \
+        self.target_ipad == False or \
+        self.ios_version_min != MIN_IOS_VERSION or \
+        self.ios_version_max != MAX_IOS_VERSION or \
+        self.target_android == False or \
+        self.android_version_min != MIN_ANDROID_VERSION or \
+        self.android_version_max != MAX_ANDROID_VERSION or \
+        self.target_other == False:
+            return False
+        else:
+            return True
+        
+    @property
     def geographic_predicates(self):
         return self.geo_predicates
         
@@ -260,6 +295,25 @@ class AdGroup(db.Model):
             return self.bid
         return None
  
+    @property
+    def individual_cost(self):
+        """ The smallest atomic bid. """
+        if self.bid_strategy == 'cpc':
+            return self.bid
+        elif self.bid_strategy == 'cpm':
+            return self.bid/1000
+            
+    @property
+    def running(self):
+        """ Must be active and have proper start and end dates"""
+        campaign = self.campaign
+        pac_today = datetime.datetime.now(tz=Pacific).date()
+        if ((not campaign.start_date or campaign.start_date < pac_today) and 
+            (not campaign.end_date or campaign.end_date > pac_today)):
+            if self.active and campaign.active:
+                return True
+
+        return False
  
 class Creative(polymodel.PolyModel):
     name = db.StringProperty()

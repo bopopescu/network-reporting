@@ -978,26 +978,6 @@ class TestBudgetUnitTests(unittest.TestCase):
 
         eq_(budget_service._apply_if_able(self.cheap_c, 250), True)
         eq_(budget_service._apply_if_able(self.cheap_c, 50), False)
-          
-    def mptest_full_campaign_change_length(self):
-        self.cheap_c.budget_type = "full_campaign"
-        self.cheap_c.budget_strategy = "allatonce"
-        self.cheap_c.full_budget = 3000.
-        self.cheap_c.start_date = budget_service.pac_today()-datetime.timedelta(days=1)
-        self.cheap_c.end_date = budget_service.pac_today()+datetime.timedelta(days=1)
-        self.cheap_c.put()
-
-        budget_service.daily_advance(self.cheap_c, new_date=self.cheap_c.start_date)
-        eq_(budget_service._apply_if_able(self.cheap_c, 500), True)
-
-        budget_service.daily_advance(self.cheap_c, new_date=budget_service.pac_today())
-
-        self.cheap_c.end_date = datetime.date(2011,6,16)
-        self.cheap_c.put()
-        budget_service.update_budget(self.cheap_c)
-
-        eq_(budget_service._apply_if_able(self.cheap_c, 2500), True)
-        eq_(budget_service._apply_if_able(self.cheap_c, 100), False)
 
     def mptest_full_campaign_budget_evenly(self):
         # We have a campaign that was set to begin several days ago 

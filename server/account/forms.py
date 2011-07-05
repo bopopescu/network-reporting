@@ -24,9 +24,15 @@ class AccountForm(mpforms.MPModelForm):
                   "jumptap_pub_id",
                   "millenial_pub_id",
                   "mobfox_pub_id",
-                  )        
+                  )                        
         
 class NetworkConfigForm(mpforms.MPModelForm):
     
     class Meta:
         model = NetworkConfig
+    
+    def clean(self):
+        cleaned_data = self.cleaned_data
+        for key, value in cleaned_data.iteritems():
+            cleaned_data[key] = value.strip()
+        return cleaned_data

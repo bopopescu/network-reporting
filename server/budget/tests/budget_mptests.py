@@ -26,7 +26,7 @@ from nose.tools import with_setup
 from budget import budget_service
 from google.appengine.api import memcache
 from budget import models as budgetmodels
-from budget.models import (Budget,
+from budget.models import (BudgetSlicer,
                            BudgetSliceLog,
                            BudgetDailyLog,
                            )
@@ -140,7 +140,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(val,same)
         
     def mptest_timeslice_retrieval(self):
-        budget_manager = Budget.get_or_insert_for_campaign(self.cheap_c)
+        budget_manager = BudgetSlicer.get_or_insert_for_campaign(self.cheap_c)
         eq_(budget_manager.timeslice_budget, 100)
 
     def mptest_memcache_rollunder(self):
@@ -326,7 +326,7 @@ class TestBudgetUnitTests(unittest.TestCase):
 
     def mptest_cache_failure_then_advance(self):
         
-        budget_manager = Budget.get_or_insert_for_campaign(self.cheap_c)
+        budget_manager = BudgetSlicer.get_or_insert_for_campaign(self.cheap_c)
         eq_(budget_service.remaining_ts_budget(self.cheap_c), 100)
 
         eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
@@ -335,7 +335,7 @@ class TestBudgetUnitTests(unittest.TestCase):
 
         budget_service._advance_all()
         
-        budget_manager = Budget.get_or_insert_for_campaign(self.cheap_c)
+        budget_manager = BudgetSlicer.get_or_insert_for_campaign(self.cheap_c)
         eq_(budget_manager.spent_today, 100)
         
         eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
@@ -345,7 +345,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         # Memcache miss -> restart spending at last snapshot (100)
         budget_service._advance_all()
         
-        budget_manager = Budget.get_or_insert_for_campaign(self.cheap_c)
+        budget_manager = BudgetSlicer.get_or_insert_for_campaign(self.cheap_c)
         
         eq_(budget_manager.spent_today, 100)
         
@@ -375,7 +375,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         budget_service._advance_all()
         
         
-        slicer = Budget.get_or_insert_for_campaign(self.cheap_c)
+        slicer = BudgetSlicer.get_or_insert_for_campaign(self.cheap_c)
         eq_(slicer.timeslice_budget, 111)
         
         last_log = slicer.timeslice_logs.order("-end_date").get()

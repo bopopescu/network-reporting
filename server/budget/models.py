@@ -6,7 +6,7 @@ import math
 DEFAULT_TIMESLICES = 1440.0 # Timeslices per day
 DEFAULT_FUDGE_FACTOR = 0.05
 
-class Budget(db.Model):
+class BudgetSlicer(db.Model):
     
     campaign = db.ReferenceProperty(Campaign)
     spent_today = db.FloatProperty(default = 0.)
@@ -34,7 +34,7 @@ class Budget(db.Model):
             if campaign:
                 key_name = self.get_key_name(campaign)
                     
-        super(Budget, self).__init__(parent=parent,
+        super(BudgetSlicer, self).__init__(parent=parent,
                                            key_name=key_name,
                                             **kwargs)
 
@@ -61,13 +61,13 @@ class Budget(db.Model):
         def _txn(campaign):
             obj = cls.get_by_campaign(campaign)
             if not obj:
-                obj = Budget(**kwargs)
+                obj = BudgetSlicer(**kwargs)
                 obj.put()
             return obj
         return db.run_in_transaction(_txn,campaign)        
 
 class BudgetSliceLog(db.Model):
-    budget_obj = db.ReferenceProperty(Budget,collection_name="timeslice_logs")
+    budget_obj = db.ReferenceProperty(BudgetSlicer,collection_name="timeslice_logs")
     remaining_daily_budget = db.FloatProperty()
     actual_spending = db.FloatProperty()
     desired_spending = db.FloatProperty()
@@ -75,7 +75,7 @@ class BudgetSliceLog(db.Model):
 
 
 class BudgetDailyLog(db.Model):
-    budget_obj = db.ReferenceProperty(Budget,collection_name="daily_logs")
+    budget_obj = db.ReferenceProperty(BudgetSlicer,collection_name="daily_logs")
     initial_daily_budget = db.FloatProperty()
     remaining_daily_budget = db.FloatProperty()
     actual_spending = db.FloatProperty()

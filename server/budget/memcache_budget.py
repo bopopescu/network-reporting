@@ -1,7 +1,7 @@
 from google.appengine.api import memcache
 
 import logging
-from budget.models import Budget
+from budget.models import BudgetSlicer
 
 def remaining_daily_budget(campaign):
     """ Gets or inserts the remaining daily budget.
@@ -14,7 +14,7 @@ def remaining_daily_budget(campaign):
     if memcache_budget is None:
         logging.error("Budget cache miss campaign with key: %s" % key)
         # If there is a cache miss, we fall back to the previous snapshot
-        budget_obj = Budget.get_or_insert_for_campaign(campaign)
+        budget_obj = BudgetSlicer.get_or_insert_for_campaign(campaign)
 
         key = _make_campaign_daily_budget_key(campaign)    
 
@@ -34,7 +34,7 @@ def remaining_ts_budget(campaign):
     if memcache_budget is None:
         logging.error("cache miss for campaign with key: %s" % key)
         # If there is a cache miss, we fall back to the previous snapshot
-        budget_obj = Budget.get_or_insert_for_campaign(campaign)
+        budget_obj = BudgetSlicer.get_or_insert_for_campaign(campaign)
         
         key = _make_campaign_ts_budget_key(campaign) 
         
@@ -52,7 +52,7 @@ def spent_today(campaign):
     memcache_spent = memcache.get(key, namespace="budget")
     if memcache_spent is None:
         logging.error("spending cache miss for campaign with key: %s" % key)
-        budget_obj = Budget.get_or_insert_for_campaign(campaign)
+        budget_obj = BudgetSlicer.get_or_insert_for_campaign(campaign)
         spent = budget_obj.spent_today
         
         key = _make_campaign_spent_today_key(campaign)

@@ -17,7 +17,7 @@ from google.appengine.api import taskqueue
 from google.appengine.ext import db
 from google.appengine.ext import webapp
 from advertiser.models import Campaign
-from budget.models import NoSpendingForIncompleteLogError, Budget
+from budget.models import NoSpendingForIncompleteLogError, BudgetSlicer
 
 # The constraints: 
 # The maximum bucket size is 100
@@ -149,7 +149,7 @@ def budget_view(request, adgroup_key):
     # prefix = "http://localhost:8080/_ah/admin/datastore/edit?key="
     prefix = "https://appengine.google.com/datastore/edit?app_id=mopub-inc&namespace=&key="
 
-    budget_obj = Budget.get_or_insert_for_campaign(camp)
+    budget_obj = BudgetSlicer.get_or_insert_for_campaign(camp)
     budget_obj_url = prefix + str(budget_obj.key())
            
            

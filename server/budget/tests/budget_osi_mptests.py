@@ -27,7 +27,7 @@ from budget import budget_service
 from google.appengine.api import memcache
 from budget import models as budgetmodels
 import budget
-from budget.models import (Budget,
+from budget.models import (BudgetSlicer,
                            BudgetSliceLog,
                            BudgetDailyLog,
                            )

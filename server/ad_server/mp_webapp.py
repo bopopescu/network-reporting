@@ -102,7 +102,7 @@ class MPLoggingWSGIApplication(webapp.WSGIApplication):
         request_origin = request.remote_addr
         request_user =  request.remote_user
         request_method = request.method
-        request_url = _get_url_with_country(request)
+        request_url = self._get_url_with_country(request)
         request_protocol = request.environ.get("SERVER_PROTOCOL")
         request_referrer = request.environ.get("HTTP_REFERER")
         request_user_agent = request.environ.get("HTTP_USER_AGENT")
@@ -131,5 +131,5 @@ class MPLoggingWSGIApplication(webapp.WSGIApplication):
         
         return self.APACHE_STR_FORMAT % apache_dict
     
-    def _get_url_with_country(request):
+    def _get_url_with_country(self, request):
         return  request.path_qs + '&mpcountry=' + helpers.get_country_code(headers=request.headers)

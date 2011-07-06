@@ -4,7 +4,11 @@ html = Template("""<html><head><title>$title</title>
                         $finishLoad
                         $trackImpressionHelper
                         <script type="text/javascript">
-                          function webviewDidClose(){}
+                          function webviewDidClose(){
+                            if(typeof webviewDidCloseHelper == 'function') {
+                               webviewDidCloseHelper();
+                            }
+                          }
                           function webviewDidAppear(){
                               // inserts impression tracking
                               // when the interstitial is presented on screen

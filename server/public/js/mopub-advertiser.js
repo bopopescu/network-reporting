@@ -907,14 +907,16 @@ var mopub = mopub || {};
         results.fill_rate = formatPercentage(results.fill_rate);
         
         if (results.status == "Running") {
-            if (results.on_schedule) {
+            if (results.on_schedule == "on pace") {
                 results.on_schedule = '<span class="osi-success"> On pace ' +
                     '<a href="#" id="campaign-osi-success-helpLink" class="whatsthis">' + 
                     '<div class="whatsthis-icon"></div></a></span>';
-            } else {
+            } else if (results.on_schedule == "behind"){
                 results.on_schedule = '<span class="osi-failure""> Behind ' +
                     '<a href="#" id="campaign-osi-failure-helpLink" class="whatsthis">' + 
                     '<div class="whatsthis-icon"></div></a></span>';
+            } else {
+                results.on_schedule = "";
             }
         }
         

@@ -72,7 +72,7 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
     else:
         request_id = None
         instance_id = None
-        country_code = helpers.get_country_code(headers=headers)
+        country_code = None
         revenue = None
     
     # if trying to record the request of a adunit and creative

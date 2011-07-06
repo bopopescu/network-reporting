@@ -4,18 +4,18 @@
     {% if form.save_as %}
     <dt>Report Name:</dt>
     <dd>
-    <input id='reportName-input' type='text' name='name' value='{{form.name.value}}' placeholder='Report Name'></input></dd>
+    <input id='reportName-input' type='text' name='name' value='{{form.name.value}}' size=60 placeholder='Report Name'></input></dd>
     {% endif %}
     <dt>Report Breakdown:</dt>
     <dd>
-        {{ form.d1|attrs:'{"class":"selectmenu-required dim-selectmenu","id":"d1"}'|raw }}
+        {{ form.d1|attrs:'{"class":"selectmenu-required dim-selectmenu update-button","id":"d1"}'|raw }}
         <span id='d1Error' style="display:none; color:red;">* Required</span>
         <span id="d2-show" {% if not form.d2.value %}class='hidden'{% endif %}>
             &nbsp;>&nbsp;
-            {{ form.d2|attrs:'{"class":"dim-selectmenu","id":"d2"}'|raw }}
+            {{ form.d2|attrs:'{"class":"dim-selectmenu update-button","id":"d2"}'|raw }}
             <span id='d3-show' {% if not form.d3.value %}class='hidden'{% endif %}>
                 &nbsp;>&nbsp;
-                {{ form.d3|attrs:'{"class":"dim-selectmenu","id":"d3"}'|raw }}
+                {{ form.d3|attrs:'{"class":"dim-selectmenu update-button","id":"d3"}'|raw }}
             </span>
         </span>
     </dd>
@@ -23,13 +23,46 @@
     <dd>
         {{ form.interval|attrs:'{"class":"int-selectmenu","id":"interval"}'|raw }}
         &nbsp;&nbsp;
-        <input id='start-input' type='text' class='date-required input-text input-text-number date-field' name='{{form.start.name}}' size='15' value='{{form.start.value|date:'m/d/Y'}}' placeholder='Start'/> -
-        <input id='end-input' type='text' class='date-required input-text input-text-number date-field' name='{{form.end.name}}' size='15' value='{{form.end.value|date:'m/d/Y'}}' placeholder='End'/>
+        <input id='start-input' type='text' class='date-required input-text input-text-number date-field update-button' name='{{form.start.name}}' size='15' value='{{form.start.value|date:'m/d/Y'}}' placeholder='Start'/> -
+        <input id='end-input' type='text' class='date-required input-text input-text-number date-field update-button' name='{{form.end.name}}' size='15' value='{{form.end.value|date:'m/d/Y'}}' placeholder='End'/>
         <span id='dateError' style="display:none; color:red;">* Required</span>
     </dd>
     <dt>Schedule:</dt>
     <dd>
         {{ form.sched_interval|attrs:'{"class":"sched-int-selectmenu", "id": "sched_interval"}'|raw}}
+        <div style='padding-top:5px'>
+            &nbsp;
+            &nbsp;
+            <span class='schedule-help daily'>
+                Daily scheduled reports are run every day, 12:00 AM GMT.
+            </span>
+            <span class='schedule-help weekly'>
+                Weekly scheduled reports are run every Monday, 12:00 AM GMT.
+            </span>
+            <span class='schedule-help monthly'>
+                Montly scheduled reports are run on the first of every month, 12:00 AM GMT.
+            </span>
+            <span class='schedule-help quarterly'>
+                Quarterly scheduled reports are run at the start of every quarter, 12:00 AM GMT.
+            </span>
+        </div>
     </dd>
-        
-        
+    <div id='email-input'>
+        <dt>
+            E-mail:
+        </dt>
+        <dd>
+            {{form.email|raw|attrs:'{"id":"email-input-checkbox"}'}}&nbsp;&nbsp;Notify me when report finishes.
+        </dd>
+        <dt>
+            Recipients:
+        </dt>
+        <dd>
+            {{form.recipients|raw}}
+        </dd>
+    </div>
+    <div id='reports-email-helpContent' class='hidden'>
+        <h3>Emailing Scheduled Reports</h3>
+        <p>If you would like to be emailed with a copy of the report as an attachment <strong>each</strong> time that this report is run.</p>
+    </div>
+    <input id='interval-toggle' type='hidden' value=2 />

@@ -50,6 +50,7 @@ class ScheduledReport(db.Model):
     saved = db.BooleanProperty()
     deleted = db.BooleanProperty(default=False)
     last_run = db.DateTimeProperty()
+    default = db.BooleanProperty(default=False)
 
     d1 = db.StringProperty(required=True) 
     d2 = db.StringProperty() 
@@ -60,7 +61,12 @@ class ScheduledReport(db.Model):
     interval = db.StringProperty(choices=['today','yesterday', '7days', 'lmonth', 'custom'], default='custom')
     sched_interval = db.StringProperty(choices = ['none', 'daily', 'weekly', 'monthly', 'quarterly'], default='none')
     next_sched_date = db.DateProperty(default=datetime.now().date())
+    email = db.BooleanProperty(default=False)
+    recipients = db.StringListProperty(default=[])
 
+    @property
+    def data(self):
+        return self.most_recent.data
 
     @property
     def most_recent(self):
@@ -78,7 +84,22 @@ class ScheduledReport(db.Model):
     def dim_details(self):
         return self.most_recent.dim_details
 
-    
+    @property
+    def schedule_details(self):
+        if self.sched_interval == 'none':
+            return None
+        else:
+            ret = '('+self.sched_interval+')'
+            return ret.title()
+
+    @property
+    def interval_details(self):
+        if self.interval == '7days':
+            return 'Last 7 days'
+        elif self.interval == 'lmonth':
+            return 'Last month'
+        else:
+            return self.interval.title()
 
 class Report(db.Model):
     #standard
@@ -113,7 +134,21 @@ class Report(db.Model):
     def name(self):
         return self.schedule.name
 
-    
+    @property
+    def schedule_details(self):
+        return self.schedule.schedule_details
+
+    @property
+    def interval_details(self):
+        return self.schedule.interval_details
+
+    @property
+    def email(self):
+        return self.schedule.email
+
+    @property
+    def recipients(self):
+        return self.schedule.recipients
 
     def __str__(self):
         return "Report(d1=%s, d2=%s, d3=%s, start=%s, end=%s)" % (self.d1, self.d2, self.d3, self.start, self.end)

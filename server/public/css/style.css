@@ -632,12 +632,12 @@ h5 {
 
 /* Links */
 
-a, a:active, a:visited {
+a, a:active, a:visited,a.no-jqui {
   color: #0090d9;
   text-decoration: none;
 }
 
-a:hover {
+a:hover,a.no-jqui:hover {
   color: #e57300;
   text-decoration: underline;
 }
@@ -1634,6 +1634,16 @@ ul.ui-selectmenu-menu {
   text-decoration: underline;
 }
 
+.whatsthis{
+
+}
+.whatsthis-icon{
+  background-image:url(../images/what.png);
+  height: 12px;
+  width: 12px;
+  display:inline-block;
+}
+
 /*---------------------------------------/
 / Page-specific Styles
 /---------------------------------------*/
@@ -2162,10 +2172,23 @@ table.campaignData-main, table.reportData-table {
   margin: 20px 0 0 0;
 }
 
+.osi-success {
+  color: #53a600;
+}
+
+.osi-failure {
+  color: #ac6f6f;
+}
+
 /* New Campaign */
 
 #campaignForm-details{
   padding-top:0px;
+}
+
+#target-by-device{
+  padding-top: 5px;
+  padding-left: 50px;
 }
 
 /* Login */

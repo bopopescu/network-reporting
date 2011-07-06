@@ -437,7 +437,7 @@ class StringListProperty(db.StringListProperty):
 
     This defaults to a Textarea widget with a blank initial value.
     """
-    defaults = {'widget': mpfields.MPKeywordsField,
+    defaults = {'widget': mpfields.MPTextareaField,
                 'initial': ''}
     defaults.update(kwargs)
     return super(StringListProperty, self).get_form_field(**defaults)

@@ -35,3 +35,11 @@ def clear_datastore():
 
 def debug_key_name(key_name, id_dict):
     return ':'.join([id_dict.get(id, id) for id in key_name.split(':')])
+    
+    
+def debug_helper(readable_key_name, expected_counts, actual_counts):
+    if expected_counts != actual_counts:
+        print
+        print readable_key_name
+        print 'expected:', expected_counts
+        print 'actual:', actual_counts

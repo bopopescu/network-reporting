@@ -11,7 +11,10 @@ from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 
 from django.contrib.auth.decorators import login_required
+from common.utils import date_magic
+from common.utils import sswriter
 from common.utils.decorators import cache_page_until_post
+from common.utils.helpers import campaign_stats
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
 from django.utils import simplejson
@@ -89,7 +92,7 @@ class AdGroupIndexHandler(RequestHandler):
         adunits_dict = {}
         apps_dict = {}    
         
-        # Graph totals are the summed counts across all the adgroups   
+        # Graph totals are the summed counts across all the adgroups
         # account_level_stats = _calc_app_level_stats(adgroups)
         # account_level_summed_stats = sum(account_level_stats,StatsModel()) 
         
@@ -255,6 +258,14 @@ def _calc_and_attach_e_cpm(adgroups_with_stats, app_level_summed_stats):
             adgroup.summed_stats.e_cpm = adgroup.cpm
             
     return adgroups_with_stats
+
+def _calc_and_attach_osi_success(adgroups):
+    for adgroup in adgroups:
+        if adgroup.running and adgroup.campaign.budget:
+            adgroup.osi_success = budget_service.get_osi(adgroup.campaign)
+        
+    return adgroups
+
 
 @login_required
 def adgroups(request,*args,**kwargs):
@@ -895,7 +906,7 @@ class AdServerTestHandler(RequestHandler):
         device_to_user_agent = {
             'iphone': 'Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_0 like Mac OS X; %s) AppleWebKit/532.9 (KHTML, like Gecko) Version/4.0.5 Mobile/8A293 Safari/6531.22.7',
             'ipad': 'Mozilla/5.0 (iPad; U; CPU OS 3_2 like Mac OS X; %s) AppleWebKit/531.21.10 (KHTML, like Gecko) Version/4.0.4 Mobile/7B334b Safari/531.21.10',
-            'nexus_s': 'Mozilla/5.0 (Linux; U; Android 0.5; %s) AppleWebKit/522+ (KHTML, like Gecko) Safari/419.3',
+            'nexus_s': 'Mozilla/5.0 (Linux; U; Android 2.1; %s) AppleWebKit/522+ (KHTML, like Gecko) Safari/419.3',
             'chrome': 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/525.13 (KHTML, like Gecko) Chrome/0.A.B.C Safari/525.13',
         }
         country_to_locale_ip = {
@@ -993,8 +1004,10 @@ class AJAXStatsHandler(RequestHandler):
                     if adgroup.cpc:
                         e_ctr = summed_stats.ctr or DEFAULT_CTR
                         summed_stats.cpm = float(e_ctr) * float(adgroup.cpc) * 1000
+                    else:
+                        summed_stats.cpm = adgroup.cpm
                     
-                    percent_delivered = 10.0#budget_service.percent_delivered(adgroup.campaign)
+                    percent_delivered = budget_service.percent_delivered(adgroup.campaign)
                     summed_stats.percent_delivered = percent_delivered
                     adgroup.percent_delivered = percent_delivered
                     
@@ -1028,5 +1041,36 @@ from django.views.decorators.vary import vary_on_headers, vary_on_cookie
 @login_required
 @cache_control(max_age=60)
 def stats_ajax(request, *args, **kwargs):
-    #return HttpResponse("HEHEH\n")
     return AJAXStatsHandler()(request, use_cache=True, *args, **kwargs)
+
+class CampaignExporter(RequestHandler):
+    def post(self, adgroup_key, file_type, start, end, *args, **kwargs):
+        start = datetime.datetime.strptime(start,'%m%d%y')
+        end = datetime.datetime.strptime(end,'%m%d%y')
+        days = date_magic.gen_days(start, end)
+        adgroup = AdGroupQueryManager.get(adgroup_key)
+        all_stats = StatsModelQueryManager(self.account, offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)
+        f_name_dict = dict(adgroup_title = adgroup.campaign.name,
+                           start = start.strftime('%b %d'),
+                           end   = end.strftime('%b %d, %Y'),
+                           )
+        # Build
+        f_name = "%(adgroup_title)s CampaignStats,  %(start)s - %(end)s" % f_name_dict
+        f_name = f_name.encode('ascii', 'ignore')
+        # Zip up days w/ corresponding stats object and other stuff
+        data = map(lambda x: [x[0]] + x[1], zip([day.strftime('%a, %b %d, %Y') for day in days], [campaign_stats(stat, adgroup.campaign.campaign_type) for stat in all_stats]))
+        # Row titles
+        c_type = adgroup.campaign.campaign_type
+        titles = ['Date']
+        if c_type == 'network':
+            titles += ['Attempts', 'Impressions', 'Fill Rate', 'Clicks', 'CTR']
+        elif 'gtee' in c_type:
+            titles += ['Impressions', 'Clicks', 'CTR', 'Revenue']
+        elif 'promo' in c_type:
+            titles += ['Impressions', 'Clicks', 'CTR', 'Conversions', 'Conversion Rate']
+        return sswriter.export_writer(file_type, f_name, titles, data)
+
+
+
+def campaign_export(request, *args, **kwargs):
+    return CampaignExporter()(request, *args, **kwargs)

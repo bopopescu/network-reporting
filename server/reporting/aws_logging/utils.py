@@ -1,4 +1,9 @@
+import os
+import pickle
 import re
+import sys
+import traceback
+
 
 # same as patterns defined in common.utils.heplers
 # the reason we are re-defining them here is to minimize path issues for EMR and run_jobflow.sh as well as to reduce the number of cache files needed for EMR
@@ -42,6 +47,48 @@ DEFAULT_COUNTRY = 'XX'
 # default value for brand_name, marketing_name, device_os, device_os_version since '' is interpreted as * in keyname
 DEFAULT_VALUE = 'N/A'
 
+# deref cache 
+DEREF_CACHE_PICKLE_FILE = 'deref_cache.pkl' 
+
+def load_deref_cache(pkl_file_name=DEREF_CACHE_PICKLE_FILE):
+    try:
+        print '\nloading deref cache from %s ...' % (pkl_file_name)
+        with open(pkl_file_name, 'rb') as pickle_file:
+            deref_cache = pickle.load(pickle_file)
+        print 'loaded %i records\n' % (len(deref_cache))
+        return deref_cache
+    except:
+        traceback.print_exc()
+        print '\ninitializing empty deref cache...\n'
+        return {}
+
 
 def auth_func():
     return "olp@mopub.com", "N47935"
+
+
+def setup_remote_api():
+    # add mopub root to path
+    sys.path.append(os.getcwd()+'/../../')
+
+    # for ubuntu EC2
+    sys.path.append('/home/ubuntu/mopub/server')
+    sys.path.append('/home/ubuntu/mopub/server/reporting')
+    sys.path.append('/home/ubuntu/google_appengine')
+    sys.path.append('/home/ubuntu/google_appengine/lib/antlr3')
+    sys.path.append('/home/ubuntu/google_appengine/lib/django_1_2')
+    sys.path.append('/home/ubuntu/google_appengine/lib/fancy_urllib')
+    sys.path.append('/home/ubuntu/google_appengine/lib/ipaddr')
+    sys.path.append('/home/ubuntu/google_appengine/lib/webob')
+    sys.path.append('/home/ubuntu/google_appengine/lib/yaml/lib')
+
+    # from appengine_django import InstallAppengineHelperForDjango
+    # InstallAppengineHelperForDjango()
+
+    from google.appengine.ext.remote_api import remote_api_stub
+    
+    
+    app_id = 'mopub-inc'
+    host = '38-aws.latest.mopub-inc.appspot.com'
+    remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', auth_func, host)
+    

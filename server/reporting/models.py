@@ -1,6 +1,7 @@
 from google.appengine.api.datastore_types import Key
 
 from google.appengine.ext import db
+from google.appengine.ext import blobstore 
 from publisher.models import Site
 from account.models import Account
 from common.utils import simplejson
@@ -21,6 +22,23 @@ GEO_CONVERSION_COUNT = 'conversion_count'
 GEO_COUNTS = [GEO_REQUEST_COUNT,GEO_IMPRESSION_COUNT,GEO_CLICK_COUNT,GEO_CONVERSION_COUNT]
 
 
+class BlobLog(db.Model):
+
+    date = db.DateProperty()
+    blob_key = db.StringProperty()
+    account = db.StringProperty()
+
+    def __init__(self, **kwargs):
+        date = kwargs.get('date', None)
+        account = kwargs.get('account', None)
+
+        date_str = date.strftime('%y%m%d') if date else 'None'
+        account_str = account or 'None'
+        
+        key_name = 'blobkey:%s:%s' % (date_str, account_str)
+        return super(BlobLog, self).__init__(key_name=key_name, **kwargs)
+        
+        
 class StatsModel(db.Expando):
     
     publisher = db.ReferenceProperty(collection_name='publisher_stats')
@@ -59,7 +77,7 @@ class StatsModel(db.Expando):
     device_os = db.StringProperty()
     device_os_version = db.StringProperty()
     
-    include_geo = False
+    include_geo = True
     
     @classmethod
     def from_json(cls,string):

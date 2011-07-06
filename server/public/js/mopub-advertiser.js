@@ -14,7 +14,6 @@ var mopub = mopub || {};
 (function($){
   // dom ready
   $(document).ready(function() {
-    
     //get info from page
   if (typeof creatives=="undefined") {
     creatives = false;
@@ -922,14 +921,16 @@ var mopub = mopub || {};
         return results;
     }
     
-    function getCampaignsWithType(type) {
-        var matchingCampaigns = $("." + type).map(function() { 
-            return $(this).attr("id");
-        });
+    function getCampaignIdsWithType(type) {
+        return $("." + type).map(function() { return $(this).attr("id"); });
+    }
+    
+    function getFetchedCampaignsWithType(type) {
+        var matchingCampaignIds = getCampaignIdsWithType(type);
         
         var campaigns = [];
         $.each(fetchedCampaignIds, function(key, value) {
-            if ($.inArray(key, matchingCampaigns) != -1) {
+            if ($.inArray(key, matchingCampaignIds) != -1) {
                 var dict = {};
                 dict.key = value["name"].replace("||", "");
                 dict.stats = value;
@@ -1097,7 +1098,7 @@ var mopub = mopub || {};
     }
     
     function getGraphImpressionStats() {
-        var allCampaigns = getCampaignsWithType(CampaignTypeEnum.All);
+        var allCampaigns = getFetchedCampaignsWithType(CampaignTypeEnum.All);
         var sortedCampaigns = sortCampaignsByStat(allCampaigns, "impression_count");
         var topCampaigns = sortedCampaigns.slice(0, 3);
         var otherCampaigns = sortedCampaigns.slice(3, sortedCampaigns.length);
@@ -1106,7 +1107,7 @@ var mopub = mopub || {};
     
     function getGraphRevenueStats() {
         // We only care about guaranteed campaigns when graphing revenue.
-        var allGuaranteed = getCampaignsWithType(CampaignTypeEnum.Guaranteed);
+        var allGuaranteed = getFetchedCampaignsWithType(CampaignTypeEnum.Guaranteed);
         var sortedGuaranteed = sortCampaignsByStat(allGuaranteed, "revenue");
         var topGuaranteed = sortedGuaranteed.slice(0, 3);
         var otherGuaranteed = sortedGuaranteed.slice(3, sortedGuaranteed.length);
@@ -1114,7 +1115,7 @@ var mopub = mopub || {};
     }
     
     function getGraphClickStats() {
-        var allCampaigns = getCampaignsWithType(CampaignTypeEnum.All);
+        var allCampaigns = getFetchedCampaignsWithType(CampaignTypeEnum.All);
         var sortedCampaigns = sortCampaignsByStat(allCampaigns, "impression_count");
         var topCampaigns = sortedCampaigns.slice(0, 3);
         var otherCampaigns = sortedCampaigns.slice(3, sortedCampaigns.length);
@@ -1122,7 +1123,7 @@ var mopub = mopub || {};
     }
     
     function getGraphCtrStats() {
-        var allCampaigns = getCampaignsWithType(CampaignTypeEnum.All);
+        var allCampaigns = getFetchedCampaignsWithType(CampaignTypeEnum.All);
         var sortedCampaigns = sortCampaignsByStat(allCampaigns, "impression_count");
         var topCampaigns = sortedCampaigns.slice(0, 3);
         var otherCampaigns = sortedCampaigns.slice(3, sortedCampaigns.length);
@@ -1235,6 +1236,13 @@ var mopub = mopub || {};
         }
     }
 
+    function showOrHideRevenueBreakdown() {
+        // Hide the revenue breakdown if there are no guaranteed campaigns.
+        var guaranteed = getCampaignIdsWithType(CampaignTypeEnum.Guaranteed);
+        if (guaranteed.length == 0) $("#stats-breakdown-revenue").hide();
+        else $("#stats-breakdown-revenue").show();
+    }
+
     function onCampaignsFullyUpdated() {
         setCampaignFilterOptionsDisabled(false);
         calcRollups();
@@ -1245,15 +1253,18 @@ var mopub = mopub || {};
     // =====================================================================
     
     function initCampaignsPage() {
+        showOrHideRevenueBreakdown();
         setCampaignFilterOptionsDisabled(true);
         populateStatsBreakdownsWithData(mopub.accountStats);
         populateGraphWithAccountStats(mopub.accountStats);
         populateCampaignStats(unfetchedIds, fetchedCampaignIds);
     }
     
-    // setTimeout is a workaround for Chrome: without it, the loading indicator doesn't 
-    // disappear until all "onload" AJAX requests are complete.
-    setTimeout(initCampaignsPage, 0);
+    if (mopub.isCampaignsPage) {
+        // setTimeout is a workaround for Chrome: without it, the loading indicator doesn't 
+        // disappear until all "onload" AJAX requests are complete.
+        setTimeout(initCampaignsPage, 0);
+    }
     
     // *********************************************************************
     // End -- Campaign AJAX
@@ -1551,7 +1562,10 @@ var mopub = mopub || {};
         },
         series: chartSeries
       });
+      
+      $('#dashboard-stats-chart').removeClass('chart-loading');
     }
+    
     if ($('#dashboard-stats').length){
       setupDashboardStatsChart('area');
     }

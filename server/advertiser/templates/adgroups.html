@@ -551,11 +551,12 @@
 
 {% block extraScripts %}
 <script>
+    var mopub = mopub || {};
     $(function() {
+        mopub.isCampaignsPage = true;
         mopub.graphStartDate = Date.UTC({{start_date.year}}, 
             {{start_date.month|add:"-1"}}, 
             {{start_date.day}});
-
         mopub.accountStats = {{account_stats|safe}};
     });
 </script>

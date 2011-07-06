@@ -41,7 +41,7 @@ def budget_filter():
 def active_filter():
     log_mesg = "Removed due to inactivity: %s"
     def real_filter(a):
-        return (a.active and a.campaign.active and (a.campaign.start_date  <= StatsModel.today() if a.campaign.start_date else True) and (StatsModel.today() <= a.campaign.end_date if a.campaign.end_date else True))
+        return (a.active and (a.campaign.start_date  <= StatsModel.today() if a.campaign.start_date else True) and (StatsModel.today() <= a.campaign.end_date if a.campaign.end_date else True))
     return (real_filter, log_mesg, [])
 
 def kw_filter(keywords):

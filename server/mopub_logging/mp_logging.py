@@ -43,7 +43,7 @@ NUM_INAPP_QUEUS = 1
 
 MAX_TASK_ADDS = 100
 
-def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,creative_id=None,udid=None,user_agent=None,testing=False):
+def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,creative_id=None,udid=None,user_agent=None,headers=None,testing=False):
     # if this is the second request because of a 
     # native failure we just bail in order to 
     # Note if logging an adnetwork request, we pass
@@ -67,12 +67,12 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
         udid = udid or request.get('udid', None)
         request_id = request.get('reqcnt',None)
         instance_id = request.get('inst',None)
-        country_code = helpers.get_country_code(user_agent=request.headers['User-Agent'])            
+        country_code = helpers.get_country_code(headers=request.headers)            
         revenue = request.get('rev',None)
     else:
         request_id = None
         instance_id = None
-        country_code = helpers.get_country_code(user_agent=user_agent)
+        country_code = helpers.get_country_code(headers=headers)
         revenue = None
     
     # if trying to record the request of a adunit and creative

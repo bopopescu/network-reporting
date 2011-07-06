@@ -179,7 +179,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service.remaining_ts_budget(self.expensive_c), 0)       
                                   
         # Then after we advance the timeslice
-        budget_service.timeslice_advance(self.expensive_c)
+        budget_service.timeslice_advance(self.expensive_c, testing=True)
         
         # We now have more budget and can do the bid one more time
         eq_(budget_service._apply_if_able(self.expensive_c, 100), True)
@@ -193,7 +193,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service.remaining_ts_budget(self.cheap_c), 99)       
 
         # Then after we advance the timeslice
-        budget_service._advance_all()
+        budget_service._advance_all(testing=True)
         
 
         eq_(budget_service.remaining_ts_budget(self.cheap_c), 111)      
@@ -213,7 +213,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
         eq_(budget_service._apply_if_able(self.expensive_c, 100), False)
 
-        budget_service._advance_all()
+        budget_service._advance_all(testing=True)
         
         
         assert_almost_equal(budget_service.remaining_ts_budget(self.cheap_c), 998/9.,4)
@@ -233,8 +233,8 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
         eq_(budget_service._apply_if_able(self.expensive_c, 100), False)
 
-        budget_service._advance_all()
-        budget_service._advance_all()
+        budget_service._advance_all(testing=True)
+        budget_service._advance_all(testing=True)
         
 
         eq_(budget_service.remaining_ts_budget(self.cheap_c), 998/8.)
@@ -245,20 +245,20 @@ class TestBudgetUnitTests(unittest.TestCase):
         # We have moved 100 to the current timeslice budget
         eq_(budget_service.remaining_ts_budget(self.cheap_c),99)
         
-        budget_service._advance_all()
+        budget_service._advance_all(testing=True)
         
         
         # We have moved 200 to the current timeslice budget
         eq_(budget_service.remaining_ts_budget(self.cheap_c),199)
         
-        budget_service._advance_all()
-        budget_service._advance_all()
+        budget_service._advance_all(testing=True)
+        budget_service._advance_all(testing=True)
         
         eq_(budget_service.remaining_ts_budget(self.cheap_c),399)
         
         # We have moved 400 to the current timeslice budget
         
-        budget_service._advance_all()
+        budget_service._advance_all(testing=True)
         
         eq_(budget_service.remaining_ts_budget(self.cheap_c),499)
 
@@ -278,12 +278,12 @@ class TestBudgetUnitTests(unittest.TestCase):
         
         # After advancing to datetime.date(1987,4,3) we should still have no budget
         budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,3))
-        eq_(budget_service._apply_if_able(self.cheap_c, 100), False)
+        eq_(budget_service._apply_if_able(self.cheap_c, 100, today=datetime.date(1987,4,3)), False)
         
         # After advancing to datetime.date(1987,4,4) we should have a budget
         budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,4))
-        budget_service.timeslice_advance(self.cheap_c)
-        eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
+        budget_service.timeslice_advance(self.cheap_c, testing=True)
+        eq_(budget_service._apply_if_able(self.cheap_c, 100, today=datetime.date(1987,4,4)), True)
         
     def mptest_cache_failure_then_spend(self):
         eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
@@ -297,7 +297,7 @@ class TestBudgetUnitTests(unittest.TestCase):
     def mptest_cache_failure_then_spend_multiple_timeslices(self):
         eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
         
-        budget_service._advance_all()
+        budget_service._advance_all(testing=True)
         
         
         eq_(budget_service.remaining_ts_budget(self.cheap_c), 999/9.)
@@ -333,7 +333,7 @@ class TestBudgetUnitTests(unittest.TestCase):
 
         eq_(budget_manager.spent_today, 0)
 
-        budget_service._advance_all()
+        budget_service._advance_all(testing=True)
         
         budget_manager = BudgetSlicer.get_or_insert_for_campaign(self.cheap_c)
         eq_(budget_manager.spent_today, 100)
@@ -343,7 +343,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         budget_service._delete_memcache(self.cheap_c)
                 
         # Memcache miss -> restart spending at last snapshot (100)
-        budget_service._advance_all()
+        budget_service._advance_all(testing=True)
         
         budget_manager = BudgetSlicer.get_or_insert_for_campaign(self.cheap_c)
         
@@ -356,14 +356,14 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
         eq_(budget_service.remaining_ts_budget(self.cheap_c), 99)
         
-        budget_service._advance_all()
+        budget_service._advance_all(testing=True)
         
 
         eq_(budget_service.remaining_ts_budget(self.cheap_c), 999/9.)
 
         budget_service._delete_memcache(self.cheap_c)
         # Memcache miss -> restart timeslice at last snapshot (199)
-        budget_service._advance_all()
+        budget_service._advance_all(testing=True)
         
         eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
         eq_(budget_service.remaining_ts_budget(self.cheap_c), 999/8.-1)
@@ -372,7 +372,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
         eq_(budget_service.remaining_ts_budget(self.cheap_c), 99)
         
-        budget_service._advance_all()
+        budget_service._advance_all(testing=True)
         
         
         slicer = BudgetSlicer.get_or_insert_for_campaign(self.cheap_c)
@@ -454,12 +454,12 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service.remaining_daily_budget(self.cheap_c), 400)
 
         budget_service.daily_advance(self.cheap_c)
-        budget_service.timeslice_advance(self.cheap_c) # to backup
+        budget_service.timeslice_advance(self.cheap_c,testing=True) # to backup
         budget_service._delete_memcache(self.cheap_c)
 
         # Fall back to snapshot
         budget_service.daily_advance(self.cheap_c)
-        budget_service.timeslice_advance(self.cheap_c) # to backup
+        budget_service.timeslice_advance(self.cheap_c,testing=True) # to backup
         eq_(budget_service.remaining_daily_budget(self.cheap_c), 1000)
 
         eq_(budget_service._apply_if_able(self.cheap_c, 600), True)
@@ -475,7 +475,7 @@ class TestBudgetUnitTests(unittest.TestCase):
          self.cheap_c.put()
 
 
-         eq_(budget_service._apply_if_able(self.cheap_c, 500), True)    
+         eq_(budget_service._apply_if_able(self.cheap_c, 500, today=datetime.date(1987,4,4)), True)    
 
          eq_(budget_service.remaining_daily_budget(self.cheap_c), 500)
 
@@ -505,7 +505,7 @@ class TestBudgetUnitTests(unittest.TestCase):
          # The end of the first day
          budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,4))
 
-         eq_(budget_service._apply_if_able(self.cheap_c, 500), True)    
+         eq_(budget_service._apply_if_able(self.cheap_c, 500,today=datetime.date(1987,4,4)), True)    
 
          eq_(budget_service.remaining_daily_budget(self.cheap_c), 500)
 
@@ -528,14 +528,14 @@ class TestBudgetUnitTests(unittest.TestCase):
         
         eq_(budget_service.remaining_daily_budget(self.cheap_c), 1000)
         
-        eq_(budget_service._apply_if_able(self.cheap_c, 500), True)    
+        eq_(budget_service._apply_if_able(self.cheap_c, 500, today=datetime.date(1987,4,4)), True)    
         
         eq_(budget_service.remaining_daily_budget(self.cheap_c), 500)
         
         # The end of the first day
         budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,5))
         
-        eq_(budget_service._apply_if_able(self.cheap_c, 500), True)    
+        eq_(budget_service._apply_if_able(self.cheap_c, 500, today=datetime.date(1987,4,5)), True)    
         
         eq_(budget_service.remaining_daily_budget(self.cheap_c), 500)
         
@@ -543,7 +543,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,6))
         
          
-        eq_(budget_service._apply_if_able(self.cheap_c, 500), True)    
+        eq_(budget_service._apply_if_able(self.cheap_c, 500, today=datetime.date(1987,4,6)), True)    
         
         eq_(budget_service.remaining_daily_budget(self.cheap_c), 500)
         
@@ -586,14 +586,14 @@ class TestBudgetUnitTests(unittest.TestCase):
         
         eq_(budget_service.remaining_daily_budget(self.cheap_c), 1000)
         
-        eq_(budget_service._apply_if_able(self.cheap_c, 500), True)    
+        eq_(budget_service._apply_if_able(self.cheap_c, 500, today=datetime.date(1987,4,4)), True)    
         
         eq_(budget_service.remaining_daily_budget(self.cheap_c), 500)
         
         # The end of the first day
         budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,5))
         
-        eq_(budget_service._apply_if_able(self.cheap_c, 500), True)    
+        eq_(budget_service._apply_if_able(self.cheap_c, 500, today=datetime.date(1987,4,5)), True)    
         
         eq_(budget_service.remaining_daily_budget(self.cheap_c), 500)
         
@@ -601,7 +601,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,6))
         
         
-        eq_(budget_service._apply_if_able(self.cheap_c, 500), True)    
+        eq_(budget_service._apply_if_able(self.cheap_c, 500, today=datetime.date(1987,4,6)), True)    
         
         # Three days have advanced and we have spent 1500 -> 1500 remains
         eq_(budget_service.remaining_daily_budget(self.cheap_c), 500)
@@ -613,7 +613,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         # We have spent 0 today
         eq_(budget_service.remaining_daily_budget(self.cheap_c), 1000)
         
-        eq_(budget_service._apply_if_able(self.cheap_c, 100), True)    
+        eq_(budget_service._apply_if_able(self.cheap_c, 100, today=datetime.date(1987,4,7)), True)    
         
         eq_(budget_service.remaining_daily_budget(self.cheap_c), 900)
         
@@ -637,7 +637,7 @@ class TestBudgetUnitTests(unittest.TestCase):
 
         eq_(budget_service.percent_delivered(self.cheap_c), 0.0)
         
-        eq_(budget_service._apply_if_able(self.cheap_c, 500), True)    
+        eq_(budget_service._apply_if_able(self.cheap_c, 500, today=datetime.date(1987,4,4)), True)    
         
         eq_(budget_service.remaining_daily_budget(self.cheap_c), 500)
         
@@ -667,7 +667,7 @@ class TestBudgetUnitTests(unittest.TestCase):
 
         eq_(budget_service.percent_delivered(self.cheap_c, today=datetime.date(1987,4,4)), 0.0)
         
-        eq_(budget_service._apply_if_able(self.cheap_c, 500), True)    
+        eq_(budget_service._apply_if_able(self.cheap_c, 500, today=datetime.date(1987,4,4)), True)    
         
         # We have delivered 5.0%
         eq_(budget_service.percent_delivered(self.cheap_c, today=datetime.date(1987,4,4)), 5.0)
@@ -677,7 +677,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         
         eq_(budget_service.percent_delivered(self.cheap_c), 5.0)      
 
-        eq_(budget_service._apply_if_able(self.cheap_c, 1000), True) 
+        eq_(budget_service._apply_if_able(self.cheap_c, 1000, today=datetime.date(1987,4,5)), True) 
            
         # We have delivered 15.0%
         eq_(budget_service.percent_delivered(self.cheap_c, today=datetime.date(1987,4,5)), 15.0)
@@ -723,9 +723,9 @@ class TestBudgetUnitTests(unittest.TestCase):
         # Advance the budget 1 day (and 10 timeslices)
         budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,4))
         for i in xrange(budgetmodels.DEFAULT_TIMESLICES-1):
-            budget_service.timeslice_advance(self.cheap_c)
+            budget_service.timeslice_advance(self.cheap_c,testing=True)
         
-        eq_(budget_service._apply_if_able(self.cheap_c, 500), True)
+        eq_(budget_service._apply_if_able(self.cheap_c, 500, today=datetime.date(1987,4,4)), True)
         # We have spent 500 out of 1000 total
         eq_(budget_service.remaining_daily_budget(self.cheap_c), 500)
         
@@ -743,10 +743,10 @@ class TestBudgetUnitTests(unittest.TestCase):
         budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,4))
         budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,5))
         for i in xrange(budgetmodels.DEFAULT_TIMESLICES-2):
-            budget_service.timeslice_advance(self.cheap_c)
+            budget_service.timeslice_advance(self.cheap_c,testing=True)
 
         # 1000 remaining
-        eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
+        eq_(budget_service._apply_if_able(self.cheap_c, 100, today=datetime.date(1987,4,5)), True)
         # We have spent 100 out of 1000 total
         eq_(budget_service.remaining_daily_budget(self.cheap_c), 900)
         
@@ -754,19 +754,19 @@ class TestBudgetUnitTests(unittest.TestCase):
         memcache.flush_all()
     
         # Should return to the state we had at the last backup (1000)
-        eq_(budget_service._apply_if_able(self.cheap_c, 500), True)
+        eq_(budget_service._apply_if_able(self.cheap_c, 500, today=datetime.date(1987,4,5)), True)
         # We have spent 500 out of 1000 total
         eq_(budget_service.remaining_daily_budget(self.cheap_c), 500)
         
         # Another advance, backs up to db
-        budget_service.timeslice_advance(self.cheap_c)
+        budget_service.timeslice_advance(self.cheap_c,testing=True)
         eq_(budget_service.remaining_daily_budget(self.cheap_c), 500)
         
         # Catastrophic cache failure again!!!
         memcache.flush_all()
     
         # Should return to the state we had at the last backup (500)
-        eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
+        eq_(budget_service._apply_if_able(self.cheap_c, 100, today=datetime.date(1987,4,5)), True)
         # We have spent 600 out of 1000 total
         eq_(budget_service.remaining_daily_budget(self.cheap_c), 400)   
 
@@ -786,22 +786,22 @@ class TestBudgetUnitTests(unittest.TestCase):
         # Advance the budget 1 day (and 10 timeslices)
         budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,4))
         for i in xrange(budgetmodels.DEFAULT_TIMESLICES):
-            budget_service.timeslice_advance(self.cheap_c)
+            budget_service.timeslice_advance(self.cheap_c,testing=True)
 
         # Advance the budget to the second day of the campaign
         budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,5))
 
         # The first two days' budget should be spread across this day. each timeslice is worth $100
 
-        eq_(budget_service._apply_if_able(self.cheap_c, 500), False)
-        budget_service.timeslice_advance(self.cheap_c)
-        budget_service.timeslice_advance(self.cheap_c)
+        eq_(budget_service._apply_if_able(self.cheap_c, 500, today=datetime.date(1987,4,5)), False)
+        budget_service.timeslice_advance(self.cheap_c,testing=True)
+        budget_service.timeslice_advance(self.cheap_c,testing=True)
         
         # We have $125
-        eq_(budget_service._apply_if_able(self.cheap_c, 125), True)
+        eq_(budget_service._apply_if_able(self.cheap_c, 125, today=datetime.date(1987,4,5)), True)
         
         # Now our budget is empty
-        eq_(budget_service._apply_if_able(self.cheap_c, 1), False)
+        eq_(budget_service._apply_if_able(self.cheap_c, 1, today=datetime.date(1987,4,5)), False)
 
 
     def mptest_timeslices_underdelivering(self):
@@ -818,9 +818,9 @@ class TestBudgetUnitTests(unittest.TestCase):
         # Advance the budget 1 day (and 10 timeslices)
         budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,4))
         for i in xrange(budgetmodels.DEFAULT_TIMESLICES-1):
-            budget_service.timeslice_advance(self.cheap_c)
+            budget_service.timeslice_advance(self.cheap_c,testing=True)
 
-        eq_(budget_service._apply_if_able(self.cheap_c, 500), True)
+        eq_(budget_service._apply_if_able(self.cheap_c, 500, today=datetime.date(1987,4,4)), True)
         # We have spent 500 out of 1000 total
         eq_(budget_service.remaining_daily_budget(self.cheap_c), 500)
         
@@ -862,7 +862,7 @@ class TestBudgetUnitTests(unittest.TestCase):
     
         # Advance the budget and spend the full 1000
         budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,4))
-        eq_(budget_service._apply_if_able(self.cheap_c, 1000), True)
+        eq_(budget_service._apply_if_able(self.cheap_c, 1000, today=datetime.date(1987,4,4)), True)
     
         # 9K budget remains, but before the end of the first day we
         # change the end date, now the campaign goes for 20 days total, 19 remain
@@ -887,7 +887,7 @@ class TestBudgetUnitTests(unittest.TestCase):
     
         # Advance the budget and spend the full 1000
         budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,4))
-        eq_(budget_service._apply_if_able(self.cheap_c, 1000), True)
+        eq_(budget_service._apply_if_able(self.cheap_c, 1000, today=datetime.date(1987,4,4)), True)
     
         # 9K budget remains, but before the end of the first day we
         # change the end date, now the campaign goes for 5 days total, 4 days remain
@@ -911,7 +911,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         
         # Advance the budget and spend the full 1000
         budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,4))
-        eq_(budget_service._apply_if_able(self.cheap_c, 1000), True)
+        eq_(budget_service._apply_if_able(self.cheap_c, 1000, today=datetime.date(1987,4,4)), True)
         
         # 9K budget remains, but before the end of the first day we
         # increase the budget. Now we have 9 days and 18000 more to spend.
@@ -935,10 +935,10 @@ class TestBudgetUnitTests(unittest.TestCase):
         
         # Advance the budget and spend 500, twice
         budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,4))
-        eq_(budget_service._apply_if_able(self.cheap_c, 500), True)
+        eq_(budget_service._apply_if_able(self.cheap_c, 500, today=datetime.date(1987,4,4)), True)
         budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,5))
         
-        eq_(budget_service._apply_if_able(self.cheap_c, 500), True)
+        eq_(budget_service._apply_if_able(self.cheap_c, 500, today=datetime.date(1987,4,5)), True)
         
         budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,6))
         
@@ -952,15 +952,15 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.cheap_c.put()
 
         budget_service.daily_advance(self.cheap_c, new_date=self.cheap_c.start_date)
-        eq_(budget_service._apply_if_able(self.cheap_c, 1000), True)
-        eq_(budget_service._apply_if_able(self.cheap_c, 200), False)
+        eq_(budget_service._apply_if_able(self.cheap_c, 1000, today=datetime.date(1987,4,4)), True)
+        eq_(budget_service._apply_if_able(self.cheap_c, 200, today=datetime.date(1987,4,4)), False)
 
         self.cheap_c.budget = 1200.
         self.cheap_c.put()
         budget_service.update_budget(self.cheap_c, dt=datetime.datetime(1987,4,4,0,0,0))
 
-        eq_(budget_service._apply_if_able(self.cheap_c, 200), True)
-        eq_(budget_service._apply_if_able(self.cheap_c, 100), False)
+        eq_(budget_service._apply_if_able(self.cheap_c, 200, today=datetime.date(1987,4,5)), True)
+        eq_(budget_service._apply_if_able(self.cheap_c, 100, today=datetime.date(1987,4,4)), False)
          
     def mptest_full_campaign_change_budget(self):
         self.cheap_c.budget_type = "full_campaign"
@@ -971,17 +971,17 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.cheap_c.put()
 
         budget_service.daily_advance(self.cheap_c, new_date=self.cheap_c.start_date)
-        eq_(budget_service._apply_if_able(self.cheap_c, 500), True)
+        eq_(budget_service._apply_if_able(self.cheap_c, 500, today=datetime.date(1987,4,3)), True)
         
         budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,4))
         
-        budget_service._apply_if_able(self.cheap_c, 500)
+        budget_service._apply_if_able(self.cheap_c, 500, today=datetime.date(1987,4,4))
         self.cheap_c.full_budget = 2000.
         self.cheap_c.put()
         budget_service.update_budget(self.cheap_c, dt=datetime.datetime(1987,4,4,0,0,0))
 
-        eq_(budget_service._apply_if_able(self.cheap_c, 250), True)
-        eq_(budget_service._apply_if_able(self.cheap_c, 50), False)
+        eq_(budget_service._apply_if_able(self.cheap_c, 250, today=datetime.date(1987,4,4)), True)
+        eq_(budget_service._apply_if_able(self.cheap_c, 50, today=datetime.date(1987,4,4)), False)
           
     def mptest_full_campaign_change_length(self):
         self.cheap_c.budget_type = "full_campaign"
@@ -992,7 +992,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.cheap_c.put()
 
         budget_service.daily_advance(self.cheap_c, new_date=self.cheap_c.start_date)
-        eq_(budget_service._apply_if_able(self.cheap_c, 500), True)
+        eq_(budget_service._apply_if_able(self.cheap_c, 500, today=datetime.date(1987,4,3)), True)
 
         budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,4))
 
@@ -1000,8 +1000,8 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.cheap_c.put()
         budget_service.update_budget(self.cheap_c, dt = datetime.datetime(1987,4,4,0,0,0))
 
-        eq_(budget_service._apply_if_able(self.cheap_c, 2500), True)
-        eq_(budget_service._apply_if_able(self.cheap_c, 100), False)
+        eq_(budget_service._apply_if_able(self.cheap_c, 2500, today=datetime.date(1987,4,4)), True)
+        eq_(budget_service._apply_if_able(self.cheap_c, 100, today=datetime.date(1987,4,4)), False)
 
     def mptest_full_campaign_budget_evenly(self):
         # We have a campaign that was set to begin several days ago 
@@ -1018,7 +1018,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         # Advance the budget and the ts budgets
         budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,4))
         for i in xrange(budgetmodels.DEFAULT_TIMESLICES-1):
-            budget_service.timeslice_advance(self.cheap_c)
+            budget_service.timeslice_advance(self.cheap_c,testing=True)
         
         # 1000 remaining because the 10K budget is split between the 10 remaining days
         eq_(budget_service.remaining_daily_budget(self.cheap_c), 1000)
@@ -1026,14 +1026,14 @@ class TestBudgetUnitTests(unittest.TestCase):
         # Advance the budget and the ts budgets
         budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,5))
         for i in xrange(budgetmodels.DEFAULT_TIMESLICES):
-            budget_service.timeslice_advance(self.cheap_c)
+            budget_service.timeslice_advance(self.cheap_c,testing=True)
         
         # 1111.11 remaining because the 10K budget is split between the 9 remaining days
         assert_almost_equal(budget_service.remaining_daily_budget(self.cheap_c), 10000./9, 5)
         
         # We can actually spend all the money, this means the timeslices have 
         # been advanced properly
-        eq_(budget_service._apply_if_able(self.cheap_c, 1111.11111), True)
+        eq_(budget_service._apply_if_able(self.cheap_c, 1111.11111, today=datetime.date(1987,4,5)), True)
         
     def mptest_timeslice_changes(self):
         self.cheap_c.budget_strategy = "evenly"
@@ -1044,16 +1044,16 @@ class TestBudgetUnitTests(unittest.TestCase):
         
         budget_service.update_budget(self.cheap_c, dt = datetime.datetime(1987,4,4,0,0,0))
         
-        eq_(budget_service._apply_if_able(self.cheap_c,100), True)
+        eq_(budget_service._apply_if_able(self.cheap_c,100, today=datetime.date(1987,4,4)), True)
         
-        budget_service.timeslice_advance(self.cheap_c)
+        budget_service.timeslice_advance(self.cheap_c,testing=True)
         self.cheap_c.budget = 3000.
         self.cheap_c.put()
         
         budget_service.update_budget(self.cheap_c, dt = datetime.datetime(1987,4,4,2,30,0))
         
-        eq_(budget_service._apply_if_able(self.cheap_c,322.2222), True)
-        eq_(budget_service._apply_if_able(self.cheap_c,1), False)
+        eq_(budget_service._apply_if_able(self.cheap_c,322.2222, today=datetime.date(1987,4,4)), True)
+        eq_(budget_service._apply_if_able(self.cheap_c,1, today=datetime.date(1987,4,4)), False)
     
     def mptest_campaign_starts_midday(self):
         self.cheap_c.budget_strategy = "evenly"
@@ -1063,8 +1063,8 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.cheap_c.put()
         
         budget_service.update_budget(self.cheap_c, dt=datetime.datetime(1987,4,4,12,0,0))
-        eq_(budget_service._apply_if_able(self.cheap_c,200), True)
-        eq_(budget_service._apply_if_able(self.cheap_c,1), False)
+        eq_(budget_service._apply_if_able(self.cheap_c,200, today=datetime.date(1987,4,4)), True)
+        eq_(budget_service._apply_if_able(self.cheap_c,1, today=datetime.date(1987,4,4)), False)
         
     # def mptest_timeslice_changing_in_the_morning(self):
     #      # We have a campaign that was set to begin several days ago 

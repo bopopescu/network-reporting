@@ -1012,7 +1012,10 @@ class AJAXStatsHandler(RequestHandler):
                     adgroup.percent_delivered = percent_delivered
                     
                     summed_stats.status = filters.campaign_status(adgroup)
-                    summed_stats.on_schedule = True if random.randint(0,1) == 0 else False
+                    if adgroup.running and adgroup.campaign.budget:
+                        summed_stats.on_schedule = "on pace" if budget_service.get_osi(adgroup.campaign) else "behind"
+                    else:
+                        summed_stats.on_schedule = "none"    
                 stats_dict[key]['sum'] = summed_stats.to_dict()
                 
                 # make name

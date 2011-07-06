@@ -312,7 +312,7 @@ class AdAuction(object):
                                         trace_logging.info('Attempting ad network request: %s ...'%winner.adgroup.network_type.title())
                                         rpc = AdAuction.request_third_party_server(request, adunit, winner.adgroup)
                                         # log a network "request"
-                                        mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, udid=udid)
+                                        mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, headers=request.headers, udid=udid)
                                         try:
                                             result = rpc.get_result()
                                             server_tuple = rpc.serverside.bid_and_html_for_response(result)

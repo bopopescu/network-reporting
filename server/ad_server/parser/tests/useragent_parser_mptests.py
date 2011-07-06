@@ -31,7 +31,8 @@ class TestUseragentParser(unittest.TestCase):
                                          target_ipod=False,
                                          target_iphone=False,
                                          target_android=False,
-                                         target_other=True)
+                                         target_other=True,
+                                         device_targeting=True)
         self.other_only_adgroup.put()                          
         
 
@@ -43,7 +44,8 @@ class TestUseragentParser(unittest.TestCase):
                                          ios_version_max="999",
                                          target_android=False,
                                          android_version_min="1.6",
-                                         android_version_max="999")
+                                         android_version_max="999",
+                                         device_targeting=True)
         self.ipad_only_adgroup.put()                          
           
           
@@ -53,7 +55,8 @@ class TestUseragentParser(unittest.TestCase):
                                          target_android=True,
                                          target_other=False,
                                          android_version_min="1.5.1",
-                                         android_version_max="1.5.1")
+                                         android_version_max="1.5.1",
+                                         device_targeting=True)
         self.ipad_only_adgroup.put() 
         
         self.default_adgroup = AdGroup()
@@ -63,6 +66,14 @@ class TestUseragentParser(unittest.TestCase):
         self.testbed.deactivate()
         
     ################# Unit Tests ################
+        
+        
+    def mptest_uses_default_device_targeting(self):
+        
+        eq_(self.default_adgroup.uses_default_device_targeting, True)
+        eq_(self.ipad_only_adgroup.uses_default_device_targeting, False)
+        eq_(self.recent_android_adgroup.uses_default_device_targeting, False)
+        eq_(self.other_only_adgroup.uses_default_device_targeting, False)
         
     def mptest_ipad(self):
         user_agent = "Mozilla/5.0 (iPad; U; CPU OS 3.2 like Mac OS X; en-us) AppleWebKit/531.21.10 (KHTML, like Gecko) Version/4.0.4 Mobile/7B314 Safari/531.21.10"

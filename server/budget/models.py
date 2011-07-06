@@ -5,11 +5,22 @@ import logging
 DEFAULT_TIMESLICES = 1440.0 # Timeslices per day
 DEFAULT_FUDGE_FACTOR = 0.1
 
+
+###### INTERIM VERSION TO BE DELETED #######
+
 class BudgetSlicer(db.Model):
     
     campaign = db.ReferenceProperty(Campaign)
+    
+    # Old models
     timeslice_snapshot = db.FloatProperty()
     daily_snapshot = db.FloatProperty()
+    
+    # New Models
+    spent_today = db.FloatProperty(default = 0.)
+    spent_in_campaign = db.FloatProperty(default = 0.)
+    current_timeslice = db.IntegerProperty(default = 0)
+    
 
     @property
     def timeslice_budget(self):
@@ -64,6 +75,9 @@ class BudgetSlicer(db.Model):
             return obj
         return db.run_in_transaction(_txn,campaign)        
 
+
+
+
 class BudgetSliceLog(db.Model):
       budget_slicer = db.ReferenceProperty(BudgetSlicer,collection_name="timeslice_logs")
       initial_memcache_budget = db.FloatProperty()
@@ -72,8 +86,11 @@ class BudgetSliceLog(db.Model):
       actual_spending = db.FloatProperty()
       desired_spending = db.FloatProperty()
       end_date = db.DateTimeProperty()
+      
+      # New Models
       actual_spending = db.FloatProperty()
       desired_spending = db.FloatProperty()
+      
       
       @property
       def spending(self):
@@ -90,6 +107,10 @@ class BudgetDailyLog(db.Model):
     initial_daily_budget = db.FloatProperty()
     remaining_daily_budget = db.FloatProperty()
     date = db.DateProperty()
+    
+    
+    # New Models
+    actual_spending = db.FloatProperty()
 
     @property
     def spending(self):

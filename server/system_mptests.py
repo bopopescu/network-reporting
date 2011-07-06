@@ -219,8 +219,8 @@ class TestBudgetEndToEnd(unittest.TestCase):
         creative = run_auction(self.adunit.key())
         eq_(creative.ad_group.campaign.name, "expensive")
     
-        # We use half our cheap campaign budget
-        for i in xrange(5):
+        # We use 1/10 of our cheap campaign budget
+        for i in xrange(1):
             creative = run_auction(self.adunit.key())
             eq_(creative.ad_group.campaign.name, "cheap")
     
@@ -232,8 +232,8 @@ class TestBudgetEndToEnd(unittest.TestCase):
         creative = run_auction(self.adunit.key())
         eq_(creative.ad_group.campaign.name, "expensive")
     
-        # We now have a cheap campaign budget for 15 ads
-        for i in xrange(15):
+        # We now have a cheap campaign budget for 11 ads
+        for i in xrange(11):
             creative = run_auction(self.adunit.key())
             eq_(creative.ad_group.campaign.name, "cheap")
     
@@ -277,7 +277,7 @@ class TestBudgetEndToEnd(unittest.TestCase):
         eq_(creative.ad_group.campaign.name, "expensive")
     
         # We use half our cheap campaign budget
-        for i in xrange(5):
+        for i in xrange(1):
             creative = run_auction(self.adunit.key())
             eq_(creative.ad_group.campaign.name, "cheap")
     
@@ -290,7 +290,7 @@ class TestBudgetEndToEnd(unittest.TestCase):
         eq_(creative.ad_group.campaign.name, "expensive")
     
         # We now have a cheap campaign budget for 15 ads
-        for i in xrange(15):
+        for i in xrange(11):
             creative = run_auction(self.adunit.key())
             eq_(creative.ad_group.campaign.name, "cheap")
     

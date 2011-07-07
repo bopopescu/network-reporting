@@ -1015,6 +1015,11 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.cheap_c.full_budget = 10000.
         self.cheap_c.put()
         
+        eq_(self.cheap_c.is_active_for_date(datetime.date(1987,4,4)),True)
+        eq_(self.cheap_c.is_active_for_date(datetime.date(1987,4,13)),True)
+        eq_(self.cheap_c.is_active_for_date(datetime.date(1987,4,14)),False)
+        eq_(self.cheap_c.is_active_for_date(datetime.date(1987,4,3)),False)
+        
         # Advance the budget and the ts budgets
         budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,4))
         for i in xrange(budgetmodels.DEFAULT_TIMESLICES-1):
@@ -1062,9 +1067,32 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.cheap_c.end_date = datetime.date(1987,4,4)
         self.cheap_c.put()
         
+        eq_(self.cheap_c.is_active_for_date(datetime.date(1987,4,4)),True)
+        eq_(self.cheap_c.is_active_for_date(datetime.date(1987,4,5)),False)
+        eq_(self.cheap_c.is_active_for_date(datetime.date(1987,4,3)),False)
+        
         budget_service.update_budget(self.cheap_c, dt=datetime.datetime(1987,4,4,12,0,0))
         eq_(budget_service._apply_if_able(self.cheap_c,200, today=datetime.date(1987,4,4)), True)
         eq_(budget_service._apply_if_able(self.cheap_c,1, today=datetime.date(1987,4,4)), False)
+        
+    def mptest_test_activity(self):
+        self.cheap_c.budget_type = "daily"
+        
+        eq_(self.cheap_c.is_active_for_date(datetime.date(1987,4,4)),True)
+        
+        self.cheap_c.start_date = datetime.date(1987,4,4)
+        
+        eq_(self.cheap_c.is_active_for_date(datetime.date(1997,4,4)),True)
+        eq_(self.cheap_c.is_active_for_date(datetime.date(1987,4,3)),False)
+        
+        
+        self.cheap_c.end_date = datetime.date(1987,4,4)
+        self.cheap_c.start_date = None
+        
+        eq_(self.cheap_c.is_active_for_date(datetime.date(1987,4,2)),True)
+        eq_(self.cheap_c.is_active_for_date(datetime.date(1987,4,5)),False)
+        
+        
         
     # def mptest_timeslice_changing_in_the_morning(self):
     #      # We have a campaign that was set to begin several days ago 

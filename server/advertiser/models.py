@@ -84,6 +84,8 @@ class Campaign(db.Model):
         or (not self.start_date and self.end_date and self.end_date >= date) \
         or (self.start_date and self.end_date and self.start_date <= date and self.end_date >= date))):
             return True
+        else:
+            return False
         
         
 class AdGroup(db.Model):

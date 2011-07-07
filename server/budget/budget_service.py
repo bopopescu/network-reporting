@@ -58,15 +58,13 @@ def has_budget(campaign, cost, today=pac_today()):
 def apply_expense(campaign, cost, today=pac_today()):
     """ Applies an expense to our memcache """
     if campaign and campaign.budget and campaign.is_active_for_date(today):
-        budget_obj = BudgetSlicer.get_or_insert_for_campaign(campaign)
-        
         ts_key = _make_campaign_ts_budget_key(campaign)
         daily_key = _make_campaign_daily_budget_key(campaign)
         spent_key = _make_campaign_spent_today_key(campaign)
     
         memcache.decr(ts_key, _to_memcache_int(cost), namespace="budget")
         memcache.decr(daily_key, _to_memcache_int(cost), namespace="budget")
-        memcache.incr(spent_key, _to_memcache_int(cost), namespace="budget", initial_value=_to_memcache_int(budget_obj.spent_today))
+        memcache.incr(spent_key, _to_memcache_int(cost), namespace="budget", initial_value=spent_today(campaign))
 
 def timeslice_advance(campaign, testing=False):
     """ Adds a new timeslice's worth of budget and pulls the budget

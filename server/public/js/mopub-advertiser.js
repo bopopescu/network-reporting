@@ -628,11 +628,21 @@ var mopub = mopub || {};
         return (isNaN(stat)) ? 0 : stat;
     }
     
-    function calcRollups() {
-        // Don't compute rollups until we've gotten all the information.
-        if (!isCampaignsPageFullyUpdated()) return;
+    function setSectionLoadingSpinnerHidden(campaignType, hidden) {
+        var selector = "";
+        switch (campaignType) {
+            case CampaignTypeEnum.Guaranteed: selector = "#gtee-loading-img"; break;
+            case CampaignTypeEnum.Promotional: selector = "#promo-loading-img"; break;
+            case CampaignTypeEnum.Network: selector = "#network-loading-img"; break;
+            case CampaignTypeEnum.Backfill: selector = "#bfill-loading-img"; break;
+            default: return; break;
+        }
         
-        // No need to calculate rollups when placeholder is visible, since there are no campaigns.
+        if (hidden) $(selector).hide();
+        else $(selector).show();
+    }
+    
+    function calcGuaranteedRollup() {
         if ($('.gtee-placeholder').is(":visible")) {
             $('#gtee-rollups').hide();
         }
@@ -662,38 +672,11 @@ var mopub = mopub || {};
             }
             $('#gtee-total-ctr').text(gtee_ctr);
         }
-
-
-        if ($('.bfill-placeholder').is(":visible")) {
-            $('#bfill-rollups').hide();
-        }
-        else {
-            $('#bfill-rollups').show();
-            var bfill_imp, bfill_clk, bfill_conv;
-            bfill_imp = bfill_clk = bfill_conv = 0;
-            $('.bfill-imp:visible').each(function() {
-                    bfill_imp += parseIntFromStatText($(this).text());
-                    });
-            $('.bfill-clk:visible').each(function() {
-                    bfill_clk += parseIntFromStatText($(this).text());
-                    });
-            $('.bfill-conv:visible').each(function() {
-                    bfill_conv += parseIntFromStatText($(this).text());
-                    });
-
-            $("#bfill-total-imp").text(addCommas(bfill_imp));
-            $("#bfill-total-clk").text(addCommas(bfill_clk));
-            $("#bfill-total-conv").text(addCommas(bfill_conv));
-            var bfill_ctr;
-            if (bfill_clk === 0) {
-                bfill_ctr = formatPercentage(0);
-            }
-            else {
-                bfill_ctr = formatPercentage(bfill_clk/bfill_imp);
-            }
-            $("#bfill-total-ctr").text(bfill_ctr);
-        }
-
+        
+        setSectionLoadingSpinnerHidden(CampaignTypeEnum.Guaranteed, true);
+    }
+    
+    function calcPromotionalRollup() {
         if ($('.promo-placeholder').is(":visible")) {
             $('#promo-rollups').hide();
         }
@@ -723,7 +706,11 @@ var mopub = mopub || {};
             }
             $("#promo-total-ctr").text(promo_ctr);
         }
-
+        
+        setSectionLoadingSpinnerHidden(CampaignTypeEnum.Promotional, true);
+    }
+    
+    function calcNetworkRollup() {
         if ($('.network-placeholder').is(":visible")) {
             $('#network-rollups').hide();
         }
@@ -759,6 +746,52 @@ var mopub = mopub || {};
             }
             $('#network-total-fill').text(net_fill + ' (' + addCommas(net_req) + ')');
         }
+        
+        setSectionLoadingSpinnerHidden(CampaignTypeEnum.Network, true);
+    }
+    
+    function calcBackfillRollup() {
+        if ($('.bfill-placeholder').is(":visible")) {
+            $('#bfill-rollups').hide();
+        }
+        else {
+            $('#bfill-rollups').show();
+            var bfill_imp, bfill_clk, bfill_conv;
+            bfill_imp = bfill_clk = bfill_conv = 0;
+            $('.bfill-imp:visible').each(function() {
+                    bfill_imp += parseIntFromStatText($(this).text());
+                    });
+            $('.bfill-clk:visible').each(function() {
+                    bfill_clk += parseIntFromStatText($(this).text());
+                    });
+            $('.bfill-conv:visible').each(function() {
+                    bfill_conv += parseIntFromStatText($(this).text());
+                    });
+
+            $("#bfill-total-imp").text(addCommas(bfill_imp));
+            $("#bfill-total-clk").text(addCommas(bfill_clk));
+            $("#bfill-total-conv").text(addCommas(bfill_conv));
+            var bfill_ctr;
+            if (bfill_clk === 0) {
+                bfill_ctr = formatPercentage(0);
+            }
+            else {
+                bfill_ctr = formatPercentage(bfill_clk/bfill_imp);
+            }
+            $("#bfill-total-ctr").text(bfill_ctr);
+        }
+        
+        setSectionLoadingSpinnerHidden(CampaignTypeEnum.Backfill, true);
+    }
+    
+    function calcRollups() {
+        // Don't compute rollups until we've gotten all the information.
+        if (!isCampaignsPageFullyUpdated()) return;
+        
+        calcGuaranteedRollup();
+        calcPromotionalRollup();
+        calcNetworkRollup();
+        calcBackfillRollup();
     }
 
     // *********************************************************************
@@ -798,7 +831,7 @@ var mopub = mopub || {};
         Guaranteed: "gtee_row",
         Promotional: "promo_row",
         Network: "network_row",
-        Backfill: "backfill_row",
+        Backfill: "bfill_row",
         All: "campaignData"
     };
     
@@ -821,6 +854,11 @@ var mopub = mopub || {};
     var unfetchedIds = getCampaignIds();
     var fetchedCampaignIds = {};
     var failedIds = [];
+    
+    var guaranteedIds = getCampaignIdsWithType(CampaignTypeEnum.Guaranteed);
+    var promotionalIds = getCampaignIdsWithType(CampaignTypeEnum.Promotional);
+    var networkIds = getCampaignIdsWithType(CampaignTypeEnum.Network);
+    var backfillIds = getCampaignIdsWithType(CampaignTypeEnum.Backfill);
     
     // Helpers
     // =====================================================================
@@ -906,25 +944,41 @@ var mopub = mopub || {};
         results.ctr = formatPercentage(results.ctr);
         results.fill_rate = formatPercentage(results.fill_rate);
         
+        var onScheduleHtml = "";
         if (results.status == "Running") {
             if (results.on_schedule == "on pace") {
-                results.on_schedule = '<span class="osi-success"> On pace ' +
+                onScheduleHtml = '<span class="osi-success"> On pace ' +
                     '<a href="#" id="campaign-osi-success-helpLink" class="whatsthis">' + 
                     '<div class="whatsthis-icon"></div></a></span>';
-            } else if (results.on_schedule == "behind"){
-                results.on_schedule = '<span class="osi-failure""> Behind ' +
+            } else if (results.on_schedule == "behind") {
+                onScheduleHtml = '<span class="osi-failure""> Behind ' +
                     '<a href="#" id="campaign-osi-failure-helpLink" class="whatsthis">' + 
                     '<div class="whatsthis-icon"></div></a></span>';
-            } else {
-                results.on_schedule = "";
             }
         }
+        results.on_schedule = onScheduleHtml;
         
         return results;
     }
     
     function getCampaignIdsWithType(type) {
         return $("." + type).map(function() { return $(this).attr("id"); });
+    }
+    
+    function getCampaignTypeForId(id) {
+        if ($.inArray(id, guaranteedIds) != -1) return CampaignTypeEnum.Guaranteed;
+        else if ($.inArray(id, promotionalIds) != -1) return CampaignTypeEnum.Promotional;
+        else if ($.inArray(id, networkIds) != -1) return CampaignTypeEnum.Network;
+        else if ($.inArray(id, backfillIds) != -1) return CampaignTypeEnum.Backfill;
+        else return null;
+    }
+    
+    function hasAlreadyFetchedCampaigns(campaigns) {
+        for (var i = 0; i < campaigns.length; i++) {
+            var campaignId = campaigns[i];
+            if (!fetchedCampaignIds[campaignId]) return false;
+        }
+        return true;
     }
     
     function getFetchedCampaignsWithType(type) {
@@ -958,11 +1012,15 @@ var mopub = mopub || {};
     
     function ajaxBatchFetchCampaigns(fetchData, unfetchedIds, fetchedIds, backoffData) {
         // Construct AJAX URL with the proper query parameters.
-        var ids = fetchData.campaigns;
+        var campaigns = fetchData.campaigns;
         var url = "/campaigns/stats/ajax/?";
-        for (var i = 0; i < ids.length; i++) {
-            if (i == 0) url += "adv=" + ids[i];
-            else url += "&adv=" + ids[i];
+        for (var i = 0; i < campaigns.length; i++) {
+            if (i == 0) url += "adv=" + campaigns[i];
+            else url += "&adv=" + campaigns[i];
+            
+            // Display the loading indicator for this campaign's section.
+            var campaignType = getCampaignTypeForId(campaigns[i]);
+            if (campaignType != null) setSectionLoadingSpinnerHidden(campaignType, false);
         }
         url += "&date_range=" + fetchData.days;
         if (fetchData.startDate) url += "&start_date=" + fetchData.startDate;
@@ -981,7 +1039,7 @@ var mopub = mopub || {};
                 
                 // If we've failed too many times, stop retrying. Mark any unfetched IDs as failed.
                 if (backoffData.failedAttempts > AJAX_MAX_FAILED_ATTEMPTS) {
-                    ajaxFetchCampaignsFailed(ids);
+                    ajaxFetchCampaignsFailed(campaigns);
                     return;
                 }
                 
@@ -994,13 +1052,19 @@ var mopub = mopub || {};
     }
     
     function ajaxFetchCampaignsFailed(campaigns) {
+        $("#ajaxFailure").show();
+        
         $.each(campaigns, function(index, campaign) {
             if ($.inArray(campaign, failedIds) == -1) failedIds.push(campaign);
+            
+            // Stop the loading indicator for this campaign's section.
+            var campaignType = getCampaignTypeForId(campaign);
+            if (campaignType != null) setSectionLoadingSpinnerHidden(campaignType, true);
         });
     }
     
     function updateHelpLinks() {
-        $('.ecpm-helpLink').html("What's this?");
+        $('.complete .ecpm-helpLink').html("What's this?");
         
         $('.whatsthis').click(function(e) {
             e.preventDefault();
@@ -1025,7 +1089,9 @@ var mopub = mopub || {};
             // Set campaign status to "Running", "Paused", etc. via class attribute.
             var campaignStatus = formattedStats.status;
             var selector = "#" + campaignId;
-            $(selector).addClass("campaign-status-" + campaignStatus);
+            $(selector).removeClass("incomplete")
+                .addClass("complete")
+                .addClass("campaign-status-" + campaignStatus);
             
             updateHelpLinks();
             
@@ -1033,6 +1099,11 @@ var mopub = mopub || {};
             delete unfetchedIds[campaignId];
             fetchedIds[campaignId] = allStats[key];
         }
+        
+        if (hasAlreadyFetchedCampaigns(guaranteedIds)) calcGuaranteedRollup();
+        if (hasAlreadyFetchedCampaigns(promotionalIds)) calcPromotionalRollup();
+        if (hasAlreadyFetchedCampaigns(networkIds)) calcNetworkRollup();
+        if (hasAlreadyFetchedCampaigns(backfillIds)) calcBackfillRollup();
         
         if (isCampaignsPageFullyUpdated()) onCampaignsFullyUpdated();
     }
@@ -1046,6 +1117,35 @@ var mopub = mopub || {};
         var selector = "#" + campaign + " ." + classType;
         $(selector).html(data);
     };
+    
+    function retryFailedAjax() {
+        var days = getNumDaysToFetch() || 14;
+        var startDate = getStartDate();
+        
+        var chunks = chunkArray(failedIds, AJAX_CAMPAIGN_CHUNK_SIZE);
+        for (var i = 0; i < chunks.length; i++) {
+            var backoffData = new BackoffData();
+            var fetchData = new FetchData({
+                campaigns: chunks[i], 
+                days: days, 
+                startDate: startDate 
+            });
+            ajaxBatchFetchCampaigns(fetchData, unfetchedIds, fetchedCampaignIds, backoffData);
+        }
+    }
+    
+    function setupAjaxStatusPopup() {
+        $("#ajaxRetry").click(function(event) {
+            retryFailedAjax();
+            $("#ajaxFailure").fadeOut();
+            event.preventDefault();
+        });
+
+        $("#ajaxDismiss").click(function(event) {
+           $("#ajaxFailure").fadeOut(); 
+           event.preventDefault();
+        });
+    }
     
     // Helpers for graph construction
     // =====================================================================
@@ -1256,6 +1356,7 @@ var mopub = mopub || {};
     
     function initCampaignsPage() {
         showOrHideRevenueBreakdown();
+        setupAjaxStatusPopup();
         setCampaignFilterOptionsDisabled(true);
         populateStatsBreakdownsWithData(mopub.accountStats);
         populateGraphWithAccountStats(mopub.accountStats);

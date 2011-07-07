@@ -158,7 +158,6 @@ def campaign_status(adgroup):
         return "Scheduled"
     else:
         return "Unknown"
-
         
 @register.filter
 def binary_data(data):

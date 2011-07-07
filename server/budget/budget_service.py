@@ -39,7 +39,7 @@ def has_budget(campaign, cost, today=pac_today()):
     if not campaign.budget:
         return True
     
-    if campaign.start_date and today < campaign.start_date:
+    if not campaign.is_active_for_date(today):
         return False
     
     memcache_daily_budget = remaining_daily_budget(campaign)
@@ -55,20 +55,18 @@ def has_budget(campaign, cost, today=pac_today()):
     # All budgets are met:
     return True
     
-def apply_expense(campaign, cost):
+def apply_expense(campaign, cost, today=pac_today()):
     """ Applies an expense to our memcache """
-    if campaign is not None:
-        spent_today(campaign) #Assures memcache spent today will not be None
-        
+    if campaign and campaign.budget and campaign.is_active_for_date(today):
         ts_key = _make_campaign_ts_budget_key(campaign)
         daily_key = _make_campaign_daily_budget_key(campaign)
         spent_key = _make_campaign_spent_today_key(campaign)
-        
+    
         memcache.decr(ts_key, _to_memcache_int(cost), namespace="budget")
         memcache.decr(daily_key, _to_memcache_int(cost), namespace="budget")
-        memcache.incr(spent_key, _to_memcache_int(cost), namespace="budget")
+        memcache.incr(spent_key, _to_memcache_int(cost), namespace="budget", initial_value=spent_today(campaign))
 
-def timeslice_advance(campaign):
+def timeslice_advance(campaign, testing=False):
     """ Adds a new timeslice's worth of budget and pulls the budget
     expenditures into the database. Executed once per timeslice."""
     if not campaign.budget:
@@ -76,7 +74,11 @@ def timeslice_advance(campaign):
     budget_obj = BudgetSlicer.get_or_insert_for_campaign(campaign)
     # Update timeslice budget in memory
     key = _make_campaign_ts_budget_key(campaign)
-    budget_obj.advance_timeslice()
+    if testing:
+        budget_obj.advance_timeslice()
+    else:
+        dt = pac_dt()
+        budget_obj.set_timeslice(dt.hour*60*60+dt.minute*60+dt.second)
 
     spent_this_timeslice = spent_today(campaign)-budget_obj.spent_today
     budget_obj.spent_today = spent_today(campaign)
@@ -198,7 +200,7 @@ def update_budget(campaign, dt = pac_dt(), save_campaign=True):
             campaign.budget = _redistribute_budget(campaign, dt.date())
             budget_obj.campaign = campaign
             
-        if campaign.is_active_for_date(dt):
+        if campaign.is_active_for_date(dt.date()):
             spent = spent_today(campaign)
             daily_budget_key = _make_campaign_daily_budget_key(campaign)
             ts_key = _make_campaign_ts_budget_key(campaign)
@@ -329,7 +331,7 @@ def _apply_if_able(campaign, cost, today=pac_today()):
     """ For testing purposes """
     success = has_budget(campaign, cost, today=today)
     if success:
-        apply_expense(campaign, cost)
+        apply_expense(campaign, cost, today=today)
     return success
 
 
@@ -366,9 +368,9 @@ def _delete_memcache(campaign):
     key = _make_campaign_spent_today_key(campaign)
     memcache.delete(key, namespace="budget")
 
-def _advance_all():
+def _advance_all(testing=False):
     campaigns = Campaign.all()
     # We use campaigns as an iterator
     for camp in campaigns:
         if camp.budget is not None:
-            timeslice_advance(camp)
+            timeslice_advance(camp, testing=testing)

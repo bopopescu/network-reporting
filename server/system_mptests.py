@@ -222,7 +222,7 @@ class TestBudgetEndToEnd(unittest.TestCase):
         # We use none of our cheap campaign budget
     
         # Advance all of our campaigns
-        budget_service._advance_all()
+        budget_service._advance_all(testing=True)
     
     
         # We again have enough budget for one expensive ad
@@ -269,6 +269,5 @@ class TestBudgetEndToEnd(unittest.TestCase):
     
     
     
-        
         
         

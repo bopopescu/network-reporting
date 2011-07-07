@@ -80,6 +80,8 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
                                budget_strategy="evenly")
         self.full_c.put()
 
+        budget_service.update_budget(self.full_c, datetime.datetime(1987,4,4,0,0,0))
+        
         self.full_adgroup = AdGroup(account=self.account, 
                                           campaign=self.full_c, 
                                           site_keys=[self.adunit.key()],
@@ -128,7 +130,7 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
         
         # We only spend 50 on the second one
-        budget_service.timeslice_advance(self.cheap_c)
+        budget_service.timeslice_advance(self.cheap_c, testing=True)
         eq_(budget_service._apply_if_able(self.cheap_c, 50), True)
         
         most_recent = BudgetSliceLogQueryManager().get_most_recent(self.cheap_c)
@@ -137,7 +139,7 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         eq_(most_recent.actual_spending, 100)
         
         # Now the most recent was 100
-        budget_service.timeslice_advance(self.cheap_c)
+        budget_service.timeslice_advance(self.cheap_c, testing=True)
         most_recent = BudgetSliceLogQueryManager().get_most_recent(self.cheap_c)
           
           
@@ -148,7 +150,7 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
 
         # We only spend 50 on the second one
-        budget_service.timeslice_advance(self.cheap_c)
+        budget_service.timeslice_advance(self.cheap_c,testing=True)
         # eq_(budget_service._apply_if_able(self.cheap_c, 50), True)
         
         # In the most recent completed timeslice, we spent 100%
@@ -166,14 +168,14 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
     
         # We only spend 50 on the second one
-        budget_service.timeslice_advance(self.cheap_c)
+        budget_service.timeslice_advance(self.cheap_c,testing=True)
         eq_(budget_service._apply_if_able(self.cheap_c, 50), True)
         
         # In the most recent completed timeslice, we spent 100%
         eq_(budget_service.get_osi(self.cheap_c), True)
     
         # We only spent 50 on the second one
-        budget_service.timeslice_advance(self.cheap_c)
+        budget_service.timeslice_advance(self.cheap_c,testing=True)
         
         # In the most recent completed timeslice, we only spent 50%
         eq_(budget_service.get_osi(self.cheap_c), False)
@@ -184,7 +186,7 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
     
         # We only spend 50 on the second one
-        budget_service.timeslice_advance(self.cheap_c)
+        budget_service.timeslice_advance(self.cheap_c, testing=True)
         
         eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
         
@@ -197,7 +199,7 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         eq_(budget_service.get_osi(self.cheap_c), True)
     
         # Now in this new one, we have 1800/8 = $225 available
-        budget_service.timeslice_advance(self.cheap_c)
+        budget_service.timeslice_advance(self.cheap_c, testing=True)
     
         # In the most recent completed timeslice, we spent what we wanted
         eq_(budget_service.get_osi(self.cheap_c), False)
@@ -205,7 +207,7 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         # Now we spend the full 225
         eq_(budget_service._apply_if_able(self.cheap_c, 225), True)
     
-        budget_service.timeslice_advance(self.cheap_c)
+        budget_service.timeslice_advance(self.cheap_c, testing=True)
     
         # In the most recent completed timeslice, we spent 225
         eq_(budget_service.get_osi(self.cheap_c), True)
@@ -220,7 +222,7 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         eq_(budget_service._apply_if_able(self.cheap_c, 33), True)
         eq_(budget_service._apply_if_able(self.cheap_c, 2), False)                      
                              
-        budget_service.timeslice_advance(self.cheap_c)
+        budget_service.timeslice_advance(self.cheap_c, testing=True)
     
         # We spent the most that we could
     
@@ -236,10 +238,10 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         """ We change a two day campaign to a four day campaign. 
             It should slow down the delivery."""
     
-        eq_(budget_service._apply_if_able(self.full_c, 100), True)
+        eq_(budget_service._apply_if_able(self.full_c, 100, today=self.start_date), True)
         for i in xrange(9):
-            budget_service.timeslice_advance(self.full_c)
-            eq_(budget_service._apply_if_able(self.full_c, 100), True)
+            budget_service.timeslice_advance(self.full_c,testing=True)
+            eq_(budget_service._apply_if_able(self.full_c, 100, today=self.start_date), True)
     
         # 1000$ has been spent and the last timeslice is about to end, 
         # the user says that the campaign must last three days.
@@ -253,14 +255,14 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         eq_(self.full_c.budget, 2000/3.)
 
         budget_service.daily_advance(self.full_c, datetime.date(1987,4,5))
-        budget_service.timeslice_advance(self.full_c)
+        budget_service.timeslice_advance(self.full_c, testing=True)
         
         eq_(self.full_c.budget, 500)
         
         # The budget should now only have $1000 to spend over 2 days
-        eq_(budget_service._apply_if_able(self.full_c, 50), True)
-        eq_(budget_service._apply_if_able(self.full_c, 1), False)
-        budget_service.timeslice_advance(self.full_c)
+        eq_(budget_service._apply_if_able(self.full_c, 50, today=datetime.date(1987,4,5)), True)
+        eq_(budget_service._apply_if_able(self.full_c, 1, today=datetime.date(1987,4,5)), False)
+        budget_service.timeslice_advance(self.full_c, testing=True)
         
         eq_(budget_service.get_osi(self.full_c), True)
     
@@ -270,14 +272,14 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
             we set the campaign to be one day instead of two"""
             
         
-        eq_(budget_service._apply_if_able(self.full_c, 100), True)
+        eq_(budget_service._apply_if_able(self.full_c, 100, today=self.start_date), True)
         for i in xrange(8):
-            budget_service.timeslice_advance(self.full_c)
-            eq_(budget_service._apply_if_able(self.full_c, 100), True)
+            budget_service.timeslice_advance(self.full_c, testing=True)
+            eq_(budget_service._apply_if_able(self.full_c, 100, today=self.start_date), True)
         
         # The last timeslice is about to begin, and the user says that 
         # the campaign must end tomorrow.
-        budget_service.timeslice_advance(self.full_c)
+        budget_service.timeslice_advance(self.full_c, testing=True)
         
         today = self.start_date
         new_end_date = datetime.date(1987,4,4)
@@ -288,7 +290,7 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         
         # We have spent 900 out of the $2000 total, we should now be able to spend
         # $1100
-        eq_(budget_service._apply_if_able(self.full_c, 1100), True)
+        eq_(budget_service._apply_if_able(self.full_c, 1100, today=today), True)
         
         
         

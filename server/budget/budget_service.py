@@ -37,6 +37,11 @@ def has_budget(campaign, cost, today=pac_today()):
         Campaigns that have not yet begun always return false"""
     
     if not campaign.budget:
+        # TEMP: If past July 15th with no errors, remove this
+        if campaign.full_budget:
+            logging.error("full_budget without budget in campaign: %s" % campaign.key())
+         # TEMP: If past July 15th with no errors, remove this
+         
         return True
     
     if not campaign.is_active_for_date(today):

@@ -38,7 +38,7 @@ def has_budget(campaign, cost, today=pac_today()):
     
     if not campaign.budget:
         # TEMP: If past July 15th with no errors, remove this
-        if campaign.full_budget:
+        if not campaign.full_budget is None:
             logging.error("full_budget without budget in campaign: %s" % campaign.key())
          # TEMP: If past July 15th with no errors, remove this
          

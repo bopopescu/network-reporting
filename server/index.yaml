@@ -71,7 +71,7 @@ indexes:
 
 - kind: BudgetDailyLog
   properties:
-  - name: budget
+  - name: budget_obj
   - name: date
 
     

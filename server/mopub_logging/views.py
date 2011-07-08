@@ -113,8 +113,14 @@ class LogTaskHandler(webapp.RequestHandler):
           memcache_stats = memcache_stats or memcache.get_stats()
       tail_index = int(tail_index_str or MAX_TAIL)
 
-      logging.info("account: %s time: %s start: %s stop: %s"%(account_name,time_bucket,head_index,tail_index))
-      logging.info("MEMCACHE STATS: %s"%memcache_stats_start)
+
+      if account_name == "agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww":
+          logging.error("account: %s time: %s start: %s stop: %s"%(account_name,time_bucket,head_index,tail_index))
+          logging.error("MEMCACHE STATS: %s"%memcache_stats_start)
+      else:
+          logging.info("account: %s time: %s start: %s stop: %s"%(account_name,time_bucket,head_index,tail_index))
+          logging.info("MEMCACHE STATS: %s"%memcache_stats_start)
+           
 
       stats_dict = {}      
       start = head_index
@@ -220,7 +226,9 @@ class LogTaskHandler(webapp.RequestHandler):
       query_manager = query_managers.StatsModelQueryManager(account_name)
       try:
           # raise db.BadRequestError('asdf')
-          query_manager.put_stats(stats_dict.values())
+          stats_to_put = stats_dict.values()
+          logging.info("rolling up and putting stats: %s"%len(stats_to_put))
+          query_manager.put_stats(stats_to_put)
       # if the transaction is too large then we split it up and try again    
       # except db.BadRequestError:
       #     async_put_models(account_name,stats_dict.values(),MAX_PUT_SIZE)

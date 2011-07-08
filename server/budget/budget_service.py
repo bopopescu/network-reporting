@@ -1,4 +1,5 @@
 from google.appengine.api import memcache
+from ad_server.debug_console import trace_logging
 import datetime
 from advertiser.models import ( Campaign,
                                 )
@@ -36,24 +37,30 @@ def has_budget(campaign, cost, today=pac_today()):
     """ Returns True if the cost is less than the budget in the current timeslice.
         Campaigns that have not yet begun always return false"""
     
+    trace_logging.warning("cost: %s"%cost)
+    
     if not campaign.budget:
         # TEMP: If past July 15th with no errors, remove this
-        if not campaign.full_budget is None:
-            logging.error("full_budget without budget in campaign: %s" % campaign.key())
+        if campaign.full_budget:
+            trace_logging.error("full_budget without budget in campaign: %s" % campaign.key())
          # TEMP: If past July 15th with no errors, remove this
          
         return True
     
+    trace_logging.warning("active: %s"%campaign.is_active_for_date(today))
     if not campaign.is_active_for_date(today):
         return False
     
+    
     memcache_daily_budget = remaining_daily_budget(campaign)
+    trace_logging.warning("memcache: %s"%memcache_daily_budget)
     
     if memcache_daily_budget < cost:
         return False
     
     if campaign.budget_strategy == "evenly":
         memcache_ts_budget = remaining_ts_budget(campaign)
+        trace_logging.warning("memcache ts: %s"%memcache_ts_budget)
         if memcache_ts_budget < cost:
             return False
             

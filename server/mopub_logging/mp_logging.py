@@ -149,7 +149,7 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
     try:
         account_bucket = hash(account_name)%NUM_TASK_QUEUES
         task_queue_name = TASK_QUEUE_NAME_FORMAT%account_bucket
-        logging.info('\n\ntask: %s\n queue: %s eta:%s\n\n'%(task_name,
+        logging.error('\n\ntask: %s\n queue: %s eta:%s\n\n'%(task_name,
                                                     task_queue_name,
                                                     _get_execution_datetime(account_shard,time_bucket)))
         t = taskqueue.Task(name=task_name,params={'account_name':account_name,
@@ -162,7 +162,7 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
     except taskqueue.TaskAlreadyExistsError:
         logging.info("task %s already exists"%task_name)
     except Exception, e:    
-        logging.warning(e)
+        logging.error(e)
         
 def _get_time_bucket_start(time_bucket):
     # time_bucket = the current time bucket

@@ -48,6 +48,7 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
     # native failure we just bail in order to 
     # Note if logging an adnetwork request, we pass
     # in request = None.
+    logging.info("trying to log")
     if request:
         exclude_creatives = request.get_all("exclude")
         if exclude_creatives:
@@ -127,14 +128,19 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
                         udid=udid,
                         req=request_id,
                         inst=instance_id)
+                        
     
     # bail early if the memcache increment failed
     if log_index is None or log_index == '': 
+        logging.error("NOOOOO INDEX")
         return
     
     # put the log data into appropriate place
+    logging.info("adding to cache: %s ts: %s"%(log_index,time_bucket))
     log_key = LOG_KEY_FORMAT%dict(account_name=account_name,account_shard=account_shard,time=time_bucket,log_index=log_index)
     memcache.set(log_key,logging_data,time=MEMCACHE_ALIVE_TIME)
+    logging.info("done adding to cache")
+    
     
     # send to appropriately named task_queue
     task_name = TASK_NAME%dict(account_name=account_name.replace('_','1X--X1'), # must escape '_' regex: [a-zA-Z0-9-]{1,500}$   
@@ -143,13 +149,14 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
 
     # because we have limited task queue API calls we only try adding
     # to the queue up to MAX_TASK_ADDS time, most are dupes anyway                           
-    if log_index > MAX_TASK_ADDS:
-        return
+    # if log_index > MAX_TASK_ADDS:
+    #     return
         
     try:
+        logging.info("trying to add to queue (in try): %s"%task_name)
         account_bucket = hash(account_name)%NUM_TASK_QUEUES
         task_queue_name = TASK_QUEUE_NAME_FORMAT%account_bucket
-        logging.error('\n\ntask: %s\n queue: %s eta:%s\n\n'%(task_name,
+        logging.info('\n\ntask: %s\n queue: %s eta:%s\n\n'%(task_name,
                                                     task_queue_name,
                                                     _get_execution_datetime(account_shard,time_bucket)))
         t = taskqueue.Task(name=task_name,params={'account_name':account_name,

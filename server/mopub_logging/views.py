@@ -227,6 +227,16 @@ class LogTaskHandler(webapp.RequestHandler):
       try:
           # raise db.BadRequestError('asdf')
           stats_to_put = stats_dict.values()
+          
+          if account_name == "agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww":
+              try:
+                  mail.send_mail_to_admins(sender="olp@mopub.com",
+                                           subject="WTF",
+                                           body="len: %s\n%s"%(len(stats_to_put), [s.to_dict() for s in stats_to_put[:100]]))
+              except Exception, e:
+                  logging.error("MAIL ERROR: %s",e)
+                                                 
+          
           logging.info("rolling up and putting stats: %s"%len(stats_to_put))
           query_manager.put_stats(stats_to_put)
       # if the transaction is too large then we split it up and try again    

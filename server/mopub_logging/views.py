@@ -232,14 +232,14 @@ class LogTaskHandler(webapp.RequestHandler):
           # raise db.BadRequestError('asdf')
           stats_to_put = stats_dict.values()
           
-          if account_name == "agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww":
-              try:
-                  mail.send_mail_to_admins(sender="olp@mopub.com",
-                                           subject="WTF",
-                                           body="len: %s\n%s"%(len(stats_to_put), 
-                                                [(str(s._advertiser), str(s._publisher), s.country, s.impression_count) for s in stats_to_put if str(s.country) == 'US']))
-              except Exception, e:
-                  logging.error("MAIL ERROR: %s",e)
+          # if account_name == "agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww":
+          #     try:
+          #         mail.send_mail_to_admins(sender="olp@mopub.com",
+          #                                  subject="WTF",
+          #                                  body="len: %s\n%s"%(len(stats_to_put), 
+          #                                       [(str(s._advertiser), str(s._publisher), s.country, s.impression_count) for s in stats_to_put if str(s.country) == 'US']))
+          #     except Exception, e:
+          #         logging.error("MAIL ERROR: %s",e)
                                                  
           query_manager.put_stats(stats_to_put)
           total_stats = query_manager.all_stats_deltas

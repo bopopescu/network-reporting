@@ -242,7 +242,7 @@ class LogTaskHandler(webapp.RequestHandler):
       # if the transaction is too large then we split it up and try again    
       # except db.BadRequestError:
       #     async_put_models(account_name,stats_dict.values(),MAX_PUT_SIZE)
-      except Exception:
+      except:
           if retry_count > -1:
               exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
               base_number_of_stats = len(stats_dict.values())

@@ -147,7 +147,7 @@ class LogTaskHandler(webapp.RequestHandler):
           memcache_misses += current_memcache_misses
           if memcache_misses:
               memcache_stats = memcache_stats or memcache.get_stats()
-          logging.info("Memcache misses: %d"%current_memcache_misses)
+          # logging.info("Memcache misses: %d"%current_memcache_misses)
 
           for k,d in data_dicts.iteritems():
               if d:
@@ -232,18 +232,18 @@ class LogTaskHandler(webapp.RequestHandler):
               try:
                   mail.send_mail_to_admins(sender="olp@mopub.com",
                                            subject="WTF",
-                                           body="len: %s\n%s"%(len(stats_to_put), [s.to_dict() for s in stats_to_put[:100]]))
+                                           body="len: %s\n%s"%(len(stats_to_put), 
+                                                [(str(s._advertiser), str(s._publisher), s.country, s.impression_count) for s in stats_to_put if str(s.country) == 'US']))
               except Exception, e:
                   logging.error("MAIL ERROR: %s",e)
                                                  
-          
-          logging.info("rolling up and putting stats: %s"%len(stats_to_put))
           query_manager.put_stats(stats_to_put)
+          total_stats = query_manager.all_stats_deltas
       # if the transaction is too large then we split it up and try again    
       # except db.BadRequestError:
       #     async_put_models(account_name,stats_dict.values(),MAX_PUT_SIZE)
-      except:
-          if retry_count > 0:
+      except Exception:
+          if retry_count > -1:
               exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
               base_number_of_stats = len(stats_dict.values())
               total_stats = query_manager.all_stats_deltas

@@ -86,6 +86,10 @@ class LogTaskHandler(webapp.RequestHandler):
   def get(self):
       # inspect headers of the task
       retry_count = int(self.request.headers.get('X-AppEngine-TaskRetryCount',"0"))
+      
+      if retry_count > 6: return # bail early
+      
+      
       task_name = self.request.headers.get('X-AppEngine-TaskName',None)
       queue_name = self.request.headers.get('X-AppEngine-QueueName',None)
       

@@ -253,10 +253,16 @@ class LogTaskHandler(webapp.RequestHandler):
               total_stats = query_manager.all_stats_deltas
               number_of_stats = len(total_stats)
               max_countries = max([len(stat.get_countries()) for stat in total_stats])
-              
+              account = Account.get(account_name)
+              if account:
+                  user_email = account.mpuser.email
+              else:
+                  user_email = None 
+                  
               mail.send_mail_to_admins(sender="olp@mopub.com",
                                         subject="Logging error",
-                                        body="account: %s retries: %s task name: %s queue name: %s base stats: %s total number of stats: %s max countries: %s \n\n%s"%(account_name,
+                                        body="account: %s email: %s retries: %s task name: %s queue name: %s base stats: %s total number of stats: %s max countries: %s \n\n%s"%(account_name,
+                                                                                             user_email,
                                                                                              retry_count,
                                                                                              task_name,
                                                                                              queue_name,

@@ -123,28 +123,10 @@ def budget_view(request, adgroup_key):
                                                                one_month_ago,
                                                                today)
                                                                 
-    ts_logs = budget_service._get_ts_logs_for_date(camp, today).fetch(200)
-    
-                                                
-    
-    def format_spending(log):
-        try:
-            log.delivery = log.spending
-        except NoSpendingForIncompleteLogError:
-            log.delivery = "Incomplete"
-        return log
+                                                                
+    slicer = BudgetSlicer.get_or_insert_for_campaign(camp)
+    ts_logs = slicer.timeslice_logs.order("-end_date").fetch(1440)
         
-    def format_spending_ts(log):
-        try:
-            log.delivery = log.spending
-        except NoSpendingForIncompleteLogError:
-            log.delivery = "Incomplete"
-        log.time = log.end_date.time()
-        return log
-        
-    ts_logs = [format_spending_ts(log) for log in ts_logs]
-    daily_logs = [format_spending(log) for log in daily_logs]
-         
     #### Build budgetslicer address ####
     # prefix = "http://localhost:8080/_ah/admin/datastore/edit?key="
     prefix = "https://appengine.google.com/datastore/edit?app_id=mopub-inc&namespace=&key="

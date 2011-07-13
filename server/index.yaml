@@ -106,11 +106,6 @@ indexes:
 - kind: BudgetDailyLog
   properties:
   - name: budget_obj
-  - name: date
-
-- kind: BudgetDailyLog
-  properties:
-  - name: budget_obj
   - name: end_date
     direction: desc
 

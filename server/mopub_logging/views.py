@@ -31,6 +31,8 @@ from mopub_logging import log_service
 from reporting import models as r_models
 from reporting import query_managers
 
+from account.models import Account
+
 
 OVERFLOW_TASK_QUEUE_NAME_FORMAT = "bulk-log-processor-overflow-%02d"
 NUM_OVERFLOW_TASK_QUEUES = 3

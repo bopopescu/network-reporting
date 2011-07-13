@@ -277,7 +277,15 @@ class LogTaskHandler(webapp.RequestHandler):
       
       # only email if we miss alot (more than .1% or more than 1)      
       if not tail_index_str or (memcache_misses > 1 and float(memcache_misses)/float(tail_index) > 0.001):
-          message = "Account: %s time: %s tail: %s misses: %s retry: %s\nmemcache_stats_starts:%s\nmemcache_stats:%s"%(account_name,time_bucket,
+          account = Account.get(account_name)
+          if account:
+              user_email = account.mpuser.email
+          else:
+              user_email = None 
+          
+          message = "Account: %s email: %s time: %s tail: %s misses: %s retry: %s\nmemcache_stats_starts:%s\nmemcache_stats:%s"%(account_name,
+                                                                                  user_email,
+                                                                                  time_bucket,
                                                                                   tail_index_str,memcache_misses,retry_count,
                                                                                   memcache_stats_start,memcache_stats)
           

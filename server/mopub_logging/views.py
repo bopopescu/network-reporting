@@ -249,7 +249,7 @@ class LogTaskHandler(webapp.RequestHandler):
       # except db.BadRequestError:
       #     async_put_models(account_name,stats_dict.values(),MAX_PUT_SIZE)
       except:
-          if retry_count > -1:
+          if retry_count > 0:
               exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
               base_number_of_stats = len(stats_dict.values())
               total_stats = query_manager.all_stats_deltas
@@ -276,7 +276,7 @@ class LogTaskHandler(webapp.RequestHandler):
               except:
                   pass                                                                                     
               logging.error(exception_traceback)
-              raise Exception("need to try transaction again")
+          raise Exception("need to try transaction again")
       
       # only email if we miss alot (more than .1% or more than 1)      
       if not tail_index_str or (memcache_misses > 1 and float(memcache_misses)/float(tail_index) > 0.001):

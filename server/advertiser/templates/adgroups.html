@@ -223,7 +223,7 @@
                       <tr>
                         <th class="campaignData-icon"></th>
                         <th class="dataTable-name">{{level.name}} Priority</th>
-                        <th class="dataTable-data numeric">eCPM</th>
+                        <th class="dataTable-data numeric">eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
                         <th class="dataTable-data numeric">Status</th>
                         <th class="dataTable-data numeric">Impressions</th>
                         <th class="dataTable-data numeric">Clicks</th>
@@ -265,8 +265,6 @@
                         {% if adgroup.cpc %}
                         <td class="dataTable-data numeric dataTable-ecpm">
                           <div class="dataTable-campaign-ecpm">{{adgroup.summed_stats.e_cpm|currency}}</div>
-                        <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"> What's this?
-                          </a>
                         </td>
                         {% else %}
                         <td class="dataTable-data numeric dataTable-ecpm">{{adgroup.summed_stats.e_cpm|currency}}</td>
@@ -331,7 +329,7 @@
                   <tr>
                     <th class="campaignData-icon"></th>
                     <th class="dataTable-name">Name</th>
-                    <th class="dataTable-data numeric">eCPM</th>
+                    <th class="dataTable-data numeric">eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
                     <th class="dataTable-data numeric">Status</th>
                     <th class="dataTable-data numeric">Impressions</th>
                     <th class="dataTable-data numeric">Clicks</th>
@@ -373,8 +371,6 @@
                         {% endif %}
                         {% if adgroup.bid_strategy == 'cpc' %}
                           <div class="dataTable-campaign-ecpm">{{adgroup.summed_stats.e_cpm|currency}}</div>
-                        <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"> What's this?
-                          </a>
                         {% endif %}
                     </td>    
                     <td class="dataTable-data numeric">{{adgroup|campaign_status}}</td>
@@ -424,7 +420,7 @@
                   <tr>
                     <th class="campaignData-icon"></th>
                     <th class="dataTable-name">Name</th>
-                    <th class="dataTable-data numeric">eCPM</th>
+                    <th class="dataTable-data numeric">eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
                     <th class="dataTable-data numeric">Attempts</th>
                     <th class="dataTable-data numeric">Impressions</th>
                     <th class="dataTable-data numeric">Fillrate</th>
@@ -455,8 +451,6 @@
                     {% if adgroup.cpc %}
                     <td class="dataTable-data numeric dataTable-ecpm">
                       <div class="dataTable-campaign-ecpm">{{adgroup.summed_stats.e_cpm|currency}}</div>
-                      <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"> What's this?
-                      </a>
                     </td>
                     {% else %}
                     <td class="dataTable-data numeric dataTable-ecpm">{{adgroup.summed_stats.e_cpm|currency}}</td>
@@ -508,7 +502,7 @@
                   <tr>
                     <th class="campaignData-icon"></th>
                     <th class="dataTable-name">Name</th>
-                    <th class="dataTable-data numeric">eCPM</th>
+                    <th class="dataTable-data numeric">eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
                     <th class="dataTable-data numeric">Status</th>
                     <th class="dataTable-data numeric">Impressions</th>
                     <th class="dataTable-data numeric">Clicks</th>
@@ -547,8 +541,6 @@
                     {% if adgroup.cpc %}
                     <td class="dataTable-data numeric dataTable-ecpm">
                       <div class="dataTable-campaign-ecpm">{{adgroup.summed_stats.e_cpm|currency}}</div>
-                        <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"> What's this?
-                          </a>
                     </td>
                     {% else %}
                     <td class="dataTable-data numeric dataTable-ecpm">{{adgroup.summed_stats.e_cpm|currency}}</td>

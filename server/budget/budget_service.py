@@ -4,6 +4,7 @@ import datetime
 from advertiser.models import ( Campaign,
                                 )
 import logging
+import random
 
 from budget.models import (BudgetSlicer,
                            BudgetSliceLog,
@@ -37,7 +38,7 @@ def has_budget(campaign, cost, today=pac_today()):
     """ Returns True if the cost is less than the budget in the current timeslice.
         Campaigns that have not yet begun always return false"""
     
-    trace_logging.warning("cost: %s"%cost)
+    
     
     if campaign.budget is None:
         # TEMP: If past July 15th with no errors, remove this
@@ -51,6 +52,12 @@ def has_budget(campaign, cost, today=pac_today()):
     if not campaign.is_active_for_date(today):
         return False
     
+    # We keep track of how many times has_budget is called each minute
+    increment_has_budget_count(campaign)
+    
+    # Determine if we need to slow down to prevent race conditions
+    if budget_braking_fraction(campaign) > random.random():
+        return False
     
     memcache_daily_budget = remaining_daily_budget(campaign)
     trace_logging.warning("memcache: %s"%memcache_daily_budget)
@@ -244,6 +251,33 @@ def get_osi(campaign):
     except AttributeError:
         # If there is no log built yet, we return True
         return True
+                
+################ BUDGET BRAKING ###################                
+                
+def calc_braking_fraction(desired_spending, actual_spending, prev_fraction):
+    """ Looks at the previous minute, if we overdelivered by 15 percent or more,
+        we reduce the fraction by half. If we ever underdeliver, we double it """
+    
+    if actual_spending > desired_spending*1.15:
+        new_fraction = prev_fraction * 0.5
+    
+    else if actual_spending < desired_spending:
+        new_fraction = max(prev_fraction*2.0, 1.0)
+    
+    return new_fraction
+
+
+def get_budget_braking_fraction(campaign):
+    """ Looks up the budget braking fraction in memcache. """
+    key = _make_fraction_to_brake_key(campaign)
+    return memcache.get(key, namespace="budget") or 1.0 # If nothing is in memcache try on 100%
+
+def increment_has_budget_count(campaign):
+    key = _make_budget_count_key(campaign)
+    memcache.incr(key, 1, namespace="budget", initial_value=0)  
+            
+def _make_fraction_to_brake_key(campaign):
+    return 'fraction_to_brake:%s'%(campaign.key())    
                 
 ################ HELPER FUNCTIONS ###################
 

@@ -39,7 +39,7 @@ def has_budget(campaign, cost, today=pac_today()):
     
     trace_logging.warning("cost: %s"%cost)
     
-    if not campaign.budget:
+    if campaign.budget is None:
         # TEMP: If past July 15th with no errors, remove this
         if campaign.full_budget:
             trace_logging.error("full_budget without budget in campaign: %s" % campaign.key())
@@ -206,6 +206,10 @@ def get_spending_for_date_range(campaign, start_date, end_date, today=pac_today(
     return total_spending
 
 def update_budget(campaign, dt = pac_dt(), save_campaign=True):
+    """ Update budget is called whenever a campaign is created or saved. 
+        It sets a new daily budget as well as fixing the outdated values
+        in memcache. """
+    
     if campaign.budget_type and (campaign.budget_type == "full_campaign" or campaign.budget):
         budget_obj = BudgetSlicer.get_or_insert_for_campaign(campaign)
         if campaign.budget_type == "full_campaign":
@@ -301,11 +305,12 @@ def _backup_budgets(campaign, spent_this_timeslice = None):
     rem_daily_budget = remaining_daily_budget(campaign)
 
     # Make BudgetSliceLog
+    desired_spending = budget_obj.timeslice_budget
     
     log = BudgetSliceLog(budget_obj=budget_obj,
                       remaining_daily_budget=rem_daily_budget,
                       end_date=pac_dt(),
-                      desired_spending=spent_this_timeslice+mem_budget,
+                      desired_spending=desired_spending,
                       actual_spending=spent_this_timeslice
                       )
     log.put()

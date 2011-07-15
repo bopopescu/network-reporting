@@ -709,10 +709,16 @@ def publisher_adunit_delete(request,*args,**kwargs):
 
 class RemoveAppHandler(RequestHandler):
     def post(self, app_key):
-        a = AppQueryManager.get(app_key)
-        if a != None and a.account == self.account:
-            a.deleted = True
-            AppQueryManager.put(a)
+        app = AppQueryManager.get(app_key)
+        adunits = AdUnitQueryManager.get_adunits(app=app)
+        if app and app.account == self.account:
+            app.deleted = True
+            # also "delete" all the adunits associated with the app
+            for adunit in adunits:
+                adunit.deleted = True
+            AppQueryManager.put(app)
+            AdUnitQueryManager.put(adunits)
+            
     
         return HttpResponseRedirect(reverse('publisher_index'))
  

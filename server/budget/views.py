@@ -115,6 +115,8 @@ def budget_view(request, adgroup_key):
     
     remaining_daily_budget = budget_service.remaining_daily_budget(camp)
     remaining_ts_budget = budget_service.remaining_ts_budget(camp)
+    
+    braking_fraction = budget_service.braking_fraction(camp)
         
     today = datetime.datetime.now(Pacific_tzinfo()).date()
     one_month_ago = today - datetime.timedelta(days=30)
@@ -156,7 +158,8 @@ def budget_view(request, adgroup_key):
                 'one_month_ago': one_month_ago,
                 'budget_obj_url': budget_obj_url,
                 'clear_memcache_daily_url': clear_memcache_daily_url,
-                'clear_memcache_ts_url': clear_memcache_ts_url}
+                'clear_memcache_ts_url': clear_memcache_ts_url,
+                'braking_fraction': braking_fraction}
 
 
 

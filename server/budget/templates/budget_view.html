@@ -23,6 +23,12 @@
       <td>Timeslice Budget: </td> <td>{{remaining_ts_budget|currency}}</td>
       <td><h5> <a href="{{clear_memcache_ts_url}}">Clear from memcache and fall back to Budget backup</a> </h5></td>
     </tr>
+    
+    <tr>
+      <td>Braking Percentage: </td> <td>{{braking_fraction|percentage}}</td>
+      <td> (25% means that 25% of machines will actually try to execute the request)</td>
+    </tr>
+    
   </table>
 
 </h3>

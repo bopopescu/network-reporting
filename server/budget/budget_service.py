@@ -51,13 +51,15 @@ def has_budget(campaign, cost, today=pac_today()):
     trace_logging.warning("active: %s"%campaign.is_active_for_date(today))
     if not campaign.is_active_for_date(today):
         return False
+
     
-    # We keep track of how many times has_budget is called each minute
-    increment_has_budget_count(campaign)
     
-    # Determine if we need to slow down to prevent race conditions
-    if budget_braking_fraction(campaign) > random.random():
-        return False
+    # For now we comment this out, to get a sense of the fraction behavior
+    
+    # # Determine if we need to slow down to prevent race conditions
+    # # Only let through things less than the braking fraction
+    # if random.random() > braking_fraction(campaign):
+    #     return False
     
     memcache_daily_budget = remaining_daily_budget(campaign)
     trace_logging.warning("memcache: %s"%memcache_daily_budget)
@@ -258,26 +260,28 @@ def calc_braking_fraction(desired_spending, actual_spending, prev_fraction):
     """ Looks at the previous minute, if we overdelivered by 15 percent or more,
         we reduce the fraction by half. If we ever underdeliver, we double it """
     
-    if actual_spending > desired_spending*1.15:
+    if actual_spending > desired_spending * 1.15:
         new_fraction = prev_fraction * 0.5
     
-    else if actual_spending < desired_spending:
-        new_fraction = max(prev_fraction*2.0, 1.0)
+    elif actual_spending < desired_spending * 0.95:
+        # Use more machines if underdelivering. Never go above 1.0
+        new_fraction = min(prev_fraction * 2.0, 1.0)
     
+    else:
+        new_fraction = prev_fraction
+        
     return new_fraction
 
 
-def get_budget_braking_fraction(campaign):
-    """ Looks up the budget braking fraction in memcache. """
-    key = _make_fraction_to_brake_key(campaign)
+def braking_fraction(campaign):
+    """ Looks up the budget braking fraction in memcache. 
+        1.00 means that we let through all traffic. 
+        0.25 means we only let through one quearter. """
+    key = _make_braking_fraction_key(campaign)
     return memcache.get(key, namespace="budget") or 1.0 # If nothing is in memcache try on 100%
-
-def increment_has_budget_count(campaign):
-    key = _make_budget_count_key(campaign)
-    memcache.incr(key, 1, namespace="budget", initial_value=0)  
             
-def _make_fraction_to_brake_key(campaign):
-    return 'fraction_to_brake:%s'%(campaign.key())    
+def _make_braking_fraction_key(campaign):
+    return 'braking_fraction:%s'%(campaign.key())    
                 
 ################ HELPER FUNCTIONS ###################
 
@@ -348,6 +352,16 @@ def _backup_budgets(campaign, spent_this_timeslice = None):
                       actual_spending=spent_this_timeslice
                       )
     log.put()
+    
+    old_braking_fraction = braking_fraction(campaign)
+    
+    new_braking_fraction = calc_braking_fraction(desired_spending,
+                                                 spent_this_timeslice,
+                                                 old_braking_fraction)
+    
+    key = _make_braking_fraction_key(campaign)
+    memcache.set(key, new_braking_fraction, namespace="budget")
+    
 
 ################ TESTING FUNCTIONS ###################
 

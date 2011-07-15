@@ -1092,34 +1092,40 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(self.cheap_c.is_active_for_date(datetime.date(1987,4,2)),True)
         eq_(self.cheap_c.is_active_for_date(datetime.date(1987,4,5)),False)
         
+    def mptest_calc_braking_fraction_simple(self):
+        # We wanted to spend 100, but spent 200 instead.
+        fraction = budget_service.calc_braking_fraction(100.0, 200.0, 1.0)
+        
+        eq_(fraction, 0.5)
+        
+        # We wanted to spend 100, but only spent 50.
+        fraction = budget_service.calc_braking_fraction(100.0, 50.0, 0.1)
+        
+        eq_(fraction, 0.2)
+        
+        # Never go above 1.0
+        # We wanted to spend 50, but spent 100.
+        fraction = budget_service.calc_braking_fraction(100.0, 50.0, 0.8)
+        
+        eq_(fraction, 1.0)
+        
+        # If we deliver about the right amount, leave the fraction the same
+        fraction = budget_service.calc_braking_fraction(100.0, 110.0, 0.8)
+        
+        eq_(fraction, 0.8)
         
         
-    # def mptest_timeslice_changing_in_the_morning(self):
-    #      # We have a campaign that was set to begin several days ago 
-    #      # but is only beginning now.
-    # 
-    #      # The cheap_campaign has a $1000 daily budget, and goes for 10 days inclusive -> $10,000
-    #      self.cheap_c.budget_strategy = "evenly"
-    #      self.cheap_c.start_date = datetime.date(1987,4,4)
-    #      self.cheap_c.end_date = datetime.date(1987,4,13)
-    #      self.cheap_c.budget_type = "full_campaign"
-    #      self.cheap_c.full_budget = 10000.
-    #      #self.cheap_c.budget = None
-    #      self.cheap_c.put()
-    # 
-    #     budget_service.update_budget(self.cheap_c, dt=datetime.datetime(1987,4,4,0,0,0))
-    #     
-    #      # 1000 remaining because the 10K budget is split between the 10 remaining days
-    #      eq_(budget_service.remaining_daily_budget(self.cheap_c), 1000)
-    # 
-    #      # Advance the budget and the ts budgets
-    #      budget_service.daily_advance(self.cheap_c, new_date=datetime.date(1987,4,5))
-    #      for i in xrange(budgetmodels.DEFAULT_TIMESLICES):
-    #          budget_service.timeslice_advance(self.cheap_c)
-    # 
-    #      # 1111.11 remaining because the 10K budget is split between the 9 remaining days
-    #      assert_almost_equal(budget_service.remaining_daily_budget(self.cheap_c), 10000./9, 5)
-    # 
-    #      # We can actually spend all the money, this means the timeslices have 
-    #      # been advanced properly
-    #      eq_(budget_service._apply_if_able(self.cheap_c, 1100), False)
+        # If we deliver about the right amount, leave the fraction the same
+        fraction = budget_service.calc_braking_fraction(114.0, 110.0, 0.8)
+        
+        eq_(fraction, 0.8)
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        

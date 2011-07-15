@@ -298,6 +298,7 @@ def add_demo_campaign(site):
                  account=site.account,
                  priority_level=3,
                  bid=1.0,
+                 bid_strategy="cpm",
                  site_keys=[site.key()])
     AdGroupQueryManager.put(ag)
 

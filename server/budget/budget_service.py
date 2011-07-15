@@ -39,7 +39,7 @@ def has_budget(campaign, cost, today=pac_today()):
     
     trace_logging.warning("cost: %s"%cost)
     
-    if not campaign.budget:
+    if campaign.budget is None:
         # TEMP: If past July 15th with no errors, remove this
         if campaign.full_budget:
             trace_logging.error("full_budget without budget in campaign: %s" % campaign.key())

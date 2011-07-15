@@ -38,8 +38,6 @@ def has_budget(campaign, cost, today=pac_today()):
     """ Returns True if the cost is less than the budget in the current timeslice.
         Campaigns that have not yet begun always return false"""
     
-    
-    
     if campaign.budget is None:
         # TEMP: If past July 15th with no errors, remove this
         if campaign.full_budget:

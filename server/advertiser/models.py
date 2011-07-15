@@ -466,7 +466,9 @@ class CustomCreative(HtmlCreative):
     pass
 
 class CustomNativeCreative(HtmlCreative):
-    pass
+    @property
+    def multi_format(self):
+        return ('728x90', '320x50','300x250', 'full')
 
 class iAdCreative(Creative):
     @property

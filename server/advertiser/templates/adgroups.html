@@ -224,7 +224,6 @@
                         {% if adgroup.cpc %}
                         <td class="dataTable-data numeric dataTable-ecpm">
                           <div class="dataTable-campaign-ecpm ecpm">--</div>
-                          <a href="#" id="campaign-ecpm-helpLink" class="whatsthis ecpm-helpLink"></a>
                         </td>
                         {% else %}
                         <td class="dataTable-data numeric dataTable-ecpm ecpm">--</td>
@@ -326,8 +325,7 @@
                         --
                         {% endif %}
                         {% if adgroup.bid_strategy == 'cpc' %}
-                        <div class="dataTable-campaign-ecpm ecpm">--</div>  
-                        <a href="#" id="campaign-ecpm-helpLink" class="whatsthis ecpm-helpLink"></a>
+                        <div class="dataTable-campaign-ecpm ecpm">--</div>
                         {% endif %}
                     </td>    
                     <td class="dataTable-data numeric status">--</td>
@@ -409,7 +407,6 @@
                     {% if adgroup.cpc %}
                     <td class="dataTable-data numeric dataTable-ecpm">
                         <div class="dataTable-campaign-ecpm ecpm">--</div>
-                        <a href="#" id="campaign-ecpm-helpLink" class="whatsthis ecpm-helpLink"></a>
                     </td>
                     {% else %}
                     <td class="dataTable-data numeric dataTable-ecpm ecpm">--</td>
@@ -501,7 +498,6 @@
                     {% if adgroup.cpc %}
                     <td class="dataTable-data numeric dataTable-ecpm">
                         <div class="dataTable-campaign-ecpm ecpm">--</div>
-                        <a href="#" id="campaign-ecpm-helpLink" class="whatsthis ecpm-helpLink"></a>
                     </td>
                     {% else %}
                     <td class="dataTable-data numeric dataTable-ecpm ecpm">--</td>
@@ -574,7 +570,7 @@
         mopub.accountStats = {{account_stats|safe}};
     });
 </script>
-<script src="/js/mopub-advertiser.js?v=57"></script>
+<script src="/js/mopub-advertiser.js?v=58"></script>
 <script src='/js/tokenize_in.js'></script>
 <script src='/js/countries.js'></script>
 {% endblock extraScripts %}

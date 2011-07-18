@@ -500,8 +500,11 @@ class MillennialNativeCreative(MillennialCreative):
         return ('728x90', '320x50', '300x250', 'full' ,)
 
 class ChartBoostCreative(Creative):
-    pass
-
+    
+    @property
+    def multi_format(self):
+        return ('320x50', 'full',)
+        
 class EjamCreative(Creative):
     pass
 

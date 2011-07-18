@@ -1,6 +1,6 @@
 application: mopub-inc
 #application: mopub-experimental
-version: 38-ajax
+version: 38
 
 runtime: python
 api_version: 1
@@ -10,7 +10,7 @@ builtins:
 - datastore_admin: on
 
 # Turn this on to debug
-- appstats: on
+#- appstats: on
 
 inbound_services:
 - warmup     

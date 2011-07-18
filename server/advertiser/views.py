@@ -967,8 +967,6 @@ class AJAXStatsHandler(RequestHandler):
         from common.utils.query_managers import QueryManager
         from common_templates.templatetags import filters
 
-        import random
-
         if start_date:
             s = start_date.split('-')
             start_date = datetime.date(int(s[0]),int(s[1]),int(s[2]))
@@ -1044,7 +1042,7 @@ from django.views.decorators.vary import vary_on_headers, vary_on_cookie
 @login_required
 @cache_control(max_age=60)
 def stats_ajax(request, *args, **kwargs):
-    return AJAXStatsHandler()(request, use_cache=True, *args, **kwargs)
+    return AJAXStatsHandler()(request, *args, **kwargs)
 
 class CampaignExporter(RequestHandler):
     def post(self, adgroup_key, file_type, start, end, *args, **kwargs):

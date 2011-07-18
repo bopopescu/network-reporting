@@ -183,6 +183,7 @@ var mopub = mopub || {};
       $('#fullCampaignError-budget').hide();
       $('#fullCampaignError-name').hide();
       $('#fullCampaignError-bid').hide();
+      
       $('#campaignAdgroupForm input[name="start_date"]').removeClass('form-error');
       $('#campaignAdgroupForm input[name="end_date"]').removeClass('form-error');
       $('#campaignAdgroupForm input[name="full_budget"]').removeClass('form-error');
@@ -645,8 +646,26 @@ var mopub = mopub || {};
       return (number*100).toFixed(2) + '%';
     }
     
-    function calcRollups() {
-        //rollup gtee's 
+    function parseIntFromStatText(statText) {
+        var stat = parseInt(statText.replace(/,/g, ''), 10);
+        return (isNaN(stat)) ? 0 : stat;
+    }
+    
+    function setSectionLoadingSpinnerHidden(campaignType, hidden) {
+        var selector = "";
+        switch (campaignType) {
+            case CampaignTypeEnum.Guaranteed: selector = "#gtee-loading-img"; break;
+            case CampaignTypeEnum.Promotional: selector = "#promo-loading-img"; break;
+            case CampaignTypeEnum.Network: selector = "#network-loading-img"; break;
+            case CampaignTypeEnum.Backfill: selector = "#bfill-loading-img"; break;
+            default: return; break;
+        }
+        
+        if (hidden) $(selector).hide();
+        else $(selector).show();
+    }
+    
+    function calcGuaranteedRollup() {
         if ($('.gtee-placeholder').is(":visible")) {
             $('#gtee-rollups').hide();
         }
@@ -655,14 +674,13 @@ var mopub = mopub || {};
             var gtee_imp, gtee_clk, gtee_rev;
             gtee_imp = gtee_clk = gtee_rev = 0;
             $('.gtee-imp:visible').each(function() {
-                    gtee_imp += parseInt($(this).text().replace(/,/g,''), 10);
+                    gtee_imp += parseIntFromStatText($(this).text());
                     });
             $('.gtee-clk:visible').each(function() {
-                    gtee_clk += parseInt($(this).text().replace(/,/g,''), 10);
+                    gtee_clk += parseIntFromStatText($(this).text());
                     });
-            //Yuuuckkkkk
             $('tr.gtee_row:visible td.gtee-rev').each(function() {
-                    gtee_rev += parseInt($(this).text().replace(/,/g,''), 10);
+                    gtee_rev += parseIntFromStatText($(this).text());
                     });
 
             $('#gtee-total-imp').text(addCommas(gtee_imp));
@@ -677,38 +695,11 @@ var mopub = mopub || {};
             }
             $('#gtee-total-ctr').text(gtee_ctr);
         }
-
         
-        if ($('.bfill-placeholder').is(":visible")) {
-            $('#bfill-rollups').hide();
-        }
-        else {
-            $('#bfill-rollups').show();
-            var bfill_imp, bfill_clk, bfill_conv;
-            bfill_imp = bfill_clk = bfill_conv = 0;
-            $('.bfill-imp:visible').each(function() {
-                    bfill_imp += parseInt($(this).text().replace(/,/g,''), 10);
-                    });
-            $('.bfill-clk:visible').each(function() {
-                    bfill_clk += parseInt($(this).text().replace(/,/g,''), 10);
-                    });
-            $('.bfill-conv:visible').each(function() {
-                    bfill_conv += parseInt($(this).text().replace(/,/g,''), 10);
-                    });
-
-            $("#bfill-total-imp").text(addCommas(bfill_imp));
-            $("#bfill-total-clk").text(addCommas(bfill_clk));
-            $("#bfill-total-conv").text(addCommas(bfill_conv));
-            var bfill_ctr;
-            if (bfill_clk === 0) {
-                bfill_ctr = formatPercentage(0);
-            }
-            else {
-                bfill_ctr = formatPercentage(bfill_clk/bfill_imp);
-            }
-            $("#bfill-total-ctr").text(bfill_ctr);
-        }
-        
+        setSectionLoadingSpinnerHidden(CampaignTypeEnum.Guaranteed, true);
+    }
+    
+    function calcPromotionalRollup() {
         if ($('.promo-placeholder').is(":visible")) {
             $('#promo-rollups').hide();
         }
@@ -717,13 +708,13 @@ var mopub = mopub || {};
             var promo_imp, promo_clk, promo_conv;
             promo_imp = promo_clk = promo_conv = 0;
             $('.promo-imp:visible').each(function() {
-                    promo_imp += parseInt($(this).text().replace(/,/g,''), 10);
+                    promo_imp += parseIntFromStatText($(this).text());
                     });
             $('.promo-clk:visible').each(function() {
-                    promo_clk += parseInt($(this).text().replace(/,/g,''), 10);
+                    promo_clk += parseIntFromStatText($(this).text());
                     });
             $('.promo-conv:visible').each(function() {
-                    promo_conv += parseInt($(this).text().replace(/,/g,''), 10);
+                    promo_conv += parseIntFromStatText($(this).text());
                     });
 
             $("#promo-total-imp").text(addCommas(promo_imp));
@@ -738,9 +729,11 @@ var mopub = mopub || {};
             }
             $("#promo-total-ctr").text(promo_ctr);
         }
-
-
-
+        
+        setSectionLoadingSpinnerHidden(CampaignTypeEnum.Promotional, true);
+    }
+    
+    function calcNetworkRollup() {
         if ($('.network-placeholder').is(":visible")) {
             $('#network-rollups').hide();
         }
@@ -749,13 +742,13 @@ var mopub = mopub || {};
             var net_imp, net_clk, net_req;
             net_imp = net_clk = net_req = 0;
             $('.network-imp').each(function() {
-                    net_imp += parseInt($(this).text().replace(/,/g,''), 10);
+                    net_imp += parseIntFromStatText($(this).text());
                     });
             $('.network-clk').each(function() {
-                    net_clk += parseInt($(this).text().replace(/,/g,''), 10);
+                    net_clk += parseIntFromStatText($(this).text());
                     });
             $('.network-req').each(function() {
-                    net_req += parseInt($(this).text().replace(/,/g,''), 10);
+                    net_req += parseIntFromStatText($(this).text());
                     });
             $("#network-total-imp").text(addCommas(net_imp));
             $("#network-total-clk").text(addCommas(net_clk));
@@ -776,8 +769,632 @@ var mopub = mopub || {};
             }
             $('#network-total-fill').text(net_fill + ' (' + addCommas(net_req) + ')');
         }
+        
+        setSectionLoadingSpinnerHidden(CampaignTypeEnum.Network, true);
+    }
+    
+    function calcBackfillRollup() {
+        if ($('.bfill-placeholder').is(":visible")) {
+            $('#bfill-rollups').hide();
+        }
+        else {
+            $('#bfill-rollups').show();
+            var bfill_imp, bfill_clk, bfill_conv;
+            bfill_imp = bfill_clk = bfill_conv = 0;
+            $('.bfill-imp:visible').each(function() {
+                    bfill_imp += parseIntFromStatText($(this).text());
+                    });
+            $('.bfill-clk:visible').each(function() {
+                    bfill_clk += parseIntFromStatText($(this).text());
+                    });
+            $('.bfill-conv:visible').each(function() {
+                    bfill_conv += parseIntFromStatText($(this).text());
+                    });
+
+            $("#bfill-total-imp").text(addCommas(bfill_imp));
+            $("#bfill-total-clk").text(addCommas(bfill_clk));
+            $("#bfill-total-conv").text(addCommas(bfill_conv));
+            var bfill_ctr;
+            if (bfill_clk === 0) {
+                bfill_ctr = formatPercentage(0);
+            }
+            else {
+                bfill_ctr = formatPercentage(bfill_clk/bfill_imp);
+            }
+            $("#bfill-total-ctr").text(bfill_ctr);
+        }
+        
+        setSectionLoadingSpinnerHidden(CampaignTypeEnum.Backfill, true);
+    }
+    
+    function calcRollups() {
+        // Don't compute rollups until we've gotten all the information.
+        if (!isCampaignsPageFullyUpdated()) return;
+        
+        calcGuaranteedRollup();
+        calcPromotionalRollup();
+        calcNetworkRollup();
+        calcBackfillRollup();
     }
 
+    // *********************************************************************
+    // Begin -- Campaign AJAX
+    // *********************************************************************
+
+    // Time to wait before terminating AJAX request.
+    var AJAX_TIMEOUT_MILLISECONDS = 10000;
+    
+    // Maximum number of AJAX retries before giving up.
+    var AJAX_MAX_FAILED_ATTEMPTS = 3;
+    
+    // Number of campaigns to be fetched in a single AJAX request.
+    var AJAX_CAMPAIGN_CHUNK_SIZE = 8;
+    
+    // Time to wait before retrying a failed AJAX request.
+    var AJAX_BACKOFF_TIME_MILLISECONDS = 1000;
+    
+    // Multiplier to increase the backoff time when there are consecutive failures.
+    var AJAX_BACKOFF_MULTIPLIER = 1.5;
+    
+    // =====================================================================
+    
+    var FetchData = function(args) {
+        $.extend(this, args);
+        return this;
+    }
+    
+    var BackoffData = function(args) {
+        this.delay = AJAX_BACKOFF_TIME_MILLISECONDS;
+        this.failedAttempts = 0;
+        $.extend(this, args);
+        return this;
+    }
+    
+    var CampaignTypeEnum = {
+        Guaranteed: "gtee_row",
+        Promotional: "promo_row",
+        Network: "network_row",
+        Backfill: "bfill_row",
+        All: "campaignData"
+    };
+    
+    // Map specific stats from our JSON object to HTML class attributes.
+    var jsonKeyToHtmlClassMap = {
+        status: "status",
+        on_schedule: "on_schedule",
+        revenue: "rev",
+        impression_count: "imp",
+        conversion_count: "conv",
+        request_count: "req",
+        click_count: "clk",
+        cpa: "cpa",
+        cpc: "cpc",
+        cpm: "ecpm",
+        ctr: "ctr",
+        fill_rate: "fill",
+    };
+        
+    var unfetchedIds = getCampaignIds();
+    var fetchedCampaignIds = {};
+    var failedIds = [];
+    
+    var guaranteedIds = getCampaignIdsWithType(CampaignTypeEnum.Guaranteed);
+    var promotionalIds = getCampaignIdsWithType(CampaignTypeEnum.Promotional);
+    var networkIds = getCampaignIdsWithType(CampaignTypeEnum.Network);
+    var backfillIds = getCampaignIdsWithType(CampaignTypeEnum.Backfill);
+    
+    // Helpers
+    // =====================================================================
+    
+    function getCampaignIds() {
+        var dictionary = {};
+        $(".campaignData").each(
+            function() { 
+                var id = $(this).attr("id");
+                if (id && id != "") dictionary[id] = {};
+            });
+        return dictionary;
+    }
+    
+    function setCampaignFilterOptionsDisabled(disabled) {
+        $("#campaigns-filterOptions").buttonset({"disabled": disabled});
+    }
+    
+    function getNumDaysToFetch() {
+        var daysRadioVal = $("input[name=dashboard-dateOptions-option]:checked").val();
+        if (!daysRadioVal || daysRadioVal == "custom") {
+            var currentUrl = document.location.href;
+            var daysRegex = /r=(\d+)/g;
+            var match = daysRegex.exec(currentUrl);
+            if (!match || match.length < 2) return null;
+            else return match[1];
+        }
+        else return daysRadioVal;
+    }
+    
+    function getStartDate() {
+        var currentUrl = document.location.href;
+        var startDateRegex = /s=(\d+-\d+-\d+)/g;
+        var match = startDateRegex.exec(currentUrl);
+        if (!match || match.length < 2) return null;
+        else return match[1];
+    }
+    
+    function getKeysFromObject(obj)
+    {
+        var keys = [];
+        for (var i in obj) {
+            if (obj.hasOwnProperty(i)) keys.push(i);
+        }
+        return keys;
+    }
+    
+    function chunkArray(array, chunkSize) {
+        if (!array) return [];
+        
+        var chunks = [];
+        $.each(array, function(index, elem) {
+            var chunkNumber = Math.floor(index / chunkSize);
+            var indexInChunk = index % chunkSize;
+            chunks[chunkNumber] = chunks[chunkNumber] || [];
+            chunks[chunkNumber][indexInChunk] = elem;
+        });
+        return chunks;
+    }
+    
+    function objectIsEmpty(obj) {
+        for (var key in obj) { 
+            if (obj.hasOwnProperty(key)) return false;
+        }
+        return true;
+    }
+    
+    function isCampaignsPageFullyUpdated() {
+        // unfetchedIds is only empty if all AJAX has completed (or if there are no campaigns).
+        return objectIsEmpty(unfetchedIds);
+    }
+    
+    function formatStatsForDisplay(sumStats) {
+        var results = $.extend(true, {}, sumStats);
+        results.impression_count = addCommas(results.impression_count);
+        results.conversion_count = addCommas(results.conversion_count) + 
+            " (" + formatPercentage(results.conv_rate) + ")";
+        results.request_count = addCommas(results.request_count);
+        results.click_count = addCommas(results.click_count);
+        results.cpa = "$" + results.cpa.toFixed(2);
+        results.cpc = "$" + results.cpc.toFixed(2);
+        results.cpm = "$" + results.cpm.toFixed(2);
+        results.ctr = formatPercentage(results.ctr);
+        results.fill_rate = formatPercentage(results.fill_rate);
+        
+        var onScheduleHtml = "";
+        if (results.status == "Running") {
+            if (results.on_schedule == "on pace") {
+                onScheduleHtml = '<span class="osi-success"> On pace ' +
+                    '<a href="#" id="campaign-osi-success-helpLink" class="whatsthis">' + 
+                    '<div class="whatsthis-icon"></div></a></span>';
+            } else if (results.on_schedule == "behind") {
+                onScheduleHtml = '<span class="osi-failure""> Behind ' +
+                    '<a href="#" id="campaign-osi-failure-helpLink" class="whatsthis">' + 
+                    '<div class="whatsthis-icon"></div></a></span>';
+            }
+        }
+        results.on_schedule = onScheduleHtml;
+        
+        return results;
+    }
+    
+    function getCampaignIdsWithType(type) {
+        return $("." + type).map(function() { return $(this).attr("id"); });
+    }
+    
+    function getCampaignTypeForId(id) {
+        if ($.inArray(id, guaranteedIds) != -1) return CampaignTypeEnum.Guaranteed;
+        else if ($.inArray(id, promotionalIds) != -1) return CampaignTypeEnum.Promotional;
+        else if ($.inArray(id, networkIds) != -1) return CampaignTypeEnum.Network;
+        else if ($.inArray(id, backfillIds) != -1) return CampaignTypeEnum.Backfill;
+        else return null;
+    }
+    
+    function hasAlreadyFetchedCampaigns(campaigns) {
+        for (var i = 0; i < campaigns.length; i++) {
+            var campaignId = campaigns[i];
+            if (!fetchedCampaignIds[campaignId]) return false;
+        }
+        return true;
+    }
+    
+    function getFetchedCampaignsWithType(type) {
+        var matchingCampaignIds = getCampaignIdsWithType(type);
+        
+        var campaigns = [];
+        $.each(fetchedCampaignIds, function(key, value) {
+            if ($.inArray(key, matchingCampaignIds) != -1) {
+                var dict = {};
+                dict.key = value["name"].replace("||", "");
+                dict.stats = value;
+                campaigns.push(dict);
+            }
+        });
+        return campaigns;
+    }
+    
+    function sortCampaignsByStat(campaigns, statName) {
+        campaigns.sort(function(a, b) {
+            var statA = parseFloat(a["stats"]["sum"][statName]);
+            var statB = parseFloat(b["stats"]["sum"][statName]);
+            if (statA < statB) return 1;
+            if (statA > statB) return -1;
+            else return 0;
+        });
+        return campaigns;
+    }
+    
+    // Main AJAX call + callbacks
+    // =====================================================================
+    
+    function ajaxBatchFetchCampaigns(fetchData, unfetchedIds, fetchedIds, backoffData) {
+        // Construct AJAX URL with the proper query parameters.
+        var campaigns = fetchData.campaigns;
+        var url = "/campaigns/stats/ajax/?";
+        for (var i = 0; i < campaigns.length; i++) {
+            if (i == 0) url += "adv=" + campaigns[i];
+            else url += "&adv=" + campaigns[i];
+            
+            // Display the loading indicator for this campaign's section.
+            var campaignType = getCampaignTypeForId(campaigns[i]);
+            if (campaignType != null) setSectionLoadingSpinnerHidden(campaignType, false);
+        }
+        url += "&date_range=" + fetchData.days;
+        if (fetchData.startDate) url += "&start_date=" + fetchData.startDate;
+        
+        // Fire request.
+        $.ajax({
+            url: url,
+            dataType: 'json',
+            success: function() {
+                return function(data) {
+                    updateCampaign(data, unfetchedIds, fetchedIds);
+                }
+            }(),
+            error: function() {
+                backoffData.failedAttempts++;
+                
+                // If we've failed too many times, stop retrying. Mark any unfetched IDs as failed.
+                if (backoffData.failedAttempts > AJAX_MAX_FAILED_ATTEMPTS) {
+                    ajaxFetchCampaignsFailed(campaigns);
+                    return;
+                }
+                
+                setTimeout(function() { ajaxBatchFetchCampaigns(fetchData, unfetchedIds, fetchedIds, backoffData) },
+                    backoffData.delay);
+                backoffData.delay *= AJAX_BACKOFF_MULTIPLIER;
+            },
+            timeout: AJAX_TIMEOUT_MILLISECONDS
+        });
+    }
+    
+    function ajaxFetchCampaignsFailed(campaigns) {
+        $("#ajaxFailure").show();
+        
+        $.each(campaigns, function(index, campaign) {
+            if ($.inArray(campaign, failedIds) == -1) failedIds.push(campaign);
+            
+            // Stop the loading indicator for this campaign's section.
+            var campaignType = getCampaignTypeForId(campaign);
+            if (campaignType != null) setSectionLoadingSpinnerHidden(campaignType, true);
+        });
+    }
+    
+    function updateHelpLinks() {
+        $('.complete .ecpm-helpLink').html("What's this?");
+        
+        $('.whatsthis').click(function(e) {
+            e.preventDefault();
+            $('#'+$(this).attr('id').replace('helpLink', 'helpContent')).dialog({
+                buttons: { "Close": function() { $(this).dialog('close');} }
+            });
+        });
+    }
+    
+    function updateCampaign(data, unfetchedIds, fetchedIds) {
+        var allStats = data["all_stats"];
+        
+        for (var key in allStats) {
+            var campaignId = key.split("||")[1];
+            var sumStats = allStats[key]["sum"];
+            var formattedStats = formatStatsForDisplay(sumStats);
+            
+            $.each(formattedStats, function(key, value) {
+                updateCampaignField(campaignId, key, value);
+            });
+            
+            // Set campaign status to "Running", "Paused", etc. via class attribute.
+            var campaignStatus = formattedStats.status;
+            var selector = "#" + campaignId;
+            $(selector).removeClass("incomplete")
+                .addClass("complete")
+                .addClass("campaign-status-" + campaignStatus);
+            
+            updateHelpLinks();
+            
+            // Record campaignId as fetched by removing from unfetchedIds.
+            delete unfetchedIds[campaignId];
+            fetchedIds[campaignId] = allStats[key];
+        }
+        
+        if (hasAlreadyFetchedCampaigns(guaranteedIds)) calcGuaranteedRollup();
+        if (hasAlreadyFetchedCampaigns(promotionalIds)) calcPromotionalRollup();
+        if (hasAlreadyFetchedCampaigns(networkIds)) calcNetworkRollup();
+        if (hasAlreadyFetchedCampaigns(backfillIds)) calcBackfillRollup();
+        
+        if (isCampaignsPageFullyUpdated()) onCampaignsFullyUpdated();
+    }
+    
+    function updateCampaignField(campaign, field, data) {
+        if (!campaign || campaign == "") return;
+        
+        var classType = jsonKeyToHtmlClassMap[field];
+        if (!classType || classType == "") return;
+        
+        var selector = "#" + campaign + " ." + classType;
+        $(selector).html(data);
+    };
+    
+    function retryFailedAjax() {
+        var days = getNumDaysToFetch() || 14;
+        var startDate = getStartDate();
+        
+        var chunks = chunkArray(failedIds, AJAX_CAMPAIGN_CHUNK_SIZE);
+        for (var i = 0; i < chunks.length; i++) {
+            var backoffData = new BackoffData();
+            var fetchData = new FetchData({
+                campaigns: chunks[i], 
+                days: days, 
+                startDate: startDate 
+            });
+            ajaxBatchFetchCampaigns(fetchData, unfetchedIds, fetchedCampaignIds, backoffData);
+        }
+    }
+    
+    function setupAjaxStatusPopup() {
+        $("#ajaxRetry").click(function(event) {
+            retryFailedAjax();
+            $("#ajaxFailure").fadeOut();
+            event.preventDefault();
+        });
+
+        $("#ajaxDismiss").click(function(event) {
+           $("#ajaxFailure").fadeOut(); 
+           event.preventDefault();
+        });
+    }
+    
+    // Helpers for graph construction
+    // =====================================================================
+    
+    function getGraphAdditiveStatsForStatName(statName, topCampaigns, otherCampaigns) {
+        var result = [];
+        
+        // Get stats for the top campaigns.
+        $.each(topCampaigns, function(index, campaign) {
+            var campaignName = campaign["key"];
+            var arrayOfDailyStats = campaign["stats"]["daily_stats"];
+            var statsForCampaign = {};
+            statsForCampaign[campaignName] = statArrayFromDailyStats(arrayOfDailyStats, statName);
+            result.push(statsForCampaign);
+        });
+        
+        // Get stats for all other campaigns.
+        var statsForOtherCampaigns = sumDailyStatsAcrossCampaigns(otherCampaigns, statName);
+        var otherDict = { "Others": statsForOtherCampaigns };
+        result.push(otherDict);
+        
+        return result;
+    }
+    
+    function statArrayFromDailyStats(arrayOfDailyStats, statName) {
+        return $.map(arrayOfDailyStats, function(oneDayStats) {
+            return parseFloat(oneDayStats[statName]);
+        });
+    }
+    
+    function sumDailyStatsAcrossCampaigns(campaigns, statName) {
+        var result = [];
+        $.each(campaigns, function(index, campaign) {
+            var arrayOfDailyStats = campaign.stats.daily_stats;
+            $.each(arrayOfDailyStats, function(dayIndex, oneDayStats) {
+                if (!result[dayIndex]) result[dayIndex] = 0;
+                result[dayIndex] += parseFloat(oneDayStats[statName]);
+            });
+        });
+        return result;
+    }
+    
+    function getDailyCtrAcrossCampaigns(campaigns) {
+        var ctr = [];
+        var clicks = sumDailyStatsAcrossCampaigns(campaigns, "click_count");
+        var impressions = sumDailyStatsAcrossCampaigns(campaigns, "impression_count");
+        
+        for (var i = 0; i < clicks.length; i++) {
+            ctr[i] = (clicks[i] / impressions[i]) || 0;
+        }
+        return ctr;
+    }
+    
+    function getGraphImpressionStats() {
+        var allCampaigns = getFetchedCampaignsWithType(CampaignTypeEnum.All);
+        var sortedCampaigns = sortCampaignsByStat(allCampaigns, "impression_count");
+        var topCampaigns = sortedCampaigns.slice(0, 3);
+        var otherCampaigns = sortedCampaigns.slice(3, sortedCampaigns.length);
+        return getGraphAdditiveStatsForStatName("impression_count", topCampaigns, otherCampaigns);
+    }
+    
+    function getGraphRevenueStats() {
+        // We only care about guaranteed campaigns when graphing revenue.
+        var allGuaranteed = getFetchedCampaignsWithType(CampaignTypeEnum.Guaranteed);
+        var sortedGuaranteed = sortCampaignsByStat(allGuaranteed, "revenue");
+        var topGuaranteed = sortedGuaranteed.slice(0, 3);
+        var otherGuaranteed = sortedGuaranteed.slice(3, sortedGuaranteed.length);
+        return getGraphAdditiveStatsForStatName("revenue", topGuaranteed, otherGuaranteed);
+    }
+    
+    function getGraphClickStats() {
+        var allCampaigns = getFetchedCampaignsWithType(CampaignTypeEnum.All);
+        var sortedCampaigns = sortCampaignsByStat(allCampaigns, "impression_count");
+        var topCampaigns = sortedCampaigns.slice(0, 3);
+        var otherCampaigns = sortedCampaigns.slice(3, sortedCampaigns.length);
+        return getGraphAdditiveStatsForStatName("click_count", topCampaigns, otherCampaigns);
+    }
+    
+    function getGraphCtrStats() {
+        var allCampaigns = getFetchedCampaignsWithType(CampaignTypeEnum.All);
+        var sortedCampaigns = sortCampaignsByStat(allCampaigns, "impression_count");
+        var topCampaigns = sortedCampaigns.slice(0, 3);
+        var otherCampaigns = sortedCampaigns.slice(3, sortedCampaigns.length);
+        
+        var result = [];
+        
+        // Get stats for the top campaigns.
+        $.each(topCampaigns, function(index, campaign) {
+            var campaignName = campaign["key"];
+            var arrayOfDailyStats = campaign["stats"]["daily_stats"];
+            var statsForCampaign = {};
+            statsForCampaign[campaignName] = statArrayFromDailyStats(arrayOfDailyStats, "ctr");
+            result.push(statsForCampaign);
+        });
+        
+        // Get stats for all other campaigns.
+        var statsForOtherCampaigns = getDailyCtrAcrossCampaigns(otherCampaigns);
+        var otherDict = { "Others": statsForOtherCampaigns };
+        result.push(otherDict);
+        
+        // Get stats for MoPub-optimized CTR.
+        var accountDailyStats = mopub.accountStats["all_stats"]["||"]["daily_stats"];
+        var mopubOptimized = { 
+            "MoPub Optimized": statArrayFromDailyStats(accountDailyStats, "ctr"),
+        };
+        result.push(mopubOptimized);
+        
+        return result;
+    }
+    
+    // Graph and stats construction methods
+    // =====================================================================
+    
+    function prepareGraphFromCampaignData() {
+        var graphImpStats = getGraphImpressionStats();
+        var graphRevStats = getGraphRevenueStats();
+        var graphClkStats = getGraphClickStats();
+        var graphCtrStats = getGraphCtrStats();
+        
+        mopub.dashboardStatsChartData = {
+            pointStart: mopub.graphStartDate,
+            pointInterval: 86400000,
+            impressions: graphImpStats,
+            revenue: graphRevStats,
+            clicks: graphClkStats,
+            ctr: graphCtrStats
+        };
+        
+        setupDashboardStatsChart(getCurrentChartSeriesType());
+    }
+    
+    function populateGraphWithAccountStats(stats) {
+        var dailyStats = stats["all_stats"]["||"]["daily_stats"];
+        
+        var graphImpStats = [{ "Total": statArrayFromDailyStats(dailyStats, "impression_count")}];
+        var graphRevStats = [{ "Total": statArrayFromDailyStats(dailyStats, "revenue")}];
+        var graphClkStats = [{ "Total": statArrayFromDailyStats(dailyStats, "click_count")}];
+        var graphCtrStats = [{ "Total": statArrayFromDailyStats(dailyStats, "ctr")}];
+        
+        mopub.dashboardStatsChartData = {
+            pointStart: mopub.graphStartDate,
+            pointInterval: 86400000,
+            impressions: graphImpStats,
+            revenue: graphRevStats,
+            clicks: graphClkStats,
+            ctr: graphCtrStats
+        };
+        
+        setupDashboardStatsChart(getCurrentChartSeriesType());
+    }
+    
+    function populateStatsBreakdownsWithData(data) {
+        var allStats = data["all_stats"]["||"];
+        var dailyStats = allStats["daily_stats"];
+        
+        var today = formatStatsForDisplay(dailyStats[dailyStats.length - 1]);
+        var yesterday = formatStatsForDisplay(dailyStats[dailyStats.length - 2]);
+        var all = formatStatsForDisplay(allStats.sum);
+        
+        $("#stats-breakdown-impressions .today .inner").html(today.impression_count);
+        $("#stats-breakdown-revenue .today .inner").html("$" + today.revenue.toFixed(2));
+        $("#stats-breakdown-clicks .today .inner").html(today.click_count);
+        $("#stats-breakdown-ctr .today .inner").html(today.ctr);
+        
+        $("#stats-breakdown-impressions .yesterday .inner").html(yesterday.impression_count);
+        $("#stats-breakdown-revenue .yesterday .inner").html("$" + yesterday.revenue.toFixed(2));
+        $("#stats-breakdown-clicks .yesterday .inner").html(yesterday.click_count);
+        $("#stats-breakdown-ctr .yesterday .inner").html(yesterday.ctr);
+        
+        $("#stats-breakdown-impressions .all .inner").html(all.impression_count);
+        $("#stats-breakdown-revenue .all .inner").html("$" + all.revenue.toFixed(2));
+        $("#stats-breakdown-clicks .all .inner").html(all.click_count);
+        $("#stats-breakdown-ctr .all .inner").html(all.ctr);
+    }
+    
+    function populateCampaignStats(unfetchedIds, fetchedIds) {
+        var days = getNumDaysToFetch() || 14;
+        var startDate = getStartDate();
+        
+        var idsToFetch = getKeysFromObject(unfetchedIds);
+        var chunks = chunkArray(idsToFetch, AJAX_CAMPAIGN_CHUNK_SIZE);
+        for (var i = 0; i < chunks.length; i++) {
+            var backoffData = new BackoffData();
+            var fetchData = new FetchData({
+                campaigns: chunks[i], 
+                days: days, 
+                startDate: startDate 
+            });
+            ajaxBatchFetchCampaigns(fetchData, unfetchedIds, fetchedIds, backoffData);
+        }
+    }
+
+    function showOrHideRevenueBreakdown() {
+        // Hide the revenue breakdown if there are no guaranteed campaigns.
+        var guaranteed = getCampaignIdsWithType(CampaignTypeEnum.Guaranteed);
+        if (guaranteed.length == 0) $("#stats-breakdown-revenue").hide();
+        else $("#stats-breakdown-revenue").show();
+    }
+
+    function onCampaignsFullyUpdated() {
+        setCampaignFilterOptionsDisabled(false);
+        calcRollups();
+        prepareGraphFromCampaignData();
+    }
+    
+    // AJAX init and entry point
+    // =====================================================================
+    
+    function initCampaignsPage() {
+        showOrHideRevenueBreakdown();
+        setupAjaxStatusPopup();
+        setCampaignFilterOptionsDisabled(true);
+        populateStatsBreakdownsWithData(mopub.accountStats);
+        populateGraphWithAccountStats(mopub.accountStats);
+        populateCampaignStats(unfetchedIds, fetchedCampaignIds);
+    }
+    
+    if (mopub.isCampaignsPage) {
+        // setTimeout is a workaround for Chrome: without it, the loading indicator doesn't 
+        // disappear until all "onload" AJAX requests are complete.
+        setTimeout(initCampaignsPage, 0);
+    }
+    
+    // *********************************************************************
+    // End -- Campaign AJAX
+    // *********************************************************************
     
     function hideEmptyDirects(){
         var somethingToDisplay = false;
@@ -936,8 +1553,10 @@ var mopub = mopub || {};
     / Chart
     /---------------------------------------*/
     
-    function chartError() {
-      $('#dashboard-stats-chart').removeClass('chart-loading').addClass('chart-error');
+    function getCurrentChartSeriesType() {
+        var activeBreakdownsElem = $('#dashboard-stats .stats-breakdown .active');
+        if (activeBreakdownsElem.attr('id') == 'stats-breakdown-ctr') return 'line';
+        else return 'area';
     }
     
     function setupDashboardStatsChart(seriesType) {
@@ -949,7 +1568,6 @@ var mopub = mopub || {};
       // get data
       var data = mopub.dashboardStatsChartData;
       if(typeof data == 'undefined') {
-        chartError();
         return;
       }
       
@@ -958,7 +1576,6 @@ var mopub = mopub || {};
       var chartSeries = [];
       var activeData = data[activeMetric];
       if(typeof activeData == 'undefined') {
-        chartError();
         return;
       }
       $.each(activeData, function(i, seriesObject) {
@@ -1074,6 +1691,7 @@ var mopub = mopub || {};
       
       $('#dashboard-stats-chart').removeClass('chart-loading');
     }
+    
     if ($('#dashboard-stats').length){
       setupDashboardStatsChart('area');
     }

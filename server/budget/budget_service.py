@@ -343,22 +343,30 @@ def _backup_budgets(campaign, spent_this_timeslice = None):
     # Make BudgetSliceLog
     desired_spending = budget_obj.timeslice_budget
     
-    log = BudgetSliceLog(budget_obj=budget_obj,
-                      remaining_daily_budget=rem_daily_budget,
-                      end_date=pac_dt(),
-                      desired_spending=desired_spending,
-                      actual_spending=spent_this_timeslice
-                      )
-    log.put()
+    last_log = budget_obj.timeslice_logs.order("-end_date").get()
     
-    old_braking_fraction = braking_fraction(campaign)
+    if last_log:
+        last_log.remaining_daily_budget = rem_daily_budget
+        last_log.actual_spending = spent_this_timeslice
+        last_log.put()
+        
+        # If we had a previoius log, we can calculate the braking fraction too
+        old_braking_fraction = braking_fraction(campaign)
+
+        new_braking_fraction = calc_braking_fraction(last_log.desired_spending,
+                                                     spent_this_timeslice,
+                                                     old_braking_fraction)
+
+        key = _make_braking_fraction_key(campaign)
+        memcache.set(key, new_braking_fraction, namespace="budget")
     
-    new_braking_fraction = calc_braking_fraction(desired_spending,
-                                                 spent_this_timeslice,
-                                                 old_braking_fraction)
     
-    key = _make_braking_fraction_key(campaign)
-    memcache.set(key, new_braking_fraction, namespace="budget")
+    new_log = BudgetSliceLog(budget_obj=budget_obj,
+                             desired_spending=desired_spending,
+                             end_date=pac_dt())
+    new_log.put()
+    
+
     
 
 ################ TESTING FUNCTIONS ###################

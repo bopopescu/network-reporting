@@ -54,10 +54,10 @@ def has_budget(campaign, cost, today=pac_today()):
     
     # For now we comment this out, to get a sense of the fraction behavior
     
-    # # Determine if we need to slow down to prevent race conditions
-    # # Only let through things less than the braking fraction
-    # if random.random() > braking_fraction(campaign):
-    #     return False
+    # Determine if we need to slow down to prevent race conditions
+    # Only let through things less than the braking fraction
+    if random.random() > braking_fraction(campaign):
+        return False
     
     memcache_daily_budget = remaining_daily_budget(campaign)
     trace_logging.warning("memcache: %s"%memcache_daily_budget)

@@ -242,15 +242,21 @@ def update_budget(campaign, dt = pac_dt(), save_campaign=True):
                     
 def get_osi(campaign):
     """ Returns True if the most recent completed timeslice spent within 95% of the 
-        desired total. """  
+        desired total. 
+
+        The first timeslice that is run, there is no previously initialized
+        timeslice, so we have no recording for a desired budget. Because of
+        this, we always return True initially."""  
     last_budgetslice = BudgetSliceLogQueryManager().get_most_recent(campaign)
     successful_delivery = .95
     
-    try:
+    # If there is no log built yet, we return True
+    if last_budgetslice.actual_spending is None:
+        return True    
+    else:
         return last_budgetslice.actual_spending >= last_budgetslice.desired_spending*successful_delivery 
-    except AttributeError:
-        # If there is no log built yet, we return True
-        return True
+
+        
                 
 ################ BUDGET BRAKING ###################                
                 

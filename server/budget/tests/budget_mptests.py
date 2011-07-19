@@ -33,6 +33,8 @@ from budget.models import (BudgetSlicer,
 
 from google.appengine.ext import testbed
 
+from budget.query_managers import BudgetSliceLogQueryManager
+
 class TestBudgetUnitTests(unittest.TestCase):
     
     def setUp(self):
@@ -369,16 +371,15 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service.remaining_ts_budget(self.cheap_c), 999/8.-1)
         
     def mptest_budget_logging_basic(self):
+        eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
+        budget_service._advance_all(testing=True)
+        
         eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
         eq_(budget_service.remaining_ts_budget(self.cheap_c), 99)
         
         budget_service._advance_all(testing=True)
         
-        
-        slicer = BudgetSlicer.get_or_insert_for_campaign(self.cheap_c)
-        eq_(slicer.timeslice_budget, 111)
-        
-        last_log = slicer.timeslice_logs.order("-end_date").get()
+        last_log = BudgetSliceLogQueryManager().get_most_recent(self.cheap_c)
         eq_(last_log.actual_spending, 1)
    
     def mptest_very_expensive(self):

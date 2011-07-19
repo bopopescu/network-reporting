@@ -1,5 +1,5 @@
 import logging
-from datetime import date
+from datetime import date,datetime
 
 from account.query_managers import AccountQueryManager
 from account.models import Account
@@ -11,6 +11,7 @@ from inspect import getargspec
 
 from common.utils import simplejson
 from common.utils.decorators import cache_page_until_post, conditionally
+from common.utils.timezones import Pacific_tzinfo
 from django.views.decorators.cache import cache_page
 from django.conf import settings
 
@@ -80,7 +81,7 @@ class RequestHandler(object):
             elif request.method == "POST":
                 # Now we can define get/post methods with variables instead of having to get it from the 
                 # Query dict every time! hooray!
-                audit_logger.log(simplejson.dumps({"account": self.request.user.email, "body": request.POST}))
+                audit_logger.log(simplejson.dumps({"account": self.request.user.email, "time": str(datetime.now(Pacific_tzinfo())), "body": request.POST}))
                 f_args = getargspec(self.post)[0]
                 for arg in f_args:
                     if not kwargs.has_key(arg) and self.params.has_key(arg):

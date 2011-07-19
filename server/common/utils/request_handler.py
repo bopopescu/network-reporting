@@ -81,7 +81,7 @@ class RequestHandler(object):
             elif request.method == "POST":
                 # Now we can define get/post methods with variables instead of having to get it from the 
                 # Query dict every time! hooray!
-                audit_logger.log(simplejson.dumps({"account": self.request.user.email, "time": str(datetime.now(Pacific_tzinfo())), "body": request.POST}))
+                audit_logger.log(simplejson.dumps({"account": self.request.user.email, "time": datetime.now(Pacific_tzinfo()).isoformat(), "body": request.POST}))
                 f_args = getargspec(self.post)[0]
                 for arg in f_args:
                     if not kwargs.has_key(arg) and self.params.has_key(arg):

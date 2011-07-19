@@ -1592,7 +1592,7 @@ var mopub = mopub || {};
             }
           }
           else{
-            seriesLineWidth = 3;
+            seriesLineWidth = 4;
           }
           
         });

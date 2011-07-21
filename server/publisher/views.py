@@ -288,7 +288,7 @@ def add_demo_campaign(site):
     c = Campaign(name="MoPub Demo Campaign",
                  u=site.account.user,
                  account=site.account,
-                 campaign_type="promo",
+                 campaign_type="backfill_promo",
                  description="Demo campaign for checking that MoPub works for your application")
     CampaignQueryManager.put(c)
 

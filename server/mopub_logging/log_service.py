@@ -25,9 +25,10 @@ FILE_QUEUE_NAME = 'file-finalizer-%02d'
 NUM_FILE_QUEUES = 1
 
 class LogService(object):
-    def __init__(self):
-        self.flush_lines = MAX_LINES_BEFORE_FLUSH
-        self.flush_timer = MAX_TIME_BEFORE_FLUSH
+    def __init__(self, blob_file_name="apache", flush_lines=MAX_LINES_BEFORE_FLUSH, flush_time=MAX_TIME_BEFORE_FLUSH):
+        self.blob_file_name = blob_file_name
+        self.flush_lines = flush_lines
+        self.flush_timer = flush_time
         self.lines = []
         self.last_flush = datetime.datetime.now()
     
@@ -53,7 +54,7 @@ class LogService(object):
     
     def flush(self):
         """Flushes the log lines to a file"""
-        file_name, blob_file_name, current_time = _get_file_names_and_time()
+        file_name, blob_file_name, current_time = _get_file_names_and_time(self.blob_file_name)
 
         # open the file and append all new lines together
         with files.open(file_name, 'a') as f:
@@ -113,14 +114,14 @@ class LogService(object):
         execution_time = current_hour + datetime.timedelta(hours=1,minutes=15)                                 
         return execution_time
             
-def _get_file_names_and_time():
+def _get_file_names_and_time(blob_file_name):
     """
     Returns the filename based on the current hour
     and the current instance ID
     """    
     # creates the current time in PST
     current_time = datetime.datetime.now(Pacific_tzinfo())
-    file_name, blob_file_name = _get_file_names_for_time(current_time)
+    file_name, blob_file_name = _get_file_names_for_time(current_time, blob_file_name)
     
     return file_name, blob_file_name, current_time
     
@@ -128,13 +129,13 @@ def _get_file_names_and_time():
 # to appengine file names     
 FILE_NAME_FROM_TIME_DICT = {}   
  
-def _get_file_names_for_time(t):
+def _get_file_names_for_time(t, blob_file_name):
     """
     Returns appengine internal file name and the human 
     readable file name for the input time.
     """
     
-    blob_file_name = get_blob_name_for_time(t)    
+    blob_file_name = get_blob_name_for_time(t, blob_file_name)    
 
     # if not in the cache put it in there
     if not blob_file_name in FILE_NAME_FROM_TIME_DICT:
@@ -146,15 +147,15 @@ def _get_file_names_for_time(t):
 
     return FILE_NAME_FROM_TIME_DICT[blob_file_name], blob_file_name    
     
-def get_blob_name_for_time(t):
+def get_blob_name_for_time(t, blob_file_name):
     # 2011050215 for 3pm May 2, 2011 PST
     hour_str = t.strftime('%Y%m%d%H')
 
     # human readable file name with timestamp
     # NOTE: all instances have the same human readable
     # file name for a given hour
-    blob_file_name = "apache-%(hour)s"%dict(hour=hour_str)    
+    blob_file_name += "-%(hour)s"%dict(hour=hour_str)    
     return blob_file_name
         
 # creates the singleton for this instance
-logger = LogService()        
+logger = LogService()

@@ -49,6 +49,10 @@ var mopub = mopub || {};
 		// set up buttonsets
 		$('.buttonset').buttonset().css({ visibility: 'visible' });
 		
+		// gray out any buttonsets that ought to be disabled
+		$('.buttonset-start-disabled').buttonset()
+		$('.buttonset-start-disabled').buttonset({ disabled: true });
+		
 		// set up selectmenus
 		$('.selectmenu').selectmenu().css({ visibility: 'visible' });
 		

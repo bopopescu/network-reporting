@@ -1,6 +1,5 @@
 import logging
-from datetime import date
-
+from datetime import date,datetime
 
 from account.query_managers import AccountQueryManager
 from account.models import Account
@@ -10,10 +9,15 @@ from google.appengine.ext import db
 
 from inspect import getargspec
 
+from common.utils import simplejson
 from common.utils.decorators import cache_page_until_post, conditionally
+from common.utils.timezones import Pacific_tzinfo
 from django.views.decorators.cache import cache_page
 from django.conf import settings
 
+from mopub_logging.log_service import LogService
+
+audit_logger = LogService(blob_file_name='audit', flush_lines=1)
 
 class RequestHandler(object):
     """ Does some basic work and redirects a view to get and post appropriately """
@@ -24,7 +28,7 @@ class RequestHandler(object):
 
         super(RequestHandler,self).__init__()  
 
-    def __call__(self,request, cache_time=5*60, use_cache=False, *args,**kwargs):
+    def __call__(self,request, cache_time=5*60, use_cache=True, *args,**kwargs):
         if settings.DEBUG:
             use_cache = False
         
@@ -77,6 +81,12 @@ class RequestHandler(object):
             elif request.method == "POST":
                 # Now we can define get/post methods with variables instead of having to get it from the 
                 # Query dict every time! hooray!
+                audit_logger.log(simplejson.dumps({"user_email": self.request.user.email, 
+                                                   "account_email": self.account.mpuser.email,
+                                                   "account_key": str(self.account.key()),
+                                                   "time": datetime.now(Pacific_tzinfo()).isoformat(), 
+                                                   "url": self.request.get_full_path(),
+                                                   "body": request.POST}))
                 f_args = getargspec(self.post)[0]
                 for arg in f_args:
                     if not kwargs.has_key(arg) and self.params.has_key(arg):

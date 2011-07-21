@@ -21,14 +21,7 @@ class Campaign(db.Model):
     # budget per day
     budget = db.FloatProperty() 
     full_budget = db.FloatProperty()
-    
-    timeslice_snapshot = db.FloatProperty()
-    
-    # budget per timeslice, determined dynamically
-    timeslice_budget = db.FloatProperty()
-    
-    current_timeslice = db.IntegerProperty(default = 0)
-    
+        
     # Determines whether we redistribute if we underdeliver during a day
     budget_type = db.StringProperty(choices=['daily', 'full_campaign'], default="daily")
     
@@ -85,10 +78,14 @@ class Campaign(db.Model):
         
     def is_active_for_date(self, date):
         """ Start and end dates are inclusive """
-        if date >= self.start_date:
-            if date <= self.end_date:
-                return True
-        return False
+        if (self.budget_type == "full_campaign" and date >= self.start_date and date <= self.end_date)\
+        or ((self.budget_type == "daily") and ((not self.end_date and self.start_date and self.start_date <= date) \
+        or (not self.end_date and not self.start_date) \
+        or (not self.start_date and self.end_date and self.end_date >= date) \
+        or (self.start_date and self.end_date and self.start_date <= date and self.end_date >= date))):
+            return True
+        else:
+            return False
         
         
 class AdGroup(db.Model):
@@ -167,6 +164,8 @@ class AdGroup(db.Model):
     min_os = db.StringListProperty(default=['any'])
     
     # Device Targeting
+    device_targeting = db.BooleanProperty(default=False)
+    
     target_iphone = db.BooleanProperty(default=True)
     target_ipod = db.BooleanProperty(default=True)
     target_ipad = db.BooleanProperty(default=True)
@@ -243,6 +242,22 @@ class AdGroup(db.Model):
     
     def __repr__(self):
         return "AdGroup:'%s'" % self.name
+        
+    @property
+    def uses_default_device_targeting(self):
+        
+        if self.target_iphone == False or \
+        self.target_ipod == False or \
+        self.target_ipad == False or \
+        self.ios_version_min != MIN_IOS_VERSION or \
+        self.ios_version_max != MAX_IOS_VERSION or \
+        self.target_android == False or \
+        self.android_version_min != MIN_ANDROID_VERSION or \
+        self.android_version_max != MAX_ANDROID_VERSION or \
+        self.target_other == False:
+            return False
+        else:
+            return True
         
     @property
     def geographic_predicates(self):
@@ -451,7 +466,9 @@ class CustomCreative(HtmlCreative):
     pass
 
 class CustomNativeCreative(HtmlCreative):
-    pass
+    @property
+    def multi_format(self):
+        return ('728x90', '320x50','300x250', 'full')
 
 class iAdCreative(Creative):
     @property
@@ -483,8 +500,11 @@ class MillennialNativeCreative(MillennialCreative):
         return ('728x90', '320x50', '300x250', 'full' ,)
 
 class ChartBoostCreative(Creative):
-    pass
-
+    
+    @property
+    def multi_format(self):
+        return ('320x50', 'full',)
+        
 class EjamCreative(Creative):
     pass
 

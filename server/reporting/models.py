@@ -365,12 +365,47 @@ class StatsModel(db.Expando):
             return self.date.date()
 
 
-    @property   
-    def cpm(self):
+    def get_cpm(self):
+        if hasattr(self, '_cpm'): return self._cpm
+        
         if self.impression_count > 0:
             return self.revenue * 1000 / float(self.impression_count)
         else:
             return 0
+        
+    def set_cpm(self, value):
+        self._cpm = value
+    
+    cpm = property(get_cpm, set_cpm)   
+    
+
+
+    def get_percent_delivered(self):         
+        if hasattr(self, '_percent_delivered'): return self._percent_delivered
+        return None
+    
+    def set_percent_delivered(self, value):
+        self._percent_delivered = value
+    
+    percent_delivered = property(get_percent_delivered, set_percent_delivered)         
+    
+    def get_status(self):
+        if hasattr(self, '_status'): return self._status
+        return None
+        
+    def set_status(self, value):
+        self._status = value
+        
+    status = property(get_status, set_status)      
+    
+    def get_on_schedule(self):
+        if hasattr(self, '_on_schedule'): return self._on_schedule
+        return None
+        
+    def set_on_schedule(self, value):
+        self._on_schedule = value
+        
+    on_schedule = property(get_on_schedule, set_on_schedule)        
 
     @property   
     def cpc(self):
@@ -388,16 +423,24 @@ class StatsModel(db.Expando):
     
             
     def _dict_properties(self):
-        return self.properties().keys()
+        model_props = self.properties().keys()
+        pseudo_props = ['cpa', 'cpc', 'cpm', 'fill_rate', 'conv_rate', 'ctr', 'on_schedule', 'status']
+        return model_props + pseudo_props
                
     def to_dict(self):
         properties = self._dict_properties()
         d = {}
         for prop_name in properties:
             value = getattr(self, '_%s'%prop_name, None)
+            if value is None:
+                value = getattr(self, '%s'%prop_name, None)
             if value is not None:
+                if isinstance(value, db.Model):
+                    value = str(value.key())
                 if isinstance(value, db.Key):
                     value = str(value)
+                if isinstance(value, datetime.datetime):
+                    value = str(value)    
                 d[prop_name] = value
         return d        
 # 

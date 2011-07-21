@@ -102,9 +102,8 @@ class AdHandler(webapp.RequestHandler):
         mp_logging.log(self.request, event=mp_logging.REQ_EVENT, adunit=adunit)  
         
         trace_logging.warning("User Agent: %s"%helpers.get_user_agent(self.request))
-        country_re = r'[a-zA-Z][a-zA-Z][-_](?P<ccode>[a-zA-Z][a-zA-Z])'
-        countries = re.findall(country_re, helpers.get_user_agent(self.request))
-        country_tuple = []
+
+        countries = [helpers.get_country_code(headers = self.request.headers)]
         if len(countries) == 1:
             countries = [c.upper() for c in countries]
             country_tuple = tuple(countries)
@@ -195,7 +194,7 @@ class AdHandler(webapp.RequestHandler):
             appid = creative.conv_appid or ''
             ad_click_url = "http://%s/m/aclk?id=%s&cid=%s&c=%s&req=%s&reqt=%s&udid=%s&appid=%s" % (self.request.host, adunit_id, creative.key(), creative.key(),request_id, request_time, udid, appid)
             # ad an impression tracker URL
-            track_url = "http://%s/m/imp?id=%s&cid=%s&udid=%s&appid=%s&req=%s&reqt=%s&random=%s" % (self.request.host, adunit_id, creative.key(), request_id, request_time, udid, appid, random.random())
+            track_url = "http://%s/m/imp?id=%s&cid=%s&udid=%s&appid=%s&req=%s&reqt=%s&random=%s" % (self.request.host, adunit_id, creative.key(), udid, appid, request_id, request_time, random.random())
             cost_tracker = "&rev=%.07f" 
             if creative.adgroup.bid_strategy == 'cpm':
                 cost_tracker = cost_tracker % (float(creative.adgroup.bid)/1000)
@@ -383,6 +382,14 @@ class AdHandler(webapp.RequestHandler):
                 params.update({"w": img_width, "h": img_height, "w2":img_width/2.0, "h2":img_height/2.0, "class":css_class})
             elif creative.ad_type == "html":
                 params.update({"html_data": creative.html_data, "w": format[0], "h": format[1]})
+                
+                if 'full' in adunit.format:
+                    params['trackingPixel'] = ""
+                    trackImpressionHelper = "<script>\nfunction trackImpressionHelper(){\n%s\n}\n</script>"%success
+                    params.update(trackImpressionHelper=trackImpressionHelper)
+                else:
+                    params['trackImpressionHelper'] = ''    
+                
                 # add the launchpage header for inmobi in case they have dynamic ads that use
                 # window.location = 'http://some.thing/asdf'
                 if creative.adgroup.network_type == "inmobi":
@@ -412,9 +419,6 @@ class AdHandler(webapp.RequestHandler):
                 # extra parameters used only by admob template
                 params.update(admob_finish_load=success)
                 params.update(admob_fail_load='')
-               
-            
-            
             
             # indicate to the client the winning creative type, in case it is natively implemented (iad, clear)
             

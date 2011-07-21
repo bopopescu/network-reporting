@@ -303,7 +303,7 @@ class AdAuction(object):
                                         winning_creative = winner
                                         # if native, log native request
                                         if winner.adgroup.network_type in NATIVE_REQUESTS:
-                                            mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, udid=udid)
+                                            mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, headers=request.headers, udid=udid)
                                         # A native request could potential fail and must be excluded from subsequent requests    
                                         on_fail_exclude_adgroups.append(str(winning_creative.adgroup.key()))
                                         return [winning_creative, on_fail_exclude_adgroups]
@@ -312,7 +312,7 @@ class AdAuction(object):
                                         trace_logging.info('Attempting ad network request: %s ...'%winner.adgroup.network_type.title())
                                         rpc = AdAuction.request_third_party_server(request, adunit, winner.adgroup)
                                         # log a network "request"
-                                        mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, udid=udid)
+                                        mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, headers=request.headers, udid=udid)
                                         try:
                                             result = rpc.get_result()
                                             server_tuple = rpc.serverside.bid_and_html_for_response(result)

@@ -288,7 +288,7 @@ def add_demo_campaign(site):
     c = Campaign(name="MoPub Demo Campaign",
                  u=site.account.user,
                  account=site.account,
-                 campaign_type="promo",
+                 campaign_type="backfill_promo",
                  description="Demo campaign for checking that MoPub works for your application")
     CampaignQueryManager.put(c)
 
@@ -298,6 +298,7 @@ def add_demo_campaign(site):
                  account=site.account,
                  priority_level=3,
                  bid=1.0,
+                 bid_strategy="cpm",
                  site_keys=[site.key()])
     AdGroupQueryManager.put(ag)
 
@@ -709,10 +710,16 @@ def publisher_adunit_delete(request,*args,**kwargs):
 
 class RemoveAppHandler(RequestHandler):
     def post(self, app_key):
-        a = AppQueryManager.get(app_key)
-        if a != None and a.account == self.account:
-            a.deleted = True
-            AppQueryManager.put(a)
+        app = AppQueryManager.get(app_key)
+        adunits = AdUnitQueryManager.get_adunits(app=app)
+        if app and app.account == self.account:
+            app.deleted = True
+            # also "delete" all the adunits associated with the app
+            for adunit in adunits:
+                adunit.deleted = True
+            AppQueryManager.put(app)
+            AdUnitQueryManager.put(adunits)
+            
     
         return HttpResponseRedirect(reverse('publisher_index'))
  

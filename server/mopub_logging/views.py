@@ -31,6 +31,8 @@ from mopub_logging import log_service
 from reporting import models as r_models
 from reporting import query_managers
 
+from account.models import Account
+
 
 OVERFLOW_TASK_QUEUE_NAME_FORMAT = "bulk-log-processor-overflow-%02d"
 NUM_OVERFLOW_TASK_QUEUES = 3
@@ -86,6 +88,10 @@ class LogTaskHandler(webapp.RequestHandler):
   def get(self):
       # inspect headers of the task
       retry_count = int(self.request.headers.get('X-AppEngine-TaskRetryCount',"0"))
+      
+      if retry_count > 6: return # bail early
+      
+      
       task_name = self.request.headers.get('X-AppEngine-TaskName',None)
       queue_name = self.request.headers.get('X-AppEngine-QueueName',None)
       
@@ -113,8 +119,14 @@ class LogTaskHandler(webapp.RequestHandler):
           memcache_stats = memcache_stats or memcache.get_stats()
       tail_index = int(tail_index_str or MAX_TAIL)
 
-      logging.info("account: %s time: %s start: %s stop: %s"%(account_name,time_bucket,head_index,tail_index))
-      logging.info("MEMCACHE STATS: %s"%memcache_stats_start)
+
+      if account_name == "agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww":
+          logging.error("account: %s time: %s start: %s stop: %s"%(account_name,time_bucket,head_index,tail_index))
+          logging.error("MEMCACHE STATS: %s"%memcache_stats_start)
+      else:
+          logging.info("account: %s time: %s start: %s stop: %s"%(account_name,time_bucket,head_index,tail_index))
+          logging.info("MEMCACHE STATS: %s"%memcache_stats_start)
+           
 
       stats_dict = {}      
       start = head_index
@@ -141,7 +153,7 @@ class LogTaskHandler(webapp.RequestHandler):
           memcache_misses += current_memcache_misses
           if memcache_misses:
               memcache_stats = memcache_stats or memcache.get_stats()
-          logging.info("Memcache misses: %d"%current_memcache_misses)
+          # logging.info("Memcache misses: %d"%current_memcache_misses)
 
           for k,d in data_dicts.iteritems():
               if d:
@@ -220,7 +232,19 @@ class LogTaskHandler(webapp.RequestHandler):
       query_manager = query_managers.StatsModelQueryManager(account_name)
       try:
           # raise db.BadRequestError('asdf')
-          query_manager.put_stats(stats_dict.values())
+          stats_to_put = stats_dict.values()
+          
+          # if account_name == "agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww":
+          #     try:
+          #         mail.send_mail_to_admins(sender="olp@mopub.com",
+          #                                  subject="WTF",
+          #                                  body="len: %s\n%s"%(len(stats_to_put), 
+          #                                       [(str(s._advertiser), str(s._publisher), s.country, s.impression_count) for s in stats_to_put if str(s.country) == 'US']))
+          #     except Exception, e:
+          #         logging.error("MAIL ERROR: %s",e)
+                                                 
+          query_manager.put_stats(stats_to_put)
+          total_stats = query_manager.all_stats_deltas
       # if the transaction is too large then we split it up and try again    
       # except db.BadRequestError:
       #     async_put_models(account_name,stats_dict.values(),MAX_PUT_SIZE)
@@ -231,29 +255,49 @@ class LogTaskHandler(webapp.RequestHandler):
               total_stats = query_manager.all_stats_deltas
               number_of_stats = len(total_stats)
               max_countries = max([len(stat.get_countries()) for stat in total_stats])
+              account = Account.get(account_name)
+              if account:
+                  user_email = account.mpuser.email
+              else:
+                  user_email = None 
               
-              mail.send_mail_to_admins(sender="olp@mopub.com",
-                                        subject="Logging error",
-                                        body="account: %s retries: %s task name: %s queue name: %s base stats: %s total number of stats: %s max countries: %s \n\n%s"%(account_name,
-                                                                                             retry_count,
-                                                                                             task_name,
-                                                                                             queue_name,
-                                                                                             base_number_of_stats,
-                                                                                             number_of_stats,
-                                                                                             max_countries,
-                                                                                             exception_traceback))
+              try:      
+                  mail.send_mail_to_admins(sender="olp@mopub.com",
+                                            subject="Logging error",
+                                            body="account: %s email: %s retries: %s task name: %s queue name: %s base stats: %s total number of stats: %s max countries: %s \n\n%s"%(account_name,
+                                                                                                 user_email,
+                                                                                                 retry_count,
+                                                                                                 task_name,
+                                                                                                 queue_name,
+                                                                                                 base_number_of_stats,
+                                                                                                 number_of_stats,
+                                                                                                 max_countries,
+                                                                                                 exception_traceback))
+              except:
+                  pass                                                                                     
               logging.error(exception_traceback)
-              raise Exception("need to try transaction again")
+          raise Exception("need to try transaction again")
       
       # only email if we miss alot (more than .1% or more than 1)      
       if not tail_index_str or (memcache_misses > 1 and float(memcache_misses)/float(tail_index) > 0.001):
-          message = "Account: %s time: %s tail: %s misses: %s retry: %s\nmemcache_stats_starts:%s\nmemcache_stats:%s"%(account_name,time_bucket,
+          account = Account.get(account_name)
+          if account:
+              user_email = account.mpuser.email
+          else:
+              user_email = None 
+          
+          message = "Account: %s email: %s time: %s tail: %s misses: %s retry: %s\nmemcache_stats_starts:%s\nmemcache_stats:%s"%(account_name,
+                                                                                  user_email,
+                                                                                  time_bucket,
                                                                                   tail_index_str,memcache_misses,retry_count,
                                                                                   memcache_stats_start,memcache_stats)
           
-          mail.send_mail_to_admins(sender="olp@mopub.com",
-                                    subject="Logging error (cache miss)",
-                                    body=message)
+          try:
+              mail.send_mail_to_admins(sender="olp@mopub.com",
+                                        subject="Logging error (cache miss)",
+                                        body=message)
+          except:
+              pass                                
           logging.error(message)
           
 class StatsModelPutTaskHandler(webapp.RequestHandler):

@@ -882,6 +882,20 @@ dl.formFields.thin {
   margin: 0;
 }
 
+.formFields .appData-icon {
+  float:left;
+  padding-right: 11px;
+}
+
+.formFields .appData-name {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+.formFields .appData-icon img {
+  -webkit-border-radius:6px;-moz-border-radius:6px
+}
+
 .formFields-field-help {
   display: inline-block;
   margin: 1px 0 0 8px;

@@ -4,6 +4,7 @@ import datetime
 from advertiser.models import ( Campaign,
                                 )
 import logging
+import random
 
 from budget.models import (BudgetSlicer,
                            BudgetSliceLog,
@@ -37,8 +38,6 @@ def has_budget(campaign, cost, today=pac_today()):
     """ Returns True if the cost is less than the budget in the current timeslice.
         Campaigns that have not yet begun always return false"""
     
-    trace_logging.warning("cost: %s"%cost)
-    
     if campaign.budget is None:
         # TEMP: If past July 15th with no errors, remove this
         if campaign.full_budget:
@@ -50,7 +49,15 @@ def has_budget(campaign, cost, today=pac_today()):
     trace_logging.warning("active: %s"%campaign.is_active_for_date(today))
     if not campaign.is_active_for_date(today):
         return False
+
     
+    
+    # For now we comment this out, to get a sense of the fraction behavior
+    
+    # Determine if we need to slow down to prevent race conditions
+    # Only let through things less than the braking fraction
+    if random.random() > braking_fraction(campaign):
+        return False
     
     memcache_daily_budget = remaining_daily_budget(campaign)
     trace_logging.warning("memcache: %s"%memcache_daily_budget)
@@ -206,6 +213,10 @@ def get_spending_for_date_range(campaign, start_date, end_date, today=pac_today(
     return total_spending
 
 def update_budget(campaign, dt = pac_dt(), save_campaign=True):
+    """ Update budget is called whenever a campaign is created or saved. 
+        It sets a new daily budget as well as fixing the outdated values
+        in memcache. """
+    
     if campaign.budget_type and (campaign.budget_type == "full_campaign" or campaign.budget):
         budget_obj = BudgetSlicer.get_or_insert_for_campaign(campaign)
         if campaign.budget_type == "full_campaign":
@@ -231,15 +242,50 @@ def update_budget(campaign, dt = pac_dt(), save_campaign=True):
                     
 def get_osi(campaign):
     """ Returns True if the most recent completed timeslice spent within 95% of the 
-        desired total. """  
+        desired total. 
+
+        The first timeslice that is run, there is no previously initialized
+        timeslice, so we have no recording for a desired budget. Because of
+        this, we always return True initially."""  
     last_budgetslice = BudgetSliceLogQueryManager().get_most_recent(campaign)
     successful_delivery = .95
     
-    try:
+    # If there is no log built yet, we return True
+    if last_budgetslice.actual_spending is None:
+        return True    
+    else:
         return last_budgetslice.actual_spending >= last_budgetslice.desired_spending*successful_delivery 
-    except AttributeError:
-        # If there is no log built yet, we return True
-        return True
+
+        
+                
+################ BUDGET BRAKING ###################                
+                
+def calc_braking_fraction(desired_spending, actual_spending, prev_fraction):
+    """ Looks at the previous minute, if we overdelivered by 15 percent or more,
+        we reduce the fraction by half. If we ever underdeliver, we double it """
+    
+    if actual_spending > desired_spending * 1.15:
+        new_fraction = prev_fraction * 0.5
+    
+    elif actual_spending < desired_spending * 0.95:
+        # Use more machines if underdelivering. Never go above 1.0
+        new_fraction = min(prev_fraction * 2.0, 1.0)
+    
+    else:
+        new_fraction = prev_fraction
+        
+    return new_fraction
+
+
+def braking_fraction(campaign):
+    """ Looks up the budget braking fraction in memcache. 
+        1.00 means that we let through all traffic. 
+        0.25 means we only let through one quearter. """
+    key = _make_braking_fraction_key(campaign)
+    return memcache.get(key, namespace="budget") or 1.0 # If nothing is in memcache try on 100%
+            
+def _make_braking_fraction_key(campaign):
+    return 'braking_fraction:%s'%(campaign.key())    
                 
 ################ HELPER FUNCTIONS ###################
 
@@ -301,14 +347,33 @@ def _backup_budgets(campaign, spent_this_timeslice = None):
     rem_daily_budget = remaining_daily_budget(campaign)
 
     # Make BudgetSliceLog
+    desired_spending = budget_obj.timeslice_budget
     
-    log = BudgetSliceLog(budget_obj=budget_obj,
-                      remaining_daily_budget=rem_daily_budget,
-                      end_date=pac_dt(),
-                      desired_spending=spent_this_timeslice+mem_budget,
-                      actual_spending=spent_this_timeslice
-                      )
-    log.put()
+    last_log = budget_obj.timeslice_logs.order("-end_date").get()
+    
+    if last_log:
+        last_log.remaining_daily_budget = rem_daily_budget
+        last_log.actual_spending = spent_this_timeslice
+        last_log.put()
+        
+        # If we had a previoius log, we can calculate the braking fraction too
+        old_braking_fraction = braking_fraction(campaign)
+
+        new_braking_fraction = calc_braking_fraction(last_log.desired_spending,
+                                                     spent_this_timeslice,
+                                                     old_braking_fraction)
+
+        key = _make_braking_fraction_key(campaign)
+        memcache.set(key, new_braking_fraction, namespace="budget")
+    
+    
+    new_log = BudgetSliceLog(budget_obj=budget_obj,
+                             desired_spending=desired_spending,
+                             end_date=pac_dt())
+    new_log.put()
+    
+
+    
 
 ################ TESTING FUNCTIONS ###################
 

@@ -11,11 +11,38 @@ from common.utils import fields as mpfields
 from common.utils import widgets as mpwidgets 
 from publisher.models import Site, App
 
+CATEGORY_CHOICES = (
+        (u'not_selected', '-----------------'),
+        (u'books', 'Books'),
+        (u'business', 'Business'),
+        (u'education', 'Education'),
+        (u'entertainment', 'Entertainment'),
+        (u'finance', 'Finance'),
+        (u'games', 'Games'),
+        (u'healthcare_and_fitness', 'Healthcare & Fitness'),
+        (u'lifestyle', 'Lifestyle'),
+        (u'medical', 'Medical'),
+        (u'music', 'Music'),
+        (u'navigation', 'Navigation'),
+        (u'news', 'News'),
+        (u'photography', 'Photography'),
+        (u'productivity', 'Productivity'),
+        (u'reference', 'Reference'),
+        (u'social_networking', 'Social Networking'),
+        (u'sports', 'Sports'),
+        (u'travel', 'Travel'),
+        (u'utilities', 'Utilities'),
+        (u'weather', 'Weather'),
+)
+
 class AppForm(mpforms.MPModelForm):
     TEMPLATE = 'publisher/forms/app_form.html'
 
     img_url = forms.URLField(verify_exists=False,required=False)
     img_file = forms.FileField(required=False)
+    
+    primary_category = mpfields.MPChoiceField(choices=CATEGORY_CHOICES,widget=mpwidgets.MPSelectWidget)
+    secondary_category = mpfields.MPChoiceField(choices=CATEGORY_CHOICES,widget=mpwidgets.MPSelectWidget)
     
     def __init__(self, *args,**kwargs):
         instance = kwargs.get('instance',None)
@@ -31,7 +58,7 @@ class AppForm(mpforms.MPModelForm):
 
     class Meta:
         model = App
-        fields = ('name', 'app_type', 'url', 'package', 'description', 'adsense_app_name')
+        fields = ('name', 'app_type', 'url', 'package', 'description', 'adsense_app_name', 'primary_category', 'secondary_category')
         
     def save(self,commit=True):
         obj = super(AppForm,self).save(commit=False)

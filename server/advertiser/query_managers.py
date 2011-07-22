@@ -219,7 +219,7 @@ class CreativeQueryManager(QueryManager):
         crtvs = Creative.all().filter('account =', account)
         if deleted is not None:
             crtvs = crtvs.filter('deleted =', deleted)
-        return crtvs
+        return [c for c in crtvs]
 
         
 

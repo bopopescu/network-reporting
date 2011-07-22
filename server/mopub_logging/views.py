@@ -370,6 +370,7 @@ class DownloadLogsHandler(webapp.RequestHandler):
         limit = int(self.request.get('limit', LIMIT))
         start_time_stamp = self.request.get('start_time', None)
         start_key = self.request.get('start_key', None)
+        filename = self.request.get('filename', 'apache')
         
         # date_hour_string = YYYYMMDDHH
         year = int(date_hour_string[:4])
@@ -382,7 +383,7 @@ class DownloadLogsHandler(webapp.RequestHandler):
                                       day=day,
                                       hour=hour)
         
-        filename = log_service.get_blob_name_for_time(date_hour) + '.log'
+        filename = log_service.get_blob_name_for_time(date_hour, filename) + '.log'
         blob_infos = BlobInfo.all().filter('filename =',filename)
         if start_time_stamp:
             start_time = datetime.datetime.fromtimestamp(float(start_time_stamp))

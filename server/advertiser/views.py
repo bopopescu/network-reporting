@@ -857,6 +857,7 @@ class DisplayCreativeHandler(RequestHandler):
             #return HttpResponse(c.image,content_type='image/png')
         if c and c.ad_type == "html":
             return HttpResponse("<html><body style='margin:0px;'>"+c.html_data+"</body></html");
+        # OMG WHO DID THIS lol me that's right
         return HttpResponse('NOOOOOOOOOOOO IMAGE')
 
 class CreativeImageHandler(RequestHandler):

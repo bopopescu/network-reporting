@@ -35,6 +35,7 @@ from common.utils.query_managers import CachedQueryManager
 from common.utils.request_handler import RequestHandler
 
 from account.query_managers import AccountQueryManager
+from account.forms import NetworkConfigForm
 from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager, \
                                       CreativeQueryManager, TextCreativeQueryManager, \
                                       ImageCreativeQueryManager, TextAndTileCreativeQueryManager, \
@@ -413,6 +414,22 @@ class CreateCampaignAJAXHander(RequestHandler):
                     adgroup.net_creative = creative.key()
                     #put the adgroup again with the new (or old) creative reference
                     AdGroupQueryManager.put(adgroup)
+
+                # Update network config information if this is a network type adgroup
+                if campaign.campaign_type == "network":
+                    apps_for_account = AppQueryManager.get_apps(account=self.account)
+                    # Build app level pub_ids
+                    for app in apps_for_account:
+                        app_network_config_data = {}
+                        for (key, value) in self.request.POST.iteritems():
+                            app_key_identifier = key.split('-__-')
+                            if app_key_identifier[0] == str(app.key()):
+                                app_network_config_data[app_key_identifier[1]] = value
+
+                        logging.warning("link" + unicode(app.name) + " " + str(app_network_config_data))
+                        app_form = NetworkConfigForm(data=app_network_config_data, instance=app.network_config)
+                        app_network_config = app_form.save(commit=False)
+                        AppQueryManager.update_config_and_put(app, app_network_config)
 
                 # Delete Cache. We leave this in views.py because we 
                 # must delete the adunits that the adgroup used to have as well
@@ -857,6 +874,7 @@ class DisplayCreativeHandler(RequestHandler):
             #return HttpResponse(c.image,content_type='image/png')
         if c and c.ad_type == "html":
             return HttpResponse("<html><body style='margin:0px;'>"+c.html_data+"</body></html");
+        # OMG WHO DID THIS lol me that's right
         return HttpResponse('NOOOOOOOOOOOO IMAGE')
 
 class CreativeImageHandler(RequestHandler):

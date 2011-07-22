@@ -147,7 +147,7 @@ def _get_file_names_for_time(t, blob_file_name):
 
     return FILE_NAME_FROM_TIME_DICT[blob_file_name], blob_file_name    
     
-def get_blob_name_for_time(t, blob_file_name):
+def get_blob_name_for_time(t, blob_file_name="apache"):
     # 2011050215 for 3pm May 2, 2011 PST
     hour_str = t.strftime('%Y%m%d%H')
 

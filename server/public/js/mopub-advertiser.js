@@ -175,7 +175,13 @@ var mopub = mopub || {};
           $('#formError').show();
         }
       });
-      
+    $('.adgroupForm-editNetwork-link')
+      .click(function(e){
+        e.preventDefault();
+        var parent = $(this).parents('.adgroupForm-Network');
+        parent.find('.adgroupForm-editNetwork').show();
+        parent.find('.adgroupForm-showNetwork').hide();
+      });
     function adgroupFormValidate(form) {
       var success = true;
       $('#formError').hide();

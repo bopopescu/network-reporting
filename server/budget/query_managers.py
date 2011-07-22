@@ -6,7 +6,12 @@ class BudgetSliceLogQueryManager(QueryManager):
     Model = BudgetSliceLog
     
     def get_most_recent(self, campaign):
-        """ Returns the most recent SliceLog for a campaign. """
+        """ Returns the most recent *completed* SliceLog for a campaign. """
         budget_obj = BudgetSlicer.get_or_insert_for_campaign(campaign)
         
-        return budget_obj.timeslice_logs.order('-end_date').get()
+        recent_timeslices = budget_obj.timeslice_logs.order('-end_date').fetch(2)
+        
+        try:
+            return recent_timeslices[1]
+        except IndexError:
+            return recent_timeslices[0]

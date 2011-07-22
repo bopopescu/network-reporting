@@ -125,6 +125,10 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         self.testbed.deactivate()
 
     def mptest_get_most_recent(self):
+        # We spend it all this first time
+        eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
+
+        budget_service.timeslice_advance(self.cheap_c,testing=True)
         
         # Each slice has a budget of 100
         eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
@@ -141,17 +145,19 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         # Now the most recent was 100
         budget_service.timeslice_advance(self.cheap_c, testing=True)
         most_recent = BudgetSliceLogQueryManager().get_most_recent(self.cheap_c)
-          
-          
-    def mptest_query_managers(self):
+    
+            
+    def mptest_query_managers_second_round(self):
         # Each slice has a budget of 100
         
         # We spend it all this first time
         eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
 
-        # We only spend 50 on the second one
         budget_service.timeslice_advance(self.cheap_c,testing=True)
-        # eq_(budget_service._apply_if_able(self.cheap_c, 50), True)
+
+        eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
+
+        budget_service.timeslice_advance(self.cheap_c,testing=True)
         
         # In the most recent completed timeslice, we spent 100%
         last_budgetslice = BudgetSliceLogQueryManager().get_most_recent(self.cheap_c)
@@ -159,10 +165,35 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         eq_(last_budgetslice.actual_spending, 100)
         eq_(last_budgetslice.desired_spending, 100)
         
+        
+    def mptest_get_osi_uninitialized(self):
+        """ The first timeslice that is run, there is no previously initialized
+            timeslice, so we have no recording for a desired budget. Because of
+            this, we always return True initially. """
+
+        # We spend it all this first time
+        eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
+
+        # We only spend 50 on the second one
+        budget_service.timeslice_advance(self.cheap_c,testing=True)
+        eq_(budget_service._apply_if_able(self.cheap_c, 50), True)
+
+        # In the most recent completed timeslice, we spent 100%
+        eq_(budget_service.get_osi(self.cheap_c), True)
+
+        # We only spent 50 on the second one
+        budget_service.timeslice_advance(self.cheap_c,testing=True)
+
+        # In the most recent completed timeslice, we only spent 50%
+        eq_(budget_service.get_osi(self.cheap_c), False)
     
     def mptest_get_osi(self):
     
         # Each slice has a budget of 100
+        # We spend it all this first time
+        eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
+    
+        budget_service.timeslice_advance(self.cheap_c,testing=True)
         
         # We spend it all this first time
         eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
@@ -182,6 +213,11 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
     
     def mptest_get_osi_with_changing_budget(self):
     
+        # We do one round to set up the OSI
+        eq_(budget_service._apply_if_able(self.cheap_c, 100), True)                      
+        
+        budget_service.timeslice_advance(self.cheap_c, testing=True)
+    
         # Each slice has a budget of 100
         eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
     
@@ -193,19 +229,19 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         # Double the daily budget right before an advance
         self.cheap_c.budget = 2000.
         self.cheap_c.put()
-        budget_service.update_budget(self.cheap_c, dt = datetime.datetime(1987,4,4,2,45,0))
+        budget_service.update_budget(self.cheap_c, dt = datetime.datetime(1987,4,4,5,45,0))
         
         # In the last timeslice, we spent 100%
         eq_(budget_service.get_osi(self.cheap_c), True)
     
-        # Now in this new one, we have 1800/8 = $225 available
+        # Now in this new one, we have 1700/7 = $242 available
         budget_service.timeslice_advance(self.cheap_c, testing=True)
     
         # In the most recent completed timeslice, we spent what we wanted
-        eq_(budget_service.get_osi(self.cheap_c), False)
+        eq_(budget_service.get_osi(self.cheap_c), True)
     
-        # Now we spend the full 225
-        eq_(budget_service._apply_if_able(self.cheap_c, 225), True)
+        # Now we spend the full 242
+        eq_(budget_service._apply_if_able(self.cheap_c, 242), True)
     
         budget_service.timeslice_advance(self.cheap_c, testing=True)
     
@@ -216,6 +252,11 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         """ When a budget doesn't match perfectly with a timeslice, we want
             the osi to still say it's ok, 95percent is fine. """
 
+        # We do one round to set up the OSI
+        eq_(budget_service._apply_if_able(self.cheap_c, 100), True)                      
+        
+        budget_service.timeslice_advance(self.cheap_c, testing=True)
+        
         # We spend 99
         eq_(budget_service._apply_if_able(self.cheap_c, 33), True)
         eq_(budget_service._apply_if_able(self.cheap_c, 33), True)
@@ -229,9 +270,6 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         # In the most recent completed timeslice, we spent 99 out of 100
         # This is within 95% so it is ok
         eq_(budget_service.get_osi(self.cheap_c), True)
-        
-        
-        
     
     
     def mptest_full_campaign_extended_dates(self):

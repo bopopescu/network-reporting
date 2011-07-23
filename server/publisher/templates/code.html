@@ -6,9 +6,7 @@
               <span class="ui-icon ui-icon-arrow-1-e"></span> 
               <span class="stepProgress-step stepProgress-active">Step 2: Integrate</span> 
               <span class="ui-icon ui-icon-arrow-1-e"></span> 
-              <span class="stepProgress-step">Step 3: Ad networks</span> 
-              <span class="ui-icon ui-icon-arrow-1-e"></span> 
-              <span class="stepProgress-step">Step 4: Ad campaigns</span> 
+              <span class="stepProgress-step">Step 3: Add campaigns</span> 
             </div>{% endifequal %}{% endblock titleBarRight %}
 {% block messageCenter %}{% endblock messageCenter %}
 
@@ -126,6 +124,6 @@ mpv.loadAd();</pre>
               </li>  
             </ol>
             <div class="form-submit">
-              <span class="buttonWrap">{% ifequal status 'welcome' %}<a href="{% url account_index %}" class="button">Continue to Step 3</a>{% else %}<a href="{% url publisher_app_show app_key=site.app_key.key %}" class="button">Continue</a>{% endifequal %}</span>
+              <span class="buttonWrap">{% ifequal status 'welcome' %}<a href="{% url advertiser_campaign %}" class="button">Continue to Step 3</a>{% else %}<a href="{% url publisher_app_show app_key=site.app_key.key %}" class="button">Continue</a>{% endifequal %}</span>
             </div>
           </section>{% endblock content %}

@@ -1,0 +1,24 @@
+{% extends 'advertiser/base.html' %}
+{% load filters %}
+{% load super_if %}
+
+{% block navLinks %}
+<li><a href="{% url publisher_index %}">Dashboard</a></li>
+<li class="active"><a href="{% url advertiser_campaign %}">Campaigns</a></li>
+<li><a href="{% url reports_index %}">Reports</a></li>
+{% endblock navLinks %}
+
+    
+{% block messageCenter %}{% endblock messageCenter %}
+
+
+{% block content %}
+
+
+
+OMG AWESOME ARCHIVE
+
+
+
+
+{% endblock content %}

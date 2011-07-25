@@ -112,7 +112,7 @@ class AdGroupQueryManager(QueryManager):
     Model = AdGroup   
         
     @classmethod
-    def get_adgroups(cls, campaign=None, campaigns=None, adunit=None, app=None, account=None, deleted=False, limit=MAX_OBJECTS):
+    def get_adgroups(cls, campaign=None, campaigns=None, adunit=None, app=None, account=None, deleted=False, limit=MAX_OBJECTS, archived=False):
         adgroups = AdGroup.all()
         if not (deleted == None):
             adgroups = adgroups.filter("deleted =",deleted)
@@ -126,10 +126,10 @@ class AdGroupQueryManager(QueryManager):
                 for sub_campaigns in chunks(campaigns,MAX_ALLOWABLE_QUERIES):
                     adgroups_current = copy.deepcopy(adgroups)
                     total_adgroups += adgroups_current.filter("campaign IN", sub_campaigns).\
-                                        fetch(limit)
+                                        filter("archived =", archived).fetch(limit)
                 return total_adgroups    
             else:    
-                adgroups = adgroups.filter("campaign IN",campaigns)
+                adgroups = adgroups.filter("campaign IN",campaigns).filter("archived =", archived)
         elif campaign:      
             adgroups = adgroups.filter("campaign =",campaign)      
 

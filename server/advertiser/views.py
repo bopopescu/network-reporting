@@ -273,6 +273,21 @@ def adgroups(request,*args,**kwargs):
     return AdGroupIndexHandler()(request,*args,**kwargs)
 
 
+class AdGroupArchiveHandler(RequestHandler):
+
+    def get(self):
+        archived_adgroups = AdGroupQueryManager().get_adgroups(account=self.account, archived=True)
+        return render_to_response(self.request, 
+                                   'advertiser/archived_adgroups.html', 
+                                    {'archived_adgroups':archived_adgroups
+                                     })
+
+
+@login_required
+def archive(request,*args,**kwargs):
+    return AdGroupArchiveHandler()(request,*args,**kwargs)
+
+
 class CreateCampaignAJAXHander(RequestHandler):
     TEMPLATE    = 'advertiser/forms/campaign_create_form.html'
     def get(self,campaign_form=None,adgroup_form=None,

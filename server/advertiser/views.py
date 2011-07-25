@@ -186,6 +186,7 @@ class AdGroupIndexHandler(RequestHandler):
                                    # 'today': reduce(lambda x, y: x+y, [c.all_stats[-1] for c in graph_adgroups], StatsModel()),
                                    # 'yesterday': yesterday,
                                    'guarantee_levels': guarantee_levels, 
+                                   'guarantee_num': len(guaranteed_campaigns),
                                    'promo': promo_campaigns,
                                    'network': network_campaigns,
                                    'backfill_promo': backfill_promo_campaigns,

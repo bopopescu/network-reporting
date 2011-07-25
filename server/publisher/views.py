@@ -245,7 +245,7 @@ class AppCreateHandler(RequestHandler):
         # Check if this is the first app for this account
         status = "success"
         if self.account.status == "new":
-          self.account.status = "step3"  # skip setting 'step2' since the step 2 page is only displayed once
+          self.account.status = "step4"  # skip to step 4 (add campaigns), but show step 2 (integrate)
           AccountQueryManager.put_accounts(self.account)
           status = "welcome"
         return HttpResponseRedirect(reverse('publisher_generate',kwargs={'adunit_key':adunit.key()})+'?status='+status)

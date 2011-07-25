@@ -10,6 +10,10 @@
 {% block pageTitle %}<h1>{% ifequal account.status 'step4' %}Step 3: Set up an ad campaign{% else %}Campaigns{% endifequal %}</h1>{% endblock pageTitle %}
 {% block titleBarRight %}
     {% ifequal account.status 'step4' %}
+            <!-- MixPanel Tracking -->
+            <script type="text/javascript">
+            mpq.push(["track", "Sign up: Campaign dashboard"]);
+            </script>
             <div class="stepProgress"> 
               <span class="stepProgress-step">Step 1: Add app</span> 
               <span class="ui-icon ui-icon-arrow-1-e"></span> 
@@ -524,7 +528,7 @@
         mopub.accountStats = {{account_stats|safe}};
     });
 </script>
-<script src="/js/mopub-advertiser.js?v=58"></script>
+<script src="/js/mopub-advertiser.js?v=60"></script>
 <script src='/js/tokenize_in.js'></script>
 <script src='/js/countries.js'></script>
 {% endblock extraScripts %}

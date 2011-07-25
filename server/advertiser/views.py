@@ -469,6 +469,7 @@ class CreateCampaignHandler(RequestHandler):
         campaign_create_form_fragment = CreateCampaignAJAXHander(self.request).get(adgroup=adgroup)
         return render_to_response(self.request,'advertiser/new.html', {"adgroup_key": adgroup_key,
             "adgroup":adgroup,
+            "account": self.account,
             "campaign_create_form_fragment": campaign_create_form_fragment})
 
 @login_required      

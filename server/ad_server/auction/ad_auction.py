@@ -133,6 +133,14 @@ class AdAuction(object):
         @returns: [winning_creative, on_fail_exclude_adgroups] """
         # TODO: Clean up variable names
         # TODO: For testability, should not require request
+
+
+        # SPAM TEH SHIT OUT OF MPX.MOPUB.COM
+        try:
+            spam_rpc = urlfetch.create_rpc()
+            urlfetch.make_fetch_call(spam_rpc, 'http://mpx.mopub.com/req')
+        except Exception as e:
+            trace_logging.error(e)
         
         geo_predicates = AdAuction.geo_predicates_for_rgeocode(country_tuple)
 

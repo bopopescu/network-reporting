@@ -149,8 +149,8 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
 
     # because we have limited task queue API calls we only try adding
     # to the queue up to MAX_TASK_ADDS time, most are dupes anyway                           
-    # if log_index > MAX_TASK_ADDS:
-    #     return
+    if log_index > MAX_TASK_ADDS:
+        return
         
     try:
         logging.info("trying to add to queue (in try): %s"%task_name)

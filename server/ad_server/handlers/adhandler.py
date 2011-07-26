@@ -281,6 +281,10 @@ class AdHandler(webapp.RequestHandler):
                     #to 300x250 if the adunit is a full (of some kind) and the creative is from
                     #an ad network that doesn't serve fulls
                     network_center = True
+                    if adunit.landscape:
+                        self.response.headers.add_header("X-Orientation","l")
+                    else:
+                        self.response.headers.add_header("X-Orientation","p")
                     format = (300, 250)
           
             template_name = creative.ad_type

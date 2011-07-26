@@ -427,9 +427,13 @@ class AdHandler(webapp.RequestHandler):
                 # self.response.headers.add_header("X-Backfill","alert")
                 # self.response.headers.add_header("X-Nativeparams",'{"title":"MoPub Alert View","cancelButtonTitle":"No Thanks","message":"We\'ve noticed you\'ve enjoyed playing Angry Birds.","otherButtonTitle":"Rank","clickURL":"mopub://inapp?id=pixel_001"}')
                 # self.response.headers.add_header("X-Customselector","customEventTest")
+                if "full_tablet" in adunit.format:
+                    self.response.headers.add_header("X-Adtype", "interstitial")
+                    self.response.headers.add_header("X-Fulladtype", "iAd_full")
+                else:
+                    self.response.headers.add_header("X-Adtype", str(creative.ad_type))
+                    self.response.headers.add_header("X-Backfill", str(creative.ad_type))
                 
-                self.response.headers.add_header("X-Adtype", str(creative.ad_type))
-                self.response.headers.add_header("X-Backfill", str(creative.ad_type))
                 self.response.headers.add_header("X-Failurl", _build_fail_url(self.request.url, on_fail_exclude_adgroups))
 
             elif str(creative.ad_type) == "admob_native":
@@ -440,7 +444,12 @@ class AdHandler(webapp.RequestHandler):
                     self.response.headers.add_header("X-Adtype", str(creative.ad_type))
                     self.response.headers.add_header("X-Backfill", str(creative.ad_type))
                 self.response.headers.add_header("X-Failurl", _build_fail_url(self.request.url, on_fail_exclude_adgroups))
-                self.response.headers.add_header("X-Nativeparams", '{"adUnitID":"'+adunit.get_pub_id("admob_pub_id")+'"}')
+                nativeparams_dict = {
+                    "adUnitID":adunit.get_pub_id("admob_pub_id"),
+                    "adWidth":adunit.get_width(),
+                    "adHeight":adunit.get_height()
+                }
+                self.response.headers.add_header("X-Nativeparams", simplejson.dumps(nativeparams_dict))
 
             elif str(creative.ad_type) == "millennial_native":
                 if "full" in adunit.format:

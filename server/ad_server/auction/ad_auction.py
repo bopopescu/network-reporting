@@ -137,7 +137,7 @@ class AdAuction(object):
 
         # SPAM TEH SHIT OUT OF MPX.MOPUB.COM
         try:
-            spam_rpc = urlfetch.create_rpc()
+            spam_rpc = urlfetch.create_rpc(deadline=.1)
             urlfetch.make_fetch_call(spam_rpc, 'http://mpx.mopub.com/req')
         except Exception as e:
             trace_logging.error(e)

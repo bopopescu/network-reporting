@@ -138,8 +138,9 @@ class AdAuction(object):
         # SPAM TEH SHIT OUT OF MPX.MOPUB.COM
         try:
             spam_rpc = urlfetch.create_rpc(deadline=.1)
-            urlfetch.make_fetch_call(spam_rpc, 'http://mpx.mopub.com/req')
-        except Exception as e:
+            urlfetch.make_fetch_call(spam_rpc, 'http://mpx.mopub.com/req?asdfasdfasdfasdf')
+            spam_rpc.get_result()
+        except Exception, e:
             trace_logging.error(e)
         
         geo_predicates = AdAuction.geo_predicates_for_rgeocode(country_tuple)

@@ -26,7 +26,7 @@ class AdUnitContext(object):
         
         adgroups = cls.fetch_adgroups(adunit)
         campaigns = cls.fetch_campaigns(adgroups)
-        creatives = cls.fetch_creatives(adgroups)
+        creatives = cls.fetch_creatives(adunit, adgroups)
         
         adunit_context = cls(adunit, 
                              campaigns, 
@@ -100,11 +100,14 @@ class AdUnitContext(object):
         return adgroups
 
     @classmethod
-    def fetch_creatives(cls, adgroups, limit=MAX_OBJECTS):
+    def fetch_creatives(cls, adunit, adgroups, limit=MAX_OBJECTS):
         logging.info("getting creatives from db")
-        creatives = Creative.all().filter("ad_group IN", adgroups).\
-                    filter("active =",True).filter("deleted =",False).\
+        creatives = Creative.all().filter("account =",adunit.account).\
+                    filter("active =", True).filter("deleted =",False).\
                     fetch(limit)
+        # creatives = Creative.all().filter("ad_group IN", adgroups).\
+        #             filter("active =",True).filter("deleted =",False).\
+        #             fetch(limit)
                     
         # re-write creative so that ad_group is actually the object already in memory
         for creative in creatives:

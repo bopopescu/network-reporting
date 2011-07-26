@@ -866,7 +866,7 @@ class DisplayCreativeHandler(RequestHandler):
         c = CreativeQueryManager.get(creative_key)
         if c and c.ad_type == "image":
             if c.image_blob:
-                return HttpResponse('<img src="%s"/>'%images.get_serving_url(c.image_blob))
+                return HttpResponse('<html><head><style type="text/css">body{margin:0;padding:0;}</style></head><body><img src="%s"/></body></html>'%images.get_serving_url(c.image_blob))
             else:    
                 return HttpResponse(c.image,content_type='image/png')
         if c and c.ad_type == "text_icon":

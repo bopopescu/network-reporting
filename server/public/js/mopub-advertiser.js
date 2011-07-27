@@ -1396,6 +1396,7 @@ var mopub = mopub || {};
 
     function applyFilters(){
         var statusFilter = $("#campaigns-filterOptions").find(':checked').val();
+        if (!statusFilter) return;
         var appFilter = $('#campaigns-appFilterOptions').val();
         window.location.hash = "status:" + statusFilter + "&app:" + appFilter;
         // Hide all the campaigns, then show the ones that pass the filters

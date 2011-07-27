@@ -2231,7 +2231,18 @@ table.campaignData-main, table.reportData-table {
   padding-top: 5px;
   padding-left: 50px;
 }
-
+                  
+#archive-link{
+  float: right;
+  position: relative;
+  bottom: 20px;
+}             
+             
+/* Campaigns Archive */
+.dataTable-budget-delivered, .dataTable-budget-goal{
+  width:100px;    
+}   
+                             
 /* Login */
 
 #login-left, #login-left .fieldset{

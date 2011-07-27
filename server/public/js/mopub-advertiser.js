@@ -565,6 +565,12 @@ var mopub = mopub || {};
       .click(function(e) {
         e.preventDefault();
         $('#campaignForm').find("#action").attr("value","resume").end().submit();
+    }); 
+      
+    $('#campaignForm-archive')
+      .click(function(e) {
+        e.preventDefault();
+        $('#campaignForm').find("#action").attr("value","archive").end().submit();
     });
 
     $('#campaignForm-delete')

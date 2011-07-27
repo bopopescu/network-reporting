@@ -268,34 +268,39 @@ class AdAuction(object):
                                                          kws = keywords,
                                                          udid = udid,
                                                          ua = user_agent,
-                                                         ll = ll
+                                                         ll = ll,
                                                          ip = request.remote_addr,
                                                          adunit_context = adunit_context)
                         # Turn it into a get query
+                        trace_logging.info("\nSending to MPX: %s\n" % mk_args)
                         mpx_url = 'http://mpx.mopub.com/req?' + urllib.urlencode(mk_args)
                         xhtml = None
                         charge_price = None
                         # Try to get a response
+                        crtv = adunit_context.get_creatives_for_adgroups(eligible_adgroups)
+                        if isinstance(crtv, list):
+                            crtv = crtv[0]
+                        # set the creative as having done w/e
+                        mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=None, user_agent=user_agent, headers=request.headers, udid=udid)
                         try:
                             fetched = urlfetch.fetch(mpx_url, deadline=.2)
                             # Make sure it's a good response
                             if fetched.status_code == 200:
                                 data = simplejson.loads(fetched.content)
                                 # With valid data
-                                if data.has_key('xhtml') and data.has_key('charge_price'):
+                                if data.has_key('xhtml') and data.has_key('charge_price') and data['xhtml']:
                                     xhtml = data['xhtml']
                                     charge_price = data['charge_price']
+                                else:
+                                    continue
                         except urlfetch.DownloadError, e:
                             pass
                         trace_logging.info('\n\nMPX Charge: %s\nMPX HTML: %s\n' % (charge_price, xhtml))
                         if xhtml:
-                            ag = eligible_adgroups[0]
-                            if isinstance(ag.creatives, list):
-                                crtv = ag.creatives[0]
-                            else:
-                                crtv = ag.creatives
-                            # set the creative as having done w/e
+                            # Should only be one
                             crtv.html_data = xhtml
+                            # Should really be the pub's cut
+                            crtv.adgroup.bid = charge_price
                             # I think we should log stuff here but I don't know how to do that
                             return [crtv, on_fail_exclude_adgroups]
                         else:

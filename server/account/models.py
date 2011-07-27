@@ -82,6 +82,8 @@ class Account(db.Model):
     phone = db.PhoneNumberProperty()
     country = db.StringProperty()
     traffic = db.FloatProperty()
+    # Publishers website, this is for MPX
+    domain = db.StringProperty()
 
     active = db.BooleanProperty(default=False)
     status = db.StringProperty()  # Initially storing onboarding status

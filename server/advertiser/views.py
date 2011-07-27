@@ -383,7 +383,12 @@ class CreateCampaignAJAXHander(RequestHandler):
 
              ##Check if creative exists for this network type, if yes
              #update, if no, delete old and create new
-                if campaign.campaign_type == "network":
+                if campaign.campaign_type == 'marketplace':
+                    creative = adgroup.default_creative()
+                    creative.account = self.account
+                    CreativeQueryManager.put(creative)
+
+                elif campaign.campaign_type == "network":
                     html_data = None
                     if adgroup.network_type == 'custom':
                         html_data = adgroup_form['custom_html'].value
@@ -659,7 +664,7 @@ class ShowAdGroupHandler(RequestHandler):
               graph_adunits[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[au.all_stats for au in adunits[3:]])]
 
         # Load creatives if we are supposed to 
-        if not adgroup.network_type:  
+        if not (adgroup.network_type or adgroup.campaign.campaign_type== 'marketplace'):
             # In order to have add creative
             creative_handler = AddCreativeHandler(self.request)
             creative_fragment = creative_handler.get() # return the creative fragment

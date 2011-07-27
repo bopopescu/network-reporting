@@ -278,6 +278,7 @@
           </section>
           
           {% ifnotequal campaign.campaign_type "network" %}
+          {% ifnotequal campaign.campaign_type "marketplace" %}
           <section id="dashboard-apps">
             <div class="buttonBank buttonBank-right">
               <a class="button" id="advertiser-adgroups-addCreativeButton" href="#">Add a creative</a>
@@ -414,6 +415,7 @@
               </div>
             </section>
           </section>
+            {% endifnotequal %} {# endifnotequal campaign.campaign_type "marketplace" #}
             {% endifnotequal %} {# endifnotequal campaign.campaign_type "network" #}
           
             {# Form for in-place updating #}

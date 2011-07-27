@@ -36,6 +36,46 @@ class CampaignQueryManager(QueryManager):
     Model = Campaign
 
     @classmethod
+    def get_marketplace_campaign(cls, adunit=None):
+        """ Returns a marketplace campaign for this adunit, 
+            Creatives a new campaign if one doesn't exist already
+            """
+        if adunit is None:
+            return None
+        camps = cls.get_campaigns(account=adunit.account)
+        mkcamp = filter(lambda camp: camp.campaign_type == 'marketplace', camps)
+        if mkcamp:
+            ag = camp.adgroups
+            if adunit.key() not in ag.site_keys:
+                ag.site_keys.append(adunit.key())
+                ag.put()
+            mkcamp.put()
+            return mkcamp
+        else:
+            return cls.add_marketplace_campaign(cls, adunit=adunit)
+
+        @classmethod
+        def add_marketplace_campaign(cls, adunit=None):
+                """ Adds a marketplace campagin for this adunit
+                    """
+                acct = adunit.account
+                camp = Campaign(name = 'Marketplace Campaign',
+                                        campaign_type = 'marketplace',
+                                        account = acct,
+                                        )
+                camp.put()
+                ag = AdGroup(campaign = camp,
+                                     account = acct,
+                                     name = 'Marketplace adgroup',
+                                     site_keys = [adunit.key()],
+                                     )
+                ag.put()
+                creative = adgroup.default_creative()
+                creative.account = acct
+                creative.put()
+                return camp
+               
+    @classmethod
     def get_campaigns(cls,account=None,adunit=None,deleted=False,limit=MAX_OBJECTS):
         campaigns = Campaign.all()
         if not (deleted == None):

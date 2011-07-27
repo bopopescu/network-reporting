@@ -475,7 +475,7 @@ class CustomNativeCreative(HtmlCreative):
 class iAdCreative(Creative):
     @property
     def multi_format(self):
-        return ('728x90', '320x50',)
+        return ('728x90', '320x50', 'full_tablet')
     
 class AdSenseCreative(Creative):
     pass
@@ -487,7 +487,7 @@ class AdMobNativeCreative(AdMobCreative):
 
     @property
     def multi_format(self):
-        return ('728x90', '320x50', 'full' ,)
+        return ('728x90', '320x50', '300x250', 'full' ,)
 
 class MillennialCreative(Creative):
     
@@ -520,7 +520,9 @@ class AppNexusCreative(Creative):
     pass  
 
 class BrightRollCreative(Creative):
-    pass
+    @property
+    def multi_format(self):
+        return ('full', 'full_tablet')
 
 class JumptapCreative(Creative):
     @property

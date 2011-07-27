@@ -13,6 +13,13 @@
 {% block messageCenter %}{% endblock messageCenter %}
 
 {% block titleBarRight %}
+        {% if not account.status %}
+        <!-- MixPanel Tracking -->
+        <script type="text/javascript">
+        mpq.push(["track", "Post sign up: Campaign viewed"]);
+        </script>
+        {% endif %}
+
             <span class="titlebar-right">
               {% if adgroup.active %}
               	<select name="campaign-status-options" id="campaign-status-options" class="selectmenu"> 
@@ -379,7 +386,7 @@
                         <h3>{{c.name}}</h3>
                         <div>
                           <input type="hidden" name="{{c.key}}-preview-src" id="{{c.key}}-preview-src" value="{% url advertiser_creative_html creative_key=c.key %}">
-                          <iframe frameborder="0" scrolling="no" {% if c.size.2 %}width="{{c.size.0}}" height="{{c.size.2}}"{% else %}width="320" height="480"{% endif %}>
+                          <iframe frameborder="0" scrolling="no" {% if c.size.2 %}width="{{c.size.0}}" height="{{c.size.2}}"{% else %} {% if c.landscape %}width="480" height="320"{% else %}width="320" height="480"{% endif %}{% endif %}>
                             <p>Your browser does not support iframes.</p>
                           </iframe>
                         </div>

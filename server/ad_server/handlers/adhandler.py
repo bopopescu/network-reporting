@@ -281,6 +281,10 @@ class AdHandler(webapp.RequestHandler):
                     #to 300x250 if the adunit is a full (of some kind) and the creative is from
                     #an ad network that doesn't serve fulls
                     network_center = True
+                    if adunit.landscape:
+                        self.response.headers.add_header("X-Orientation","l")
+                    else:
+                        self.response.headers.add_header("X-Orientation","p")
                     format = (300, 250)
           
             template_name = creative.ad_type
@@ -427,9 +431,13 @@ class AdHandler(webapp.RequestHandler):
                 # self.response.headers.add_header("X-Backfill","alert")
                 # self.response.headers.add_header("X-Nativeparams",'{"title":"MoPub Alert View","cancelButtonTitle":"No Thanks","message":"We\'ve noticed you\'ve enjoyed playing Angry Birds.","otherButtonTitle":"Rank","clickURL":"mopub://inapp?id=pixel_001"}')
                 # self.response.headers.add_header("X-Customselector","customEventTest")
+                if "full_tablet" in adunit.format:
+                    self.response.headers.add_header("X-Adtype", "interstitial")
+                    self.response.headers.add_header("X-Fulladtype", "iAd_full")
+                else:
+                    self.response.headers.add_header("X-Adtype", str(creative.ad_type))
+                    self.response.headers.add_header("X-Backfill", str(creative.ad_type))
                 
-                self.response.headers.add_header("X-Adtype", str(creative.ad_type))
-                self.response.headers.add_header("X-Backfill", str(creative.ad_type))
                 self.response.headers.add_header("X-Failurl", _build_fail_url(self.request.url, on_fail_exclude_adgroups))
 
             elif str(creative.ad_type) == "admob_native":
@@ -440,7 +448,12 @@ class AdHandler(webapp.RequestHandler):
                     self.response.headers.add_header("X-Adtype", str(creative.ad_type))
                     self.response.headers.add_header("X-Backfill", str(creative.ad_type))
                 self.response.headers.add_header("X-Failurl", _build_fail_url(self.request.url, on_fail_exclude_adgroups))
-                self.response.headers.add_header("X-Nativeparams", '{"adUnitID":"'+adunit.get_pub_id("admob_pub_id")+'"}')
+                nativeparams_dict = {
+                    "adUnitID":adunit.get_pub_id("admob_pub_id"),
+                    "adWidth":adunit.get_width(),
+                    "adHeight":adunit.get_height()
+                }
+                self.response.headers.add_header("X-Nativeparams", simplejson.dumps(nativeparams_dict))
 
             elif str(creative.ad_type) == "millennial_native":
                 if "full" in adunit.format:
@@ -466,7 +479,7 @@ class AdHandler(webapp.RequestHandler):
                   "Gclientid":str(site.get_pub_id("adsense_pub_id")),
                   "Gcompanyname":str(site.account.adsense_company_name),
                   "Gappname":str(site.app_key.adsense_app_name),
-                  "Gappid":"0",
+                  "Gappid":str(site.app_key.adsense_app_name or '0'),
                   "Gkeywords":str(site.keywords or ''),
                   "Gtestadrequest":"0",
                   "Gchannelids":str(site.adsense_channel_id or ''),        

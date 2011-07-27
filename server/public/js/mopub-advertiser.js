@@ -482,16 +482,13 @@ var mopub = mopub || {};
         e.preventDefault();
         var creative_key = $(this).attr("id");
         var creative_src = $('#'+creative_key+'-preview-src').val();
+        var width = parseInt($("#"+creative_key+"-preview iframe").attr("width"));
+        var height = parseInt($("#"+creative_key+"-preview iframe").attr("height"));
         $("#"+creative_key+"-preview iframe").attr('src', creative_src);
         $("#"+creative_key+"-preview").dialog({
-          buttons: [
-            {
-              text: 'Close', 
-              click: function() {
-                $(this).dialog("close");
-              }
-            }
-          ]
+          buttons: [{text: 'Close',click: function() {$(this).dialog("close")}}],
+          width: width+100,
+          height: height+130
         });
       });
 
@@ -1402,6 +1399,7 @@ var mopub = mopub || {};
 
     function applyFilters(){
         var statusFilter = $("#campaigns-filterOptions").find(':checked').val();
+        if (!statusFilter) return;
         var appFilter = $('#campaigns-appFilterOptions').val();
         window.location.hash = "status:" + statusFilter + "&app:" + appFilter;
         // Hide all the campaigns, then show the ones that pass the filters

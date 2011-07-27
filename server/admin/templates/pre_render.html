@@ -73,6 +73,7 @@
 	<h3>Top MoPubs</h3>
 	<table width="100%">
 		<thead>
+		  <th></th>
 			<th style="text-align: left;">App</th>
 			<th style="text-align: left;">Account</th>
 			<th width="75px">Requests</th>
@@ -84,7 +85,8 @@
 		</thead>
 		{% for a in apps %}
 		<tr class="alternating-color">
-			<td><a href="{% url admin_switch_user %}?user_email={{a.account.mpuser.email}}&amp;next={% url publisher_app_show app_key=a.publisher.key %}">{{a.publisher.name|truncate:50}}</a></td>
+		  <td>{{forloop.counter}}&nbsp;</td>
+			<td><a href="{% url admin_switch_user %}?user_email={{a.account.mpuser.email}}&amp;next={% url publisher_app_show app_key=a.publisher.key %}">{{a.publisher.name|truncate:46}}</a></td>
 			<td><a href="mailto:{{a.publisher.account.mpuser.email}}">{{a.publisher.account.mpuser.email}}</a></td>
 			<td class="numeric">{{a.request_count|withsep}}</td>
 			<td class="numeric">{{a.impression_count|withsep}}</td>

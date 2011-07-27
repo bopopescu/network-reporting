@@ -15,7 +15,9 @@
 {% block messageCenter %}{% endblock messageCenter %}
 
 
-{% block content %}
+{% block content %}                
+
+
 <form method="post" action="{% url advertiser_bid_pause %}" id="campaignForm">        
   
   {% if not archived_adgroups %}

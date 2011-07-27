@@ -207,7 +207,22 @@
                 </tr>
               </tbody>
             </table>
-          </section>{% endblock messageCenter %}{% block content %}{% endblock content %}
+          </section>{% endblock messageCenter %}
+          
+          
+          {% block flash %}
+            {% if flash %}
+                <!-- There's one or more flash-scoped objects -->
+
+                {% for key, value in flash.items %}
+                    <div class="flash_{{ key }}">
+                        <p>{{ value }}</p>
+                    </div>
+                {% endfor %}
+            {% endif %}    
+          {% endblock flash %}
+          
+          {% block content %}{% endblock content %}
         </div>
       </div>
     </div>

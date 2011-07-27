@@ -15,12 +15,13 @@ class JumptapServerSide(ServerSide):
    
    
     def get_key_values(self):
+        language = self.request.headers.get('Accept-Language', None)
         key_values = {#'gateway-ip': '208.54.5.50',    # TODO: This should be the x-forwarded-for header of the device
                       'hid': self.get_udid(),
                       'client-ip': self.get_ip(), # Test value: 'client-ip': '208.54.5.50'
                       'ua': self.get_user_agent(),
-                      'v': 'v29' }
-                      
+                      'v': 'v29',
+                      'l': language[:2] if language else None }
         # Jumptap uses all levels of pub_ids
         # 'pub' -- Account Level
         # 'site' -- App Level

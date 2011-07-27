@@ -272,7 +272,6 @@ class AdAuction(object):
                                                          ip = request.remote_addr,
                                                          adunit_context = adunit_context)
                         # Turn it into a get query
-                        for k,v in mk_args.iteritems():
                         mpx_url = 'http://mpx.mopub.com/req?' + urllib.urlencode(mk_args)
                         xhtml = None
                         charge_price = None

@@ -1,6 +1,5 @@
 {% load filters %}
-
-
+<script src="sorttable.js"></script>
 <section class="offset separated" id="dashboard-stats"> 
     <div class="stats"> 
     <div class="stats-breakdown">
@@ -69,14 +68,14 @@
   <div class="clear"></div> 
 </section>
 
-<section class="separated">
+<section class="seperated">
 	<h3>Top MoPubs</h3>
-	<table width="100%">
+	<table class ="sortable" width="100%">
 		<thead>
 			<th style="text-align: left;">App</th>
 			<th style="text-align: left;">Account</th>
-			<th width="75px">Requests</th>
-			<th width="75px">Impressions</th>
+			<th width="100px">Requests</th>
+			<th width="100px">Impressions</th>
 			<th width="75px">Fill Rate</th>
 			<th width="75px">Clicks</th>
 			<th width="75px">CTR</th>
@@ -99,12 +98,12 @@
 
 <section class="separated">
     <h3>New users since {{start_date}}</h3>
-    <table width="100%">
+    <table class="sortable" width="100%">
         <thead>
     		<tr>
     		    <th style="text-align: left;">Email</th>
     		    <th style="text-align: left;">Date</th>
-    		    <th style="text-align: left;">Mailing List</th>
+    		    <th width="100px">Mailing List</th>
     		</tr>
     	</thead>
     	<tbody>

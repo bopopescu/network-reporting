@@ -21,6 +21,7 @@
 
   <!-- CSS -->
   <link rel="stylesheet" href="/js/mylibs/jquery-ui-1.8.7.custom/css/mopub/jquery-ui-1.8.7.custom.css" />  
+	<link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.8.14/themes/base/jquery-ui.css" />
   <link rel="stylesheet" href="/css/style.css?v=34">
   {% block extraCSS %}{% endblock %}
  
@@ -97,16 +98,6 @@
       var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
       })();
   </script>
-
-	<script>
-	$(function() {
-		$( "#user_switcher" ).autocomplete({
-			source: apps
-		});
-	});
-	</script>
-
-
 </head>
 
 {% block body_content %}
@@ -256,7 +247,6 @@
             {% endif %}
 {% block adminSelect %}
 {% if user.is_admin %}
-				  <div class="ui-widget">
                   <div style="float:right;padding-left:10px">
                     <form id="admin_user_switch" action="{% url admin_switch_user %}" method="POST">
                       Sudo: <input id="user_switcher" type="text" name="user_email" placeholder="user@email.com"/>

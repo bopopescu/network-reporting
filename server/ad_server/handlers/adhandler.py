@@ -479,7 +479,7 @@ class AdHandler(webapp.RequestHandler):
                   "Gclientid":str(site.get_pub_id("adsense_pub_id")),
                   "Gcompanyname":str(site.account.adsense_company_name),
                   "Gappname":str(site.app_key.adsense_app_name),
-                  "Gappid":"0",
+                  "Gappid":str(site.app_key.adsense_app_name or '0'),
                   "Gkeywords":str(site.keywords or ''),
                   "Gtestadrequest":"0",
                   "Gchannelids":str(site.adsense_channel_id or ''),        

@@ -1,8 +1,12 @@
 {% extends 'advertiser/base.html' %}
 {% load filters %}
 {% block pageTitle %}
-          <div class="breadcrumb">
-            <a class="linkIcon breadcrumb-back" href="{% url advertiser_campaign %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Campaigns</a>
+          <div class="breadcrumb">  
+            {% if not adgroup.archived %}
+            <a class="linkIcon breadcrumb-back" href="{% url advertiser_campaign %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Campaigns</a>           
+            {% else %}
+            <a class="linkIcon breadcrumb-back" href="{% url advertiser_archive %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Archived Campaigns</a>   
+            {% endif %}
             <h1>Campaign: {{adgroup.name}}</h1>
           </div>
 {% endblock pageTitle %}
@@ -21,14 +25,24 @@
               	<select name="campaign-status-options" id="campaign-status-options" class="selectmenu"> 
               	  <option value="play" selected="selected">Running</option>
               	  <option value="pause">Pause</option>
+              	  <option value="archive">Archive</option>
             	    <option value="delete">Delete</option>
-              </select>
+                </select>
               {% else %}
-              	<select name="campaign-status-options" id="campaign-status-options" class="selectmenu"> 
-              	  <option value="pause" selected="selected">Paused</option>
-              	  <option value="play">Resume</option>
-            	    <option value="delete">Delete</option>
-              </select>
+                {% if adgroup.archived %}
+                  <select name="campaign-status-options" id="campaign-status-options" class="selectmenu">   
+                    <option value="archive">Archived</option>
+              	    <option value="play">Resume</option>      
+            	      <option value="delete">Delete</option>
+                  </select>
+                {% else %}
+                	<select name="campaign-status-options" id="campaign-status-options" class="selectmenu"> 
+                	  <option value="pause" selected="selected">Paused</option>
+                	  <option value="play">Resume</option> 
+                	  <option value="archive">Archive</option>
+              	    <option value="delete">Delete</option>
+                  </select>    
+                {% endif %}   
               {% endif %}
               <a class="button" id="advertisers-adgroups-editAdGroupButton" href="{% url advertiser_campaign_edit adgroup_key=adgroup.key %}">Edit campaign settings</a>
             </span>

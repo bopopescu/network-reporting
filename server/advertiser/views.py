@@ -42,7 +42,8 @@ from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager,
                                       HtmlCreativeQueryManager
 from publisher.query_managers import AdUnitQueryManager, AppQueryManager, AdUnitContextQueryManager
 from reporting.query_managers import StatsModelQueryManager
-from budget import budget_service
+from budget import budget_service     
+from budget.models import BudgetSlicer
 
 from django.views.decorators.cache import cache_page
 
@@ -272,6 +273,25 @@ def _calc_and_attach_osi_success(adgroups):
 @login_required
 def adgroups(request,*args,**kwargs):
     return AdGroupIndexHandler()(request,*args,**kwargs)
+
+
+class AdGroupArchiveHandler(RequestHandler):
+
+    def get(self):
+        archived_adgroups = AdGroupQueryManager().get_adgroups(account=self.account, archived=True)  
+        
+        for adgroup in archived_adgroups:
+            adgroup.budget_slicer = BudgetSlicer.get_by_campaign(adgroup.campaign)  
+            
+        return render_to_response(self.request, 
+                                   'advertiser/archived_adgroups.html', 
+                                    {'archived_adgroups':archived_adgroups,        
+                                     })
+
+
+@login_required
+def archive(request,*args,**kwargs):
+    return AdGroupArchiveHandler()(request,*args,**kwargs)
 
 
 class CreateCampaignAJAXHander(RequestHandler):
@@ -532,49 +552,7 @@ def campaign_adgroup_new(request,*args,**kwargs):
 def campaign_adgroup_edit(request,*args,**kwargs):
     kwargs.update(title="Edit Ad Group",edit=True)
     return CreateAdGroupHandler()(request,*args,**kwargs)    
-
-class PauseHandler(RequestHandler):
-    def post(self):
-        action = self.request.POST.get("action", "pause")
-        updated_campaigns = []
-        for id_ in self.request.POST.getlist('id') or []:
-            c = CampaignQueryManager.get(id_)
-            updated_campaigns.append(c)
-            update_objs = []
-            if c != None and c.account == self.account:
-                if action == "pause":
-                    c.active = False
-                    c.deleted = False
-                    update_objs.append(c)
-                elif action == "resume":
-                    c.active = True
-                    c.deleted = False
-                    update_objs.append(c)
-                elif action == "delete":
-                    # 'deletes' adgroups and creatives
-                    c.active = False
-                    c.deleted = True
-                    update_objs.append(c)
-                    for adgroup in c.adgroups:
-                        adgroup.deleted = True
-                        update_objs.append(adgroup)
-                        for creative in adgroup.creatives:
-                            creative.deleted = True
-                            update_objs.append(creative)
-            if update_objs: 
-                db.put(update_objs)     
-                adgroups = AdGroupQueryManager().get_adgroups(campaigns=updated_campaigns)
-                adunits = []
-                for adgroup in adgroups:
-                    adunits.extend(adgroups.site_keys)
-                adunits = AdUnitQueryManager.get(adunits)    
-                CachedQueryManager().put(adunits)
-        return HttpResponseRedirect(reverse('advertiser_campaign',kwargs={}))
-
-@login_required
-def campaign_pause(request,*args,**kwargs):
-    return PauseHandler()(request,*args,**kwargs)
-
+       
 class ShowAdGroupHandler(RequestHandler):
     def post(self, adgroup_key):
         adgroup = AdGroupQueryManager.get(adgroup_key)
@@ -582,17 +560,24 @@ class ShowAdGroupHandler(RequestHandler):
         update = False
         campaign = adgroup.campaign
         if opt == 'play':
-            adgroup.active = True
+            adgroup.active = True   
+            adgroup.archived = False
             update = True
         elif opt == 'pause':
+            adgroup.active = False  
+            adgroup.archived = False
+            update = True          
+        elif opt == "archive":
             adgroup.active = False
-            update = True
+            adgroup.archived = True    
+            update = True   
         elif opt == "delete":   
             adgroup.deleted = True
             campaign.deleted = True
             AdGroupQueryManager.put(adgroup)
-            CampaignQueryManager.put(campaign)
-            # TODO: Flash a message saying we deleted the campaign
+            CampaignQueryManager.put(campaign)            
+            
+            self.request.flash["message"] = "Campaign: %s has been deleted." % adgroup.name          
             return HttpResponseRedirect(reverse('advertiser_campaign'))
             
         else:
@@ -718,31 +703,51 @@ class PauseAdGroupHandler(RequestHandler):
     def post(self):
         action = self.request.POST.get("action", "pause")
         adgroups = []
-        update_objs = []
+        update_objs = []  
+        update_creatives = []  
         for id_ in self.request.POST.getlist('id') or []:
             a = AdGroupQueryManager.get(id_)
             adgroups.append(a)
             if a != None and a.campaign.account == self.account:
                 if action == "pause":
                     a.active = False
-                    a.deleted = False
+                    a.deleted = False       
+                    a.archived = False
                     update_objs.append(a)
                 elif action == "resume":
                     a.active = True
-                    a.deleted = False
-                    update_objs.append(a)
+                    a.deleted = False     
+                    a.archived = False
+                    update_objs.append(a)  
+                elif action == "activate":
+                    a.active = True
+                    a.deleted = False     
+                    a.archived = False
+                    update_objs.append(a)          
+                    self.request.flash["message"] = "A campaign has been activated. View it within <a href='%s'>active campaigns</a>." % reverse('advertiser_campaign') 
+                elif action == "archive":       
+                    a.active = False
+                    a.deleted = False     
+                    a.archived = True
+                    update_objs.append(a)    
+                    self.request.flash["message"] = "A campaign has been archived. View it within <a href='%s'>archived campaigns</a>." % reverse('advertiser_archive') 
                 elif action == "delete":
                     a.active = False
-                    a.deleted = True
-                    update_objs.append(a)
+                    a.deleted = True    
+                    a.archived = False
+                    update_objs.append(a)       
+                    self.request.flash["message"] = "Your campaign has been successfully deleted"
                     for creative in a.creatives:
                         creative.deleted = True
-                        update_objs.append(creative)
+                        update_creatives.append(creative)
 
         if update_objs:
-            AdGroupQueryManager.put(update_objs)
+            AdGroupQueryManager.put(update_objs)  
+            
+        if update_creatives:
+            CreativeQueryManager.put(update_creatives)
 
-        return HttpResponseRedirect(reverse('advertiser_campaign', kwargs={}))
+        return HttpResponseRedirect(self.request.META["HTTP_REFERER"])
 
 @login_required
 def bid_pause(request,*args,**kwargs):

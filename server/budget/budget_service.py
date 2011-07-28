@@ -251,7 +251,7 @@ def get_osi(campaign):
     successful_delivery = .95
     
     # If there is no log built yet, we return True
-    if last_budgetslice.actual_spending is None:
+    if last_budgetslice is None:
         return True    
     else:
         return last_budgetslice.actual_spending >= last_budgetslice.desired_spending*successful_delivery 

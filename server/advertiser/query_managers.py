@@ -112,12 +112,16 @@ class AdGroupQueryManager(QueryManager):
     Model = AdGroup   
         
     @classmethod
-    def get_adgroups(cls, campaign=None, campaigns=None, adunit=None, app=None, account=None, deleted=False, limit=MAX_OBJECTS):
+    def get_adgroups(cls, campaign=None, campaigns=None, adunit=None, app=None, account=None, deleted=False, limit=MAX_OBJECTS, archived=False):    
+        """ archived=True means we only show archived adgroups. """
         adgroups = AdGroup.all()
         if not (deleted == None):
-            adgroups = adgroups.filter("deleted =",deleted)
+            adgroups = adgroups.filter("deleted =", deleted)
         if account:
-            adgroups = adgroups.filter("account =",account)      
+            adgroups = adgroups.filter("account =", account)   
+       
+        if not (archived == None):
+            adgroups = adgroups.filter("archived =", archived)    
             
         if campaigns:
             # if the number of campaigns is greater than 30 we must "chunk" the query
@@ -125,8 +129,7 @@ class AdGroupQueryManager(QueryManager):
                 total_adgroups = []
                 for sub_campaigns in chunks(campaigns,MAX_ALLOWABLE_QUERIES):
                     adgroups_current = copy.deepcopy(adgroups)
-                    total_adgroups += adgroups_current.filter("campaign IN", sub_campaigns).\
-                                        fetch(limit)
+                    total_adgroups += adgroups_current.filter("campaign IN", sub_campaigns).fetch(limit)
                 return total_adgroups    
             else:    
                 adgroups = adgroups.filter("campaign IN",campaigns)

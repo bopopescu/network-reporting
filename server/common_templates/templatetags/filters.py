@@ -4,7 +4,8 @@ from datetime import datetime
 from django import template
 import base64, binascii
 from django.utils import simplejson as json
-import logging
+import logging                   
+import string
 
 from country_codes import COUNTRY_CODE_DICT
 
@@ -81,7 +82,13 @@ def percentage_rounded(value):
         return "%1.0f%%" % ((value or 0) * 100)
     else:
         return "0%"        
+       
   
+@register.filter
+def upper(s):
+    return string.upper(s)
+        
+        
 @register.filter
 def withsep(x):
     if x:

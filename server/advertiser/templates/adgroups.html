@@ -22,7 +22,7 @@
               <span class="stepProgress-step stepProgress-active">Step 3: Add campaigns</span> 
             </div>
     {% else %}        
-        <span class="titlebar-right">
+        <span class="titlebar-right">                                                      
             <a class="button" id="advertisers-testAdServer" href="#">Test Campaigns</a>
         </span>
     {% endifequal %}
@@ -484,10 +484,16 @@
               </table>{% endif %}
               
               <div class="form-submit-left"> 
-                <span class="buttonWrap"><a class="button" id="campaignForm-pause">Pause</a>
-                <a class="button" id="campaignForm-resume">Resume</a>
+                <span class="buttonWrap">
+                <a class="button" id="campaignForm-pause">Pause</a>
+                <a class="button" id="campaignForm-resume">Resume</a>      
+                <a class="button" id="campaignForm-archive">Archive</a>   
+                </span>
               </div> 
-            </form> 
+            </form>  
+            <div id="archive-link" > 
+            <a class="linkIcon" href="{% url advertiser_archive %}"> View Archived Campaigns <span class="ui-icon ui-icon-arrowthick-1-e"></span></a>
+            </div>
           </section>
           
           {# Help Content #}

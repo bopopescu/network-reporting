@@ -21,7 +21,7 @@
 
   <!-- CSS -->
   <link rel="stylesheet" href="/js/mylibs/jquery-ui-1.8.7.custom/css/mopub/jquery-ui-1.8.7.custom.css" />  
-  <link rel="stylesheet" href="/css/style.css?v=34">
+  <link rel="stylesheet" href="/css/style.css?v=37">
   {% block extraCSS %}{% endblock %}
  
   <!-- modernizr -->
@@ -215,7 +215,24 @@
                 </tr>
               </tbody>
             </table>
-          </section>{% endblock messageCenter %}{% block content %}{% endblock content %}
+          </section>{% endblock messageCenter %}
+          
+          
+          {% block flash %}
+            {% if flash %}
+                <!-- There's one or more flash-scoped objects -->
+
+                {% for key, value in flash.items %}
+                    <div class="flash_{{ key }} alertMessage">  
+                        {% autoescape off %} 
+                        {{ value }}
+                        {% endautoescape %}
+                    </div>
+                {% endfor %}
+            {% endif %}    
+          {% endblock flash %}
+          
+          {% block content %}{% endblock content %}
         </div>
       </div>
     </div>

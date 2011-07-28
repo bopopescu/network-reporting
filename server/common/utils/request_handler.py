@@ -45,8 +45,7 @@ class RequestHandler(object):
             self.request = request or self.request
         
             try:
-              # Limit date range to 31 days, otherwise too heavy
-              self.date_range = min(int(self.params.get('r')),31)  # date range
+              self.date_range = int(self.params.get('r'))  # date range
             except:
               self.date_range = 14
           

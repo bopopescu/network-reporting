@@ -20,8 +20,10 @@ class JumptapServerSide(ServerSide):
                       'hid': self.get_udid(),
                       'client-ip': self.get_ip(), # Test value: 'client-ip': '208.54.5.50'
                       'ua': self.get_user_agent(),
-                      'v': 'v29',
-                      'l': language[:2] if language else None }
+                      'v': 'v29',}
+        
+        if language:
+            key_values.update(l=language[:2])
         # Jumptap uses all levels of pub_ids
         # 'pub' -- Account Level
         # 'site' -- App Level

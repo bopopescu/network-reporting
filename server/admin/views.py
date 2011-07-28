@@ -222,8 +222,11 @@ def update_sfdc_leads(request, *args, **kwargs):
         try:
             create_result = sforce.upsert('MoPub_Account_ID__c', [account_to_sfdc(a) for a in accounts[:BATCH_SIZE]])
             results += str(create_result)
-        except:
-            logging.info("Submit into SFDC failed for %d records" % BATCH_SIZE)
+        except beatbox.SoapFaultError, errorInfo:
+            mail.send_mail_to_admins(sender="olp@mopub.com",
+                                     subject="SFDC upsert failed",
+                                     body="%s %s" % (results, errorInfo.faultCode, errorInfo.faultString))            
+            logging.error("Submit into SFDC failed for %d records" % BATCH_SIZE)
         accounts[:BATCH_SIZE] = []
 
     # Cool

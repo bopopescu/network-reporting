@@ -16,7 +16,7 @@ from ad_server.debug_console import trace_logging
 from ad_server.optimizer.adunit_context import AdUnitContext, CreativeCTR
 
 from common.constants import MAX_OBJECTS
-CACHE_TIME = 5*60
+CACHE_TIME = 60*60
 
 class AdUnitContextQueryManager(CachedQueryManager):
     """ Keeps an up-to-date version of the AdUnit Context in memcache.

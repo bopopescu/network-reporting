@@ -407,7 +407,7 @@ class DownloadLogsHandler(webapp.RequestHandler):
             next_creation_time_stamp = None
             next_key_name = None
         
-        response_dict = dict(urls=['/files/serve/%s'%urllib.quote(str(bk)) for bk in blob_keys[:-1]])
+        response_dict = dict(urls=['/files/serve/%s'%urllib.quote(str(bk)) for bk in blob_keys[:limit]])
         if next_creation_time_stamp:
             response_dict.update(start_time=str(next_creation_time_stamp))
         if next_key_name:

@@ -141,7 +141,7 @@ class AdAuction(object):
             urlfetch.make_fetch_call(spam_rpc, 'http://mpx.mopub.com/req?asdfasdfasdfasdf')
             spam_rpc.get_result()
         except Exception, e:
-            trace_logging.error(e)
+            trace_logging.error("spam error: %s"%e)
         
         geo_predicates = AdAuction.geo_predicates_for_rgeocode(country_tuple)
 

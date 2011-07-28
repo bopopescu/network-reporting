@@ -36,6 +36,7 @@ class App(db.Model):
   
     name = db.StringProperty(required=True)
     adsense_app_name = db.StringProperty()
+    adsense_app_id = db.StringProperty()
     
     app_type = db.StringProperty(required=True, default='iphone', choices=['iphone', 'android', 'ipad', 'mweb'])
     description = db.TextProperty()

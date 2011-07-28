@@ -13,6 +13,7 @@
 {% endblock titleBarRight %}
 
 {% block content %}	
+
 {{page.html|safe}}
 <script type="text/javascript">
     var reloadTime;
@@ -23,4 +24,19 @@
     {% endif %}
 	setTimeout("window.location.href = '{% url admin_dashboard %}';", reloadTime);
 </script>
+<script>
+	$(function() {
+		var all_emails = new Array();
+		$('.account_email').each(function(e){
+			if($.inArray($(this).html(), all_emails) == -1){
+				all_emails.push($(this).html());
+			}
+		});
+		$("input#user_switcher").autocomplete({
+			source: all_emails
+		});
+	});
+</script>
+
+
 {% endblock %}

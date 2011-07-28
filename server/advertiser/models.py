@@ -519,7 +519,9 @@ class AppNexusCreative(Creative):
     pass  
 
 class BrightRollCreative(Creative):
-    pass
+    @property
+    def multi_format(self):
+        return ('full', 'full_tablet')
 
 class JumptapCreative(Creative):
     @property

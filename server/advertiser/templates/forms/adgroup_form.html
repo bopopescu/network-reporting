@@ -137,7 +137,7 @@
                           </div>
                           <ul style="overflow:auto; max-height:200px; list-style: none;padding:5px 10px" class="{% if form.site_keys.errors %}form-error{% endif %}">
                         {% endifchanged %}
-                          <li><input type="checkbox" name="site_keys" value="{{adunit.key}}"{% if adunit.checked %} checked="checked"{% endif %}/> {{adunit.name}}</li>
+                          <li><input type="checkbox" name="site_keys" value="{{adunit.key}}" id="site_keys-{{adunit.key}}"{% if adunit.checked %} checked="checked"{% endif %}/> <label for="site_keys-{{adunit.key}}">{{adunit.name}}</label></li>
                         {% if forloop.last %}
                           </ul>
                         </div>

@@ -15,8 +15,8 @@
                             {% endifequal %}
                           {% else %}
                           <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="network" id="advertiser-CampaignType-network" {% ifequal form.campaign_type.value "network" %}checked="checked"{% endifequal %}/> <label for="advertiser-CampaignType-network">Network</label>
-                          <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="marketplace" id="advertiser-CampaignType-marketplace" {% ifequal form.campaign_type.value "marketplace" %}checked="checked"{% endifequal %}/>
-                          <label for="advertiser-CampaignType-marketplace">Marketplace</label> 
+                          <input type="radio" class="input-radio marketplace" name="{{form.campaign_type.name}}" value="marketplace" id="advertiser-CampaignType-marketplace" {% ifequal form.campaign_type.value "marketplace" %}checked="checked"{% endifequal %}/>
+                          <label class='marketplace' for="advertiser-CampaignType-marketplace">Marketplace</label> 
                           {% endif %}
                           {% if form.instance and form.campaign_type.value == 'network' %}</div>
                           <strong>Network</strong>{% endif %}
@@ -31,8 +31,10 @@
                           <p>A <strong>Promotional</strong> campaign is for house ads like advertising another of your applications, ads for the paid version of your app or other functions like a "rate this app" campaign.</p>
                           <h4>Network</h4>
                           <p>A <strong>Network</strong> campaign is used for showing ads from an ad network like AdMob or iAd.</p>
+                          <span class='marketplace'>
                           <h4>Marketplace</h4>
                           <p>A <strong>Marketplace</strong> campaign enables the MoPub marketplace for the selected adunits</p>
+                          </span>
                         </div>
                       </dd>
                       <div class="campaignDependent gtee">

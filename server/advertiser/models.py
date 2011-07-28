@@ -312,8 +312,11 @@ class AdGroup(db.Model):
             if self.active and campaign.active:
                 return True
 
-        return False
- 
+        return False    
+        
+    @property
+    def created_date(self):
+        return self.created.date()
 class Creative(polymodel.PolyModel):
     name = db.StringProperty()
     custom_width = db.IntegerProperty()

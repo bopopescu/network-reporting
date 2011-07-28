@@ -1039,13 +1039,13 @@ label.error {
   border-radius: 5px;
 }
 
-.alertMessage.success {
+.alertMessage.success, .flash_message{
   color: #5d8c00;
   background: #fbfff2;
   border-color: #cee6ac;
 }
 
-.alertMessage.error {
+.alertMessage.error, .flash_error {
   color: #cc2929;
   background: #fff2f2;
   border-color: #e6a1a1;
@@ -1249,6 +1249,10 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
 }
 .dataTable-date {
   width: 175px;
+}  
+
+.dataTable-date-short {
+  width: 100px;
 }
 
 .dataTable-ecpm {

@@ -551,7 +551,10 @@ var mopub = mopub || {};
       .button({ icons : {primary : 'ui-icon-circle-plus'} });
     
     $('#advertisers-adgroups-editAdGroupButton').button({ icons: { primary: "ui-icon-wrench" } });
+                                
 
+
+    // TODO: This is not DRY
     $('#campaignForm-pause')
       .click(function(e) {
         e.preventDefault();
@@ -562,7 +565,13 @@ var mopub = mopub || {};
       .click(function(e) {
         e.preventDefault();
         $('#campaignForm').find("#action").attr("value","resume").end().submit();
-    }); 
+    });  
+    
+    $('#campaignForm-activate')
+      .click(function(e) {
+        e.preventDefault();
+        $('#campaignForm').find("#action").attr("value","activate").end().submit();
+    });
       
     $('#campaignForm-archive')
       .click(function(e) {

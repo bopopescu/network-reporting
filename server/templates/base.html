@@ -21,7 +21,7 @@
 
   <!-- CSS -->
   <link rel="stylesheet" href="/js/mylibs/jquery-ui-1.8.7.custom/css/mopub/jquery-ui-1.8.7.custom.css" />  
-  <link rel="stylesheet" href="/css/style.css?v=36">
+  <link rel="stylesheet" href="/css/style.css?v=37">
   {% block extraCSS %}{% endblock %}
  
   <!-- modernizr -->
@@ -220,8 +220,10 @@
                 <!-- There's one or more flash-scoped objects -->
 
                 {% for key, value in flash.items %}
-                    <div class="flash_{{ key }}">
-                        <p>{{ value }}</p>
+                    <div class="flash_{{ key }} alertMessage">  
+                        {% autoescape off %} 
+                        {{ value }}
+                        {% endautoescape %}
                     </div>
                 {% endfor %}
             {% endif %}    

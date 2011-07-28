@@ -279,16 +279,13 @@ class AdGroupArchiveHandler(RequestHandler):
 
     def get(self):
         archived_adgroups = AdGroupQueryManager().get_adgroups(account=self.account, archived=True)  
-                                                                
-        self.request.flash["message"] = "thing"
         
         for adgroup in archived_adgroups:
             adgroup.budget_slicer = BudgetSlicer.get_by_campaign(adgroup.campaign)  
             
         return render_to_response(self.request, 
                                    'advertiser/archived_adgroups.html', 
-                                    {'archived_adgroups':archived_adgroups,
-                                     'flash_message':self.request.flash["message"]
+                                    {'archived_adgroups':archived_adgroups,        
                                      })
 
 
@@ -573,13 +570,14 @@ class ShowAdGroupHandler(RequestHandler):
         elif opt == "archive":
             adgroup.active = False
             adgroup.archived = True    
-            update = True
+            update = True   
         elif opt == "delete":   
             adgroup.deleted = True
             campaign.deleted = True
             AdGroupQueryManager.put(adgroup)
-            CampaignQueryManager.put(campaign)
-            # TODO: Flash a message saying we deleted the campaign
+            CampaignQueryManager.put(campaign)            
+            
+            self.request.flash["message"] = "Campaign: %s has been deleted." % adgroup.name          
             return HttpResponseRedirect(reverse('advertiser_campaign'))
             
         else:
@@ -720,17 +718,25 @@ class PauseAdGroupHandler(RequestHandler):
                     a.active = True
                     a.deleted = False     
                     a.archived = False
-                    update_objs.append(a)
+                    update_objs.append(a)  
+                elif action == "activate":
+                    a.active = True
+                    a.deleted = False     
+                    a.archived = False
+                    update_objs.append(a)          
+                    self.request.flash["message"] = "A campaign has been activated. View it within <a href='%s'>active campaigns</a>." % reverse('advertiser_campaign') 
                 elif action == "archive":       
                     a.active = False
                     a.deleted = False     
                     a.archived = True
-                    update_objs.append(a)
+                    update_objs.append(a)    
+                    self.request.flash["message"] = "A campaign has been archived. View it within <a href='%s'>archived campaigns</a>." % reverse('advertiser_archive') 
                 elif action == "delete":
                     a.active = False
                     a.deleted = True    
                     a.archived = False
-                    update_objs.append(a)
+                    update_objs.append(a)       
+                    self.request.flash["message"] = "Your campaign has been successfully deleted"
                     for creative in a.creatives:
                         creative.deleted = True
                         update_creatives.append(creative)

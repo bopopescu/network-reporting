@@ -71,6 +71,7 @@
 	<h3>Top MoPubs</h3>
 	<table class ="sortable" width="100%" onselectstart="return false" ondragstart="return false">
 		<thead>
+		  <th></th>
 			<th style="text-align: left;">App</th>
 			<th style="text-align: left;">Account</th>
 			<th width="100px">Requests</th>
@@ -82,6 +83,7 @@
 		</thead>
 		{% for a in apps %}
 		<tr class="alternating-color">
+			<td>{{forloop.counter}}&nbsp;</td>
 			<td><a href="{% url admin_switch_user %}?user_email={{a.account.mpuser.email}}&amp;next={% url publisher_app_show app_key=a.publisher.key %}">{{a.publisher.name|truncate:46}}</a></td>
 			<td><a href="mailto:{{a.publisher.account.mpuser.email}}" class="account_email">{{a.publisher.account.mpuser.email}}</a></td>
 			<td class="numeric">{{a.request_count|withsep}}</td>

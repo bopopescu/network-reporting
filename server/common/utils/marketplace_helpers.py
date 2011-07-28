@@ -15,7 +15,8 @@ def build_marketplace_dict(adunit, kws, udid, ua, ll, ip, adunit_context):
                     pub_id = str(app.account.key()),
                     pub_name = app.account.company,
                     pub_domain = app.account.domain,
-                    categories = [app.primary_category, app.secondary_category],
+                    primary_category = app.primary_category, 
+                    secondary_category = app.secondary_category,
                     #categories = app.categories,
                     app_bundle = app.package if app.app_type == 'android' else None,
                     # These return 0 if interstitial or w/e, don't return 0 just None

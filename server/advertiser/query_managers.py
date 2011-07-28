@@ -54,26 +54,26 @@ class CampaignQueryManager(QueryManager):
         else:
             return cls.add_marketplace_campaign(cls, adunit=adunit)
 
-        @classmethod
-        def add_marketplace_campaign(cls, adunit=None):
-                """ Adds a marketplace campagin for this adunit
-                    """
-                acct = adunit.account
-                camp = Campaign(name = 'Marketplace Campaign',
-                                        campaign_type = 'marketplace',
-                                        account = acct,
-                                        )
-                camp.put()
-                ag = AdGroup(campaign = camp,
-                                     account = acct,
-                                     name = 'Marketplace adgroup',
-                                     site_keys = [adunit.key()],
-                                     )
-                ag.put()
-                creative = adgroup.default_creative()
-                creative.account = acct
-                creative.put()
-                return camp
+    @classmethod
+    def add_marketplace_campaign(cls, adunit=None):
+            """ Adds a marketplace campagin for this adunit
+                """
+            acct = adunit.account
+            camp = Campaign(name = 'Marketplace Campaign',
+                                    campaign_type = 'marketplace',
+                                    account = acct,
+                                    )
+            camp.put()
+            ag = AdGroup(campaign = camp,
+                                 account = acct,
+                                 name = 'Marketplace adgroup',
+                                 site_keys = [adunit.key()],
+                                 )
+            ag.put()
+            creative = adgroup.default_creative()
+            creative.account = acct
+            creative.put()
+            return camp
                
     @classmethod
     def get_campaigns(cls,account=None,adunit=None,deleted=False,limit=MAX_OBJECTS):

@@ -333,39 +333,19 @@
               <h2>Marketplace {% if not marketplace %}<span class="muted">(None)</span>{% endif %}
                   <img id="marketplace-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img>
               </h2>
-              {% if marketplace %}<div id='marketplace-rollups' class="campaignData-rollup">
-                  <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
-                      <thead>
-                          <tr>
-                              <th width=25%>Impressions</th>
-                              <th width=25%>Clicks</th>
-                              <th width=25%>CTR</th>
-                              <th width=25%>Conversions</th>
-                          </tr>
-                      </thead>
-                      <tbody>
-                          <tr>
-                              <td id='marketplace-total-imp'>--</td>
-                              <td id='marketplace-total-clk'>--</td>
-                              <td id='marketplace-total-ctr'>--</td>
-                              <td id='marketplace-total-conv'>--</td>
-                              <td></td>
-                          </tr>
-                      </tbody>
-                  </table>
-              </div>
+              {% if marketplace %}
               <table class="dataTable campaignData-main">
                 <thead>
                   <tr>
                     <th class="campaignData-icon"></th>
                     <th class="dataTable-name">Name</th>
-                    <th class="dataTable-data numeric">eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
-                    <th class="dataTable-data numeric">Status</th>
+                    <th class="dataTable-data numeric"></th>
+                    <th class="dataTable-data numeric">Attempts</th>
                     <th class="dataTable-data numeric">Impressions</th>
+                    <th class="dataTable-data numeric">Fillrate</th>
                     <th class="dataTable-data numeric">Clicks</th>
                     <th class="dataTable-data numeric">CTR</th>
-                    <th class="dataTable-data numeric">Conv</th>
-                    <th class="dataTable-data numeric">CPA</th>
+                    <th class="dataTable-data numeric">&nbsp;</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -380,34 +360,17 @@
                       {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
                     </th> 
                     <th class="dataTable-name">
-                        <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
-                        <span class="muted">
-                            {% if adgroup.campaign.start_date and adgroup.campaign.end_date %}
-                            {{adgroup.campaign.start_date|format_date_compact}}-{{adgroup.campaign.end_date|format_date_compact}}.
-                            {% endif %} {% if adgroup.campaign.start_date and not adgroup.campaign.end_date %}
-                            Starts {{adgroup.campaign.start_date|format_date_compact}}.
-                            {% endif %} {% if not adgroup.campaign.start_date and adgroup.campaign.end_date %}
-                            Ends {{adgroup.campaign.start_date|format_date_compact}}.
-                            {% endif %} {% if not adgroup.campaign.start_date and not adgroup.campaign.end_date %}
-                            All dates.
-                            {% endif %}
-                            {% if adgroup.campaign.budget %}{{adgroup.campaign.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
-                        </span>
+                      <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
+
+                      <span class="muted"></span>
                     </th>
-                    <td class="dataTable-data numeric dataTable-ecpm ecpm">
-                        {% if adgroup.bid_strategy == 'cpm' %}
-                        --
-                        {% endif %}
-                        {% if adgroup.bid_strategy == 'cpc' %}
-                        <div class="dataTable-campaign-ecpm ecpm">--</div>
-                        {% endif %}
-                    </td>    
-                    <td class="dataTable-data numeric status">--</td>
+                    <td class="dataTable-data numeric dataTable-ecpm ecpm">--</td>
+                    <td class="dataTable-data numeric marketplace-req req">--</td>
                     <td class="dataTable-data numeric marketplace-imp imp">--</td>
+                    <td class="dataTable-data numeric marketplace-fill fill">--</td>
                     <td class="dataTable-data numeric marketplace-clk clk">--</td>
                     <td class="dataTable-data numeric marketplace-ctr ctr">--</td>
-                    <td class="dataTable-data numeric marketplace-conv conv">--</td>
-                    <td class="dataTable-data numeric marketplace-cpa cpa">--</td>
+                    <td class="dataTable-data numeric">&nbsp;</td>
                   </tr>
                   {% endfor %}
                 </tbody>

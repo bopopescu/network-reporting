@@ -13,6 +13,11 @@
                             {% ifequal form.campaign_type.value 'network' %}
                           <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="network" id="advertiser-CampaignType-network" {% ifequal form.campaign_type.value "network" %}checked="checked"{% endifequal %}/> <label for="advertiser-CampaignType-network">Network</label>
                             {% endifequal %}
+                              {% ifequal form.campaign_type.value 'marketplace' %}
+                              <br/>
+                            <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="marketplace" id="advertiser-CampaignType-network" {% ifequal form.campaign_type.value "marketplace" %}checked="checked"{% endifequal %}/> <label for="advertiser-CampaignType-marketplace">Marketplace</label>
+                              {% endifequal %}
+                            
                           {% else %}
                           <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="network" id="advertiser-CampaignType-network" {% ifequal form.campaign_type.value "network" %}checked="checked"{% endifequal %}/> <label for="advertiser-CampaignType-network">Network</label>
                           <input type="radio" class="input-radio marketplace" name="{{form.campaign_type.name}}" value="marketplace" id="advertiser-CampaignType-marketplace" {% ifequal form.campaign_type.value "marketplace" %}checked="checked"{% endifequal %}/>

@@ -28,7 +28,7 @@ from publisher.query_managers import AdUnitContextQueryManager, AdUnitQueryManag
 
 from account.query_managers import AccountQueryManager
   
-from ad_server.optimizer.adunit_context import AdUnitContext, CreativeCTR
+from ad_server.adunit_context.adunit_context import AdUnitContext, CreativeCTR
   
 class TestQueryManagersAdunitContext(unittest.TestCase):
     """ Make sure that adunit_context is appropriately removed from the cache """
@@ -373,3 +373,12 @@ class TestQueryManagersAdunitContext(unittest.TestCase):
         adgroup = AdGroupQueryManager.get(self.adgroup.key())
         eq_(adgroup.deleted, True)
 
+                            
+
+    def mptest_hypercache(self):
+        """ When we change an adunit_context in memcache, the query manager should 
+            detect the difference and get the updated context."""
+                                                                         
+        local_context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key())    
+
+        

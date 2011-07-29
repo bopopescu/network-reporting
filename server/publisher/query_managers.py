@@ -1,4 +1,6 @@
-import logging
+import logging  
+import hashlib       
+from common.utils import simplejson
 
 from common.utils.query_managers import QueryManager, CachedQueryManager
 
@@ -13,8 +15,7 @@ import datetime
 from reporting.query_managers import StatsModelQueryManager
 from google.appengine.api import memcache
 from ad_server.debug_console import trace_logging
-from ad_server.optimizer.adunit_context import AdUnitContext, CreativeCTR
-
+from ad_server.adunit_context.adunit_context import AdUnitContext, CreativeCTR     
 from common.constants import MAX_OBJECTS
 CACHE_TIME = 60*60
 
@@ -24,48 +25,80 @@ class AdUnitContextQueryManager(CachedQueryManager):
     Model = AdUnitContext
 
     @classmethod
-    def cache_get_or_insert(cls,adunit_key):
-        """ Takes an AdUnit key, gets or builds the context """
+    def cache_get_or_insert(cls, adunit_key):
+        """ Takes an AdUnit key, tries both hypercache and memcache, if found
+            neither, builds the context from the datastore.
+            
+            This assumes that any stale adunit_context objects have been removed
+            from memcache using cache_delete_from_adunits.
+            """
         adunit_key = str(adunit_key).replace("'","")
-        adunit_context_key = "context:"+str(adunit_key)
+        adunit_context_key = AdUnitContext.key_from_adunit_key(adunit_key)  
+        
+        adunit_context_digest = cls.get_memcache_digest(adunit_context_key)
+           
         adunit_context = memcache.get(adunit_context_key, namespace="context")
         if adunit_context is None:
-            trace_logging.warning("fetching adunit from db")
+            trace_logging.warning("memcache miss: fetching adunit_context from db")
             # get adunit from db
             adunit = AdUnit.get(adunit_key)
             # wrap context
-            adunit_context = AdUnitContext.wrap(adunit)
-            # put context in cache as long as it will fit
-            # TODO: fix this so we don't need this hack
-            try:
-                memcache.set(str(adunit_context.key()), 
-                             adunit_context, 
-                             namespace="context", 
-                             time=CACHE_TIME)
-            except:
-                pass    
+            adunit_context = AdUnitContext.wrap(adunit) 
+            memcache.set(str(adunit_context.key()), 
+                         adunit_context, 
+                         namespace="context", 
+                         time=CACHE_TIME)
+                                             
         else:
-            trace_logging.warning("found adunit in cache")    
+            trace_logging.warning("retrieved adunit from memcache")     
+            
+            
         return adunit_context
+             
+    @classmethod
+    def get_memcache_digest(cls, adunit_context_key):
+        """ We store the digest in order to know when the value has changed """
+        return memcache.get(adunit_context_key, namespace="context-digest")
         
     @classmethod
-    def cache_delete_from_adunits(cls, adunits):
-        if not isinstance(adunits,list):
+    def set_memcache_digest(cls, adunit_context_key, adunit_context):
+        """ We build a """  
+        
+        new_digest = cls._make_digest(adunit_context)
+        
+        return memcache.set(adunit_context_key, new_digest, namespace="context-digest") 
+    
+    @classmethod
+    def _make_digest(cls, obj):      
+        """ Makes a digest of an object """       
+        obj = simplejson.dumps(obj) # We serialize the object first
+        m = hashlib.md5()     
+        m.update(obj)
+        return m.digest()
+                               
+    @classmethod
+    def cache_delete_from_adunits(cls, adunits):   
+        """ This is called whenever something modifies an adunit_context.
+            Removes both the context and its digest from memcache in 
+            order to maintain an up-to-date value in the cache. """
+        if not isinstance(adunits, list):
           adunits = [adunits]
         keys = ["context:"+str(adunit.key()) for adunit in adunits]  
         logging.info("deleting from cache: %s"%keys)
-        success = memcache.delete_multi(keys,namespace="context")
-        logging.info("deleted: %s"%success)
+        success = memcache.delete_multi(keys, namespace="context")
+        digest_success = memcache.delete_multi(keys, namespace="context-digest")
+        
+        logging.info("deleted: %s" % success and digest_success)
         return success
 
 class AppQueryManager(QueryManager):
     Model = App
     
     @classmethod
-    def get_apps(cls,account=None,deleted=False,limit=MAX_OBJECTS, alphabetize=False):
-        apps = cls.Model.all().filter("deleted =",deleted)
+    def get_apps(cls, account=None, deleted=False, limit=MAX_OBJECTS, alphabetize=False):
+        apps = cls.Model.all().filter("deleted =", deleted)
         if account:
-            apps = apps.filter("account =",account)
+            apps = apps.filter("account =", account)
             if alphabetize:
                 apps = apps.order("name")
         return apps.fetch(limit)    

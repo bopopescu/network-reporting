@@ -1,6 +1,7 @@
 from ad_server.networks.server_side import ServerSide
 from ad_server.debug_console import trace_logging
 
+import re
 import cgi
 import urllib
 import urllib2
@@ -19,8 +20,12 @@ class JumptapServerSide(ServerSide):
                       'hid': self.get_udid(),
                       'client-ip': self.get_ip(), # Test value: 'client-ip': '208.54.5.50'
                       'ua': self.get_user_agent(),
-                      'v': 'v29' }
-                      
+                      'v': 'v29',}
+        
+        language = self.get_language()
+        if language:
+            key_values.update(l=language)
+        
         # Jumptap uses all levels of pub_ids
         # 'pub' -- Account Level
         # 'site' -- App Level
@@ -40,7 +45,15 @@ class JumptapServerSide(ServerSide):
     def get_query_string(self):
         query_string = urllib.urlencode(self.get_key_values())       
         return query_string
-   
+    
+    def get_language(self):
+        LANGUAGE_PAT = re.compile(r' (?P<language>[a-zA-Z][a-zA-Z])[-_][a-zA-Z][a-zA-Z];*[^a-zA-Z0-9-_]')
+        m = LANGUAGE_PAT.search(self.get_user_agent())
+        if m:
+            return m.group('language')
+        else:
+            return None
+    
     @property
     def url(self):
         return self.base_url + '?' + self.get_query_string()

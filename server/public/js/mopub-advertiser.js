@@ -482,16 +482,13 @@ var mopub = mopub || {};
         e.preventDefault();
         var creative_key = $(this).attr("id");
         var creative_src = $('#'+creative_key+'-preview-src').val();
+        var width = parseInt($("#"+creative_key+"-preview iframe").attr("width"));
+        var height = parseInt($("#"+creative_key+"-preview iframe").attr("height"));
         $("#"+creative_key+"-preview iframe").attr('src', creative_src);
         $("#"+creative_key+"-preview").dialog({
-          buttons: [
-            {
-              text: 'Close', 
-              click: function() {
-                $(this).dialog("close");
-              }
-            }
-          ]
+          buttons: [{text: 'Close',click: function() {$(this).dialog("close")}}],
+          width: width+100,
+          height: height+130
         });
       });
 
@@ -554,7 +551,10 @@ var mopub = mopub || {};
       .button({ icons : {primary : 'ui-icon-circle-plus'} });
     
     $('#advertisers-adgroups-editAdGroupButton').button({ icons: { primary: "ui-icon-wrench" } });
+                                
 
+
+    // TODO: This is not DRY
     $('#campaignForm-pause')
       .click(function(e) {
         e.preventDefault();
@@ -565,6 +565,18 @@ var mopub = mopub || {};
       .click(function(e) {
         e.preventDefault();
         $('#campaignForm').find("#action").attr("value","resume").end().submit();
+    });  
+    
+    $('#campaignForm-activate')
+      .click(function(e) {
+        e.preventDefault();
+        $('#campaignForm').find("#action").attr("value","activate").end().submit();
+    });
+      
+    $('#campaignForm-archive')
+      .click(function(e) {
+        e.preventDefault();
+        $('#campaignForm').find("#action").attr("value","archive").end().submit();
     });
 
     $('#campaignForm-delete')

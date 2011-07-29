@@ -113,6 +113,7 @@ class AdGroup(db.Model):
     active = db.BooleanProperty(default=True)
     deleted = db.BooleanProperty(default=False)
     archived = db.BooleanProperty(default=False)   
+
     
     # percent of users to be targetted
     percent_users = db.FloatProperty(default=100.0)
@@ -312,8 +313,11 @@ class AdGroup(db.Model):
             if self.active and campaign.active:
                 return True
 
-        return False
- 
+        return False    
+        
+    @property
+    def created_date(self):
+        return self.created.date()
 class Creative(polymodel.PolyModel):
     name = db.StringProperty()
     custom_width = db.IntegerProperty()
@@ -523,7 +527,9 @@ class AppNexusCreative(Creative):
     pass  
 
 class BrightRollCreative(Creative):
-    pass
+    @property
+    def multi_format(self):
+        return ('full', 'full_tablet')
 
 class JumptapCreative(Creative):
     @property

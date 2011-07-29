@@ -1,6 +1,4 @@
 {% load filters %}
-
-
 <section class="offset separated" id="dashboard-stats"> 
     <div class="stats"> 
     <div class="stats-breakdown">
@@ -71,13 +69,13 @@
 
 <section class="separated">
 	<h3>Top MoPubs</h3>
-	<table width="100%">
+	<table class ="sortable" width="100%" onselectstart="return false" ondragstart="return false">
 		<thead>
 		  <th></th>
 			<th style="text-align: left;">App</th>
 			<th style="text-align: left;">Account</th>
-			<th width="75px">Requests</th>
-			<th width="75px">Impressions</th>
+			<th width="100px">Requests</th>
+			<th width="100px">Impressions</th>
 			<th width="75px">Fill Rate</th>
 			<th width="75px">Clicks</th>
 			<th width="75px">CTR</th>
@@ -85,9 +83,9 @@
 		</thead>
 		{% for a in apps %}
 		<tr class="alternating-color">
-		  <td>{{forloop.counter}}&nbsp;</td>
+			<td>{{forloop.counter}}&nbsp;</td>
 			<td><a href="{% url admin_switch_user %}?user_email={{a.account.mpuser.email}}&amp;next={% url publisher_app_show app_key=a.publisher.key %}">{{a.publisher.name|truncate:46}}</a></td>
-			<td><a href="mailto:{{a.publisher.account.mpuser.email}}">{{a.publisher.account.mpuser.email}}</a></td>
+			<td><a href="mailto:{{a.publisher.account.mpuser.email}}" class="account_email">{{a.publisher.account.mpuser.email}}</a></td>
 			<td class="numeric">{{a.request_count|withsep}}</td>
 			<td class="numeric">{{a.impression_count|withsep}}</td>
 			<td class="numeric">{{a.fill_rate|percentage_rounded}}</td>
@@ -101,12 +99,12 @@
 
 <section class="separated">
     <h3>New users since {{start_date}}</h3>
-    <table width="100%">
+    <table class="sortable" width="100%" onselectstart="return false" ondragstart="return false">
         <thead>
     		<tr>
     		    <th style="text-align: left;">Email</th>
     		    <th style="text-align: left;">Date</th>
-    		    <th style="text-align: left;">Mailing List</th>
+    		    <th width="100px">Mailing List</th>
     		</tr>
     	</thead>
     	<tbody>

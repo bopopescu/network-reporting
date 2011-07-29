@@ -1,6 +1,8 @@
 import logging  
 import hashlib       
-from common.utils import simplejson
+import pickle 
+
+import hypercache
 
 from common.utils.query_managers import QueryManager, CachedQueryManager
 
@@ -35,45 +37,50 @@ class AdUnitContextQueryManager(CachedQueryManager):
         adunit_key = str(adunit_key).replace("'","")
         adunit_context_key = AdUnitContext.key_from_adunit_key(adunit_key)  
         
-        adunit_context_digest = cls.get_memcache_digest(adunit_context_key)
-           
-        adunit_context = memcache.get(adunit_context_key, namespace="context")
+        adunit_context_digest = memcache.get(adunit_context_key, namespace="context-digest")  
+        hypercached_context = hypercache.get(adunit_context_key)
+         
+        # We can return our hypercached context if nothing in memcache changed
+        if hypercached_context and (hypercached_context.digest == adunit_context_digest): 
+            return hypercached_context
+        
+        trace_logging.warning("hypercache miss: fetching adunit_context from memcache")    
+        
+        # Something has changed, let's get the new memcached context   
+        adunit_context = memcache.get(adunit_context_key, namespace="context")     
+        
         if adunit_context is None:
             trace_logging.warning("memcache miss: fetching adunit_context from db")
             # get adunit from db
             adunit = AdUnit.get(adunit_key)
             # wrap context
             adunit_context = AdUnitContext.wrap(adunit) 
-            memcache.set(str(adunit_context.key()), 
+            memcache.set(adunit_context_key, 
                          adunit_context, 
                          namespace="context", 
-                         time=CACHE_TIME)
-                                             
+                         time=CACHE_TIME)   
+            
+            new_digest = cls._make_digest(adunit_context) 
+            memcache.set(adunit_context_key, new_digest, namespace="context-digest")
+              
         else:
-            trace_logging.warning("retrieved adunit from memcache")     
+            new_digest = cls._make_digest(adunit_context)                   
             
-            
+        adunit_context.digest = new_digest
+        hypercache.set(adunit_context_key, adunit_context)
+        
+         
         return adunit_context
              
-    @classmethod
-    def get_memcache_digest(cls, adunit_context_key):
-        """ We store the digest in order to know when the value has changed """
-        return memcache.get(adunit_context_key, namespace="context-digest")
-        
-    @classmethod
-    def set_memcache_digest(cls, adunit_context_key, adunit_context):
-        """ We build a """  
-        
-        new_digest = cls._make_digest(adunit_context)
-        
-        return memcache.set(adunit_context_key, new_digest, namespace="context-digest") 
+
+      
     
     @classmethod
     def _make_digest(cls, obj):      
         """ Makes a digest of an object """       
-        obj = simplejson.dumps(obj) # We serialize the object first
+        obj_str = pickle.dumps(obj) # We pickle the object first
         m = hashlib.md5()     
-        m.update(obj)
+        m.update(obj_str)
         return m.digest()
                                
     @classmethod

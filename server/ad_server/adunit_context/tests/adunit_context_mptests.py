@@ -3,6 +3,9 @@ import sys
 sys.path.append(os.environ['PWD'])
 import common.utils.test.setup
 
+import hypercache
+             
+import copy
 
 import unittest
 from nose.tools import eq_
@@ -373,12 +376,87 @@ class TestQueryManagersAdunitContext(unittest.TestCase):
         adgroup = AdGroupQueryManager.get(self.adgroup.key())
         eq_(adgroup.deleted, True)
 
-                            
+    # def mptest_consistent_digest(self):
+    #     """ We want to make sure that even when we deepcopy an element, it 
+    #         still hashes to the same value. """
+    #                                                                                      
+    # 
+    #     string1 = AdUnitContextQueryManager._make_digest("testing")  
+    #     string2 = AdUnitContextQueryManager._make_digest("testing")   
+    #     
+    #     eq_(string1, string2)
+    #     
+    #     
+    #     local_context1 = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key())        
+    #     local_context2 = copy.deepcopy(local_context1) 
+    #     
+    #     digest1 = AdUnitContextQueryManager._make_digest(local_context1)  
+    #     digest2 = AdUnitContextQueryManager._make_digest(local_context2)
+    #     
+    #     eq_(digest1, digest2)                   
+                                  
 
-    def mptest_hypercache(self):
+    def mptest_pickling_should_not_change_digest(self):
+        """ We should be able to take an element out of memcache, put it back,
+            and get the same digest from it """
+        local_context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key()) 
+
+        digest1 = local_context.digest     
+        
+        # Delete the context from memcache
+        AdUnitContextQueryManager.cache_delete_from_adunits(self.adunit)
+        
+        # Now we recreate it, but nothing in the database has changed  
+        new_local_context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key())       
+           
+        # So the digests should be the same
+        eq_(new_local_context.digest, digest1)
+        
+    def mptest_hypercaching(self):
         """ When we change an adunit_context in memcache, the query manager should 
             detect the difference and get the updated context."""
                                                                          
+        local_context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key())  
+        
+        adunit_key = str(self.adunit.key()).replace("'","")
+        adunit_context_key = AdUnitContext.key_from_adunit_key(adunit_key)                                                   
+        
+        
+        # This sets a new digest value in memcache
+        adunit_context_digest1 = memcache.get(adunit_context_key, namespace="context-digest")   
+        
+        hyper_context = hypercache.get(adunit_context_key)                 
+        eq_(hyper_context.adunit.name, "Test AdUnit")    
+              
+        # Finds it in hypercache
         local_context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key())    
+           
+        # This does not change the digest value in memcache
+        adunit_context_digest2 = memcache.get(adunit_context_key, namespace="context-digest")  
+        eq_(adunit_context_digest2, adunit_context_digest1)
+        
+        eq_(local_context.adunit.name, "Test AdUnit")   
+        
+        # Now let's change the name     
+        self.adunit.name = "Test AdUnit Changed"
 
+        # Adds to the datastore and deletes context from cache                           
+        AdUnitQueryManager.put(self.adunit)
+         
+        # Now the context in memcache is different
+        context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key())  
+         
+        # This means that the digest has changed
+        adunit_context_digest3 = memcache.get(adunit_context_key, namespace="context-digest") 
+        assert (adunit_context_digest2 != adunit_context_digest3)
+          
+        eq_(context.adunit.name, "Test AdUnit Changed")  
+         
+        hyper_context = hypercache.get(adunit_context_key)                 
+        eq_(hyper_context.adunit.name, "Test AdUnit Changed")
+
+                                                                                      
+
+        
+        
         

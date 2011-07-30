@@ -40,7 +40,7 @@
               <label for="dashboard-dateOptions-option-14">14 days</label>
               <input type="radio" name="dashboard-dateOptions-option" value="30" id="dashboard-dateOptions-option-30" {% ifequal date_range 30 %}checked="checked" {% endifequal %}/>
               <label for="dashboard-dateOptions-option-30">30 days</label>
-              <input type="radio" name="dashboard-dateOptions-option" value="custom" id="dashboard-dateOptions-option-custom" />
+              <input type="radio" name="dashboard-dateOptions-option" value="custom" id="dashboard-dateOptions-option-custom" {% if date_range != 7 and date_range != 14 and date_range != 30 %}checked="checked" {% endif %}/>
               <label for="dashboard-dateOptions-option-custom">Custom ...</label>
             </span>
             <div id="dashboard-dateOptions-custom-modal">

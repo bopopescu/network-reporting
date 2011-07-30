@@ -16,7 +16,7 @@ from budget.tzinfo import Pacific
 class Campaign(db.Model):
     name = db.StringProperty(required=True)
     description = db.TextProperty()
-    campaign_type = db.StringProperty(choices=['gtee', 'gtee_high', 'gtee_low', 'promo', 'network','backfill_promo'], default="network")
+    campaign_type = db.StringProperty(choices=['gtee', 'gtee_high', 'gtee_low', 'promo', 'network','backfill_promo', 'marketplace'], default="network")
 
     # budget per day
     budget = db.FloatProperty() 
@@ -239,6 +239,7 @@ class AdGroup(db.Model):
         elif self.network_type == 'custom_native': c = CustomNativeCreative(name='custom native dummy', ad_type='custom_native', format='320x50', format_predicates=['format=*'], html_data=custom_html)
         elif self.network_type == 'admob_native': c = AdMobNativeCreative(name="admob native dummy",ad_type="admob_native",format="320x50",format_predicates=["format=320x50"])
         elif self.network_type == 'millennial_native': c = MillennialNativeCreative(name="millennial native dummy",ad_type="millennial_native",format="320x50",format_predicates=["format=320x50"])
+        elif self.campaign.campaign_type == 'marketplace': c = MarketplaceCreative(name='marketplace dummy', ad_type='html')
         if c: c.ad_group = self
         return c
     
@@ -466,6 +467,9 @@ class ImageCreative(Creative):
             "468x60": "format=468x60"}
         fp = IMAGE_PREDICATES.get("%dx%d" % (img.width, img.height))
         return [fp] if fp else None
+
+class MarketplaceCreative(HtmlCreative):
+    pass
 
 class CustomCreative(HtmlCreative):
     pass

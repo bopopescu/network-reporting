@@ -42,6 +42,8 @@ class App(db.Model):
     description = db.TextProperty()
     url = db.StringProperty()
     package = db.StringProperty()
+    # For MPX
+    categories = db.StringListProperty()
     
     icon = db.BlobProperty()
     

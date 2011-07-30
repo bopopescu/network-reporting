@@ -1,8 +1,8 @@
 import logging  
 import hashlib       
-import pickle 
 
-import hypercache
+import hypercache   
+import datetime
 
 from common.utils.query_managers import QueryManager, CachedQueryManager
 
@@ -19,7 +19,7 @@ from google.appengine.api import memcache
 from ad_server.debug_console import trace_logging
 from ad_server.adunit_context.adunit_context import AdUnitContext, CreativeCTR     
 from common.constants import MAX_OBJECTS
-CACHE_TIME = 60*60
+CACHE_TIME = 60*60     
 
 class AdUnitContextQueryManager(CachedQueryManager):
     """ Keeps an up-to-date version of the AdUnit Context in memcache.
@@ -37,11 +37,11 @@ class AdUnitContextQueryManager(CachedQueryManager):
         adunit_key = str(adunit_key).replace("'","")
         adunit_context_key = AdUnitContext.key_from_adunit_key(adunit_key)  
         
-        adunit_context_digest = memcache.get(adunit_context_key, namespace="context-digest")  
+        memcache_ts = memcache.get(adunit_context_key, namespace="context-timestamp")  
         hypercached_context = hypercache.get(adunit_context_key)
          
-        # We can return our hypercached context if nothing in memcache changed
-        if hypercached_context and (hypercached_context.digest == adunit_context_digest): 
+        # We can return our hypercached context if nothing in memcache changed yet
+        if hypercached_context and (hypercached_context._hyper_ts == memcache_ts): 
             return hypercached_context
         
         trace_logging.warning("hypercache miss: fetching adunit_context from memcache")    
@@ -58,30 +58,20 @@ class AdUnitContextQueryManager(CachedQueryManager):
             memcache.set(adunit_context_key, 
                          adunit_context, 
                          namespace="context", 
-                         time=CACHE_TIME)   
-            
-            new_digest = cls._make_digest(adunit_context) 
-            memcache.set(adunit_context_key, new_digest, namespace="context-digest")
-              
+                         time=CACHE_TIME)    
+            new_timestamp = datetime.datetime.now()            
+            memcache.set(adunit_context_key, new_timestamp, namespace="context-timestamp") 
         else:
-            new_digest = cls._make_digest(adunit_context)                   
-            
-        adunit_context.digest = new_digest
-        hypercache.set(adunit_context_key, adunit_context)
+            new_timestamp = memcache_ts             
         
-         
+        # We got new information for the hypercache, give it a new timestamp    
+        adunit_context._hyper_ts = new_timestamp
+        hypercache.set(adunit_context_key, adunit_context)
+   
         return adunit_context
              
 
-      
     
-    @classmethod
-    def _make_digest(cls, obj):      
-        """ Makes a digest of an object """       
-        obj_str = pickle.dumps(obj) # We pickle the object first
-        m = hashlib.md5()     
-        m.update(obj_str)
-        return m.digest()
                                
     @classmethod
     def cache_delete_from_adunits(cls, adunits):   
@@ -93,9 +83,9 @@ class AdUnitContextQueryManager(CachedQueryManager):
         keys = ["context:"+str(adunit.key()) for adunit in adunits]  
         logging.info("deleting from cache: %s"%keys)
         success = memcache.delete_multi(keys, namespace="context")
-        digest_success = memcache.delete_multi(keys, namespace="context-digest")
+        ts_success = memcache.delete_multi(keys, namespace="context-timestamp")
         
-        logging.info("deleted: %s" % success and digest_success)
+        logging.info("deleted: %s" % success and ts_success)
         return success
 
 class AppQueryManager(QueryManager):

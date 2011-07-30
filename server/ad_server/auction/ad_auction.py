@@ -3,6 +3,7 @@
 import os
 import random
 import datetime
+import urllib
 
 from ad_server.filters.filters import (budget_filter,
                                     active_filter,
@@ -22,6 +23,7 @@ from ad_server.filters.filters import (budget_filter,
                                     
 from common.utils import simplejson
 from common.utils import helpers
+from common.utils.marketplace_helpers import build_marketplace_dict
 from common.constants import (FULL_NETWORKS,
                               ACCEPTED_MULTI_COUNTRY,
                               CAMPAIGN_LEVELS,
@@ -136,12 +138,12 @@ class AdAuction(object):
 
 
         # SPAM TEH SHIT OUT OF MPX.MOPUB.COM
-        try:
-            spam_rpc = urlfetch.create_rpc(deadline=.1)
-            urlfetch.make_fetch_call(spam_rpc, 'http://mpx.mopub.com/req?asdfasdfasdfasdf')
-            spam_rpc.get_result()
-        except Exception, e:
-            trace_logging.error("spam error: %s"%e)
+        # try:
+        #     spam_rpc = urlfetch.create_rpc(deadline=.1)
+        #     urlfetch.make_fetch_call(spam_rpc, 'http://mpx.mopub.com/req?asdfasdfasdfasdf')
+        #     spam_rpc.get_result()
+        # except Exception, e:
+        #     trace_logging.error("spam error: %s"%e)
         
         geo_predicates = AdAuction.geo_predicates_for_rgeocode(country_tuple)
 
@@ -259,6 +261,55 @@ class AdAuction(object):
                     trace_logging.info("Campaigns of this priority: %s"%", ".join([a.name.encode('utf8') for a in eligible_adgroups]))
                     if not eligible_adgroups:
                         continue
+                    # if we're on marketplace level, do that marketplace shit
+                    if p == 'marketplace':
+                        # Build a big dict
+                        mk_args = build_marketplace_dict(adunit = adunit,
+                                                         kws = keywords,
+                                                         udid = udid,
+                                                         ua = user_agent,
+                                                         ll = ll,
+                                                         ip = request.remote_addr,
+                                                         adunit_context = adunit_context)
+                        # Turn it into a get query
+                        trace_logging.info("\nSending to MPX: %s\n" % mk_args)
+                        mpx_url = 'http://mpx.mopub.com/req?' + urllib.urlencode(mk_args)
+                        xhtml = None
+                        charge_price = None
+                        # Try to get a response
+                        crtv = adunit_context.get_creatives_for_adgroups(eligible_adgroups)
+                        if isinstance(crtv, list):
+                            crtv = crtv[0]
+                        # set the creative as having done w/e
+                        mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=None, user_agent=user_agent, headers=request.headers, udid=udid)
+                        try:
+                            fetched = urlfetch.fetch(mpx_url, deadline=.2)
+                            # Make sure it's a good response
+                            if fetched.status_code == 200:
+                                data = simplejson.loads(fetched.content)
+                                # With valid data
+                                if data.has_key('xhtml') and data.has_key('charge_price') and data['xhtml']:
+                                    xhtml = data['xhtml']
+                                    charge_price = data['charge_price']
+                                else:
+                                    continue
+                        except urlfetch.DownloadError, e:
+                            pass
+                        trace_logging.info('\n\nMPX Charge: %s\nMPX HTML: %s\n' % (charge_price, xhtml))
+                        if xhtml:
+                            # Should only be one
+                            crtv.html_data = xhtml
+                            # Should really be the pub's cut
+                            crtv.adgroup.bid = charge_price
+                            # I think we should log stuff here but I don't know how to do that
+                            return [crtv, on_fail_exclude_adgroups]
+                        else:
+                            continue
+                            
+
+
+
+
                     players = adunit_context.get_creatives_for_adgroups(eligible_adgroups)
                     
                     # For now we only use sampling on the experimental server

@@ -482,7 +482,7 @@ class AdHandler(webapp.RequestHandler):
                   "Gappid":str(site.app_key.adsense_app_name or '0'),
                   "Gkeywords":str(site.keywords or ''),
                   "Gtestadrequest":"0",
-                  "Gchannelids":str(site.adsense_channel_id or ''),        
+                  "Gchannelids":str('[%s]'%site.adsense_channel_id or ''),        
                 # "Gappwebcontenturl":,
                   "Gadtype":"GADAdSenseTextImageAdType", #GADAdSenseTextAdType,GADAdSenseImageAdType,GADAdSenseTextImageAdType
                   "Gtestadrequest":"0",

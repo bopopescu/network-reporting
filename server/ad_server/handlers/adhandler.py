@@ -369,8 +369,11 @@ class AdHandler(webapp.RequestHandler):
                 if creative.image_blob:
                     img = images.Image(blob_key=creative.image_blob)
                     img_height = creative.image_height
-                    img_width = creative.image_width
-                    params["image_url"] = images.get_serving_url(creative.image_blob)
+                    img_width = creative.image_width 
+                    try:
+                        params["image_url"] = images.get_serving_url(creative.image_blob)              
+                    except images.InvalidBlobKeyError:
+                        trace_logging.error("InvalidBlobKeyError, are you accessing a blobstore on another server?")
                 else:      
                     img = images.Image(creative.image)
                     img_width = img.width

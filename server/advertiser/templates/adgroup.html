@@ -477,7 +477,7 @@
                     <td class="dataTable-data numeric"><b>{{adgroup.stats.revenue|currency}}</b></td>
                 </tr>
                 {% for s in adgroup.all_stats reversed %}
-                <tr class="appData-details-inner show">
+                <tr class="appData-details-inner hide">
                     <th class="dataTable-name">{{s.date|format_date}}</th>
                     <td class="dataTable-data numeric">&nbsp;</td>     
                     <td class="dataTable-data numeric">{{s.impression_count|withsep}}</td>
@@ -508,7 +508,7 @@
                     <td class="dataTable-data numeric"><b>{{adgroup.stats.conversion_count|withsep}} ({{adgroup.stats.conv_rate|percentage}})</b></td>
                 </tr>
                 {% for s in adgroup.all_stats reversed %}
-                <tr class="appData-details-inner show">
+                <tr class="appData-details-inner hide">
                     <th class="dataTable-name">{{s.date|format_date}}</th>
                     <td class="dataTable-data numeric">&nbsp;</td>     
                     <td class="dataTable-data numeric">{{s.impression_count|withsep}}</td>
@@ -541,7 +541,7 @@
                     <td class="dataTable-data numeric"><b>{{adgroup.stats.ctr|percentage}}</b></td>
                 </tr>
                 {% for s in adgroup.all_stats reversed %}
-                <tr class="appData-details-inner show">
+                <tr class="appData-details-inner hide">
                     <th class="dataTable-name">{{s.date|format_date}}</th>
                     <td class="dataTable-data numeric">&nbsp;</td>     
                     <td class="dataTable-data numeric">{{s.request_count|withsep}}</td>

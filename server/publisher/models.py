@@ -35,6 +35,7 @@ class App(db.Model):
     account = db.ReferenceProperty(Account)
   
     name = db.StringProperty(required=True)
+    global_id = db.StringProperty() # used to store appstore or marketplace id
     adsense_app_name = db.StringProperty()
     adsense_app_id = db.StringProperty()
     

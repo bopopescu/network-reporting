@@ -145,16 +145,15 @@ def register(request, success_url=None,
                            subject="Welcome to MoPub!",
                            body="""
 Hi %s,
-Welcome to MoPub! Start turning your apps into businesses today.  MoPub handles optimization of your mobile ad network relationships and let's you serve direct-sold ads into your mobile apps and sites, all through a simple open-source client library.
+Welcome to MoPub, the easiest way to turn your apps into businesses.  Now you can optimize your mobile ad network relationships or easily serve direct-sold ads into your mobile apps -- all through a simple, open-source client library.
 
-Get started by accessing MoPub here:
+Get started here:
 http://app.mopub.com/
 
-Send an email to support@mopub.com if you have any questions.  We're here to help!
+Questions?  Email support@mopub.com or check out our Help FAQ at http://help.mopub.com/ (yes, it's actually helpful).
 
 Thanks!
-The MoPub Team
-support@mopub.com"""%(new_user.first_name))
+The MoPub Team"""%(new_user.first_name))
             
             # success_url needs to be dynamically generated here; setting a
             # a default value using reverse() will cause circular-import

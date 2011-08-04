@@ -4,6 +4,7 @@ import re
 import hashlib
 import random
 import time
+import traceback
 import urllib
 import datetime
 
@@ -58,7 +59,17 @@ class AdHandler(webapp.RequestHandler):
     }
     
     def get(self):
-
+        if self.request.get('admin_debug_mode','0') == "1":
+            try:
+                self._get()
+            except Exception, e:
+                import sys
+                self.response.out.write("Exception: %s<br/>"%e)
+                self.response.out.write('TB2: %s' % '<br/>'.join(traceback.format_exception(*sys.exc_info())))
+        else:
+            self._get()        
+    
+    def _get(self):
         ufid = self.request.get('ufid', None)
         
         if self.request.get('jsonp', '0') == '1':

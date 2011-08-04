@@ -140,7 +140,9 @@ def register(request, success_url=None,
             new_user = form.save(domain_override)
             
             # Send welcome email
-            mail.send_mail(sender="support@mopub.com",
+            try:
+                mail.send_mail(sender="olp@mopub.com",
+                           reply_to="support@mopub.com",
                            to=new_user.email,
                            subject="Welcome to MoPub!",
                            body="""
@@ -154,6 +156,8 @@ Questions?  Email support@mopub.com or check out our Help FAQ at http://help.mop
 
 Thanks!
 The MoPub Team"""%(new_user.first_name))
+            except:
+                pass
             
             # success_url needs to be dynamically generated here; setting a
             # a default value using reverse() will cause circular-import

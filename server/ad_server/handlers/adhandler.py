@@ -70,7 +70,6 @@ class AdHandler(webapp.RequestHandler):
             self._get()        
     
     def _get(self):
-        sadf
         ufid = self.request.get('ufid', None)
         
         if self.request.get('jsonp', '0') == '1':

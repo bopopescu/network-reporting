@@ -287,6 +287,7 @@ class AdAuction(object):
                             # Make sure it's a good response
                             if fetched.status_code == 200:
                                 data = simplejson.loads(fetched.content)
+                                trace_logging.info('MPX REPSONSE:%s'%data)    
                                 # With valid data
                                 if data.has_key('xhtml') and data.has_key('charge_price') and data['xhtml']:
                                     xhtml = data['xhtml']

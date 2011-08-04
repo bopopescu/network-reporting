@@ -285,6 +285,7 @@ class AdAuction(object):
                         try:
                             fetched = urlfetch.fetch(mpx_url, deadline=.2)
                             # Make sure it's a good response
+                            trace_logging.info('MPX RESPONES CODE:%s'%fetched.status_code)
                             if fetched.status_code == 200:
                                 data = simplejson.loads(fetched.content)
                                 trace_logging.info('MPX REPSONSE:%s'%data)    

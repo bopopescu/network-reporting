@@ -61,7 +61,7 @@
      <input type="hidden" name="{{form.img_url.name}}" value="" />
    </div>
   </dd>
-  <span {% if not user.is_admin %}class="hidden"{% endif %}>
+  <span {% if not form.is_edit_form.value %}class="hidden"{% endif %}>
   {{form.primary_category}}
   {{form.secondary_category}}
   </span>

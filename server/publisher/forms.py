@@ -40,6 +40,7 @@ class AppForm(mpforms.MPModelForm):
 
     img_url = forms.URLField(verify_exists=False,required=False)
     img_file = forms.FileField(required=False)
+    is_edit_form = forms.BooleanField(required=False)
     
     primary_category = mpfields.MPChoiceField(choices=CATEGORY_CHOICES,widget=mpwidgets.MPSelectWidget)
     secondary_category = mpfields.MPChoiceField(choices=CATEGORY_CHOICES,widget=mpwidgets.MPSelectWidget)
@@ -47,12 +48,14 @@ class AppForm(mpforms.MPModelForm):
     def __init__(self, *args,**kwargs):
         instance = kwargs.get('instance',None)
         initial = kwargs.get('initial',None)
-
+        is_edit_form = kwargs.pop('is_edit_form', None)
+        
         if instance:
             img_url = reverse('publisher_app_icon',kwargs={'app_key':str(instance.key())})
             if not initial:
                 initial = {}
-            initial.update(img_url=img_url)    
+            initial.update(img_url=img_url)
+            initial.update(is_edit_form=is_edit_form)
             kwargs.update(initial=initial)
         super(AppForm,self).__init__(*args,**kwargs)
 

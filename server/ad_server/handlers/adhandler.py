@@ -362,7 +362,14 @@ class AdHandler(webapp.RequestHandler):
                 self.response.headers.add_header("X-Launchpage","http://c.admob.com/")
             elif creative.ad_type == "text_icon":
                 if creative.image:
-                    params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(creative.image)
+                    try:
+                        img = images.Image(blob_key=creative.image_blob)
+                        img_height = creative.image_height
+                        img_width = creative.image_width
+                        params["image_url"] = images.get_serving_url(creative.image_blob)
+                    except:
+                        params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(creative.image)
+                    
                 if creative.action_icon:
                     #c.url can be undefined, don't want it to break
                     icon_div = '<div style="padding-top:5px;position:absolute;top:0;right:0;"><a href="'+(creative.url or '#')+'" target="_top">'
@@ -376,17 +383,11 @@ class AdHandler(webapp.RequestHandler):
                 params.update({"html_data": creative.html_data, "w": format[0], "h": format[1]})
                 self.response.headers.add_header("X-Launchpage","http://adsx.greystripe.com/openx/www/delivery/ck.php")
                 template_name = "html"
-            elif creative.ad_type == "image":
-                if creative.image_blob:
-                    img = images.Image(blob_key=creative.image_blob)
-                    img_height = creative.image_height
-                    img_width = creative.image_width
-                    params["image_url"] = images.get_serving_url(creative.image_blob)
-                else:      
-                    img = images.Image(creative.image)
-                    img_width = img.width
-                    img_height = img.height
-                    params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(creative.image)
+            elif creative.ad_type == "image":        
+                img = images.Image(blob_key=creative.image_blob)
+                img_height = creative.image_height
+                img_width = creative.image_width
+                params["image_url"] = images.get_serving_url(creative.image_blob)   
                 
                 # if full screen we don't need to center
                 if (not "full" in adunit.format) or ((img_width == 480.0 and img_height == 320.0 ) or (img_width == 320.0 and img_height == 480.0)):

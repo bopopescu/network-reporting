@@ -236,7 +236,8 @@ def migrate_many_images(request, *args, **kwargs):
     pass 
     
     
-def migrate_image(request, *args, **kwargs):
+def migrate_image(request, *args, **kwargs):  
+    """ Migrates a text and tile image. """
     from google.appengine.api import files
     
     params = request.POST or request.GET
@@ -262,15 +263,10 @@ def migrate_image(request, *args, **kwargs):
                             
         # Do not delete image yet
         # creative.image = None 
-        creative.image_blob = blob_key
-        creative.image_height = img.height
-        creative.image_width = img.width
-    
-           
+        creative.image_blob = blob_key      
     
         url = images.get_serving_url(blob_key)    
           
-    
         creative.put()  
         
         return HttpResponse(url)                

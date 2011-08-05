@@ -360,16 +360,11 @@ class AdHandler(webapp.RequestHandler):
                 params.update(test_mode='true' if debug else 'false')
                 # params.update(test_ad='<a href="http://m.google.com" target="_top"><img src="/images/admob_test.png"/></a>' if debug else '')
                 self.response.headers.add_header("X-Launchpage","http://c.admob.com/")
-            elif creative.ad_type == "text_icon":
-                if creative.image:
-                    try:
-                        img = images.Image(blob_key=creative.image_blob)
-                        img_height = creative.image_height
-                        img_width = creative.image_width
-                        params["image_url"] = images.get_serving_url(creative.image_blob)
-                    except:
-                        params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(creative.image)
-                    
+            elif creative.ad_type == "text_icon":      
+                params["image_url"] = images.get_serving_url(creative.image_blob)
+                     
+                # params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(creative.image)
+                        
                 if creative.action_icon:
                     #c.url can be undefined, don't want it to break
                     icon_div = '<div style="padding-top:5px;position:absolute;top:0;right:0;"><a href="'+(creative.url or '#')+'" target="_top">'

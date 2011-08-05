@@ -440,7 +440,7 @@ class TextCreative(Creative):
 class TextAndTileCreative(Creative):
     line1 = db.StringProperty()
     line2 = db.StringProperty()
-    image = db.BlobProperty()          
+    # image = db.BlobProperty()          
     image_blob = blobstore.BlobReferenceProperty() 
     action_icon = db.StringProperty(choices=["download_arrow4", "access_arrow", "none"], default="download_arrow4")
     color = db.StringProperty(default="000000")
@@ -454,7 +454,7 @@ class HtmlCreative(Creative):
 
 class ImageCreative(Creative):
     # image properties
-    image = db.BlobProperty()
+    # image = db.BlobProperty()
     image_blob = blobstore.BlobReferenceProperty()
     image_width = db.IntegerProperty(default=320)
     image_height = db.IntegerProperty(default=480)

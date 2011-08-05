@@ -276,8 +276,6 @@ class TextAndTileCreativeForm(AbstractCreativeForm):
         if self.files.get('image_file',None):
             image_data = self.files.get('image_file').read()
             img = images.Image(image_data)
-            obj.image_width = img.width
-            obj.image_height = img.height
             fname = files.blobstore.create(mime_type='image/png')
             with files.open(fname, 'a') as f:
                 f.write(image_data)

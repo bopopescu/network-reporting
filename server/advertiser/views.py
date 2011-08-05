@@ -883,9 +883,17 @@ class DisplayCreativeHandler(RequestHandler):
                 return HttpResponse('<html><head><style type="text/css">body{margin:0;padding:0;}</style></head><body><img src="%s"/></body></html>'%images.get_serving_url(c.image_blob))
             else:    
                 return HttpResponse(c.image,content_type='image/png')
-        if c and c.ad_type == "text_icon":
-            if c.image:
-                c.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
+        if c and c.ad_type == "text_icon":    
+            
+            if c.image or c.image_blob:     
+                try:
+                    img = images.Image(blob_key=creative.image_blob)
+                    img_height = creative.image_height
+                    img_width = creative.image_width
+                    c.icon_url = images.get_serving_url(c.image_blob)
+                except:
+                    c.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
+                                                                                  
             return render_to_response(self.request, 'advertiser/text_tile.html', {'c':c})
             #return HttpResponse(c.image,content_type='image/png')
         if c and c.ad_type == "html":

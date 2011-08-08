@@ -246,7 +246,7 @@ class ScheduledRunner(RequestHandler):
         return HttpResponse("Scheduled reports have been created")
 
 def sched_runner(request, *args, **kwargs):
-    return ScheduledRunner()(request, *args, **kwargs)
+    return ScheduledRunner(login=False)(request, *args, **kwargs)
 
 
 

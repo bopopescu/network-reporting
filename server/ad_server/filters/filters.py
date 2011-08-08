@@ -260,7 +260,7 @@ def freq_filter(type, key_func, udid, now, frq_dict):
         else:
             imp_cnt = 0
         #Log the current counts and cap
-        trace_logging.warning("%s imps: %s, freq cap: %s" % (type.title(), imp_cnt, frq_cap))
+        trace_logging.warning("key: %s type: %s imps: %s, freq cap: %s" % (a_key, type.title(), imp_cnt, frq_cap))
         return (not frq_cap or imp_cnt < frq_cap)
     return (real_filter, log_mesg, [])
 

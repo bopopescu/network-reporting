@@ -8,7 +8,7 @@ from hypercache.lru import LRUCache
 
 
 
-MAX_ELTS = 200 # We limit the max number of elts in the cache    
+MAX_ELTS = 500 # We limit the max number of elts in the cache    
 _cache = LRUCache(MAX_ELTS)
                     
 

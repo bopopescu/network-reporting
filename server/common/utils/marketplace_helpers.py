@@ -22,8 +22,8 @@ def build_marketplace_dict(adunit, kws, udid, ua, ll, ip, adunit_context):
                     #categories = app.categories,
                     app_bundle = app.package if app.app_type == 'android' else None,
                     # These return 0 if interstitial or w/e, don't return 0 just None
-                    width = adunit.get_width() or None,
-                    height = adunit.get_height() or None,
+                    width = adunit.width or None,
+                    height = adunit.height or None,
                     )
         none_keys = []
         for k,v in ret.iteritems():

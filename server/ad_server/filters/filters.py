@@ -1,4 +1,6 @@
 import logging 
+from ad_server.debug_console import trace_logging
+
 
 from math import (atan2,
                    cos,
@@ -59,7 +61,7 @@ def kw_filter(keywords):
         # is transformed to
         # [(m_age:19,m_gender:m),(m_age:20,m_gender:f)]
         anded_keywords = [k.split(' AND ') for k in adgroup.keywords] 
-        logging.info("KEYWORDS: %s == %s"%(keywords,anded_keywords))
+        trace_logging.info("KEYWORDS: %s == %s"%(keywords,anded_keywords))
         for anded_keyword in anded_keywords:
             anded_keyword = (kw.lower() for kw in anded_keyword)
             if set(anded_keyword) <= set(keywords):
@@ -87,7 +89,7 @@ def os_filter(user_agent):
 
         # NOTE: This is because of ghetto memcache error, remove this if past July 5th 2011.
         if a.target_ipod is None or a.target_iphone is None or a.target_ipad is None or a.ios_version_min is None or a.ios_version_max is None or a.android_version_min is None or a.android_version_max is None:
-            logging.error("adgroup value contained None. Automatically passing.")
+            trace_logging.error("adgroup value contained None. Automatically passing.")
             return True
         # ENDNOTE
         
@@ -258,7 +260,7 @@ def freq_filter(type, key_func, udid, now, frq_dict):
         else:
             imp_cnt = 0
         #Log the current counts and cap
-        logging.warning("%s imps: %s, freq cap: %s" % (type.title(), imp_cnt, frq_cap))
+        trace_logging.warning("key: %s type: %s imps: %s, freq cap: %s" % (a_key, type.title(), imp_cnt, frq_cap))
         return (not frq_cap or imp_cnt < frq_cap)
     return (real_filter, log_mesg, [])
 
@@ -266,7 +268,7 @@ def freq_filter(type, key_func, udid, now, frq_dict):
 def all_freq_filter(*filters):
     def actual_filter(a):
         #print the adgroup title so the counts/cap printing in the acutal filter don't confuse things
-        logging.warning("Adgroup: %s" % a)
+        trace_logging.warning("Adgroup: %s" % a)
         for f, msg, lst in filters:
             if not f(a):
                 lst.append(a)

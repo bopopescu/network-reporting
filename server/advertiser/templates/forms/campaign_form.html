@@ -140,7 +140,7 @@
                         <dt>Network Type:</dt>
                         <dd>
                           <select id="network_select" name="network_type">
-                            {% for network in networks %}<option class="network_option" value="{{network.0}}" {% if network.2 %}selected="selected"{%endif%}>{{network.1}}</option>
+                            {% for network in networks %}{% if network.0 != "greystripe" or form.network_type.value == "greystripe" %}<option class="network_option" value="{{network.0}}" {% if network.2 %}selected="selected"{%endif%}>{{network.1}}</option>{% endif %}
                             {% endfor %}
                           </select>
                         </dd>

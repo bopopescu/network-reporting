@@ -281,7 +281,7 @@ class AdAuction(object):
                         if isinstance(crtv, list):
                             crtv = crtv[0]
                         # set the creative as having done w/e
-                        mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=None, user_agent=user_agent, headers=request.headers, udid=udid)
+                        mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=crtv, user_agent=user_agent, headers=request.headers, udid=udid)
                         try:
                             fetched = urlfetch.fetch(mpx_url, deadline=.2)
                             # Make sure it's a good response

@@ -328,6 +328,7 @@ class CreateCampaignAJAXHander(RequestHandler):
         campaign_form.bid_strategy = adgroup_form['bid_strategy']
         campaign_form.custom_html = adgroup_form['custom_html']
         campaign_form.custom_method = adgroup_form['custom_method']
+        campaign_form.network_type = adgroup_form['network_type']
 
         adunit_keys = adgroup_form['site_keys'].value or []
         adunit_str_keys = [unicode(k) for k in adunit_keys]

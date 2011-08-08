@@ -276,12 +276,17 @@ class TextAndTileCreativeForm(AbstractCreativeForm):
         if self.files.get('image_file',None):
             image_data = self.files.get('image_file').read()
             img = images.Image(image_data)
-            obj.image = db.Blob(image_data)            
-            obj.image_width = img.width
-            obj.image_height = img.height
+            fname = files.blobstore.create(mime_type='image/png')
+            with files.open(fname, 'a') as f:
+                f.write(image_data)
+            files.finalize(fname)
+            blob_key = files.blobstore.get_blob_key(fname)
+            obj.image_blob = blob_key     
+
         if commit:
             obj.put()
-        return obj  
+        return obj
+                          
       
 class HtmlCreativeForm(AbstractCreativeForm):
     TEMPLATE = 'advertiser/forms/html_creative_form.html'
@@ -320,15 +325,14 @@ class ImageCreativeForm(AbstractCreativeForm):
             img = images.Image(image_data)
             obj.image_width = img.width
             obj.image_height = img.height
-            try:
-                fname = files.blobstore.create(mime_type='image/png')
-                with files.open(fname, 'a') as f:
-                    f.write(image_data)
-                files.finalize(fname)
-                blob_key = files.blobstore.get_blob_key(fname)
-                obj.image_blob = blob_key
-            except:
-                obj.image = db.Blob(image_data)
+
+            fname = files.blobstore.create(mime_type='image/png')
+            with files.open(fname, 'a') as f:
+                f.write(image_data)
+            files.finalize(fname)
+            blob_key = files.blobstore.get_blob_key(fname)
+            obj.image_blob = blob_key        
+
         if commit:
             obj.put()
         return obj

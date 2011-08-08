@@ -84,6 +84,7 @@ class Account(db.Model):
     traffic = db.FloatProperty()
     # Publishers website, this is for MPX
     domain = db.StringProperty()
+    
 
     active = db.BooleanProperty(default=False)
     status = db.StringProperty()  # Initially storing onboarding status
@@ -95,6 +96,7 @@ class Account(db.Model):
     
     network_config = db.ReferenceProperty(NetworkConfig,
                             collection_name="accounts")
+    marketplace_rev_share = db.FloatProperty(default=.90)                        
     
     # Still here for transfering
     admob_pub_id = db.StringProperty()

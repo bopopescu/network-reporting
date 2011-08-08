@@ -2,7 +2,7 @@
 Views which allow users to create and activate accounts.
 
 """
-
+from google.appengine.api import mail
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.auth import login as auth_login
@@ -138,6 +138,27 @@ def register(request, success_url=None,
         domain_override = request.get_host()
         if form.is_valid():
             new_user = form.save(domain_override)
+            
+            # Send welcome email
+            try:
+                mail.send_mail(sender="olp@mopub.com",
+                           reply_to="support@mopub.com",
+                           to=new_user.email,
+                           subject="Welcome to MoPub!",
+                           body="""
+Hi %s,
+Welcome to MoPub, the easiest way to turn your apps into businesses.  Now you can optimize your mobile ad network relationships or easily serve direct-sold ads into your mobile apps -- all through a simple, open-source client library.
+
+Get started here:
+http://app.mopub.com/
+
+Questions?  Email support@mopub.com or check out our Help FAQ at http://help.mopub.com/ (yes, it's actually helpful).
+
+Thanks!
+The MoPub Team"""%(new_user.first_name))
+            except:
+                pass
+            
             # success_url needs to be dynamically generated here; setting a
             # a default value using reverse() will cause circular-import
             # problems with the default URLConf for this application, which

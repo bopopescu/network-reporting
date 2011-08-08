@@ -21,11 +21,12 @@ audit_logger = LogService(blob_file_name='audit', flush_lines=1)
 
 class RequestHandler(object):
     """ Does some basic work and redirects a view to get and post appropriately """
-    def __init__(self,login=True, request=None):
+    def __init__(self, request=None, login=True):
         self.login = login
         if request:
             self.request = request
-            self._set_account()    
+            if self.login:
+                self._set_account()    
 
         super(RequestHandler,self).__init__()  
 

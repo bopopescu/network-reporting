@@ -16,7 +16,8 @@ then
     nosetests ./common/utils/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox
     
     # Adserver Tests
-    nosetests ./ad_server/optimizer/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox
+    nosetests ./ad_server/optimizer/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox 
+    nosetests ./ad_server/adunit_context/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox  
     nosetests ./ad_server/filters/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox 
     nosetests ./ad_server/auction/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox
     nosetests ./ad_server/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox

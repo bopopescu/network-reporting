@@ -54,7 +54,7 @@ from ad_server.optimizer import optimizer
 
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 
-from ad_server.optimizer.adunit_context import AdUnitContext, CreativeCTR
+from ad_server.adunit_context.adunit_context import AdUnitContext, CreativeCTR
 
 from mopub_logging import mp_logging
 from budget import budget_service

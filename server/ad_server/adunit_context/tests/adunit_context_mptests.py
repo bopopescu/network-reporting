@@ -3,7 +3,10 @@ import sys
 sys.path.append(os.environ['PWD'])
 import common.utils.test.setup
 
-
+import hypercache
+             
+import copy
+                     
 import unittest
 from nose.tools import eq_
 from google.appengine.api import memcache
@@ -28,7 +31,7 @@ from publisher.query_managers import AdUnitContextQueryManager, AdUnitQueryManag
 
 from account.query_managers import AccountQueryManager
   
-from ad_server.optimizer.adunit_context import AdUnitContext, CreativeCTR
+from ad_server.adunit_context.adunit_context import AdUnitContext, CreativeCTR
   
 class TestQueryManagersAdunitContext(unittest.TestCase):
     """ Make sure that adunit_context is appropriately removed from the cache """
@@ -373,3 +376,94 @@ class TestQueryManagersAdunitContext(unittest.TestCase):
         adgroup = AdGroupQueryManager.get(self.adgroup.key())
         eq_(adgroup.deleted, True)
 
+    # def mptest_consistent_digest(self):
+    #     """ We want to make sure that even when we deepcopy an element, it 
+    #         still hashes to the same value. """
+    #                                                                                      
+    # 
+    #     string1 = AdUnitContextQueryManager._make_digest("testing")  
+    #     string2 = AdUnitContextQueryManager._make_digest("testing")   
+    #     
+    #     eq_(string1, string2)
+    #     
+    #     
+    #     local_context1 = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key())        
+    #     local_context2 = copy.deepcopy(local_context1) 
+    #     
+    #     digest1 = AdUnitContextQueryManager._make_digest(local_context1)  
+    #     digest2 = AdUnitContextQueryManager._make_digest(local_context2)
+    #     
+    #     eq_(digest1, digest2)                   
+                           
+    def mptest_memcache_timestamping(self):
+         """ Make sure the timestamp gets updated properly """
+
+         local_context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key())  
+
+         adunit_key = str(self.adunit.key()).replace("'","")
+         adunit_context_key = AdUnitContext.key_from_adunit_key(adunit_key)
+         
+         ts1 = memcache.get(adunit_context_key, namespace="context-timestamp")   
+         
+         assert ts1 is not None   
+                                                             
+         local_context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key())   
+         
+         ts2 = memcache.get(adunit_context_key, namespace="context-timestamp")  
+         
+         eq_(ts1, ts2) 
+         
+
+             
+    def mptest_hypercache(self):
+        """ When we change an adunit_context in memcache, the query manager should 
+            detect the difference and get the updated context."""
+                                                                         
+        local_context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key())  
+        
+        adunit_key = str(self.adunit.key()).replace("'","")
+        adunit_context_key = AdUnitContext.key_from_adunit_key(adunit_key)                                                   
+        
+        
+        # This sets a new ts value in memcache
+        ts1 = memcache.get(adunit_context_key, namespace="context-timestamp")  
+        
+        hyper_context = hypercache.get(adunit_context_key)                 
+        eq_(hyper_context.adunit.name, "Test AdUnit")    
+              
+        # Finds it in hypercache
+        local_context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key())    
+           
+        # This does not change the ts value in memcache
+        ts2 = memcache.get(adunit_context_key, namespace="context-timestamp")   
+        eq_(ts1, ts2)
+        
+        eq_(local_context.adunit.name, "Test AdUnit")   
+        
+        # Now let's change the name     
+        self.adunit.name = "Test AdUnit Changed"
+
+        # Adds to the datastore and deletes context from cache                           
+        AdUnitQueryManager.put(self.adunit)
+                                                         
+        # eq_(datetime.datetime.now(), ts2) 
+        # Now the context in memcache is different
+        context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key())  
+         
+        # This means that the digest has changed              
+        ts3 = memcache.get(adunit_context_key, namespace="context-timestamp")    
+                           
+        assert (ts2 != ts3)
+          
+        eq_(context.adunit.name, "Test AdUnit Changed")  
+         
+        hyper_context = hypercache.get(adunit_context_key)                 
+        eq_(hyper_context.adunit.name, "Test AdUnit Changed")
+                                                                     
+
+
+                                                                                      
+
+        
+        
+        

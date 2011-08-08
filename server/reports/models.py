@@ -150,6 +150,10 @@ class Report(db.Model):
     def recipients(self):
         return self.schedule.recipients
 
+    @property
+    def days(self):
+        return self.schedule.days
+
     def __str__(self):
         return "Report(d1=%s, d2=%s, d3=%s, start=%s, end=%s)" % (self.d1, self.d2, self.d3, self.start, self.end)
     

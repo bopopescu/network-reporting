@@ -111,7 +111,7 @@ class AppQueryManager(QueryManager):
 
         if account:
             apps = apps.filter('account =', account)
-        return [app for app in apps]
+        return apps
         
     def put_apps(self,apps):
         return db.put(apps)    
@@ -209,7 +209,7 @@ class AdUnitQueryManager(QueryManager):
             adunits = adunits.filter('account =', account)
         #publisher can only be an app or adunit, and two adunits is dumb
         # also do publisher after because we can filter much faster with advertiser data than the deleted stuff
-        return [au for au in adunits]
+        return adunits
 
     @classmethod 
     def put_adunits(cls,adunits):

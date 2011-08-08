@@ -135,7 +135,7 @@ class ReportQueryManager(CachedQueryManager):
         return reports
                     
     def new_report(self, report, now=None, testing=False, sched=False):
-        if isinstance(report, str) or isinstance(report, unicode):
+        if not isinstance(report, db.Model()) or isinstance(report, str) or isinstance(report, unicode):
             if sched:
                 report = self.get_report_by_key(report, sched=False).schedule
             else:

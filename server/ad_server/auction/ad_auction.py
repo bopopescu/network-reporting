@@ -270,7 +270,8 @@ class AdAuction(object):
                                                          ua = user_agent,
                                                          ll = ll,
                                                          ip = request.remote_addr,
-                                                         adunit_context = adunit_context)
+                                                         adunit_context = adunit_context,
+                                                         country= helpers.get_country_code(request.headers, default=None))
                         # Turn it into a get query
                         trace_logging.info("\nSending to MPX: %s\n" % mk_args)
                         mpx_url = 'http://mpx.mopub.com/req?' + urllib.urlencode(mk_args)

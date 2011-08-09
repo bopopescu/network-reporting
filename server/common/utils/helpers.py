@@ -2,8 +2,8 @@ import logging
 import re
 import reporting.models as reporting_models
 
-def get_country_code(headers):
-    return headers.get('X-AppEngine-country', reporting_models.DEFAULT_COUNTRY)
+def get_country_code(headers, default=reporting_models.DEFAULT_COUNTRY):
+    return headers.get('X-AppEngine-country', default)
     
 def get_user_agent(request):
     return request.get('ua') or request.headers['User-Agent']    

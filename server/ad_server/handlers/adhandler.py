@@ -419,7 +419,7 @@ class AdHandler(webapp.RequestHandler):
               
               
             if version_number >= 2:  
-                params.update(finishLoad='<script>function finishLoad(){window.location="mopub://finishLoad";} window.onload = function(){finishLoad();} </script>')
+                params.update(finishLoad='<script>function mopubFinishLoad(){window.location="mopub://finishLoad";}</script>')
                 # extra parameters used only by admob template
                 #add in the success tracking pixel
                 params.update(admob_finish_load= success + 'window.location = "mopub://finishLoad";')

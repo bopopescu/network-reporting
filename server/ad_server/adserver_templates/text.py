@@ -6,6 +6,11 @@ text = Template("""<html>
                           </style>
                           $finishLoad
                           <script>
+                            if(typeof finishLoad == 'function') {
+                                finishLoad();
+                            }
+                          </script>
+                          <script>
                             function webviewDidClose(){} 
                             function webviewDidAppear(){} 
                           </script>

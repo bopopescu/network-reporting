@@ -7,6 +7,7 @@
 
 //mopub singleton object
 var mopub = mopub || {};
+mopub.utils = mopub.utils || {};
 
 (function($){
 	// dom ready
@@ -327,7 +328,187 @@ var mopub = mopub || {};
   } else {
     log = function(){ return; }
   }
+  
+  /*---------------------------------------/
+  / Utility functions.
+  /---------------------------------------*/
+  
+  mopub.utils.formatNumberWithCommas = function(string) {
+    string += '';
+    x = string.split('.');
+    x1 = x[0];
+    x2 = x.length > 1 ? '.' + x[1] : '';
+    var rgx = /(\d+)(\d{3})/;
+    while (rgx.test(x1)) {
+      x1 = x1.replace(rgx, '$1' + ',' + '$2');
+    }
+    return x1 + x2;
+  };
+  
+  mopub.utils.formatNumberAsPercentage = function(string) {
+    // We round to two decimal places.
+    return (string*100).toFixed(2) + '%';
+  };
+  
 })(this.jQuery);
+
+// =====================================================================
+// mopub.utils.AjaxChunkedFetch
+// =====================================================================
+
+(function(utils, $) {
+  
+  var AjaxChunkedFetch = utils.AjaxChunkedFetch = function(args) {
+    this.items = {};
+    this.chunkComplete = function(data, chunk, fetchObj) {};
+    this.chunkFailure = function(chunk, fetchObj) {};
+    this.fetchComplete = function(fetchObj) {};
+    this.isComplete = false;
+    this.hasFailed = false;
+    $.extend(this, args);
+
+    this.unfetchedItems = {};
+    var self = this;
+    $.each(this.items, function(index, item) { self.unfetchedItems[item] = {}; });
+
+    return this;
+  };
+  
+  AjaxChunkedFetch.chunkArray = function(array, chunkSize) {
+    if (!array) return [];
+
+    var chunks = [];
+    $.each(array, function(index, elem) {
+      var chunkNumber = Math.floor(index / chunkSize);
+      var indexInChunk = index % chunkSize;
+      chunks[chunkNumber] = chunks[chunkNumber] || [];
+      chunks[chunkNumber][indexInChunk] = elem;
+    });
+    return chunks;
+  };
+  
+  // Time to wait before terminating AJAX request.
+  AjaxChunkedFetch.TIMEOUT_MILLISECONDS = 10000;
+
+  // Maximum number of AJAX retries before giving up.
+  AjaxChunkedFetch.MAX_FAILED_ATTEMPTS = 3;
+
+  // Number of items to be fetched in a single AJAX request.
+  AjaxChunkedFetch.DEFAULT_CHUNK_SIZE = 8;
+
+  // Time to wait before retrying a failed AJAX request.
+  AjaxChunkedFetch.BACKOFF_TIME_MILLISECONDS = 1000;
+
+  // Multiplier to increase the backoff time when there are consecutive failures.
+  AjaxChunkedFetch.BACKOFF_MULTIPLIER = 1.5;
+
+  AjaxChunkedFetch.prototype.unfetchedItemsEmpty = function() {
+    for (var key in this.unfetchedItems) { 
+      if (this.unfetchedItems.hasOwnProperty(key)) return false;
+    }
+    return true;
+  };
+
+  AjaxChunkedFetch.prototype.start = function() {
+    this.isComplete = false;
+    this.hasFailed = false;
+    
+    if (!this.urlConstructor) {
+      this.hasFailed = true;
+      this.chunkFailure([], this);
+      return;
+    }
+
+    var chunks = AjaxChunkedFetch.chunkArray(this.items, 
+      AjaxChunkedFetch.DEFAULT_CHUNK_SIZE);
+    if (chunks.length <= 0) {
+      this.isComplete = true;
+      this.fetchComplete(this);
+      return;
+    }
+    
+    var self = this;
+    $.each(chunks, function(index, chunk) {
+      var request = new FetchRequest({
+        items: chunk,
+        url: self.urlConstructor(chunk, self),
+        success: self.chunkComplete,
+        failure: self.chunkFailure,
+        fetchObject: self
+      });
+      request.execute();
+    });
+  };
+
+  AjaxChunkedFetch.prototype.markItemsComplete = function(items) {
+    var self = this;
+    $.each(items, function(index, item) {
+      delete self.unfetchedItems[item];
+    });
+
+    if (this.unfetchedItemsEmpty()) {
+      this.isComplete = true;
+      this.hasFailed = false;
+      this.fetchComplete(this);
+    }
+  };
+  
+  AjaxChunkedFetch.prototype.markAsFailed = function() {
+    this.hasFailed = true;
+  };
+  
+  // =====================================================================
+  
+  var FetchRequest = AjaxChunkedFetch.FetchRequest = function(args) {
+    this.items = [];
+    this.url = "";
+    this.success = function(data) {};
+    this.failure = function() {};
+    this.backoffData = new BackoffData();
+    $.extend(this, args);
+    return this;
+  };
+
+  FetchRequest.prototype.execute = function() {
+    var self = this;
+
+    $.ajax({
+      url: self.url,
+      dataType: 'json',
+      success: function() {
+        return function(data) {
+          self.success(data, self.items, self.fetchObject);
+          self.fetchObject.markItemsComplete(self.items);
+        };
+      }(),
+      error: function() {
+        self.backoffData.failedAttempts++;
+        if (self.backoffData.failedAttempts > AjaxChunkedFetch.MAX_FAILED_ATTEMPTS) {
+          self.failure(self.items, self.fetchObject);
+          self.fetchObject.markAsFailed();
+          // TODO: mark items as failed in self.fetchObject.
+        } else {
+          // Schedule retry and extend the backoff delay.
+          setTimeout(function() { self.execute() }, self.backoffData.delay);
+          self.backoffData.delay *= AjaxChunkedFetch.BACKOFF_MULTIPLIER;
+        }
+      },
+      timeout: AjaxChunkedFetch.TIMEOUT_MILLISECONDS
+    });
+  };
+  
+  // =====================================================================
+  
+  var BackoffData = AjaxChunkedFetch.BackoffData = function(args) {
+    this.delay = AjaxChunkedFetch.BACKOFF_TIME_MILLISECONDS;
+    this.failedAttempts = 0;
+    $.extend(this, args);
+    return this;
+  };
+  
+})(mopub.utils = mopub.utils || {}, this.jQuery);
+
+// =====================================================================
 
 function obj_equals(x, y) {
     for(p in y) {

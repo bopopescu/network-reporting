@@ -1,4 +1,8 @@
-import logging
+import logging  
+import hashlib       
+
+import hypercache   
+import datetime
 
 from common.utils.query_managers import QueryManager, CachedQueryManager
 
@@ -13,10 +17,9 @@ import datetime
 from reporting.query_managers import StatsModelQueryManager
 from google.appengine.api import memcache
 from ad_server.debug_console import trace_logging
-from ad_server.optimizer.adunit_context import AdUnitContext, CreativeCTR
-
+from ad_server.adunit_context.adunit_context import AdUnitContext, CreativeCTR     
 from common.constants import MAX_OBJECTS
-CACHE_TIME = 60*60
+CACHE_TIME = 60*60     
 
 class AdUnitContextQueryManager(CachedQueryManager):
     """ Keeps an up-to-date version of the AdUnit Context in memcache.
@@ -24,48 +27,75 @@ class AdUnitContextQueryManager(CachedQueryManager):
     Model = AdUnitContext
 
     @classmethod
-    def cache_get_or_insert(cls,adunit_key):
-        """ Takes an AdUnit key, gets or builds the context """
+    def cache_get_or_insert(cls, adunit_key):
+        """ Takes an AdUnit key, tries both hypercache and memcache, if found
+            neither, builds the context from the datastore.
+            
+            This assumes that any stale adunit_context objects have been removed
+            from memcache using cache_delete_from_adunits.
+            """
         adunit_key = str(adunit_key).replace("'","")
-        adunit_context_key = "context:"+str(adunit_key)
-        adunit_context = memcache.get(adunit_context_key, namespace="context")
+        adunit_context_key = AdUnitContext.key_from_adunit_key(adunit_key)  
+        
+        memcache_ts = memcache.get(adunit_context_key, namespace="context-timestamp")  
+        hypercached_context = hypercache.get(adunit_context_key)
+         
+        # We can return our hypercached context if nothing in memcache changed yet
+        if hypercached_context and (hypercached_context._hyper_ts == memcache_ts): 
+            return hypercached_context
+        
+        trace_logging.warning("hypercache miss: fetching adunit_context from memcache")    
+        
+        # Something has changed, let's get the new memcached context   
+        adunit_context = memcache.get(adunit_context_key, namespace="context")     
+        
         if adunit_context is None:
-            trace_logging.warning("fetching adunit from db")
+            trace_logging.warning("memcache miss: fetching adunit_context from db")
             # get adunit from db
             adunit = AdUnit.get(adunit_key)
             # wrap context
-            adunit_context = AdUnitContext.wrap(adunit)
-            # put context in cache as long as it will fit
-            # TODO: fix this so we don't need this hack
-            try:
-                memcache.set(str(adunit_context.key()), 
-                             adunit_context, 
-                             namespace="context", 
-                             time=CACHE_TIME)
-            except:
-                pass    
+            adunit_context = AdUnitContext.wrap(adunit) 
+            memcache.set(adunit_context_key, 
+                         adunit_context, 
+                         namespace="context", 
+                         time=CACHE_TIME)    
+            new_timestamp = datetime.datetime.now()            
+            memcache.set(adunit_context_key, new_timestamp, namespace="context-timestamp") 
         else:
-            trace_logging.warning("found adunit in cache")    
-        return adunit_context
+            new_timestamp = memcache_ts             
         
+        # We got new information for the hypercache, give it a new timestamp    
+        adunit_context._hyper_ts = new_timestamp
+        hypercache.set(adunit_context_key, adunit_context)
+   
+        return adunit_context
+             
+
+    
+                               
     @classmethod
-    def cache_delete_from_adunits(cls, adunits):
-        if not isinstance(adunits,list):
+    def cache_delete_from_adunits(cls, adunits):   
+        """ This is called whenever something modifies an adunit_context.
+            Removes both the context and its digest from memcache in 
+            order to maintain an up-to-date value in the cache. """
+        if not isinstance(adunits, list):
           adunits = [adunits]
         keys = ["context:"+str(adunit.key()) for adunit in adunits]  
         logging.info("deleting from cache: %s"%keys)
-        success = memcache.delete_multi(keys,namespace="context")
-        logging.info("deleted: %s"%success)
+        success = memcache.delete_multi(keys, namespace="context")
+        ts_success = memcache.delete_multi(keys, namespace="context-timestamp")
+        
+        logging.info("deleted: %s" % success and ts_success)
         return success
 
 class AppQueryManager(QueryManager):
     Model = App
     
     @classmethod
-    def get_apps(cls,account=None,deleted=False,limit=MAX_OBJECTS, alphabetize=False):
-        apps = cls.Model.all().filter("deleted =",deleted)
+    def get_apps(cls, account=None, deleted=False, limit=MAX_OBJECTS, alphabetize=False):
+        apps = cls.Model.all().filter("deleted =", deleted)
         if account:
-            apps = apps.filter("account =",account)
+            apps = apps.filter("account =", account)
             if alphabetize:
                 apps = apps.order("name")
         return apps.fetch(limit)    
@@ -111,7 +141,7 @@ class AppQueryManager(QueryManager):
 
         if account:
             apps = apps.filter('account =', account)
-        return [app for app in apps]
+        return apps
         
     def put_apps(self,apps):
         return db.put(apps)    
@@ -209,7 +239,7 @@ class AdUnitQueryManager(QueryManager):
             adunits = adunits.filter('account =', account)
         #publisher can only be an app or adunit, and two adunits is dumb
         # also do publisher after because we can filter much faster with advertiser data than the deleted stuff
-        return [au for au in adunits]
+        return adunits
 
     @classmethod 
     def put_adunits(cls,adunits):

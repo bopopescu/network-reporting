@@ -1864,6 +1864,14 @@ var mopub = mopub || {};
 
     // Hide unneeded li entry
     $('#advertiser-adgroups-exportSelect-menu').find('li').first().hide();
-  }); 
+  
+    // For campaigns/create //
 
+    if ($("#campaignForm-details") != []){       
+        // Only execute this if we are on the new campaigns form     
+        var preselected_tag = window.location.hash.substr(1); 
+        $("#advertiser-CampaignType-"+preselected_tag).click();          
+    }
+  
+  }); // End document onready                                                                         
  })(this.jQuery);

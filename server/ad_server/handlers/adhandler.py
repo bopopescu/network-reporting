@@ -24,7 +24,7 @@ from publisher.models import *
 from advertiser.models import *
 
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
-from ad_server.optimizer.adunit_context import AdUnitContext, CreativeCTR
+from ad_server.adunit_context.adunit_context import AdUnitContext, CreativeCTR
 
 from mopub_logging import mp_logging
 from budget import budget_service
@@ -378,11 +378,11 @@ class AdHandler(webapp.RequestHandler):
                 params.update({"html_data": creative.html_data, "w": format[0], "h": format[1]})
                 self.response.headers.add_header("X-Launchpage","http://adsx.greystripe.com/openx/www/delivery/ck.php")
                 template_name = "html"
-            elif creative.ad_type == "image":        
-                img = images.Image(blob_key=creative.image_blob)
+
+            elif creative.ad_type == "image":                       
                 img_height = creative.image_height
                 img_width = creative.image_width
-                params["image_url"] = images.get_serving_url(creative.image_blob)   
+                params["image_url"] = images.get_serving_url(creative.image_blob) 
                 
                 # if full screen we don't need to center
                 if (not "full" in adunit.format) or ((img_width == 480.0 and img_height == 320.0 ) or (img_width == 320.0 and img_height == 480.0)):

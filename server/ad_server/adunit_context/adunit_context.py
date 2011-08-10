@@ -129,12 +129,17 @@ class AdUnitContext(object):
             campaign = db.get(adgroup.campaign.key())
             if not campaign.deleted:
                 campaigns.append(campaign)
-        return campaigns
+        return campaigns   
         
-    def key(self):
+    @classmethod
+    def key_from_adunit_key(cls, adunit_key):    
         """ Since we want a 1-1 mapping from adunits to adunit_contexts, we
         appropriate the key from the adunit, returns a string. """
-        return "context:"+str(self.adunit.key())
+        return "context:"+ adunit_key   
+        
+    def key(self):
+        """ Uses the adunit's key """
+        return AdUnitContext.key_from_adunit_key(str(self.adunit.key()))
         
     def get_creative_by_key(self,creative_key):
         creative = None

@@ -19,6 +19,11 @@ var mopub = mopub || {};
   if (typeof creatives=="undefined") {
     creatives = false;
     }
+    
+  if ($('#is_admin_input').val() != 'True'){
+    $('.admin_only').hide();
+  }
+      
 
   function campaignAdgroupFormOnLoad(){
     $('#campaignAdgroupForm input[name="campaign_type"]').click(function(e) {

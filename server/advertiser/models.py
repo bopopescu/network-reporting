@@ -347,6 +347,8 @@ class Creative(polymodel.PolyModel):
     # e.g. format=*
     format_predicates = db.StringListProperty(default=["format=*"]) 
     format = db.StringProperty(default="320x50") # We should switch to using this field instead of format_predicates: one creative per size
+    
+    launchpage = db.StringProperty()
 
     # time of creation
     account = db.ReferenceProperty(Account)

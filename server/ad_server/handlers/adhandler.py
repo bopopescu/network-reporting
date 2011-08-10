@@ -538,11 +538,14 @@ class AdHandler(webapp.RequestHandler):
             # adds network info to the headers
             if creative.adgroup.network_type:
                 self.response.headers.add_header("X-Networktype",creative.adgroup.network_type)
-            
+
+            if creative.launchpage:
+                self.response.headers.add_header("X-Launchpage", creative.launchpage)
             
             # render the HTML body
             rendered_creative = self.TEMPLATES[template_name].safe_substitute(params)
             rendered_creative.encode('utf-8')
+            
             
             return rendered_creative
             

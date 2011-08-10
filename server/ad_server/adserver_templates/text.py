@@ -6,8 +6,8 @@ text = Template("""<html>
                           </style>
                           $finishLoad
                           <script>
-                            if(typeof finishLoad == 'function') {
-                                finishLoad();
+                            if(typeof mopubFinishLoad == 'function') {
+                                mopubFinishLoad();
                             }
                           </script>
                           <script>

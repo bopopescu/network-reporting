@@ -24,7 +24,7 @@ CO = 'country' #10
 DEV = 'device' #11
 OS = 'os' #12
 KEY = 'kw' #13
-CHOICES = [('','------------'), (APP, 'App'), (AU, 'Ad Unit'), (CAMP, 'Campaign'), (CRTV, 'Creative'), (P, 'Priority'), (MO, 'Month'), (WEEK, 'Week'), (DAY, 'Day'), (HOUR, 'Hour'),]# (CO, 'Country'), (DEV, 'Device'), (OS, 'Operating System'), (KEY, 'Keywords')]
+CHOICES = [('','------------'), (APP, 'App'), (AU, 'Ad Unit'), (P, 'Priority'), (CAMP, 'Campaign'), (CRTV, 'Creative'), (MO, 'Month'), (WEEK, 'Week'), (DAY, 'Day'), (HOUR, 'Hour'),]# (CO, 'Country'), (DEV, 'Device'), (OS, 'Operating System'), (KEY, 'Keywords')]
 TARG = 'targeting' # I don't know what this is
 
 INT_CHCES = [('today', 'Today'), ('yesterday', 'Yesterday'), ('7days', 'Last 7 days'), ('lmonth', 'Last month'), ('custom', 'Custom')]

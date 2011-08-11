@@ -65,9 +65,7 @@ from ad_server import memcache_mangler
 from ad_server import frequency_capping
 
 
-############## CONSTANTS ###############
-
-TEST_MODE = "3uoijg2349ic(TEST_MODE)kdkdkg58gjslaf"
+############## CONSTANTS ###############                 
 
 SERVER_SIDE_DICT = {"millennial":MillennialServerSide,
                     "appnexus":AppNexusServerSide,
@@ -90,7 +88,7 @@ class AdAuction(object):
     MAX_ADGROUPS = 30
     
     @classmethod
-    def request_third_party_server(cls,request,adunit,adgroups):
+    def request_third_party_server(cls, request, adunit, adgroups):
         if not isinstance(adgroups,(list,tuple)):
             multiple = False
             adgroups = [adgroups]
@@ -99,9 +97,9 @@ class AdAuction(object):
         rpcs = []
         for adgroup in adgroups:
             if adgroup.network_type in SERVER_SIDE_DICT:
-                KlassServerSide = SERVER_SIDE_DICT[adgroup.network_type]
-                server_side = KlassServerSide(request, adunit) 
-                trace_logging.warning("%s url %s"%(KlassServerSide,server_side.url))
+                ServerSideClass = SERVER_SIDE_DICT[adgroup.network_type]
+                server_side = ServerSideClass(request, adunit) 
+                trace_logging.warning("%s url %s"%(ServerSideClass,server_side.url))
                 
                 rpc = urlfetch.create_rpc(2) # maximum delay we are willing to accept is 2000 ms
                 payload = server_side.payload

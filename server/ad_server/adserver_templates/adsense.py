@@ -4,6 +4,11 @@ adsense = Template("""<html>
                             <head>
                               <title>$title</title>
                               $finishLoad
+                              <script> 
+                                if(typeof mopubFinishLoad == 'function') {
+                                    window.onload = mopubFinishLoad;
+                                }
+                              </script>
                               <script>
                                 function webviewDidClose(){} 
                                 function webviewDidAppear(){} 

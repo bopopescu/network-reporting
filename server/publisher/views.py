@@ -49,7 +49,8 @@ from common.utils.query_managers import CachedQueryManager
 from publisher.query_managers import AppQueryManager, AdUnitQueryManager, AdUnitContextQueryManager
 from reporting.query_managers import StatsModelQueryManager
 
-from common.utils import sswriter
+from common.utils import sswriter, date_magic
+from common.utils.helpers import app_stats
 from common.utils.request_handler import RequestHandler
 from common.constants import *
 from budget import budget_service
@@ -149,7 +150,7 @@ class AppIndexGeoHandler(RequestHandler):
     totals = StatsModel(date=now) # sum across all days and countries
     
     # hydrate geo count dicts with stats counts on account level
-    all_stats = StatsModelQueryManager(self.account,self.offline).get_stats_for_days(days=days) 
+    all_stats = StatsModelQueryManager(self.account,self.offline,include_geo=True).get_stats_for_days(days=days) 
     for stats in all_stats:
       totals = totals + StatsModel(request_count=stats.request_count, 
                                    impression_count=stats.impression_count, 
@@ -244,7 +245,7 @@ class AppCreateHandler(RequestHandler):
         # Check if this is the first app for this account
         status = "success"
         if self.account.status == "new":
-          self.account.status = "step3"  # skip setting 'step2' since the step 2 page is only displayed once
+          self.account.status = "step4"  # skip to step 4 (add campaigns), but show step 2 (integrate)
           AccountQueryManager.put_accounts(self.account)
           status = "welcome"
         return HttpResponseRedirect(reverse('publisher_generate',kwargs={'adunit_key':adunit.key()})+'?status='+status)
@@ -287,7 +288,7 @@ def add_demo_campaign(site):
     c = Campaign(name="MoPub Demo Campaign",
                  u=site.account.user,
                  account=site.account,
-                 campaign_type="promo",
+                 campaign_type="backfill_promo",
                  description="Demo campaign for checking that MoPub works for your application")
     CampaignQueryManager.put(c)
 
@@ -297,6 +298,7 @@ def add_demo_campaign(site):
                  account=site.account,
                  priority_level=3,
                  bid=1.0,
+                 bid_strategy="cpm",
                  site_keys=[site.key()])
     AdGroupQueryManager.put(ag)
 
@@ -602,7 +604,7 @@ def adunit_show(request,*args,**kwargs):
 class AppUpdateAJAXHandler(RequestHandler):
   TEMPLATE  = 'publisher/forms/app_form.html'
   def get(self,app_form=None,app=None):
-    app_form = app_form or AppForm(instance=app)
+    app_form = app_form or AppForm(instance=app, is_edit_form=True)
 
     return self.render(form=app_form)
 
@@ -620,7 +622,7 @@ class AppUpdateAJAXHandler(RequestHandler):
     else:
       app = None
 
-    app_form = AppForm(data=self.request.POST, files = self.request.FILES, instance=app)
+    app_form = AppForm(data=self.request.POST, files = self.request.FILES, instance=app, is_edit_form=True)
 
     json_dict = {'success':False,'html':None}
 
@@ -708,10 +710,16 @@ def publisher_adunit_delete(request,*args,**kwargs):
 
 class RemoveAppHandler(RequestHandler):
     def post(self, app_key):
-        a = AppQueryManager.get(app_key)
-        if a != None and a.account == self.account:
-            a.deleted = True
-            AppQueryManager.put(a)
+        app = AppQueryManager.get(app_key)
+        adunits = AdUnitQueryManager.get_adunits(app=app)
+        if app and app.account == self.account:
+            app.deleted = True
+            # also "delete" all the adunits associated with the app
+            for adunit in adunits:
+                adunit.deleted = True
+            AppQueryManager.put(app)
+            AdUnitQueryManager.put(adunits)
+            
     
         return HttpResponseRedirect(reverse('publisher_index'))
  
@@ -728,3 +736,27 @@ class GenerateHandler(RequestHandler):
 @login_required
 def generate(request,*args,**kwargs):
   return GenerateHandler()(request,*args,**kwargs) 
+
+class AppExportHandler(RequestHandler):
+    def post(self, app_key, file_type, start, end):
+        start = datetime.strptime(start,'%m%d%y')
+        end = datetime.strptime(end,'%m%d%y')
+        days = date_magic.gen_days(start, end)
+
+        app = AppQueryManager.get(app_key)
+        all_stats = StatsModelQueryManager(self.account, offline=self.offline).get_stats_for_days(publisher=app, days=days)
+        f_name_dict = dict(app_title = app.name,
+                           start = start.strftime('%b %d'),
+                           end   = end.strftime('%b %d, %Y'),
+                           )
+
+        f_name = "%(app_title)s AppStats,  %(start)s - %(end)s" % f_name_dict
+        f_name = f_name.encode('ascii', 'ignore')
+        data = map(lambda x: [x[0]] + x[1], zip([day.strftime('%a, %b %d, %Y') for day in days], [app_stats(stat) for stat in all_stats]))
+        titles = ['Date', 'Requests', 'Impressions', 'Fill Rate', 'Clicks', 'CTR']
+        return sswriter.export_writer(file_type, f_name, titles, data)
+
+
+
+def app_export(request, *args, **kwargs):
+    return AppExportHandler()(request, *args, **kwargs)

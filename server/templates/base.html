@@ -21,11 +21,14 @@
 
   <!-- CSS -->
   <link rel="stylesheet" href="/js/mylibs/jquery-ui-1.8.7.custom/css/mopub/jquery-ui-1.8.7.custom.css" />  
-  <link rel="stylesheet" href="/css/style.css?v=24">
+  <link rel="stylesheet" href="/css/style.css?v=39">
   {% block extraCSS %}{% endblock %}
  
   <!-- modernizr -->
   <script src="/js/mylibs/modernizr-1.6.min.js"></script>
+
+  <!-- sorttable -->
+  <script src="/js/sorttable.js"></script>
    
   <!-- Google load for jquery and jqueryui -->
   <script src="https://www.google.com/jsapi?key=ABQIAAAAbRw2cYJlVhkm8Sy9e32IvhSp_nRSlbw3drc-oo9CvDm6lSB7YhTn-1GvX4YW6_H-c4ZV_1LYTj_jrw" type="text/javascript"></script>
@@ -49,9 +52,34 @@
   <script src="/js/mylibs/highcharts/highcharts.js"></script>
   
   <!-- MoPub -->
-  <script src="/js/mopub.js?v=18"></script>
-  {% block extraScripts %}<script src="/js/mopub-dashboard.js?v=19"></script>{% endblock extraScripts %}
+  <script src="/js/mopub.js?v=23"></script>
+  {% block extraScripts %}<script src="/js/mopub-dashboard.js?v=22"></script>{% endblock extraScripts %}
   
+  <!-- KISSmetrics -->
+  <script type="text/javascript">
+    var _kmq = _kmq || [];
+    function _kms(u){
+      setTimeout(function(){
+        var s = document.createElement('script'); var f = document.getElementsByTagName('script')[0]; s.type = 'text/javascript'; s.async = true;
+        s.src = u; f.parentNode.insertBefore(s, f);
+      }, 1);
+    }
+    _kms('//i.kissmetrics.com/i.js');_kms('//doug1izaerwt3.cloudfront.net/bac035c888be28f161fd88b0e4d2325d67acb2a9.1.js');
+  </script>
+  
+  <!-- Mixpanel -->
+  <script type="text/javascript">
+    var mpq=[];
+    mpq.push(["init","2941bda924fcaaff6ec23f27b41f0129"]);
+    (function(){var a=document.createElement("script");a.type="text/javascript";a.async=true;a.src=(document.location.protocol==="https:"?"https:":"http:")+"//api.mixpanel.com/site_media/js/api/mixpanel.js";var b=document.getElementsByTagName("script")[0];b.parentNode.insertBefore(a,b)})();
+    {% if user.is_authenticated %}  
+    // Track by name
+    mpq.push(["name_tag", "{{user.email}}"]);
+    {% endif %}
+    
+  </script>
+  <!-- End Mixpanel -->
+
   <!--[if lt IE 7 ]>
     <script src="/js/mylibs/dd_belatedpng.js"></script>
     <script> DD_belatedPNG.fix('img, .png_bg'); </script>
@@ -70,6 +98,7 @@
       })();
   </script>
 </head>
+<input type=hidden value="{{user.is_staff}}" id='is_admin_input'></input>
 
 {% block body_content %}
 <body id="mopub-dashboard">
@@ -97,7 +126,7 @@
         <nav id="nav2">
           <ul>
             <li><a href="{% url account_index %}">Your account</a></li>
-            <li><a href="http://www.mopub.com/resources/" target="_blank">Help</a></li>
+            <li><a href="http://help.mopub.com/" target="_blank">Help</a></li>
             {% if user.is_authenticated %}  
             <li><a href="{% url django.contrib.auth.views.logout %}">Log out</a></li>
             {% endif %}
@@ -121,7 +150,7 @@
               <label for="dashboard-dateOptions-option-14">14 days</label>
               <input type="radio" name="dashboard-dateOptions-option" value="30" id="dashboard-dateOptions-option-30" {% ifequal date_range 30 %}checked="checked" {% endifequal %}/>
               <label for="dashboard-dateOptions-option-30">30 days</label>
-              <input type="radio" name="dashboard-dateOptions-option" value="custom" id="dashboard-dateOptions-option-custom" />
+              <input type="radio" name="dashboard-dateOptions-option" value="custom" id="dashboard-dateOptions-option-custom" {% if date_range != 7 and date_range != 14 and date_range != 30 %}checked="checked" {% endif %}/>
               <label for="dashboard-dateOptions-option-custom">Custom ...</label>
             </span>
             <div id="dashboard-dateOptions-custom-modal">
@@ -187,7 +216,24 @@
                 </tr>
               </tbody>
             </table>
-          </section>{% endblock messageCenter %}{% block content %}{% endblock content %}
+          </section>{% endblock messageCenter %}
+          
+          
+          {% block flash %}
+            {% if flash %}
+                <!-- There's one or more flash-scoped objects -->
+
+                {% for key, value in flash.items %}
+                    <div class="flash_{{ key }} alertMessage">  
+                        {% autoescape off %} 
+                        {{ value }}
+                        {% endautoescape %}
+                    </div>
+                {% endfor %}
+            {% endif %}    
+          {% endblock flash %}
+          
+          {% block content %}{% endblock content %}
         </div>
       </div>
     </div>

@@ -152,29 +152,6 @@
                 </fieldset>
                 <fieldset class="adForm"> 
                   <div class="buttonBank buttonBank-right">
-                    <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
-                  </div>
-                  <legend>Greystripe {% if greystripe_status == 1 or greystripe_status == 2 or greystripe_status == 4 %}<span class="success unbold">(Enabled)</span>{% endif %}
-					{% if greystripe_status == 3 %}<span class ="partial unbold">(Partially enabled)</span>{% endif %}
-					{% if greystripe_status == 0 %}<span class="muted unbold">(Not configured)</span>{% endif %}</legend> 
-                  <dl class="formFields {% if greystripe_status != 0 %}show{% endif %}">
-                    <dt><label for="appForm-adUnitName">Greystripe Publisher ID:</label></dt> 
-                    <dd><input type="text" class="input-text" name="greystripe_pub_id" value="{{account.network_config.greystripe_pub_id|default_if_none:""}}" placeholder="ex: 3705265e-1025-4873-9352-7b1e4986xxxx" /></dd> 
-                    <div class="adForm-apps {% if greystripe_status == 2 or greystripe_status == 3 or greystripe_status == 4 %} {% else %} show {% endif %}">
-                      {% for app in apps%}
-
-                      <dt>{{app.name}}:</dt>
-                      <dd><input type="text" class="input-text" name="{{app.key}}-__-greystripe_pub_id" value="{{app.network_config.greystripe_pub_id|default_if_none:""}}"  placeholder="ex: 3705265e-1025-4873-9352-7b1e4986xxxx"/></dd>
-                      {% endfor %}
-                    </div>
-                    <dt><a class="button button-small adForm-fields-appButton" href="#">Show apps</a></dt>
-                    <dd>&nbsp;</dd>
-                    
-                    <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.greystripe.com/" target="_blank">Go to Greystripe<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
-                  </dl> 
-                </fieldset>
-                <fieldset class="adForm alt"> 
-                  <div class="buttonBank buttonBank-right">
                     <a class="button button-small adForm-fields-infoButton" href="#">More info</a>
                     <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
                     <div class="accountInfoForm hidden">
@@ -212,7 +189,7 @@
                     <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.inmobi.com/" target="_blank">Go to InMobi<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
                   </dl> 
                 </fieldset> 
-                <fieldset class="adForm"> 
+                <fieldset class="adForm alt"> 
                   <div class="buttonBank buttonBank-right">
                     <a class="button button-small adForm-fields-infoButton" href="#">More info</a>
                     <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
@@ -243,8 +220,15 @@
                     <div class="adForm-apps {% if jumptap_status == 2 or jumptap_status == 3 or jumptap_status == 4 %} {% else %} show {% endif %}">
                       {% for app in apps%}
                       
-                      <dt>{{app.name}}:</dt>
-                      <dd><input type="text" class="input-text" name="{{app.key}}-__-jumptap_pub_id" value="{{app.network_config.jumptap_pub_id|default_if_none:""}}"  placeholder="ex: pa_company_inc_app"/></dd>
+                      <dt><strong>App</strong> {{app.name}}:</dt>
+                      <dd><input type="text" class="input-text" name="{{app.key}}-__-jumptap_pub_id" value="{{app.network_config.jumptap_pub_id|default_if_none:""}}"  placeholder="ex: pa_company_inc_app (Site Alias) "/></dd>
+                      <!-- here -->
+                      {% for adunit in app.adunits %}
+                      <!-- here -->
+                      <dt><strong>AdUnit</strong> {{adunit.name}}:</dt>
+                      <dd><input type="text" class="input-text" name="{{adunit.key}}-_ADUNIT_-jumptap_pub_id" value="{{adunit.network_config.jumptap_pub_id|default_if_none:""}}"  placeholder="ex: pa_company_inc_app_spot (Spot Alias)"/></dd>
+                      {% endfor %}
+                      
                       {% endfor %}
                       
                     </div>
@@ -253,7 +237,7 @@
                     <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.jumptap.com/" target="_blank">Go to Jumptap<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
                   </dl> 
                 </fieldset> 
-                <fieldset class="adForm alt"> 
+                <fieldset class="adForm"> 
                   <div class="buttonBank buttonBank-right">
                     <a class="button button-small adForm-fields-infoButton" href="#">More info</a>
                     <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
@@ -293,7 +277,7 @@
                     <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.millennialmedia.com" target="_blank">Go to Millennial Media<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
                   </dl> 
                 </fieldset> 
-                <fieldset class="adForm"> 
+                <fieldset class="adForm alt"> 
                   <div class="buttonBank buttonBank-right">
                     <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
                   </div>

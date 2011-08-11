@@ -1,4 +1,7 @@
 import logging 
+from ad_server.debug_console import trace_logging
+
+
 from math import (atan2,
                    cos,
                    sin,
@@ -8,9 +11,15 @@ from math import (atan2,
                   )
 from budget import budget_service
 from reporting.models import StatsModel
+from ad_server.parser.useragent_parser import get_os
+
 
 from common.constants import (VALID_FULL_FORMATS,     
                               VALID_TABLET_FULL_FORMATS,
+                              MIN_IOS_VERSION, 
+                              MAX_IOS_VERSION, 
+                              MIN_ANDROID_VERSION, 
+                              MAX_ANDROID_VERSION
                              )
 ###############################
 # BASIC INCLUSION FILTERS
@@ -28,13 +37,14 @@ def budget_filter():
     log_mesg = "Removed due to being over budget: %s"
     def real_filter(a):
         # Check if we need smoothing, if so, use budgeting
+        a.bid = a.bid or 0.0
         return (budget_service.has_budget(a.campaign, a.bid/1000))
     return (real_filter, log_mesg, [])
 
 def active_filter():
     log_mesg = "Removed due to inactivity: %s"
     def real_filter(a):
-        return (a.active and a.campaign.active and (a.campaign.start_date  <= StatsModel.today() if a.campaign.start_date else True) and (StatsModel.today() <= a.campaign.end_date if a.campaign.end_date else True))
+        return (a.active and (a.campaign.start_date  <= StatsModel.today() if a.campaign.start_date else True) and (StatsModel.today() <= a.campaign.end_date if a.campaign.end_date else True))
     return (real_filter, log_mesg, [])
 
 def kw_filter(keywords):
@@ -51,7 +61,7 @@ def kw_filter(keywords):
         # is transformed to
         # [(m_age:19,m_gender:m),(m_age:20,m_gender:f)]
         anded_keywords = [k.split(' AND ') for k in adgroup.keywords] 
-        logging.info("KEYWORDS: %s == %s"%(keywords,anded_keywords))
+        trace_logging.info("KEYWORDS: %s == %s"%(keywords,anded_keywords))
         for anded_keyword in anded_keywords:
             anded_keyword = (kw.lower() for kw in anded_keyword)
             if set(anded_keyword) <= set(keywords):
@@ -71,6 +81,94 @@ def device_filter(dev_preds):
     log_mesg = "Removed due to device mismatch: %s"
     def real_filter(a):
         return (set(dev_preds).intersection(a.device_predicates) > set())
+    return (real_filter, log_mesg, [])
+
+def os_filter(user_agent):
+    log_mesg = "Removed due to OS restrictions: %s"
+    def real_filter(a):
+
+        # NOTE: This is because of ghetto memcache error, remove this if past July 5th 2011.
+        if a.target_ipod is None or a.target_iphone is None or a.target_ipad is None or a.ios_version_min is None or a.ios_version_max is None or a.android_version_min is None or a.android_version_max is None:
+            trace_logging.error("adgroup value contained None. Automatically passing.")
+            return True
+        # ENDNOTE
+        
+        # Do not do device targeting if it is turned off
+        if not a.device_targeting:
+            return True
+        
+        user_os_name, user_model, user_os_version = get_os(user_agent)
+        
+        # If we don't know the user agent
+        if user_os_name is None:
+            if a.target_other:
+                return True
+            else:
+                return False
+        
+        # We do know the OS but we don't know what the os_version is
+        if user_os_version is None:
+            if user_os_name == 'iOS':
+                if a.target_iphone and a.target_ipod and a.target_ipad and a.ios_version_min == MIN_IOS_VERSION and a.ios_version_max == MAX_IOS_VERSION:
+                    return True
+                else:
+                    return False
+            elif user_os_name == 'android':
+                if a.target_android and a.android_version_min == MIN_ANDROID_VERSION and a.android_version_max == MAX_ANDROID_VERSION:
+                    return True
+                else:
+                    return False
+                    
+        def in_range(user_nums, max_nums, min_nums):
+            # Make all lists same length to make comparison easier
+            max_len = max(len(user_nums), len(max_nums), len(min_nums))
+            while len(user_nums) < max_len:
+                user_nums.append('0')
+            while len(max_nums) < max_len:
+                max_nums.append('0')
+            while len(min_nums) < max_len:
+                min_nums.append('0')
+            
+            # Do comparison
+            is_less = False
+            is_more = False
+            for i, num in enumerate(user_nums):
+                if not is_less:
+                    if int(num) > int(max_nums[i]):
+                        return False
+                    elif int(num) < int(max_nums[i]):
+                        is_less = True
+                if not is_more:
+                    if int(num) < int(min_nums[i]):
+                        return False
+                    elif int(num) > int(min_nums[i]):
+                        is_more = True
+            
+            # Comparison succeeded            
+            return True
+        
+        # We know the OS and the os_version
+        user_nums = user_os_version.split('.')
+        if user_os_name == "iOS":
+            if user_model:
+                if user_model == "iPhone" and not a.target_iphone:
+                    return False
+                elif user_model == "iPad" and not a.target_ipad:
+                    return False
+                elif user_model == "iPod" and not a.target_ipod:
+                    return False
+                else:
+                    max_nums = a.ios_version_max.split('.')
+                    min_nums = a.ios_version_min.split('.')
+                    return in_range(user_nums, max_nums, min_nums)
+        elif user_os_name == "android":
+            if not a.target_android:
+                return False
+            else:
+                max_nums = a.android_version_max.split('.')
+                min_nums = a.android_version_min.split('.')
+                return in_range(user_nums, max_nums, min_nums)
+                
     return (real_filter, log_mesg, [])
 
 def mega_filter(*filters): 
@@ -162,7 +260,7 @@ def freq_filter(type, key_func, udid, now, frq_dict):
         else:
             imp_cnt = 0
         #Log the current counts and cap
-        logging.warning("%s imps: %s, freq cap: %s" % (type.title(), imp_cnt, frq_cap))
+        trace_logging.warning("key: %s type: %s imps: %s, freq cap: %s" % (a_key, type.title(), imp_cnt, frq_cap))
         return (not frq_cap or imp_cnt < frq_cap)
     return (real_filter, log_mesg, [])
 
@@ -170,7 +268,7 @@ def freq_filter(type, key_func, udid, now, frq_dict):
 def all_freq_filter(*filters):
     def actual_filter(a):
         #print the adgroup title so the counts/cap printing in the acutal filter don't confuse things
-        logging.warning("Adgroup: %s" % a)
+        trace_logging.warning("Adgroup: %s" % a)
         for f, msg, lst in filters:
             if not f(a):
                 lst.append(a)

@@ -12,6 +12,17 @@ var mopub = mopub || {};
 	// dom ready
 	$(document).ready(function() {
 		/*---------------------------------------/
+		/ Marketplace Hiding
+		/---------------------------------------*/
+
+        if ($('#is_admin_input').val()=='False') {
+            $('.marketplace').hide();
+        }
+
+
+
+
+		/*---------------------------------------/
 		/ UI Stuff
 		/---------------------------------------*/
 		
@@ -48,6 +59,10 @@ var mopub = mopub || {};
 		
 		// set up buttonsets
 		$('.buttonset').buttonset().css({ visibility: 'visible' });
+		
+		// gray out any buttonsets that ought to be disabled
+		$('.buttonset-start-disabled').buttonset()
+		$('.buttonset-start-disabled').buttonset({ disabled: true });
 		
 		// set up selectmenus
 		$('.selectmenu').selectmenu().css({ visibility: 'visible' });
@@ -324,3 +339,31 @@ var mopub = mopub || {};
     log = function(){ return; }
   }
 })(this.jQuery);
+
+function obj_equals(x, y) {
+    for(p in y) {
+        if(typeof(x[p])=='undefined') {return false;}
+    }
+    for(p in y) {
+        if (y[p]) {
+            switch(typeof(y[p])) {
+                case 'object':
+                    if (!y[p].equals(x[p])) { return false }; break;
+                case 'function':
+                    if (typeof(x[p])=='undefined' || (p != 'equals' && y[p].toString() != x[p].toString())) { return false; }; break;
+                default:
+                    if (y[p] != x[p]) { return false; }
+            }
+        }
+        else {
+            if (x[p]) {
+                return false;
+            }
+        }
+    }
+    for(p in x){
+        if(typeof(y[p])=='undefined') {return false;}
+    }
+    return true;
+}
+

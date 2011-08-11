@@ -2,7 +2,7 @@ from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
 from django.utils import simplejson
 from common.ragendja.template import render_to_response, render_to_string, JSONResponse
-
+from common.utils.timezones import Pacific_tzinfo
 # from common.ragendja.auth.decorators import google_login_required as login_required
 from budget import budget_service
 
@@ -115,42 +115,26 @@ def budget_view(request, adgroup_key):
     
     remaining_daily_budget = budget_service.remaining_daily_budget(camp)
     remaining_ts_budget = budget_service.remaining_ts_budget(camp)
+    
+    braking_fraction = budget_service.braking_fraction(camp)
         
-    today = datetime.date.today()
+    today = datetime.datetime.now(Pacific_tzinfo()).date()
     one_month_ago = today - datetime.timedelta(days=30)
     
     daily_logs = budget_service._get_daily_logs_for_date_range(camp,
                                                                one_month_ago,
                                                                today)
                                                                 
-    ts_logs = budget_service._get_ts_logs_for_date(camp, today).fetch(200)
-    
-                                                
-    
-    def format_spending(log):
-        try:
-            log.delivery = log.spending
-        except NoSpendingForIncompleteLogError:
-            log.delivery = "Incomplete"
-        return log
+                                                                
+    slicer = BudgetSlicer.get_or_insert_for_campaign(camp)
+    ts_logs = slicer.timeslice_logs.order("-end_date").fetch(1440)
         
-    def format_spending_ts(log):
-        try:
-            log.delivery = log.spending
-        except NoSpendingForIncompleteLogError:
-            log.delivery = "Incomplete"
-        log.time = log.end_date.time()
-        return log
-        
-    ts_logs = [format_spending_ts(log) for log in ts_logs]
-    daily_logs = [format_spending(log) for log in daily_logs]
-         
     #### Build budgetslicer address ####
     # prefix = "http://localhost:8080/_ah/admin/datastore/edit?key="
     prefix = "https://appengine.google.com/datastore/edit?app_id=mopub-inc&namespace=&key="
 
-    budget_slicer = BudgetSlicer.get_or_insert_for_campaign(camp)
-    budget_slicer_url = prefix + str(budget_slicer.key())
+    budget_obj = BudgetSlicer.get_or_insert_for_campaign(camp)
+    budget_obj_url = prefix + str(budget_obj.key())
            
            
     #### Build memcache clearing urls ####
@@ -172,9 +156,10 @@ def budget_view(request, adgroup_key):
                 'ts_logs': ts_logs,
                 'today': today,
                 'one_month_ago': one_month_ago,
-                'budget_slicer_url': budget_slicer_url,
+                'budget_obj_url': budget_obj_url,
                 'clear_memcache_daily_url': clear_memcache_daily_url,
-                'clear_memcache_ts_url': clear_memcache_ts_url}
+                'clear_memcache_ts_url': clear_memcache_ts_url,
+                'braking_fraction': braking_fraction}
 
 
 

@@ -1,23 +1,32 @@
 #!/bin/bash
 PATH=~/mopub/server/reporting/aws_logging:$PATH:/usr/local/bin:~/google_appengine
-# echo $PATH
-# pwd
 
+INPUT_DAY=$1$2
+DAYSTAMP=$1-$2
+echo "download logs for day" $DAYSTAMP
 
 APP_DIR=~/mopub/server
 LOG_ROOT_DIR=~/aws_logs 
+LOG_DIR=$LOG_ROOT_DIR/day-$DAYSTAMP
 
-mkdir $LOG_ROOT_DIR
+S3_BUCKET=s3://mopub-aws-logging
+S3_LOG_DIR=$S3_BUCKET/tmp4/logs-$DAYSTAMP-full/aws-logfile-$DAYSTAMP-0000-full.raw
 
-# download logs from GAE
-echo "begin downloading:" `date +"%D"` `date +"%T"`
-START_TIME=$(date +%s)
 
-echo N47935 | appcfg.py --no_cookies --email=olp@mopub.com --passin --append --num_days=1 --verbose request_logs $APP_DIR $LOG_ROOT_DIR/request-logfile
-#echo N47935 | appcfg.py --no_cookies --email=olp@mopub.com --passin --num_days=3 request_logs $APP_DIR $LOG_ROOT_DIR/request-logfile
+# parallel downloading of yeterday's blog logs from GAE blobstore
+python $APP_DIR/reporting/aws_logging/blob_log_downloader.py -t $INPUT_DAY -n 32
 
-STOP_TIME=$(date +%s)
-echo "downloading GAE logs took" $((STOP_TIME-START_TIME)) "seconds"
-echo
-echo
-echo
+HOUR_DIRS=`ls $LOG_DIR`
+
+mkdir $LOG_DIR/totals
+
+for hour_dir in $HOUR_DIRS
+do
+    if [ ${#hour_dir} != 6 ]; then  # not the totals directory
+        echo "cat-ing" $LOG_DIR/$hour_dir/ "..." 
+        cat $LOG_DIR/$hour_dir/* > $LOG_DIR/totals/$hour_dir.blog
+    fi
+done
+
+# upload totals to S3
+s3cmd put $LOG_DIR/totals/* $S3_LOG_DIR/

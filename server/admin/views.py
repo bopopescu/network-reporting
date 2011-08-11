@@ -201,7 +201,7 @@ def update_sfdc_leads(request, *args, **kwargs):
     
     # Gnarly constants
     USER = "jim@mopub.com"
-    PW = "fhaaCohb0hXCNSQnreJUPhHbgKYNaQf00"
+    PW = "fhaaCohb14IaRUwM7VoAM4YEBqYfpCIl6H"
     BATCH_SIZE = 1      # this is so low because we cannot override the urlfetch timeout easily w/ beatbox, so only have 5 seconds to do it
     DAYS_BACK = 1       # only update N days of recent users at a time
     ACCOUNT_FETCH_MAX = 1000   # maximum number of records to pull out of Account table
@@ -222,42 +222,54 @@ def update_sfdc_leads(request, *args, **kwargs):
         try:
             create_result = sforce.upsert('MoPub_Account_ID__c', [account_to_sfdc(a) for a in accounts[:BATCH_SIZE]])
             results += str(create_result)
-        except:
-            logging.info("Submit into SFDC failed for %d records" % BATCH_SIZE)
+        except beatbox.SoapFaultError, errorInfo:
+            mail.send_mail_to_admins(sender="olp@mopub.com",
+                                     subject="SFDC upsert failed",
+                                     body="%s %s" % (results, errorInfo.faultCode, errorInfo.faultString))            
+            logging.error("Submit into SFDC failed for %d records" % BATCH_SIZE)
         accounts[:BATCH_SIZE] = []
 
     # Cool
     return HttpResponse(results)
+
+def migrate_many_images(request, *args, **kwargs):
+    pass 
     
     
-def migrate_image(request, *args, **kwargs):
+def migrate_image(request, *args, **kwargs):  
+    """ Migrates a text and tile image. """
     from google.appengine.api import files
     
     params = request.POST or request.GET
+     
+    try:
+        creative_key = params.get('creative_key')
+        creative = Creative.get(creative_key)
     
-    creative_key = params.get('creative_key')
-    creative = Creative.get(creative_key)
+        img = images.Image(creative.image)
     
-    img = images.Image(creative.image)
-    
-    # Create the file
-    file_name = files.blobstore.create(mime_type='image/png')
+        # Create the file
+        file_name = files.blobstore.create(mime_type='image/png')
 
-    # Open the file and write to it
-    with files.open(file_name, 'a') as f:
-      f.write(creative.image)
+        # Open the file and write to it
+        with files.open(file_name, 'a') as f:
+          f.write(creative.image)
 
-    # Finalize the file. Do this before attempting to read it.
-    files.finalize(file_name)
+        # Finalize the file. Do this before attempting to read it.
+        files.finalize(file_name)
 
-    # Get the file's blob key
-    blob_key = files.blobstore.get_blob_key(file_name)
+        # Get the file's blob key
+        blob_key = files.blobstore.get_blob_key(file_name)
+                            
+        # Do not delete image yet
+        # creative.image = None 
+        creative.image_blob = blob_key      
     
-    creative.image = None
-    creative.image_blob = blob_key
-    creative.image_height = img.height
-    creative.image_width = img.width
-    
-    creative.put()
-    
-    return HttpResponse(blob_key)    
+        url = images.get_serving_url(blob_key)    
+          
+        creative.put()  
+        
+        return HttpResponse(url)                
+        
+    except Exception, e:
+        return HttpResponse(str(e))         

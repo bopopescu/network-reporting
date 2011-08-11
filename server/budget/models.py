@@ -1,35 +1,44 @@
 from google.appengine.ext import db
 from advertiser.models import Campaign
 import logging
+import math
 
-DEFAULT_TIMESLICES = 1440.0 # Timeslices per day
-DEFAULT_FUDGE_FACTOR = 0.1
+DEFAULT_TIMESLICES = 1440 # Timeslices per day
+DEFAULT_FUDGE_FACTOR = 0.05
+
+
+###### INTERIM VERSION TO BE DELETED #######
 
 class BudgetSlicer(db.Model):
     
     campaign = db.ReferenceProperty(Campaign)
-    timeslice_snapshot = db.FloatProperty()
-    daily_snapshot = db.FloatProperty()
-  
 
+    # New Models
+    spent_today = db.FloatProperty(default = 0.)
+    spent_in_campaign = db.FloatProperty(default = 0.)
+    current_timeslice = db.IntegerProperty(default = 0)
+    
     @property
     def timeslice_budget(self):
-        return self.campaign.budget / DEFAULT_TIMESLICES * (1.0 + DEFAULT_FUDGE_FACTOR)
-
+        """ The amount to increase the remaining_timeslice_budget amount by
+        every minute or so. This is how much we want to spend on this budget """
+        remaining_timeslice = DEFAULT_TIMESLICES-self.current_timeslice
+        remaining_budget = self.campaign.budget - self.spent_today
+        return remaining_budget / remaining_timeslice * (1.0 + DEFAULT_FUDGE_FACTOR)
+    
+    def set_timeslice(self, seconds):
+        self.current_timeslice = int(math.floor((DEFAULT_TIMESLICES*seconds)/86400))
+    
+    def advance_timeslice(self):
+        self.current_timeslice = int((self.current_timeslice+1)%DEFAULT_TIMESLICES)
+    
     def __init__(self, parent=None, key_name=None, **kwargs):
         if not key_name and not kwargs.get('key', None):
             # We are not coming from database
             campaign = kwargs.get('campaign',None)
             if campaign:
                 key_name = self.get_key_name(campaign)
-                if campaign.budget:
-                    timeslice_snapshot = (campaign.budget / 
-                                                DEFAULT_TIMESLICES * 
-                                                (1.0 + DEFAULT_FUDGE_FACTOR))
-                                            
-                    kwargs.update(daily_snapshot = campaign.budget)
-                    kwargs.update(timeslice_snapshot = timeslice_snapshot)
-                
+                    
         super(BudgetSlicer, self).__init__(parent=parent,
                                            key_name=key_name,
                                             **kwargs)
@@ -62,31 +71,33 @@ class BudgetSlicer(db.Model):
             return obj
         return db.run_in_transaction(_txn,campaign)        
 
+
+
+
 class BudgetSliceLog(db.Model):
-      budget_slicer = db.ReferenceProperty(BudgetSlicer,collection_name="timeslice_logs")
-      initial_memcache_budget = db.FloatProperty()
-      final_memcache_budget = db.FloatProperty()
+      budget_obj = db.ReferenceProperty(BudgetSlicer,collection_name="timeslice_logs")
       remaining_daily_budget = db.FloatProperty()
       end_date = db.DateTimeProperty()
       
-      @property
-      def spending(self):
-          try:
-              return self.initial_memcache_budget - self.final_memcache_budget
-          except TypeError:
-              raise NoSpendingForIncompleteLogError
-         
-
+      # New Models
+      actual_spending = db.FloatProperty()
+      desired_spending = db.FloatProperty()
+    
 class BudgetDailyLog(db.Model):
-    budget_slicer = db.ReferenceProperty(BudgetSlicer,collection_name="daily_logs")
+    budget_obj = db.ReferenceProperty(BudgetSlicer,collection_name="daily_logs")
     initial_daily_budget = db.FloatProperty()
     remaining_daily_budget = db.FloatProperty()
     date = db.DateProperty()
+    
+    # New Models
+    actual_spending = db.FloatProperty()
 
     @property
     def spending(self):
         try:
-            return self.initial_daily_budget - self.remaining_daily_budget
+            # If actual_spending is None, calculate it
+            return self.actual_spending or (self.initial_daily_budget - 
+                                            self.remaining_daily_budget)
         except TypeError:
             raise NoSpendingForIncompleteLogError
 

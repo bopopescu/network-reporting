@@ -1,5 +1,7 @@
 application: mopub-inc
+# application: mopub-experimental
 version: 38-mr-break
+
 runtime: python
 api_version: 1
 default_expiration: "10d"
@@ -9,6 +11,9 @@ builtins:
 
 # Turn this on to debug
 # - appstats: on
+
+inbound_services:
+- warmup     
 
 
 handlers:
@@ -27,9 +32,9 @@ handlers:
   static_files: public/images/favicon.ico
   upload: public/images/favicon.ico
 
-- url: /m/req
-  static_files: public/dummy/req.txt
-  upload: public/dummy/req.txt
+# - url: /m/req
+#   static_files: public/dummy/req.txt
+#   upload: public/dummy/req.txt
   
 - url: /css
   static_dir: public/css
@@ -59,7 +64,10 @@ handlers:
 - url: /m/clear
   script: ad_server/main.py
   login: admin
-  
+
+- url: /files/.*
+  script: mopub_logging/views.py
+
 - url: /m/.*
   script: ad_server/main.py
 

@@ -1,3 +1,6 @@
+from __future__ import with_statement
+
+
 from advertiser.models import Campaign, AdGroup, Creative, \
                               TextCreative, TextAndTileCreative,\
                               HtmlCreative, ImageCreative
@@ -14,19 +17,23 @@ from common.utils import widgets as mpwidgets
 from django import forms
 from django.core.urlresolvers import reverse
 from google.appengine.ext import db
-from google.appengine.api import images
+from google.appengine.api import images, files
 from publisher.models import Site as AdUnit
 
+from budget.budget_service import update_budget
 import logging
 import re
 import urlparse
 import cgi
+
+from common.constants import IOS_VERSION_CHOICES, ANDROID_VERSION_CHOICES
 
 class CampaignForm(mpforms.MPModelForm):
     TEMPLATE = 'advertiser/forms/campaign_form.html'
     gtee_level = forms.Field(widget = forms.Select)
     promo_level = mpfields.MPChoiceField(choices=[('normal','Normal'),('backfill','Backfill')],widget=mpwidgets.MPSelectWidget)
     budget_strategy = mpfields.MPChoiceField(choices=[('evenly','Spread Evenly'),('allatonce','All at once')],widget=mpwidgets.MPRadioWidget)
+    budget_type = mpfields.MPChoiceField(choices=[('daily','Daily'),('full_campaign','Full Campaign')],widget=mpwidgets.MPSelectWidget)
    
     #priority is now based off of campaign_type, not actually priority
     #gtee has 3 levels, this makes it so the database understands the three different levels of gtee
@@ -58,7 +65,7 @@ class CampaignForm(mpforms.MPModelForm):
                 initial.update(campaign_type=type_)
                 initial.update(promo_level=level)
                 kwargs.update(initial=initial)
-                
+        
         super(CampaignForm, self).__init__(*args, **kwargs)
         
     #same as above, but so the one level of gtee and 3 levels of prioirty
@@ -86,15 +93,21 @@ class CampaignForm(mpforms.MPModelForm):
                     type_ = 'backfill_promo'
                 else:
                     logging.warning("Invalid promo level")
-                obj.campaign_type = type_                  
-                     
+                obj.campaign_type = type_
+            
+            if obj.budget_type == "full_campaign":
+                obj.budget = None
+            else:
+                obj.full_budget = None
         if commit:
             obj.put()
+            update_budget(obj, save_campaign = False)
+            obj.put()
         return obj
-  
+    
     class Meta:
       model = Campaign
-      fields = ('name', 'budget_strategy', 'description', 'budget', 'campaign_type', 'start_date', 'end_date', 'gtee_level','promo_level')
+      fields = ('name', 'budget_strategy', 'budget_type', 'full_budget', 'description', 'budget', 'campaign_type', 'start_date', 'end_date', 'gtee_level','promo_level')
   
   
 class AdGroupForm(mpforms.MPModelForm):
@@ -108,13 +121,32 @@ class AdGroupForm(mpforms.MPModelForm):
     custom_method = mpfields.MPTextField(required=False)
     cities = forms.Field(widget=forms.MultipleHiddenInput, required=False)
     
+    device_targeting = mpfields.MPChoiceField(choices=[(False,'All'),(True,'Filter by device and OS')],widget=mpwidgets.MPRadioWidget)
+    
+    ios_version_max = mpfields.MPChoiceField(choices=IOS_VERSION_CHOICES,
+                                             widget=mpwidgets.MPSelectWidget)
+
+    ios_version_min = mpfields.MPChoiceField(choices=IOS_VERSION_CHOICES[1:],
+                                             widget=mpwidgets.MPSelectWidget)
+
+    android_version_max = mpfields.MPChoiceField(choices=ANDROID_VERSION_CHOICES,
+                                          widget=mpwidgets.MPSelectWidget)
+
+    android_version_min = mpfields.MPChoiceField(choices=ANDROID_VERSION_CHOICES[1:],
+                                          widget=mpwidgets.MPSelectWidget)
+    
     class Meta:
         model = AdGroup
         fields = ('name', 'network_type', 'priority_level', 'keywords', 
                   'bid', 'bid_strategy', 
                   'percent_users', 'site_keys',
                   'hourly_frequency_cap','daily_frequency_cap','allocation_percentage', 
-                  'allocation_type','budget')
+                  'allocation_type','budget', 
+                  "device_targeting",
+                  'target_iphone', 
+                  'target_ipod', 'target_ipad', 'ios_version_max','ios_version_min',
+                  'target_android', 'android_version_max','android_version_min',
+                  'target_other')
        
     def save( self, commit=True):
         obj = super(AdGroupForm, self).save(commit=False)
@@ -136,12 +168,14 @@ class AdGroupForm(mpforms.MPModelForm):
         if instance:
             if not initial:
                 initial = {}
+                
             if instance.network_type == 'custom' and instance.net_creative:
                 initial.update(custom_html = instance.net_creative.html_data)
 
             if instance.network_type == 'custom_native' and instance.net_creative:
                 initial.update(custom_method = instance.net_creative.html_data)
-                
+            
+            # Set up cities
             cities = []
             for city in instance.cities:
                 cities.append(str(city))
@@ -153,12 +187,15 @@ class AdGroupForm(mpforms.MPModelForm):
             initial.update(cities=cities)
             #initial.update(geo=instance.geo_predicates)
             kwargs.update(initial=initial)
+            
+            
+            
         super(AdGroupForm,self).__init__(*args,**kwargs)    
   
 class AbstractCreativeForm(mpforms.MPModelForm):
     def save(self,commit=True):
         obj = super(AbstractCreativeForm,self).save(commit=False)  
-        if obj.url:
+        if not obj.conv_appid and obj.url:
             obj.conv_appid = self._get_appid(obj.url)
             
         if commit:
@@ -202,7 +239,7 @@ class BaseCreativeForm(AbstractCreativeForm):
 
     class Meta:
         model = Creative
-        fields = ('ad_type','name','tracking_url','url','display_url','format','custom_height','custom_width','landscape')
+        fields = ('ad_type','name','tracking_url','url','display_url','format','custom_height','custom_width','landscape', 'conv_appid', 'launchpage')
                     
 class TextCreativeForm(AbstractCreativeForm):
     TEMPLATE = 'advertiser/forms/text_creative_form.html'
@@ -210,7 +247,7 @@ class TextCreativeForm(AbstractCreativeForm):
     class Meta:
         model = TextCreative
         fields = ('headline','line1','line2') + \
-                 ('ad_type','name','tracking_url','url','display_url','format','custom_height','custom_width','landscape')
+                 ('ad_type','name','tracking_url','url','display_url','format','custom_height','custom_width','landscape', 'conv_appid', 'launchpage')
         
 class TextAndTileCreativeForm(AbstractCreativeForm):
     TEMPLATE = 'advertiser/forms/text_tile_creative_form.html'
@@ -220,7 +257,7 @@ class TextAndTileCreativeForm(AbstractCreativeForm):
     
     class Meta:
         model = TextAndTileCreative
-        fields = ('line1','line2', 'ad_type','name','tracking_url','url','format','custom_height','custom_width','landscape')
+        fields = ('line1','line2', 'ad_type','name','tracking_url','url','format','custom_height','custom_width','landscape', 'conv_appid', 'launchpage')
       
     def __init__(self, *args,**kwargs):
         instance = kwargs.get('instance',None)
@@ -239,12 +276,17 @@ class TextAndTileCreativeForm(AbstractCreativeForm):
         if self.files.get('image_file',None):
             image_data = self.files.get('image_file').read()
             img = images.Image(image_data)
-            obj.image = db.Blob(image_data)            
-            obj.image_width = img.width
-            obj.image_height = img.height
+            fname = files.blobstore.create(mime_type='image/png')
+            with files.open(fname, 'a') as f:
+                f.write(image_data)
+            files.finalize(fname)
+            blob_key = files.blobstore.get_blob_key(fname)
+            obj.image_blob = blob_key     
+
         if commit:
             obj.put()
-        return obj  
+        return obj
+                          
       
 class HtmlCreativeForm(AbstractCreativeForm):
     TEMPLATE = 'advertiser/forms/html_creative_form.html'
@@ -252,7 +294,7 @@ class HtmlCreativeForm(AbstractCreativeForm):
     class Meta:
         model = HtmlCreative
         fields = ('html_data',) + \
-                 ('ad_type','name','tracking_url','url','display_url','format','custom_height','custom_width','landscape')
+                 ('ad_type','name','tracking_url','url','display_url','format','custom_height','custom_width','landscape', 'conv_appid', 'launchpage')
                
 class ImageCreativeForm(AbstractCreativeForm):
     TEMPLATE = 'advertiser/forms/image_creative_form.html'
@@ -262,7 +304,7 @@ class ImageCreativeForm(AbstractCreativeForm):
     
     class Meta:
         model = ImageCreative
-        fields = ('ad_type','name','tracking_url','url','display_url','format','custom_height','custom_width','landscape') 
+        fields = ('ad_type','name','tracking_url','url','display_url','format','custom_height','custom_width','landscape', 'conv_appid', 'launchpage')
         
     def __init__(self, *args,**kwargs):
         instance = kwargs.get('instance',None)
@@ -281,9 +323,16 @@ class ImageCreativeForm(AbstractCreativeForm):
         if self.files.get('image_file',None):
             image_data = self.files.get('image_file').read()
             img = images.Image(image_data)
-            obj.image = db.Blob(image_data)
             obj.image_width = img.width
             obj.image_height = img.height
+
+            fname = files.blobstore.create(mime_type='image/png')
+            with files.open(fname, 'a') as f:
+                f.write(image_data)
+            files.finalize(fname)
+            blob_key = files.blobstore.get_blob_key(fname)
+            obj.image_blob = blob_key        
+
         if commit:
             obj.put()
         return obj

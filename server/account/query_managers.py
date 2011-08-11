@@ -37,6 +37,11 @@ class AccountQueryManager(CachedQueryManager):
             if cache:    
                 memcache.set(str(cls._user_key(user)), account, namespace="account")
         return account
+        
+    @classmethod
+    def get_account_for_email(cls, email):    
+        user = User.get_by_email(email)
+        return cls.get_current_account(user=user)
 
     @classmethod
     def update_config_and_put(cls, account, network_config):

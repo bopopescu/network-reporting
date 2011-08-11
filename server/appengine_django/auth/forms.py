@@ -6,8 +6,13 @@ from django.utils.translation import ugettext_lazy as _
 
 from account.query_managers import UserQueryManager
 
+
+
 class PasswordResetForm(django_forms.PasswordResetForm):
     # email = forms.EmailField(label=_("E-mail"), max_length=75)
+    class UserError(Exception):
+        pass
+
 
     def clean_email(self):
         """
@@ -17,6 +22,14 @@ class PasswordResetForm(django_forms.PasswordResetForm):
         self.users_cache = UserQueryManager.get_by_email(email)
         if not self.users_cache:
             raise forms.ValidationError(_("We couldn't find this email in our system. Are you sure you've registered?"))
+        
+        # if its a google user and doesn't have a password
+        # then we know that this account is only for google authentication    
+        import logging
+        logging.info("%s %s"%(self.users_cache.user,self.users_cache.has_usable_password()))
+        if self.users_cache.user and not self.users_cache.has_usable_password():
+            raise AttributeError('Google User Error')
+            
         self.users_cache = [self.users_cache]    
         return email
     
@@ -47,4 +60,4 @@ class PasswordResetForm(django_forms.PasswordResetForm):
             logging.info("message: %s"%t.render(Context(c)))
             
             send_mail(_("Password reset on %s") % site_name,
-                t.render(Context(c)), 'welcome@mopub.com', [user.email])
+                t.render(Context(c)), 'olp@mopub.com', [user.email])

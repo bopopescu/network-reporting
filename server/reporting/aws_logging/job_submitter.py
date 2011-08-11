@@ -23,11 +23,19 @@ UNIQ_USER_MAPPER = S3_CODE_DIR + '/uniq_user_mapper.py'
 
 
 NUM_INSTANCES = 1
+<<<<<<< HEAD
 # MASTER_INSTANCE_TYPE = 'm1.large'
 # SLAVE_INSTANCE_TYPE = 'm1.large'
 MASTER_INSTANCE_TYPE = 'm1.small'
 SLAVE_INSTANCE_TYPE = 'm1.small'
 KEEP_ALIVE = True
+=======
+MASTER_INSTANCE_TYPE = 'm1.large'
+SLAVE_INSTANCE_TYPE = 'm1.large'
+# MASTER_INSTANCE_TYPE = 'm1.small'
+# SLAVE_INSTANCE_TYPE = 'm1.small'
+KEEP_ALIVE = False
+>>>>>>> 7d9a671ae089e06e54dc73254ab42b44ab758e4c
     
 
 
@@ -80,7 +88,11 @@ def main():
 
     # pub:adv:country_code:time (hour & day)
     basic_count_step = StreamingStep(
+<<<<<<< HEAD
         name='log count step',
+=======
+        name='basic log count step',
+>>>>>>> 7d9a671ae089e06e54dc73254ab42b44ab758e4c
         mapper=BASIC_LOG_MAPPER,
         reducer=LOG_REDUCER,
         cache_files=[S3_CODE_DIR+'/utils.py#utils.py', S3_CODE_DIR+'/parse_utils.py#parse_utils.py', S3_CODE_DIR+'/wurfl.py#wurfl.py'],
@@ -90,7 +102,11 @@ def main():
 
     # pub:adv:country_code:brand_name:marketing_name:os:os_version:hour
     advanced_count_step = StreamingStep(
+<<<<<<< HEAD
         name='log count step',
+=======
+        name='advanced log count step',
+>>>>>>> 7d9a671ae089e06e54dc73254ab42b44ab758e4c
         mapper=ADVANCED_LOG_MAPPER,
         reducer=LOG_REDUCER,
         cache_files=[S3_CODE_DIR+'/utils.py#utils.py', S3_CODE_DIR+'/parse_utils.py#parse_utils.py', S3_CODE_DIR+'/wurfl.py#wurfl.py'],

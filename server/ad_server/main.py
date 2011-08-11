@@ -21,6 +21,8 @@ from google.appengine.api import images
 from publisher.models import *
 from advertiser.models import *
 
+from ad_server import mp_webapp
+
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 from userstore.query_managers import ClickEventManager, AppOpenEventManager
 
@@ -92,7 +94,7 @@ class AdClickHandler(webapp.RequestHandler):
         # Update budgeting
         creative = Creative.get(Key(creative_id))
         if creative.ad_group.bid_strategy == 'cpc':
-            budget_service.apply_expense(creative.ad_group.campaign, creative.ad_group.bid/1000)
+            budget_service.apply_expense(creative.ad_group.campaign, creative.ad_group.bid)
 
 
         # if driving download then we use the user datastore
@@ -120,6 +122,9 @@ class AppOpenHandler(webapp.RequestHandler):
     # /m/open?v=1&udid=26a85bc239152e5fbc221fe5510e6841896dd9f8&id=agltb3B1Yi1pbmNyDAsSBFNpdGUY6ckDDA
     def get(self):
         udid = self.request.get('udid')
+        # assumes md5 hash as the default
+        # prepends on "md5:" if it is not already there
+        udid = 'md5:' + udid.split('md5:')[-1]
         mobile_appid = self.request.get('id')
         aoe_manager = AppOpenEventManager()
         aoe, conversion_logged = aoe_manager.log_conversion(udid, mobile_appid, time=datetime.datetime.now())
@@ -129,63 +134,6 @@ class AppOpenHandler(webapp.RequestHandler):
             self.response.out.write("ConversionLogged:"+str(conversion_logged)+":"+str(aoe.key())) 
         else:
             self.response.out.write("ConversionLogged:"+str(conversion_logged)) 
-
-
-class TestHandler(webapp.RequestHandler):
-  # /m/open?v=1&udid=26a85bc239152e5fbc221fe5510e6841896dd9f8&q=Hotels:%20Hotel%20Utah%20Saloon%20&id=agltb3B1Yi1pbmNyDAsSBFNpdGUY6ckDDA&r=http://googleads.g.doubleclick.net/aclk?sa=l&ai=BN4FhRH6hTIPcK5TUjQT8o9DTA7qsucAB0vDF6hXAjbcB4KhlEAEYASDgr4IdOABQrJON3ARgyfb4hsijoBmgAbqxif8DsgERYWRzLm1vcHViLWluYy5jb226AQkzMjB4NTBfbWLIAQHaAbwBaHR0cDovL2Fkcy5tb3B1Yi1pbmMuY29tL20vYWQ_dj0xJmY9MzIweDUwJnVkaWQ9MjZhODViYzIzOTE1MmU1ZmJjMjIxZmU1NTEwZTY4NDE4OTZkZDlmOCZsbD0zNy43ODM1NjgsLTEyMi4zOTE3ODcmcT1Ib3RlbHM6JTIwSG90ZWwlMjBVdGFoJTIwU2Fsb29uJTIwJmlkPWFnbHRiM0IxWWkxcGJtTnlEQXNTQkZOcGRHVVk2Y2tEREGAAgGoAwHoA5Ep6AOzAfUDAAAAxA&num=1&sig=AGiWqtx2KR1yHomcTK3f4HJy5kk28bBsNA&client=ca-mb-pub-5592664190023354&adurl=http://www.sanfranciscoluxuryhotels.com/
-    def get(self):
-        from ad_server.networks.greystripe import GreyStripeServerSide
-        from ad_server.networks.millennial import MillennialServerSide
-        from ad_server.networks.brightroll import BrightRollServerSide
-        from ad_server.networks.jumptap import JumptapServerSide
-        from ad_server.networks.mobfox import MobFoxServerSide
-        from ad_server.networks.inmobi import InMobiServerSide
-        from ad_server.networks.ejam import EjamServerSide
-        from ad_server.networks.chartboost import ChartBoostServerSide
-        key = self.request.get('id') or 'agltb3B1Yi1pbmNyCgsSBFNpdGUYAgw'
-        delay = self.request.get('delay') or '5'
-        delay = int(delay)
-        adunit = Site.get(key)
-        network_name = self.request.get('network','BrightRoll')
-        ServerSideKlass = locals()[network_name+"ServerSide"]
-        
-        
-        server_side = ServerSideKlass(self.request,adunit)
-        self.response.out.write("URL: %s <br/>PAYLOAD: %s <br/> HEADERS: %s<br/><br/>"%(server_side.url,server_side.payload,server_side.headers))
-        
-        rpc = urlfetch.create_rpc(delay) # maximum delay we are willing to accept is 1000 ms
-        
-        payload = server_side.payload
-        if payload == None:
-            urlfetch.make_fetch_call(rpc, server_side.url, headers=server_side.headers)
-        else:
-            urlfetch.make_fetch_call(rpc, server_side.url, headers=server_side.headers, method=urlfetch.POST, payload=payload)
-        
-        
-        # ... do other things ...
-        
-        try:
-            result = rpc.get_result()
-            if result.status_code == 200:
-                server_tuple = server_side.bid_and_html_for_response(result)
-                bid = server_tuple[0]
-                response = server_tuple[1]
-                if len(server_tuple) > 2:
-                    width = server_tuple[2]
-                    height = server_tuple[3]
-                else:
-                    width = "UNKOWN"
-                    height = "UNKOWN"    
-                # self.response.out.write(response)
-            self.response.out.write("%s<br/> %s %s %s %s"%(server_side.url+'?'+payload if payload else '',bid,response, width, height))
-        except urlfetch.DownloadError:
-            self.response.out.write("%s<br/> %s"%(server_side.url,"response not fast enough"))
-        except Exception, e:
-            self.response.out.write("%s <br/> %s"%(server_side.url, e)) 
-          
-    def post(self):
-        trace_logging.info("%s"%self.request.headers["User-Agent"])  
-        self.response.out.write("hello world")
         
 class PurchaseHandler(webapp.RequestHandler):
     def get(self):
@@ -236,19 +184,19 @@ class PurchaseHandlerTxn(webapp.RequestHandler):
                                                         
 
 def main():
-    application = webapp.WSGIApplication([('/m/ad', adhandler.AdHandler), 
-                                          ('/m/imp', AdImpressionHandler),
-                                          ('/m/aclk', AdClickHandler),
-                                          ('/m/open', AppOpenHandler),
-                                          ('/m/track', AppOpenHandler),
-                                          ('/m/test', TestHandler),
-                                          ('/m/mpid',UDIDHandler),
-                                          ('/m/memclear', memcache_mangler.ClearHandler),
-                                          ('/m/memshow', memcache_mangler.ShowHandler),
-                                          ('/m/purchase', PurchaseHandler),
-                                          ('/m/purchase_txn', PurchaseHandlerTxn),
-                                          ('/m/req',AdRequestHandler),], 
-                                          debug=DEBUG)
+    application = mp_webapp.MPLoggingWSGIApplication([('/m/ad', adhandler.AdHandler), 
+                                                  ('/m/imp', AdImpressionHandler),
+                                                  ('/m/aclk', AdClickHandler),
+                                                  ('/m/open', AppOpenHandler),
+                                                  ('/m/track', AppOpenHandler),
+                                                  ('/m/test', TestHandler),
+                                                  ('/m/mpid',UDIDHandler),
+                                                  ('/m/memclear', memcache_mangler.ClearHandler),
+                                                  ('/m/memshow', memcache_mangler.ShowHandler),
+                                                  ('/m/purchase', PurchaseHandler),
+                                                  ('/m/purchase_txn', PurchaseHandlerTxn),
+                                                  ('/m/req',AdRequestHandler),], 
+                                                  debug=DEBUG)
     run_wsgi_app(application)
     # wsgiref.handlers.CGIHandler().run(application)
     

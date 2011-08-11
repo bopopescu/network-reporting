@@ -26,7 +26,7 @@ class AdUnitContext(object):
         
         adgroups = cls.fetch_adgroups(adunit)
         campaigns = cls.fetch_campaigns(adgroups)
-        creatives = cls.fetch_creatives(adgroups)
+        creatives = cls.fetch_creatives(adunit, adgroups)
         
         adunit_context = cls(adunit, 
                              campaigns, 
@@ -100,18 +100,25 @@ class AdUnitContext(object):
         return adgroups
 
     @classmethod
-    def fetch_creatives(cls, adgroups, limit=MAX_OBJECTS):
+    def fetch_creatives(cls, adunit, adgroups, limit=MAX_OBJECTS):
         logging.info("getting creatives from db")
-        creatives = Creative.all().filter("ad_group IN", adgroups).\
+        creatives = Creative.all().filter("account =", adunit.account.key()).\
                     filter("active =",True).filter("deleted =",False).\
                     fetch(limit)
+        # creatives = Creative.all().filter("ad_group IN", adgroups).\
+        #             filter("active =",True).filter("deleted =",False).\
+        #             fetch(limit)
                     
         # re-write creative so that ad_group is actually the object already in memory
+        real_crtvs = []
         for creative in creatives:
-            creative.ad_group = [ag for ag in adgroups 
+            try:
+                creative.ad_group = [ag for ag in adgroups 
                         if ag.key() == Creative.ad_group.get_value_for_datastore(creative)][0]
-        
-        return creatives
+                real_crtvs.append(creative)
+            except IndexError, e:
+                pass
+        return real_crtvs
 
     @classmethod
     def fetch_campaigns(cls, adgroups):  
@@ -122,12 +129,17 @@ class AdUnitContext(object):
             campaign = db.get(adgroup.campaign.key())
             if not campaign.deleted:
                 campaigns.append(campaign)
-        return campaigns
+        return campaigns   
         
-    def key(self):
+    @classmethod
+    def key_from_adunit_key(cls, adunit_key):    
         """ Since we want a 1-1 mapping from adunits to adunit_contexts, we
         appropriate the key from the adunit, returns a string. """
-        return "context:"+str(self.adunit.key())
+        return "context:"+ adunit_key   
+        
+    def key(self):
+        """ Uses the adunit's key """
+        return AdUnitContext.key_from_adunit_key(str(self.adunit.key()))
         
     def get_creative_by_key(self,creative_key):
         creative = None

@@ -69,7 +69,7 @@ class BlobLogQueryManager():
 class StatsModelQueryManager(CachedQueryManager):
     Model = StatsModel
     
-    def __init__(self, account, offline=False):
+    def __init__(self, account, offline=False, include_geo=False):
         if isinstance(account, db.Key):
             self.account = account
         elif isinstance(account, db.Model):
@@ -82,6 +82,7 @@ class StatsModelQueryManager(CachedQueryManager):
         self.stats = []
         self.obj_cache = {}
         self.all_stats_deltas = [StatsModel()]
+        self.include_geo = include_geo
         
     def get_stats_for_apps(self, apps, num_days=30):
         days = StatsModel.lastdays(num_days)
@@ -362,8 +363,13 @@ class StatsModelQueryManager(CachedQueryManager):
         #since pubs iterates more than once around days, stats might be too long
         #but it should only iterate on MULTIPLES of days_len, so ct mod days_len
 
-        stats = [s or StatsModel(date=datetime.datetime.combine(days[ct%days_len],datetime.time())) for ct,s in enumerate(stats)]
-        return stats            
+        final_stats = []
+        for i,stat in enumerate(stats):
+            if not stat:
+                stat = stat or StatsModel(date=datetime.datetime.combine(days[i%days_len],datetime.time()))
+            stat.include_geo = self.include_geo
+            final_stats.append(stat)
+        return final_stats
     
     def accumulate_stats(self, stat):
         self.stats.append(stat)
@@ -373,6 +379,7 @@ class StatsModelQueryManager(CachedQueryManager):
         offline = offline or self.offline
         
         stats = stats or self.stats
+
         if isinstance(stats,db.Model):
             stats = [stats]
         if rollup:
@@ -383,7 +390,7 @@ class StatsModelQueryManager(CachedQueryManager):
         all_stats_deltas = self._place_stats_under_account(all_stats_deltas, offline=offline)
         
         self.all_stats_deltas = all_stats_deltas
-    
+        
         # get or insert from db in order to update as transaction
         def _txn(stats, offline):
             return self._update_db(stats, offline)
@@ -431,7 +438,7 @@ class StatsModelQueryManager(CachedQueryManager):
     def _get_all_rollups(self, stats, offline):
         offline = offline or self.offline
                 
-        # # initialize the object dictionary 
+        # initialize the object dictionary 
         stats_dict = {}
         for stat in stats:
             stats_dict[stat.key().name()] = stat

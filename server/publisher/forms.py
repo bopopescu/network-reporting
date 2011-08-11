@@ -11,27 +11,57 @@ from common.utils import fields as mpfields
 from common.utils import widgets as mpwidgets 
 from publisher.models import Site, App
 
+CATEGORY_CHOICES = (
+        (u'not_selected', '-----------------'),
+        (u'books', 'Books'),
+        (u'business', 'Business'),
+        (u'education', 'Education'),
+        (u'entertainment', 'Entertainment'),
+        (u'finance', 'Finance'),
+        (u'games', 'Games'),
+        (u'healthcare_and_fitness', 'Healthcare & Fitness'),
+        (u'lifestyle', 'Lifestyle'),
+        (u'medical', 'Medical'),
+        (u'music', 'Music'),
+        (u'navigation', 'Navigation'),
+        (u'news', 'News'),
+        (u'photography', 'Photography'),
+        (u'productivity', 'Productivity'),
+        (u'reference', 'Reference'),
+        (u'social_networking', 'Social Networking'),
+        (u'sports', 'Sports'),
+        (u'travel', 'Travel'),
+        (u'utilities', 'Utilities'),
+        (u'weather', 'Weather'),
+)
+
 class AppForm(mpforms.MPModelForm):
     TEMPLATE = 'publisher/forms/app_form.html'
 
     img_url = forms.URLField(verify_exists=False,required=False)
     img_file = forms.FileField(required=False)
+    is_edit_form = forms.BooleanField(required=False)
+    
+    primary_category = mpfields.MPChoiceField(choices=CATEGORY_CHOICES,widget=mpwidgets.MPSelectWidget)
+    secondary_category = mpfields.MPChoiceField(choices=CATEGORY_CHOICES,widget=mpwidgets.MPSelectWidget)
     
     def __init__(self, *args,**kwargs):
         instance = kwargs.get('instance',None)
         initial = kwargs.get('initial',None)
-
+        is_edit_form = kwargs.pop('is_edit_form', None)
+        
         if instance:
             img_url = reverse('publisher_app_icon',kwargs={'app_key':str(instance.key())})
             if not initial:
                 initial = {}
-            initial.update(img_url=img_url)    
+            initial.update(img_url=img_url)
+            initial.update(is_edit_form=is_edit_form)
             kwargs.update(initial=initial)
         super(AppForm,self).__init__(*args,**kwargs)
 
     class Meta:
         model = App
-        fields = ('name', 'app_type', 'url', 'package', 'description', 'adsense_app_name')
+        fields = ('name', 'app_type', 'url', 'package', 'description', 'adsense_app_name', 'primary_category', 'secondary_category')
         
     def save(self,commit=True):
         obj = super(AppForm,self).save(commit=False)

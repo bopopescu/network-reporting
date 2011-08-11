@@ -11,7 +11,10 @@ from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 
 from django.contrib.auth.decorators import login_required
+from common.utils import date_magic
+from common.utils import sswriter
 from common.utils.decorators import cache_page_until_post
+from common.utils.helpers import campaign_stats
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
 from django.utils import simplejson
@@ -32,13 +35,15 @@ from common.utils.query_managers import CachedQueryManager
 from common.utils.request_handler import RequestHandler
 
 from account.query_managers import AccountQueryManager
+from account.forms import NetworkConfigForm
 from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager, \
                                       CreativeQueryManager, TextCreativeQueryManager, \
                                       ImageCreativeQueryManager, TextAndTileCreativeQueryManager, \
                                       HtmlCreativeQueryManager
 from publisher.query_managers import AdUnitQueryManager, AppQueryManager, AdUnitContextQueryManager
 from reporting.query_managers import StatsModelQueryManager
-from budget import budget_service
+from budget import budget_service     
+from budget.models import BudgetSlicer
 
 from django.views.decorators.cache import cache_page
 
@@ -55,9 +60,15 @@ class AdGroupIndexHandler(RequestHandler):
             
         apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
         
+        # memoize
+        campaigns_dict = {}
+        
         campaigns = CampaignQueryManager.get_campaigns(account=self.account)
+        for campaign in campaigns:
+            campaigns_dict[campaign.key()] = campaign
+            
         if campaigns:
-            adgroups = AdGroupQueryManager().get_adgroups(campaigns=campaigns)
+            adgroups = AdGroupQueryManager().get_adgroups(account=self.account)
         else:
             adgroups = []
     
@@ -68,81 +79,115 @@ class AdGroupIndexHandler(RequestHandler):
             # impression_count
             # fill_rate
             # click_count
-            adgroup.all_stats = StatsModelQueryManager(self.account, offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)
+            # adgroup.all_stats = StatsModelQueryManager(self.account, offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)
 
             # Get total for the range
-            adgroup.summed_stats = reduce(lambda x, y: x+y, adgroup.all_stats, StatsModel())
+            # adgroup.summed_stats = reduce(lambda x, y: x+y, adgroup.all_stats, StatsModel())
+            
+            # derefernce campaign from the local cache
+            adgroup.campaign = campaigns_dict[adgroup._campaign]
 
-            adgroup.percent_delivered = budget_service.percent_delivered(adgroup.campaign)
-            
-            
+            #adgroup.percent_delivered = budget_service.percent_delivered(adgroup.campaign)
         
-        # Graph totals are the summed counts across all the adgroups   
-        app_level_stats = _calc_app_level_stats(adgroups)
-        app_level_summed_stats = reduce(lambda x, y: x+y, app_level_stats, StatsModel())
+        # memoize    
+        adunits_dict = {}
+        apps_dict = {}    
         
+        # Graph totals are the summed counts across all the adgroups
+        # account_level_stats = _calc_app_level_stats(adgroups)
+        # account_level_summed_stats = sum(account_level_stats,StatsModel()) 
         
-        adgroups = _calc_and_attach_e_cpm(adgroups, app_level_summed_stats)
-    
+        # gets account level stats
+        stats = StatsModelQueryManager(self.account, 
+                                       offline=self.offline).get_stats_for_days(publisher=None,
+                                                                                advertiser=None, 
+                                                                                days=days)
+                                                                                    
+        key = "||"
+        stats_dict = {}
+        stats_dict[key] = {}
+        stats_dict[key]['name'] = "||"
+        stats_dict[key]['daily_stats'] = [s.to_dict() for s in stats]
+        summed_stats = sum(stats, StatsModel())
+        stats_dict[key]['sum'] = summed_stats.to_dict()        
+        
+        response_dict = {}
+        response_dict['status'] = 200
+        response_dict['all_stats'] = stats_dict
+        
         for adgroup in adgroups:
-            
+            adunits = []
+            adunit_keys_to_fetch = []
             # get targeted apps
             adgroup.targeted_app_keys = []
-            for adunit_key in adgroup.site_keys:
-                adunit = Site.get(adunit_key)
+            adunit_keys = [adunit_key for adunit_key in adgroup.site_keys]
+            for adunit_key in adunit_keys:
+                if adunit_key in adunits_dict:
+                    adunits.append(adunits_dict[adunit_key])
+                else:
+                    adunit_keys_to_fetch.append(adunit_key)    
+                    
+            if adunit_keys_to_fetch:
+                adunits += AdUnitQueryManager.get(adunit_keys_to_fetch)
+            
+            for adunit in adunits:
+                adunits_dict[adunit.key()] = adunit
                 if adunit:
-                    adgroup.targeted_app_keys.append(adunit.app_key.key())
+                    adgroup.targeted_app_keys.append(adunit._app_key)
                 # apps.append(adunit.app_key)
             
         # Due to weirdness, network_campaigns and backfill_promo_campaigns are actually lists of adgroups
         sorted_campaign_groups = _sort_campaigns(adgroups)
-        promo_campaigns, guaranteed_campaigns, network_campaigns, backfill_promo_campaigns = sorted_campaign_groups
-       
+        promo_campaigns, guaranteed_campaigns, marketplace_campaigns, network_campaigns, backfill_promo_campaigns = sorted_campaign_groups
+
         guarantee_levels = _sort_guarantee_levels(guaranteed_campaigns)
-    
-        adgroups = sorted(adgroups, key=lambda adgroup: adgroup.summed_stats.impression_count, reverse=True)
+
+        # adgroups = sorted(adgroups, key=lambda adgroup: adgroup.summed_stats.impression_count, reverse=True)
     
         help_text = None
 
-        graph_adgroups = adgroups[0:4]
-        if len(adgroups) > 4:
-            graph_adgroups[3] = AdGroup(name='Others')
-            graph_adgroups[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[c.all_stats for c in adgroups[3:]])]
+        # graph_adgroups = adgroups[0:4]
+        # if len(adgroups) > 4:
+        #     graph_adgroups[3] = AdGroup(name='Others')
+        #     graph_adgroups[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[c.all_stats for c in adgroups[3:]])]
         
         # create special list of gtee adgroups to show revenue in graph
-        visible_gtee_adgroups = []
-        for level in guarantee_levels:
-            if level['display']:   # only get levels to show
-                visible_gtee_adgroups.extend(level['adgroups'])
+        # visible_gtee_adgroups = []
+        # for level in guarantee_levels:
+        #     if level['display']:   # only get levels to show
+        #         visible_gtee_adgroups.extend(level['adgroups'])
         
         # sort visible gtee adgroups by summed impression count
-        visible_gtee_adgroups = sorted(visible_gtee_adgroups, key=lambda adgroup: adgroup.summed_stats.impression_count, reverse=True)
+        # visible_gtee_adgroups = sorted(visible_gtee_adgroups, key=lambda adgroup: adgroup.summed_stats.impression_count, reverse=True)
         
         # if more than 4 visible gtee adgroups, condense 4th and remaining into 'Others'
-        graph_gtee_adgroups = visible_gtee_adgroups[0:4]
-        if len(visible_gtee_adgroups) > 4:
-            graph_gtee_adgroups[3] = AdGroup(name='Others')
-            graph_gtee_adgroups[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[c.all_stats for c in visible_gtee_adgroups[3:]])]
+        # graph_gtee_adgroups = visible_gtee_adgroups[0:4]
+        # if len(visible_gtee_adgroups) > 4:
+        #     graph_gtee_adgroups[3] = AdGroup(name='Others')
+        #     graph_gtee_adgroups[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[c.all_stats for c in visible_gtee_adgroups[3:]])]
             
-        try:
-            yesterday = reduce(lambda x, y: x+y, [c.all_stats[-2] for c in graph_adgroups], StatsModel())
-        except IndexError: 
-            yesterday = StatsModel()
+        # try:
+        #     yesterday = sum([c.all_stats[-2] for c in graph_adgroups], StatsModel())
+        # except IndexError: 
+        #     yesterday = StatsModel()
 
         return render_to_response(self.request, 
                                  'advertiser/adgroups.html', 
                                   {'adgroups':adgroups,
-                                   'graph_adgroups': graph_adgroups,
-                                   'graph_gtee_adgroups': graph_gtee_adgroups,
-                                   'graph_totals': app_level_stats,
+                                   # 'graph_adgroups': graph_adgroups,
+                                   # 'graph_gtee_adgroups': graph_gtee_adgroups,
+                                   # 'graph_totals': account_level_stats,
+                                   'account_stats': simplejson.dumps(response_dict),
                                    'start_date': days[0],
                                    'end_date':days[-1],
                                    'date_range': self.date_range,
                                    'apps' : apps,
-                                   'totals': reduce(lambda x, y: x+y.summed_stats, adgroups, StatsModel()),
-                                   'today': reduce(lambda x, y: x+y, [c.all_stats[-1] for c in graph_adgroups], StatsModel()),
-                                   'yesterday': yesterday,
+                                   # 'totals': reduce(lambda x, y: x+y.summed_stats, adgroups, StatsModel()),
+                                   # 'today': reduce(lambda x, y: x+y, [c.all_stats[-1] for c in graph_adgroups], StatsModel()),
+                                   # 'yesterday': yesterday,
                                    'guarantee_levels': guarantee_levels, 
+                                   'guarantee_num': len(guaranteed_campaigns),
+                                   'marketplace': marketplace_campaigns,
                                    'promo': promo_campaigns,
                                    'network': network_campaigns,
                                    'backfill_promo': backfill_promo_campaigns,
@@ -179,6 +224,9 @@ def _sort_campaigns(adgroups):
 
     guaranteed_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee_high', 'gtee_low', 'gtee'], adgroups)
     guaranteed_campaigns = sorted(guaranteed_campaigns, lambda x,y: cmp(y.bid, x.bid))
+
+    marketplace_campaigns = filter(lambda x: x.campaign.campaign_type in ['marketplace'], adgroups)
+    marketplace_campaigns = sorted(marketplace_campaigns, lambda x,y: cmp(x.bid, y.bid))
  
     network_campaigns = filter(lambda x: x.campaign.campaign_type in ['network'], adgroups)
     network_campaigns = sorted(network_campaigns, lambda x,y: cmp(y.bid, x.bid))
@@ -186,10 +234,20 @@ def _sort_campaigns(adgroups):
     backfill_promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_promo'], adgroups)
     backfill_promo_campaigns = sorted(backfill_promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
     
-    return [promo_campaigns, guaranteed_campaigns, network_campaigns, backfill_promo_campaigns]
+    return [promo_campaigns, guaranteed_campaigns, marketplace_campaigns, network_campaigns, backfill_promo_campaigns]
 
 def _calc_app_level_stats(adgroups):
-    return [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[c.all_stats for c in adgroups])]
+    # adgroup1.all_stats = [StatsModel(day=1), StatsModel(day=2), StatsModel(day=3)]
+    # adgroup2.all_stats = [StatsModel(day=1), StatsModel(day=2), StatsModel(day=3)]
+    # adgroup3.all_stats = [StatsModel(day=1), StatsModel(day=2), StatsModel(day=3)]
+    # all_daily_stats = [(StatsModel(day=1),StatsModel(day=1),StatsModel(day=1)),
+    #                    (StatsModel(day=2),StatsModel(day=2),StatsModel(day=2)),
+    #                    (StatsModel(day=3),StatsModel(day=3),StatsModel(day=3))]
+    # returns [StatsModel(day=1)+StatsModel(day=1)+StatsModel(day=1),
+    #          StatsModel(day=2)+StatsModel(day=2)+StatsModel(day=2)),
+    #          StatsModel(day=3)+StatsModel(day=3)+StatsModel(day=3)]
+    all_daily_stats = zip(*[adgroup.all_stats for adgroup in adgroups])
+    return [sum(daily_stats, StatsModel()) for daily_stats in all_daily_stats]
 
 
 def _calc_and_attach_e_cpm(adgroups_with_stats, app_level_summed_stats):
@@ -207,9 +265,36 @@ def _calc_and_attach_e_cpm(adgroups_with_stats, app_level_summed_stats):
             
     return adgroups_with_stats
 
+def _calc_and_attach_osi_success(adgroups):
+    for adgroup in adgroups:
+        if adgroup.running and adgroup.campaign.budget:
+            adgroup.osi_success = budget_service.get_osi(adgroup.campaign)
+        
+    return adgroups
+
+
 @login_required
 def adgroups(request,*args,**kwargs):
     return AdGroupIndexHandler()(request,*args,**kwargs)
+
+
+class AdGroupArchiveHandler(RequestHandler):
+
+    def get(self):
+        archived_adgroups = AdGroupQueryManager().get_adgroups(account=self.account, archived=True)  
+        
+        for adgroup in archived_adgroups:
+            adgroup.budget_slicer = BudgetSlicer.get_by_campaign(adgroup.campaign)  
+            
+        return render_to_response(self.request, 
+                                   'advertiser/archived_adgroups.html', 
+                                    {'archived_adgroups':archived_adgroups,        
+                                     })
+
+
+@login_required
+def archive(request,*args,**kwargs):
+    return AdGroupArchiveHandler()(request,*args,**kwargs)
 
 
 class CreateCampaignAJAXHander(RequestHandler):
@@ -243,6 +328,7 @@ class CreateCampaignAJAXHander(RequestHandler):
         campaign_form.bid_strategy = adgroup_form['bid_strategy']
         campaign_form.custom_html = adgroup_form['custom_html']
         campaign_form.custom_method = adgroup_form['custom_method']
+        campaign_form.network_type = adgroup_form['network_type']
 
         adunit_keys = adgroup_form['site_keys'].value or []
         adunit_str_keys = [unicode(k) for k in adunit_keys]
@@ -304,6 +390,12 @@ class CreateCampaignAJAXHander(RequestHandler):
 
                 # TODO: clean this up in case the campaign succeeds and the adgroup fails
                 CampaignQueryManager.put(campaign)
+                
+                # Update budget upon changes or set budget from full_budget. Have to put in datastore first.
+                budget_service.update_budget(campaign, save_campaign = False) 
+                # And then put in datastore again.
+                CampaignQueryManager.put(campaign) 
+                
                 adgroup.campaign = campaign
                 # TODO: put this in the adgroup form
                 if not adgroup.campaign.campaign_type == 'network':
@@ -315,7 +407,12 @@ class CreateCampaignAJAXHander(RequestHandler):
 
              ##Check if creative exists for this network type, if yes
              #update, if no, delete old and create new
-                if campaign.campaign_type == "network":
+                if campaign.campaign_type == 'marketplace':
+                    creative = adgroup.default_creative()
+                    creative.account = self.account
+                    CreativeQueryManager.put(creative)
+
+                elif campaign.campaign_type == "network":
                     html_data = None
                     if adgroup.network_type == 'custom':
                         html_data = adgroup_form['custom_html'].value
@@ -347,6 +444,22 @@ class CreateCampaignAJAXHander(RequestHandler):
                     adgroup.net_creative = creative.key()
                     #put the adgroup again with the new (or old) creative reference
                     AdGroupQueryManager.put(adgroup)
+
+                # Update network config information if this is a network type adgroup
+                if campaign.campaign_type == "network":
+                    apps_for_account = AppQueryManager.get_apps(account=self.account)
+                    # Build app level pub_ids
+                    for app in apps_for_account:
+                        app_network_config_data = {}
+                        for (key, value) in self.request.POST.iteritems():
+                            app_key_identifier = key.split('-__-')
+                            if app_key_identifier[0] == str(app.key()):
+                                app_network_config_data[app_key_identifier[1]] = value
+
+                        logging.warning("link" + unicode(app.name) + " " + str(app_network_config_data))
+                        app_form = NetworkConfigForm(data=app_network_config_data, instance=app.network_config)
+                        app_network_config = app_form.save(commit=False)
+                        AppQueryManager.update_config_and_put(app, app_network_config)
 
                 # Delete Cache. We leave this in views.py because we 
                 # must delete the adunits that the adgroup used to have as well
@@ -385,6 +498,7 @@ class CreateCampaignHandler(RequestHandler):
         campaign_create_form_fragment = CreateCampaignAJAXHander(self.request).get(adgroup=adgroup)
         return render_to_response(self.request,'advertiser/new.html', {"adgroup_key": adgroup_key,
             "adgroup":adgroup,
+            "account": self.account,
             "campaign_create_form_fragment": campaign_create_form_fragment})
 
 @login_required      
@@ -447,49 +561,7 @@ def campaign_adgroup_new(request,*args,**kwargs):
 def campaign_adgroup_edit(request,*args,**kwargs):
     kwargs.update(title="Edit Ad Group",edit=True)
     return CreateAdGroupHandler()(request,*args,**kwargs)    
-
-class PauseHandler(RequestHandler):
-    def post(self):
-        action = self.request.POST.get("action", "pause")
-        updated_campaigns = []
-        for id_ in self.request.POST.getlist('id') or []:
-            c = CampaignQueryManager.get(id_)
-            updated_campaigns.append(c)
-            update_objs = []
-            if c != None and c.account == self.account:
-                if action == "pause":
-                    c.active = False
-                    c.deleted = False
-                    update_objs.append(c)
-                elif action == "resume":
-                    c.active = True
-                    c.deleted = False
-                    update_objs.append(c)
-                elif action == "delete":
-                    # 'deletes' adgroups and creatives
-                    c.active = False
-                    c.deleted = True
-                    update_objs.append(c)
-                    for adgroup in c.adgroups:
-                        adgroup.deleted = True
-                        update_objs.append(adgroup)
-                        for creative in adgroup.creatives:
-                            creative.deleted = True
-                            update_objs.append(creative)
-            if update_objs: 
-                db.put(update_objs)     
-                adgroups = AdGroupQueryManager().get_adgroups(campaigns=updated_campaigns)
-                adunits = []
-                for adgroup in adgroups:
-                    adunits.extend(adgroups.site_keys)
-                adunits = AdUnitQueryManager.get(adunits)    
-                CachedQueryManager().put(adunits)
-        return HttpResponseRedirect(reverse('advertiser_campaign',kwargs={}))
-
-@login_required
-def campaign_pause(request,*args,**kwargs):
-    return PauseHandler()(request,*args,**kwargs)
-
+       
 class ShowAdGroupHandler(RequestHandler):
     def post(self, adgroup_key):
         adgroup = AdGroupQueryManager.get(adgroup_key)
@@ -497,17 +569,24 @@ class ShowAdGroupHandler(RequestHandler):
         update = False
         campaign = adgroup.campaign
         if opt == 'play':
-            adgroup.active = True
+            adgroup.active = True   
+            adgroup.archived = False
             update = True
         elif opt == 'pause':
+            adgroup.active = False  
+            adgroup.archived = False
+            update = True          
+        elif opt == "archive":
             adgroup.active = False
-            update = True
+            adgroup.archived = True    
+            update = True   
         elif opt == "delete":   
             adgroup.deleted = True
             campaign.deleted = True
             AdGroupQueryManager.put(adgroup)
-            CampaignQueryManager.put(campaign)
-            # TODO: Flash a message saying we deleted the campaign
+            CampaignQueryManager.put(campaign)            
+            
+            self.request.flash["message"] = "Campaign: %s has been deleted." % adgroup.name          
             return HttpResponseRedirect(reverse('advertiser_campaign'))
             
         else:
@@ -574,7 +653,7 @@ class ShowAdGroupHandler(RequestHandler):
               graph_adunits[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[au.all_stats for au in adunits[3:]])]
 
         # Load creatives if we are supposed to 
-        if not adgroup.network_type:  
+        if not (adgroup.network_type or adgroup.campaign.campaign_type== 'marketplace'):
             # In order to have add creative
             creative_handler = AddCreativeHandler(self.request)
             creative_fragment = creative_handler.get() # return the creative fragment
@@ -620,6 +699,7 @@ class ShowAdGroupHandler(RequestHandler):
                                     'graph_adunits': graph_adunits,
                                     'start_date': days[0],
                                     'end_date': days[-1],
+                                    'date_range': self.date_range,
                                     'creative_fragment':creative_fragment,
                                     'campaign_create_form_fragment':campaign_create_form_fragment,
                                     'message': message})
@@ -633,31 +713,51 @@ class PauseAdGroupHandler(RequestHandler):
     def post(self):
         action = self.request.POST.get("action", "pause")
         adgroups = []
-        update_objs = []
+        update_objs = []  
+        update_creatives = []  
         for id_ in self.request.POST.getlist('id') or []:
             a = AdGroupQueryManager.get(id_)
             adgroups.append(a)
             if a != None and a.campaign.account == self.account:
                 if action == "pause":
                     a.active = False
-                    a.deleted = False
+                    a.deleted = False       
+                    a.archived = False
                     update_objs.append(a)
                 elif action == "resume":
                     a.active = True
-                    a.deleted = False
-                    update_objs.append(a)
+                    a.deleted = False     
+                    a.archived = False
+                    update_objs.append(a)  
+                elif action == "activate":
+                    a.active = True
+                    a.deleted = False     
+                    a.archived = False
+                    update_objs.append(a)          
+                    self.request.flash["message"] = "A campaign has been activated. View it within <a href='%s'>active campaigns</a>." % reverse('advertiser_campaign') 
+                elif action == "archive":       
+                    a.active = False
+                    a.deleted = False     
+                    a.archived = True
+                    update_objs.append(a)    
+                    self.request.flash["message"] = "A campaign has been archived. View it within <a href='%s'>archived campaigns</a>." % reverse('advertiser_archive') 
                 elif action == "delete":
                     a.active = False
-                    a.deleted = True
-                    update_objs.append(a)
+                    a.deleted = True    
+                    a.archived = False
+                    update_objs.append(a)       
+                    self.request.flash["message"] = "Your campaign has been successfully deleted"
                     for creative in a.creatives:
                         creative.deleted = True
-                        update_objs.append(creative)
+                        update_creatives.append(creative)
 
         if update_objs:
-            AdGroupQueryManager.put(update_objs)
+            AdGroupQueryManager.put(update_objs)  
+            
+        if update_creatives:
+            CreativeQueryManager.put(update_creatives)
 
-        return HttpResponseRedirect(reverse('advertiser_campaign', kwargs={}))
+        return HttpResponseRedirect(self.request.META["HTTP_REFERER"])
 
 @login_required
 def bid_pause(request,*args,**kwargs):
@@ -780,18 +880,16 @@ class DisplayCreativeHandler(RequestHandler):
     def get(self, creative_key):
         c = CreativeQueryManager.get(creative_key)
         if c and c.ad_type == "image":
-            if c.image_blob:
-                return HttpResponse('<img src="%s"/>'%images.get_serving_url(c.image_blob))
-            else:    
-                return HttpResponse(c.image,content_type='image/png')
-        if c and c.ad_type == "text_icon":
-            if c.image:
-                c.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
+
+            return HttpResponse('<html><head><style type="text/css">body{margin:0;padding:0;}</style></head><body><img src="%s"/></body></html>'%images.get_serving_url(c.image_blob))                 
+            # return HttpResponse(c.image,content_type='image/png')
+        if c and c.ad_type == "text_icon":                                        
+            c.icon_url = images.get_serving_url(c.image_blob)
+                                                                              
             return render_to_response(self.request, 'advertiser/text_tile.html', {'c':c})
             #return HttpResponse(c.image,content_type='image/png')
         if c and c.ad_type == "html":
             return HttpResponse("<html><body style='margin:0px;'>"+c.html_data+"</body></html");
-        return HttpResponse('NOOOOOOOOOOOO IMAGE')
 
 class CreativeImageHandler(RequestHandler):
     def get(self,creative_key):
@@ -846,7 +944,7 @@ class AdServerTestHandler(RequestHandler):
         device_to_user_agent = {
             'iphone': 'Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_0 like Mac OS X; %s) AppleWebKit/532.9 (KHTML, like Gecko) Version/4.0.5 Mobile/8A293 Safari/6531.22.7',
             'ipad': 'Mozilla/5.0 (iPad; U; CPU OS 3_2 like Mac OS X; %s) AppleWebKit/531.21.10 (KHTML, like Gecko) Version/4.0.4 Mobile/7B334b Safari/531.21.10',
-            'nexus_s': 'Mozilla/5.0 (Linux; U; Android 0.5; %s) AppleWebKit/522+ (KHTML, like Gecko) Safari/419.3',
+            'nexus_s': 'Mozilla/5.0 (Linux; U; Android 2.1; %s) AppleWebKit/522+ (KHTML, like Gecko) Safari/419.3',
             'chrome': 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/525.13 (KHTML, like Gecko) Chrome/0.A.B.C Safari/525.13',
         }
         country_to_locale_ip = {
@@ -901,3 +999,117 @@ class AdServerTestHandler(RequestHandler):
 @login_required
 def adserver_test(request,*args,**kwargs):
     return AdServerTestHandler()(request,*args,**kwargs)
+
+class AJAXStatsHandler(RequestHandler):
+    def get(self, start_date=None, date_range=14):
+        from common.utils.query_managers import QueryManager
+        from common_templates.templatetags import filters
+
+        if start_date:
+            s = start_date.split('-')
+            start_date = datetime.date(int(s[0]),int(s[1]),int(s[2]))
+            days = StatsModel.get_days(start_date, int(date_range))
+        else:
+            days = StatsModel.lastdays(int(date_range))
+            
+        advs = self.params.getlist('adv')
+        pubs = self.params.getlist('pub')
+                    
+        if not advs:
+            advs = [None]
+        
+        if not pubs:
+            pubs = [None]
+        
+        stats_dict = {}    
+        for adv in advs:
+            for pub in pubs:
+                stats = StatsModelQueryManager(self.account, 
+                                               offline=self.offline).get_stats_for_days(publisher=pub,
+                                                                                        advertiser=adv, 
+                                                                                        days=days)
+                                                                                            
+                key = "%s||%s"%(pub or '',adv or '')
+                stats_dict[key] = {}
+                stats_dict[key]['daily_stats'] = [s.to_dict() for s in stats]
+                summed_stats = sum(stats, StatsModel())
+                
+                # adds ECPM if the adgroup is a CPC adgroup
+                if db.Key(adv).kind() == 'AdGroup':
+                    adgroup = AdGroupQueryManager.get(adv)
+                    if adgroup.cpc:
+                        e_ctr = summed_stats.ctr or DEFAULT_CTR
+                        summed_stats.cpm = float(e_ctr) * float(adgroup.cpc) * 1000
+                    else:
+                        summed_stats.cpm = adgroup.cpm
+                    
+                    percent_delivered = budget_service.percent_delivered(adgroup.campaign)
+                    summed_stats.percent_delivered = percent_delivered
+                    adgroup.percent_delivered = percent_delivered
+                    
+                    summed_stats.status = filters.campaign_status(adgroup)
+                    if adgroup.running and adgroup.campaign.budget:
+                        summed_stats.on_schedule = "on pace" if budget_service.get_osi(adgroup.campaign) else "behind"
+                    else:
+                        summed_stats.on_schedule = "none"    
+                stats_dict[key]['sum'] = summed_stats.to_dict()
+                
+                # make name
+                if pub:
+                    pub_name = QueryManager.get(pub).name
+                else:
+                    pub_name = ''
+                    
+                if adv:
+                    adv_name = QueryManager.get(adv).name
+                else:
+                    adv_name = ''        
+                
+                stats_dict[key]['name'] = "%s||%s"%(pub_name, adv_name)
+                
+                                                                                             
+
+        response_dict = {}
+        response_dict['status'] = 200
+        response_dict['all_stats'] = stats_dict
+        return JSONResponse(response_dict)
+
+from django.views.decorators.cache import cache_control
+from django.views.decorators.vary import vary_on_headers, vary_on_cookie
+
+@login_required
+@cache_control(max_age=60)
+def stats_ajax(request, *args, **kwargs):
+    return AJAXStatsHandler()(request, *args, **kwargs)
+
+class CampaignExporter(RequestHandler):
+    def post(self, adgroup_key, file_type, start, end, *args, **kwargs):
+        start = datetime.datetime.strptime(start,'%m%d%y')
+        end = datetime.datetime.strptime(end,'%m%d%y')
+        days = date_magic.gen_days(start, end)
+        adgroup = AdGroupQueryManager.get(adgroup_key)
+        all_stats = StatsModelQueryManager(self.account, offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)
+        f_name_dict = dict(adgroup_title = adgroup.campaign.name,
+                           start = start.strftime('%b %d'),
+                           end   = end.strftime('%b %d, %Y'),
+                           )
+        # Build
+        f_name = "%(adgroup_title)s CampaignStats,  %(start)s - %(end)s" % f_name_dict
+        f_name = f_name.encode('ascii', 'ignore')
+        # Zip up days w/ corresponding stats object and other stuff
+        data = map(lambda x: [x[0]] + x[1], zip([day.strftime('%a, %b %d, %Y') for day in days], [campaign_stats(stat, adgroup.campaign.campaign_type) for stat in all_stats]))
+        # Row titles
+        c_type = adgroup.campaign.campaign_type
+        titles = ['Date']
+        if c_type == 'network':
+            titles += ['Attempts', 'Impressions', 'Fill Rate', 'Clicks', 'CTR']
+        elif 'gtee' in c_type:
+            titles += ['Impressions', 'Clicks', 'CTR', 'Revenue']
+        elif 'promo' in c_type:
+            titles += ['Impressions', 'Clicks', 'CTR', 'Conversions', 'Conversion Rate']
+        return sswriter.export_writer(file_type, f_name, titles, data)
+
+
+
+def campaign_export(request, *args, **kwargs):
+    return CampaignExporter()(request, *args, **kwargs)

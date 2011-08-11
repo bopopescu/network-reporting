@@ -1,6 +1,6 @@
 import re, logging
 import datetime
-#import reporting.models as reporting_models
+import reporting.models as reporting_models
 from common.constants import (KB, MB, GB)
 
 from google.appengine.ext import blobstore
@@ -11,12 +11,8 @@ COUNTRY_PAT = re.compile(r' [a-zA-Z][a-zA-Z][-_](?P<ccode>[a-zA-Z][a-zA-Z]);*[^a
 
 MB_PER_SHARD = 10
 
-def get_country_code(user_agent):
-    m = COUNTRY_PAT.search(user_agent)
-    if m:
-        country_code = m.group('ccode')
-        return country_code.upper()
-    return reporting_models.DEFAULT_COUNTRY
+def get_country_code(headers, default=reporting_models.DEFAULT_COUNTRY):
+    return headers.get('X-AppEngine-country', default)
     
 def get_user_agent(request):
     return request.get('ua') or request.headers['User-Agent']    
@@ -183,3 +179,14 @@ def build_key(template, template_dict):
     return template % template_dict
 
 
+def campaign_stats(stat, type):
+    if type == 'network':
+        return [int(stat.request_count), int(stat.impression_count), stat.fill_rate, int(stat.click_count), stat.ctr]
+    elif 'gtee' in type:
+        return [int(stat.impression_count), int(stat.click_count), stat.ctr, stat.revenue]
+    elif 'promo' in type:
+        return [int(stat.impression_count), int(stat.click_count), stat.ctr, int(stat.conversion_count), stat.conv_rate]
+
+
+def app_stats(stat):
+    return [int(stat.request_count), int(stat.impression_count), stat.fill_rate, int(stat.click_count), stat.ctr]

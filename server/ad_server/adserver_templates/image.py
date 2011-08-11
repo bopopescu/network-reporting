@@ -4,6 +4,11 @@ image = Template("""<html>
                         <head>                          
                           $finishLoad
                           <script>
+                            if(typeof mopubFinishLoad == 'function') {
+                                mopubFinishLoad();
+                            }
+                          </script>
+                          <script>
                             function webviewDidClose(){} 
                             function webviewDidAppear(){} 
                           </script>

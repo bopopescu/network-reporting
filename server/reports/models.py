@@ -102,6 +102,7 @@ class ScheduledReport(db.Model):
     saved = db.BooleanProperty()
     deleted = db.BooleanProperty(default=False)
     last_run = db.DateTimeProperty()
+    default = db.BooleanProperty(default=False)
 
     d1 = db.StringProperty(required=True) 
     d2 = db.StringProperty() 
@@ -112,8 +113,12 @@ class ScheduledReport(db.Model):
     interval = db.StringProperty(choices=['today','yesterday', '7days', 'lmonth', 'custom'], default='custom')
     sched_interval = db.StringProperty(choices = ['none', 'daily', 'weekly', 'monthly', 'quarterly'], default='none')
     next_sched_date = db.DateProperty(default=datetime.now().date())
-
+    email = db.BooleanProperty(default=False)
     recipients = db.StringListProperty(default=[])
+
+    @property
+    def data(self):
+        return self.most_recent.data
 
     @property
     def most_recent(self):
@@ -131,6 +136,22 @@ class ScheduledReport(db.Model):
     def dim_details(self):
         return self.most_recent.dim_details
 
+    @property
+    def schedule_details(self):
+        if self.sched_interval == 'none':
+            return None
+        else:
+            ret = '('+self.sched_interval+')'
+            return ret.title()
+
+    @property
+    def interval_details(self):
+        if self.interval == '7days':
+            return 'Last 7 days'
+        elif self.interval == 'lmonth':
+            return 'Last month'
+        else:
+            return self.interval.title()
 
 class Report(db.Model):
     #standard
@@ -210,7 +231,25 @@ class Report(db.Model):
     def name(self):
         return self.schedule.name
 
-    
+    @property
+    def schedule_details(self):
+        return self.schedule.schedule_details
+
+    @property
+    def interval_details(self):
+        return self.schedule.interval_details
+
+    @property
+    def email(self):
+        return self.schedule.email
+
+    @property
+    def recipients(self):
+        return self.schedule.recipients
+
+    @property
+    def days(self):
+        return self.schedule.days
 
     def __str__(self):
         return "Report(d1=%s, d2=%s, d3=%s, start=%s, end=%s)" % (self.d1, self.d2, self.d3, self.start, self.end)
@@ -225,8 +264,48 @@ class Report(db.Model):
         #BACKWARDS COMPATIBILITY!
         elif self.data:
             return loader.render_to_string('reports/report.html', dict(all_stats=self.data))
+
         else:
             return None
+
+    @property
+    def export_data(self):
+        """ Turns the dictionary into a list lists """ 
+        if self.data:
+            d2 = d3 = False
+            if self.d2:
+                d2 = True
+            if self.d3:
+                d3 = True
+            ret = []
+            for key, value in self.data.iteritems():
+                dat = [value['name']]
+                if d2:
+                    dat.append('')
+                if d3:
+                    dat.append('')
+                stat_dat = [value['stats'].request_count, value['stats'].impression_count, value['stats'].click_count, value['stats'].conversion_count] 
+                dat += stat_dat
+                ret.append(dat)
+                #There's a smarter way to do this, but I'm in a hurry and (hopefully) this isn't needed for long
+                if value.has_key('sub_stats'):
+                    for key2, value2 in value['sub_stats'].iteritems():
+                        dat2 = [value['name'], value2['name']]
+                        if d3:
+                            dat2.append('')
+                        stat_dat2 = [value2['stats'].request_count, value2['stats'].impression_count, value2['stats'].click_count, value2['stats'].conversion_count] 
+                        dat2 += stat_dat2
+                        ret.append(dat2)
+                        #Really stupid
+                        if value2.has_key('sub_stats'):
+                            for key3, value3 in value2['sub_stats'].iteritems():
+                                dat3 = [value['name'], value2['name'], value3['name'], value3['stats'].request_count, value3['stats'].impression_count, value3['stats'].click_count, value3['stats'].conversion_count] 
+                                ret.append(dat3)
+        else:
+            return None
+        return ret
+
+
     
     @property
     def details(self):

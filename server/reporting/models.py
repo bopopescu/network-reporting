@@ -6,6 +6,7 @@ from publisher.models import Site
 from advertiser.models import Creative
 from account.models import Account
 from common.utils import simplejson
+from common.utils.timezones import Pacific_tzinfo
 
 import datetime
 import hashlib
@@ -21,32 +22,10 @@ GEO_CLICK_COUNT = 'click_count'
 GEO_CONVERSION_COUNT = 'conversion_count'
 GEO_COUNTS = [GEO_REQUEST_COUNT,GEO_IMPRESSION_COUNT,GEO_CLICK_COUNT,GEO_CONVERSION_COUNT]
 
-
 class Pacific_tzinfo(datetime.tzinfo):
     """Implementation of the Pacific timezone."""
     def utcoffset(self, dt):
         return datetime.timedelta(hours=-8) + self.dst(dt)
-
-    def _FirstSunday(self, dt):
-        """First Sunday on or after dt."""
-        return dt + datetime.timedelta(days=(6-dt.weekday()))
-
-    def dst(self, dt):
-        # 2 am on the second Sunday in March
-        dst_start = self._FirstSunday(datetime.datetime(dt.year, 3, 8, 2))
-        # 1 am on the first Sunday in November
-        dst_end = self._FirstSunday(datetime.datetime(dt.year, 11, 1, 1))
-
-        if dst_start <= dt.replace(tzinfo=None) < dst_end:
-            return datetime.timedelta(hours=1)
-        else:
-            return datetime.timedelta(hours=0)
-    def tzname(self, dt):
-        if self.dst(dt) == datetime.timedelta(hours=0):
-            return "PST"
-        else:
-            return "PDT"
-
 
 class BlobLog(db.Model):
 
@@ -54,18 +33,17 @@ class BlobLog(db.Model):
     blob_key = db.StringProperty()
     account = db.StringProperty()
 
-    def __init__(self, parent=None, key_name=None, **kwargs):
-        if not key_name and not kwargs.get('key', None):
-            date = kwargs.get('date', None)
-            account = kwargs.get('account', None)
+    def __init__(self, **kwargs):
+        date = kwargs.get('date', None)
+        account = kwargs.get('account', None)
 
-            date_str = date.strftime('%y%m%d') if date else 'None'
-            account_str = account or 'None'
-            key_name = 'blobkey:%s:%s' % (date_str, account_str)
-
+        date_str = date.strftime('%y%m%d') if date else 'None'
+        account_str = account or 'None'
+        
+        key_name = 'blobkey:%s:%s' % (date_str, account_str)
         return super(BlobLog, self).__init__(key_name=key_name, **kwargs)
-
-
+        
+        
 class StatsModel(db.Expando):
     
     publisher = db.ReferenceProperty(collection_name='publisher_stats')
@@ -104,6 +82,7 @@ class StatsModel(db.Expando):
     device_os = db.StringProperty()
     device_os_version = db.StringProperty()
     
+    include_geo = True
     
     @classmethod
     def from_json(cls,string):
@@ -208,6 +187,7 @@ class StatsModel(db.Expando):
         return list(countries)
         
     def __add__(self,s):
+        include_geo = s.include_geo and self.include_geo
         obj = StatsModel(parent=self.parent_key() or s.parent_key(),
                           key_name=self.key().name() or self.key.name(),
                           publisher=StatsModel.publisher.get_value_for_datastore(self) or StatsModel.publisher.get_value_for_datastore(s),
@@ -233,18 +213,21 @@ class StatsModel(db.Expando):
                           reqs=self.reqs+s.reqs,
                           offline=self.offline,
                          )
+        obj.include_geo = include_geo
         
         # add dynamic geo properties
-        countries_self = self.get_countries()
-        countries_s = s.get_countries()
-        # all countries
-        countries = set(countries_self).union(set(countries_s))
-        for country in countries:
-            for geo_count in GEO_COUNTS:
-                attribute = '%s_country_%s'%(country,geo_count)
-                # obj.US_country_request_count = self.US_country_request_count + s.US_country_request_count
-                new_value = getattr(self,attribute,0) + getattr(s,attribute,0)
-                setattr(obj,attribute,new_value)
+        if include_geo:
+            countries_self = self.get_countries()
+            countries_s = s.get_countries()
+            # all countries
+            countries = set(countries_self).union(set(countries_s))
+            for country in countries:
+                for geo_count in GEO_COUNTS:
+                    attribute = '%s_country_%s'%(country,geo_count)
+                    # obj.US_country_request_count = self.US_country_request_count + s.US_country_request_count
+                    new_value = getattr(self,attribute,0) + getattr(s,attribute,0)
+                    setattr(obj,attribute,new_value)
+                
         return obj       
                
     def __unicode__(self):
@@ -387,12 +370,47 @@ offline=%s, %s,%s,%s,%s)" % (self.date or self.date_hour,
             return self.date.date()
 
 
-    @property   
-    def cpm(self):
+    def get_cpm(self):
+        if hasattr(self, '_cpm'): return self._cpm
+        
         if self.impression_count > 0:
             return self.revenue * 1000 / float(self.impression_count)
         else:
             return 0
+        
+    def set_cpm(self, value):
+        self._cpm = value
+    
+    cpm = property(get_cpm, set_cpm)   
+    
+
+
+    def get_percent_delivered(self):         
+        if hasattr(self, '_percent_delivered'): return self._percent_delivered
+        return None
+    
+    def set_percent_delivered(self, value):
+        self._percent_delivered = value
+    
+    percent_delivered = property(get_percent_delivered, set_percent_delivered)         
+    
+    def get_status(self):
+        if hasattr(self, '_status'): return self._status
+        return None
+        
+    def set_status(self, value):
+        self._status = value
+        
+    status = property(get_status, set_status)      
+    
+    def get_on_schedule(self):
+        if hasattr(self, '_on_schedule'): return self._on_schedule
+        return None
+        
+    def set_on_schedule(self, value):
+        self._on_schedule = value
+        
+    on_schedule = property(get_on_schedule, set_on_schedule)        
 
     @property   
     def cpc(self):
@@ -418,6 +436,29 @@ offline=%s, %s,%s,%s,%s)" % (self.date or self.date_hour,
             if self.publisher.kind() != Site.kind() or self.advertiser.kinds() != Creative.kind():
                 return False
             return True
+    
+            
+    def _dict_properties(self):
+        model_props = self.properties().keys()
+        pseudo_props = ['cpa', 'cpc', 'cpm', 'fill_rate', 'conv_rate', 'ctr', 'on_schedule', 'status']
+        return model_props + pseudo_props
+               
+    def to_dict(self):
+        properties = self._dict_properties()
+        d = {}
+        for prop_name in properties:
+            value = getattr(self, '_%s'%prop_name, None)
+            if value is None:
+                value = getattr(self, '%s'%prop_name, None)
+            if value is not None:
+                if isinstance(value, db.Model):
+                    value = str(value.key())
+                if isinstance(value, db.Key):
+                    value = str(value)
+                if isinstance(value, datetime.datetime):
+                    value = str(value)    
+                d[prop_name] = value
+        return d        
 # 
 # Tracks statistics for a site for a particular day - clicks and impressions are aggregated
 # into this object

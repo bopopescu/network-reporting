@@ -210,8 +210,8 @@ def app_open_event_manager_conversion_logging_mptests():
     assert_equals(fetched_app.latest_click_creative, SAMPLE_CREATIVE1)
     assert_true(fetched_app.latest_click_time is not None)
 
-    # try open app again after 20 days, which is > default windows of 14 days 
-    aoe, conversion_logged = manager.log_conversion(SAMPLE_UDID1, SAMPLE_MOBILE_APPID1, dt+timedelta(20))
+    # try open app again after 20 days, which is > default windows of 30 days 
+    aoe, conversion_logged = manager.log_conversion(SAMPLE_UDID1, SAMPLE_MOBILE_APPID1, dt+timedelta(40))
     assert_equals(AppOpenEvent.all().count(), 1)
     assert_equals(MobileApp.all().count(), 1)
     assert_equals(MobileUser.all().count(), 1)

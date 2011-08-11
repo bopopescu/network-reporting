@@ -82,6 +82,9 @@ class Account(db.Model):
     phone = db.PhoneNumberProperty()
     country = db.StringProperty()
     traffic = db.FloatProperty()
+    # Publishers website, this is for MPX
+    domain = db.StringProperty()
+    
 
     active = db.BooleanProperty(default=False)
     status = db.StringProperty()  # Initially storing onboarding status
@@ -89,10 +92,11 @@ class Account(db.Model):
     adsense_company_name = db.StringProperty()
     adsense_test_mode = db.BooleanProperty(default=False)
     
-    number_shards = db.IntegerProperty(default=1)
+    number_shards = db.IntegerProperty(default=4)
     
     network_config = db.ReferenceProperty(NetworkConfig,
                             collection_name="accounts")
+    marketplace_rev_share = db.FloatProperty(default=.90)                        
     
     # Still here for transfering
     admob_pub_id = db.StringProperty()

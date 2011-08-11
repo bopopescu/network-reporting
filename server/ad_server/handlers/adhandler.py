@@ -4,6 +4,7 @@ import re
 import hashlib
 import random
 import time
+import traceback
 import urllib
 import datetime
 
@@ -23,7 +24,7 @@ from publisher.models import *
 from advertiser.models import *
 
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
-from ad_server.optimizer.adunit_context import AdUnitContext, CreativeCTR
+from ad_server.adunit_context.adunit_context import AdUnitContext, CreativeCTR
 
 from mopub_logging import mp_logging
 from budget import budget_service
@@ -32,7 +33,9 @@ from google.appengine.ext.db import Key
 from ad_server.debug_console import trace_logging
 from ad_server import memcache_mangler
 from ad_server.auction.ad_auction import AdAuction
-from ad_server import frequency_capping
+from ad_server import frequency_capping            
+
+from google.appengine.api.images import InvalidBlobKeyError
 
 
 TEST_MODE = "3uoijg2349ic(TEST_MODE)kdkdkg58gjslaf"
@@ -58,7 +61,17 @@ class AdHandler(webapp.RequestHandler):
     }
     
     def get(self):
-
+        if self.request.get('admin_debug_mode','0') == "1":
+            try:
+                self._get()
+            except Exception, e:
+                import sys
+                self.response.out.write("Exception: %s<br/>"%e)
+                self.response.out.write('TB2: %s' % '<br/>'.join(traceback.format_exception(*sys.exc_info())))
+        else:
+            self._get()        
+    
+    def _get(self):
         ufid = self.request.get('ufid', None)
         
         if self.request.get('jsonp', '0') == '1':
@@ -102,9 +115,8 @@ class AdHandler(webapp.RequestHandler):
         mp_logging.log(self.request, event=mp_logging.REQ_EVENT, adunit=adunit)  
         
         trace_logging.warning("User Agent: %s"%helpers.get_user_agent(self.request))
-        country_re = r'[a-zA-Z][a-zA-Z][-_](?P<ccode>[a-zA-Z][a-zA-Z])'
-        countries = re.findall(country_re, helpers.get_user_agent(self.request))
-        country_tuple = []
+
+        countries = [helpers.get_country_code(headers = self.request.headers)]
         if len(countries) == 1:
             countries = [c.upper() for c in countries]
             country_tuple = tuple(countries)
@@ -188,12 +200,14 @@ class AdHandler(webapp.RequestHandler):
             trace_logging.warning("user_adgroup_daily_key: %s"%user_adgroup_daily_key)
             trace_logging.warning("user_adgroup_hourly_key: %s"%user_adgroup_hourly_key)
             memcache.offset_multi({user_adgroup_daily_key:1,user_adgroup_hourly_key:1}, key_prefix='', namespace=None, initial_value=0)
+
+            request_time = time.mktime(now.timetuple())
         
             # create an ad clickthrough URL
             appid = creative.conv_appid or ''
-            ad_click_url = "http://%s/m/aclk?id=%s&cid=%s&c=%s&req=%s&udid=%s&appid=%s" % (self.request.host, adunit_id, creative.key(), creative.key(),request_id, udid, appid)
+            ad_click_url = "http://%s/m/aclk?id=%s&cid=%s&c=%s&req=%s&reqt=%s&udid=%s&appid=%s" % (self.request.host, adunit_id, creative.key(), creative.key(),request_id, request_time, udid, appid)
             # ad an impression tracker URL
-            track_url = "http://%s/m/imp?id=%s&cid=%s&udid=%s&appid=%s&random=%s" % (self.request.host, adunit_id, creative.key(), udid, appid, random.random())
+            track_url = "http://%s/m/imp?id=%s&cid=%s&udid=%s&appid=%s&req=%s&reqt=%s&random=%s" % (self.request.host, adunit_id, creative.key(), udid, appid, request_id, request_time, random.random())
             cost_tracker = "&rev=%.07f" 
             if creative.adgroup.bid_strategy == 'cpm':
                 cost_tracker = cost_tracker % (float(creative.adgroup.bid)/1000)
@@ -249,7 +263,7 @@ class AdHandler(webapp.RequestHandler):
             
             trace_logging.info("##############################")
             trace_logging.info("##############################")
-            trace_logging.info("Winner found, rendering: %s" % creative.name.encode('utf8'))
+            trace_logging.info("Winner found, rendering: %s" % creative.name.encode('utf8') if creative.name else 'None')
             trace_logging.warning("Creative key: %s" % str(creative.key()))
             trace_logging.warning("rendering: %s" % creative.ad_type)
 
@@ -280,6 +294,10 @@ class AdHandler(webapp.RequestHandler):
                     #to 300x250 if the adunit is a full (of some kind) and the creative is from
                     #an ad network that doesn't serve fulls
                     network_center = True
+                    if adunit.landscape:
+                        self.response.headers.add_header("X-Orientation","l")
+                    else:
+                        self.response.headers.add_header("X-Orientation","p")
                     format = (300, 250)
           
             template_name = creative.ad_type
@@ -344,9 +362,13 @@ class AdHandler(webapp.RequestHandler):
                 params.update(test_mode='true' if debug else 'false')
                 # params.update(test_ad='<a href="http://m.google.com" target="_top"><img src="/images/admob_test.png"/></a>' if debug else '')
                 self.response.headers.add_header("X-Launchpage","http://c.admob.com/")
-            elif creative.ad_type == "text_icon":
-                if creative.image:
-                    params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(creative.image)
+            elif creative.ad_type == "text_icon":      
+                try:
+                    params["image_url"] = images.get_serving_url(creative.image_blob)   
+                except InvalidBlobKeyError:     
+                    # This will fail when on mopub-experimental
+                    trace_logging.error("""InvalidBlobKeyError when trying to get image from adhandler.py.
+                                          Are you on mopub-experimental?""")     
                 if creative.action_icon:
                     #c.url can be undefined, don't want it to break
                     icon_div = '<div style="padding-top:5px;position:absolute;top:0;right:0;"><a href="'+(creative.url or '#')+'" target="_top">'
@@ -360,17 +382,18 @@ class AdHandler(webapp.RequestHandler):
                 params.update({"html_data": creative.html_data, "w": format[0], "h": format[1]})
                 self.response.headers.add_header("X-Launchpage","http://adsx.greystripe.com/openx/www/delivery/ck.php")
                 template_name = "html"
-            elif creative.ad_type == "image":
-                if creative.image_blob:
-                    img = images.Image(blob_key=creative.image_blob)
-                    img_height = creative.image_height
-                    img_width = creative.image_width
-                    params["image_url"] = images.get_serving_url(creative.image_blob)
-                else:      
-                    img = images.Image(creative.image)
-                    img_width = img.width
-                    img_height = img.height
-                    params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(creative.image)
+
+            elif creative.ad_type == "image":                       
+                img_height = creative.image_height
+                img_width = creative.image_width
+
+                try:        
+                    params["image_url"] = images.get_serving_url(creative.image_blob) 
+                except InvalidBlobKeyError:     
+                    # This will fail when on mopub-experimental
+                    trace_logging.error("""InvalidBlobKeyError when trying to get image from adhandler.py.
+                                            Are you on mopub-experimental?""")
+                    
                 
                 # if full screen we don't need to center
                 if (not "full" in adunit.format) or ((img_width == 480.0 and img_height == 320.0 ) or (img_width == 320.0 and img_height == 480.0)):
@@ -381,6 +404,14 @@ class AdHandler(webapp.RequestHandler):
                 params.update({"w": img_width, "h": img_height, "w2":img_width/2.0, "h2":img_height/2.0, "class":css_class})
             elif creative.ad_type == "html":
                 params.update({"html_data": creative.html_data, "w": format[0], "h": format[1]})
+                
+                if 'full' in adunit.format:
+                    params['trackingPixel'] = ""
+                    trackImpressionHelper = "<script>\nfunction trackImpressionHelper(){\n%s\n}\n</script>"%success
+                    params.update(trackImpressionHelper=trackImpressionHelper)
+                else:
+                    params['trackImpressionHelper'] = ''    
+                
                 # add the launchpage header for inmobi in case they have dynamic ads that use
                 # window.location = 'http://some.thing/asdf'
                 if creative.adgroup.network_type == "inmobi":
@@ -399,7 +430,7 @@ class AdHandler(webapp.RequestHandler):
               
               
             if version_number >= 2:  
-                params.update(finishLoad='<script>function finishLoad(){window.location="mopub://finishLoad";} window.onload = function(){finishLoad();} </script>')
+                params.update(finishLoad='<script>function mopubFinishLoad(){window.location="mopub://finishLoad";}</script>')
                 # extra parameters used only by admob template
                 #add in the success tracking pixel
                 params.update(admob_finish_load= success + 'window.location = "mopub://finishLoad";')
@@ -410,9 +441,6 @@ class AdHandler(webapp.RequestHandler):
                 # extra parameters used only by admob template
                 params.update(admob_finish_load=success)
                 params.update(admob_fail_load='')
-               
-            
-            
             
             # indicate to the client the winning creative type, in case it is natively implemented (iad, clear)
             
@@ -421,9 +449,13 @@ class AdHandler(webapp.RequestHandler):
                 # self.response.headers.add_header("X-Backfill","alert")
                 # self.response.headers.add_header("X-Nativeparams",'{"title":"MoPub Alert View","cancelButtonTitle":"No Thanks","message":"We\'ve noticed you\'ve enjoyed playing Angry Birds.","otherButtonTitle":"Rank","clickURL":"mopub://inapp?id=pixel_001"}')
                 # self.response.headers.add_header("X-Customselector","customEventTest")
+                if "full_tablet" in adunit.format:
+                    self.response.headers.add_header("X-Adtype", "interstitial")
+                    self.response.headers.add_header("X-Fulladtype", "iAd_full")
+                else:
+                    self.response.headers.add_header("X-Adtype", str(creative.ad_type))
+                    self.response.headers.add_header("X-Backfill", str(creative.ad_type))
                 
-                self.response.headers.add_header("X-Adtype", str(creative.ad_type))
-                self.response.headers.add_header("X-Backfill", str(creative.ad_type))
                 self.response.headers.add_header("X-Failurl", _build_fail_url(self.request.url, on_fail_exclude_adgroups))
 
             elif str(creative.ad_type) == "admob_native":
@@ -434,7 +466,12 @@ class AdHandler(webapp.RequestHandler):
                     self.response.headers.add_header("X-Adtype", str(creative.ad_type))
                     self.response.headers.add_header("X-Backfill", str(creative.ad_type))
                 self.response.headers.add_header("X-Failurl", _build_fail_url(self.request.url, on_fail_exclude_adgroups))
-                self.response.headers.add_header("X-Nativeparams", '{"adUnitID":"'+adunit.get_pub_id("admob_pub_id")+'"}')
+                nativeparams_dict = {
+                    "adUnitID":adunit.get_pub_id("admob_pub_id"),
+                    "adWidth":adunit.get_width(),
+                    "adHeight":adunit.get_height()
+                }
+                self.response.headers.add_header("X-Nativeparams", simplejson.dumps(nativeparams_dict))
 
             elif str(creative.ad_type) == "millennial_native":
                 if "full" in adunit.format:
@@ -460,10 +497,10 @@ class AdHandler(webapp.RequestHandler):
                   "Gclientid":str(site.get_pub_id("adsense_pub_id")),
                   "Gcompanyname":str(site.account.adsense_company_name),
                   "Gappname":str(site.app_key.adsense_app_name),
-                  "Gappid":"0",
+                  "Gappid":str(site.app_key.adsense_app_name or '0'),
                   "Gkeywords":str(site.keywords or ''),
                   "Gtestadrequest":"0",
-                  "Gchannelids":str(site.adsense_channel_id or ''),        
+                  "Gchannelids":str('[%s]'%site.adsense_channel_id or ''),        
                 # "Gappwebcontenturl":,
                   "Gadtype":"GADAdSenseTextImageAdType", #GADAdSenseTextAdType,GADAdSenseImageAdType,GADAdSenseTextImageAdType
                   "Gtestadrequest":"0",
@@ -509,9 +546,17 @@ class AdHandler(webapp.RequestHandler):
                 self.response.headers.add_header("X-Width", str(creative.width))
                 self.response.headers.add_header("X-Height", str(creative.height))
             
+            # adds network info to the headers
+            if creative.adgroup.network_type:
+                self.response.headers.add_header("X-Networktype",creative.adgroup.network_type)
+
+            if creative.launchpage:
+                self.response.headers.add_header("X-Launchpage", creative.launchpage)
+            
             # render the HTML body
             rendered_creative = self.TEMPLATES[template_name].safe_substitute(params)
             rendered_creative.encode('utf-8')
+            
             
             return rendered_creative
             

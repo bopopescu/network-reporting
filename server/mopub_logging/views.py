@@ -1,7 +1,9 @@
-import logging
 import datetime
-import traceback
+import logging
 import sys
+import time
+import traceback
+import urllib
 
 from appengine_django import InstallAppengineHelperForDjango
 InstallAppengineHelperForDjango()
@@ -9,22 +11,28 @@ InstallAppengineHelperForDjango()
 # from appengine_django import LoadDjango
 # LoadDjango()
 
+from google.appengine.datastore import entity_pb
 from google.appengine.ext import db
-from google.appengine.ext import webapp
-from google.appengine.ext.webapp.util import run_wsgi_app
-
+from google.appengine.api import files
 from google.appengine.api import mail
 from google.appengine.api import memcache
+from google.appengine.api import taskqueue
+from google.appengine.ext import webapp
+from google.appengine.ext.blobstore import BlobInfo
+from google.appengine.ext.webapp import blobstore_handlers
+from google.appengine.ext.webapp.util import run_wsgi_app
+
+from common.utils import helpers
+from common.utils import simplejson
+
+from mopub_logging import mp_logging
+from mopub_logging import log_service
 
 from reporting import models as r_models
 from reporting import query_managers
 
-from mopub_logging import mp_logging
+from account.models import Account
 
-from common.utils import helpers
-
-from google.appengine.api import taskqueue
-from google.appengine.datastore import entity_pb
 
 OVERFLOW_TASK_QUEUE_NAME_FORMAT = "bulk-log-processor-overflow-%02d"
 NUM_OVERFLOW_TASK_QUEUES = 3
@@ -80,6 +88,10 @@ class LogTaskHandler(webapp.RequestHandler):
   def get(self):
       # inspect headers of the task
       retry_count = int(self.request.headers.get('X-AppEngine-TaskRetryCount',"0"))
+      
+      if retry_count > 6: return # bail early
+      
+      
       task_name = self.request.headers.get('X-AppEngine-TaskName',None)
       queue_name = self.request.headers.get('X-AppEngine-QueueName',None)
       
@@ -107,8 +119,14 @@ class LogTaskHandler(webapp.RequestHandler):
           memcache_stats = memcache_stats or memcache.get_stats()
       tail_index = int(tail_index_str or MAX_TAIL)
 
-      logging.info("account: %s time: %s start: %s stop: %s"%(account_name,time_bucket,head_index,tail_index))
-      logging.info("MEMCACHE STATS: %s"%memcache_stats_start)
+
+      if account_name == "agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww":
+          logging.error("account: %s time: %s start: %s stop: %s"%(account_name,time_bucket,head_index,tail_index))
+          logging.error("MEMCACHE STATS: %s"%memcache_stats_start)
+      else:
+          logging.info("account: %s time: %s start: %s stop: %s"%(account_name,time_bucket,head_index,tail_index))
+          logging.info("MEMCACHE STATS: %s"%memcache_stats_start)
+           
 
       stats_dict = {}      
       start = head_index
@@ -135,7 +153,7 @@ class LogTaskHandler(webapp.RequestHandler):
           memcache_misses += current_memcache_misses
           if memcache_misses:
               memcache_stats = memcache_stats or memcache.get_stats()
-          logging.info("Memcache misses: %d"%current_memcache_misses)
+          # logging.info("Memcache misses: %d"%current_memcache_misses)
 
           for k,d in data_dicts.iteritems():
               if d:
@@ -214,42 +232,72 @@ class LogTaskHandler(webapp.RequestHandler):
       query_manager = query_managers.StatsModelQueryManager(account_name)
       try:
           # raise db.BadRequestError('asdf')
-          query_manager.put_stats(stats_dict.values())
+          stats_to_put = stats_dict.values()
+          
+          # if account_name == "agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww":
+          #     try:
+          #         mail.send_mail_to_admins(sender="olp@mopub.com",
+          #                                  subject="WTF",
+          #                                  body="len: %s\n%s"%(len(stats_to_put), 
+          #                                       [(str(s._advertiser), str(s._publisher), s.country, s.impression_count) for s in stats_to_put if str(s.country) == 'US']))
+          #     except Exception, e:
+          #         logging.error("MAIL ERROR: %s",e)
+                                                 
+          query_manager.put_stats(stats_to_put)
+          total_stats = query_manager.all_stats_deltas
       # if the transaction is too large then we split it up and try again    
       # except db.BadRequestError:
       #     async_put_models(account_name,stats_dict.values(),MAX_PUT_SIZE)
       except:
-          if retry_count > 0:
+          if retry_count > 5:
               exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
               base_number_of_stats = len(stats_dict.values())
               total_stats = query_manager.all_stats_deltas
               number_of_stats = len(total_stats)
               max_countries = max([len(stat.get_countries()) for stat in total_stats])
+              account = Account.get(account_name)
+              if account:
+                  user_email = account.mpuser.email
+              else:
+                  user_email = None 
               
-              mail.send_mail(sender="olp@mopub.com",
-                            to="bugs@mopub.com",
-                            subject="Logging error",
-                            body="account: %s retries: %s task name: %s queue name: %s base stats: %s total number of stats: %s max countries: %s \n\n%s"%(account_name,
-                                                                                             retry_count,
-                                                                                             task_name,
-                                                                                             queue_name,
-                                                                                             base_number_of_stats,
-                                                                                             number_of_stats,
-                                                                                             max_countries,
-                                                                                             exception_traceback))
+              try:      
+                  mail.send_mail_to_admins(sender="olp@mopub.com",
+                                            subject="Logging error",
+                                            body="account: %s email: %s retries: %s task name: %s queue name: %s base stats: %s total number of stats: %s max countries: %s \n\n%s"%(account_name,
+                                                                                                 user_email,
+                                                                                                 retry_count,
+                                                                                                 task_name,
+                                                                                                 queue_name,
+                                                                                                 base_number_of_stats,
+                                                                                                 number_of_stats,
+                                                                                                 max_countries,
+                                                                                                 exception_traceback))
+              except:
+                  pass                                                                                     
               logging.error(exception_traceback)
-              raise Exception("need to try transaction again")
+          raise Exception("need to try transaction again")
       
       # only email if we miss alot (more than .1% or more than 1)      
-      if not tail_index_str or (memcache_misses > 1 and float(memcache_misses)/float(tail_index) > 0.001):
-          message = "Account: %s time: %s tail: %s misses: %s retry: %s\nmemcache_stats_starts:%s\nmemcache_stats:%s"%(account_name,time_bucket,
+      if not tail_index_str or (memcache_misses > 1 and float(memcache_misses)/float(tail_index) > 0.01):
+          account = Account.get(account_name)
+          if account:
+              user_email = account.mpuser.email
+          else:
+              user_email = None 
+          
+          message = "Account: %s email: %s time: %s tail: %s misses: %s retry: %s\nmemcache_stats_starts:%s\nmemcache_stats:%s"%(account_name,
+                                                                                  user_email,
+                                                                                  time_bucket,
                                                                                   tail_index_str,memcache_misses,retry_count,
                                                                                   memcache_stats_start,memcache_stats)
           
-          mail.send_mail(sender="olp@mopub.com",
-                        to="bugs@mopub.com",
-                        subject="Logging error (cache miss)",
-                        body=message)
+          try:
+              mail.send_mail_to_admins(sender="olp@mopub.com",
+                                        subject="Logging error (cache miss)",
+                                        body=message)
+          except:
+              pass                                
           logging.error(message)
           
 class StatsModelPutTaskHandler(webapp.RequestHandler):
@@ -304,6 +352,79 @@ def async_put_models(account_name,stats_models,bucket_size):
                                countdown=5)
             t.add(task_queue_name, transactional=False)
     db.run_in_transaction(_txn)        
+    
+class FinalizeHandler(webapp.RequestHandler):
+    def post(self):
+        return self.get(self)
+
+    def get(self):
+        file_name = self.request.get('file_name')
+        files.finalize(file_name)
+
+class DownloadLogsHandler(webapp.RequestHandler):
+    def post(self):
+        return self.get(self)
+    
+    def get(self, LIMIT=100):
+        date_hour_string = self.request.get('dh')
+        limit = int(self.request.get('limit', LIMIT))
+        start_time_stamp = self.request.get('start_time', None)
+        start_key = self.request.get('start_key', None)
+        filename = self.request.get('filename', 'apache')
+        
+        # date_hour_string = YYYYMMDDHH
+        year = int(date_hour_string[:4])
+        month = int(date_hour_string[4:6])
+        day = int(date_hour_string[6:8])
+        hour = int(date_hour_string[8:10])
+        
+        date_hour = datetime.datetime(year=year, 
+                                      month=month,
+                                      day=day,
+                                      hour=hour)
+        
+        filename = log_service.get_blob_name_for_time(date_hour, filename) + '.log'
+        blob_infos = BlobInfo.all().filter('filename =',filename)
+        if start_time_stamp:
+            start_time = datetime.datetime.fromtimestamp(float(start_time_stamp))
+            blob_infos = blob_infos.filter('creation >=', start_time).order('creation')
+
+        if start_key:
+            blob_infos = blob_infos.filter('__key__ >=', db.Key(start_key))
+            
+        
+        # fetch the objects from DB
+        blob_infos = blob_infos.fetch(limit+1)
+        
+        blob_keys = [bi.key() for bi in blob_infos]
+        
+        # if there are limit + 1 entries returned
+        # notify the API user where to start next
+        if len(blob_infos) > limit:
+            next_creation_time_stamp = time.mktime(blob_infos[-1].creation.timetuple())
+            next_key_name = blob_infos[-1].key()
+        else:
+            next_creation_time_stamp = None
+            next_key_name = None
+        
+        response_dict = dict(urls=['/files/serve/%s'%urllib.quote(str(bk)) for bk in blob_keys[:limit]])
+        if next_creation_time_stamp:
+            response_dict.update(start_time=str(next_creation_time_stamp))
+        if next_key_name:
+            # makes pseudo BlobInfo key
+            # next_key is actually a BlobKey which is the key_name for the BlobInfo
+            next_key = db.Key.from_path(BlobInfo.kind(), str(next_key_name), namespace='')
+            response_dict.update(start_key=str(next_key))
+        
+        self.response.out.write(simplejson.dumps(response_dict))
+
+class ServeLogHandler(blobstore_handlers.BlobstoreDownloadHandler):
+    """Actually serves the file"""
+    def get(self, resource):
+        resource = str(urllib.unquote(resource))
+        blob_info = BlobInfo.get(resource)
+        self.send_blob(blob_info)
+        
         
 application = webapp.WSGIApplication([('/_ah/queue/bulk-log-processor', LogTaskHandler),
                                       ('/_ah/queue/bulk-log-processor-00', LogTaskHandler),
@@ -317,6 +438,9 @@ application = webapp.WSGIApplication([('/_ah/queue/bulk-log-processor', LogTaskH
                                       ('/_ah/queue/bulk-log-processor-08', LogTaskHandler),
                                       ('/_ah/queue/bulk-log-processor-09', LogTaskHandler),
                                       ('/_ah/queue/bulk-log-processor/put', StatsModelPutTaskHandler),
+                                      ('/files/finalize', FinalizeHandler),
+                                      ('/files/download', DownloadLogsHandler),
+                                      ('/files/serve/([^/]+)?', ServeLogHandler),
                                      ],
                                      debug=True)
 

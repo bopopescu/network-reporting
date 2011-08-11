@@ -46,15 +46,9 @@ from common.utils.system_test_framework import run_auction, fake_request
 
 
 
-""" This module is where all of our system and end-to-end tests can live. """
-
+""" This module is where all of our ad_server system and end-to-end tests can live. """
 
 class TestBudgetEndToEnd(unittest.TestCase):
-    """
-    Using the web UI, we have created an ad_unit with the only two 
-    competitors being a cheap campaign ($10/ad) and an expensive
-    campaign ($100/ad)
-    """
 
     def setUp(self):
         
@@ -119,7 +113,7 @@ class TestBudgetEndToEnd(unittest.TestCase):
                               campaign=self.cheap_c, 
                               site_keys=[self.adunit.key()],
                               bid_strategy="cpm",
-                              bid=10000.0)
+                              bid=10000.0) # $10 per click
         self.cheap_adgroup.put()
 
 
@@ -149,19 +143,6 @@ class TestBudgetEndToEnd(unittest.TestCase):
         c_g.bid = 10000.0
         c_g.put()
 
-    def switch_adgroups_to_cpc(self):
-        group_query = AdGroup.all().filter('name =', 'expensive') 
-
-        e_g = group_query.get()
-        e_g.bid = 100000.0
-        e_g.bid_strategy = "cpc"
-        e_g.put()
-        
-        group_query = AdGroup.all().filter('name =', 'cheap')
-        c_g = group_query.get()
-        c_g.bid = 10000.0
-        c_g.bid_strategy = "cpc"
-        c_g.put()
 
     def switch_adgroups_to_cpm(self):
         group_query = AdGroup.all().filter('name =', 'expensive') 
@@ -238,103 +219,28 @@ class TestBudgetEndToEnd(unittest.TestCase):
         creative = run_auction(self.adunit.key())
         eq_(creative.ad_group.campaign.name, "expensive")
     
-        # We use half our cheap campaign budget
-        for i in xrange(5):
-            creative = run_auction(self.adunit.key())
-            eq_(creative.ad_group.campaign.name, "cheap")
+        # We use none of our cheap campaign budget
     
         # Advance all of our campaigns
-        budget_service._advance_all()
+        budget_service._advance_all(testing=True)
     
     
         # We again have enough budget for one expensive ad
         creative = run_auction(self.adunit.key())
         eq_(creative.ad_group.campaign.name, "expensive")
     
-        # We now have a cheap campaign budget for 15 ads
-        for i in xrange(15):
+        # We redistribute the budget, so we now have a cheap campaign 
+        # budget for 11 ads. 1000/9 = 111.1 enought for 11 $10 ads
+        for i in xrange(11):
             creative = run_auction(self.adunit.key())
             eq_(creative.ad_group.campaign.name, "cheap")
     
         creative = run_auction(self.adunit.key())
         eq_(creative, None)
-    
-    def mptest_multiple_requests_timeslice_advance_twice(self):
-        # We have enough budget for one expensive ad
-        creative = run_auction(self.adunit.key())
-        eq_(creative.ad_group.campaign.name, "expensive")
-    
-        # We use half our cheap campaign budget
-        for i in xrange(5):
-            creative = run_auction(self.adunit.key())
-            eq_(creative.ad_group.campaign.name, "cheap")
-    
-        # Advance all of our campaigns
-        budget_service._advance_all()
-        budget_service._advance_all()
-    
-    
-        # We again have enough budget for two expensive ads
-        creative = run_auction(self.adunit.key())
-        eq_(creative.ad_group.campaign.name, "expensive")
-    
-        creative = run_auction(self.adunit.key())
-        eq_(creative.ad_group.campaign.name, "expensive")
-    
-        # We now have a cheap campaign budget for 25 ads
-        for i in xrange(25):
-            creative = run_auction(self.adunit.key())
-            eq_(creative.ad_group.campaign.name, "cheap")
-    
-        creative = run_auction(self.adunit.key())
-        eq_(creative, None)
-    
-    def mptest_multiple_requests_cpc(self):
-        self.switch_adgroups_to_cpc()
-    
-        # We have enough budget for one expensive ad
-        creative = run_auction(self.adunit.key())
-        eq_(creative.ad_group.campaign.name, "expensive")
-    
-        # We have enough budget for 10 cheap ads
-        for i in xrange(10):
-            creative = run_auction(self.adunit.key())
-            eq_(creative.ad_group.campaign.name, "cheap")
-    
-        creative = run_auction(self.adunit.key())
-        eq_(creative, None)
-    
-    def mptest_multiple_requests_timeslice_advance_logging(self):
-        # We have enough budget for one expensive ad
-        creative = run_auction(self.adunit.key())
-        eq_(creative.ad_group.campaign.name, "expensive")
-    
-        # We use half our cheap campaign budget
-        for i in xrange(5):
-            creative = run_auction(self.adunit.key())
-            eq_(creative.ad_group.campaign.name, "cheap")
-    
-        # Advance all of our campaigns
-        budget_service._advance_all()
+        
 
-    
-        # We again have enough budget for one expensive ad
-        creative = run_auction(self.adunit.key())
-        eq_(creative.ad_group.campaign.name, "expensive")
-    
-        # We now have a cheap campaign budget for 15 ads
-        for i in xrange(15):
-            creative = run_auction(self.adunit.key())
-            eq_(creative.ad_group.campaign.name, "cheap")
-    
-        creative = run_auction(self.adunit.key())
-        eq_(creative, None)
-    
-        # Advance all of our campaigns
-        budget_service._advance_all()
-    
 
-    
+
     def mptest_allatonce(self):
         self.expensive_c.budget_strategy = "allatonce"
         self.expensive_c.put()
@@ -360,9 +266,8 @@ class TestBudgetEndToEnd(unittest.TestCase):
         # We now use our cheap campaign budget
         creative = run_auction(self.adunit.key())
         eq_(creative.ad_group.campaign.name, "cheap")
-
-
-
-        
+    
+    
+    
         
         

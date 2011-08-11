@@ -3,6 +3,7 @@
 import os
 import random
 import datetime
+import urllib
 
 from ad_server.filters.filters import (budget_filter,
                                     active_filter,
@@ -16,11 +17,13 @@ from ad_server.filters.filters import (budget_filter,
                                     freq_filter,
                                     all_freq_filter,
                                     lat_lon_filter,
+                                    os_filter,
                                    )
 # from ad_server.adserver_templates import TEMPLATES
                                     
 from common.utils import simplejson
 from common.utils import helpers
+from common.utils.marketplace_helpers import build_marketplace_dict
 from common.constants import (FULL_NETWORKS,
                               ACCEPTED_MULTI_COUNTRY,
                               CAMPAIGN_LEVELS,
@@ -51,7 +54,7 @@ from ad_server.optimizer import optimizer
 
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 
-from ad_server.optimizer.adunit_context import AdUnitContext, CreativeCTR
+from ad_server.adunit_context.adunit_context import AdUnitContext, CreativeCTR
 
 from mopub_logging import mp_logging
 from budget import budget_service
@@ -132,6 +135,15 @@ class AdAuction(object):
         @returns: [winning_creative, on_fail_exclude_adgroups] """
         # TODO: Clean up variable names
         # TODO: For testability, should not require request
+
+
+        # SPAM TEH SHIT OUT OF MPX.MOPUB.COM
+        # try:
+        #     spam_rpc = urlfetch.create_rpc(deadline=.1)
+        #     urlfetch.make_fetch_call(spam_rpc, 'http://mpx.mopub.com/req?asdfasdfasdfasdf')
+        #     spam_rpc.get_result()
+        # except Exception, e:
+        #     trace_logging.error("spam error: %s"%e)
         
         geo_predicates = AdAuction.geo_predicates_for_rgeocode(country_tuple)
 
@@ -159,12 +171,13 @@ class AdAuction(object):
         
         # We first run filters at the adgroup level
         ALL_FILTERS = ( exclude_filter(excluded_adgroups),
-                        budget_filter(),
                         active_filter(), 
                         lat_lon_filter(ll),
                         kw_filter(keywords), 
                         geo_filter(geo_predicates), 
-                        device_filter(device_predicates)
+                        device_filter(device_predicates),
+                        os_filter(user_agent),
+                        budget_filter(),
                        ) 
         
         all_ad_groups = filter(mega_filter(*ALL_FILTERS), all_ad_groups)
@@ -248,6 +261,58 @@ class AdAuction(object):
                     trace_logging.info("Campaigns of this priority: %s"%", ".join([a.name.encode('utf8') for a in eligible_adgroups]))
                     if not eligible_adgroups:
                         continue
+                    # if we're on marketplace level, do that marketplace shit
+                    if p == 'marketplace':
+                        # Build a big dict
+                        mk_args = build_marketplace_dict(adunit = adunit,
+                                                         kws = keywords,
+                                                         udid = udid,
+                                                         ua = user_agent,
+                                                         ll = ll,
+                                                         ip = request.remote_addr,
+                                                         adunit_context = adunit_context,
+                                                         country = helpers.get_country_code(request.headers, default=None))
+                        # Turn it into a get query
+                        trace_logging.info("\nSending to MPX: %s\n" % mk_args)
+                        mpx_url = 'http://mpx.mopub.com/req?' + urllib.urlencode(mk_args)
+                        xhtml = None
+                        charge_price = None
+                        # Try to get a response
+                        crtv = adunit_context.get_creatives_for_adgroups(eligible_adgroups)
+                        if isinstance(crtv, list):
+                            crtv = crtv[0]
+                        # set the creative as having done w/e
+                        mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=crtv, user_agent=user_agent, headers=request.headers, udid=udid)
+                        try:
+                            fetched = urlfetch.fetch(mpx_url, deadline=.2)
+                            # Make sure it's a good response
+                            trace_logging.info('MPX RESPONES CODE:%s'%fetched.status_code)
+                            if fetched.status_code == 200:
+                                data = simplejson.loads(fetched.content)
+                                trace_logging.info('MPX REPSONSE:%s'%data)    
+                                # With valid data
+                                if data.has_key('xhtml') and data.has_key('charge_price') and data['xhtml']:
+                                    xhtml = data['xhtml']
+                                    charge_price = data['charge_price']
+                                else:
+                                    continue
+                        except urlfetch.DownloadError, e:
+                            pass
+                        trace_logging.info('\n\nMPX Charge: %s\nMPX HTML: %s\n' % (charge_price, xhtml))
+                        if xhtml:
+                            # Should only be one
+                            crtv.html_data = xhtml
+                            # Should really be the pub's cut
+                            crtv.adgroup.bid = charge_price
+                            # I think we should log stuff here but I don't know how to do that
+                            return [crtv, on_fail_exclude_adgroups]
+                        else:
+                            continue
+                            
+
+
+
+
                     players = adunit_context.get_creatives_for_adgroups(eligible_adgroups)
                     
                     # For now we only use sampling on the experimental server
@@ -265,7 +330,7 @@ class AdAuction(object):
                 
                     while players:
                         winning_ecpm = player_ecpm_dict[players[0]]
-                        trace_logging.info("Trying to get creatives: %s"%", ".join([c.name.encode('utf8').replace("dummy","") if c.name else c.name for c in players]))
+                        trace_logging.info("Trying to get creatives: %s"%", ".join([c.name.encode('utf8').replace("dummy","") if c.name else 'None' for c in players]))
                         trace_logging.warning("auction at priority=%s: %s, max eCPM=%s" % (p, players, winning_ecpm))
                         if winning_ecpm >= adunit.threshold_cpm(p):
         
@@ -282,7 +347,7 @@ class AdAuction(object):
                             winners = filter(mega_filter(*CRTV_FILTERS), players)
                             for func, warn, lst in CRTV_FILTERS:
                                 if lst:
-                                    trace_logging.info(warn %", ".join([c.name.encode('utf8').replace("dummy","") if c.name else c.name for c in lst]))
+                                    trace_logging.info(warn %", ".join([c.name.encode('utf8').replace("dummy","") if c.name else '' for c in lst]))
         
                             # if there is a winning/eligible adgroup find the appropriate creative for it
                             winning_creative = None
@@ -301,7 +366,7 @@ class AdAuction(object):
                                         winning_creative = winner
                                         # if native, log native request
                                         if winner.adgroup.network_type in NATIVE_REQUESTS:
-                                            mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, udid=udid)
+                                            mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, headers=request.headers, udid=udid)
                                         # A native request could potential fail and must be excluded from subsequent requests    
                                         on_fail_exclude_adgroups.append(str(winning_creative.adgroup.key()))
                                         return [winning_creative, on_fail_exclude_adgroups]
@@ -310,7 +375,7 @@ class AdAuction(object):
                                         trace_logging.info('Attempting ad network request: %s ...'%winner.adgroup.network_type.title())
                                         rpc = AdAuction.request_third_party_server(request, adunit, winner.adgroup)
                                         # log a network "request"
-                                        mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, udid=udid)
+                                        mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, headers=request.headers, udid=udid)
                                         try:
                                             result = rpc.get_result()
                                             server_tuple = rpc.serverside.bid_and_html_for_response(result)

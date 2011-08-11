@@ -632,12 +632,12 @@ h5 {
 
 /* Links */
 
-a, a:active, a:visited {
+a, a:active, a:visited,a.no-jqui {
   color: #0090d9;
   text-decoration: none;
 }
 
-a:hover {
+a:hover,a.no-jqui:hover {
   color: #e57300;
   text-decoration: underline;
 }
@@ -882,6 +882,20 @@ dl.formFields.thin {
   margin: 0;
 }
 
+.formFields .appData-icon {
+  float:left;
+  padding-right: 11px;
+}
+
+.formFields .appData-name {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+.formFields .appData-icon img {
+  -webkit-border-radius:6px;-moz-border-radius:6px
+}
+
 .formFields-field-help {
   display: inline-block;
   margin: 1px 0 0 8px;
@@ -1025,13 +1039,13 @@ label.error {
   border-radius: 5px;
 }
 
-.alertMessage.success {
+.alertMessage.success, .flash_message{
   color: #5d8c00;
   background: #fbfff2;
   border-color: #cee6ac;
 }
 
-.alertMessage.error {
+.alertMessage.error, .flash_error {
   color: #cc2929;
   background: #fff2f2;
   border-color: #e6a1a1;
@@ -1235,6 +1249,10 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
 }
 .dataTable-date {
   width: 175px;
+}  
+
+.dataTable-date-short {
+  width: 100px;
 }
 
 .dataTable-ecpm {
@@ -1637,6 +1655,16 @@ ul.ui-selectmenu-menu {
 .no-js #jsnotice a {
   color: #fff;
   text-decoration: underline;
+}
+
+.whatsthis{
+
+}
+.whatsthis-icon{
+  background-image:url(../images/what.png);
+  height: 12px;
+  width: 12px;
+  display:inline-block;
 }
 
 /*---------------------------------------/
@@ -2167,12 +2195,63 @@ table.campaignData-main, table.reportData-table {
   margin: 20px 0 0 0;
 }
 
+.osi-success {
+  color: #53a600;
+}
+
+.osi-failure {
+  color: #ac6f6f;
+}
+
+.loading-img {
+    padding-left: 3px;
+}
+
+#ajaxFailure { 
+    font-size: 14px;
+    padding: 8px; 
+    border: 1px solid #e6d2b8;
+    background: #fff2f2;
+    position: fixed; 
+    top: 1%; 
+    right: 1%; 
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    z-index: 1000;
+}
+
+#ajaxDismiss img {
+    padding-right: 5px;
+    vertical-align: top;
+}
+
+#ajaxRetry img {
+    padding-left: 5px;
+    vertical-align: top;
+}
+
 /* New Campaign */
 
 #campaignForm-details{
   padding-top:0px;
 }
 
+#target-by-device{
+  padding-top: 5px;
+  padding-left: 50px;
+}
+                  
+#archive-link{
+  float: right;
+  position: relative;
+  bottom: 20px;
+}             
+             
+/* Campaigns Archive */
+.dataTable-budget-delivered, .dataTable-budget-goal{
+  width:100px;    
+}   
+                             
 /* Login */
 
 #login-left, #login-left .fieldset{

@@ -150,7 +150,8 @@
                           {% endif %} {% if not adgroup.campaign.start_date and not adgroup.campaign.end_date %}
                           All dates.
                           {% endif %}
-                          {% if adgroup.campaign.budget %}{{adgroup.campaign.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
+                          {% ifequal adgroup.campaign.budget_type 'daily' %}{% if adgroup.campaign.budget %}{{adgroup.campaign.budget|currency}} daily budget.{% else %} Unlimited budget.{% endif %}{% endifequal %}
+                          {% ifequal adgroup.campaign.budget_type 'full_campaign' %}{{adgroup.campaign.full_budget|currency}} campaign budget.{% endifequal %}
                           {% if adgroup.percent_delivered %}({{adgroup.percent_delivered|floatformat:1}}%){%endif %}
                       </span>
                     </th> 
@@ -351,7 +352,7 @@
                               <td class="dataTable-data numeric big"><b>{{adunit.stats.ctr|percentage}}</b></td>
                           </tr>
                           {% for s in adunit.all_stats reversed %}
-                          <tr class="appData-details-inner show">
+                          <tr class="appData-details-inner hide">
                               <th class="dataTable-name">{{s.date|format_date}}</th>
                               <td class="dataTable-data numeric">&nbsp;</td>     
                               <td class="dataTable-data numeric">{{s.request_count|withsep}}</td>

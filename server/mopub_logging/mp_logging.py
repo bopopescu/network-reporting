@@ -43,11 +43,12 @@ NUM_INAPP_QUEUS = 1
 
 MAX_TASK_ADDS = 100
 
-def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,creative_id=None,udid=None,user_agent=None,testing=False):
+def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,creative_id=None,udid=None,user_agent=None,headers=None,testing=False):
     # if this is the second request because of a 
     # native failure we just bail in order to 
     # Note if logging an adnetwork request, we pass
     # in request = None.
+    logging.info("trying to log")
     if request:
         exclude_creatives = request.get_all("exclude")
         if exclude_creatives:
@@ -67,12 +68,12 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
         udid = udid or request.get('udid', None)
         request_id = request.get('reqcnt',None)
         instance_id = request.get('inst',None)
-        country_code = helpers.get_country_code(user_agent=request.headers['User-Agent'])            
+        country_code = helpers.get_country_code(headers=request.headers)            
         revenue = request.get('rev',None)
     else:
         request_id = None
         instance_id = None
-        country_code = helpers.get_country_code(user_agent=user_agent)
+        country_code = helpers.get_country_code(headers=headers) 
         revenue = None
     
     # if trying to record the request of a adunit and creative
@@ -82,24 +83,22 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
     if adunit_id and creative_id and event == REQ_EVENT:
         logging.info("fire and forget--adunit: %s creative:%s"%(adunit_id,creative_id))
         fire_forget_params = dict(id=adunit_id, cid=creative_id, udid=udid or '', ua=user_agent)
-        # make async internal request to appengine
-        rpc = urlfetch.create_rpc(deadline=2) # in seconds
-        urlfetch.make_fetch_call(rpc=rpc, 
-                                 url="http://38-attempt.mopub-inc.appspot.com/m/req?"+urllib.urlencode(fire_forget_params),
-                                 headers={'X-URLFetch-Service-Id': 'APPSPOT'},
-                                 follow_redirects=False,)
+        task = taskqueue.Task(params=fire_forget_params,
+                              method='GET',
+                              url='/m/req')
+        queue_num = random.randint(0,NUM_REQ_QUEUES-1)                      
+        queue_name = REQ_QUEUE_NAME%queue_num
+        try:
+            task.add(queue_name)
+        except Exception, e:
+            logging.warning(e)
         
-        # task = taskqueue.Task(params=,
-        #                       method='GET',
-        #                       url='/m/req')
-        # queue_num = random.randint(0,NUM_REQ_QUEUES-1)                      
-        # queue_name = REQ_QUEUE_NAME%queue_num
-        # 
-        # try:
-        #     task.add(queue_name)
-        # except Exception, e:
-        #     logging.warning(e)
-                
+        # make async internal request to appengine
+        # rpc = urlfetch.create_rpc(deadline=2) # in seconds
+        # urlfetch.make_fetch_call(rpc=rpc, 
+        #                          url="http://38-attempt.mopub-inc.appspot.com/m/req?"+urllib.urlencode(fire_forget_params),
+        #                          headers={'X-URLFetch-Service-Id': 'APPSPOT'},
+        #                          follow_redirects=False,)                
         
     # get account name from the adunit
     if not adunit:
@@ -129,14 +128,19 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
                         udid=udid,
                         req=request_id,
                         inst=instance_id)
+                        
     
     # bail early if the memcache increment failed
     if log_index is None or log_index == '': 
+        logging.error("NOOOOO INDEX")
         return
     
     # put the log data into appropriate place
+    logging.info("adding to cache: %s ts: %s"%(log_index,time_bucket))
     log_key = LOG_KEY_FORMAT%dict(account_name=account_name,account_shard=account_shard,time=time_bucket,log_index=log_index)
     memcache.set(log_key,logging_data,time=MEMCACHE_ALIVE_TIME)
+    logging.info("done adding to cache")
+    
     
     # send to appropriately named task_queue
     task_name = TASK_NAME%dict(account_name=account_name.replace('_','1X--X1'), # must escape '_' regex: [a-zA-Z0-9-]{1,500}$   
@@ -149,6 +153,7 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
         return
         
     try:
+        logging.info("trying to add to queue (in try): %s"%task_name)
         account_bucket = hash(account_name)%NUM_TASK_QUEUES
         task_queue_name = TASK_QUEUE_NAME_FORMAT%account_bucket
         logging.info('\n\ntask: %s\n queue: %s eta:%s\n\n'%(task_name,
@@ -164,7 +169,7 @@ def log(request,event,adunit=None,creative=None,manager=None,adunit_id=None,crea
     except taskqueue.TaskAlreadyExistsError:
         logging.info("task %s already exists"%task_name)
     except Exception, e:    
-        logging.warning(e)
+        logging.error(e)
         
 def _get_time_bucket_start(time_bucket):
     # time_bucket = the current time bucket

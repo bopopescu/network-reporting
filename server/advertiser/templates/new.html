@@ -7,9 +7,15 @@
             {% endblock navLinks %}
 {% block pageTitle %}
   {% if adgroup %}
-    <h1>Edit Campaign: {{ adgroup.campaign.name }} </h1>
+          <h1>Edit Campaign: {{ adgroup.campaign.name }} </h1>
   {% else %}
-    <h1>New Campaign</h1>
+          <h1>New Campaign</h1>
+    {% ifequal account.status 'step4' %}
+          <!-- MixPanel Tracking -->
+          <script type="text/javascript">
+          mpq.push(["track", "Sign up: Create campaign"]);
+          </script>
+    {% endifequal %}
   {% endif %}
 {% endblock pageTitle %}
 {% block messageCenter %}{% endblock %}

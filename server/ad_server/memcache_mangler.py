@@ -12,7 +12,7 @@ class ClearHandler(webapp.RequestHandler):
     def get(self):
         key = self.request.get("key")
         namespace = self.request.get("namespace") or None
-        if key is "flush":
+        if key == "flush":
             memcache.flush_all()
             self.response.out.write("Memcache has been flushed")
         else:

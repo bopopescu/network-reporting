@@ -216,7 +216,8 @@
                           {% endif %} {% if not adgroup.campaign.start_date and not adgroup.campaign.end_date %}
                           All dates.
                           {% endif %}
-                          {% if adgroup.campaign.budget %}{{adgroup.campaign.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
+                          {% ifequal adgroup.campaign.budget_type 'daily' %}{% if adgroup.campaign.budget %}{{adgroup.campaign.budget|currency}} daily budget.{% else %} Unlimited budget.{% endif %}{% endifequal %}
+                          {% ifequal adgroup.campaign.budget_type 'full_campaign' %}{{adgroup.campaign.full_budget|currency}} campaign budget.{% endifequal %}
                           {% if adgroup.percent_delivered %}({{adgroup.percent_delivered|floatformat:1}}%){%endif %}
                       </span>
                     </th> 
@@ -396,7 +397,20 @@
             </div>                  	      
           </section>
           
+<form id='appExportForm' style='display:none;' method='POST' accept-charset='utf-8' action='{% url app_export %}'>
+    <input name='app_key' type='text' value='{{app.key}}' />
+    <input name='file_type' id='appExportType' type='text' value='' />
+    <input name='start' value={{start_date|date:"mdy"}} />
+    <input name='end' value={{end_date|date:"mdy"}} />
+</form>
           <section id="dashboard-apps">
+              <div class="buttonBank buttonBank-right">
+                  <select name='exportSelect' id='publisher-app-exportSelect' class='selectmenu'>
+                      <option value='exp'>Export</option>
+                      <option value='xls'>XLS</option>
+                      <option value='csv'>CSV</option>
+                  </select>
+              </div>
               <h2>Daily Counts</h2>            
                  <div class="appData-details noneg">
                   <table class="dataTable appData-main">
@@ -422,7 +436,7 @@
                               <td class="dataTable-data numeric special"><b>{{app.stats.ctr|percentage}}</b></td>
                           </tr>
                           {% for s in app.all_stats reversed %}
-                          <tr class="appData-details-inner show">
+                          <tr class="appData-details-inner hide">
                               <th class="dataTable-name">{{s.date|format_date}}</th>
                               <td class="dataTable-data numeric">&nbsp;</td>     
                               <td class="dataTable-data numeric">{{s.request_count|withsep}}</td>

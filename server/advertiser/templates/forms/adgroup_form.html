@@ -1,7 +1,9 @@
+
 {% load filters %}
 <script type='text/javascript'>
     //
-    // All this JS is here because it needs render-time info (see immediately below) to properly pre-populate//format the token inputs
+    // All this JS is here because it needs render-time info (see immediately below) to properly pre-populate/format the token inputs
+    // Can we move this to a hidden div or use ajax or some such? 
     //
     var geo_s = 'http://ws.geonames.org/searchJSON?';
     $(document).ready( function () {
@@ -80,14 +82,68 @@
 </script>
                     <dl class="formFields"> 
                       <dt>Ad Units:</dt>
-                      <dd> 
-                        <ul style="overflow:auto; max-height:200px; list-style: none;padding:5px 10px" class="{% if form.site_keys.errors %}form-error{% endif %}"> 
-                        {% for adunit in all_adunits %}   
-                        <div class="adunit-Target {{adunit.app_key.app_type}}"> 
-                            <li><input type="checkbox" name="site_keys" value="{{adunit.key}}"{% if adunit.checked %} checked="checked"{% endif %}/> {{adunit.app.name}} &gt; {{adunit.name}}</li>
+                      <dd>
+                        {% for adunit in all_adunits %}
+                        {% ifchanged adunit.app.name %}
+                        {% if not forloop.first %}
+                          </ul>
                         </div>
+                        <div style="clear:both;"></div>
+                        {% endif %}
+                        <div class="appData-icon"><img src="{% url publisher_app_icon app_key=adunit.app_key.key %}" width="45" height="45"/></div>
+                        <div class="adgroupForm-Network" style="float:left;">
+                          <div class="appData-name">{{adunit.app.name}}</div>
+                          <div class="campaignDependent network hidden">
+                            <div class="networkDependent admob admob_native hidden">
+                              <div class="adgroupForm-editNetwork {% if adunit.app.network_config.admob_pub_id %}hidden{% endif %}">AdMob Pub ID: <input type="text" name="{{adunit.app.key}}-__-admob_pub_id" class="input-text input-text-half-width adgroupForm-editNetwork" placeholder="ex: a14cdb1922f35xx" value="{{adunit.app.network_config.admob_pub_id|default_if_none:""}}"/></div>
+                              {% if adunit.app.network_config.admob_pub_id %}<div class="adgroupForm-showNetwork"><span class="muted">AdMob Pub ID: {{adunit.app.network_config.admob_pub_id|default_if_none:""}}</span> <a href="#" class="adgroupForm-editNetwork-link">Change</a></div>{% endif %}
+                            </div>
+                            <div class="networkDependent adsense hidden">
+                              <div class="adgroupForm-editNetwork {% if adunit.app.network_config.adsense_pub_id %}hidden{% endif %}">AdSense ID: <input type="text" name="{{adunit.app.key}}-__-adsense_pub_id" class="input-text input-text-half-width adgroupForm-editNetwork" placeholder="ex: ca-mb-pub-5592664190023789" value="{{adunit.app.network_config.adsense_pub_id|default_if_none:""}}"/></div>
+                              {% if adunit.app.network_config.adsense_pub_id %}<div class="adgroupForm-showNetwork"><span class="muted">AdSense ID: {{adunit.app.network_config.adsense_pub_id|default_if_none:""}}</span> <a href="#" class="adgroupForm-editNetwork-link">Change</a></div>{% endif %}
+                            </div>
+                            <div class="networkDependent brightroll hidden">
+                              <div class="adgroupForm-editNetwork {% if adunit.app.network_config.brightroll_pub_id %}hidden{% endif %}">BrightRoll ID: <input type="text" name="{{adunit.app.key}}-__-brightroll_pub_id" class="input-text input-text-half-width adgroupForm-editNetwork" placeholder="ex: 3836789" value="{{adunit.app.network_config.brightroll_pub_id|default_if_none:""}}"/></div>
+                              {% if adunit.app.network_config.brightroll_pub_id %}<div class="adgroupForm-showNetwork"><span class="muted">BrightRoll ID: {{adunit.app.network_config.brightroll_pub_id|default_if_none:""}}</span> <a href="#" class="adgroupForm-editNetwork-link">Change</a></div>{% endif %}
+                            </div>
+                            <div class="networkDependent chartboost hidden">
+                              <div class="adgroupForm-editNetwork {% if adunit.app.network_config.chartboost_pub_id %}hidden{% endif %}">ChartBoost ID: <input type="text" name="{{adunit.app.key}}-__-chartboost_pub_id" class="input-text input-text-half-width adgroupForm-editNetwork" placeholder="ex: 4cf55942bb93162f4500006g" value="{{adunit.app.network_config.chartboost_pub_id|default_if_none:""}}"/></div>
+                              {% if adunit.app.network_config.chartboost_pub_id %}<div class="adgroupForm-showNetwork"><span class="muted">ChartBoost ID: {{adunit.app.network_config.chartboost_pub_id|default_if_none:""}}</span> <a href="#" class="adgroupForm-editNetwork-link">Change</a></div>{% endif %}
+                            </div>
+                            <div class="networkDependent ejam hidden">
+                              <div class="adgroupForm-editNetwork {% if adunit.app.network_config.ejam_pub_id %}hidden{% endif %}">eJam Zone ID: <input type="text" name="{{adunit.app.key}}-__-ejam_pub_id" class="input-text input-text-half-width adgroupForm-editNetwork" placeholder="ex: 23710" value="{{adunit.app.network_config.ejam_pub_id|default_if_none:""}}"/></div>
+                              {% if adunit.app.network_config.ejam_pub_id %}<div class="adgroupForm-showNetwork"><span class="muted">eJam Zone ID: {{adunit.app.network_config.ejam_pub_id|default_if_none:""}}</span> <a href="#" class="adgroupForm-editNetwork-link">Change</a></div>{% endif %}
+                            </div>
+                            {% if form.network_type.value == "greystripe" %}<div class="networkDependent greystripe hidden">
+                              <div class="adgroupForm-editNetwork {% if adunit.app.network_config.greystripe_pub_id %}hidden{% endif %}">GreyStripe ID: <input type="text" name="{{adunit.app.key}}-__-greystripe_pub_id" class="input-text input-text-half-width adgroupForm-editNetwork" placeholder="ex: 3705265e-1025-4873-9352-7b1e4986xxxx" value="{{adunit.app.network_config.greystripe_pub_id|default_if_none:""}}"/></div>
+                              {% if adunit.app.network_config.greystripe_pub_id %}<div class="adgroupForm-showNetwork"><span class="muted">GreyStripe ID: {{adunit.app.network_config.greystripe_pub_id|default_if_none:""}}</span> <a href="#" class="adgroupForm-editNetwork-link">Change</a></div>{% endif %}
+                            </div>{% endif %}
+                            <div class="networkDependent inmobi hidden">
+                              <div class="adgroupForm-editNetwork {% if adunit.app.network_config.inmobi_pub_id %}hidden{% endif %}">InMobi ID: <input type="text" name="{{adunit.app.key}}-__-inmobi_pub_id" class="input-text input-text-half-width adgroupForm-editNetwork" placeholder="ex: 4028cb962b75ff06012b792fc5fb6789" value="{{adunit.app.network_config.inmobi_pub_id|default_if_none:""}}"/></div>
+                              {% if adunit.app.network_config.inmobi_pub_id %}<div class="adgroupForm-showNetwork"><span class="muted">InMobi ID: {{adunit.app.network_config.inmobi_pub_id|default_if_none:""}}</span> <a href="#" class="adgroupForm-editNetwork-link">Change</a></div>{% endif %}
+                            </div>
+                            <div class="networkDependent jumptap hidden">
+                              <div class="adgroupForm-editNetwork {% if adunit.app.network_config.jumptap_pub_id %}hidden{% endif %}">JumpTap ID: <input type="text" name="{{adunit.app.key}}-__-jumptap_pub_id" class="input-text input-text-half-width adgroupForm-editNetwork" placeholder="ex: pa_company_inc_app" value="{{adunit.app.network_config.jumptap_pub_id|default_if_none:""}}"/></div>
+                              {% if adunit.app.network_config.jumptap_pub_id %}<div class="adgroupForm-showNetwork"><span class="muted">JumpTap ID: {{adunit.app.network_config.jumptap_pub_id|default_if_none:""}}</span> <a href="#" class="adgroupForm-editNetwork-link">Change</a></div>{% endif %}
+                            </div>
+                            <div class="networkDependent millennial millennial_native hidden">
+                              <div class="adgroupForm-editNetwork {% if adunit.app.network_config.millennial_pub_id %}hidden{% endif %}">Millennial ID: <input type="text" name="{{adunit.app.key}}-__-millennial_pub_id" class="input-text input-text-half-width adgroupForm-editNetwork" placeholder="ex: 36789" value="{{adunit.app.network_config.millennial_pub_id|default_if_none:""}}"/></div>
+                              {% if adunit.app.network_config.millennial_pub_id %}<div class="adgroupForm-showNetwork"><span class="muted">Millennial ID: {{adunit.app.network_config.millennial_pub_id|default_if_none:""}}</span> <a href="#" class="adgroupForm-editNetwork-link">Change</a></div>{% endif %}
+                            </div>
+                            <div class="networkDependent mobfox hidden">
+                              <div class="adgroupForm-editNetwork {% if adunit.app.network_config.mobfox_pub_id %}hidden{% endif %}">MobFox ID: <input type="text" name="{{adunit.app.key}}-__-mobfox_pub_id" class="input-text input-text-half-width adgroupForm-editNetwork" placeholder="ex: 008048afe367bf4ce82ae95363c4xxxx" value="{{adunit.app.network_config.mobfox_pub_id|default_if_none:""}}"/></div>
+                              {% if adunit.app.network_config.mobfox_pub_id %}<div class="adgroupForm-showNetwork"><span class="muted">MobFox ID: {{adunit.app.network_config.mobfox_pub_id|default_if_none:""}}</span> <a href="#" class="adgroupForm-editNetwork-link">Change</a></div>{% endif %}
+                            </div>
+                          </div>
+                          <ul style="overflow:auto; max-height:200px; list-style: none;padding:5px 10px" class="{% if form.site_keys.errors %}form-error{% endif %}">
+                        {% endifchanged %}
+                          <li><input type="checkbox" name="site_keys" value="{{adunit.key}}" id="site_keys-{{adunit.key}}"{% if adunit.checked %} checked="checked"{% endif %}/> <label for="site_keys-{{adunit.key}}">{{adunit.name}}</label></li>
+                        {% if forloop.last %}
+                          </ul>
+                        </div>
+                        <div style="clear:both;"></div>
+                        {% endif %}
                         {% endfor %}
-                        </ul>
                         {% for error in form.site_keys.errors %}
                         <div class="form-error-text">{{error}}</div>
                         {% endfor %}
@@ -135,31 +191,35 @@
                             </p>
                           </div>
                         </dd>
-                        <!-- <dt>Device Targeting:</dt>
+                        <dt>Device Targeting:</dt>
                         
                         <dd>
-                          <ul class="tree treeview filetree">
-                            <li><span> All devices </span></li>
-                            <li><span> Target devices by OS 
-                              <ul>
-                                <li><span> iPhone OS / iOS (iPhone/iPod Touch/iPad)
-                                  <ul>
-                                    <li><span> 2.0 </span></li>
-                                    <li><span> 2.1 </span></li>
-                                    <li><span> 4.3 </span></li>
-                                  </ul>
-                                </span></li>
-                                <li><span> Android
-                                  <ul>
-                                     <li><span> 1.5 </span></li>
-                                     <li><span> 1.6 </span></li>
-                                     <li><span> 3.0 </span></li>
-                                   </ul>
-                                </span></li>
-                              </ul>
-                            </span></li> 
-                          </ul>
-                        </dd> -->
+                          {{ form.device_targeting|raw }}
+                          <div id="target-by-device">
+                            <div id="target-ios" style="display:inline-block; width:400px">
+                              <span style="display:inline-block; width:150px">
+                              {{ form.target_iphone|raw }}iPhone {{ form.target_ipod|raw }}iPod {{ form.target_ipad|raw }}iPad
+                              </span>
+                                    <span style="display:inline-block; width:30px">Min:</span>{{ form.ios_version_min|raw }}
+
+                                    <span style="display:inline-block; width:30px">Max: </span>{{ form.ios_version_max|raw }}
+                            </div>
+                          
+                            <div id="target-android" style="display:inline-block; width:400px">
+                               <span style="display:inline-block; width:150px; padding-top:2px">
+                               {{ form.target_android|raw }} Android
+                               </span>
+                                     <span style="display:inline-block; width:30px">Min:</span>{{ form.android_version_min|raw }}
+                                     <span style="display:inline-block; width:30px">Max: </span>{{ form.android_version_max|raw }}
+                             </div>
+                             <div id="target-other" style="display:inline-block; width:400px">
+                                <span style="display:inline-block; width:150px; padding-top:2px">
+                                {{ form.target_other|raw }} Other
+                                </span> <span class="muted"> (All versions)</span>
+                              </div>
+                            </div>
+                          
+                        </dd>
                         
                         <dt>Country Targeting:</dt>
                         <dd>

@@ -8,15 +8,43 @@ from advertiser.models import Creative
 # A mobile app, which can have multiple Sites on which ads can be displayed
 #
 class App(db.Model):
+    CATEGORY_CHOICES = (
+            u'not_selected',
+            u'books',
+            u'business',
+            u'education',
+            u'entertainment',
+            u'finance',
+            u'games',
+            u'healthcare_and_fitness',
+            u'lifestyle',
+            u'medical',
+            u'music',
+            u'navigation',
+            u'news',
+            u'photography',
+            u'productivity',
+            u'reference',
+            u'social_networking',
+            u'sports',
+            u'travel',
+            u'utilities',
+            u'weather',
+    )
+    
     account = db.ReferenceProperty(Account)
   
     name = db.StringProperty(required=True)
+    global_id = db.StringProperty() # used to store appstore or marketplace id
     adsense_app_name = db.StringProperty()
+    adsense_app_id = db.StringProperty()
     
     app_type = db.StringProperty(required=True, default='iphone', choices=['iphone', 'android', 'ipad', 'mweb'])
     description = db.TextProperty()
     url = db.StringProperty()
     package = db.StringProperty()
+    # For MPX
+    categories = db.StringListProperty()
     
     icon = db.BlobProperty()
     
@@ -33,6 +61,9 @@ class App(db.Model):
     experimental_fraction = db.FloatProperty(default=0.0)
     
     network_config = db.ReferenceProperty(NetworkConfig, collection_name="apps")
+    
+    primary_category = db.StringProperty(choices=CATEGORY_CHOICES)
+    secondary_category = db.StringProperty(choices=CATEGORY_CHOICES)
   
     def get_owner(self):
         return None

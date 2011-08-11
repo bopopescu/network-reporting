@@ -24,6 +24,7 @@ sys.path.append('/home/ubuntu/google_appengine/lib/webob')
 sys.path.append('/home/ubuntu/google_appengine/lib/yaml/lib')
 
 
+<<<<<<< HEAD
 from appengine_django import InstallAppengineHelperForDjango
 InstallAppengineHelperForDjango()
 
@@ -31,6 +32,16 @@ InstallAppengineHelperForDjango()
 import utils
 import deref_cache_builder
 
+=======
+# from appengine_django import InstallAppengineHelperForDjango
+# InstallAppengineHelperForDjango()
+
+import utils
+from google.appengine.ext.db import BadKeyError
+
+
+DEREF_CACHE = utils.load_deref_cache()
+>>>>>>> 7d9a671ae089e06e54dc73254ab42b44ab758e4c
 account_buckets = {} # {account_str: [lines]}
 
 
@@ -71,7 +82,11 @@ def process_stats_file(stats_file):
                 adunit_key = parts[1]
                 
                 # deref account_str from adunit_key
+<<<<<<< HEAD
                 deref_result = deref_cache_builder.deref_adunit(adunit_key)
+=======
+                deref_result = _deref_adunit(adunit_key)
+>>>>>>> 7d9a671ae089e06e54dc73254ab42b44ab758e4c
                 if not deref_result: 
                     print 'no deref: %s' % (line)
                     continue
@@ -88,14 +103,44 @@ def process_stats_file(stats_file):
                 continue
     
 
+<<<<<<< HEAD
+=======
+
+# returns [app_str, account_str]
+def _deref_adunit(adunit_str):
+    if adunit_str in DEREF_CACHE:
+        return DEREF_CACHE[adunit_str]
+
+    try:
+        adunit_key = db.Key(adunit_str)
+        adunit = AdUnit.get(adunit_key)
+        app_str = str(adunit._app_key)
+        account_str = str(adunit._account)
+        DEREF_CACHE[adunit_str] = [app_str, account_str]
+        return [app_str, account_str]
+    except BadKeyError, e:
+        print 'EXCEPTION on adunit %s: %s' %(adunit_str, e)
+        return None
+    except Exception, e:
+        # print 'ADUNIT_STR:', adunit_str
+        # traceback.print_exc()
+        return None
+
+
+>>>>>>> 7d9a671ae089e06e54dc73254ab42b44ab758e4c
 def main():
     start = time.time()
     
     # make sure non-empty deref cache is loaded
+<<<<<<< HEAD
     if len(deref_cache_builder.DEREF_CACHE) == 0:
         sys.exit('\nERROR: deref cache is empty')
     else:
         print '%i mappings loaded in deref cache\n' % (len(deref_cache_builder.DEREF_CACHE))
+=======
+    if len(DEREF_CACHE) == 0:
+        sys.exit('\nERROR: deref cache is empty')
+>>>>>>> 7d9a671ae089e06e54dc73254ab42b44ab758e4c
     
     parser = OptionParser()
     parser.add_option('-f', '--input_file', dest='input_file')
@@ -105,7 +150,11 @@ def main():
         sys.exit('\nERROR: input file must be specified\n')   
     if not os.path.exists(options.input_file):
         sys.exit('\nERROR: input file does not exist\n')
+<<<<<<< HEAD
         
+=======
+            
+>>>>>>> 7d9a671ae089e06e54dc73254ab42b44ab758e4c
     dir_path, file_name = os.path.split(options.input_file)
     # ex file_name: aws-logfile-2011-0610-1110.adv.lc.stats
     parts = file_name.split('-')
@@ -113,6 +162,12 @@ def main():
     month_day = parts[3]
     date_str = year[-2:] + month_day
 
+<<<<<<< HEAD
+=======
+    # for dereferencing adunits in process_stats_file
+    utils.setup_remote_api()
+    
+>>>>>>> 7d9a671ae089e06e54dc73254ab42b44ab758e4c
     process_stats_file(options.input_file)   
     generate_split_files(dir_path, date_str)
     

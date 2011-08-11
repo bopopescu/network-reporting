@@ -52,8 +52,17 @@
         return success;
     }
 
+    var sub_label;
+    if (window.location.pathname == '/reports/') {
+        sub_label = 'Run';
+    }
+    else {
+        sub_label = 'Save';
+    }
+    
     $('#reportCreateForm-submit')
     .button({
+        label: sub_label,
         icons: {secondary: 'ui-icon-circle-triangle-e' }})
     .click(function(e) {
             e.preventDefault();
@@ -68,13 +77,27 @@
     $('#reports-view-runReportButton').button({
         icons: {secondary: 'ui-icon-circle-triangle-e' }});
 
-    $('#reports-view-saveReportButton')
-    .button({
-        icons: {secondary: 'ui-icon-circle-check'}})
-    .click(function(e) {
-        e.preventDefault();
-        $.ajax({url:'http://' + window.location.host + '/reports/save/' + $('#reportKey').val() + '/'});
-    })
+    function ajaxSave() {
+        $.ajax({url:'http://' + window.location.host + '/reports/save/' + $('#reportKey').val() + '/',
+                success: function() { 
+                    $('#reports-view-toIndex').click();
+                    } 
+                });
+    }
+
+    $('#reports-view-saveAsButton').button({icons: {secondary: 'ui-icon-check'}})
+        .click(function(e) {
+            e.preventDefault();
+            $('#saveAs').val('True');
+            $('#reportName-input').val('Copy of '+ $('#reportName-input').val());
+            $('.dim-selectmenu').selectmenu('disable');
+            $('#interval').selectmenu('disable');
+            $('#start-input').datepicker('disable');
+            $('#end-input').datepicker('disable');
+            $('#reportCreateForm-submit').button({label: 'Save As'});
+            $('#sched_interval').selectmenu('index', 0).change();
+            $('#reportForm-container').dialog({width:750});
+        });
 
     $('#reportCreateForm-cancel').button()
         .click(function(e) {
@@ -97,24 +120,21 @@
     $('#reports-view-editReportButton').button({icons: {primary: 'ui-icon-wrench'}})
         .click(function(e) {
             e.preventDefault();
-            $('#reportCreateForm-submit').button('option', 'label', 'Run').button('option', 'icons', {secondary: 'ui-icon-circle-triangle-e'}); 
             $('#saveAs').val('False');
+            $('#reportCreateForm-submit').button({label: 'Save'});
             var report_form = $('#reportForm-container');
             report_form.dialog({width:750});
         });
 
-    $('#reports-view-saveAsReportButton').button({icons: {secondary: 'ui-icon-check'}})
-        .click(function(e) {
-            e.preventDefault();
-            $('#reportCreateForm-submit').button('option', 'label', 'Save As').button('option', 'icons', {secondary: 'ui-icon-check'});
-            $('#saveAs').val('True');
-            $('#reportForm-container').dialog({width:750});
-        });
 
     $('#reportCreateForm-cancel')
         .button()
         .click(function(e) {
             e.preventDefault();
+            $('.dim-selectmenu').selectmenu('enable');
+            $('#interval').selectmenu('enable');
+            $('#start-input').datepicker('enable');
+            $('#end-input').datepicker('enable');
             revert_state(form_state);
             $(this).parents('#reportForm-container')
             .dialog('close');
@@ -135,6 +155,29 @@
             $(this).parents('form').submit();
         });
 
+    $('#reports-view-exportSelect')
+        .change(function(e) {
+            e.preventDefault();
+            var val = $(this).val();
+            if (val != 'exp') {
+                $('#reportExportForm')
+                    .find('#report-exportFtype')
+                    .val(val)
+                    .end()
+                    .submit();
+            }
+            $(this).selectmenu('index', 0);
+        });
+
+    $('#reports-view-exportSelect-menu').find('li').first().hide();
+
+    $('#reports-view-exportButton')
+        .click(function(e) {
+            e.preventDefault();
+            $('#reportExportForm').submit();
+        });
+
+            
 
     $('.int-selectmenu').selectmenu({
         style: 'popup',
@@ -167,25 +210,26 @@
             var val = $(this).val();
             var today = new Date();
             if (val != 'custom') {
+                $('#interval-toggle').val(2);
                 var one_day = 1000*60*60*24
                 switch (val) {
                     case 'today':
                         var dte = format_date(today); 
-                        $('#end-input').val(dte);
-                        $('#start-input').val(dte);
+                        $('#end-input').val(dte).change();
+                        $('#start-input').val(dte).change();
                         break;
                     case 'yesterday':
                         today.setTime(today.getTime() - one_day);
                         var dte = format_date(today); 
-                        $('#end-input').val(dte);
-                        $('#start-input').val(dte);
+                        $('#end-input').val(dte).change();
+                        $('#start-input').val(dte).change();
                         break;
                     case '7days':
                         var dte = format_date(today); 
-                        $('#end-input').val(dte);
+                        $('#end-input').val(dte).change();
                         today.setTime(today.getTime() - (7*one_day));
                         dte = format_date(today); 
-                        $('#start-input').val(dte);
+                        $('#start-input').val(dte).change();
                         break;
                     case 'lmonth':
                         var this_mo = today.getMonth();
@@ -193,29 +237,26 @@
                             today.setTime(today.getTime() - one_day);
                         }
                         var dte = format_date(today); 
-                        $('#end-input').val(dte);
+                        $('#end-input').val(dte).change();
                         today.setDate(1);
                         dte = format_date(today); 
-                        $('#start-input').val(dte);
+                        $('#start-input').val(dte).change();
                         break;
                 }
             }
             else {
                 return;
             }
-        }).change();
+        });
 
     $('.date-field')
-        .focus(function(e) {
-            update = true;
-        })
         .change(function(e) {
-            if (update) {
+            var inter_val = $('#interval-toggle').val()
+            if ($('#interval-toggle').val() == 0) {
                 $('#interval').selectmenu('index', 4);
             }
             else {
-                update = true;
-                return;
+                $('#interval-toggle').val(inter_val - 1);
             }
         });
 
@@ -239,7 +280,16 @@
         $('#start-input').val(state.start); 
         $('#interval').selectmenu('index', state.interv);
         $('#sched_interval').selectmenu('index', state.sched_interv);
+        // Trigger those on change events what whatttt
+        $('#interval').change();
+        $('#sched_interval').change();
         $("#reportName-input").val(state.name);
+        if (state.email) {
+            $('#email-input-checkbox').attr('checked',checked);
+        }
+        else {
+            $('#email-input-checkbox').removeAttr('checked');
+        }
     }
 
     function get_form_state() {
@@ -250,10 +300,11 @@
                             sel_state($('#sched_interval')),
                             $('#end-input').val(), 
                             $('#start-input').val(), 
-                            $('#reportName-input').val()
+                            $('#reportName-input').val(),
+                            $('#email-input-checkbox')
                             )
     }
-    function build_state(d1, d2, d3, interv, sched_interv, end, start, name) {
+    function build_state(d1, d2, d3, interv, sched_interv, end, start, name, email) {
         return {d1: d1,
                 d2: d2,
                 d3: d3,
@@ -262,6 +313,7 @@
                 end: end,
                 start: start,
                 name: name,
+                email:email.is(':checked'),
                 }
     }
     function sel_state(obj) {
@@ -271,8 +323,6 @@
     var form_state = get_form_state();
 
 
-
-    var form_state;
     $('#d1').change(
         function(e) {
             if ($(this).val() != '') {
@@ -432,12 +482,27 @@
                     break;
             }
     }
+
     $('#d2').change(
         function(e) {
             e.preventDefault();
             d1_validate($('#d1'));
             d2_validate($(this));
         });
+
+    $('.update-button').change(
+        function(e) {
+            e.preventDefault();
+            if (!obj_equals(form_state, get_form_state())) {
+                $('#reportCreateForm-submit').button({label:'Save and Run'});
+            }
+            else {
+                $('#reportCreateForm-submit').button({label:'Save'});
+            }
+        }).change();
+
+    
+
 
     function d2_validate(obj) {
         var idx = obj.selectmenu('index');
@@ -526,5 +591,24 @@
                 break;
         }
     }
+
+
+    $("#sched_interval")
+    .change(function(e) {
+        $('#email-input').hide();
+        $('.schedule-help').hide();
+        $('.schedule-help.'+$(this).val()).show();
+        if ($(this).val() != 'none') {
+            $('#email-input').show();
+        }
+    }).change();
+
+   
+    $('#reportStateChangeForm-delete')
+        .click(function(e) {
+            e.preventDefault();
+            $('#reportStateChangeForm').find('#action').val('delete').end().submit();
+        });
+
  });
 })(this.jQuery);

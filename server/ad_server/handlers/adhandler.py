@@ -239,15 +239,15 @@ class AdHandler(webapp.RequestHandler):
             trace_logging.render()
 
     def render_creative(self, 
-                      creative, 
-                      site = None, 
-                      keywords = None, 
-                      country_tuple = None,
-                      request_id = None, 
-                      version_number = None,
-                      track_url = None,
-                      debug = False,
-                      on_fail_exclude_adgroups = None):
+                        creative, 
+                        site = None, 
+                        keywords = None, 
+                        country_tuple = None,
+                        request_id = None, 
+                        version_number = None,
+                        track_url = None,
+                        debug = False,
+                        on_fail_exclude_adgroups = None):
         """ Returns a rendered HTML creative """
         self.TEMPLATES = TEMPLATES
         if creative:

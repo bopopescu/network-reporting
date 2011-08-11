@@ -8,8 +8,7 @@ import urllib
 from ad_server.filters.filters import (budget_filter,
                                     active_filter,
                                     kw_filter,
-                                    geo_filter,
-                                    device_filter,
+                                    geo_filter,    
                                     mega_filter,
                                     format_filter,
                                     exclude_filter,
@@ -88,7 +87,8 @@ class AdAuction(object):
     MAX_ADGROUPS = 30
     
     @classmethod
-    def request_third_party_server(cls, request, adunit, adgroups):
+    def request_third_party_server(cls, request, adunit, adgroups):  
+        return "FAIL"
         if not isinstance(adgroups,(list,tuple)):
             multiple = False
             adgroups = [adgroups]
@@ -140,10 +140,9 @@ class AdAuction(object):
         #possible codes.  If it does, get all of them and use them all
         if len(country_tuple) == 1 and ACCEPTED_MULTI_COUNTRY.has_key(country_tuple[0]):
             geo_predicates = reduce(lambda x,y: x+y, [AdAuction.geo_predicates_for_rgeocode([country_tupleess]) for country_tupleess in ACCEPTED_MULTI_COUNTRY[country_tuple[0]]])
+       
         
-        device_predicates = AdAuction.device_predicates_for_request(request)
-        
-        trace_logging.warning("keywords=%s, geo_predicates=%s, device_predicates=%s" % (keywords, geo_predicates, device_predicates))
+        trace_logging.warning("keywords=%s, geo_predicates=%s" % (keywords, geo_predicates))
         
         # Matching strategy: 
         # 1) match all ad groups that match the placement that is in question, sort by priority
@@ -163,8 +162,7 @@ class AdAuction(object):
                         active_filter(), 
                         lat_lon_filter(ll),
                         kw_filter(keywords), 
-                        geo_filter(geo_predicates), 
-                        device_filter(device_predicates),
+                        geo_filter(geo_predicates),       
                         os_filter(user_agent),
                         budget_filter(),
                        ) 
@@ -426,16 +424,7 @@ class AdAuction(object):
                   "region_name=%s,country_name=%s" % (r[1], r[2]),
                   "country_name=%s" % r[2],
                   "country_name=*"]
-        
-    @classmethod
-    def device_predicates_for_request(c, req):
-        ua = req.headers["User-Agent"]
-        if "Android" in ua:
-            return ["platform_name=android", "platform_name=*"]
-        elif "iPhone" in ua:
-            return ["platform_name=iphone", "platform_name=*"]
-        else:
-            return ["platform_name=*"]
+
         
     @classmethod
     def format_predicates_for_format(c, f):

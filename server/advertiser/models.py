@@ -213,13 +213,6 @@ class AdGroup(db.Model):
     # Each incoming request will be matched against all of these combinations
     geo_predicates = db.StringListProperty(default=["country_name=*"])
     
-    # Device and platform preferences are listed similarly:
-    #
-    # model_name=X,brand_name=X
-    # brand_name=X,platform_name=X
-    # platform_name=X
-    device_predicates = db.StringListProperty(default=["platform_name=*"])
-    
     def default_creative(self, custom_html=None):
         # TODO: These should be moved to ad_server/networks or some such
         c = None

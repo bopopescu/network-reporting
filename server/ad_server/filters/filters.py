@@ -77,12 +77,6 @@ def geo_filter(geo_preds):
         return (set(geo_preds).intersection(a.geographic_predicates) > set())
     return (real_filter, log_mesg, [])
 
-def device_filter(dev_preds):
-    log_mesg = "Removed due to device mismatch: %s"
-    def real_filter(a):
-        return (set(dev_preds).intersection(a.device_predicates) > set())
-    return (real_filter, log_mesg, [])
-
 def os_filter(user_agent):
     log_mesg = "Removed due to OS restrictions: %s"
     def real_filter(a):

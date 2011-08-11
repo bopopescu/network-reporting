@@ -1,4 +1,6 @@
-# !/usr/bin/env python
+# !/usr/bin/env python 
+""" The AdHandler takes in all requests to m/ad. It """
+
 import os
 import re
 import hashlib
@@ -114,7 +116,7 @@ class AdHandler(webapp.RequestHandler):
         
         mp_logging.log(self.request, event=mp_logging.REQ_EVENT, adunit=adunit)  
         
-        trace_logging.warning("User Agent: %s"%helpers.get_user_agent(self.request))
+        trace_logging.warning("User Agent: %s" % helpers.get_user_agent(self.request))
 
         countries = [helpers.get_country_code(headers = self.request.headers)]
         if len(countries) == 1:
@@ -138,8 +140,7 @@ class AdHandler(webapp.RequestHandler):
             self.response.out.write("Publisher adunit key %s not valid" % adunit_id)
             return
         
-        # get keywords 
-        # q = [sz.strip() for sz in ("%s\n%s" % (self.request.get("q").lower() if self.request.get("q") else '', site.keywords if site.k)).split("\n") if sz.strip()]
+        # Prepare Keywords
         keywords = []
         if site.keywords and site.keywords != 'None':
             keywords += site.keywords.split(',')
@@ -150,10 +151,6 @@ class AdHandler(webapp.RequestHandler):
         
         # look up lat/lon
         ll = self.request.get('ll') if self.request.get('ll') else None
-        
-        # Reverse Geocode stuff isn't used atm
-        # country_tuple = self.rgeocode(self.request.get("ll")) if self.request.get("ll") else ()      
-        # trace_logging.warning("geo is %s (requested '%s')" % (country_tuple, self.request.get("ll")))
         
         # get creative exclusions usually used to exclude iAd because it has already failed
         excluded_adgroups = self.request.get_all("exclude")
@@ -184,16 +181,12 @@ class AdHandler(webapp.RequestHandler):
         # Unpack the results of the AdAuction
         creative, on_fail_exclude_adgroups = ad_auction_results
         
-        # add timer and animations for the ad 
-        # only send to client if there should be a refresh
-        # animation_type = random.randint(0,6)
-        # self.response.headers.add_header("X-Animation",str(animation_type))    
-        
+        # Attach various headers   
         refresh = adunit.refresh_interval
         if refresh:
             self.response.headers.add_header("X-Refreshtime",str(refresh))
         
-        # output the request_id and the winning creative_id if an impression happened
+        # Output the request_id and the winning creative_id if an impression happened
         if creative:
             user_adgroup_daily_key = frequency_capping.memcache_key_for_date(udid, now, creative.ad_group.key())
             user_adgroup_hourly_key = frequency_capping.memcache_key_for_hour(udid, now, creative.ad_group.key())
@@ -203,10 +196,10 @@ class AdHandler(webapp.RequestHandler):
 
             request_time = time.mktime(now.timetuple())
         
-            # create an ad clickthrough URL
+            # Create an ad clickthrough URL
             appid = creative.conv_appid or ''
             ad_click_url = "http://%s/m/aclk?id=%s&cid=%s&c=%s&req=%s&reqt=%s&udid=%s&appid=%s" % (self.request.host, adunit_id, creative.key(), creative.key(),request_id, request_time, udid, appid)
-            # ad an impression tracker URL
+            # Add an impression tracker URL
             track_url = "http://%s/m/imp?id=%s&cid=%s&udid=%s&appid=%s&req=%s&reqt=%s&random=%s" % (self.request.host, adunit_id, creative.key(), udid, appid, request_id, request_time, random.random())
             cost_tracker = "&rev=%.07f" 
             if creative.adgroup.bid_strategy == 'cpm':
@@ -245,7 +238,8 @@ class AdHandler(webapp.RequestHandler):
             trace_logging.rendered_creative = rendered_creative
             trace_logging.render()
 
-    def render_creative(self, creative, 
+    def render_creative(self, 
+                      creative, 
                       site = None, 
                       keywords = None, 
                       country_tuple = None,

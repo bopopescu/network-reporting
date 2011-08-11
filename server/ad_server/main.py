@@ -1,4 +1,8 @@
 # !/usr/bin/env python
+
+""" Provides handlers for all the ad server functions. For the handler for m/ad
+    look at ad_server/handlers/adhandler.py."""
+
 from appengine_django import InstallAppengineHelperForDjango
 InstallAppengineHelperForDjango()
 

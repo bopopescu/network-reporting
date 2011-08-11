@@ -128,7 +128,8 @@ def de_prioritize_all():
     for c in Campaign.all():
         set_ecpm(c)
 
-def set_freq(c_name, count, type = 'daily'):
+def set_freq(c_name, count, type = 'daily'):                
+    assert False
     assert type in ('daily', 'hourly'), "Expected daily or hourly frequency, request frequency was %s" % type 
     for c in Campaign.all():
         if c.name == c_name:

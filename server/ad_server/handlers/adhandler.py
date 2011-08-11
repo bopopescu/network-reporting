@@ -361,7 +361,7 @@ class AdHandler(webapp.RequestHandler):
                     params["image_url"] = images.get_serving_url(creative.image_blob)   
                 except InvalidBlobKeyError:     
                     # This will fail when on mopub-experimental
-                    trace_logging.error("""InvalidBlobKeyError when trying to get image from adhandler.py.
+                    trace_logging.warning("""InvalidBlobKeyError when trying to get image from adhandler.py.
                                           Are you on mopub-experimental?""")     
                 if creative.action_icon:
                     #c.url can be undefined, don't want it to break
@@ -385,7 +385,7 @@ class AdHandler(webapp.RequestHandler):
                     params["image_url"] = images.get_serving_url(creative.image_blob) 
                 except InvalidBlobKeyError:     
                     # This will fail when on mopub-experimental
-                    trace_logging.error("""InvalidBlobKeyError when trying to get image from adhandler.py.
+                    trace_logging.warning("""InvalidBlobKeyError when trying to get image from adhandler.py.
                                             Are you on mopub-experimental?""")
                     
                 

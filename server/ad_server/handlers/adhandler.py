@@ -117,9 +117,8 @@ class AdHandler(webapp.RequestHandler):
         trace_logging.warning("User Agent: %s"%helpers.get_user_agent(self.request))
 
         # check if the country is overriden manually
-        country = self.request.get('country') if self.request.get('country') else None
-        if country:
-            countries = [country]
+        if self.request.get('country'):
+            countries = [self.request.get('country')]
         else:
             countries = [helpers.get_country_code(headers = self.request.headers)]
         if len(countries) == 1:

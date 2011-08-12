@@ -362,7 +362,8 @@ class AdHandler(webapp.RequestHandler):
                 params.update(channel_id=site.adsense_channel_id or '')
                 # self.response.headers.add_header("X-Launchpage","http://googleads.g.doubleclick.net")
             elif creative.ad_type == "admob":
-                params.update({"title": ','.join(keywords), "w": format[0], "h": format[1], "client": site.get_pub_id("admob_pub_id")})
+                params.update({"title": ','.join(keywords), "w": format[0], "h": format[1], "client": site.get_pub_id("admob_pub_id"), \
+                    "bgcolor": str(site.app_key.admob_bgcolor or '000000') , "textcolor": str(site.app_key.admob_textcolor or 'FFFFFF')})
                 params.update(test_mode='true' if debug else 'false')
                 # params.update(test_ad='<a href="http://m.google.com" target="_top"><img src="/images/admob_test.png"/></a>' if debug else '')
                 self.response.headers.add_header("X-Launchpage","http://c.admob.com/")

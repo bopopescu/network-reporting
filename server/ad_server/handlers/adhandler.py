@@ -33,7 +33,9 @@ from google.appengine.ext.db import Key
 from ad_server.debug_console import trace_logging
 from ad_server import memcache_mangler
 from ad_server.auction.ad_auction import AdAuction
-from ad_server import frequency_capping
+from ad_server import frequency_capping            
+
+from google.appengine.api.images import InvalidBlobKeyError
 
 
 TEST_MODE = "3uoijg2349ic(TEST_MODE)kdkdkg58gjslaf"
@@ -114,7 +116,11 @@ class AdHandler(webapp.RequestHandler):
         
         trace_logging.warning("User Agent: %s"%helpers.get_user_agent(self.request))
 
-        countries = [helpers.get_country_code(headers = self.request.headers)]
+        # check if the country is overriden manually
+        if self.request.get('country'):
+            countries = [self.request.get('country')]
+        else:
+            countries = [helpers.get_country_code(headers = self.request.headers)]
         if len(countries) == 1:
             countries = [c.upper() for c in countries]
             country_tuple = tuple(countries)
@@ -361,10 +367,12 @@ class AdHandler(webapp.RequestHandler):
                 # params.update(test_ad='<a href="http://m.google.com" target="_top"><img src="/images/admob_test.png"/></a>' if debug else '')
                 self.response.headers.add_header("X-Launchpage","http://c.admob.com/")
             elif creative.ad_type == "text_icon":      
-                params["image_url"] = images.get_serving_url(creative.image_blob)
-                     
-                # params["image_url"] = "data:image/png;base64,%s" % binascii.b2a_base64(creative.image)
-                        
+                try:
+                    params["image_url"] = images.get_serving_url(creative.image_blob)   
+                except InvalidBlobKeyError:     
+                    # This will fail when on mopub-experimental
+                    trace_logging.error("""InvalidBlobKeyError when trying to get image from adhandler.py.
+                                          Are you on mopub-experimental?""")     
                 if creative.action_icon:
                     #c.url can be undefined, don't want it to break
                     icon_div = '<div style="padding-top:5px;position:absolute;top:0;right:0;"><a href="'+(creative.url or '#')+'" target="_top">'
@@ -382,7 +390,14 @@ class AdHandler(webapp.RequestHandler):
             elif creative.ad_type == "image":                       
                 img_height = creative.image_height
                 img_width = creative.image_width
-                params["image_url"] = images.get_serving_url(creative.image_blob) 
+
+                try:        
+                    params["image_url"] = images.get_serving_url(creative.image_blob) 
+                except InvalidBlobKeyError:     
+                    # This will fail when on mopub-experimental
+                    trace_logging.error("""InvalidBlobKeyError when trying to get image from adhandler.py.
+                                            Are you on mopub-experimental?""")
+                    
                 
                 # if full screen we don't need to center
                 if (not "full" in adunit.format) or ((img_width == 480.0 and img_height == 320.0 ) or (img_width == 320.0 and img_height == 480.0)):

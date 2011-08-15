@@ -37,7 +37,7 @@ html = Template("""<html><head><title>$title</title>
                                 <script type="text/javascript">
                                     if (typeof htmlWillCallFinishLoad == "undefined" || !htmlWillCallFinishLoad) { // just call mopubFinishLoad upon window's load
                                         if(typeof mopubFinishLoad == 'function') {
-                                           window.onload = function(){mopubFinishLoad();}
+                                           window.onload = mopubFinishLoad;
                                         }
                                     }
                                 </script>

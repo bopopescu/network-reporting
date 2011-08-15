@@ -3,9 +3,9 @@ from string import Template
 image = Template("""<html>
                         <head>                          
                           $finishLoad
-                          <script>
+                          <script> 
                             if(typeof mopubFinishLoad == 'function') {
-                                mopubFinishLoad();
+                                window.onload = mopubFinishLoad;
                             }
                           </script>
                           <script>

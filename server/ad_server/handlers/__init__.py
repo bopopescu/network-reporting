@@ -1,1 +1,1 @@
-from testhandler import TestHandler, UDIDHandler
+from testhandler import TestHandler, UDIDHandler, MPXUDIDHandler

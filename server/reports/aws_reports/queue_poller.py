@@ -16,17 +16,33 @@ LOG_REDUCER = REPORTING_S3_CODE_DIR + '/log_reducer.py'
 ACCOUNT_DIR = S3_BUCKET + '/account_data'
 
 MAX_MSGS = 10
+CONN = SQSConnection(AWS_ACCESS_KEY, AWS_SECRET_KEY)
+
+def job_failed(job_id):
+    state = CONN.describe_jobflow(jobid).state
+    if state == u'FAILED':
+        return True
+    else:
+        return False
+
+def job_succeeded(job_id):
+    state = CONN.describe_jobflow(jobid).state
+    if state in [u'COMPLETED', u'TERMINATED', u'WAITING']:
+        return True
+    else:
+        return False
+
 
 def notify_appengine(msg):
     d1, d2, d3, start, end, rep, acct = parse_msg(msg)
     report_file = gen_report_fname(d1, d2, d3, start, end)
     report_dir = ACCOUNT_DIR + '/%s/reports/' + report_file
     report_dir = report_dir % acct
+    file = report_dir + report_file
 
 
 def main_loop():
-    conn = SQSConnection(AWS_ACCESS_KEY, AWS_SECRET_KEY)
-    report_queue = conn.create_queue('report_queue')
+    report_queue = CONN.create_queue('report_queue')
     job_msg_map = {}
     while True:
         if report_queue.count() > 0:

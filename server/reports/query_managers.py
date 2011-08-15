@@ -38,7 +38,7 @@ REP_Q = SQS_CONN.create_queue('report_queue')
 
 
 def fire_report_sqs(data):
-    msg_data = REPORT_MSG % (data.d1, data.d2, data.d3, data.start, data.end, str(data.key()), str(data.account.key()))
+    msg_data = REPORT_MSG % (data.d1, data.d2, data.d3, data.start.strftime('%y%m%d'), data.end.strftime('%y%m%d'), str(data.key()), str(data.account.key()))
     m = Message()
     m.set_body(msg_data)
     # Write returns True if success, keep trying until it succeeds

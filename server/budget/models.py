@@ -4,7 +4,7 @@ import logging
 import math
 
 DEFAULT_TIMESLICES = 1440 # Timeslices per day
-DEFAULT_FUDGE_FACTOR = 0.05
+DEFAULT_FUDGE_FACTOR = 0.005
 
 
 ###### INTERIM VERSION TO BE DELETED #######

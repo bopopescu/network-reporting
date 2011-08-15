@@ -3,6 +3,7 @@ from __future__ import with_statement
 import logging, os, re, datetime, hashlib
 
 from urllib import urlencode
+from urllib2 import urlopen
 import time
 
 from google.appengine.api import users, images
@@ -33,9 +34,13 @@ from google.appengine.api import taskqueue
 
 from admin import beatbox
 from common.utils.decorators import cache_page_until_post
+import json
 
 MEMCACHE_KEY = "jpayne:admin/d:render_p"
 NUM_DAYS = 14
+
+BIDDER_SPENT_URL = "http://mpx.mopub.com/spent"
+BIDDER_SPENT_MAX = 100
 
 @login_required
 @cache_page_until_post()
@@ -273,3 +278,16 @@ def migrate_image(request, *args, **kwargs):
         
     except Exception, e:
         return HttpResponse(str(e))         
+
+def bidder_spent(request, $args, **kwargs):
+    try:
+        f = urlopen(BIDDER_SPENT_URL)
+        spent_dict = json.loads(f.read())
+        for id, spent_vals in spent_dict.iteritems():
+            if spent_vals['spent'] > BIDDER_SPENT_MAX:
+                #DO_SOMETHING
+    except: 
+        pass
+
+
+    

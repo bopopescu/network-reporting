@@ -22,6 +22,10 @@ OS = 'os'
 OS_VER = 'os_ver'
 KEY = 'kw'
 
+AWS_ACCESS_KEY = 'AKIAJKOJXDCZA3VYXP3Q'
+AWS_SECRET_KEY = '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'
+
+
 NO_REQUESTS = (CAMP, CRTV, P)
 
 DELIM = '|'

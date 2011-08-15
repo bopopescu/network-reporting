@@ -57,10 +57,5 @@ def main_loop():
             del(job_msg_map[job_id])
 
 
-
-
-
-
-
 if __name__ == '__main__':
     main_loop()

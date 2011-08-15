@@ -107,10 +107,13 @@ class ScheduledReport(db.Model):
     d1 = db.StringProperty(required=True) 
     d2 = db.StringProperty() 
     d3 = db.StringProperty() 
+
     end = db.DateProperty(required=True)
     days = db.IntegerProperty(required=True)
     #daily, weekly, monthly
     interval = db.StringProperty(choices=['today','yesterday', '7days', 'lmonth', 'custom'], default='custom')
+    
+
     sched_interval = db.StringProperty(choices = ['none', 'daily', 'weekly', 'monthly', 'quarterly'], default='none')
     next_sched_date = db.DateProperty(default=datetime.now().date())
     email = db.BooleanProperty(default=False)
@@ -172,48 +175,6 @@ class Report(db.Model):
 
     # maybe useful for internal analytics//informing users
     completed_at = db.DateTimeProperty()
-
-    #Since we're cloning reports and they would both have the same key_name, no good
-    clone_count = db.IntegerProperty()
-
-    def __init__(self, parent=None, key_name=None, clone_count=0, **kwargs):
-        if not key_name and not kwargs.get('key', None):
-            sched = kwargs.get('schedule')
-            start = kwargs.get('start')
-            end = kwargs.get('end')
-            acct = kwargs.get('account')
-            start_str = start.strftime('%y%m%d') if start else 'None'
-            end_str = end.strftime('%y%m%d') if end else 'None'
-            acct_key = 'None'
-            #Weird instances in DS where :acct_key: is actual model obj in string form, basically not a key
-            if acct:
-                if isinstance(acct, db.Key):
-                    acct_key = str(acct)
-                elif isinstance(acct, Account):
-                    acct_key = str(acct.key())
-                elif isinstance(acct, str):
-                    acct_key = acct
-            d1 = sched.d1
-            d2 = sched.d2
-            d3 = sched.d3
-            key_dict = dict(d1 = d1,
-                            d2 = d2,
-                            d3 = d3,
-                            account = acct_key,
-                            start = start_str,
-                            end = end_str,
-                            )
-            if clone_count:
-                key_dict.update(clone_count=clone_count)
-                #Key this so it has a diff key than normal because it's a clone
-                key_name = CLONE_REP_KEY % key_dict 
-                #make this new guy have a higher clone count
-                kwargs.update(clone_count = clone_count + 1)
-            else:
-                #no clone count, set clone_count = 1
-                key_name = REP_KEY % key_dict
-                kwargs.update(clone_count = 1)
-        return super(Report, self).__init__(key_name=key_name, **kwargs)
 
     @property
     def d1(self):

@@ -66,44 +66,9 @@ class AddReportHandler(RequestHandler):
             days = (end - start).days
         man = ReportQueryManager(self.account)
 
-        recipients = [r.strip() for r in recipients.replace('\r', '\n').replace(',','\n').split('\n') if r] if recipients else []
+        saved = True
+        recipients = [r.strip() for r in recipients.replace('\r','\n').replace(',','\n').split('\n') if r] if recipients else [] 
 
-        if report_key:
-            report = man.get_report_by_key(report_key)
-            sched = report.schedule
-            if saved == 'True' or saved == 'true':
-                new_rep = man.clone_report(report)
-                new_sched = man.clone_report(sched, sched=True)
-                new_sched.email = email
-                new_sched.sched_interval = sched_interval
-                new_sched.name = name
-                new_sched.put()
-                new_rep.schedule = new_sched
-                new_rep.put()
-                ##Return to index
-                return HttpResponseRedirect('/reports/')
-            #This is an edit
-            else:
-                if not sched.default:
-                    sched.deleted = True
-                sched.put()
-                report = man.add_report(d1, 
-                                    d2,
-                                    d3, 
-                                    end, 
-                                    days, 
-                                    name = name, 
-                                    interval = interval,
-                                    sched_interval = sched_interval,
-                                    recipients = recipients,
-                                    )
-                return HttpResponseRedirect('/reports/view/'+str(report.key()))
-        #Traditional report add
-        else:
-            saved = False
-        
-        recipients = [r.strip() for r in recipients.replace('\r','\n').replace(',','\n').split('\n') if r] if recipients else []    
-            
         report = man.add_report(d1, 
                                 d2,
                                 d3, 
@@ -140,7 +105,7 @@ class CheckReportHandler(RequestHandler):
     def get(self, report_key):
         man = ReportQueryManager(self.account)
         #Sched is false, this is a standard report
-        report = man.get_report_by_key(report_key)
+        report = man.get_report_data_by_key(report_key)
         data = report.html_data
         ret = {}
         if data is None:
@@ -153,66 +118,15 @@ class CheckReportHandler(RequestHandler):
 def check_report(request, *args, **kwargs):
     return CheckReportHandler(use_cache=False)(request, *args, **kwargs)
 
-def gen_report_worker(report, account):
-    man = ReportQueryManager()
-    report = man.get_report_by_key(report)
-    report.status = 'pending'
-    man.put_report(report)
-    sched = report.schedule
-    sched.last_run = datetime.datetime.now()
-    man.put_report(sched)
-    report.data = report.gen_data()
-    if report.email:
-        mesg = mail.EmailMessage(sender = 'olp@mopub.com',
-                                 subject = 'Your report has completed')
-        mesg_dict = dict(report_key = str(sched.key()))
-        mesg.body = REPORT_FINISHED_SIMPLE % mesg_dict
-        for recip in report.recipients:
-            mesg.to = recip
-            try:
-                mesg.send()
-            except InvalidEmailError:
-                pass
-
-    report.status = 'done'
-    report.completed_at = datetime.datetime.now()
-    man.put_report(report)
-    return
-
-#Only actual reports call this
-class GenReportHandler(RequestHandler):
-    def post(self, report, account):
-        gen_report_worker(report, account)
-        return HttpResponse('Report Generation Successful')
-
-    def get(self, report):
-        man = ReportQueryManager(self.account)
-        report = man.get_report_by_key(report)
-        report.status = 'pending'
-        man.put_report(report)
-        sched = report.schedule
-        sched.last_run = datetime.datetime.now()
-        man.put_report(sched)
-        report.data = report.gen_data()
-        report.status = 'done'
-        report.completed_at = datetime.datetime.now()
-        man.put_report(report)
-        return HttpResponse('Report Generation Successful')
-
-def gen_report(request, *args, **kwargs):
-    return GenReportHandler()(request, use_cache=False, *args, **kwargs)
-
 #Only scheduled reports get viewed
 class ViewReportHandler(RequestHandler):
     def get(self, report_key, *args, **kwargs):
         man = ReportQueryManager(self.account)
-        report = man.get_report_by_key(report_key, sched=True)
+        report = man.get_report_data_by_key(report_key)
         report_frag = ReportForm(initial = {'recipients': self.request.user.email}, instance=report, save_as=True)
         return render_to_response(self.request, 'reports/view_report.html',
                 dict(report=report.most_recent,
                      report_fragment = report_frag,))
-    def post(self, report_key, save=False):
-        return
 
 @login_required
 def view_report(request, *args, **kwargs):
@@ -222,7 +136,7 @@ def view_report(request, *args, **kwargs):
 class SaveReportHandler(RequestHandler):
     def get(self, report_key, *args, **kwargs):
         man = ReportQueryManager(self.account)
-        report = man.get_report_by_key(report_key)
+        report = man.get_report_data_by_key(report_key)
         report.schedule.saved = True
         man.put_report(report.schedule)
         return HttpResponse('K')
@@ -236,7 +150,8 @@ def save_report(request, *args, **kwargs):
 class RunReportHandler(RequestHandler):
     def get(self, report_key, *args, **kwargs):
         man = ReportQueryManager(self.account)
-        report = man.new_report(report_key)
+        sched = man.get_report_data_by_key(report_key).schedule
+        report = man.new_report(sched)
         return HttpResponseRedirect('/reports/view/'+str(report.schedule.key()))
 
 @login_required
@@ -276,7 +191,7 @@ class ReportStateUpdater(RequestHandler):
         logging.warning(keys)
         if keys:
             qm = ReportQueryManager()
-            reports = [qm.get_report_by_key(key, sched=True) for key in keys]
+            reports = [qm.get_report_by_key(key) for key in keys]
             reports = [update_report(report, action) for report in reports]
             qm.put_report(reports)
         return HttpResponseRedirect(reverse('reports_index'))

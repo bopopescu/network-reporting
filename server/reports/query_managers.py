@@ -22,10 +22,29 @@ from reporting.query_managers import StatsModelQueryManager, BlobLogQueryManager
 
 from reports.models import Report, ScheduledReport
 from reports.rep_mapreduce import GenReportPipeline
+from reports.aws_reports.parse_utils import AWS_ACCESS_KEY, AWS_SECRET_KEY
+
+from boto.sqs.connection import SQSConnection
+from boto.sqs.message import Message
+
+
+REPORT_MSG = '%s|%s|%s|%s|%s|%s|%s'
 
 NUM_REP_QS = 1
 REP_Q_NAME = "gen-rep-%02d"
 DEFAULT_REPORT_DIM_LIST = (('app', 'Apps'), ('adunit', 'Ad Units'), ('campaign', 'Campaigns'))
+SQS_CONN = SQSConnection(AWS_ACCESS_KEY, AWS_SECRET_KEY)
+REP_Q = SQS_CONN.create_queue('report_queue')
+
+
+def fire_report_sqs(data):
+    msg_data = REPORT_MSG % (data.d1, data.d2, data.d3, data.start, data.end, str(data.key()), str(data.account.key()))
+    m = Message()
+    m.set_body(msg_data)
+    # Write returns True if success, keep trying until it succeeds
+    while not REP_Q.write(m):
+        pass
+    
 
 
 class ReportQueryManager(CachedQueryManager):
@@ -45,22 +64,21 @@ class ReportQueryManager(CachedQueryManager):
 
         self.obj_cache = {}
 
-    def get_report_by_key(self, report_key, view=False, sched=False):
-        if sched:
-            report = ScheduledReport.get(report_key)
-        else:
-            report = Report.get(report_key)
-        if view:
-            report.last_viewed = datetime.datetime.now()
-            report.put()
-        return report 
+    def get_report_by_key(self, report_key, view=False):
+        return ScheduledReport.get(report_key)
+
+    def get_report_data_by_sched_key(self, report_key):
+        return ScheduledReport.get(report_key).most_recent
+
+    def get_report_data_by_key(self, data_key):
+        return Report.get(data_key)
 
     def get_report(self, d1,d2,d3,start,end,name=None,view=False, deleted=False):
         '''Given the specs for a report, return that report.  If the report
         doesnt exist yet, create an empty one.  If this is a view request, update
         the last_viewed field of the report'''
         report_q = Report.all().filter('account =', self.account).filter('deleted =', deleted)
-        report_q = report_q.filter('d1 =', d1).filter('start =', start).filter('end =', end)
+        report_q = report_q.filter('d1 =', d1).filter('end =', end).filter('start =', start)
         if d2:
             report_q = report_q.filter('d2 =', d2)
         if d3:
@@ -69,9 +87,6 @@ class ReportQueryManager(CachedQueryManager):
         #This should always work.  There should be NO way we EVER
         # try to access a report that doesn't exist.  Every report
         # MUST have a corresponding scheduled report so that's good
-        if view:
-            report.last_viewed = datetime.datetime.now()
-            report.put()
         return report
 
     def get_scheduled_report(self, d1, d2, d3, end=None, days=None, name=None, deleted=False):
@@ -126,16 +141,16 @@ class ReportQueryManager(CachedQueryManager):
                     reports.append(self.add_report(dim, None, None, None, 7, name=name, saved=True, interval='7days', default=True))
         return reports
                     
-    def new_report(self, report, now=None, testing=False, sched=False):
+    def new_report(self, report, now=None, testing=False):
         if not isinstance(report, db.Model()) or isinstance(report, str) or isinstance(report, unicode):
-            if sched:
-                report = self.get_report_by_key(report, sched=False).schedule
-            else:
-                report = self.get_report_by_key(report, sched=sched)
+            report = self.get_report_by_key(report)
+
         dt = datetime.timedelta(days=report.days) 
         one_day = datetime.timedelta(days=1)
         if now is None:
             now = datetime.datetime.now().date()
+
+        # Find start and end based on interval things
         if report.interval:
             if report.interval == 'yesterday':
                 now = now - one_day 
@@ -148,52 +163,27 @@ class ReportQueryManager(CachedQueryManager):
         start = now - dt
         end = now
         acct_key = str(account)
-        rep_key_dict = dict(d1 = report.d1,
-                            d2 = report.d2,
-                            d3 = report.d3,
-                            account = acct_key,
-                            start = start.strftime(DATE_FMT),
-                            end = end.strftime(DATE_FMT),
+        # Create new report
+        new_report = Report(start = now - dt,
+                            end = now,
+                            account = account,
+                            schedule = report,
                             )
-        key = build_key(REP_KEY, rep_key_dict)
-        rep = Report.get_by_key_name(key)
-        if rep:
-            cloned = True
-            new_report = clone_entity(rep, schedule=report)
-        else:
-            cloned = False
-            new_report = Report(start = now - dt,
-                                end = now,
-                                account = account,
-                                schedule = report,
-                                )
 
+        # Set up sched to run at a later time
         report.next_sched_date = date_magic.get_next_day(report.sched_interval, now)
+        
+        # Save the reports
         self.put_report(report)
         self.put_report(new_report)
         report_key = str(new_report.key())
         sched_key = str(report.key())
-        if not cloned:
-            report.last_run = datetime.datetime.now()
-            report.put()
-            blob_keys = BlobLogQueryManager.get_blobkeys_for_days(date_magic.gen_days(now-dt, now), str(account.key()))
-            shards = shard_count(blob_size(blob_keys)) 
-            pipe = GenReportPipeline(blob_keys,
-                                     shards, 
-                                     new_report.d1, 
-                                     new_report.d2, 
-                                     new_report.d3, 
-                                     new_report.start.strftime(DATE_FMT), 
-                                     new_report.end.strftime(DATE_FMT), 
-                                     report_key = report_key,
-                                     )
 
-            key_dict = dict(type = 'GenReportPipeline',
-                            key = report_key)
-            pipe_key = PIPE_KEY % key_dict
-            q_num = random.randint(0, NUM_REP_QS - 1) 
+        report.last_run = datetime.datetime.now()
+        report.put()
 
-            pipe.start(idempotence_key = pipe_key, queue_name=REP_Q_NAME % q_num)
+        fire_report_sqs(new_report)
+
         return new_report
 
     def add_report(self, 
@@ -276,58 +266,22 @@ class ReportQueryManager(CachedQueryManager):
         end = end
         #ACCOUNT IS ACCOUNT KEY
         acct_key = str(self.account)
-        rep_key_dict = dict(d1 = d1,
-                            d2 = d2,
-                            d3 = d3,
-                            account = acct_key,
-                            start = start.strftime(DATE_FMT),
-                            end = end.strftime(DATE_FMT),
-                            )
-        key = build_key(REP_KEY, rep_key_dict)
-        rep = Report.get_by_key_name(key)
-        if rep:
-            cloned = True
-            report = clone_entity(rep, schedule=sched)
-        else:
-            cloned = False
-            #ACCOUNT IS ACCOUNT KEY
-            report = Report(start = start,
-                            end = end,
-                            account = self.account,
-                            schedule = sched,
-                            )
+
+        report = Report(start = start,
+                        end = end,
+                        account = self.account,
+                        schedule = sched,
+                        )
         report.put()
         report_key = str(report.key())
         sched_key = str(sched.key())
 
-        if not cloned:
-            #not cloned, we're going to run this report
-            sched.last_run = datetime.datetime.now()
-            sched.put()
-            ###########
-            # Prep and run the pipeline
-            blob_keys = BlobLogQueryManager.get_blobkeys_for_days(date_magic.gen_days(end-dt, end), str(report.account.key()))
+        #not cloned, we're going to run this report
+        sched.last_run = datetime.datetime.now()
+        sched.put()
 
-            # Computer number of shards this job will need
-            shards = shard_count(blob_size(blob_keys))
+        fire_report_sqs(report)
 
-            # create the pipeline
-            pipe = GenReportPipeline(blob_keys, 
-                                     shards, 
-                                     report.d1, 
-                                     report.d2, 
-                                     report.d3, 
-                                     report.start.strftime(DATE_FMT), 
-                                     report.end.strftime(DATE_FMT), 
-                                     report_key = report_key,
-                                     )
-
-            key_dict = dict(type = 'GenReportPipeline',
-                            key = report_key)
-            pipe_key = PIPE_KEY % key_dict
-            q_num = random.randint(0, NUM_REP_QS - 1) 
-            #start pipeline w/ specific key + gen_rep queue
-            pipe.start(idempotence_key = pipe_key, queue_name=REP_Q_NAME % q_num)
         return sched 
 
     

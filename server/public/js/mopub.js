@@ -7,7 +7,7 @@
 
 //mopub singleton object
 var mopub = mopub || {};
-mopub.utils = mopub.utils || {};
+mopub.Utils = mopub.Utils || {};
 
 (function($){
 	// dom ready
@@ -333,7 +333,7 @@ mopub.utils = mopub.utils || {};
   / Utility functions.
   /---------------------------------------*/
   
-  mopub.utils.formatNumberWithCommas = function(string) {
+  mopub.Utils.formatNumberWithCommas = function(string) {
     string += '';
     x = string.split('.');
     x1 = x[0];
@@ -345,20 +345,28 @@ mopub.utils = mopub.utils || {};
     return x1 + x2;
   };
   
-  mopub.utils.formatNumberAsPercentage = function(string) {
+  mopub.Utils.formatNumberAsPercentage = function(string) {
     // We round to two decimal places.
     return (string*100).toFixed(2) + '%';
+  };
+  
+  mopub.Utils.getKeysFromObject = function(object) {
+    var keys = [];
+    for (var key in object) {
+      if (object.hasOwnProperty(key)) keys.push(key);
+    }
+    return keys;
   };
   
 })(this.jQuery);
 
 // =====================================================================
-// mopub.utils.AjaxChunkedFetch
+// mopub.Utils.AjaxChunkedFetch
 // =====================================================================
 
-(function(utils, $) {
+(function(Utils, $) {
   
-  var AjaxChunkedFetch = utils.AjaxChunkedFetch = function(args) {
+  var AjaxChunkedFetch = Utils.AjaxChunkedFetch = function(args) {
     this.items = {};
     this.chunkComplete = function(data, chunk, fetchObj) {};
     this.chunkFailure = function(chunk, fetchObj) {};
@@ -457,6 +465,31 @@ mopub.utils = mopub.utils || {};
     this.hasFailed = true;
   };
   
+  AjaxChunkedFetch.prototype.retry = function() {
+    // TODO: this might be called before all fetch requests have finished, which can result in
+    // some items being fetched unnecessarily.
+    
+    if (!this.hasFailed) return;
+    
+    var unfetched = mopub.Utils.getKeysFromObject(this.unfetchedItems);
+    if (unfetched.length <= 0) return;
+    
+    var chunks = AjaxChunkedFetch.chunkArray(unfetched, 
+      AjaxChunkedFetch.DEFAULT_CHUNK_SIZE);
+    
+    var self = this;
+    $.each(chunks, function(index, chunk) {
+      var request = new FetchRequest({
+        items: chunk,
+        url: self.urlConstructor(chunk, self),
+        success: self.chunkComplete,
+        failure: self.chunkFailure,
+        fetchObject: self
+      });
+      request.execute();
+    });
+  };
+  
   // =====================================================================
   
   var FetchRequest = AjaxChunkedFetch.FetchRequest = function(args) {
@@ -506,9 +539,247 @@ mopub.utils = mopub.utils || {};
     return this;
   };
   
-})(mopub.utils = mopub.utils || {}, this.jQuery);
+})(mopub.Utils = mopub.Utils || {}, this.jQuery);
 
 // =====================================================================
+// mopub.Stats
+// =====================================================================
+
+(function(Stats, $) {
+  
+  Stats.sortStatsObjectsByStat = function(objects, statName) {
+    objects.sort(function(a, b) {
+      var statA = parseFloat(a["stats"]["sum"][statName]);
+      var statB = parseFloat(b["stats"]["sum"][statName]);
+      if (statA < statB) return 1;
+      if (statA > statB) return -1;
+      else return 0;
+    });
+    return objects;
+  };
+  
+  Stats.statArrayFromDailyStats = function(arrayOfDailyStats, statName) {
+    return $.map(arrayOfDailyStats, function(oneDayStats) {
+      return parseFloat(oneDayStats[statName]);
+    });
+  };
+  
+  Stats.getGraphSummedStatsForStatName = function(statName, objects) {
+    var result = [];
+    
+    var topThreePerformers = objects.splice(0, 3);
+    var otherPerformers = objects;
+  
+    // Get stats for the top three performers.
+    $.each(topThreePerformers, function(index, statsObject) {
+      var name = statsObject["key"];
+      var arrayOfDailyStats = statsObject["stats"]["daily_stats"];
+      var graphStatsObject = {};
+      graphStatsObject[name] = Stats.statArrayFromDailyStats(arrayOfDailyStats, statName);
+      result.push(graphStatsObject);
+    });
+  
+    if (otherPerformers.length == 0) return result;
+  
+    // Get stats for all other performers.
+    var statsForOtherPerformers = Stats.sumDailyStatsAcrossStatsObjects(otherPerformers, statName);
+    var otherDict = { "Others": statsForOtherPerformers };
+    result.push(otherDict);
+  
+    return result;
+  };
+
+  Stats.sumDailyStatsAcrossStatsObjects = function(objects, statName) {
+    var result = [];
+    $.each(objects, function(index, statsObject) {
+      var arrayOfDailyStats = statsObject["stats"]["daily_stats"];
+      $.each(arrayOfDailyStats, function(dayIndex, oneDayStats) {
+        if (!result[dayIndex]) result[dayIndex] = 0;
+        result[dayIndex] += parseFloat(oneDayStats[statName]);
+      });
+    });
+    return result;
+  };
+  
+  Stats.getGraphCtrStats = function(objects) {
+    var result = [];
+  
+    var topThreePerformers = objects.splice(0, 3);
+    var otherPerformers = objects;
+    
+    // Get stats for the top campaigns.
+    $.each(topThreePerformers, function(index, statsObject) {
+      var name = statsObject["key"];
+      var arrayOfDailyStats = statsObject["stats"]["daily_stats"];
+      var graphStatsObject = {};
+      graphStatsObject[name] = Stats.statArrayFromDailyStats(arrayOfDailyStats, "ctr");
+      result.push(graphStatsObject);
+    });
+  
+    if (otherPerformers.length == 0) return result;
+  
+    // Get stats for all other campaigns.
+    var statsForOtherPerformers = Stats.getDailyCtrAcrossStatsObjects(otherPerformers);
+    var otherDict = { "Others": statsForOtherPerformers };
+    result.push(otherDict);
+    
+    return result;
+  };
+  
+  Stats.getDailyCtrAcrossStatsObjects = function(objects) {
+    var ctr = [];
+    var clicks = Stats.sumDailyStatsAcrossStatsObjects(objects, "click_count");
+    var impressions = Stats.sumDailyStatsAcrossStatsObjects(objects, "impression_count");
+  
+    for (var i = 0; i < clicks.length; i++) {
+      ctr[i] = (clicks[i] / impressions[i]) || 0;
+    }
+    return ctr;
+  };
+  
+})(mopub.Stats = mopub.Stats || {}, this.jQuery);
+
+// =====================================================================
+// mopub.Chart
+// =====================================================================
+
+(function(Chart, $) {
+  
+  Chart.setupDashboardStatsChart = function(seriesType) {
+    // get active metric from breakdown
+    var metricElement = $('#dashboard-stats .stats-breakdown .active');
+    if (metricElement === null || metricElement.length === 0) return;
+    var metricElementIdComponents = metricElement.attr('id').split('-');
+    var activeMetric = metricElementIdComponents[metricElementIdComponents.length - 1];
+
+    // get data
+    var data = mopub.dashboardStatsChartData;
+    if (typeof data == 'undefined') {
+      Chart.chartError();
+      return;
+    }
+    
+    // set up series
+    var colors = ['#0090d9', '#e57300', '#53a600', '#444444'];
+    var chartSeries = [];
+    var activeData = data[activeMetric];
+    if (typeof activeData == 'undefined') {
+      Chart.chartError();
+      return;
+    }
+    
+    $.each(activeData, function(i, seriesObject) {
+      var seriesName, seriesData, seriesLineWidth;
+      
+      $.each(seriesObject, function(name, value) {
+        seriesName = name;
+        seriesData = value;
+        
+        if (seriesType == 'line' && activeMetric == 'ctr') {
+          seriesLineWidth = (seriesName == 'MoPub Optimized') ? 3 : 2;
+        } else seriesLineWidth = 4;
+      });
+      
+      chartSeries.push({
+        name: seriesName,
+        data: seriesData,
+        color: colors[i],
+        lineWidth: seriesLineWidth
+      });
+    });
+
+    // setup HighCharts chart
+    this.trafficChart = new Highcharts.Chart({
+      chart: {
+        renderTo: 'dashboard-stats-chart',
+        defaultSeriesType: seriesType,
+        marginTop: 0,
+        marginBottom: 55
+      },
+      plotOptions: {
+        series: {
+          pointStart: data.pointStart,
+          pointInterval: data.pointInterval
+        }
+      },
+      legend: {
+        verticalAlign: "bottom",
+        y: -7,
+        enabled: (chartSeries.length > 1)
+      },
+      yAxis: {
+        labels: {
+          formatter: function() {
+            if(activeMetric == 'revenue') {
+              text = '$' + Highcharts.numberFormat(this.value, 0);
+            } 
+            else if(activeMetric == 'ctr') {
+              text = Highcharts.numberFormat(this.value, 0) + '%';
+            }
+            else {
+              if (this.value >= 1000000000) {
+                return Highcharts.numberFormat(this.value / 1000000000, 0) + "B";
+              } else if (this.value >= 1000000) {
+                return Highcharts.numberFormat(this.value / 1000000, 0) + "M";
+              } else if (this.value >= 1000) {
+                return Highcharts.numberFormat(this.value / 1000, 0) + "K";
+              } else if (this.value > 0) {
+                return Highcharts.numberFormat(this.value, 0);
+              } else {
+                return "0";
+              }
+            }
+          }
+        }
+      },
+      tooltip: {
+        formatter: function() {
+          var text = '', value = '', total = '';
+
+          if(activeMetric == 'revenue') {
+            value = '$' + Highcharts.numberFormat(this.y, 0);
+            total = '$' + Highcharts.numberFormat(this.total, 0) + ' total';
+          }
+          else if (activeMetric == 'clicks') {
+            value = Highcharts.numberFormat(this.y, 0) + ' ' + activeMetric;
+            total = Highcharts.numberFormat(this.total, 0) + ' total ' + activeMetric;
+          }
+          else if (activeMetric == 'ctr') {
+            value = Highcharts.numberFormat(this.y*100, 2) + "% click through";
+            total = "";
+          }
+          else {
+            value = Highcharts.numberFormat(this.y, 0) + ' ' + activeMetric;
+            total = Highcharts.numberFormat(this.total, 0) + ' total ' + activeMetric;
+          }
+
+          text += '<span style="font-size: 14px;">' + Highcharts.dateFormat('%A, %B %e, %Y', this.x) + '</span><br/>';
+          text += '<span style="padding: 0; font-weight: 600; color: ' + this.series.color + '">' + this.series.name + '</span>' + ': <strong style="font-weight: 600;">' + value + '</strong><br/>';
+          
+          if(chartSeries.length > 1) {
+            text += '<span style="font-size: 12px; color: #666;">';
+            if (this.total > 0 && total) {
+              text += '(' + Highcharts.numberFormat(this.percentage, 0) + '% of ' + total + ')';
+            }
+            else if (total) {
+              text += '(' + total + ')';
+            }
+            text += '</span>';
+          }
+          return text;
+        }
+      },
+      series: chartSeries
+    });
+    
+    $('#dashboard-stats-chart').removeClass('chart-loading');
+  };
+  
+  Chart.chartError = function() {
+    $('#dashboard-stats-chart').removeClass('chart-loading').addClass('chart-error');
+  };
+  
+})(mopub.Chart = mopub.Chart || {}, this.jQuery);
 
 function obj_equals(x, y) {
     for(p in y) {

@@ -13,7 +13,13 @@
 </span>
 {% endblock titleBarRight %}
 
-{% block content %}{% ifequal account.status "step3" %}
+{% block content %}
+<div id="ajaxFailure" style="display:none">
+    <a href="#" id="ajaxDismiss"><img src="../images/icons/199_16x16.png"></img></a>
+    There was a problem retrieving data for some of your apps / sites. 
+    <a href="#" id="ajaxRetry"><img src="../images/icons/92_16x16.png"></img> <strong>Retry</strong></a>
+</div>
+{% ifequal account.status "step3" %}
           <div class="alertMessage">
             The next step is to set up your ad networks.  Visit your <a href="{% url account_index %}">Account</a> page to enable your ad networks.
           </div>
@@ -61,29 +67,7 @@
                   <label for="stats-breakdown-dateOptions-option-2">All</label>
                 </span>
               </div>
-              <div class="chart chart-loading stats-chart" id="dashboard-stats-chart">
-                <div class="chart-loading-text">Loading ...</div>
-                <div class="chart-error-text">Could not load chart</div>
-                <script type="text/javascript">
-                  // chart data
-                  mopub.dashboardStatsChartData = {
-                    //pointStart: 1294963200000,
-                    pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
-                    pointInterval: 86400000,
-                    'requests': [{% for a in graph_apps %}
-                      { '{{a.name|safe|addslashes}}': [{% for t in a.all_stats %}{{t.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                    ],
-                    'impressions': [{% for a in graph_apps %}
-                      { '{{a.name|safe|addslashes}}': [{% for t in a.all_stats %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                    ],
-                    'clicks': [{% for a in graph_apps %}
-                      { '{{a.name|safe|addslashes}}': [{% for t in a.all_stats %}{y: {{t.click_count}}, name: '{{t.ctr|percentage}}'}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                    ],
-                    'users': [{% for a in graph_apps %}
-                      { '{{a.name|safe|addslashes}}': [{% for t in a.all_stats %}{{t.user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                    ]
-                  };
-                </script>
+              <div class="chart stats-chart" id="dashboard-stats-chart">
               </div>
             </div>
             <div class="clear"></div>
@@ -113,17 +97,23 @@
               </table>
             </div>
             {% for a in apps %}
-            <div class="{% cycle 'appData' 'appData appData-alt' %}" id="dashboard-app-{{forloop.counter0}}">
+            <div class="{% cycle 'appData' 'appData appData-alt' %}" id="appData-{{a.key}}">
               <table class="dataTable appData-main" id="dashboard-app-{{forloop.counter0}}-main">
                 <tbody>
-                  <tr>
+                  <tr class="app-row" id="{{a.key}}">
                     <td class="appData-icon"><a href="{% url publisher_app_show app_key=a.key %}"><img src="{% if a.icon_url %}{{a.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" /></a></td>
-                    <th class="dataTable-name"><span class="inner"><a href="{% url publisher_app_show app_key=a.key %}">{{a.name}}</a> <span class="muted unbold">({% ifequal a.app_type "iphone" %}iOS{% endifequal %}{% ifequal a.app_type "android" %}Android{% endifequal %}{% ifequal a.app_type "mweb" %}Mobile Web{% endifequal %})</span></span></th>
-                    <td class="dataTable-data numeric">{{a.stats.request_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{a.stats.impression_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{a.stats.fill_rate|percentage_rounded}}</td>
-                    <td class="dataTable-data numeric">{{a.stats.click_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{a.stats.ctr|percentage}}</td>
+                    <th class="dataTable-name">
+                        <span class="inner">
+                            <a href="{% url publisher_app_show app_key=a.key %}">{{a.name}}</a> 
+                            <span class="muted unbold">({% ifequal a.app_type "iphone" %}iOS{% endifequal %}{% ifequal a.app_type "android" %}Android{% endifequal %}{% ifequal a.app_type "mweb" %}Mobile Web{% endifequal %})</span>
+                            <img id="{{a.key}}-img" class="loading-img" style="display:none;" src="../images/icons-custom/spinner-12.gif"></img>
+                        </span>
+                    </th>
+                    <td class="dataTable-data numeric req">--</td>
+                    <td class="dataTable-data numeric imp">--</td>
+                    <td class="dataTable-data numeric fill">--</td>
+                    <td class="dataTable-data numeric clk">--</td>
+                    <td class="dataTable-data numeric ctr">--</td>
                   </tr>
                 </tbody>
               </table>
@@ -132,13 +122,13 @@
                   <table class="dataTable">
                     <tbody>
                       {% for au in a.adunits %}
-                      <tr>
+                      <tr class="adunit-row incomplete" id="{{au.key}}">
                         <th class="dataTable-name"><span class="inner"><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a></span></th>
-                        <td class="dataTable-data numeric">{{au.stats.request_count|withsep}}</td>
-                        <td class="dataTable-data numeric">{{au.stats.impression_count|withsep}}</td>
-                        <td class="dataTable-data numeric">{{au.stats.fill_rate|percentage_rounded}}</td>
-                        <td class="dataTable-data numeric">{{au.stats.click_count|withsep}}</td>
-                        <td class="dataTable-data numeric">{{au.stats.ctr|percentage}}</td>
+                        <td class="dataTable-data numeric req">--</td>
+                        <td class="dataTable-data numeric imp">--</td>
+                        <td class="dataTable-data numeric fill">--</td>
+                        <td class="dataTable-data numeric clk">--</td>
+                        <td class="dataTable-data numeric ctr">--</td>
                       </tr>
                       {% endfor %}
                     </tbody>
@@ -147,3 +137,17 @@
               </div>
             </div>
           {% endfor %}</section>{% endblock content %}
+          
+{% block extraScripts %}
+<script>
+    var mopub = mopub || {};
+    $(function() {
+        mopub.isDashboardPage = true;
+        mopub.graphStartDate = Date.UTC({{start_date.year}}, 
+              {{start_date.month|add:"-1"}}, 
+              {{start_date.day}});
+        mopub.accountStats = {{account_stats|safe}};
+    });
+</script>
+<script src="/js/mopub-dashboard.js?v=30"></script>
+{% endblock %}

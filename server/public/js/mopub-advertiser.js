@@ -650,15 +650,15 @@ var mopub = mopub || {};
                 gtee_rev += parseIntFromStatText($(this).text());
                 });
 
-        $('#gtee-total-imp').text(mopub.utils.formatNumberWithCommas(gtee_imp));
-        $('#gtee-total-clk').text(mopub.utils.formatNumberWithCommas(gtee_clk));
-        $('#gtee-total-rev').text('$'+mopub.utils.formatNumberWithCommas(Math.round(gtee_rev*100)/100));
+        $('#gtee-total-imp').text(mopub.Utils.formatNumberWithCommas(gtee_imp));
+        $('#gtee-total-clk').text(mopub.Utils.formatNumberWithCommas(gtee_clk));
+        $('#gtee-total-rev').text('$'+mopub.Utils.formatNumberWithCommas(Math.round(gtee_rev*100)/100));
         var gtee_ctr;
         if (gtee_clk === 0) {
-            gtee_ctr = mopub.utils.formatNumberAsPercentage(0);
+            gtee_ctr = mopub.Utils.formatNumberAsPercentage(0);
         }
         else {
-            gtee_ctr = mopub.utils.formatNumberAsPercentage(gtee_clk/gtee_imp, 2);
+            gtee_ctr = mopub.Utils.formatNumberAsPercentage(gtee_clk/gtee_imp, 2);
         }
         $('#gtee-total-ctr').text(gtee_ctr);
 
@@ -679,15 +679,15 @@ var mopub = mopub || {};
                 promo_conv += parseIntFromStatText($(this).text());
                 });
 
-        $("#promo-total-imp").text(mopub.utils.formatNumberWithCommas(promo_imp));
-        $("#promo-total-clk").text(mopub.utils.formatNumberWithCommas(promo_clk));
-        $("#promo-total-conv").text(mopub.utils.formatNumberWithCommas(promo_conv));
+        $("#promo-total-imp").text(mopub.Utils.formatNumberWithCommas(promo_imp));
+        $("#promo-total-clk").text(mopub.Utils.formatNumberWithCommas(promo_clk));
+        $("#promo-total-conv").text(mopub.Utils.formatNumberWithCommas(promo_conv));
         var promo_ctr;
         if (promo_clk === 0) {
-            promo_ctr = mopub.utils.formatNumberAsPercentage(0);
+            promo_ctr = mopub.Utils.formatNumberAsPercentage(0);
         }
         else {
-            promo_ctr = mopub.utils.formatNumberAsPercentage(promo_clk/promo_imp);
+            promo_ctr = mopub.Utils.formatNumberAsPercentage(promo_clk/promo_imp);
         }
         $("#promo-total-ctr").text(promo_ctr);
         
@@ -707,24 +707,24 @@ var mopub = mopub || {};
         $('.network-req').each(function() {
                 net_req += parseIntFromStatText($(this).text());
                 });
-        $("#network-total-imp").text(mopub.utils.formatNumberWithCommas(net_imp));
-        $("#network-total-clk").text(mopub.utils.formatNumberWithCommas(net_clk));
+        $("#network-total-imp").text(mopub.Utils.formatNumberWithCommas(net_imp));
+        $("#network-total-clk").text(mopub.Utils.formatNumberWithCommas(net_clk));
         var net_ctr;
         if (net_clk === 0) {
-            net_ctr = mopub.utils.formatNumberAsPercentage(0);
+            net_ctr = mopub.Utils.formatNumberAsPercentage(0);
         }
         else {
-            net_ctr = mopub.utils.formatNumberAsPercentage(net_clk/net_imp);
+            net_ctr = mopub.Utils.formatNumberAsPercentage(net_clk/net_imp);
         }
         $("#network-total-ctr").text(net_ctr);
         var net_fill;
         if (net_imp === 0) {
-            net_fill = mopub.utils.formatNumberAsPercentage(0);
+            net_fill = mopub.Utils.formatNumberAsPercentage(0);
         }
         else {
-            net_fill = mopub.utils.formatNumberAsPercentage(net_imp/net_req);
+            net_fill = mopub.Utils.formatNumberAsPercentage(net_imp/net_req);
         }
-        $('#network-total-fill').text(net_fill + ' (' + mopub.utils.formatNumberWithCommas(net_req) + ')');
+        $('#network-total-fill').text(net_fill + ' (' + mopub.Utils.formatNumberWithCommas(net_req) + ')');
         
         setSectionLoadingSpinnerHidden(CampaignTypeEnum.Network, true);
     }
@@ -743,15 +743,15 @@ var mopub = mopub || {};
                 bfill_conv += parseIntFromStatText($(this).text());
                 });
 
-        $("#bfill-total-imp").text(mopub.utils.formatNumberWithCommas(bfill_imp));
-        $("#bfill-total-clk").text(mopub.utils.formatNumberWithCommas(bfill_clk));
-        $("#bfill-total-conv").text(mopub.utils.formatNumberWithCommas(bfill_conv));
+        $("#bfill-total-imp").text(mopub.Utils.formatNumberWithCommas(bfill_imp));
+        $("#bfill-total-clk").text(mopub.Utils.formatNumberWithCommas(bfill_clk));
+        $("#bfill-total-conv").text(mopub.Utils.formatNumberWithCommas(bfill_conv));
         var bfill_ctr;
         if (bfill_clk === 0) {
-            bfill_ctr = mopub.utils.formatNumberAsPercentage(0);
+            bfill_ctr = mopub.Utils.formatNumberAsPercentage(0);
         }
         else {
-            bfill_ctr = mopub.utils.formatNumberAsPercentage(bfill_clk/bfill_imp);
+            bfill_ctr = mopub.Utils.formatNumberAsPercentage(bfill_clk/bfill_imp);
         }
         $("#bfill-total-ctr").text(bfill_ctr);
         
@@ -803,9 +803,9 @@ var mopub = mopub || {};
     // =====================================================================
     
     if (mopub.isCampaignsPage) {
-        // setTimeout is a workaround for Chrome: without it, the loading indicator doesn't 
-        // disappear until all "onload" AJAX requests are complete.
-        setTimeout(initCampaignsPage, 0);
+      // setTimeout is a workaround for Chrome: without it, the loading indicator doesn't 
+      // disappear until all "onload" AJAX requests are complete.
+      setTimeout(initCampaignsPage, 0);
     }
     
     function initCampaignsPage() {
@@ -882,16 +882,16 @@ var mopub = mopub || {};
     
     function formatStatsForDisplay(sumStats) {
       var results = $.extend(true, {}, sumStats);
-      results.impression_count = mopub.utils.formatNumberWithCommas(results.impression_count);
-      results.conversion_count = mopub.utils.formatNumberWithCommas(results.conversion_count) + 
-        " (" + mopub.utils.formatNumberAsPercentage(results.conv_rate) + ")";
-      results.request_count = mopub.utils.formatNumberWithCommas(results.request_count);
-      results.click_count = mopub.utils.formatNumberWithCommas(results.click_count);
+      results.impression_count = mopub.Utils.formatNumberWithCommas(results.impression_count);
+      results.conversion_count = mopub.Utils.formatNumberWithCommas(results.conversion_count) + 
+        " (" + mopub.Utils.formatNumberAsPercentage(results.conv_rate) + ")";
+      results.request_count = mopub.Utils.formatNumberWithCommas(results.request_count);
+      results.click_count = mopub.Utils.formatNumberWithCommas(results.click_count);
       results.cpa = "$" + results.cpa.toFixed(2);
       results.cpc = "$" + results.cpc.toFixed(2);
       results.cpm = "$" + results.cpm.toFixed(2);
-      results.ctr = mopub.utils.formatNumberAsPercentage(results.ctr);
-      results.fill_rate = mopub.utils.formatNumberAsPercentage(results.fill_rate);
+      results.ctr = mopub.Utils.formatNumberAsPercentage(results.ctr);
+      results.fill_rate = mopub.Utils.formatNumberAsPercentage(results.fill_rate);
     
       var onScheduleHtml = "";
       if (results.status == "Running") {
@@ -913,27 +913,16 @@ var mopub = mopub || {};
     function populateGraphWithAccountStats(stats) {
       var dailyStats = stats["all_stats"]["||"]["daily_stats"];
     
-      var graphImpStats = [{ "Total": statArrayFromDailyStats(dailyStats, "impression_count")}];
-      var graphRevStats = [{ "Total": statArrayFromDailyStats(dailyStats, "revenue")}];
-      var graphClkStats = [{ "Total": statArrayFromDailyStats(dailyStats, "click_count")}];
-      var graphCtrStats = [{ "Total": statArrayFromDailyStats(dailyStats, "ctr")}];
-    
       mopub.dashboardStatsChartData = {
         pointStart: mopub.graphStartDate,
         pointInterval: 86400000,
-        impressions: graphImpStats,
-        revenue: graphRevStats,
-        clicks: graphClkStats,
-        ctr: graphCtrStats
+        impressions: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "impression_count")}],
+        revenue: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "revenue")}],
+        clicks: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "click_count")}],
+        ctr: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "ctr")}]
       };
     
-      setupDashboardStatsChart(getCurrentChartSeriesType());
-    }
-    
-    function statArrayFromDailyStats(arrayOfDailyStats, statName) {
-      return $.map(arrayOfDailyStats, function(oneDayStats) {
-        return parseFloat(oneDayStats[statName]);
-      });
+      mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
     }
     
     function populateCampaignStats() {
@@ -1000,7 +989,7 @@ var mopub = mopub || {};
         fetchComplete: campaignStatsFetchComplete
       };
       $.extend(true, options, argsDict);
-      return new mopub.utils.AjaxChunkedFetch(options);
+      return new mopub.Utils.AjaxChunkedFetch(options);
     }
     
     function campaignStatsUrlConstructor(chunk, fetchObj) {
@@ -1009,7 +998,7 @@ var mopub = mopub || {};
         if (index == 0) url += "adv=" + item;
         else url += "&adv=" + item;
       });
-      url += "&date_range=" + fetchObj.days;
+      if (fetchObj.days) url += "&date_range=" + fetchObj.days;
       if (fetchObj.startDate) url += "&start_date=" + fetchObj.startDate;
       return url;
     }
@@ -1101,54 +1090,11 @@ var mopub = mopub || {};
         ctr: getGraphCtrStats()
       };
       
-      setupDashboardStatsChart(getCurrentChartSeriesType());
+      mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
     }
     
     // Helpers for creating the stat objects needed in graph construction.
     // =====================================================================
-    
-    function sortCampaignsByStat(campaigns, statName) {
-      campaigns.sort(function(a, b) {
-        var statA = parseFloat(a["stats"]["sum"][statName]);
-        var statB = parseFloat(b["stats"]["sum"][statName]);
-        if (statA < statB) return 1;
-        if (statA > statB) return -1;
-        else return 0;
-      });
-      return campaigns;
-    }
-    
-    function getGraphAdditiveStatsForStatName(statName, topCampaigns, otherCampaigns) {
-      var result = [];
-    
-      // Get stats for the top campaigns.
-      $.each(topCampaigns, function(index, campaign) {
-        var campaignName = campaign["key"];
-        var arrayOfDailyStats = campaign["stats"]["daily_stats"];
-        var statsForCampaign = {};
-        statsForCampaign[campaignName] = statArrayFromDailyStats(arrayOfDailyStats, statName);
-        result.push(statsForCampaign);
-      });
-    
-      // Get stats for all other campaigns.
-      var statsForOtherCampaigns = sumDailyStatsAcrossCampaigns(otherCampaigns, statName);
-      var otherDict = { "Others": statsForOtherCampaigns };
-      result.push(otherDict);
-    
-      return result;
-    }
-  
-    function sumDailyStatsAcrossCampaigns(campaigns, statName) {
-      var result = [];
-      $.each(campaigns, function(index, campaign) {
-        var arrayOfDailyStats = campaign.stats.daily_stats;
-        $.each(arrayOfDailyStats, function(dayIndex, oneDayStats) {
-          if (!result[dayIndex]) result[dayIndex] = 0;
-          result[dayIndex] += parseFloat(oneDayStats[statName]);
-        });
-      });
-      return result;
-    }
     
     function getFetchedCampaignsWithType(type) {
       var matchingCampaignIds = getCampaignIdsWithType(type);
@@ -1167,70 +1113,37 @@ var mopub = mopub || {};
   
     function getGraphImpressionStats() {
       var allCampaigns = getFetchedCampaignsWithType(CampaignTypeEnum.All);
-      var sortedCampaigns = sortCampaignsByStat(allCampaigns, "impression_count");
-      var topCampaigns = sortedCampaigns.slice(0, 3);
-      var otherCampaigns = sortedCampaigns.slice(3, sortedCampaigns.length);
-      return getGraphAdditiveStatsForStatName("impression_count", topCampaigns, otherCampaigns);
+      var sortedCampaigns = mopub.Stats.sortStatsObjectsByStat(allCampaigns, "impression_count");
+      return mopub.Stats.getGraphSummedStatsForStatName("impression_count", sortedCampaigns);
     }
   
     function getGraphRevenueStats() {
       // We only care about guaranteed campaigns when graphing revenue.
       var allGuaranteed = getFetchedCampaignsWithType(CampaignTypeEnum.Guaranteed);
-      var sortedGuaranteed = sortCampaignsByStat(allGuaranteed, "revenue");
-      var topGuaranteed = sortedGuaranteed.slice(0, 3);
-      var otherGuaranteed = sortedGuaranteed.slice(3, sortedGuaranteed.length);
-      return getGraphAdditiveStatsForStatName("revenue", topGuaranteed, otherGuaranteed);
+      var sortedGuaranteed = mopub.Stats.sortStatsObjectsByStat(allGuaranteed, "revenue");
+      return mopub.Stats.getGraphSummedStatsForStatName("revenue", sortedGuaranteed);
     }
   
     function getGraphClickStats() {
       var allCampaigns = getFetchedCampaignsWithType(CampaignTypeEnum.All);
-      var sortedCampaigns = sortCampaignsByStat(allCampaigns, "impression_count");
-      var topCampaigns = sortedCampaigns.slice(0, 3);
-      var otherCampaigns = sortedCampaigns.slice(3, sortedCampaigns.length);
-      return getGraphAdditiveStatsForStatName("click_count", topCampaigns, otherCampaigns);
+      var sortedCampaigns = mopub.Stats.sortStatsObjectsByStat(allCampaigns, "impression_count");
+      return mopub.Stats.getGraphSummedStatsForStatName("click_count", sortedCampaigns);
     }
   
     function getGraphCtrStats() {
       var allCampaigns = getFetchedCampaignsWithType(CampaignTypeEnum.All);
-      var sortedCampaigns = sortCampaignsByStat(allCampaigns, "impression_count");
-      var topCampaigns = sortedCampaigns.slice(0, 3);
-      var otherCampaigns = sortedCampaigns.slice(3, sortedCampaigns.length);
+      var sortedCampaigns = mopub.Stats.sortStatsObjectsByStat(allCampaigns, "impression_count");
     
-      var result = [];
-    
-      // Get stats for the top campaigns.
-      $.each(topCampaigns, function(index, campaign) {
-        var campaignName = campaign["key"];
-        var arrayOfDailyStats = campaign["stats"]["daily_stats"];
-        var statsForCampaign = {};
-        statsForCampaign[campaignName] = statArrayFromDailyStats(arrayOfDailyStats, "ctr");
-        result.push(statsForCampaign);
-      });
-    
-      // Get stats for all other campaigns.
-      var statsForOtherCampaigns = getDailyCtrAcrossCampaigns(otherCampaigns);
-      var otherDict = { "Others": statsForOtherCampaigns };
-      result.push(otherDict);
-    
-      // Get stats for MoPub-optimized CTR.
+      var result = mopub.Stats.getGraphCtrStats(sortedCampaigns);
+      
+      // Append stats for MoPub-optimized CTR.
       var accountDailyStats = mopub.accountStats["all_stats"]["||"]["daily_stats"];
       var mopubOptimized = { 
-        "MoPub Optimized": statArrayFromDailyStats(accountDailyStats, "ctr"),
+        "MoPub Optimized": mopub.Stats.statArrayFromDailyStats(accountDailyStats, "ctr"),
       };
       result.push(mopubOptimized);
     
       return result;
-    }
-    
-    function getDailyCtrAcrossCampaigns(campaigns) {
-      var ctr = [];
-      var clicks = sumDailyStatsAcrossCampaigns(campaigns, "click_count");
-      var impressions = sumDailyStatsAcrossCampaigns(campaigns, "impression_count");
-    
-      for (var i = 0; i < clicks.length; i++) {
-        ctr[i] = (clicks[i] / impressions[i]) || 0;
-      }
-      return ctr;
     }
 
     // *********************************************************************
@@ -1399,158 +1312,13 @@ var mopub = mopub || {};
         if (activeBreakdownsElem.attr('id') == 'stats-breakdown-ctr') return 'line';
         else return 'area';
     }
-    
-    function setupDashboardStatsChart(seriesType) {
-      // get active metric from breakdown
-      var metricElement = $('#dashboard-stats .stats-breakdown .active');
-      var metricElementIdComponents = metricElement.attr('id').split('-');
-      var activeMetric = metricElementIdComponents[metricElementIdComponents.length - 1];
-
-      // get data
-      var data = mopub.dashboardStatsChartData;
-      if(typeof data == 'undefined') {
-        return;
-      }
-      
-      // set up series
-      var colors = ['#0090d9', '#e57300', '#53a600', '#444444'];
-      var chartSeries = [];
-      var activeData = data[activeMetric];
-      if(typeof activeData == 'undefined') {
-        return;
-      }
-      $.each(activeData, function(i, seriesObject) {
-        var seriesName, seriesData;
-        $.each(seriesObject, function(name, value) {
-          seriesName = name;
-          seriesData = value;
-          
-          if (seriesType == 'line'){
-             if (seriesName == 'Mopub Optimized'){
-              seriesLineWidth = 4;
-            } else{
-              seriesLineWidth = 2;
-            }
-          }
-          else{
-            seriesLineWidth = 4;
-          }
-          
-        });
-        chartSeries.push({
-          name: seriesName,
-          data: seriesData,
-          color: colors[i],
-          lineWidth: seriesLineWidth,
-        });
-      });
-
-      // setup HighCharts chart
-      this.trafficChart = new Highcharts.Chart({
-        chart: {
-          renderTo: 'dashboard-stats-chart',
-          defaultSeriesType: seriesType,
-          marginTop: 0,
-          marginBottom: 55
-        },
-        plotOptions: {
-          series: {
-            pointStart: data.pointStart,
-            pointInterval: data.pointInterval
-          }
-        },
-        legend: {
-          verticalAlign: "bottom",
-          y: -7,
-          enabled: (chartSeries.length > 1)          
-        },
-        yAxis: {
-          labels: {
-            formatter: function() {
-              if(activeMetric == 'revenue') {
-                text = '$' + Highcharts.numberFormat(this.value, 0);
-              }
-              else if(activeMetric == 'ctr') {
-                text = Highcharts.numberFormat(this.value, 0) + '%';
-              } 
-              else {
-                if (this.value >= 1000000000) {
-                  return Highcharts.numberFormat(this.value / 1000000000, 0) + "B";
-                } else if (this.value >= 1000000) {
-                  return Highcharts.numberFormat(this.value / 1000000, 0) + "M";
-                } else if (this.value >= 1000) {
-                  return Highcharts.numberFormat(this.value / 1000, 0) + "K";
-                } else if (this.value > 0) {
-                  return Highcharts.numberFormat(this.value, 0);
-                } else {
-                  return "0";
-                }
-              }
-            }
-          }
-        },
-        tooltip: {
-          formatter: function() {
-            var text = '', value = '', total = '';
-
-            if(activeMetric == 'revenue') {
-              value = '$' + Highcharts.numberFormat(this.y, 0);
-              total = '$' + Highcharts.numberFormat(this.total, 0) + ' total';
-            }
-            else if (activeMetric == 'clicks') {
-              value = Highcharts.numberFormat(this.y, 0) + ' ' + activeMetric;
-              total = Highcharts.numberFormat(this.total, 0) + ' total ' + activeMetric;
-            }
-            else if (activeMetric == 'ctr') {
-              value = Highcharts.numberFormat(this.y*100, 2) + "% click through";
-              total = "";
-            }
-            else {
-              value = Highcharts.numberFormat(this.y, 0) + ' ' + activeMetric;
-              total = Highcharts.numberFormat(this.total, 0) + ' total ' + activeMetric;
-            }
-
-            text += '<span style="font-size: 14px;">' + Highcharts.dateFormat('%A, %B %e, %Y', this.x) + '</span><br/>';
-            text += '<span style="padding: 0; font-weight: 600; color: ' + this.series.color + '">' + this.series.name + '</span>' + ': <strong style="font-weight: 600;">' + value + '</strong><br/>';
-            
-            if((chartSeries.length > 1) && (total != "")) {
-              text += '<span style="font-size: 12px; color: #666;">';
-              if(this.total > 0) {
-                text += '(' + Highcharts.numberFormat(this.percentage, 0) + '% of ' + total + ')';
-              }
-              else {
-                text += '(' + total + ')';
-              }
-              text += '</span>';
-            }
-
-            return text;
-          }
-        },
-        series: chartSeries
-      });
-      
-      $('#dashboard-stats-chart').removeClass('chart-loading');
-    }
-    
-    if ($('#dashboard-stats').length){
-      setupDashboardStatsChart('area');
-    }
 
     // Use breakdown to switch charts
-    $('.stats-breakdown tr:not(#stats-breakdown-ctr)').click(function(e) {
-      $('#dashboard-stats-chart').fadeOut('fast', function() {
-        setupDashboardStatsChart('area');
-        $(this).fadeIn('fast');
+    $('.stats-breakdown tr').click(function(e) {
+      $('#dashboard-stats-chart').fadeOut(100, function() {
+        mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
+        $(this).show();
       });
-    });
-    
-    // Remove the standard click handler and replace it
-    $('#stats-breakdown-ctr').click(function(){
-        $('#dashboard-stats-chart').fadeOut('fast', function(){
-            setupDashboardStatsChart('line');
-            $(this).fadeIn('fast');
-        });
     });
     
     /*---------------------------------------/

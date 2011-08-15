@@ -39,7 +39,7 @@ def gen_report_worker(report, account, end=None):
 class ReportQueryManager(CachedQueryManager):
     Model = Report
 
-    def __init__(self, account=None, offline=False):
+    def __init__(self, account=None, offline=True):
         if isinstance(account, db.Key):
             self.account = account
         elif isinstance(account, db.Model):

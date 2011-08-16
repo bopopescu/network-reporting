@@ -17,7 +17,7 @@ class MoceanServerSide(ServerSide):
         data =	{'zone': self.get_pub_id(), 'ip': self.get_ip(), 'ua': self.get_user_agent(), }
         return self.base_url + "?" + urllib.urlencode(data)
 
-    def _bid_and_html_for_response(self,response):
+    def bid_and_html_for_response(self, response):
         if re.match("^<!--.*--\>$", response.content) == None and len(response.content) != 0:
             trace_logging.warning("Received " + self.network_name + " response: %s"%cgi.escape(response.content))
             return 0.0, response.content

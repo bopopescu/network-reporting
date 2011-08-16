@@ -34,6 +34,6 @@ class AdMobServerSide(ServerSide):
               
         return urllib.urlencode(data) + '&' + self._add_extra_headers()
 
-    def _bid_and_html_for_response(self,response):
+    def bid_and_html_for_response(self, response):
         return 0.0, content
         

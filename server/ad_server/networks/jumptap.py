@@ -68,7 +68,7 @@ class JumptapServerSide(ServerSide):
         response = urllib2.urlopen(req)
         return response.read()
    
-    def _bid_and_html_for_response(self,response):
+    def bid_and_html_for_response(self, response):
         trace_logging.warning("Jumptap response: %s"%cgi.escape(response.content))
         if len(response.content) == 0:
             trace_logging.info("Jumptap ad is empty")

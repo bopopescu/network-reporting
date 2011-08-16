@@ -124,7 +124,7 @@ class BrightRollServerSide(ServerSide):
             cpm = None            
         self.url_params.update(cpm=cpm)
         
-    def _bid_and_html_for_response(self,response):
+    def bid_and_html_for_response(self, response):
         self.parse_xml(response.content)
         # try:
         #     self.parse_xml(response.content)
@@ -696,50 +696,50 @@ template2 = string.Template("""<!DOCTYPE HTML>
 
 
 
-#### EXAMPLE VAST RESPONSE
-# sample_response = """<?xml version="1.0" encoding="UTF-8"?> 
-# <VAST version="2.0"> 
-#   <Ad id="brightroll_ad"> 
-#     <InLine> 
-#       <AdSystem>BrightRoll</AdSystem> 
-#       <AdTitle></AdTitle> 
-#       <Impression><![CDATA[http://2686.btrll.com/imp/2686/5573/PreRoll.182.112431/start;Video;1301955275]]></Impression> 
-#       <Impression><![CDATA[http://brxserv.btrll.com/v1/epix/6834979/3844792/2668/4881/DbzBx_CgKbAABNmkLLAAAKbAAAExEAOqq4AAAAAABc5buF6_RLfQ/event.imp/r_64.aHR0cDovL2Iuc2NvcmVjYXJkcmVzZWFyY2guY29tL3A_YzE9MSZjMj02MDAwMDA2JmMzPSZjND0mYzU9MDEwMDAwJmM2PTY4MzQ5NzkmYzEwPSZjQTE9OCZjQTI9NjAwMDAwNiZjQTM9Mzg0NDc5MiZjQTQ9MjY2OCZjQTU9ODkzJmNBNj02ODM0OTc5JmNBMTA9NDg4MSZjdj0xLjcmY2o9JnJuPTEzMDE5NTUyNzUmcj1odHRwJTNBJTJGJTJGcGl4ZWwucXVhbnRzZXJ2ZS5jb20lMkZwaXhlbCUyRnAtY2I2QzB6RkY3ZFdqSS5naWYlM0ZsYWJlbHMlM0RwLjY4MzQ5NzkuMzg0NDc5Mi4wJTJDYS44OTMuMjY2OC40ODgxJTJDdS5wcmUuMHgwJTNCbWVkaWElM0RhZCUzQnIlM0QxMzAxOTU1Mjc1]]></Impression> 
-#       <Impression><![CDATA[http://2686.btrll.com/imp/2686/5573/PreRoll.182.112432/start;Video;1301955275]]></Impression> 
-#       <Creatives> 
-#         <Creative sequence="1"> 
-#           <Linear> 
-#             <Duration>00:00:15</Duration> 
-#             <TrackingEvents> 
-#               <Tracking event="midpoint"><![CDATA[http://brxserv.btrll.com/v1/epix/6834979/3844792/2668/4881/DbzBx_CgKbAABNmkLLAAAKbAAAExEAOqq4AAAAAABc5buF6_RLfQ/event.mid/r_64.aHR0cDovLzI2ODYuYnRybGwuY29tL2ltcC8yNjg2LzU1NzMvUHJlUm9sbC4xODIuMTEyNDMxL21pZDtWaWRlbzsxMzAxOTU1Mjc1]]></Tracking> 
-#               <Tracking event="midpoint"><![CDATA[http://2686.btrll.com/imp/2686/5573/PreRoll.182.112432/mid;Video;1301955275]]></Tracking> 
-#               <Tracking event="complete"><![CDATA[http://brxserv.btrll.com/v1/epix/6834979/3844792/2668/4881/DbzBx_CgKbAABNmkLLAAAKbAAAExEAOqq4AAAAAABc5buF6_RLfQ/event.end/r_64.aHR0cDovLzI2ODYuYnRybGwuY29tL2ltcC8yNjg2LzU1NzMvUHJlUm9sbC4xODIuMTEyNDMxL2RvbmU7VmlkZW87MTMwMTk1NTI3NQ]]></Tracking> 
-#               <Tracking event="complete"><![CDATA[http://2686.btrll.com/imp/2686/5573/PreRoll.182.112432/done;Video;1301955275]]></Tracking> 
-#             </TrackingEvents> 
-#             <VideoClicks> 
-#               <ClickThrough><![CDATA[http://brxserv.btrll.com/v1/epix/6834979/3844792/2668/4881/DbzBx_CgKbAABNmkLLAAAKbAAAExEAOqq4AAAAAABc5buF6_RLfQ/event.click/r_64.aHR0cDovL3d3dy5pbnRlbC5jb20]]></ClickThrough> 
-#               <ClickTracking><![CDATA[http://brxserv.btrll.com/v1/epix/6834979/3844792/2668/4881/DbzBx_CgKbAABNmkLLAAAKbAAAExEAOqq4AAAAAABc5buF6_RLfQ/event.c_trk/r_64.aHR0cDovLzI2ODYuYnRybGwuY29tL2Nsay8yNjg2LzU1NzMvUHJlUm9sbC4xODIuMTEyNDMxL25vbmUvO1ZpZGVvOzEzMDE5NTUyNzU]]></ClickTracking> 
-#             </VideoClicks> 
-#             <MediaFiles> 
-#               <MediaFile delivery="progressive" type="video/x-flv" bitrate="400" height="240" width="320"><![CDATA[http://brxcdn2.btrll.com/production/26753/FullVideo_SoundOn.mp4]]></MediaFile> 
-#             </MediaFiles> 
-#           </Linear> 
-#         </Creative> 
-#         <Creative sequence="1"> 
-#           <CompanionAds> 
-#             <Companion width="320" height="50"> 
-#               <StaticResource creativeType="image/jpeg"><![CDATA[http://brxserv.btrll.com/v1/epix/6834979/3844792/2668/5268/IbzBx_CgAAAABNmkLLAAAKbAAAFJQAOqq4AAATEQAvf9LlkcUTsA/event.imp/r_64.aHR0cDovL2JyeGNkbi5idHJsbC5jb20vcHJvZHVjdGlvbi8yODIzNi9pbnRlbF8zMjB4NTBfdjMuZ2lm]]></StaticResource> 
-#               <CompanionClickThrough><![CDATA[http://brxserv.btrll.com/v1/epix/6834979/3844792/2668/5268/IbzBx_CgAAAABNmkLLAAAKbAAAFJQAOqq4AAATEQAvf9LlkcUTsA/event.click/r_64.aHR0cDovL3d3dy5pbnRlbC5jb20]]></CompanionClickThrough> 
-#             </Companion> 
-#           </CompanionAds> 
-#         </Creative> 
-#       </Creatives> 
-#       <Extensions> 
-#         <Extension type="LR-Pricing"> 
-#           <Price model="CPM" currency="USD">5</Price> 
-#         </Extension> 
-#       </Extensions> 
-#     </InLine> 
-#   </Ad> 
-# </VAST>
-# """
+### EXAMPLE VAST RESPONSE
+sample_response = """<?xml version="1.0" encoding="UTF-8"?> 
+<VAST version="2.0"> 
+  <Ad id="brightroll_ad"> 
+    <InLine> 
+      <AdSystem>BrightRoll</AdSystem> 
+      <AdTitle></AdTitle> 
+      <Impression><![CDATA[http://2686.btrll.com/imp/2686/5573/PreRoll.182.112431/start;Video;1301955275]]></Impression> 
+      <Impression><![CDATA[http://brxserv.btrll.com/v1/epix/6834979/3844792/2668/4881/DbzBx_CgKbAABNmkLLAAAKbAAAExEAOqq4AAAAAABc5buF6_RLfQ/event.imp/r_64.aHR0cDovL2Iuc2NvcmVjYXJkcmVzZWFyY2guY29tL3A_YzE9MSZjMj02MDAwMDA2JmMzPSZjND0mYzU9MDEwMDAwJmM2PTY4MzQ5NzkmYzEwPSZjQTE9OCZjQTI9NjAwMDAwNiZjQTM9Mzg0NDc5MiZjQTQ9MjY2OCZjQTU9ODkzJmNBNj02ODM0OTc5JmNBMTA9NDg4MSZjdj0xLjcmY2o9JnJuPTEzMDE5NTUyNzUmcj1odHRwJTNBJTJGJTJGcGl4ZWwucXVhbnRzZXJ2ZS5jb20lMkZwaXhlbCUyRnAtY2I2QzB6RkY3ZFdqSS5naWYlM0ZsYWJlbHMlM0RwLjY4MzQ5NzkuMzg0NDc5Mi4wJTJDYS44OTMuMjY2OC40ODgxJTJDdS5wcmUuMHgwJTNCbWVkaWElM0RhZCUzQnIlM0QxMzAxOTU1Mjc1]]></Impression> 
+      <Impression><![CDATA[http://2686.btrll.com/imp/2686/5573/PreRoll.182.112432/start;Video;1301955275]]></Impression> 
+      <Creatives> 
+        <Creative sequence="1"> 
+          <Linear> 
+            <Duration>00:00:15</Duration> 
+            <TrackingEvents> 
+              <Tracking event="midpoint"><![CDATA[http://brxserv.btrll.com/v1/epix/6834979/3844792/2668/4881/DbzBx_CgKbAABNmkLLAAAKbAAAExEAOqq4AAAAAABc5buF6_RLfQ/event.mid/r_64.aHR0cDovLzI2ODYuYnRybGwuY29tL2ltcC8yNjg2LzU1NzMvUHJlUm9sbC4xODIuMTEyNDMxL21pZDtWaWRlbzsxMzAxOTU1Mjc1]]></Tracking> 
+              <Tracking event="midpoint"><![CDATA[http://2686.btrll.com/imp/2686/5573/PreRoll.182.112432/mid;Video;1301955275]]></Tracking> 
+              <Tracking event="complete"><![CDATA[http://brxserv.btrll.com/v1/epix/6834979/3844792/2668/4881/DbzBx_CgKbAABNmkLLAAAKbAAAExEAOqq4AAAAAABc5buF6_RLfQ/event.end/r_64.aHR0cDovLzI2ODYuYnRybGwuY29tL2ltcC8yNjg2LzU1NzMvUHJlUm9sbC4xODIuMTEyNDMxL2RvbmU7VmlkZW87MTMwMTk1NTI3NQ]]></Tracking> 
+              <Tracking event="complete"><![CDATA[http://2686.btrll.com/imp/2686/5573/PreRoll.182.112432/done;Video;1301955275]]></Tracking> 
+            </TrackingEvents> 
+            <VideoClicks> 
+              <ClickThrough><![CDATA[http://brxserv.btrll.com/v1/epix/6834979/3844792/2668/4881/DbzBx_CgKbAABNmkLLAAAKbAAAExEAOqq4AAAAAABc5buF6_RLfQ/event.click/r_64.aHR0cDovL3d3dy5pbnRlbC5jb20]]></ClickThrough> 
+              <ClickTracking><![CDATA[http://brxserv.btrll.com/v1/epix/6834979/3844792/2668/4881/DbzBx_CgKbAABNmkLLAAAKbAAAExEAOqq4AAAAAABc5buF6_RLfQ/event.c_trk/r_64.aHR0cDovLzI2ODYuYnRybGwuY29tL2Nsay8yNjg2LzU1NzMvUHJlUm9sbC4xODIuMTEyNDMxL25vbmUvO1ZpZGVvOzEzMDE5NTUyNzU]]></ClickTracking> 
+            </VideoClicks> 
+            <MediaFiles> 
+              <MediaFile delivery="progressive" type="video/x-flv" bitrate="400" height="240" width="320"><![CDATA[http://brxcdn2.btrll.com/production/26753/FullVideo_SoundOn.mp4]]></MediaFile> 
+            </MediaFiles> 
+          </Linear> 
+        </Creative> 
+        <Creative sequence="1"> 
+          <CompanionAds> 
+            <Companion width="320" height="50"> 
+              <StaticResource creativeType="image/jpeg"><![CDATA[http://brxserv.btrll.com/v1/epix/6834979/3844792/2668/5268/IbzBx_CgAAAABNmkLLAAAKbAAAFJQAOqq4AAATEQAvf9LlkcUTsA/event.imp/r_64.aHR0cDovL2JyeGNkbi5idHJsbC5jb20vcHJvZHVjdGlvbi8yODIzNi9pbnRlbF8zMjB4NTBfdjMuZ2lm]]></StaticResource> 
+              <CompanionClickThrough><![CDATA[http://brxserv.btrll.com/v1/epix/6834979/3844792/2668/5268/IbzBx_CgAAAABNmkLLAAAKbAAAFJQAOqq4AAATEQAvf9LlkcUTsA/event.click/r_64.aHR0cDovL3d3dy5pbnRlbC5jb20]]></CompanionClickThrough> 
+            </Companion> 
+          </CompanionAds> 
+        </Creative> 
+      </Creatives> 
+      <Extensions> 
+        <Extension type="LR-Pricing"> 
+          <Price model="CPM" currency="USD">5</Price> 
+        </Extension> 
+      </Extensions> 
+    </InLine> 
+  </Ad> 
+</VAST>
+"""                                                                      

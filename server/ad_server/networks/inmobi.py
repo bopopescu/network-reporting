@@ -97,7 +97,7 @@ class InMobiServerSide(ServerSide):
         except:
             pass
     
-    def _bid_and_html_for_response(self,response):
+    def bid_and_html_for_response(self, response):
         # Test responses
         # Simple Banner
         # response.content = '<AdResponse><Ads number="1"><Ad type="banner" actionType="android"><ImageURL>http://r.w.inmobi.com/FileData/513cc422-33a6-4274-9e22-dd12e84e23d14.png</ImageURL><ImageAltText></ImageAltText><Placement>page</Placement><AdURL>http://c.w.mkhoj.com/c.asm/3/t/c7i/pl5/2/2m/aj/u/0/0/1/354957037659003/11ba085a-012e-1000-d9a8-00020fe80003/1/829a0c01</AdURL></Ad></Ads></AdResponse>'

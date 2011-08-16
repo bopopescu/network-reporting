@@ -111,7 +111,7 @@ class MobFoxServerSide(ServerSide):
         return ad_type    
          
 
-    def _bid_and_html_for_response(self,response):
+    def bid_and_html_for_response(self, response):
         image_template = """<div style='text-align:center'><a href="%(clickurl)s" target="_blank"><img src="%(imageurl)s" width=%(bannerwidth)s height=%(bannerheight)s/></a></div>"""
         text_template = """%(htmlString)s"""
         # Image: 

@@ -23,7 +23,7 @@ class ChartBoostServerSide(ServerSide):
             self.is_full_screen = False
             return self.base_url + "banner.json?" + urllib.urlencode(data)
             
-    def _bid_and_html_for_response(self,response):
+    def bid_and_html_for_response(self, response):
         image_template = """<div style='text-align:center'><a href="%(url)s" target="_blank"><img src="%(banner)s"/></a></div>"""
         trace_logging.warning("Received ChartBoost response: %s"%cgi.escape(response.content))
         try:

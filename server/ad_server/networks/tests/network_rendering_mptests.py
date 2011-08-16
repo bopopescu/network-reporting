@@ -54,12 +54,7 @@ class RenderingTests(unittest.TestCase):
                                site_keys=[self.adunit.key()],
                                bid_strategy="cpc",
                                bid=100.0)
-        self.adgroup.put()
-         
-        self.creative = Creative(account=self.account,
-                                 ad_group=self.adgroup,
-                                 tracking_url="test-tracking-url")
-        self.creative.put()
+        self.adgroup.put()         
 
         
         self.host = "app.mopub.com"
@@ -84,8 +79,12 @@ class RenderingTests(unittest.TestCase):
     
     def mptest_admob_rendering(self):
         """ For now just test the renderer. Next test headers too. """
-        
-        self.creative.ad_type = "admob"       
+
+        self.adgroup.network_type = "admob"  
+        self.adgroup.put()
+          
+        self.creative = self.adgroup.default_creative()       
+        self.creative.put()
              
         response = Response() # We can use a vanilla response, as we don't use anything from it
         rendered_creative = CreativeRenderer.render(response,   
@@ -101,23 +100,23 @@ class RenderingTests(unittest.TestCase):
                                        
         # Used to initialize admob_example
         
-        # with open('ad_server/networks/tests/admob.example', 'w') as f:   
+        # with open('ad_server/networks/tests/example_renderings/admob.rendering', 'w') as f:   
         #     f.write(rendered_creative)        
         
-        with open('ad_server/networks/tests/admob.example', 'r') as f:   
+        with open('ad_server/networks/tests/example_renderings/admob.rendering', 'r') as f:   
             example_creative = f.read()
                                        
                                        
         eq_(rendered_creative, example_creative)        
         
-        
-        
-        
-        
-    def mptest_appnexus_rendering(self):
+    def mptest_iad_rendering(self):
         """ For now just test the renderer. Next test headers too. """
 
-        self.creative.ad_type = "appnexus"       
+        self.adgroup.network_type = "iAd"  
+        self.adgroup.put()
+          
+        self.creative = self.adgroup.default_creative()       
+        self.creative.put()  
 
         response = Response() # We can use a vanilla response, as we don't use anything from it
         rendered_creative = CreativeRenderer.render(response,   
@@ -130,14 +129,144 @@ class RenderingTests(unittest.TestCase):
                                        track_url=self.track_url,   
                                        on_fail_exclude_adgroups=self.on_fail_exclude_adgroups,
                                        random_val="0932jfios")   
+        # Used to initialize 
 
-        # Used to initialize admob_example
+        # with open('ad_server/networks/tests/example_renderings/iad.rendering', 'w') as f:   
+        #     f.write(rendered_creative)         
 
-        with open('ad_server/networks/tests/appnexus.example', 'w') as f:   
-            f.write(rendered_creative)         
-
-        with open('ad_server/networks/tests/appnexus.example', 'r') as f:   
+        with open('ad_server/networks/tests/example_renderings/iad.rendering', 'r') as f:   
             example_creative = f.read()
 
 
-        eq_(rendered_creative, example_creative)                         
+        eq_(rendered_creative, example_creative)                   
+        
+
+    def mptest_mobfox_rendering(self):
+        """ For now just test the renderer. Next test headers too. """
+
+        self.adgroup.network_type = "mobfox"  
+        self.adgroup.put()
+
+        self.creative = self.adgroup.default_creative()   
+        self.creative.html_data = "fake data" # TODO: Use the actual serverside methods to build this    
+        self.creative.put()    
+
+        response = Response() # We can use a vanilla response, as we don't use anything from it
+        rendered_creative = CreativeRenderer.render(response,   
+                                       creative=self.creative,
+                                       adunit=self.adunit, 
+                                       keywords=self.keywords, 
+                                       request_host=self.host, # Needed for serving static files
+                                       request_url=self.url, # Needed for onfail urls          
+                                       version_number=self.version_number,
+                                       track_url=self.track_url,   
+                                       on_fail_exclude_adgroups=self.on_fail_exclude_adgroups,
+                                       random_val="0932jfios")   
+        # Used to initialize 
+        # 
+        # with open('ad_server/networks/tests/mobfox.rendering', 'w') as f:   
+        #     f.write(rendered_creative)         
+
+        with open('ad_server/networks/tests/example_renderings/mobfox.rendering', 'r') as f:   
+            example_creative = f.read()
+
+
+        eq_(rendered_creative, example_creative)      
+        
+        
+        
+        
+    ### Make remaining tests more DRY ###
+
+    def mptest_brightroll_rendering(self):
+        """ For now just test the renderer. Next test headers too. """     
+        self._compare_rendered_creative_to_stored_creative("brightroll")  
+   
+    def mptest_jumptap_rendering(self):
+        """ For now just test the renderer. Next test headers too. """ 
+        self._compare_rendered_creative_to_stored_creative("jumptap")  
+
+    def mptest_marketplace_rendering(self):
+        """ For now just test the renderer. Next test headers too. """  
+        self._compare_rendered_creative_to_stored_creative("marketplace")  
+   
+    def mptest_ejam_rendering(self):
+        """ For now just test the renderer. Next test headers too. """     
+        self._compare_rendered_creative_to_stored_creative("ejam")  
+
+    def mptest_chartboost_rendering(self):
+        """ For now just test the renderer. Next test headers too. """ 
+        self._compare_rendered_creative_to_stored_creative("chartboost")  
+
+    def mptest_millennial_rendering(self):
+        """ For now just test the renderer. Next test headers too. """  
+        self._compare_rendered_creative_to_stored_creative("millennial")  
+
+    def mptest_inmobi_rendering(self):
+        """ For now just test the renderer. Next test headers too. """     
+        self._compare_rendered_creative_to_stored_creative("inmobi")  
+
+    def mptest_greystripe_rendering(self):
+        """ For now just test the renderer. Next test headers too. """ 
+        self._compare_rendered_creative_to_stored_creative("greystripe")  
+
+    def mptest_appnexus_rendering(self):
+        """ For now just test the renderer. Next test headers too. """  
+        self._compare_rendered_creative_to_stored_creative("appnexus")  
+
+    def mptest_custom_native_rendering(self):
+        """ For now just test the renderer. Next test headers too. """     
+        self._compare_rendered_creative_to_stored_creative("custom_native")        
+   
+    def mptest_custom_rendering(self):
+        """ For now just test the renderer. Next test headers too. """     
+        self._compare_rendered_creative_to_stored_creative("custom")
+
+    def mptest_admob_native_rendering(self):
+        """ For now just test the renderer. Next test headers too. """ 
+        self._compare_rendered_creative_to_stored_creative("admob_native")  
+
+    def mptest_millennial_native_rendering(self):
+        """ For now just test the renderer. Next test headers too. """  
+        self._compare_rendered_creative_to_stored_creative("millennial_native")                       
+
+                                    
+    ### Helper functions ###                                       
+        
+    def _compare_rendered_creative_to_stored_creative(self, network_type):
+        """ For now just test the renderer. Next test headers too.
+            Uses a default value for html_data. """
+
+        self.adgroup.network_type = "brightroll"  
+        self.adgroup.put()
+
+        self.creative = self.adgroup.default_creative()   
+        self.creative.html_data = "fake data" # TODO: Use the actual serverside methods to build this 
+
+        self.creative.put()    
+
+        response = Response() # We can use a vanilla response, as we don't use anything from it
+        rendered_creative = CreativeRenderer.render(response,   
+                                       creative=self.creative,
+                                       adunit=self.adunit, 
+                                       keywords=self.keywords, 
+                                       request_host=self.host, # Needed for serving static files
+                                       request_url=self.url, # Needed for onfail urls          
+                                       version_number=self.version_number,
+                                       track_url=self.track_url,   
+                                       on_fail_exclude_adgroups=self.on_fail_exclude_adgroups,
+                                       random_val="0932jfios")   
+        # Used to initialize 
+        # 
+        # with open('ad_server/networks/tests/example_renderings/%s.rendering' % network_type, 'w') as f:   
+        #     f.write(rendered_creative)         
+                                           
+        with open('ad_server/networks/tests/example_renderings/%s.rendering' % network_type, 'r') as f:   
+            example_creative = f.read()
+
+
+        eq_(rendered_creative, example_creative)             
+
+
+        
+      

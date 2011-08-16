@@ -79,10 +79,6 @@ class AppIndexHandler(RequestHandler):
       # attaching adunits onto the app object
       app.adunits = sorted(AdUnitQueryManager.get_adunits(app=app), key=lambda adunit:adunit.name)
 
-      # We have to read the datastore at the app level since we need to get the de-duped user_count
-      #app.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=app,days=days)
-      #app.stats = reduce(lambda x, y: x+y, app.all_stats, StatsModel())
-
     apps = sorted(apps, key=lambda app: app.name)
 
     totals_list = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(days=days)
@@ -97,6 +93,7 @@ class AppIndexHandler(RequestHandler):
     # NOT total unique users
     totals.user_count = max([t.user_count for t in totals_list])
     
+    # prepare account_stats object
     key = "||"
     stats_dict = {}
     stats_dict[key] = {}
@@ -113,16 +110,9 @@ class AppIndexHandler(RequestHandler):
     logging.warning("YESTERDAY: %s"%yesterday.key())
     logging.warning("TODAY: %s"%today.key())
 
-    # In the graph, only show the top 3 apps and bundle the rest if there are more than 4
-    # graph_apps = apps[0:4]
-    #if len(apps) > 4:
-    #  graph_apps[3] = App(name='Others')
-    #  graph_apps[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[a.all_stats for a in apps[3:]])]
-
     return render_to_response(self.request,'publisher/index.html', 
       {'apps': apps,
        'account_stats': simplejson.dumps(response_dict),
-       #'graph_apps': graph_apps,
        'start_date': days[0],
        'end_date': days[-1],
        'date_range': self.date_range,

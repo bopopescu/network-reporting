@@ -761,7 +761,7 @@ var mopub = mopub || {};
         var id = key.split("||")[0];
         var sumStats = allStats[key]["sum"];
       
-        // Store the stats so that we can build the graph later.
+        // Store the stats so that we can build the chart later.
         statsMap[id] = allStats[key];
       
         var formattedStats = formatStatsForDisplay(sumStats);

@@ -186,7 +186,7 @@ class Report(db.Model):
                 dim = 9001
                 logging.error("impossible")
             ret = {}
-            manager = StatsModelQueryManager(self.account, offline=False)#True) #offline=self.offline)
+            manager = StatsModelQueryManager(self.account, offline=True) #offline=self.offline)
             vals, typ, date_fmt = self.get_vals(pub, adv, days, country, brand, market, os, os_ver, dim, date_fmt)
             if vals is None:
                 return ret

@@ -101,7 +101,7 @@ class RenderingTests(unittest.TestCase):
         # Used to initialize admob_example
         
         # with open('ad_server/networks/tests/example_renderings/admob.rendering', 'w') as f:   
-        #     f.write(rendered_creative)        
+        #     f.write(rendered_creative)          
         
         with open('ad_server/networks/tests/example_renderings/admob.rendering', 'r') as f:   
             example_creative = f.read()
@@ -164,8 +164,8 @@ class RenderingTests(unittest.TestCase):
                                        random_val="0932jfios")   
         # Used to initialize 
         # 
-        # with open('ad_server/networks/tests/mobfox.rendering', 'w') as f:   
-        #     f.write(rendered_creative)         
+        with open('ad_server/networks/tests/example_renderings/mobfox.rendering', 'w') as f:   
+            f.write(rendered_creative)          
 
         with open('ad_server/networks/tests/example_renderings/mobfox.rendering', 'r') as f:   
             example_creative = f.read()

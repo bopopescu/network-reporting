@@ -117,7 +117,8 @@ class CreativeRenderer(object):
             params.update({"title": ','.join(keywords), "adsense_format": '320x50_mb', "w": format[0], "h": format[1], "client": adunit.get_pub_id("adsense_pub_id")})
             params.update(channel_id=adunit.adsense_channel_id or '')
         elif creative.ad_type == "admob":
-            params.update({"title": ','.join(keywords), "w": format[0], "h": format[1], "client": adunit.get_pub_id("admob_pub_id")})   
+            params.update({"title": ','.join(keywords), "w": format[0], "h": format[1], "client": adunit.get_pub_id("admob_pub_id"), \
+            "bgcolor": str(adunit.app_key.admob_bgcolor or '000000') , "textcolor": str(adunit.app_key.admob_textcolor or 'FFFFFF')})  
             
             # params.update(test_mode='true' if debug else 'false')
             # params.update(test_ad='<a href="http://m.google.com" target="_top"><img src="/images/admob_test.png"/></a>' if debug else '')

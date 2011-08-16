@@ -23,7 +23,9 @@ from server.ad_server.main import  ( AdClickHandler,
                                      AppOpenHandler,
                                      TestHandler,
                                      )
-from server.ad_server.handlers import adhandler
+from server.ad_server.handlers import adhandler  
+from server.ad_server.networks import rendering  
+
 from server.ad_server.handlers.adhandler import AdHandler                                     
 from server.ad_server.auction.ad_auction import AdAuction
 
@@ -143,27 +145,27 @@ class TestAdAuction(unittest.TestCase):
     def mptest_build_fail_url(self):
         original_url = "http://ads.mopub.com/m/ad?id=asdf&blah&foo&bar&IMPORTANT"
         on_fail_exclude_adgroups = ["admob", "millennial"]
-        fail_url = adhandler._build_fail_url(original_url, on_fail_exclude_adgroups)
+        fail_url = rendering._build_fail_url(original_url, on_fail_exclude_adgroups)
     
         eq_(fail_url,"http://ads.mopub.com/m/ad?id=asdf&blah&foo&bar&IMPORTANT&exclude=admob&exclude=millennial")
 
     def mptest_build_fail_url_replace(self):
         original_url = "http://ads.mopub.com/m/ad?id=asdf2&blah&foo&bar&IMPORTANT&exclude=admob"
         on_fail_exclude_adgroups = ["admob", "millennial"]
-        fail_url = adhandler._build_fail_url(original_url, on_fail_exclude_adgroups)
+        fail_url = rendering._build_fail_url(original_url, on_fail_exclude_adgroups)
 
         eq_(fail_url,"http://ads.mopub.com/m/ad?id=asdf2&blah&foo&bar&IMPORTANT&exclude=admob&exclude=millennial")
 
     def mptest_build_fail_url_multiple_replace(self):
         original_url = "http://ads.mopub.com/m/ad?id=asdf3&blah&foo&bar&IMPORTANT&exclude=admob&exclude=millennial"
         on_fail_exclude_adgroups = ["admob"]
-        fail_url = adhandler._build_fail_url(original_url, on_fail_exclude_adgroups)
+        fail_url = rendering._build_fail_url(original_url, on_fail_exclude_adgroups)
 
         eq_(fail_url,"http://ads.mopub.com/m/ad?id=asdf3&blah&foo&bar&IMPORTANT&exclude=admob")
 
     def mptest_build_fail_url_multiple_replace_suffix(self):
         original_url = "http://ads.mopub.com/m/ad?id=asdf3&blah&foo&bar&exclude=admob&exclude=millennial&other=ok"
         on_fail_exclude_adgroups = ["admob"]
-        fail_url = adhandler._build_fail_url(original_url, on_fail_exclude_adgroups)
+        fail_url = rendering._build_fail_url(original_url, on_fail_exclude_adgroups)
 
         eq_(fail_url,"http://ads.mopub.com/m/ad?id=asdf3&blah&foo&bar&other=ok&exclude=admob")

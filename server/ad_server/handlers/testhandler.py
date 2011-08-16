@@ -1,3 +1,5 @@
+import hashlib
+
 from ad_server.networks.server_side import ServerSide
 from ad_server.networks.greystripe import GreyStripeServerSide
 from ad_server.networks.millennial import MillennialServerSide
@@ -7,6 +9,8 @@ from ad_server.networks.mobfox import MobFoxServerSide
 from ad_server.networks.inmobi import InMobiServerSide
 from ad_server.networks.ejam import EjamServerSide
 from ad_server.networks.chartboost import ChartBoostServerSide
+
+from common.utils import simplejson
 
 from google.appengine.api import urlfetch
 from google.appengine.ext import webapp
@@ -82,3 +86,34 @@ class UDIDHandler(webapp.RequestHandler):
         ss = ServerSide(None)
         mopub_hashed_udid = ss.get_udid(raw_udid)
         self.response.out.write("MoPub ID: md5:%s"%mopub_hashed_udid)
+        
+        
+class MPXUDIDHandler(webapp.RequestHandler):
+    bidder_dict = {'mopubsample':"ein39vuvya",
+                   'tapad':"ieir8bhbxll",
+                   'adsymptotic':"otwbcmbuty",
+                   'mopubsampletornado':"do20t8bhc7g9",
+                  }
+    
+    
+    def post(self):
+        return self.get()
+    
+    def get(self):
+        udid_list = self.request.get_all('udid', None)
+        bidder = self.request.get('bidder', None)
+        response_dict = {}
+        if bidder and bidder in self.bidder_dict and udid_list:
+            for udid in udid_list:
+                md5_udid = hashlib.md5('mopub-'+udid).hexdigest().upper()
+                sha1_udid = hashlib.sha1('mopub-'+udid).hexdigest().upper() 
+                sha_udid = hashlib.sha1(udid).hexdigest().upper()
+                possible_udids = [udid, md5_udid, sha1_udid, sha_udid]
+                possible_bidder_mpids = [hashlib.sha1(self.bidder_dict[bidder]+pudid).hexdigest().upper() 
+                                            for pudid in possible_udids ]
+                response_dict[udid] = possible_bidder_mpids                                
+                    
+        else:
+            response_dict.update(error="No real bidder and/or udids provided")    
+        
+        self.response.out.write(simplejson.dumps(response_dict))

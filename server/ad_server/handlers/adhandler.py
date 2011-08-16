@@ -119,7 +119,11 @@ class AdHandler(webapp.RequestHandler):
         
         trace_logging.warning("User Agent: %s" % helpers.get_user_agent(self.request))
 
-        countries = [helpers.get_country_code(headers = self.request.headers)]
+        # check if the country is overriden manually
+        if self.request.get('country'):
+            countries = [self.request.get('country')]
+        else:
+            countries = [helpers.get_country_code(headers = self.request.headers)]
         if len(countries) == 1:
             countries = [c.upper() for c in countries]
             country_tuple = tuple(countries)

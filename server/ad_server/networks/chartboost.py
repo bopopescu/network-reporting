@@ -26,13 +26,13 @@ class ChartBoostServerSide(ServerSide):
     def _bid_and_html_for_response(self,response):
         image_template = """<div style='text-align:center'><a href="%(url)s" target="_blank"><img src="%(banner)s"/></a></div>"""
         trace_logging.warning("Received ChartBoost response: %s"%cgi.escape(response.content))
-        try:
-            response_content = simplejson.loads(response.content)
-            if self.is_full_screen:
-                return 0.0, response_content['url']
-            else:    
-                content = image_template%response_content
-                return 0.0, content
-        except:    
+        # try:
+        response_content = simplejson.loads(response.content)
+        if self.is_full_screen:
+            return 0.0, response_content['url']
+        else:    
+            content = image_template%response_content
+            return 0.0, content          
+        # except:    
             trace_logging.info("ChartBoost ad is empty")
             raise Exception("ChartBoost ad is empty")

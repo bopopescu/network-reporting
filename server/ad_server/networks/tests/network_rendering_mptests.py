@@ -102,10 +102,10 @@ class RenderingTests(unittest.TestCase):
                                        
         # Used to initialize admob_example
         
-        # with open('ad_server/networks/tests/admob_example', 'w') as f:   
+        # with open('ad_server/networks/tests/admob.example', 'w') as f:   
         #     f.write(rendered_creative)        
         
-        with open('ad_server/networks/tests/admob_example', 'r') as f:   
+        with open('ad_server/networks/tests/admob.example', 'r') as f:   
             example_creative = f.read()
                                        
                                        

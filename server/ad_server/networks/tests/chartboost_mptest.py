@@ -42,11 +42,7 @@ class ChartBoostUnitTests(unittest.TestCase):
         self.network_config = NetworkConfig(chartboost_pub_id = '4de55942bb93162f4500006c')
         self.network_config.put()
         
-        self.adunit = AdUnit(account=self.account, 
-                             app_key=self.app, 
-                             name="Test AdUnit", 
-                             network_config=self.network_config,
-                             format="full")
+        self.adunit = AdUnit(account=self.account, app_key=self.app, name="Test AdUnit", network_config=self.network_config)
         self.adunit.put()
 
     def tearDown(self):

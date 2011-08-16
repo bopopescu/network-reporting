@@ -87,7 +87,6 @@ class RenderingTests(unittest.TestCase):
         
         self.creative.ad_type = "admob"       
              
-                          
         response = Response() # We can use a vanilla response, as we don't use anything from it
         rendered_creative = CreativeRenderer.render(response,   
                                        creative=self.creative,
@@ -109,4 +108,36 @@ class RenderingTests(unittest.TestCase):
             example_creative = f.read()
                                        
                                        
-        eq_(rendered_creative, example_creative)
+        eq_(rendered_creative, example_creative)        
+        
+        
+        
+        
+        
+    def mptest_appnexus_rendering(self):
+        """ For now just test the renderer. Next test headers too. """
+
+        self.creative.ad_type = "appnexus"       
+
+        response = Response() # We can use a vanilla response, as we don't use anything from it
+        rendered_creative = CreativeRenderer.render(response,   
+                                       creative=self.creative,
+                                       adunit=self.adunit, 
+                                       keywords=self.keywords, 
+                                       request_host=self.host, # Needed for serving static files
+                                       request_url=self.url, # Needed for onfail urls          
+                                       version_number=self.version_number,
+                                       track_url=self.track_url,   
+                                       on_fail_exclude_adgroups=self.on_fail_exclude_adgroups,
+                                       random_val="0932jfios")   
+
+        # Used to initialize admob_example
+
+        with open('ad_server/networks/tests/appnexus.example', 'w') as f:   
+            f.write(rendered_creative)         
+
+        with open('ad_server/networks/tests/appnexus.example', 'r') as f:   
+            example_creative = f.read()
+
+
+        eq_(rendered_creative, example_creative)                         

@@ -19,7 +19,9 @@ from google.appengine.ext.webapp import Response
 
 from google.appengine.api import urlfetch   
 
-from common.utils.system_test_framework import run_auction, fake_request      
+from common.utils.system_test_framework import run_auction, fake_request  
+    
+from nose.tools import eq_    
 
 class RenderingTests(unittest.TestCase):
     def setUp(self):
@@ -63,7 +65,7 @@ class RenderingTests(unittest.TestCase):
         self.host = "app.mopub.com"
         self.url = """app.mopub.com/m/ad?test_url"""
           
-        self.keywords = "awesome, stuff"
+        self.keywords = ["awesome","stuff"]
         
         self.version_number = 2 # Not sure what this is used for
         
@@ -93,9 +95,18 @@ class RenderingTests(unittest.TestCase):
                                        keywords=self.keywords, 
                                        request_host=self.host, # Needed for serving static files
                                        request_url=self.url, # Needed for onfail urls          
-                                       version_number = self.version_number,
-                                       track_url = self.track_url,   
-                                       on_fail_exclude_adgroups = self.on_fail_exclude_adgroups)
+                                       version_number=self.version_number,
+                                       track_url=self.track_url,   
+                                       on_fail_exclude_adgroups=self.on_fail_exclude_adgroups,
+                                       random_val="0932jfios")   
+                                       
+        # Used to initialize admob_example
+        
+        # with open('ad_server/networks/tests/admob_example', 'w') as f:   
+        #     f.write(rendered_creative)        
+        
+        with open('ad_server/networks/tests/admob_example', 'r') as f:   
+            example_creative = f.read()
                                        
                                        
-        _eq(rendered_creative, "This is what we want")
+        eq_(rendered_creative, example_creative)

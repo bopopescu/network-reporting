@@ -1,18 +1,21 @@
 from ad_server.adserver_templates import TEMPLATES
-from ad_server.debug_console import trace_logging    
+from ad_server.debug_console import trace_logging   
+import random  
+import re
 
 class CreativeRenderer(object):
     
     @classmethod
     def render(cls, response, 
-                    creative = None, 
-                    adunit = None, 
-                    keywords = None,
-                    request_host = None,
-                    request_url = None,   
-                    version_number = None,
-                    track_url = None,
-                    on_fail_exclude_adgroups = None):  
+                    creative=None, 
+                    adunit=None, 
+                    keywords=None,
+                    request_host=None,
+                    request_url=None,   
+                    version_number=None,
+                    track_url=None,
+                    on_fail_exclude_adgroups=None,
+                    random_val=random.random()):
         # rename network so its sensical
         if creative.adgroup.network_type:
             creative.name = creative.adgroup.network_type
@@ -95,14 +98,20 @@ class CreativeRenderer(object):
         # Because of the admob pixel has to be added AFTER the admob ad actually loads, this is done via javascript.
 
         success = hidden_span
-        success += tracking_pix % dict(name = 'first', src = track_url)
+        success += tracking_pix % dict(name = 'first', src = track_url)           
+        
+        
+        
+        # We need randomness in order to keep clients from caching impression pixels
         if creative.tracking_url:
-            creative.tracking_url += '&random=%s'%random.random()
+            creative.tracking_url += '&random=%s' % random_val
             success += tracking_pix % dict(name = 'second', src = creative.tracking_url) 
             params.update(trackingPixel='<span style="display:none;"><img src="%s"/><img src="%s"/></span>'% (creative.tracking_url, track_url))
         else:
             params.update(trackingPixel='<span style="display:none;"><img src="%s"/></span>' % track_url)
         success += 'document.body.appendChild(hid_span);'
+        
+        
         
         if creative.ad_type == "adsense":
             params.update({"title": ','.join(keywords), "adsense_format": '320x50_mb', "w": format[0], "h": format[1], "client": adunit.get_pub_id("adsense_pub_id")})
@@ -309,4 +318,17 @@ class CreativeRenderer(object):
         rendered_creative.encode('utf-8')
     
     
-        return rendered_creative
+        return rendered_creative               
+        
+        
+
+########### HELPER FUNCTIONS ############
+def _build_fail_url(original_url, on_fail_exclude_adgroups):
+    """ Remove all the old &exclude= substrings and replace them with our new ones """
+    clean_url = re.sub("&exclude=[^&]*", "", original_url)
+
+    if not on_fail_exclude_adgroups:
+        return clean_url
+    else:
+        return clean_url + '&exclude=' + '&exclude='.join(on_fail_exclude_adgroups)
+

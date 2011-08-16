@@ -296,15 +296,5 @@ class AdHandler(webapp.RequestHandler):
         trace_logging.info("Redirected to experimental server: " + exp_url)
         return self.redirect(exp_url)
         
-########### HELPER FUNCTIONS ############
-def _build_fail_url(original_url, on_fail_exclude_adgroups):
-    """ Remove all the old &exclude= substrings and replace them with our new ones """
-    clean_url = re.sub("&exclude=[^&]*", "", original_url)
-    
-    if not on_fail_exclude_adgroups:
-        return clean_url
-    else:
-        return clean_url + '&exclude=' + '&exclude='.join(on_fail_exclude_adgroups)
-    
-    
+
     

@@ -66,6 +66,11 @@ class NetworkConfig(db.Model):
     jumptap_pub_id = db.StringProperty()
     millennial_pub_id = db.StringProperty()
     mobfox_pub_id = db.StringProperty()
+    
+class MarketPlaceConfig(db.Model):
+    """ All marketplace related configurations """
+    rev_share = db.FloatProperty(default=.90)                        
+    price_floor = db.FloatProperty(default=1.) # dollars CPM
 
 class Account(db.Model):
     user = db.UserProperty() # admin user for this account
@@ -96,7 +101,8 @@ class Account(db.Model):
     
     network_config = db.ReferenceProperty(NetworkConfig,
                             collection_name="accounts")
-    marketplace_rev_share = db.FloatProperty(default=.90)                        
+    marketplace_config = db.ReferenceProperty(MarketPlaceConfig,
+                            collection_name="accounts")
     
     # Still here for transfering
     admob_pub_id = db.StringProperty()

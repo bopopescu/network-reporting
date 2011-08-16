@@ -291,7 +291,7 @@ def bidder_spent(request, *args, **kwargs):
                 mail.send_mail_to_admins(sender="olp@mopub.com",
                                          subject="Bidder Over Quota",
                                          body="%s"%body)
-                num_sent = num_sent + 1
+                num_sent += 1
     except:
         pass
     return HttpResponse(str(num_sent))

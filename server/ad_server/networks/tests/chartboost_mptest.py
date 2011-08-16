@@ -48,7 +48,9 @@ class ChartBoostUnitTests(unittest.TestCase):
     def tearDown(self):
         self.testbed.deactivate()
     
-    def mptest_chartboost_basictest(self):
+    def chartboost_basictest(self):     
+        """ DISABLED due to chartboost not returning pings. 
+            prefix with MPTEST to undisable"""
         request = Request(dict(REQUEST_METHOD = 'get',
                         QUERY_STRING   = '',
                         SERVER_NAME = 'localhost',

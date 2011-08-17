@@ -145,7 +145,7 @@ class TestAdAuction(unittest.TestCase):
                                        adunit=self.adunit,
                                        keywords=None,
                                        country_tuple=[],
-                                       excluded_adgroups=[],
+                                       excluded_adgroup_keys=[],
                                        udid="FakeUDID",
                                        ll=None,
                                        request_id=None,
@@ -163,7 +163,7 @@ class TestAdAuction(unittest.TestCase):
                                        adunit=self.adunit,
                                        keywords=None,
                                        country_tuple=["US"],
-                                       excluded_adgroups=[],
+                                       excluded_adgroup_keys=[],
                                        udid="FakeUDID",
                                        ll=None,
                                        request_id=None,
@@ -181,7 +181,7 @@ class TestAdAuction(unittest.TestCase):
                                        adunit=self.adunit,
                                        keywords=None,
                                        country_tuple=[],
-                                       excluded_adgroups=[],
+                                       excluded_adgroup_keys=[],
                                        udid="FakeUDID",
                                        ll=None,
                                        request_id=None,
@@ -203,7 +203,7 @@ class TestAdAuction(unittest.TestCase):
                                        adunit=self.adunit,
                                        keywords=None,
                                        country_tuple=[],
-                                       excluded_adgroups=[expensive_ag_key],
+                                       excluded_adgroup_keys=[expensive_ag_key],
                                        udid="FakeUDID",
                                        ll=None,
                                        request_id=None,
@@ -223,13 +223,12 @@ class TestAdAuction(unittest.TestCase):
         assert cheap_ag_key in on_fail_exclude_adgroups
 
     def mptest_native_network_failure_cascade(self):
-        """ Native adnetwork failures should properly cascade """
-        """ This belongs in ad_auction_mptests """
+        """ Native adnetwork failures should properly cascade """   
         auction_results = AdAuction.run(request = self.request,
                                        adunit=self.adunit,
                                        keywords=None,
                                        country_tuple=[],
-                                       excluded_adgroups=[],
+                                       excluded_adgroup_keys=[],
                                        udid="FakeUDID",
                                        ll=None,
                                        request_id=None,

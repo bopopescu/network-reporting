@@ -212,12 +212,12 @@ def format_filter(adunit):
         return creative.format == adunit_format
     return (real_filter, log_mesg, [])
 
-def exclude_filter(excluded_adgroups):
+def exclude_filter(excluded_adgroup_keys):
     """ We exclude certain adgroups that we have already tried or wish
     to skip for other reasons """
     log_mesg = "Removed due to exclusion parameters: %s"
     def real_filter(adgroup):
-        return not str(adgroup.key()) in excluded_adgroups
+        return not str(adgroup.key()) in excluded_adgroup_keys
     return (real_filter, log_mesg, [])
 
 def ecpm_filter(winning_ecpm, creative_ecpm_dict):

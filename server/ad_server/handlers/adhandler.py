@@ -157,9 +157,9 @@ class AdHandler(webapp.RequestHandler):
         ll = self.request.get('ll') if self.request.get('ll') else None
         
         # get creative exclusions usually used to exclude iAd because it has already failed
-        excluded_adgroups = self.request.get_all("exclude")
-        if excluded_adgroups:
-            trace_logging.info("Excluded Adgroups: %s" % excluded_adgroups)
+        excluded_adgroup_keys = self.request.get_all("exclude")
+        if excluded_adgroup_keys:
+            trace_logging.info("Excluded Adgroups: %s" % excluded_adgroup_keys)
         
         # TODO: get udid we should hash it if its not already hashed
         udid = self.request.get("udid")
@@ -174,7 +174,7 @@ class AdHandler(webapp.RequestHandler):
         ad_auction_results = AdAuction.run(request = self.request,
                                            adunit = site,
                                            keywords=keywords, 
-                                           excluded_adgroups=excluded_adgroups, 
+                                           excluded_adgroup_keys=excluded_adgroup_keys, 
                                            udid=udid, 
                                            ll = ll,
                                            request_id=request_id, 

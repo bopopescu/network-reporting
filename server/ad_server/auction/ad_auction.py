@@ -121,7 +121,7 @@ class AdAuction(object):
   		         adunit=None,
   		         keywords=None,
                  country_tuple=[],
-  		         excluded_adgroups=[],
+  		         excluded_adgroup_keys=[],
   		         udid=None,
   		         ll=None,
   		         request_id=None,
@@ -130,7 +130,7 @@ class AdAuction(object):
   		         adunit_context=None,
   		         experimental=None):
         """ Runs the auction to determine the appropriate adunit to display. 
-        @returns: [winning_creative, on_fail_exclude_adgroups] """
+        @returns: [winning_creative, on_fail_exclude_adgroup_keys] """
         # TODO: Clean up variable names
         # TODO: For testability, should not require request
 
@@ -158,7 +158,7 @@ class AdAuction(object):
         trace_logging.info("##############################")
         
         # We first run filters at the adgroup level
-        ALL_FILTERS = ( exclude_filter(excluded_adgroups),
+        ALL_FILTERS = ( exclude_filter(excluded_adgroup_keys),
                         active_filter(), 
                         lat_lon_filter(ll),
                         kw_filter(keywords), 
@@ -232,8 +232,8 @@ class AdAuction(object):
         trace_logging.info(" Beginning Auction")
         trace_logging.info("#####################")
         
-        # Initialize on_fail_exclude_adgroups to include all the previously excluded agdgroups
-        on_fail_exclude_adgroups = excluded_adgroups
+        # Initialize on_fail_exclude_adgroup_keys to include all the previously excluded agdgroups
+        on_fail_exclude_adgroup_keys = excluded_adgroup_keys
         
         # If any ad groups were returned, find the creatives that match the requested format in all candidates
         if len(all_ad_groups) > 0:
@@ -292,7 +292,7 @@ class AdAuction(object):
                             # Should really be the pub's cut
                             crtv.adgroup.bid = charge_price
                             # I think we should log stuff here but I don't know how to do that
-                            return [crtv, on_fail_exclude_adgroups]
+                            return [crtv, on_fail_exclude_adgroup_keys]
                         else:
                             continue
                             
@@ -355,8 +355,8 @@ class AdAuction(object):
                                         if winner.adgroup.network_type in NATIVE_REQUESTS:
                                             mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, headers=request.headers, udid=udid)
                                         # A native request could potential fail and must be excluded from subsequent requests    
-                                        on_fail_exclude_adgroups.append(str(winning_creative.adgroup.key()))
-                                        return [winning_creative, on_fail_exclude_adgroups]
+                                        on_fail_exclude_adgroup_keys.append(str(winning_creative.adgroup.key()))
+                                        return [winning_creative, on_fail_exclude_adgroup_keys]
                                     # if the adgroup requires an RPC    
                                     else:
                                         trace_logging.info('Attempting ad network request: %s ...'%winner.adgroup.network_type.title())
@@ -379,14 +379,14 @@ class AdAuction(object):
                                                     height = server_tuple[3]
                                                     winning_creative.width = width
                                                     winning_creative.height = height
-                                                return [winning_creative, on_fail_exclude_adgroups]
+                                                return [winning_creative, on_fail_exclude_adgroup_keys]
                                         except Exception,e:
                                             import traceback, sys
                                             exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
                                             trace_logging.warning(exception_traceback)
                                             
                                         # Network request has failed. We won't try it again
-                                        on_fail_exclude_adgroups.append(str(winner.adgroup.key()))
+                                        on_fail_exclude_adgroup_keys.append(str(winner.adgroup.key()))
                             else:
                                 # remove players of the current winning e_cpm
                                 trace_logging.warning('current players: %s'%players)
@@ -403,7 +403,7 @@ class AdAuction(object):
         
         # nothing... failed auction
         trace_logging.warning("auction failed, returning None")
-        return [None, on_fail_exclude_adgroups]
+        return [None, on_fail_exclude_adgroup_keys]
         
     @classmethod
     def geo_predicates_for_rgeocode(c, r):

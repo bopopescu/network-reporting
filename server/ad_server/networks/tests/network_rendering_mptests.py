@@ -27,6 +27,7 @@ from ad_server.handlers.adhandler import RENDERERS
 
 
 class RenderingTests(object):
+    """ This does not inherit from TestCase because we use Nose's generator function with it. """
     def setUp(self):
         # First, create an instance of the Testbed class.
         self.testbed = testbed.Testbed()
@@ -164,6 +165,7 @@ network_names = ("brightroll",
                    "millennial_native" )    
                                                          
 def mptest_full_generator():
+    """ Uses Nose's built in generator system to run multiple tests. """
     test = RenderingTests()  
     
     for network_name in network_names:
@@ -176,7 +178,8 @@ def mptest_full_generator():
         yield test.compare_rendered_creative_to_stored_creative_full, network_name
         test.tearDown()
                                
-def mptest_320x50_generator():
+def mptest_320x50_generator():  
+    """ Uses Nose's built in generator system to run multiple tests. """     
     test = RenderingTests()
     for network_name in network_names:
         test.setUp()  

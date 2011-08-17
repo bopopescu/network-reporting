@@ -1,4 +1,6 @@
-from datetime import datetime, time, date, timedelta
+from datetime import datetime, date, timedelta
+import time
+import sys
 
 sys.path.append('.')
 
@@ -63,11 +65,11 @@ def get_key(line_dict, dim):
     if P == dim:
         return line_dict['creative']
     if MO == dim:
-        return line_dict['time']
+        return line_dict['time'][:-4]
     if WEEK == dim: 
-        return line_dict['time']
+        return line_dict['time'][:-2]
     if DAY == dim:
-        return line_dict['time']
+        return line_dict['time'][:-2]
     if HOUR == dim:
         return line_dict['time']
     if CO == dim:
@@ -134,8 +136,8 @@ def build_keys(line_dict, d1, d2, d3):
 
 
 def gen_report_fname(d1, d2, d3, start, end):
-    fname = REPORT_NAME % (d1, d2, d3, start.strftime('%y%m%d'), end.strftime('%y%m%d'))
-    return
+    fname = REPORT_NAME % (d1, d2, d3, start.strftime('%y%m%d'), end.strftime('%y%m%d'), int(time.time()))
+    return fname
 
 
 def parse_msg(msg):
@@ -148,3 +150,16 @@ def parse_msg(msg):
     start = datetime.strptime(start, '%y%m%d')
     end = datetime.strptime(end, '%y%m%d')
     return (d1, d2, d3, start, end, rep_key, acct_key)
+
+def get_waiting_jobflow(conn):
+    waiting_jobflows = conn.describe_jobflows([u'WAITING'])
+    for jobflow in waiting_jobflows:
+        jobid = jobflow.jobflowid
+        num_steps = len(jobflow.steps)
+        print 'found waiting jobflow %s with %i steps completed' % (jobid, num_steps)
+        if num_steps > 250:
+            print 'num of steps near limit of 256: terminating jobflow %s ...' % (jobid)
+            conn.terminate_jobflow(jobid)
+        else:
+            return jobid
+    return None

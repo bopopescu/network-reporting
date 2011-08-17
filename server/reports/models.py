@@ -332,7 +332,7 @@ class Report(db.Model):
         for line in blobreader:
             #temp now refers to top of the dictionary
             temp = final
-            keys, vals = line.split('||')
+            keys, vals = line.split('\t')
             keys = keys.split(':')
             vals = eval(vals)
             req, att = self.get_stats_info(keys)

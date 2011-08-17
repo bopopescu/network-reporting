@@ -122,7 +122,7 @@ def check_report(request, *args, **kwargs):
 class ViewReportHandler(RequestHandler):
     def get(self, report_key, *args, **kwargs):
         man = ReportQueryManager(self.account)
-        report = man.get_report_data_by_key(report_key)
+        report = man.get_report_by_key(report_key)
         report_frag = ReportForm(initial = {'recipients': self.request.user.email}, instance=report, save_as=True)
         return render_to_response(self.request, 'reports/view_report.html',
                 dict(report=report.most_recent,

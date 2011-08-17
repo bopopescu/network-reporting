@@ -2,6 +2,7 @@ import datetime
 import logging
 import random
 import time
+import urllib
 
 from django.core.urlresolvers import reverse
 from django.template.loader import render_to_string
@@ -29,7 +30,12 @@ from boto.sqs.message import Message
 
 
 REPORT_MSG = '%s|%s|%s|%s|%s|%s|%s'
-
+REP_Q = 'report_queue'
+AWS_ACCT = 345840704531
+SQS_ENDPOINT = 'queue.amazonaws.com'
+SQS_URI = '/%s/%s' % (REP_Q, AWS_ACCT)
+SQS_URL = 'http://%s%s' % (SQS_ENDPOINT, SQS_URI) 
+ 
 NUM_REP_QS = 1
 REP_Q_NAME = "gen-rep-%02d"
 DEFAULT_REPORT_DIM_LIST = (('app', 'Apps'), ('adunit', 'Ad Units'), ('campaign', 'Campaigns'))
@@ -39,6 +45,8 @@ REP_Q = SQS_CONN.create_queue('report_queue')
 
 def fire_report_sqs(data):
     msg_data = REPORT_MSG % (data.d1, data.d2, data.d3, data.start.strftime('%y%m%d'), data.end.strftime('%y%m%d'), str(data.key()), str(data.account.key()))
+
+
     m = Message()
     m.set_body(msg_data)
     # Write returns True if success, keep trying until it succeeds

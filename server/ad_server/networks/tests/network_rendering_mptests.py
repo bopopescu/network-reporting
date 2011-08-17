@@ -21,7 +21,10 @@ from google.appengine.api import urlfetch
 
 from common.utils.system_test_framework import run_auction, fake_request  
     
-from nose.tools import eq_    
+from nose.tools import eq_     
+
+from ad_server.handlers.adhandler import RENDERERS
+
 
 class RenderingTests(unittest.TestCase):
     def setUp(self):
@@ -86,8 +89,11 @@ class RenderingTests(unittest.TestCase):
         self.creative = self.adgroup.default_creative()       
         self.creative.put()
              
-        response = Response() # We can use a vanilla response, as we don't use anything from it
-        rendered_creative = CreativeRenderer.render(response,   
+        response = Response() # We can use a vanilla response, as we don't use anything from it 
+        
+        Renderer = RENDERERS["admob"]
+        
+        rendered_creative = Renderer.render(response,   
                                        creative=self.creative,
                                        adunit=self.adunit, 
                                        keywords=self.keywords, 

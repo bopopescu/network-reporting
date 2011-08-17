@@ -8,45 +8,55 @@ import random
 import time
 import traceback
 import urllib
-import datetime
-
-import binascii
+import datetime   
                                     
 from common.utils import helpers, simplejson
 from common.constants import FULL_NETWORKS
 
-from google.appengine.api import users, urlfetch, memcache
+from google.appengine.api import urlfetch, memcache
 
-from google.appengine.ext import webapp, db
-from google.appengine.api import images
-
-from publisher.models import *
-from advertiser.models import *
+from google.appengine.ext import webapp, db 
 
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 from ad_server.adunit_context.adunit_context import AdUnitContext, CreativeCTR
 
-from mopub_logging import mp_logging
-from budget import budget_service
+from mopub_logging import mp_logging   
 from google.appengine.ext.db import Key
 
 from ad_server.debug_console import trace_logging
 from ad_server import memcache_mangler
 from ad_server.auction.ad_auction import AdAuction
 from ad_server import frequency_capping            
-
-from google.appengine.api.images import InvalidBlobKeyError
             
-from ad_server.networks.rendering import CreativeRenderer
+from ad_server.renderers.creative_renderer import CreativeRenderer
+from ad_server.renderers.admob import AdMobRenderer   
+
+RENDERERS = {
+    "admob": AdMobRenderer,
+    "adsense":CreativeRenderer, 
+    "clear":CreativeRenderer, 
+    "html":CreativeRenderer,
+    "html_full":CreativeRenderer, 
+    "iAd":CreativeRenderer, 
+    "image":CreativeRenderer,
+    "text":CreativeRenderer, 
+    "text_icon":CreativeRenderer, 
+    "admob_native":CreativeRenderer,
+    "custom_native":CreativeRenderer, 
+    "millennial_native":CreativeRenderer,
+}
+   
 
 TEST_MODE = "3uoijg2349ic(TEST_MODE)kdkdkg58gjslaf"
+                                    
 
 
 # Primary ad auction handler 
 # -- Handles ad request parameters and normalizes for the auction logic
 # -- Handles rendering the winning creative into the right HTML
 #
-class AdHandler(webapp.RequestHandler):
+class AdHandler(webapp.RequestHandler): 
+    
     
     # AdSense: Format properties: width, height, adsense_format, num_creatives
     FORMAT_SIZES = {
@@ -237,8 +247,11 @@ class AdHandler(webapp.RequestHandler):
           
             # Render the creative
             # TODO: we shouldn't need to pass response to this. 
-            # TODO: headers should be handled separately
-            rendered_creative = CreativeRenderer.render(self.response,   
+            # TODO: headers should be handled separately  
+            
+            Renderer = RENDERERS[creative.ad_type]
+            
+            rendered_creative = Renderer.render(self.response,   
                                            creative=creative,
                                            adunit=site, 
                                            keywords=keywords, 

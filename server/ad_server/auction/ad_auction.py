@@ -17,8 +17,7 @@ from ad_server.filters.filters import (budget_filter,
                                     all_freq_filter,
                                     lat_lon_filter,
                                     os_filter,
-                                   )
-# from ad_server.adserver_templates import TEMPLATES
+                                   )                   
                                     
 from common.utils import simplejson
 from common.utils import helpers

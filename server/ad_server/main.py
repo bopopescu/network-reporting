@@ -11,9 +11,7 @@ import os
 import urllib
 import datetime
 
-urllib.getproxies_macosx_sysconf = lambda: {}
-                          
-from ad_server.adserver_templates import TEMPLATES
+urllib.getproxies_macosx_sysconf = lambda: {}        
 
 from google.appengine.api import users, urlfetch, memcache
 from google.appengine.api import taskqueue

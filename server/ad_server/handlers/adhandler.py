@@ -11,7 +11,6 @@ import urllib
 import datetime   
                                     
 from common.utils import helpers, simplejson
-from common.constants import FULL_NETWORKS
 
 from google.appengine.api import urlfetch, memcache
 
@@ -28,22 +27,22 @@ from ad_server import memcache_mangler
 from ad_server.auction.ad_auction import AdAuction
 from ad_server import frequency_capping            
             
-from ad_server.renderers.creative_renderer import CreativeRenderer
+from ad_server.renderers.creative_renderer import BaseCreativeRenderer
 from ad_server.renderers.admob import AdMobRenderer   
 
 RENDERERS = {
     "admob": AdMobRenderer,
-    "adsense":CreativeRenderer, 
-    "clear":CreativeRenderer, 
-    "html":CreativeRenderer,
-    "html_full":CreativeRenderer, 
-    "iAd":CreativeRenderer, 
-    "image":CreativeRenderer,
-    "text":CreativeRenderer, 
-    "text_icon":CreativeRenderer, 
-    "admob_native":CreativeRenderer,
-    "custom_native":CreativeRenderer, 
-    "millennial_native":CreativeRenderer,
+    "adsense":BaseCreativeRenderer, 
+    "clear":BaseCreativeRenderer, 
+    "html":BaseCreativeRenderer,
+    "html_full":BaseCreativeRenderer, 
+    "iAd":BaseCreativeRenderer, 
+    "image":BaseCreativeRenderer,
+    "text":BaseCreativeRenderer, 
+    "text_icon":BaseCreativeRenderer, 
+    "admob_native":BaseCreativeRenderer,
+    "custom_native":BaseCreativeRenderer, 
+    "millennial_native":BaseCreativeRenderer,
 }
    
 

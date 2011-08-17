@@ -1,10 +1,31 @@
-from string import Template                             
+from string import Template   
+import random                          
 
-from ad_server.renderers.creative_renderer import CreativeRenderer
+from ad_server.renderers.creative_renderer import BaseCreativeRenderer
 
-class AdMobRenderer(CreativeRenderer):
+class AdMobRenderer(BaseCreativeRenderer):
     """ For now, just do the standard """
-    
+    @classmethod
+    def network_specific_rendering(cls, response, 
+                                        creative=None, 
+                                        adunit=None, 
+                                        keywords=None,
+                                        request_host=None,
+                                        request_url=None,   
+                                        version_number=None,
+                                        track_url=None,
+                                        on_fail_exclude_adgroups=None,  
+                                        context=None, 
+                                        format_tuple=None,
+                                        random_val=random.random()):   
+        context.update({"title": ','.join(keywords), "w": format_tuple[0], "h": format_tuple[1], "client": adunit.get_pub_id("admob_pub_id"), \
+        "bgcolor": str(adunit.app_key.admob_bgcolor or '000000') , "textcolor": str(adunit.app_key.admob_textcolor or 'FFFFFF')})  
+        
+        # context.update(test_mode='true' if debug else 'false')
+        # context.update(test_ad='<a href="http://m.google.com" target="_top"><img src="/images/admob_test.png"/></a>' if debug else '')
+        response.headers.add_header("X-Launchpage","http://c.admob.com/")
+
+###### TEMPLATE #########
 
     TEMPLATE = Template("""<html><head>
                         <script type="text/javascript">

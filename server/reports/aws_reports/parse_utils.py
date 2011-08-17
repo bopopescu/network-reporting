@@ -32,7 +32,7 @@ NO_REQUESTS = (CAMP, CRTV, P)
 
 DELIM = '|'
 
-REPORT_NAME = '%s-%s-%s__%s-%s.rep'
+REPORT_NAME = '%s-%s-%s__%s-%s__%s.rep'
 
 def gen_days(start, end, hours=False):
     dt = timedelta(days=1)
@@ -151,15 +151,18 @@ def parse_msg(msg):
     end = datetime.strptime(end, '%y%m%d')
     return (d1, d2, d3, start, end, rep_key, acct_key)
 
+
 def get_waiting_jobflow(conn):
     waiting_jobflows = conn.describe_jobflows([u'WAITING'])
     for jobflow in waiting_jobflows:
-        jobid = jobflow.jobflowid
+        jid = jobflow.jobflowid
         num_steps = len(jobflow.steps)
-        print 'found waiting jobflow %s with %i steps completed' % (jobid, num_steps)
+        print 'found waitingjobflow %s with %i steps completed' % (jid, num_steps)
         if num_steps > 250:
             print 'num of steps near limit of 256: terminating jobflow %s ...' % (jobid)
-            conn.terminate_jobflow(jobid)
+            conn.terminate_jobflow(jid)
         else:
-            return jobid
+            return jid
     return None
+
+

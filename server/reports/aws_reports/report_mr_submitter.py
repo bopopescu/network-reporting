@@ -8,7 +8,7 @@ from parse_utils import gen_days, gen_report_fname, get_waiting_jobflow
 from parse_utils import AWS_ACCESS_KEY, AWS_SECRET_KEY
 
 S3_BUCKET = 's3://mopub-aws-logging'
-LOG_URI = S3_BUCKET + '/jobflow_logs'  
+LOG_URI = S3_BUCKET + '/jobflow_logs/AAreports'  
 
 REPORTING_S3_CODE_DIR = S3_BUCKET + '/reports_code0'
 
@@ -26,20 +26,23 @@ KEEP_ALIVE = False
 def build_puts(start, end, account):
     input_dir = ACCOUNT_DIR + ('/%s/daily_logs' % account)
     output_dir = ACCOUNT_DIR + ('/%s/reports' % account)
-    
 
     days = gen_days(start, end)
     input_files = ['log+%s+%s+.adv.lc.stats' % (day.strftime('%y%m%d'), account) for day in days]
     inputs = [input_dir + '/' + file for file in input_files]
-    return inputs, output_dir
+    return (inputs, output_dir)
 
 
 def submit_job(d1, d2, d3, start, end, report_key, account):
     conn = EmrConnection(AWS_ACCESS_KEY, AWS_SECRET_KEY)
 
     inputs, output_dir = build_puts(start, end, account)
+    print inputs
+    print output_dir
     instances = 10
     output_name = gen_report_fname(d1, d2, d3, start, end)
+    start = start.strftime('%y%m%d')
+    end = end.strftime('%y%m%d')
 
     output = output_dir + '/' + output_name
 
@@ -68,3 +71,15 @@ def submit_job(d1, d2, d3, start, end, report_key, account):
                 enable_debugging=True,
                 )
     return jobid, output_name
+
+    while True:
+        state = conn.describe_jobflow(jobid).state
+        if state in [u'COMPLETED', u'TERMINATED', u'WAITING']:
+            return True
+        elif state in [u'FAILED']:
+            return False
+        else:
+            time.sleep(10)
+
+
+

@@ -7,19 +7,18 @@ from django.template import loader
 #appengine imports
 from google.appengine.ext import db
 from google.appengine.ext import blobstore
-from google.appengine.api import users
+from google.appengine.api import users, mail
 
 #mopub imports
-#from account.models import Account
-from common.constants import ISO_COUNTRIES, REP_KEY, CLONE_REP_KEY
-from common.utils import date_magic
-from common.utils.helpers import cust_sum
-#import lots of dicts and things
-from common.properties.dict_property import DictProperty
 from account.models import Account
 from advertiser.models import Creative
-from publisher.models import AdUnit
+from common.constants import ISO_COUNTRIES, REP_KEY, CLONE_REP_KEY
+from common.properties.dict_property import DictProperty
+from common.utils import date_magic
+from common.utils.helpers import cust_sum
 from common.wurfl.query_managers import WurflQueryManager
+from publisher.models import AdUnit
+from mail.mails import REPORT_FINISHED_SIMPLE
 
 APP = 'app'
 AU = 'adunit'
@@ -175,6 +174,22 @@ class Report(db.Model):
 
     # maybe useful for internal analytics//informing users
     completed_at = db.DateTimeProperty()
+
+
+    def notify_complete(self):
+        mesg = mail.EmailMessage(sender = 'olp@mopub.com',
+                                 subject = 'Your report has completed')
+        mesg_dict = dict(report_key = str(self.schedule.key()))
+        mesg.body = REPORT_FINISHED_SIMPLE % mesg_dict
+        if self.recipients:
+            for recipient in self.recipients:
+                mesg.to = recipient
+                try:
+                    mesg.send()
+                except InvalidEmailError, e:
+                    pass
+        else:
+            return
 
     @property
     def d1(self):

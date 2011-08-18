@@ -30,6 +30,8 @@ class WurflQueryManager():
 
 
     def get_market_name(self, market):
+        if 'N/A' in market:
+            return 'N/A'
         brand = self.MAR_BRAND[market]
         if isinstance(brand, list):
             if len(brand) == 1:

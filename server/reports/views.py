@@ -80,7 +80,7 @@ class AddReportHandler(RequestHandler):
                                 sched_interval = sched_interval,
                                 recipients = recipients,
                                 )
-        return HttpResponseRedirect('/reports/view/'+str(report.key()))
+        return HttpResponseRedirect('/reports/')
 
 @login_required
 def add_report(request, *args, **kwargs):

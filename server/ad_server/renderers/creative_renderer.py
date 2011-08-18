@@ -15,7 +15,7 @@ class BaseCreativeRenderer(object):
     TEMPLATE = ""
     
     @classmethod
-    def network_specific_rendering(cls, response, 
+    def network_specific_rendering(cls, headers, 
                                         creative=None, 
                                         adunit=None, 
                                         keywords=None,
@@ -31,7 +31,7 @@ class BaseCreativeRenderer(object):
         pass
     
     @classmethod
-    def render(cls, response, 
+    def render(cls, headers, 
                     creative=None, 
                     adunit=None, 
                     keywords=None,
@@ -53,7 +53,7 @@ class BaseCreativeRenderer(object):
 
         template_name = creative.ad_type    
         
-        format_tuple, network_center = _make_format_tuple_and_set_orientation(adunit, creative, response)
+        format_tuple, network_center = _make_format_tuple_and_set_orientation(adunit, creative, headers)
         
         
         context = {}
@@ -110,7 +110,7 @@ class BaseCreativeRenderer(object):
         success += 'document.body.appendChild(hid_span);'
         
         
-        cls.network_specific_rendering(response, 
+        cls.network_specific_rendering(headers, 
                                        creative=creative, 
                                        adunit=adunit, 
                                        keywords=keywords,
@@ -122,31 +122,10 @@ class BaseCreativeRenderer(object):
                                        context=context,
                                        format_tuple=format_tuple,
                                        random_val=random_val)
-        
-        if creative.ad_type == "adsense":
-            context.update({"title": ','.join(keywords), "adsense_format": '320x50_mb', "w": format_tuple[0], "h": format_tuple[1], "client": adunit.get_pub_id("adsense_pub_id")})
-            context.update(channel_id=adunit.adsense_channel_id or '')
 
-        
-        elif creative.ad_type == "text_icon":      
-            try:
-                context["image_url"] = images.get_serving_url(creative.image_blob)   
-            except InvalidBlobKeyError:     
-                # This will fail when on mopub-experimental
-                trace_logging.warning("""InvalidBlobKeyError when trying to get image from adhandler.py.
-                                      Are you on mopub-experimental?""")     
-            if creative.action_icon:
-                #c.url can be undefined, don't want it to break
-                icon_div = '<div style="padding-top:5px;position:absolute;top:0;right:0;"><a href="'+(creative.url or '#')+'" target="_top">'
-                if creative.action_icon:
-                    icon_div += '<img src="http://' + request_host + '/images/' + creative.action_icon+'.png" width=40 height=40/></a></div>'
-                context["action_icon_div"] = icon_div 
-            else:
-                context['action_icon_div'] = ''
-            # response.headers.add_header("X-Adtype", str('html'))
-        elif creative.ad_type == "greystripe":
+        if creative.ad_type == "greystripe":
             context.update({"html_data": creative.html_data, "w": format_tuple[0], "h": format_tuple[1]})
-            response.headers.add_header("X-Launchpage","http://adsx.greystripe.com/openx/www/delivery/ck.php")
+            headers.add_header("X-Launchpage","http://adsx.greystripe.com/openx/www/delivery/ck.php")
             template_name = "html"
 
         elif creative.ad_type == "image":                       
@@ -181,7 +160,7 @@ class BaseCreativeRenderer(object):
             # add the launchpage header for inmobi in case they have dynamic ads that use
             # window.location = 'http://some.thing/asdf'
             if creative.adgroup.network_type == "inmobi":
-                response.headers.add_header("X-Launchpage","http://c.w.mkhoj.com")
+                headers.add_header("X-Launchpage","http://c.w.mkhoj.com")
 
         
         elif creative.ad_type == "html_full":
@@ -189,10 +168,10 @@ class BaseCreativeRenderer(object):
             # TODO: NOT SURE WHY I CAN'T USE: html_data = c.html_data % dict(track_pixels=success)
             html_data = creative.html_data.replace(r'%(track_pixels)s',success)
             context.update(html_data=html_data)
-            response.headers.add_header("X-Scrollable","1")
-            response.headers.add_header("X-Interceptlinks","0")
+            headers.add_header("X-Scrollable","1")
+            headers.add_header("X-Interceptlinks","0")
         elif creative.ad_type == "text":  
-            response.headers.add_header("X-Productid","pixel_001")
+            headers.add_header("X-Productid","pixel_001")
       
       
         if version_number >= 2:  
@@ -211,52 +190,52 @@ class BaseCreativeRenderer(object):
         # indicate to the client the winning creative type, in case it is natively implemented (iad, clear)
     
         if str(creative.ad_type) == "iAd":
-            # response.headers.add_header("X-Adtype","custom")
-            # response.headers.add_header("X-Backfill","alert")
-            # response.headers.add_header("X-Nativecontext",'{"title":"MoPub Alert View","cancelButtonTitle":"No Thanks","message":"We\'ve noticed you\'ve enjoyed playing Angry Birds.","otherButtonTitle":"Rank","clickURL":"mopub://inapp?id=pixel_001"}')
-            # response.headers.add_header("X-Customselector","customEventTest")
+            # headers.add_header("X-Adtype","custom")
+            # headers.add_header("X-Backfill","alert")
+            # headers.add_header("X-Nativecontext",'{"title":"MoPub Alert View","cancelButtonTitle":"No Thanks","message":"We\'ve noticed you\'ve enjoyed playing Angry Birds.","otherButtonTitle":"Rank","clickURL":"mopub://inapp?id=pixel_001"}')
+            # headers.add_header("X-Customselector","customEventTest")
             if "full_tablet" in adunit.format:
-                response.headers.add_header("X-Adtype", "interstitial")
-                response.headers.add_header("X-Fulladtype", "iAd_full")
+                headers.add_header("X-Adtype", "interstitial")
+                headers.add_header("X-Fulladtype", "iAd_full")
             else:
-                response.headers.add_header("X-Adtype", str(creative.ad_type))
-                response.headers.add_header("X-Backfill", str(creative.ad_type))
+                headers.add_header("X-Adtype", str(creative.ad_type))
+                headers.add_header("X-Backfill", str(creative.ad_type))
         
-            response.headers.add_header("X-Failurl", _build_fail_url(request_url, on_fail_exclude_adgroups))
+            headers.add_header("X-Failurl", _build_fail_url(request_url, on_fail_exclude_adgroups))
 
         elif str(creative.ad_type) == "admob_native":
             if "full" in adunit.format:
-                response.headers.add_header("X-Adtype", "interstitial")
-                response.headers.add_header("X-Fulladtype", "admob_full")
+                headers.add_header("X-Adtype", "interstitial")
+                headers.add_header("X-Fulladtype", "admob_full")
             else:
-                response.headers.add_header("X-Adtype", str(creative.ad_type))
-                response.headers.add_header("X-Backfill", str(creative.ad_type))
-            response.headers.add_header("X-Failurl", _build_fail_url(request_url, on_fail_exclude_adgroups))
+                headers.add_header("X-Adtype", str(creative.ad_type))
+                headers.add_header("X-Backfill", str(creative.ad_type))
+            headers.add_header("X-Failurl", _build_fail_url(request_url, on_fail_exclude_adgroups))
             nativecontext_dict = {
                 "adUnitID":adunit.get_pub_id("admob_pub_id"),
                 "adWidth":adunit.get_width(),
                 "adHeight":adunit.get_height()
             }
-            response.headers.add_header("X-Nativecontext", simplejson.dumps(nativecontext_dict))
+            headers.add_header("X-Nativecontext", simplejson.dumps(nativecontext_dict))
 
         elif str(creative.ad_type) == "millennial_native":
             if "full" in adunit.format:
-                response.headers.add_header("X-Adtype", "interstitial")
-                response.headers.add_header("X-Fulladtype", "millennial_full")
+                headers.add_header("X-Adtype", "interstitial")
+                headers.add_header("X-Fulladtype", "millennial_full")
             else:
-                response.headers.add_header("X-Adtype", str(creative.ad_type))
-                response.headers.add_header("X-Backfill", str(creative.ad_type))
-            response.headers.add_header("X-Failurl", _build_fail_url(request_url, on_fail_exclude_adgroups))
+                headers.add_header("X-Adtype", str(creative.ad_type))
+                headers.add_header("X-Backfill", str(creative.ad_type))
+            headers.add_header("X-Failurl", _build_fail_url(request_url, on_fail_exclude_adgroups))
             nativecontext_dict = {
                 "adUnitID":adunit.get_pub_id("millennial_pub_id"),
                 "adWidth":adunit.get_width(),
                 "adHeight":adunit.get_height()
             }
-            response.headers.add_header("X-Nativecontext", simplejson.dumps(nativecontext_dict))
+            headers.add_header("X-Nativecontext", simplejson.dumps(nativecontext_dict))
         
         elif str(creative.ad_type) == "adsense":
-            response.headers.add_header("X-Adtype", str(creative.ad_type))
-            response.headers.add_header("X-Backfill", str(creative.ad_type))
+            headers.add_header("X-Adtype", str(creative.ad_type))
+            headers.add_header("X-Backfill", str(creative.ad_type))
         
             trace_logging.warning('pub id:%s' % adunit.get_pub_id("adsense_pub_id"))
             header_dict = {
@@ -286,38 +265,38 @@ class BaseCreativeRenderer(object):
             for key,value in header_dict.iteritems():
                 json_string_pairs.append('"%s":"%s"'%(key, value))
             json_string = '{'+','.join(json_string_pairs)+'}'
-            response.headers.add_header("X-Nativecontext", json_string)
+            headers.add_header("X-Nativecontext", json_string)
         
             # add some extra  
-            response.headers.add_header("X-Failurl", _build_fail_url(request_url, on_fail_exclude_adgroups))
-            response.headers.add_header("X-Format",'300x250_as')
+            headers.add_header("X-Failurl", _build_fail_url(request_url, on_fail_exclude_adgroups))
+            headers.add_header("X-Format",'300x250_as')
        
-            response.headers.add_header("X-Backgroundcolor","0000FF")
+            headers.add_header("X-Backgroundcolor","0000FF")
         elif creative.ad_type == "custom_native":
             creative.html_data = creative.html_data.rstrip(":")
             context.update({"method": creative.html_data})
-            response.headers.add_header("X-Adtype", "custom")
-            response.headers.add_header("X-Customselector",creative.html_data)
+            headers.add_header("X-Adtype", "custom")
+            headers.add_header("X-Customselector",creative.html_data)
 
         elif str(creative.ad_type) == 'admob':
-            response.headers.add_header("X-Failurl", _build_fail_url(request_url, on_fail_exclude_adgroups))
-            response.headers.add_header("X-Adtype", str('html'))
+            headers.add_header("X-Failurl", _build_fail_url(request_url, on_fail_exclude_adgroups))
+            headers.add_header("X-Adtype", str('html'))
         else:  
-            response.headers.add_header("X-Adtype", str('html'))
+            headers.add_header("X-Adtype", str('html'))
       
     
         # pass the creative height and width if they are explicity set
         trace_logging.warning("creative size:%s"%creative.format)
         if creative.width and creative.height and 'full' not in adunit.format:
-            response.headers.add_header("X-Width", str(creative.width))
-            response.headers.add_header("X-Height", str(creative.height))
+            headers.add_header("X-Width", str(creative.width))
+            headers.add_header("X-Height", str(creative.height))
     
         # adds network info to the headers
         if creative.adgroup.network_type:
-            response.headers.add_header("X-Networktype",creative.adgroup.network_type)
+            headers.add_header("X-Networktype",creative.adgroup.network_type)
 
         if creative.launchpage:
-            response.headers.add_header("X-Launchpage", creative.launchpage)
+            headers.add_header("X-Launchpage", creative.launchpage)
     
         # render the HTML body   
         if cls.TEMPLATE:   
@@ -327,7 +306,7 @@ class BaseCreativeRenderer(object):
         rendered_creative.encode('utf-8')
     
     
-        return rendered_creative               
+        return rendered_creative, headers              
         
 
 
@@ -337,7 +316,7 @@ class BaseCreativeRenderer(object):
 
 def _make_format_tuple_and_set_orientation(adunit,
                        creative,
-                       response):
+                       headers):
     """ Sets orientation appropriately. REFACTOR clean this up"""                   
                        
     format = adunit.format.split('x')
@@ -352,10 +331,10 @@ def _make_format_tuple_and_set_orientation(adunit,
         ####################################
         if not creative.ad_type == "html":
             if adunit.landscape:
-                response.headers.add_header("X-Orientation","l")
+                headers.add_header("X-Orientation","l")
                 format = ("480","320")
             else:
-                response.headers.add_header("X-Orientation","p")
+                headers.add_header("X-Orientation","p")
                 format = (320,480)    
                                         
         elif not creative.adgroup.network_type or creative.adgroup.network_type in FULL_NETWORKS:
@@ -366,9 +345,9 @@ def _make_format_tuple_and_set_orientation(adunit,
             #an ad network that doesn't serve fulls
             network_center = True
             if adunit.landscape:
-                response.headers.add_header("X-Orientation","l")
+                headers.add_header("X-Orientation","l")
             else:
-                response.headers.add_header("X-Orientation","p")
+                headers.add_header("X-Orientation","p")
             format = (300, 250)
             
     return format, network_center

@@ -1,0 +1,9 @@
+Content-Type: text/html; charset=utf-8
+Cache-Control: no-cache
+X-Orientation: p
+X-Adtype: interstitial
+X-Fulladtype: millennial_full
+X-Failurl: app.mopub.com/m/ad?test_url&exclude=test_on_fail_adgroup1&exclude=test_on_fail_adgroup2
+X-Nativecontext: {"adWidth": 0, "adHeight": 0, "adUnitID": null}
+X-Networktype: millennial_native
+

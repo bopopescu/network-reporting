@@ -1,0 +1,10 @@
+Content-Type: text/html; charset=utf-8
+Cache-Control: no-cache
+X-Adtype: admob_native
+X-Backfill: admob_native
+X-Failurl: app.mopub.com/m/ad?test_url&exclude=test_on_fail_adgroup1&exclude=test_on_fail_adgroup2
+X-Nativecontext: {"adWidth": 320, "adHeight": 50, "adUnitID": null}
+X-Width: 320
+X-Height: 50
+X-Networktype: admob_native
+

@@ -94,7 +94,7 @@ class RenderingTests(object):
         self.creative.put()    
 
         response = Response() # We can use a vanilla response, as we don't use anything from it
-        rendered_creative = BaseCreativeRenderer.render(response,   
+        rendered_creative, headers = BaseCreativeRenderer.render(response.headers,   
                                        creative=self.creative,
                                        adunit=self.adunit, 
                                        keywords=self.keywords, 
@@ -104,6 +104,9 @@ class RenderingTests(object):
                                        track_url=self.track_url,   
                                        on_fail_exclude_adgroups=self.on_fail_exclude_adgroups,
                                        random_val="0932jfios")   
+       
+        header_string = str(headers) # We serialize the headers    
+       
         # Used to initialize 
         # 
         # with open('ad_server/networks/tests/example_renderings/%s.rendering' % network_type, 'w') as f:   
@@ -115,6 +118,16 @@ class RenderingTests(object):
 
         eq_(rendered_creative, example_creative)
         
+        # Used to initialize header examples
+        # 
+        # with open('ad_server/networks/tests/example_renderings/%s.headers' % network_type, 'w') as f:   
+        #     f.write(header_string)                                                             
+
+        with open('ad_server/networks/tests/example_renderings/%s.headers' % network_type, 'r') as f:   
+            example_headers = f.read()
+
+
+        eq_(header_string, example_headers)
     def compare_rendered_creative_to_stored_creative_full(self, network_type):
         """ For now just test the renderer. Next test headers too.
             Uses a default value for html_data. """
@@ -128,7 +141,7 @@ class RenderingTests(object):
         self.creative.put()    
 
         response = Response() # We can use a vanilla response, as we don't use anything from it
-        rendered_creative = BaseCreativeRenderer.render(response,   
+        rendered_creative, headers = BaseCreativeRenderer.render(response.headers,   
                                        creative=self.creative,
                                        adunit=self.adunit, 
                                        keywords=self.keywords, 
@@ -138,16 +151,27 @@ class RenderingTests(object):
                                        track_url=self.track_url,   
                                        on_fail_exclude_adgroups=self.on_fail_exclude_adgroups,
                                        random_val="0932jfios")   
-        # Used to initialize 
+                                       
+        header_string = str(headers) # We serialize the headers 
+        
+        # Used to initialize creative examples
         # 
         # with open('ad_server/networks/tests/example_renderings/%s_full.rendering' % network_type, 'w') as f:   
         #     f.write(rendered_creative)         
 
         with open('ad_server/networks/tests/example_renderings/%s_full.rendering' % network_type, 'r') as f:   
-            example_creative = f.read()
+            example_creative = f.read()   
+            
+        # Used to initialize header examples
+        # 
+        # with open('ad_server/networks/tests/example_renderings/%s_full.headers' % network_type, 'w') as f:   
+        #     f.write(header_string)         
+
+        with open('ad_server/networks/tests/example_renderings/%s_full.headers' % network_type, 'r') as f:   
+            example_headers = f.read()
 
 
-        eq_(rendered_creative, example_creative)             
+        eq_(header_string, example_headers)             
 
 ##### TEST GENERATORS ######     
 

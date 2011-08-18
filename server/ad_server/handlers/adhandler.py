@@ -29,17 +29,19 @@ from ad_server import frequency_capping
             
 from ad_server.renderers.creative_renderer import BaseCreativeRenderer
 from ad_server.renderers.admob import AdMobRenderer   
+from ad_server.renderers.text_icon import TextIconRenderer    
+from ad_server.renderers.adsense import AdsenseRenderer
 
 RENDERERS = {
     "admob": AdMobRenderer,
-    "adsense":BaseCreativeRenderer, 
+    "adsense":AdsenseRenderer, 
     "clear":BaseCreativeRenderer, 
     "html":BaseCreativeRenderer,
     "html_full":BaseCreativeRenderer, 
     "iAd":BaseCreativeRenderer, 
     "image":BaseCreativeRenderer,
     "text":BaseCreativeRenderer, 
-    "text_icon":BaseCreativeRenderer, 
+    "text_icon":TextIconRenderer, 
     "admob_native":BaseCreativeRenderer,
     "custom_native":BaseCreativeRenderer, 
     "millennial_native":BaseCreativeRenderer,
@@ -240,17 +242,10 @@ class AdHandler(webapp.RequestHandler):
             # add creative ID for testing (also prevents that one bad bug from happening)
             self.response.headers.add_header("X-Creativeid", "%s" % creative.key())
                                                          
-           
-            ### Determine which creative to use:
-            # template_name = creative.ad_type
-          
-            # Render the creative
-            # TODO: we shouldn't need to pass response to this. 
-            # TODO: headers should be handled separately  
             
             Renderer = RENDERERS[creative.ad_type]
             
-            rendered_creative = Renderer.render(self.response,   
+            rendered_creative, headers = Renderer.render(self.response.headers,   
                                            creative=creative,
                                            adunit=site, 
                                            keywords=keywords, 

@@ -147,18 +147,19 @@ def daily_advance(campaign, new_date=pac_today()):
     memcache.set(spent_key, _to_memcache_int(0), namespace="budget")
     
     if campaign.budget_type == "full_campaign":
-        campaign.budget = _redistribute_budget(campaign,new_date)
+        if campaign.budget_strategy == "evenly":
+            campaign.budget = _redistribute_budget(campaign,new_date)
+        else:
+            campaign.budget = campaign.full_budget - budget_obj.spent_in_campaign
         budget_obj.campaign=campaign
-    
-    new_initial_budget = campaign.budget
-    
+        
     daily_budget_key = _make_campaign_daily_budget_key(campaign)
-    memcache.set(daily_budget_key, _to_memcache_int(new_initial_budget), namespace="budget")
+    memcache.set(daily_budget_key, _to_memcache_int(campaign.budget), namespace="budget")
     
     daily_log = BudgetDailyLog(budget_obj=budget_obj,
-                      initial_daily_budget=new_initial_budget,
-                      date=today,
-                      )
+                               initial_daily_budget=campaign.budget,
+                               date=today,
+                               )
     daily_log.put()
         
     budget_obj.spent_today = 0.
@@ -220,19 +221,22 @@ def update_budget(campaign, dt = pac_dt(), save_campaign=True):
     if campaign.budget_type and (campaign.budget_type == "full_campaign" or campaign.budget):
         budget_obj = BudgetSlicer.get_or_insert_for_campaign(campaign)
         if campaign.budget_type == "full_campaign":
-            campaign.budget = _redistribute_budget(campaign, dt.date())
+            if campaign.budget_strategy == "evenly":
+                campaign.budget = _redistribute_budget(campaign, dt.date())
+            else:
+                campaign.budget = campaign.full_budget-budget_obj.spent_in_campaign
             budget_obj.campaign = campaign
             
         if campaign.is_active_for_date(dt.date()):
             spent = spent_today(campaign)
             daily_budget_key = _make_campaign_daily_budget_key(campaign)
-            ts_key = _make_campaign_ts_budget_key(campaign)
                         
             memcache.set(daily_budget_key, _to_memcache_int(campaign.budget-spent), namespace="budget")
 
             budget_obj.set_timeslice(dt.hour*60*60+dt.minute*60+dt.second)
             
             if campaign.budget_strategy == "evenly":
+                ts_key = _make_campaign_ts_budget_key(campaign)
                 spent_in_timeslice = spent_today(campaign)-budget_obj.spent_today
                 remaining_timeslice = budget_obj.timeslice_budget-spent_in_timeslice
                 memcache.set(ts_key, _to_memcache_int(remaining_timeslice), namespace="budget")

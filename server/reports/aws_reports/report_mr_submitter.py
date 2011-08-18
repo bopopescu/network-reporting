@@ -57,6 +57,7 @@ def submit_job(d1, d2, d3, start, end, report_key, account):
 
     steps_to_add = [gen_report_step]
     jobid = get_waiting_jobflow(conn)
+    jobid = None
     if jobid:
         conn.add_jobflow_steps(jobid, steps_to_add)
     else:

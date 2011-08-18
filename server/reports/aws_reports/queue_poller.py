@@ -80,7 +80,7 @@ def job_failed(state):
         return False
 
 def job_succeeded(state):
-    if state in [u'COMPLETED']:#, u'TERMINATED', u'WAITING']:
+    if state in [u'COMPLETED', u'WAITING']:#, u'TERMINATED', u'WAITING']:
         return True
     else:
         return False
@@ -113,9 +113,18 @@ def notify_appengine(fname, msg):
     f.close()
     f = open('reports/finished_%s.rep' % rep)
     blob_key = upload_file(f)
-    report = Report.get(rep)
-    report.report_blob = blob_key
-    report.put()
+    # Fork this shit because I don't like to wait
+    pid = os.fork()
+    if pid:
+        return
+    else:
+        report = Report.get(rep)
+        report.report_blob = blob_key
+        data = report.parse_report_blob(report.report_blob.open())
+        report.data = data
+        report.put()
+        print data
+        sys.exit(0)
     
 
 
@@ -151,8 +160,12 @@ def main_loop():
              
         processed_jobs = []
         if job_msg_map.keys():
-            statuses = EMR_CONN.describe_jobflows(jobflow_ids = job_msg_map.keys())
-            print [(st.state, st.jobflowid) for st in statuses]
+            try:
+                statuses = EMR_CONN.describe_jobflows(jobflow_ids = job_msg_map.keys())
+            except Exception, e:
+                # Prob a rate limit issue, just sleep and start the loop over
+                time.sleep(15)
+                continue
             for job in statuses:
                fname, msg = job_msg_map[str(job.jobflowid)]
                if job_failed(job.state):

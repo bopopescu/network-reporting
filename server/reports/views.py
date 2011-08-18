@@ -116,7 +116,7 @@ class CheckReportHandler(RequestHandler):
         return HttpResponse(simplejson.dumps(ret), mimetype='application/json')
 
 def check_report(request, *args, **kwargs):
-    return CheckReportHandler(use_cache=False)(request, *args, **kwargs)
+    return CheckReportHandler()(request, use_cache=False, *args, **kwargs)
 
 #Only scheduled reports get viewed
 class ViewReportHandler(RequestHandler):

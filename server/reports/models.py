@@ -217,17 +217,17 @@ class Report(db.Model):
     
     @property
     def html_data(self):
-        if self.report_blob:
-            logging.warning("parsing report blob")
-            magic = self.parse_report_blob(self.report_blob.open())
-            logging.warning('\n%s\n' % magic)
-            return loader.render_to_string('reports/report.html', dict(all_stats=magic))
+        return loader.render_to_string('reports/report.html', dict(all_stats=self.data))
+        #if self.report_blob:
+        #    logging.warning("parsing report blob")
+        #    magic = self.parse_report_blob(self.report_blob.open())
+        #    logging.warning('\n%s\n' % magic)
+        #    return loader.render_to_string('reports/report.html', dict(all_stats=magic))
         #BACKWARDS COMPATIBILITY!
-        elif self.data:
-            return loader.render_to_string('reports/report.html', dict(all_stats=self.data))
-
-        else:
-            return None
+        #elif self.data:
+        #   pass
+        #else:
+        #    return None
 
     @property
     def export_data(self):

@@ -6,17 +6,9 @@ class AdMobRenderer(BaseCreativeRenderer):
     """ For now, just do the standard """
     @classmethod
     def network_specific_rendering(cls, headers, 
-                                        creative=None, 
-                                        adunit=None, 
-                                        keywords=None,
-                                        request_host=None,
-                                        request_url=None,   
-                                        version_number=None,
-                                        track_url=None,
-                                        on_fail_exclude_adgroups=None,  
-                                        context=None, 
+                                        creative=None,  
                                         format_tuple=None,
-                                        random_val=random.random()):   
+                                        **kwargs):   
         context.update({"title": ','.join(keywords), "w": format_tuple[0], "h": format_tuple[1], "client": adunit.get_pub_id("admob_pub_id"), \
         "bgcolor": str(adunit.app_key.admob_bgcolor or '000000') , "textcolor": str(adunit.app_key.admob_textcolor or 'FFFFFF')})  
         

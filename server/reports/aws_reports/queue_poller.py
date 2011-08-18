@@ -15,7 +15,6 @@ sys.path.append("/home/ubuntu/google_appengine/lib/antlr3")
 sys.path.append("/home/ubuntu/google_appengine/lib/django_1_2")
 sys.path.append("/home/ubuntu/google_appengine/lib/yaml/lib")
 
-my_log = open('/home/ubuntu/poller.log', 'a')
 
 from appengine_django import InstallAppengineHelperForDjango
 InstallAppengineHelperForDjango()
@@ -75,7 +74,9 @@ UPDATE_STATS_HANDLER_PATH = '/offline/update_stats'
 LOG_FORMAT = "%s:\t%s\n"
 
 def log(mesg):
+    my_log = open('/home/ubuntu/poller.log', 'a')
     my_log.write(LOG_FORMAT % (int(time.time()), mesg))
+    my_log.close()
 
 def auth_func():
     return 'olp@mopub.com', 'N47935'

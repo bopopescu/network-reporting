@@ -172,25 +172,52 @@ ad_types = ("image",
              
 class RenderingTests(RenderingTestBase, unittest.TestCase):  
     """ Inherits that setUp and tearDown methods from RenderingTestBase. """  
-    
-    
+
+
     # image, text and text_icon adtypes are not tested as defaults
     def mptest_image_adtype(self):
+        """ Make a one-off test for image creatives. """
         self.creative = ImageCreative(name="image dummy",
                                       image_blob="blobby",
                                       ad_type="image", 
                                       format="320x50", 
                                       format_predicates=["format=320x50"],
                                       ad_group=self.adgroup)
-        
+
         self.creative.image_width = 320
         self.creative.image_height = 50
         self.creative.put()    
-        
+
         self._compare_rendering_with_examples("image_adtype", suffix="", reset_example=True)  
-        
-                                                        
-    
+
+    def mptest_text_adtype(self):
+        """ Make a one-off test for image creatives. """
+        self.creative = TextCreative(name="image dummy",
+                                            headline="HEADLINE!!", 
+                                            line1="Sweet line",
+                                            line2="Awesome line",
+                                            ad_type="text", 
+                                            format="320x50", 
+                                            format_predicates=["format=320x50"],
+                                            ad_group=self.adgroup)
+        self.creative.put()    
+
+        self._compare_rendering_with_examples("text_adtype", suffix="", reset_example=True)  
+
+
+    def mptest_text_icon_adtype(self):
+        """ Make a one-off test for image creatives. """
+        self.creative = TextAndTileCreative(name="image dummy",
+                                            image_blob="blobby", 
+                                            line1="Sweet line",
+                                            line2="Awesome line",
+                                            ad_type="text_icon", 
+                                            format="320x50", 
+                                            format_predicates=["format=320x50"],
+                                            ad_group=self.adgroup)     
+        self.creative.put()    
+
+        self._compare_rendering_with_examples("text_icon_adtype", suffix="", reset_example=True)
 
 ##### TEST GENERATORS ######     
 

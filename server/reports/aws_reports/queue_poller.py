@@ -15,7 +15,6 @@ sys.path.append("/home/ubuntu/google_appengine/lib/antlr3")
 sys.path.append("/home/ubuntu/google_appengine/lib/django_1_2")
 sys.path.append("/home/ubuntu/google_appengine/lib/yaml/lib")
 
-my_log = open('/home/ubuntu/poller.log', 'a')
 
 from appengine_django import InstallAppengineHelperForDjango
 InstallAppengineHelperForDjango()
@@ -75,7 +74,9 @@ UPDATE_STATS_HANDLER_PATH = '/offline/update_stats'
 LOG_FORMAT = "%s:\t%s\n"
 
 def log(mesg):
+    my_log = open('/home/ubuntu/poller.log', 'a')
     my_log.write(LOG_FORMAT % (int(time.time()), mesg))
+    my_log.close()
 
 def auth_func():
     return 'olp@mopub.com', 'N47935'
@@ -111,11 +112,15 @@ def upload_file(fd):
     return blob_key
 
 
-def finalize_report(rep):
+def finalize_report(rep, blob_key):
     log("Finalizing %s" % rep)
+    print "getting report"
     report = Report.get(rep)
+    print "got report"
     report.report_blob = blob_key
+    print "parsing blob"
     data = report.parse_report_blob(report.report_blob.open())
+    print data
     report.data = data
     report.completed_at = datetime.now()
     report.put()
@@ -140,7 +145,7 @@ def notify_appengine(fname, msg):
     if pid:
         return
     else:
-        finalize_report(rep)
+        finalize_report(rep, blob_key)
     
 
 
@@ -182,7 +187,7 @@ def main_loop():
                 time.sleep(15)
                 continue
             for job in statuses:
-                log("Job: %s in state: %s" % (job.jobid, job.state))
+                log("Job: %s in state: %s" % (job.jobflowid, job.state))
                 fname, msg = job_msg_map[str(job.jobflowid)]
                 if job_failed(job.state):
                     fail_dict[msg.get_body()] += 1

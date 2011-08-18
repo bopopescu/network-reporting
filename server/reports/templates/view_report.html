@@ -19,7 +19,7 @@
 {% block content %}
 <link rel='stylesheet' href='/css/dt_jui.css?v=7'>
 <input id='reportKey' type='hidden' value='{{report.key}}' />
-<script type='text/javascript' src='/js/reports-ajaxPoll.js?v=6'></script>
+<script type='text/javascript' src='/js/reports-ajaxPoll.js?v=7'></script>
 <form id='reportExportForm' style='display:none;' action='{% url report_export %}' method='POST' accept-charset='utf-8'>
     <input name='report_key' type='text' value='{{report.key}}' />
     <input name='account_key' type='text' value='{{report.account.key}}' />

@@ -760,7 +760,7 @@ var mopub = mopub || {};
     
     function calcRollups() {
         // Don't compute rollups until we've gotten all the information.
-        if (allFetchesCompleted()) return;
+        if (!allFetchesCompleted()) return;
         
         calcGuaranteedRollup();
         calcPromotionalRollup();
@@ -806,6 +806,8 @@ var mopub = mopub || {};
       // setTimeout is a workaround for Chrome: without it, the loading indicator doesn't 
       // disappear until all "onload" AJAX requests are complete.
       setTimeout(initCampaignsPage, 0);
+    } else {
+      mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
     }
     
     function initCampaignsPage() {
@@ -1021,6 +1023,8 @@ var mopub = mopub || {};
         updateCampaignStatus(campaignId, formattedStats.status);
         updateHelpLinks();
       }
+      
+      showCampaignsMatchingStatusFilter();
     }
 
     function updateCampaignField(campaign, field, data) {
@@ -1175,7 +1179,7 @@ var mopub = mopub || {};
         }        
     }
 
-    function applyFilters(){
+    function showCampaignsMatchingStatusFilter(){
         var statusFilter = $("#campaigns-filterOptions").find(':checked').val();
         if (!statusFilter) return;
         var appFilter = $('#campaigns-appFilterOptions').val();
@@ -1191,9 +1195,9 @@ var mopub = mopub || {};
     
     // We filter whenever the user changes the filtering options
     $("#campaigns-filterOptions, #campaigns-appFilterOptions").change(function(){
-        applyFilters();
+        showCampaignsMatchingStatusFilter();
     });
-    applyFilters();
+    showCampaignsMatchingStatusFilter();
 
     //jQuery magic last
     $('#campaigns-appFilterOptions').selectmenu({

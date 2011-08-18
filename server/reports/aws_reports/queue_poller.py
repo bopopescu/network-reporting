@@ -75,7 +75,7 @@ LOG_FORMAT = "%s:\t%s\n"
 
 def log(mesg):
     my_log = open('/home/ubuntu/poller.log', 'a')
-    my_log.write(LOG_FORMAT % (int(time.time()), mesg))
+    my_log.write(LOG_FORMAT % (time.time(), mesg))
     my_log.close()
 
 def auth_func():
@@ -114,17 +114,16 @@ def upload_file(fd):
 
 def finalize_report(rep, blob_key):
     log("Finalizing %s" % rep)
-    print "getting report"
     report = Report.get(rep)
-    print "got report"
     report.report_blob = blob_key
-    print "parsing blob"
     data = report.parse_report_blob(report.report_blob.open())
-    print data
     report.data = data
     report.completed_at = datetime.now()
+    log("Putting finished Report %s" % rep)
     report.put()
+    log("Notifying recipients on completion of %s" % rep)
     report.notify_complete()
+    log("Finished Finalizing, Exiting")
     sys.exit(0)
 
 def notify_appengine(fname, msg):

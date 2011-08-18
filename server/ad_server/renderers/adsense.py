@@ -9,16 +9,10 @@ class AdsenseRenderer(BaseCreativeRenderer):
     @classmethod
     def network_specific_rendering(cls, headers, 
                                         creative=None, 
-                                        adunit=None, 
-                                        keywords=None,
-                                        request_host=None,
-                                        request_url=None,   
-                                        version_number=None,
-                                        track_url=None,
-                                        on_fail_exclude_adgroups=None,  
-                                        context=None, 
+                                        adunit=None,  
                                         format_tuple=None,
-                                        random_val=random.random()):   
+                                        context=None,
+                                        **kwargs):   
         context.update({"title": ','.join(keywords), "adsense_format": '320x50_mb', "w": format_tuple[0], "h": format_tuple[1], "client": adunit.get_pub_id("adsense_pub_id")})
         context.update(channel_id=adunit.adsense_channel_id or '')     
 ###### TEMPLATE #########

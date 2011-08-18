@@ -24,11 +24,13 @@ from common.utils.system_test_framework import run_auction, fake_request
     
 from nose.tools import eq_     
 
-from ad_server.handlers.adhandler import RENDERERS
+from ad_server.handlers.adhandler import RENDERERS   
+from advertiser.models import ImageCreative, TextAndTileCreative, TextCreative
 
 
-class RenderingTests(object):
-    """ This does not inherit from TestCase because we use Nose's generator function with it. """
+class RenderingTestBase(object):
+    """ This does not inherit from TestCase because we use Nose's generator function with it.
+        """
     def setUp(self):
         # First, create an instance of the Testbed class.
         self.testbed = testbed.Testbed()
@@ -100,7 +102,7 @@ class RenderingTests(object):
 
         self.creative.put()    
         
-        self._compare_rendering_with_examples(network_type, "")  
+        self._compare_rendering_with_examples(network_type, suffix="")  
         
         
         
@@ -120,9 +122,9 @@ class RenderingTests(object):
 
         self.creative.put() 
         
-        self._compare_rendering_with_examples(network_type, "_full")
+        self._compare_rendering_with_examples(network_type, suffix="_full")
         
-    def _compare_rendering_with_examples(self, network_type, suffix):
+    def _compare_rendering_with_examples(self, name, suffix="", reset_example=False):
         """ For now just test the renderer. Next test headers too.
             Uses a default value for html_data. """
 
@@ -144,56 +146,87 @@ class RenderingTests(object):
         
         # Used to initialize creative examples
         # 
-        # with open('ad_server/networks/tests/example_renderings/%s_%s.rendering' % (network_type, suffix), 'w') as f:   
-        #     f.write(rendered_creative)         
+        if reset_example:
+            with open('ad_server/networks/tests/example_renderings/%s%s.rendering' % (name, suffix), 'w') as f:   
+                f.write(rendered_creative)         
 
-        with open('ad_server/networks/tests/example_renderings/%s%s.rendering' % (network_type, suffix), 'r') as f:   
+        with open('ad_server/networks/tests/example_renderings/%s%s.rendering' % (name, suffix), 'r') as f:   
             example_creative = f.read()   
             
         # Used to initialize header examples
-        # 
-        # with open('ad_server/networks/tests/example_renderings/%s_%s.rendering' % (network_type, suffix), 'w') as f:   
-        #     f.write(header_string)         
+        #   
+        if reset_example:
+            with open('ad_server/networks/tests/example_renderings/%s%s.headers' % (name, suffix), 'w') as f:   
+                   f.write(header_string)         
 
-        with open('ad_server/networks/tests/example_renderings/%s%s.headers' % (network_type, suffix), 'r') as f:   
+        with open('ad_server/networks/tests/example_renderings/%s%s.headers' % (name, suffix), 'r') as f:   
             example_headers = f.read()
 
 
         eq_(header_string, example_headers)             
 
+# Non-network-specific adtypes                 
+ad_types = ("image",
+             "text",
+             "text_icon")          
+             
+class RenderingTests(RenderingTestBase, unittest.TestCase):  
+    """ Inherits that setUp and tearDown methods from RenderingTestBase. """  
+    
+    
+    # image, text and text_icon adtypes are not tested as defaults
+    def mptest_image_adtype(self):
+        self.creative = ImageCreative(name="image dummy",
+                                      image_blob="blobby",
+                                      ad_type="image", 
+                                      format="320x50", 
+                                      format_predicates=["format=320x50"],
+                                      ad_group=self.adgroup)
+        
+        self.creative.image_width = 320
+        self.creative.image_height = 50
+        self.creative.put()    
+        
+        self._compare_rendering_with_examples("image_adtype", suffix="", reset_example=True)  
+        
+                                                        
+    
+
 ##### TEST GENERATORS ######     
 
 network_names = ("brightroll",
-                   "jumptap",
-                   "ejam",
-                   "chartboost",
-                   "millennial",
-                   "inmobi",
-                   "greystripe",
-                   "appnexus",
-                   "custom_native",
-                   "custom",
-                   "admob_native",
-                   "millennial_native" )    
+                 "jumptap",
+                 "ejam",
+                 "chartboost",
+                 "millennial",
+                 "inmobi",
+                 "greystripe",
+                 "appnexus",
+                 "custom_native",
+                 "custom",
+                 "admob_native",
+                 "millennial_native")    
+
+
                                                          
-def mptest_full_generator():
-    """ Uses Nose's built in generator system to run multiple tests. """
-    test = RenderingTests()  
+def mptest_full_network_generator():
+    """ Uses Nose's built in generator system to run multiple tests.
+        Tests each of the network's default creatives, """
+    test = RenderingTestBase()  
     
     for network_name in network_names:
         test.setUp()                 
         yield test.render_full_creative, network_name
         test.tearDown()
                                
-def mptest_320x50_generator():  
+def mptest_320x50_network_generator():  
     """ Uses Nose's built in generator system to run multiple tests. """     
-    test = RenderingTests()
+    test = RenderingTestBase()
     for network_name in network_names:
         test.setUp()  
         yield test.render_320x50_creative, network_name
         test.tearDown()
-
-                  
+       
     
     
     

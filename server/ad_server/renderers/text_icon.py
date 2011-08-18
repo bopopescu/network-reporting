@@ -6,17 +6,10 @@ class TextIconRenderer(BaseCreativeRenderer):
     """ For now, just do the standard """
     @classmethod
     def network_specific_rendering(cls, headers, 
-                                        creative=None, 
-                                        adunit=None, 
-                                        keywords=None,
-                                        request_host=None,
-                                        request_url=None,   
-                                        version_number=None,
-                                        track_url=None,
-                                        on_fail_exclude_adgroups=None,  
-                                        context=None, 
-                                        format_tuple=None,
-                                        random_val=random.random()):   
+                                        creative=None,   
+                                        context=None,
+                                        **kwargss):    
+        int("omg")
         try:
             context["image_url"] = images.get_serving_url(creative.image_blob)   
         except InvalidBlobKeyError:     

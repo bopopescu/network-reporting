@@ -1,5 +1,6 @@
 import os
-import sys
+import sys      
+import datetime
 
 sys.path.append(os.environ['PWD'])
 import common.utils.test.setup
@@ -77,14 +78,20 @@ class RenderingTests(object):
         adunit_id = str(self.adunit.key())
 
         self.adunit_context = AdUnitContextQueryManager.cache_get_or_insert(adunit_id)      
+        
+        self.dt = datetime.datetime(1955,5,5,5,5)
 
     def tearDown(self):
         self.testbed.deactivate()
    
-    def compare_rendered_creative_to_stored_creative(self, network_type):
+    def render_320x50_creative(self, network_type):
         """ For now just test the renderer. Next test headers too.
             Uses a default value for html_data. """
-
+        self.adunit = AdUnit(account=self.account, 
+                             app_key=self.app, 
+                             name="Test AdUnit",
+                             format="320x50")
+        self.adunit.put()
         self.adgroup.network_type = network_type  
         self.adgroup.put()
 
@@ -92,57 +99,38 @@ class RenderingTests(object):
         self.creative.html_data = "fake data" # TODO: Use the actual serverside methods to build this 
 
         self.creative.put()    
-
-        response = Response() # We can use a vanilla response, as we don't use anything from it
-        rendered_creative, headers = BaseCreativeRenderer.render(response.headers,   
-                                       creative=self.creative,
-                                       adunit=self.adunit, 
-                                       keywords=self.keywords, 
-                                       request_host=self.host, # Needed for serving static files
-                                       request_url=self.url, # Needed for onfail urls          
-                                       version_number=self.version_number,
-                                       track_url=self.track_url,   
-                                       on_fail_exclude_adgroups=self.on_fail_exclude_adgroups,
-                                       random_val="0932jfios")   
-       
-        header_string = str(headers) # We serialize the headers    
-       
-        # Used to initialize 
-        # 
-        # with open('ad_server/networks/tests/example_renderings/%s.rendering' % network_type, 'w') as f:   
-        #     f.write(rendered_creative)         
-                                           
-        with open('ad_server/networks/tests/example_renderings/%s.rendering' % network_type, 'r') as f:   
-            example_creative = f.read()
-
-
-        eq_(rendered_creative, example_creative)
         
-        # Used to initialize header examples
-        # 
-        # with open('ad_server/networks/tests/example_renderings/%s.headers' % network_type, 'w') as f:   
-        #     f.write(header_string)                                                             
-
-        with open('ad_server/networks/tests/example_renderings/%s.headers' % network_type, 'r') as f:   
-            example_headers = f.read()
-
-
-        eq_(header_string, example_headers)
-    def compare_rendered_creative_to_stored_creative_full(self, network_type):
-        """ For now just test the renderer. Next test headers too.
+        self._compare_rendering_with_examples(network_type, "")  
+        
+        
+        
+    def render_full_creative(self, network_type):
+        """ Tests both the rendering of the creative payload 
             Uses a default value for html_data. """
-
+        self.adunit = AdUnit(account=self.account, 
+                     app_key=self.app, 
+                     name="Test AdUnit",
+                     format="full")
+        self.adunit.put()
         self.adgroup.network_type = network_type  
         self.adgroup.put()
 
         self.creative = self.adgroup.default_creative()   
         self.creative.html_data = "fake data" # TODO: Use the actual serverside methods to build this 
 
-        self.creative.put()    
+        self.creative.put() 
+        
+        self._compare_rendering_with_examples(network_type, "_full")
+        
+    def _compare_rendering_with_examples(self, network_type, suffix):
+        """ For now just test the renderer. Next test headers too.
+            Uses a default value for html_data. """
 
-        response = Response() # We can use a vanilla response, as we don't use anything from it
-        rendered_creative, headers = BaseCreativeRenderer.render(response.headers,   
+
+        empty_headers = Response().headers # We can use a vanilla response, as we don't use anything from it
+        rendered_creative, headers = BaseCreativeRenderer.render(empty_headers,   
                                        creative=self.creative,
+                                       now=self.dt,
                                        adunit=self.adunit, 
                                        keywords=self.keywords, 
                                        request_host=self.host, # Needed for serving static files
@@ -156,18 +144,18 @@ class RenderingTests(object):
         
         # Used to initialize creative examples
         # 
-        # with open('ad_server/networks/tests/example_renderings/%s_full.rendering' % network_type, 'w') as f:   
+        # with open('ad_server/networks/tests/example_renderings/%s_%s.rendering' % (network_type, suffix), 'w') as f:   
         #     f.write(rendered_creative)         
 
-        with open('ad_server/networks/tests/example_renderings/%s_full.rendering' % network_type, 'r') as f:   
+        with open('ad_server/networks/tests/example_renderings/%s%s.rendering' % (network_type, suffix), 'r') as f:   
             example_creative = f.read()   
             
         # Used to initialize header examples
         # 
-        # with open('ad_server/networks/tests/example_renderings/%s_full.headers' % network_type, 'w') as f:   
+        # with open('ad_server/networks/tests/example_renderings/%s_%s.rendering' % (network_type, suffix), 'w') as f:   
         #     f.write(header_string)         
 
-        with open('ad_server/networks/tests/example_renderings/%s_full.headers' % network_type, 'r') as f:   
+        with open('ad_server/networks/tests/example_renderings/%s%s.headers' % (network_type, suffix), 'r') as f:   
             example_headers = f.read()
 
 
@@ -194,12 +182,7 @@ def mptest_full_generator():
     
     for network_name in network_names:
         test.setUp()                 
-        test.adunit = AdUnit(account=test.account, 
-                             app_key=test.app, 
-                             name="Test AdUnit",
-                             format="full")
-        test.adunit.put()
-        yield test.compare_rendered_creative_to_stored_creative_full, network_name
+        yield test.render_full_creative, network_name
         test.tearDown()
                                
 def mptest_320x50_generator():  
@@ -207,12 +190,7 @@ def mptest_320x50_generator():
     test = RenderingTests()
     for network_name in network_names:
         test.setUp()  
-        test.adunit = AdUnit(account=test.account, 
-                             app_key=test.app, 
-                             name="Test AdUnit",
-                             format="320x50")
-        test.adunit.put()
-        yield test.compare_rendered_creative_to_stored_creative, network_name
+        yield test.render_320x50_creative, network_name
         test.tearDown()
 
                   

@@ -6,7 +6,8 @@ import re
 from google.appengine.api.images import InvalidBlobKeyError         
 from google.appengine.api import images     
 from common.utils import simplejson  
-from common.constants import FULL_NETWORKS     
+from common.constants import FULL_NETWORKS 
+import time    
 
 
 class BaseCreativeRenderer(object):  
@@ -15,23 +16,13 @@ class BaseCreativeRenderer(object):
     TEMPLATE = ""
     
     @classmethod
-    def network_specific_rendering(cls, headers, 
-                                        creative=None, 
-                                        adunit=None, 
-                                        keywords=None,
-                                        request_host=None,
-                                        request_url=None,   
-                                        version_number=None,
-                                        track_url=None,
-                                        on_fail_exclude_adgroups=None,  
-                                        context=None, 
-                                        format_tuple=None,
-                                        random_val=random.random()):
+    def network_specific_rendering(cls, headers, **kwargs):
         """ Stub method to be overwritten"""
         pass
     
     @classmethod
-    def render(cls, headers, 
+    def render(cls, headers,
+                    now=None,
                     creative=None, 
                     adunit=None, 
                     keywords=None,
@@ -44,6 +35,8 @@ class BaseCreativeRenderer(object):
         # rename network so its sensical
         if creative.adgroup.network_type:
             creative.name = creative.adgroup.network_type
+                      
+
 
         trace_logging.info("##############################")
         trace_logging.info("##############################")

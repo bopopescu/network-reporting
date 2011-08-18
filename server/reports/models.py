@@ -488,13 +488,21 @@ class Report(db.Model):
             #was requested, and the keys will be the same, this way they are uniquely 
             #ID'd
             try:
-                time_key = date_magic.date_key(time, dim)
-                if memo.has_key(time_key):
-                    time = memo[time_key]
+                if memo.has_key(key):
+                    time = memo[key]
                 else:
-                    time = datetime.strptime(key,'%y%m%d%H')
-                    memo[time_key] = time
-                return (time_key + dim, date_magic.date_name(time, dim))
+                    if dim == MO:
+                        time = datetime.strptime(key,'%y%m')
+                    elif dim == WEEK:
+                        time = datetime.strptime(key,'%y%m%W')
+                    elif dim == DAY:
+                        time = datetime.strptime(key,'%y%m%d')
+                    elif dim == HOUR:
+                        time = datetime.strptime(key,'%y%m%d%H')
+                    else:
+                        time = None
+                    memo[key] = time
+                return (key + dim, date_magic.date_name(time, dim))
             except:
                 return None
 

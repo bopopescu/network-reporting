@@ -65,13 +65,13 @@ def get_key(line_dict, dim):
     if P == dim:
         return line_dict['creative']
     if MO == dim:
-        return line_dict['time'][:-4]
+        return line_dict['time'].strptime('%y%m')
     if WEEK == dim: 
-        return line_dict['time'][:-2]
+        return line_dict['time'].strptime('%y%m%W')
     if DAY == dim:
-        return line_dict['time'][:-2]
+        return line_dict['time'].strptime('%y%m%d')
     if HOUR == dim:
-        return line_dict['time']
+        return line_dict['time'].strptime('%y%m%d%H')
     if CO == dim:
         #TODO somehow get the full country name from the 2 letter country code
         return line_dict['country']

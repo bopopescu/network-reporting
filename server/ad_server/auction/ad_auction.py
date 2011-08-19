@@ -170,15 +170,14 @@ class AdAuction(object):
         trace_logging.info("##############################")
         
         # We first run filters at the adgroup level
-        ALL_FILTERS = ( exclude_filter(excluded_adgroups),
-                        active_filter(), 
-                        lat_lon_filter(ll),
-                        kw_filter(keywords), 
-                        geo_filter(geo_predicates), 
-                        device_filter(device_predicates),
-                        os_filter(user_agent),
-                        budget_filter(),
-                       ) 
+        ALL_FILTERS = (exclude_filter(excluded_adgroups),
+                       active_filter(), 
+                       lat_lon_filter(ll),
+                       kw_filter(keywords), 
+                       geo_filter(geo_predicates), 
+                       device_filter(device_predicates),
+                       os_filter(user_agent),
+                       budget_filter()) 
         
         all_ad_groups = filter(mega_filter(*ALL_FILTERS), all_ad_groups)
         for (func, warn, lst) in ALL_FILTERS:

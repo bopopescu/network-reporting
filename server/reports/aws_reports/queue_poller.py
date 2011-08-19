@@ -94,7 +94,7 @@ def job_failed(state):
         return False
 
 def job_succeeded(state):
-    if state in [u'COMPLETED']#, u'WAITING']:#, u'TERMINATED', u'WAITING']:
+    if state in [u'COMPLETED']:#, u'WAITING']:#, u'TERMINATED', u'WAITING']:
         return True
     else:
         return False

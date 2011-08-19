@@ -70,7 +70,7 @@ class NetworkConfig(db.Model):
 class MarketPlaceConfig(db.Model):
     """ All marketplace related configurations """
     rev_share = db.FloatProperty(default=.90)                        
-    price_floor = db.FloatProperty(default=1.) # dollars CPM
+    price_floor = db.FloatProperty(default=.25) # dollars CPM
 
 class Account(db.Model):
     user = db.UserProperty() # admin user for this account

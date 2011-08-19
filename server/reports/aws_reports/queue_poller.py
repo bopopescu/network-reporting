@@ -208,11 +208,11 @@ def main_loop():
                         processed_jobs.append(job.jobflowid)
                     elif job.state == u'WAITING' and job.steps > job_step_map[job.jobflowid]:
                         notify_appengine(fname, msg)
-                        process_jobs.append(job.jobflowid)
+                        processed_jobs.append(job.jobflowid)
                         # Don't worry about clearing job_step_map because it will reset itself if it is reused
                         
         except Exception, e:
-            log("Encountered exception %s" % e)
+            log("Encountered exception: %s" % e)
 
 
 

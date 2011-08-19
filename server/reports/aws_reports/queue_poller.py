@@ -122,7 +122,7 @@ def finalize_report(rep, blob_key):
     report.completed_at = datetime.now()
     log("Putting finished Report %s" % rep)
     report.put()
-    log("Notifying recipients on completion of %s" % rep)
+    log("Notifying recipients: %s  on completion of %s" % (report.recipients, rep))
     report.notify_complete()
     log("Finished Finalizing, Exiting")
     sys.exit(0)
@@ -156,48 +156,51 @@ def main_loop():
     to_del = []
     setup_remote_api()
     while True:
-        if report_queue.count() > 0:
-            msgs = report_queue.get_messages(MAX_MSGS, visibility_timeout = 0)
-            for msg in msgs:
-                log("Processing %s" % msg.get_body())
-                if msg in to_del:
-                    continue
-                # Start the MR job
-                job_id, fname = submit_job(*parse_msg(msg))
-                if not fail_dict.has_key(msg.get_body()):
-                    fail_dict[msg.get_body()] = 0
-                # Save the msg w/ the job id
-                job_msg_map[job_id] = (fname, msg)
-                # Remove the msg from the Q
-                to_del.append(msg)
-        else:
-            log("No Messages")
+        try:
+            if report_queue.count() > 0:
+                msgs = report_queue.get_messages(MAX_MSGS, visibility_timeout = 0)
+                for msg in msgs:
+                    log("Processing %s" % msg.get_body())
+                    if msg in to_del:
+                        continue
+                    # Start the MR job
+                    job_id, fname = submit_job(*parse_msg(msg))
+                    if not fail_dict.has_key(msg.get_body()):
+                        fail_dict[msg.get_body()] = 0
+                    # Save the msg w/ the job id
+                    job_msg_map[job_id] = (fname, msg)
+                    # Remove the msg from the Q
+                    to_del.append(msg)
+            else:
+                log("No Messages")
 
-        for i in range(len(to_del)):
-            msg = to_del.pop(0)
-            if not report_queue.delete_message(msg):
-                to_del.append(msg)
-             
-        processed_jobs = []
-        if job_msg_map.keys():
-            try:
-                statuses = EMR_CONN.describe_jobflows(jobflow_ids = job_msg_map.keys())
-            except Exception, e:
-                # Prob a rate limit issue, just sleep and start the loop over
-                time.sleep(15)
-                continue
-            for job in statuses:
-                log("Job: %s in state: %s" % (job.jobflowid, job.state))
-                fname, msg = job_msg_map[str(job.jobflowid)]
-                if job_failed(job.state):
-                    fail_dict[msg.get_body()] += 1
-                    report_queue.write(msg)
-                    if fail_dict[msg.get_body()] <= 3:
+            for i in range(len(to_del)):
+                msg = to_del.pop(0)
+                if not report_queue.delete_message(msg):
+                    to_del.append(msg)
+                 
+            processed_jobs = []
+            if job_msg_map.keys():
+                try:
+                    statuses = EMR_CONN.describe_jobflows(jobflow_ids = job_msg_map.keys())
+                except Exception, e:
+                    # Prob a rate limit issue, just sleep and start the loop over
+                    time.sleep(15)
+                    continue
+                for job in statuses:
+                    log("Job: %s in state: %s" % (job.jobflowid, job.state))
+                    fname, msg = job_msg_map[str(job.jobflowid)]
+                    if job_failed(job.state):
+                        fail_dict[msg.get_body()] += 1
+                        report_queue.write(msg)
+                        if fail_dict[msg.get_body()] <= 3:
+                            processed_jobs.append(job.jobflowid)
+                # Notify GAE when a report is finished
+                    elif job_succeeded(job.state):
+                        notify_appengine(fname, msg)
                         processed_jobs.append(job.jobflowid)
-            # Notify GAE when a report is finished
-                elif job_succeeded(job.state):
-                    notify_appengine(fname, msg)
-                    processed_jobs.append(job.jobflowid)
+        except Exception, e:
+            log("Encountered exception %s" % e)
 
 
 

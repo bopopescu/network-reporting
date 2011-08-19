@@ -5,7 +5,7 @@ from boto.emr.connection import EmrConnection
 from boto.emr.step import StreamingStep
 
 from parse_utils import gen_days, gen_report_fname, get_waiting_jobflow
-from parse_utils import AWS_ACCESS_KEY, AWS_SECRET_KEY
+from parse_utils import AWS_ACCESS_KEY, AWS_SECRET_KEY, JOBFLOW_NAME
 
 S3_BUCKET = 's3://mopub-aws-logging'
 LOG_URI = S3_BUCKET + '/jobflow_logs/AAreports'  
@@ -21,7 +21,7 @@ ACCOUNT_DIR = S3_BUCKET + '/account_data'
 NUM_INSTANCES = 1
 MASTER_INSTANCE_TYPE = 'm1.large'
 SLAVE_INSTANCE_TYPE = 'm1.large'
-KEEP_ALIVE = False
+KEEP_ALIVE = True
 
 def build_puts(start, end, account):
     input_dir = ACCOUNT_DIR + ('/%s/daily_logs' % account)
@@ -62,7 +62,7 @@ def submit_job(d1, d2, d3, start, end, report_key, account):
         conn.add_jobflow_steps(jobid, steps_to_add)
     else:
         jobid = conn.run_jobflow(
-                name = 'generating report job',
+                name = JOBFLOW_NAME,
                 steps = steps_to_add,
                 log_uri = LOG_URI,
                 num_instances = instances,

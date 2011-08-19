@@ -170,8 +170,8 @@ def main_loop():
                         continue
                     # Start the MR job
                     job_id, steps, fname = submit_job(*parse_msg(msg))
-                    if steps != 0:
-                        job_step_map[job_id] = steps
+
+                    job_step_map[job_id] = steps
                     if not fail_dict.has_key(msg.get_body()):
                         fail_dict[msg.get_body()] = 0
                     # Save the msg w/ the job id

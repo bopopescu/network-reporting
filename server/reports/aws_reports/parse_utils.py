@@ -27,6 +27,7 @@ KEY = 'kw'
 AWS_ACCESS_KEY = 'AKIAJKOJXDCZA3VYXP3Q'
 AWS_SECRET_KEY = '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'
 
+JOBFLOW_NAME = 'generating report job'
 
 NO_REQUESTS = (CAMP, CRTV, P)
 
@@ -155,6 +156,8 @@ def parse_msg(msg):
 def get_waiting_jobflow(conn):
     waiting_jobflows = conn.describe_jobflows([u'WAITING'])
     for jobflow in waiting_jobflows:
+        if jobflow.name != JOBFLOW_NAME:
+            continue
         jid = jobflow.jobflowid
         num_steps = len(jobflow.steps)
         print 'found waitingjobflow %s with %i steps completed' % (jid, num_steps)

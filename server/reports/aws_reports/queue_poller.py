@@ -116,6 +116,7 @@ def finalize_report(rep, blob_key):
     log("Finalizing %s" % rep)
     report = Report.get(rep)
     report.report_blob = blob_key
+    log("Parsing report blob for %s" % rep)
     data = report.parse_report_blob(report.report_blob.open())
     report.data = data
     report.completed_at = datetime.now()

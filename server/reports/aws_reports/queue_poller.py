@@ -132,11 +132,11 @@ def notify_appengine(fname, msg):
     report_dir = report_dir % acct
     file = report_dir + fname
     files = BUCK.list(prefix = file + '/part')
-    f = open('reports/finished_%s.rep' % rep, 'a')
+    f = open('/home/ubuntu/mopub/server/reports/aws_reports/reports/finished_%s.rep' % rep, 'a')
     for ent in files:
         ent.get_contents_to_file(f)
     f.close()
-    f = open('reports/finished_%s.rep' % rep)
+    f = open('/home/ubuntu/mopub/server/reports/aws_reports/reports/finished_%s.rep' % rep)
     blob_key = upload_file(f)
     # Fork this shit because I don't like to wait
     pid = os.fork()
@@ -150,8 +150,13 @@ def notify_appengine(fname, msg):
 
 def main_loop():
     report_queue = SQS_CONN.create_queue('report_queue')
+    # Links jobs to messages
     job_msg_map = {}
+    # Links jobs to previous steps completed, useful for waiting jobflows
+    job_step_map = {}
+    # Count for a job as to how many times it has failed
     fail_dict = {}
+    # List of messages to delete from SQS
     to_del = []
     setup_remote_api()
     while True:
@@ -163,7 +168,9 @@ def main_loop():
                     if msg in to_del:
                         continue
                     # Start the MR job
-                    job_id, fname = submit_job(*parse_msg(msg))
+                    job_id, steps, fname = submit_job(*parse_msg(msg))
+                    if steps != 0:
+                        job_step_map[job_id] = steps
                     if not fail_dict.has_key(msg.get_body()):
                         fail_dict[msg.get_body()] = 0
                     # Save the msg w/ the job id
@@ -198,6 +205,11 @@ def main_loop():
                     elif job_succeeded(job.state):
                         notify_appengine(fname, msg)
                         processed_jobs.append(job.jobflowid)
+                    elif job.state == u'WAITING' and job.steps > job_step_map[job.jobflowid]:
+                        notify_appengine(fname, msg)
+                        process_jobs.append(job.jobflowid)
+                        # Don't worry about clearing job_step_map because it will reset itself if it is reused
+                        
         except Exception, e:
             log("Encountered exception %s" % e)
 

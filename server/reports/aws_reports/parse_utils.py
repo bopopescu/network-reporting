@@ -162,7 +162,7 @@ def get_waiting_jobflow(conn):
             print 'num of steps near limit of 256: terminating jobflow %s ...' % (jobid)
             conn.terminate_jobflow(jid)
         else:
-            return jid
-    return None
+            return jid, num_steps
+    return None, 0
 
 

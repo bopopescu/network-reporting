@@ -46,6 +46,6 @@ def admob_scraper(network_credential, from_date, to_date):
 
 if __name__ == '__main__':
     nc = NetworkConfidential()
-    nc.email =''
-    nc.password =''
-    admob_scraper(nc, time.mktime(datetime.date(2011,8,10).timetuple()),time.mktime(datetime.date(2011,8,11).timetuple()))
+    nc.email ='paul@haveasec.com'
+    nc.password ='surv3y#@!'
+    admob_scraper(nc, '','')

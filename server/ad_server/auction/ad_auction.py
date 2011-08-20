@@ -284,15 +284,19 @@ class AdAuction(object):
                         # set the creative as having done w/e
                         mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=crtv, user_agent=user_agent, headers=request.headers, udid=udid)
                         try:
-                            fetched = urlfetch.fetch(mpx_url, deadline=.2)
+                            t1 = datetime.datetime.now()
+                            trace_logging.warning('MPX REQUEST:%s'%mpx_url)
+                            fetched = urlfetch.fetch(mpx_url, deadline=10)
+                            t2 = datetime.datetime.now()
                             # Make sure it's a good response
-                            trace_logging.info('MPX RESPONES CODE:%s'%fetched.status_code)
+                            trace_logging.info('MPX RESPONES CODE:%s timing: %s'%(fetched.status_code, t2-t1))
                             if fetched.status_code == 200:
+                                trace_logging.warning('MPX RESPONES:%s'%fetched.content)
                                 data = simplejson.loads(fetched.content)
                                 trace_logging.info('MPX REPSONSE:%s'%data)    
                                 # With valid data
-                                if data.has_key('xhtml') and data.has_key('charge_price') and data['xhtml']:
-                                    xhtml = data['xhtml']
+                                if data.has_key('xhtml_real') and data.has_key('charge_price') and data['xhtml_real']:
+                                    xhtml = data['xhtml_real']
                                     charge_price = data['charge_price']
                                 else:
                                     continue

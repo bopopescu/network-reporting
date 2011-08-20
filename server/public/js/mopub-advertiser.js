@@ -203,15 +203,17 @@ var mopub = mopub || {};
       $('#campaignAdgroupForm input[name="bid"]').removeClass('form-error');
       
       if ($("#adgroupForm-budget_type-select").val() == "full_campaign" && $("input[name='campaign_type']").filter(':checked').val() == "gtee") {
-        if ($('#campaignAdgroupForm input[name="start_date"]').val() == '') {
-          $('#campaignAdgroupForm input[name="start_date"]').addClass('form-error');
-          $('#fullCampaignError-date').show();
-          success = false;
-        }
-        if ($('#campaignAdgroupForm input[name="end_date"]').val() == '') {
-          $('#campaignAdgroupForm input[name="end_date"]').addClass('form-error');
-          $('#fullCampaignError-date').show();
-          success = false;
+        if ($("input[name='budget_strategy']").filter(":checked").val() == "evenly") {
+          if ($('#campaignAdgroupForm input[name="start_date"]').val() == '') {
+            $('#campaignAdgroupForm input[name="start_date"]').addClass('form-error');
+            $('#fullCampaignError-date').show();
+            success = false;
+          }
+          if ($('#campaignAdgroupForm input[name="end_date"]').val() == '') {
+            $('#campaignAdgroupForm input[name="end_date"]').addClass('form-error');
+            $('#fullCampaignError-date').show();
+            success = false;
+          }
         }
         if ($('#campaignAdgroupForm input[name="full_budget"]').val() == '') {
           $('#campaignAdgroupForm input[name="full_budget"]').addClass('form-error');

@@ -42,12 +42,11 @@ def build_puts(start, end, account):
     input_files = verify_inputs(['log+%s+%s+.adv.lc.stats' % (day.strftime('%y%m%d'), account) for day in days], account)
     log("Cleaned inputs: %s" % input_files)
     inputs = [input_dir + '/' + file for file in input_files]
-    inputs = verify_inputs(inputs)
     return (inputs, output_dir)
 
 def verify_inputs(inputs, account):
     log("Dirtayy inputs: %s" % inputs)
-    in_dir = SHORT_ACCT_DIR + '/%s/daily_logs' % account
+    input_dir = SHORT_ACCT_DIR + '/%s/daily_logs' % account
     return [file for file in inputs if BUCK.get_key(input_dir + '/' + file) is not None]
 
 

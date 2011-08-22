@@ -217,6 +217,8 @@ def main_loop():
                         notify_appengine(fname, msg)
                         processed_jobs.append(job.jobflowid)
                         # Don't worry about clearing job_step_map because it will reset itself if it is reused
+                    elif job.state == u'TERMINATED':
+                        processed_jobs.append(job.jobflowid)
 
 
             # Remove Completed/Failed jobs from the map so we don't

@@ -34,5 +34,5 @@ class NetworkConfigForm(mpforms.MPModelForm):
     def clean(self):
         cleaned_data = self.cleaned_data
         for key, value in cleaned_data.iteritems():
-            cleaned_data[key] = value.strip()
+            cleaned_data[key] = value.strip() if value else value
         return cleaned_data

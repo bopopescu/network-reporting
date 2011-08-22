@@ -1,0 +1,9 @@
+set daemon 120
+    with start delay 240
+
+set logfile syslog facility log_daemon
+
+check process queue_poller
+    with pidfile /tmp/poller.pid
+    start program = "/etc/init.d/queue_poller start"
+    stop program = "/etc/init.d/queue_poller stop"

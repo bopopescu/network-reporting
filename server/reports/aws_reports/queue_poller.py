@@ -42,6 +42,12 @@ from report_mr_submitter import submit_job
 from reports.models import Report
 
 
+################## PID Stuff ######################
+f = open("/tmp/poller.pid", 'w')
+f.write(os.getpid())
+f.close()
+
+
 ################### S3 Stuff ######################
 S3_CONN = s3(AWS_ACCESS_KEY, AWS_SECRET_KEY)
 BUCK = S3_CONN.get_bucket('mopub-aws-logging')

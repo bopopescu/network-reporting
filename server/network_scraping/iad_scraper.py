@@ -13,6 +13,8 @@ def iad_scraper(network_credential, from_date, to_date):
     br['theAccountName'] = network_credential.apple_id
     br['theAccountPW'] = network_credential.password
     br.submit()
+    request = mechanize.Request('http://developer.apple.com/appstore/resources/iad/', ' ')
+    br.open(request)
 
     # headers = response.readline().split(',')
     # 

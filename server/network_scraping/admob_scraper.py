@@ -8,11 +8,13 @@ class NetworkScrapeRecord(object):
 
 def admob_scraper(network_credential, from_date, to_date):
     br = mechanize.Browser()
-    br.open('http://www.admob.com/home/login/?access=1&forward_url=%2Freporting%2Fsites%2Fgrid')
+    br.open('http://www.admob.com/home/login/')
     br.select_form(name='login')
     br['email'] = network_credential.email
     br['password'] = network_credential.password
     br.submit()
+    request = mechanize.Request('http://www.admob.com/reporting/sites/grid', ' ')
+    response = br.open(request)
 
     # headers = response.readline().split(',')
     # 

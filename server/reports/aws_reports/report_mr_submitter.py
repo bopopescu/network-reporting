@@ -22,11 +22,12 @@ LOG_REDUCER = REPORTING_S3_CODE_DIR + '/log_reducer.py'
 ACCOUNT_DIR = S3_BUCKET + '/account_data'
 SHORT_ACCT_DIR = 'account_data'
 
-
 NUM_INSTANCES = 1
 MASTER_INSTANCE_TYPE = 'm1.large'
 SLAVE_INSTANCE_TYPE = 'm1.large'
 KEEP_ALIVE = True
+
+LOG_FORMAT = "%s:\t%s\n"
 
 def log(mesg):
     my_log = open('/home/ubuntu/poller.log', 'a')

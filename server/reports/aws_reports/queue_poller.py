@@ -44,7 +44,7 @@ from reports.models import Report
 
 ################## PID Stuff ######################
 f = open("/tmp/poller.pid", 'w')
-f.write(os.getpid())
+f.write('%s' % os.getpid())
 f.close()
 
 

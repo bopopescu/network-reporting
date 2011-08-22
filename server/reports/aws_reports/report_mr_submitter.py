@@ -30,8 +30,13 @@ def build_puts(start, end, account):
     days = gen_days(start, end)
     input_files = ['log+%s+%s+.adv.lc.stats' % (day.strftime('%y%m%d'), account) for day in days]
     inputs = [input_dir + '/' + file for file in input_files]
+    inputs = verify_inputs(inputs)
     return (inputs, output_dir)
 
+
+def verify_inputs(inputs):
+    """ Only return input files that are actually there """
+    return inputs
 
 def submit_job(d1, d2, d3, start, end, report_key, account):
     conn = EmrConnection(AWS_ACCESS_KEY, AWS_SECRET_KEY)
@@ -57,29 +62,20 @@ def submit_job(d1, d2, d3, start, end, report_key, account):
 
     steps_to_add = [gen_report_step]
     jobid, steps = get_waiting_jobflow(conn)
-    if jobid:
-        conn.add_jobflow_steps(jobid, steps_to_add)
-    else:
-        jobid = conn.run_jobflow(
-                name = JOBFLOW_NAME,
-                steps = steps_to_add,
-                log_uri = LOG_URI,
-                num_instances = instances,
-                master_instance_type = MASTER_INSTANCE_TYPE,
-                slave_instance_type = SLAVE_INSTANCE_TYPE,
-                keep_alive=KEEP_ALIVE,
-                enable_debugging=True,
-                )
-    return jobid, steps, output_name
-
-    while True:
-        state = conn.describe_jobflow(jobid).state
-        if state in [u'COMPLETED', u'TERMINATED', u'WAITING']:
-            return True
-        elif state in [u'FAILED']:
-            return False
+    try:
+        if jobid:
+            conn.add_jobflow_steps(jobid, steps_to_add)
         else:
-            time.sleep(10)
-
-
-
+            jobid = conn.run_jobflow(
+                    name = JOBFLOW_NAME,
+                    steps = steps_to_add,
+                    log_uri = LOG_URI,
+                    num_instances = instances,
+                    master_instance_type = MASTER_INSTANCE_TYPE,
+                    slave_instance_type = SLAVE_INSTANCE_TYPE,
+                    keep_alive=KEEP_ALIVE,
+                    enable_debugging=True,
+                    )
+    except Exception, e:
+        return False, False, False
+    return jobid, steps, output_name

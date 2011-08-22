@@ -243,7 +243,6 @@ class Report(db.Model):
         #   pass
         #else:
         #    return None
-
     @property
     def export_data(self):
         """ Turns the dictionary into a list lists """ 
@@ -260,7 +259,10 @@ class Report(db.Model):
                     dat.append('')
                 if d3:
                     dat.append('')
-                stat_dat = [value['stats'].request_count, value['stats'].impression_count, value['stats'].click_count, value['stats'].conversion_count] 
+                if isinstance(value['stats'], dict):
+                    stat_dat = [value['stats']['request_count'],value['stats']['impression_count'], value['stats']['click_count'], value['stats']['conversion_count']]
+                else:
+                    stat_dat = [value['stats'].request_count, value['stats'].impression_count, value['stats'].click_count, value['stats'].conversion_count] 
                 dat += stat_dat
                 ret.append(dat)
                 #There's a smarter way to do this, but I'm in a hurry and (hopefully) this isn't needed for long
@@ -269,18 +271,24 @@ class Report(db.Model):
                         dat2 = [value['name'], value2['name']]
                         if d3:
                             dat2.append('')
-                        stat_dat2 = [value2['stats'].request_count, value2['stats'].impression_count, value2['stats'].click_count, value2['stats'].conversion_count] 
+                        if isinstance(value2['stats'], dict):
+                            stat_dat2 = [value2['stats']['request_count'],value2['stats']['impression_count'], value2['stats']['click_count'], value2['stats']['conversion_count']]
+                        else:
+                            stat_dat2 = [value2['stats'].request_count, value2['stats'].impression_count, value2['stats'].click_count, value2['stats'].conversion_count] 
                         dat2 += stat_dat2
                         ret.append(dat2)
                         #Really stupid
                         if value2.has_key('sub_stats'):
                             for key3, value3 in value2['sub_stats'].iteritems():
-                                dat3 = [value['name'], value2['name'], value3['name'], value3['stats'].request_count, value3['stats'].impression_count, value3['stats'].click_count, value3['stats'].conversion_count] 
+                                if isinstance(value3['stats'], dict):
+                                    stat_dat3 = [value3['stats']['request_count'],value3['stats']['impression_count'], value3['stats']['click_count'], value3['stats']['conversion_count']]
+                                else:
+                                    stat_dat3 = [value3['stats'].request_count, value3['stats'].impression_count, value3['stats'].click_count, value3['stats'].conversion_count] 
+                                dat3 = [value['name'], value2['name'], value3['name']] + stat_dat3
                                 ret.append(dat3)
         else:
             return None
         return ret
-
 
     
     @property

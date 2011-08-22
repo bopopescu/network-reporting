@@ -170,6 +170,8 @@ def main_loop():
                         continue
                     # Start the MR job
                     job_id, steps, fname = submit_job(*parse_msg(msg))
+                    if job_id is None:
+                        continue
 
                     job_step_map[job_id] = steps
                     if not fail_dict.has_key(msg.get_body()):
@@ -199,9 +201,9 @@ def main_loop():
                     fname, msg = job_msg_map[str(job.jobflowid)]
                     if job_failed(job.state):
                         fail_dict[msg.get_body()] += 1
-                        report_queue.write(msg)
-                        if fail_dict[msg.get_body()] <= 3:
-                            processed_jobs.append(job.jobflowid)
+                        processed_jobs.append(job.jobflowid)
+                        if fail_dict[msg.get_body()] < 3:
+                            report_queue.write(msg)
                 # Notify GAE when a report is finished
                     elif job_succeeded(job.state):
                         notify_appengine(fname, msg)

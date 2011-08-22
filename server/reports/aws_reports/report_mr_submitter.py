@@ -3,9 +3,13 @@ from optparse import OptionParser
 
 from boto.emr.connection import EmrConnection
 from boto.emr.step import StreamingStep
+from boto.s3.connection import S3Connection
 
 from parse_utils import gen_days, gen_report_fname, get_waiting_jobflow
 from parse_utils import AWS_ACCESS_KEY, AWS_SECRET_KEY, JOBFLOW_NAME
+
+S3_CONN = S3Connection(AWS_ACCESS_KEY, AWS_SECRET_KEY)
+BUCK = S3_CONN.get_bucket('mopub-aws-logging')
 
 S3_BUCKET = 's3://mopub-aws-logging'
 LOG_URI = S3_BUCKET + '/jobflow_logs/AAreports'  
@@ -16,6 +20,7 @@ REPORT_MAPPER = REPORTING_S3_CODE_DIR + '/%s_%s_%s_report_mapper.py'
 LOG_REDUCER = REPORTING_S3_CODE_DIR + '/log_reducer.py'
 
 ACCOUNT_DIR = S3_BUCKET + '/account_data'
+SHORT_ACCT_DIR = 'account_data'
 
 
 NUM_INSTANCES = 1
@@ -28,17 +33,20 @@ def build_puts(start, end, account):
     output_dir = ACCOUNT_DIR + ('/%s/reports' % account)
 
     days = gen_days(start, end)
-    input_files = ['log+%s+%s+.adv.lc.stats' % (day.strftime('%y%m%d'), account) for day in days]
+    input_files = verify_inputs(['log+%s+%s+.adv.lc.stats' % (day.strftime('%y%m%d'), account) for day in days], account)
     inputs = [input_dir + '/' + file for file in input_files]
     return (inputs, output_dir)
 
+def verify_inputs(inputs, account):
+    in_dir = SHORT_ACCT_DIR + '/%s/daily_logs' % account
+    return [file for file in inputs if BUCK.get_key(input_dir + '/' + file) is not None]
 
 def submit_job(d1, d2, d3, start, end, report_key, account):
     conn = EmrConnection(AWS_ACCESS_KEY, AWS_SECRET_KEY)
 
     inputs, output_dir = build_puts(start, end, account)
-    print inputs
-    print output_dir
+    if len(inputs) == 0:
+        return None, None, None
     instances = 10
     output_name = gen_report_fname(d1, d2, d3, start, end)
     start = start.strftime('%y%m%d')

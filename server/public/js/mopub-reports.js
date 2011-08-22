@@ -15,13 +15,12 @@
      addPlaceholder();
 
     $('input[name="start"]').datepicker().change(function (e) {
-        var dte = $(this).val().split("/");
-        dte = new Date(parseInt(dte[2]), parseInt(dte[0])-1, parseInt(dte[1]));
+        var dte = new Date($(this).val());
         $('input[name="end"]').datepicker('option', 'minDate', dte);
     });
+
     $('input[name="end"]').datepicker({maxDate: new Date()}).change(function (e) {
-        var dte = $(this).val().split("/");
-        dte = new Date(parseInt(dte[2]), parseInt(dte[0])-1, parseInt(dte[1]));
+        var dte = new Date($(this).val());
         $('input[name="start"]').datepicker('option', 'maxDate', dte);
     });
 
@@ -213,11 +212,6 @@
                 $('#interval-toggle').val(2);
                 var one_day = 1000*60*60*24
                 switch (val) {
-                    case 'today':
-                        var dte = format_date(today); 
-                        $('#end-input').val(dte).change();
-                        $('#start-input').val(dte).change();
-                        break;
                     case 'yesterday':
                         today.setTime(today.getTime() - one_day);
                         var dte = format_date(today); 
@@ -253,7 +247,7 @@
         .change(function(e) {
             var inter_val = $('#interval-toggle').val()
             if ($('#interval-toggle').val() == 0) {
-                $('#interval').selectmenu('index', 4);
+                $('#interval').selectmenu('index', 3);
             }
             else {
                 $('#interval-toggle').val(inter_val - 1);

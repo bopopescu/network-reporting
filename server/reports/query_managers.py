@@ -205,6 +205,7 @@ class ReportQueryManager(CachedQueryManager):
                      interval=None, 
                      sched_interval=None, 
                      recipients = None, 
+                     default=False,
                      testing=False):
         '''Create a new scheduled report with the given specs
         and create a new report to run
@@ -266,6 +267,7 @@ class ReportQueryManager(CachedQueryManager):
                                 account=self.account,
                                 name=name,
                                 saved=saved,
+                                default=default,
                                 recipients=recipients or [],
                                 )
         sched.put()

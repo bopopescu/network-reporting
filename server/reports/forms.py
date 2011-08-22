@@ -45,7 +45,7 @@ CHOICES = [('','------------'),
            #(KEY, 'Keywords')]
 TARG = 'targeting' # I don't know what this is
 
-INT_CHCES = [('today', 'Today'), ('yesterday', 'Yesterday'), ('7days', 'Last 7 days'), ('lmonth', 'Last month'), ('custom', 'Custom')]
+INT_CHCES = [('yesterday', 'Yesterday'), ('7days', 'Last 7 days'), ('lmonth', 'Last month'), ('custom', 'Custom')]
 SCHED_CHCES = [('none', "Don't schedule"), ('daily', 'Daily'), ('weekly', 'Weekly'), ('monthly', 'Monthly'), ('quarterly', 'Quarterly')]
 
 

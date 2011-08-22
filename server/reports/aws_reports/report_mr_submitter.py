@@ -28,23 +28,27 @@ MASTER_INSTANCE_TYPE = 'm1.large'
 SLAVE_INSTANCE_TYPE = 'm1.large'
 KEEP_ALIVE = True
 
+def log(mesg):
+    my_log = open('/home/ubuntu/poller.log', 'a')
+    my_log.write(LOG_FORMAT % (time.time(), mesg))
+    my_log.close()
+
 def build_puts(start, end, account):
     input_dir = ACCOUNT_DIR + ('/%s/daily_logs' % account)
     output_dir = ACCOUNT_DIR + ('/%s/reports' % account)
 
     days = gen_days(start, end)
     input_files = verify_inputs(['log+%s+%s+.adv.lc.stats' % (day.strftime('%y%m%d'), account) for day in days], account)
+    log("Cleaned inputs: %s" % input_files)
     inputs = [input_dir + '/' + file for file in input_files]
     inputs = verify_inputs(inputs)
     return (inputs, output_dir)
 
 def verify_inputs(inputs, account):
+    log("Dirtayy inputs: %s" % inputs)
     in_dir = SHORT_ACCT_DIR + '/%s/daily_logs' % account
     return [file for file in inputs if BUCK.get_key(input_dir + '/' + file) is not None]
 
-def verify_inputs(inputs):
-    """ Only return input files that are actually there """
-    return inputs
 
 def submit_job(d1, d2, d3, start, end, report_key, account):
     """ Returns Jobid, steps completed, and output name if job is added properly

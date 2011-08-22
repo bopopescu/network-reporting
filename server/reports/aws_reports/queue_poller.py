@@ -181,8 +181,6 @@ def main_loop():
                     job_msg_map[job_id] = (fname, msg)
                     # Remove the msg from the Q
                     to_del.append(msg)
-            else:
-                log("No Messages")
 
             for i in range(len(to_del)):
                 msg = to_del.pop(0)

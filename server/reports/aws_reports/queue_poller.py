@@ -170,7 +170,8 @@ def main_loop():
                         continue
                     # Start the MR job
                     job_id, steps, fname = submit_job(*parse_msg(msg))
-                    if job_id is None:
+                    if not job_id:
+                        to_del.append(msg)
                         continue
 
                     job_step_map[job_id] = steps
@@ -208,22 +209,22 @@ def main_loop():
                     elif job_succeeded(job.state):
                         notify_appengine(fname, msg)
                         processed_jobs.append(job.jobflowid)
-                    elif job.state == u'WAITING' and job.steps > job_step_map[job.jobflowid]:
+                    elif job.state == u'WAITING' and len([step for step in job.steps if step.state == u'COMPLETED']) > job_step_map[job.jobflowid]:
                         notify_appengine(fname, msg)
                         processed_jobs.append(job.jobflowid)
                         # Don't worry about clearing job_step_map because it will reset itself if it is reused
+
+
+            # Remove Completed/Failed jobs from the map so we don't
+            # Repeatedly notify GAE//Continuously add a job that 
+            # failed once
+            for job_id in processed_jobs:
+                del(job_msg_map[job_id])
+            time.sleep(10)
                         
         except Exception, e:
             log("Encountered exception: %s" % e)
 
-
-
-        # Remove Completed/Failed jobs from the map so we don't
-        # Repeatedly notify GAE//Continuously add a job that 
-        # failed once
-        for job_id in processed_jobs:
-            del(job_msg_map[job_id])
-        time.sleep(10)
 
 
 if __name__ == '__main__':

@@ -28,3 +28,8 @@ cron:
   url: /admin/prep/?offline=1
   schedule: every 30 minutes  
   timezone: America/Los_Angeles
+
+- description: Check how much each bidder has spent
+  url: /admin/bidder_spent/
+  schedule: every 5 minutes
+  timezone: America/Los_Angeles

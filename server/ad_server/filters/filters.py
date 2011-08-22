@@ -13,6 +13,7 @@ from budget import budget_service
 from reporting.models import StatsModel
 from ad_server.parser.useragent_parser import get_os
 
+from common.utils.decorators import deprecated
 
 from common.constants import (VALID_FULL_FORMATS,     
                               VALID_TABLET_FULL_FORMATS,
@@ -71,12 +72,13 @@ def kw_filter(keywords):
     return (real_filter, log_mesg, [])
 
 
-def geo_filter(geo_preds):
+def geo_filter(acceptable_geo_preds_list):
     log_mesg = "Removed due to geo mismatch: %s"
     def real_filter(a):
-        return (set(geo_preds).intersection(a.geographic_predicates) > set())
+        return (set(acceptable_geo_preds_list).intersection(a.geographic_predicates) > set())
     return (real_filter, log_mesg, [])
 
+@deprecated
 def device_filter(dev_preds):
     log_mesg = "Removed due to device mismatch: %s"
     def real_filter(a):
@@ -86,12 +88,6 @@ def device_filter(dev_preds):
 def os_filter(user_agent):
     log_mesg = "Removed due to OS restrictions: %s"
     def real_filter(a):
-
-        # NOTE: This is because of ghetto memcache error, remove this if past July 5th 2011.
-        if a.target_ipod is None or a.target_iphone is None or a.target_ipad is None or a.ios_version_min is None or a.ios_version_max is None or a.android_version_min is None or a.android_version_max is None:
-            trace_logging.error("adgroup value contained None. Automatically passing.")
-            return True
-        # ENDNOTE
         
         # Do not do device targeting if it is turned off
         if not a.device_targeting:

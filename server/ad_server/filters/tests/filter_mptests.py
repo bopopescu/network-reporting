@@ -78,3 +78,18 @@ def landscape_format_filter_mptest():
     assert(not real_filter4(creative1))
     assert(not real_filter4(creative2))
     assert(not real_filter4(creative3))
+
+def horrible_geo_system_mptest():
+    """ Right now we store the country tuple in a custom string encoding. """ 
+    
+    # I want this adunit to accept everything
+    adunit1 = AdUnit()
+    creative1 = Creative(format="full", landscape=True)
+
+    
+    real_filter1, msg, l = format_filter(country_tuple)
+
+    assert(real_filter1(creative1))
+    
+    
+

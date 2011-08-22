@@ -45,17 +45,8 @@ from google.appengine.ext import testbed
 
 from common.utils.system_test_framework import run_auction, fake_request
 
-
-
-""" This module is where all of our system and end-to-end tests can live. """
-
-
 class TestAdAuction(unittest.TestCase):
-    """
-    Using the web UI, we have created an ad_unit with the only two 
-    competitors being a cheap campaign ($10/ad) and an expensive
-    campaign ($100/ad)
-    """
+
 
     def setUp(self):
         

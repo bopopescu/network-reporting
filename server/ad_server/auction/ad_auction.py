@@ -422,7 +422,11 @@ class AdAuction(object):
         # r = [US, CA SF] or []
         # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         # TODO: DEFAULT COUNTRY SHOULD NOT BE US!!!!!!!
-        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
+        
+        # I think the idea here is to enumerate the list of geo predicates 
+        # that when matched will accept this ad_request
+        
         if len(r) == 0:
             return ["country_name=US","country_name=*"] # ["country_name"=*] or ["country_name=US] ["country_name="CD"]
         elif len(r) == 1:

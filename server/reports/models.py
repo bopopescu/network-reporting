@@ -1,5 +1,8 @@
 #generic python imports
 import logging
+import time
+import traceback
+import sys
 
 from datetime import datetime, timedelta
 
@@ -113,7 +116,6 @@ class ScheduledReport(db.Model):
     #daily, weekly, monthly
     interval = db.StringProperty(choices=['today','yesterday', '7days', 'lmonth', 'custom'], default='custom')
     
-
     sched_interval = db.StringProperty(choices = ['none', 'daily', 'weekly', 'monthly', 'quarterly'], default='none')
     next_sched_date = db.DateProperty(default=datetime.now().date())
     email = db.BooleanProperty(default=False)
@@ -361,9 +363,9 @@ class Report(db.Model):
             vals = eval(vals)
             req, att = self.get_stats_info(keys)
             #I'm using list comprehension for you Nafis
-            keys = [self.get_key_name(idx, key, memo) for idx,key in enumerate(keys)]
-            # Hopefully the memo is populated and no lookups are necessary....wishful thinking, I know
             bid_infos = [self.get_bid_info(idx, key, memo) for idx, key in enumerate(keys)]
+            keys = [self.get_key_name(idx, key, memo) for idx,key in enumerate(keys)]
+
             # Invalid key somewhere in this line, don't use it
             if None in keys:
                 continue
@@ -376,14 +378,17 @@ class Report(db.Model):
                 if len(vals) == 5:
                     rev = 0
                     req, att, imp, clk, conv = vals
-                    if bid_strat is not None:
-                        if bid_strat == 'cpm':
-                            rev = float(bid * imp)/1000
-                        elif bid_strat == 'cpc':
-                            rev = bid * clk
-                        elif bid_strat == 'cpa':
-                            rev = bid * conv
-                    vals = [rev, req, att, imp, clk, conv]
+                elif len(vals) == 6:
+                    rev, req, att, imp, clk, conv = vals
+                # Need to set rev if we can
+                if bid_strat is not None:
+                    if bid_strat == 'cpm':
+                        rev = float(bid * imp)/1000
+                    elif bid_strat == 'cpc':
+                        rev = bid * clk
+                    elif bid_strat == 'cpa':
+                        rev = bid * conv
+                vals = [rev, req, att, imp, clk, conv]
                 #if this key doesn't exist, build that shit
                 if not temp.has_key(key):
                     #this key doesn't exist, so no previous anything can exist
@@ -413,7 +418,36 @@ class Report(db.Model):
                             temp[key]['sub_stats'] = {}
                         temp = temp[key]['sub_stats']
         logging.debug(final)
-        return statsify(final)
+        return self.rollup_revenue(statsify(final))
+
+
+    def rollup_revenue(self, stats):
+        def rollup_help(stats, depth):
+            rev = 0.0
+            for k,v in stats.iteritems():
+                if depth == 0:
+                    # Bottom level, just roll up
+                    rev += v['stats']['revenue']
+                else:
+                    # Not bottom level, roll up and set 
+                    rev += rollup_help(v['sub_stats'], depth-1)
+                    stats[k]['stats']['revenue'] = rev
+            return rev
+        if self.d1 in [CRTV, CAMP]:
+            # Top level already rolled up
+            return stats
+        elif self.d2 in [CRTV, CAMP]:
+            depth = 0
+        elif self.d3 in [CRTV,CAMP]:
+            depth = 1
+        else:
+            # No levels have rev
+            return stats
+
+        for k,v in stats.iteritems():
+            stats[k]['stats']['revenue'] = rollup_help(v['sub_stats'], depth)
+        return stats
+
 
 
     def get_stats_info(self, keys):
@@ -454,19 +488,25 @@ class Report(db.Model):
         else:
             dim = None
 
-        if dim in CRTV_DIMS:
+        if dim in [CAMP, CRTV]:
             try:
                 if memo.has_key(key):
                     crtv = memo[key]
                 else:
                     crtv = Creative.get(key)
                     memo[key] = crtv
+                if crtv.adgroup.campaign.campaign_type == 'network':
+                    return None, None
                 if dim == CRTV:
                     return (crtv.adgroup.bid_strategy, crtv.adgroup.bid)
                 elif dim == CAMP:
                     camp = crtv.adgroup.campaign
                     return (crtv.adgroup.bid_strategy, crtv.adgroup.bid)
             except:
+                log("Exception in bid info")
+                f = open('/home/ubuntu/tb.log', 'a')
+                traceback.print_tb(sys.exc_info()[2], file=f)
+                f.close()
                 return None, None
         return None, None
 

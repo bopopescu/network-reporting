@@ -156,6 +156,7 @@ def notify_appengine(fname, msg):
         except Exception, e:
             # Don't endlessly cycle and shit, log the error and hten kill yourself
             log("%s" % e)
+            log("%s" % sys.exc_info[2])
             sys.exit(0)
     
 

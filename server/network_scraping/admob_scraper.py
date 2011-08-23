@@ -15,6 +15,7 @@ def admob_scraper(network_credential, from_date, to_date):
     br.submit()
     request = mechanize.Request('http://www.admob.com/reporting/sites/grid', ' ')
     response = br.open(request)
+    for line in response: print line
 
     # headers = response.readline().split(',')
     # 

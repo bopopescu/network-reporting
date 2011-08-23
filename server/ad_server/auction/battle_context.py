@@ -4,19 +4,21 @@ class BattleContext(object):
     def __init__ (self,
                   adunit=None,
     	          keywords=None,
-                  country_tuple=[],
+                  country_code=None, # Two characater country code.
+                  region_code=None, # For future use.
     	          excluded_adgroup_keys=[],
     	          udid=None,
     	          ll=None,
     	          request_id=None,
     	          now=datetime.datetime.now(),
     	          user_agent=None,  
-    	          geo_predicates=["country_name=US","country_name=*"],   #TODO get rid of this horrible hack. Refactor geopreds.   
+    	          geo_predicates=["country_name=US","country_name=*"],   #TODO get rid of this horrible hack. Refactor geopreds!   
     	          experimental=None,
     	          ):         
         self.adunit = adunit
         self.keywords = keywords
-        self.country_tuple = country_tuple
+        self.country_code = country_code
+        self.region_code = region_code
         self.excluded_adgroup_keys = excluded_adgroup_keys
         self.udid = udid
         self.ll = ll

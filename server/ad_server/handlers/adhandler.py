@@ -123,6 +123,11 @@ class AdHandler(webapp.RequestHandler):
         mp_logging.log(self.request, event=mp_logging.REQ_EVENT, adunit=adunit)  
         
         trace_logging.warning("User Agent: %s"%helpers.get_user_agent(self.request))
+        
+
+
+
+        # TODO: get rid of country_tuple
 
         # check if the country is overriden manually
         if self.request.get('country'):
@@ -132,6 +137,15 @@ class AdHandler(webapp.RequestHandler):
         if len(countries) == 1:
             countries = [c.upper() for c in countries]
             country_tuple = tuple(countries)
+        
+        # ENDTODO
+        
+        # We can get country_code from one of two places 
+        if self.request.get('country'):
+            country_code = self.request.get('country')
+        else:
+            country_code = helpers.get_country_code(headers=self.request.headers)
+        
         
         site = adunit
         
@@ -188,7 +202,7 @@ class AdHandler(webapp.RequestHandler):
                                 request_id=request_id, 
                                 now=now,
                                 user_agent=user_agent,       
-                                country_tuple=country_tuple, 
+                                country_code=country_code, 
                                 experimental=experimental)  
                                 
         # Run the ad auction to get the creative to display

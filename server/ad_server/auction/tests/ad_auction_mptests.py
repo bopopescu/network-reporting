@@ -25,7 +25,7 @@ from server.ad_server.main import  ( AdClickHandler,
                                      )
 from server.ad_server.handlers import adhandler
 from server.ad_server.handlers.adhandler import AdHandler                                     
-from server.ad_server.auction.ad_auction import AdAuction
+
 
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 ############# Integration Tests #############
@@ -39,10 +39,10 @@ from budget.models import (BudgetSlicer,
                            BudgetSliceLog,
                            BudgetDailyLog,
                            )               
-                           
-from ad_server.auction import new_ad_auction
+                                             
 from ad_server.auction.battle_context import BattleContext
-
+                                        
+from server.ad_server.auction import ad_auction     
 from google.appengine.ext import testbed
 ################# End to End #################
 
@@ -146,7 +146,7 @@ class TestAdAuction(unittest.TestCase):
     def mptest_basic(self):
         battle_context = BattleContext(adunit=self.adunit,
                                        keywords=None,
-                                       country_tuple=[],
+                                       country_code=None,
                                        excluded_adgroup_keys=[],
                                        udid="FakeUDID",
                                        ll=None,
@@ -156,14 +156,14 @@ class TestAdAuction(unittest.TestCase):
                                        experimental=False)   
                                        
         # Unpack results
-        creative, on_fail_exclude_adgroups = new_ad_auction.run(battle_context, self.adunit_context)                    
+        creative, on_fail_exclude_adgroups = ad_auction.run(battle_context, self.adunit_context)                    
     
         eq_obj(creative, self.expensive_creative)
         
-    def mptest_basic_country_tuple(self):
+    def mptest_basic_country_code(self):
         battle_context = BattleContext(adunit=self.adunit,
                                        keywords=None,
-                                       country_tuple=["US"],
+                                       country_code="US",
                                        excluded_adgroup_keys=[],
                                        udid="FakeUDID",
                                        ll=None,
@@ -172,14 +172,14 @@ class TestAdAuction(unittest.TestCase):
                                        user_agent='FakeAndroidOS',        
                                        experimental=False)
         # Unpack results
-        creative, on_fail_exclude_adgroups = new_ad_auction.run(battle_context, self.adunit_context)                    
+        creative, on_fail_exclude_adgroups = ad_auction.run(battle_context, self.adunit_context)                    
 
         eq_obj(creative, self.expensive_creative)
         
     def mptest_basic_exclusion(self):
         battle_context = BattleContext(adunit=self.adunit,
                                        keywords=None,
-                                       country_tuple=[],
+                                       country_code=None,
                                        excluded_adgroup_keys=[],
                                        udid="FakeUDID",
                                        ll=None,
@@ -188,7 +188,7 @@ class TestAdAuction(unittest.TestCase):
                                        user_agent='FakeAndroidOS',
                                        experimental=False)
         # Unpack results
-        creative, on_fail_exclude_adgroups = new_ad_auction.run(battle_context, self.adunit_context)                    
+        creative, on_fail_exclude_adgroups = ad_auction.run(battle_context, self.adunit_context)                    
 
         eq_obj(creative, self.expensive_creative)
         
@@ -199,7 +199,7 @@ class TestAdAuction(unittest.TestCase):
         expensive_ag_key = str(self.expensive_adgroup.key())
         battle_context = BattleContext(adunit=self.adunit,
                                        keywords=None,
-                                       country_tuple=[],
+                                       country_code=None,
                                        excluded_adgroup_keys=[expensive_ag_key],
                                        udid="FakeUDID",
                                        ll=None,
@@ -208,7 +208,7 @@ class TestAdAuction(unittest.TestCase):
                                        user_agent='FakeAndroidOS',
                                        experimental=False)
         # Unpack results
-        creative, on_fail_exclude_adgroups = new_ad_auction.run(battle_context, self.adunit_context)                    
+        creative, on_fail_exclude_adgroups = ad_auction.run(battle_context, self.adunit_context)                    
 
         eq_obj(creative, self.cheap_creative)
 
@@ -223,7 +223,7 @@ class TestAdAuction(unittest.TestCase):
         """ This belongs in ad_auction_mptests """
         battle_context = BattleContext(adunit=self.adunit,
                                        keywords=None,
-                                       country_tuple=[],
+                                       country_code=None,
                                        excluded_adgroup_keys=[],
                                        udid="FakeUDID",
                                        ll=None,
@@ -232,7 +232,7 @@ class TestAdAuction(unittest.TestCase):
                                        user_agent='FakeAndroidOS',
                                        experimental=False)
         # Unpack results
-        creative, on_fail_exclude_adgroups = new_ad_auction.run(battle_context, self.adunit_context)                    
+        creative, on_fail_exclude_adgroups = ad_auction.run(battle_context, self.adunit_context)                    
                                        
         eq_obj(creative, self.expensive_creative)
         

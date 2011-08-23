@@ -49,10 +49,6 @@ from ad_server.auction.battles import (Battle,
                                        GteeHighBattle,
                                        GteeLowBattle 
                                       )
-
-
-
-
   
 from ad_server.auction.battle_context import BattleContext
 
@@ -91,7 +87,7 @@ class TestAdAuction(unittest.TestCase):
         # Make Expensive Campaign
         self.expensive_c = Campaign(name="expensive",
                                     budget=1000.0,
-                                    budget_strategy="evenly",
+                                    budget_strategy="allatonce",
                                     campaign_type="gtee")
         self.expensive_c.put()
 
@@ -113,7 +109,7 @@ class TestAdAuction(unittest.TestCase):
         # Make cheap campaign
         self.cheap_c = Campaign(name="cheap",
                                 budget=1000.0,
-                                budget_strategy="evenly",
+                                budget_strategy="allatonce",
                                 campaign_type="gtee")
         self.cheap_c.put()
 
@@ -143,7 +139,7 @@ class TestAdAuction(unittest.TestCase):
         
         self.battle_context = BattleContext(adunit=self.adunit,
                 	                        keywords=["rocks", "paper"],
-                                            country_tuple=[],
+                                            country_code=None,
                 	                        excluded_adgroup_keys=[],
                 	                        udid="awesome_test_udid",
                 	                        ll=None,

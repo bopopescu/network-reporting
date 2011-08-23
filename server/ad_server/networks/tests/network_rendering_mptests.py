@@ -5,7 +5,10 @@ import datetime
 sys.path.append(os.environ['PWD'])
 import common.utils.test.setup
 
-from ad_server.renderers.creative_renderer import BaseCreativeRenderer
+from ad_server.renderers.creative_renderer import BaseCreativeRenderer  
+from ad_server.renderers.text_icon import TextIconRenderer
+
+
 import unittest
 
 from account.models import Account 
@@ -26,6 +29,7 @@ from nose.tools import eq_
 
 from ad_server.handlers.adhandler import RENDERERS   
 from advertiser.models import ImageCreative, TextAndTileCreative, TextCreative
+
 
 
 class RenderingTestBase(object):
@@ -124,13 +128,13 @@ class RenderingTestBase(object):
         
         self._compare_rendering_with_examples(network_type, suffix="_full")
         
-    def _compare_rendering_with_examples(self, name, suffix="", reset_example=False):
+    def _compare_rendering_with_examples(self, name, suffix="", reset_example=False, Renderer=BaseCreativeRenderer):
         """ For now just test the renderer. Next test headers too.
             Uses a default value for html_data. """
 
 
         empty_headers = Response().headers # We can use a vanilla response, as we don't use anything from it
-        rendered_creative, headers = BaseCreativeRenderer.render(empty_headers,   
+        rendered_creative, headers = Renderer.render(empty_headers,   
                                        creative=self.creative,
                                        now=self.dt,
                                        adunit=self.adunit, 
@@ -188,7 +192,7 @@ class RenderingTests(RenderingTestBase, unittest.TestCase):
         self.creative.image_height = 50
         self.creative.put()    
 
-        self._compare_rendering_with_examples("image_adtype", suffix="", reset_example=True)  
+        self._compare_rendering_with_examples("image_adtype", suffix="", reset_example=False)  
 
     def mptest_text_adtype(self):
         """ Make a one-off test for image creatives. """
@@ -202,7 +206,7 @@ class RenderingTests(RenderingTestBase, unittest.TestCase):
                                             ad_group=self.adgroup)
         self.creative.put()    
 
-        self._compare_rendering_with_examples("text_adtype", suffix="", reset_example=True)  
+        self._compare_rendering_with_examples("text_adtype", suffix="", reset_example=False)  
 
 
     def mptest_text_icon_adtype(self):
@@ -217,7 +221,7 @@ class RenderingTests(RenderingTestBase, unittest.TestCase):
                                             ad_group=self.adgroup)     
         self.creative.put()    
 
-        self._compare_rendering_with_examples("text_icon_adtype", suffix="", reset_example=True)
+        self._compare_rendering_with_examples("text_icon_adtype", suffix="", reset_example=False, Renderer=TextIconRenderer)
 
 ##### TEST GENERATORS ######     
 

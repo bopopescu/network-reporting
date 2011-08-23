@@ -1,6 +1,8 @@
 from string import Template 
 import random              
 from ad_server.renderers.creative_renderer import BaseCreativeRenderer 
+from google.appengine.api.images import InvalidBlobKeyError
+from google.appengine.api import images 
 
 class TextIconRenderer(BaseCreativeRenderer):
     """ For now, just do the standard """
@@ -8,8 +10,8 @@ class TextIconRenderer(BaseCreativeRenderer):
     def network_specific_rendering(cls, headers, 
                                         creative=None,   
                                         context=None,
+                                        request_host=None,
                                         **kwargss):    
-        int("omg")
         try:
             context["image_url"] = images.get_serving_url(creative.image_blob)   
         except InvalidBlobKeyError:     

@@ -6,7 +6,7 @@ cron:
 
 - description: Advance the budget timeslices
   url: /budget/advance/
-  schedule: every 1 minutes synchronized
+  schedule: every 5 minutes synchronized
   timezone: America/Los_Angeles
   
 - description: Run all reports scheduled for today

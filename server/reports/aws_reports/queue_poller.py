@@ -151,7 +151,12 @@ def notify_appengine(fname, msg):
     if pid:
         return
     else:
-        finalize_report(rep, blob_key)
+        try:
+            finalize_report(rep, blob_key)
+        except Exception, e:
+            # Don't endlessly cycle and shit, log the error and hten kill yourself
+            log("%s" % e)
+            sys.exit(0)
     
 
 

@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import time, sys, os, time, urllib2
 from datetime import datetime
+import traceback
 
 sys.path.append("..")
 sys.path.append("../..")
@@ -156,7 +157,9 @@ def notify_appengine(fname, msg):
         except Exception, e:
             # Don't endlessly cycle and shit, log the error and hten kill yourself
             log("%s" % e)
-            log("%s" % sys.exc_info[2])
+            f = open('/home/ubuntu/tb.log', 'a')
+            traceback.print_tb(sys.exc_info()[2], file=f)
+            f.close()
             sys.exit(0)
     
 

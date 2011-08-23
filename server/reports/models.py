@@ -373,16 +373,17 @@ class Report(db.Model):
                 vals[1] = '---'
             for i,((key,name), (bid_strat, bid)) in enumerate(zip(keys, bid_infos)):
                 # Preprocess the values to add revenue
-                rev = 0
-                req, att, imp, clk, conv = vals
-                if bid_strat is not None:
-                    if bid_strat == 'cpm':
-                        rev = float(bid * imp)/1000
-                    elif bid_strat == 'cpc':
-                        rev = bid * clk
-                    elif bid_strat == 'cpa':
-                        rev = bid * conv
-                vals = [rev, req, att, imp, clk, conv]
+                if len(vals) == 5:
+                    rev = 0
+                    req, att, imp, clk, conv = vals
+                    if bid_strat is not None:
+                        if bid_strat == 'cpm':
+                            rev = float(bid * imp)/1000
+                        elif bid_strat == 'cpc':
+                            rev = bid * clk
+                        elif bid_strat == 'cpa':
+                            rev = bid * conv
+                    vals = [rev, req, att, imp, clk, conv]
                 #if this key doesn't exist, build that shit
                 if not temp.has_key(key):
                     #this key doesn't exist, so no previous anything can exist

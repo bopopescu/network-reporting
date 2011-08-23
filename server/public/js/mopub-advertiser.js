@@ -956,6 +956,7 @@ var mopub = mopub || {};
         results.cpa = "$" + results.cpa.toFixed(2);
         results.cpc = "$" + results.cpc.toFixed(2);
         results.cpm = "$" + results.cpm.toFixed(2);
+        results.revenue = "$" + results.revenue.toFixed(2);
         results.ctr = formatPercentage(results.ctr);
         results.fill_rate = formatPercentage(results.fill_rate);
         
@@ -1321,17 +1322,17 @@ var mopub = mopub || {};
         var all = formatStatsForDisplay(allStats.sum);
         
         $("#stats-breakdown-impressions .today .inner").html(today.impression_count);
-        $("#stats-breakdown-revenue .today .inner").html("$" + today.revenue.toFixed(2));
+        $("#stats-breakdown-revenue .today .inner").html(today.revenue);
         $("#stats-breakdown-clicks .today .inner").html(today.click_count);
         $("#stats-breakdown-ctr .today .inner").html(today.ctr);
         
         $("#stats-breakdown-impressions .yesterday .inner").html(yesterday.impression_count);
-        $("#stats-breakdown-revenue .yesterday .inner").html("$" + yesterday.revenue.toFixed(2));
+        $("#stats-breakdown-revenue .yesterday .inner").html(yesterday.revenue);
         $("#stats-breakdown-clicks .yesterday .inner").html(yesterday.click_count);
         $("#stats-breakdown-ctr .yesterday .inner").html(yesterday.ctr);
         
         $("#stats-breakdown-impressions .all .inner").html(all.impression_count);
-        $("#stats-breakdown-revenue .all .inner").html("$" + all.revenue.toFixed(2));
+        $("#stats-breakdown-revenue .all .inner").html(all.revenue);
         $("#stats-breakdown-clicks .all .inner").html(all.click_count);
         $("#stats-breakdown-ctr .all .inner").html(all.ctr);
     }

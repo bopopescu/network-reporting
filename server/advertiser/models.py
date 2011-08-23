@@ -14,7 +14,8 @@ from ad_server.renderers.creative_renderer import BaseCreativeRenderer
 from ad_server.renderers.admob import AdMobRenderer   
 from ad_server.renderers.text_and_tile import TextAndTileRenderer    
 from ad_server.renderers.adsense import AdSenseRenderer            
-from ad_server.renderers.image import ImageRenderer
+from ad_server.renderers.image import ImageRenderer 
+from ad_server.renderers.millennial_native import MillennialNativeRenderer
 
 # from budget import budget_service
 #
@@ -455,8 +456,9 @@ class TextAndTileCreative(Creative):
         return TextAndTileRenderer
         
 class HtmlCreative(Creative):
-    # html ad properties
-    # html_name = db.StringProperty(required=True)
+    """ This creative has pure html that has been added by the user.
+        This should not be confused with X-adtype=html, which means that the
+        payload is html as opposed to a native request. """
     html_data = db.TextProperty()  
 
 class ImageCreative(Creative):
@@ -522,7 +524,10 @@ class MillennialCreative(Creative):
         return ('728x90', '320x50', '300x250',)
 
 class MillennialNativeCreative(MillennialCreative):
-
+                 
+    @property
+    def Renderer(self):                      
+        return MillennialNativeRenderer
     @property
     def multi_format(self):
         return ('728x90', '320x50', '300x250', 'full' ,)

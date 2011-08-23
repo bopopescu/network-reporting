@@ -151,9 +151,7 @@ class RenderingTestBase(object):
     def _compare_rendering_with_examples(self, name, suffix="", reset_example=False):
         """ For now just test the renderer. Next test headers too.
             Uses a default value for html_data. """
-        
-        print "yyy" + str(self.creative)
-
+                                           
         empty_headers = Response().headers # We can use a vanilla response, as we don't use anything from it
         rendered_creative, headers = self.creative.Renderer.render(empty_headers,   
                                        creative=self.creative,
@@ -243,15 +241,12 @@ class RenderingTests(RenderingTestBase, unittest.TestCase):
                                             
                                                                                     
         self.creative.put()         
-        print "omg" + str(self.creative)
-        print str(TextAndTileCreative)
-        print str(self.creative.Renderer)
-
         self._compare_rendering_with_examples("text_icon_adtype", suffix="", reset_example=False)
 
 ##### TEST GENERATORS ######     
 
-network_names = ("brightroll",
+network_names = ("adsense",
+                 "brightroll",
                  "jumptap",
                  "ejam",
                  "chartboost",

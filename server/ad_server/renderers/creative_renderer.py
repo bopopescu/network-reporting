@@ -47,6 +47,9 @@ class BaseCreativeRenderer(object):
         
         format_tuple, network_center = _make_format_tuple_and_set_orientation(adunit, creative, headers)
         
+         
+        # Build fail url
+        fail_url = _build_fail_url(request_url, on_fail_exclude_adgroups)
         
         context = {}
         
@@ -109,11 +112,11 @@ class BaseCreativeRenderer(object):
                                        request_host=request_host,
                                        request_url=request_url,   
                                        version_number=version_number,
-                                       track_url=track_url,
-                                       on_fail_exclude_adgroups=on_fail_exclude_adgroups,
+                                       track_url=track_url,                                 
                                        context=context,
                                        format_tuple=format_tuple,
-                                       random_val=random_val)
+                                       random_val=random_val,
+                                       fail_url=fail_url)
 
         if creative.ad_type == "greystripe":
             context.update({"html_data": creative.html_data, "w": format_tuple[0], "h": format_tuple[1]})
@@ -175,7 +178,7 @@ class BaseCreativeRenderer(object):
                 headers.add_header("X-Adtype", str(creative.ad_type))
                 headers.add_header("X-Backfill", str(creative.ad_type))
         
-            headers.add_header("X-Failurl", _build_fail_url(request_url, on_fail_exclude_adgroups))
+            headers.add_header("X-Failurl", fail_url)
 
         elif str(creative.ad_type) == "admob_native":
             if "full" in adunit.format:
@@ -191,61 +194,8 @@ class BaseCreativeRenderer(object):
                 "adHeight":adunit.get_height()
             }
             headers.add_header("X-Nativecontext", simplejson.dumps(nativecontext_dict))
-
-        elif str(creative.ad_type) == "millennial_native":
-            if "full" in adunit.format:
-                headers.add_header("X-Adtype", "interstitial")
-                headers.add_header("X-Fulladtype", "millennial_full")
-            else:
-                headers.add_header("X-Adtype", str(creative.ad_type))
-                headers.add_header("X-Backfill", str(creative.ad_type))
-            headers.add_header("X-Failurl", _build_fail_url(request_url, on_fail_exclude_adgroups))
-            nativecontext_dict = {
-                "adUnitID":adunit.get_pub_id("millennial_pub_id"),
-                "adWidth":adunit.get_width(),
-                "adHeight":adunit.get_height()
-            }
-            headers.add_header("X-Nativecontext", simplejson.dumps(nativecontext_dict))
-        
-        elif str(creative.ad_type) == "adsense":
-            headers.add_header("X-Adtype", str(creative.ad_type))
-            headers.add_header("X-Backfill", str(creative.ad_type))
-        
-            trace_logging.warning('pub id:%s' % adunit.get_pub_id("adsense_pub_id"))
-            header_dict = {
-              "Gclientid":str(adunit.get_pub_id("adsense_pub_id")),
-              "Gcompanyname":str(adunit.account.adsense_company_name),
-              "Gappname":str(adunit.app_key.adsense_app_name),
-              "Gappid":str(adunit.app_key.adsense_app_name or '0'),
-              "Gkeywords":str(keywords or ''),
-              "Gtestadrequest":"0",
-              "Gchannelids":str('[%s]'%adunit.adsense_channel_id or ''),        
-            # "Gappwebcontenturl":,
-              "Gadtype":"GADAdSenseTextImageAdType", #GADAdSenseTextAdType,GADAdSenseImageAdType,GADAdSenseTextImageAdType
-              "Gtestadrequest":"0",
-            # "Ghostid":,
-            # "Gbackgroundcolor":"00FF00",
-            # "Gadtopbackgroundcolor":"FF0000",
-            # "Gadbordercolor":"0000FF",
-            # "Gadlinkcolor":,
-            # "Gadtextcolor":,
-            # "Gadurlolor":,
-            # "Gexpandirection":,
-            # "Galternateadcolor":,
-            # "Galternateadurl":, # This could be interesting we can know if Adsense 'fails' and is about to show a PSA.
-            # "Gallowadsafemedium":,
-            }
-            json_string_pairs = []
-            for key,value in header_dict.iteritems():
-                json_string_pairs.append('"%s":"%s"'%(key, value))
-            json_string = '{'+','.join(json_string_pairs)+'}'
-            headers.add_header("X-Nativecontext", json_string)
-        
-            # add some extra  
-            headers.add_header("X-Failurl", _build_fail_url(request_url, on_fail_exclude_adgroups))
-            headers.add_header("X-Format",'300x250_as')
-       
-            headers.add_header("X-Backgroundcolor","0000FF")
+        elif creative.ad_type == "millennial_native":
+            pass                     
         elif creative.ad_type == "custom_native":
             creative.html_data = creative.html_data.rstrip(":")
             context.update({"method": creative.html_data})
@@ -282,8 +232,6 @@ class BaseCreativeRenderer(object):
     
     
         return rendered_creative, headers              
-        
-
 
         
 

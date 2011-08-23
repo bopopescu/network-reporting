@@ -2,7 +2,9 @@ from string import Template
 
 from string import Template   
 import random                 
-from ad_server.renderers.creative_renderer import BaseCreativeRenderer
+from ad_server.renderers.creative_renderer import BaseCreativeRenderer          
+
+from ad_server.debug_console import trace_logging
 
 class AdSenseRenderer(BaseCreativeRenderer):
     """ For now, just do the standard """
@@ -11,10 +13,54 @@ class AdSenseRenderer(BaseCreativeRenderer):
                                         creative=None, 
                                         adunit=None,  
                                         format_tuple=None,
-                                        context=None,
+                                        context=None,     
+                                        keywords=None,
+                                        fail_url=None,
                                         **kwargs):   
         context.update({"title": ','.join(keywords), "adsense_format": '320x50_mb', "w": format_tuple[0], "h": format_tuple[1], "client": adunit.get_pub_id("adsense_pub_id")})
-        context.update(channel_id=adunit.adsense_channel_id or '')     
+        context.update(channel_id=adunit.adsense_channel_id or '')  
+        
+        
+        headers.add_header("X-Adtype", str(creative.ad_type))
+        headers.add_header("X-Backfill", str(creative.ad_type))
+        
+        trace_logging.warning('pub id:%s' % adunit.get_pub_id("adsense_pub_id"))
+        header_dict = {
+          "Gclientid":str(adunit.get_pub_id("adsense_pub_id")),
+          "Gcompanyname":str(adunit.account.adsense_company_name),
+          "Gappname":str(adunit.app_key.adsense_app_name),
+          "Gappid":str(adunit.app_key.adsense_app_name or '0'),
+          "Gkeywords":str(keywords or ''),
+          "Gtestadrequest":"0",
+          "Gchannelids":str('[%s]'%adunit.adsense_channel_id or ''),        
+        # "Gappwebcontenturl":,
+          "Gadtype":"GADAdSenseTextImageAdType", #GADAdSenseTextAdType,GADAdSenseImageAdType,GADAdSenseTextImageAdType
+          "Gtestadrequest":"0",
+        # "Ghostid":,
+        # "Gbackgroundcolor":"00FF00",
+        # "Gadtopbackgroundcolor":"FF0000",
+        # "Gadbordercolor":"0000FF",
+        # "Gadlinkcolor":,
+        # "Gadtextcolor":,
+        # "Gadurlolor":,
+        # "Gexpandirection":,
+        # "Galternateadcolor":,
+        # "Galternateadurl":, # This could be interesting we can know if Adsense 'fails' and is about to show a PSA.
+        # "Gallowadsafemedium":,
+        }
+        json_string_pairs = []
+        for key,value in header_dict.iteritems():
+            json_string_pairs.append('"%s":"%s"'%(key, value))
+        json_string = '{'+','.join(json_string_pairs)+'}'
+        headers.add_header("X-Nativecontext", json_string)
+        
+        # add some extra  
+        headers.add_header("X-Failurl", fail_url)
+        headers.add_header("X-Format",'300x250_as')
+        
+        headers.add_header("X-Backgroundcolor","0000FF") 
+        headers.add_header("X-Adtype", str('html'))    
+        
 ###### TEMPLATE #########
 
     TEMPLATE = Template("""<html>

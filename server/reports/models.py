@@ -374,8 +374,8 @@ class Report(db.Model):
             for i,((key,name), (bid_strat, bid)) in enumerate(zip(keys, bid_infos)):
                 # Preprocess the values to add revenue
                 rev = 0
+                req, att, imp, clk, conv = vals
                 if bid_strat is not None:
-                    req, att, imp, clk, conv = vals
                     if bid_strat == 'cpm':
                         rev = float(bid * imp)/1000
                     elif bid_strat == 'cpc':

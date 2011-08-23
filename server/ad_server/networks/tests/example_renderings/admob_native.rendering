@@ -1,1 +1,51 @@
-admob native sdk
+<html><head>
+                        <script type="text/javascript">
+                          function webviewDidClose(){} 
+                          function webviewDidAppear(){} 
+                          window.innerWidth = 320;
+                          window.innerHeight = 50;
+                        </script>
+                        <title>awesome,stuff</title>
+                        </head><body style="margin: 0;width:320px;height:50px;padding:0;background-color:transparent;">
+                        <script type="text/javascript">
+                        var admob_vars = {
+                         pubid: 'None', // publisher id
+                         bgcolor: '000000', // background color (hex)
+                         text: 'FFFFFF', // font-color (hex)
+                         ama: false, // set to true and retain comma for the AdMob Adaptive Ad Unit, a special ad type designed for PC sites accessed from the iPhone.  More info: http://developer.admob.com/wiki/IPhone#Web_Integration
+                         test: $test_mode, // test mode, set to false to receive live ads
+                         manual_mode: true // set to manual mode
+                        };
+                        </script>
+                        <script type="text/javascript" src="http://mmv.admob.com/static/iphone/iadmob.js"></script>  
+                        
+                        <!-- DIV For admob ad -->
+                        <div id="admob_ad">
+                        </div>
+
+                        <!-- Script to determine if admob loaded -->
+                        <script>
+                            var ad = _admob.fetchAd(document.getElementById('admob_ad'));                                                                         
+                            var POLLING_FREQ = 500;
+                            var MAX_POLL = 5000;
+                            var polling_timeout = 0;                                                                                                              
+                            var polling_func = function() {                                                                                                       
+                             if(ad.adEl.height == 48) {                                                                                                           
+                               // we have an ad                                                                                                                   
+                               console.log('received ad');
+                               var hid_span = document.createElement("span"); hid_span.setAttribute("style", "display:none");var imgfirst = document.createElement("img");                         imgfirst.setAttribute("height", 1);                         imgfirst.setAttribute("width", 1);                        imgfirst.setAttribute("src", "test_track_url");                        hid_span.appendChild(imgfirst);document.body.appendChild(hid_span);window.location = "mopub://finishLoad";
+                             } 
+                             else if(polling_timeout < MAX_POLL) {                                                                                                         
+                               console.log('repoll');                                                                                                             
+                               polling_timeout += POLLING_FREQ;                                                                                                           
+                               window.setTimeout(polling_func, POLLING_FREQ);                                                                                             
+                             }                                                                                                                                    
+                             else {                                                                                                                               
+                               console.log('no ad'); 
+                               window.location = "mopub://failLoad";                                                                                                               
+                               ad.adEl.style.display = 'none';                                                                                                    
+                             }                                                                                                                                    
+                            };                                                                                                                                    
+                            window.setTimeout(polling_func, POLLING_FREQ);
+                        </script>
+                        </body></html>

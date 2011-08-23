@@ -1,6 +1,7 @@
 Content-Type: text/html; charset=utf-8
 Cache-Control: no-cache
 X-Orientation: p
+X-Launchpage: http://c.admob.com/
 X-Adtype: interstitial
 X-Fulladtype: admob_full
 X-Failurl: app.mopub.com/m/ad?test_url&exclude=test_on_fail_adgroup1&exclude=test_on_fail_adgroup2

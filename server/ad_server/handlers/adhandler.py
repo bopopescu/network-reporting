@@ -29,23 +29,25 @@ from ad_server import frequency_capping
             
 from ad_server.renderers.creative_renderer import BaseCreativeRenderer
 from ad_server.renderers.admob import AdMobRenderer   
-from ad_server.renderers.text_icon import TextIconRenderer    
-from ad_server.renderers.adsense import AdsenseRenderer
+from ad_server.renderers.text_and_tile import TextAndTileRenderer    
+from ad_server.renderers.adsense import AdSenseRenderer
+ 
+# unnecessary because we use class introspection
 
-RENDERERS = {
-    "admob": AdMobRenderer,
-    "adsense":AdsenseRenderer, 
-    "clear":BaseCreativeRenderer, 
-    "html":BaseCreativeRenderer,
-    "html_full":BaseCreativeRenderer, 
-    "iAd":BaseCreativeRenderer, 
-    "image":BaseCreativeRenderer,
-    "text":BaseCreativeRenderer, 
-    "text_icon":TextIconRenderer, 
-    "admob_native":BaseCreativeRenderer,
-    "custom_native":BaseCreativeRenderer, 
-    "millennial_native":BaseCreativeRenderer,
-}
+# RENDERERS = {
+#     "admob": AdMobRenderer,
+#     "adsense":AdSenseRenderer, 
+#     "clear":BaseCreativeRenderer, 
+#     "html":BaseCreativeRenderer,
+#     "html_full":BaseCreativeRenderer, 
+#     "iAd":BaseCreativeRenderer, 
+#     "image":BaseCreativeRenderer,
+#     "text":BaseCreativeRenderer, 
+#     "text_icon":TextAndTileRenderer, 
+#     "admob_native":BaseCreativeRenderer,
+#     "custom_native":BaseCreativeRenderer, 
+#     "millennial_native":BaseCreativeRenderer,
+# }                                         
          
 from ad_server.auction import ad_auction
 from ad_server import frequency_capping     
@@ -271,7 +273,7 @@ class AdHandler(webapp.RequestHandler):
             self.response.headers.add_header("X-Creativeid", "%s" % creative.key())
                             
             
-            Renderer = RENDERERS[creative.ad_type]
+            Renderer = creative.Renderer
             
             rendered_creative, headers = Renderer.render(self.response.headers,   
                                            creative=creative,

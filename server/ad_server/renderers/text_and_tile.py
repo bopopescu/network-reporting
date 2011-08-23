@@ -4,7 +4,7 @@ from ad_server.renderers.creative_renderer import BaseCreativeRenderer
 from google.appengine.api.images import InvalidBlobKeyError
 from google.appengine.api import images 
 
-class TextIconRenderer(BaseCreativeRenderer):
+class TextAndTileRenderer(BaseCreativeRenderer):
     """ For now, just do the standard """
     @classmethod
     def network_specific_rendering(cls, headers, 

@@ -7,7 +7,13 @@ from account.models import Account
 
 from common.constants import MIN_IOS_VERSION, MAX_IOS_VERSION, MIN_ANDROID_VERSION, MAX_ANDROID_VERSION
 import datetime
-from budget.tzinfo import Pacific
+from budget.tzinfo import Pacific        
+
+
+from ad_server.renderers.creative_renderer import BaseCreativeRenderer
+from ad_server.renderers.admob import AdMobRenderer   
+from ad_server.renderers.text_and_tile import TextAndTileRenderer    
+from ad_server.renderers.adsense import AdSenseRenderer
 
 # from budget import budget_service
 #
@@ -305,7 +311,9 @@ class AdGroup(db.Model):
         
     @property
     def created_date(self):
-        return self.created.date()
+        return self.created.date()     
+        
+        
 class Creative(polymodel.PolyModel):
     name = db.StringProperty()
     custom_width = db.IntegerProperty()
@@ -350,6 +358,10 @@ class Creative(polymodel.PolyModel):
     #         return float(self.p_ctr() * self.ad_group.bid * 1000)
     #     elif self.ad_group.bid_strategy == 'cpm':
     #         return float(self.ad_group.bid)
+    
+    @property
+    def Renderer(self):                      
+        return BaseCreativeRenderer
 
     @property
     def multi_format(self):
@@ -435,12 +447,16 @@ class TextAndTileCreative(Creative):
     action_icon = db.StringProperty(choices=["download_arrow4", "access_arrow", "none"], default="download_arrow4")
     color = db.StringProperty(default="000000")
     font_color = db.StringProperty(default="FFFFFF")
-    gradient = db.BooleanProperty(default=False)
-
+    gradient = db.BooleanProperty(default=False)   
+    
+    @property
+    def renderer(self):
+        return TextAndTileRenderer
+        
 class HtmlCreative(Creative):
     # html ad properties
     # html_name = db.StringProperty(required=True)
-    html_data = db.TextProperty()
+    html_data = db.TextProperty()  
 
 class ImageCreative(Creative):
     # image properties
@@ -476,10 +492,16 @@ class iAdCreative(Creative):
         return ('728x90', '320x50', 'full_tablet')
     
 class AdSenseCreative(Creative):
-    pass
+    
+    @property
+    def Renderer(self):                      
+        return AdSenseRenderer
 
-class AdMobCreative(Creative):
-    pass
+class AdMobCreative(Creative):   
+    
+    @property
+    def Renderer(self):                      
+        return AdMobRenderer
 
 class AdMobNativeCreative(AdMobCreative):
 

@@ -1,5 +1,6 @@
 Content-Type: text/html; charset=utf-8
 Cache-Control: no-cache
+X-Launchpage: http://c.admob.com/
 X-Adtype: admob_native
 X-Backfill: admob_native
 X-Failurl: app.mopub.com/m/ad?test_url&exclude=test_on_fail_adgroup1&exclude=test_on_fail_adgroup2

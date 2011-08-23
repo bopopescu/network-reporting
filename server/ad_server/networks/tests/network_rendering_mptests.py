@@ -4,11 +4,7 @@ import datetime
 
 sys.path.append(os.environ['PWD'])
 import common.utils.test.setup
-
-from ad_server.renderers.creative_renderer import BaseCreativeRenderer  
-from ad_server.renderers.text_icon import TextIconRenderer
-
-
+ 
 import unittest
 
 from account.models import Account 
@@ -27,10 +23,34 @@ from common.utils.system_test_framework import run_auction, fake_request
     
 from nose.tools import eq_     
 
-from ad_server.handlers.adhandler import RENDERERS   
-from advertiser.models import ImageCreative, TextAndTileCreative, TextCreative
+from advertiser.models import (AdMobCreative,
+                               AdSenseCreative,
+                               HtmlCreative,     
+                               ImageCreative,
+                               TextAndTileCreative, 
+                               TextCreative
+                               )
 
+from ad_server.renderers.creative_renderer import BaseCreativeRenderer
+from ad_server.renderers.admob import AdMobRenderer   
+from ad_server.renderers.text_and_tile import TextAndTileRenderer    
+from ad_server.renderers.adsense import AdSenseRenderer
+ 
 
+# RENDERERS = {
+#     "admob": AdMobRenderer,
+#     "adsense":AdSenseRenderer, 
+#     "clear":BaseCreativeRenderer, 
+#     "html":BaseCreativeRenderer,
+#     "html_full":BaseCreativeRenderer, 
+#     "iAd":BaseCreativeRenderer, 
+#     "image":BaseCreativeRenderer,
+#     "text":BaseCreativeRenderer, 
+#     "text_icon":TextAndTileRenderer, 
+#     "admob_native":BaseCreativeRenderer,
+#     "custom_native":BaseCreativeRenderer, 
+#     "millennial_native":BaseCreativeRenderer,
+# } 
 
 class RenderingTestBase(object):
     """ This does not inherit from TestCase because we use Nose's generator function with it.
@@ -106,7 +126,7 @@ class RenderingTestBase(object):
 
         self.creative.put()    
         
-        self._compare_rendering_with_examples(network_type, suffix="")  
+        self._compare_rendering_with_examples(network_type, suffix="", Renderer=self.creative.Renderer)  
         
         
         
@@ -126,7 +146,7 @@ class RenderingTestBase(object):
 
         self.creative.put() 
         
-        self._compare_rendering_with_examples(network_type, suffix="_full")
+        self._compare_rendering_with_examples(network_type, suffix="_full", Renderer=self.creative.Renderer)
         
     def _compare_rendering_with_examples(self, name, suffix="", reset_example=False, Renderer=BaseCreativeRenderer):
         """ For now just test the renderer. Next test headers too.
@@ -221,7 +241,7 @@ class RenderingTests(RenderingTestBase, unittest.TestCase):
                                             ad_group=self.adgroup)     
         self.creative.put()    
 
-        self._compare_rendering_with_examples("text_icon_adtype", suffix="", reset_example=False, Renderer=TextIconRenderer)
+        self._compare_rendering_with_examples("text_icon_adtype", suffix="", reset_example=False, Renderer=TextAndTileRenderer)
 
 ##### TEST GENERATORS ######     
 

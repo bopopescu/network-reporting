@@ -62,8 +62,9 @@ def build_stat_dict(stats):
         Returns:
             dict with keys like statsmodel properties
     """
-    req, att, imp, clk, conv = stats
-    return dict(request_count = req, 
+    rev, req, att, imp, clk, conv = stats
+    return dict(revenue = rev,
+                request_count = req, 
                 attempt_count = att, 
                 impression_count = imp, 
                 click_count = clk, 
@@ -361,6 +362,8 @@ class Report(db.Model):
             req, att = self.get_stats_info(keys)
             #I'm using list comprehension for you Nafis
             keys = [self.get_key_name(idx, key, memo) for idx,key in enumerate(keys)]
+            # Hopefully the memo is populated and no lookups are necessary....wishful thinking, I know
+            bid_infos = [self.get_bid_info(idx, key, memo) for idx, key in enumerate(keys)]
             # Invalid key somewhere in this line, don't use it
             if None in keys:
                 continue
@@ -368,7 +371,18 @@ class Report(db.Model):
                 vals[0] = '---'
             if not att:
                 vals[1] = '---'
-            for i,(key,name) in enumerate(keys):
+            for i,((key,name), (bid_strat, bid)) in enumerate(zip(keys, bid_infos)):
+                # Preprocess the values to add revenue
+                rev = 0
+                if bid_strat is not None:
+                    req, att, imp, clk, conv = vals
+                    if bid_strat == 'cpm':
+                        rev = float(bid * imp)/1000
+                    elif bid_strat == 'cpc':
+                        rev = bid * clk
+                    elif bid_strat == 'cpa':
+                        rev = bid * conv
+                vals = [rev, req, att, imp, clk, conv]
                 #if this key doesn't exist, build that shit
                 if not temp.has_key(key):
                     #this key doesn't exist, so no previous anything can exist
@@ -429,7 +443,31 @@ class Report(db.Model):
                     att = False
         return (req, att)
 
-    
+    def get_bid_info(self, idx, key, memo): 
+        if idx == 0:
+            dim = self.d1
+        elif idx == 1:
+            dim = self.d2
+        elif idx == 2:
+            dim = self.d3
+        else:
+            dim = None
+
+        if dim in CRTV_DIMS:
+            try:
+                if memo.has_key(key):
+                    crtv = memo[key]
+                else:
+                    crtv = Creative.get(key)
+                    memo[key] = crtv
+                if dim == CRTV:
+                    return (crtv.adgroup.bid_strategy, crtv.adgroup.bid)
+                elif dim == CAMP:
+                    camp = crtv.adgroup.campaign
+                    return (crtv.adgroup.bid_strategy, crtv.adgroup.bid)
+            except:
+                return None, None
+        return None, None
 
 
     def get_key_name(self, idx, key, memo):

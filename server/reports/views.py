@@ -180,7 +180,6 @@ class ReportExporter(RequestHandler):
     def post(self, report_key, account_key, f_type, *args, **kwargs):
         return sswriter.write_report(f_type, report_key, account_key)
 
-
 def exporter(request, *args, **kwargs):
     return ReportExporter()(request, *args, **kwargs)
 

@@ -24,9 +24,7 @@ from google.appengine.ext.db import Key
 
 from ad_server.debug_console import trace_logging
 from ad_server import memcache_mangler          
-
-
-from ad_server.auction.ad_auction import AdAuction
+                                                          
 from ad_server import frequency_capping            
             
 from ad_server.renderers.creative_renderer import BaseCreativeRenderer
@@ -204,13 +202,10 @@ class AdHandler(webapp.RequestHandler):
         
         # create a unique request id, but only log this line if the user agent is real
         request_id = hashlib.md5("%s:%s" % (self.request.query_string, time.time())).hexdigest()
-         
-
-        print("adunitxx %s" % adunit) 
-                                                                           
+                                                                         
         battle_context = BattleContext(adunit=site,
                                 keywords=keywords, 
-                                excluded_adgroup_keys=excluded_adgroups, 
+                                excluded_adgroup_keys=excluded_adgroup_keys, 
                                 udid=udid, 
                                 ll=ll,
                                 request_id=request_id, 
@@ -225,10 +220,7 @@ class AdHandler(webapp.RequestHandler):
         
         # Unpack the results of the AdAuction
         creative, on_fail_exclude_adgroups = ad_auction_results
-        
 
-        print("Creativexx: %s" % creative)
-        
         # add timer and animations for the ad 
         # only send to client if there should be a refresh
         # animation_type = random.randint(0,6)

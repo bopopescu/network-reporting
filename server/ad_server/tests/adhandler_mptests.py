@@ -23,16 +23,12 @@ from server.ad_server.main import  ( AdClickHandler,
                                      AppOpenHandler,
                                      TestHandler,
                                      )
-<<<<<<< HEAD
+
 from server.ad_server.handlers import adhandler  
 from server.ad_server.renderers import creative_renderer  
 
 from server.ad_server.handlers.adhandler import AdHandler                                     
-from server.ad_server.auction.ad_auction import AdAuction
-=======
-from server.ad_server.handlers import adhandler
-from server.ad_server.handlers.adhandler import AdHandler   
->>>>>>> auction-refactor
+
 
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 ############# Integration Tests #############

@@ -126,7 +126,7 @@ class RenderingTestBase(object):
 
         self.creative.put()    
         
-        self._compare_rendering_with_examples(network_type, suffix="", Renderer=self.creative.Renderer)  
+        self._compare_rendering_with_examples(network_type, suffix="")  
         
         
         
@@ -146,15 +146,16 @@ class RenderingTestBase(object):
 
         self.creative.put() 
         
-        self._compare_rendering_with_examples(network_type, suffix="_full", Renderer=self.creative.Renderer)
+        self._compare_rendering_with_examples(network_type, suffix="_full")
         
-    def _compare_rendering_with_examples(self, name, suffix="", reset_example=False, Renderer=BaseCreativeRenderer):
+    def _compare_rendering_with_examples(self, name, suffix="", reset_example=False):
         """ For now just test the renderer. Next test headers too.
             Uses a default value for html_data. """
-
+        
+        print "yyy" + str(self.creative)
 
         empty_headers = Response().headers # We can use a vanilla response, as we don't use anything from it
-        rendered_creative, headers = Renderer.render(empty_headers,   
+        rendered_creative, headers = self.creative.Renderer.render(empty_headers,   
                                        creative=self.creative,
                                        now=self.dt,
                                        adunit=self.adunit, 
@@ -238,10 +239,15 @@ class RenderingTests(RenderingTestBase, unittest.TestCase):
                                             ad_type="text_icon", 
                                             format="320x50", 
                                             format_predicates=["format=320x50"],
-                                            ad_group=self.adgroup)     
-        self.creative.put()    
+                                            ad_group=self.adgroup) 
+                                            
+                                                                                    
+        self.creative.put()         
+        print "omg" + str(self.creative)
+        print str(TextAndTileCreative)
+        print str(self.creative.Renderer)
 
-        self._compare_rendering_with_examples("text_icon_adtype", suffix="", reset_example=False, Renderer=TextAndTileRenderer)
+        self._compare_rendering_with_examples("text_icon_adtype", suffix="", reset_example=False)
 
 ##### TEST GENERATORS ######     
 

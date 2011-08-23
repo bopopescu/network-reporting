@@ -8,8 +8,7 @@ from google.appengine.api import images
 from common.utils import simplejson  
 from common.constants import FULL_NETWORKS 
 import time    
-
-
+ 
 class BaseCreativeRenderer(object):  
     """ Probides basic interface for renderers. """
     
@@ -121,25 +120,7 @@ class BaseCreativeRenderer(object):
             headers.add_header("X-Launchpage","http://adsx.greystripe.com/openx/www/delivery/ck.php")
             template_name = "html"
 
-        elif creative.ad_type == "image":                       
-            img_height = creative.image_height
-            img_width = creative.image_width
-
-            try:        
-                context["image_url"] = images.get_serving_url(creative.image_blob) 
-            except InvalidBlobKeyError:     
-                # This will fail when on mopub-experimental
-                trace_logging.warning("""InvalidBlobKeyError when trying to get image from adhandler.py.
-                                        Are you on mopub-experimental?""")
-            
         
-            # if full screen we don't need to center
-            if (not "full" in adunit.format) or ((img_width == 480.0 and img_height == 320.0 ) or (img_width == 320.0 and img_height == 480.0)):
-                css_class = ""
-            else:
-                css_class = "center"    
-        
-            context.update({"w": img_width, "h": img_height, "w2":img_width/2.0, "h2":img_height/2.0, "class":css_class})
         elif creative.ad_type == "html":
             context.update({"html_data": creative.html_data, "w": format_tuple[0], "h": format_tuple[1]})
         
@@ -291,7 +272,8 @@ class BaseCreativeRenderer(object):
         if creative.launchpage:
             headers.add_header("X-Launchpage", creative.launchpage)
     
-        # render the HTML body   
+        # render the HTML body    
+
         if cls.TEMPLATE:   
             rendered_creative = cls.TEMPLATE.safe_substitute(context) 
         else:    

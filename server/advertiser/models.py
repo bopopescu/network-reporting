@@ -13,7 +13,8 @@ from budget.tzinfo import Pacific
 from ad_server.renderers.creative_renderer import BaseCreativeRenderer
 from ad_server.renderers.admob import AdMobRenderer   
 from ad_server.renderers.text_and_tile import TextAndTileRenderer    
-from ad_server.renderers.adsense import AdSenseRenderer
+from ad_server.renderers.adsense import AdSenseRenderer            
+from ad_server.renderers.image import ImageRenderer
 
 # from budget import budget_service
 #
@@ -450,7 +451,7 @@ class TextAndTileCreative(Creative):
     gradient = db.BooleanProperty(default=False)   
     
     @property
-    def renderer(self):
+    def Renderer(self):
         return TextAndTileRenderer
         
 class HtmlCreative(Creative):
@@ -473,7 +474,12 @@ class ImageCreative(Creative):
             "728x90": "format=728x90",
             "468x60": "format=468x60"}
         fp = IMAGE_PREDICATES.get("%dx%d" % (img.width, img.height))
-        return [fp] if fp else None
+        return [fp] if fp else None      
+    
+    
+    @property
+    def Renderer(self):
+        return ImageRenderer
 
 class MarketplaceCreative(HtmlCreative):
     pass

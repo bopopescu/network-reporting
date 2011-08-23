@@ -44,11 +44,7 @@ LIMIT = 50
 
 account_cache = {}  # account_cache[account_stats_kn] = account_stats_SM
 stats_model_cache = {}  # {account_stats_SM: set([stats_key_name|account])}
-<<<<<<< HEAD
-counts_cache = {}
-=======
 counts_cache = {}   # {stats_key_name|account : [total_uu, req_uu, imp_uu, clk_uu]}
->>>>>>> 7d9a671ae089e06e54dc73254ab42b44ab758e4c
 
 
 def update_counts(array1, array2):
@@ -226,17 +222,6 @@ def process_input_file(input_file, num_workers):
             parse_line(line)
             line_count += 1
 
-<<<<<<< HEAD
-            if line_count % 100 == 0: 
-                print "\nuniq user: MARKER: %i lines\n" %line_count
-                try:
-                    update_models(pool)
-                except KeyboardInterrupt:
-                    print 'controller received control-c'
-                    break
-                except:
-                    traceback.print_exc()
-=======
             if line_count % BATCH_LINE_COUNT == 0: 
                 print "\nuniq user: MARKER: %i lines\n" %line_count
     
@@ -248,8 +233,6 @@ def process_input_file(input_file, num_workers):
         break
     except:
         traceback.print_exc()
->>>>>>> 7d9a671ae089e06e54dc73254ab42b44ab758e4c
-                    
 
 
 def single_thread_process_input_file(input_file):
@@ -260,17 +243,7 @@ def single_thread_process_input_file(input_file):
             parse_line(line)
     single_thread_update_models()
                                 
-<<<<<<< HEAD
-        
-def setup_remote_api():
-    from google.appengine.ext.remote_api import remote_api_stub
-    app_id = 'mopub-inc'
-    host = '38-aws.latest.mopub-inc.appspot.com'
-    remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', utils.auth_func, host)
-        
-=======
                 
->>>>>>> 7d9a671ae089e06e54dc73254ab42b44ab758e4c
                     
 def main():
     start = time.time()
@@ -288,11 +261,7 @@ def main():
     if not os.path.exists(options.input_file):
         sys.exit('\nERROR: input file does not exist\n')
         
-<<<<<<< HEAD
-    setup_remote_api()    
-=======
     utils.setup_remote_api()    
->>>>>>> 7d9a671ae089e06e54dc73254ab42b44ab758e4c
     
     if options.single_thread:
         single_thread_process_input_file(options.input_file)

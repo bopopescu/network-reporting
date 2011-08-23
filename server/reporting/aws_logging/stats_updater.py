@@ -39,10 +39,7 @@ from reporting.models import StatsModel, Pacific_tzinfo
 from reporting.query_managers import StatsModelQueryManager
 
 
-<<<<<<< HEAD
-=======
 BATCH_LINE_COUNT = 1000
->>>>>>> 7d9a671ae089e06e54dc73254ab42b44ab758e4c
 account_cache = {}
 stats_qm_cache = {}
 
@@ -67,19 +64,6 @@ def put_models_by_qm(qm):
         return 'failed: account %s' %(qm.account.name())
     
 
-<<<<<<< HEAD
-def put_models(pool):
-    async_results = pool.map_async(put_models_by_qm, stats_qm_cache.values())
-    results = async_results.get(0xFFFF) # set maximum timeout (seconds) to return result when it arrives
-
-    # print status message from each process
-    print
-    print
-    for i in results:
-      print i
-    print
-    print
-=======
 def _has_stats(qm):
     if len(qm.stats) > 0:
         return True
@@ -104,7 +88,6 @@ def put_models(pool):
     #   print i
     # print
     # print
->>>>>>> 7d9a671ae089e06e54dc73254ab42b44ab758e4c
     
            
 def update_model(adunit_key=None, creative_key=None, country_code=None, counts=None, date=None, date_hour=None):    
@@ -211,11 +194,7 @@ def process_input_file(input_file, num_workers):
             parse_line(line)
             line_count += 1
 
-<<<<<<< HEAD
-            if line_count % 100 == 0: 
-=======
             if line_count % BATCH_LINE_COUNT == 0: 
->>>>>>> 7d9a671ae089e06e54dc73254ab42b44ab758e4c
                 print "\nMARKER: %i lines\n" %line_count
                 try:
                     put_models(pool)
@@ -226,16 +205,6 @@ def process_input_file(input_file, num_workers):
                     traceback.print_exc()
                                                                                     
                                 
-<<<<<<< HEAD
-def setup_remote_api():
-    from google.appengine.ext.remote_api import remote_api_stub
-    app_id = 'mopub-inc'
-    host = '38-aws.latest.mopub-inc.appspot.com'
-    remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', utils.auth_func, host)
-
-=======
->>>>>>> 7d9a671ae089e06e54dc73254ab42b44ab758e4c
-                    
 def main():
     start = time.time()
     
@@ -251,11 +220,7 @@ def main():
     if not os.path.exists(options.input_file):
         sys.exit('\nERROR: input file does not exist\n')
         
-<<<<<<< HEAD
-    setup_remote_api()
-=======
     utils.setup_remote_api()
->>>>>>> 7d9a671ae089e06e54dc73254ab42b44ab758e4c
     process_input_file(options.input_file, options.num_workers)
    
     elapsed = time.time() - start

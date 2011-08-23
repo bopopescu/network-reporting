@@ -24,8 +24,7 @@ from server.ad_server.main import  ( AdClickHandler,
                                      TestHandler,
                                      )
 from server.ad_server.handlers import adhandler
-from server.ad_server.handlers.adhandler import AdHandler                                     
-from server.ad_server.auction.ad_auction import AdAuction
+from server.ad_server.handlers.adhandler import AdHandler   
 
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 ############# Integration Tests #############

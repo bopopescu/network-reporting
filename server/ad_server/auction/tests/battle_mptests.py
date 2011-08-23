@@ -24,8 +24,7 @@ from server.ad_server.main import  ( AdClickHandler,
                                      TestHandler,
                                      )
 from server.ad_server.handlers import adhandler
-from server.ad_server.handlers.adhandler import AdHandler                                     
-from server.ad_server.auction.ad_auction import AdAuction
+from server.ad_server.handlers.adhandler import AdHandler   
 
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 ############# Integration Tests #############
@@ -45,7 +44,16 @@ from google.appengine.ext import testbed
 
 from common.utils.system_test_framework import run_auction, fake_request
 
-from ad_server.auction.battles import Battle, GteeBattle 
+from ad_server.auction.battles import (Battle, 
+                                       GteeBattle, 
+                                       GteeHighBattle,
+                                       GteeLowBattle 
+                                      )
+
+
+
+
+  
 from ad_server.auction.battle_context import BattleContext
 
 
@@ -93,7 +101,7 @@ class TestAdAuction(unittest.TestCase):
                                           site_keys=[self.adunit.key()],
                                           bid_strategy="cpm",
                                           bid=100000.0) # 100 per click
-        self.expensive_adgroup.put()
+        self.expensive_adgroup.put()   
 
         self.expensive_creative = Creative(account=self.account,
                                 ad_group=self.expensive_adgroup,
@@ -127,11 +135,11 @@ class TestAdAuction(unittest.TestCase):
     
         
         self.request = fake_request(self.adunit.key())
-        adunit_id = str(self.adunit.key())
+        self.adunit_id = str(self.adunit.key())
          
         self.user_agent = "Mozilla/5.0 (iPad; U; CPU OS 3.2 like Mac OS X; en-us) AppleWebKit/531.21.10 (KHTML, like Gecko) Version/4.0.4 Mobile/7B314 Safari/531.21.10"
 
-        self.adunit_context = AdUnitContextQueryManager.cache_get_or_insert(adunit_id)   
+        self.adunit_context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit_id)   
         
         self.battle_context = BattleContext(adunit=self.adunit,
                 	                        keywords=["rocks", "paper"],
@@ -151,5 +159,41 @@ class TestAdAuction(unittest.TestCase):
     def mptest_basic(self):
         gtee_battle = GteeBattle(self.battle_context, self.adunit_context)
         creative = gtee_battle.run() 
-        eq_(creative.key(), self.expensive_creative.key())
+        eq_obj(creative, self.expensive_creative)    
+         
+    def mptest_gtee_high_priority(self):   
+        self.expensive_c.campaign_type = "gtee_high"
+        self.expensive_c.put()  
         
+        # Clear the adunit context cache         
+        self.refresh_context(self.adunit)
+
+        # for c in self.adunit_context.campaigns:
+        #     print c.campaign_priority   
+
+        gtee_battle = GteeHighBattle(self.battle_context, self.adunit_context)
+        creative = gtee_battle.run() 
+        eq_obj(creative, self.expensive_creative)
+    
+    def mptest_gtee_low_priority(self):   
+        self.expensive_c.campaign_type = "gtee_low"
+        self.expensive_c.put()  
+    
+        # Clear the adunit context cache         
+        self.refresh_context(self.adunit)                                  
+    
+        gtee_battle = GteeLowBattle(self.battle_context, self.adunit_context)
+        creative = gtee_battle.run() 
+        eq_obj(creative, self.expensive_creative)
+                                                      
+
+############### HELPER FUNCTIONS ###########                          
+                                           
+    def refresh_context(self, adunit):
+        """ Refreshes self.adunit_context when it has been changed"""
+        AdUnitContextQueryManager.cache_delete_from_adunits(adunit)
+        self.adunit_context = AdUnitContextQueryManager.cache_get_or_insert(str(adunit.key()))         
+ 
+def eq_obj(obj1, obj2): 
+    """ Convenience func """
+    eq_(obj1.key(), obj2.key())      

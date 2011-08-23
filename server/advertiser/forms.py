@@ -137,7 +137,7 @@ class AdGroupForm(mpforms.MPModelForm):
     
     class Meta:
         model = AdGroup
-        fields = ('name', 'network_type', 'priority_level', 'keywords', 
+        fields = ('name', 'network_type', 'keywords', 
                   'bid', 'bid_strategy', 
                   'percent_users', 'site_keys',
                   'hourly_frequency_cap','daily_frequency_cap','allocation_percentage', 

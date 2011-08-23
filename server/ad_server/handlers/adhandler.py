@@ -32,8 +32,16 @@ from google.appengine.ext.db import Key
 
 from ad_server.debug_console import trace_logging
 from ad_server import memcache_mangler
-from ad_server.auction.ad_auction import AdAuction
-from ad_server import frequency_capping            
+from ad_server.auction import ad_auction
+from ad_server import frequency_capping     
+
+from ad_server.auction.battles import (Battle, 
+                                       GteeBattle, 
+                                       GteeHighBattle,
+                                       GteeLowBattle 
+                                      )     
+from ad_server.auction.battle_context import BattleContext                                     
+                                       
 
 from google.appengine.api.images import InvalidBlobKeyError
 
@@ -148,8 +156,7 @@ class AdHandler(webapp.RequestHandler):
         if site.keywords and site.keywords != 'None':
             keywords += site.keywords.split(',')
         if self.request.get("q"):
-            keywords += self.request.get("q").lower().split(',')
-        q = keywords
+            keywords += self.request.get("q").lower().split(',')  
         trace_logging.warning("keywords are %s" % keywords)
         
         # look up lat/lon
@@ -170,23 +177,27 @@ class AdHandler(webapp.RequestHandler):
         
         # create a unique request id, but only log this line if the user agent is real
         request_id = hashlib.md5("%s:%s" % (self.request.query_string, time.time())).hexdigest()
-          
+         
+        print("adunitxx %s" % adunit) 
+                                                                           
+        battle_context = BattleContext(adunit=site,
+                                keywords=keywords, 
+                                excluded_adgroup_keys=excluded_adgroups, 
+                                udid=udid, 
+                                ll=ll,
+                                request_id=request_id, 
+                                now=now,
+                                user_agent=user_agent,       
+                                country_tuple=country_tuple, 
+                                experimental=experimental)  
+                                
         # Run the ad auction to get the creative to display
-        ad_auction_results = AdAuction.run(request = self.request,
-                                          adunit = site,
-                                          keywords=q, 
-                                          excluded_adgroups=excluded_adgroups, 
-                                          udid=udid, 
-                                          ll = ll,
-                                          request_id=request_id, 
-                                          now=now,
-                                          user_agent=user_agent,
-                                          adunit_context=adunit_context,
-                                          country_tuple=country_tuple, 
-                                          experimental=experimental)
+        ad_auction_results = ad_auction.run(battle_context, adunit_context)
         
         # Unpack the results of the AdAuction
         creative, on_fail_exclude_adgroups = ad_auction_results
+        
+        print("Creativexx: %s" % creative)
         
         # add timer and animations for the ad 
         # only send to client if there should be a refresh
@@ -233,7 +244,7 @@ class AdHandler(webapp.RequestHandler):
         # render the creative 
         rendered_creative = self.render_creative(creative, 
                                           site = site, 
-                                          keywords = q, 
+                                          keywords = keywords, 
                                           country_tuple = country_tuple,
                                           request_id = request_id, 
                                           version_number = int(self.request.get('v') or 0),

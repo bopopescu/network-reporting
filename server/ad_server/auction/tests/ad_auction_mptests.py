@@ -38,12 +38,22 @@ from budget import models as budgetmodels
 from budget.models import (BudgetSlicer,
                            BudgetSliceLog,
                            BudgetDailyLog,
-                           )
+                           )               
+                           
+from ad_server.auction import new_ad_auction
+from ad_server.auction.battle_context import BattleContext
 
 from google.appengine.ext import testbed
 ################# End to End #################
 
-from common.utils.system_test_framework import run_auction, fake_request
+from common.utils.system_test_framework import run_auction, fake_request     
+
+
+from ad_server.auction.battles import (Battle, 
+                                       GteeBattle, 
+                                       GteeHighBattle,
+                                       GteeLowBattle 
+                                      )
 
 class TestAdAuction(unittest.TestCase):
 
@@ -80,7 +90,8 @@ class TestAdAuction(unittest.TestCase):
         # Make Expensive Campaign
         self.expensive_c = Campaign(name="expensive",
                                     budget=1000.0,
-                                    budget_strategy="evenly")
+                                    budget_strategy="evenly",
+                                    campaign_type="gtee")
         self.expensive_c.put()
 
         self.expensive_adgroup = AdGroup(account=self.account, 
@@ -103,7 +114,8 @@ class TestAdAuction(unittest.TestCase):
         # Make cheap campaign
         self.cheap_c = Campaign(name="cheap",
                                 budget=1000.0,
-                                budget_strategy="evenly")
+                                budget_strategy="evenly",
+                                campaign_type="gtee")
         self.cheap_c.put()
 
         self.cheap_adgroup = AdGroup(account=self.account, 
@@ -129,59 +141,54 @@ class TestAdAuction(unittest.TestCase):
         self.adunit_context = AdUnitContextQueryManager.cache_get_or_insert(adunit_id)
    
     def tearDown(self):
-        self.testbed.deactivate()
+        self.testbed.deactivate()                                           
 
     def mptest_basic(self):
-        auction_results = AdAuction.run(request = self.request,
-                                       adunit=self.adunit,
+        battle_context = BattleContext(adunit=self.adunit,
                                        keywords=None,
                                        country_tuple=[],
-                                       excluded_adgroups=[],
+                                       excluded_adgroup_keys=[],
                                        udid="FakeUDID",
                                        ll=None,
                                        request_id=None,
                                        now=datetime.datetime.now(),
-                                       user_agent='FakeAndroidOS',
-                                       adunit_context=self.adunit_context,
-                                       experimental=False)
+                                       user_agent='FakeAndroidOS',           
+                                       experimental=False)   
+                                       
         # Unpack results
-        creative, on_fail_exclude_adgroups = auction_results                   
-
+        creative, on_fail_exclude_adgroups = new_ad_auction.run(battle_context, self.adunit_context)                    
+    
         eq_obj(creative, self.expensive_creative)
         
     def mptest_basic_country_tuple(self):
-        auction_results = AdAuction.run(request = self.request,
-                                       adunit=self.adunit,
+        battle_context = BattleContext(adunit=self.adunit,
                                        keywords=None,
                                        country_tuple=["US"],
-                                       excluded_adgroups=[],
+                                       excluded_adgroup_keys=[],
                                        udid="FakeUDID",
                                        ll=None,
                                        request_id=None,
                                        now=datetime.datetime.now(),
-                                       user_agent='FakeAndroidOS',
-                                       adunit_context=self.adunit_context,
+                                       user_agent='FakeAndroidOS',        
                                        experimental=False)
         # Unpack results
-        creative, on_fail_exclude_adgroups = auction_results                   
+        creative, on_fail_exclude_adgroups = new_ad_auction.run(battle_context, self.adunit_context)                    
 
         eq_obj(creative, self.expensive_creative)
         
     def mptest_basic_exclusion(self):
-        auction_results = AdAuction.run(request = self.request,
-                                       adunit=self.adunit,
+        battle_context = BattleContext(adunit=self.adunit,
                                        keywords=None,
                                        country_tuple=[],
-                                       excluded_adgroups=[],
+                                       excluded_adgroup_keys=[],
                                        udid="FakeUDID",
                                        ll=None,
                                        request_id=None,
                                        now=datetime.datetime.now(),
                                        user_agent='FakeAndroidOS',
-                                       adunit_context=self.adunit_context,
                                        experimental=False)
         # Unpack results
-        creative, on_fail_exclude_adgroups = auction_results                   
+        creative, on_fail_exclude_adgroups = new_ad_auction.run(battle_context, self.adunit_context)                    
 
         eq_obj(creative, self.expensive_creative)
         
@@ -190,20 +197,18 @@ class TestAdAuction(unittest.TestCase):
 
     def mptest_inbound_exclusion(self):
         expensive_ag_key = str(self.expensive_adgroup.key())
-        auction_results = AdAuction.run(request = self.request,
-                                       adunit=self.adunit,
+        battle_context = BattleContext(adunit=self.adunit,
                                        keywords=None,
                                        country_tuple=[],
-                                       excluded_adgroups=[expensive_ag_key],
+                                       excluded_adgroup_keys=[expensive_ag_key],
                                        udid="FakeUDID",
                                        ll=None,
                                        request_id=None,
                                        now=datetime.datetime.now(),
                                        user_agent='FakeAndroidOS',
-                                       adunit_context=self.adunit_context,
                                        experimental=False)
         # Unpack results
-        creative, on_fail_exclude_adgroups = auction_results                   
+        creative, on_fail_exclude_adgroups = new_ad_auction.run(battle_context, self.adunit_context)                    
 
         eq_obj(creative, self.cheap_creative)
 
@@ -216,20 +221,18 @@ class TestAdAuction(unittest.TestCase):
     def mptest_native_network_failure_cascade(self):
         """ Native adnetwork failures should properly cascade """
         """ This belongs in ad_auction_mptests """
-        auction_results = AdAuction.run(request = self.request,
-                                       adunit=self.adunit,
+        battle_context = BattleContext(adunit=self.adunit,
                                        keywords=None,
                                        country_tuple=[],
-                                       excluded_adgroups=[],
+                                       excluded_adgroup_keys=[],
                                        udid="FakeUDID",
                                        ll=None,
                                        request_id=None,
                                        now=datetime.datetime.now(),
                                        user_agent='FakeAndroidOS',
-                                       adunit_context=self.adunit_context,
                                        experimental=False)
         # Unpack results
-        creative, on_fail_exclude_adgroups = auction_results                   
+        creative, on_fail_exclude_adgroups = new_ad_auction.run(battle_context, self.adunit_context)                    
                                        
         eq_obj(creative, self.expensive_creative)
         

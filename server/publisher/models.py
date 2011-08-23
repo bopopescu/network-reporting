@@ -148,12 +148,6 @@ class Site(db.Model):
     
     network_config = db.ReferenceProperty(NetworkConfig, collection_name="adunits")
     
-
-    def threshold_cpm(self, priority_level):
-        """ Allows the site to reject ads if their eCPM does not 
-        exceed a given threshold, on a per-priority level basis
-        TODO Make this actually do something """
-        return 0
     
     def get_height(self):
         if self.format == 'custom' and self.custom_height: 

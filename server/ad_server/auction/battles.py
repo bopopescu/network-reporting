@@ -26,13 +26,13 @@ class Battle(object):
     
     def _sort_creatives(self, creatives): 
         """ Sorts a list of creatives in place. Sorts by the ecpm of each
-            creative-adunit pairing """   
+            creative-adunit pairing in descending value """   
         
+        # Build a dict {creative: ecpm}
         creative_ecpm_dict = optimizer.get_ecpms(self.adunit_context,
                                                  creatives,
                                                  sampling_fraction=0.0)
-        
-        
+
         # Make this negative so high ecpm comes first
         ecpm_lookup = lambda creative: -creative_ecpm_dict[creative]   
         
@@ -40,7 +40,7 @@ class Battle(object):
         return sorted(creatives, key=ecpm_lookup)
         
     
-    def _get_adgroups(self):
+    def _get_adgroups_for_level(self):
         """ Retrieves the appropriate adgroups from the adunit_context """ 
         
         # Base case, return all targeted adgroups
@@ -49,7 +49,8 @@ class Battle(object):
         
     
     def _filter_adgroups(self, adgroups):
-        """ Runs the set of adgroup filters on our adgroups """         
+        """ Runs the set of adgroup filters on our adgroups.
+            Returns a filtered subset of adgroups. """         
         
         # TODO: refactor logging on filters (make them oo) 
         
@@ -59,7 +60,9 @@ class Battle(object):
                            kw_filter(self.battle_context.keywords), 
                            geo_filter(self.battle_context.geo_predicates),
                            os_filter(self.battle_context.user_agent),
-                           budget_filter())         
+                           budget_filter()) # Run budget last b/c it touches memcache        
+         
+         
                        
         filtered_adgroups = filter(mega_filter(*adgroup_filters), adgroups)
         for (func, warn, removed_adgroup_list) in adgroup_filters:
@@ -68,7 +71,8 @@ class Battle(object):
         
         
     def _filter_creatives(self, creatives):      
-        """ Runs the set of creative filters on our creatives """ 
+        """ Runs the set of creative filters on our creatives.
+            Returns a filtered subset of creatives. """ 
 
         # TODO: refactor logging on filters (make them oo) 
         
@@ -81,11 +85,16 @@ class Battle(object):
     def _process_winner(self, creative):
         """ Processes the winning creative. Requests it using an rpc if necessary.
             Throws an exception if an error occurs. """
-            
+        
+        # regardless of outcome, exclude
+        self.battle_context.excluded_adgroup_keys.append(str(creative.adgroup.key()))
+        print(self.__class__) 
+        print(creative.adgroup)     
         return creative  
        
-    def run(self): 
-        adgroups = self._get_adgroups()
+    def run(self):                             
+        """ Runs the sub-auction"""
+        adgroups = self._get_adgroups_for_level()
     
         trace_logging.info(self.__class__.starting_message)
         
@@ -100,21 +109,26 @@ class Battle(object):
         creatives = self.adunit_context.get_creatives_for_adgroups(filtered_adgroups)   
     
         filtered_creatives = self._filter_creatives(creatives)
-    
+        
+        # Sorted creatives are in order of descending value
         sorted_creatives = self._sort_creatives(filtered_creatives)
     
-        for creative in sorted_creatives:
-            try:
-                return self._process_winner(creative) 
-            except:
-                pass
+        for creative in sorted_creatives:   
+            
+            return self._process_winner(creative) 
+            
+            # try:
+            #                return self._process_winner(creative) 
+            #            except: 
+            #                trace_logging.info("Processing of creative: %s failed" % creative)  
+            #                                               
                                                     
 class GteeHighBattle(Battle):  
     """ Runs the standard battle for all guaranteed campaigns. """
     
     starting_message = "Beginning guaranteed high campaigns..."         
     
-    def _get_adgroups(self):
+    def _get_adgroups_for_level(self):
         all_adgroups = self.adunit_context.adgroups 
         return filter(lambda ag: ag.campaign.campaign_type == "gtee_high", all_adgroups)
         
@@ -123,8 +137,16 @@ class GteeBattle(Battle):
 
     starting_message = "Beginning guaranteed campaigns..."         
 
-    def _get_adgroups(self):
+    def _get_adgroups_for_level(self):
         all_adgroups = self.adunit_context.adgroups 
-        return filter(lambda ag: ag.campaign.campaign_type == "gtee", all_adgroups)        
-        
+        return filter(lambda ag: ag.campaign.campaign_type == "gtee", all_adgroups)               
+
+class GteeLowBattle(Battle):  
+    """ Runs the standard battle for all guaranteed campaigns. """
+
+    starting_message = "Beginning guaranteed low campaigns..."         
+
+    def _get_adgroups_for_level(self):
+        all_adgroups = self.adunit_context.adgroups 
+        return filter(lambda ag: ag.campaign.campaign_type == "gtee_low", all_adgroups)
     

@@ -28,8 +28,7 @@ from server.ad_server.main import  (AdImpressionHandler,
                                      AppOpenHandler,
                                     )
                                     
-from server.ad_server.handlers.adhandler import AdHandler     
-from server.ad_server.auction.ad_auction import AdAuction
+from server.ad_server.handlers.adhandler import AdHandler  
 
 from time import mktime
 import logging

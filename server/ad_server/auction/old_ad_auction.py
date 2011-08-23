@@ -8,7 +8,8 @@ import urllib
 from ad_server.filters.filters import (budget_filter,
                                     active_filter,
                                     kw_filter,
-                                    geo_filter,    
+                                    geo_filter,
+                                    device_filter,
                                     mega_filter,
                                     format_filter,
                                     exclude_filter,
@@ -17,7 +18,8 @@ from ad_server.filters.filters import (budget_filter,
                                     all_freq_filter,
                                     lat_lon_filter,
                                     os_filter,
-                                   )                   
+                                   )
+# from ad_server.adserver_templates import TEMPLATES
                                     
 from common.utils import simplejson
 from common.utils import helpers
@@ -63,7 +65,9 @@ from ad_server import memcache_mangler
 from ad_server import frequency_capping
 
 
-############## CONSTANTS ###############                 
+############## CONSTANTS ###############
+
+TEST_MODE = "3uoijg2349ic(TEST_MODE)kdkdkg58gjslaf"
 
 SERVER_SIDE_DICT = {"millennial":MillennialServerSide,
                     "appnexus":AppNexusServerSide,
@@ -86,8 +90,7 @@ class AdAuction(object):
     MAX_ADGROUPS = 30
     
     @classmethod
-    def request_third_party_server(cls, request, adunit, adgroups):  
-        return "FAIL"
+    def request_third_party_server(cls,request,adunit,adgroups):
         if not isinstance(adgroups,(list,tuple)):
             multiple = False
             adgroups = [adgroups]
@@ -96,9 +99,9 @@ class AdAuction(object):
         rpcs = []
         for adgroup in adgroups:
             if adgroup.network_type in SERVER_SIDE_DICT:
-                ServerSideClass = SERVER_SIDE_DICT[adgroup.network_type]
-                server_side = ServerSideClass(request, adunit) 
-                trace_logging.warning("%s url %s"%(ServerSideClass,server_side.url))
+                KlassServerSide = SERVER_SIDE_DICT[adgroup.network_type]
+                server_side = KlassServerSide(request, adunit) 
+                trace_logging.warning("%s url %s"%(KlassServerSide,server_side.url))
                 
                 rpc = urlfetch.create_rpc(2) # maximum delay we are willing to accept is 2000 ms
                 payload = server_side.payload
@@ -120,7 +123,7 @@ class AdAuction(object):
   		         adunit=None,
   		         keywords=None,
                  country_tuple=[],
-  		         excluded_adgroup_keys=[],
+  		         excluded_adgroups=[],
   		         udid=None,
   		         ll=None,
   		         request_id=None,
@@ -129,19 +132,29 @@ class AdAuction(object):
   		         adunit_context=None,
   		         experimental=None):
         """ Runs the auction to determine the appropriate adunit to display. 
-        @returns: [winning_creative, on_fail_exclude_adgroup_keys] """
+        @returns: [winning_creative, on_fail_exclude_adgroups] """
         # TODO: Clean up variable names
         # TODO: For testability, should not require request
 
+
+        # SPAM TEH SHIT OUT OF MPX.MOPUB.COM
+        # try:
+        #     spam_rpc = urlfetch.create_rpc(deadline=.1)
+        #     urlfetch.make_fetch_call(spam_rpc, 'http://mpx.mopub.com/req?asdfasdfasdfasdf')
+        #     spam_rpc.get_result()
+        # except Exception, e:
+        #     trace_logging.error("spam error: %s"%e)
+        
         geo_predicates = AdAuction.geo_predicates_for_rgeocode(country_tuple)
 
         #if only one geo_pred (it's a country) check to see if this country has multiple
         #possible codes.  If it does, get all of them and use them all
         if len(country_tuple) == 1 and ACCEPTED_MULTI_COUNTRY.has_key(country_tuple[0]):
             geo_predicates = reduce(lambda x,y: x+y, [AdAuction.geo_predicates_for_rgeocode([country_tupleess]) for country_tupleess in ACCEPTED_MULTI_COUNTRY[country_tuple[0]]])
-       
         
-        trace_logging.warning("keywords=%s, geo_predicates=%s" % (keywords, geo_predicates))
+        device_predicates = AdAuction.device_predicates_for_request(request)
+        
+        trace_logging.warning("keywords=%s, geo_predicates=%s, device_predicates=%s" % (keywords, geo_predicates, device_predicates))
         
         # Matching strategy: 
         # 1) match all ad groups that match the placement that is in question, sort by priority
@@ -157,14 +170,14 @@ class AdAuction(object):
         trace_logging.info("##############################")
         
         # We first run filters at the adgroup level
-        ALL_FILTERS = ( exclude_filter(excluded_adgroup_keys),
-                        active_filter(), 
-                        lat_lon_filter(ll),
-                        kw_filter(keywords), 
-                        geo_filter(geo_predicates),       
-                        os_filter(user_agent),
-                        budget_filter(),
-                       ) 
+        ALL_FILTERS = (exclude_filter(excluded_adgroups),
+                       active_filter(), 
+                       lat_lon_filter(ll),
+                       kw_filter(keywords), 
+                       geo_filter(geo_predicates), 
+                       device_filter(device_predicates),
+                       os_filter(user_agent),
+                       budget_filter()) 
         
         all_ad_groups = filter(mega_filter(*ALL_FILTERS), all_ad_groups)
         for (func, warn, lst) in ALL_FILTERS:
@@ -231,8 +244,8 @@ class AdAuction(object):
         trace_logging.info(" Beginning Auction")
         trace_logging.info("#####################")
         
-        # Initialize on_fail_exclude_adgroup_keys to include all the previously excluded agdgroups
-        on_fail_exclude_adgroup_keys = excluded_adgroup_keys
+        # Initialize on_fail_exclude_adgroups to include all the previously excluded agdgroups
+        on_fail_exclude_adgroups = excluded_adgroups
         
         # If any ad groups were returned, find the creatives that match the requested format in all candidates
         if len(all_ad_groups) > 0:
@@ -291,7 +304,7 @@ class AdAuction(object):
                             # Should really be the pub's cut
                             crtv.adgroup.bid = charge_price
                             # I think we should log stuff here but I don't know how to do that
-                            return [crtv, on_fail_exclude_adgroup_keys]
+                            return [crtv, on_fail_exclude_adgroups]
                         else:
                             continue
                             
@@ -318,7 +331,7 @@ class AdAuction(object):
                         winning_ecpm = player_ecpm_dict[players[0]]
                         trace_logging.info("Trying to get creatives: %s"%", ".join([c.name.encode('utf8').replace("dummy","") if c.name else 'None' for c in players]))
                         trace_logging.warning("auction at priority=%s: %s, max eCPM=%s" % (p, players, winning_ecpm))
-                        if winning_ecpm >= adunit.threshold_cpm(p):
+                        if True:
         
                             # exclude according to the exclude parameter must do this after determining adgroups
                             # so that we maintain the correct order for user bucketing
@@ -354,8 +367,8 @@ class AdAuction(object):
                                         if winner.adgroup.network_type in NATIVE_REQUESTS:
                                             mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, headers=request.headers, udid=udid)
                                         # A native request could potential fail and must be excluded from subsequent requests    
-                                        on_fail_exclude_adgroup_keys.append(str(winning_creative.adgroup.key()))
-                                        return [winning_creative, on_fail_exclude_adgroup_keys]
+                                        on_fail_exclude_adgroups.append(str(winning_creative.adgroup.key()))
+                                        return [winning_creative, on_fail_exclude_adgroups]
                                     # if the adgroup requires an RPC    
                                     else:
                                         trace_logging.info('Attempting ad network request: %s ...'%winner.adgroup.network_type.title())
@@ -378,14 +391,14 @@ class AdAuction(object):
                                                     height = server_tuple[3]
                                                     winning_creative.width = width
                                                     winning_creative.height = height
-                                                return [winning_creative, on_fail_exclude_adgroup_keys]
+                                                return [winning_creative, on_fail_exclude_adgroups]
                                         except Exception,e:
                                             import traceback, sys
                                             exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
                                             trace_logging.warning(exception_traceback)
                                             
                                         # Network request has failed. We won't try it again
-                                        on_fail_exclude_adgroup_keys.append(str(winner.adgroup.key()))
+                                        on_fail_exclude_adgroups.append(str(winner.adgroup.key()))
                             else:
                                 # remove players of the current winning e_cpm
                                 trace_logging.warning('current players: %s'%players)
@@ -402,14 +415,18 @@ class AdAuction(object):
         
         # nothing... failed auction
         trace_logging.warning("auction failed, returning None")
-        return [None, on_fail_exclude_adgroup_keys]
+        return [None, on_fail_exclude_adgroups]
         
     @classmethod
     def geo_predicates_for_rgeocode(c, r):
         # r = [US, CA SF] or []
         # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         # TODO: DEFAULT COUNTRY SHOULD NOT BE US!!!!!!!
-        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
+        
+        # I think the idea here is to enumerate the list of geo predicates 
+        # that when matched will accept this ad_request
+        
         if len(r) == 0:
             return ["country_name=US","country_name=*"] # ["country_name"=*] or ["country_name=US] ["country_name="CD"]
         elif len(r) == 1:
@@ -423,72 +440,19 @@ class AdAuction(object):
                   "region_name=%s,country_name=%s" % (r[1], r[2]),
                   "country_name=%s" % r[2],
                   "country_name=*"]
-
+        
+    @classmethod
+    def device_predicates_for_request(c, req):
+        ua = req.headers["User-Agent"]
+        if "Android" in ua:
+            return ["platform_name=android", "platform_name=*"]
+        elif "iPhone" in ua:
+            return ["platform_name=iphone", "platform_name=*"]
+        else:
+            return ["platform_name=*"]
         
     @classmethod
     def format_predicates_for_format(c, f):
         # TODO: does this always work for any format
         return ["format=%dx%d" % (f[0], f[1]), "format=*"]
-=======
-from ad_server.auction.battles import (Battle, 
-                                       GteeBattle, 
-                                       GteeHighBattle,
-                                       GteeLowBattle,
-                                       PromoBattle,
-                                       MarketplaceBattle, 
-                                      )
-                                      
-def run(battle_context, adunit_context):   
-    """ Runs the auction, returns a creative and an updated list of 
-        excluded_adgroup_keys """ 
-    
-    battle_context.geo_predicates = geo_predicates_from_country_code(battle_context.country_code)
-                               
-    # Run each of our battle levels in the appropriate order.
-    battle_classes = [GteeHighBattle,
-                      GteeBattle,
-                      GteeLowBattle,
-                      PromoBattle,
-                      MarketplaceBattle,
-                      # NetworkBattle,
-                      # BackfillPromoBattle
-                      ]                      
-     
-    # Return the first successful creative
-    for BattleClass in battle_classes:                    
-        battle = BattleClass(battle_context, adunit_context)
-        creative = battle.run()
-        if creative: 
-            return (creative, battle_context.excluded_adgroup_keys)              
-
-    # No battle found an eligble creative
-    return (None, battle_context.excluded_adgroup_keys)
-
-
-
-
-def geo_predicates_from_country_code(country_code): 
-    """ This desperately needs to be refactored. Three steps to happiness:
-        1. Deprecate the idea of a 'geo_predicate'
-        2. Start recording country, region, state and city information
-        3. Tweak geo_filter to use the new fields
-        """       
-    if not country_code:
-        return ["country_name=US","country_name=*"]
-    else:
-        return ["country_name=%s" % country_code, "country_name=*"]
-
-    # TODO: Ask Nafis - is multiple country codes a real thing?
-
-    #if only one geo_pred (it's a country) check to see if this country has multiple
-    #possible codes.  If it does, get all of them and use them all
-    # if len(country_tuple) == 1 and ACCEPTED_MULTI_COUNTRY.has_key(country_tuple[0]):
-    #     geo_predicates = reduce(lambda x,y: x+y, [geo_predicates_for_rgeocode([country_tupleess]) for country_tupleess in ACCEPTED_MULTI_COUNTRY[country_tuple[0]]])       
-    
-    
-    
-    
-    
->>>>>>> auction-refactor
-    
     

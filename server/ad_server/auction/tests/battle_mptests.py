@@ -23,16 +23,8 @@ from server.ad_server.main import  ( AdClickHandler,
                                      AppOpenHandler,
                                      TestHandler,
                                      )
-<<<<<<< HEAD
-from server.ad_server.handlers import adhandler  
-from server.ad_server.renderers import creative_renderer  
-
-from server.ad_server.handlers.adhandler import AdHandler                                     
-from server.ad_server.auction.ad_auction import AdAuction
-=======
 from server.ad_server.handlers import adhandler
 from server.ad_server.handlers.adhandler import AdHandler   
->>>>>>> auction-refactor
 
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 ############# Integration Tests #############
@@ -52,9 +44,13 @@ from google.appengine.ext import testbed
 
 from common.utils.system_test_framework import run_auction, fake_request
 
-
-
-""" This module is where all of our system and end-to-end tests can live. """
+from ad_server.auction.battles import (Battle, 
+                                       GteeBattle, 
+                                       GteeHighBattle,
+                                       GteeLowBattle 
+                                      )
+  
+from ad_server.auction.battle_context import BattleContext
 
 
 class TestAdAuction(unittest.TestCase):
@@ -75,11 +71,6 @@ class TestAdAuction(unittest.TestCase):
         self.testbed.init_datastore_v3_stub()
         self.testbed.init_memcache_stub()
 
-
-        # We simplify the budgetmanger for testing purposes
-        budgetmodels.DEFAULT_TIMESLICES = 10 # this means each campaign has 100 dollars per slice
-        budgetmodels.DEFAULT_FUDGE_FACTOR = 0.0
-
         # Set up default models
         self.account = Account()
         self.account.put()
@@ -96,7 +87,8 @@ class TestAdAuction(unittest.TestCase):
         # Make Expensive Campaign
         self.expensive_c = Campaign(name="expensive",
                                     budget=1000.0,
-                                    budget_strategy="evenly")
+                                    budget_strategy="allatonce",
+                                    campaign_type="gtee")
         self.expensive_c.put()
 
         self.expensive_adgroup = AdGroup(account=self.account, 
@@ -105,9 +97,7 @@ class TestAdAuction(unittest.TestCase):
                                           site_keys=[self.adunit.key()],
                                           bid_strategy="cpm",
                                           bid=100000.0) # 100 per click
-        self.expensive_adgroup.put()
-
-
+        self.expensive_adgroup.put()   
 
         self.expensive_creative = Creative(account=self.account,
                                 ad_group=self.expensive_adgroup,
@@ -119,7 +109,8 @@ class TestAdAuction(unittest.TestCase):
         # Make cheap campaign
         self.cheap_c = Campaign(name="cheap",
                                 budget=1000.0,
-                                budget_strategy="evenly")
+                                budget_strategy="allatonce",
+                                campaign_type="gtee")
         self.cheap_c.put()
 
         self.cheap_adgroup = AdGroup(account=self.account, 
@@ -140,37 +131,65 @@ class TestAdAuction(unittest.TestCase):
     
         
         self.request = fake_request(self.adunit.key())
-        adunit_id = str(self.adunit.key())
+        self.adunit_id = str(self.adunit.key())
+         
+        self.user_agent = "Mozilla/5.0 (iPad; U; CPU OS 3.2 like Mac OS X; en-us) AppleWebKit/531.21.10 (KHTML, like Gecko) Version/4.0.4 Mobile/7B314 Safari/531.21.10"
 
-        self.adunit_context = AdUnitContextQueryManager.cache_get_or_insert(adunit_id)
+        self.adunit_context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit_id)   
+        
+        self.battle_context = BattleContext(adunit=self.adunit,
+                	                        keywords=["rocks", "paper"],
+                                            country_code=None,
+                	                        excluded_adgroup_keys=[],
+                	                        udid="awesome_test_udid",
+                	                        ll=None,
+                	                        request_id="random_awesome_request_id",
+                	                        now=datetime.datetime.now(),
+                	                        user_agent=self.user_agent,       
+                	                        experimental=False,
+                	                        geo_predicates=["country_name=US","country_name=*"])
    
     def tearDown(self):
         self.testbed.deactivate()
 
-    def mptest_build_fail_url(self):
-        original_url = "http://ads.mopub.com/m/ad?id=asdf&blah&foo&bar&IMPORTANT"
-        on_fail_exclude_adgroups = ["admob", "millennial"]
-        fail_url = creative_renderer._build_fail_url(original_url, on_fail_exclude_adgroups)
+    def mptest_basic(self):
+        gtee_battle = GteeBattle(self.battle_context, self.adunit_context)
+        creative = gtee_battle.run() 
+        eq_obj(creative, self.expensive_creative)    
+         
+    def mptest_gtee_high_priority(self):   
+        self.expensive_c.campaign_type = "gtee_high"
+        self.expensive_c.put()  
+        
+        # Clear the adunit context cache         
+        self.refresh_context(self.adunit)
+
+        # for c in self.adunit_context.campaigns:
+        #     print c.campaign_priority   
+
+        gtee_battle = GteeHighBattle(self.battle_context, self.adunit_context)
+        creative = gtee_battle.run() 
+        eq_obj(creative, self.expensive_creative)
     
-        eq_(fail_url,"http://ads.mopub.com/m/ad?id=asdf&blah&foo&bar&IMPORTANT&exclude=admob&exclude=millennial")
+    def mptest_gtee_low_priority(self):   
+        self.expensive_c.campaign_type = "gtee_low"
+        self.expensive_c.put()  
+    
+        # Clear the adunit context cache         
+        self.refresh_context(self.adunit)                                  
+    
+        gtee_battle = GteeLowBattle(self.battle_context, self.adunit_context)
+        creative = gtee_battle.run() 
+        eq_obj(creative, self.expensive_creative)
+                                                      
 
-    def mptest_build_fail_url_replace(self):
-        original_url = "http://ads.mopub.com/m/ad?id=asdf2&blah&foo&bar&IMPORTANT&exclude=admob"
-        on_fail_exclude_adgroups = ["admob", "millennial"]
-        fail_url = creative_renderer._build_fail_url(original_url, on_fail_exclude_adgroups)
-
-        eq_(fail_url,"http://ads.mopub.com/m/ad?id=asdf2&blah&foo&bar&IMPORTANT&exclude=admob&exclude=millennial")
-
-    def mptest_build_fail_url_multiple_replace(self):
-        original_url = "http://ads.mopub.com/m/ad?id=asdf3&blah&foo&bar&IMPORTANT&exclude=admob&exclude=millennial"
-        on_fail_exclude_adgroups = ["admob"]
-        fail_url = creative_renderer._build_fail_url(original_url, on_fail_exclude_adgroups)
-
-        eq_(fail_url,"http://ads.mopub.com/m/ad?id=asdf3&blah&foo&bar&IMPORTANT&exclude=admob")
-
-    def mptest_build_fail_url_multiple_replace_suffix(self):
-        original_url = "http://ads.mopub.com/m/ad?id=asdf3&blah&foo&bar&exclude=admob&exclude=millennial&other=ok"
-        on_fail_exclude_adgroups = ["admob"]
-        fail_url = creative_renderer._build_fail_url(original_url, on_fail_exclude_adgroups)
-
-        eq_(fail_url,"http://ads.mopub.com/m/ad?id=asdf3&blah&foo&bar&other=ok&exclude=admob")
+############### HELPER FUNCTIONS ###########                          
+                                           
+    def refresh_context(self, adunit):
+        """ Refreshes self.adunit_context when it has been changed"""
+        AdUnitContextQueryManager.cache_delete_from_adunits(adunit)
+        self.adunit_context = AdUnitContextQueryManager.cache_get_or_insert(str(adunit.key()))         
+ 
+def eq_obj(obj1, obj2): 
+    """ Convenience func """
+    eq_(obj1.key(), obj2.key())      

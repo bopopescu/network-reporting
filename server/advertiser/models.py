@@ -78,11 +78,7 @@ class Campaign(db.Model):
         
     def is_active_for_date(self, date):
         """ Start and end dates are inclusive """
-        if (self.budget_type == "full_campaign" and date >= self.start_date and date <= self.end_date)\
-        or ((self.budget_type == "daily") and ((not self.end_date and self.start_date and self.start_date <= date) \
-        or (not self.end_date and not self.start_date) \
-        or (not self.start_date and self.end_date and self.end_date >= date) \
-        or (self.start_date and self.end_date and self.start_date <= date and self.end_date >= date))):
+        if (self.start_date  <= date if self.start_date else True) and (date <= self.end_date if self.end_date else True):
             return True
         else:
             return False
@@ -100,7 +96,6 @@ class AdGroup(db.Model):
     created = db.DateTimeProperty(auto_now_add=True)
 
     # the priority level at which this ad group should be auctioned
-    priority_level = db.IntegerProperty(default=1)
     network_type = db.StringProperty(choices=["adsense", "iAd", "admob","millennial","ejam","chartboost","appnexus","inmobi","mobfox","jumptap","brightroll","greystripe", "custom", "custom_native", "admob_native", "millennial_native"])
 
     # Note that bid has different meaning depending on the bidding strategy.

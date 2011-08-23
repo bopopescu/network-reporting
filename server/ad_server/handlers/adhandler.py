@@ -23,7 +23,9 @@ from mopub_logging import mp_logging
 from google.appengine.ext.db import Key
 
 from ad_server.debug_console import trace_logging
-from ad_server import memcache_mangler
+from ad_server import memcache_mangler          
+
+
 from ad_server.auction.ad_auction import AdAuction
 from ad_server import frequency_capping            
             
@@ -46,7 +48,19 @@ RENDERERS = {
     "custom_native":BaseCreativeRenderer, 
     "millennial_native":BaseCreativeRenderer,
 }
-   
+         
+from ad_server.auction import ad_auction
+from ad_server import frequency_capping     
+
+from ad_server.auction.battles import (Battle, 
+                                       GteeBattle, 
+                                       GteeHighBattle,
+                                       GteeLowBattle 
+                                      )     
+from ad_server.auction.battle_context import BattleContext                                     
+                                       
+
+from google.appengine.api.images import InvalidBlobKeyError
 
 TEST_MODE = "3uoijg2349ic(TEST_MODE)kdkdkg58gjslaf"
                                     
@@ -130,6 +144,7 @@ class AdHandler(webapp.RequestHandler):
         
         trace_logging.warning("User Agent: %s" % helpers.get_user_agent(self.request))
 
+
         # check if the country is overriden manually
         if self.request.get('country'):
             countries = [self.request.get('country')]
@@ -139,7 +154,17 @@ class AdHandler(webapp.RequestHandler):
             countries = [c.upper() for c in countries]
             country_tuple = tuple(countries)
         
-        site = adunit       
+
+        # ENDTODO
+        
+        # We can get country_code from one of two places 
+        if self.request.get('country'):
+            country_code = self.request.get('country')
+        else:
+            country_code = helpers.get_country_code(headers=self.request.headers)
+        
+        
+        site = adunit     
         
         if self.request.get('testing') == TEST_MODE:
             # If we are running tests from ad_server_tests, don't use caching
@@ -162,6 +187,7 @@ class AdHandler(webapp.RequestHandler):
             keywords += site.keywords.split(',')
         if self.request.get("q"):
             keywords += self.request.get("q").lower().split(',')
+
         trace_logging.warning("keywords are %s" % keywords)
         
         # look up lat/lon
@@ -180,25 +206,35 @@ class AdHandler(webapp.RequestHandler):
         request_id = hashlib.md5("%s:%s" % (self.request.query_string, time.time())).hexdigest()
          
 
-          
+        print("adunitxx %s" % adunit) 
+                                                                           
+        battle_context = BattleContext(adunit=site,
+                                keywords=keywords, 
+                                excluded_adgroup_keys=excluded_adgroups, 
+                                udid=udid, 
+                                ll=ll,
+                                request_id=request_id, 
+                                now=now,
+                                user_agent=user_agent,       
+                                country_code=country_code, 
+                                experimental=experimental)  
+                                
         # Run the ad auction to get the creative to display
-        ad_auction_results = AdAuction.run(request = self.request,
-                                           adunit = site,
-                                           keywords=keywords, 
-                                           excluded_adgroup_keys=excluded_adgroup_keys, 
-                                           udid=udid, 
-                                           ll = ll,
-                                           request_id=request_id, 
-                                           now=now,
-                                           user_agent=user_agent,
-                                           adunit_context=adunit_context,
-                                           country_tuple=country_tuple, 
-                                           experimental=experimental)
+        ad_auction_results = ad_auction.run(battle_context, adunit_context)
+
         
         # Unpack the results of the AdAuction
         creative, on_fail_exclude_adgroups = ad_auction_results
         
-        # Attach various headers   
+
+        print("Creativexx: %s" % creative)
+        
+        # add timer and animations for the ad 
+        # only send to client if there should be a refresh
+        # animation_type = random.randint(0,6)
+        # self.response.headers.add_header("X-Animation",str(animation_type))    
+        
+
         refresh = adunit.refresh_interval
         if refresh:
             self.response.headers.add_header("X-Refreshtime",str(refresh))
@@ -241,7 +277,7 @@ class AdHandler(webapp.RequestHandler):
       
             # add creative ID for testing (also prevents that one bad bug from happening)
             self.response.headers.add_header("X-Creativeid", "%s" % creative.key())
-                                                         
+                            
             
             Renderer = RENDERERS[creative.ad_type]
             
@@ -254,6 +290,7 @@ class AdHandler(webapp.RequestHandler):
                                            version_number = int(self.request.get('v') or 0),
                                            track_url = track_url,   
                                            on_fail_exclude_adgroups = on_fail_exclude_adgroups)       
+
                                       
         if jsonp:
             self.response.out.write('%s(%s)' % (callback, dict(ad=str(rendered_creative or ''), click_url = str(ad_click_url), ufid=str(ufid))))

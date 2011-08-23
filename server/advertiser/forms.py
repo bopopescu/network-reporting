@@ -32,7 +32,7 @@ class CampaignForm(mpforms.MPModelForm):
     TEMPLATE = 'advertiser/forms/campaign_form.html'
     gtee_level = forms.Field(widget = forms.Select)
     promo_level = mpfields.MPChoiceField(choices=[('normal','Normal'),('backfill','Backfill')],widget=mpwidgets.MPSelectWidget)
-    budget_strategy = mpfields.MPChoiceField(choices=[('evenly','Spread Evenly'),('allatonce','All at once')],widget=mpwidgets.MPRadioWidget)
+    budget_strategy = mpfields.MPChoiceField(choices=[('evenly','Spread evenly'),('allatonce','All at once')],widget=mpwidgets.MPRadioWidget)
     budget_type = mpfields.MPChoiceField(choices=[('daily','Daily'),('full_campaign','Full Campaign')],widget=mpwidgets.MPSelectWidget)
    
     #priority is now based off of campaign_type, not actually priority
@@ -136,7 +136,7 @@ class AdGroupForm(mpforms.MPModelForm):
     
     class Meta:
         model = AdGroup
-        fields = ('name', 'network_type', 'priority_level', 'keywords', 
+        fields = ('name', 'network_type', 'keywords', 
                   'bid', 'bid_strategy', 
                   'percent_users', 'site_keys',
                   'hourly_frequency_cap','daily_frequency_cap','allocation_percentage', 

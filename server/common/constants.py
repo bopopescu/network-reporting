@@ -119,6 +119,6 @@ ACCEPTED_MULTI_COUNTRY = {'GB' : ['UK', 'GB'],
                           'UK' : ['UK', 'GB'],
                           }
 
-CAMPAIGN_LEVELS = ('gtee_high', 'gtee', 'gtee_low', 'promo', 'network', 'backfill_promo', 'marketplace')
+CAMPAIGN_LEVELS = ('gtee_high', 'gtee', 'gtee_low', 'promo', 'marketplace_high', 'network', 'backfill_promo', 'marketplace')
 
 MAX_OBJECTS=100 # <-- What is this?

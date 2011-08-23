@@ -16,7 +16,7 @@ from budget.tzinfo import Pacific
 class Campaign(db.Model):
     name = db.StringProperty(required=True)
     description = db.TextProperty()
-    campaign_type = db.StringProperty(choices=['gtee', 'gtee_high', 'gtee_low', 'promo', 'network','backfill_promo', 'marketplace'], default="network")
+    campaign_type = db.StringProperty(choices=['gtee', 'gtee_high', 'gtee_low', 'promo', 'network','backfill_promo', 'marketplace', 'marketplace_high'], default="network")
 
     # budget per day
     budget = db.FloatProperty() 
@@ -235,7 +235,7 @@ class AdGroup(db.Model):
         elif self.network_type == 'custom_native': c = CustomNativeCreative(name='custom native dummy', ad_type='custom_native', format='320x50', format_predicates=['format=*'], html_data=custom_html)
         elif self.network_type == 'admob_native': c = AdMobNativeCreative(name="admob native dummy",ad_type="admob_native",format="320x50",format_predicates=["format=320x50"])
         elif self.network_type == 'millennial_native': c = MillennialNativeCreative(name="millennial native dummy",ad_type="millennial_native",format="320x50",format_predicates=["format=320x50"])
-        elif self.campaign.campaign_type == 'marketplace': c = MarketplaceCreative(name='marketplace dummy', ad_type='html')
+        elif self.campaign.campaign_type in ['marketplace', 'marketplace_high']: c = MarketplaceCreative(name='marketplace dummy', ad_type='html')
         if c: c.ad_group = self
         return c
     

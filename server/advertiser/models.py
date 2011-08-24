@@ -16,10 +16,17 @@ from ad_server.renderers.text_and_tile import TextAndTileRenderer
 from ad_server.renderers.adsense import AdSenseRenderer            
 from ad_server.renderers.image import ImageRenderer 
 from ad_server.renderers.millennial_native import MillennialNativeRenderer
+from ad_server.renderers.millennial import MillennialRenderer
 from ad_server.renderers.custom_native import CustomNativeRenderer
 from ad_server.renderers.pure_html import PureHTMLRenderer
 from ad_server.renderers.brightroll import BrightRollRenderer
 from ad_server.renderers.inmobi import InmobiRenderer
+from ad_server.renderers.greystripe import GreyStripeRenderer
+from ad_server.renderers.appnexus import AppNexusRenderer
+from ad_server.renderers.chartboost import ChartBoostRenderer
+from ad_server.renderers.ejam import EjamRenderer
+from ad_server.renderers.jumptap import JumptapRenderer
+from ad_server.renderers.text import TextRenderer
 
 # from budget import budget_service
 #
@@ -442,6 +449,10 @@ class TextCreative(Creative):
     line1 = db.StringProperty()
     line2 = db.StringProperty()
 
+    @property
+    def Renderer(self):
+        return TextRenderer
+    
     def __repr__(self):
         return "'%s'" % (self.headline,)
 
@@ -532,6 +543,11 @@ class AdMobNativeCreative(AdMobCreative):
         return ('728x90', '320x50', '300x250', 'full' ,)
 
 class MillennialCreative(Creative):
+
+    @property
+    def Renderer(self):                      
+        return MillennialRenderer
+
     
     @property
     def multi_format(self):
@@ -548,14 +564,22 @@ class MillennialNativeCreative(MillennialCreative):
         return ('728x90', '320x50', '300x250', 'full' ,)
 
 class ChartBoostCreative(Creative):
+
+    @property
+    def Renderer(self):                      
+        return ChartBoostRenderer
+    
     
     @property
     def multi_format(self):
         return ('320x50', 'full',)
         
 class EjamCreative(Creative):
-    pass
-
+    
+    @property
+    def Renderer(self):                      
+        return ChartBoostRenderer
+    
 class InMobiCreative(Creative):
    
     @property
@@ -568,9 +592,12 @@ class InMobiCreative(Creative):
         return ('728x90', '320x50', '300x250', '468x60', '120x600',)
     
 class AppNexusCreative(Creative):
-    pass  
+    @property
+    def Renderer(self):                      
+        return AppNexusRenderer
 
 class BrightRollCreative(Creative):
+
     @property
     def Renderer(self):                      
         return BrightRollRenderer
@@ -580,12 +607,22 @@ class BrightRollCreative(Creative):
         return ('full', 'full_tablet')
 
 class JumptapCreative(Creative):
+
+    @property
+    def Renderer(self):                      
+        return JumptapRenderer
+    
     @property
     def multi_format(self):
         return ('728x90', '320x50', '300x250')
 
 class GreyStripeCreative(Creative):
-   
+    
+    @property
+    def Renderer(self):                      
+        return GreyStripeRenderer
+
+    
     @property
     def multi_format(self):
         return ('320x320', '320x50', '300x250',)

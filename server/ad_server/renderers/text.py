@@ -1,6 +1,10 @@
-from string import Template
+from string import Template   
+import random                 
+from ad_server.renderers.base_html_renderer import BaseHTMLRenderer
 
-text = Template("""<html>
+class TextRenderer(BaseHTMLRenderer):
+
+    TEMPLATE = Template("""<html>
                         <head>
                           <style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: ${w}px;height: ${h}px;}.creative_headline {font-size: 14px;}.creative .creative_url a {color: green;text-decoration: none;}
                           </style>

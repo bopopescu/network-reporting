@@ -1,16 +1,26 @@
 from string import Template    
-from ad_server.renderers.creative_renderer import BaseCreativeRenderer 
+from ad_server.renderers.base_html_renderer import BaseHTMLRenderer 
 from google.appengine.api.images import InvalidBlobKeyError
 from google.appengine.api import images 
 
-class TextAndTileRenderer(BaseCreativeRenderer):
+class TextAndTileRenderer(BaseHTMLRenderer):
     """ For now, just do the standard """
     @classmethod
-    def network_specific_rendering(cls, headers, 
-                                        creative=None,   
-                                        context=None,
-                                        request_host=None,
-                                        **kwargss):    
+    def network_specific_rendering(cls, header_context, 
+                                   creative=None,  
+                                   format_tuple=None,
+                                   context=None,
+                                   keywords=None,
+                                   adunit=None,
+                                   fail_url=None,
+                                   request_host=None,
+                                   **kwargs):   
+
+#     def network_specific_rendering(cls, headers, 
+#                                         creative=None,   
+#                                         context=None,
+#                                         request_host=None,
+#                                         **kwargss):    
         try:
             context["image_url"] = images.get_serving_url(creative.image_blob)   
         except InvalidBlobKeyError:     
@@ -25,6 +35,14 @@ class TextAndTileRenderer(BaseCreativeRenderer):
             context["action_icon_div"] = icon_div 
         else:
             context['action_icon_div'] = ''                      
+        super(TextAndTileRenderer, cls).network_specific_rendering(header_context, 
+                                                                   creative=None,  
+                                                                   format_tuple=None,
+                                                                   context=None,
+                                                                   keywords=None,
+                                                                   adunit=None,
+                                                                   **kwargs)
+
             
 ###### TEMPLATE #########
            

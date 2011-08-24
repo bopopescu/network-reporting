@@ -137,15 +137,9 @@ class BaseCreativeRenderer(object):
                                        )
 
         if creative.ad_type == "greystripe":
-            context.update({"html_data": creative.html_data, "w": format_tuple[0], "h": format_tuple[1]})
-            header_context.add_header("X-Launchpage","http://adsx.greystripe.com/openx/www/delivery/ck.php")
-            template_name = "html"
-
-        
+            pass
         elif creative.ad_type == "html":
             pass
-
-        
         elif creative.ad_type == "html_full":
             pass
         elif creative.ad_type == "text":  
@@ -200,7 +194,8 @@ class BaseCreativeRenderer(object):
         elif creative.ad_type == "custom_native":
             pass
         else:
-            header_context.add_header("X-Adtype", str('html'))
+            pass
+            #header_context.add_header("X-Adtype", str('html'))
       
     
         # pass the creative height and width if they are explicity set

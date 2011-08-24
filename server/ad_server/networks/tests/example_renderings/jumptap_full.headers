@@ -1,6 +1,1 @@
-Content-Type: text/html; charset=utf-8
-Cache-Control: no-cache
-X-Orientation: p
-X-Adtype: html
-X-Networktype: jumptap
-
+{"X-Networktype": ["jumptap"], "X-Orientation": ["p"], "Content-Type": ["text/html; charset=utf-8"], "X-Adtype": ["html"], "Cache-Control": ["no-cache"]}

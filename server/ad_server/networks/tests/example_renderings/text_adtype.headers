@@ -1,7 +1,1 @@
-Content-Type: text/html; charset=utf-8
-Cache-Control: no-cache
-X-Productid: pixel_001
-X-Adtype: html
-X-Width: 320
-X-Height: 50
-
+{"X-Adtype": ["html"], "X-Width": ["320"], "Cache-Control": ["no-cache"], "X-Height": ["50"], "X-Productid": ["pixel_001"], "Content-Type": ["text/html; charset=utf-8"]}

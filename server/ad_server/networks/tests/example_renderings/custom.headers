@@ -1,5 +1,1 @@
-Content-Type: text/html; charset=utf-8
-Cache-Control: no-cache
-X-Adtype: html
-X-Networktype: custom
-
+{"X-Networktype": ["custom"], "Content-Type": ["text/html; charset=utf-8"], "X-Adtype": ["html"], "Cache-Control": ["no-cache"]}

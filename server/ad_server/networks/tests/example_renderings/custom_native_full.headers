@@ -1,7 +1,1 @@
-Content-Type: text/html; charset=utf-8
-Cache-Control: no-cache
-X-Orientation: p
-X-Adtype: custom
-X-Customselector: fake data
-X-Networktype: custom_native
-
+{"X-Customselector": ["fake data"], "X-Adtype": ["custom"], "X-Networktype": ["custom_native"], "X-Orientation": ["p"], "Cache-Control": ["no-cache"], "Content-Type": ["text/html; charset=utf-8"]}

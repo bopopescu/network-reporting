@@ -1,30 +1,31 @@
 <html>
-                        <head>                          
-                          <script>function mopubFinishLoad(){window.location="mopub://finishLoad";}</script>
-                          <script> 
-                            if(typeof mopubFinishLoad == 'function') {
-                                window.onload = mopubFinishLoad;
-                            }
-                          </script>
-                          <script>
-                            function webviewDidClose(){} 
-                            function webviewDidAppear(){} 
-                          </script>
-                          <style type='text/css'>
-                            .center {
-                                position: fixed;
-                                top: 50%;
-                                left: 50%;
-                                margin-left: -160.0px !important;
-                                margin-top: -25.0px !important;
+                          <meta name="viewport" content="width=device-width; initial-scale=1.0; user-scalable=no;">
+                            <head>                          
+                              <script>function mopubFinishLoad(){window.location="mopub://finishLoad";}</script>
+                              <script> 
+                                if(typeof mopubFinishLoad == 'function') {
+                                    window.onload = mopubFinishLoad;
                                 }
-                          </style>
-                        </head>
-                        <body style="padding:0;margin:0;">
-                          <div class="outer" id="outer">    
-                              <div class="">    
-                                  <a href="None" target="_top"><img src="http://localhost:8080/_ah/img/blobby" width="320" height="50"/></a>
-                              </div>
-                          </div>      
-                          <span style="display:none;"><img src="test_track_url"/></span>
-                        </body></html> 
+                              </script>
+                              <script>
+                                function webviewDidClose(){} 
+                                function webviewDidAppear(){} 
+                              </script>
+                              <style type='text/css'>
+                                .center {
+                                    position: fixed;
+                                    top: 50%;
+                                    left: 50%;
+                                    margin-left: -160.0px !important;
+                                    margin-top: -25.0px !important;
+                                    }
+                              </style>
+                            </head>
+                            <body style="padding:0;margin:0;">
+                              <div class="outer" id="outer">    
+                                  <div class="">    
+                                      <a href="None" target="_top"><img src="http://localhost:8080/_ah/img/blobby" width="320" height="50"/></a>
+                                  </div>
+                              </div>      
+                              <span style="display:none;"><img src="test_track_url"/></span>
+                            </body></html> 

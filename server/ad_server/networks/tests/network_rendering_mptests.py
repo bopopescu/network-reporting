@@ -1,3 +1,4 @@
+from __future__ import with_statement
 import os
 import sys      
 import datetime
@@ -22,6 +23,7 @@ from google.appengine.api import urlfetch
 from common.utils.system_test_framework import run_auction, fake_request  
     
 from nose.tools import eq_     
+from common.utils import simplejson
 
 from advertiser.models import (AdMobCreative,
                                AdSenseCreative,
@@ -166,6 +168,10 @@ class RenderingTestBase(object):
                                        random_val="0932jfios")   
                                        
         header_string = str(headers) # We serialize the headers 
+        header_dict = {}
+        for n in headers.keys():
+            header_dict[n] = headers.get_all(n)
+ #        header_json = simplejson.dumps(headers)
         
         # Used to initialize creative examples
         # 
@@ -176,17 +182,19 @@ class RenderingTestBase(object):
         with open('ad_server/networks/tests/example_renderings/%s%s.rendering' % (name, suffix), 'r') as f:   
             example_creative = f.read()   
             
+            
         # Used to initialize header examples
         #   
         if reset_example:
             with open('ad_server/networks/tests/example_renderings/%s%s.headers' % (name, suffix), 'w') as f:   
-                   f.write(header_string)         
+                f.write(simplejson.dumps(header_dict))         
 
         with open('ad_server/networks/tests/example_renderings/%s%s.headers' % (name, suffix), 'r') as f:   
             example_headers = f.read()
-
-
-        eq_(header_string, example_headers)             
+            example_header_dict = simplejson.loads(example_headers)
+        
+        eq_(header_dict, example_header_dict)             
+                    
 
 # Non-network-specific adtypes                 
 ad_types = ("image",
@@ -211,7 +219,7 @@ class RenderingTests(RenderingTestBase, unittest.TestCase):
         self.creative.image_height = 50
         self.creative.put()    
 
-        self._compare_rendering_with_examples("image_adtype", suffix="", reset_example=False)  
+        self._compare_rendering_with_examples("image_adtype", suffix="")#, reset_example=False)  
 
     def mptest_text_adtype(self):
         """ Make a one-off test for image creatives. """
@@ -225,7 +233,7 @@ class RenderingTests(RenderingTestBase, unittest.TestCase):
                                             ad_group=self.adgroup)
         self.creative.put()    
 
-        self._compare_rendering_with_examples("text_adtype", suffix="", reset_example=False)  
+        self._compare_rendering_with_examples("text_adtype", suffix="")#, reset_example=False)  
 
 
     def mptest_text_icon_adtype(self):
@@ -241,7 +249,7 @@ class RenderingTests(RenderingTestBase, unittest.TestCase):
                                             
                                                                                     
         self.creative.put()         
-        self._compare_rendering_with_examples("text_icon_adtype", suffix="", reset_example=False)
+        self._compare_rendering_with_examples("text_icon_adtype", suffix="")#), reset_example=False)
 
 ##### TEST GENERATORS ######     
 

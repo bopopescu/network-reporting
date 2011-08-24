@@ -260,7 +260,9 @@ network_names = ("adsense",
                  "custom_native",
                  "custom",
                  "admob_native",
-                 "millennial_native")    
+                 "millennial_native",
+                 "iAd"
+                 )    
 
 
                                                          

@@ -27,6 +27,7 @@ from ad_server.renderers.chartboost import ChartBoostRenderer
 from ad_server.renderers.ejam import EjamRenderer
 from ad_server.renderers.jumptap import JumptapRenderer
 from ad_server.renderers.text import TextRenderer
+from ad_server.renderers.iad import iAdRenderer
 
 # from budget import budget_service
 #
@@ -520,6 +521,11 @@ class CustomNativeCreative(HtmlCreative):
         return ('728x90', '320x50','300x250', 'full')
 
 class iAdCreative(Creative):
+
+    @property
+    def Renderer(self):                      
+        return iAdRenderer
+    
     @property
     def multi_format(self):
         return ('728x90', '320x50', 'full_tablet')

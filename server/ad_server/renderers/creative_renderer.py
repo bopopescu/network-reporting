@@ -162,19 +162,7 @@ class BaseCreativeRenderer(object):
         # indicate to the client the winning creative type, in case it is natively implemented (iad, clear)
     
         if str(creative.ad_type) == "iAd":
-            # header_context.add_header("X-Adtype","custom")
-            # header_context.add_header("X-Backfill","alert")
-            # header_context.add_header("X-Nativecontext",'{"title":"MoPub Alert View","cancelButtonTitle":"No Thanks","message":"We\'ve noticed you\'ve enjoyed playing Angry Birds.","otherButtonTitle":"Rank","clickURL":"mopub://inapp?id=pixel_001"}')
-            # header_context.add_header("X-Customselector","customEventTest")
-            if "full_tablet" in adunit.format:
-                header_context.add_header("X-Adtype", "interstitial")
-                header_context.add_header("X-Fulladtype", "iAd_full")
-            else:
-                header_context.add_header("X-Adtype", str(creative.ad_type))
-                header_context.add_header("X-Backfill", str(creative.ad_type))
-        
-            header_context.add_header("X-Failurl", fail_url)
-
+            pass
         elif str(creative.ad_type) == "admob_native":
             if "full" in adunit.format:
                 header_context.add_header("X-Adtype", "interstitial")

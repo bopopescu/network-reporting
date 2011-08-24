@@ -31,8 +31,10 @@ class ReportIndexHandler(RequestHandler):
         manager = ReportQueryManager(self.account)
         saved = manager.get_saved()
         scheduled = manager.get_scheduled()
-        defaults = manager.get_default_reports()
+        defaults, adding_reps = manager.get_default_reports()
         scheduled = defaults + scheduled
+        if adding_reps:
+            self.request.flash['generating_defaults'] = "Default reports are currently being generated, you will be notified when they are completed."
         report_form = ReportForm(initial={'recipients':self.request.user.email})
         return render_to_response(self.request, 'reports/report_index.html',
                 dict(scheduled  = scheduled,
@@ -64,7 +66,10 @@ class AddReportHandler(RequestHandler):
         if start:
             start = datetime.datetime.strptime(start, '%m/%d/%Y').date()
             days = (end - start).days
-        man = ReportQueryManager(self.account)
+
+        if report_key is not None:
+            man = ReportQueryManager(self.account)
+            report = man.get_report_data_by_key(report_key)
 
         saved = True
         recipients = [r.strip() for r in recipients.replace('\r','\n').replace(',','\n').split('\n') if r] if recipients else [] 
@@ -80,6 +85,7 @@ class AddReportHandler(RequestHandler):
                                 sched_interval = sched_interval,
                                 recipients = recipients,
                                 )
+        self.request.flash['report_success'] = 'Your report has been successfully submitted, you will be notified via email when it as completed!'
         return HttpResponseRedirect('/reports/')
 
 @login_required

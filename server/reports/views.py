@@ -60,16 +60,29 @@ class AddReportHandler(RequestHandler):
         
     def post(self, d1, end, days=None, start=None, d2=None, d3=None,
                             name=None, saved=False, interval=None, 
-                            sched_interval=None, recipients=None):
+                            sched_interval=None, recipients=None, report_key=None):
+        if not d2:
+            d2 = None
+        if not d3:
+            d3 = None
 
         end = datetime.datetime.strptime(end, '%m/%d/%Y').date() if end else None
         if start:
             start = datetime.datetime.strptime(start, '%m/%d/%Y').date()
             days = (end - start).days
-
+        edit = False
         if report_key is not None:
+            logging.info("there is a report key")
+            edit = True
             man = ReportQueryManager(self.account)
             report = man.get_report_data_by_key(report_key)
+            if d1 == report.d1 and d2 == report.d2 and d3 == report.d3 and start == report.start and end == report.end:
+                # All the actual data dims are the same, edit the sched settings
+                sched = report.schedule
+                sched.name = name
+                sched.sched_interval = sched_interval
+                sched.put()
+                return HttpResponseRedirect('/reports/view/%s/' % sched.key())
 
         saved = True
         recipients = [r.strip() for r in recipients.replace('\r','\n').replace(',','\n').split('\n') if r] if recipients else [] 
@@ -85,7 +98,10 @@ class AddReportHandler(RequestHandler):
                                 sched_interval = sched_interval,
                                 recipients = recipients,
                                 )
-        self.request.flash['report_success'] = 'Your report has been successfully submitted, you will be notified via email when it as completed!'
+        if edit:
+            self.request.flash['report_edit'] = 'The requested edit requires the report to be re-run.  The request has been submitted and you will be notified via email when it has completed'
+        else:
+            self.request.flash['report_success'] = 'Your report has been successfully submitted, you will be notified via email when it as completed!'
         return HttpResponseRedirect('/reports/')
 
 @login_required

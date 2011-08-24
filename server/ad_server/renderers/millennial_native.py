@@ -1,8 +1,8 @@
 from string import Template
-from ad_server.renderers.creative_renderer import BaseCreativeRenderer   
+from ad_server.renderers.base_native_renderer import BaseNativeRenderer   
 from common.utils import simplejson
 
-class MillennialNativeRenderer(BaseCreativeRenderer):
+class MillennialNativeRenderer(BaseNativeRenderer):
     """ For now, just do the standard """
     @classmethod
     def network_specific_rendering(cls, header_context, 
@@ -26,5 +26,13 @@ class MillennialNativeRenderer(BaseCreativeRenderer):
             "adHeight":adunit.get_height()
         }
         header_context.add_header("X-Nativecontext", simplejson.dumps(nativecontext_dict))                  
+        super(MillennialNativeRenderer, cls).network_specific_rendering(header_context, 
+                                                                        creative=None,  
+                                                                        format_tuple=None,
+                                                                        context=None,
+                                                                        keywords=None,
+                                                                        adunit=None,
+                                                                        **kwargs)
+                
     
     TEMPLATE = Template("""millennial native sdk""")

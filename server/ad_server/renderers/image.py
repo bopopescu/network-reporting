@@ -1,10 +1,10 @@
 from string import Template
 
-from ad_server.renderers.creative_renderer import BaseCreativeRenderer 
+from ad_server.renderers.base_html_renderer import BaseHTMLRenderer 
 from google.appengine.api.images import InvalidBlobKeyError
 from google.appengine.api import images
 
-class ImageRenderer(BaseCreativeRenderer):
+class ImageRenderer(BaseHTMLRenderer):
     """ For now, just do the standard """
     @classmethod
     def network_specific_rendering(cls, header_context, 
@@ -23,14 +23,22 @@ class ImageRenderer(BaseCreativeRenderer):
             # This will fail when on mopub-experimental
             trace_logging.warning("""InvalidBlobKeyError when trying to get image from adhandler.py.
                                     Are you on mopub-experimental?""")
-
-        # if full screen we don't need to center
+            
+            # if full screen we don't need to center
         if (not "full" in adunit.format) or ((img_width == 480.0 and img_height == 320.0 ) or (img_width == 320.0 and img_height == 480.0)):
             css_class = ""
         else:
             css_class = "center"    
 
         context.update({"w": img_width, "h": img_height, "w2":img_width/2.0, "h2":img_height/2.0, "class":css_class})
+        super(ImageRenderer, cls).network_specific_rendering(header_context, 
+                                                              creative=None,  
+                                                              format_tuple=None,
+                                                              context=None,
+                                                              keywords=None,
+                                                              adunit=None,
+                                                              **kwargs)
+                
                                         
      
     TEMPLATE = Template("""<html>

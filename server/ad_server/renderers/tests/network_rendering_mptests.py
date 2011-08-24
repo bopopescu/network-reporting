@@ -189,8 +189,9 @@ class RenderingTestBase(object):
             example_headers_string = f.read()
             example_headers = HeaderContext.from_json(unicode(example_headers_string))
         
+        print "running file name: %s" % name
         eq_(header_context, example_headers)             
-
+        
          
                     
       

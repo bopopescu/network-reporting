@@ -16,6 +16,10 @@ from ad_server.renderers.text_and_tile import TextAndTileRenderer
 from ad_server.renderers.adsense import AdSenseRenderer            
 from ad_server.renderers.image import ImageRenderer 
 from ad_server.renderers.millennial_native import MillennialNativeRenderer
+from ad_server.renderers.custom_native import CustomNativeRenderer
+from ad_server.renderers.pure_html import PureHTMLRenderer
+from ad_server.renderers.brightroll import BrightRollRenderer
+from ad_server.renderers.inmobi import InmobiRenderer
 
 # from budget import budget_service
 #
@@ -457,9 +461,14 @@ class TextAndTileCreative(Creative):
         
 class HtmlCreative(Creative):
     """ This creative has pure html that has been added by the user.
-        This should not be confused with X-adtype=html, which means that the
+        This should not be confused with ad_type=html, which means that the
         payload is html as opposed to a native request. """
     html_data = db.TextProperty()  
+
+    @property
+    def Renderer(self):
+        return PureHTMLRenderer
+
 
 class ImageCreative(Creative):
     # image properties
@@ -490,6 +499,11 @@ class CustomCreative(HtmlCreative):
     pass
 
 class CustomNativeCreative(HtmlCreative):
+    @property
+    def Renderer(self):                      
+        return CustomNativeRenderer
+
+
     @property
     def multi_format(self):
         return ('728x90', '320x50','300x250', 'full')
@@ -528,6 +542,7 @@ class MillennialNativeCreative(MillennialCreative):
     @property
     def Renderer(self):                      
         return MillennialNativeRenderer
+
     @property
     def multi_format(self):
         return ('728x90', '320x50', '300x250', 'full' ,)
@@ -544,6 +559,11 @@ class EjamCreative(Creative):
 class InMobiCreative(Creative):
    
     @property
+    def Renderer(self):                      
+        return InmobiRenderer
+
+
+    @property
     def multi_format(self):
         return ('728x90', '320x50', '300x250', '468x60', '120x600',)
     
@@ -551,6 +571,10 @@ class AppNexusCreative(Creative):
     pass  
 
 class BrightRollCreative(Creative):
+    @property
+    def Renderer(self):                      
+        return BrightRollRenderer
+    
     @property
     def multi_format(self):
         return ('full', 'full_tablet')

@@ -2,11 +2,11 @@ from string import Template
 
 from string import Template   
 import random                 
-from ad_server.renderers.creative_renderer import BaseCreativeRenderer          
+from ad_server.renderers.base_html_renderer import BaseHTMLRenderer          
 
 from ad_server.debug_console import trace_logging
 
-class AdSenseRenderer(BaseCreativeRenderer):
+class AdSenseRenderer(BaseHTMLRenderer):
     """ For now, just do the standard """
     @classmethod
     def network_specific_rendering(cls, header_context, 
@@ -59,7 +59,14 @@ class AdSenseRenderer(BaseCreativeRenderer):
         header_context.add_header("X-Format",'300x250_as')
         
         header_context.add_header("X-Backgroundcolor","0000FF") 
-        header_context.add_header("X-Adtype", str('html'))    
+        super(AdSenseRenderer, cls).network_specific_rendering(header_context, 
+                                                               creative=None,  
+                                                               format_tuple=None,
+                                                               context=None,
+                                                               keywords=None,
+                                                               adunit=None,
+                                                               **kwargs)
+                
         
 ###### TEMPLATE #########
 

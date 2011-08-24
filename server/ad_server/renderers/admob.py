@@ -1,23 +1,32 @@
 from string import Template   
 import random                 
-from ad_server.renderers.creative_renderer import BaseCreativeRenderer
+from ad_server.renderers.base_html_renderer import BaseHTMLRenderer
 
-class AdMobRenderer(BaseCreativeRenderer):
+class AdMobRenderer(BaseHTMLRenderer):
     """ For now, just do the standard """
     @classmethod
     def network_specific_rendering(cls, header_context, 
-                                        creative=None,  
-                                        format_tuple=None,
-                                        context=None,
-                                        keywords=None,
-                                        adunit=None,
-                                        **kwargs):   
+                                   creative=None,  
+                                   format_tuple=None,
+                                   context=None,
+                                   keywords=None,
+                                   adunit=None,
+                                   fail_url=None,
+                                   **kwargs):   
         context.update({"title": ','.join(keywords), "w": format_tuple[0], "h": format_tuple[1], "client": adunit.get_pub_id("admob_pub_id"), \
         "bgcolor": str(adunit.app_key.admob_bgcolor or '000000') , "textcolor": str(adunit.app_key.admob_textcolor or 'FFFFFF')})  
         
         # context.update(test_mode='true' if debug else 'false')
         # context.update(test_ad='<a href="http://m.google.com" target="_top"><img src="/images/admob_test.png"/></a>' if debug else '')
         header_context.add_header("X-Launchpage","http://c.admob.com/")
+        header_context.add_header("X-Failurl", fail_url)
+        super(AdMobRenderer, cls).network_specific_rendering(header_context, 
+                                                              creative=None,  
+                                                              format_tuple=None,
+                                                              context=None,
+                                                              keywords=None,
+                                                              adunit=None,
+                                                              **kwargs)
 
 ###### TEMPLATE #########
 

@@ -132,7 +132,9 @@ class BaseCreativeRenderer(object):
                                        context=context,
                                        format_tuple=format_tuple,
                                        random_val=random_val,
-                                       fail_url=fail_url)
+                                       fail_url=fail_url,
+                                       success=success
+                                       )
 
         if creative.ad_type == "greystripe":
             context.update({"html_data": creative.html_data, "w": format_tuple[0], "h": format_tuple[1]})
@@ -141,28 +143,11 @@ class BaseCreativeRenderer(object):
 
         
         elif creative.ad_type == "html":
-            context.update({"html_data": creative.html_data, "w": format_tuple[0], "h": format_tuple[1]})
-        
-            if 'full' in adunit.format:
-                context['trackingPixel'] = ""
-                trackImpressionHelper = "<script>\nfunction trackImpressionHelper(){\n%s\n}\n</script>"%success
-                context.update(trackImpressionHelper=trackImpressionHelper)
-            else:
-                context['trackImpressionHelper'] = ''    
-        
-            # add the launchpage header for inmobi in case they have dynamic ads that use
-            # window.location = 'http://some.thing/asdf'
-            if creative.adgroup.network_type == "inmobi":
-                header_context.add_header("X-Launchpage","http://c.w.mkhoj.com")
+            pass
 
         
         elif creative.ad_type == "html_full":
-            # must pass in parameters to fully render template
-            # TODO: NOT SURE WHY I CAN'T USE: html_data = c.html_data % dict(track_pixels=success)
-            html_data = creative.html_data.replace(r'%(track_pixels)s',success)
-            context.update(html_data=html_data)
-            header_context.add_header("X-Scrollable","1")
-            header_context.add_header("X-Interceptlinks","0")
+            pass
         elif creative.ad_type == "text":  
             header_context.add_header("X-Productid","pixel_001")
       
@@ -213,15 +198,8 @@ class BaseCreativeRenderer(object):
         elif creative.ad_type == "millennial_native":
             pass                     
         elif creative.ad_type == "custom_native":
-            creative.html_data = creative.html_data.rstrip(":")
-            context.update({"method": creative.html_data})
-            header_context.add_header("X-Adtype", "custom")
-            header_context.add_header("X-Customselector",creative.html_data)
-
-        elif str(creative.ad_type) == 'admob':
-            header_context.add_header("X-Failurl", _build_fail_url(request_url, on_fail_exclude_adgroups))
-            header_context.add_header("X-Adtype", str('html'))
-        else:  
+            pass
+        else:
             header_context.add_header("X-Adtype", str('html'))
       
     

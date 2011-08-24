@@ -18,3 +18,5 @@ server/common/wurfl/*.xml
 counts.csv
 
 server/common/wurfl/*.xml
+*~
+*#

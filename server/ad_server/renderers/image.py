@@ -7,7 +7,7 @@ from google.appengine.api import images
 class ImageRenderer(BaseCreativeRenderer):
     """ For now, just do the standard """
     @classmethod
-    def network_specific_rendering(cls, headers, 
+    def network_specific_rendering(cls, header_context, 
                                         creative=None,  
                                         format_tuple=None,
                                         context=None,

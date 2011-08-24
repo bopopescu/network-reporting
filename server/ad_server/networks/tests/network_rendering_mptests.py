@@ -37,7 +37,9 @@ from ad_server.renderers.creative_renderer import BaseCreativeRenderer
 from ad_server.renderers.admob import AdMobRenderer   
 from ad_server.renderers.text_and_tile import TextAndTileRenderer    
 from ad_server.renderers.adsense import AdSenseRenderer
+                                                             
  
+from ad_server.renderers.header_context import HeaderContext
 
 # RENDERERS = {
 #     "admob": AdMobRenderer,
@@ -155,7 +157,7 @@ class RenderingTestBase(object):
             Uses a default value for html_data. """
                                            
         empty_headers = Response().headers # We can use a vanilla response, as we don't use anything from it
-        rendered_creative, headers = self.creative.Renderer.render(empty_headers,   
+        rendered_creative, header_context = self.creative.Renderer.render(empty_headers,   
                                        creative=self.creative,
                                        now=self.dt,
                                        adunit=self.adunit, 
@@ -167,14 +169,8 @@ class RenderingTestBase(object):
                                        on_fail_exclude_adgroups=self.on_fail_exclude_adgroups,
                                        random_val="0932jfios")   
                                        
-        header_string = str(headers) # We serialize the headers 
-        header_dict = {}
-        for n in headers.keys():
-            header_dict[n] = headers.get_all(n)
- #        header_json = simplejson.dumps(headers)
-        
-        # Used to initialize creative examples
-        # 
+   
+
         if reset_example:
             with open('ad_server/networks/tests/example_renderings/%s%s.rendering' % (name, suffix), 'w') as f:   
                 f.write(rendered_creative)         
@@ -182,24 +178,23 @@ class RenderingTestBase(object):
         with open('ad_server/networks/tests/example_renderings/%s%s.rendering' % (name, suffix), 'r') as f:   
             example_creative = f.read()   
             
-            
+                
         # Used to initialize header examples
-        #   
+       
         if reset_example:
-            with open('ad_server/networks/tests/example_renderings/%s%s.headers' % (name, suffix), 'w') as f:   
-                f.write(simplejson.dumps(header_dict))         
+            with open('ad_server/networks/tests/example_renderings/%s%s.headers' % (name, suffix), 'w') as f: 
+                header_json = header_context.to_json() # We serialize the headers    
+                f.write(header_json)         
 
         with open('ad_server/networks/tests/example_renderings/%s%s.headers' % (name, suffix), 'r') as f:   
-            example_headers = f.read()
-            example_header_dict = simplejson.loads(example_headers)
+            example_headers_string = f.read()
+            example_headers = HeaderContext.from_json(unicode(example_headers_string))
         
-        eq_(header_dict, example_header_dict)             
-                    
+        eq_(header_context, example_headers)             
 
-# Non-network-specific adtypes                 
-ad_types = ("image",
-             "text",
-             "text_icon")          
+         
+                    
+      
              
 class RenderingTests(RenderingTestBase, unittest.TestCase):  
     """ Inherits that setUp and tearDown methods from RenderingTestBase. """  

@@ -265,26 +265,23 @@ class AdHandler(webapp.RequestHandler):
                 cost_tracker = cost_tracker % creative.adgroup.bid
                 ad_click_url += cost_tracker
         
-            self.response.headers.add_header("X-Clickthrough", str(ad_click_url))
-            self.response.headers.add_header("X-Imptracker", str(track_url))
-        
-      
-            # add creative ID for testing (also prevents that one bad bug from happening)
-            self.response.headers.add_header("X-Creativeid", "%s" % creative.key())
-                            
             
             Renderer = creative.Renderer
             
-            rendered_creative, headers = Renderer.render(self.response.headers,   
-                                           creative=creative,
-                                           adunit=site, 
-                                           keywords=keywords, 
-                                           request_host=self.request.host, # Needed for serving static files
-                                           request_url=self.request.url, # Needed for onfail urls  
-                                           version_number = int(self.request.get('v') or 0),
-                                           track_url = track_url,   
-                                           on_fail_exclude_adgroups = on_fail_exclude_adgroups)       
-
+            rendered_creative, header_context = Renderer.render(    
+                                                   creative=creative,
+                                                   adunit=site, 
+                                                   keywords=keywords, 
+                                                   request_host=self.request.host, # Needed for serving static files
+                                                   request_url=self.request.url, # Needed for onfail urls  
+                                                   version_number=int(self.request.get('v') or 0),
+                                                   track_url=track_url,  
+                                                   ad_click_url=ad_click_url, 
+                                                   on_fail_exclude_adgroups = on_fail_exclude_adgroups)       
+        
+        # Add header context values to response.headers
+        for key, value in header_context.items():
+            self.response.headers.add_header(key, value)
                                       
         if jsonp:
             self.response.out.write('%s(%s)' % (callback, dict(ad=str(rendered_creative or ''), click_url = str(ad_click_url), ufid=str(ufid))))

@@ -9,7 +9,7 @@ from ad_server.debug_console import trace_logging
 class AdSenseRenderer(BaseCreativeRenderer):
     """ For now, just do the standard """
     @classmethod
-    def network_specific_rendering(cls, headers, 
+    def network_specific_rendering(cls, header_context, 
                                         creative=None, 
                                         adunit=None,  
                                         format_tuple=None,
@@ -21,8 +21,8 @@ class AdSenseRenderer(BaseCreativeRenderer):
         context.update(channel_id=adunit.adsense_channel_id or '')  
         
         
-        headers.add_header("X-Adtype", str(creative.ad_type))
-        headers.add_header("X-Backfill", str(creative.ad_type))
+        header_context.add_header("X-Adtype", str(creative.ad_type))
+        header_context.add_header("X-Backfill", str(creative.ad_type))
         
         trace_logging.warning('pub id:%s' % adunit.get_pub_id("adsense_pub_id"))
         header_dict = {
@@ -52,14 +52,14 @@ class AdSenseRenderer(BaseCreativeRenderer):
         for key,value in header_dict.iteritems():
             json_string_pairs.append('"%s":"%s"'%(key, value))
         json_string = '{'+','.join(json_string_pairs)+'}'
-        headers.add_header("X-Nativecontext", json_string)
+        header_context.add_header("X-Nativecontext", json_string)
         
         # add some extra  
-        headers.add_header("X-Failurl", fail_url)
-        headers.add_header("X-Format",'300x250_as')
+        header_context.add_header("X-Failurl", fail_url)
+        header_context.add_header("X-Format",'300x250_as')
         
-        headers.add_header("X-Backgroundcolor","0000FF") 
-        headers.add_header("X-Adtype", str('html'))    
+        header_context.add_header("X-Backgroundcolor","0000FF") 
+        header_context.add_header("X-Adtype", str('html'))    
         
 ###### TEMPLATE #########
 

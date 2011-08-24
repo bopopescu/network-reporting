@@ -3,7 +3,7 @@ from advertiser.models import Campaign
 import logging
 import math
 
-DEFAULT_TIMESLICES = 1440 # Timeslices per day
+DEFAULT_TIMESLICES = 288 # A day divided into 5 minute slices
 DEFAULT_FUDGE_FACTOR = 0.005
 
 

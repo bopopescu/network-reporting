@@ -1,6 +1,7 @@
 from datetime import datetime, date, timedelta
 import time
 import sys
+import logging
 
 sys.path.append('.')
 
@@ -35,6 +36,12 @@ DELIM = '|'
 
 REPORT_NAME = '%s-%s-%s__%s-%s__%s.rep'
 
+DATE_FMT = '%y%m%d'
+DATE_FMT_HR = '%y%m%d%H'
+
+DATE_HR_LEN = 8
+DATE_LEN = 6
+
 def gen_days(start, end, hours=False):
     dt = timedelta(days=1)
     temp = start
@@ -66,13 +73,13 @@ def get_key(line_dict, dim):
     if P == dim:
         return line_dict['creative']
     if MO == dim:
-        return line_dict['time'].strptime('%y%m')
+        return line_dict['time'].strftime('%y%m')
     if WEEK == dim: 
-        return line_dict['time'].strptime('%y%m%W')
+        return line_dict['time'].strftime('%y%m%W')
     if DAY == dim:
-        return line_dict['time'].strptime('%y%m%d')
+        return line_dict['time'].strftime('%y%m%d')
     if HOUR == dim:
-        return line_dict['time'].strptime('%y%m%d%H')
+        return line_dict['time'].strftime('%y%m%d%H')
     if CO == dim:
         #TODO somehow get the full country name from the 2 letter country code
         return line_dict['country']
@@ -101,6 +108,11 @@ def parse_line(line):
     vals = eval(value)
     #ph = k, needed a placeholder 
     ph, adunit_id, creative_id, country, brand, marketing, os, os_ver, time = key.split(':')
+
+    if len(time) == DATE_LEN:
+        time = datetime.strptime(time, DATE_FMT)
+    elif len(time) == DATE_HR_LEN:
+        time = datetime.strptime(time, DATE_FMT_HR)
 
     au = adunit_id
     crtv = creative_id

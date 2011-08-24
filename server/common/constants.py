@@ -1,7 +1,7 @@
 ## Global Constants 
 
 # True for production, False for not production
-IS_PROD = False
+IS_PROD = True
 
 # OS Versions
 

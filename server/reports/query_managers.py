@@ -18,7 +18,6 @@ from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager, BlobLogQueryManager
 
 from reports.models import Report, ScheduledReport
-from reports.rep_mapreduce import GenReportPipeline
 from reports.aws_reports.parse_utils import AWS_ACCESS_KEY, AWS_SECRET_KEY
 
 from boto.sqs.connection import SQSConnection

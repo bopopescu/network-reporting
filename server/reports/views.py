@@ -71,10 +71,10 @@ class AddReportHandler(RequestHandler):
             start = datetime.datetime.strptime(start, '%m/%d/%Y').date()
             days = (end - start).days
         edit = False
+        man = ReportQueryManager(self.account)
         if report_key is not None:
             logging.info("there is a report key")
             edit = True
-            man = ReportQueryManager(self.account)
             report = man.get_report_data_by_key(report_key)
             if d1 == report.d1 and d2 == report.d2 and d3 == report.d3 and start == report.start and end == report.end:
                 # All the actual data dims are the same, edit the sched settings

@@ -23,7 +23,7 @@ from common.utils import date_magic
 from publisher.models import App
 from publisher.models import Site as AdUnit
 from reports.models import Report, ScheduledReport
-from reports.rep_mapreduce import generate_report_map_test, generate_report_reduce_test
+from reports.aws_reports.report_mapper import mapper_test, reduce_test
 from reports.query_managers import ReportQueryManager
 from reporting.aws_logging.stats_updater import update_model, put_models
 from reporting.models import StatsModel
@@ -63,11 +63,11 @@ def make_get_data(d1, d2=None, d3=None):
     fin = {}
 
     #Yo dawg, I heard you like functional programming
-    mapt = reduce(lambda x,y: x+y, [[(key, val) for (key, val) in generate_report_map_test((None,line), d1, d2, d3)] for line in file])
+    mapt = reduce(lambda x,y: x+y, [[(key, val) for (key, val) in [out.split('\t') for out in mapper_test(line, d1, d2, d3)]] for line in file])
 
     mapt2 = map(lambda (key,vals): fin.update({key:vals}), [(key1, map(lambda (key3, value3): value3, filter(lambda (key2, value2): key1==key2, mapt))) for (key1, value1) in mapt])
 
-    map_red = reduce(lambda x,y: x+y, [[a for a in generate_report_reduce_test(key, values)] for key, values in fin.iteritems()])
+    map_red = reduce(lambda x,y: x+y, [[a for a in reduce_test(key, values)] for key, values in fin.iteritems()])
     return map_red
 
 
@@ -79,7 +79,7 @@ def verify_data(data, *dims):
     file = open(DIR + '/test_data2.dat')
     lines = [line for line in file]
     for datum in data:
-        keys, values = datum.split("||")
+        keys, values = datum.split("\t")
         values = eval(values)
         lines_to_sum = []
         for line in lines:

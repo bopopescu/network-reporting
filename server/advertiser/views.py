@@ -138,7 +138,7 @@ class AdGroupIndexHandler(RequestHandler):
             
         # Due to weirdness, network_campaigns and backfill_promo_campaigns are actually lists of adgroups
         sorted_campaign_groups = _sort_campaigns(adgroups)
-        promo_campaigns, guaranteed_campaigns, marketplace_high_campaigns, marketplace_campaigns, network_campaigns, backfill_promo_campaigns = sorted_campaign_groups
+        promo_campaigns, guaranteed_campaigns, marketplace_campaigns, network_campaigns, backfill_promo_campaigns, backfill_marketplace_campaigns = sorted_campaign_groups
 
         guarantee_levels = _sort_guarantee_levels(guaranteed_campaigns)
 
@@ -188,7 +188,7 @@ class AdGroupIndexHandler(RequestHandler):
                                    'guarantee_levels': guarantee_levels, 
                                    'guarantee_num': len(guaranteed_campaigns),
                                    'marketplace': marketplace_campaigns,
-                                   'marketplace_high': marketplace_high_campaigns,
+                                   'backfill_marketplace': backfill_marketplace_campaigns,
                                    'promo': promo_campaigns,
                                    'network': network_campaigns,
                                    'backfill_promo': backfill_promo_campaigns,
@@ -235,10 +235,10 @@ def _sort_campaigns(adgroups):
     backfill_promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_promo'], adgroups)
     backfill_promo_campaigns = sorted(backfill_promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
     
-    marketplace_high_campaigns = filter(lambda x: x.campaign.campaign_type in ['marketplace_high'], adgroups)
-    marketplace_high_campaigns = sorted(marketplace_high_campaigns, lambda x,y: cmp(x.bid, y.bid))
+    backfill_marketplace_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_marketplace'], adgroups)
+    backfill_marketplace_campaigns = sorted(backfill_marketplace_campaigns, lambda x,y: cmp(x.bid, y.bid))
     
-    return [promo_campaigns, guaranteed_campaigns, marketplace_high_campaigns, marketplace_campaigns, network_campaigns, backfill_promo_campaigns]
+    return [promo_campaigns, guaranteed_campaigns, marketplace_campaigns, network_campaigns, backfill_promo_campaigns, backfill_marketplace_campaigns]
 
 def _calc_app_level_stats(adgroups):
     # adgroup1.all_stats = [StatsModel(day=1), StatsModel(day=2), StatsModel(day=3)]
@@ -411,7 +411,7 @@ class CreateCampaignAJAXHander(RequestHandler):
 
              ##Check if creative exists for this network type, if yes
              #update, if no, delete old and create new
-                if campaign.campaign_type in ['marketplace', 'marketplace_high']:
+                if campaign.campaign_type in ['marketplace', 'backfill_marketplace']:
                     creative = adgroup.default_creative()
                     creative.account = self.account
                     CreativeQueryManager.put(creative)
@@ -657,7 +657,7 @@ class ShowAdGroupHandler(RequestHandler):
               graph_adunits[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[au.all_stats for au in adunits[3:]])]
 
         # Load creatives if we are supposed to 
-        if not (adgroup.network_type or adgroup.campaign.campaign_type in ['marketplace', 'marketplace_high']):
+        if not (adgroup.network_type or adgroup.campaign.campaign_type in ['marketplace', 'backfill_marketplace']):
             # In order to have add creative
             creative_handler = AddCreativeHandler(self.request)
             creative_fragment = creative_handler.get() # return the creative fragment

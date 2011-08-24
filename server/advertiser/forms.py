@@ -68,11 +68,10 @@ class CampaignForm(mpforms.MPModelForm):
                 kwargs.update(initial=initial)
             if 'marketplace' in vals:
                 type_ = 'marketplace'
-                # THIS IS CONVOLUTED AND WRONG
-                if 'high' in vals:
-                    level = 'normal'
-                else:
+                if 'backfill' in vals:
                     level = 'backfill'
+                else:
+                    level = 'normal'
                 initial.update(campaign_type=type_)
                 initial.update(mpx_level=level)
         
@@ -104,13 +103,12 @@ class CampaignForm(mpforms.MPModelForm):
                 else:
                     logging.warning("Invalid promo level")
                 obj.campaign_type = type_
-            # THIS IS CONVOLUTED AND WRONG
             elif type_ == 'marketplace':
                 lev = self.cleaned_data['mpx_level']
                 if lev == 'normal':
-                    type_ = 'marketplace_high'
-                elif lev == 'backfill':
                     type_ = 'marketplace'
+                elif lev == 'backfill':
+                    type_ = 'backfill_marketplace'
                 else:
                     logging.warning("Invalid MPX level")
                 obj.campaign_type = type_

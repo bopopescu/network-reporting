@@ -233,7 +233,6 @@ def process_input_file(input_file, num_workers):
         break
     except:
         traceback.print_exc()
-                    
 
 
 def single_thread_process_input_file(input_file):

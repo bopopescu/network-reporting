@@ -1,6 +1,7 @@
 import datetime
 import logging
 import time
+import copy
 import traceback
 
 from google.appengine.ext import db
@@ -11,6 +12,8 @@ from google.appengine.runtime.apiproxy_errors import CapabilityDisabledError
 import reporting.models as reporting_models
 
 from common.utils.query_managers import CachedQueryManager
+from common.utils import date_magic
+from common.utils.helpers import chunks
 from reporting.models import SiteStats, StatsModel, BlobLog
 from advertiser.models import Creative
 from publisher.models import Site as AdUnit
@@ -22,6 +25,9 @@ LIMIT = 200
 SENTINEL = '!!!'
 # max number of retries for offline batch put
 MAX_RETRIES = 3
+
+#blobkey:date:acct
+BLOBLOG_KEY = 'blobkey:%s:%s'
 
 
 class SiteStatsQueryManager(CachedQueryManager):
@@ -48,12 +54,18 @@ class BlobLogQueryManager():
         bloblog = BlobLog(date=date, blob_key=blob_key, account=account)
         return bloblog.put()
 
-    def get_blobkeys_for_days(self, days): 
+    @classmethod
+    def get_blobkeys_for_days(cls, days, account_key): 
         #for all the days, turn them into YYMMDD and then use that to construct the key, then with all those keys get all the BlobLogs, then with all those bloblogs, return only a list of the blob_keys associated with them
-        #this comment is longer than the code lul
-        return map(lambda bloblog: bloblog.blob_key, BlobLog.get(map(lambda day: db.Key(BLOBLOG_KEY % day.strftime('%y%m%d')), days)))
+        keys = [BLOBLOG_KEY % (day.strftime('%y%m%d'), account_key) for day in days]
+        # get_by_key_name returns None for every key that doesn't exist, get ride of these Nones
+        return map(lambda bloblog: bloblog.blob_key, filter(lambda bl: bl is not None, BlobLog.get_by_key_name(keys)))
+        # I guess we should also do something involving saying "Hey data you want doesn't exist.."but w/e
 
+        #(for nafis)
+        #return [blob.blob_key for blob in BlobLog.get([db.Key(BLOBLOG_KEY % day.strftime('%y%m%d')) for day in days])]
         
+
 class StatsModelQueryManager(CachedQueryManager):
     Model = StatsModel
     
@@ -136,68 +148,8 @@ class StatsModelQueryManager(CachedQueryManager):
             return stats        
             
             
-    def get_stat_rollup_for_days(self, **kwargs):
-        stats = self.get_stats_for_days(**kwargs)
-        return reduce(lambda x,y: x+y, stats, StatsModel())
-
-
-    def get_rollup_for_days(self, 
-                            publisher=None, 
-                            publishers=None, 
-                            advertiser=None, 
-                            advertisers=None, 
-                            days=None, 
-                            num_days=None, 
-                            account=None,
-                            country=None, 
-                            brand_name=None, 
-                            marketing_name=None, 
-                            device_os=None, 
-                            device_os_version=None,
-                            offline=False, 
-                            date_fmt='date'):
-
-        if publisher and publishers:
-            logging.error("cannot pass both a single publisher and multiple publishers")
-        if publisher and not publishers:
-            if isinstance(publisher, list):
-                publishers = publisher
-            else:
-                publishers = [publisher]
-
-        if advertiser and advertisers:
-            logging.error("cannot pass both a single advertiser and multiple advertisers")
-        if advertiser and not advertisers:
-            if isinstance(advertiser, list):
-                advertisers = advertiser
-            else:
-                advertisers = [advertiser]
-
-        if not isinstance(publisher, list) and publisher == publishers:
-            publishers = [publisher]
-        if not isinstance(advertiser, list) and advertiser == advertisers:
-            advertisers = [advertiser]
-
-        stats = []
-        for pub in publishers:
-            for adv in advertisers:
-                stats += self.get_stats_for_days(publisher = pub, 
-                                                 advertiser = adv, 
-                                                 days = days, 
-                                                 num_days = num_days, 
-                                                 account = account, 
-                                                 country = country, 
-                                                 brand_name=brand_name,
-                                                 marketing_name=marketing_name,
-                                                 device_os=device_os,
-                                                 device_os_version=device_os_version,
-                                                 offline = offline, 
-                                                 date_fmt = date_fmt)
-        return reduce(lambda x,y: x+y, stats, StatsModel())
-
-
     def get_stats_for_days(self, publisher=None, publishers=None, advertiser=None, days=None, num_days=None, account=None, 
-                           country=None, brand_name=None, marketing_name=None, device_os=None, device_os_version=None,
+                           country=None, 
                            offline=False, date_fmt='date'):
         """ Gets the stats for a specific pairing. Definitions:
             advertiser_group: Either Campaign, AdGroup or Creative
@@ -236,10 +188,10 @@ class StatsModelQueryManager(CachedQueryManager):
                                                              account=account,
                                                              date=d,    # date is overloaded; type defined by date_fmt
                                                              country=country,
-                                                             brand_name=brand_name,
-                                                             marketing_name=marketing_name,
-                                                             device_os=device_os,
-                                                             device_os_version=device_os_version,
+                                                             brand_name=None,
+                                                             marketing_name=None,
+                                                             device_os=None,
+                                                             device_os_version=None,
                                                              offline=offline,
                                                              date_fmt=date_fmt),
                                       parent=parent)
@@ -252,15 +204,14 @@ class StatsModelQueryManager(CachedQueryManager):
                                                              account=account,
                                                              date=d,    # date is overloaded; type defined by date_fmt
                                                              country=country,
-                                                             brand_name=brand_name,
-                                                             marketing_name=marketing_name,
-                                                             device_os=device_os,
-                                                             device_os_version=device_os_version,
+                                                             brand_name=None,
+                                                             marketing_name=None,
+                                                             device_os=None,
+                                                             device_os_version=None,
                                                              offline=offline,
                                                              date_fmt=date_fmt),
                                       parent=parent)
                         for d in days]
-                               
         days_len = len(days)
         stats = StatsModel.get(keys) # db get
         #since pubs iterates more than once around days, stats might be too long
@@ -529,6 +480,10 @@ class StatsModelQueryManager(CachedQueryManager):
             for stat in stats:
                 make_above_stat(stat, attr)
                             
+        # if not offline, remove all the country level stats
+        # because we are storing this data in dynamic properties
+        # if not offline:
+
         stats = stats_dict.values()
         for stat in stats:
             if stat.country:

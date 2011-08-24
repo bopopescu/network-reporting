@@ -39,10 +39,16 @@
 <h2>{{report.dim_details}}<br/><span style='font-weight:normal;' class="muted">{{report.start|date:"M j, Y"}} - {{report.end|date:"M j, Y"}} ({{report.interval_details}})</span></h2>
 <div id='table-goes-here' class='tabled'>
     </div>
-    <div id='preloader' class='loading-text'>
-        {% if report.data %}Retrieving{% else %}Generating{% endif %} Report
-        <br />
-        <img src='/images/report-preloader.gif'></img>
+    <div id='preloader'>
+        <div id='genspinner' class='loading-text'>
+            Generating Report
+            <br />
+            <img src='/images/report-preloader.gif'></img>
+        </div>
+        <br>
+        <div class='loading-center'>
+            Reports may take several minutes to finish.  However, the report will be emailed to you when it is complete.
+        </div>
     </div>
    
     <div id='reportForm-container' style='display: none;'>

@@ -262,7 +262,7 @@ class AdAuction(object):
                     if not eligible_adgroups:
                         continue
                     # if we're on marketplace level, do that marketplace shit
-                    if p == 'marketplace':
+                    if p in ['marketplace', 'backfill_marketplace']:
                         # Build a big dict
                         mk_args = build_marketplace_dict(adunit = adunit,
                                                          kws = keywords,

@@ -32,6 +32,7 @@ class CampaignForm(mpforms.MPModelForm):
     TEMPLATE = 'advertiser/forms/campaign_form.html'
     gtee_level = forms.Field(widget = forms.Select)
     promo_level = mpfields.MPChoiceField(choices=[('normal','Normal'),('backfill','Backfill')],widget=mpwidgets.MPSelectWidget)
+    mpx_level = mpfields.MPChoiceField(choices=[('normal','Normal'),('backfill','Backfill')],widget=mpwidgets.MPSelectWidget)
     budget_strategy = mpfields.MPChoiceField(choices=[('evenly','Spread evenly'),('allatonce','All at once')],widget=mpwidgets.MPRadioWidget)
     budget_type = mpfields.MPChoiceField(choices=[('daily','Daily'),('full_campaign','Full Campaign')],widget=mpwidgets.MPSelectWidget)
    
@@ -65,6 +66,14 @@ class CampaignForm(mpforms.MPModelForm):
                 initial.update(campaign_type=type_)
                 initial.update(promo_level=level)
                 kwargs.update(initial=initial)
+            if 'marketplace' in vals:
+                type_ = 'marketplace'
+                if 'backfill' in vals:
+                    level = 'backfill'
+                else:
+                    level = 'normal'
+                initial.update(campaign_type=type_)
+                initial.update(mpx_level=level)
         
         super(CampaignForm, self).__init__(*args, **kwargs)
         
@@ -94,7 +103,15 @@ class CampaignForm(mpforms.MPModelForm):
                 else:
                     logging.warning("Invalid promo level")
                 obj.campaign_type = type_
-            
+            elif type_ == 'marketplace':
+                lev = self.cleaned_data['mpx_level']
+                if lev == 'normal':
+                    type_ = 'marketplace'
+                elif lev == 'backfill':
+                    type_ = 'backfill_marketplace'
+                else:
+                    logging.warning("Invalid MPX level")
+                obj.campaign_type = type_
             if obj.budget_type == "full_campaign":
                 obj.budget = None
             else:

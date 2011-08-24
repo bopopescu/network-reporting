@@ -34,6 +34,8 @@ then
     nosetests ./ad_server/parser/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox
     echo "Running network tests..."  
     nosetests ./ad_server/networks/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox
+    echo "Running rendering tests..."
+    nosetests ./ad_server/renderers/tests/ --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox 
   
     
   

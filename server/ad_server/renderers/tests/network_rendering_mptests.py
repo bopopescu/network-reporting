@@ -155,9 +155,8 @@ class RenderingTestBase(object):
     def _compare_rendering_with_examples(self, name, suffix="", reset_example=False):
         """ For now just test the renderer. Next test headers too.
             Uses a default value for html_data. """
-                                           
-        empty_headers = Response().headers # We can use a vanilla response, as we don't use anything from it
-        rendered_creative, header_context = self.creative.Renderer.render(empty_headers,   
+                                                                                                              
+        rendered_creative, header_context = self.creative.Renderer.render(  
                                        creative=self.creative,
                                        now=self.dt,
                                        adunit=self.adunit, 
@@ -172,21 +171,21 @@ class RenderingTestBase(object):
    
 
         if reset_example:
-            with open('ad_server/networks/tests/example_renderings/%s%s.rendering' % (name, suffix), 'w') as f:   
+            with open('ad_server/renderers/tests/example_renderings/%s%s.rendering' % (name, suffix), 'w') as f:   
                 f.write(rendered_creative)         
 
-        with open('ad_server/networks/tests/example_renderings/%s%s.rendering' % (name, suffix), 'r') as f:   
+        with open('ad_server/renderers/tests/example_renderings/%s%s.rendering' % (name, suffix), 'r') as f:   
             example_creative = f.read()   
             
                 
         # Used to initialize header examples
        
         if reset_example:
-            with open('ad_server/networks/tests/example_renderings/%s%s.headers' % (name, suffix), 'w') as f: 
+            with open('ad_server/renderers/tests/example_renderings/%s%s.headers' % (name, suffix), 'w') as f: 
                 header_json = header_context.to_json() # We serialize the headers    
                 f.write(header_json)         
 
-        with open('ad_server/networks/tests/example_renderings/%s%s.headers' % (name, suffix), 'r') as f:   
+        with open('ad_server/renderers/tests/example_renderings/%s%s.headers' % (name, suffix), 'r') as f:   
             example_headers_string = f.read()
             example_headers = HeaderContext.from_json(unicode(example_headers_string))
         

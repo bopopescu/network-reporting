@@ -279,9 +279,9 @@ class AdHandler(webapp.RequestHandler):
                                                    ad_click_url=ad_click_url, 
                                                    on_fail_exclude_adgroups = on_fail_exclude_adgroups)       
         
-        # Add header context values to response.headers
-        for key, value in header_context.items():
-            self.response.headers.add_header(key, value)
+            # Add header context values to response.headers
+            for key, value in header_context.items():
+                self.response.headers.add_header(key, value)      
                                       
         if jsonp:
             self.response.out.write('%s(%s)' % (callback, dict(ad=str(rendered_creative or ''), click_url = str(ad_click_url), ufid=str(ufid))))

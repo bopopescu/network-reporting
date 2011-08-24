@@ -10,14 +10,10 @@ from google.appengine.api import taskqueue
 from google.appengine.ext import db
 from account.models import Account
 
-from common.constants import DATE_FMT, PIPE_KEY, REP_KEY
+from common.constants import DATE_FMT, PIPE_KEY, REP_KEY, IS_PROD
 from common.utils.query_managers import CachedQueryManager
 from common.utils import date_magic
-from common.utils.helpers import (blob_size, 
-                                  shard_count, 
-                                  clone_entity,
-                                  build_key,
-                                  )
+from common.utils.helpers import clone_entity
 from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager, BlobLogQueryManager
 
@@ -44,6 +40,9 @@ REP_Q = SQS_CONN.create_queue('report_queue')
 
 
 def fire_report_sqs(data):
+    # Don't send shit to EMR if we're not on prod
+    if not IS_PROD:
+        return
     msg_data = REPORT_MSG % (data.d1, data.d2, data.d3, data.start.strftime('%y%m%d'), data.end.strftime('%y%m%d'), str(data.key()), str(data.account.key()))
 
 

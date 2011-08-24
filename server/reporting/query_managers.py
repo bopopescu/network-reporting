@@ -13,7 +13,7 @@ import reporting.models as reporting_models
 
 from common.utils.query_managers import CachedQueryManager
 from common.utils import date_magic
-from common.utils.helpers import (dedupe_and_add, chunks)
+from common.utils.helpers import chunks
 from reporting.models import SiteStats, StatsModel, BlobLog
 from advertiser.models import Creative
 from publisher.models import Site as AdUnit

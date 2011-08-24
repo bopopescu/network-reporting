@@ -22,10 +22,6 @@ GEO_CLICK_COUNT = 'click_count'
 GEO_CONVERSION_COUNT = 'conversion_count'
 GEO_COUNTS = [GEO_REQUEST_COUNT,GEO_IMPRESSION_COUNT,GEO_CLICK_COUNT,GEO_CONVERSION_COUNT]
 
-class Pacific_tzinfo(datetime.tzinfo):
-    """Implementation of the Pacific timezone."""
-    def utcoffset(self, dt):
-        return datetime.timedelta(hours=-8) + self.dst(dt)
 
 class BlobLog(db.Model):
 

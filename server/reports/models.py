@@ -581,11 +581,13 @@ class Report(db.Model):
                     if dim == MO:
                         time = datetime.strptime(key,'%y%m')
                     elif dim == WEEK:
-                        time = datetime.strptime(key,'%y%m%W')
+                        key1 = '0' + key
+                        key2 = '6' + key
+                        time = (datetime.strptime(key1,'%U%y%W'), datetime.strptime(key2,'%U%y%W'))
                     elif dim == DAY:
                         time = datetime.strptime(key,'%y%m%d')
                     elif dim == HOUR:
-                        time = datetime.strptime(key,'%y%m%d%H')
+                        time = datetime.strptime(key,'%H')
                     else:
                         time = None
                     memo[key] = time

@@ -21,12 +21,13 @@ class AdMobRenderer(BaseHTMLRenderer):
         header_context.add_header("X-Launchpage","http://c.admob.com/")
         header_context.add_header("X-Failurl", fail_url)
         super(AdMobRenderer, cls).network_specific_rendering(header_context, 
-                                                              creative=None,  
-                                                              format_tuple=None,
-                                                              context=None,
-                                                              keywords=None,
-                                                              adunit=None,
-                                                              **kwargs)
+                                                             creative=creative,  
+                                                             format_tuple=format_tuple,
+                                                             context=context,
+                                                             keywords=keywords,
+                                                             adunit=adunit,
+                                                             fail_url=fail_url,
+                                                             **kwargs)
 
 ###### TEMPLATE #########
 

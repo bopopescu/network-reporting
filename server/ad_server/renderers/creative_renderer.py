@@ -69,15 +69,6 @@ class BaseCreativeRenderer(object):
         
         context = {}
         
-        context.update(creative.__dict__.get("_entity"))
-        #Line1/2 None check biznass 
-        if context.has_key('line1'):
-            if context['line1'] is None:
-                context['line1'] = ''
-        if context.has_key('line2'):
-            if context['line2'] is None:
-                context['line2'] = ''
-        #centering non-full ads in fullspace
         if network_center: 
             #css to center things
             style = "<style type='text/css'> \
@@ -164,19 +155,7 @@ class BaseCreativeRenderer(object):
         if str(creative.ad_type) == "iAd":
             pass
         elif str(creative.ad_type) == "admob_native":
-            if "full" in adunit.format:
-                header_context.add_header("X-Adtype", "interstitial")
-                header_context.add_header("X-Fulladtype", "admob_full")
-            else:
-                header_context.add_header("X-Adtype", str(creative.ad_type))
-                header_context.add_header("X-Backfill", str(creative.ad_type))
-            header_context.add_header("X-Failurl", _build_fail_url(request_url, on_fail_exclude_adgroups))
-            nativecontext_dict = {
-                "adUnitID":adunit.get_pub_id("admob_pub_id"),
-                "adWidth":adunit.get_width(),
-                "adHeight":adunit.get_height()
-            }
-            header_context.add_header("X-Nativecontext", simplejson.dumps(nativecontext_dict))
+            pass
         elif creative.ad_type == "millennial_native":
             pass                     
         elif creative.ad_type == "custom_native":

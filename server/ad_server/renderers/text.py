@@ -3,6 +3,38 @@ import random
 from ad_server.renderers.base_html_renderer import BaseHTMLRenderer
 
 class TextRenderer(BaseHTMLRenderer):
+    @classmethod
+    def network_specific_rendering(cls, header_context, 
+                                   creative=None,  
+                                   format_tuple=None,
+                                   context=None,
+                                   keywords=None,
+                                   adunit=None,
+                                   fail_url=None,
+                                   request_host=None,
+                                   **kwargs):   
+        
+        context['line1']=creative.line1 or ''
+        context['line2']=creative.line2 or ''
+        context['w'] = creative.width or ''
+        context['h'] = creative.height or ''
+        context['url'] = creative.url or ''
+        context['display_url'] = creative.display_url or ''
+        try:
+            context['headline']=creative.headline or ''
+        except AttributeError:
+            pass
+        
+                
+        super(TextRenderer, cls).network_specific_rendering(header_context, 
+                                                            creative=creative,  
+                                                            format_tuple=format_tuple,
+                                                            context=context,
+                                                            keywords=keywords,
+                                                            adunit=adunit,
+                                                            **kwargs)
+
+        
 
     TEMPLATE = Template("""<html>
                         <head>

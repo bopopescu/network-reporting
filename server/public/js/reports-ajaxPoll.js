@@ -1,16 +1,19 @@
-function checkReport() {
+var retry=0;
+
+function checkReport(retry_num) {
     //If exists returns data, otherwise returns False
     //
     var id = $('#reportKey').val();
     $.ajax({
-       url: '/reports/check/'+id+'/',
+       url: '/reports/check/'+id+'/?retry='+retry_num,
        success: writeReport,
        });
 }
 
 function writeReport(report) {
     if (report.data == 'none') {
-        setTimeout('checkReport()', 2500);
+        retry++;
+        setTimeout('checkReport('+retry+')', 2500);
         //setup another ajaxmagic
         return;
     }
@@ -28,4 +31,4 @@ function buildTable(table) {
     });
 }
 
-$(document).ready(checkReport());
+$(document).ready(checkReport(retry));

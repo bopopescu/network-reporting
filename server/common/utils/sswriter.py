@@ -188,7 +188,7 @@ def write_report(file_type, report_key, account):
     if file_type == 'xls':
         response = HttpResponse(mimetype = 'application/vnd.ms-excel')
         row_writer, writer = make_xls_writers()
-    report = ReportQueryManager(account).get_report_by_key(report_key)
+    report = ReportQueryManager(account).get_report_data_by_key(report_key)
     s_str = report.start.strftime('%m%d%Y')
     e_str = report.end.strftime('%m%d%Y')
     f_name = '%s %s-%s.%s' % (report.name, s_str, e_str, file_type)

@@ -11,23 +11,41 @@ from common.utils import widgets as mpwidgets
 from common.utils import date_magic
 from reports.models import Report, ScheduledReport
 
-APP = 'app'
-AU = 'adunit'
-CAMP = 'campaign'
-CRTV = 'creative'
-P = 'priority'
+#NONE = '--------' (this is for my sanity) #0
+APP = 'app' #1
+AU = 'adunit' #2
+P = 'priority' #3
+CAMP = 'campaign' #4
+CRTV = 'creative' #5
 MO = 'month' #6
 WEEK = 'week' #7
 DAY = 'day' #8
 HOUR = 'hour' #9
 CO = 'country' #10
-DEV = 'device' #11
+#device is now just marketing name
+DEV = 'marketing' #11
 OS = 'os' #12
-KEY = 'kw' #13
-CHOICES = [('','------------'), (APP, 'App'), (AU, 'Ad Unit'), (P, 'Priority'), (CAMP, 'Campaign'), (CRTV, 'Creative'), (MO, 'Month'), (WEEK, 'Week'), (DAY, 'Day'), (HOUR, 'Hour'),]# (CO, 'Country'), (DEV, 'Device'), (OS, 'Operating System'), (KEY, 'Keywords')]
+OS_VER = 'os_ver' #13
+KEY = 'kw' #14
+CHOICES = [('','------------'), 
+           (APP, 'App'), 
+           (AU, 'Ad Unit'), 
+           (P, 'Priority'), 
+           (CAMP, 'Campaign'), 
+           (CRTV, 'Creative'), 
+           (MO, 'Month'), 
+           (WEEK, 'Week'), 
+           (DAY, 'Day'), 
+           (HOUR, 'Hour'), 
+           (CO, 'Country'), 
+           (DEV, 'Device'), 
+           (OS, 'OS'), 
+           (OS_VER, 'OS Version'),
+           ]
+           #(KEY, 'Keywords')]
 TARG = 'targeting' # I don't know what this is
 
-INT_CHCES = [('today', 'Today'), ('yesterday', 'Yesterday'), ('7days', 'Last 7 days'), ('lmonth', 'Last month'), ('custom', 'Custom')]
+INT_CHCES = [('yesterday', 'Yesterday'), ('7days', 'Last 7 days'), ('lmonth', 'Last month'), ('custom', 'Custom')]
 SCHED_CHCES = [('none', "Don't schedule"), ('daily', 'Daily'), ('weekly', 'Weekly'), ('monthly', 'Monthly'), ('quarterly', 'Quarterly')]
 
 
@@ -40,13 +58,15 @@ class ReportForm(mpforms.MPModelForm):
     interval = mpfields.MPChoiceField(choices=INT_CHCES, widget=mpwidgets.MPSelectWidget())
     sched_interval = mpfields.MPChoiceField(choices=SCHED_CHCES, widget=mpwidgets.MPSelectWidget())
     start = forms.Field()
-    recipients = mpfields.MPTextField()
+    recipients = mpfields.MPTextareaField()
 
     def __init__(self, save_as=False,*args, **kwargs):
         instance = kwargs.get('instance', None)
         initial = kwargs.get('initial', {})
         self.save_as = save_as
-        if instance and instance.days:
+        #Initially was just a check, making it an int check since
+        #0 is a valid property, but evals to false
+        if instance and (instance.days or instance.days == 0):
             dt = timedelta(days=instance.days)
             initial.update(start=instance.end-dt)
             kwargs.update(initial = initial)
@@ -59,6 +79,7 @@ class ReportForm(mpforms.MPModelForm):
     def save(self, commit=True):
         obj = super(ReportForm, self).save(commit=False)
         if obj:
+            logging.info("\n\n\n\n\n:%s"%self.cleaned_data)
             start = self.cleaned_data['start']
             obj.days = obj.end - start
         if commit:

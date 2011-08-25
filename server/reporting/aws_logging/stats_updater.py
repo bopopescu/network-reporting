@@ -207,7 +207,6 @@ def process_input_file(input_file, num_workers):
                     traceback.print_exc()
                                                                                     
                                 
-                    
 def main():
     start = time.time()
     

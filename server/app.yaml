@@ -17,6 +17,9 @@ inbound_services:
 
 
 handlers:
+- url: /mapreduce(/.*)?
+  script: mapreduce/main.py
+  login: admin
   
 - url: /robots.txt
   static_files: public/robots.txt
@@ -54,10 +57,6 @@ handlers:
   script: main.py
   login: admin
 
-- url: /reports/gen_report/
-  script: main.py
-  login: admin
-  
 - url: /admin/sfdc/
   script: main.py
   login: admin 
@@ -78,6 +77,6 @@ handlers:
 
 - url: /offline/.*
   script: reporting/aws_logging/blob_server.py
-    
+
 - url: /.*
   script: main.py

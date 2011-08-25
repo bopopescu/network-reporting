@@ -315,7 +315,7 @@ class AdGroup(db.Model):
     def created_date(self):
         return self.created.date()
 class Creative(polymodel.PolyModel):
-    name = db.StringProperty()
+    name = db.StringProperty(default='Creative')
     custom_width = db.IntegerProperty()
     custom_height = db.IntegerProperty()
     landscape = db.BooleanProperty(default=False) # TODO: make this more flexible later
@@ -369,6 +369,7 @@ class Creative(polymodel.PolyModel):
     def _set_adgroup(self,value):
             self.ad_group = value
             
+    #whoever did this you rule
     adgroup = property(_get_adgroup,_set_adgroup)
         
     def get_owner(self):

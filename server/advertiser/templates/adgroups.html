@@ -329,7 +329,7 @@
                   {% endfor %}
                 </tbody>
               </table>{% endif %}
-              <span class='marketplace'>
+              {% if marketplace %}
               <h2>Marketplace {% if not marketplace %}<span class="muted">(None)</span>{% endif %}
                   <img id="marketplace-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img>
               </h2>
@@ -375,7 +375,7 @@
                   {% endfor %}
                 </tbody>
               </table>{% endif %}
-              </span>
+              {% endif %}
 
               <h2>Network  {% if not network %}<span class="muted">(None)</span>{% endif %}
                   <img id="network-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img>
@@ -531,7 +531,7 @@
                   {% endfor %}
                 </tbody>
               </table>{% endif %}
-              <span class='marketplace'>
+              {% if backfill_marketplace %}
               <h2>Backfill Marketplace {% if not backfill_marketplace %}<span class="muted">(None)</span>{% endif %}
                   <img id="marketplace-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img>
               </h2>
@@ -577,7 +577,7 @@
                   {% endfor %}
                 </tbody>
               </table>{% endif %}
-              </span>
+             {% endif %}
               
               <div class="form-submit-left"> 
                 <span class="buttonWrap">

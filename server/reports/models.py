@@ -581,9 +581,9 @@ class Report(db.Model):
                     if dim == MO:
                         time = datetime.strptime(key,'%y%m')
                     elif dim == WEEK:
-                        key1 = '0' + key
-                        key2 = '6' + key
-                        time = (datetime.strptime(key1,'%w%y%W'), datetime.strptime(key2,'%U%y%W'))
+                        key1 = '1' + key
+                        key2 = '0' + key
+                        time = (datetime.strptime(key1,'%w%y%W'), datetime.strptime(key2,'%w%y%W'))
                     elif dim == DAY:
                         time = datetime.strptime(key,'%y%m%d')
                     elif dim == HOUR:

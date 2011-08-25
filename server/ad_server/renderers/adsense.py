@@ -10,14 +10,16 @@ class AdSenseRenderer(BaseHTMLRenderer):
     """ For now, just do the standard """
     @classmethod
     def network_specific_rendering(cls, header_context, 
-                                        creative=None, 
-                                        adunit=None,  
-                                        format_tuple=None,
-                                        context=None,     
-                                        keywords=None,
-                                        fail_url=None,
-                                        **kwargs):   
-        context.update({"title": ','.join(keywords), "adsense_format": '320x50_mb', "w": format_tuple[0], "h": format_tuple[1], "client": adunit.get_pub_id("adsense_pub_id")})
+                                   creative=None, 
+                                   adunit=None,  
+                                   format_tuple=None,
+                                   context=None,     
+                                   keywords=None,
+                                   fail_url=None,
+                                   track_url=None,
+                                   **kwargs):   
+        context.update({"title": ','.join(keywords), "adsense_format": '320x50_mb', "w": format_tuple[0], 
+                        "h": format_tuple[1], "client": adunit.get_pub_id("adsense_pub_id")})
         context.update(channel_id=adunit.adsense_channel_id or '')  
         
         
@@ -66,6 +68,7 @@ class AdSenseRenderer(BaseHTMLRenderer):
                                                                keywords=keywords,
                                                                adunit=adunit,
                                                                fail_url=fail_url,
+                                                               track_url=track_url,
                                                                **kwargs)
 
                 

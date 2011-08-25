@@ -13,10 +13,12 @@ class BaseHTMLRenderer(BaseCreativeRenderer):
                                    adunit=None,
                                    fail_url=None,
                                    request_host=None,
+                                   track_url=None,
+                                   network_center=None,
                                    **kwargs):   
         header_context.add_header("X-Adtype", str('html'))
 
-        
+                
     TEMPLATE = Template("""<html>
                       <meta name="viewport" content="width=device-width; initial-scale=1.0; user-scalable=no;">
                       <head><title>$title</title>
@@ -49,7 +51,7 @@ class BaseHTMLRenderer(BaseCreativeRenderer):
                               links[i].setAttribute('target','_top');
                             }
                           }, false);
-                        </script>$network_style</head>
+                        </script></head>
                         <body class="network_center" style="margin:0;padding:0;">
                                 ${html_data}
                                 $trackingPixel

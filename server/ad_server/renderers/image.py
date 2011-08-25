@@ -8,12 +8,13 @@ class ImageRenderer(BaseHTMLRenderer):
     """ For now, just do the standard """
     @classmethod
     def network_specific_rendering(cls, header_context, 
-                                        creative=None,  
-                                        format_tuple=None,
-                                        context=None,
-                                        keywords=None,
-                                        adunit=None,
-                                        **kwargs):                 
+                                   creative=None,  
+                                   format_tuple=None,
+                                   context=None,
+                                   keywords=None,
+                                   adunit=None,
+                                   track_url=None,
+                                   **kwargs):                 
         img_height = creative.image_height
         img_width = creative.image_width
 
@@ -24,19 +25,16 @@ class ImageRenderer(BaseHTMLRenderer):
             trace_logging.warning("""InvalidBlobKeyError when trying to get image from adhandler.py.
                                     Are you on mopub-experimental?""")
             
-            # if full screen we don't need to center
-        if (not "full" in adunit.format) or ((img_width == 480.0 and img_height == 320.0 ) or (img_width == 320.0 and img_height == 480.0)):
-            css_class = ""
-        else:
-            css_class = "center"    
-
+        # always center image
+        css_class = "center"    
         context.update({"w": img_width, "h": img_height, "w2":img_width/2.0, "h2":img_height/2.0, "class":css_class})
         super(ImageRenderer, cls).network_specific_rendering(header_context, 
-                                                             creative=None,  
-                                                             format_tuple=None,
-                                                             context=None,
-                                                             keywords=None,
-                                                             adunit=None,
+                                                             creative=creative,  
+                                                             format_tuple=format_tuple,
+                                                             context=context,
+                                                             keywords=keywords,
+                                                             adunit=adunit,
+                                                             track_url=track_url,
                                                              **kwargs)
                 
                                         

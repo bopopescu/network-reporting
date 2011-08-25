@@ -12,6 +12,7 @@ class GreyStripeRenderer(BaseHTMLRenderer):
                                    keywords=None,
                                    adunit=None,
                                    fail_url=None,
+                                   track_url=None,
                                    **kwargs):   
         context.update({"html_data": creative.html_data, "w": format_tuple[0], "h": format_tuple[1]})
         header_context.add_header("X-Launchpage","http://adsx.greystripe.com/openx/www/delivery/ck.php")
@@ -22,6 +23,7 @@ class GreyStripeRenderer(BaseHTMLRenderer):
                                                                   keywords=keywords,
                                                                   adunit=adunit,
                                                                   fail_url=fail_url,
+                                                                  track_url=track_url,
                                                                   **kwargs)
         
         

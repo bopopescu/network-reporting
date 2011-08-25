@@ -30,7 +30,7 @@
                               links[i].setAttribute('target','_top');
                             }
                           }, false);
-                        </script><style type='text/css'>                           .network_center {                               position: fixed;                               top: 50%;                               left: 50%;                               margin-left: -150px !important;                               margin-top: -125px !important;                               }                       </style></head>
+                        </script></head>
                         <body class="network_center" style="margin:0;padding:0;">
                                 ${html_data}
                                 <span style="display:none;"><img src="test_track_url"/></span>

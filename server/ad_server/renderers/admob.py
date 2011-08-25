@@ -12,6 +12,8 @@ class AdMobRenderer(BaseHTMLRenderer):
                                    keywords=None,
                                    adunit=None,
                                    fail_url=None,
+                                   track_url=None,
+                                   network_center=None,
                                    **kwargs):   
         context.update({"title": ','.join(keywords), "w": format_tuple[0], "h": format_tuple[1], "client": adunit.get_pub_id("admob_pub_id"), \
         "bgcolor": str(adunit.app_key.admob_bgcolor or '000000') , "textcolor": str(adunit.app_key.admob_textcolor or 'FFFFFF')})  
@@ -27,6 +29,8 @@ class AdMobRenderer(BaseHTMLRenderer):
                                                              keywords=keywords,
                                                              adunit=adunit,
                                                              fail_url=fail_url,
+                                                             track_url=track_url,
+                                                             network_center=network_center,
                                                              **kwargs)
 
 ###### TEMPLATE #########

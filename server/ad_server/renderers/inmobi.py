@@ -12,6 +12,8 @@ class InmobiRenderer(BaseHTMLRenderer):
                                    keywords=None,
                                    adunit=None,
                                    fail_url=None,
+                                   track_url=None,
+                                   network_center=None,
                                    **kwargs):   
         
         
@@ -26,6 +28,8 @@ class InmobiRenderer(BaseHTMLRenderer):
                                                               context=context,
                                                               keywords=keywords,
                                                               adunit=adunit,
+                                                              track_url=track_url,
+                                                              network_center=network_center,
                                                               **kwargs)
                     
     

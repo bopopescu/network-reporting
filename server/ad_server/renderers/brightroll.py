@@ -13,6 +13,7 @@ class BrightRollRenderer(BaseHTMLRenderer):
                                    adunit=None,
                                    fail_url=None,
                                    success=None,
+                                   network_center=None,
                                    **kwargs):   
         html_data = creative.html_data.replace(r'%(track_pixels)s',success)
         context.update(html_data=html_data)
@@ -25,6 +26,8 @@ class BrightRollRenderer(BaseHTMLRenderer):
                                                                   keywords=keywords,
                                                                   adunit=adunit,
                                                                   fail_url=fail_url,
+                                                                  success=success,
+                                                                  network_center=network_center,
                                                                   **kwargs)
                 
 

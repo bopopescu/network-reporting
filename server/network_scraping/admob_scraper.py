@@ -1,4 +1,6 @@
 import mechanize
+import urllib
+import json
 
 class NetworkConfidential(object):
     pass
@@ -8,14 +10,51 @@ class NetworkScrapeRecord(object):
 
 def admob_scraper(network_credential, from_date, to_date):
     br = mechanize.Browser()
-    br.open('http://www.admob.com/home/login/')
-    br.select_form(name='login')
-    br['email'] = network_credential.email
-    br['password'] = network_credential.password
+    br.addheaders = [('User-agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_1) AppleWebKit/535.1 (KHTML, like Gecko) Chrome/13.0.782.215 Safari/535.1')]
+    br.open('https://www.google.com/accounts/ServiceLogin?service=admob&hl=en_US&continue=https%3A%2F%2Fwww.admob.com%2Fhome%2Flogin%2Fgoogle%3F&followup=https%3A%2F%2Fwww.admob.com%2Fhome%2Flogin%2Fgoogle%3F')
+    br.select_form(nr=0)
+    br['Email'] = network_credential.email
+    br['Passwd'] = network_credential.password
     br.submit()
-    request = mechanize.Request('http://www.admob.com/reporting/sites/grid', ' ')
+    
+    br.open('http://www.admob.com/reporting/sites/')
+    
+    request = mechanize.Request('http://www.admob.com/reporting/sites/grid', urllib.urlencode({ 'start': 0, 
+                                                                                                'limit':25, 
+                                                                                                'object_type':'site',
+                                                                                                'ids%5B%5D':'a14970f6ad53c3c', 
+                                                                                                'ids%5B%5D':'a1497a459250ea5',
+                                                                                                'ids%5B%5D':'a14a6b5458b0447',
+                                                                                                'ids%5B%5D':'a14a6e18d6610af',
+                                                                                                'ids%5B%5D':'a14a7142acad145',
+                                                                                                'ids%5B%5D':'a14a7142ee96329',
+                                                                                                'ids%5B%5D':'a14a71435d8d5b3',
+                                                                                                'ids%5B%5D':'a14a7143850a745',
+                                                                                                'ids%5B%5D':'a14a9ed9bf1fdcd',
+                                                                                                'future_ids%5B%5D':'future_sites',
+                                                                                                'start_date':'2011-07-25',
+                                                                                                'end_date':'2011-08-24',
+                                                                                                'preset_date':'last30',
+                                                                                                'name':'Last 30 Days (All Sites & Apps)',
+                                                                                                'object_dimension':0,
+                                                                                                'time_dimension':'day',
+                                                                                                'selected_type':'cpc'}))
+                                                                                                
+    request.add_header("Referer", "http://www.admob.com/reporting/sites")
+    request.add_header("Accept","*/*")
+    request.add_header("Accept-Charset", "ISO-8859-1,utf-8;q=0.7,*;q=0.3")
+    request.add_header("Accept-Language", "en-US,en;q=0.8")
+    request.add_header("Origin", "http://www.admob.com")
+    request.add_header("X-Requested-With", "XMLHttpRequest")
+    request.add_header("Connection", "keep-alive")
+    
+    br.set_debug_http(True)
+    br.set_debug_redirects(True)
+    br.set_debug_responses(True)
+    
+    
     response = br.open(request)
-    for line in response: print line
+    # print response.read()
 
     # headers = response.readline().split(',')
     # 
@@ -49,6 +88,6 @@ def admob_scraper(network_credential, from_date, to_date):
 
 if __name__ == '__main__':
     nc = NetworkConfidential()
-    nc.email ='paul@haveasec.com'
-    nc.password ='surv3y#@!'
+    nc.email ='njamal@stanford.edu'
+    nc.password ='asdf!@#$'
     admob_scraper(nc, '','')

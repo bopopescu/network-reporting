@@ -176,9 +176,8 @@ class RenderingTestBase(object):
 
         with open('ad_server/renderers/tests/example_renderings/%s%s.rendering' % (name, suffix), 'r') as f:   
             example_creative = f.read()   
-            
-        eq_(rendered_creative, example_creative)
-        # Used to initialize header examples
+
+        eq_(rendered_creative, example_creative)        
        
         if reset_example:
             with open('ad_server/renderers/tests/example_renderings/%s%s.headers' % (name, suffix), 'w') as f: 

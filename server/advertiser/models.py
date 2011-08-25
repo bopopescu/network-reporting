@@ -374,6 +374,19 @@ class Creative(polymodel.PolyModel):
     #     elif self.ad_group.bid_strategy == 'cpm':
     #         return float(self.ad_group.bid)
     
+    
+    @property
+    def intercept_url(self):
+        """ A URL prefix for which navigation should be intercepted and 
+            forwarded to a full-screen browser.
+   
+            For some ad networks, a click event actually results in navigation 
+            via "window.location = [TARGET_URL]". Since this kind of navigation is 
+            not limited exclusively to clicks, only a subset of all observed 
+            [TARGET_URL]s should be intercepted. This header is used as part of 
+            prefix-matching to distinguish true click events."""                    
+        return self.launchpage
+    
     @property
     def Renderer(self):                      
         return BaseCreativeRenderer

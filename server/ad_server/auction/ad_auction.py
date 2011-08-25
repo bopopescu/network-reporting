@@ -295,19 +295,19 @@ class AdAuction(object):
                                 data = simplejson.loads(fetched.content)
                                 trace_logging.info('MPX REPSONSE:%s'%data)    
                                 # With valid data
-                                if data.has_key('xhtml_real') and data.has_key('charge_price') and data['xhtml_real']:
+                                if data.has_key('xhtml_real') and data.has_key('revenue') and data['xhtml_real']:
                                     xhtml = data['xhtml_real']
-                                    charge_price = data['charge_price']
+                                    pub_rev = data['revenue']
                                 else:
                                     continue
                         except urlfetch.DownloadError, e:
                             pass
-                        trace_logging.info('\n\nMPX Charge: %s\nMPX HTML: %s\n' % (charge_price, xhtml))
+                        trace_logging.info('\n\nMPX Charge: %s\nMPX HTML: %s\n' % (pub_rev, xhtml))
                         if xhtml:
                             # Should only be one
                             crtv.html_data = xhtml
                             # Should really be the pub's cut
-                            crtv.adgroup.bid = charge_price
+                            crtv.adgroup.bid = pub_rev
                             # I think we should log stuff here but I don't know how to do that
                             return [crtv, on_fail_exclude_adgroups]
                         else:

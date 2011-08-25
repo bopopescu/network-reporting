@@ -339,13 +339,13 @@
                   <tr>
                     <th class="campaignData-icon"></th>
                     <th class="dataTable-name">Name</th>
-                    <th class="dataTable-data numeric"></th>
+                    <th class="dataTable-data numeric">Revenue</th>
+                    <th class="dataTable-data numeric">eCPM</th>
                     <th class="dataTable-data numeric">Attempts</th>
                     <th class="dataTable-data numeric">Impressions</th>
                     <th class="dataTable-data numeric">Fillrate</th>
                     <th class="dataTable-data numeric">Clicks</th>
                     <th class="dataTable-data numeric">CTR</th>
-                    <th class="dataTable-data numeric">&nbsp;</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -364,13 +364,13 @@
 
                       <span class="muted">MoPub Marketplace Beta</span>
                     </th>
-                    <td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric marketplace-rev rev">--</td>
+                    <td class="dataTable-data numeric marketplace-ecpm ecpm">--</td>
                     <td class="dataTable-data numeric marketplace-req req">--</td>
                     <td class="dataTable-data numeric marketplace-imp imp">--</td>
                     <td class="dataTable-data numeric marketplace-fill fill">--</td>
                     <td class="dataTable-data numeric marketplace-clk clk">--</td>
                     <td class="dataTable-data numeric marketplace-ctr ctr">--</td>
-                    <td class="dataTable-data numeric">&nbsp;</td>
                   </tr>
                   {% endfor %}
                 </tbody>
@@ -541,13 +541,13 @@
                   <tr>
                     <th class="campaignData-icon"></th>
                     <th class="dataTable-name">Name</th>
-                    <th class="dataTable-data numeric"></th>
+                    <th class="dataTable-data numeric">Revenue</th>
+                    <th class="dataTable-data numeric">eCPM</th>
                     <th class="dataTable-data numeric">Attempts</th>
                     <th class="dataTable-data numeric">Impressions</th>
                     <th class="dataTable-data numeric">Fillrate</th>
                     <th class="dataTable-data numeric">Clicks</th>
                     <th class="dataTable-data numeric">CTR</th>
-                    <th class="dataTable-data numeric">&nbsp;</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -566,13 +566,13 @@
 
                       <span class="muted">MoPub Marketplace Beta</span>
                     </th>
-                    <td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric backfill_marketplace-rev rev">--</td>
+                    <td class="dataTable-data numeric backfill_marketplace-ecpm ecpm">--</td>
                     <td class="dataTable-data numeric backfill_marketplace-req req">--</td>
                     <td class="dataTable-data numeric backfill_marketplace-imp imp">--</td>
                     <td class="dataTable-data numeric backfill_marketplace-fill fill">--</td>
                     <td class="dataTable-data numeric backfill_marketplace-clk clk">--</td>
                     <td class="dataTable-data numeric backfill_marketplace-ctr ctr">--</td>
-                    <td class="dataTable-data numeric">&nbsp;</td>
                   </tr>
                   {% endfor %}
                 </tbody>
@@ -630,7 +630,7 @@
         mopub.accountStats = {{account_stats|safe}};
     });
 </script>
-<script src="/js/mopub-advertiser.js?v=61"></script>
+<script src="/js/mopub-advertiser.js?v=63"></script>
 <script src='/js/tokenize_in.js'></script>
 <script src='/js/countries.js'></script>
 {% endblock extraScripts %}

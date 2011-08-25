@@ -60,12 +60,14 @@ class AdSenseRenderer(BaseHTMLRenderer):
         
         header_context.add_header("X-Backgroundcolor","0000FF") 
         super(AdSenseRenderer, cls).network_specific_rendering(header_context, 
-                                                               creative=None,  
-                                                               format_tuple=None,
-                                                               context=None,
-                                                               keywords=None,
-                                                               adunit=None,
+                                                               creative=creative,  
+                                                               format_tuple=format_tuple,
+                                                               context=context,
+                                                               keywords=keywords,
+                                                               adunit=adunit,
+                                                               fail_url=fail_url,
                                                                **kwargs)
+
                 
         
 ###### TEMPLATE #########

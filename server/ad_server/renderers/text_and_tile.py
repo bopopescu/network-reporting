@@ -1,9 +1,9 @@
 from string import Template    
-from ad_server.renderers.base_html_renderer import BaseHTMLRenderer 
+from ad_server.renderers.text import TextRenderer
 from google.appengine.api.images import InvalidBlobKeyError
 from google.appengine.api import images 
 
-class TextAndTileRenderer(BaseHTMLRenderer):
+class TextAndTileRenderer(TextRenderer):
     """ For now, just do the standard """
     @classmethod
     def network_specific_rendering(cls, header_context, 
@@ -16,11 +16,6 @@ class TextAndTileRenderer(BaseHTMLRenderer):
                                    request_host=None,
                                    **kwargs):   
 
-#     def network_specific_rendering(cls, headers, 
-#                                         creative=None,   
-#                                         context=None,
-#                                         request_host=None,
-#                                         **kwargss):    
         try:
             context["image_url"] = images.get_serving_url(creative.image_blob)   
         except InvalidBlobKeyError:     
@@ -35,12 +30,17 @@ class TextAndTileRenderer(BaseHTMLRenderer):
             context["action_icon_div"] = icon_div 
         else:
             context['action_icon_div'] = ''                      
+        context['action_icon']=creative.action_icon
+        context['color']=creative.color
+        context['font_color']=creative.font_color
+        context['gradient']=creative.gradient
+                
         super(TextAndTileRenderer, cls).network_specific_rendering(header_context, 
-                                                                   creative=None,  
-                                                                   format_tuple=None,
-                                                                   context=None,
-                                                                   keywords=None,
-                                                                   adunit=None,
+                                                                   creative=creative,  
+                                                                   format_tuple=format_tuple,
+                                                                   context=context,
+                                                                   keywords=keywords,
+                                                                   adunit=adunit,
                                                                    **kwargs)
 
             

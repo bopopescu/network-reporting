@@ -27,11 +27,11 @@ class MillennialNativeRenderer(BaseNativeRenderer):
         }
         header_context.add_header("X-Nativecontext", simplejson.dumps(nativecontext_dict))                  
         super(MillennialNativeRenderer, cls).network_specific_rendering(header_context, 
-                                                                        creative=None,  
-                                                                        format_tuple=None,
-                                                                        context=None,
-                                                                        keywords=None,
-                                                                        adunit=None,
+                                                                        creative=creative,  
+                                                                        format_tuple=format_tuple,
+                                                                        context=context,
+                                                                        keywords=keywords,
+                                                                        adunit=adunit,
                                                                         **kwargs)
                 
     

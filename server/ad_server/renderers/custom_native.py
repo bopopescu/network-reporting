@@ -18,13 +18,15 @@ class CustomNativeRenderer(BaseNativeRenderer):
         header_context.add_header("X-Adtype", "custom")
         header_context.add_header("X-Customselector",creative.html_data)
         super(CustomNativeRenderer, cls).network_specific_rendering(header_context, 
-                                                                    creative=None,  
-                                                                    format_tuple=None,
-                                                                    context=None,
-                                                                    keywords=None,
-                                                                    adunit=None,
+                                                                    creative=creative,  
+                                                                    format_tuple=format_tuple,
+                                                                    context=context,
+                                                                    keywords=keywords,
+                                                                    adunit=adunit,
+                                                                    fail_url=fail_url,
                                                                     **kwargs)
 
+        
         
 
     TEMPLATE = Template('custom selector: $method')

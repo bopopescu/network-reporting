@@ -12,6 +12,7 @@ from budget.tzinfo import Pacific
 
 from ad_server.renderers.creative_renderer import BaseCreativeRenderer
 from ad_server.renderers.admob import AdMobRenderer   
+from ad_server.renderers.admob_native import AdMobNativeRenderer   
 from ad_server.renderers.text_and_tile import TextAndTileRenderer    
 from ad_server.renderers.adsense import AdSenseRenderer            
 from ad_server.renderers.image import ImageRenderer 
@@ -558,9 +559,13 @@ class AdMobCreative(Creative):
 class AdMobNativeCreative(AdMobCreative):
 
     @property
+    def Renderer(self):                      
+        return AdMobNativeRenderer
+
+    @property
     def multi_format(self):
         return ('728x90', '320x50', '300x250', 'full' ,)
-
+    
 class MillennialCreative(Creative):
 
     @property

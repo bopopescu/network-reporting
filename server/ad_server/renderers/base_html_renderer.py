@@ -5,8 +5,17 @@ from ad_server.renderers.creative_renderer import BaseCreativeRenderer
 class BaseHTMLRenderer(BaseCreativeRenderer):
     """ For now, just do the standard """
     @classmethod
-    def network_specific_rendering(cls, header_context, **kwargs):
-        header_context.add_header("X-Adtype", str('html'))    
+    def network_specific_rendering(cls, header_context, 
+                                   creative=None,  
+                                   format_tuple=None,
+                                   context=None,
+                                   keywords=None,
+                                   adunit=None,
+                                   fail_url=None,
+                                   request_host=None,
+                                   **kwargs):   
+        header_context.add_header("X-Adtype", str('html'))
+
         
     TEMPLATE = Template("""<html>
                       <meta name="viewport" content="width=device-width; initial-scale=1.0; user-scalable=no;">

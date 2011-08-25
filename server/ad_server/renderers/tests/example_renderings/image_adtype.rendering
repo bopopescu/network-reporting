@@ -24,7 +24,7 @@
                             <body style="padding:0;margin:0;">
                               <div class="outer" id="outer">    
                                   <div class="">    
-                                      <a href="None" target="_top"><img src="http://localhost:8080/_ah/img/blobby" width="320" height="50"/></a>
+                                      <a href="$url" target="_top"><img src="http://localhost:8080/_ah/img/blobby" width="320" height="50"/></a>
                                   </div>
                               </div>      
                               <span style="display:none;"><img src="test_track_url"/></span>

@@ -21,11 +21,11 @@ class InmobiRenderer(BaseHTMLRenderer):
             header_context.add_header("X-Launchpage","http://c.w.mkhoj.com")
             
         super(InmobiRenderer, cls).network_specific_rendering(header_context, 
-                                                              creative=None,  
-                                                              format_tuple=None,
-                                                              context=None,
-                                                              keywords=None,
-                                                              adunit=None,
+                                                              creative=creative,  
+                                                              format_tuple=format_tuple,
+                                                              context=context,
+                                                              keywords=keywords,
+                                                              adunit=adunit,
                                                               **kwargs)
                     
     

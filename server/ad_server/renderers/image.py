@@ -32,12 +32,12 @@ class ImageRenderer(BaseHTMLRenderer):
 
         context.update({"w": img_width, "h": img_height, "w2":img_width/2.0, "h2":img_height/2.0, "class":css_class})
         super(ImageRenderer, cls).network_specific_rendering(header_context, 
-                                                              creative=None,  
-                                                              format_tuple=None,
-                                                              context=None,
-                                                              keywords=None,
-                                                              adunit=None,
-                                                              **kwargs)
+                                                             creative=None,  
+                                                             format_tuple=None,
+                                                             context=None,
+                                                             keywords=None,
+                                                             adunit=None,
+                                                             **kwargs)
                 
                                         
      

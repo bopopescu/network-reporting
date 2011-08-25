@@ -49,21 +49,14 @@ class BaseCreativeRenderer(object):
 
 
              
-        header_context.add_header("X-Clickthrough", str(ad_click_url)) 
-    
-  
+        header_context.add_header("X-Clickthrough", str(ad_click_url))   
         # add creative ID for testing (also prevents that one bad bug from happening)
         header_context.add_header("X-Creativeid", "%s" % creative.key())
-
-        
         header_context.add_header("X-Imptracker", str(track_url))
 
-
         template_name = creative.ad_type    
-        
         format_tuple, network_center = _make_format_tuple_and_set_orientation(adunit, creative, header_context)
         
-         
         # Build fail url
         fail_url = _build_fail_url(request_url, on_fail_exclude_adgroups)
         
@@ -127,16 +120,7 @@ class BaseCreativeRenderer(object):
                                        success=success
                                        )
 
-        if creative.ad_type == "greystripe":
-            pass
-        elif creative.ad_type == "html":
-            pass
-        elif creative.ad_type == "html_full":
-            pass
-        elif creative.ad_type == "text":  
-            header_context.add_header("X-Productid","pixel_001")
-      
-      
+       
         if version_number >= 2:  
             context.update(finishLoad='<script>function mopubFinishLoad(){window.location="mopub://finishLoad";}</script>')
             # extra parameters used only by admob template
@@ -150,22 +134,7 @@ class BaseCreativeRenderer(object):
             context.update(admob_finish_load=success)
             context.update(admob_fail_load='')
     
-        # indicate to the client the winning creative type, in case it is natively implemented (iad, clear)
-    
-        if str(creative.ad_type) == "iAd":
-            pass
-        elif str(creative.ad_type) == "admob_native":
-            pass
-        elif creative.ad_type == "millennial_native":
-            pass                     
-        elif creative.ad_type == "custom_native":
-            pass
-        else:
-            pass
-            #header_context.add_header("X-Adtype", str('html'))
-      
-    
-        # pass the creative height and width if they are explicity set
+         # pass the creative height and width if they are explicity set
         trace_logging.warning("creative size:%s"%creative.format)
         if creative.width and creative.height and 'full' not in adunit.format:
             header_context.add_header("X-Width", str(creative.width))
@@ -185,10 +154,8 @@ class BaseCreativeRenderer(object):
         else:    
             rendered_creative = TEMPLATES[template_name].safe_substitute(context)
         rendered_creative.encode('utf-8')
-    
-    
+        
         return rendered_creative, header_context              
-
         
 
 ########### HELPER FUNCTIONS ############     

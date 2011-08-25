@@ -25,7 +25,6 @@ class TextRenderer(BaseHTMLRenderer):
         except AttributeError:
             pass
         
-                
         super(TextRenderer, cls).network_specific_rendering(header_context, 
                                                             creative=creative,  
                                                             format_tuple=format_tuple,

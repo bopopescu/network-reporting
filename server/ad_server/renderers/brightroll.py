@@ -19,12 +19,12 @@ class BrightRollRenderer(BaseHTMLRenderer):
         header_context.add_header("X-Scrollable","1")
         header_context.add_header("X-Interceptlinks","0")
         super(BrightRollRenderer, cls).network_specific_rendering(header_context, 
-                                                                  creative=None,  
-                                                                  format_tuple=None,
-                                                                  context=None,
-                                                                  keywords=None,
-                                                                  adunit=None,
-                                                                  success=None,
+                                                                  creative=creative,  
+                                                                  format_tuple=format_tuple,
+                                                                  context=context,
+                                                                  keywords=keywords,
+                                                                  adunit=adunit,
+                                                                  fail_url=fail_url,
                                                                   **kwargs)
                 
 

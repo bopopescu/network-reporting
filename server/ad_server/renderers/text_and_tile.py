@@ -34,11 +34,7 @@ class TextAndTileRenderer(TextRenderer):
         context['color']=creative.color
         context['font_color']=creative.font_color
         context['gradient']=creative.gradient
-        context['w'] = creative.width or ''
-        context['h'] = creative.height or ''
-        context['url'] = creative.url or ''
-        context['display_url'] = creative.display_url or ''
-        
+                
         super(TextAndTileRenderer, cls).network_specific_rendering(header_context, 
                                                                    creative=creative,  
                                                                    format_tuple=format_tuple,

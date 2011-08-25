@@ -14,7 +14,7 @@ class BaseHTMLRenderer(BaseCreativeRenderer):
                                    fail_url=None,
                                    request_host=None,
                                    **kwargs):   
-        header_context.add_header("X-Adtype", str('html'))    
+        header_context.add_header("X-Adtype", str('html'))
 
         
     TEMPLATE = Template("""<html>

@@ -42,7 +42,8 @@ from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager,
                                       HtmlCreativeQueryManager
 from publisher.query_managers import AdUnitQueryManager, AppQueryManager, AdUnitContextQueryManager
 from reporting.query_managers import StatsModelQueryManager
-from budget import budget_service
+from budget import budget_service     
+from budget.models import BudgetSlicer
 
 from django.views.decorators.cache import cache_page
 
@@ -52,7 +53,6 @@ class AdGroupIndexHandler(RequestHandler):
 
     def get(self):
         # Set start date if passed in, otherwise get most recent days
-        self.date_range = int(self.params.get('r','14'))
         if self.start_date:
             days = StatsModel.get_days(self.start_date, self.date_range)
         else:
@@ -138,7 +138,7 @@ class AdGroupIndexHandler(RequestHandler):
             
         # Due to weirdness, network_campaigns and backfill_promo_campaigns are actually lists of adgroups
         sorted_campaign_groups = _sort_campaigns(adgroups)
-        promo_campaigns, guaranteed_campaigns, network_campaigns, backfill_promo_campaigns = sorted_campaign_groups
+        promo_campaigns, guaranteed_campaigns, marketplace_campaigns, network_campaigns, backfill_promo_campaigns, backfill_marketplace_campaigns = sorted_campaign_groups
 
         guarantee_levels = _sort_guarantee_levels(guaranteed_campaigns)
 
@@ -187,6 +187,8 @@ class AdGroupIndexHandler(RequestHandler):
                                    # 'yesterday': yesterday,
                                    'guarantee_levels': guarantee_levels, 
                                    'guarantee_num': len(guaranteed_campaigns),
+                                   'marketplace': marketplace_campaigns,
+                                   'backfill_marketplace': backfill_marketplace_campaigns,
                                    'promo': promo_campaigns,
                                    'network': network_campaigns,
                                    'backfill_promo': backfill_promo_campaigns,
@@ -223,6 +225,9 @@ def _sort_campaigns(adgroups):
 
     guaranteed_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee_high', 'gtee_low', 'gtee'], adgroups)
     guaranteed_campaigns = sorted(guaranteed_campaigns, lambda x,y: cmp(y.bid, x.bid))
+
+    marketplace_campaigns = filter(lambda x: x.campaign.campaign_type in ['marketplace'], adgroups)
+    marketplace_campaigns = sorted(marketplace_campaigns, lambda x,y: cmp(x.bid, y.bid))
  
     network_campaigns = filter(lambda x: x.campaign.campaign_type in ['network'], adgroups)
     network_campaigns = sorted(network_campaigns, lambda x,y: cmp(y.bid, x.bid))
@@ -230,7 +235,10 @@ def _sort_campaigns(adgroups):
     backfill_promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_promo'], adgroups)
     backfill_promo_campaigns = sorted(backfill_promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
     
-    return [promo_campaigns, guaranteed_campaigns, network_campaigns, backfill_promo_campaigns]
+    backfill_marketplace_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_marketplace'], adgroups)
+    backfill_marketplace_campaigns = sorted(backfill_marketplace_campaigns, lambda x,y: cmp(x.bid, y.bid))
+    
+    return [promo_campaigns, guaranteed_campaigns, marketplace_campaigns, network_campaigns, backfill_promo_campaigns, backfill_marketplace_campaigns]
 
 def _calc_app_level_stats(adgroups):
     # adgroup1.all_stats = [StatsModel(day=1), StatsModel(day=2), StatsModel(day=3)]
@@ -274,6 +282,25 @@ def adgroups(request,*args,**kwargs):
     return AdGroupIndexHandler()(request,*args,**kwargs)
 
 
+class AdGroupArchiveHandler(RequestHandler):
+
+    def get(self):
+        archived_adgroups = AdGroupQueryManager().get_adgroups(account=self.account, archived=True)  
+        
+        for adgroup in archived_adgroups:
+            adgroup.budget_slicer = BudgetSlicer.get_by_campaign(adgroup.campaign)  
+            
+        return render_to_response(self.request, 
+                                   'advertiser/archived_adgroups.html', 
+                                    {'archived_adgroups':archived_adgroups,        
+                                     })
+
+
+@login_required
+def archive(request,*args,**kwargs):
+    return AdGroupArchiveHandler()(request,*args,**kwargs)
+
+
 class CreateCampaignAJAXHander(RequestHandler):
     TEMPLATE    = 'advertiser/forms/campaign_create_form.html'
     def get(self,campaign_form=None,adgroup_form=None,
@@ -305,6 +332,7 @@ class CreateCampaignAJAXHander(RequestHandler):
         campaign_form.bid_strategy = adgroup_form['bid_strategy']
         campaign_form.custom_html = adgroup_form['custom_html']
         campaign_form.custom_method = adgroup_form['custom_method']
+        campaign_form.network_type = adgroup_form['network_type']
 
         adunit_keys = adgroup_form['site_keys'].value or []
         adunit_str_keys = [unicode(k) for k in adunit_keys]
@@ -383,7 +411,12 @@ class CreateCampaignAJAXHander(RequestHandler):
 
              ##Check if creative exists for this network type, if yes
              #update, if no, delete old and create new
-                if campaign.campaign_type == "network":
+                if campaign.campaign_type in ['marketplace', 'backfill_marketplace']:
+                    creative = adgroup.default_creative()
+                    creative.account = self.account
+                    CreativeQueryManager.put(creative)
+
+                elif campaign.campaign_type == "network":
                     html_data = None
                     if adgroup.network_type == 'custom':
                         html_data = adgroup_form['custom_html'].value
@@ -532,49 +565,7 @@ def campaign_adgroup_new(request,*args,**kwargs):
 def campaign_adgroup_edit(request,*args,**kwargs):
     kwargs.update(title="Edit Ad Group",edit=True)
     return CreateAdGroupHandler()(request,*args,**kwargs)    
-
-class PauseHandler(RequestHandler):
-    def post(self):
-        action = self.request.POST.get("action", "pause")
-        updated_campaigns = []
-        for id_ in self.request.POST.getlist('id') or []:
-            c = CampaignQueryManager.get(id_)
-            updated_campaigns.append(c)
-            update_objs = []
-            if c != None and c.account == self.account:
-                if action == "pause":
-                    c.active = False
-                    c.deleted = False
-                    update_objs.append(c)
-                elif action == "resume":
-                    c.active = True
-                    c.deleted = False
-                    update_objs.append(c)
-                elif action == "delete":
-                    # 'deletes' adgroups and creatives
-                    c.active = False
-                    c.deleted = True
-                    update_objs.append(c)
-                    for adgroup in c.adgroups:
-                        adgroup.deleted = True
-                        update_objs.append(adgroup)
-                        for creative in adgroup.creatives:
-                            creative.deleted = True
-                            update_objs.append(creative)
-            if update_objs: 
-                db.put(update_objs)     
-                adgroups = AdGroupQueryManager().get_adgroups(campaigns=updated_campaigns)
-                adunits = []
-                for adgroup in adgroups:
-                    adunits.extend(adgroups.site_keys)
-                adunits = AdUnitQueryManager.get(adunits)    
-                CachedQueryManager().put(adunits)
-        return HttpResponseRedirect(reverse('advertiser_campaign',kwargs={}))
-
-@login_required
-def campaign_pause(request,*args,**kwargs):
-    return PauseHandler()(request,*args,**kwargs)
-
+       
 class ShowAdGroupHandler(RequestHandler):
     def post(self, adgroup_key):
         adgroup = AdGroupQueryManager.get(adgroup_key)
@@ -582,17 +573,24 @@ class ShowAdGroupHandler(RequestHandler):
         update = False
         campaign = adgroup.campaign
         if opt == 'play':
-            adgroup.active = True
+            adgroup.active = True   
+            adgroup.archived = False
             update = True
         elif opt == 'pause':
+            adgroup.active = False  
+            adgroup.archived = False
+            update = True          
+        elif opt == "archive":
             adgroup.active = False
-            update = True
+            adgroup.archived = True    
+            update = True   
         elif opt == "delete":   
             adgroup.deleted = True
             campaign.deleted = True
             AdGroupQueryManager.put(adgroup)
-            CampaignQueryManager.put(campaign)
-            # TODO: Flash a message saying we deleted the campaign
+            CampaignQueryManager.put(campaign)            
+            
+            self.request.flash["message"] = "Campaign: %s has been deleted." % adgroup.name          
             return HttpResponseRedirect(reverse('advertiser_campaign'))
             
         else:
@@ -659,7 +657,7 @@ class ShowAdGroupHandler(RequestHandler):
               graph_adunits[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[au.all_stats for au in adunits[3:]])]
 
         # Load creatives if we are supposed to 
-        if not adgroup.network_type:  
+        if not (adgroup.network_type or adgroup.campaign.campaign_type in ['marketplace', 'backfill_marketplace']):
             # In order to have add creative
             creative_handler = AddCreativeHandler(self.request)
             creative_fragment = creative_handler.get() # return the creative fragment
@@ -705,6 +703,7 @@ class ShowAdGroupHandler(RequestHandler):
                                     'graph_adunits': graph_adunits,
                                     'start_date': days[0],
                                     'end_date': days[-1],
+                                    'date_range': self.date_range,
                                     'creative_fragment':creative_fragment,
                                     'campaign_create_form_fragment':campaign_create_form_fragment,
                                     'message': message})
@@ -718,31 +717,51 @@ class PauseAdGroupHandler(RequestHandler):
     def post(self):
         action = self.request.POST.get("action", "pause")
         adgroups = []
-        update_objs = []
+        update_objs = []  
+        update_creatives = []  
         for id_ in self.request.POST.getlist('id') or []:
             a = AdGroupQueryManager.get(id_)
             adgroups.append(a)
             if a != None and a.campaign.account == self.account:
                 if action == "pause":
                     a.active = False
-                    a.deleted = False
+                    a.deleted = False       
+                    a.archived = False
                     update_objs.append(a)
                 elif action == "resume":
                     a.active = True
-                    a.deleted = False
-                    update_objs.append(a)
+                    a.deleted = False     
+                    a.archived = False
+                    update_objs.append(a)  
+                elif action == "activate":
+                    a.active = True
+                    a.deleted = False     
+                    a.archived = False
+                    update_objs.append(a)          
+                    self.request.flash["message"] = "A campaign has been activated. View it within <a href='%s'>active campaigns</a>." % reverse('advertiser_campaign') 
+                elif action == "archive":       
+                    a.active = False
+                    a.deleted = False     
+                    a.archived = True
+                    update_objs.append(a)    
+                    self.request.flash["message"] = "A campaign has been archived. View it within <a href='%s'>archived campaigns</a>." % reverse('advertiser_archive') 
                 elif action == "delete":
                     a.active = False
-                    a.deleted = True
-                    update_objs.append(a)
+                    a.deleted = True    
+                    a.archived = False
+                    update_objs.append(a)       
+                    self.request.flash["message"] = "Your campaign has been successfully deleted"
                     for creative in a.creatives:
                         creative.deleted = True
-                        update_objs.append(creative)
+                        update_creatives.append(creative)
 
         if update_objs:
-            AdGroupQueryManager.put(update_objs)
+            AdGroupQueryManager.put(update_objs)  
+            
+        if update_creatives:
+            CreativeQueryManager.put(update_creatives)
 
-        return HttpResponseRedirect(reverse('advertiser_campaign', kwargs={}))
+        return HttpResponseRedirect(self.request.META["HTTP_REFERER"])
 
 @login_required
 def bid_pause(request,*args,**kwargs):
@@ -865,19 +884,16 @@ class DisplayCreativeHandler(RequestHandler):
     def get(self, creative_key):
         c = CreativeQueryManager.get(creative_key)
         if c and c.ad_type == "image":
-            if c.image_blob:
-                return HttpResponse('<html><head><style type="text/css">body{margin:0;padding:0;}</style></head><body><img src="%s"/></body></html>'%images.get_serving_url(c.image_blob))
-            else:    
-                return HttpResponse(c.image,content_type='image/png')
-        if c and c.ad_type == "text_icon":
-            if c.image:
-                c.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(c.image)
+
+            return HttpResponse('<html><head><style type="text/css">body{margin:0;padding:0;}</style></head><body><img src="%s"/></body></html>'%images.get_serving_url(c.image_blob))                 
+            # return HttpResponse(c.image,content_type='image/png')
+        if c and c.ad_type == "text_icon":                                        
+            c.icon_url = images.get_serving_url(c.image_blob)
+                                                                              
             return render_to_response(self.request, 'advertiser/text_tile.html', {'c':c})
             #return HttpResponse(c.image,content_type='image/png')
         if c and c.ad_type == "html":
             return HttpResponse("<html><body style='margin:0px;'>"+c.html_data+"</body></html");
-        # OMG WHO DID THIS lol me that's right
-        return HttpResponse('NOOOOOOOOOOOO IMAGE')
 
 class CreativeImageHandler(RequestHandler):
     def get(self,creative_key):
@@ -1028,6 +1044,8 @@ class AJAXStatsHandler(RequestHandler):
                     if adgroup.cpc:
                         e_ctr = summed_stats.ctr or DEFAULT_CTR
                         summed_stats.cpm = float(e_ctr) * float(adgroup.cpc) * 1000
+                    elif 'marketplace' in adgroup.campaign.campaign_type:
+                        summed_stats.cpm = summed_stats.cpm # no-op
                     else:
                         summed_stats.cpm = adgroup.cpm
                     

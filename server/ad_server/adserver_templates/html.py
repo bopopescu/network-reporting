@@ -1,6 +1,8 @@
 from string import Template
 
-html = Template("""<html><head><title>$title</title>
+html = Template("""<html>
+                      <meta name="viewport" content="width=device-width; initial-scale=1.0; user-scalable=no;">
+                      <head><title>$title</title>
                         $finishLoad
                         $trackImpressionHelper
                         <script type="text/javascript">
@@ -31,5 +33,14 @@ html = Template("""<html><head><title>$title</title>
                             }
                           }, false);
                         </script>$network_style</head>
-                        <body class="network_center" style="margin:0;padding:0;">${html_data}$trackingPixel</body></html>""")
-
+                        <body class="network_center" style="margin:0;padding:0;">
+                                ${html_data}
+                                $trackingPixel
+                                <script type="text/javascript">
+                                    if (typeof htmlWillCallFinishLoad == "undefined" || !htmlWillCallFinishLoad) { // just call mopubFinishLoad upon window's load
+                                        if(typeof mopubFinishLoad == 'function') {
+                                           window.onload = mopubFinishLoad;
+                                        }
+                                    }
+                                </script>
+                        </body></html>""")

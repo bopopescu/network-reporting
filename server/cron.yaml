@@ -6,7 +6,7 @@ cron:
 
 - description: Advance the budget timeslices
   url: /budget/advance/
-  schedule: every 1 minutes synchronized
+  schedule: every 5 minutes synchronized
   timezone: America/Los_Angeles
   
 - description: Run all reports scheduled for today
@@ -27,4 +27,9 @@ cron:
 - description: Periodic dashboard refresh (offline)
   url: /admin/prep/?offline=1
   schedule: every 30 minutes  
+  timezone: America/Los_Angeles
+
+- description: Check how much each bidder has spent
+  url: /admin/bidder_spent/
+  schedule: every 5 minutes
   timezone: America/Los_Angeles

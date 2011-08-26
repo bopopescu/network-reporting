@@ -36,6 +36,46 @@ class CampaignQueryManager(QueryManager):
     Model = Campaign
 
     @classmethod
+    def get_marketplace_campaign(cls, adunit=None):
+        """ Returns a marketplace campaign for this adunit, 
+            Creatives a new campaign if one doesn't exist already
+            """
+        if adunit is None:
+            return None
+        camps = cls.get_campaigns(account=adunit.account)
+        mkcamp = filter(lambda camp: camp.campaign_type == 'marketplace', camps)
+        if mkcamp:
+            ag = camp.adgroups
+            if adunit.key() not in ag.site_keys:
+                ag.site_keys.append(adunit.key())
+                ag.put()
+            mkcamp.put()
+            return mkcamp
+        else:
+            return cls.add_marketplace_campaign(cls, adunit=adunit)
+
+    @classmethod
+    def add_marketplace_campaign(cls, adunit=None):
+            """ Adds a marketplace campagin for this adunit
+                """
+            acct = adunit.account
+            camp = Campaign(name = 'Marketplace Campaign',
+                                    campaign_type = 'marketplace',
+                                    account = acct,
+                                    )
+            camp.put()
+            ag = AdGroup(campaign = camp,
+                                 account = acct,
+                                 name = 'Marketplace adgroup',
+                                 site_keys = [adunit.key()],
+                                 )
+            ag.put()
+            creative = adgroup.default_creative()
+            creative.account = acct
+            creative.put()
+            return camp
+               
+    @classmethod
     def get_campaigns(cls,account=None,adunit=None,deleted=False,limit=MAX_OBJECTS):
         campaigns = Campaign.all()
         if not (deleted == None):
@@ -112,12 +152,16 @@ class AdGroupQueryManager(QueryManager):
     Model = AdGroup   
         
     @classmethod
-    def get_adgroups(cls, campaign=None, campaigns=None, adunit=None, app=None, account=None, deleted=False, limit=MAX_OBJECTS):
+    def get_adgroups(cls, campaign=None, campaigns=None, adunit=None, app=None, account=None, deleted=False, limit=MAX_OBJECTS, archived=False):    
+        """ archived=True means we only show archived adgroups. """
         adgroups = AdGroup.all()
         if not (deleted == None):
-            adgroups = adgroups.filter("deleted =",deleted)
+            adgroups = adgroups.filter("deleted =", deleted)
         if account:
-            adgroups = adgroups.filter("account =",account)      
+            adgroups = adgroups.filter("account =", account)   
+       
+        if not (archived == None):
+            adgroups = adgroups.filter("archived =", archived)    
             
         if campaigns:
             # if the number of campaigns is greater than 30 we must "chunk" the query
@@ -125,8 +169,7 @@ class AdGroupQueryManager(QueryManager):
                 total_adgroups = []
                 for sub_campaigns in chunks(campaigns,MAX_ALLOWABLE_QUERIES):
                     adgroups_current = copy.deepcopy(adgroups)
-                    total_adgroups += adgroups_current.filter("campaign IN", sub_campaigns).\
-                                        fetch(limit)
+                    total_adgroups += adgroups_current.filter("campaign IN", sub_campaigns).fetch(limit)
                 return total_adgroups    
             else:    
                 adgroups = adgroups.filter("campaign IN",campaigns)
@@ -219,7 +262,7 @@ class CreativeQueryManager(QueryManager):
         crtvs = Creative.all().filter('account =', account)
         if deleted is not None:
             crtvs = crtvs.filter('deleted =', deleted)
-        return [c for c in crtvs]
+        return crtvs
 
         
 

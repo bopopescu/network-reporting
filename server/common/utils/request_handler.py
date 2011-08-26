@@ -21,10 +21,12 @@ audit_logger = LogService(blob_file_name='audit', flush_lines=1)
 
 class RequestHandler(object):
     """ Does some basic work and redirects a view to get and post appropriately """
-    def __init__(self,request=None):
+    def __init__(self, request=None, login=True):
+        self.login = login
         if request:
             self.request = request
-            self._set_account()    
+            if self.login:
+                self._set_account()    
 
         super(RequestHandler,self).__init__()  
 
@@ -45,8 +47,7 @@ class RequestHandler(object):
             self.request = request or self.request
         
             try:
-              # Limit date range to 31 days, otherwise too heavy
-              self.date_range = min(int(self.params.get('r')),31)  # date range
+              self.date_range = int(self.params.get('r'))  # date range
             except:
               self.date_range = 14
           
@@ -55,16 +56,17 @@ class RequestHandler(object):
               self.start_date = date(int(s[0]),int(s[1]),int(s[2]))
             except:
               self.start_date = None
-
-            if self.params.has_key('account'):
-                account_key = self.params['account']
-                if account_key:
-                  self.account = AccountQueryManager.get(account_key)
-            else:
-                self._set_account()
-        
-            logging.info("final account: %s"%(self.account.key()))  
-            logging.info("final account: %s"%repr(self.account.key()))
+            
+            if self.login:
+                if self.params.has_key('account'):
+                    account_key = self.params['account']
+                    if account_key:
+                      self.account = AccountQueryManager.get(account_key)
+                else:
+                    self._set_account()
+            
+                logging.info("final account: %s"%(self.account.key()))  
+                logging.info("final account: %s"%repr(self.account.key()))
           
             # use the offline stats  
             self.offline = self.params.get("offline",False)   
@@ -81,7 +83,7 @@ class RequestHandler(object):
             elif request.method == "POST":
                 # Now we can define get/post methods with variables instead of having to get it from the 
                 # Query dict every time! hooray!
-                if self.request.user.is_authenticated():
+                if self.login and self.request.user.is_authenticated():
                     audit_logger.log(simplejson.dumps({"user_email": self.request.user.email, 
                                                        "account_email": self.account.mpuser.email,
                                                        "account_key": str(self.account.key()),

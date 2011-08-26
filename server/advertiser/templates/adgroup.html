@@ -1,8 +1,12 @@
 {% extends 'advertiser/base.html' %}
 {% load filters %}
 {% block pageTitle %}
-          <div class="breadcrumb">
-            <a class="linkIcon breadcrumb-back" href="{% url advertiser_campaign %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Campaigns</a>
+          <div class="breadcrumb">  
+            {% if not adgroup.archived %}
+            <a class="linkIcon breadcrumb-back" href="{% url advertiser_campaign %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Campaigns</a>           
+            {% else %}
+            <a class="linkIcon breadcrumb-back" href="{% url advertiser_archive %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Archived Campaigns</a>   
+            {% endif %}
             <h1>Campaign: {{adgroup.name}}</h1>
           </div>
 {% endblock pageTitle %}
@@ -21,14 +25,24 @@
               	<select name="campaign-status-options" id="campaign-status-options" class="selectmenu"> 
               	  <option value="play" selected="selected">Running</option>
               	  <option value="pause">Pause</option>
+              	  <option value="archive">Archive</option>
             	    <option value="delete">Delete</option>
-              </select>
+                </select>
               {% else %}
-              	<select name="campaign-status-options" id="campaign-status-options" class="selectmenu"> 
-              	  <option value="pause" selected="selected">Paused</option>
-              	  <option value="play">Resume</option>
-            	    <option value="delete">Delete</option>
-              </select>
+                {% if adgroup.archived %}
+                  <select name="campaign-status-options" id="campaign-status-options" class="selectmenu">   
+                    <option value="archive">Archived</option>
+              	    <option value="play">Resume</option>      
+            	      <option value="delete">Delete</option>
+                  </select>
+                {% else %}
+                	<select name="campaign-status-options" id="campaign-status-options" class="selectmenu"> 
+                	  <option value="pause" selected="selected">Paused</option>
+                	  <option value="play">Resume</option> 
+                	  <option value="archive">Archive</option>
+              	    <option value="delete">Delete</option>
+                  </select>    
+                {% endif %}   
               {% endif %}
               <a class="button" id="advertisers-adgroups-editAdGroupButton" href="{% url advertiser_campaign_edit adgroup_key=adgroup.key %}">Edit campaign settings</a>
             </span>
@@ -65,7 +79,7 @@
                             <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
                         </tr>
                     {% endif %} 
-                      <tr {% if campaign.promo or campaign.network %} class="active" {% endif %} id="stats-breakdown-impressions">
+                      <tr {% if not campaign.gtee %} class="active" {% endif %} id="stats-breakdown-impressions">
                         <td class="stats-breakdown-value today"><span class="inner">{{today.impression_count|withsep}}</span></td>
                         <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.impression_count|withsep}}</span></td>
                         <td class="stats-breakdown-value all"><span class="inner">{{totals.impression_count|withsep}}</span></td>
@@ -278,6 +292,7 @@
           </section>
           
           {% ifnotequal campaign.campaign_type "network" %}
+          {% ifnotequal campaign.campaign_type "marketplace" %}
           <section id="dashboard-apps">
             <div class="buttonBank buttonBank-right">
               <a class="button" id="advertiser-adgroups-addCreativeButton" href="#">Add a creative</a>
@@ -414,6 +429,7 @@
               </div>
             </section>
           </section>
+            {% endifnotequal %} {# endifnotequal campaign.campaign_type "marketplace" #}
             {% endifnotequal %} {# endifnotequal campaign.campaign_type "network" #}
           
             {# Form for in-place updating #}
@@ -461,7 +477,7 @@
                     <td class="dataTable-data numeric"><b>{{adgroup.stats.revenue|currency}}</b></td>
                 </tr>
                 {% for s in adgroup.all_stats reversed %}
-                <tr class="appData-details-inner show">
+                <tr class="appData-details-inner hide">
                     <th class="dataTable-name">{{s.date|format_date}}</th>
                     <td class="dataTable-data numeric">&nbsp;</td>     
                     <td class="dataTable-data numeric">{{s.impression_count|withsep}}</td>
@@ -492,7 +508,7 @@
                     <td class="dataTable-data numeric"><b>{{adgroup.stats.conversion_count|withsep}} ({{adgroup.stats.conv_rate|percentage}})</b></td>
                 </tr>
                 {% for s in adgroup.all_stats reversed %}
-                <tr class="appData-details-inner show">
+                <tr class="appData-details-inner hide">
                     <th class="dataTable-name">{{s.date|format_date}}</th>
                     <td class="dataTable-data numeric">&nbsp;</td>     
                     <td class="dataTable-data numeric">{{s.impression_count|withsep}}</td>
@@ -525,7 +541,7 @@
                     <td class="dataTable-data numeric"><b>{{adgroup.stats.ctr|percentage}}</b></td>
                 </tr>
                 {% for s in adgroup.all_stats reversed %}
-                <tr class="appData-details-inner show">
+                <tr class="appData-details-inner hide">
                     <th class="dataTable-name">{{s.date|format_date}}</th>
                     <td class="dataTable-data numeric">&nbsp;</td>     
                     <td class="dataTable-data numeric">{{s.request_count|withsep}}</td>

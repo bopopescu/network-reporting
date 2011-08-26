@@ -4,6 +4,11 @@ text_icon = Template(
 """<html>
   <head>
     $finishLoad
+    <script> 
+      if(typeof mopubFinishLoad == 'function') {
+          window.onload = mopubFinishLoad;
+      }
+    </script>
     <script>
       function webviewDidClose(){}
       function webviewDidAppear(){}

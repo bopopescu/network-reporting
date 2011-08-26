@@ -1,22 +1,27 @@
 #generic python imports
 import logging
+import time
+import traceback
+import sys
 
 from datetime import datetime, timedelta
 
-#appengine imports
 from django.template import loader
-from django.utils import simplejson
+#appengine imports
 from google.appengine.ext import db
-from google.appengine.api import users
+from google.appengine.ext import blobstore
+from google.appengine.api import users, mail
 
 #mopub imports
 from account.models import Account
-from advertiser.query_managers import CampaignQueryManager, CreativeQueryManager
-from common.utils import date_magic
+from advertiser.models import Creative
+from common.constants import ISO_COUNTRIES, REP_KEY, CLONE_REP_KEY
 from common.properties.dict_property import DictProperty
-from publisher.query_managers import AppQueryManager, AdUnitQueryManager
-from reporting.models import StatsModel
-from reporting.query_managers import StatsModelQueryManager
+from common.utils import date_magic
+from common.utils.helpers import cust_sum
+from common.wurfl.query_managers import WurflQueryManager
+from publisher.models import AdUnit
+from mail.mails import REPORT_FINISHED_SIMPLE
 
 APP = 'app'
 AU = 'adunit'
@@ -28,8 +33,10 @@ WEEK = 'week'
 DAY = 'day'
 HOUR = 'hour'
 CO = 'country'
-DEV = 'device'
+MAR = 'marketing'
+BRND = 'brand'
 OS = 'os'
+OS_VER = 'os_ver'
 KEY = 'kw'
 TARG = 'targeting' # I don't know what this is
 C_TARG = 'custom targeting' # or this
@@ -40,10 +47,58 @@ ALL_OS = []
 
 NAME_STR = "dim%d-ent%d"
 
+
+CRTV_DIMS = (CAMP, CRTV, P)
+TIME_DIMS = (MO, WEEK, DAY, HOUR)
+AU_DIMS = (APP, AU)
+WURFL_DIMS = (MAR, BRND, OS, OS_VER)
+
+NO_REQ = CRTV_DIMS
+
+def build_stat_dict(stats):
+    """ Return a dict that appears like a StatsModel object to django
+        (haha django you are so dumb and easy to fool)
+
+        Args:
+            stats: List of stats, must have len = 5
+        
+        Returns:
+            dict with keys like statsmodel properties
+    """
+    rev, req, att, imp, clk, conv = stats
+    return dict(revenue = rev,
+                request_count = req, 
+                attempt_count = att, 
+                impression_count = imp, 
+                click_count = clk, 
+                conversion_count = conv)
+
+def statsify(stats_dict):
+    """ Traverse the dict hierarchy, turning all list entries in all
+        dictionaries into StatsModel-like dictionaries
+
+        Args:
+            stats_dict: dictionary of all stats to be formatted for viewing
+
+        Returns:
+            stats_dict, with objects instead of lists
+    """
+    for k,v in stats_dict.iteritems():
+        #if it's stats, make them object-like
+        if isinstance(v, list):
+            stats_dict[k] = build_stat_dict(v)
+        #elif they're sub_stats, statsify those
+        elif isinstance(v, dict):
+            stats_dict[k] = statsify(v)
+    return stats_dict
+
+
+            
+
 #class ScheduledReport -> has a "next report" time, "report every ____" time, report type, when it's tim
 #   to gen a report, this guy makes report objects
 class ScheduledReport(db.Model):
-    account = db.ReferenceProperty(Account, collection_name='scheduled_reports')
+    account = db.ReferenceProperty(collection_name='scheduled_reports')
     created_at = db.DateTimeProperty(auto_now_add=True)
 
     name = db.StringProperty()
@@ -55,10 +110,12 @@ class ScheduledReport(db.Model):
     d1 = db.StringProperty(required=True) 
     d2 = db.StringProperty() 
     d3 = db.StringProperty() 
+
     end = db.DateProperty(required=True)
     days = db.IntegerProperty(required=True)
     #daily, weekly, monthly
     interval = db.StringProperty(choices=['today','yesterday', '7days', 'lmonth', 'custom'], default='custom')
+    
     sched_interval = db.StringProperty(choices = ['none', 'daily', 'weekly', 'monthly', 'quarterly'], default='none')
     next_sched_date = db.DateProperty(default=datetime.now().date())
     email = db.BooleanProperty(default=False)
@@ -103,7 +160,7 @@ class ScheduledReport(db.Model):
 
 class Report(db.Model):
     #standard
-    account = db.ReferenceProperty(Account, collection_name='reports')
+    account = db.ReferenceProperty(collection_name='reports')
     created_at = db.DateTimeProperty(auto_now_add=True)
 
     #scheduled report
@@ -112,11 +169,30 @@ class Report(db.Model):
     start = db.DateProperty(required=True)
     end = db.DateProperty(required=True)
 
+    #the actual report (As of 6/13/11 with MR)
+    report_blob = blobstore.BlobReferenceProperty()
+
     #the actual report
     data = DictProperty()
 
     # maybe useful for internal analytics//informing users
     completed_at = db.DateTimeProperty()
+
+
+    def notify_complete(self):
+        mesg = mail.EmailMessage(sender = 'olp@mopub.com',
+                                 subject = 'Your report has completed')
+        mesg_dict = dict(report_key = str(self.schedule.key()))
+        mesg.body = REPORT_FINISHED_SIMPLE % mesg_dict
+        if self.recipients:
+            for recipient in self.recipients:
+                mesg.to = recipient
+                try:
+                    mesg.send()
+                except InvalidEmailError, e:
+                    pass
+        else:
+            return
 
     @property
     def d1(self):
@@ -150,175 +226,26 @@ class Report(db.Model):
     def recipients(self):
         return self.schedule.recipients
 
+    @property
+    def days(self):
+        return self.schedule.days
+
     def __str__(self):
         return "Report(d1=%s, d2=%s, d3=%s, start=%s, end=%s)" % (self.d1, self.d2, self.d3, self.start, self.end)
     
-    def gen_data(self, page_num=0, per_page=100):
-        #pagination stuff for pagination later?
-        pub = None
-        adv = None
-        country = None
-        brand = None
-        market = None
-        os = None
-        os_ver = None
-
-        date_fmt = None
-        days = date_magic.gen_days(self.start,self.end) 
-        def gen_helper(pub, adv, days, country, brand, market, os, os_ver, date_fmt, level):
-            last_dim = False
-            if level == 0:
-                if self.d2 is None:
-                    last_dim = True
-                dim = self.d1
-            elif level == 1:
-                if self.d3 is None:
-                    last_dim = True
-                dim = self.d2
-            elif level == 2:
-                last_dim = True
-                dim = self.d3
-            else:
-                dim = 9001
-                logging.error("impossible")
-            ret = {}
-            manager = StatsModelQueryManager(self.account, offline=False)#True) #offline=self.offline)
-            vals, typ, date_fmt = self.get_vals(pub, adv, days, country, brand, market, os, os_ver, dim, date_fmt)
-            if vals is None:
-                return ret
-            for idx, val in enumerate(vals):
-                name = None
-                if typ == 'co':
-                    name = "<<COUNTRY NAME HERE>>"
-                    country = val
-                elif typ == 'dev':
-                    name = '<<DEVICE NAME HERE>>'
-                    device = val
-                elif typ == 'os':
-                    name = '<<OS NAME HERE>>'
-                    op_sys = val
-                elif typ == 'days':
-                    name = date_magic.date_name(val, dim)
-                    days = val
-                elif typ == 'pub':
-                    name = val.name
-                    pub = val
-                elif typ == 'adv':
-                    if type(val) == list:
-                        print val
-                        name = val[0].campaign_type
-                    else:
-                        name = val.name
-                    adv = val
-                #days can be a list (actually I think it needs to be) but publisher/advertiser should NOT
-                # rolls them up
-                key = NAME_STR % (level, idx) 
-                stats = manager.get_rollup_for_days(publisher = pub,
-                                                    advertiser = adv,
-                                                    country = country,
-                                                    brand_name = brand,
-                                                    marketing_name = market, 
-                                                    device_os = os,
-                                                    device_os_version = os_ver,
-                                                    days = days,
-                                                    date_fmt = date_fmt
-                                                    )
-                if last_dim: 
-                    ret[key] = dict(stats = stats, name = name)
-                else:
-                    ret[key] = dict(stats=stats, name = name, sub_stats = gen_helper(pub,adv,days, country, brand, market, os, os_ver, date_fmt, level+1))
-            return ret
-        return gen_helper(pub, adv, days, country, brand, market, os, os_ver, date_fmt, 0)
-
-    def get_vals(self, pub, adv, days, country, brand, market, os, os_ver, dim, date_fmt=None):
-        #This gets the list of values to iterate over for this level of the breakdown.  Country, device, OS, and keywords are irrelevant because they are independent of everythign else
-        typ = None
-        if date_fmt is None:
-            #use preset format if it exists, otherwise use 'date'
-            date_fmt = 'date'
-        if dim in (MO, WEEK, HOUR, DAY):
-            #assume it's not hour right away, if it is 'date_hour' it'll fix itself
-            date_fmt = 'date'
-            typ = 'days'
-            if dim == MO:
-                vals = date_magic.get_months(days)
-            elif dim == WEEK:
-                vals = date_magic.get_weeks(days)
-            elif dim == DAY:
-                vals = date_magic.get_days(days)
-            elif dim == HOUR:
-                date_fmt = 'date_hour'
-                vals = date_magic.get_hours(days)
-        elif dim == APP:
-            #basic stuff
-            man = AppQueryManager
-            typ = 'pub'
-            vals = man.reports_get_apps(account = self.account,
-                                        publisher = pub,
-                                        advertiser = adv,
-                                        )
-        elif dim == AU:
-            man = AdUnitQueryManager
-            typ = 'pub'
-            vals = man.reports_get_adunits(account = self.account,
-                                           publisher = pub,
-                                           advertiser = adv,
-                                           )
-        elif dim == CAMP:
-            man = CampaignQueryManager
-            typ = 'adv'
-            vals = man.reports_get_campaigns(account = self.account,
-                                             publisher = pub,
-                                             advertiser = adv,
-                                             )
-        elif dim == CRTV:
-            man = CreativeQueryManager
-            typ = 'adv'
-            vals = man.reports_get_creatives(account = self.account,
-                                             publisher = pub,
-                                             advertiser = adv,
-                                             )
-        elif dim == P:
-            man = CampaignQueryManager
-            typ = 'adv'
-            vals = man.reports_get_campaigns(account = self.account,
-                                             publisher = pub,
-                                             advertiser = adv,
-                                             by_priority = True,
-                                             )
-        elif dim == CO:
-            typ = 'co'
-            vals = ALL_COUNTRY 
-            #countries are indepent of publisher//advertiser
-        elif dim == DEV:
-            typ = 'dev'
-            vals = ALL_DEVICE
-            #devices are indepent of publisher//advertiser
-        elif dim == OS:
-            typ = 'os'
-            vals = ALL_OS
-            #OS's are indepent of publisher//advertiser
-        elif dim == TARG:
-            return "Not implemented yet"
-            typ = 'other'
-            #do 'targeting' stuff
-        elif dim == C_TARG:
-            return "Not implemented yet"
-            typ = 'other'
-            #do 'custom targeting' stuff
-        else:
-            logging.error("cry me a river ohh ohhhhh")
-            return None, None
-        return vals, typ, date_fmt
-
     @property
     def html_data(self):
-        if self.data:
-            return loader.render_to_string('reports/report.html', dict(all_stats=self.data))
-
-        else:
-            return None
-
+        return loader.render_to_string('reports/report.html', dict(all_stats=self.data))
+        #if self.report_blob:
+        #    logging.warning("parsing report blob")
+        #    magic = self.parse_report_blob(self.report_blob.open())
+        #    logging.warning('\n%s\n' % magic)
+        #    return loader.render_to_string('reports/report.html', dict(all_stats=magic))
+        #BACKWARDS COMPATIBILITY!
+        #elif self.data:
+        #   pass
+        #else:
+        #    return None
     @property
     def export_data(self):
         """ Turns the dictionary into a list lists """ 
@@ -335,7 +262,10 @@ class Report(db.Model):
                     dat.append('')
                 if d3:
                     dat.append('')
-                stat_dat = [value['stats'].request_count, value['stats'].impression_count, value['stats'].click_count, value['stats'].conversion_count] 
+                if isinstance(value['stats'], dict):
+                    stat_dat = [value['stats']['request_count'],value['stats']['impression_count'], value['stats']['click_count'], value['stats']['conversion_count']]
+                else:
+                    stat_dat = [value['stats'].request_count, value['stats'].impression_count, value['stats'].click_count, value['stats'].conversion_count] 
                 dat += stat_dat
                 ret.append(dat)
                 #There's a smarter way to do this, but I'm in a hurry and (hopefully) this isn't needed for long
@@ -344,18 +274,24 @@ class Report(db.Model):
                         dat2 = [value['name'], value2['name']]
                         if d3:
                             dat2.append('')
-                        stat_dat2 = [value2['stats'].request_count, value2['stats'].impression_count, value2['stats'].click_count, value2['stats'].conversion_count] 
+                        if isinstance(value2['stats'], dict):
+                            stat_dat2 = [value2['stats']['request_count'],value2['stats']['impression_count'], value2['stats']['click_count'], value2['stats']['conversion_count']]
+                        else:
+                            stat_dat2 = [value2['stats'].request_count, value2['stats'].impression_count, value2['stats'].click_count, value2['stats'].conversion_count] 
                         dat2 += stat_dat2
                         ret.append(dat2)
                         #Really stupid
                         if value2.has_key('sub_stats'):
                             for key3, value3 in value2['sub_stats'].iteritems():
-                                dat3 = [value['name'], value2['name'], value3['name'], value3['stats'].request_count, value3['stats'].impression_count, value3['stats'].click_count, value3['stats'].conversion_count] 
+                                if isinstance(value3['stats'], dict):
+                                    stat_dat3 = [value3['stats']['request_count'],value3['stats']['impression_count'], value3['stats']['click_count'], value3['stats']['conversion_count']]
+                                else:
+                                    stat_dat3 = [value3['stats'].request_count, value3['stats'].impression_count, value3['stats'].click_count, value3['stats'].conversion_count] 
+                                dat3 = [value['name'], value2['name'], value3['name']] + stat_dat3
                                 ret.append(dat3)
         else:
             return None
         return ret
-
 
     
     @property
@@ -389,8 +325,285 @@ class Report(db.Model):
         elif self.d1:
             det = "%s" % self.d1
         else:
-            det = "how the fuck did you get to this state, at least one dim is required"
+            det = "at least one dim is required"
         return det.title()
 
             
+    #keys will either make sense, or be AU, CRTV
+    """This is a second reduce.  It is possible to construct a worst-case scenario 
+    (tons of creatives, very few campaigns (among others)) where this gets hella slow.
+    This is done this way so the mapreduce NEVER has to touch the datastore to resolve things,
+    all the resolution is done here.  In the future it might makes sense to take this and put it 
+    into a second mapreduce job that's run when the report finalizes.
+    """
+    def parse_report_blob(self, blobreader):
+        """ turns a reports report_blob blobstore object into a dictionary
+        
+        Args:
+            blobreader: Line reader for this reports report_blob
 
+        Returns:
+            a dictionary of values in the following format:
+
+            stats_dict = { KEY : 
+                             { 'stats' : [req, att, etc.],
+                               'name'  : <human readable name>,
+                               'sub_stats' : stats_dict (recursiionnnn)
+                              },
+                              ....
+                          }
+        """
+        final = {}
+        memo = {}
+        for line in blobreader:
+            #temp now refers to top of the dictionary
+            temp = final
+            keys, vals = line.split('\t')
+            keys = keys.split(':')
+            vals = eval(vals)
+            req, att = self.get_stats_info(keys)
+            #I'm using list comprehension for you Nafis
+            bid_infos = [self.get_bid_info(idx, key, memo) for idx, key in enumerate(keys)]
+            keys = [self.get_key_name(idx, key, memo) for idx,key in enumerate(keys)]
+
+            # Invalid key somewhere in this line, don't use it
+            if None in keys:
+                continue
+            if not req:
+                vals[0] = '---'
+            if not att:
+                vals[1] = '---'
+            for i,((key,name), (bid_strat, bid)) in enumerate(zip(keys, bid_infos)):
+                # Preprocess the values to add revenue
+                if len(vals) == 5:
+                    rev = 0
+                    req, att, imp, clk, conv = vals
+                elif len(vals) == 6:
+                    rev, req, att, imp, clk, conv = vals
+                # Need to set rev if we can
+                if bid_strat is not None:
+                    if bid_strat == 'cpm':
+                        rev = float(bid * imp)/1000
+                    elif bid_strat == 'cpc':
+                        rev = bid * clk
+                    elif bid_strat == 'cpa':
+                        rev = bid * conv
+                vals = [rev, req, att, imp, clk, conv]
+                #if this key doesn't exist, build that shit
+                if not temp.has_key(key):
+                    #this key doesn't exist, so no previous anything can exist
+                    temp[key] = dict(name = name) 
+                    if (i+1) == len(keys): #last key
+                        temp[key]['stats'] = vals
+                    else: #more keys
+                        temp[key]['sub_stats'] = {}
+                        #change our point of reference into the dict
+                        #kind of like fake recursion
+                        temp = temp[key]['sub_stats']
+                else:
+                    if temp[key]['name'] != name:
+                        logging.warning("I fail at coding")
+                    if (i+1) == len(keys):
+                        #Since we're not doing anything smart-ish with the
+                        #keys in the map/reduce phase (to speed it up by not
+                        #doing Datastore reads) there is a possibility for 
+                        #dupes.  If there are dupes, don't overwrite, sum
+                        if temp[key].has_key('stats'):
+                            temp[key]['stats'] = [cust_sum(zipt) for zipt in zip(vals,temp[key]['stats'])]
+                        else:
+                            temp[key]['stats'] = vals
+                    else:
+                        #if no sub_stats entry, make it
+                        if not temp[key].has_key('sub_stats'):
+                            temp[key]['sub_stats'] = {}
+                        temp = temp[key]['sub_stats']
+        logging.debug(final)
+        return self.rollup_revenue(statsify(final))
+
+
+    def rollup_revenue(self, stats):
+        def rollup_help(stats, depth):
+            rev = 0.0
+            for k,v in stats.iteritems():
+                if depth == 0:
+                    # Bottom level, just roll up
+                    rev += v['stats']['revenue']
+                else:
+                    # Not bottom level, roll up and set 
+                    rev += rollup_help(v['sub_stats'], depth-1)
+                    stats[k]['stats']['revenue'] = rev
+            return rev
+        if self.d1 in [CRTV, CAMP]:
+            # Top level already rolled up
+            return stats
+        elif self.d2 in [CRTV, CAMP]:
+            depth = 0
+        elif self.d3 in [CRTV,CAMP]:
+            depth = 1
+        else:
+            # No levels have rev
+            return stats
+
+        for k,v in stats.iteritems():
+            stats[k]['stats']['revenue'] = rollup_help(v['sub_stats'], depth)
+        return stats
+
+
+
+    def get_stats_info(self, keys):
+        depth = len(keys)
+        #If any of the dims are an adv, reqs is meaningless
+        req = True
+        att = False
+        #only take all the dims that there are keys for
+        if depth == 1:
+            dim_list = (self.d1,)
+        elif depth == 2:
+            dim_list = (self.d1, self.d2)
+        elif depth == 3:
+            dim_list = (self.d1, self.d2, self.d3)
+        else:
+            logging.warning('Invalid key length')
+        if set(dim_list).intersection(set(NO_REQ)):
+            req = False
+        for key, dim in zip(keys,dim_list):
+            if dim in CRTV_DIMS:
+                try:
+                    crtv = Creative.get(key)
+                #doesn't matter if we're crtv, camp, or priority, want to know the
+                #campaign type and if it's a network regardless
+                    if crtv.adgroup.campaign.campaign_type == 'network':
+                        att = True
+                except:
+                    att = False
+        return (req, att)
+
+    def get_bid_info(self, idx, key, memo): 
+        if idx == 0:
+            dim = self.d1
+        elif idx == 1:
+            dim = self.d2
+        elif idx == 2:
+            dim = self.d3
+        else:
+            dim = None
+
+        if dim in [CAMP, CRTV]:
+            try:
+                if memo.has_key(key):
+                    crtv = memo[key]
+                else:
+                    crtv = Creative.get(key)
+                    memo[key] = crtv
+                if crtv.adgroup.campaign.campaign_type == 'network':
+                    return None, None
+                if dim == CRTV:
+                    return (crtv.adgroup.bid_strategy, crtv.adgroup.bid)
+                elif dim == CAMP:
+                    camp = crtv.adgroup.campaign
+                    return (crtv.adgroup.bid_strategy, crtv.adgroup.bid)
+            except:
+                log("Exception in bid info")
+                f = open('/home/ubuntu/tb.log', 'a')
+                traceback.print_tb(sys.exc_info()[2], file=f)
+                f.close()
+                return None, None
+        return None, None
+
+
+    def get_key_name(self, idx, key, memo):
+        """ Turns arbitrary keys and things into human-readable names to 
+            be output to the report
+
+            Args:
+               idx: level of this argument (should always be 0, 1, or 2)
+               key: key string for this dim
+
+            Returns:
+                (key, name) so we can use 'key' for keying into DataTables
+                and name to display
+        """
+        if idx == 0:
+            dim = self.d1
+        elif idx == 1:
+            dim = self.d2
+        elif idx == 2:
+            dim = self.d3
+        else:
+            logging.error("Impossible dim level when rebuilding blob keys")
+            dim = None
+
+        if dim in CRTV_DIMS:
+            try:
+                if memo.has_key(key):
+                    crtv = memo[key]
+                else:
+                    crtv = Creative.get(key)
+                    memo[key] = crtv
+                if dim == CRTV:
+                    return (str(crtv.key()), crtv.name)
+                elif dim == CAMP:
+                    camp = crtv.adgroup.campaign
+                    return (str(camp.key()), camp.name)
+                elif dim == P:
+                    p = crtv.adgroup.campaign.campaign_type
+                    if 'gtee' in p:
+                        p = 'guaranteed'
+                    return (p, p.title())
+            except:
+                return None
+
+        elif dim in AU_DIMS:
+            try:
+                if memo.has_key(key):
+                    au = memo[key]
+                else:
+                    au = AdUnit.get(key)
+                    memo[key] = au
+                if dim == AU:
+                    return (str(au.key()), au.name)
+                elif dim == APP:
+                    app = au.app_key
+                    return (str(app.key()), app.name)
+            except:
+                return None
+
+        elif dim in TIME_DIMS:
+            #This is cool that this was this easy
+
+            #append dim to key because it's possible that day:hour breakdown
+            #was requested, and the keys will be the same, this way they are uniquely 
+            #ID'd
+            try:
+                if memo.has_key(key):
+                    time = memo[key]
+                else:
+                    if dim == MO:
+                        time = datetime.strptime(key,'%y%m')
+                    elif dim == WEEK:
+                        key1 = '1' + key
+                        key2 = '0' + key
+                        time = (datetime.strptime(key1,'%w%y%W'), datetime.strptime(key2,'%w%y%W'))
+                    elif dim == DAY:
+                        time = datetime.strptime(key,'%y%m%d')
+                    elif dim == HOUR:
+                        time = datetime.strptime(key,'%H')
+                    else:
+                        time = None
+                    memo[key] = time
+                return (key + dim, date_magic.date_name(time, dim))
+            except:
+                return None
+
+        elif dim in WURFL_DIMS:
+            try:
+                return (key, WurflQueryManager().get_wurfl_name(key, dim))
+            except:
+                return None
+
+        elif dim == CO:
+            #TODO This needs to be fixed eventually...
+            # Should be key, country(key) i.e. (US, United States) not (US, US)
+            return (key, key)
+        else:
+            logging.warning("Not handling KW's yet")

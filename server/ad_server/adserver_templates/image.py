@@ -1,8 +1,14 @@
 from string import Template
     
 image = Template("""<html>
+                      <meta name="viewport" content="width=device-width; initial-scale=1.0; user-scalable=no;">
                         <head>                          
                           $finishLoad
+                          <script> 
+                            if(typeof mopubFinishLoad == 'function') {
+                                window.onload = mopubFinishLoad;
+                            }
+                          </script>
                           <script>
                             function webviewDidClose(){} 
                             function webviewDidAppear(){} 

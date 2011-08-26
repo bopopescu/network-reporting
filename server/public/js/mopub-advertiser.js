@@ -19,6 +19,11 @@ var mopub = mopub || {};
   if (typeof creatives=="undefined") {
     creatives = false;
     }
+    
+  if ($('#is_admin_input').val() != 'True'){
+    $('.admin_only').hide();
+  }
+      
 
   function campaignAdgroupFormOnLoad(){
     $('#campaignAdgroupForm input[name="campaign_type"]').click(function(e) {
@@ -198,15 +203,17 @@ var mopub = mopub || {};
       $('#campaignAdgroupForm input[name="bid"]').removeClass('form-error');
       
       if ($("#adgroupForm-budget_type-select").val() == "full_campaign" && $("input[name='campaign_type']").filter(':checked').val() == "gtee") {
-        if ($('#campaignAdgroupForm input[name="start_date"]').val() == '') {
-          $('#campaignAdgroupForm input[name="start_date"]').addClass('form-error');
-          $('#fullCampaignError-date').show();
-          success = false;
-        }
-        if ($('#campaignAdgroupForm input[name="end_date"]').val() == '') {
-          $('#campaignAdgroupForm input[name="end_date"]').addClass('form-error');
-          $('#fullCampaignError-date').show();
-          success = false;
+        if ($("input[name='budget_strategy']").filter(":checked").val() == "evenly") {
+          if ($('#campaignAdgroupForm input[name="start_date"]').val() == '') {
+            $('#campaignAdgroupForm input[name="start_date"]').addClass('form-error');
+            $('#fullCampaignError-date').show();
+            success = false;
+          }
+          if ($('#campaignAdgroupForm input[name="end_date"]').val() == '') {
+            $('#campaignAdgroupForm input[name="end_date"]').addClass('form-error');
+            $('#fullCampaignError-date').show();
+            success = false;
+          }
         }
         if ($('#campaignAdgroupForm input[name="full_budget"]').val() == '') {
           $('#campaignAdgroupForm input[name="full_budget"]').addClass('form-error');
@@ -549,7 +556,10 @@ var mopub = mopub || {};
       .button({ icons : {primary : 'ui-icon-circle-plus'} });
     
     $('#advertisers-adgroups-editAdGroupButton').button({ icons: { primary: "ui-icon-wrench" } });
+                                
 
+
+    // TODO: This is not DRY
     $('#campaignForm-pause')
       .click(function(e) {
         e.preventDefault();
@@ -560,6 +570,18 @@ var mopub = mopub || {};
       .click(function(e) {
         e.preventDefault();
         $('#campaignForm').find("#action").attr("value","resume").end().submit();
+    });  
+    
+    $('#campaignForm-activate')
+      .click(function(e) {
+        e.preventDefault();
+        $('#campaignForm').find("#action").attr("value","activate").end().submit();
+    });
+      
+    $('#campaignForm-archive')
+      .click(function(e) {
+        e.preventDefault();
+        $('#campaignForm').find("#action").attr("value","archive").end().submit();
     });
 
     $('#campaignForm-delete')
@@ -623,149 +645,73 @@ var mopub = mopub || {};
     }
     
     function setSectionLoadingSpinnerHidden(campaignType, hidden) {
-        var selector = "";
-        switch (campaignType) {
-            case CampaignTypeEnum.Guaranteed: selector = "#gtee-loading-img"; break;
-            case CampaignTypeEnum.Promotional: selector = "#promo-loading-img"; break;
-            case CampaignTypeEnum.Network: selector = "#network-loading-img"; break;
-            case CampaignTypeEnum.Backfill: selector = "#bfill-loading-img"; break;
-            default: return; break;
-        }
+        var classPrefix = campaignType.split('_')[0];
+        var selector = '#' + classPrefix + '-loading-img';
         
         if (hidden) $(selector).hide();
         else $(selector).show();
     }
     
-    function calcGuaranteedRollup() {
-        $('#gtee-rollups').show();
-        var gtee_imp, gtee_clk, gtee_rev;
-        gtee_imp = gtee_clk = gtee_rev = 0;
-        $('.gtee-imp:visible').each(function() {
-                gtee_imp += parseIntFromStatText($(this).text());
-                });
-        $('.gtee-clk:visible').each(function() {
-                gtee_clk += parseIntFromStatText($(this).text());
-                });
-        $('tr.gtee_row:visible td.gtee-rev').each(function() {
-                gtee_rev += parseIntFromStatText($(this).text());
-                });
-
-        $('#gtee-total-imp').text(mopub.Utils.formatNumberWithCommas(gtee_imp));
-        $('#gtee-total-clk').text(mopub.Utils.formatNumberWithCommas(gtee_clk));
-        $('#gtee-total-rev').text('$'+mopub.Utils.formatNumberWithCommas(Math.round(gtee_rev*100)/100));
-        var gtee_ctr;
-        if (gtee_clk === 0) {
-            gtee_ctr = mopub.Utils.formatNumberAsPercentage(0);
-        }
-        else {
-            gtee_ctr = mopub.Utils.formatNumberAsPercentage(gtee_clk/gtee_imp, 2);
-        }
-        $('#gtee-total-ctr').text(gtee_ctr);
-
-        setSectionLoadingSpinnerHidden(CampaignTypeEnum.Guaranteed, true);
-    }
-    
-    function calcPromotionalRollup() {
-        $('#promo-rollups').show();
-        var promo_imp, promo_clk, promo_conv;
-        promo_imp = promo_clk = promo_conv = 0;
-        $('.promo-imp:visible').each(function() {
-                promo_imp += parseIntFromStatText($(this).text());
-                });
-        $('.promo-clk:visible').each(function() {
-                promo_clk += parseIntFromStatText($(this).text());
-                });
-        $('.promo-conv:visible').each(function() {
-                promo_conv += parseIntFromStatText($(this).text());
-                });
-
-        $("#promo-total-imp").text(mopub.Utils.formatNumberWithCommas(promo_imp));
-        $("#promo-total-clk").text(mopub.Utils.formatNumberWithCommas(promo_clk));
-        $("#promo-total-conv").text(mopub.Utils.formatNumberWithCommas(promo_conv));
-        var promo_ctr;
-        if (promo_clk === 0) {
-            promo_ctr = mopub.Utils.formatNumberAsPercentage(0);
-        }
-        else {
-            promo_ctr = mopub.Utils.formatNumberAsPercentage(promo_clk/promo_imp);
-        }
-        $("#promo-total-ctr").text(promo_ctr);
-        
-        setSectionLoadingSpinnerHidden(CampaignTypeEnum.Promotional, true);
-    }
-    
-    function calcNetworkRollup() {
-        $('#network-rollups').show();
-        var net_imp, net_clk, net_req;
-        net_imp = net_clk = net_req = 0;
-        $('.network-imp').each(function() {
-                net_imp += parseIntFromStatText($(this).text());
-                });
-        $('.network-clk').each(function() {
-                net_clk += parseIntFromStatText($(this).text());
-                });
-        $('.network-req').each(function() {
-                net_req += parseIntFromStatText($(this).text());
-                });
-        $("#network-total-imp").text(mopub.Utils.formatNumberWithCommas(net_imp));
-        $("#network-total-clk").text(mopub.Utils.formatNumberWithCommas(net_clk));
-        var net_ctr;
-        if (net_clk === 0) {
-            net_ctr = mopub.Utils.formatNumberAsPercentage(0);
-        }
-        else {
-            net_ctr = mopub.Utils.formatNumberAsPercentage(net_clk/net_imp);
-        }
-        $("#network-total-ctr").text(net_ctr);
-        var net_fill;
-        if (net_imp === 0) {
-            net_fill = mopub.Utils.formatNumberAsPercentage(0);
-        }
-        else {
-            net_fill = mopub.Utils.formatNumberAsPercentage(net_imp/net_req);
-        }
-        $('#network-total-fill').text(net_fill + ' (' + mopub.Utils.formatNumberWithCommas(net_req) + ')');
-        
-        setSectionLoadingSpinnerHidden(CampaignTypeEnum.Network, true);
-    }
-    
-    function calcBackfillRollup() {
-        $('#bfill-rollups').show();
-        var bfill_imp, bfill_clk, bfill_conv;
-        bfill_imp = bfill_clk = bfill_conv = 0;
-        $('.bfill-imp:visible').each(function() {
-                bfill_imp += parseIntFromStatText($(this).text());
-                });
-        $('.bfill-clk:visible').each(function() {
-                bfill_clk += parseIntFromStatText($(this).text());
-                });
-        $('.bfill-conv:visible').each(function() {
-                bfill_conv += parseIntFromStatText($(this).text());
-                });
-
-        $("#bfill-total-imp").text(mopub.Utils.formatNumberWithCommas(bfill_imp));
-        $("#bfill-total-clk").text(mopub.Utils.formatNumberWithCommas(bfill_clk));
-        $("#bfill-total-conv").text(mopub.Utils.formatNumberWithCommas(bfill_conv));
-        var bfill_ctr;
-        if (bfill_clk === 0) {
-            bfill_ctr = mopub.Utils.formatNumberAsPercentage(0);
-        }
-        else {
-            bfill_ctr = mopub.Utils.formatNumberAsPercentage(bfill_clk/bfill_imp);
-        }
-        $("#bfill-total-ctr").text(bfill_ctr);
-        
-        setSectionLoadingSpinnerHidden(CampaignTypeEnum.Backfill, true);
+    function calcAndShowRollupForCampaignType(campaignType) {
+      var req, imp, clk, rev, conv, ctr, fill;
+      req = imp = clk = rev = conv = ctr = fill = 0;
+      
+      var classPrefix = campaignType.split('_')[0];
+      
+      $(classPrefix + '-req:visible').each(function() {
+        req += parseIntFromStatText($(this).text());
+      });
+      
+      $(classPrefix + '-imp:visible').each(function() {
+        imp += parseIntFromStatText($(this).text());
+      });
+      
+      $(classPrefix + '-clk:visible').each(function() {
+        clk += parseIntFromStatText($(this).text());
+      });
+      
+      $(classPrefix + '-rev:visible').each(function() {
+        rev += parseIntFromStatText($(this).text());
+      });
+      
+      $(classPrefix + '-conv:visible').each(function() {
+        conv += parseIntFromStatText($(this).text());
+      });
+      
+      ctr = (clk === 0 || imp === 0) ? 0 : clk / imp;
+      
+      fill = (imp === 0 || req === 0) ? 0 : imp / req;
+      
+      $("#" + classPrefix + '-total-req').text(mopub.Utils.formatNumberWithCommas(req));
+      $("#" + classPrefix + '-total-imp').text(mopub.Utils.formatNumberWithCommas(imp));
+      $("#" + classPrefix + '-total-clk').text(mopub.Utils.formatNumberWithCommas(clk));
+      $("#" + classPrefix + '-total-rev').text('$' + mopub.Utils.formatNumberWithCommas(rev.toFixed(2)));
+      $("#" + classPrefix + '-total-conv').text(mopub.Utils.formatNumberWithCommas(conv));
+      $("#" + classPrefix + '-total-ctr').text(mopub.Utils.formatNumberAsPercentage(ctr))
+      $("#" + classPrefix + '-total-fill').text(
+        mopub.Utils.formatNumberAsPercentage(fill) + '(' + 
+        mopub.Utils.formatNumberWithCommas(req) + ')'
+      );
+      
+      $(classPrefix + '-rollups').show();
+      
+      setSectionLoadingSpinnerHidden(campaignType, true);
     }
     
     function calcRollups() {
         // Don't compute rollups until we've gotten all the information.
         if (!allFetchesCompleted()) return;
         
-        calcGuaranteedRollup();
-        calcPromotionalRollup();
-        calcNetworkRollup();
-        calcBackfillRollup();
+        var campaignTypes = [
+          CampaignTypeEnum.Guaranteed,
+          CampaignTypeEnum.Promotional,
+          CampaignTypeEnum.Network,
+          CampaignTypeEnum.Backfill
+        ];
+        
+        $.each(campaignTypes, function(index, type) {
+          calcAndShowRollupForCampaignType(type);
+        });
     }
 
     // *********************************************************************
@@ -777,6 +723,8 @@ var mopub = mopub || {};
         Promotional: "promo_row",
         Network: "network_row",
         Backfill: "bfill_row",
+        Marketplace: "marketplace_row",
+        BackfillMarketplace: "backfill_marketplace_row",
         All: "campaignData"
     };
     
@@ -797,7 +745,7 @@ var mopub = mopub || {};
     };
     
     var campaignsData = {};
-    var gteeFetch, promoFetch, networkFetch, bfillFetch;
+    var gteeFetch, promoFetch, networkFetch, bfillFetch, marketplaceFetch, bfMarketplaceFetch;
     
     // Entry point.
     // =====================================================================
@@ -844,7 +792,8 @@ var mopub = mopub || {};
     }
     
     function retryFailedFetches() {
-      var fetches = [gteeFetch, promoFetch, networkFetch, bfillFetch];
+      var fetches = [gteeFetch, promoFetch, networkFetch, bfillFetch, marketplaceFetch, 
+        bfMarketplaceFetch];
       
       $.each(fetches, function(index, fetch) {
         if (fetch.hasFailed) {
@@ -867,17 +816,17 @@ var mopub = mopub || {};
       var all = formatStatsForDisplay(allStats.sum);
 
       $("#stats-breakdown-impressions .today .inner").html(today.impression_count);
-      $("#stats-breakdown-revenue .today .inner").html("$" + today.revenue.toFixed(2));
+      $("#stats-breakdown-revenue .today .inner").html(today.revenue);//"$" + today.revenue.toFixed(2));
       $("#stats-breakdown-clicks .today .inner").html(today.click_count);
       $("#stats-breakdown-ctr .today .inner").html(today.ctr);
 
       $("#stats-breakdown-impressions .yesterday .inner").html(yesterday.impression_count);
-      $("#stats-breakdown-revenue .yesterday .inner").html("$" + yesterday.revenue.toFixed(2));
+      $("#stats-breakdown-revenue .yesterday .inner").html(yesterday.revenue);//"$" + yesterday.revenue.toFixed(2));
       $("#stats-breakdown-clicks .yesterday .inner").html(yesterday.click_count);
       $("#stats-breakdown-ctr .yesterday .inner").html(yesterday.ctr);
 
       $("#stats-breakdown-impressions .all .inner").html(all.impression_count);
-      $("#stats-breakdown-revenue .all .inner").html("$" + all.revenue.toFixed(2));
+      $("#stats-breakdown-revenue .all .inner").html(all.revenue);//"$" + all.revenue.toFixed(2));
       $("#stats-breakdown-clicks .all .inner").html(all.click_count);
       $("#stats-breakdown-ctr .all .inner").html(all.ctr);
     }
@@ -892,6 +841,7 @@ var mopub = mopub || {};
       results.cpa = "$" + results.cpa.toFixed(2);
       results.cpc = "$" + results.cpc.toFixed(2);
       results.cpm = "$" + results.cpm.toFixed(2);
+      results.revenue = "$" + results.revenue.toFixed(2);
       results.ctr = mopub.Utils.formatNumberAsPercentage(results.ctr);
       results.fill_rate = mopub.Utils.formatNumberAsPercentage(results.fill_rate);
     
@@ -942,6 +892,8 @@ var mopub = mopub || {};
       var promotionalIds = getCampaignIdsWithType(CampaignTypeEnum.Promotional);
       var networkIds = getCampaignIdsWithType(CampaignTypeEnum.Network);
       var backfillIds = getCampaignIdsWithType(CampaignTypeEnum.Backfill);
+      var marketplaceIds = getCampaignIdsWithType(CampaignTypeEnum.Marketplace);
+      var bfMarketplaceIds = getCampaignIdsWithType(CampaignTypeEnum.BackfillMarketplace);
       
       gteeFetch = createCampaignStatsFetchObject(guaranteedIds, argsDict);
       gteeFetch.campaignType = CampaignTypeEnum.Guaranteed;
@@ -955,7 +907,14 @@ var mopub = mopub || {};
       bfillFetch = createCampaignStatsFetchObject(backfillIds, argsDict);
       bfillFetch.campaignType = CampaignTypeEnum.Backfill;
       
-      var fetches = [gteeFetch, promoFetch, networkFetch, bfillFetch];
+      marketplaceFetch = createCampaignStatsFetchObject(marketplaceIds, argsDict);
+      marketplaceFetch.campaignType = CampaignTypeEnum.Marketplace;
+      
+      bfMarketplaceFetch = createCampaignStatsFetchObject(bfMarketplaceIds, argsDict);
+      bfMarketplaceFetch.campaignType = CampaignTypeEnum.BackfillMarketplace;
+      
+      var fetches = [gteeFetch, promoFetch, networkFetch, bfillFetch, marketplaceFetch, 
+        bfMarketplaceFetch];
       $.each(fetches, function(index, fetch) {
         setSectionLoadingSpinnerHidden(fetch.campaignType, false);
         fetch.start();
@@ -1062,20 +1021,15 @@ var mopub = mopub || {};
     }
 
     function campaignStatsFetchComplete(fetchObj) {
-      switch (fetchObj.campaignType) {
-        case CampaignTypeEnum.Guaranteed: calcGuaranteedRollup(); break;
-        case CampaignTypeEnum.Promotional: calcPromotionalRollup(); break;
-        case CampaignTypeEnum.Network: calcNetworkRollup(); break;
-        case CampaignTypeEnum.Backfill: calcBackfillRollup(); break;
-        default: break;
-      }
-      
+      calcAndShowRollupForCampaignType(fetchObj.campaignType);
       if (allFetchesCompleted()) onCampaignsFullyUpdated();
     }
     
     function allFetchesCompleted() {
       return (gteeFetch && gteeFetch.isComplete && promoFetch && promoFetch.isComplete && 
-        networkFetch && networkFetch.isComplete && bfillFetch && bfillFetch.isComplete);
+        networkFetch && networkFetch.isComplete && bfillFetch && bfillFetch.isComplete &&
+        marketplaceFetch && marketplaceFetch.isComplete && 
+        bfMarketplaceFetch && bfMarketplaceFetch.isComplete);
     }
 
     function onCampaignsFullyUpdated() {
@@ -1492,6 +1446,14 @@ var mopub = mopub || {};
 
     // Hide unneeded li entry
     $('#advertiser-adgroups-exportSelect-menu').find('li').first().hide();
-  }); 
+  
+    // For campaigns/create //
 
+    if ($("#campaignForm-details") != []){       
+        // Only execute this if we are on the new campaigns form     
+        var preselected_tag = window.location.hash.substr(1); 
+        $("#advertiser-CampaignType-"+preselected_tag).click();          
+    }
+  
+  }); // End document onready                                                                         
  })(this.jQuery);

@@ -1,3 +1,4 @@
+from __future__ import with_statement
 import os
 import sys
 import time
@@ -9,6 +10,7 @@ from datetime import datetime
 from multiprocessing import Pool
 from multiprocessing.pool import ThreadPool
 from optparse import OptionParser
+
 
 
 # add mopub root to path, for run_jobflow.sh
@@ -205,7 +207,6 @@ def process_input_file(input_file, num_workers):
                     traceback.print_exc()
                                                                                     
                                 
-                    
 def main():
     start = time.time()
     

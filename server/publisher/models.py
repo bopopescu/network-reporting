@@ -35,13 +35,18 @@ class App(db.Model):
     account = db.ReferenceProperty(Account)
   
     name = db.StringProperty(required=True)
+    global_id = db.StringProperty() # used to store appstore or marketplace id
     adsense_app_name = db.StringProperty()
     adsense_app_id = db.StringProperty()
+    admob_bgcolor = db.StringProperty()
+    admob_textcolor = db.StringProperty()
     
     app_type = db.StringProperty(required=True, default='iphone', choices=['iphone', 'android', 'ipad', 'mweb'])
     description = db.TextProperty()
     url = db.StringProperty()
     package = db.StringProperty()
+    # For MPX
+    categories = db.StringListProperty()
     
     icon = db.BlobProperty()
     

@@ -13,6 +13,17 @@ mopub.Utils = mopub.Utils || {};
 	// dom ready
 	$(document).ready(function() {
 		/*---------------------------------------/
+		/ Marketplace Hiding
+		/---------------------------------------*/
+
+        if ($('#is_admin_input').val()=='False') {
+            $('.marketplace').hide();
+        }
+
+
+
+
+		/*---------------------------------------/
 		/ UI Stuff
 		/---------------------------------------*/
 		

@@ -599,7 +599,7 @@ def adunit_show(request,*args,**kwargs):
 class AppUpdateAJAXHandler(RequestHandler):
   TEMPLATE  = 'publisher/forms/app_form.html'
   def get(self,app_form=None,app=None):
-    app_form = app_form or AppForm(instance=app)
+    app_form = app_form or AppForm(instance=app, is_edit_form=True)
 
     return self.render(form=app_form)
 
@@ -617,7 +617,7 @@ class AppUpdateAJAXHandler(RequestHandler):
     else:
       app = None
 
-    app_form = AppForm(data=self.request.POST, files = self.request.FILES, instance=app)
+    app_form = AppForm(data=self.request.POST, files = self.request.FILES, instance=app, is_edit_form=True)
 
     json_dict = {'success':False,'html':None}
 

@@ -64,7 +64,7 @@
                 ip = locale_ip[1]; 
                 udid = user_to_udid[user]; 
                 user_agent = device_to_user_agent[device].replace('%s',locale);
-                var url = base_url + '&id=' + adunit +'&ua=' + escape(user_agent) + '&ip=' + ip + '&q=' + escape(keywords) + '&udid=' + udid + '&exclude=' + exclude;
+                var url = base_url + '&id=' + adunit +'&ua=' + escape(user_agent) + '&ip=' + ip + '&q=' + escape(keywords) + '&udid=' + udid + '&exclude=' + exclude + '&country=' + country;
                 if (admin){
                     url += '&admin_debug_mode=1';
                 }

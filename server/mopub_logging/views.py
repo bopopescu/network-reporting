@@ -249,7 +249,7 @@ class LogTaskHandler(webapp.RequestHandler):
       # except db.BadRequestError:
       #     async_put_models(account_name,stats_dict.values(),MAX_PUT_SIZE)
       except:
-          if retry_count > 0:
+          if retry_count > 5:
               exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
               base_number_of_stats = len(stats_dict.values())
               total_stats = query_manager.all_stats_deltas
@@ -262,24 +262,25 @@ class LogTaskHandler(webapp.RequestHandler):
                   user_email = None 
               
               try:      
-                  mail.send_mail_to_admins(sender="olp@mopub.com",
-                                            subject="Logging error",
-                                            body="account: %s email: %s retries: %s task name: %s queue name: %s base stats: %s total number of stats: %s max countries: %s \n\n%s"%(account_name,
-                                                                                                 user_email,
-                                                                                                 retry_count,
-                                                                                                 task_name,
-                                                                                                 queue_name,
-                                                                                                 base_number_of_stats,
-                                                                                                 number_of_stats,
-                                                                                                 max_countries,
-                                                                                                 exception_traceback))
+                  pass
+                  # mail.send_mail_to_admins(sender="olp@mopub.com",
+                  #                           subject="Logging error",
+                  #                           body="account: %s email: %s retries: %s task name: %s queue name: %s base stats: %s total number of stats: %s max countries: %s \n\n%s"%(account_name,
+                  #                                                                                user_email,
+                  #                                                                                retry_count,
+                  #                                                                                task_name,
+                  #                                                                                queue_name,
+                  #                                                                                base_number_of_stats,
+                  #                                                                                number_of_stats,
+                  #                                                                                max_countries,
+                  #                                                                                exception_traceback))
               except:
                   pass                                                                                     
               logging.error(exception_traceback)
           raise Exception("need to try transaction again")
       
       # only email if we miss alot (more than .1% or more than 1)      
-      if not tail_index_str or (memcache_misses > 1 and float(memcache_misses)/float(tail_index) > 0.001):
+      if not tail_index_str or (memcache_misses > 1 and float(memcache_misses)/float(tail_index) > 0.01):
           account = Account.get(account_name)
           if account:
               user_email = account.mpuser.email
@@ -293,9 +294,10 @@ class LogTaskHandler(webapp.RequestHandler):
                                                                                   memcache_stats_start,memcache_stats)
           
           try:
-              mail.send_mail_to_admins(sender="olp@mopub.com",
-                                        subject="Logging error (cache miss)",
-                                        body=message)
+              pass
+              # mail.send_mail_to_admins(sender="olp@mopub.com",
+              #                           subject="Logging error (cache miss)",
+              #                           body=message)
           except:
               pass                                
           logging.error(message)

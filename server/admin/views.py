@@ -3,6 +3,7 @@ from __future__ import with_statement
 import logging, os, re, datetime, hashlib
 
 from urllib import urlencode
+from urllib2 import urlopen
 import time
 
 from google.appengine.api import users, images
@@ -33,9 +34,13 @@ from google.appengine.api import taskqueue
 
 from admin import beatbox
 from common.utils.decorators import cache_page_until_post
+from common.utils import simplejson
 
 MEMCACHE_KEY = "jpayne:admin/d:render_p"
 NUM_DAYS = 14
+
+BIDDER_SPENT_URL = "http://mpx.mopub.com/spent"
+BIDDER_SPENT_MAX = 2000
 
 @login_required
 @cache_page_until_post()
@@ -231,36 +236,65 @@ def update_sfdc_leads(request, *args, **kwargs):
 
     # Cool
     return HttpResponse(results)
+
+def migrate_many_images(request, *args, **kwargs):
+    pass 
     
     
-def migrate_image(request, *args, **kwargs):
+def migrate_image(request, *args, **kwargs):  
+    """ Migrates a text and tile image. """
     from google.appengine.api import files
     
     params = request.POST or request.GET
+     
+    try:
+        creative_key = params.get('creative_key')
+        creative = Creative.get(creative_key)
     
-    creative_key = params.get('creative_key')
-    creative = Creative.get(creative_key)
+        img = images.Image(creative.image)
     
-    img = images.Image(creative.image)
-    
-    # Create the file
-    file_name = files.blobstore.create(mime_type='image/png')
+        # Create the file
+        file_name = files.blobstore.create(mime_type='image/png')
 
-    # Open the file and write to it
-    with files.open(file_name, 'a') as f:
-      f.write(creative.image)
+        # Open the file and write to it
+        with files.open(file_name, 'a') as f:
+          f.write(creative.image)
 
-    # Finalize the file. Do this before attempting to read it.
-    files.finalize(file_name)
+        # Finalize the file. Do this before attempting to read it.
+        files.finalize(file_name)
 
-    # Get the file's blob key
-    blob_key = files.blobstore.get_blob_key(file_name)
+        # Get the file's blob key
+        blob_key = files.blobstore.get_blob_key(file_name)
+                            
+        # Do not delete image yet
+        # creative.image = None 
+        creative.image_blob = blob_key      
     
-    creative.image = None
-    creative.image_blob = blob_key
-    creative.image_height = img.height
-    creative.image_width = img.width
+        url = images.get_serving_url(blob_key)    
+          
+        creative.put()  
+        
+        return HttpResponse(url)                
+        
+    except Exception, e:
+        return HttpResponse(str(e))         
+
+def bidder_spent(request, *args, **kwargs):
+    num_sent = 0
+    try:
+        f = urlopen(BIDDER_SPENT_URL)
+        spent_dict = simplejson.loads(f.read())
+        for id, spent_vals in spent_dict.iteritems():
+            #send email if bidder is over quota
+            if float(spent_vals['spent']) > BIDDER_SPENT_MAX:
+                body = "Bidder (%s) is over budget. Has spent $%s today<br />"%(spent_vals['bidder_name'],spent_vals['spent'])
+                mail.send_mail_to_admins(sender="olp@mopub.com",
+                                         subject="Bidder Over Quota",
+                                         body="%s"%body)
+                num_sent += 1
+    except:
+        pass
+    return HttpResponse(str(num_sent))
+
+
     
-    creative.put()
-    
-    return HttpResponse(blob_key)    

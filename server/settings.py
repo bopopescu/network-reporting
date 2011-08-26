@@ -77,7 +77,7 @@ EMAIL_HOST = ''
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.load_template_source',
     'common.ragendja.template.app_prefixed_loader',
-    'django.template.loaders.app_directories.load_template_source',
+    'django.template.loaders.app_directories.load_template_source',   
 )
 
 MIDDLEWARE_CLASSES = (
@@ -92,20 +92,21 @@ MIDDLEWARE_CLASSES = (
 'common.ragendja.auth.middleware.HybridAuthenticationMiddleware',
 'django.middleware.common.CommonMiddleware',
 'django.middleware.locale.LocaleMiddleware',
-'common.ragendja.middleware.LoginRequiredMiddleware',
+# 'common.ragendja.middleware.LoginRequiredMiddleware', 
 # 'ragendja.sites.dynamicsite.DynamicSiteIDMiddleware',
 # 'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
 # 'django.contrib.redirects.middleware.RedirectFallbackMiddleware',
-
+'djangoflash.middleware.FlashMiddleware',    
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.auth',
     'django.core.context_processors.debug',
     # 'django.core.context_processors.i18n',
-    'common.ragendja.auth.context_processors.google_user'
+    'common.ragendja.auth.context_processors.google_user',
 #    'django.core.context_processors.media',  # 0.97 only.
-   # 'django.core.context_processors.request',
+   # 'django.core.context_processors.request',       
+    'djangoflash.context_processors.flash',
 )
 
 ROOT_URLCONF = 'urls'

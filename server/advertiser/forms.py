@@ -32,7 +32,8 @@ class CampaignForm(mpforms.MPModelForm):
     TEMPLATE = 'advertiser/forms/campaign_form.html'
     gtee_level = forms.Field(widget = forms.Select)
     promo_level = mpfields.MPChoiceField(choices=[('normal','Normal'),('backfill','Backfill')],widget=mpwidgets.MPSelectWidget)
-    budget_strategy = mpfields.MPChoiceField(choices=[('evenly','Spread Evenly'),('allatonce','All at once')],widget=mpwidgets.MPRadioWidget)
+    mpx_level = mpfields.MPChoiceField(choices=[('normal','Normal'),('backfill','Backfill')],widget=mpwidgets.MPSelectWidget)
+    budget_strategy = mpfields.MPChoiceField(choices=[('evenly','Spread evenly'),('allatonce','All at once')],widget=mpwidgets.MPRadioWidget)
     budget_type = mpfields.MPChoiceField(choices=[('daily','Daily'),('full_campaign','Full Campaign')],widget=mpwidgets.MPSelectWidget)
    
     #priority is now based off of campaign_type, not actually priority
@@ -65,6 +66,14 @@ class CampaignForm(mpforms.MPModelForm):
                 initial.update(campaign_type=type_)
                 initial.update(promo_level=level)
                 kwargs.update(initial=initial)
+            if 'marketplace' in vals:
+                type_ = 'marketplace'
+                if 'backfill' in vals:
+                    level = 'backfill'
+                else:
+                    level = 'normal'
+                initial.update(campaign_type=type_)
+                initial.update(mpx_level=level)
         
         super(CampaignForm, self).__init__(*args, **kwargs)
         
@@ -94,7 +103,15 @@ class CampaignForm(mpforms.MPModelForm):
                 else:
                     logging.warning("Invalid promo level")
                 obj.campaign_type = type_
-            
+            elif type_ == 'marketplace':
+                lev = self.cleaned_data['mpx_level']
+                if lev == 'normal':
+                    type_ = 'marketplace'
+                elif lev == 'backfill':
+                    type_ = 'backfill_marketplace'
+                else:
+                    logging.warning("Invalid MPX level")
+                obj.campaign_type = type_
             if obj.budget_type == "full_campaign":
                 obj.budget = None
             else:
@@ -239,7 +256,7 @@ class BaseCreativeForm(AbstractCreativeForm):
 
     class Meta:
         model = Creative
-        fields = ('ad_type','name','tracking_url','url','display_url','format','custom_height','custom_width','landscape', 'conv_appid')
+        fields = ('ad_type','name','tracking_url','url','display_url','format','custom_height','custom_width','landscape', 'conv_appid', 'launchpage')
                     
 class TextCreativeForm(AbstractCreativeForm):
     TEMPLATE = 'advertiser/forms/text_creative_form.html'
@@ -247,7 +264,7 @@ class TextCreativeForm(AbstractCreativeForm):
     class Meta:
         model = TextCreative
         fields = ('headline','line1','line2') + \
-                 ('ad_type','name','tracking_url','url','display_url','format','custom_height','custom_width','landscape', 'conv_appid')
+                 ('ad_type','name','tracking_url','url','display_url','format','custom_height','custom_width','landscape', 'conv_appid', 'launchpage')
         
 class TextAndTileCreativeForm(AbstractCreativeForm):
     TEMPLATE = 'advertiser/forms/text_tile_creative_form.html'
@@ -257,7 +274,7 @@ class TextAndTileCreativeForm(AbstractCreativeForm):
     
     class Meta:
         model = TextAndTileCreative
-        fields = ('line1','line2', 'ad_type','name','tracking_url','url','format','custom_height','custom_width','landscape', 'conv_appid')
+        fields = ('line1','line2', 'ad_type','name','tracking_url','url','format','custom_height','custom_width','landscape', 'conv_appid', 'launchpage')
       
     def __init__(self, *args,**kwargs):
         instance = kwargs.get('instance',None)
@@ -276,12 +293,17 @@ class TextAndTileCreativeForm(AbstractCreativeForm):
         if self.files.get('image_file',None):
             image_data = self.files.get('image_file').read()
             img = images.Image(image_data)
-            obj.image = db.Blob(image_data)            
-            obj.image_width = img.width
-            obj.image_height = img.height
+            fname = files.blobstore.create(mime_type='image/png')
+            with files.open(fname, 'a') as f:
+                f.write(image_data)
+            files.finalize(fname)
+            blob_key = files.blobstore.get_blob_key(fname)
+            obj.image_blob = blob_key     
+
         if commit:
             obj.put()
-        return obj  
+        return obj
+                          
       
 class HtmlCreativeForm(AbstractCreativeForm):
     TEMPLATE = 'advertiser/forms/html_creative_form.html'
@@ -289,7 +311,7 @@ class HtmlCreativeForm(AbstractCreativeForm):
     class Meta:
         model = HtmlCreative
         fields = ('html_data',) + \
-                 ('ad_type','name','tracking_url','url','display_url','format','custom_height','custom_width','landscape', 'conv_appid')
+                 ('ad_type','name','tracking_url','url','display_url','format','custom_height','custom_width','landscape', 'conv_appid', 'launchpage')
                
 class ImageCreativeForm(AbstractCreativeForm):
     TEMPLATE = 'advertiser/forms/image_creative_form.html'
@@ -299,7 +321,7 @@ class ImageCreativeForm(AbstractCreativeForm):
     
     class Meta:
         model = ImageCreative
-        fields = ('ad_type','name','tracking_url','url','display_url','format','custom_height','custom_width','landscape', 'conv_appid') 
+        fields = ('ad_type','name','tracking_url','url','display_url','format','custom_height','custom_width','landscape', 'conv_appid', 'launchpage')
         
     def __init__(self, *args,**kwargs):
         instance = kwargs.get('instance',None)
@@ -320,15 +342,14 @@ class ImageCreativeForm(AbstractCreativeForm):
             img = images.Image(image_data)
             obj.image_width = img.width
             obj.image_height = img.height
-            try:
-                fname = files.blobstore.create(mime_type='image/png')
-                with files.open(fname, 'a') as f:
-                    f.write(image_data)
-                files.finalize(fname)
-                blob_key = files.blobstore.get_blob_key(fname)
-                obj.image_blob = blob_key
-            except:
-                obj.image = db.Blob(image_data)
+
+            fname = files.blobstore.create(mime_type='image/png')
+            with files.open(fname, 'a') as f:
+                f.write(image_data)
+            files.finalize(fname)
+            blob_key = files.blobstore.get_blob_key(fname)
+            obj.image_blob = blob_key        
+
         if commit:
             obj.put()
         return obj

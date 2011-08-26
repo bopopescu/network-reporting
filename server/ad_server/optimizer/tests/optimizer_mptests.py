@@ -27,7 +27,7 @@ import logging
 
 from publisher.query_managers import AdUnitContextQueryManager
   
-from ad_server.optimizer.adunit_context import AdUnitContext, CreativeCTR
+from ad_server.adunit_context.adunit_context import AdUnitContext, CreativeCTR
   
 class TestOptimizer(unittest.TestCase):
 

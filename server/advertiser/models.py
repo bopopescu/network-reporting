@@ -16,7 +16,7 @@ from budget.tzinfo import Pacific
 class Campaign(db.Model):
     name = db.StringProperty(required=True)
     description = db.TextProperty()
-    campaign_type = db.StringProperty(choices=['gtee', 'gtee_high', 'gtee_low', 'promo', 'network','backfill_promo'], default="network")
+    campaign_type = db.StringProperty(choices=['gtee', 'gtee_high', 'gtee_low', 'promo', 'network','backfill_promo', 'marketplace', 'backfill_marketplace'], default="network")
 
     # budget per day
     budget = db.FloatProperty() 
@@ -78,11 +78,7 @@ class Campaign(db.Model):
         
     def is_active_for_date(self, date):
         """ Start and end dates are inclusive """
-        if (self.budget_type == "full_campaign" and date >= self.start_date and date <= self.end_date)\
-        or ((self.budget_type == "daily") and ((not self.end_date and self.start_date and self.start_date <= date) \
-        or (not self.end_date and not self.start_date) \
-        or (not self.start_date and self.end_date and self.end_date >= date) \
-        or (self.start_date and self.end_date and self.start_date <= date and self.end_date >= date))):
+        if (self.start_date  <= date if self.start_date else True) and (date <= self.end_date if self.end_date else True):
             return True
         else:
             return False
@@ -113,6 +109,7 @@ class AdGroup(db.Model):
     active = db.BooleanProperty(default=True)
     deleted = db.BooleanProperty(default=False)
     archived = db.BooleanProperty(default=False)   
+
     
     # percent of users to be targetted
     percent_users = db.FloatProperty(default=100.0)
@@ -238,6 +235,7 @@ class AdGroup(db.Model):
         elif self.network_type == 'custom_native': c = CustomNativeCreative(name='custom native dummy', ad_type='custom_native', format='320x50', format_predicates=['format=*'], html_data=custom_html)
         elif self.network_type == 'admob_native': c = AdMobNativeCreative(name="admob native dummy",ad_type="admob_native",format="320x50",format_predicates=["format=320x50"])
         elif self.network_type == 'millennial_native': c = MillennialNativeCreative(name="millennial native dummy",ad_type="millennial_native",format="320x50",format_predicates=["format=320x50"])
+        elif self.campaign.campaign_type in ['marketplace', 'backfill_marketplace']: c = MarketplaceCreative(name='marketplace dummy', ad_type='html')
         if c: c.ad_group = self
         return c
     
@@ -311,10 +309,13 @@ class AdGroup(db.Model):
             if self.active and campaign.active:
                 return True
 
-        return False
- 
+        return False    
+        
+    @property
+    def created_date(self):
+        return self.created.date()
 class Creative(polymodel.PolyModel):
-    name = db.StringProperty()
+    name = db.StringProperty(default='Creative')
     custom_width = db.IntegerProperty()
     custom_height = db.IntegerProperty()
     landscape = db.BooleanProperty(default=False) # TODO: make this more flexible later
@@ -342,6 +343,8 @@ class Creative(polymodel.PolyModel):
     # e.g. format=*
     format_predicates = db.StringListProperty(default=["format=*"]) 
     format = db.StringProperty(default="320x50") # We should switch to using this field instead of format_predicates: one creative per size
+    
+    launchpage = db.StringProperty()
 
     # time of creation
     account = db.ReferenceProperty(Account)
@@ -366,6 +369,7 @@ class Creative(polymodel.PolyModel):
     def _set_adgroup(self,value):
             self.ad_group = value
             
+    #whoever did this you rule
     adgroup = property(_get_adgroup,_set_adgroup)
         
     def get_owner(self):
@@ -435,7 +439,8 @@ class TextCreative(Creative):
 class TextAndTileCreative(Creative):
     line1 = db.StringProperty()
     line2 = db.StringProperty()
-    image = db.BlobProperty()
+    # image = db.BlobProperty()          
+    image_blob = blobstore.BlobReferenceProperty() 
     action_icon = db.StringProperty(choices=["download_arrow4", "access_arrow", "none"], default="download_arrow4")
     color = db.StringProperty(default="000000")
     font_color = db.StringProperty(default="FFFFFF")
@@ -448,7 +453,7 @@ class HtmlCreative(Creative):
 
 class ImageCreative(Creative):
     # image properties
-    image = db.BlobProperty()
+    # image = db.BlobProperty()
     image_blob = blobstore.BlobReferenceProperty()
     image_width = db.IntegerProperty(default=320)
     image_height = db.IntegerProperty(default=480)
@@ -462,6 +467,9 @@ class ImageCreative(Creative):
             "468x60": "format=468x60"}
         fp = IMAGE_PREDICATES.get("%dx%d" % (img.width, img.height))
         return [fp] if fp else None
+
+class MarketplaceCreative(HtmlCreative):
+    pass
 
 class CustomCreative(HtmlCreative):
     pass

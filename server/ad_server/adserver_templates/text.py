@@ -5,6 +5,11 @@ text = Template("""<html>
                           <style type="text/css">.creative {font-size: 12px;font-family: Arial, sans-serif;width: ${w}px;height: ${h}px;}.creative_headline {font-size: 14px;}.creative .creative_url a {color: green;text-decoration: none;}
                           </style>
                           $finishLoad
+                          <script> 
+                            if(typeof mopubFinishLoad == 'function') {
+                                window.onload = mopubFinishLoad;
+                            }
+                          </script>
                           <script>
                             function webviewDidClose(){} 
                             function webviewDidAppear(){} 

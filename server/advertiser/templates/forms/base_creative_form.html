@@ -65,6 +65,16 @@
                                 {% endfor %}
                               </dd>
                             </div>
+                            <dt class="admin_only">Intercept URL:</dt>  
+                            <dd class="admin_only">
+                              {{ form.launchpage|attrs:'{"label":"Intercept URL","placeholder":"http://bs.serving-sys.com (optional)"}'|raw}}
+                              <a href="#" class="whatsthis" id="creativeLaunchPage-url-helpLink">What's this?</a>
+                              <div id="creativeLaunchPage-url-helpContent" class="hidden"> 
+                                <h3>Intercept URL (admin only)</h3>
+                                <p>Use if the ad network is using window.location or window.open to open links. Don't forget the HTTP!</p>
+                              </div>
+                            </dd>
+                            
                             <dt>Conversion Tracking ID:</dt>  
                             <dd>
                               {{ form.conv_appid|attrs:'{"label":"Conversion Tracking ID","placeholder":"399903812 (optional)"}'|raw}}

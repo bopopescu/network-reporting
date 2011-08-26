@@ -21,7 +21,7 @@
 
   <!-- CSS -->
   <link rel="stylesheet" href="/js/mylibs/jquery-ui-1.8.7.custom/css/mopub/jquery-ui-1.8.7.custom.css" />  
-  <link rel="stylesheet" href="/css/style.css?v=34">
+  <link rel="stylesheet" href="/css/style.css?v=39">
   {% block extraCSS %}{% endblock %}
  
   <!-- modernizr -->
@@ -98,6 +98,7 @@
       })();
   </script>
 </head>
+<input type=hidden value="{{user.is_staff}}" id='is_admin_input'></input>
 
 {% block body_content %}
 <body id="mopub-dashboard">
@@ -149,7 +150,7 @@
               <label for="dashboard-dateOptions-option-14">14 days</label>
               <input type="radio" name="dashboard-dateOptions-option" value="30" id="dashboard-dateOptions-option-30" {% ifequal date_range 30 %}checked="checked" {% endifequal %}/>
               <label for="dashboard-dateOptions-option-30">30 days</label>
-              <input type="radio" name="dashboard-dateOptions-option" value="custom" id="dashboard-dateOptions-option-custom" />
+              <input type="radio" name="dashboard-dateOptions-option" value="custom" id="dashboard-dateOptions-option-custom" {% if date_range != 7 and date_range != 14 and date_range != 30 %}checked="checked" {% endif %}/>
               <label for="dashboard-dateOptions-option-custom">Custom ...</label>
             </span>
             <div id="dashboard-dateOptions-custom-modal">
@@ -215,7 +216,24 @@
                 </tr>
               </tbody>
             </table>
-          </section>{% endblock messageCenter %}{% block content %}{% endblock content %}
+          </section>{% endblock messageCenter %}
+          
+          
+          {% block flash %}
+            {% if flash %}
+                <!-- There's one or more flash-scoped objects -->
+
+                {% for key, value in flash.items %}
+                    <div class="flash_{{ key }} alertMessage">  
+                        {% autoescape off %} 
+                        {{ value }}
+                        {% endautoescape %}
+                    </div>
+                {% endfor %}
+            {% endif %}    
+          {% endblock flash %}
+          
+          {% block content %}{% endblock content %}
         </div>
       </div>
     </div>

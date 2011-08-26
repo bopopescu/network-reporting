@@ -307,7 +307,13 @@ class CreateCampaignAJAXHander(RequestHandler):
                              campaign=None,adgroup=None):
         if adgroup:                     
             campaign = campaign or adgroup.campaign
-        campaign_form = campaign_form or CampaignForm(instance=campaign)
+        
+        # TODO: HACKKKK get price floors done
+        initial = {}    
+        if campaign and campaign.campaign_type in ['marketplace', 'backfill_marketplace']:
+            initial.update(price_floor=self.account.network_config.price_floor)
+        logging.info("\n\n\n\n\nafasdfasdfasdf\n\n\n\n:%s\n\n\n"%initial)    
+        campaign_form = campaign_form or CampaignForm(instance=campaign, initial=initial)
         adgroup_form = adgroup_form or AdGroupForm(instance=adgroup)
         networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["chartboost","ChartBoost",False],["ejam","eJam",False],["greystripe","GreyStripe",False],\
             ["iAd","iAd",False],["inmobi","InMobi",False],["jumptap","Jumptap",False],["millennial","Millennial Media",False],["mobfox","MobFox",False],\
@@ -387,6 +393,10 @@ class CreateCampaignAJAXHander(RequestHandler):
         if campaign_form.is_valid():
             campaign = campaign_form.save(commit=False)
             campaign.account = self.account
+            
+            if campaign.campaign_type in ["marketplace", "backfill_marketplace"]:
+                self.account.network_config.price_floor = float(campaign_form.cleaned_data['price_floor'])
+                AccountQueryManager.update_config_and_put(self.account, self.account.network_config)
 
             if adgroup_form.is_valid():
                 adgroup = adgroup_form.save(commit=False)

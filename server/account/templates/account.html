@@ -385,10 +385,12 @@
 
                     <dt> Country: </dt> <dd>{{account.paymentinfo.country|country_code_to_name}} </dd>
 
-                    {% if account.paymentinfo.country == 'United States' %}
+                    {% if account.paymentinfo.country == 'US' %}
                       <dt> US Tax ID: </dt> <dd>{{account.paymentinfo.us_tax_id}} </dd>
                       <dt> Local Tax ID: </dt> <dd>{{account.paymentinfo.local_tax_id}} </dd>
                     {% endif %}
+
+                    <br /><br />
 
                     <h3> Payment Details </h3>
                     <dt> Beneficiary Name: </dt> <dd>{{account.paymentinfo.beneficiary_name}} </dd>

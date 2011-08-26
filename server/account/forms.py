@@ -52,10 +52,38 @@ class PaymentInfoForm(mpforms.MPModelForm):
                   'payment_preference',
                   'us_tax_id',
                   'local_tax_id',
-                  'paypal_email,',
+                  'paypal_email',
                   'beneficiary_name',
                   'bank_name',
                   'bank_address',
                   'account_number',
                   'ach_routing_number',
                   'bank_swift_code',)
+
+    def clean_payment_type(self):
+        if self.data['payment_preference'] == 'paypal' and \
+           self.data['paypal_email'] == '':
+            raise forms.ValidationError('Please provide your Paypal account information if you wish to use Paypal.')
+
+
+    def clean_country_information(self):
+        if self.data['payment_preference'] == 'paypal' and \
+           self.data['country'] == 'US':
+            required_us_info = [self.data['us_tax_id'],
+                                self.data['local_tax_id'],
+                                self.data['ach_routing_number'],
+                                self.data['bank_swift_code']]
+
+            if not all(required_us_info):
+                raise forms.ValidationError("""The following information is required for accounts in the United States:
+                                            US Tax ID
+                                            Local Tax ID
+                                            ACH Routing Number
+                                            Bank SWIFT Code
+                                            """)
+
+
+    def clean(self, *args, **kwargs):
+        self.clean_payment_type()
+        self.clean_country_information()
+        return super(PaymentInfoForm, self).clean(*args, **kwargs)

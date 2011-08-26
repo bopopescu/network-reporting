@@ -3,6 +3,7 @@ from google.appengine.api import users, mail
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect
 from django.core.urlresolvers import reverse
+from django.shortcuts import redirect
 from common.ragendja.template import render_to_response
 
 from common.utils.query_managers import CachedQueryManager
@@ -143,19 +144,21 @@ class LogoutHandler(RequestHandler):
 
 
 class PaymentInfoChangeHandler(RequestHandler):
-    def get(self, *args, **kwargs):
-        payment_info = self.account.payment_infos.get()
-        if self.request.method == 'POST':
-            form = PaymentInfoForm(self.request.POST, instance=payment_info)
-            if form.is_valid():
-                payment_info = form.save()
-                return redirect('account_index')
-        else:
-            form = PaymentInfoForm()
-
+    def get(self, payment_form=None, *args, **kwargs):
+        form = payment_form or PaymentInfoForm(instance=self.account.payment_infos.get())
         return render_to_response(self.request,
                                   'account/payment_info_change.html',
                                   {'form': form})
+
+
+    def post(self, *args, **kwargs):
+        form = PaymentInfoForm(self.request.POST, instance=self.account.payment_infos.get())
+        if form.is_valid():
+            payment_info = form.save(commit=False)
+            payment_info.account = self.account
+            payment_info.put()
+            return redirect('account_index')
+        return self.get(payment_form=form)
 
 @login_required
 def payment_info_change(request, *args, **kwargs):

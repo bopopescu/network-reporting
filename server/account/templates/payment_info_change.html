@@ -7,8 +7,38 @@
   {{block.super}}
   <script type="text/javascript">
     $(function() {
-            $('#submitbutton').click(function(){
-                    $("#paymentchange").submit();
+
+            $("#payment_preference_paypal").click(function(){
+                    $("#wire_only").fadeOut(10);
+                    $("#paypal_only").fadeIn();
+
+
+            })
+
+            $("#payment_preference_wire").click(function(){
+                    $("#paypal_only").fadeOut(10);
+                    $("#wire_only").fadeIn();
+
+            })
+
+            // form validation + submit
+            $('#guy').click(function(){
+                    var us_fields_filled = true;
+                    if ($("#id_country").val() == 'US') {
+                            $(["#id_us_tax_id",
+                               "#id_local_tax_id",
+                               "#id_ach_routing_number",
+                               "#id_bank_swift_code"]).each(function(us_field){
+                                       console.log(us_field);
+                                       var field = $(us_field);
+                                       if (field.val() == '') {
+                                               us_fields_filled = false;
+                                               field.style('background', 'red');
+                                       }
+                               });
+                    }
+
+                    // if (us_fields_filled) $("#paymentchange").submit();
             });
     });
   </script>
@@ -22,7 +52,7 @@
 
     </fieldset>
     <div class="form-submit">
-      <button id="submitbutton" class="button"> Submit </button>
+      <button id="guy" class="button"> Submit </button>
      </div>
   </form>
 {% endblock content %}

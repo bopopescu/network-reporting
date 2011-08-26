@@ -1,5 +1,8 @@
 import urllib2
 import urllib
+
+#can specify app or not specify app, breaks down by adunit.
+
 class NetworkConfidential(object):
     pass
 

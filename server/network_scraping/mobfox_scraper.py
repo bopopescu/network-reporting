@@ -4,6 +4,8 @@ import time
 import datetime
 from xml.dom import minidom
 
+##One app per called to mobfox_scraper unless we want to include multiple pub ids in nc. does not break down by ad unit.
+
 class NetworkConfidential(object):
     pass
 

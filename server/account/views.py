@@ -147,7 +147,7 @@ class PaymentInfoChangeHandler(RequestHandler):
     def get(self, payment_form=None, *args, **kwargs):
         form = payment_form or PaymentInfoForm(instance=self.account.payment_infos.get())
         return render_to_response(self.request,
-                                  'account/payment_info_change.html',
+                                  'account/paymentinfo_change.html',
                                   {'form': form})
 
 

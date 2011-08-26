@@ -225,8 +225,8 @@ class AdHandler(webapp.RequestHandler):
         else:    
             # Output the request_id and the winning creative_id if an impression happened
 
-            user_adgroup_daily_key = frequency_capping.memcache_key_for_date(udid, now, creative.ad_group.key())
-            user_adgroup_hourly_key = frequency_capping.memcache_key_for_hour(udid, now, creative.ad_group.key())
+            user_adgroup_daily_key = frequency_capping.memcache_key_for_date(raw_udid, now, creative.ad_group.key())
+            user_adgroup_hourly_key = frequency_capping.memcache_key_for_hour(raw_udid, now, creative.ad_group.key())
             trace_logging.warning("user_adgroup_daily_key: %s"%user_adgroup_daily_key)
             trace_logging.warning("user_adgroup_hourly_key: %s"%user_adgroup_hourly_key)
             memcache.offset_multi({user_adgroup_daily_key:1,user_adgroup_hourly_key:1}, key_prefix='', namespace=None, initial_value=0)
@@ -235,9 +235,9 @@ class AdHandler(webapp.RequestHandler):
     
             # Create an ad clickthrough URL
             appid = creative.conv_appid or ''
-            ad_click_url = "http://%s/m/aclk?id=%s&cid=%s&c=%s&req=%s&reqt=%s&udid=%s&appid=%s" % (self.request.host, adunit_id, creative.key(), creative.key(),request_id, request_time, udid, appid)
+            ad_click_url = "http://%s/m/aclk?id=%s&cid=%s&c=%s&req=%s&reqt=%s&udid=%s&appid=%s" % (self.request.host, adunit_id, creative.key(), creative.key(),request_id, request_time, raw_udid, appid)
             # Add an impression tracker URL
-            track_url = "http://%s/m/imp?id=%s&cid=%s&udid=%s&appid=%s&req=%s&reqt=%s&random=%s" % (self.request.host, adunit_id, creative.key(), udid, appid, request_id, request_time, random.random())
+            track_url = "http://%s/m/imp?id=%s&cid=%s&udid=%s&appid=%s&req=%s&reqt=%s&random=%s" % (self.request.host, adunit_id, creative.key(), raw_udid, appid, request_id, request_time, random.random())
             cost_tracker = "&rev=%.07f" 
             if creative.adgroup.bid_strategy == 'cpm':
                 cost_tracker = cost_tracker % (float(creative.adgroup.bid)/1000)

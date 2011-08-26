@@ -96,7 +96,7 @@ class BaseCreativeRenderer(object):
         template_name = creative.ad_type    
         format_tuple = _make_format_tuple_and_set_orientation(adunit, creative, header_context)
         fail_url = _build_fail_url(request_url, on_fail_exclude_adgroups)
-        success = _make_tracking_pixel(track_url, creative, context)
+        success = _make_tracking_pixel(track_url, creative, context, random_val)
         cls.network_specific_rendering(header_context, 
                                        creative=creative, 
                                        adunit=adunit, 
@@ -132,7 +132,7 @@ class BaseCreativeRenderer(object):
 ########### HELPER FUNCTIONS ############     
 
 
-def _make_tracking_pixel(track_url, creative, context):
+def _make_tracking_pixel(track_url, creative, context, random_val):
     #success tracking pixel for admob
     #set up an invisible span
     hidden_span = 'var hid_span = document.createElement("span"); hid_span.setAttribute("style", "display:none");'

@@ -284,7 +284,7 @@ def ll_dist(p1, p2):
 
 
 def lat_lon_filter(ll=None):   
-    
+    ll_p = None
     #ll should be input as a string, turn it into a list of floats
     if ll:
         ll_p = [float(val) for val in ll.split(',')]

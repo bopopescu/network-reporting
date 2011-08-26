@@ -307,7 +307,13 @@ class CreateCampaignAJAXHander(RequestHandler):
                              campaign=None,adgroup=None):
         if adgroup:                     
             campaign = campaign or adgroup.campaign
-        campaign_form = campaign_form or CampaignForm(instance=campaign)
+        
+        # TODO: HACKKKK get price floors done
+        initial = {}    
+        if campaign and campaign.campaign_type in ['marketplace', 'backfill_marketplace']:
+            initial.update(price_floor=self.account.network_config.price_floor)
+        logging.info("\n\n\n\n\nafasdfasdfasdf\n\n\n\n:%s\n\n\n"%initial)    
+        campaign_form = campaign_form or CampaignForm(instance=campaign, initial=initial)
         adgroup_form = adgroup_form or AdGroupForm(instance=adgroup)
         networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["chartboost","ChartBoost",False],["ejam","eJam",False],["greystripe","GreyStripe",False],\
             ["iAd","iAd",False],["inmobi","InMobi",False],["jumptap","Jumptap",False],["millennial","Millennial Media",False],["mobfox","MobFox",False],\
@@ -387,6 +393,10 @@ class CreateCampaignAJAXHander(RequestHandler):
         if campaign_form.is_valid():
             campaign = campaign_form.save(commit=False)
             campaign.account = self.account
+            
+            if campaign.campaign_type in ["marketplace", "backfill_marketplace"]:
+                self.account.network_config.price_floor = float(campaign_form.cleaned_data['price_floor'])
+                AccountQueryManager.update_config_and_put(self.account, self.account.network_config)
 
             if adgroup_form.is_valid():
                 adgroup = adgroup_form.save(commit=False)
@@ -717,7 +727,7 @@ class PauseAdGroupHandler(RequestHandler):
     def post(self):
         action = self.request.POST.get("action", "pause")
         adgroups = []
-        update_objs = []  
+        update_objs = [] 
         update_creatives = []  
         for id_ in self.request.POST.getlist('id') or []:
             a = AdGroupQueryManager.get(id_)
@@ -725,29 +735,39 @@ class PauseAdGroupHandler(RequestHandler):
             if a != None and a.campaign.account == self.account:
                 if action == "pause":
                     a.active = False
-                    a.deleted = False       
+                    a.campaign.active = False
+                    a.deleted = False 
+                    a.campaign.deleted = False      
                     a.archived = False
                     update_objs.append(a)
                 elif action == "resume":
                     a.active = True
-                    a.deleted = False     
+                    a.campaign.active = True
+                    a.deleted = False
+                    a.campaign.deleted = False     
                     a.archived = False
                     update_objs.append(a)  
                 elif action == "activate":
                     a.active = True
-                    a.deleted = False     
+                    a.campaign.active = True
+                    a.deleted = False
+                    a.campaign.deleted = False      
                     a.archived = False
                     update_objs.append(a)          
                     self.request.flash["message"] = "A campaign has been activated. View it within <a href='%s'>active campaigns</a>." % reverse('advertiser_campaign') 
                 elif action == "archive":       
                     a.active = False
-                    a.deleted = False     
+                    a.campaign.active = False
+                    a.deleted = False 
+                    a.campaign.deleted = False     
                     a.archived = True
                     update_objs.append(a)    
                     self.request.flash["message"] = "A campaign has been archived. View it within <a href='%s'>archived campaigns</a>." % reverse('advertiser_archive') 
                 elif action == "delete":
-                    a.active = False
-                    a.deleted = True    
+                    a.active = False 
+                    a.campaign.active = False
+                    a.deleted = True
+                    a.campaign.deleted = True     
                     a.archived = False
                     update_objs.append(a)       
                     self.request.flash["message"] = "Your campaign has been successfully deleted"
@@ -756,7 +776,12 @@ class PauseAdGroupHandler(RequestHandler):
                         update_creatives.append(creative)
 
         if update_objs:
-            AdGroupQueryManager.put(update_objs)  
+            AdGroupQueryManager.put(update_objs)         
+            camp_objs = []
+            for adgroup in update_objs: 
+                camp_objs.append(adgroup.campaign)
+            
+            CampaignQueryManager.put(camp_objs) 
             
         if update_creatives:
             CreativeQueryManager.put(update_creatives)

@@ -35,6 +35,7 @@ class CampaignForm(mpforms.MPModelForm):
     mpx_level = mpfields.MPChoiceField(choices=[('normal','Normal'),('backfill','Backfill')],widget=mpwidgets.MPSelectWidget)
     budget_strategy = mpfields.MPChoiceField(choices=[('evenly','Spread evenly'),('allatonce','All at once')],widget=mpwidgets.MPRadioWidget)
     budget_type = mpfields.MPChoiceField(choices=[('daily','Daily'),('full_campaign','Full Campaign')],widget=mpwidgets.MPSelectWidget)
+    price_floor = mpfields.MPTextField(required=False)
    
     #priority is now based off of campaign_type, not actually priority
     #gtee has 3 levels, this makes it so the database understands the three different levels of gtee
@@ -66,6 +67,7 @@ class CampaignForm(mpforms.MPModelForm):
                 initial.update(campaign_type=type_)
                 initial.update(promo_level=level)
                 kwargs.update(initial=initial)
+                
             if 'marketplace' in vals:
                 type_ = 'marketplace'
                 if 'backfill' in vals:
@@ -74,6 +76,7 @@ class CampaignForm(mpforms.MPModelForm):
                     level = 'normal'
                 initial.update(campaign_type=type_)
                 initial.update(mpx_level=level)
+                kwargs.update(initial=initial)
         
         super(CampaignForm, self).__init__(*args, **kwargs)
         

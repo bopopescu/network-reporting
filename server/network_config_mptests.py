@@ -133,6 +133,14 @@ class TestNetworkConfig(unittest.TestCase):
         
     ############### ServerSide Tests ###############
     
+    def mptest_admob(self):
+        """ Make sure we go to lowest available level. Here app level """
+        server_side = AdmobServerSide(self.client_context, self.adunit) 
+        pub_id = server_side.get_pub_id()
+        
+        eq_(pub_id, "app-admob")
+    
+    
     def mptest_millennial(self):
         """ Make sure we go to lowest available level. Here app level """
         server_side = MillennialServerSide(self.client_context, self.adunit) 

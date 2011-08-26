@@ -16,39 +16,12 @@ class ServerSide(object):
         self.adunit = adunit
     @property
     def format(self):
-        return self.adunit.format
-  
-    def get_udid(self, udid=None):
-        """
-        udid from the device comes as 
-        udid=md5:asdflkjbaljsadflkjsdf (new clients) or
-        udid=pqesdlsdfoqeld (old clients)
-        For the newer clients we can just pass over the hashed string
-        after "md5:"
-
-        For older clients we must md5 hash the udid with salt 
-        "mopub-" prepended.
-
-        returns hashed_udid
-        """  
-        raw_udid = udid or self.client_context.udid
-        raw_udid_parts = raw_udid.split('md5:')
-
-        # if has md5: then just pull out value
-        if len(raw_udid_parts) == 2:
-            # get the part after 'md5:'
-            hashed_udid = raw_udid_parts[-1]
-        # else salt the udid and hash it    
-        else:
-            m = hashlib.md5()
-            m.update('mopub-')
-            m.update(raw_udid_parts[0])
-            hashed_udid = m.hexdigest().upper()
-        return hashed_udid   
+        return self.adunit.format  
          
     def get_ip(self):
-        """gets ths ip from either a query parameter or the header"""
-        return helpers.get_ip(self.request)
+        """ Gets the client's ip from either a query parameter or the header"""   
+        int('fail')
+        return self.client_context.client_ip
     
     def get_user_agent(self):
         """gets the user agent from either a query paramter or the header"""

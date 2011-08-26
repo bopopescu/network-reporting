@@ -17,9 +17,9 @@ class JumptapServerSide(ServerSide):
    
     def get_key_values(self):
         key_values = {#'gateway-ip': '208.54.5.50',    # TODO: This should be the x-forwarded-for header of the device
-                      'hid': self.get_udid(),
-                      'client-ip': self.get_ip(), # Test value: 'client-ip': '208.54.5.50'
-                      'ua': self.get_user_agent(),
+                      'hid': self.client_context.mopub_id,
+                      'client-ip': self.client_context.client_ip, # Test value: 'client-ip': '208.54.5.50'
+                      'ua': self.client_context.user_agent,
                       'v': 'v29',}
         
         language = self.get_language()
@@ -48,7 +48,7 @@ class JumptapServerSide(ServerSide):
     
     def get_language(self):
         LANGUAGE_PAT = re.compile(r' (?P<language>[a-zA-Z][a-zA-Z])[-_][a-zA-Z][a-zA-Z];*[^a-zA-Z0-9-_]')
-        m = LANGUAGE_PAT.search(self.get_user_agent())
+        m = LANGUAGE_PAT.search(self.client_context.user_agent)
         if m:
             return m.group('language')
         else:

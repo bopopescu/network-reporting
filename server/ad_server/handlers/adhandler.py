@@ -178,7 +178,8 @@ class AdHandler(webapp.RequestHandler):
             keywords += self.request.get("q").lower().split(',')
 
         trace_logging.warning("keywords are %s" % keywords)
-
+        
+        raw_udid = self.request.get("udid")
      
         # create a unique request id, but only log this line if the user agent is real
         request_id = hashlib.md5("%s:%s" % (self.request.query_string, time.time())).hexdigest()
@@ -186,13 +187,15 @@ class AdHandler(webapp.RequestHandler):
         client_context = ClientContext(adunit=site,
                                 keywords=keywords, 
                                 excluded_adgroup_keys=self.request.get_all("exclude"), 
-                                raw_udid=self.request.get("udid"), # TOMTODO: hash? 
+                                raw_udid=raw_udid,
+                                mopub_id=helpers.make_mopub_id(raw_udid),
                                 ll=self.request.get('ll'),
                                 request_id=request_id, 
                                 now=now,
                                 user_agent=helpers.get_user_agent(self.request),       
                                 country_code=country_code, 
-                                experimental=experimental)  
+                                experimental=experimental,
+                                client_ip=helpers.get_client_ip(self.request))  
                                 
         # Run the ad auction to get the creative to display
         ad_auction_results = ad_auction.run(client_context, adunit_context)

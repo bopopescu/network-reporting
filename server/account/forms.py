@@ -67,7 +67,7 @@ class PaymentInfoForm(mpforms.MPModelForm):
 
 
     def clean_country_information(self):
-        if self.data['payment_preference'] == 'paypal' and \
+        if self.data['payment_preference'] == 'wire' and \
            self.data['country'] == 'US':
             required_us_info = [self.data['us_tax_id'],
                                 self.data['local_tax_id'],

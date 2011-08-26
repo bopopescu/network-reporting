@@ -7,47 +7,81 @@
   {{block.super}}
   <script type="text/javascript">
     $(function() {
+            var paypal_required_fields = ['#id_paypal_email'];
+            var us_paypal_required_fields = ['#id_us_tax_id','#id_local_tax_id'];
+            var wire_required_fields = ['#id_beneficiary_name','#id_bank_name','#id_bank_address','#id_account_number'];
+            var us_wire_required_fields = ['#id_us_tax_id','#id_local_tax_id', '#id_ach_routing_number','#id_bank_swift_code'];
+
+            (function() {
+                    if ($("#payment_preference_paypal").is(":checked")) {
+                            $("#wire_only").hide();
+                    } else {
+                            $("#paypal_only").hide();
+                    }
+            })();
 
             $("#payment_preference_paypal").click(function(){
                     $("#wire_only").fadeOut(10);
                     $("#paypal_only").fadeIn();
-
-
+                    $.each(paypal_required_fields, function(i, field){
+                            $(field).addClass("required");
+                    });
+                    $.each(wire_required_fields.concat(us_wire_required_fields), function(i, field) {
+                            $(field).removeClass("required");
+                    });
+                    if ($("#id_country").val() == "US") {
+                            console.log('go us');
+                            $.each(us_wire_required_fields, function(i, field){
+                                    $(field).addClass("required");
+                            });
+                    }
             })
 
             $("#payment_preference_wire").click(function(){
                     $("#paypal_only").fadeOut(10);
                     $("#wire_only").fadeIn();
-
+                    $.each(paypal_required_fields.concat(us_paypal_required_fields), function(i, field){
+                            $(field).removeClass("required");
+                    });
+                    $.each(wire_required_fields, function(i, field) {
+                            $(field).addClass("required");
+                    });
+                    if ($("#id_country").val() == "US") {
+                            $.each(us_wire_required_fields, function(i, field) {
+                                    $(field).addClass("required");
+                            });
+                    }
             })
 
-            // form validation + submit
-            $('#guy').click(function(){
-                    var us_fields_filled = true;
-                    if ($("#id_country").val() == 'US') {
-                            $(["#id_us_tax_id",
-                               "#id_local_tax_id",
-                               "#id_ach_routing_number",
-                               "#id_bank_swift_code"]).each(function(us_field){
-                                       console.log(us_field);
-                                       var field = $(us_field);
-                                       if (field.val() == '') {
-                                               us_fields_filled = false;
-                                               field.style('background', 'red');
-                                       }
-                               });
-                    }
+            $("#id_country").change(function() {
+                    if ($("#id_country").val() == "US") {
+                            if ($("#payment_preference_paypal").is(":checked")){
+                                    $.each(us_paypal_required_fields, function(i,field){
+                                            $(field).addClass("required");
+                                    });
+                            }
 
-                    // if (us_fields_filled) $("#paymentchange").submit();
+                            if ($("#payment_preference_wire").is(":checked")) {
+                                    $.each(us_wire_required_fields, function(i,field){
+                                            $(field).addClass("required");
+                                    });
+                            }
+                    } else {
+                            $.each(us_paypal_required_fields.concat(us_wire_required_fields), function(i,field){
+                                    $(field).removeClass("required");
+                            });
+                    }
             });
+
     });
   </script>
 {% endblock %}
 {% block content %}
-  <form action="{% url payment_info_change %}" method="POST" id="paymentchange">
+  <form action="{% url payment_info_change %}" method="POST" id="paymentchange" class="validate">
     {% csrf_token %}
 
     <fieldset id="appForm-details">
+      {{form.bound_fields}}
       {{form.as_template}}
 
     </fieldset>

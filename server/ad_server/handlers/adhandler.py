@@ -11,6 +11,7 @@ import urllib
 import datetime   
                                     
 from common.utils import helpers, simplejson
+from common.utils.helpers import get_country_code, get_user_agent
 
 from google.appengine.api import urlfetch, memcache
 
@@ -57,7 +58,7 @@ from ad_server.auction.battles import (Battle,
                                        GteeHighBattle,
                                        GteeLowBattle 
                                       )     
-from ad_server.auction.battle_context import BattleContext                                     
+from ad_server.auction.client_context import ClientContext                                     
                                        
 
 from google.appengine.api.images import InvalidBlobKeyError
@@ -145,23 +146,11 @@ class AdHandler(webapp.RequestHandler):
         trace_logging.warning("User Agent: %s" % helpers.get_user_agent(self.request))
 
 
-        # check if the country is overriden manually
-        if self.request.get('country'):
-            countries = [self.request.get('country')]
-        else:
-            countries = [helpers.get_country_code(headers = self.request.headers)]
-        if len(countries) == 1:
-            countries = [c.upper() for c in countries]
-            country_tuple = tuple(countries)
-        
 
-        # ENDTODO
         
         # We can get country_code from one of two places 
-        if self.request.get('country'):
-            country_code = self.request.get('country')
-        else:
-            country_code = helpers.get_country_code(headers=self.request.headers)
+
+        country_code = self.request.get('country') or get_country_code(self.request.headers)
         
         
         site = adunit     
@@ -189,35 +178,24 @@ class AdHandler(webapp.RequestHandler):
             keywords += self.request.get("q").lower().split(',')
 
         trace_logging.warning("keywords are %s" % keywords)
-        
-        # look up lat/lon
-        ll = self.request.get('ll') if self.request.get('ll') else None
-        
-        # get creative exclusions usually used to exclude iAd because it has already failed
-        excluded_adgroup_keys = self.request.get_all("exclude")
-        if excluded_adgroup_keys:
-            trace_logging.info("Excluded Adgroups: %s" % excluded_adgroup_keys)
-        
-        # TODO: get udid we should hash it if its not already hashed
-        udid = self.request.get("udid")
-        user_agent = helpers.get_user_agent(self.request)
-        
+
+     
         # create a unique request id, but only log this line if the user agent is real
         request_id = hashlib.md5("%s:%s" % (self.request.query_string, time.time())).hexdigest()
                                                                          
-        battle_context = BattleContext(adunit=site,
+        client_context = ClientContext(adunit=site,
                                 keywords=keywords, 
-                                excluded_adgroup_keys=excluded_adgroup_keys, 
-                                udid=udid, 
-                                ll=ll,
+                                excluded_adgroup_keys=self.request.get_all("exclude"), 
+                                raw_udid=self.request.get("udid"), # TOMTODO: hash? 
+                                ll=self.request.get('ll'),
                                 request_id=request_id, 
                                 now=now,
-                                user_agent=user_agent,       
+                                user_agent=helpers.get_user_agent(self.request),       
                                 country_code=country_code, 
                                 experimental=experimental)  
                                 
         # Run the ad auction to get the creative to display
-        ad_auction_results = ad_auction.run(battle_context, adunit_context)
+        ad_auction_results = ad_auction.run(client_context, adunit_context)
 
         
         # Unpack the results of the AdAuction

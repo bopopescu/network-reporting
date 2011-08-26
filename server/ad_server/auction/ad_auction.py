@@ -6,11 +6,11 @@ from ad_server.auction.battles import (Battle,
                                        MarketplaceBattle, 
                                       )
                                       
-def run(battle_context, adunit_context):   
+def run(client_context, adunit_context):   
     """ Runs the auction, returns a creative and an updated list of 
         excluded_adgroup_keys """ 
     
-    battle_context.geo_predicates = geo_predicates_from_country_code(battle_context.country_code)
+    client_context.geo_predicates = geo_predicates_from_country_code(client_context.country_code)
                                
     # Run each of our battle levels in the appropriate order.
     battle_classes = [GteeHighBattle,
@@ -24,13 +24,13 @@ def run(battle_context, adunit_context):
      
     # Return the first successful creative
     for BattleClass in battle_classes:                    
-        battle = BattleClass(battle_context, adunit_context)
+        battle = BattleClass(client_context, adunit_context)
         creative = battle.run()
         if creative: 
-            return (creative, battle_context.excluded_adgroup_keys)              
+            return (creative, client_context.excluded_adgroup_keys)              
 
     # No battle found an eligble creative
-    return (None, battle_context.excluded_adgroup_keys)
+    return (None, client_context.excluded_adgroup_keys)
 
 
 

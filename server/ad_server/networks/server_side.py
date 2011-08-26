@@ -11,14 +11,14 @@ class ServerSide(object):
     pub_id_attr = 'None' # must be specified by sub class
     network_name = 'Generic Server Side'
     
-    def __init__(self,request,adunit=None,*args,**kwargs):
-        self.request = request
+    def __init__(self, client_context, adunit, *args, **kwargs):
+        self.client_context = client_context
         self.adunit = adunit
     @property
     def format(self):
         return self.adunit.format
   
-    def get_udid(self,udid=None):
+    def get_udid(self, udid=None):
         """
         udid from the device comes as 
         udid=md5:asdflkjbaljsadflkjsdf (new clients) or
@@ -30,9 +30,8 @@ class ServerSide(object):
         "mopub-" prepended.
 
         returns hashed_udid
-
         """  
-        raw_udid = udid or self.request.get('udid')
+        raw_udid = udid or self.client_context.udid
         raw_udid_parts = raw_udid.split('md5:')
 
         # if has md5: then just pull out value
@@ -45,7 +44,8 @@ class ServerSide(object):
             m.update('mopub-')
             m.update(raw_udid_parts[0])
             hashed_udid = m.hexdigest().upper()
-        return hashed_udid    
+        return hashed_udid   
+         
     def get_ip(self):
         """gets ths ip from either a query parameter or the header"""
         return helpers.get_ip(self.request)
@@ -54,7 +54,7 @@ class ServerSide(object):
         """gets the user agent from either a query paramter or the header"""
         return helpers.get_user_agent(self.request)
         
-    def get_pub_id(self,warn=False):
+    def get_pub_id(self, warn=False):
         """ Gets the most specifically defined pub id """
         pub_id = self.adunit.get_pub_id(self.pub_id_attr)
         if warn and not pub_id:
@@ -69,7 +69,7 @@ class ServerSide(object):
     def payload(self):
         return None
         
-    def _get_size(self,content):
+    def _get_size(self, content):
         width_pat = re.compile(r'width="(?P<width>\d+?)"')
         height_pat = re.compile(r'height="(?P<height>\d+?)"')
 
@@ -83,7 +83,7 @@ class ServerSide(object):
             height = int(height_match.groups('height')[0])
         return width,height      
 
-    def bid_and_html_for_response(self,response):
+    def bid_and_html_for_response(self, response):
         self.get_pub_id(warn=True) # get the pub id and warn if not present
         if response.status_code == 200:
             response_tuple = list(self.bid_and_html_for_response(response))

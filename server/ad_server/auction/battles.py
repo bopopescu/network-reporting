@@ -49,8 +49,8 @@ class Battle(object):
     
     starting_message = "Beginning priority level x ..."     
     
-    def __init__(self, battle_context, adunit_context):
-        self.battle_context = battle_context
+    def __init__(self, client_context, adunit_context):
+        self.client_context = client_context
         self.adunit_context = adunit_context
     
     def _sort_creatives(self, creatives): 
@@ -83,12 +83,12 @@ class Battle(object):
         
         # TODO: refactor logging on filters (make them oo) 
         
-        adgroup_filters = (exclude_filter(self.battle_context.excluded_adgroup_keys),
+        adgroup_filters = (exclude_filter(self.client_context.excluded_adgroup_keys),
                            active_filter(), 
-                           lat_lon_filter(self.battle_context.ll),
-                           kw_filter(self.battle_context.keywords), 
-                           geo_filter(self.battle_context.geo_predicates),
-                           os_filter(self.battle_context.user_agent),
+                           lat_lon_filter(self.client_context.ll),
+                           kw_filter(self.client_context.keywords), 
+                           geo_filter(self.client_context.geo_predicates),
+                           os_filter(self.client_context.user_agent),
                            budget_filter()) # Run budget last b/c it touches memcache        
          
          
@@ -105,7 +105,7 @@ class Battle(object):
 
         # TODO: refactor logging on filters (make them oo) 
         
-        creative_filters = [format_filter(self.battle_context.adunit)]
+        creative_filters = [format_filter(self.client_context.adunit)]
         
         filtered_creatives = filter(mega_filter(*creative_filters), creatives)
         return filtered_creatives   
@@ -116,7 +116,7 @@ class Battle(object):
             Throws an exception if an error occurs. """
         
         # regardless of outcome, exclude
-        self.battle_context.excluded_adgroup_keys.append(str(creative.adgroup.key()))
+        self.client_context.excluded_adgroup_keys.append(str(creative.adgroup.key()))
   
         return creative  
        
@@ -202,15 +202,15 @@ class MarketplaceBattle(Battle):
     def _process_winner(self, creative):    
         """ Fan out to the marketplace and see if there is a bid """    
         # TODO: Can we get relevant information without passing request
-        mk_args = build_marketplace_dict(adunit=self.battle_contextadunit,
-                                         kws=self.battle_context.keywords,
-                                         udid=self.battle_context.udid,
-                                         ua=self.battle_context.user_agent,
-                                         ll=self.battle_context.ll,
+        mk_args = build_marketplace_dict(adunit=self.client_contextadunit,
+                                         kws=self.client_context.keywords,
+                                         udid=self.client_context.udid,
+                                         ua=self.client_context.user_agent,
+                                         ll=self.client_context.ll,
                                          ip=request.remote_addr,
                                          adunit_context=self.adunit_context,
                                          # country=helpers.get_country_code(request.headers, default=None),
-                                         country=self.battle_context.country_code)
+                                         country=self.client_context.country_code)
 class NetworkBattle(Battle):  
     """ Fans out to each of the networks """
     
@@ -228,46 +228,47 @@ class NetworkBattle(Battle):
             # TODO: refactor logging
             mp_logging.log(None, 
                            event=mp_logging.REQ_EVENT, 
-                           adunit=self.battle_context.adunit, 
+                           adunit=self.client_context.adunit, 
                            creative=creative, 
-                           user_agent=self.battle_context.user_agent,   
-                           udid=self.battle_context.udid,
-                           country_code=self.battle_context.country_code)
+                           user_agent=self.client_context.user_agent,   
+                           udid=self.client_context.udid,
+                           country_code=self.client_context.country_code)
             return super(NetworkBattle, self)._process_winner(creative)
         
         # All non-native networks need rpcs    
         else:
-            ServerSideClass = SERVER_SIDE_DICT[creative.adgroup.network_type]
+            ServerSideClass = SERVER_SIDE_DICT[creative.adgroup.network_type] 
+            server_side
             
                
-            @classmethod
-            def request_third_party_server(cls,request,adunit,adgroups):
-                if not isinstance(adgroups,(list,tuple)):
-                    multiple = False
-                    adgroups = [adgroups]
-                else:
-                    multiple = True    
-                rpcs = []
-                for adgroup in adgroups:
-                    if adgroup.network_type in SERVER_SIDE_DICT:
-                        KlassServerSide = SERVER_SIDE_DICT[adgroup.network_type]
-                        server_side = KlassServerSide(request, adunit) 
-                        trace_logging.warning("%s url %s"%(KlassServerSide,server_side.url))
+    @classmethod
+    def request_third_party_server(cls,request,adunit,adgroups):
+        if not isinstance(adgroups,(list,tuple)):
+            multiple = False
+            adgroups = [adgroups]
+        else:
+            multiple = True    
+        rpcs = []
+        for adgroup in adgroups:
+            if adgroup.network_type in SERVER_SIDE_DICT:
+                KlassServerSide = SERVER_SIDE_DICT[adgroup.network_type]
+                server_side = KlassServerSide(request, adunit) 
+                trace_logging.warning("%s url %s"%(KlassServerSide,server_side.url))
 
-                        rpc = urlfetch.create_rpc(2) # maximum delay we are willing to accept is 2000 ms
-                        payload = server_side.payload
-                        trace_logging.warning("payload: %s"%payload)
-                        trace_logging.warning("headers: %s"%server_side.headers)
-                        if payload == None:
-                            urlfetch.make_fetch_call(rpc, server_side.url, headers=server_side.headers)
-                        else:
-                            urlfetch.make_fetch_call(rpc, server_side.url, headers=server_side.headers, method=urlfetch.POST, payload=payload)
-                        # attaching the adgroup to the rpc
-                        rpc.adgroup = adgroup
-                        rpc.serverside = server_side
-                        rpcs.append(rpc)
-                return rpcs if multiple else rpcs[0]    
-        
+                rpc = urlfetch.create_rpc(2) # maximum delay we are willing to accept is 2000 ms
+                payload = server_side.payload
+                trace_logging.warning("payload: %s"%payload)
+                trace_logging.warning("headers: %s"%server_side.headers)
+                if payload == None:
+                    urlfetch.make_fetch_call(rpc, server_side.url, headers=server_side.headers)
+                else:
+                    urlfetch.make_fetch_call(rpc, server_side.url, headers=server_side.headers, method=urlfetch.POST, payload=payload)
+                # attaching the adgroup to the rpc
+                rpc.adgroup = adgroup
+                rpc.serverside = server_side
+                rpcs.append(rpc)
+        return rpcs if multiple else rpcs[0]    
+                                                 
             
         
             

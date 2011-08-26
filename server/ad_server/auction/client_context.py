@@ -1,13 +1,16 @@
 import datetime
-class BattleContext(object):
-    """ The necessary information for running a battle. """
+class ClientContext(object):
+    """ All of the information provided to us by the client.
+    
+        Along with adunit context, this provides all the necessary information
+        for running a battle. """
     def __init__ (self,
                   adunit=None,
     	          keywords=None,
                   country_code=None, # Two characater country code.
                   region_code=None, # For future use.
     	          excluded_adgroup_keys=[],
-    	          udid=None,
+    	          raw_udid=None,
     	          ll=None,
     	          request_id=None,
     	          now=datetime.datetime.now(),
@@ -20,7 +23,7 @@ class BattleContext(object):
         self.country_code = country_code
         self.region_code = region_code
         self.excluded_adgroup_keys = excluded_adgroup_keys
-        self.udid = udid
+        self.raw_udid = raw_udid
         self.ll = ll
         self.request_id = request_id
         self.now = now

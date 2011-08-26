@@ -40,7 +40,7 @@ from budget.models import (BudgetSlicer,
                            BudgetDailyLog,
                            )               
                                              
-from ad_server.auction.battle_context import BattleContext
+from ad_server.auction.client_context import ClientContext
                                         
 from server.ad_server.auction import ad_auction     
 from google.appengine.ext import testbed
@@ -144,7 +144,7 @@ class TestAdAuction(unittest.TestCase):
         self.testbed.deactivate()                                           
 
     def mptest_basic(self):
-        battle_context = BattleContext(adunit=self.adunit,
+        client_context = ClientContext(adunit=self.adunit,
                                        keywords=None,
                                        country_code=None,
                                        excluded_adgroup_keys=[],
@@ -156,12 +156,12 @@ class TestAdAuction(unittest.TestCase):
                                        experimental=False)   
                                        
         # Unpack results
-        creative, on_fail_exclude_adgroups = ad_auction.run(battle_context, self.adunit_context)                    
+        creative, on_fail_exclude_adgroups = ad_auction.run(client_context, self.adunit_context)                    
     
         eq_obj(creative, self.expensive_creative)
         
     def mptest_basic_country_code(self):
-        battle_context = BattleContext(adunit=self.adunit,
+        client_context = ClientContext(adunit=self.adunit,
                                        keywords=None,
                                        country_code="US",
                                        excluded_adgroup_keys=[],
@@ -172,12 +172,12 @@ class TestAdAuction(unittest.TestCase):
                                        user_agent='FakeAndroidOS',        
                                        experimental=False)
         # Unpack results
-        creative, on_fail_exclude_adgroups = ad_auction.run(battle_context, self.adunit_context)                    
+        creative, on_fail_exclude_adgroups = ad_auction.run(client_context, self.adunit_context)                    
 
         eq_obj(creative, self.expensive_creative)
         
     def mptest_basic_exclusion(self):
-        battle_context = BattleContext(adunit=self.adunit,
+        client_context = ClientContext(adunit=self.adunit,
                                        keywords=None,
                                        country_code=None,
                                        excluded_adgroup_keys=[],
@@ -188,7 +188,7 @@ class TestAdAuction(unittest.TestCase):
                                        user_agent='FakeAndroidOS',
                                        experimental=False)
         # Unpack results
-        creative, on_fail_exclude_adgroups = ad_auction.run(battle_context, self.adunit_context)                    
+        creative, on_fail_exclude_adgroups = ad_auction.run(client_context, self.adunit_context)                    
 
         eq_obj(creative, self.expensive_creative)
         
@@ -197,7 +197,7 @@ class TestAdAuction(unittest.TestCase):
 
     def mptest_inbound_exclusion(self):
         expensive_ag_key = str(self.expensive_adgroup.key())
-        battle_context = BattleContext(adunit=self.adunit,
+        client_context = ClientContext(adunit=self.adunit,
                                        keywords=None,
                                        country_code=None,
                                        excluded_adgroup_keys=[expensive_ag_key],
@@ -208,7 +208,7 @@ class TestAdAuction(unittest.TestCase):
                                        user_agent='FakeAndroidOS',
                                        experimental=False)
         # Unpack results
-        creative, on_fail_exclude_adgroups = ad_auction.run(battle_context, self.adunit_context)                    
+        creative, on_fail_exclude_adgroups = ad_auction.run(client_context, self.adunit_context)                    
 
         eq_obj(creative, self.cheap_creative)
 
@@ -221,7 +221,7 @@ class TestAdAuction(unittest.TestCase):
     def mptest_native_network_failure_cascade(self):
         """ Native adnetwork failures should properly cascade """
         """ This belongs in ad_auction_mptests """
-        battle_context = BattleContext(adunit=self.adunit,
+        client_context = ClientContext(adunit=self.adunit,
                                        keywords=None,
                                        country_code=None,
                                        excluded_adgroup_keys=[],
@@ -232,7 +232,7 @@ class TestAdAuction(unittest.TestCase):
                                        user_agent='FakeAndroidOS',
                                        experimental=False)
         # Unpack results
-        creative, on_fail_exclude_adgroups = ad_auction.run(battle_context, self.adunit_context)                    
+        creative, on_fail_exclude_adgroups = ad_auction.run(client_context, self.adunit_context)                    
                                        
         eq_obj(creative, self.expensive_creative)
         

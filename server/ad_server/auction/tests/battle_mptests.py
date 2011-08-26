@@ -50,7 +50,7 @@ from ad_server.auction.battles import (Battle,
                                        GteeLowBattle 
                                       )
   
-from ad_server.auction.battle_context import BattleContext
+from ad_server.auction.client_context import ClientContext
 
 
 class TestAdAuction(unittest.TestCase):
@@ -137,7 +137,7 @@ class TestAdAuction(unittest.TestCase):
 
         self.adunit_context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit_id)   
         
-        self.battle_context = BattleContext(adunit=self.adunit,
+        self.client_context = ClientContext(adunit=self.adunit,
                 	                        keywords=["rocks", "paper"],
                                             country_code=None,
                 	                        excluded_adgroup_keys=[],
@@ -153,7 +153,7 @@ class TestAdAuction(unittest.TestCase):
         self.testbed.deactivate()
 
     def mptest_basic(self):
-        gtee_battle = GteeBattle(self.battle_context, self.adunit_context)
+        gtee_battle = GteeBattle(self.client_context, self.adunit_context)
         creative = gtee_battle.run() 
         eq_obj(creative, self.expensive_creative)    
          
@@ -167,7 +167,7 @@ class TestAdAuction(unittest.TestCase):
         # for c in self.adunit_context.campaigns:
         #     print c.campaign_priority   
 
-        gtee_battle = GteeHighBattle(self.battle_context, self.adunit_context)
+        gtee_battle = GteeHighBattle(self.client_context, self.adunit_context)
         creative = gtee_battle.run() 
         eq_obj(creative, self.expensive_creative)
     
@@ -178,7 +178,7 @@ class TestAdAuction(unittest.TestCase):
         # Clear the adunit context cache         
         self.refresh_context(self.adunit)                                  
     
-        gtee_battle = GteeLowBattle(self.battle_context, self.adunit_context)
+        gtee_battle = GteeLowBattle(self.client_context, self.adunit_context)
         creative = gtee_battle.run() 
         eq_obj(creative, self.expensive_creative)
                                                       

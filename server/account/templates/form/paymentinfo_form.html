@@ -1,0 +1,25 @@
+{% load filters %}
+
+ <dl class="formFields">
+
+   {# always needed #}
+   {{form.payment_preference|attrs:'{"class":"required"}'}}
+   {{form.country|attrs:'{"class":"required"}'}}
+   {{form.us_tax_id|attrs:'{"placeholder":"United States accounts only"}'}}
+   {{form.local_tax_id|attrs:'{"placeholder":"United States accounts only"}'}}
+
+   <div id="paypal_only">
+     {{form.paypal_email}}
+   </div>
+
+   <div id="wire_only">
+     {{form.beneficiary_name}}
+     {{form.bank_name}}
+     {{form.bank_address}}
+     {{form.account_number}}
+     {{form.ach_routing_number|attrs:'{"placeholder":"United States accounts only"}'}}
+     {{form.bank_swift_code|attrs:'{"placeholder":"United States accounts only"}'}}
+   </div>
+
+ </dl>
+

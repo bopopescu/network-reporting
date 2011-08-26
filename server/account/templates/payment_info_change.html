@@ -1,0 +1,28 @@
+{% extends "account/base.html" %}
+{% load filters %}
+{% block pageTitle %}
+  <h1> Payment Information </h1>
+{% endblock pageTitle %}
+{% block extraScripts %}
+  {{block.super}}
+  <script type="text/javascript">
+    $(function() {
+            $('#submitbutton').click(function(){
+                    $("#paymentchange").submit();
+            });
+    });
+  </script>
+{% endblock %}
+{% block content %}
+  <form action="{% url payment_info_change %}" method="POST" id="paymentchange">
+    {% csrf_token %}
+
+    <fieldset id="appForm-details">
+      {{form.as_template}}
+
+    </fieldset>
+    <div class="form-submit">
+      <button id="submitbutton" class="button"> Submit </button>
+     </div>
+  </form>
+{% endblock content %}

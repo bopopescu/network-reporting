@@ -1,5 +1,7 @@
 import logging
-import re
+import re       
+import hashlib  
+
 import reporting.models as reporting_models
 
 def get_country_code(headers, default=reporting_models.DEFAULT_COUNTRY):
@@ -17,7 +19,7 @@ def chunks(l, n):
     for i in xrange(0, len(l), n):
         yield l[i:i+n]
 
-def make_mopub_id(self, raw_udid):
+def make_mopub_id(raw_udid):
     """
     Converts a raw_udid into a mopub_id
     udid from the device comes as 

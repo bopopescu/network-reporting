@@ -1,4 +1,3 @@
-import hashlib
 import re
 
 from ad_server.debug_console import trace_logging

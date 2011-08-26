@@ -283,10 +283,10 @@ def ll_dist(p1, p2):
     return EARTH_RADIUS * c
 
 
-def lat_lon_filter(ll=None):
-    ll_p = None
+def lat_lon_filter(ll=None):   
+    
     #ll should be input as a string, turn it into a list of floats
-    if ll is not None:
+    if ll:
         ll_p = [float(val) for val in ll.split(',')]
     log_mesg = "Removed due to being outside target lat/long radii: %s"
     def real_filter(a):

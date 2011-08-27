@@ -276,7 +276,7 @@ class AdAuction(object):
                         trace_logging.info("\nSending to MPX: %s\n" % mk_args)
                         mpx_url = 'http://mpx.mopub.com/req?' + urllib.urlencode(mk_args)
                         xhtml = None
-                        charge_price = None
+                        pub_rev = None
                         # Try to get a response
                         crtv = adunit_context.get_creatives_for_adgroups(eligible_adgroups)
                         if isinstance(crtv, list):

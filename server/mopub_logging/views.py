@@ -361,7 +361,11 @@ class FinalizeHandler(webapp.RequestHandler):
 
     def get(self):
         file_name = self.request.get('file_name')
-        files.finalize(file_name)
+        try:
+            files.finalize(file_name)
+        except (files.ExistenceError, files.FinalizationError):
+            pass # no-opp file is already finalized
+                
 
 class DownloadLogsHandler(webapp.RequestHandler):
     def post(self):

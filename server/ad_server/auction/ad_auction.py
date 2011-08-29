@@ -286,7 +286,7 @@ class AdAuction(object):
                         try:
                             t1 = datetime.datetime.now()
                             trace_logging.warning('MPX REQUEST:%s'%mpx_url)
-                            fetched = urlfetch.fetch(mpx_url, deadline=2)
+                            fetched = urlfetch.fetch(mpx_url, deadline=.5)
                             t2 = datetime.datetime.now()
                             # Make sure it's a good response
                             trace_logging.info('MPX RESPONES CODE:%s timing: %s'%(fetched.status_code, t2-t1))

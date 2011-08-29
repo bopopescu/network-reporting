@@ -8,9 +8,11 @@
   <script type="text/javascript">
     $(function() {
             var paypal_required_fields = ['#id_paypal_email'];
-            var us_paypal_required_fields = ['#id_us_tax_id','#id_local_tax_id'];
+            var us_required_fields = ['#id_us_tax_id'];
+            var non_us_required_fields = ['#id_local_tax_id'];
             var wire_required_fields = ['#id_beneficiary_name','#id_bank_name','#id_bank_address','#id_account_number'];
-            var us_wire_required_fields = ['#id_us_tax_id','#id_local_tax_id', '#id_ach_routing_number','#id_bank_swift_code'];
+            var us_wire_required_fields = ['#id_ach_routing_number'];
+            var non_us_wire_required_fields = ['#id_bank_swift_code'];
 
             (function() {
                     if ($("#payment_preference_paypal").is(":checked")) {
@@ -26,21 +28,16 @@
                     $.each(paypal_required_fields, function(i, field){
                             $(field).addClass("required");
                     });
-                    $.each(wire_required_fields.concat(us_wire_required_fields), function(i, field) {
+                    $.each(wire_required_fields.concat(us_wire_required_fields).concat(non_us_wire_required_fields),
+                            function(i, field) {
                             $(field).removeClass("required");
                     });
-                    if ($("#id_country").val() == "US") {
-                            console.log('go us');
-                            $.each(us_wire_required_fields, function(i, field){
-                                    $(field).addClass("required");
-                            });
-                    }
             })
 
             $("#payment_preference_wire").click(function(){
                     $("#paypal_only").fadeOut(10);
                     $("#wire_only").fadeIn();
-                    $.each(paypal_required_fields.concat(us_paypal_required_fields), function(i, field){
+                    $.each(paypal_required_fields, function(i, field){
                             $(field).removeClass("required");
                     });
                     $.each(wire_required_fields, function(i, field) {
@@ -50,28 +47,47 @@
                             $.each(us_wire_required_fields, function(i, field) {
                                     $(field).addClass("required");
                             });
+                            $.each(non_us_wire_required_fields, function(i, field) {
+                                    $(field).removeClass("required");
+                            });
+                    }
+                    else {
+                            $.each(us_wire_required_fields, function(i, field) {
+                                    $(field).removeClass("required");
+                            });
+                            $.each(non_us_wire_required_fields, function(i, field) {
+                                    $(field).addClass("required");
+                            });
                     }
             })
 
             $("#id_country").change(function() {
                     if ($("#id_country").val() == "US") {
-                            if ($("#payment_preference_paypal").is(":checked")){
-                                    $.each(us_paypal_required_fields, function(i,field){
-                                            $(field).addClass("required");
-                                    });
-                            }
-
-                            if ($("#payment_preference_wire").is(":checked")) {
-                                    $.each(us_wire_required_fields, function(i,field){
-                                            $(field).addClass("required");
-                                    });
-                            }
-                    } else {
-                            $.each(us_paypal_required_fields.concat(us_wire_required_fields), function(i,field){
+                            $(".us_only").show();
+                            $(".non_us_only").hide();
+                            $.each(us_required_fields, function(i, field) {
+                                    $(field).addClass("required");
+                            });
+                            $.each(non_us_required_fields, function(i, field) {
                                     $(field).removeClass("required");
                             });
+                    } else {
+                            $(".us_only").hide();
+                            $(".non_us_only").show();
+                            $.each(us_required_fields, function(i, field) {
+                                    $(field).removeClass("required");
+                            });
+                            $.each(non_us_required_fields, function(i, field) {
+                                    $(field).addClass("required");
+                            });
                     }
-            });
+                    if ($("#payment_preference_paypal").is(":checked")) {
+                            $("#payment_preference_paypal").click();
+                    }
+                    else {
+                            $("#payment_preference_wire").click();
+                    }
+            }).change();
 
     });
   </script>
@@ -80,13 +96,11 @@
   <form action="{% url payment_info_change %}" method="POST" id="paymentchange" class="validate">
     {% csrf_token %}
 
-    <fieldset id="appForm-details">
+    <section>
+    <div class="content-main">
       {{form.bound_fields}}
       {{form.as_template}}
-
-    </fieldset>
-    <div class="form-submit">
-      <button id="guy" class="button"> Submit </button>
-     </div>
+    </div>
+    </section>
   </form>
 {% endblock content %}

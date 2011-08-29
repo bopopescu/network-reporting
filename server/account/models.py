@@ -139,11 +139,13 @@ class PaymentInfo(db.Model):
 
     If 'paypal' is selected for payment preference, we only need their paypal email.
 
-    us_tax_id, local_tax_id, ach_routing_number, and bank_swift_code are only
-    required when country == 'US'
+    us_tax_id and ach_routing_number are only required when country == 'US'
+    
+    local_tax_id and bank_swift_code are only required when country != 'US'
     """
     country = db.StringProperty(choices=[country[0] for country in ISO_COUNTRIES])
     us_tax_id = db.StringProperty()
+    business_name = db.StringProperty()
     local_tax_id = db.StringProperty()
     payment_preference = db.StringProperty(choices=['paypal', 'wire'])
     paypal_email = db.StringProperty()

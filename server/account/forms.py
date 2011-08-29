@@ -49,6 +49,7 @@ class PaymentInfoForm(mpforms.MPModelForm):
     class Meta:
         model = PaymentInfo
         fields = ('country',
+                  'business_name',
                   'payment_preference',
                   'us_tax_id',
                   'local_tax_id',
@@ -67,21 +68,25 @@ class PaymentInfoForm(mpforms.MPModelForm):
 
 
     def clean_country_information(self):
-        if self.data['payment_preference'] == 'wire' and \
-           self.data['country'] == 'US':
-            required_us_info = [self.data['us_tax_id'],
-                                self.data['local_tax_id'],
-                                self.data['ach_routing_number'],
-                                self.data['bank_swift_code']]
+        if self.data['payment_preference'] == 'wire':
+            if self.data['country'] == 'US':
+                required_us_info = [self.data['us_tax_id'],
+                                    self.data['ach_routing_number']]
 
-            if not all(required_us_info):
-                raise forms.ValidationError("""The following information is required for accounts in the United States:
-                                            US Tax ID
-                                            Local Tax ID
-                                            ACH Routing Number
-                                            Bank SWIFT Code
-                                            """)
+                if not all(required_us_info):
+                    raise forms.ValidationError("""The following information is required for accounts in the United States:
+                                                US Tax ID
+                                                ACH Routing Number
+                                                """)
+            else:
+                required_us_info = [self.data['local_tax_id'],
+                                    self.data['bank_swift_code']]
 
+                if not all(required_us_info):
+                    raise forms.ValidationError("""The following information is required for accounts outside the United States:
+                                                US Tax ID
+                                                Bank SWIFT Code
+                                                """)
 
     def clean(self, *args, **kwargs):
         self.clean_payment_type()

@@ -11,19 +11,13 @@ class AdMobServerSide(ServerSide):
     pub_id_attr = 'admob_pub_id'
     network_name = 'AdMob'
 
-    def __init__(self,request,adunit=None,*args,**kwargs):
-        return super(AdMobServerSide,self).__init__(request,adunit,*args,**kwargs)
-
-    @property
-    def url(self):
-        return None
 
     @property  
     def payload(self):
         data = {'rt': 'api',
-                'u': self.get_user_agent(),
-                'i': self.get_ip(),
-                'o': self.get_udid(),
+                'u': self.client_context.user_agent,
+                'i': self.client_context.client_ip,
+                'o': self.client_context.mopub_id,
                 'm': 'live',
                 's': self.get_pub_id(),
                 # 'longitude': , # long

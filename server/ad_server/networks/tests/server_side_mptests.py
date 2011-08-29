@@ -41,7 +41,8 @@ from google.appengine.ext import testbed
 
 from ad_server.networks.jumptap import JumptapServerSide
 from ad_server.networks.millennial import MillennialServerSide
-from ad_server.networks.brightroll import BrightRollServerSide
+from ad_server.networks.brightroll import BrightRollServerSide   
+from ad_server.networks.admob import AdMobServerSide
 
 ################# End to End #################
 

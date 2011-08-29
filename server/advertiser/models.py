@@ -37,7 +37,7 @@ from ad_server.renderers.iad import iAdRenderer
 class Campaign(db.Model):
     name = db.StringProperty(required=True)
     description = db.TextProperty()
-    campaign_type = db.StringProperty(choices=['gtee', 'gtee_high', 'gtee_low', 'promo', 'network','backfill_promo', 'marketplace'], default="network")
+    campaign_type = db.StringProperty(choices=['gtee', 'gtee_high', 'gtee_low', 'promo', 'network','backfill_promo', 'marketplace', 'backfill_marketplace'], default="network")
 
     # budget per day
     budget = db.FloatProperty() 
@@ -248,7 +248,7 @@ class AdGroup(db.Model):
         elif self.network_type == 'custom_native': c = CustomNativeCreative(name='custom native dummy', ad_type='custom_native', format='320x50', format_predicates=['format=*'], html_data=custom_html)
         elif self.network_type == 'admob_native': c = AdMobNativeCreative(name="admob native dummy",ad_type="admob_native",format="320x50",format_predicates=["format=320x50"])
         elif self.network_type == 'millennial_native': c = MillennialNativeCreative(name="millennial native dummy",ad_type="millennial_native",format="320x50",format_predicates=["format=320x50"])
-        elif self.campaign.campaign_type == 'marketplace': c = MarketplaceCreative(name='marketplace dummy', ad_type='html')
+        elif self.campaign.campaign_type in ['marketplace', 'backfill_marketplace']: c = MarketplaceCreative(name='marketplace dummy', ad_type='html')
         if c: c.ad_group = self
         return c
     
@@ -330,7 +330,7 @@ class AdGroup(db.Model):
         
         
 class Creative(polymodel.PolyModel):
-    name = db.StringProperty()
+    name = db.StringProperty(default='Creative')
     custom_width = db.IntegerProperty()
     custom_height = db.IntegerProperty()
     landscape = db.BooleanProperty(default=False) # TODO: make this more flexible later
@@ -401,6 +401,7 @@ class Creative(polymodel.PolyModel):
     def _set_adgroup(self,value):
             self.ad_group = value
             
+    #whoever did this you rule
     adgroup = property(_get_adgroup,_set_adgroup)
         
     def get_owner(self):

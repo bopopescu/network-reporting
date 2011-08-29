@@ -12,6 +12,7 @@ from multiprocessing.pool import ThreadPool
 from optparse import OptionParser
 
 
+
 # add mopub root to path, for run_jobflow.sh
 sys.path.append(os.getcwd()+'/../../')
 
@@ -206,7 +207,6 @@ def process_input_file(input_file, num_workers):
                     traceback.print_exc()
                                                                                     
                                 
-                    
 def main():
     start = time.time()
     

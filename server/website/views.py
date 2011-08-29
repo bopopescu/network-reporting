@@ -24,6 +24,13 @@ from django.core.mail import send_mail, EmailMessage
 
 def website_root(request,*args,**kwargs):
     return HttpResponseRedirect("/inventory")
+ 
+
+def mobile_web_test(request):
+    context =  {}
+
+    return render_to_response(request,'website/mobile_web_test.html', context)
+    
 
 def droid_market_search(request, qs):
     qs = qs.replace(' ', '+')

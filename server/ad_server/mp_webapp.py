@@ -93,9 +93,7 @@ class MPLoggingWSGIApplication(webapp.WSGIApplication):
         self._log_request(request, response)
     
     def _log_request(self, request, response):
-        import logging
         apache_string = self._build_apache_string(request, response)
-        logging.info("\n\nAPACHE:"+apache_string+"\n\n")
         logger.log(apache_string)
 
     def _build_apache_string(self, request, response):

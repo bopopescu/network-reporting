@@ -1,3 +1,4 @@
+import datetime
 import logging
 from common.utils import simplejson
 
@@ -10,9 +11,11 @@ class DebugConsole(object):
         self.response = response
         self.lines = []
         self.rendered_creative = None
+        self.log_to_console = False
         
-    def start(self):
+    def start(self, log_to_console=False):
         self.lines = []    
+        self.log_to_console = log_to_console
         
     def info(self, logline):
         self.log(logline, logging.info)
@@ -30,8 +33,12 @@ class DebugConsole(object):
         self.log(logline, logging.critical)    
         
     def log(self, logline, logging_type=logging.info):
-        # log to the console just as before
-        logging_type(logline)
+        "prepend time"
+        logline = "%s - %s" % (datetime.datetime.now(),
+                               logline)
+        # log to the console just as before if set to
+        if self.log_to_console:
+            logging_type(logline)
         if logging_type in self.log_levels:
             self.lines.append(logline.decode('utf8'))
 

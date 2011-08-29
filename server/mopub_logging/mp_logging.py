@@ -1,15 +1,16 @@
-import logging
 import time
 import datetime
 import random
 import urllib
 
+from ad_server.debug_console import trace_logging
 from common.utils import helpers 
 from google.appengine.api import memcache
 from google.appengine.api import taskqueue
 from google.appengine.api import urlfetch
 from publisher.query_managers import AdUnitContextQueryManager
 from reporting import models as reporting_models
+
 
 REQ_EVENT = 0
 IMP_EVENT = 1
@@ -60,7 +61,6 @@ def log(request,
     # native failure we just bail in order to 
     # Note if logging an adnetwork request, we pass
     # in request = None.
-    logging.info("trying to log")
     if request:
         exclude_creatives = request.get_all("exclude")
         if exclude_creatives:
@@ -92,7 +92,7 @@ def log(request,
     # we add a "fire-and-forget" taskqueue entry so that the
     # data shows up in the apache-style request logs    
     if adunit_id and creative_id and event == REQ_EVENT:
-        logging.info("fire and forget--adunit: %s creative:%s"%(adunit_id,creative_id))
+        trace_logging.info("fire and forget--adunit: %s creative:%s"%(adunit_id,creative_id))
         fire_forget_params = dict(id=adunit_id, cid=creative_id, udid=udid or '', ua=user_agent)
         task = taskqueue.Task(params=fire_forget_params,
                               method='GET',
@@ -102,7 +102,7 @@ def log(request,
         try:
             task.add(queue_name)
         except Exception, e:
-            logging.warning(e)
+            trace_logging.warning(e)
         
         # make async internal request to appengine
         # rpc = urlfetch.create_rpc(deadline=2) # in seconds
@@ -143,14 +143,14 @@ def log(request,
     
     # bail early if the memcache increment failed
     if log_index is None or log_index == '': 
-        logging.error("NOOOOO INDEX")
+        trace_logging.error("NOOOOO INDEX")
         return
     
     # put the log data into appropriate place
-    logging.info("adding to cache: %s ts: %s"%(log_index,time_bucket))
+    trace_logging.info("adding to cache: %s ts: %s"%(log_index,time_bucket))
     log_key = LOG_KEY_FORMAT%dict(account_name=account_name,account_shard=account_shard,time=time_bucket,log_index=log_index)
     memcache.set(log_key,logging_data,time=MEMCACHE_ALIVE_TIME)
-    logging.info("done adding to cache")
+    trace_logging.info("done adding to cache")
     
     
     # send to appropriately named task_queue
@@ -164,10 +164,10 @@ def log(request,
         return
         
     try:
-        logging.info("trying to add to queue (in try): %s"%task_name)
+        trace_logging.info("trying to add to queue (in try): %s"%task_name)
         account_bucket = hash(account_name)%NUM_TASK_QUEUES
         task_queue_name = TASK_QUEUE_NAME_FORMAT%account_bucket
-        logging.info('\n\ntask: %s\n queue: %s eta:%s\n\n'%(task_name,
+        trace_logging.info('\n\ntask: %s\n queue: %s eta:%s\n\n'%(task_name,
                                                     task_queue_name,
                                                     _get_execution_datetime(account_shard,time_bucket)))
         t = taskqueue.Task(name=task_name,params={'account_name':account_name,
@@ -178,9 +178,9 @@ def log(request,
         if not testing:
             t.add(task_queue_name)
     except taskqueue.TaskAlreadyExistsError:
-        logging.info("task %s already exists"%task_name)
+        trace_logging.info("task %s already exists"%task_name)
     except Exception, e:    
-        logging.error(e)
+        trace_logging.error(e)
         
 def _get_time_bucket_start(time_bucket):
     # time_bucket = the current time bucket
@@ -217,5 +217,5 @@ def log_inapp_purchase(request, event, udid, receipt, mobile_appid=None):
     try:
         task.add(queue_name)
     except Exception, e:
-        logging.error(e)
+        trace_logging.error(e)
     

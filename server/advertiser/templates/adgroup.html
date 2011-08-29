@@ -79,7 +79,7 @@
                             <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
                         </tr>
                     {% endif %} 
-                      <tr {% if campaign.promo or campaign.network %} class="active" {% endif %} id="stats-breakdown-impressions">
+                      <tr {% if not campaign.gtee %} class="active" {% endif %} id="stats-breakdown-impressions">
                         <td class="stats-breakdown-value today"><span class="inner">{{today.impression_count|withsep}}</span></td>
                         <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.impression_count|withsep}}</span></td>
                         <td class="stats-breakdown-value all"><span class="inner">{{totals.impression_count|withsep}}</span></td>

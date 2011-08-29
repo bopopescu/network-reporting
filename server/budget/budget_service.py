@@ -19,6 +19,9 @@ from budget.memcache_budget import (spent_today,
                                     remaining_daily_budget,
                                     remaining_ts_budget
                                     )
+                                    
+from advertiser.query_managers import AdGroupQueryManager
+
 """
 A service that determines if a campaign can be shown based upon the defined 
 budget for that campaign. If the budget_type is "evenly", a minute by minute
@@ -256,9 +259,13 @@ def get_osi(campaign):
     
     # If there is no log built yet, we return True
     if last_budgetslice is None:
-        return True    
+        return True
     else:
-        return last_budgetslice.actual_spending >= last_budgetslice.desired_spending*successful_delivery 
+        adgroup = AdGroupQueryManager().get_adgroups(campaign=campaign)[0]
+        if last_budgetslice.desired_spending < adgroup.bid/1000:
+            return True
+        else:
+            return last_budgetslice.actual_spending >= last_budgetslice.desired_spending*successful_delivery 
 
         
                 

@@ -62,4 +62,6 @@ class ChartBoostUnitTests(unittest.TestCase):
        
         response_tuple = chartboost.bid_and_html_for_response(response)
         
+        assert False
+        
         assert(response_tuple[1]=="""<div style=\'text-align:center\'><a href="http://www.chartboost.com/api/banner_click.json?app=4de55942bb93162f4500006c&uuid=467A52DB6F573AC18431045FB136B22E" target="_blank"><img src="https://s3.amazonaws.com/chartboost/banners/banner_ad_tapzoo.jpg"/></a></div>""")

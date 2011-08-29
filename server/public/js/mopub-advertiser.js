@@ -356,8 +356,6 @@ var mopub = mopub || {};
     });
   });
   
-  
-  
   $('#campaignAdgroupForm input[name="start_date"]').datepicker({ minDate:0 });
   $('#campaignAdgroupForm input[name="end_date"]').datepicker({ minDate:0 });
 
@@ -640,23 +638,6 @@ var mopub = mopub || {};
 
     }
     checkFilterHash();
-    function addCommas(nStr)
-    {
-        nStr += '';
-        x = nStr.split('.');
-        x1 = x[0];
-        x2 = x.length > 1 ? '.' + x[1] : '';
-        var rgx = /(\d+)(\d{3})/;
-        while (rgx.test(x1)) {
-            x1 = x1.replace(rgx, '$1' + ',' + '$2');
-        }
-        return x1 + x2;
-    }
-    
-    function formatPercentage(number){
-      // We round to two decimal places
-      return (number*100).toFixed(2) + '%';
-    }
     
     function parseIntFromStatText(statText) {
         var stat = parseInt(statText.replace(/,/g, ''), 10);
@@ -664,189 +645,86 @@ var mopub = mopub || {};
     }
     
     function setSectionLoadingSpinnerHidden(campaignType, hidden) {
-        var selector = "";
-        switch (campaignType) {
-            case CampaignTypeEnum.Guaranteed: selector = "#gtee-loading-img"; break;
-            case CampaignTypeEnum.Promotional: selector = "#promo-loading-img"; break;
-            case CampaignTypeEnum.Network: selector = "#network-loading-img"; break;
-            case CampaignTypeEnum.Backfill: selector = "#bfill-loading-img"; break;
-            default: return; break;
-        }
+        var classPrefix = campaignType.split('_')[0];
+        var selector = '#' + classPrefix + '-loading-img';
         
         if (hidden) $(selector).hide();
         else $(selector).show();
     }
     
-    function calcGuaranteedRollup() {
-        $('#gtee-rollups').show();
-        var gtee_imp, gtee_clk, gtee_rev;
-        gtee_imp = gtee_clk = gtee_rev = 0;
-        $('.gtee-imp:visible').each(function() {
-                gtee_imp += parseIntFromStatText($(this).text());
-                });
-        $('.gtee-clk:visible').each(function() {
-                gtee_clk += parseIntFromStatText($(this).text());
-                });
-        $('tr.gtee_row:visible td.gtee-rev').each(function() {
-                gtee_rev += parseIntFromStatText($(this).text());
-                });
-
-        $('#gtee-total-imp').text(addCommas(gtee_imp));
-        $('#gtee-total-clk').text(addCommas(gtee_clk));
-        $('#gtee-total-rev').text('$'+addCommas(Math.round(gtee_rev*100)/100));
-        var gtee_ctr;
-        if (gtee_clk === 0) {
-            gtee_ctr = formatPercentage(0);
-        }
-        else {
-            gtee_ctr = formatPercentage(gtee_clk/gtee_imp, 2);
-        }
-        $('#gtee-total-ctr').text(gtee_ctr);
-
-        setSectionLoadingSpinnerHidden(CampaignTypeEnum.Guaranteed, true);
-    }
-    
-    function calcPromotionalRollup() {
-        $('#promo-rollups').show();
-        var promo_imp, promo_clk, promo_conv;
-        promo_imp = promo_clk = promo_conv = 0;
-        $('.promo-imp:visible').each(function() {
-                promo_imp += parseIntFromStatText($(this).text());
-                });
-        $('.promo-clk:visible').each(function() {
-                promo_clk += parseIntFromStatText($(this).text());
-                });
-        $('.promo-conv:visible').each(function() {
-                promo_conv += parseIntFromStatText($(this).text());
-                });
-
-        $("#promo-total-imp").text(addCommas(promo_imp));
-        $("#promo-total-clk").text(addCommas(promo_clk));
-        $("#promo-total-conv").text(addCommas(promo_conv));
-        var promo_ctr;
-        if (promo_clk === 0) {
-            promo_ctr = formatPercentage(0);
-        }
-        else {
-            promo_ctr = formatPercentage(promo_clk/promo_imp);
-        }
-        $("#promo-total-ctr").text(promo_ctr);
-        
-        setSectionLoadingSpinnerHidden(CampaignTypeEnum.Promotional, true);
-    }
-    
-    function calcNetworkRollup() {
-        $('#network-rollups').show();
-        var net_imp, net_clk, net_req;
-        net_imp = net_clk = net_req = 0;
-        $('.network-imp').each(function() {
-                net_imp += parseIntFromStatText($(this).text());
-                });
-        $('.network-clk').each(function() {
-                net_clk += parseIntFromStatText($(this).text());
-                });
-        $('.network-req').each(function() {
-                net_req += parseIntFromStatText($(this).text());
-                });
-        $("#network-total-imp").text(addCommas(net_imp));
-        $("#network-total-clk").text(addCommas(net_clk));
-        var net_ctr;
-        if (net_clk === 0) {
-            net_ctr = formatPercentage(0);
-        }
-        else {
-            net_ctr = formatPercentage(net_clk/net_imp);
-        }
-        $("#network-total-ctr").text(net_ctr);
-        var net_fill;
-        if (net_imp === 0) {
-            net_fill = formatPercentage(0);
-        }
-        else {
-            net_fill = formatPercentage(net_imp/net_req);
-        }
-        $('#network-total-fill').text(net_fill + ' (' + addCommas(net_req) + ')');
-        
-        setSectionLoadingSpinnerHidden(CampaignTypeEnum.Network, true);
-    }
-    
-    function calcBackfillRollup() {
-        $('#bfill-rollups').show();
-        var bfill_imp, bfill_clk, bfill_conv;
-        bfill_imp = bfill_clk = bfill_conv = 0;
-        $('.bfill-imp:visible').each(function() {
-                bfill_imp += parseIntFromStatText($(this).text());
-                });
-        $('.bfill-clk:visible').each(function() {
-                bfill_clk += parseIntFromStatText($(this).text());
-                });
-        $('.bfill-conv:visible').each(function() {
-                bfill_conv += parseIntFromStatText($(this).text());
-                });
-
-        $("#bfill-total-imp").text(addCommas(bfill_imp));
-        $("#bfill-total-clk").text(addCommas(bfill_clk));
-        $("#bfill-total-conv").text(addCommas(bfill_conv));
-        var bfill_ctr;
-        if (bfill_clk === 0) {
-            bfill_ctr = formatPercentage(0);
-        }
-        else {
-            bfill_ctr = formatPercentage(bfill_clk/bfill_imp);
-        }
-        $("#bfill-total-ctr").text(bfill_ctr);
-        
-        setSectionLoadingSpinnerHidden(CampaignTypeEnum.Backfill, true);
+    function calcAndShowRollupForCampaignType(campaignType) {
+      var req, imp, clk, rev, conv, ctr, fill;
+      req = imp = clk = rev = conv = ctr = fill = 0;
+      
+      var classPrefix = campaignType.split('_')[0];
+      
+      $(classPrefix + '-req:visible').each(function() {
+        req += parseIntFromStatText($(this).text());
+      });
+      
+      $(classPrefix + '-imp:visible').each(function() {
+        imp += parseIntFromStatText($(this).text());
+      });
+      
+      $(classPrefix + '-clk:visible').each(function() {
+        clk += parseIntFromStatText($(this).text());
+      });
+      
+      $(classPrefix + '-rev:visible').each(function() {
+        rev += parseIntFromStatText($(this).text());
+      });
+      
+      $(classPrefix + '-conv:visible').each(function() {
+        conv += parseIntFromStatText($(this).text());
+      });
+      
+      ctr = (clk === 0 || imp === 0) ? 0 : clk / imp;
+      
+      fill = (imp === 0 || req === 0) ? 0 : imp / req;
+      
+      $("#" + classPrefix + '-total-req').text(mopub.Utils.formatNumberWithCommas(req));
+      $("#" + classPrefix + '-total-imp').text(mopub.Utils.formatNumberWithCommas(imp));
+      $("#" + classPrefix + '-total-clk').text(mopub.Utils.formatNumberWithCommas(clk));
+      $("#" + classPrefix + '-total-rev').text('$' + mopub.Utils.formatNumberWithCommas(rev.toFixed(2)));
+      $("#" + classPrefix + '-total-conv').text(mopub.Utils.formatNumberWithCommas(conv));
+      $("#" + classPrefix + '-total-ctr').text(mopub.Utils.formatNumberAsPercentage(ctr))
+      $("#" + classPrefix + '-total-fill').text(
+        mopub.Utils.formatNumberAsPercentage(fill) + '(' + 
+        mopub.Utils.formatNumberWithCommas(req) + ')'
+      );
+      
+      $(classPrefix + '-rollups').show();
+      
+      setSectionLoadingSpinnerHidden(campaignType, true);
     }
     
     function calcRollups() {
         // Don't compute rollups until we've gotten all the information.
-        if (!isCampaignsPageFullyUpdated()) return;
+        if (!allFetchesCompleted()) return;
         
-        calcGuaranteedRollup();
-        calcPromotionalRollup();
-        calcNetworkRollup();
-        calcBackfillRollup();
+        var campaignTypes = [
+          CampaignTypeEnum.Guaranteed,
+          CampaignTypeEnum.Promotional,
+          CampaignTypeEnum.Network,
+          CampaignTypeEnum.Backfill
+        ];
+        
+        $.each(campaignTypes, function(index, type) {
+          calcAndShowRollupForCampaignType(type);
+        });
     }
 
     // *********************************************************************
     // Begin -- Campaign AJAX
     // *********************************************************************
-
-    // Time to wait before terminating AJAX request.
-    var AJAX_TIMEOUT_MILLISECONDS = 10000;
-    
-    // Maximum number of AJAX retries before giving up.
-    var AJAX_MAX_FAILED_ATTEMPTS = 3;
-    
-    // Number of campaigns to be fetched in a single AJAX request.
-    var AJAX_CAMPAIGN_CHUNK_SIZE = 8;
-    
-    // Time to wait before retrying a failed AJAX request.
-    var AJAX_BACKOFF_TIME_MILLISECONDS = 1000;
-    
-    // Multiplier to increase the backoff time when there are consecutive failures.
-    var AJAX_BACKOFF_MULTIPLIER = 1.5;
-    
-    // =====================================================================
-    
-    var FetchData = function(args) {
-        $.extend(this, args);
-        return this;
-    }
-    
-    var BackoffData = function(args) {
-        this.delay = AJAX_BACKOFF_TIME_MILLISECONDS;
-        this.failedAttempts = 0;
-        $.extend(this, args);
-        return this;
-    }
     
     var CampaignTypeEnum = {
         Guaranteed: "gtee_row",
         Promotional: "promo_row",
         Network: "network_row",
         Backfill: "bfill_row",
+        Marketplace: "marketplace_row",
+        BackfillMarketplace: "backfill_marketplace_row",
         All: "campaignData"
     };
     
@@ -865,525 +743,367 @@ var mopub = mopub || {};
         ctr: "ctr",
         fill_rate: "fill",
     };
-        
-    var unfetchedIds = getCampaignIds();
-    var fetchedCampaignIds = {};
-    var failedIds = [];
     
-    var guaranteedIds = getCampaignIdsWithType(CampaignTypeEnum.Guaranteed);
-    var promotionalIds = getCampaignIdsWithType(CampaignTypeEnum.Promotional);
-    var networkIds = getCampaignIdsWithType(CampaignTypeEnum.Network);
-    var backfillIds = getCampaignIdsWithType(CampaignTypeEnum.Backfill);
+    var campaignsData = {};
+    var gteeFetch, promoFetch, networkFetch, bfillFetch, marketplaceFetch, bfMarketplaceFetch;
     
-    // Helpers
+    // Entry point.
     // =====================================================================
     
-    function getCampaignIds() {
-        var dictionary = {};
-        $(".campaignData").each(
-            function() { 
-                var id = $(this).attr("id");
-                if (id && id != "") dictionary[id] = {};
-            });
-        return dictionary;
+    if (mopub.isCampaignsPage) {
+      // setTimeout is a workaround for Chrome: without it, the loading indicator doesn't 
+      // disappear until all "onload" AJAX requests are complete.
+      setTimeout(initCampaignsPage, 0);
+    } else {
+      mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
     }
     
-    function setCampaignFilterOptionsDisabled(disabled) {
-        $("#campaigns-filterOptions").buttonset({"disabled": disabled});
+    function initCampaignsPage() {
+      showOrHideRevenueBreakdown();
+      setupAjaxStatusPopup();
+      setCampaignFilterOptionsDisabled(true);
+      populateStatsBreakdownsWithData(mopub.accountStats);
+      populateGraphWithAccountStats(mopub.accountStats);
+      populateCampaignStats();
     }
     
-    function getNumDaysToFetch() {
-        var daysRadioVal = $("input[name=dashboard-dateOptions-option]:checked").val();
-        if (!daysRadioVal || daysRadioVal == "custom") {
-            var currentUrl = document.location.href;
-            var daysRegex = /r=(\d+)/g;
-            var match = daysRegex.exec(currentUrl);
-            if (!match || match.length < 2) return null;
-            else return match[1];
-        }
-        else return daysRadioVal;
-    }
-    
-    function getStartDate() {
-        var currentUrl = document.location.href;
-        var startDateRegex = /s=(\d+-\d+-\d+)/g;
-        var match = startDateRegex.exec(currentUrl);
-        if (!match || match.length < 2) return null;
-        else return match[1];
-    }
-    
-    function getKeysFromObject(obj)
-    {
-        var keys = [];
-        for (var i in obj) {
-            if (obj.hasOwnProperty(i)) keys.push(i);
-        }
-        return keys;
-    }
-    
-    function chunkArray(array, chunkSize) {
-        if (!array) return [];
-        
-        var chunks = [];
-        $.each(array, function(index, elem) {
-            var chunkNumber = Math.floor(index / chunkSize);
-            var indexInChunk = index % chunkSize;
-            chunks[chunkNumber] = chunks[chunkNumber] || [];
-            chunks[chunkNumber][indexInChunk] = elem;
-        });
-        return chunks;
-    }
-    
-    function objectIsEmpty(obj) {
-        for (var key in obj) { 
-            if (obj.hasOwnProperty(key)) return false;
-        }
-        return true;
-    }
-    
-    function isCampaignsPageFullyUpdated() {
-        // unfetchedIds is only empty if all AJAX has completed (or if there are no campaigns).
-        return objectIsEmpty(unfetchedIds);
-    }
-    
-    function formatStatsForDisplay(sumStats) {
-        var results = $.extend(true, {}, sumStats);
-        results.impression_count = addCommas(results.impression_count);
-        results.conversion_count = addCommas(results.conversion_count) + 
-            " (" + formatPercentage(results.conv_rate) + ")";
-        results.request_count = addCommas(results.request_count);
-        results.click_count = addCommas(results.click_count);
-        results.cpa = "$" + results.cpa.toFixed(2);
-        results.cpc = "$" + results.cpc.toFixed(2);
-        results.cpm = "$" + results.cpm.toFixed(2);
-        results.ctr = formatPercentage(results.ctr);
-        results.fill_rate = formatPercentage(results.fill_rate);
-        
-        var onScheduleHtml = "";
-        if (results.status == "Running") {
-            if (results.on_schedule == "on pace") {
-                onScheduleHtml = '<span class="osi-success"> On pace ' +
-                    '<a href="#" id="campaign-osi-success-helpLink" class="whatsthis">' + 
-                    '<div class="whatsthis-icon"></div></a></span>';
-            } else if (results.on_schedule == "behind") {
-                onScheduleHtml = '<span class="osi-failure""> Behind ' +
-                    '<a href="#" id="campaign-osi-failure-helpLink" class="whatsthis">' + 
-                    '<div class="whatsthis-icon"></div></a></span>';
-            }
-        }
-        results.on_schedule = onScheduleHtml;
-        
-        return results;
+    function showOrHideRevenueBreakdown() {
+      // Hide the revenue breakdown if there are no guaranteed campaigns.
+      var guaranteed = getCampaignIdsWithType(CampaignTypeEnum.Guaranteed);
+      if (guaranteed.length == 0) $("#stats-breakdown-revenue").hide();
+      else $("#stats-breakdown-revenue").show();
     }
     
     function getCampaignIdsWithType(type) {
-        return $("." + type).map(function() { return $(this).attr("id"); });
-    }
-    
-    function getCampaignTypeForId(id) {
-        if ($.inArray(id, guaranteedIds) != -1) return CampaignTypeEnum.Guaranteed;
-        else if ($.inArray(id, promotionalIds) != -1) return CampaignTypeEnum.Promotional;
-        else if ($.inArray(id, networkIds) != -1) return CampaignTypeEnum.Network;
-        else if ($.inArray(id, backfillIds) != -1) return CampaignTypeEnum.Backfill;
-        else return null;
-    }
-    
-    function hasAlreadyFetchedCampaigns(campaigns) {
-        for (var i = 0; i < campaigns.length; i++) {
-            var campaignId = campaigns[i];
-            if (!fetchedCampaignIds[campaignId]) return false;
-        }
-        return true;
-    }
-    
-    function getFetchedCampaignsWithType(type) {
-        var matchingCampaignIds = getCampaignIdsWithType(type);
-        
-        var campaigns = [];
-        $.each(fetchedCampaignIds, function(key, value) {
-            if ($.inArray(key, matchingCampaignIds) != -1) {
-                var dict = {};
-                dict.key = value["name"].replace("||", "");
-                dict.stats = value;
-                campaigns.push(dict);
-            }
-        });
-        return campaigns;
-    }
-    
-    function sortCampaignsByStat(campaigns, statName) {
-        campaigns.sort(function(a, b) {
-            var statA = parseFloat(a["stats"]["sum"][statName]);
-            var statB = parseFloat(b["stats"]["sum"][statName]);
-            if (statA < statB) return 1;
-            if (statA > statB) return -1;
-            else return 0;
-        });
-        return campaigns;
-    }
-    
-    // Main AJAX call + callbacks
-    // =====================================================================
-    
-    function ajaxBatchFetchCampaigns(fetchData, unfetchedIds, fetchedIds, backoffData) {
-        // Construct AJAX URL with the proper query parameters.
-        var campaigns = fetchData.campaigns;
-        var url = "/campaigns/stats/ajax/?";
-        for (var i = 0; i < campaigns.length; i++) {
-            if (i == 0) url += "adv=" + campaigns[i];
-            else url += "&adv=" + campaigns[i];
-            
-            // Display the loading indicator for this campaign's section.
-            var campaignType = getCampaignTypeForId(campaigns[i]);
-            if (campaignType != null) setSectionLoadingSpinnerHidden(campaignType, false);
-        }
-        url += "&date_range=" + fetchData.days;
-        if (fetchData.startDate) url += "&start_date=" + fetchData.startDate;
-        
-        // Fire request.
-        $.ajax({
-            url: url,
-            dataType: 'json',
-            success: function() {
-                return function(data) {
-                    updateCampaign(data, unfetchedIds, fetchedIds);
-                }
-            }(),
-            error: function() {
-                backoffData.failedAttempts++;
-                
-                // If we've failed too many times, stop retrying. Mark any unfetched IDs as failed.
-                if (backoffData.failedAttempts > AJAX_MAX_FAILED_ATTEMPTS) {
-                    ajaxFetchCampaignsFailed(campaigns);
-                    return;
-                }
-                
-                setTimeout(function() { ajaxBatchFetchCampaigns(fetchData, unfetchedIds, fetchedIds, backoffData) },
-                    backoffData.delay);
-                backoffData.delay *= AJAX_BACKOFF_MULTIPLIER;
-            },
-            timeout: AJAX_TIMEOUT_MILLISECONDS
-        });
-    }
-    
-    function ajaxFetchCampaignsFailed(campaigns) {
-        $("#ajaxFailure").show();
-        
-        $.each(campaigns, function(index, campaign) {
-            if ($.inArray(campaign, failedIds) == -1) failedIds.push(campaign);
-            
-            // Stop the loading indicator for this campaign's section.
-            var campaignType = getCampaignTypeForId(campaign);
-            if (campaignType != null) setSectionLoadingSpinnerHidden(campaignType, true);
-        });
-    }
-    
-    function updateHelpLinks() {
-        $('.complete .ecpm-helpLink').html("What's this?");
-        
-        $('.whatsthis').click(function(e) {
-            e.preventDefault();
-            $('#'+$(this).attr('id').replace('helpLink', 'helpContent')).dialog({
-                buttons: { "Close": function() { $(this).dialog('close');} }
-            });
-        });
-    }
-    
-    function updateCampaign(data, unfetchedIds, fetchedIds) {
-        var allStats = data["all_stats"];
-        
-        for (var key in allStats) {
-            var campaignId = key.split("||")[1];
-            var sumStats = allStats[key]["sum"];
-            var formattedStats = formatStatsForDisplay(sumStats);
-            
-            $.each(formattedStats, function(key, value) {
-                updateCampaignField(campaignId, key, value);
-            });
-            
-            // Set campaign status to "Running", "Paused", etc. via class attribute.
-            var campaignStatus = formattedStats.status;
-            var selector = "#" + campaignId;
-            $(selector).removeClass("incomplete")
-                .addClass("complete")
-                .addClass("campaign-status-" + campaignStatus);
-            
-            updateHelpLinks();
-            
-            // Record campaignId as fetched by removing from unfetchedIds.
-            delete unfetchedIds[campaignId];
-            fetchedIds[campaignId] = allStats[key];
-        }
-        
-        if (hasAlreadyFetchedCampaigns(guaranteedIds)) calcGuaranteedRollup();
-        if (hasAlreadyFetchedCampaigns(promotionalIds)) calcPromotionalRollup();
-        if (hasAlreadyFetchedCampaigns(networkIds)) calcNetworkRollup();
-        if (hasAlreadyFetchedCampaigns(backfillIds)) calcBackfillRollup();
-        
-        if (isCampaignsPageFullyUpdated()) onCampaignsFullyUpdated();
-    }
-    
-    function updateCampaignField(campaign, field, data) {
-        if (!campaign || campaign == "") return;
-        
-        var classType = jsonKeyToHtmlClassMap[field];
-        if (!classType || classType == "") return;
-        
-        var selector = "#" + campaign + " ." + classType;
-        $(selector).html(data);
-    };
-    
-    function retryFailedAjax() {
-        var days = getNumDaysToFetch() || 14;
-        var startDate = getStartDate();
-        
-        var chunks = chunkArray(failedIds, AJAX_CAMPAIGN_CHUNK_SIZE);
-        for (var i = 0; i < chunks.length; i++) {
-            var backoffData = new BackoffData();
-            var fetchData = new FetchData({
-                campaigns: chunks[i], 
-                days: days, 
-                startDate: startDate 
-            });
-            ajaxBatchFetchCampaigns(fetchData, unfetchedIds, fetchedCampaignIds, backoffData);
-        }
+      return $("." + type).map(function() { return $(this).attr("id"); });
     }
     
     function setupAjaxStatusPopup() {
-        $("#ajaxRetry").click(function(event) {
-            retryFailedAjax();
-            $("#ajaxFailure").fadeOut();
-            event.preventDefault();
-        });
+      $("#ajaxRetry").click(function(event) {
+        retryFailedFetches();
+        $("#ajaxFailure").fadeOut();
+        event.preventDefault();
+      });
 
-        $("#ajaxDismiss").click(function(event) {
-           $("#ajaxFailure").fadeOut(); 
-           event.preventDefault();
-        });
+      $("#ajaxDismiss").click(function(event) {
+       $("#ajaxFailure").fadeOut(); 
+       event.preventDefault();
+      });
     }
     
-    // Helpers for graph construction
-    // =====================================================================
-    
-    function getGraphAdditiveStatsForStatName(statName, topCampaigns, otherCampaigns) {
-        var result = [];
-        
-        // Get stats for the top campaigns.
-        $.each(topCampaigns, function(index, campaign) {
-            var campaignName = campaign["key"];
-            var arrayOfDailyStats = campaign["stats"]["daily_stats"];
-            var statsForCampaign = {};
-            statsForCampaign[campaignName] = statArrayFromDailyStats(arrayOfDailyStats, statName);
-            result.push(statsForCampaign);
-        });
-        
-        // Get stats for all other campaigns.
-        var statsForOtherCampaigns = sumDailyStatsAcrossCampaigns(otherCampaigns, statName);
-        var otherDict = { "Others": statsForOtherCampaigns };
-        result.push(otherDict);
-        
-        return result;
-    }
-    
-    function statArrayFromDailyStats(arrayOfDailyStats, statName) {
-        return $.map(arrayOfDailyStats, function(oneDayStats) {
-            return parseFloat(oneDayStats[statName]);
-        });
-    }
-    
-    function sumDailyStatsAcrossCampaigns(campaigns, statName) {
-        var result = [];
-        $.each(campaigns, function(index, campaign) {
-            var arrayOfDailyStats = campaign.stats.daily_stats;
-            $.each(arrayOfDailyStats, function(dayIndex, oneDayStats) {
-                if (!result[dayIndex]) result[dayIndex] = 0;
-                result[dayIndex] += parseFloat(oneDayStats[statName]);
-            });
-        });
-        return result;
-    }
-    
-    function getDailyCtrAcrossCampaigns(campaigns) {
-        var ctr = [];
-        var clicks = sumDailyStatsAcrossCampaigns(campaigns, "click_count");
-        var impressions = sumDailyStatsAcrossCampaigns(campaigns, "impression_count");
-        
-        for (var i = 0; i < clicks.length; i++) {
-            ctr[i] = (clicks[i] / impressions[i]) || 0;
+    function retryFailedFetches() {
+      var fetches = [gteeFetch, promoFetch, networkFetch, bfillFetch, marketplaceFetch, 
+        bfMarketplaceFetch];
+      
+      $.each(fetches, function(index, fetch) {
+        if (fetch.hasFailed) {
+          setSectionLoadingSpinnerHidden(fetch.campaignType, false);
+          fetch.start();
         }
-        return ctr;
+      });
     }
     
-    function getGraphImpressionStats() {
-        var allCampaigns = getFetchedCampaignsWithType(CampaignTypeEnum.All);
-        var sortedCampaigns = sortCampaignsByStat(allCampaigns, "impression_count");
-        var topCampaigns = sortedCampaigns.slice(0, 3);
-        var otherCampaigns = sortedCampaigns.slice(3, sortedCampaigns.length);
-        return getGraphAdditiveStatsForStatName("impression_count", topCampaigns, otherCampaigns);
-    }
-    
-    function getGraphRevenueStats() {
-        // We only care about guaranteed campaigns when graphing revenue.
-        var allGuaranteed = getFetchedCampaignsWithType(CampaignTypeEnum.Guaranteed);
-        var sortedGuaranteed = sortCampaignsByStat(allGuaranteed, "revenue");
-        var topGuaranteed = sortedGuaranteed.slice(0, 3);
-        var otherGuaranteed = sortedGuaranteed.slice(3, sortedGuaranteed.length);
-        return getGraphAdditiveStatsForStatName("revenue", topGuaranteed, otherGuaranteed);
-    }
-    
-    function getGraphClickStats() {
-        var allCampaigns = getFetchedCampaignsWithType(CampaignTypeEnum.All);
-        var sortedCampaigns = sortCampaignsByStat(allCampaigns, "impression_count");
-        var topCampaigns = sortedCampaigns.slice(0, 3);
-        var otherCampaigns = sortedCampaigns.slice(3, sortedCampaigns.length);
-        return getGraphAdditiveStatsForStatName("click_count", topCampaigns, otherCampaigns);
-    }
-    
-    function getGraphCtrStats() {
-        var allCampaigns = getFetchedCampaignsWithType(CampaignTypeEnum.All);
-        var sortedCampaigns = sortCampaignsByStat(allCampaigns, "impression_count");
-        var topCampaigns = sortedCampaigns.slice(0, 3);
-        var otherCampaigns = sortedCampaigns.slice(3, sortedCampaigns.length);
-        
-        var result = [];
-        
-        // Get stats for the top campaigns.
-        $.each(topCampaigns, function(index, campaign) {
-            var campaignName = campaign["key"];
-            var arrayOfDailyStats = campaign["stats"]["daily_stats"];
-            var statsForCampaign = {};
-            statsForCampaign[campaignName] = statArrayFromDailyStats(arrayOfDailyStats, "ctr");
-            result.push(statsForCampaign);
-        });
-        
-        // Get stats for all other campaigns.
-        var statsForOtherCampaigns = getDailyCtrAcrossCampaigns(otherCampaigns);
-        var otherDict = { "Others": statsForOtherCampaigns };
-        result.push(otherDict);
-        
-        // Get stats for MoPub-optimized CTR.
-        var accountDailyStats = mopub.accountStats["all_stats"]["||"]["daily_stats"];
-        var mopubOptimized = { 
-            "MoPub Optimized": statArrayFromDailyStats(accountDailyStats, "ctr"),
-        };
-        result.push(mopubOptimized);
-        
-        return result;
-    }
-    
-    // Graph and stats construction methods
-    // =====================================================================
-    
-    function prepareGraphFromCampaignData() {
-        var graphImpStats = getGraphImpressionStats();
-        var graphRevStats = getGraphRevenueStats();
-        var graphClkStats = getGraphClickStats();
-        var graphCtrStats = getGraphCtrStats();
-        
-        mopub.dashboardStatsChartData = {
-            pointStart: mopub.graphStartDate,
-            pointInterval: 86400000,
-            impressions: graphImpStats,
-            revenue: graphRevStats,
-            clicks: graphClkStats,
-            ctr: graphCtrStats
-        };
-        
-        setupDashboardStatsChart(getCurrentChartSeriesType());
-    }
-    
-    function populateGraphWithAccountStats(stats) {
-        var dailyStats = stats["all_stats"]["||"]["daily_stats"];
-        
-        var graphImpStats = [{ "Total": statArrayFromDailyStats(dailyStats, "impression_count")}];
-        var graphRevStats = [{ "Total": statArrayFromDailyStats(dailyStats, "revenue")}];
-        var graphClkStats = [{ "Total": statArrayFromDailyStats(dailyStats, "click_count")}];
-        var graphCtrStats = [{ "Total": statArrayFromDailyStats(dailyStats, "ctr")}];
-        
-        mopub.dashboardStatsChartData = {
-            pointStart: mopub.graphStartDate,
-            pointInterval: 86400000,
-            impressions: graphImpStats,
-            revenue: graphRevStats,
-            clicks: graphClkStats,
-            ctr: graphCtrStats
-        };
-        
-        setupDashboardStatsChart(getCurrentChartSeriesType());
+    function setCampaignFilterOptionsDisabled(disabled) {
+      $("#campaigns-filterOptions").buttonset({"disabled": disabled});
     }
     
     function populateStatsBreakdownsWithData(data) {
-        var allStats = data["all_stats"]["||"];
-        var dailyStats = allStats["daily_stats"];
-        
-        var today = formatStatsForDisplay(dailyStats[dailyStats.length - 1]);
-        var yesterday = formatStatsForDisplay(dailyStats[dailyStats.length - 2]);
-        var all = formatStatsForDisplay(allStats.sum);
-        
-        $("#stats-breakdown-impressions .today .inner").html(today.impression_count);
-        $("#stats-breakdown-revenue .today .inner").html("$" + today.revenue.toFixed(2));
-        $("#stats-breakdown-clicks .today .inner").html(today.click_count);
-        $("#stats-breakdown-ctr .today .inner").html(today.ctr);
-        
-        $("#stats-breakdown-impressions .yesterday .inner").html(yesterday.impression_count);
-        $("#stats-breakdown-revenue .yesterday .inner").html("$" + yesterday.revenue.toFixed(2));
-        $("#stats-breakdown-clicks .yesterday .inner").html(yesterday.click_count);
-        $("#stats-breakdown-ctr .yesterday .inner").html(yesterday.ctr);
-        
-        $("#stats-breakdown-impressions .all .inner").html(all.impression_count);
-        $("#stats-breakdown-revenue .all .inner").html("$" + all.revenue.toFixed(2));
-        $("#stats-breakdown-clicks .all .inner").html(all.click_count);
-        $("#stats-breakdown-ctr .all .inner").html(all.ctr);
+      var allStats = data["all_stats"]["||"];
+      var dailyStats = allStats["daily_stats"];
+
+      var today = formatStatsForDisplay(dailyStats[dailyStats.length - 1]);
+      var yesterday = formatStatsForDisplay(dailyStats[dailyStats.length - 2]);
+      var all = formatStatsForDisplay(allStats.sum);
+
+      $("#stats-breakdown-impressions .today .inner").html(today.impression_count);
+      $("#stats-breakdown-revenue .today .inner").html(today.revenue);//"$" + today.revenue.toFixed(2));
+      $("#stats-breakdown-clicks .today .inner").html(today.click_count);
+      $("#stats-breakdown-ctr .today .inner").html(today.ctr);
+
+      $("#stats-breakdown-impressions .yesterday .inner").html(yesterday.impression_count);
+      $("#stats-breakdown-revenue .yesterday .inner").html(yesterday.revenue);//"$" + yesterday.revenue.toFixed(2));
+      $("#stats-breakdown-clicks .yesterday .inner").html(yesterday.click_count);
+      $("#stats-breakdown-ctr .yesterday .inner").html(yesterday.ctr);
+
+      $("#stats-breakdown-impressions .all .inner").html(all.impression_count);
+      $("#stats-breakdown-revenue .all .inner").html(all.revenue);//"$" + all.revenue.toFixed(2));
+      $("#stats-breakdown-clicks .all .inner").html(all.click_count);
+      $("#stats-breakdown-ctr .all .inner").html(all.ctr);
     }
     
-    function populateCampaignStats(unfetchedIds, fetchedIds) {
-        var days = getNumDaysToFetch() || 14;
-        var startDate = getStartDate();
-        
-        var idsToFetch = getKeysFromObject(unfetchedIds);
-        var chunks = chunkArray(idsToFetch, AJAX_CAMPAIGN_CHUNK_SIZE);
-        for (var i = 0; i < chunks.length; i++) {
-            var backoffData = new BackoffData();
-            var fetchData = new FetchData({
-                campaigns: chunks[i], 
-                days: days, 
-                startDate: startDate 
-            });
-            ajaxBatchFetchCampaigns(fetchData, unfetchedIds, fetchedIds, backoffData);
+    function formatStatsForDisplay(sumStats) {
+      var results = $.extend(true, {}, sumStats);
+      results.impression_count = mopub.Utils.formatNumberWithCommas(results.impression_count);
+      results.conversion_count = mopub.Utils.formatNumberWithCommas(results.conversion_count) + 
+        " (" + mopub.Utils.formatNumberAsPercentage(results.conv_rate) + ")";
+      results.request_count = mopub.Utils.formatNumberWithCommas(results.request_count);
+      results.click_count = mopub.Utils.formatNumberWithCommas(results.click_count);
+      results.cpa = "$" + results.cpa.toFixed(2);
+      results.cpc = "$" + results.cpc.toFixed(2);
+      results.cpm = "$" + results.cpm.toFixed(2);
+      results.revenue = "$" + results.revenue.toFixed(2);
+      results.ctr = mopub.Utils.formatNumberAsPercentage(results.ctr);
+      results.fill_rate = mopub.Utils.formatNumberAsPercentage(results.fill_rate);
+    
+      var onScheduleHtml = "";
+      if (results.status == "Running") {
+        if (results.on_schedule == "on pace") {
+          onScheduleHtml = '<span class="osi-success"> On pace ' +
+            '<a href="#" id="campaign-osi-success-helpLink" class="whatsthis">' + 
+            '<div class="whatsthis-icon"></div></a></span>';
+        } else if (results.on_schedule == "behind") {
+          onScheduleHtml = '<span class="osi-failure""> Behind ' +
+            '<a href="#" id="campaign-osi-failure-helpLink" class="whatsthis">' + 
+            '<div class="whatsthis-icon"></div></a></span>';
         }
+      }
+      results.on_schedule = onScheduleHtml;
+    
+      return results;
+    }
+    
+    function populateGraphWithAccountStats(stats) {
+      var dailyStats = stats["all_stats"]["||"]["daily_stats"];
+    
+      mopub.dashboardStatsChartData = {
+        pointStart: mopub.graphStartDate,
+        pointInterval: 86400000,
+        impressions: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "impression_count")}],
+        revenue: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "revenue")}],
+        clicks: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "click_count")}],
+        ctr: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "ctr")}]
+      };
+    
+      mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
+    }
+    
+    function populateCampaignStats() {
+      var allCampaignIds = getCampaignIdsWithType(CampaignTypeEnum.All);
+      $.each(allCampaignIds, function(index, id) {
+        campaignsData[id] = {};
+      });
+      
+      var argsDict = {
+        days: getNumDaysToFetch() || 14,
+        startDate: getStartDate()
+      };
+      
+      var guaranteedIds = getCampaignIdsWithType(CampaignTypeEnum.Guaranteed);
+      var promotionalIds = getCampaignIdsWithType(CampaignTypeEnum.Promotional);
+      var networkIds = getCampaignIdsWithType(CampaignTypeEnum.Network);
+      var backfillIds = getCampaignIdsWithType(CampaignTypeEnum.Backfill);
+      var marketplaceIds = getCampaignIdsWithType(CampaignTypeEnum.Marketplace);
+      var bfMarketplaceIds = getCampaignIdsWithType(CampaignTypeEnum.BackfillMarketplace);
+      
+      gteeFetch = createCampaignStatsFetchObject(guaranteedIds, argsDict);
+      gteeFetch.campaignType = CampaignTypeEnum.Guaranteed;
+      
+      promoFetch = createCampaignStatsFetchObject(promotionalIds, argsDict);
+      promoFetch.campaignType = CampaignTypeEnum.Promotional;
+      
+      networkFetch = createCampaignStatsFetchObject(networkIds, argsDict);
+      networkFetch.campaignType = CampaignTypeEnum.Network;
+      
+      bfillFetch = createCampaignStatsFetchObject(backfillIds, argsDict);
+      bfillFetch.campaignType = CampaignTypeEnum.Backfill;
+      
+      marketplaceFetch = createCampaignStatsFetchObject(marketplaceIds, argsDict);
+      marketplaceFetch.campaignType = CampaignTypeEnum.Marketplace;
+      
+      bfMarketplaceFetch = createCampaignStatsFetchObject(bfMarketplaceIds, argsDict);
+      bfMarketplaceFetch.campaignType = CampaignTypeEnum.BackfillMarketplace;
+      
+      var fetches = [gteeFetch, promoFetch, networkFetch, bfillFetch, marketplaceFetch, 
+        bfMarketplaceFetch];
+      $.each(fetches, function(index, fetch) {
+        setSectionLoadingSpinnerHidden(fetch.campaignType, false);
+        fetch.start();
+      });
+    }
+    
+    function getNumDaysToFetch() {
+      var daysRadioVal = $("input[name=dashboard-dateOptions-option]:checked").val();
+      if (!daysRadioVal || daysRadioVal == "custom") {
+        var currentUrl = document.location.href;
+        var daysRegex = /r=(\d+)/g;
+        var match = daysRegex.exec(currentUrl);
+        if (!match || match.length < 2) return null;
+        else return match[1];
+      }
+      else return daysRadioVal;
+    }
+    
+    function getStartDate() {
+      var currentUrl = document.location.href;
+      var startDateRegex = /s=(\d+-\d+-\d+)/g;
+      var match = startDateRegex.exec(currentUrl);
+      if (!match || match.length < 2) return null;
+      else return match[1];
+    }
+    
+    function createCampaignStatsFetchObject(campaigns, argsDict) {
+      var options = {
+        items: campaigns,
+        urlConstructor: campaignStatsUrlConstructor,
+        chunkComplete: campaignStatsChunkComplete,
+        chunkFailure: campaignStatsChunkFailure,
+        fetchComplete: campaignStatsFetchComplete
+      };
+      $.extend(true, options, argsDict);
+      return new mopub.Utils.AjaxChunkedFetch(options);
+    }
+    
+    function campaignStatsUrlConstructor(chunk, fetchObj) {
+      var url = "/campaigns/stats/ajax/?";
+      $.each(chunk, function(index, item) {
+        if (index == 0) url += "adv=" + item;
+        else url += "&adv=" + item;
+      });
+      if (fetchObj.days) url += "&date_range=" + fetchObj.days;
+      if (fetchObj.startDate) url += "&start_date=" + fetchObj.startDate;
+      return url;
     }
 
-    function showOrHideRevenueBreakdown() {
-        // Hide the revenue breakdown if there are no guaranteed campaigns.
-        var guaranteed = getCampaignIdsWithType(CampaignTypeEnum.Guaranteed);
-        if (guaranteed.length == 0) $("#stats-breakdown-revenue").hide();
-        else $("#stats-breakdown-revenue").show();
+    function campaignStatsChunkComplete(data, chunk, fetchObj) {
+      var allStats = data["all_stats"];
+
+      for (var key in allStats) {
+        var campaignId = key.split("||")[1];
+        var sumStats = allStats[key]["sum"];
+        
+        // Store the stats so that we can build the graph later.
+        campaignsData[campaignId] = allStats[key];
+        
+        var formattedStats = formatStatsForDisplay(sumStats);
+        $.each(formattedStats, function(key, value) {
+          updateCampaignField(campaignId, key, value);
+        });
+
+        updateCampaignStatus(campaignId, formattedStats.status);
+        updateHelpLinks();
+      }
+      
+      showCampaignsMatchingStatusFilter();
+    }
+
+    function updateCampaignField(campaign, field, data) {
+      if (!campaign) return;
+
+      var classType = jsonKeyToHtmlClassMap[field];
+      if (!classType) return;
+
+      var selector = "#" + campaign + " ." + classType;
+      $(selector).html(data);
+    };
+
+    function updateCampaignStatus(campaignId, status) {
+      // Set campaign status to "Running", "Paused", etc. via class attribute.
+      var selector = "#" + campaignId;
+      $(selector).removeClass("incomplete")
+        .addClass("complete")
+        .addClass("campaign-status-" + status);
+    }
+
+    function updateHelpLinks() {
+      $('.complete .ecpm-helpLink').html("What's this?");
+
+      $('.whatsthis').click(function(e) {
+        e.preventDefault();
+        $('#'+$(this).attr('id').replace('helpLink', 'helpContent')).dialog({
+          buttons: { "Close": function() { $(this).dialog('close');} }
+        });
+      });
+    }
+
+    function campaignStatsChunkFailure(chunk, fetchObj) {
+      $("#ajaxFailure").show();
+      setSectionLoadingSpinnerHidden(fetchObj.campaignType, true);
+    }
+
+    function campaignStatsFetchComplete(fetchObj) {
+      calcAndShowRollupForCampaignType(fetchObj.campaignType);
+      if (allFetchesCompleted()) onCampaignsFullyUpdated();
+    }
+    
+    function allFetchesCompleted() {
+      return (gteeFetch && gteeFetch.isComplete && promoFetch && promoFetch.isComplete && 
+        networkFetch && networkFetch.isComplete && bfillFetch && bfillFetch.isComplete &&
+        marketplaceFetch && marketplaceFetch.isComplete && 
+        bfMarketplaceFetch && bfMarketplaceFetch.isComplete);
     }
 
     function onCampaignsFullyUpdated() {
-        setCampaignFilterOptionsDisabled(false);
-        calcRollups();
-        prepareGraphFromCampaignData();
+      setCampaignFilterOptionsDisabled(false);
+      calcRollups();
+      prepareGraphFromCampaignData();
     }
     
-    // AJAX init and entry point
+    function prepareGraphFromCampaignData() {
+      mopub.dashboardStatsChartData = {
+        pointStart: mopub.graphStartDate,
+        pointInterval: 86400000,
+        impressions: getGraphImpressionStats(),
+        revenue: getGraphRevenueStats(),
+        clicks: getGraphClickStats(),
+        ctr: getGraphCtrStats()
+      };
+      
+      mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
+    }
+    
+    // Helpers for creating the stat objects needed in graph construction.
     // =====================================================================
     
-    function initCampaignsPage() {
-        showOrHideRevenueBreakdown();
-        setupAjaxStatusPopup();
-        setCampaignFilterOptionsDisabled(true);
-        populateStatsBreakdownsWithData(mopub.accountStats);
-        populateGraphWithAccountStats(mopub.accountStats);
-        populateCampaignStats(unfetchedIds, fetchedCampaignIds);
+    function getFetchedCampaignsWithType(type) {
+      var matchingCampaignIds = getCampaignIdsWithType(type);
+      
+      var campaigns = [];
+      $.each(campaignsData, function(key, value) {
+        if ($.inArray(key, matchingCampaignIds) != -1) {
+          var dict = {};
+          dict.key = value["name"].replace("||", "");
+          dict.stats = value;
+          campaigns.push(dict);
+        }
+      });
+      return campaigns;
     }
-    
-    if (mopub.isCampaignsPage) {
-        // setTimeout is a workaround for Chrome: without it, the loading indicator doesn't 
-        // disappear until all "onload" AJAX requests are complete.
-        setTimeout(initCampaignsPage, 0);
+  
+    function getGraphImpressionStats() {
+      var allCampaigns = getFetchedCampaignsWithType(CampaignTypeEnum.All);
+      var sortedCampaigns = mopub.Stats.sortStatsObjectsByStat(allCampaigns, "impression_count");
+      return mopub.Stats.getGraphSummedStatsForStatName("impression_count", sortedCampaigns);
     }
+  
+    function getGraphRevenueStats() {
+      // We only care about guaranteed campaigns when graphing revenue.
+      var allGuaranteed = getFetchedCampaignsWithType(CampaignTypeEnum.Guaranteed);
+      var sortedGuaranteed = mopub.Stats.sortStatsObjectsByStat(allGuaranteed, "revenue");
+      return mopub.Stats.getGraphSummedStatsForStatName("revenue", sortedGuaranteed);
+    }
+  
+    function getGraphClickStats() {
+      var allCampaigns = getFetchedCampaignsWithType(CampaignTypeEnum.All);
+      var sortedCampaigns = mopub.Stats.sortStatsObjectsByStat(allCampaigns, "impression_count");
+      return mopub.Stats.getGraphSummedStatsForStatName("click_count", sortedCampaigns);
+    }
+  
+    function getGraphCtrStats() {
+      var allCampaigns = getFetchedCampaignsWithType(CampaignTypeEnum.All);
+      var sortedCampaigns = mopub.Stats.sortStatsObjectsByStat(allCampaigns, "impression_count");
     
+      var result = mopub.Stats.getGraphCtrStats(sortedCampaigns);
+      
+      // Append stats for MoPub-optimized CTR.
+      var accountDailyStats = mopub.accountStats["all_stats"]["||"]["daily_stats"];
+      var mopubOptimized = { 
+        "MoPub Optimized": mopub.Stats.statArrayFromDailyStats(accountDailyStats, "ctr"),
+      };
+      result.push(mopubOptimized);
+    
+      return result;
+    }
+
     // *********************************************************************
     // End -- Campaign AJAX
     // *********************************************************************
@@ -1413,7 +1133,7 @@ var mopub = mopub || {};
         }        
     }
 
-    function applyFilters(){
+    function showCampaignsMatchingStatusFilter(){
         var statusFilter = $("#campaigns-filterOptions").find(':checked').val();
         if (!statusFilter) return;
         var appFilter = $('#campaigns-appFilterOptions').val();
@@ -1429,9 +1149,9 @@ var mopub = mopub || {};
     
     // We filter whenever the user changes the filtering options
     $("#campaigns-filterOptions, #campaigns-appFilterOptions").change(function(){
-        applyFilters();
+        showCampaignsMatchingStatusFilter();
     });
-    applyFilters();
+    showCampaignsMatchingStatusFilter();
 
     //jQuery magic last
     $('#campaigns-appFilterOptions').selectmenu({
@@ -1550,158 +1270,13 @@ var mopub = mopub || {};
         if (activeBreakdownsElem.attr('id') == 'stats-breakdown-ctr') return 'line';
         else return 'area';
     }
-    
-    function setupDashboardStatsChart(seriesType) {
-      // get active metric from breakdown
-      var metricElement = $('#dashboard-stats .stats-breakdown .active');
-      var metricElementIdComponents = metricElement.attr('id').split('-');
-      var activeMetric = metricElementIdComponents[metricElementIdComponents.length - 1];
-
-      // get data
-      var data = mopub.dashboardStatsChartData;
-      if(typeof data == 'undefined') {
-        return;
-      }
-      
-      // set up series
-      var colors = ['#0090d9', '#e57300', '#53a600', '#444444'];
-      var chartSeries = [];
-      var activeData = data[activeMetric];
-      if(typeof activeData == 'undefined') {
-        return;
-      }
-      $.each(activeData, function(i, seriesObject) {
-        var seriesName, seriesData;
-        $.each(seriesObject, function(name, value) {
-          seriesName = name;
-          seriesData = value;
-          
-          if (seriesType == 'line'){
-             if (seriesName == 'Mopub Optimized'){
-              seriesLineWidth = 4;
-            } else{
-              seriesLineWidth = 2;
-            }
-          }
-          else{
-            seriesLineWidth = 4;
-          }
-          
-        });
-        chartSeries.push({
-          name: seriesName,
-          data: seriesData,
-          color: colors[i],
-          lineWidth: seriesLineWidth,
-        });
-      });
-
-      // setup HighCharts chart
-      this.trafficChart = new Highcharts.Chart({
-        chart: {
-          renderTo: 'dashboard-stats-chart',
-          defaultSeriesType: seriesType,
-          marginTop: 0,
-          marginBottom: 55
-        },
-        plotOptions: {
-          series: {
-            pointStart: data.pointStart,
-            pointInterval: data.pointInterval
-          }
-        },
-        legend: {
-          verticalAlign: "bottom",
-          y: -7,
-          enabled: (chartSeries.length > 1)          
-        },
-        yAxis: {
-          labels: {
-            formatter: function() {
-              if(activeMetric == 'revenue') {
-                text = '$' + Highcharts.numberFormat(this.value, 0);
-              }
-              else if(activeMetric == 'ctr') {
-                text = Highcharts.numberFormat(this.value, 0) + '%';
-              } 
-              else {
-                if (this.value >= 1000000000) {
-                  return Highcharts.numberFormat(this.value / 1000000000, 0) + "B";
-                } else if (this.value >= 1000000) {
-                  return Highcharts.numberFormat(this.value / 1000000, 0) + "M";
-                } else if (this.value >= 1000) {
-                  return Highcharts.numberFormat(this.value / 1000, 0) + "K";
-                } else if (this.value > 0) {
-                  return Highcharts.numberFormat(this.value, 0);
-                } else {
-                  return "0";
-                }
-              }
-            }
-          }
-        },
-        tooltip: {
-          formatter: function() {
-            var text = '', value = '', total = '';
-
-            if(activeMetric == 'revenue') {
-              value = '$' + Highcharts.numberFormat(this.y, 0);
-              total = '$' + Highcharts.numberFormat(this.total, 0) + ' total';
-            }
-            else if (activeMetric == 'clicks') {
-              value = Highcharts.numberFormat(this.y, 0) + ' ' + activeMetric;
-              total = Highcharts.numberFormat(this.total, 0) + ' total ' + activeMetric;
-            }
-            else if (activeMetric == 'ctr') {
-              value = Highcharts.numberFormat(this.y*100, 2) + "% click through";
-              total = "";
-            }
-            else {
-              value = Highcharts.numberFormat(this.y, 0) + ' ' + activeMetric;
-              total = Highcharts.numberFormat(this.total, 0) + ' total ' + activeMetric;
-            }
-
-            text += '<span style="font-size: 14px;">' + Highcharts.dateFormat('%A, %B %e, %Y', this.x) + '</span><br/>';
-            text += '<span style="padding: 0; font-weight: 600; color: ' + this.series.color + '">' + this.series.name + '</span>' + ': <strong style="font-weight: 600;">' + value + '</strong><br/>';
-            
-            if((chartSeries.length > 1) && (total != "")) {
-              text += '<span style="font-size: 12px; color: #666;">';
-              if(this.total > 0) {
-                text += '(' + Highcharts.numberFormat(this.percentage, 0) + '% of ' + total + ')';
-              }
-              else {
-                text += '(' + total + ')';
-              }
-              text += '</span>';
-            }
-
-            return text;
-          }
-        },
-        series: chartSeries
-      });
-      
-      $('#dashboard-stats-chart').removeClass('chart-loading');
-    }
-    
-    if ($('#dashboard-stats').length){
-      setupDashboardStatsChart('area');
-    }
 
     // Use breakdown to switch charts
-    $('.stats-breakdown tr:not(#stats-breakdown-ctr)').click(function(e) {
-      $('#dashboard-stats-chart').fadeOut('fast', function() {
-        setupDashboardStatsChart('area');
-        $(this).fadeIn('fast');
+    $('.stats-breakdown tr').click(function(e) {
+      $('#dashboard-stats-chart').fadeOut(100, function() {
+        mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
+        $(this).show();
       });
-    });
-    
-    // Remove the standard click handler and replace it
-    $('#stats-breakdown-ctr').click(function(){
-        $('#dashboard-stats-chart').fadeOut('fast', function(){
-            setupDashboardStatsChart('line');
-            $(this).fadeIn('fast');
-        });
     });
     
     /*---------------------------------------/

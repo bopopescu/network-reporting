@@ -122,7 +122,12 @@ class AdHandler(webapp.RequestHandler):
         else:
             admin_debug_mode = False 
 
-        trace_logging.start()
+        if self.request.get('log_to_console','0') == '1':
+            log_to_console = True
+        else:
+            log_to_console = False    
+
+        trace_logging.start(log_to_console=log_to_console)
         trace_logging.response = self.response
         
         adunit_id = self.request.get("id")

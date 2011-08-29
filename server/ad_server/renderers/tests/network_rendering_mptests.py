@@ -213,7 +213,7 @@ class RenderingTests(RenderingTestBase, unittest.TestCase):
         self.creative.image_height = 50
         self.creative.put()    
 
-        self._compare_rendering_with_examples("image_adtype", suffix="")#, reset_example=False)  
+        self._compare_rendering_with_examples("image_adtype", suffix="")
 
     def mptest_text_adtype(self):
         """ Make a one-off test for image creatives. """
@@ -227,7 +227,7 @@ class RenderingTests(RenderingTestBase, unittest.TestCase):
                                             ad_group=self.adgroup)
         self.creative.put()    
 
-        self._compare_rendering_with_examples("text_adtype", suffix="")#, reset_example=False)  
+        self._compare_rendering_with_examples("text_adtype", suffix="") 
 
 
     def mptest_text_icon_adtype(self):
@@ -243,7 +243,7 @@ class RenderingTests(RenderingTestBase, unittest.TestCase):
                                             
                                                                                     
         self.creative.put()         
-        self._compare_rendering_with_examples("text_icon_adtype", suffix="")#), reset_example=False)
+        self._compare_rendering_with_examples("text_icon_adtype", suffix="")
 
 ##### TEST GENERATORS ######     
 

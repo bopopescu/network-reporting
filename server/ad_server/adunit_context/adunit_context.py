@@ -61,6 +61,9 @@ class AdUnitContext(object):
         if self.adunit.network_config:
             self.adunit.network_config.admob_pub_id
         
+        # We also deference the marketplace configs
+        if self.adunit.account.marketplace_config:
+            self.adunit.account.marketplace_config.price_floor
 
 
     def _get_ctr(self, creative, date=datetime.date.today(), date_hour=None, min_sample_size=1000):

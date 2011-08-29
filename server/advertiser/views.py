@@ -138,7 +138,7 @@ class AdGroupIndexHandler(RequestHandler):
             
         # Due to weirdness, network_campaigns and backfill_promo_campaigns are actually lists of adgroups
         sorted_campaign_groups = _sort_campaigns(adgroups)
-        promo_campaigns, guaranteed_campaigns, marketplace_campaigns, network_campaigns, backfill_promo_campaigns = sorted_campaign_groups
+        promo_campaigns, guaranteed_campaigns, marketplace_campaigns, network_campaigns, backfill_promo_campaigns, backfill_marketplace_campaigns = sorted_campaign_groups
 
         guarantee_levels = _sort_guarantee_levels(guaranteed_campaigns)
 
@@ -188,6 +188,7 @@ class AdGroupIndexHandler(RequestHandler):
                                    'guarantee_levels': guarantee_levels, 
                                    'guarantee_num': len(guaranteed_campaigns),
                                    'marketplace': marketplace_campaigns,
+                                   'backfill_marketplace': backfill_marketplace_campaigns,
                                    'promo': promo_campaigns,
                                    'network': network_campaigns,
                                    'backfill_promo': backfill_promo_campaigns,
@@ -234,7 +235,10 @@ def _sort_campaigns(adgroups):
     backfill_promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_promo'], adgroups)
     backfill_promo_campaigns = sorted(backfill_promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
     
-    return [promo_campaigns, guaranteed_campaigns, marketplace_campaigns, network_campaigns, backfill_promo_campaigns]
+    backfill_marketplace_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_marketplace'], adgroups)
+    backfill_marketplace_campaigns = sorted(backfill_marketplace_campaigns, lambda x,y: cmp(x.bid, y.bid))
+    
+    return [promo_campaigns, guaranteed_campaigns, marketplace_campaigns, network_campaigns, backfill_promo_campaigns, backfill_marketplace_campaigns]
 
 def _calc_app_level_stats(adgroups):
     # adgroup1.all_stats = [StatsModel(day=1), StatsModel(day=2), StatsModel(day=3)]
@@ -303,7 +307,13 @@ class CreateCampaignAJAXHander(RequestHandler):
                              campaign=None,adgroup=None):
         if adgroup:                     
             campaign = campaign or adgroup.campaign
-        campaign_form = campaign_form or CampaignForm(instance=campaign)
+        
+        # TODO: HACKKKK get price floors done
+        initial = {}    
+        if campaign and campaign.campaign_type in ['marketplace', 'backfill_marketplace']:
+            initial.update(price_floor=self.account.network_config.price_floor)
+        logging.info("\n\n\n\n\nafasdfasdfasdf\n\n\n\n:%s\n\n\n"%initial)    
+        campaign_form = campaign_form or CampaignForm(instance=campaign, initial=initial)
         adgroup_form = adgroup_form or AdGroupForm(instance=adgroup)
         networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["chartboost","ChartBoost",False],["ejam","eJam",False],["greystripe","GreyStripe",False],\
             ["iAd","iAd",False],["inmobi","InMobi",False],["jumptap","Jumptap",False],["millennial","Millennial Media",False],["mobfox","MobFox",False],\
@@ -383,6 +393,10 @@ class CreateCampaignAJAXHander(RequestHandler):
         if campaign_form.is_valid():
             campaign = campaign_form.save(commit=False)
             campaign.account = self.account
+            
+            if campaign.campaign_type in ["marketplace", "backfill_marketplace"]:
+                self.account.network_config.price_floor = float(campaign_form.cleaned_data['price_floor'])
+                AccountQueryManager.update_config_and_put(self.account, self.account.network_config)
 
             if adgroup_form.is_valid():
                 adgroup = adgroup_form.save(commit=False)
@@ -407,7 +421,7 @@ class CreateCampaignAJAXHander(RequestHandler):
 
              ##Check if creative exists for this network type, if yes
              #update, if no, delete old and create new
-                if campaign.campaign_type == 'marketplace':
+                if campaign.campaign_type in ['marketplace', 'backfill_marketplace']:
                     creative = adgroup.default_creative()
                     creative.account = self.account
                     CreativeQueryManager.put(creative)
@@ -653,7 +667,7 @@ class ShowAdGroupHandler(RequestHandler):
               graph_adunits[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[au.all_stats for au in adunits[3:]])]
 
         # Load creatives if we are supposed to 
-        if not (adgroup.network_type or adgroup.campaign.campaign_type== 'marketplace'):
+        if not (adgroup.network_type or adgroup.campaign.campaign_type in ['marketplace', 'backfill_marketplace']):
             # In order to have add creative
             creative_handler = AddCreativeHandler(self.request)
             creative_fragment = creative_handler.get() # return the creative fragment
@@ -713,7 +727,7 @@ class PauseAdGroupHandler(RequestHandler):
     def post(self):
         action = self.request.POST.get("action", "pause")
         adgroups = []
-        update_objs = []  
+        update_objs = [] 
         update_creatives = []  
         for id_ in self.request.POST.getlist('id') or []:
             a = AdGroupQueryManager.get(id_)
@@ -721,29 +735,39 @@ class PauseAdGroupHandler(RequestHandler):
             if a != None and a.campaign.account == self.account:
                 if action == "pause":
                     a.active = False
-                    a.deleted = False       
+                    a.campaign.active = False
+                    a.deleted = False 
+                    a.campaign.deleted = False      
                     a.archived = False
                     update_objs.append(a)
                 elif action == "resume":
                     a.active = True
-                    a.deleted = False     
+                    a.campaign.active = True
+                    a.deleted = False
+                    a.campaign.deleted = False     
                     a.archived = False
                     update_objs.append(a)  
                 elif action == "activate":
                     a.active = True
-                    a.deleted = False     
+                    a.campaign.active = True
+                    a.deleted = False
+                    a.campaign.deleted = False      
                     a.archived = False
                     update_objs.append(a)          
                     self.request.flash["message"] = "A campaign has been activated. View it within <a href='%s'>active campaigns</a>." % reverse('advertiser_campaign') 
                 elif action == "archive":       
                     a.active = False
-                    a.deleted = False     
+                    a.campaign.active = False
+                    a.deleted = False 
+                    a.campaign.deleted = False     
                     a.archived = True
                     update_objs.append(a)    
                     self.request.flash["message"] = "A campaign has been archived. View it within <a href='%s'>archived campaigns</a>." % reverse('advertiser_archive') 
                 elif action == "delete":
-                    a.active = False
-                    a.deleted = True    
+                    a.active = False 
+                    a.campaign.active = False
+                    a.deleted = True
+                    a.campaign.deleted = True     
                     a.archived = False
                     update_objs.append(a)       
                     self.request.flash["message"] = "Your campaign has been successfully deleted"
@@ -752,7 +776,12 @@ class PauseAdGroupHandler(RequestHandler):
                         update_creatives.append(creative)
 
         if update_objs:
-            AdGroupQueryManager.put(update_objs)  
+            AdGroupQueryManager.put(update_objs)         
+            camp_objs = []
+            for adgroup in update_objs: 
+                camp_objs.append(adgroup.campaign)
+            
+            CampaignQueryManager.put(camp_objs) 
             
         if update_creatives:
             CreativeQueryManager.put(update_creatives)
@@ -1040,6 +1069,8 @@ class AJAXStatsHandler(RequestHandler):
                     if adgroup.cpc:
                         e_ctr = summed_stats.ctr or DEFAULT_CTR
                         summed_stats.cpm = float(e_ctr) * float(adgroup.cpc) * 1000
+                    elif 'marketplace' in adgroup.campaign.campaign_type:
+                        summed_stats.cpm = summed_stats.cpm # no-op
                     else:
                         summed_stats.cpm = adgroup.cpm
                     

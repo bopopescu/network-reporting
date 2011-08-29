@@ -3,6 +3,7 @@ from google.appengine.api.datastore_types import Key
 from google.appengine.ext import db
 from google.appengine.ext import blobstore 
 from publisher.models import Site
+from advertiser.models import Creative
 from account.models import Account
 from common.utils import simplejson
 from common.utils.timezones import Pacific_tzinfo
@@ -233,8 +234,8 @@ class StatsModel(db.Expando):
                     
     def __str__(self):
         return  "StatsModel(date=%s, pub=%s, adv=%s, account=%s, \
-                 country=%s, brand_name=%s, marketing_name=%s, device_os=%s, device_os_version=%s, \
-                 offline=%s, %s,%s,%s,%s)" % (self.date,
+country=%s, brand_name=%s, marketing_name=%s, device_os=%s, device_os_version=%s, \
+offline=%s, %s,%s,%s,%s)" % (self.date or self.date_hour,
                                               StatsModel.publisher.get_value_for_datastore(self),
                                               StatsModel.advertiser.get_value_for_datastore(self),    
                                               StatsModel.account.get_value_for_datastore(self),
@@ -420,6 +421,17 @@ class StatsModel(db.Expando):
             return self.revenue / float(self.conversion_count)
         else:
             return 0
+
+    @property
+    def is_rollup(self):
+        #Make sure all values are set, any values not set imply a rollup on that value
+        if self.publisher and self.advertiser and self.date_hour and self.country and self.brand_name and self.marketin_name and self.device_os and self.device_os_version:
+            return False
+        else:
+            #If publisher isn't an adunit or advertiser isn't a creative
+            if self.publisher.kind() != Site.kind() or self.advertiser.kinds() != Creative.kind():
+                return False
+            return True
     
             
     def _dict_properties(self):

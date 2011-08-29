@@ -262,17 +262,18 @@ class LogTaskHandler(webapp.RequestHandler):
                   user_email = None 
               
               try:      
-                  mail.send_mail_to_admins(sender="olp@mopub.com",
-                                            subject="Logging error",
-                                            body="account: %s email: %s retries: %s task name: %s queue name: %s base stats: %s total number of stats: %s max countries: %s \n\n%s"%(account_name,
-                                                                                                 user_email,
-                                                                                                 retry_count,
-                                                                                                 task_name,
-                                                                                                 queue_name,
-                                                                                                 base_number_of_stats,
-                                                                                                 number_of_stats,
-                                                                                                 max_countries,
-                                                                                                 exception_traceback))
+                  pass
+                  # mail.send_mail_to_admins(sender="olp@mopub.com",
+                  #                           subject="Logging error",
+                  #                           body="account: %s email: %s retries: %s task name: %s queue name: %s base stats: %s total number of stats: %s max countries: %s \n\n%s"%(account_name,
+                  #                                                                                user_email,
+                  #                                                                                retry_count,
+                  #                                                                                task_name,
+                  #                                                                                queue_name,
+                  #                                                                                base_number_of_stats,
+                  #                                                                                number_of_stats,
+                  #                                                                                max_countries,
+                  #                                                                                exception_traceback))
               except:
                   pass                                                                                     
               logging.error(exception_traceback)
@@ -293,9 +294,10 @@ class LogTaskHandler(webapp.RequestHandler):
                                                                                   memcache_stats_start,memcache_stats)
           
           try:
-              mail.send_mail_to_admins(sender="olp@mopub.com",
-                                        subject="Logging error (cache miss)",
-                                        body=message)
+              pass
+              # mail.send_mail_to_admins(sender="olp@mopub.com",
+              #                           subject="Logging error (cache miss)",
+              #                           body=message)
           except:
               pass                                
           logging.error(message)

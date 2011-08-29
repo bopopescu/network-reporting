@@ -156,7 +156,7 @@ class TestAdAuction(unittest.TestCase):
     def mptest_basic(self):
         gtee_battle = GteeBattle(self.client_context, self.adunit_context)
         creative = gtee_battle.run() 
-        eq_obj(creative, self.expensive_creative)    
+        eq_obj(creative, self.expensive_creative)            
          
     def mptest_gtee_high_priority(self):   
         self.expensive_c.campaign_type = "gtee_high"

@@ -13,32 +13,36 @@ class ServerSide(object):
     def __init__(self, client_context, adunit, *args, **kwargs):
         self.client_context = client_context
         self.adunit = adunit
+
+    @property
+    def headers(self): 
+        """ The payload that we send to the ad network when making our request """
+        raise NotImplementedError
+
+    @property  
+    def payload(self):
+        """ The payload that we send to the ad network when making our request """
+        raise NotImplementedError
+ 
     @property
     def format(self):
         return self.adunit.format  
-         
+
     def get_ip(self):
         """ Gets the client's ip from either a query parameter or the header"""   
         return self.client_context.client_ip
-    
+
     def get_user_agent(self):
         """gets the user agent from either a query paramter or the header"""
         return self.client_context.user_agent
-        
+
     def get_pub_id(self, warn=False):
         """ Gets the most specifically defined pub id """
         pub_id = self.adunit.get_pub_id(self.pub_id_attr)
         if warn and not pub_id:
             trace_logging.info(self.no_pub_id_warning%self.network_name)  
         return pub_id
-
-    @property
-    def headers(self):
-        return {}  
-
-    @property  
-    def payload(self):
-        return None
+     
         
     def _get_size(self, content):
         width_pat = re.compile(r'width="(?P<width>\d+?)"')

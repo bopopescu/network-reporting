@@ -158,3 +158,16 @@ class wraps_first_arg(object):
             args[1] = [args[1]]
             
         return self.f(*args)
+      
+
+def returns_unicode(func):         
+    """ If the result is an unencoded string, encode it. """
+    def new_func(*args, **kwargs):  
+        unencoded = func(*args,**kwargs)      
+        if isinstance(unencoded, basestring):
+            if not isinstance(unencoded, unicode):
+                return unicode(unencoded, 'utf-8')  
+        else:
+            return unencoded
+    return new_func
+

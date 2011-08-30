@@ -19,12 +19,11 @@ class ServerSide(object):
          
     def get_ip(self):
         """ Gets the client's ip from either a query parameter or the header"""   
-        int('fail')
         return self.client_context.client_ip
     
     def get_user_agent(self):
         """gets the user agent from either a query paramter or the header"""
-        return helpers.get_user_agent(self.request)
+        return self.client_context.user_agent
         
     def get_pub_id(self, warn=False):
         """ Gets the most specifically defined pub id """

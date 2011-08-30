@@ -238,9 +238,22 @@ class NetworkBattle(Battle):
         # All non-native networks need rpcs    
         else:
             ServerSideClass = SERVER_SIDE_DICT[creative.adgroup.network_type] 
-            server_side
+            server_side = ServerSideClass(self.client_context, self.adunit_context.adunit)
             
-               
+            rpc = urlfetch.create_rpc(2) # maximum delay we are willing to accept is 2000 ms
+            
+            if server_side.payload == None:
+                urlfetch.make_fetch_call(rpc, server_side.url, 
+                                         headers=server_side.headers)
+            else:
+                urlfetch.make_fetch_call(rpc, server_side.url, 
+                                         headers=server_side.headers, 
+                                         method=urlfetch.POST, 
+                                         payload=server_side.payload)   
+            
+            server_side.bid_and_html_for_response(response)
+                
+                   
     @classmethod
     def request_third_party_server(cls,request,adunit,adgroups):
         if not isinstance(adgroups,(list,tuple)):

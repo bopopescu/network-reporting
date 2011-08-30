@@ -6,6 +6,9 @@ import re
 
 from ad_server.debug_console import trace_logging
 
+"""
+    mocean is an adserving platform that lets players build on top of them. EJam is built on top of mocean
+"""
 
 class MoceanServerSide(ServerSide):
     base_url = "http://ads.mocean.mobi/ad"

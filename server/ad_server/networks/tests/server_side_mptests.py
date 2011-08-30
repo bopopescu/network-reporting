@@ -75,7 +75,8 @@ class TestNetworkConfig(unittest.TestCase):
         self.dt = datetime.datetime(1987,4,4,4,4)# save some test time
         
         # Set up network config
-        self.account_network_config = NetworkConfig(
+        self.account_network_config = NetworkConfig(   
+                                admob_pub_id="account-admob",
                                 brightroll_pub_id="account-brightroll",
                                 millennial_pub_id="account-millennial",
                                 jumptap_pub_id="account-jumptap")
@@ -118,7 +119,7 @@ class TestNetworkConfig(unittest.TestCase):
         server_side = AdMobServerSide(self.client_context, self.adunit) 
         pub_id = server_side.get_pub_id()
         
-        eq_(pub_id, "app-admob")
+        eq_(pub_id, "account-admob")
     
     
     def mptest_millennial(self):
@@ -160,9 +161,10 @@ class TestNetworkConfig(unittest.TestCase):
             
             
             
-####### These tests actively ping the servers for a response        
+####### These tests actively ping the servers for a response #######  
+####### NOTE THESE TESTS SOMETIMES FAIL DUE TO TIMEOUT ############     
 
-class MoceanUnitTests(unittest.TestCase):
+class EjamUnitTests(unittest.TestCase):
     def setUp(self):
         # First, create an instance of the Testbed class.
         self.testbed = testbed.Testbed()

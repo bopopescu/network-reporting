@@ -24,16 +24,6 @@ class MobFoxServerSide(ServerSide):
                 'uip':self.get_ip(),
                 'ua':self.get_user_agent()}
     
-    @property
-    def url(self):
-        return self.base_url 
-
-
-
-#     @property
-#     def url(self):
-#         return self.base_url
-        
     def _device_overide(self):
         ua = self.get_user_agent().lower()
         if 'ipad' in ua:
@@ -48,7 +38,7 @@ class MobFoxServerSide(ServerSide):
     @property  
     def payload(self):
         data = {'rt': 'api',
-                'u': 'Mozilla%2F5.0+%28iPhone%3B+U%3B+CPU+iPhone+OS+4_3_3+like+Mac+OS+X%3B+en-us%29+AppleWebKit%2F533.17.9+%28KHTML%2C+like+Gecko%29+Version%2F5.0.2+Mobile%2F8J2+Safari%2F6533.18.5&h',#self.get_user_agent(),
+                'u': self.get_user_agent(),
                 'i': self.get_ip(),
                 'o': self.get_udid(),
                 'm': 'live',

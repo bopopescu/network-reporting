@@ -270,6 +270,18 @@ var mopub = mopub || {};
       });
     });
     
+    $('.appData-id').each(function() {
+        var id = $(this)
+        var td = id.parents('tr');
+        td.hover(
+          function() {
+            id.show();
+          },
+          function() {
+            id.hide();
+          });
+      });
+        
     // set up toggle all app details button
     // $('#dashboard-apps-toggleAllButton').click(function(e) {
     //   e.preventDefault();

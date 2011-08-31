@@ -115,6 +115,10 @@ def dashboard_prep(request, *args, **kwargs):
                 totals[str(app_stat.date)].user_count = user_count
             if app_stat._publisher:
                 _incr_dict(unique_apps,str(app_stat._publisher),app_stat)
+        # Calculate a 1 day delta between yesterday and the day before that
+        if app_stats[-2].date and app_stats[-3].date and app_stats[-2]._publisher:
+            unique_apps[str(app_stats[-2]._publisher)].requests_delta1day = app_stats[-2].request_count - app_stats[-3].request_count
+            
     
     # organize daily stats by date
     total_stats = totals.values()

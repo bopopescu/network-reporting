@@ -202,7 +202,7 @@ class MarketplaceBattle(Battle):
     def _process_winner(self, creative):    
         """ Fan out to the marketplace and see if there is a bid """    
         # TODO: Can we get relevant information without passing request
-        mk_args = build_marketplace_dict(adunit=self.client_contextadunit,
+        mk_args = build_marketplace_dict(adunit=self.client_context.adunit,
                                          kws=self.client_context.keywords,
                                          udid=self.client_context.udid,
                                          ua=self.client_context.user_agent,
@@ -221,7 +221,7 @@ class NetworkBattle(Battle):
         return filter(lambda ag: ag.campaign.campaign_type == "network", all_adgroups) 
     
     def _process_winner(self, creative):    
-        """ Fan out to each networks and see if it can fill the request. """ 
+        """ Fan out to a network and see if it can fill the request. """ 
         # If the network is a native network, then it does not require an rpc
         if creative.adgroup.network_type in NATIVE_REQUESTS: 
 
@@ -238,37 +238,13 @@ class NetworkBattle(Battle):
         # All non-native networks need rpcs    
         else:
             ServerSideClass = SERVER_SIDE_DICT[creative.adgroup.network_type] 
-            server_side
+            server_side = ServerSideClass(self.client_context, self.adunit_context.adunit)
             
-               
-    @classmethod
-    def request_third_party_server(cls,request,adunit,adgroups):
-        if not isinstance(adgroups,(list,tuple)):
-            multiple = False
-            adgroups = [adgroups]
-        else:
-            multiple = True    
-        rpcs = []
-        for adgroup in adgroups:
-            if adgroup.network_type in SERVER_SIDE_DICT:
-                KlassServerSide = SERVER_SIDE_DICT[adgroup.network_type]
-                server_side = KlassServerSide(request, adunit) 
-                trace_logging.warning("%s url %s"%(KlassServerSide,server_side.url))
-
-                rpc = urlfetch.create_rpc(2) # maximum delay we are willing to accept is 2000 ms
-                payload = server_side.payload
-                trace_logging.warning("payload: %s"%payload)
-                trace_logging.warning("headers: %s"%server_side.headers)
-                if payload == None:
-                    urlfetch.make_fetch_call(rpc, server_side.url, headers=server_side.headers)
-                else:
-                    urlfetch.make_fetch_call(rpc, server_side.url, headers=server_side.headers, method=urlfetch.POST, payload=payload)
-                # attaching the adgroup to the rpc
-                rpc.adgroup = adgroup
-                rpc.serverside = server_side
-                rpcs.append(rpc)
-        return rpcs if multiple else rpcs[0]    
-                                                 
+            # Right now we make the call, and synchronously get the reponse
+            creative.html = server_side.make_call_and_get_html_from_response()  
+            return super(NetworkBattle, self)._process_winner(creative) 
+                
+                    
             
         
             

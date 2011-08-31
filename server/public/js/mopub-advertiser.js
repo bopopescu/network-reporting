@@ -407,14 +407,8 @@ var mopub = mopub || {};
     success: function(jsonData) { 
       $('#creativeCreateForm-loading').hide();
         if (jsonData.success) {
-          $('#creativeCreateForm-success').show(); // show message
-          $('#advertiser-creativeAddForm')
-            .slideUp('slow', function() {
-              $('#advertiser-adgroups-addCreativeButton').show();
-              $('#creativeCreateForm-success').hide(); // hide message
-              $('#creativeCreateForm').resetForm();
-              window.location.reload();
-            });
+          $('#creativeCreateForm-success').show();
+          window.location.reload();
         }
         else{
           $('#creativeAddForm-fragment').html(jsonData.html);

@@ -11,15 +11,10 @@ class InMobiServerSide(ServerSide):
     pub_id_attr = 'inmobi_pub_id'
     network_name = 'InMobi'
     
-    
     def __init__(self,request,adunit,*args,**kwargs):
         self.url_params = {}
         return super(InMobiServerSide,self).__init__(request,adunit,*args,**kwargs)
   
-    @property
-    def url(self):
-        return self.base_url
-        
     def get_user_agent(self):
         ua = super(InMobiServerSide, self).get_user_agent()
         if 'iPhone Simulator' in ua:

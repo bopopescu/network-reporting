@@ -12,10 +12,14 @@ class MoceanServerSide(ServerSide):
     pub_id_attr = 'mocean_pub_id'
     network_name = 'Mocean'
 
-    @property
-    def url(self):
-        data =	{'zone': self.get_pub_id(), 'ip': self.get_ip(), 'ua': self.get_user_agent(), }
-        return self.base_url + "?" + urllib.urlencode(data)
+    @property  
+    def payload(self):
+        data = {'zone': self.get_pub_id(),
+                'ip': self.get_ip(),
+                'ua': self.get_user_agent(),
+                }
+              
+        return urllib.urlencode(data)
 
     def bid_and_html_for_response(self, response):
         if re.match("^<!--.*--\>$", response.content) == None and len(response.content) != 0:

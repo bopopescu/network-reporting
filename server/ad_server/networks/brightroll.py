@@ -28,10 +28,6 @@ class BrightRollServerSide(ServerSide):
         # TODO: Replace with self.get_appid()
         return {}
 
-    @property    
-    def payload(self):
-        return None
-        
     def get_response(self):
         logging.info("url: %s"%self.url)
         req = urllib2.Request(self.url)

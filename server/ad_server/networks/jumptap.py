@@ -14,8 +14,8 @@ class JumptapServerSide(ServerSide):
     no_pub_id_warning = 'Warning: no %s Publisher Alias has been specified'
     network_name = 'Jumptap'
    
-   
-    def get_key_values(self):
+    @property
+    def payload(self):
         key_values = {#'gateway-ip': '208.54.5.50',    # TODO: This should be the x-forwarded-for header of the device
                       'hid': self.client_context.mopub_id,
                       'client-ip': self.client_context.client_ip, # Test value: 'client-ip': '208.54.5.50'
@@ -39,13 +39,9 @@ class JumptapServerSide(ServerSide):
         spot_id = self.adunit.network_config.jumptap_pub_id if self.adunit.network_config else None
         if spot_id:
             key_values['spot'] = spot_id
-        return key_values
-
-   
-    def get_query_string(self):
-        query_string = urllib.urlencode(self.get_key_values())       
-        return query_string
+        return urllib.urlencode(key_values)
     
+   
     def get_language(self):
         LANGUAGE_PAT = re.compile(r' (?P<language>[a-zA-Z][a-zA-Z])[-_][a-zA-Z][a-zA-Z];*[^a-zA-Z0-9-_]')
         m = LANGUAGE_PAT.search(self.client_context.user_agent)
@@ -54,15 +50,6 @@ class JumptapServerSide(ServerSide):
         else:
             return None
     
-    @property
-    def url(self):
-        return self.base_url + '?' + self.get_query_string()
-   
-    @property
-    def headers(self):
-        return { 'User-Agent': self.get_user_agent() }
-               #'Accept-Language': 'en-us' }  # TODO: Accept language from web request
-   
     def get_response(self):
         req = urllib2.Request(self.url)
         response = urllib2.urlopen(req)

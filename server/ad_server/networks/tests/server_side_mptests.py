@@ -137,27 +137,27 @@ class TestNetworkConfig(unittest.TestCase):
     
         eq_(pub_id, "account-brightroll")
     
-    def mptest_jumptap(self):
-        """ Jumptap requires multiple pub ids"""
-        server_side = JumptapServerSide(self.client_context, self.adunit) 
-        key_values = server_side.get_key_values()
-        eq_(key_values["pub"],"account-jumptap")
-        eq_(key_values["site"],"app-jumptap")
+#     def mptest_jumptap(self):
+#         """ Jumptap requires multiple pub ids"""
+#         server_side = JumptapServerSide(self.client_context, self.adunit) 
+#         key_values = server_side.get_key_values()
+#         eq_(key_values["pub"],"account-jumptap")
+#         eq_(key_values["site"],"app-jumptap")
         
     
-    def mptest_jumptap_no_adunit(self):
-        """ Make sure that the key value dictionary sent to jumptap does not
-        contain any keys for unspecified pub ids """
-        server_side = JumptapServerSide(self.client_context, self.adunit) 
-        key_values = server_side.get_key_values()
+#     def mptest_jumptap_no_adunit(self):
+#         """ Make sure that the key value dictionary sent to jumptap does not
+#         contain any keys for unspecified pub ids """
+#         server_side = JumptapServerSide(self.client_context, self.adunit) 
+#         key_values = server_side.get_key_values()
     
-        try:
-            adunit_pub_id = key_values["spot"] # this should raise a keyerror
-        except KeyError:
-            pass
-        else:
-            # If no key error was thrown, fail
-            eq_(adunit_pub_id, "A key error should have been raised")        
+#         try:
+#             adunit_pub_id = key_values["spot"] # this should raise a keyerror
+#         except KeyError:
+#             pass
+#         else:
+#             # If no key error was thrown, fail
+#             eq_(adunit_pub_id, "A key error should have been raised")        
             
             
             
@@ -211,16 +211,6 @@ class NetworkUnitTests(unittest.TestCase):
         mocean = EjamServerSide(self.client_context, self.adunit)
         self._check_bid_and_response(mocean)
        
-
-#     def mptest_appnexus_basictest(self):     
-#         self.client_context = ClientContext(adunit=self.adunit,
-#                                             country_code="US", # Two characater country code.  
-#                                             raw_udid="fake_udid",   
-#                                             request_id="fake_request_id",
-#                                             now=datetime.datetime.now(),
-#                                             user_agent='FakeAndroidOS')
-#         server_side = AppNexusServerSide(self.client_context, self.adunit)
-#         self._check_bid_and_response(server_side, False)
 
     def mptest_brightroll_basictest(self):     
         self.client_context = ClientContext(adunit=self.adunit,
@@ -282,14 +272,18 @@ class NetworkUnitTests(unittest.TestCase):
     def _check_bid_and_response(this, network_server_side):
         url = network_server_side.url
         payload = network_server_side.payload
-        response = urlfetch.fetch(url=url, 
-                                  method="POST", 
-                                  payload=payload, 
-                                  headers=network_server_side.headers)
+        if payload:
+            print "payload...."
+            response = urlfetch.fetch(url=url, 
+                                      method="POST", 
+                                      payload=payload, 
+                                      headers=network_server_side.headers)
+        else:
+            print "no payload..."
+            response = urlfetch.fetch(url=url)
         
         print response.content
 
         response_tuple = network_server_side.bid_and_html_for_response(response)
 
-        print response_tuple
         assert(response_tuple[1])

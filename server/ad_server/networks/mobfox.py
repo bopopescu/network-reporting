@@ -26,7 +26,7 @@ class MobFoxServerSide(ServerSide):
     
     @property
     def url(self):
-        return self.base_url + '?' + urllib.urlencode(self.get_key_values())
+        return self.base_url 
 
 
 
@@ -78,7 +78,7 @@ class MobFoxServerSide(ServerSide):
         return '&'.join(['h[%s]=%s'%(urllib.quote_plus(h),urllib.quote_plus(v)) for h,v in  headers])
 
     def get_response(self):
-        req = urllib2.Request(self.url)
+        req = urllib2.Request(self.url, self.payload)
         response = urllib2.urlopen(req)
         return response.read()
 

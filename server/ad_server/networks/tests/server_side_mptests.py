@@ -289,8 +289,14 @@ http://my.mobfox.com/request.php?v=api_mopub?apid=147e13e17341db4f25afe08ac01441
         else:
             url += '?' + network_server_side.payload
             
-        url ='http://my.mobfox.com/request.php?v=api_mopub?rt=api&i=204.28.127.10&m=live&o=467A52DB6F573AC18431045FB136B22E&s=147e13e17341db4f25afe08ac0144193&u=Mozilla%2F5.0+%28iPhone%3B+U%3B+CPU+iPhone+OS+4_3_3+like+Mac+OS+X%3B+en-us%29+AppleWebKit%2F533.17.9+%28KHTML%2C+like+Gecko%29+Version%2F5.0.2+Mobile%2F8J2+Safari%2F6533.18.5&v=api_mopub&device_override=iphone_app'
-        response = urlfetch.fetch(url)
+        url = network_server_side.url
+        url = "http://my.mobfox.com/request.php?v=api_mopub"    
+        payload = "rt=api&i=74.177.233.185&m=live&o=467A52DB6F573AC18431045FB136B22E&s=147e13e17341db4f25afe08ac0144193&u=Mozilla%2F5.0+%28iPhone%3B+U%3B+CPU+iPhone+OS+4_0_2+like+Mac+OS+X%3B+en-us%29+AppleWebKit%2F532.9+%28KHTML%2C+like+Gecko%29+Version%2F4.0.5+Mobile%2F8A400+Safari%2F6531.22.7&v=api_mopub&device_override=iphone_app&h[Accept-Language]=en-us&h[X-Appengine-Default-Namespace]=mopub.com&h[User-Agent]=Mozilla%2F5.0+%28iPhone%3B+U%3B+CPU+iPhone+OS+4_0_2+like+Mac+OS+X%3B+en-us%29+AppleWebKit%2F532.9+%28KHTML%2C+like+Gecko%29+Version%2F4.0.5+Mobile%2F8A400+Safari%2F6531.22.7&h[Pragma]=no-cache&h[Host]=ads.mopub.com&h[X-Zoo]=app-id%3Dmopub-inc%2Cdomain%3Dmopub.com&h[Accept]=application%2Fxml%2Capplication%2Fxhtml%2Bxml%2Ctext%2Fhtml%3Bq%3D0.9%2Ctext%2Fplain%3Bq%3D0.8%2Cimage%2Fpng%2C%2A%2F%2A%3Bq%3D0.5&h[X-Google-Apps-Metadata]=domain%3Dmopub.com&h[X-Appengine-Country]=US"
+        headers = {}
+        response = urlfetch.fetch(url=url, 
+                                  method="POST", 
+                                  payload=payload, 
+                                  headers=network_server_side.headers)
         
         print response.content
 

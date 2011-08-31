@@ -201,15 +201,15 @@ class NetworkUnitTests(unittest.TestCase):
     def tearDown(self):
         self.testbed.deactivate()
 
-#     def mptest_ejam_basictest(self):     
-#         self.client_context = ClientContext(adunit=self.adunit,
-#                                             country_code="US", # Two characater country code.  
-#                                             raw_udid="fake_udid",   
-#                                             request_id="fake_request_id",
-#                                             now=datetime.datetime.now(),
-#                                             user_agent='FakeAndroidOS')
-#         mocean = EjamServerSide(self.client_context, self.adunit)
-#         self._check_bid_and_response(mocean)
+    def mptest_ejam_basictest(self):     
+        self.client_context = ClientContext(adunit=self.adunit,
+                                            country_code="US", # Two characater country code.  
+                                            raw_udid="fake_udid",   
+                                            request_id="fake_request_id",
+                                            now=datetime.datetime.now(),
+                                            user_agent='FakeAndroidOS')
+        mocean = EjamServerSide(self.client_context, self.adunit)
+        self._check_bid_and_response(mocean)
        
 
 #     def mptest_appnexus_basictest(self):     
@@ -222,55 +222,52 @@ class NetworkUnitTests(unittest.TestCase):
 #         server_side = AppNexusServerSide(self.client_context, self.adunit)
 #         self._check_bid_and_response(server_side, False)
 
-#     def mptest_brightroll_basictest(self):     
-#         self.client_context = ClientContext(adunit=self.adunit,
-#                                             country_code="US", # Two characater country code.  
-#                                             raw_udid="fake_udid",   
-#                                             request_id="fake_request_id",
-#                                             now=datetime.datetime.now(),
-#                                             user_agent='FakeAndroidOS')
-#         server_side = BrightRollServerSide(self.client_context, self.adunit)
-#         self._check_bid_and_response(server_side)
+    def mptest_brightroll_basictest(self):     
+        self.client_context = ClientContext(adunit=self.adunit,
+                                            country_code="US", # Two characater country code.  
+                                            raw_udid="fake_udid",   
+                                            request_id="fake_request_id",
+                                            now=datetime.datetime.now(),
+                                            user_agent='FakeAndroidOS')
+        server_side = BrightRollServerSide(self.client_context, self.adunit)
+        self._check_bid_and_response(server_side)
         
 
-#     def mptest_inmobi_basictest(self):     
-#         self.client_context = ClientContext(adunit=self.adunit,
-#                                             client_ip='204.28.127.10',
-#                                             country_code="US", # Two characater country code.  
-#                                             raw_udid="fake_udid",   
-#                                             request_id="fake_request_id",
-#                                             now=datetime.datetime.now(),
-#                                             user_agent='Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_3_3 like Mac OS X; en-us) AppleWebKit/533.17.9 (KHTML, like Gecko) Version/5.0.2 Mobile/8J2 Safari/6533.18.5')
-#         server_side = InMobiServerSide(self.client_context, self.adunit)
-#         self._check_bid_and_response(server_side, False)
-
-#     def mptest_jumptap_basictest(self):     
-#         self.client_context = ClientContext(adunit=self.adunit,
-#                                             country_code="US", # Two characater country code.  
-#                                             raw_udid="fake_udid",   
-#                                             request_id="fake_request_id",
-#                                             now=datetime.datetime.now(),
-#                                             user_agent='FakeAndroidOS')
-#         server_side = JumptapServerSide(self.client_context, self.adunit)
-#         self._check_bid_and_response(server_side)
-
-#     def mptest_millennial_basictest(self):     
-#         self.client_context = ClientContext(adunit=self.adunit,
-#                                             country_code="US", # Two characater country code.  
-#                                             raw_udid="fake_udid",   
-#                                             request_id="fake_request_id",
-#                                             now=datetime.datetime.now(),
-#                                             user_agent='Mozilla%2F5.0+%28Macintosh%3B+Intel+'\
-#                                                 'Mac+OS+X+10.7%3B+rv%3A5.0.1%29+Gecko%2F20100101+Firefox%2F5.0.1')
-#         server_side = MillennialServerSide(self.client_context, self.adunit)
-#         self._check_bid_and_response(server_side)
-
-    def mptest_mobfox_basictest(self):     
-        """
-        Failing with this url
-http://my.mobfox.com/request.php?v=api_mopub?apid=147e13e17341db4f25afe08ac0144193&auid=fake_udid&ua=Mozilla%252F5.0%2B%2528iPhone%253B%2BU%253B%2BCPU%2BiPhone%2BOS%2B4_3_3%2Blike%2BMac%2BOS%2BX%253B%2Ben-us%2529%2BAppleWebKit%252F533.17.9%2B%2528KHTML%252C%2Blike%2BGecko%2529%2BVersion%252F5.0.2%2BMobile%252F8J2%2BSafari%252F6533.18.5%26h&uip=Nonert=api&i=None&m=live&o=fake_udid&s=147e13e17341db4f25afe08ac0144193&u=Mozilla%252F5.0%2B%2528iPhone%253B%2BU%253B%2BCPU%2BiPhone%2BOS%2B4_3_3%2Blike%2BMac%2BOS%2BX%253B%2Ben-us%2529%2BAppleWebKit%252F533.17.9%2B%2528KHTML%252C%2Blike%2BGecko%2529%2BVersion%252F5.0.2%2BMobile%252F8J2%2BSafari%252F6533.18.5%26h&v=api_mopub&device_override=iphone_app
-        """
+    def mptest_inmobi_basictest(self):     
         self.client_context = ClientContext(adunit=self.adunit,
+                                            client_ip='204.28.127.10',
+                                            country_code="US", # Two characater country code.  
+                                            raw_udid="fake_udid",   
+                                            request_id="fake_request_id",
+                                            now=datetime.datetime.now(),
+                                            user_agent='Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_3_3 like Mac OS X; en-us) AppleWebKit/533.17.9 (KHTML, like Gecko) Version/5.0.2 Mobile/8J2 Safari/6533.18.5')
+        server_side = InMobiServerSide(self.client_context, self.adunit)
+        self._check_bid_and_response(server_side)
+
+    def mptest_jumptap_basictest(self):     
+        self.client_context = ClientContext(adunit=self.adunit,
+                                            country_code="US", # Two characater country code.  
+                                            raw_udid="fake_udid",   
+                                            request_id="fake_request_id",
+                                            now=datetime.datetime.now(),
+                                            user_agent='FakeAndroidOS')
+        server_side = JumptapServerSide(self.client_context, self.adunit)
+        self._check_bid_and_response(server_side)
+
+    def mptest_millennial_basictest(self):     
+        self.client_context = ClientContext(adunit=self.adunit,
+                                            country_code="US", # Two characater country code.  
+                                            raw_udid="fake_udid",   
+                                            request_id="fake_request_id",
+                                            now=datetime.datetime.now(),
+                                            user_agent='Mozilla%2F5.0+%28Macintosh%3B+Intel+'\
+                                                'Mac+OS+X+10.7%3B+rv%3A5.0.1%29+Gecko%2F20100101+Firefox%2F5.0.1')
+        server_side = MillennialServerSide(self.client_context, self.adunit)
+        self._check_bid_and_response(server_side)
+        
+    def mptest_mobfox_basictest(self):     
+        self.client_context = ClientContext(adunit=self.adunit,
+                                            client_ip="74.177.233.185",
                                             country_code="US", # Two characater country code.  
                                             raw_udid="fake_udid",   
                                             request_id="fake_request_id",
@@ -279,20 +276,12 @@ http://my.mobfox.com/request.php?v=api_mopub?apid=147e13e17341db4f25afe08ac01441
                                                 'OS+4_3_3+like+Mac+OS+X%3B+en-us%29+AppleWebKit%2F533'\
                                                 '.17.9+%28KHTML%2C+like+Gecko%29+Version%2F5.0.2+Mobile%2F8J2+Safari%2F6533.18.5&h')
         server_side = MobFoxServerSide(self.client_context, self.adunit)
-        self._check_bid_and_response(server_side, False)
+        self._check_bid_and_response(server_side)
         
 
-    def _check_bid_and_response(this, network_server_side, add_test=True):
+    def _check_bid_and_response(this, network_server_side):
         url = network_server_side.url
-        if add_test:
-            url += "&test=1"
-        else:
-            url += '?' + network_server_side.payload
-            
-        url = network_server_side.url
-        url = "http://my.mobfox.com/request.php?v=api_mopub"    
-        payload = network_server_side.payload#"rt=api&i=74.177.233.185&m=live&o=467A52DB6F573AC18431045FB136B22E&s=147e13e17341db4f25afe08ac0144193&u=Mozilla%2F5.0+%28iPhone%3B+U%3B+CPU+iPhone+OS+4_0_2+like+Mac+OS+X%3B+en-us%29+AppleWebKit%2F532.9+%28KHTML%2C+like+Gecko%29+Version%2F4.0.5+Mobile%2F8A400+Safari%2F6531.22.7&v=api_mopub&device_override=iphone_app&h[Accept-Language]=en-us&h[X-Appengine-Default-Namespace]=mopub.com&h[User-Agent]=Mozilla%2F5.0+%28iPhone%3B+U%3B+CPU+iPhone+OS+4_0_2+like+Mac+OS+X%3B+en-us%29+AppleWebKit%2F532.9+%28KHTML%2C+like+Gecko%29+Version%2F4.0.5+Mobile%2F8A400+Safari%2F6531.22.7&h[Pragma]=no-cache&h[Host]=ads.mopub.com&h[X-Zoo]=app-id%3Dmopub-inc%2Cdomain%3Dmopub.com&h[Accept]=application%2Fxml%2Capplication%2Fxhtml%2Bxml%2Ctext%2Fhtml%3Bq%3D0.9%2Ctext%2Fplain%3Bq%3D0.8%2Cimage%2Fpng%2C%2A%2F%2A%3Bq%3D0.5&h[X-Google-Apps-Metadata]=domain%3Dmopub.com&h[X-Appengine-Country]=US"
-        headers = {}
+        payload = network_server_side.payload
         response = urlfetch.fetch(url=url, 
                                   method="POST", 
                                   payload=payload, 

@@ -49,7 +49,7 @@ class MobFoxServerSide(ServerSide):
     def payload(self):
         data = {'rt': 'api',
                 'u': 'Mozilla%2F5.0+%28iPhone%3B+U%3B+CPU+iPhone+OS+4_3_3+like+Mac+OS+X%3B+en-us%29+AppleWebKit%2F533.17.9+%28KHTML%2C+like+Gecko%29+Version%2F5.0.2+Mobile%2F8J2+Safari%2F6533.18.5&h',#self.get_user_agent(),
-                'i': "74.177.233.185",#self.get_ip(),
+                'i': self.get_ip(),
                 'o': self.get_udid(),
                 'm': 'live',
                 's': self.get_pub_id(),
@@ -60,23 +60,8 @@ class MobFoxServerSide(ServerSide):
                 'device_override' : self._device_overide(),
               }
               
-        return urllib.urlencode(data) + '&' + self._add_extra_headers()
+        return urllib.urlencode(data)
         
-    def _add_extra_headers(self):
-        """
-        add extra headers to the post because shouldn't escape the brackets (e.g. h[])
-        hence we can't just use the generic paylod method.
-        return valid looks something like h[foo]=bar&h[foo2]=bar2
-        """
-        return ""#"h[Accept-Language]=en-us&h[X-Appengine-Default-Namespace]=mopub.com&h[User-Agent]=Mozilla%2F5.0+%28iPhone%3B+U%3B+CPU+iPhone+OS+4_0_2+like+Mac+OS+X%3B+en-us%29+AppleWebKit%2F532.9+%28KHTML%2C+like+Gecko%29+Version%2F4.0.5+Mobile%2F8A400+Safari%2F6531.22.7&h[Pragma]=no-cache&h[Host]=ads.mopub.com&h[X-Zoo]=app-id%3Dmopub-inc%2Cdomain%3Dmopub.com&h[Accept]=application%2Fxml%2Capplication%2Fxhtml%2Bxml%2Ctext%2Fhtml%3Bq%3D0.9%2Ctext%2Fplain%3Bq%3D0.8%2Cimage%2Fpng%2C%2A%2F%2A%3Bq%3D0.5&h[X-Google-Apps-Metadata]=domain%3Dmopub.com&h[X-Appengine-Country]=US"
-        exclude_headers = ['Keep-Alive','Connection','Cookie','Cache-Control','Content-Length']
-        headers = [] # list of (header,value) tuples
-        # select only ones not in the exclue header list
-        for header,value in self.request.headers.iteritems():
-            if not header in exclude_headers:
-                headers.append((header,value))
-        return '&'.join(['h[%s]=%s'%(urllib.quote_plus(h),urllib.quote_plus(v)) for h,v in  headers])
-
     def get_response(self):
         req = urllib2.Request(self.url, self.payload)
         response = urllib2.urlopen(req)

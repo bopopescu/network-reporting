@@ -18,9 +18,21 @@ class MobFoxServerSide(ServerSide):
         self.html_params = {}
         return super(MobFoxServerSide,self).__init__(request,adunit,*args,**kwargs)
 
+    def get_key_values(self):
+        return {'apid':self.get_pub_id(),
+                'auid':self.get_udid(),
+                'uip':self.get_ip(),
+                'ua':self.get_user_agent()}
+    
     @property
     def url(self):
-        return self.base_url
+        return self.base_url + '?' + urllib.urlencode(self.get_key_values())
+
+
+
+#     @property
+#     def url(self):
+#         return self.base_url
         
     def _device_overide(self):
         ua = self.get_user_agent().lower()
@@ -36,7 +48,7 @@ class MobFoxServerSide(ServerSide):
     @property  
     def payload(self):
         data = {'rt': 'api',
-                'u': self.get_user_agent(),
+                'u': 'Mozilla%2F5.0+%28iPhone%3B+U%3B+CPU+iPhone+OS+4_3_3+like+Mac+OS+X%3B+en-us%29+AppleWebKit%2F533.17.9+%28KHTML%2C+like+Gecko%29+Version%2F5.0.2+Mobile%2F8J2+Safari%2F6533.18.5&h',#self.get_user_agent(),
                 'i': self.get_ip(),
                 'o': self.get_udid(),
                 'm': 'live',
@@ -56,6 +68,7 @@ class MobFoxServerSide(ServerSide):
         hence we can't just use the generic paylod method.
         return valid looks something like h[foo]=bar&h[foo2]=bar2
         """
+        return ""
         exclude_headers = ['Keep-Alive','Connection','Cookie','Cache-Control','Content-Length']
         headers = [] # list of (header,value) tuples
         # select only ones not in the exclue header list

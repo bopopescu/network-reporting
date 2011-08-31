@@ -33,6 +33,7 @@ class InMobiServerSide(ServerSide):
         if "iPad" in ua:
             return ua  
         # TODO: Should return actual software and hardware versions for iPhone/iPod
+        return 'Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_3_3 like Mac OS X; en-us) AppleWebKit/533.17.9 (KHTML, like Gecko) Version/5.0.2 Mobile/8J2 Safari/6533.18.5'
         return 'InMobi_Specs_iPhoneApp=1.0.2 (iPhone; iPhone OS 3.1.2; HW iPhone1,1)'
     
     def get_inmobi_ad_size(self):

@@ -24,7 +24,14 @@ class ServerSide(object):
     def get_user_agent(self):
         """gets the user agent from either a query paramter or the header"""
         return self.client_context.user_agent
+
+    def get_udid(self):
+        return self.client_context.raw_udid
         
+    @property
+    def url(self):
+        return self.base_url
+    
     def get_pub_id(self, warn=False):
         """ Gets the most specifically defined pub id """
         pub_id = self.adunit.get_pub_id(self.pub_id_attr)

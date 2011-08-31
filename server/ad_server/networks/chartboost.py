@@ -16,7 +16,7 @@ class ChartBoostServerSide(ServerSide):
     @property
     def url(self):
         data =	{'uuid': self.get_udid(), 'app': self.get_pub_id(), }        
-        if "full" in self.adunit.format:
+        if "full" in self.format:
             self.is_full_screen = True
             return self.base_url + "fullscreen.json?" + urllib.urlencode(data)
         else:

@@ -184,14 +184,10 @@ class NetworkUnitTests(unittest.TestCase):
 
         self.network_config = NetworkConfig(
             ejam_pub_id = '23710',
-            appnexus_pub_id = '23711',
-            chartboost_pub_id='23712',
-            greystripe_pub_id='23713',
             inmobi_pub_id='4028cba630724cd90130c2adc9b6024f',
-            jumptap_pub_id='23715',
+            jumptap_pub_id='DUMMY_PUB_ID',
             millennial_pub_id='53344',
             mobfox_pub_id='147e13e17341db4f25afe08ac0144193',
-            mocean_pub_id='23718'
             )
         self.network_config.put()
 

@@ -4,7 +4,6 @@ import hashlib
 
 
 import datetime  
-import reporting.models as reporting_models
 from common.constants import (KB, MB, GB)
 
 from google.appengine.ext import blobstore
@@ -15,7 +14,7 @@ COUNTRY_PAT = re.compile(r' [a-zA-Z][a-zA-Z][-_](?P<ccode>[a-zA-Z][a-zA-Z]);*[^a
 
 MB_PER_SHARD = 10
 
-def get_country_code(headers, default=reporting_models.DEFAULT_COUNTRY):
+def get_country_code(headers, default='XX'):
     return headers.get('X-AppEngine-country', default)
     
 def get_user_agent(request):

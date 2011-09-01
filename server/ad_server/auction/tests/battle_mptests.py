@@ -55,7 +55,11 @@ from ad_server.auction.battles import (Battle,
                                        BackfillMarketplaceBattle
                                       )
   
-from ad_server.auction.client_context import ClientContext
+from ad_server.auction.client_context import ClientContext   
+
+from advertiser.models import (DummyServerSideSuccessCreative, 
+                               DummyServerSideFailureCreative   
+                              )   
 
 
 class TestAdAuction(unittest.TestCase):
@@ -138,7 +142,8 @@ class TestAdAuction(unittest.TestCase):
                     
          
         self.dummy_network_c = Campaign(name="dummy_network",
-                                        campaign_type="network")
+                                        campaign_type="network") 
+                                       
         self.dummy_network_c.put()
 
         self.dummy_network_adgroup = AdGroup(account=self.account, 
@@ -149,21 +154,13 @@ class TestAdAuction(unittest.TestCase):
                               
         self.dummy_network_adgroup.put()             
                     
-                                         
-        self.dummy_network_creative = Creative(account=self.account,
-                                ad_group=self.dummy_network_adgroup,
-                                tracking_url="test-tracking-url", 
-                                cpc=.03,
-                                ad_type="clear")
-        self.dummy_network_creative.put()
+        # We don't build our dummy creative here, but rather in individual tests                              
     
         
         self.request = fake_request(self.adunit.key())
         self.adunit_id = str(self.adunit.key())
          
-        self.user_agent = "Mozilla/5.0 (iPad; U; CPU OS 3.2 like Mac OS X; en-us) AppleWebKit/531.21.10 (KHTML, like Gecko) Version/4.0.4 Mobile/7B314 Safari/531.21.10"
-
-        self.adunit_context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit_id)   
+        self.user_agent = "Mozilla/5.0 (iPad; U; CPU OS 3.2 like Mac OS X; en-us) AppleWebKit/531.21.10 (KHTML, like Gecko) Version/4.0.4 Mobile/7B314 Safari/531.21.10"  
         
         self.client_context = ClientContext(adunit=self.adunit,
                 	                        keywords=["rocks", "paper"],
@@ -181,20 +178,19 @@ class TestAdAuction(unittest.TestCase):
     def tearDown(self):
         self.testbed.deactivate()
 
-    def mptest_basic(self):
+    def mptest_basic(self): 
+        self.adunit_context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit_id) 
         gtee_battle = GteeBattle(self.client_context, self.adunit_context)
         creative = gtee_battle.run() 
         eq_obj(creative, self.expensive_creative)            
          
-    def mptest_gtee_high_priority(self):   
+    def mptest_gtee_high_priority(self):         
         self.expensive_c.campaign_type = "gtee_high"
         self.expensive_c.put()  
         
         # Clear the adunit context cache         
-        self.refresh_context(self.adunit)
+        self.adunit_context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit_id)
 
-        # for c in self.adunit_context.campaigns:
-        #     print c.campaign_priority   
 
         gtee_battle = GteeHighBattle(self.client_context, self.adunit_context)
         creative = gtee_battle.run() 
@@ -205,21 +201,81 @@ class TestAdAuction(unittest.TestCase):
         self.expensive_c.put()  
     
         # Clear the adunit context cache         
-        self.refresh_context(self.adunit)                                  
+        self.adunit_context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit_id)                                 
     
         gtee_battle = GteeLowBattle(self.client_context, self.adunit_context)
         creative = gtee_battle.run() 
         eq_obj(creative, self.expensive_creative)
         
         
-    def mptest_network_basic(self):
-    
-        # Clear the adunit context cache         
-        self.refresh_context(self.adunit)                                  
+    def mptest_network_basic(self):                                                        
+        self.dummy_network_creative = DummyServerSideSuccessCreative(account=self.account,
+                                ad_group=self.dummy_network_adgroup,
+                                tracking_url="test-tracking-url", 
+                                cpc=.03,
+                                ad_type="clear") 
+
+        self.dummy_network_creative.put()
+               
+        self.adunit_context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit_id)   
     
         network_battle = NetworkBattle(self.client_context, self.adunit_context)
         creative = network_battle.run() 
-        eq_obj(creative, self.dummy_network_creative)
+        eq_obj(creative, self.dummy_network_creative)   
+        
+        eq_(creative.html, "<html> FAKE RESPONSE </html>") 
+        
+    def mptest_network_failure(self):      
+        
+        self.dummy_network_creative = DummyServerSideFailureCreative(account=self.account,
+                                ad_group=self.dummy_network_adgroup,
+                                tracking_url="test-tracking-url", 
+                                cpc=.03,
+                                ad_type="clear") 
+
+        self.dummy_network_creative.put()
+        
+        # Clear the adunit context cache         
+        self.adunit_context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit_id)                 
+          
+
+        network_battle = NetworkBattle(self.client_context, self.adunit_context)
+        creative = network_battle.run()  
+
+        eq_(creative, None) 
+
+    
+        
+    def test_network_fallback(self):
+     
+        self.dummy_network2_c = Campaign(name="dummy_network2",
+                                        campaign_type="network")
+        self.dummy_network2_c.put()
+
+        self.dummy_network2_adgroup = AdGroup(account=self.account, 
+                              name="dummy_network2",
+                              campaign=self.dummy_network2_c, 
+                              site_keys=[self.adunit.key()],
+                              network_type="dummy") # dummy networks go to the DummyServerSide 
+
+        self.dummy_network2_adgroup.put()             
+
+
+        self.dummy_network2_creative = DummyServerSideSuccessCreative(account=self.account,
+                                ad_group=self.dummy_network2_adgroup,
+                                tracking_url="test-tracking-url", 
+                                cpc=.10,
+                                ad_type="clear")
+        self.dummy_network2_creative.put()  
+        
+        # Clear the adunit context cache         
+        self.refresh_context(self.adunit)                                  
+
+        network_battle = NetworkBattle(self.client_context, self.adunit_context)
+        creative = network_battle.run() 
+        eq_obj(creative, self.dummy_network2_creative)   
+
+        eq_(creative.html, "<html> FAKE RESPONSE </html>")
         
                                                       
 

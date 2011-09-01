@@ -30,6 +30,20 @@ from ad_server.renderers.jumptap import JumptapRenderer
 from ad_server.renderers.text import TextRenderer
 from ad_server.renderers.iad import iAdRenderer
 
+
+from ad_server.networks.appnexus import AppNexusServerSide
+from ad_server.networks.brightroll import BrightRollServerSide
+from ad_server.networks.chartboost import ChartBoostServerSide
+from ad_server.networks.ejam import EjamServerSide
+from ad_server.networks.greystripe import GreyStripeServerSide
+from ad_server.networks.inmobi import InMobiServerSide
+from ad_server.networks.jumptap import JumptapServerSide
+from ad_server.networks.millennial import MillennialServerSide
+from ad_server.networks.mobfox import MobFoxServerSide  
+from ad_server.networks.dummy_server_side import (DummyServerSideSuccess, 
+                                                  DummyServerSideFailure   
+                                                 )          
+
 # from budget import budget_service
 #
 # A campaign.    Campaigns have budgetary and time based restrictions.    
@@ -332,7 +346,8 @@ class AdGroup(db.Model):
         return self.created.date()     
         
         
-class Creative(polymodel.PolyModel):
+class Creative(polymodel.PolyModel):      
+ 
     name = db.StringProperty(default='Creative')
     custom_width = db.IntegerProperty()
     custom_height = db.IntegerProperty()
@@ -390,9 +405,9 @@ class Creative(polymodel.PolyModel):
             prefix-matching to distinguish true click events."""                    
         return self.launchpage
     
-    @property
-    def Renderer(self):                      
-        return BaseCreativeRenderer
+    # Set up the basic Renderers and ServerSides for the creative
+    Renderer = BaseCreativeRenderer
+    ServerSide = None  # Non-server-bound creatives don't need a serverside
 
     @property
     def multi_format(self):
@@ -529,9 +544,7 @@ class CustomCreative(HtmlCreative):
     pass
 
 class CustomNativeCreative(HtmlCreative):
-    @property
-    def Renderer(self):                      
-        return CustomNativeRenderer
+    Renderer = CustomNativeRenderer
 
 
     @property
@@ -540,9 +553,7 @@ class CustomNativeCreative(HtmlCreative):
 
 class iAdCreative(Creative):
 
-    @property
-    def Renderer(self):                      
-        return iAdRenderer
+    Renderer = iAdRenderer
     
     @property
     def multi_format(self):
@@ -550,21 +561,15 @@ class iAdCreative(Creative):
     
 class AdSenseCreative(Creative):
     
-    @property
-    def Renderer(self):                      
-        return AdSenseRenderer
+    Renderer = AdSenseRenderer
 
 class AdMobCreative(Creative):   
     
-    @property
-    def Renderer(self):                      
-        return AdMobRenderer
+    Renderer = AdMobRenderer
 
 class AdMobNativeCreative(AdMobCreative):
 
-    @property
-    def Renderer(self):                      
-        return AdMobNativeRenderer
+    Renderer = AdMobNativeRenderer
 
     @property
     def multi_format(self):
@@ -572,9 +577,7 @@ class AdMobNativeCreative(AdMobCreative):
     
 class MillennialCreative(Creative):
 
-    @property
-    def Renderer(self):                      
-        return MillennialRenderer
+    Renderer = MillennialRenderer
 
     
     @property
@@ -583,9 +586,9 @@ class MillennialCreative(Creative):
 
 class MillennialNativeCreative(MillennialCreative):
                  
-    @property
-    def Renderer(self):                      
-        return MillennialNativeRenderer
+    Renderer = MillennialNativeRenderer  
+        
+    ServerSide = MillennialServerSide
 
     @property
     def multi_format(self):
@@ -593,9 +596,9 @@ class MillennialNativeCreative(MillennialCreative):
 
 class ChartBoostCreative(Creative):
 
-    @property
-    def Renderer(self):                      
-        return ChartBoostRenderer
+    Renderer = ChartBoostRenderer   
+        
+    ServerSide = ChartBoostServerSide
     
     
     @property
@@ -604,31 +607,32 @@ class ChartBoostCreative(Creative):
         
 class EjamCreative(Creative):
     
-    @property
-    def Renderer(self):                      
-        return ChartBoostRenderer
+    Renderer = ChartBoostRenderer  
+    
+    ServerSide = EjamServerSide
     
 class InMobiCreative(Creative):
    
-    @property
-    def Renderer(self):                      
-        return InmobiRenderer
+    Renderer = InmobiRenderer 
+        
+    ServerSide = InMobiServerSide
 
 
     @property
     def multi_format(self):
         return ('728x90', '320x50', '300x250', '468x60', '120x600',)
     
-class AppNexusCreative(Creative):
-    @property
-    def Renderer(self):                      
-        return AppNexusRenderer
+class AppNexusCreative(Creative):   
+    
+    Renderer = AppNexusRenderer  
+        
+    ServerSide = AppNexusServerSide
 
 class BrightRollCreative(Creative):
 
-    @property
-    def Renderer(self):                      
-        return BrightRollRenderer
+    Renderer = BrightRollRenderer   
+        
+    ServerSide = BrightRollServerSide
     
     @property
     def multi_format(self):
@@ -636,9 +640,9 @@ class BrightRollCreative(Creative):
 
 class JumptapCreative(Creative):
 
-    @property
-    def Renderer(self):                      
-        return JumptapRenderer
+    Renderer = JumptapRenderer  
+        
+    ServerSide = AppNexusServerSide
     
     @property
     def multi_format(self):
@@ -646,9 +650,9 @@ class JumptapCreative(Creative):
 
 class GreyStripeCreative(Creative):
     
-    @property
-    def Renderer(self):                      
-        return GreyStripeRenderer
+    Renderer = GreyStripeRenderer  
+    
+    ServerSide = GreyStripeServerSide
 
     
     @property
@@ -656,7 +660,8 @@ class GreyStripeCreative(Creative):
         return ('320x320', '320x50', '300x250',)
     
 class MobFoxCreative(Creative):
-    pass
+    
+    ServerSide = MobFoxServerSide
   
   
 class NullCreative(Creative):
@@ -665,3 +670,9 @@ class NullCreative(Creative):
 class TempImage(db.Model):
     image = db.BlobProperty()
 
+class DummyServerSideFailureCreative(Creative):
+    ServerSide = DummyServerSideFailure  
+    
+
+class DummyServerSideSuccessCreative(Creative):
+    ServerSide = DummyServerSideSuccess

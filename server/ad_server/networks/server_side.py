@@ -113,5 +113,13 @@ class ServerSide(object):
         return width,height      
 
 
+class ServerSideException(Exception):     
+    """ Something has gone wrong with the serverside. """
+    def __init__(self, message, error_dict={}):     
 
+        # Call the base class constructor with the parameters it needs
+        Exception.__init__(self, message)
+
+        # Now for your custom code...
+        self.error_dict = error_dict
 

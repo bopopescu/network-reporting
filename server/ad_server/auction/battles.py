@@ -11,40 +11,16 @@ from ad_server.filters.filters import (budget_filter,
                                     lat_lon_filter,
                                     os_filter,
                                    )       
-                                   
-                                   
-from ad_server.networks.appnexus import AppNexusServerSide
-from ad_server.networks.brightroll import BrightRollServerSide
-from ad_server.networks.chartboost import ChartBoostServerSide
-from ad_server.networks.ejam import EjamServerSide
-from ad_server.networks.greystripe import GreyStripeServerSide
-from ad_server.networks.inmobi import InMobiServerSide
-from ad_server.networks.jumptap import JumptapServerSide
-from ad_server.networks.millennial import MillennialServerSide
-from ad_server.networks.mobfox import MobFoxServerSide        
-from ad_server.networks.dummy_server_side import DummyServerSide
 
                             
 from ad_server.optimizer import optimizer                                   
 from ad_server.debug_console import trace_logging     
 
 from common.utils.marketplace_helpers import build_marketplace_dict  
-from mopub_logging import mp_logging       
+from mopub_logging import mp_logging      
 
-NATIVE_REQUESTS = ['admob', 'adsense', 'iAd', 'custom', 'custom_native', 'admob_native', 'millennial_native']      
+from ad_server.networks.server_side import ServerSideException 
 
-
-SERVER_SIDE_DICT = {"millennial":MillennialServerSide,
-                    "appnexus":AppNexusServerSide,
-                    "inmobi":InMobiServerSide,
-                    "brightroll":BrightRollServerSide,
-                    "chartboost":ChartBoostServerSide,
-                    "ejam":EjamServerSide,
-                    "jumptap":JumptapServerSide,
-                    "greystripe":GreyStripeServerSide,
-                    "mobfox":MobFoxServerSide,
-                    "dummy":DummyServerSide}
- 
 class Battle(object):
     """ Determines the best creative available within a subset of adgroups.
         Essentially a sub-auction on some subset of adgroups. """  
@@ -208,7 +184,7 @@ class NetworkBattle(Battle):
         """ Fan out to a network and see if it can fill the request. """ 
         # If the network is a native network, then it does not require an rpc   
 
-        if creative.adgroup.network_type in NATIVE_REQUESTS: 
+        if not creative.ServerSide: 
 
             # TODO: refactor logging
             mp_logging.log(None, 
@@ -216,15 +192,14 @@ class NetworkBattle(Battle):
                            adunit=self.client_context.adunit, 
                            creative=creative, 
                            user_agent=self.client_context.user_agent,   
-                           udid=self.client_context.udid,
+                           udid=self.client_context.raw_udid,
                            country_code=self.client_context.country_code)     
                            
             return super(NetworkBattle, self)._process_winner(creative)
         
         # All non-native networks need rpcs    
         else:
-            ServerSideClass = SERVER_SIDE_DICT[creative.adgroup.network_type] 
-            server_side = ServerSideClass(self.client_context, self.adunit_context.adunit)
+            server_side = creative.ServerSide(self.client_context, self.adunit_context.adunit)
             try: 
                 # Right now we make the call, and synchronously get the reponse
                 creative.html = server_side.make_call_and_get_html_from_response()  

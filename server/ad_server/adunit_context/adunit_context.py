@@ -24,7 +24,7 @@ class AdUnitContext(object):
         
         adgroups = cls.fetch_adgroups(adunit)
         campaigns = cls.fetch_campaigns(adgroups)
-        creatives = cls.fetch_creatives(adunit, adgroups)
+        creatives = cls.fetch_creatives(adunit, adgroups, limit=MAX_OBJECTS*2)
         
         adunit_context = cls(adunit, 
                              campaigns, 

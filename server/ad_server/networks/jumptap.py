@@ -6,7 +6,8 @@ import cgi
 import urllib
 import urllib2
 import string
-import logging
+import logging 
+from ad_server.networks.server_side import ServerSideException  
 
 class JumptapServerSide(ServerSide):
     base_url = "http://a.jumptap.com/a/ads" # live
@@ -63,7 +64,7 @@ class JumptapServerSide(ServerSide):
         trace_logging.warning("Jumptap response: %s"%cgi.escape(response.content))
         if len(response.content) == 0:
             trace_logging.info("Jumptap ad is empty")
-            raise Exception("Jumptap ad is empty")
+            raise ServerSideException("Jumptap ad is empty")
        
         width, height = self._get_size(response.content)
         return 0.0,"<div style='text-align:center'>"+response.content+"</div>", width, height

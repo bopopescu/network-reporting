@@ -30,10 +30,17 @@ class ServerSide(object):
     
     def make_call_and_get_html_from_response(self):   
         """ When we don't need to do any asynchronous processing while
-            we wait for a result, we can call this function. """
-        self.make_fetch_call()
-        response = self.get_result()
-        return self.html_for_response(response)
+            we wait for a result, we can call this function. """         
+            
+        try:    
+            self.make_fetch_call()
+            response = self.get_result()     
+        except DeadlineExceededError:
+            raise ServerSideException("Deadline exceeded for ad_network")
+            
+        return self.html_for_response(response)    
+            
+         
     
     def make_fetch_call(self): 
         """ Initiates the rpc to get the html from the network. Result is 

@@ -6,7 +6,7 @@ import re
 
 from ad_server.debug_console import trace_logging
 from common.utils import simplejson
-
+from ad_server.networks.server_side import ServerSideException  
 
 class ChartBoostServerSide(ServerSide):
     base_url = "http://www.chartboost.com/api/"
@@ -35,4 +35,4 @@ class ChartBoostServerSide(ServerSide):
                 return 0.0, content
         except:    
             trace_logging.info("ChartBoost ad is empty")
-            raise Exception("ChartBoost ad is empty")
+            raise ServerSideException("ChartBoost ad is empty")

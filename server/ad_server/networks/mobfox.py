@@ -6,7 +6,8 @@ import urllib
 import urllib2
 
 from xml.dom import minidom
-from ad_server.debug_console import trace_logging
+from ad_server.debug_console import trace_logging  
+from ad_server.networks.server_side import ServerSideException  
 
 class MobFoxServerSide(ServerSide):
     base_url = "http://my.mobfox.com/request.php?v=api_mopub" # live
@@ -92,7 +93,7 @@ class MobFoxServerSide(ServerSide):
         elif ad_type == "noAd":
             ad_type = None            
         else:
-            raise Exception("unsupported ad type")
+            raise ServerSideException("unsupported ad type")
         return ad_type    
          
 
@@ -113,7 +114,7 @@ class MobFoxServerSide(ServerSide):
             content = text_template % self.html_params
         else:    
             trace_logging.info("MobFox ad is empty")
-            raise Exception("MobFox ad is empty")
+            raise ServerSideException("MobFox ad is empty")
         return 0.0, content
         
         

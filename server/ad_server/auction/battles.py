@@ -164,14 +164,51 @@ class MarketplaceBattle(Battle):
     def _process_winner(self, creative):    
         """ Fan out to the marketplace and see if there is a bid """    
         # TODO: Can we get relevant information without passing request
-        mk_args = build_marketplace_dict(adunit=self.client_context.adunit,
-                                         kws=self.client_context.keywords,
-                                         udid=self.client_context.udid,
-                                         ua=self.client_context.user_agent,
-                                         ll=self.client_context.ll,
-                                         ip=request.remote_addr,
-                                         adunit_context=self.adunit_context,                                 
-                                         country=self.client_context.country_code) 
+        mk_args = self.client_context.make_marketplace_dict(self.adunit_context)  
+                                          
+     
+        trace_logging.info("\nSending to MPX: %s\n" % mk_args)
+        mpx_url = 'http://mpx.mopub.com/req?' + urllib.urlencode(mk_args)
+        xhtml = None
+        charge_price = None
+        # Try to get a response
+        
+ 
+        # set the creative as having done w/e
+        mp_logging.log(None, event=mp_logging.REQ_EVENT, 
+                       adunit=self.adunit_context.adunit, 
+                       creative=creative, 
+                       user_agent=self.client_context.user_agent,
+                       udid=self.client_context.raw_udid)
+        try:
+            fetched = urlfetch.fetch(mpx_url, deadline=.2)
+            # Make sure it's a good response
+            trace_logging.info('MPX RESPONES CODE:%s'%fetched.status_code)
+            if fetched.status_code == 200:
+                marketplace_response_dict = simplejson.loads(fetched.content)
+                trace_logging.info('MPX REPSONSE:%s'%data)    
+                # With valid data
+                if data.has_key('xhtml') and data.has_key('charge_price') and data['xhtml']:
+                    creative.html = marketplace_response_dict['xhtml']
+                    charge_price = marketplace_response_dict['charge_price']
+                      
+                    
+                    # Should really be the pub's cut 
+                    
+                    # Do we need to do anything with the bid info?
+                    trace_logging.info('\n\nMPX Charge: %s\nMPX HTML: %s\n' % (charge_price, xhtml))     
+                    crtv.adgroup.bid = charge_price
+                    # I think we should log stuff here but I don't know how to do that 
+                    
+                    return super(NetworkBattle, self)._process_winner(creative)
+
+                    
+
+        except urlfetch.DownloadError, e:  
+            # There was no valid bid
+            return False         
+            
+              
                                          
 class NetworkBattle(Battle):  
     """ Fans out to each of the networks """

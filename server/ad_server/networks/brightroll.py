@@ -6,6 +6,7 @@ import string
 import time
 
 from xml.dom import minidom
+from ad_server.networks.server_side import ServerSideException  
 
 class BrightRollServerSide(ServerSide):
     base_url = "http://vast.bp3844869.btrll.com/vast/"
@@ -129,7 +130,7 @@ class BrightRollServerSide(ServerSide):
         # try:
         #     self.parse_xml(response.content)
         # except:
-        #     raise Exception("BrightRoll ad is empty") 
+        #     raise ServerSiderException("BrightRoll ad is empty") 
         scripts = """
         <script type="text/javascript">
             window.addEventListener("load", function() { window.location="mopub://finishLoad";}, false);

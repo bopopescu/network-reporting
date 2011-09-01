@@ -5,6 +5,7 @@ import cgi
 import urllib2
 import urllib
 import logging
+from ad_server.networks.server_side import ServerSideException  
 
 class MillennialServerSide(ServerSide):
     base_url = "http://ads.mp.mydas.mobi/getAd.php5"
@@ -31,7 +32,7 @@ class MillennialServerSide(ServerSide):
           response.status_code != 200 or \
           '<title>404' in response.content: # **See Note below
             trace_logging.info("Millennial ad is empty")
-            raise Exception("Millennial ad is empty")
+            raise ServerSideException("Millennial ad is empty")
   
         width, height = self._get_size(response.content)
         return 0.0,"<div style='text-align:center'>"+response.content+"</div>", width, height

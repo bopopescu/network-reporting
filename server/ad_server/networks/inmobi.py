@@ -4,6 +4,7 @@ from ad_server.debug_console import trace_logging
 
 from xml.dom import minidom
 import cgi
+from ad_server.networks.server_side import ServerSideException  
 
 class InMobiServerSide(ServerSide):
 
@@ -111,7 +112,7 @@ class InMobiServerSide(ServerSide):
             elif 'link_text' in self.url_params:
                 return 0.0, text_template.safe_substitute(self.url_params), width, height
         trace_logging.info("InMobi failed to return ad")
-        raise Exception("InMobi ad is empty")
+        raise ServerSideException("InMobi ad is empty")
 
 banner_template = string.Template(
 """

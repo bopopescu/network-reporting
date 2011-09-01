@@ -6,6 +6,7 @@ import urllib
 import re
 
 from ad_server.debug_console import trace_logging
+from ad_server.networks.server_side import ServerSideException  
 
 """
     mocean is an adserving platform that lets players build on top of them. EJam is built on top of mocean
@@ -36,4 +37,4 @@ class MoceanServerSide(ServerSide):
             trace_logging.warning("Received " + self.network_name + " response: %s"%cgi.escape(response.content))
             return 0.0, response.content
         trace_logging.info(self.network_name + " failed to return ad")
-        raise Exception(self.network_name + " ad is empty")
+        raise ServerSideException(self.network_name + " ad is empty")

@@ -1,5 +1,5 @@
 from ad_server.networks.server_side import ServerSide
-
+from ad_server.networks.server_side import ServerSideException  
 class AppNexusServerSide(ServerSide):
     base_url = "http://ib.sand-08.adnxs.net/sspt"
     def __init__(self,request,adunit=None,*args,**kwargs):

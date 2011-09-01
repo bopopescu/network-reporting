@@ -170,8 +170,7 @@ class MarketplaceBattle(Battle):
                                          ua=self.client_context.user_agent,
                                          ll=self.client_context.ll,
                                          ip=request.remote_addr,
-                                         adunit_context=self.adunit_context,
-                                         # country=helpers.get_country_code(request.headers, default=None),
+                                         adunit_context=self.adunit_context,                                 
                                          country=self.client_context.country_code) 
                                          
 class NetworkBattle(Battle):  

@@ -43,6 +43,7 @@ var mopub = mopub || {};
            $('#adunitForm-fragment').html(jsonData.html);
            // reimplement the onload event
            appFormOnload();
+           setupAdUnitForm();
            window.location.hash = '';
            window.location.hash = 'adunitForm';
         }
@@ -454,61 +455,103 @@ var mopub = mopub || {};
     / Ad Unit Form
     /---------------------------------------*/
    
-    // Set up device format selection UI
-    $("#adunit-device_format_phone").parent().buttonset();
-    $('#adunit-device_format_phone').click(function(e){
-      $('#adForm-tablet-container').hide();
-      $('#adForm-phone-container').show().find('input[type="radio"]')[0].click();
-    });
-    
-    $('#adunit-device_format_tablet').click(function(e){
-      $('#adForm-phone-container').hide();
-      $('#adForm-tablet-container').show().find('input[type="radio"]')[0].click();
-    });
-    
-    // Set up format selection UI for phone
-    $('#adForm-phone-formats').each(function() {
-      var container = $(this);
-      $('input[type="radio"]', container).click(function(e) {
-        var radio = $(this);
-        var formatContainer = radio.parents('.adForm-format');
-        $('.adForm-format-image').css({ opacity: 0.5 });
-        $('.adForm-format-image', formatContainer).css({ opacity: 1 });
-        
-        var $full_onlys = $(".full_only");
-        var $banner_onlys = $(".banner_only");
-        if ($(this).attr("id") == "appForm-adUnitFormat-full-tablet" ||
-            $(this).attr("id") == "appForm-adUnitFormat-full"){
-                $full_onlys.show();
-                $banner_onlys.hide();
-            }
-        else{
-                $full_onlys.hide();
-                $banner_onlys.show();
-        }    
-        
-        var $custom_onlys = $(".custom_only");
-        if ($(this).attr("id") == "appForm-adUnitFormat-tablet-custom" || $(this).attr("id") == "appForm-adUnitFormat-custom"){
-            $custom_onlys.show();
-        }
-        else{
-            $custom_onlys.hide();
-        }
-        
-      }).filter(':checked').click();
-      
-      $('.adForm-format-image', container).click(function(e) {
-        var image = $(this);
-        var formatContainer = image.parents('.adForm-format');
-        $('input[type="radio"]', formatContainer).click();
+    function setupAdUnitForm() {
+      // Set up device format selection UI
+      $("#adunit-device_format_phone").parent().buttonset();
+      $('#adunit-device_format_phone').click(function(e){
+        $('#adForm-tablet-container').hide();
+        $('#adForm-phone-container').show().find('input[type="radio"]')[0].click();
       });
-      
-      $('.adForm-format-details input[type="text"]', container).focus(function() {
-        var input = $(this);
-        var formatContainer = input.parents('.adForm-format');
-        $('input[type="radio"]', formatContainer).click();
+    
+      $('#adunit-device_format_tablet').click(function(e){
+        $('#adForm-phone-container').hide();
+        $('#adForm-tablet-container').show().find('input[type="radio"]')[0].click();
       });
-    });
+    
+      // Set up format selection UI for phone
+      $('#adForm-phone-formats').each(function() {
+        var container = $(this);
+        $('input[type="radio"]', container).click(function(e) {
+          var radio = $(this);
+          var formatContainer = radio.parents('.adForm-format');
+          $('.adForm-format-image').css({ opacity: 0.5 });
+          $('.adForm-format-image', formatContainer).css({ opacity: 1 });
+        
+          var $full_onlys = $(".full_only");
+          var $banner_onlys = $(".banner_only");
+          if ($(this).attr("id") == "appForm-adUnitFormat-full-tablet" ||
+              $(this).attr("id") == "appForm-adUnitFormat-full"){
+                  $full_onlys.show();
+                  $banner_onlys.hide();
+              }
+          else{
+                  $full_onlys.hide();
+                  $banner_onlys.show();
+          }    
+        
+          var $custom_onlys = $(".custom_only");
+          if ($(this).attr("id") == "appForm-adUnitFormat-tablet-custom" || $(this).attr("id") == "appForm-adUnitFormat-custom"){
+              $custom_onlys.show();
+          }
+          else{
+              $custom_onlys.hide();
+          }
+        
+        }).filter(':checked').click();
+      
+        $('.adForm-format-image', container).click(function(e) {
+          var image = $(this);
+          var formatContainer = image.parents('.adForm-format');
+          $('input[type="radio"]', formatContainer).click();
+        });
+      
+        $('.adForm-format-details input[type="text"]', container).focus(function() {
+          var input = $(this);
+          var formatContainer = input.parents('.adForm-format');
+          $('input[type="radio"]', formatContainer).click();
+        });
+      });
+      // Set up format selection UI for tablet
+      $('#adForm-tablet-formats').each(function(){
+          var container = $(this);
+          //bind radio buttons to images
+            $(this).find('input[type="radio"]').click(function(e){
+              var index = $(this).parent().index();
+              var images = $("#adForm-images-container");
+              images.children().hide();
+              var image = images.children()[index]
+              $(image).show().css({ opacity: 1 });
+
+              var $full_onlys = $(".full_only");
+              var $banner_onlys = $(".banner_only");
+              if ($(this).attr("id") == "appForm-adUnitFormat-full-tablet" ||
+                  $(this).attr("id") == "appForm-adUnitFormat-full"){
+                      $full_onlys.show();
+                      $banner_onlys.hide();
+                  }
+              else{
+                      $full_onlys.hide();
+                      $banner_onlys.show();
+              }    
+
+              var $custom_onlys = $(".custom_only");
+              if ($(this).attr("id") == "appForm-adUnitFormat-tablet-custom" || $(this).attr("id") == "appForm-adUnitFormat-custom"){
+                  $custom_onlys.show();
+              }
+              else{
+                  $custom_onlys.hide();
+              }
+
+          }).first().click(); //initialize by activating the first
+        });
+      //initialize checked elements
+      $("#adunit-device_format_phone").parent().children().filter(':checked').click().each(function(){
+        var deviceFormat = $(this).val(); //either tablet or phone
+        var container = "#adForm-"+deviceFormat+"-container"
+        $(container).find('.possible-format').click(); 
+      });
+    }
+    setupAdUnitForm();
     
     // /*---------------------------------------/
     // / Stats Geo Breakdown
@@ -533,46 +576,6 @@ var mopub = mopub || {};
     // 
     // $('#allMaps').addClass('map-requests');
     
-    
-    // Set up format selection UI for tablet
-    $('#adForm-tablet-formats').each(function(){
-        var container = $(this);
-        //bind radio buttons to images
-          $(this).find('input[type="radio"]').click(function(e){
-            var index = $(this).parent().index();
-            var images = $("#adForm-images-container");
-            images.children().hide();
-            var image = images.children()[index]
-            $(image).show().css({ opacity: 1 });
-            
-            var $full_onlys = $(".full_only");
-            var $banner_onlys = $(".banner_only");
-            if ($(this).attr("id") == "appForm-adUnitFormat-full-tablet" ||
-                $(this).attr("id") == "appForm-adUnitFormat-full"){
-                    $full_onlys.show();
-                    $banner_onlys.hide();
-                }
-            else{
-                    $full_onlys.hide();
-                    $banner_onlys.show();
-            }    
-            
-            var $custom_onlys = $(".custom_only");
-            if ($(this).attr("id") == "appForm-adUnitFormat-tablet-custom" || $(this).attr("id") == "appForm-adUnitFormat-custom"){
-                $custom_onlys.show();
-            }
-            else{
-                $custom_onlys.hide();
-            }
-            
-        }).first().click(); //initialize by activating the first
-      });
-      
-    $("#appForm-adUnitFormat-full-tablet,#appForm-adUnitFormat-full").click(function(e){
-        
-    })  
-
-
       $('#advertisers-testAdServer')
         .button({ icons : {secondary : 'ui-icon-circle-triangle-e'} })
         .click(function(e) {
@@ -581,15 +584,7 @@ var mopub = mopub || {};
            buttons: { "Close": function() { $(this).dialog("close"); } }
          });
          $('#adserverTest-iFrame').attr('src',$('#adserverTest-iFrame-src').text());
-      });
-
-      //initialize checked elements
-      $("#adunit-device_format_phone").parent().children().filter(':checked').click().each(function(){
-        var deviceFormat = $(this).val(); //either tablet or phone
-        var container = "#adForm-"+deviceFormat+"-container"
-        $(container).find('.possible-format').click(); 
-      });
-  
+      });  
     // Do Campaign Export Select stuff
     $('#publisher-app-exportSelect')
      .change(function(e) {

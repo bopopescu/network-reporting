@@ -182,38 +182,34 @@ class MarketplaceBattle(Battle):
                        creative=creative, 
                        user_agent=self.client_context.user_agent,
                        udid=self.client_context.raw_udid)
-    # try:
-        fetched = urlfetch.fetch(mpx_url, deadline=5)
-        # Make sure it's a good response
-        trace_logging.info('MPX RESPONES CODE:%s'%fetched.status_code)   
-        print fetched.status_code
-        print mpx_url    
-        if fetched.status_code == 200: 
-            marketplace_response_dict = simplejson.loads(fetched.content)
-            trace_logging.info('MPX REPSONSE:%s'%marketplace_response_dict)    
-            # With valid data
-            if marketplace_response_dict.has_key('xhtml') and \
-             marketplace_response_dict.has_key('charge_price'):
-                creative.html = marketplace_response_dict['xhtml']
-                charge_price = marketplace_response_dict['charge_price']
-                  
+        try:
+            fetched = urlfetch.fetch(mpx_url, deadline=5)
+            # Make sure it's a good response
+            trace_logging.info('MPX RESPONES CODE:%s'%fetched.status_code)   
+            print fetched.status_code
+            print mpx_url    
+            if fetched.status_code == 200: 
+                self._process_marketplace_response(fetched.content, creative)
                 
-                # Should really be the pub's cut 
-                
-                # Do we need to do anything with the bid info?
-                trace_logging.info('\n\nMPX Charge: %s\nMPX HTML: %s\n' % (charge_price, xhtml))     
-                crtv.adgroup.bid = charge_price
-                # I think we should log stuff here but I don't know how to do that 
-                
-                return super(NetworkBattle, self)._process_winner(creative)
-
-                
-
-    # except urlfetch.DownloadError, e:  
-        # There was no valid bid
-        return False                
+        except urlfetch.DownloadError, e:  
+            # There was no valid bid
+            return False                
             
-              
+    def _process_marketplace_response(self, content, creative):
+        marketplace_response_dict = simplejson.loads(content)
+        trace_logging.info('MPX REPSONSE:%s'%marketplace_response_dict)    
+        # With valid data
+        if marketplace_response_dict.has_key('xhtml_real') and \
+                marketplace_response_dict.has_key('pub_rev'):
+            creative.html = marketplace_response_dict['xhtml_real']
+            pub_rev = marketplace_response_dict['pub_rev']
+            # Should really be the pub's cut 
+            # Do we need to do anything with the bid info?
+            trace_logging.info('\n\nMPX Charge: %s\nMPX HTML: %s\n' % (pub_rev, creative.html))     
+            creative.adgroup.bid = pub_rev
+            # I think we should log stuff here but I don't know how to do that 
+            return super(MarketplaceBattle, self)._process_winner(creative)
+
                                          
 class NetworkBattle(Battle):  
     """ Fans out to each of the networks """

@@ -359,9 +359,15 @@ class TestAdAuction(unittest.TestCase):
         self.dummy_marketplace_creative.put()
         
         self.adunit_context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit_id) 
+
+        test_html = '<html>blah....</html>'
+        content = '{"xhtml_real": "%s", "pub_rev": 10000.50}' % test_html
         marketplace_battle = MarketplaceBattle(self.client_context, self.adunit_context)
-        creative = marketplace_battle.run() 
-        eq_(creative, "None")                                                
+        creative = marketplace_battle._process_marketplace_response(content, self.dummy_marketplace_creative)
+        #creative = marketplace_battle.run() 
+        eq_(creative.html, test_html)                                                
+
+
 
 ############### HELPER FUNCTIONS ###########                          
                                            

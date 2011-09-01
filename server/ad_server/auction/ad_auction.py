@@ -3,7 +3,10 @@ from ad_server.auction.battles import (Battle,
                                        GteeHighBattle,
                                        GteeLowBattle,
                                        PromoBattle,
-                                       MarketplaceBattle, 
+                                       MarketplaceBattle,  
+                                       NetworkBattle,
+                                       BackfillPromoBattle,   
+                                       BackfillMarketplaceBattle
                                       )
                                       
 def run(client_context, adunit_context):   
@@ -18,8 +21,9 @@ def run(client_context, adunit_context):
                       GteeLowBattle,
                       PromoBattle,
                       MarketplaceBattle,
-                      # NetworkBattle,
-                      # BackfillPromoBattle
+                      NetworkBattle,
+                      BackfillPromoBattle,   
+                      BackfillMarketplaceBattle, 
                       ]                      
      
     # Return the first successful creative

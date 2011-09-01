@@ -116,8 +116,11 @@ class AdGroup(db.Model):
     
     created = db.DateTimeProperty(auto_now_add=True)
 
-    # the priority level at which this ad group should be auctioned
-    network_type = db.StringProperty(choices=["adsense", "iAd", "admob","millennial","ejam","chartboost","appnexus","inmobi","mobfox","jumptap","brightroll","greystripe", "custom", "custom_native", "admob_native", "millennial_native"])
+    # the priority level at which this ad group should be auctioned                 
+    
+    # TOMTODO: network types should be a property of the creatives like renderer
+    
+    network_type = db.StringProperty(choices=["adsense", "iAd", "admob","millennial","ejam","chartboost","appnexus","inmobi","mobfox","jumptap","brightroll","greystripe", "custom", "custom_native", "admob_native", "millennial_native", "dummy"])
 
     # Note that bid has different meaning depending on the bidding strategy.
     # if CPM: bid = cost per 1000 impressions

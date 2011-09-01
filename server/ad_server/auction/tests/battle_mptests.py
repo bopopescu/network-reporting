@@ -43,11 +43,16 @@ from google.appengine.ext import testbed
 ################# End to End #################
 
 from common.utils.system_test_framework import run_auction, fake_request
-
+ 
 from ad_server.auction.battles import (Battle, 
                                        GteeBattle, 
                                        GteeHighBattle,
-                                       GteeLowBattle 
+                                       GteeLowBattle,
+                                       PromoBattle,
+                                       MarketplaceBattle,  
+                                       NetworkBattle,
+                                       BackfillPromoBattle,   
+                                       BackfillMarketplaceBattle
                                       )
   
 from ad_server.auction.client_context import ClientContext
@@ -128,6 +133,29 @@ class TestAdAuction(unittest.TestCase):
                                 cpc=.03,
                                 ad_type="clear")
         self.cheap_creative.put()
+                    
+                    
+                    
+         
+        self.dummy_network_c = Campaign(name="dummy_network",
+                                        campaign_type="network")
+        self.dummy_network_c.put()
+
+        self.dummy_network_adgroup = AdGroup(account=self.account, 
+                              name="dummy_network",
+                              campaign=self.dummy_network_c, 
+                              site_keys=[self.adunit.key()],
+                              network_type="dummy") # dummy networks go to the DummyServerSide 
+                              
+        self.dummy_network_adgroup.put()             
+                    
+                                         
+        self.dummy_network_creative = Creative(account=self.account,
+                                ad_group=self.dummy_network_adgroup,
+                                tracking_url="test-tracking-url", 
+                                cpc=.03,
+                                ad_type="clear")
+        self.dummy_network_creative.put()
     
         
         self.request = fake_request(self.adunit.key())
@@ -182,6 +210,17 @@ class TestAdAuction(unittest.TestCase):
         gtee_battle = GteeLowBattle(self.client_context, self.adunit_context)
         creative = gtee_battle.run() 
         eq_obj(creative, self.expensive_creative)
+        
+        
+    def mptest_network_basic(self):
+    
+        # Clear the adunit context cache         
+        self.refresh_context(self.adunit)                                  
+    
+        network_battle = NetworkBattle(self.client_context, self.adunit_context)
+        creative = network_battle.run() 
+        eq_obj(creative, self.dummy_network_creative)
+        
                                                       
 
 ############### HELPER FUNCTIONS ###########                          

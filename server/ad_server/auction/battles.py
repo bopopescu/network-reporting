@@ -21,7 +21,8 @@ from ad_server.networks.greystripe import GreyStripeServerSide
 from ad_server.networks.inmobi import InMobiServerSide
 from ad_server.networks.jumptap import JumptapServerSide
 from ad_server.networks.millennial import MillennialServerSide
-from ad_server.networks.mobfox import MobFoxServerSide 
+from ad_server.networks.mobfox import MobFoxServerSide        
+from ad_server.networks.dummy_server_side import DummyServerSide
 
                             
 from ad_server.optimizer import optimizer                                   
@@ -41,13 +42,16 @@ SERVER_SIDE_DICT = {"millennial":MillennialServerSide,
                     "ejam":EjamServerSide,
                     "jumptap":JumptapServerSide,
                     "greystripe":GreyStripeServerSide,
-                    "mobfox":MobFoxServerSide,}
+                    "mobfox":MobFoxServerSide,
+                    "dummy":DummyServerSide}
  
 class Battle(object):
     """ Determines the best creative available within a subset of adgroups.
         Essentially a sub-auction on some subset of adgroups. """  
     
     starting_message = "Beginning priority level x ..."     
+    
+    campaign_type = "gtee_x" # These define the adgroup levels
     
     def __init__(self, client_context, adunit_context):
         self.client_context = client_context
@@ -71,12 +75,9 @@ class Battle(object):
     
     def _get_adgroups_for_level(self):
         """ Retrieves the appropriate adgroups from the adunit_context """ 
-        
-        # Base case, return all targeted adgroups
-        
-        return adunit_context.adgroups
-        
-    
+        all_adgroups = self.adunit_context.adgroups    
+        return filter(lambda ag: ag.campaign.campaign_type == self.__class__.campaign_type, all_adgroups)
+            
     def _filter_adgroups(self, adgroups):
         """ Runs the set of adgroup filters on our adgroups.
             Returns a filtered subset of adgroups. """         
@@ -122,7 +123,7 @@ class Battle(object):
        
     def run(self):                             
         """ Runs the sub-auction"""
-        adgroups = self._get_adgroups_for_level()
+        adgroups = self._get_adgroups_for_level()   
     
         trace_logging.info(self.__class__.starting_message)
         
@@ -143,62 +144,47 @@ class Battle(object):
     
         for creative in sorted_creatives:   
             
-            return self._process_winner(creative) 
+            processed_creative = self._process_winner(creative)
             
-            # try:
-            #                return self._process_winner(creative) 
-            #            except: 
-            #                trace_logging.info("Processing of creative: %s failed" % creative)  
-            #                                               
+            # Break if we successfully processed 
+            if processed_creative:
+                return processed_creative
+        
                                                     
 class GteeHighBattle(Battle):  
     """ Runs the standard battle for all guaranteed campaigns. """
     
-    starting_message = "Beginning guaranteed high campaigns..."         
+    starting_message = "Beginning guaranteed high campaigns..."
+    campaign_type = "gtee_high"         
     
-    def _get_adgroups_for_level(self):
-        all_adgroups = self.adunit_context.adgroups 
-        return filter(lambda ag: ag.campaign.campaign_type == "gtee_high", all_adgroups)
         
 class GteeBattle(Battle):  
     """ Runs the standard battle for all guaranteed campaigns. """
 
-    starting_message = "Beginning guaranteed campaigns..."         
+    starting_message = "Beginning guaranteed campaigns..."   
+    campaign_type = "gtee"       
 
-    def _get_adgroups_for_level(self):
-        all_adgroups = self.adunit_context.adgroups 
-        return filter(lambda ag: ag.campaign.campaign_type == "gtee", all_adgroups)               
+           
 
 class GteeLowBattle(Battle):  
     """ Runs the standard battle for all guaranteed campaigns. """
 
     starting_message = "Beginning guaranteed low campaigns..."         
-
-    def _get_adgroups_for_level(self):
-        all_adgroups = self.adunit_context.adgroups 
-        return filter(lambda ag: ag.campaign.campaign_type == "gtee_low", all_adgroups)
-                                                                                            
-    
+    campaign_type = "gtee_low"    
 
 class PromoBattle(Battle):  
     """ Runs the standard battle for all promotional campaigns. """
 
     starting_message = "Beginning promotional campaigns..."         
-
-    def _get_adgroups_for_level(self):
-        all_adgroups = self.adunit_context.adgroups 
-        return filter(lambda ag: ag.campaign.campaign_type == "promo", all_adgroups)   
-        
+    campaign_type = "promo"    
+  
   
 class MarketplaceBattle(Battle):  
     """ Queries out to the marketplace """
 
     starting_message = "Beginning marketplace campaigns..."         
-
-    def _get_adgroups_for_level(self):
-        all_adgroups = self.adunit_context.adgroups 
-        return filter(lambda ag: ag.campaign.campaign_type == "marketplace", all_adgroups) 
-        
+    campaign_type = "marketplace"
+    
     def _process_winner(self, creative):    
         """ Fan out to the marketplace and see if there is a bid """    
         # TODO: Can we get relevant information without passing request
@@ -210,19 +196,18 @@ class MarketplaceBattle(Battle):
                                          ip=request.remote_addr,
                                          adunit_context=self.adunit_context,
                                          # country=helpers.get_country_code(request.headers, default=None),
-                                         country=self.client_context.country_code)
+                                         country=self.client_context.country_code) 
+                                         
 class NetworkBattle(Battle):  
     """ Fans out to each of the networks """
-    
-    starting_message = "Beginning marketplace campaigns..."         
-    
-    def _get_adgroups_for_level(self):
-        all_adgroups = self.adunit_context.adgroups 
-        return filter(lambda ag: ag.campaign.campaign_type == "network", all_adgroups) 
-    
+
+    starting_message = "Beginning marketplace campaigns..."
+    campaign_type = "network"         
+   
     def _process_winner(self, creative):    
         """ Fan out to a network and see if it can fill the request. """ 
-        # If the network is a native network, then it does not require an rpc
+        # If the network is a native network, then it does not require an rpc   
+
         if creative.adgroup.network_type in NATIVE_REQUESTS: 
 
             # TODO: refactor logging
@@ -232,21 +217,32 @@ class NetworkBattle(Battle):
                            creative=creative, 
                            user_agent=self.client_context.user_agent,   
                            udid=self.client_context.udid,
-                           country_code=self.client_context.country_code)
+                           country_code=self.client_context.country_code)     
+                           
             return super(NetworkBattle, self)._process_winner(creative)
         
         # All non-native networks need rpcs    
         else:
             ServerSideClass = SERVER_SIDE_DICT[creative.adgroup.network_type] 
             server_side = ServerSideClass(self.client_context, self.adunit_context.adunit)
-            
-            # Right now we make the call, and synchronously get the reponse
-            creative.html = server_side.make_call_and_get_html_from_response()  
-            return super(NetworkBattle, self)._process_winner(creative) 
+            try: 
+                # Right now we make the call, and synchronously get the reponse
+                creative.html = server_side.make_call_and_get_html_from_response()  
+                return super(NetworkBattle, self)._process_winner(creative)  
+            except ServerSideException:
+                return False
+                # log
                 
-                    
+                
+class BackfillPromoBattle(PromoBattle):   
+    starting_message = "Beginning promotional campaigns..."         
+    campaign_type = "backfill_promo"
+                   
+                            
+class BackfillMarketplaceBattle(MarketplaceBattle):         
+    starting_message = "Beginning backfill marketplace campaigns..."         
+    campaign_type = "backfill_marketplace"
             
-        
             
     
     

@@ -19,6 +19,10 @@ class BrightRollServerSide(ServerSide):
         return super(BrightRollServerSide,self).__init__(request,adunit,*args,**kwargs)
     
     @property
+    def payload(self):
+        return None
+
+    @property
     def url(self):
         pub_id = self.get_pub_id() or 3844792 
         return self.base_url + str(pub_id) + '?n=%f'%time.time()
@@ -28,10 +32,6 @@ class BrightRollServerSide(ServerSide):
         # TODO: Replace with self.get_appid()
         return {}
 
-    @property    
-    def payload(self):
-        return None
-        
     def get_response(self):
         logging.info("url: %s"%self.url)
         req = urllib2.Request(self.url)
@@ -124,7 +124,7 @@ class BrightRollServerSide(ServerSide):
             cpm = None            
         self.url_params.update(cpm=cpm)
         
-    def bid_and_html_for_response(self, response):
+    def html_for_response(self, response):
         self.parse_xml(response.content)
         # try:
         #     self.parse_xml(response.content)

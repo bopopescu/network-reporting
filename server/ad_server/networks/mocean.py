@@ -1,4 +1,5 @@
 from ad_server.networks.server_side import ServerSide
+from common.utils.decorators import returns_unicode
 
 import cgi
 import urllib
@@ -15,12 +16,22 @@ class MoceanServerSide(ServerSide):
     pub_id_attr = 'mocean_pub_id'
     network_name = 'Mocean'
 
-    @property
-    def url(self):
-        data =	{'zone': self.get_pub_id(), 'ip': self.get_ip(), 'ua': self.get_user_agent(), }
-        return self.base_url + "?" + urllib.urlencode(data)
+    @property  
+    def payload(self):
+        data = {'zone': self.get_pub_id(),
+                'ip': self.get_ip(),
+                'ua': self.get_user_agent(),
+                }
+              
+        return urllib.urlencode(data)
 
-    def bid_and_html_for_response(self, response):
+
+    @property
+    def headers(self): 
+        return {}
+
+    @returns_unicode
+    def html_for_response(self, response):
         if re.match("^<!--.*--\>$", response.content) == None and len(response.content) != 0:
             trace_logging.warning("Received " + self.network_name + " response: %s"%cgi.escape(response.content))
             return 0.0, response.content

@@ -116,7 +116,7 @@ def dashboard_prep(request, *args, **kwargs):
             if app_stat._publisher:
                 _incr_dict(unique_apps,str(app_stat._publisher),app_stat)
         # Calculate a 1 day delta between yesterday and the day before that
-        if app_stats[-2].date and app_stats[-3].date and app_stats[-2]._publisher:
+        if app_stats[-2].date and app_stats[-3].date and app_stats[-2]._publisher and app_stats[-3].request_count > 0:
             unique_apps[str(app_stats[-2]._publisher)].requests_delta1day = \
                 float(app_stats[-2].request_count - app_stats[-3].request_count) / app_stats[-3].request_count
             

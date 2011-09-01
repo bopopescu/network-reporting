@@ -11,15 +11,10 @@ class InMobiServerSide(ServerSide):
     pub_id_attr = 'inmobi_pub_id'
     network_name = 'InMobi'
     
-    
     def __init__(self,request,adunit,*args,**kwargs):
         self.url_params = {}
         return super(InMobiServerSide,self).__init__(request,adunit,*args,**kwargs)
   
-    @property
-    def url(self):
-        return self.base_url
-        
     def get_user_agent(self):
         ua = super(InMobiServerSide, self).get_user_agent()
         if 'iPhone Simulator' in ua:
@@ -98,7 +93,7 @@ class InMobiServerSide(ServerSide):
         except:
             pass
     
-    def bid_and_html_for_response(self, response):
+    def html_for_response(self, response):
         # Test responses
         # Simple Banner
         # response.content = '<AdResponse><Ads number="1"><Ad type="banner" actionType="android"><ImageURL>http://r.w.inmobi.com/FileData/513cc422-33a6-4274-9e22-dd12e84e23d14.png</ImageURL><ImageAltText></ImageAltText><Placement>page</Placement><AdURL>http://c.w.mkhoj.com/c.asm/3/t/c7i/pl5/2/2m/aj/u/0/0/1/354957037659003/11ba085a-012e-1000-d9a8-00020fe80003/1/829a0c01</AdURL></Ad></Ads></AdResponse>'

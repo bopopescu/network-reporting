@@ -2,8 +2,8 @@ import re
 
 from ad_server.debug_console import trace_logging
 from common.utils import helpers
-from common.utils.decorators import returns_unicode       
-from google.appengine.api import urlfetch,
+from common.utils.decorators import returns_unicode
+from google.appengine.api import urlfetch
 
 
 class ServerSide(object):
@@ -16,12 +16,11 @@ class ServerSide(object):
     def __init__(self, client_context, adunit, *args, **kwargs):
         self.client_context = client_context
         self.adunit = adunit    
-        self.rpc
-        rpc = urlfetch.create_rpc(self.SERVER_TIMEOUT)
+        self.rpc = urlfetch.create_rpc(self.SERVER_TIMEOUT)
 
     @property
     def headers(self): 
-        """ The payload that we send to the ad network when making our request """
+        """ The headers that we send to the ad network when making our request """
         raise NotImplementedError
 
     @property  
@@ -29,13 +28,12 @@ class ServerSide(object):
         """ The payload that we send to the ad network when making our request """
         raise NotImplementedError
     
-    
     def make_call_and_get_html_from_response(self):   
         """ When we don't need to do any asynchronous processing while
             we wait for a result, we can call this function. """
         self.make_fetch_call()
         response = self.get_result()
-        return html_for_response(response)
+        return self.html_for_response(response)
     
     def make_fetch_call(self): 
         """ Initiates the rpc to get the html from the network. Result is 

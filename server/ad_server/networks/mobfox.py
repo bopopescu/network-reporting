@@ -13,27 +13,10 @@ class MobFoxServerSide(ServerSide):
     pub_id_attr = 'mobfox_pub_id'
     network_name = 'MobFox'
     
-
     def __init__(self,request,adunit=None,*args,**kwargs):
         self.html_params = {}
         return super(MobFoxServerSide,self).__init__(request,adunit,*args,**kwargs)
 
-    def get_key_values(self):
-        return {'apid':self.get_pub_id(),
-                'auid':self.get_udid(),
-                'uip':self.get_ip(),
-                'ua':self.get_user_agent()}
-    
-    @property
-    def url(self):
-        return self.base_url + '?' + urllib.urlencode(self.get_key_values())
-
-
-
-#     @property
-#     def url(self):
-#         return self.base_url
-        
     def _device_overide(self):
         ua = self.get_user_agent().lower()
         if 'ipad' in ua:
@@ -45,10 +28,14 @@ class MobFoxServerSide(ServerSide):
         else:
             return 'wap'          
 
+    @property
+    def headers(self):
+        return {}
+        
     @property  
     def payload(self):
         data = {'rt': 'api',
-                'u': 'Mozilla%2F5.0+%28iPhone%3B+U%3B+CPU+iPhone+OS+4_3_3+like+Mac+OS+X%3B+en-us%29+AppleWebKit%2F533.17.9+%28KHTML%2C+like+Gecko%29+Version%2F5.0.2+Mobile%2F8J2+Safari%2F6533.18.5&h',#self.get_user_agent(),
+                'u': self.get_user_agent(),
                 'i': self.get_ip(),
                 'o': self.get_udid(),
                 'm': 'live',
@@ -60,25 +47,10 @@ class MobFoxServerSide(ServerSide):
                 'device_override' : self._device_overide(),
               }
               
-        return urllib.urlencode(data) + '&' + self._add_extra_headers()
+        return urllib.urlencode(data)
         
-    def _add_extra_headers(self):
-        """
-        add extra headers to the post because shouldn't escape the brackets (e.g. h[])
-        hence we can't just use the generic paylod method.
-        return valid looks something like h[foo]=bar&h[foo2]=bar2
-        """
-        return ""
-        exclude_headers = ['Keep-Alive','Connection','Cookie','Cache-Control','Content-Length']
-        headers = [] # list of (header,value) tuples
-        # select only ones not in the exclue header list
-        for header,value in self.request.headers.iteritems():
-            if not header in exclude_headers:
-                headers.append((header,value))
-        return '&'.join(['h[%s]=%s'%(urllib.quote_plus(h),urllib.quote_plus(v)) for h,v in  headers])
-
     def get_response(self):
-        req = urllib2.Request(self.url)
+        req = urllib2.Request(self.url, self.payload)
         response = urllib2.urlopen(req)
         return response.read()
 
@@ -124,7 +96,7 @@ class MobFoxServerSide(ServerSide):
         return ad_type    
          
 
-    def bid_and_html_for_response(self, response):
+    def html_for_response(self, response):
         image_template = """<div style='text-align:center'><a href="%(clickurl)s" target="_blank"><img src="%(imageurl)s" width=%(bannerwidth)s height=%(bannerheight)s/></a></div>"""
         text_template = """%(htmlString)s"""
         # Image: 

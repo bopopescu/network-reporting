@@ -6,7 +6,7 @@ import datetime
 sys.path.append(os.environ['PWD'])
 import common.utils.test.setup
 
-from account.models import Account
+from account.models import Account, NetworkConfig
 
 from publisher.models import App
 from publisher.models import Site as AdUnit
@@ -14,7 +14,9 @@ from publisher.models import Site as AdUnit
 from advertiser.models import ( Campaign,
                                 AdGroup,
                                 Creative,
-                                )
+                                )          
+                                
+                     
 from google.appengine.ext.webapp import ( Request,
                                           Response,
                                           )
@@ -58,7 +60,8 @@ from ad_server.auction.battles import (Battle,
 from ad_server.auction.client_context import ClientContext   
 
 from advertiser.models import (DummyServerSideSuccessCreative, 
-                               DummyServerSideFailureCreative   
+                               DummyServerSideFailureCreative,
+                               MarketplaceCreative,   
                               )   
 from ad_server.optimizer import optimizer
 
@@ -81,9 +84,12 @@ class TestAdAuction(unittest.TestCase):
         # Next, declare which service stubs you want to use.
         self.testbed.init_datastore_v3_stub()
         self.testbed.init_memcache_stub()
+                                               
 
+        self.network_config = NetworkConfig()
+        self.network_config.put()
         # Set up default models
-        self.account = Account()
+        self.account = Account(network_config=self.network_config)
         self.account.put()
 
         self.app = App(account=self.account, name="Test App")
@@ -146,7 +152,7 @@ class TestAdAuction(unittest.TestCase):
                                        
         self.dummy_network_c.put()
 
-        self.dummy_network_adgroup = AdGroup(account=self.account, 
+        self.dummy_adgroup = AdGroup(account=self.account, 
                               name="dummy_network",
                               campaign=self.dummy_network_c, 
                               site_keys=[self.adunit.key()],
@@ -154,7 +160,7 @@ class TestAdAuction(unittest.TestCase):
                               bid=100000.0, # 100 per click  
                               network_type="dummy") # dummy networks go to the DummyServerSide 
                               
-        self.dummy_network_adgroup.put()             
+        self.dummy_adgroup.put()             
                     
         # We don't build our dummy creative here, but rather in individual tests                              
     
@@ -212,7 +218,7 @@ class TestAdAuction(unittest.TestCase):
         
     def mptest_network_basic(self):                                                        
         self.dummy_network_creative = DummyServerSideSuccessCreative(account=self.account,
-                                ad_group=self.dummy_network_adgroup,
+                                ad_group=self.dummy_adgroup,
                                 tracking_url="test-tracking-url", 
                                 cpc=.03,
                                 ad_type="clear") 
@@ -230,7 +236,7 @@ class TestAdAuction(unittest.TestCase):
     def mptest_network_failure(self):      
         
         self.dummy_network_creative = DummyServerSideFailureCreative(account=self.account,
-                                ad_group=self.dummy_network_adgroup,
+                                ad_group=self.dummy_adgroup,
                                 tracking_url="test-tracking-url", 
                                 cpc=.03,
                                 ad_type="clear") 
@@ -251,7 +257,7 @@ class TestAdAuction(unittest.TestCase):
     def mptest_network_multiple(self):
         
         self.dummy_network_creative = DummyServerSideSuccessCreative(account=self.account,
-                                ad_group=self.dummy_network_adgroup,
+                                ad_group=self.dummy_adgroup,
                                 tracking_url="test-tracking-url", 
                                 ad_type="clear") 
         
@@ -261,7 +267,7 @@ class TestAdAuction(unittest.TestCase):
                                         campaign_type="network")
         self.cheaper_dummy_network_c.put()
         
-        self.cheaper_dummy_network_adgroup = AdGroup(account=self.account, 
+        self.cheaper_dummy_adgroup = AdGroup(account=self.account, 
                               name="cheaper_dummy_network",
                               campaign=self.cheaper_dummy_network_c, 
                               site_keys=[self.adunit.key()],
@@ -269,11 +275,11 @@ class TestAdAuction(unittest.TestCase):
                               bid=50000.0, # 50 per click, the other campaign has 100 per click  
                               network_type="dummy") # dummy networks go to the DummyServerSide 
         
-        self.cheaper_dummy_network_adgroup.put()             
+        self.cheaper_dummy_adgroup.put()             
         
         
         self.cheaper_dummy_network_creative = DummyServerSideSuccessCreative(account=self.account,
-                                ad_group=self.cheaper_dummy_network_adgroup,
+                                ad_group=self.cheaper_dummy_adgroup,
                                 tracking_url="test-tracking-url",  
                                 ad_type="clear")
         self.cheaper_dummy_network_creative.put()
@@ -292,7 +298,7 @@ class TestAdAuction(unittest.TestCase):
     def mptest_network_fallback(self):
 
         self.dummy_network_creative = DummyServerSideFailureCreative(account=self.account,
-                                ad_group=self.dummy_network_adgroup,
+                                ad_group=self.dummy_adgroup,
                                 tracking_url="test-tracking-url", 
                                 ad_type="clear") 
 
@@ -302,7 +308,7 @@ class TestAdAuction(unittest.TestCase):
                                         campaign_type="network")
         self.cheaper_dummy_network_c.put()
 
-        self.cheaper_dummy_network_adgroup = AdGroup(account=self.account, 
+        self.cheaper_dummy_adgroup = AdGroup(account=self.account, 
                               name="cheaper_dummy_network",
                               campaign=self.cheaper_dummy_network_c, 
                               site_keys=[self.adunit.key()],
@@ -310,11 +316,11 @@ class TestAdAuction(unittest.TestCase):
                               bid=50000.0, # 50 per click, the other campaign has 100 per click  
                               network_type="dummy") # dummy networks go to the DummyServerSide 
 
-        self.cheaper_dummy_network_adgroup.put()             
+        self.cheaper_dummy_adgroup.put()             
 
 
         self.cheaper_dummy_network_creative = DummyServerSideSuccessCreative(account=self.account,
-                                ad_group=self.cheaper_dummy_network_adgroup,
+                                ad_group=self.cheaper_dummy_adgroup,
                                 tracking_url="test-tracking-url",  
                                 ad_type="clear")
         self.cheaper_dummy_network_creative.put()
@@ -330,7 +336,32 @@ class TestAdAuction(unittest.TestCase):
         eq_obj(creative, self.cheaper_dummy_network_creative)   
 
         eq_(creative.html, "<html> FAKE RESPONSE </html>")
-                                                  
+
+
+    def mptest_marketplace(self):   
+        self.dummy_marketplace_c = Campaign(name="dummy_network",
+                                        campaign_type="marketplace") 
+                                       
+        self.dummy_marketplace_c.put()
+
+        self.dummy_marketplace_adgroup = AdGroup(account=self.account,    
+                              campaign=self.dummy_marketplace_c, 
+                              site_keys=[self.adunit.key()],
+                              bid_strategy="cpm", 
+                              bid=100000.0, # 100 per click  
+                              network_type="dummy") # dummy networks go to the DummyServerSide 
+                              
+        self.dummy_marketplace_adgroup.put()
+        
+        self.dummy_marketplace_creative = MarketplaceCreative(account=self.account,
+                                ad_group=self.dummy_marketplace_adgroup)  
+                                
+        self.dummy_marketplace_creative.put()
+        
+        self.adunit_context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit_id) 
+        marketplace_battle = MarketplaceBattle(self.client_context, self.adunit_context)
+        creative = marketplace_battle.run() 
+        eq_(creative, "None")                                                
 
 ############### HELPER FUNCTIONS ###########                          
                                            

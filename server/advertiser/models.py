@@ -667,8 +667,10 @@ class MobFoxCreative(Creative):
 class NullCreative(Creative):
     pass
 
-class TempImage(db.Model):
-    image = db.BlobProperty()
+class MarketplaceCreative(Creative):
+    """ If this is targetted to an adunit, lets the ad_auction know to 
+        run the marketplace battle. """
+  
 
 class DummyServerSideFailureCreative(Creative):
     ServerSide = DummyServerSideFailure  

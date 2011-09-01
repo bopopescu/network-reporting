@@ -16,10 +16,12 @@ from ad_server.filters.filters import (budget_filter,
 from ad_server.optimizer import optimizer                                   
 from ad_server.debug_console import trace_logging     
 
-from common.utils.marketplace_helpers import build_marketplace_dict  
 from mopub_logging import mp_logging      
 
-from ad_server.networks.server_side import ServerSideException 
+from ad_server.networks.server_side import ServerSideException  
+from google.appengine.api import urlfetch
+import urllib
+from common.utils import simplejson
 
 class Battle(object):
     """ Determines the best creative available within a subset of adgroups.
@@ -162,7 +164,7 @@ class MarketplaceBattle(Battle):
     campaign_type = "marketplace"
     
     def _process_winner(self, creative):    
-        """ Fan out to the marketplace and see if there is a bid """    
+        """ Fan out to the marketplace and see if there is a bid """ 
         # TODO: Can we get relevant information without passing request
         mk_args = self.client_context.make_marketplace_dict(self.adunit_context)  
                                           
@@ -180,33 +182,36 @@ class MarketplaceBattle(Battle):
                        creative=creative, 
                        user_agent=self.client_context.user_agent,
                        udid=self.client_context.raw_udid)
-        try:
-            fetched = urlfetch.fetch(mpx_url, deadline=.2)
-            # Make sure it's a good response
-            trace_logging.info('MPX RESPONES CODE:%s'%fetched.status_code)
-            if fetched.status_code == 200:
-                marketplace_response_dict = simplejson.loads(fetched.content)
-                trace_logging.info('MPX REPSONSE:%s'%data)    
-                # With valid data
-                if data.has_key('xhtml') and data.has_key('charge_price') and data['xhtml']:
-                    creative.html = marketplace_response_dict['xhtml']
-                    charge_price = marketplace_response_dict['charge_price']
-                      
-                    
-                    # Should really be the pub's cut 
-                    
-                    # Do we need to do anything with the bid info?
-                    trace_logging.info('\n\nMPX Charge: %s\nMPX HTML: %s\n' % (charge_price, xhtml))     
-                    crtv.adgroup.bid = charge_price
-                    # I think we should log stuff here but I don't know how to do that 
-                    
-                    return super(NetworkBattle, self)._process_winner(creative)
+    # try:
+        fetched = urlfetch.fetch(mpx_url, deadline=5)
+        # Make sure it's a good response
+        trace_logging.info('MPX RESPONES CODE:%s'%fetched.status_code)   
+        print fetched.status_code
+        print mpx_url    
+        if fetched.status_code == 200: 
+            marketplace_response_dict = simplejson.loads(fetched.content)
+            trace_logging.info('MPX REPSONSE:%s'%marketplace_response_dict)    
+            # With valid data
+            if marketplace_response_dict.has_key('xhtml') and \
+             marketplace_response_dict.has_key('charge_price'):
+                creative.html = marketplace_response_dict['xhtml']
+                charge_price = marketplace_response_dict['charge_price']
+                  
+                
+                # Should really be the pub's cut 
+                
+                # Do we need to do anything with the bid info?
+                trace_logging.info('\n\nMPX Charge: %s\nMPX HTML: %s\n' % (charge_price, xhtml))     
+                crtv.adgroup.bid = charge_price
+                # I think we should log stuff here but I don't know how to do that 
+                
+                return super(NetworkBattle, self)._process_winner(creative)
 
-                    
+                
 
-        except urlfetch.DownloadError, e:  
-            # There was no valid bid
-            return False         
+    # except urlfetch.DownloadError, e:  
+        # There was no valid bid
+        return False                
             
               
                                          

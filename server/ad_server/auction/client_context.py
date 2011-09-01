@@ -1,4 +1,6 @@
-import datetime
+import datetime   
+from common.utils.marketplace_helpers import get_width_and_height
+
 class ClientContext(object):
     """ All of the information provided to us by the client.
     

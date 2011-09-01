@@ -60,7 +60,9 @@ from ad_server.auction.client_context import ClientContext
 from advertiser.models import (DummyServerSideSuccessCreative, 
                                DummyServerSideFailureCreative   
                               )   
+from ad_server.optimizer import optimizer
 
+optimizer.SAMPLING_FRACTION = 0 # Don't sample during tests
 
 class TestAdAuction(unittest.TestCase):
     """
@@ -111,7 +113,6 @@ class TestAdAuction(unittest.TestCase):
         self.expensive_creative = Creative(account=self.account,
                                 ad_group=self.expensive_adgroup,
                                 tracking_url="test-tracking-url", 
-                                cpc=.03,
                                 ad_type="clear")
         self.expensive_creative.put()
 
@@ -133,8 +134,7 @@ class TestAdAuction(unittest.TestCase):
 
         self.cheap_creative = Creative(account=self.account,
                                 ad_group=self.cheap_adgroup,
-                                tracking_url="test-tracking-url", 
-                                cpc=.03,
+                                tracking_url="test-tracking-url",    
                                 ad_type="clear")
         self.cheap_creative.put()
                     
@@ -150,6 +150,8 @@ class TestAdAuction(unittest.TestCase):
                               name="dummy_network",
                               campaign=self.dummy_network_c, 
                               site_keys=[self.adunit.key()],
+                              bid_strategy="cpm", 
+                              bid=100000.0, # 100 per click  
                               network_type="dummy") # dummy networks go to the DummyServerSide 
                               
         self.dummy_network_adgroup.put()             
@@ -246,38 +248,89 @@ class TestAdAuction(unittest.TestCase):
 
     
         
-    def test_network_fallback(self):
-     
-        self.dummy_network2_c = Campaign(name="dummy_network2",
-                                        campaign_type="network")
-        self.dummy_network2_c.put()
-
-        self.dummy_network2_adgroup = AdGroup(account=self.account, 
-                              name="dummy_network2",
-                              campaign=self.dummy_network2_c, 
-                              site_keys=[self.adunit.key()],
-                              network_type="dummy") # dummy networks go to the DummyServerSide 
-
-        self.dummy_network2_adgroup.put()             
-
-
-        self.dummy_network2_creative = DummyServerSideSuccessCreative(account=self.account,
-                                ad_group=self.dummy_network2_adgroup,
-                                tracking_url="test-tracking-url", 
-                                cpc=.10,
-                                ad_type="clear")
-        self.dummy_network2_creative.put()  
+    def mptest_network_multiple(self):
         
-        # Clear the adunit context cache         
-        self.refresh_context(self.adunit)                                  
-
+        self.dummy_network_creative = DummyServerSideSuccessCreative(account=self.account,
+                                ad_group=self.dummy_network_adgroup,
+                                tracking_url="test-tracking-url", 
+                                ad_type="clear") 
+        
+        self.dummy_network_creative.put()    
+        
+        self.cheaper_dummy_network_c = Campaign(name="cheaper_dummy_network",
+                                        campaign_type="network")
+        self.cheaper_dummy_network_c.put()
+        
+        self.cheaper_dummy_network_adgroup = AdGroup(account=self.account, 
+                              name="cheaper_dummy_network",
+                              campaign=self.cheaper_dummy_network_c, 
+                              site_keys=[self.adunit.key()],
+                              bid_strategy="cpm", 
+                              bid=50000.0, # 50 per click, the other campaign has 100 per click  
+                              network_type="dummy") # dummy networks go to the DummyServerSide 
+        
+        self.cheaper_dummy_network_adgroup.put()             
+        
+        
+        self.cheaper_dummy_network_creative = DummyServerSideSuccessCreative(account=self.account,
+                                ad_group=self.cheaper_dummy_network_adgroup,
+                                tracking_url="test-tracking-url",  
+                                ad_type="clear")
+        self.cheaper_dummy_network_creative.put()
+        
+        # Clear the adunit context cache                                   
+        self.adunit_context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit_id) 
+        
+        # Both succeed, but the more expensive one wins over the cheaper
+        
         network_battle = NetworkBattle(self.client_context, self.adunit_context)
         creative = network_battle.run() 
-        eq_obj(creative, self.dummy_network2_creative)   
+        eq_obj(creative, self.dummy_network_creative)   
 
         eq_(creative.html, "<html> FAKE RESPONSE </html>")
         
-                                                      
+    def mptest_network_fallback(self):
+
+        self.dummy_network_creative = DummyServerSideFailureCreative(account=self.account,
+                                ad_group=self.dummy_network_adgroup,
+                                tracking_url="test-tracking-url", 
+                                ad_type="clear") 
+
+        self.dummy_network_creative.put()    
+
+        self.cheaper_dummy_network_c = Campaign(name="cheaper_dummy_network",
+                                        campaign_type="network")
+        self.cheaper_dummy_network_c.put()
+
+        self.cheaper_dummy_network_adgroup = AdGroup(account=self.account, 
+                              name="cheaper_dummy_network",
+                              campaign=self.cheaper_dummy_network_c, 
+                              site_keys=[self.adunit.key()],
+                              bid_strategy="cpm", 
+                              bid=50000.0, # 50 per click, the other campaign has 100 per click  
+                              network_type="dummy") # dummy networks go to the DummyServerSide 
+
+        self.cheaper_dummy_network_adgroup.put()             
+
+
+        self.cheaper_dummy_network_creative = DummyServerSideSuccessCreative(account=self.account,
+                                ad_group=self.cheaper_dummy_network_adgroup,
+                                tracking_url="test-tracking-url",  
+                                ad_type="clear")
+        self.cheaper_dummy_network_creative.put()
+
+        # Clear the adunit context cache                                   
+        self.adunit_context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit_id) 
+
+        # Both succeed, and the more expensive one wins over the cheaper.  
+        # However, due to the failure of the more expensive, we fall back to the cheaper.
+
+        network_battle = NetworkBattle(self.client_context, self.adunit_context)
+        creative = network_battle.run() 
+        eq_obj(creative, self.cheaper_dummy_network_creative)   
+
+        eq_(creative.html, "<html> FAKE RESPONSE </html>")
+                                                  
 
 ############### HELPER FUNCTIONS ###########                          
                                            

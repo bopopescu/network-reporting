@@ -16,29 +16,18 @@ class GreyStripeServerSide(ServerSide):
     @property
     def headers(self):
       # TODO: Replace with self.get_appid()
-        return {'User-Agent': self.request.headers['User-Agent']}
+        return {'User-Agent': self.client_context.user_agent}
 
     @property    
     def payload(self):
-        # TODO: Replace with self.get_appid()
-        ignore_headers = ["PRAGMA","CACHE-CONTROL","CONNECTION","USER-AGENT","COOKIE"]
-        
-        phone_headers = {}
-        for header in self.request.headers:
-            if not header.upper() in ignore_headers:
-                phone_headers[header] = self.request.headers[header]
-        
-        phone_headers = [urllib.urlencode({key.upper():value}) for key,value in phone_headers.iteritems()]        
-        size = self.adunit.format if "full" not in self.adunit.format else '300x250'
-  
         data = {'language':'python',
                 'version':'1.0',
                 'format':'html',
-                'ip': self.get_ip(),
+                'ip': self.client_context.client_ip,
                 'site_id': self.get_pub_id(),
                 'sizes':size, #TODO: have this be an input parameter
                 }
-        return urllib.urlencode(data)+'&phone_headers='+'||'.join(phone_headers)
+        return urllib.urlencode(data)
     
     def get_response(self):
         req = urllib2.Request(self.url)

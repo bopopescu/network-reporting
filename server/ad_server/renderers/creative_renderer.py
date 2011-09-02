@@ -1,4 +1,3 @@
-from ad_server.renderers import TEMPLATES
 from ad_server.debug_console import trace_logging   
 import random  
 import re      
@@ -8,12 +7,13 @@ from google.appengine.api import images
 from common.utils import simplejson  
 from common.constants import FULL_NETWORKS 
 import time                        
-from ad_server.renderers.header_context import HeaderContext
+from ad_server.renderers.header_context import HeaderContext   
+from string import Template 
  
 class BaseCreativeRenderer(object):  
     """ Probides basic interface for renderers. """
     
-    TEMPLATE = ""
+    TEMPLATE = Template("")
 
     @classmethod
     def log_winner(cls, creative):
@@ -120,10 +120,9 @@ class BaseCreativeRenderer(object):
         cls.update_context(context,
                            version_number=version_number,
                            success=success)
-        if cls.TEMPLATE:   
-            rendered_creative = cls.TEMPLATE.safe_substitute(context) 
-        else:    
-            rendered_creative = TEMPLATES[template_name].safe_substitute(context)
+
+        rendered_creative = cls.TEMPLATE.safe_substitute(context) 
+
         rendered_creative.encode('utf-8')
         
         return rendered_creative, header_context              

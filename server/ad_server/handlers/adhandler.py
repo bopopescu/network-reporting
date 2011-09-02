@@ -20,7 +20,7 @@ from google.appengine.ext import webapp, db
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 from ad_server.adunit_context.adunit_context import AdUnitContext, CreativeCTR
 
-from stats import mp_logging   
+from stats import stats_accumulator   
 from google.appengine.ext.db import Key
 
 from ad_server.debug_console import trace_logging
@@ -135,7 +135,7 @@ class AdHandler(webapp.RequestHandler):
         if (not experimental and rand_dec < experimental_fraction):
             return self._redirect_to_experimental("mopub-experimental", adunit_id)
         
-        mp_logging.log(self.request, event=mp_logging.REQ_EVENT, adunit=adunit)  
+        stats_accumulator.log(self.request, event=stats_accumulator.REQ_EVENT, adunit=adunit)  
         
         trace_logging.warning("User Agent: %s" % helpers.get_user_agent(self.request))
 

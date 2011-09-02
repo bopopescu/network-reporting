@@ -142,7 +142,7 @@ class AdHandler(webapp.RequestHandler):
 
 
         
-        # We can get country_code from one of two places 
+        # We can get country_code from one of two places. It is a 2 character string 
 
         country_code = self.request.get('country') or get_country_code(self.request.headers)
         

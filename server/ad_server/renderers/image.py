@@ -2,7 +2,9 @@ from string import Template
 
 from ad_server.renderers.base_html_renderer import BaseHTMLRenderer 
 from google.appengine.api.images import InvalidBlobKeyError
-from google.appengine.api import images
+from google.appengine.api import images 
+
+from ad_server.debug_console import trace_logging 
 
 class ImageRenderer(BaseHTMLRenderer):
     """ For now, just do the standard """

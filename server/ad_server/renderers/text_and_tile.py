@@ -1,7 +1,8 @@
 from string import Template    
 from ad_server.renderers.text import TextRenderer
 from google.appengine.api.images import InvalidBlobKeyError
-from google.appengine.api import images 
+from google.appengine.api import images   
+from ad_server.debug_console import trace_logging 
 
 class TextAndTileRenderer(TextRenderer):
     """ For now, just do the standard """

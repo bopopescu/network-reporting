@@ -384,7 +384,7 @@ class AdAuction(object):
                                                 winning_creative = winner
                                                 
                                                 # We set the payload of the creative to be what we get back from the network
-                                                winning_creative.html_data = response
+                                                winning_creative.html = response
                                             
                                                 if len(server_tuple) == 4:
                                                     width = server_tuple[2]

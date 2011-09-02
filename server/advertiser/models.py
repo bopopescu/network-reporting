@@ -19,7 +19,8 @@ from ad_server.renderers.image import ImageRenderer
 from ad_server.renderers.millennial_native import MillennialNativeRenderer
 from ad_server.renderers.millennial import MillennialRenderer
 from ad_server.renderers.custom_native import CustomNativeRenderer
-from ad_server.renderers.pure_html import PureHTMLRenderer
+from ad_server.renderers.pure_html import PureHTMLRenderer   
+from ad_server.renderers.base_html_renderer import BaseHtmlRenderer
 from ad_server.renderers.brightroll import BrightRollRenderer
 from ad_server.renderers.inmobi import InmobiRenderer
 from ad_server.renderers.greystripe import GreyStripeRenderer
@@ -512,7 +513,7 @@ class HtmlCreative(Creative):
 
     @property
     def Renderer(self):
-        return PureHTMLRenderer
+        return BaseHtmlRenderer
 
 
 class ImageCreative(Creative):
@@ -541,7 +542,10 @@ class MarketplaceCreative(HtmlCreative):
     """ If this is targetted to an adunit, lets the ad_auction know to 
         run the marketplace battle. """
 
-class CustomCreative(HtmlCreative):
+
+class CustomCreative(HtmlCreative):    
+    # TODO: For now this is redundant with HtmlCreative
+    # If we don't want to add any properties to it, remove it
     pass
 
 class CustomNativeCreative(HtmlCreative):

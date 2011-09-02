@@ -2,11 +2,11 @@ from string import Template
 
 from string import Template   
 import random                 
-from ad_server.renderers.base_html_renderer import BaseHTMLRenderer          
+from ad_server.renderers.base_html_renderer import BaseHtmlRenderer          
 
 from ad_server.debug_console import trace_logging
 
-class AdSenseRenderer(BaseHTMLRenderer):
+class AdSenseRenderer(BaseHtmlRenderer):
     """ For now, just do the standard """
     @classmethod
     def network_specific_rendering(cls, header_context, 

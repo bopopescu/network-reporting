@@ -201,11 +201,11 @@ class MarketplaceBattle(Battle):
         # With valid data
         if marketplace_response_dict.has_key('xhtml_real') and \
                 marketplace_response_dict.has_key('pub_rev'):
-            creative.html = marketplace_response_dict['xhtml_real']
+            creative.html_data = marketplace_response_dict['xhtml_real']
             pub_rev = marketplace_response_dict['pub_rev']
             # Should really be the pub's cut 
             # Do we need to do anything with the bid info?
-            trace_logging.info('\n\nMPX Charge: %s\nMPX HTML: %s\n' % (pub_rev, creative.html))     
+            trace_logging.info('\n\nMPX Charge: %s\nMPX HTML: %s\n' % (pub_rev, creative.html_data))     
             creative.adgroup.bid = pub_rev
             # I think we should log stuff here but I don't know how to do that 
             return super(MarketplaceBattle, self)._process_winner(creative)
@@ -239,7 +239,7 @@ class NetworkBattle(Battle):
             server_side = creative.ServerSide(self.client_context, self.adunit_context.adunit)
             try: 
                 # Right now we make the call, and synchronously get the reponse
-                creative.html = server_side.make_call_and_get_html_from_response()  
+                creative.html_data = server_side.make_call_and_get_html_from_response()  
                 return super(NetworkBattle, self)._process_winner(creative)  
             except ServerSideException:
                 return False

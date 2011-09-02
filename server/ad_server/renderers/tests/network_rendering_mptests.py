@@ -116,7 +116,9 @@ class RenderingTestBase(object):
    
     def render_320x50_creative(self, network_type):
         """ For now just test the renderer. Next test headers too.
-            Uses a default value for html_data. """
+            Uses a default value for html_data. """        
+            
+        print network_type
         self.adunit = AdUnit(account=self.account, 
                              app_key=self.app, 
                              name="Test AdUnit",

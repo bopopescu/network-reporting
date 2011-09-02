@@ -28,6 +28,7 @@ from server.ad_server.renderers import creative_renderer
 
 from server.ad_server.handlers.adhandler import AdHandler                                     
 
+from advertiser.models import HtmlCreative, iAdCreative
 
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 ############# Integration Tests #############
@@ -91,7 +92,8 @@ class TestAdAuction(unittest.TestCase):
         # Make Expensive Campaign
         self.expensive_c = Campaign(name="expensive",
                                     budget=1000.0,
-                                    budget_strategy="evenly")
+                                    budget_strategy="evenly",
+                                    campaign_type="network")
         self.expensive_c.put()
 
         self.expensive_adgroup = AdGroup(account=self.account, 
@@ -104,8 +106,9 @@ class TestAdAuction(unittest.TestCase):
 
 
 
-        self.expensive_creative = Creative(account=self.account,
-                                ad_group=self.expensive_adgroup,
+        self.expensive_creative = iAdCreative(account=self.account,
+                                ad_group=self.expensive_adgroup,  
+                                html_data="expensive_test_data",
                                 tracking_url="test-tracking-url", 
                                 cpc=.03,
                                 ad_type="clear")
@@ -126,7 +129,8 @@ class TestAdAuction(unittest.TestCase):
         self.cheap_adgroup.put()
 
 
-        self.cheap_creative = Creative(account=self.account,
+        self.cheap_creative = HtmlCreative(account=self.account, 
+                                html_data="cheap_test_data",
                                 ad_group=self.cheap_adgroup,
                                 tracking_url="test-tracking-url", 
                                 cpc=.03,
@@ -143,13 +147,14 @@ class TestAdAuction(unittest.TestCase):
         self.testbed.deactivate()
         
         
-    def mptest_run_adhandler(self):  
+    def mptest_run_adhandler_basic(self):  
         adhandler = AdHandler()
-        adhandler.request = self.request
+        adhandler.initialize(self.request, Response())
         
-        adhandler._get()
-        
-        eq_(adhandler.response, "stuffs")    
+        adhandler.get()   
+                                 
+        eq_(adhandler.response.out.getvalue(), "iAd")
+        # eq_(adhandler.response.headers["thing"], "stuffs")     
    
 
     def mptest_build_fail_url(self):

@@ -1,8 +1,8 @@
 from string import Template   
 import random                 
-from ad_server.renderers.base_html_renderer import BaseHTMLRenderer
+from ad_server.renderers.base_html_renderer import BaseHtmlRenderer
 
-class TextRenderer(BaseHTMLRenderer):
+class TextRenderer(BaseHtmlRenderer):
     @classmethod
     def network_specific_rendering(cls, header_context, 
                                    creative=None,  

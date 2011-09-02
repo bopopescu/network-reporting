@@ -231,7 +231,7 @@ class TestAdAuction(unittest.TestCase):
         creative = network_battle.run() 
         eq_obj(creative, self.dummy_network_creative)   
         
-        eq_(creative.html, "<html> FAKE RESPONSE </html>") 
+        eq_(creative.html_data, "<html> FAKE RESPONSE </html>") 
         
     def mptest_network_failure(self):      
         
@@ -293,7 +293,7 @@ class TestAdAuction(unittest.TestCase):
         creative = network_battle.run() 
         eq_obj(creative, self.dummy_network_creative)   
 
-        eq_(creative.html, "<html> FAKE RESPONSE </html>")
+        eq_(creative.html_data, "<html> FAKE RESPONSE </html>")
         
     def mptest_network_fallback(self):
 
@@ -335,7 +335,7 @@ class TestAdAuction(unittest.TestCase):
         creative = network_battle.run() 
         eq_obj(creative, self.cheaper_dummy_network_creative)   
 
-        eq_(creative.html, "<html> FAKE RESPONSE </html>")
+        eq_(creative.html_data, "<html> FAKE RESPONSE </html>")
 
 
     def mptest_marketplace(self):   
@@ -365,7 +365,7 @@ class TestAdAuction(unittest.TestCase):
         marketplace_battle = MarketplaceBattle(self.client_context, self.adunit_context)
         creative = marketplace_battle._process_marketplace_response(content, self.dummy_marketplace_creative)
         #creative = marketplace_battle.run() 
-        eq_(creative.html, test_html)                                                
+        eq_(creative.html_data, test_html)                                                
 
 
 

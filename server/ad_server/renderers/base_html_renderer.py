@@ -2,7 +2,7 @@ from string import Template
 import random                 
 from ad_server.renderers.creative_renderer import BaseCreativeRenderer
 
-class BaseHTMLRenderer(BaseCreativeRenderer):
+class BaseHtmlRenderer(BaseCreativeRenderer):
     """ For now, just do the standard """
     @classmethod
     def network_specific_rendering(cls, header_context, 

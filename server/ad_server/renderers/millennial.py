@@ -1,6 +1,6 @@
 from string import Template   
 import random                 
-from ad_server.renderers.base_html_renderer import BaseHTMLRenderer
+from ad_server.renderers.base_html_renderer import BaseHtmlRenderer
 
-class MillennialRenderer(BaseHTMLRenderer):
+class MillennialRenderer(BaseHtmlRenderer):
     pass

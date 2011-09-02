@@ -45,7 +45,7 @@ class BrightRollServerSide(ServerSide):
     def _getURL(self,node):
         return str(self._getText(node))
       
-    def parse_xml(self,document):
+    def parse_xml(self, document):
         logging.info(document)
         
         dom = minidom.parseString(document)
@@ -126,11 +126,15 @@ class BrightRollServerSide(ServerSide):
         self.url_params.update(cpm=cpm)
         
     def html_for_response(self, response):
+        if response == '<VAST version="2.0" />':
+            raise ServerSideException
+        
+        
         self.parse_xml(response.content)
         # try:
         #     self.parse_xml(response.content)
         # except:
-        #     raise ServerSiderException("BrightRoll ad is empty") 
+        #     raise ServerSideException("BrightRoll ad is empty") 
         scripts = """
         <script type="text/javascript">
             window.addEventListener("load", function() { window.location="mopub://finishLoad";}, false);

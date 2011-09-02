@@ -13,7 +13,7 @@ class ServerSide(object):
     no_pub_id_warning = 'Warning: no %s Publisher ID has been specified'
     pub_id_attr = 'None' # Must be specified by sub class
     network_name = 'Generic Server Side'
-    SERVER_TIMEOUT = 2 # We time out after 2000 ms
+    SERVER_TIMEOUT = 1 # We time out after 2000 ms
     
     def __init__(self, client_context, adunit, *args, **kwargs):
         self.client_context = client_context
@@ -37,7 +37,7 @@ class ServerSide(object):
         try:    
             self.make_fetch_call()
             response = self.get_result()     
-        except DeadlineExceededError:
+        except urlfetch.Error:
             raise ServerSideException("Deadline exceeded for ad_network")
             
         return self.html_for_response(response)    

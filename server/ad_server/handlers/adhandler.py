@@ -73,20 +73,6 @@ TEST_MODE = "3uoijg2349ic(TEST_MODE)kdkdkg58gjslaf"
 #
 class AdHandler(webapp.RequestHandler): 
     
-    
-    # AdSense: Format properties: width, height, adsense_format, num_creatives
-    FORMAT_SIZES = {
-      "300x250_as": (300, 250, "300x250_as", 3),
-      "320x50_mb": (320, 50, "320x50_mb", 1),
-      "728x90_as": (728, 90, "728x90_as", 2),
-      "468x60_as": (468, 60, "468x60_as", 1),
-      "300x250": (300, 250, "300x250_as", 3),
-      "320x50": (320, 50, "320x50_mb", 1),
-      "728x90": (728, 90, "728x90_as", 2),
-      "468x60": (468, 60, "468x60_as", 1),
-      "320x480": (300, 250, "300x250_as", 1),
-    }
-    
     def get(self):
         if self.request.get('admin_debug_mode','0') == "1":
             try:
@@ -101,27 +87,33 @@ class AdHandler(webapp.RequestHandler):
     def _get(self):
         ufid = self.request.get('ufid', None)     
         
+        # Do we need json padding?
         if self.request.get('jsonp', '0') == '1':
             jsonp = True
             callback = self.request.get('callback')
         else:
             callback = None
             jsonp = False
-
-        if self.request.get("debug_mode","0") == "1":   
+        
+        
+        debug = False
+        # For web tester, only shows logging.info    
+        # Internal web tester, shows all levels of logging
+        if self.request.get('admin_debug_mode','0') == "1":
+            trace_logging.log_levels = [logging.info,logging.debug,logging.warning,
+                                        logging.error,logging.critical]  
+            debug = True 
+                                        
+                                        
+        elif self.request.get("debug_mode","0") == "1":   
             # Not sure what the use of debug_mode is, deprecating it for now
             trace_logging.error("debug mode is deprecated")
             debug = True
-        else:
-            debug = False
-        
-        if self.request.get('admin_debug_mode','0') == "1":
-            admin_debug_mode = True
-            trace_logging.log_levels = [logging.info,logging.debug,logging.warning,
-                                        logging.error,logging.critical,]
-        else:
-            admin_debug_mode = False 
+    
 
+  
+        
+        
         if self.request.get('log_to_console','0') == '1':
             log_to_console = True
         else:
@@ -271,7 +263,7 @@ class AdHandler(webapp.RequestHandler):
                                       
         if jsonp:
             self.response.out.write('%s(%s)' % (callback, dict(ad=str(rendered_creative or ''), click_url = str(ad_click_url), ufid=str(ufid))))
-        elif not (debug or admin_debug_mode):                                                    
+        elif not (debug):                                                    
             self.response.out.write(rendered_creative)
         else:
             trace_logging.rendered_creative = rendered_creative
@@ -321,5 +313,11 @@ class AdHandler(webapp.RequestHandler):
         trace_logging.info("Redirected to experimental server: " + exp_url)
         return self.redirect(exp_url)
         
+  
+
+def make_client_context(request):
+    
+    
+    
 
     

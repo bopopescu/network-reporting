@@ -3,7 +3,9 @@ import re
 from ad_server.debug_console import trace_logging
 from common.utils import helpers                    
 from common.utils.decorators import returns_unicode 
-from google.appengine.api import urlfetch
+from google.appengine.api import urlfetch  
+
+from google.appengine.runtime import DeadlineExceededError
 
 
 class ServerSide(object):

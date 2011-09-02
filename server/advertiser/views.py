@@ -315,9 +315,9 @@ class CreateCampaignAJAXHander(RequestHandler):
         logging.info("\n\n\n\n\nafasdfasdfasdf\n\n\n\n:%s\n\n\n"%initial)    
         campaign_form = campaign_form or CampaignForm(instance=campaign, initial=initial)
         adgroup_form = adgroup_form or AdGroupForm(instance=adgroup)
-        networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["chartboost","ChartBoost",False],["ejam","eJam",False],["greystripe","GreyStripe",False],\
-            ["iAd","iAd",False],["inmobi","InMobi",False],["jumptap","Jumptap",False],["millennial","Millennial Media",False],["mobfox","MobFox",False],\
-            ['custom','Custom Network', False], ['custom_native','Custom Native Network', False],['admob_native', 'AdMob Native', False], ['millennial_native', 'Millennial Media Native', False]]
+        networks = [['admob_native', 'AdMob', False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["chartboost","ChartBoost",False],["ejam","eJam",False],\
+            ["iAd","iAd",False],["inmobi","InMobi",False],["jumptap","Jumptap",False],['millennial_native', 'Millennial Media', False],["mobfox","MobFox",False],\
+            ['custom','Custom Network', False], ['custom_native','Custom Native Network', False]]
 
         all_adunits = AdUnitQueryManager.get_adunits(account=self.account)
         # sorts by app name, then adunit name
@@ -346,6 +346,13 @@ class CreateCampaignAJAXHander(RequestHandler):
             adunit.checked = unicode(adunit.key()) in adunit_str_keys
 
         if adgroup_form:
+            # We hide deprecated networks by default.  Show them for pre-existing adgroups though
+            if adgroup_form['network_type'].value == 'admob':
+                networks.append(["admob","AdMob Javascript (deprecated)",False])
+            if adgroup_form['network_type'].value == 'millennial':
+                networks.append(["millennial","Millennial Server-side (deprecated)",False])
+            if adgroup_form['network_type'].value == 'greystripe':
+                networks.append(["greystripe","GreyStripe (deprecated)",False])
             for n in networks:
                 if adgroup_form['network_type'].value == n[0]:
                     n[2] = True

@@ -55,6 +55,12 @@ var mopub = mopub || {};
             var network = $(this).val();
             $('.networkDependent').hide();
             $('.'+network+'.networkDependent').show();
+            if (network == 'admob_native' || network == 'millennial_native') {
+                $('#network_select_sdk_msg').show();
+            }
+            else {
+                $('#network_select_sdk_msg').hide();
+            }
             if (network == 'iAd') {
                 $('div.adunit-Target.mweb')
                 .hide()

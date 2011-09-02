@@ -3,7 +3,8 @@ import urllib
 import urllib2
 from ad_server.debug_console import trace_logging
 from ad_server.networks.server_side import ServerSideException  
-class GreyStripeServerSide(ServerSide):
+class GreyStripeServerSide(ServerSide):    
+    """ Greystripe is being deprecated. """
     base_url = "http://adsx.greystripe.com/openx/www/delivery/mw2.php"
     pub_id_attr = 'greystripe_pub_id'
     network_name = 'GreyStripe'
@@ -25,7 +26,6 @@ class GreyStripeServerSide(ServerSide):
                 'format':'html',
                 'ip': self.client_context.client_ip,
                 'site_id': self.get_pub_id(),
-                'sizes':size, #TODO: have this be an input parameter
                 }
         return urllib.urlencode(data)
     

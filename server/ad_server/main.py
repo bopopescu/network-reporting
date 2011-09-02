@@ -30,7 +30,7 @@ from userstore.query_managers import ClickEventManager, AppOpenEventManager
 
 from urllib import unquote
 
-from mopub_logging import mp_logging
+from stats import stats_accumulator
 from budget import budget_service
 from google.appengine.ext.db import Key
 
@@ -76,7 +76,7 @@ class AdImpressionHandler(webapp.RequestHandler):
             budget_service.apply_expense(creative.ad_group.campaign, creative.ad_group.bid/1000)
         
         if not self.request.get('testing') == TEST_MODE:
-            mp_logging.log(self.request,event=mp_logging.IMP_EVENT,adunit=adunit_context.adunit)  
+            stats_accumulator.log(self.request,event=stats_accumulator.IMP_EVENT,adunit=adunit_context.adunit)  
             
         self.response.out.write("OK")
     
@@ -85,7 +85,7 @@ class AdClickHandler(webapp.RequestHandler):
     def get(self):
         
         if not self.request.get('testing') == TEST_MODE:
-            mp_logging.log(self.request, event=mp_logging.CLK_EVENT)  
+            stats_accumulator.log(self.request, event=stats_accumulator.CLK_EVENT)  
   
         udid = self.request.get('udid')
         mobile_app_id = self.request.get('appid')
@@ -132,7 +132,7 @@ class AppOpenHandler(webapp.RequestHandler):
         aoe, conversion_logged = aoe_manager.log_conversion(udid, mobile_appid, time=datetime.datetime.now())
 
         if aoe and conversion_logged:
-            mp_logging.log(self.request, event=mp_logging.CONV_EVENT, adunit_id=aoe.conversion_adunit, creative_id=aoe.conversion_creative, udid=udid)
+            stats_accumulator.log(self.request, event=stats_accumulator.CONV_EVENT, adunit_id=aoe.conversion_adunit, creative_id=aoe.conversion_creative, udid=udid)
             self.response.out.write("ConversionLogged:"+str(conversion_logged)+":"+str(aoe.key())) 
         else:
             self.response.out.write("ConversionLogged:"+str(conversion_logged)) 
@@ -145,8 +145,8 @@ class PurchaseHandler(webapp.RequestHandler):
         from google.appengine.api import taskqueue
         trace_logging.info(self.request.get("receipt"))
         trace_logging.info(self.request.get("udid"))
-        mp_logging.log_inapp_purchase(request=self.request,
-                                      event=mp_logging.INAPP_EVENT,
+        stats_accumulator.log_inapp_purchase(request=self.request,
+                                      event=stats_accumulator.INAPP_EVENT,
                                       udid=self.request.get('udid'),
                                       receipt=self.request.get('receipt'),
                                       mobile_appid=self.request.get('appid'),)

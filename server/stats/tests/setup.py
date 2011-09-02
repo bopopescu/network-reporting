@@ -1,6 +1,6 @@
 # TESTING INSTRUCTIONS
 # $ ./manage.py shell/
-#  > import mopub_logging.tests.setup as s
+#  > import stats.tests.setup as s
 #  > s.setup_models()
 #  > exit()
 # 

@@ -20,7 +20,7 @@ from google.appengine.ext import webapp, db
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 from ad_server.adunit_context.adunit_context import AdUnitContext, CreativeCTR
 
-from mopub_logging import mp_logging   
+from stats import mp_logging   
 from google.appengine.ext.db import Key
 
 from ad_server.debug_console import trace_logging
@@ -109,11 +109,8 @@ class AdHandler(webapp.RequestHandler):
             # Not sure what the use of debug_mode is, deprecating it for now
             trace_logging.error("debug mode is deprecated")
             debug = True
-    
-
-  
         
-        
+        # For trace logger
         if self.request.get('log_to_console','0') == '1':
             log_to_console = True
         else:
@@ -313,11 +310,4 @@ class AdHandler(webapp.RequestHandler):
         trace_logging.info("Redirected to experimental server: " + exp_url)
         return self.redirect(exp_url)
         
-  
-
-def make_client_context(request):
-    
-    
-    
-
     

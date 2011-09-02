@@ -56,7 +56,7 @@ from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManag
 
 from ad_server.adunit_context.adunit_context import AdUnitContext, CreativeCTR
 
-from mopub_logging import mp_logging
+from stats import stats_accumulator
 from budget import budget_service
 from google.appengine.ext.db import Key
 
@@ -281,7 +281,7 @@ class AdAuction(object):
                         if isinstance(crtv, list):
                             crtv = crtv[0]
                         # set the creative as having done w/e
-                        mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=crtv, user_agent=user_agent, headers=request.headers, udid=udid)
+                        stats_accumulator.log(None, event=stats_accumulator.REQ_EVENT, adunit=adunit, creative=crtv, user_agent=user_agent, headers=request.headers, udid=udid)
                         try:
                             fetched = urlfetch.fetch(mpx_url, deadline=.2)
                             # Make sure it's a good response
@@ -365,7 +365,7 @@ class AdAuction(object):
                                         winning_creative = winner
                                         # if native, log native request
                                         if winner.adgroup.network_type in NATIVE_REQUESTS:
-                                            mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, headers=request.headers, udid=udid)
+                                            stats_accumulator.log(None, event=stats_accumulator.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, headers=request.headers, udid=udid)
                                         # A native request could potential fail and must be excluded from subsequent requests    
                                         on_fail_exclude_adgroups.append(str(winning_creative.adgroup.key()))
                                         return [winning_creative, on_fail_exclude_adgroups]
@@ -374,7 +374,7 @@ class AdAuction(object):
                                         trace_logging.info('Attempting ad network request: %s ...'%winner.adgroup.network_type.title())
                                         rpc = AdAuction.request_third_party_server(request, adunit, winner.adgroup)
                                         # log a network "request"
-                                        mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, headers=request.headers, udid=udid)
+                                        stats_accumulator.log(None, event=stats_accumulator.REQ_EVENT, adunit=adunit, creative=winner, user_agent=user_agent, headers=request.headers, udid=udid)
                                         try:
                                             result = rpc.get_result()
                                             server_tuple = rpc.serverside.bid_and_html_for_response(result)

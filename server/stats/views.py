@@ -25,8 +25,8 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 from common.utils import helpers
 from common.utils import simplejson
 
-from mopub_logging import mp_logging
-from mopub_logging import log_service
+from stats import stats_accumulator
+from stats import log_service
 
 from reporting import models as r_models
 from reporting import query_managers
@@ -109,9 +109,9 @@ class LogTaskHandler(webapp.RequestHandler):
       
       # for a brief moment there will be tasks that were put in without an associated shard
       if account_shard is None or account_shard == '':
-          tail_key = mp_logging.INDEX_KEY_FORMAT_OLD%dict(account_name=account_name,time=time_bucket)
+          tail_key = stats_accumulator.INDEX_KEY_FORMAT_OLD%dict(account_name=account_name,time=time_bucket)
       else:
-          tail_key = mp_logging.INDEX_KEY_FORMAT%dict(account_name=account_name,
+          tail_key = stats_accumulator.INDEX_KEY_FORMAT%dict(account_name=account_name,
                                                       account_shard=int(account_shard),
                                                       time=time_bucket)
       tail_index_str = memcache.get(tail_key)
@@ -139,10 +139,10 @@ class LogTaskHandler(webapp.RequestHandler):
           
           # if this is an old task we don't use the shard to make the keys
           if account_shard is None or account_shard == '':
-              keys = [mp_logging.LOG_KEY_FORMAT_OLD%dict(account_name=account_name,time=time_bucket,log_index=i) 
+              keys = [stats_accumulator.LOG_KEY_FORMAT_OLD%dict(account_name=account_name,time=time_bucket,log_index=i) 
                        for i in range(start,stop+1)]
           else:
-              keys = [mp_logging.LOG_KEY_FORMAT%dict(account_name=account_name,account_shard=int(account_shard),time=time_bucket,log_index=i) 
+              keys = [stats_accumulator.LOG_KEY_FORMAT%dict(account_name=account_name,account_shard=int(account_shard),time=time_bucket,log_index=i) 
                        for i in range(start,stop+1)]
 
           logging.info("we have %d keys (start:%s stop:%s)"%(len(keys),start,stop))
@@ -190,14 +190,14 @@ class LogTaskHandler(webapp.RequestHandler):
                   #              attribute=None,
                   #              req=req)
 
-                  if event == mp_logging.REQ_EVENT:
+                  if event == stats_accumulator.REQ_EVENT:
                       update_stats(stats_dict,
                                    publisher=adunit,
                                    advertiser=creative,
                                    date_hour=date_hour,
                                    country=country,                                   
                                    attribute='request_count')
-                  elif event == mp_logging.IMP_EVENT:
+                  elif event == stats_accumulator.IMP_EVENT:
                       update_stats(stats_dict,
                                    publisher=adunit,
                                    advertiser=creative,
@@ -206,7 +206,7 @@ class LogTaskHandler(webapp.RequestHandler):
                                    attribute='impression_count',
                                    revenue=revenue)
 
-                  if event == mp_logging.CLK_EVENT:
+                  if event == stats_accumulator.CLK_EVENT:
                       update_stats(stats_dict,
                                    publisher=adunit,
                                    advertiser=creative,
@@ -215,7 +215,7 @@ class LogTaskHandler(webapp.RequestHandler):
                                    attribute='click_count',
                                    revenue=revenue)
 
-                  elif event == mp_logging.CONV_EVENT: 
+                  elif event == stats_accumulator.CONV_EVENT: 
                       update_stats(stats_dict,
                                    publisher=adunit,
                                    advertiser=creative,

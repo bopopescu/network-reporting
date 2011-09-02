@@ -16,7 +16,7 @@ from ad_server.filters.filters import (budget_filter,
 from ad_server.optimizer import optimizer                                   
 from ad_server.debug_console import trace_logging     
 
-from mopub_logging import mp_logging      
+from stats import stats_accumulator      
 
 from ad_server.networks.server_side import ServerSideException  
 from google.appengine.api import urlfetch
@@ -177,7 +177,7 @@ class MarketplaceBattle(Battle):
         
  
         # set the creative as having done w/e
-        mp_logging.log(None, event=mp_logging.REQ_EVENT, 
+        stats_accumulator.log(None, event=stats_accumulator.REQ_EVENT, 
                        adunit=self.adunit_context.adunit, 
                        creative=creative, 
                        user_agent=self.client_context.user_agent,
@@ -224,8 +224,8 @@ class NetworkBattle(Battle):
         if not creative.ServerSide: 
 
             # TODO: refactor logging
-            mp_logging.log(None, 
-                           event=mp_logging.REQ_EVENT, 
+            stats_accumulator.log(None, 
+                           event=stats_accumulator.REQ_EVENT, 
                            adunit=self.client_context.adunit, 
                            creative=creative, 
                            user_agent=self.client_context.user_agent,   

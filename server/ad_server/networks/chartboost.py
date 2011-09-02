@@ -14,6 +14,17 @@ class ChartBoostServerSide(ServerSide):
     network_name = 'ChartBoost'
 
     @property
+    def headers(self): 
+        """ The headers that we send to the ad network when making our request """
+        return {}
+
+    @property  
+    def payload(self):
+        """ The payload that we send to the ad network when making our request """
+        return None
+
+    
+    @property
     def url(self):
         data =	{'uuid': self.get_udid(), 'app': self.get_pub_id(), }        
         if "full" in self.format:
@@ -23,7 +34,7 @@ class ChartBoostServerSide(ServerSide):
             self.is_full_screen = False
             return self.base_url + "banner.json?" + urllib.urlencode(data)
             
-    def bid_and_html_for_response(self, response):
+    def html_for_response(self, response):
         image_template = """<div style='text-align:center'><a href="%(url)s" target="_blank"><img src="%(banner)s"/></a></div>"""
         trace_logging.warning("Received ChartBoost response: %s"%cgi.escape(response.content))
         try:

@@ -23,8 +23,7 @@ from server.ad_server.main import  ( AdClickHandler,
                                      AppOpenHandler,
                                      TestHandler,
                                      )
-
-from server.ad_server.handlers import adhandler  
+                                                    
 from server.ad_server.renderers import creative_renderer  
 
 from server.ad_server.handlers.adhandler import AdHandler                                     
@@ -142,6 +141,16 @@ class TestAdAuction(unittest.TestCase):
    
     def tearDown(self):
         self.testbed.deactivate()
+        
+        
+    def mptest_run_adhandler(self):  
+        adhandler = AdHandler()
+        adhandler.request = self.request
+        
+        adhandler._get()
+        
+        eq_(adhandler.response, "stuffs")    
+   
 
     def mptest_build_fail_url(self):
         original_url = "http://ads.mopub.com/m/ad?id=asdf&blah&foo&bar&IMPORTANT"

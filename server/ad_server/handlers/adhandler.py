@@ -145,10 +145,7 @@ class AdHandler(webapp.RequestHandler):
         # We can get country_code from one of two places. It is a 2 character string 
 
         country_code = self.request.get('country') or get_country_code(self.request.headers)
-        
-        
-        site = adunit     
-        
+       
         if self.request.get('testing') == TEST_MODE:
             # If we are running tests from ad_server_tests, don't use caching
             testing = True
@@ -158,16 +155,16 @@ class AdHandler(webapp.RequestHandler):
             testing = False
         
         
-        # the user's site key was not set correctly...
-        if site is None:
+        # the user's adunit key was not set correctly...
+        if adunit is None:
             self.error(404)
             self.response.out.write("Publisher adunit key %s not valid" % adunit_id)
             return
         
         # Prepare Keywords
         keywords = []
-        if site.keywords and site.keywords != 'None':
-            keywords += site.keywords.split(',')
+        if adunit.keywords and adunit.keywords != 'None':
+            keywords += adunit.keywords.split(',')
         if self.request.get("q"):
             keywords += self.request.get("q").lower().split(',')
 
@@ -178,7 +175,7 @@ class AdHandler(webapp.RequestHandler):
         # create a unique request id, but only log this line if the user agent is real
         request_id = hashlib.md5("%s:%s" % (self.request.query_string, time.time())).hexdigest()
                                                                          
-        client_context = ClientContext(adunit=site,
+        client_context = ClientContext(adunit=adunit,
                                 keywords=keywords, 
                                 excluded_adgroup_keys=self.request.get_all("exclude"), 
                                 raw_udid=raw_udid,
@@ -245,7 +242,7 @@ class AdHandler(webapp.RequestHandler):
             
             rendered_creative, header_context = Renderer.render(    
                                                    creative=creative,
-                                                   adunit=site, 
+                                                   adunit=adunit, 
                                                    keywords=keywords, 
                                                    request_host=self.request.host, # Needed for serving static files
                                                    request_url=self.request.url, # Needed for onfail urls  

@@ -451,6 +451,15 @@ class AdHandler(webapp.RequestHandler):
                 # extra parameters used only by admob template
                 params.update(admob_finish_load=success)
                 params.update(admob_fail_load='')
+                
+            # Viewport meta tag: used by the iOS client to keep interstitials properly centered.
+            # On legacy SDKs (version < 6), inclusion of this tag causes a divide-by-zero exception,
+            # so we should omit it for those versions.
+            
+            if version_number >= 6:
+                params.update(viewportMetaTag='<meta name="viewport" content="width=device-width; initial-scale=1.0; user-scalable=no;">')
+            else:
+                params.update(viewportMetaTag='')
             
             # indicate to the client the winning creative type, in case it is natively implemented (iad, clear)
             

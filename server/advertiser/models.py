@@ -537,8 +537,9 @@ class ImageCreative(Creative):
     def Renderer(self):
         return ImageRenderer
 
-class MarketplaceCreative(HtmlCreative):
-    pass
+class MarketplaceCreative(HtmlCreative): 
+    """ If this is targetted to an adunit, lets the ad_auction know to 
+        run the marketplace battle. """
 
 class CustomCreative(HtmlCreative):
     pass
@@ -666,11 +667,6 @@ class MobFoxCreative(Creative):
   
 class NullCreative(Creative):
     pass
-
-class MarketplaceCreative(Creative):
-    """ If this is targetted to an adunit, lets the ad_auction know to 
-        run the marketplace battle. """
-  
 
 class DummyServerSideFailureCreative(Creative):
     ServerSide = DummyServerSideFailure  

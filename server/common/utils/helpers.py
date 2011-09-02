@@ -13,7 +13,21 @@ from google.appengine.ext import db
 COUNTRY_PAT = re.compile(r' [a-zA-Z][a-zA-Z][-_](?P<ccode>[a-zA-Z][a-zA-Z]);*[^a-zA-Z0-9-_]')
 
 MB_PER_SHARD = 10
+ 
 
+def to_uni(obj, encoding='utf-8'):
+    if isinstance(obj, basestring):
+        if not isinstance(obj, unicode):
+            obj = unicode(obj, encoding)
+    return obj
+
+def to_ascii(obj, encoding='utf-8'):  
+    if isinstance(obj, unicode):  
+        obj = obj.encode('utf-8')
+    return obj
+       
+   
+    
 def get_country_code(headers, default='XX'):
     return headers.get('X-AppEngine-country', default)
     

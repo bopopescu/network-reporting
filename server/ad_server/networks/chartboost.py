@@ -40,10 +40,10 @@ class ChartBoostServerSide(ServerSide):
         try:
             response_content = simplejson.loads(response.content)
             if self.is_full_screen:
-                return 0.0, response_content['url']
+                return response_content['url']
             else:    
                 content = image_template%response_content
-                return 0.0, content
+                return content
         except:    
             trace_logging.info("ChartBoost ad is empty")
             raise ServerSideException("ChartBoost ad is empty")

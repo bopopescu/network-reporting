@@ -21,7 +21,9 @@ from stats import stats_accumulator
 from ad_server.networks.server_side import ServerSideException  
 from google.appengine.api import urlfetch
 import urllib
-from common.utils import simplejson
+from common.utils import simplejson  
+
+from common.utils.helpers import to_uni, to_ascii
 
 class Battle(object):
     """ Determines the best creative available within a subset of adgroups.
@@ -103,13 +105,13 @@ class Battle(object):
         """ Runs the sub-auction"""
         adgroups = self._get_adgroups_for_level()   
     
-        trace_logging.info(self.__class__.starting_message)
-        
-        trace_logging.info("Available adgroups are: %s" % adgroups)    
+        trace_logging.info(self.__class__.starting_message)           
+
+        trace_logging.info(u"Available adgroups are: %s" % ", ".join(["%s" % a.name for a in adgroups]))    
          
         filtered_adgroups = self._filter_adgroups(adgroups)
         
-        trace_logging.info("Filtered adgroups are: %s" % filtered_adgroups)
+        trace_logging.info(u"Filtered adgroups are: %s" % ", ".join(["%s" % a.name for a in filtered_adgroups]))
     
         # TODO: Add in frequency capping.
     

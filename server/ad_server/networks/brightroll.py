@@ -141,7 +141,7 @@ class BrightRollServerSide(ServerSide):
                
         self.url_params.update(mopub_scripts=scripts) 
         logging.info(self.url_params)   
-        return self.url_params.get('cpm'),template.safe_substitute(self.url_params)
+        return template.safe_substitute(self.url_params)
         # return 0.0,string.replace(response.content,"<head>","<head><script type=\"text/javascript\">\nwindow.addEventListener(\"load\", function() { loadAdVideo();playAdVideo();}, false);function webviewDidAppear(){playAdVideo();}\n</script>",1)
         #return 0.0, "<html><body>hi</body></html>"
         #return 0.0,response.content

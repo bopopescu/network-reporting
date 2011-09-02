@@ -16,5 +16,4 @@ class DummyServerSideFailure(ServerSide):
     """ Always returns a failed response """
  
     def make_call_and_get_html_from_response(self, html="<html> FAKE RESPONSE </html>"):
-        print "zomg"   
         raise ServerSideException("This dummy server always fails.")

@@ -45,6 +45,8 @@ from ad_server.networks.dummy_server_side import (DummyServerSideSuccess,
                                                   DummyServerSideFailure   
                                                  )          
 
+from common.utils.helpers import to_uni, to_ascii  
+
 # from budget import budget_service
 #
 # A campaign.    Campaigns have budgetary and time based restrictions.    
@@ -270,8 +272,8 @@ class AdGroup(db.Model):
         if c: c.ad_group = self
         return c
     
-    def __repr__(self):
-        return "AdGroup:'%s'" % self.name
+    def __repr__(self):        
+        return u"AdGroup:%s" % to_uni(self.name)
         
     @property
     def uses_default_device_targeting(self):

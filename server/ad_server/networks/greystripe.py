@@ -40,4 +40,4 @@ class GreyStripeServerSide(ServerSide):
         """<script type='text/javascript'>/*<![CDATA[*/<a href='F' target='_blank'><img src='F' border='0' alt=''></a>/*]]>*/</script""" in response.content:
             trace_logging.info("GreyStripe failed to return ad")
             raise ServerSideException("GreyStripe ad is empty")  
-        return 0.0,response.content
+        return response.content

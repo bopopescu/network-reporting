@@ -115,6 +115,6 @@ class MobFoxServerSide(ServerSide):
         else:    
             trace_logging.info("MobFox ad is empty")
             raise ServerSideException("MobFox ad is empty")
-        return 0.0, content
+        return content
         
         

@@ -266,5 +266,5 @@ class NetworkUnitTests(unittest.TestCase):
         
 
     def _check_bid_and_response(this, network_server_side):
-        response_tuple = network_server_side.make_call_and_get_html_from_response()
-        assert(response_tuple[1])
+        html = network_server_side.make_call_and_get_html_from_response()
+        assert(html)

@@ -108,9 +108,9 @@ class InMobiServerSide(ServerSide):
             self.parse_xml(response.content)
             width, height = self.adunit.get_width(),self.adunit.get_height()
             if 'image_url' in self.url_params:
-                return 0.0, banner_template.safe_substitute(self.url_params), width, height
+                return banner_template.safe_substitute(self.url_params), width, height
             elif 'link_text' in self.url_params:
-                return 0.0, text_template.safe_substitute(self.url_params), width, height
+                return text_template.safe_substitute(self.url_params), width, height
         trace_logging.info("InMobi failed to return ad")
         raise ServerSideException("InMobi ad is empty")
 

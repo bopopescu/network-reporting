@@ -658,23 +658,26 @@ var mopub = mopub || {};
       
       var classPrefix = campaignType.split('_')[0];
       
-      $(classPrefix + '-req:visible').each(function() {
+      $('.' + classPrefix + '-req:visible').each(function() {
         req += parseIntFromStatText($(this).text());
       });
       
-      $(classPrefix + '-imp:visible').each(function() {
+      $('.' + classPrefix + '-imp:visible').each(function() {
         imp += parseIntFromStatText($(this).text());
       });
       
-      $(classPrefix + '-clk:visible').each(function() {
+      $('.' + classPrefix + '-clk:visible').each(function() {
         clk += parseIntFromStatText($(this).text());
       });
       
-      $(classPrefix + '-rev:visible').each(function() {
-        rev += parseIntFromStatText($(this).text());
+      // Revenue values may have the "display: none" attribute. When rolling up revenue values,
+      // we can't just add up the visible revenue <td>s; we need to filter out those that are
+      // a part of visible <tr>s.
+      $('.' + classPrefix + '_row:visible .' + classPrefix + '-rev').each(function() {
+        rev += parseIntFromStatText($(this).text().replace('$', ''));
       });
       
-      $(classPrefix + '-conv:visible').each(function() {
+      $('.' + classPrefix + '-conv:visible').each(function() {
         conv += parseIntFromStatText($(this).text());
       });
       
@@ -689,11 +692,11 @@ var mopub = mopub || {};
       $("#" + classPrefix + '-total-conv').text(mopub.Utils.formatNumberWithCommas(conv));
       $("#" + classPrefix + '-total-ctr').text(mopub.Utils.formatNumberAsPercentage(ctr))
       $("#" + classPrefix + '-total-fill').text(
-        mopub.Utils.formatNumberAsPercentage(fill) + '(' + 
+        mopub.Utils.formatNumberAsPercentage(fill) + ' (' + 
         mopub.Utils.formatNumberWithCommas(req) + ')'
       );
       
-      $(classPrefix + '-rollups').show();
+      $("#" + classPrefix + '-rollups').show();
       
       setSectionLoadingSpinnerHidden(campaignType, true);
     }

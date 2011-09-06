@@ -178,15 +178,17 @@ var mopub = mopub || {};
     //   .click(function(e) {
     //     e.preventDefault();
     //   });
-    
     $('#appEditForm-submit')
       .button({ 
         icons: { secondary: "ui-icon-circle-triangle-e" } 
       })
       .click(function(e) {
-        e.preventDefault();
-        $('#appEditForm-loading').show();
-        $('#appForm').submit();
+        e.preventDefault();            
+        
+        if ($("#appForm-name").val() != ""){
+          $('#appEditForm-loading').show();
+          $('#appForm').submit();     
+        }
       });
     $('#appEditForm-cancel')
       .click(function(e) {

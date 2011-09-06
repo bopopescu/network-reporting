@@ -627,6 +627,12 @@ class ShowAdGroupHandler(RequestHandler):
         else:
             days = StatsModel.lastdays(self.date_range)
 
+        # show a flash message recommending using reports if selecting more than 30 days
+        if self.date_range > 30:
+            self.request.flash['message'] = "For showing more than 30 days we recommend using the <a href='%s'>Reports</a> page." % reverse('reports_index')
+        else:
+            del self.request.flash['message']
+
         # Load the ad group itself
         adgroup = AdGroupQueryManager.get(adgroup_key)
         adgroup.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)

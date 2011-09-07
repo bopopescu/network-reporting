@@ -84,7 +84,9 @@ def dashboard_prep(request, *args, **kwargs):
     days = StatsModel.lastdays(NUM_DAYS)
     # gets all undeleted applications
     start_date = datetime.date.today() - datetime.timedelta(days=NUM_DAYS) # NOTE: change
-    apps = AppQueryManager.get_apps(limit=1000)    
+
+    apps = AppQueryManager.get_all_apps()
+    
     # get all the daily stats for the undeleted apps
     # app_stats = StatsModelQueryManager(None,offline=offline).get_stats_for_apps(apps=apps,num_days=30)
 
@@ -173,7 +175,8 @@ def dashboard(request, *args, **kwargs):
         task = taskqueue.Task(name=task_name,
                               params=dict(offline="1" if offline else "0"),
                               method='GET',
-                              url='/admin/prep/')
+                              url='/admin/prep/',
+                              target='stats-updater')
         try:                      
             task.add("admin-dashboard-queue")
             return HttpResponseRedirect(reverse('admin_dashboard')+'?loading=1')

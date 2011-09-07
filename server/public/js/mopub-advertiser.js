@@ -658,23 +658,26 @@ var mopub = mopub || {};
       
       var classPrefix = campaignType.split('_')[0];
       
-      $(classPrefix + '-req:visible').each(function() {
+      $('.' + classPrefix + '-req:visible').each(function() {
         req += parseIntFromStatText($(this).text());
       });
       
-      $(classPrefix + '-imp:visible').each(function() {
+      $('.' + classPrefix + '-imp:visible').each(function() {
         imp += parseIntFromStatText($(this).text());
       });
       
-      $(classPrefix + '-clk:visible').each(function() {
+      $('.' + classPrefix + '-clk:visible').each(function() {
         clk += parseIntFromStatText($(this).text());
       });
       
-      $(classPrefix + '-rev:visible').each(function() {
-        rev += parseIntFromStatText($(this).text());
+      // Revenue values may have the "display: none" attribute. When rolling up revenue values,
+      // we can't just add up the visible revenue <td>s; we need to filter out those that are
+      // a part of visible <tr>s.
+      $('.' + classPrefix + '_row:visible .' + classPrefix + '-rev').each(function() {
+        rev += parseIntFromStatText($(this).text().replace('$', ''));
       });
       
-      $(classPrefix + '-conv:visible').each(function() {
+      $('.' + classPrefix + '-conv:visible').each(function() {
         conv += parseIntFromStatText($(this).text());
       });
       
@@ -689,11 +692,11 @@ var mopub = mopub || {};
       $("#" + classPrefix + '-total-conv').text(mopub.Utils.formatNumberWithCommas(conv));
       $("#" + classPrefix + '-total-ctr').text(mopub.Utils.formatNumberAsPercentage(ctr))
       $("#" + classPrefix + '-total-fill').text(
-        mopub.Utils.formatNumberAsPercentage(fill) + '(' + 
+        mopub.Utils.formatNumberAsPercentage(fill) + ' (' + 
         mopub.Utils.formatNumberWithCommas(req) + ')'
       );
       
-      $(classPrefix + '-rollups').show();
+      $("#" + classPrefix + '-rollups').show();
       
       setSectionLoadingSpinnerHidden(campaignType, true);
     }
@@ -761,7 +764,7 @@ var mopub = mopub || {};
     function initCampaignsPage() {
       showOrHideRevenueBreakdown();
       setupAjaxStatusPopup();
-      setCampaignFilterOptionsDisabled(true);
+      setCampaignFilterOptionsDisabled(true);   
       populateStatsBreakdownsWithData(mopub.accountStats);
       populateGraphWithAccountStats(mopub.accountStats);
       populateCampaignStats();
@@ -810,20 +813,27 @@ var mopub = mopub || {};
     function populateStatsBreakdownsWithData(data) {
       var allStats = data["all_stats"]["||"];
       var dailyStats = allStats["daily_stats"];
+      var yesterday;
+      var all;
 
-      var today = formatStatsForDisplay(dailyStats[dailyStats.length - 1]);
-      var yesterday = formatStatsForDisplay(dailyStats[dailyStats.length - 2]);
-      var all = formatStatsForDisplay(allStats.sum);
+      var today = formatStatsForDisplay(dailyStats[dailyStats.length - 1]);  
+      if (dailyStats.length >= 2){
+        yesterday = formatStatsForDisplay(dailyStats[dailyStats.length - 2]); 
+      } 
+
+      all = formatStatsForDisplay(allStats.sum);
 
       $("#stats-breakdown-impressions .today .inner").html(today.impression_count);
       $("#stats-breakdown-revenue .today .inner").html(today.revenue);//"$" + today.revenue.toFixed(2));
       $("#stats-breakdown-clicks .today .inner").html(today.click_count);
       $("#stats-breakdown-ctr .today .inner").html(today.ctr);
-
-      $("#stats-breakdown-impressions .yesterday .inner").html(yesterday.impression_count);
-      $("#stats-breakdown-revenue .yesterday .inner").html(yesterday.revenue);//"$" + yesterday.revenue.toFixed(2));
-      $("#stats-breakdown-clicks .yesterday .inner").html(yesterday.click_count);
-      $("#stats-breakdown-ctr .yesterday .inner").html(yesterday.ctr);
+      
+      if (yesterday != null) {
+        $("#stats-breakdown-impressions .yesterday .inner").html(yesterday.impression_count);
+        $("#stats-breakdown-revenue .yesterday .inner").html(yesterday.revenue);//"$" + yesterday.revenue.toFixed(2));
+        $("#stats-breakdown-clicks .yesterday .inner").html(yesterday.click_count);
+        $("#stats-breakdown-ctr .yesterday .inner").html(yesterday.ctr);                
+      }
 
       $("#stats-breakdown-impressions .all .inner").html(all.impression_count);
       $("#stats-breakdown-revenue .all .inner").html(all.revenue);//"$" + all.revenue.toFixed(2));

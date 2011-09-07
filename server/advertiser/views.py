@@ -57,7 +57,7 @@ class AdGroupIndexHandler(RequestHandler):
             days = StatsModel.get_days(self.start_date, self.date_range)
         else:
             days = StatsModel.lastdays(self.date_range)
-            
+
         apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
         
         # memoize
@@ -97,11 +97,13 @@ class AdGroupIndexHandler(RequestHandler):
         # account_level_stats = _calc_app_level_stats(adgroups)
         # account_level_summed_stats = sum(account_level_stats,StatsModel()) 
         
-        # gets account level stats
-        stats = StatsModelQueryManager(self.account, 
-                                       offline=self.offline).get_stats_for_days(publisher=None,
-                                                                                advertiser=None, 
-                                                                                days=days)
+        # gets account level stats   
+        
+        stats_model = StatsModelQueryManager(self.account, offline=self.offline)
+        
+        stats = stats_model.get_stats_for_days(publisher=None,
+                                               advertiser=None, 
+                                               days=days)
                                                                                     
         key = "||"
         stats_dict = {}
@@ -170,6 +172,7 @@ class AdGroupIndexHandler(RequestHandler):
         #     yesterday = sum([c.all_stats[-2] for c in graph_adgroups], StatsModel())
         # except IndexError: 
         #     yesterday = StatsModel()
+                                     
 
         return render_to_response(self.request, 
                                  'advertiser/adgroups.html', 
@@ -626,6 +629,12 @@ class ShowAdGroupHandler(RequestHandler):
             days = StatsModel.get_days(self.start_date, self.date_range)
         else:
             days = StatsModel.lastdays(self.date_range)
+
+        # show a flash message recommending using reports if selecting more than 30 days
+        if self.date_range > 30:
+            self.request.flash['message'] = "For showing more than 30 days we recommend using the <a href='%s'>Reports</a> page." % reverse('reports_index')
+        else:
+            del self.request.flash['message']
 
         # Load the ad group itself
         adgroup = AdGroupQueryManager.get(adgroup_key)

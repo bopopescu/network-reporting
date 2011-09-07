@@ -377,42 +377,34 @@
 
               <dl class="formFields flat">
                 {% if account.paymentinfo %}
+                <h3> Tax Information </h3>
+                <dt> Business Name: </dt> <dd>{{account.paymentinfo.business_name}} </dd>
+                <dt> Country: </dt> <dd>{{account.paymentinfo.country|country_code_to_name}} </dd>
+                {% if account.paymentinfo.country == 'US' %}
+                  <dt> US Tax ID: </dt> <dd>{{account.paymentinfo.us_tax_id}} </dd>
+                {% else %}
+                  <dt> Local Tax ID: </dt> <dd>{{account.paymentinfo.local_tax_id}} </dd>
+                {% endif %}
+                <br /><br />
+                <h3> Payment Details </h3>
                   {% if account.paymentinfo.uses_paypal %}
                     <dt> Paypal Account:</dt> <dd> {{account.paymentinfo.paypal_email}} </dd>
                   {% else %}
-
-                    <h3> Tax Information </h3>
-
-                    <dt> Country: </dt> <dd>{{account.paymentinfo.country|country_code_to_name}} </dd>
-
-                    {% if account.paymentinfo.country == 'US' %}
-                      <dt> US Tax ID: </dt> <dd>{{account.paymentinfo.us_tax_id}} </dd>
-                      <dt> Local Tax ID: </dt> <dd>{{account.paymentinfo.local_tax_id}} </dd>
-                    {% endif %}
-
-                    <br /><br />
-
-                    <h3> Payment Details </h3>
                     <dt> Beneficiary Name: </dt> <dd>{{account.paymentinfo.beneficiary_name}} </dd>
                     <dt> Bank Name: </dt> <dd>{{account.paymentinfo.bank_name}} </dd>
                     <dt> Bank Address: </dt> <dd>{{account.paymentinfo.bank_address}} </dd>
                     <dt> Account Number: </dt> <dd>{{account.paymentinfo.account_number}} </dd>
-
-                    {% if account.paymentinfo.country == 'United States' %}
-                      <dt> ACH Routing Number: </dt> <dd>{{account.paymentinfo.ach_routing_number}} </dd>
-                      <dt> Bank SWIFT Code: </dt> <dd>{{account.paymentinfo.bank_swift_code}} </dd>
+                    {% if account.paymentinfo.country == 'US' %}
+                    <dt> ACH Number: </dt> <dd>{{account.paymentinfo.ach_routing_number}} </dd>
+                    {% else %}
+                    <dt> Bank SWIFT Code: </dt> <dd>{{account.paymentinfo.bank_swift_code}} </dd>
                     {% endif %}
-
-
                   {% endif %}
-
                 {% else %}
                   <h3> You haven't supplied any payment information yet. </h3>
                 {% endif %}
-
               </dl>
               </fieldset>
-
             </div>
           </section>
 {% endblock %}

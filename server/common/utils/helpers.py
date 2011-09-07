@@ -150,3 +150,15 @@ def campaign_stats(stat, type):
 
 def app_stats(stat):
     return [int(stat.request_count), int(stat.impression_count), stat.fill_rate, int(stat.click_count), stat.ctr]
+
+
+def to_uni(obj, encoding='utf-8'):
+    if isinstance(obj, basestring):
+        if not isinstance(obj, unicode):
+            obj = unicode(obj, encoding)
+    return obj
+
+def to_ascii(obj, encoding='utf-8'):  
+    if isinstance(obj, unicode):  
+        obj = obj.encode('utf-8')
+    return obj

@@ -2,4 +2,5 @@ backends:
 - name: stats-updater
   # options: dynamic
   options: public
+  class: B4
 

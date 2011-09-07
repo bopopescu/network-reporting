@@ -57,7 +57,7 @@ class AdGroupIndexHandler(RequestHandler):
             days = StatsModel.get_days(self.start_date, self.date_range)
         else:
             days = StatsModel.lastdays(self.date_range)
-            
+
         apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
         
         # memoize
@@ -97,11 +97,13 @@ class AdGroupIndexHandler(RequestHandler):
         # account_level_stats = _calc_app_level_stats(adgroups)
         # account_level_summed_stats = sum(account_level_stats,StatsModel()) 
         
-        # gets account level stats
-        stats = StatsModelQueryManager(self.account, 
-                                       offline=self.offline).get_stats_for_days(publisher=None,
-                                                                                advertiser=None, 
-                                                                                days=days)
+        # gets account level stats   
+        
+        stats_model = StatsModelQueryManager(self.account, offline=self.offline)
+        
+        stats = stats_model.get_stats_for_days(publisher=None,
+                                               advertiser=None, 
+                                               days=days)
                                                                                     
         key = "||"
         stats_dict = {}
@@ -170,6 +172,7 @@ class AdGroupIndexHandler(RequestHandler):
         #     yesterday = sum([c.all_stats[-2] for c in graph_adgroups], StatsModel())
         # except IndexError: 
         #     yesterday = StatsModel()
+                                     
 
         return render_to_response(self.request, 
                                  'advertiser/adgroups.html', 
@@ -315,9 +318,9 @@ class CreateCampaignAJAXHander(RequestHandler):
         logging.info("\n\n\n\n\nafasdfasdfasdf\n\n\n\n:%s\n\n\n"%initial)    
         campaign_form = campaign_form or CampaignForm(instance=campaign, initial=initial)
         adgroup_form = adgroup_form or AdGroupForm(instance=adgroup)
-        networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["chartboost","ChartBoost",False],["ejam","eJam",False],["greystripe","GreyStripe",False],\
-            ["iAd","iAd",False],["inmobi","InMobi",False],["jumptap","Jumptap",False],["millennial","Millennial Media",False],["mobfox","MobFox",False],\
-            ['custom','Custom Network', False], ['custom_native','Custom Native Network', False],['admob_native', 'AdMob Native', False], ['millennial_native', 'Millennial Media Native', False]]
+        networks = [['admob_native', 'AdMob', False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["chartboost","ChartBoost",False],["ejam","eJam",False],\
+            ["iAd","iAd",False],["inmobi","InMobi",False],["jumptap","Jumptap",False],['millennial_native', 'Millennial Media', False],["mobfox","MobFox",False],\
+            ['custom','Custom Network', False], ['custom_native','Custom Native Network', False]]
 
         all_adunits = AdUnitQueryManager.get_adunits(account=self.account)
         # sorts by app name, then adunit name
@@ -346,6 +349,13 @@ class CreateCampaignAJAXHander(RequestHandler):
             adunit.checked = unicode(adunit.key()) in adunit_str_keys
 
         if adgroup_form:
+            # We hide deprecated networks by default.  Show them for pre-existing adgroups though
+            if adgroup_form['network_type'].value == 'admob':
+                networks.append(["admob","AdMob Javascript (deprecated)",False])
+            if adgroup_form['network_type'].value == 'millennial':
+                networks.append(["millennial","Millennial Server-side (deprecated)",False])
+            if adgroup_form['network_type'].value == 'greystripe':
+                networks.append(["greystripe","GreyStripe (deprecated)",False])
             for n in networks:
                 if adgroup_form['network_type'].value == n[0]:
                     n[2] = True
@@ -619,6 +629,12 @@ class ShowAdGroupHandler(RequestHandler):
             days = StatsModel.get_days(self.start_date, self.date_range)
         else:
             days = StatsModel.lastdays(self.date_range)
+
+        # show a flash message recommending using reports if selecting more than 30 days
+        if self.date_range > 30:
+            self.request.flash['message'] = "For showing more than 30 days we recommend using the <a href='%s'>Reports</a> page." % reverse('reports_index')
+        else:
+            del self.request.flash['message']
 
         # Load the ad group itself
         adgroup = AdGroupQueryManager.get(adgroup_key)

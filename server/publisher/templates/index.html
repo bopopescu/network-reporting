@@ -123,7 +123,7 @@
                     <tbody>
                       {% for au in a.adunits %}
                       <tr class="adunit-row incomplete" id="{{au.key}}">
-                        <th class="dataTable-name"><span class="inner"><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a></span></th>
+                        <th class="dataTable-name"><span class="inner"><div class="appData-id muted hidden">Ad Unit ID: {{au.key}}</div><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a></span></th>
                         <td class="dataTable-data numeric req">--</td>
                         <td class="dataTable-data numeric imp">--</td>
                         <td class="dataTable-data numeric fill">--</td>
@@ -149,5 +149,5 @@
         mopub.accountStats = {{account_stats|safe}};
     });
 </script>
-<script src="/js/mopub-dashboard.js?v=32"></script>
+<script src="/js/mopub-dashboard.js?v=34"></script>
 {% endblock %}

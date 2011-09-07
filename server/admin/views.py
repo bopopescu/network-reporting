@@ -84,7 +84,9 @@ def dashboard_prep(request, *args, **kwargs):
     days = StatsModel.lastdays(NUM_DAYS)
     # gets all undeleted applications
     start_date = datetime.date.today() - datetime.timedelta(days=NUM_DAYS) # NOTE: change
-    apps = AppQueryManager.get_apps(limit=1000)    
+
+    apps = AppQueryManager.get_all_apps()
+    
     # get all the daily stats for the undeleted apps
     # app_stats = StatsModelQueryManager(None,offline=offline).get_stats_for_apps(apps=apps,num_days=30)
 
@@ -115,6 +117,11 @@ def dashboard_prep(request, *args, **kwargs):
                 totals[str(app_stat.date)].user_count = user_count
             if app_stat._publisher:
                 _incr_dict(unique_apps,str(app_stat._publisher),app_stat)
+        # Calculate a 1 day delta between yesterday and the day before that
+        if app_stats[-2].date and app_stats[-3].date and app_stats[-2]._publisher and app_stats[-3].request_count > 0:
+            unique_apps[str(app_stats[-2]._publisher)].requests_delta1day = \
+                float(app_stats[-2].request_count - app_stats[-3].request_count) / app_stats[-3].request_count
+            
     
     # organize daily stats by date
     total_stats = totals.values()
@@ -168,7 +175,8 @@ def dashboard(request, *args, **kwargs):
         task = taskqueue.Task(name=task_name,
                               params=dict(offline="1" if offline else "0"),
                               method='GET',
-                              url='/admin/prep/')
+                              url='/admin/prep/',
+                              target='stats-updater')
         try:                      
             task.add("admin-dashboard-queue")
             return HttpResponseRedirect(reverse('admin_dashboard')+'?loading=1')

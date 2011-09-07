@@ -55,8 +55,8 @@ def increment_stats(stats):
         stats_obj = stats    
 
     # datastore put
-    logging.info("putting in key_name: %s value: %s,%s"%(key_name,stats.request_count,stats.impression_count))
-    logging.info("putting in key_name: %s NEW value: %s,%s"%(key_name,stats_obj.request_count,stats_obj.impression_count))
+    # logging.info("putting in key_name: %s value: %s,%s"%(key_name,stats.request_count,stats.impression_count))
+    # logging.info("putting in key_name: %s NEW value: %s,%s"%(key_name,stats_obj.request_count,stats_obj.impression_count))
     stats_obj.put()
     
 def update_stats(stats_dict,publisher,advertiser,date_hour,country,attribute,req=None,revenue=None,incr=1):
@@ -120,12 +120,12 @@ class LogTaskHandler(webapp.RequestHandler):
       tail_index = int(tail_index_str or MAX_TAIL)
 
 
-      if account_name == "agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww":
-          logging.error("account: %s time: %s start: %s stop: %s"%(account_name,time_bucket,head_index,tail_index))
-          logging.error("MEMCACHE STATS: %s"%memcache_stats_start)
-      else:
-          logging.info("account: %s time: %s start: %s stop: %s"%(account_name,time_bucket,head_index,tail_index))
-          logging.info("MEMCACHE STATS: %s"%memcache_stats_start)
+      # if account_name == "agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww":
+      #     logging.error("account: %s time: %s start: %s stop: %s"%(account_name,time_bucket,head_index,tail_index))
+      #     logging.error("MEMCACHE STATS: %s"%memcache_stats_start)
+      # else:
+      #     logging.info("account: %s time: %s start: %s stop: %s"%(account_name,time_bucket,head_index,tail_index))
+      #     logging.info("MEMCACHE STATS: %s"%memcache_stats_start)
            
 
       stats_dict = {}      
@@ -145,7 +145,7 @@ class LogTaskHandler(webapp.RequestHandler):
               keys = [stats_accumulator.LOG_KEY_FORMAT%dict(account_name=account_name,account_shard=int(account_shard),time=time_bucket,log_index=i) 
                        for i in range(start,stop+1)]
 
-          logging.info("we have %d keys (start:%s stop:%s)"%(len(keys),start,stop))
+          # logging.info("we have %d keys (start:%s stop:%s)"%(len(keys),start,stop))
           
           # grab logs from memcache         
           data_dicts = memcache.get_multi(keys) 
@@ -300,11 +300,11 @@ class LogTaskHandler(webapp.RequestHandler):
               #                           body=message)
           except:
               pass                                
-          logging.error(message)
+          # logging.error(message)
           
 class StatsModelPutTaskHandler(webapp.RequestHandler):
     def get(self):
-        logging.info("ASDF: %s"%"ASdf")
+        # logging.info("ASDF: %s"%"ASdf")
         return self.post()
     
     def post(self):
@@ -324,7 +324,7 @@ class StatsModelPutTaskHandler(webapp.RequestHandler):
         #                         for pb in stats_model_protobufs]
         stats_models = [r_models.StatsModel.from_json(jstr) for jstr in stats_model_json_strings]
         try:
-            logging.info('trying to put %d models'%len(stats_models))
+            # logging.info('trying to put %d models'%len(stats_models))
             query_manager.put_stats(stats_models)
         # if the transaction is too large then we split it up and try again    
         except db.BadRequestError:
@@ -333,12 +333,12 @@ class StatsModelPutTaskHandler(webapp.RequestHandler):
 def async_put_models(account_name,stats_models,bucket_size):
     account_bucket = hash(account_name)%NUM_OVERFLOW_TASK_QUEUES
     task_queue_name = OVERFLOW_TASK_QUEUE_NAME_FORMAT%account_bucket
-    logging.info('queue: %s'%task_queue_name)
+    # logging.info('queue: %s'%task_queue_name)
     
     next_bucket_size = bucket_size/2 if bucket_size > 1 else 1
     
     # run in transaction so we atomically "put" all the data chunks
-    logging.info('splitting %d models into %d sized chunks'%(len(stats_models),bucket_size))
+    # logging.info('splitting %d models into %d sized chunks'%(len(stats_models),bucket_size))
     
     def _txn():
         for sub_stats in helpers.chunks(stats_models, bucket_size):
@@ -361,7 +361,11 @@ class FinalizeHandler(webapp.RequestHandler):
 
     def get(self):
         file_name = self.request.get('file_name')
-        files.finalize(file_name)
+        try:
+            files.finalize(file_name)
+        except (files.ExistenceError, files.FinalizationError):
+            pass # no-opp file is already finalized
+                
 
 class DownloadLogsHandler(webapp.RequestHandler):
     def post(self):

@@ -392,11 +392,18 @@ class ShowAppHandler(RequestHandler):
         level_camps = filter(lambda x:x.campaign.campaign_type == this_level, guarantee_campaigns)
         gtee_levels.append(dict(name = name, adgroups = level_camps))
 
+    marketplace_campaigns = filter(lambda x: x.campaign.campaign_type in ['marketplace'], app.adgroups)
+    marketplace_campaigns = sorted(marketplace_campaigns, lambda x,y: cmp(x.bid, y.bid))
+
     network_campaigns = filter(lambda x: x.campaign.campaign_type in ['network'], app.adgroups)
     network_campaigns = sorted(network_campaigns, lambda x,y: cmp(y.bid, x.bid))
 
     backfill_promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_promo'], app.adgroups)
     backfill_promo_campaigns = sorted(backfill_promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
+    
+    backfill_marketplace_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_marketplace'], app.adgroups)
+    backfill_marketplace_campaigns = sorted(backfill_marketplace_campaigns, lambda x,y: cmp(x.bid, y.bid))
+    
 
 
     return render_to_response(self.request,'publisher/app.html', 
@@ -412,8 +419,10 @@ class ShowAppHandler(RequestHandler):
          'helptext': help_text,
          'gtee': gtee_levels, 
          'promo': promo_campaigns,
+         'marketplace': marketplace_campaigns,
          'network': network_campaigns,
-         'backfill_promo': backfill_promo_campaigns})
+         'backfill_promo': backfill_promo_campaigns,
+         'backfill_marketplace': backfill_marketplace_campaigns})
          
 
 @login_required
@@ -562,11 +571,17 @@ class AdUnitShowHandler(RequestHandler):
         level_camps = filter(lambda x:x.campaign.campaign_type == this_level, guarantee_campaigns)
         gtee_levels.append(dict(name = name, adgroups = level_camps))
 
+    marketplace_campaigns = filter(lambda x: x.campaign.campaign_type in ['marketplace'], adunit.adgroups)
+    marketplace_campaigns = sorted(marketplace_campaigns, lambda x,y: cmp(x.bid, y.bid))
+
     network_campaigns = filter(lambda x: x.campaign.campaign_type in ['network'], adunit.adgroups)
     network_campaigns = sorted(network_campaigns, lambda x,y: cmp(y.bid, x.bid))
 
     backfill_promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_promo'], adunit.adgroups)
     backfill_promo_campaigns = sorted(backfill_promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
+    
+    backfill_marketplace_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_marketplace'], adunit.adgroups)
+    backfill_marketplace_campaigns = sorted(backfill_marketplace_campaigns, lambda x,y: cmp(x.bid, y.bid))
     
     
     today = adunit.all_stats[-1]
@@ -589,8 +604,10 @@ class AdUnitShowHandler(RequestHandler):
          'adunit_form_fragment': adunit_form_fragment,
          'gtee': gtee_levels, 
          'promo': promo_campaigns,
+         'marketplace': marketplace_campaigns,         
          'network': network_campaigns,
-         'backfill_promo': backfill_promo_campaigns})
+         'backfill_promo': backfill_promo_campaigns,
+         'backfill_marketplace': backfill_marketplace_campaigns})         
   
 @login_required
 def adunit_show(request,*args,**kwargs):

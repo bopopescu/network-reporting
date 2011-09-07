@@ -75,6 +75,7 @@
 			<th style="text-align: left;">App</th>
 			<th style="text-align: left;">Account</th>
 			<th width="100px">Requests</th>
+			<th width="75px">1d Delta</th>
 			<th width="100px">Impressions</th>
 			<th width="75px">Fill Rate</th>
 			<th width="75px">Clicks</th>
@@ -87,6 +88,7 @@
 			<td><a href="{% url admin_switch_user %}?user_email={{a.account.mpuser.email}}&amp;next={% url publisher_app_show app_key=a.publisher.key %}">{{a.publisher.name|truncate:46}}</a></td>
 			<td><a href="mailto:{{a.publisher.account.mpuser.email}}" class="account_email">{{a.publisher.account.mpuser.email}}</a></td>
 			<td class="numeric">{{a.request_count|withsep}}</td>
+			<td class="numeric">{{a.requests_delta1day|percentage}}</td>
 			<td class="numeric">{{a.impression_count|withsep}}</td>
 			<td class="numeric">{{a.fill_rate|percentage_rounded}}</td>
 			<td class="numeric">{{a.click_count|withsep}}</td>

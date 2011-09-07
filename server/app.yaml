@@ -1,6 +1,6 @@
 application: mopub-inc
 # application: mopub-experimental
-version: 38
+version: 38-risky
 
 runtime: python
 api_version: 1

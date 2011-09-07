@@ -133,7 +133,6 @@
                   <tr>
                     <th class="appData-icon"></th>
                     <th class="dataTable-name">&nbsp;</th>
-                    <th class="dataTable-data numeric">&nbsp;</th>
                     <th class="dataTable-data numeric">Requests</th>
                     <th class="dataTable-data numeric">Impressions</th>
                     <th class="dataTable-data numeric">Fillrate</th>
@@ -149,7 +148,6 @@
                   <tr>
                     <td class="appData-icon"><a href="#"><img src="{% if app.icon_url %}{{app.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" /></a></td>
                     <th class="dataTable-name">Totals</th>
-                    <td class="dataTable-data numeric">&nbsp;</td>
                     <td class="dataTable-data numeric">{{app.stats.request_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{app.stats.impression_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{app.stats.fill_rate|percentage_rounded}}</td>
@@ -294,9 +292,7 @@
             </div>
     			  </div>	
 
-
-
-
+            {% if marketplace %}
     			  <div class="appData alternating-color">	
     				<div class="appData-details noneg">
     	      <div class="appData-details-inner show">
@@ -325,7 +321,7 @@
                     </th> 
 
                     <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
+                    <td class="dataTable-data numeric">{{adgroup.stats.cpm|currency}}</td>
                     <td class="dataTable-data numeric">{{adgroup.stats.request_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{adgroup.stats.fill_rate|percentage}}</td>
@@ -338,9 +334,7 @@
     	      </div>       
             </div>
     			  </div>	
-
-
-
+            {% endif %}
 
     			  <div class="appData alternating-color">	
     				<div class="appData-details noneg">
@@ -437,9 +431,7 @@
             </div>
     		    </div>
 
-
-
-
+            {% if backfill_marketplace %}
     			  <div class="appData alternating-color">	
     				<div class="appData-details noneg">
     	      <div class="appData-details-inner show">
@@ -468,7 +460,7 @@
                     </th> 
 
                     <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
+                    <td class="dataTable-data numeric">{{adgroup.stats.cpm|currency}}</td>
                     <td class="dataTable-data numeric">{{adgroup.stats.request_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{adgroup.stats.fill_rate|percentage}}</td>
@@ -481,9 +473,7 @@
     	      </div>       
             </div>
     			  </div>	
-
-
-
+            {% endif %}
 
 
 			      {% else %}

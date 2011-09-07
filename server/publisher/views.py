@@ -215,7 +215,8 @@ class AppCreateHandler(RequestHandler):
       
     if app_form.is_valid():
       app = app_form.save(commit=False)
-      app.account = self.account # attach account info
+      if not app_form.instance: #ensure form posts do not change ownership
+        app.account = self.account # attach account info
 
 
       # Nafis: Took this away b/c this page both things need to be valid before continuing
@@ -225,7 +226,8 @@ class AppCreateHandler(RequestHandler):
       
       if adunit_form.is_valid():
         adunit = adunit_form.save(commit=False)
-        adunit.account = self.account
+        if not adunit_form.instance: #ensure form posts do not change ownership
+          adunit.account = self.account
 
         # update the database
         AppQueryManager.put(app)
@@ -256,7 +258,8 @@ class CreateAdUnitHandler(RequestHandler):
     a = AppQueryManager.get(self.request.POST.get('id'))
     if f.is_valid():
       adunit = f.save(commit=False)
-      adunit.account = self.account
+      if not f.instance: #ensure form posts do not change ownership
+        adunit.account = self.account
       adunit.app_key = a
       
       # update the database
@@ -623,7 +626,8 @@ class AppUpdateAJAXHandler(RequestHandler):
 
     if app_form.is_valid():
       app = app_form.save(commit=False)
-      app.account = self.account
+      if not app_form.instance: #ensure form posts do not change ownership
+        app.account = self.account
       AppQueryManager.put(app)
       
       json_dict.update(success=True)
@@ -665,7 +669,8 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
 
     if adunit_form.is_valid():
       adunit = adunit_form.save(commit=False)
-      adunit.account = self.account
+      if not adunit_form.instance: #ensure form posts do not change ownership
+        adunit.account = self.account
       AdUnitQueryManager.put(adunit)
       
       json_dict.update(success=True)

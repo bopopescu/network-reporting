@@ -189,6 +189,7 @@
     						<thead>
     						  <tr>
     						    <th class="dataTable-name big">Guaranteed</th>
+    						    <th class="dataTable-data numeric special">&nbsp;</th>		
     						    <th class="dataTable-data numeric special">CPM</th>
     		            <th class="dataTable-data numeric special">Revenue</th>
     		            <th class="dataTable-data numeric special">Impressions</th>
@@ -222,6 +223,7 @@
                       </span>
                     </th> 
 
+                    <td class="dataTable-data numeric">&nbsp;</td>                    
                     <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
                     <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>
       	            <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
@@ -244,7 +246,8 @@
     						<thead>
     						  <tr>
     						    <th class="dataTable-name big">Promotional</th>
-    						    <th class="dataTable-data numeric special">&nbsp;</th>		
+    						    <th class="dataTable-data numeric special">&nbsp;</th>
+    						    <th class="dataTable-data numeric special">&nbsp;</th>				
     						    <th class="dataTable-data numeric special">CPM</th>				    
     			          <th class="dataTable-data numeric special">Impressions</th>
     			          <th class="dataTable-data numeric special">Clicks</th>
@@ -274,7 +277,8 @@
                       </span>
                     </th> 
 
-                    <td class="dataTable-data numeric">&nbsp;</td>     
+                    <td class="dataTable-data numeric">&nbsp;</td>
+                    <td class="dataTable-data numeric">&nbsp;</td>
                     <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>                                             
                     <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{adgroup.stats.click_count|withsep}}</td>
@@ -288,6 +292,50 @@
             </div>
     			  </div>	
 
+            {% if marketplace %}
+    			  <div class="appData alternating-color">	
+    				<div class="appData-details noneg">
+    	      <div class="appData-details-inner show">
+    	        <table class="dataTable appData-main">
+    						<thead>
+    						  <tr>
+    						    <th class="dataTable-name big">Marketplace</th>
+    					      <th class="dataTable-data numeric special">Revenue</th>		
+    					      <th class="dataTable-data numeric special">ECPM</th>		
+    		            <th class="dataTable-data numeric special">Attempts</th>
+    		            <th class="dataTable-data numeric special">Impressions</th>
+    		            <th class="dataTable-data numeric special">Fillrate</th>		          
+    		            <th class="dataTable-data numeric special">Clicks</th>
+    		            <th class="dataTable-data numeric special">CTR</th>
+    				      </tr>
+    			      </thead>
+    			      <tbody>
+                  {% for adgroup in marketplace %}
+                  <tr>
+                    <th class="campaignData-icon dataTable-name">
+                      {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9 />{% endif %}
+                      {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
+                      {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
+                      <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a>
+                      <span class="muted">MoPub Marketplace Beta</span>
+                    </th> 
+
+                    <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>
+                    <td class="dataTable-data numeric">{{adgroup.stats.cpm|currency}}</td>
+                    <td class="dataTable-data numeric">{{adgroup.stats.request_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{adgroup.stats.fill_rate|percentage}}</td>
+                    <td class="dataTable-data numeric">{{adgroup.stats.click_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{adgroup.stats.ctr|percentage}}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>			      
+              </table>
+    	      </div>       
+            </div>
+    			  </div>	
+            {% endif %}
+
     			  <div class="appData alternating-color">	
     				<div class="appData-details noneg">
     	      <div class="appData-details-inner show">
@@ -295,6 +343,7 @@
     						<thead>
     						  <tr>
     						    <th class="dataTable-name big">Network</th>
+    						    <th class="dataTable-data numeric special">&nbsp;</th>    						    
     					      <th class="dataTable-data numeric special">ECPM</th>		
     		            <th class="dataTable-data numeric special">Attempts</th>
     		            <th class="dataTable-data numeric special">Impressions</th>
@@ -314,6 +363,7 @@
                       <span class="muted">{{adgroup.network_type}}</span>
                     </th> 
 
+                    <td class="dataTable-data numeric">&nbsp;</td>
                     <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
                     <td class="dataTable-data numeric">{{adgroup.stats.request_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
@@ -335,7 +385,8 @@
       				  <thead>
       					  <tr>
     						    <th class="dataTable-name big">Backfill Promotional</th>
-        						<th class="dataTable-data numeric special">&nbsp;</th>		
+        						<th class="dataTable-data numeric special">&nbsp;</th>
+        						<th class="dataTable-data numeric special">&nbsp;</th>
         						<th class="dataTable-data numeric special">CPM</th>				    
         			      <th class="dataTable-data numeric special">Impressions</th>
         			      <th class="dataTable-data numeric special">Clicks</th>
@@ -365,7 +416,8 @@
                       </span>
                     </th> 
 
-                    <td class="dataTable-data numeric">&nbsp;</td>     
+                    <td class="dataTable-data numeric">&nbsp;</td>
+                    <td class="dataTable-data numeric">&nbsp;</td>
                     <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>                                             
                     <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{adgroup.stats.click_count|withsep}}</td>
@@ -378,6 +430,51 @@
             </div>       
             </div>
     		    </div>
+
+            {% if backfill_marketplace %}
+    			  <div class="appData alternating-color">	
+    				<div class="appData-details noneg">
+    	      <div class="appData-details-inner show">
+    	        <table class="dataTable appData-main">
+    						<thead>
+    						  <tr>
+    						    <th class="dataTable-name big">Backfill Marketplace</th>
+    					      <th class="dataTable-data numeric special">Revenue</th>		
+    					      <th class="dataTable-data numeric special">ECPM</th>		
+    		            <th class="dataTable-data numeric special">Attempts</th>
+    		            <th class="dataTable-data numeric special">Impressions</th>
+    		            <th class="dataTable-data numeric special">Fillrate</th>		          
+    		            <th class="dataTable-data numeric special">Clicks</th>
+    		            <th class="dataTable-data numeric special">CTR</th>
+    				      </tr>
+    			      </thead>
+    			      <tbody>
+                  {% for adgroup in backfill_marketplace %}
+                  <tr>
+                    <th class="campaignData-icon dataTable-name">
+                      {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9 />{% endif %}
+                      {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
+                      {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
+                      <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a>
+                      <span class="muted">MoPub Marketplace Beta</span>
+                    </th> 
+
+                    <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>
+                    <td class="dataTable-data numeric">{{adgroup.stats.cpm|currency}}</td>
+                    <td class="dataTable-data numeric">{{adgroup.stats.request_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{adgroup.stats.fill_rate|percentage}}</td>
+                    <td class="dataTable-data numeric">{{adgroup.stats.click_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{adgroup.stats.ctr|percentage}}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>			      
+              </table>
+    	      </div>       
+            </div>
+    			  </div>	
+            {% endif %}
+
 
 			      {% else %}
 			      <div class="appData alternating-color">	

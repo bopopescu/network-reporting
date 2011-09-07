@@ -154,9 +154,12 @@ class PaymentInfoChangeHandler(RequestHandler):
     def post(self, *args, **kwargs):
         form = PaymentInfoForm(self.request.POST, instance=self.account.payment_infos.get())
         if form.is_valid():
-            payment_info = form.save(commit=False)
             if not form.instance:
-                payment_info.account = self.account
+                account = self.account
+            else:
+                account = form.instance.account
+            payment_info = form.save(commit=False)
+            payment_info.account = account
             payment_info.put()
             return redirect('account_index')
         return self.get(payment_form=form)

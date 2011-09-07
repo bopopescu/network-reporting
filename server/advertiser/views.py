@@ -398,18 +398,27 @@ class CreateCampaignAJAXHander(RequestHandler):
         json_dict = {'success':False,'html':None}
 
         if campaign_form.is_valid():
-            campaign = campaign_form.save(commit=False)
             if not campaign_form.instance: #ensure form posts do not change ownership
-                campaign.account = self.account
+                account = self.account
+            else:
+                account = campaign_form.instance.account
+            campaign = campaign_form.save(commit=False)
+            campaign.account = account
             
             if campaign.campaign_type in ["marketplace", "backfill_marketplace"]:
                 self.account.network_config.price_floor = float(campaign_form.cleaned_data['price_floor'])
                 AccountQueryManager.update_config_and_put(self.account, self.account.network_config)
 
             if adgroup_form.is_valid():
-                adgroup = adgroup_form.save(commit=False)
                 if not adgroup_form.instance: #ensure form posts do not change ownership
-                    adgroup.account = self.account
+                    account = self.account
+                    has_adgroup_instance = False
+                else:
+                    account = adgroup_form.instance.account
+                    has_adgroup_instance = True
+                adgroup = adgroup_form.save(commit=False)
+                adgroup.account = account
+
 
                 # TODO: clean this up in case the campaign succeeds and the adgroup fails
                 CampaignQueryManager.put(campaign)
@@ -432,7 +441,7 @@ class CreateCampaignAJAXHander(RequestHandler):
              #update, if no, delete old and create new
                 if campaign.campaign_type in ['marketplace', 'backfill_marketplace']:
                     creative = adgroup.default_creative()
-                    if not adgroup_form.instance: #ensure form posts do not change ownership
+                    if not has_adgroup_instance: #ensure form posts do not change ownership
                         creative.account = self.account
                     CreativeQueryManager.put(creative)
 
@@ -461,7 +470,7 @@ class CreateCampaignAJAXHander(RequestHandler):
                         CreativeQueryManager.delete(adgroup.net_creative)
                         
                     #creative should now reference the appropriate creative (new if different, old if the same, updated old if same and custom)
-                    if not adgroup_form.instance: #ensure form posts do not change ownership
+                    if not has_adgroup_instance: #ensure form posts do not change ownership
                         creative.account = self.account
                     #put the creative so we can reference it
                     CreativeQueryManager.put(creative)
@@ -567,10 +576,12 @@ class CreateAdGroupHandler(RequestHandler):
         all_adunits = AdUnitQueryManager.get_adunits(account=self.account)
 
         if campaign_form.is_valid():
-            campaign = campaign_form.save(commit=False)
             if not campaign_form.instance: #ensure form posts do not change ownership
-                campaign.account = self.account
-
+                account = self.account
+            else:
+                account = campaign_form.instance.account
+            campaign = campaign_form.save(commit=False)
+            campaign.account = account
             if adgroup_form.is_valid():
                 adgroup = adgroup_form.save(commit=False)
                 # TODO: clean this up in case the campaign succeeds and the adgroup fails
@@ -905,10 +916,13 @@ class AddCreativeHandler(RequestHandler):
                 creative_form = html_creative_form
 
             if creative_form.is_valid():
-                creative = creative_form.save(commit=False)
-                creative.ad_group = ad_group
                 if not creative_form.instance: #ensure form posts do not change ownership
-                    creative.account = self.account
+                    account = self.account
+                else:
+                    account = creative_form.instance.account
+                creative = creative_form.save(commit=False)
+                creative.account = account
+                creative.ad_group = ad_group
                 CreativeQueryManager.put(creative)
 
                 jsonDict.update(success=True)

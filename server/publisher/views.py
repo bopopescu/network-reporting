@@ -232,7 +232,6 @@ class AppCreateHandler(RequestHandler):
           account = adunit_form.instance.account
         adunit = adunit_form.save(commit=False)
         adunit.account = account
-        logging.info("ad unit instance is: %s" % adunit_form.instance)
 
         # update the database
         AppQueryManager.put(app)
@@ -632,7 +631,6 @@ class AppUpdateAJAXHandler(RequestHandler):
 
     json_dict = {'success':False,'html':None}
 
-    logging.info("app form valid: %s" % app_form.is_valid())
     if app_form.is_valid():
       if not app_form.instance: #ensure form posts do not change ownership
         account = self.account

@@ -75,8 +75,9 @@ class Battle(object):
          
                        
         filtered_adgroups = filter(mega_filter(*adgroup_filters), adgroups)
-        for (func, warn, removed_adgroup_list) in adgroup_filters:
-            trace_logging.info(warn % ", ".join([a.name.encode('utf8') for a in removed_adgroup_list])) 
+        for (func, warn, removed_adgroup_list) in adgroup_filters: 
+            if removed_adgroup_list:
+                trace_logging.info(warn % ", ".join([a.name.encode('utf8') for a in removed_adgroup_list])) 
         return filtered_adgroups   
         
         
@@ -103,25 +104,43 @@ class Battle(object):
        
     def run(self):                             
         """ Runs the sub-auction"""
-        adgroups = self._get_adgroups_for_level()   
-    
-        trace_logging.info(self.__class__.starting_message)           
-
+        adgroups = self._get_adgroups_for_level()     
+           
+        trace_logging.info("=================================")
+        trace_logging.info(self.__class__.starting_message) 
+        
+        if not adgroups:  
+            trace_logging.info(u"No adgroups for this level.")
+            return
+        
         trace_logging.info(u"Available adgroups are: %s" % ", ".join(["%s" % a.name for a in adgroups]))    
-         
-        filtered_adgroups = self._filter_adgroups(adgroups)
+        trace_logging.info(u"Running adgroup filters...") 
+        filtered_adgroups = self._filter_adgroups(adgroups) 
+        
+        if not filtered_adgroups:  
+            trace_logging.info(u"No adgroups for this level passed filters.")
+            return   
         
         trace_logging.info(u"Filtered adgroups are: %s" % ", ".join(["%s" % a.name for a in filtered_adgroups]))
     
         # TODO: Add in frequency capping.
-    
-        creatives = self.adunit_context.get_creatives_for_adgroups(filtered_adgroups)   
-    
-        filtered_creatives = self._filter_creatives(creatives)
         
+    
+        creatives = self.adunit_context.get_creatives_for_adgroups(filtered_adgroups) 
+        trace_logging.info("---------------------------------")  
+        trace_logging.info(u"Creatives from filtered adgroups are: %s" % ", ".join(["%s" % a.name for a in creatives]))  
+        trace_logging.info(u"Running creative filters...")
+        filtered_creatives = self._filter_creatives(creatives)
+        if not filtered_creatives: 
+            trace_logging.info(u"No creatives for this level passed filters.")
+            return
+            
+            
+            
         # Sorted creatives are in order of descending value
         sorted_creatives = self._sort_creatives(filtered_creatives)
-    
+        trace_logging.info("---------------------------------") 
+        trace_logging.info(u"Filtered creatives are: %s" % ", ".join(["%s" % a.name for a in sorted_creatives]))
         for creative in sorted_creatives:   
             
             processed_creative = self._process_winner(creative)
@@ -249,7 +268,7 @@ class NetworkBattle(Battle):
                 
                 
 class BackfillPromoBattle(PromoBattle):   
-    starting_message = "Beginning promotional campaigns..."         
+    starting_message = "Beginning backfill promotional campaigns..."         
     campaign_type = "backfill_promo"
                    
                             

@@ -120,6 +120,10 @@ class AdHandler(webapp.RequestHandler):
         trace_logging.start(log_to_console=log_to_console)
         trace_logging.response = self.response
         
+        trace_logging.info("Requesting URL:")   
+        trace_logging.info(str(self.request.url))  
+         
+        
         adunit_id = self.request.get("id")
         experimental = self.request.get("exp")
         now = datetime.datetime.now()

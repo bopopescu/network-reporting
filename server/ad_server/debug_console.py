@@ -34,8 +34,7 @@ class DebugConsole(object):
         
     def log(self, logline, logging_type=logging.info):
         "prepend time"
-        logline = "%s - %s" % (datetime.datetime.now(),
-                               logline)
+        # logline = "%s - %s" % (datetime.datetime.now(), logline)
         # log to the console just as before if set to
         if self.log_to_console:
             logging_type(logline)

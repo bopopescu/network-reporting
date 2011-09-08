@@ -425,7 +425,7 @@ class AdHandler(webapp.RequestHandler):
                 # add the launchpage header for inmobi in case they have dynamic ads that use
                 # window.location = 'http://some.thing/asdf'
                 if creative.adgroup.network_type == "inmobi":
-                    self.response.headers.add_header("X-Launchpage","http://c.w.mkhoj.com")
+                    self.response.headers.add_header("X-Launchpage","http://c.w.inmobi.com")
 
                 
             elif creative.ad_type == "html_full":

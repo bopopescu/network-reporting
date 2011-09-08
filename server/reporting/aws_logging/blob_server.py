@@ -32,10 +32,10 @@ from google.appengine.api import taskqueue
 from google.appengine.api import logservice
 
 from reporting.aws_logging.stats_updater import parse_line as stats_updater_parse_line
-from reporting.aws_logging.stats_updater import put_models as stats_updater_put_models
+from reporting.aws_logging.stats_updater import single_thread_put_models as stats_updater_put_models
 
-from reporting.aws_logging.uniq_user_stats_updater import parse_Line as uniq_user_stats_updater_parse_line
-from reporting.aws_logging.uniq_user_stats_updater import update_models uniq_user_stats_updater_update_models
+from reporting.aws_logging.uniq_user_stats_updater import parse_line as uniq_user_stats_updater_parse_line
+from reporting.aws_logging.uniq_user_stats_updater import single_thread_update_models as uniq_user_stats_updater_update_models
 
 
 URL_HANDLER_PATH = '/offline/get_upload_url'

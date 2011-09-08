@@ -31,8 +31,11 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.api import taskqueue
 from google.appengine.api import logservice
 
-from reporting.aws_logging import stats_updater 
-from reporting.aws_logging import uniq_user_stats_updater
+from reporting.aws_logging.stats_updater import parse_line as stats_updater_parse_line
+from reporting.aws_logging.stats_updater import put_models as stats_updater_put_models
+
+from reporting.aws_logging.uniq_user_stats_updater import parse_Line as uniq_user_stats_updater_parse_line
+from reporting.aws_logging.uniq_user_stats_updater import update_models uniq_user_stats_updater_update_models
 
 
 URL_HANDLER_PATH = '/offline/get_upload_url'
@@ -75,15 +78,15 @@ class StatsWorker(webapp.RequestHandler):
         
         if blob_type == 'log_counts':
             for line in blob_reader:
-                stats_updater.parse_line(line)
-            stats_updater.put_models()
+                stats_updater_parse_line(line)
+            stats_updater_put_models()
             
             logging.error('log counts updates done')    
             logservice.flush()
         elif blob_type == 'uniq_user':
             for line in blob_reader:
-                uniq_user_stats_updater.parse_line(line)
-            uniq_user_stats_updater.update_models()       
+                uniq_user_stats_updater_parse_line(line)
+            uniq_user_stats_updater_update_models()       
             
             logging.error('uniq user updates done') 
             logservice.flush()

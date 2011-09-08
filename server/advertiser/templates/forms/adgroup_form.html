@@ -56,9 +56,9 @@
 
         {% for adunit in all_adunits %}
           {% ifchanged adunit.app.name %}
-            $("#site_keys-{{adunit.app.key}}").change(function() {
+            $("#select-all").change(function() {
                 var should_select_all = $(this).is(":checked");
-                $(".app-{{adunit.app.key}}").each(function() {
+                $(".adunit-select").each(function() {
                     if (should_select_all) {
                         $(this).attr('checked', 'checked');
                     } else {
@@ -95,7 +95,16 @@
 
     });
 </script>
+
                     <dl class="formFields">
+                      <dt></dt>
+                      <dd>
+                        <div style="padding-left: 65px;">
+                          <input type="checkbox" value="select_all" id="select-all"/>
+                          <label for="select-all"> <h4 style="display:inline; padding:0;">Select All</h4> </label>
+                        </div>
+                      </dd>
+
                       <dt>Ad Units:</dt>
                       <dd>
                         {% for adunit in all_adunits %}
@@ -251,15 +260,11 @@
 
                               </div>
 
-                              <input type="checkbox" value="select_all" id="site_keys-{{adunit.app.key}}"/>
-                              <label for="site_keys-{{adunit.app.key}}"> Select All </label>
-
-
                               <ul style="overflow:auto; max-height:200px; list-style: none;padding:5px 10px" class="{% if form.site_keys.errors %}form-error{% endif %}">
 
                             {% endifchanged %}
                             <li>
-                              <input type="checkbox" name="site_keys" value="{{adunit.key}}" id="site_keys-{{adunit.key}}" class="app-{{adunit.app.key}}"{% if adunit.checked %} checked="checked"{% endif %}/>
+                              <input type="checkbox" name="site_keys" value="{{adunit.key}}" id="site_keys-{{adunit.key}}" class="adunit-select"{% if adunit.checked %} checked="checked"{% endif %}/>
                               <label for="site_keys-{{adunit.key}}">{{adunit.name}}</label>
                             </li>
 

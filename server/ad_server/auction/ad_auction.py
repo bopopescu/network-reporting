@@ -174,8 +174,7 @@ class AdAuction(object):
                         active_filter(), 
                         lat_lon_filter(ll),
                         kw_filter(keywords), 
-                        geo_filter(geo_predicates), 
-                        device_filter(device_predicates),
+                        geo_filter(geo_predicates),           
                         os_filter(user_agent),
                         budget_filter(),
                        ) 

@@ -14,6 +14,7 @@ from google.appengine.api import urlfetch
 # This is a db.Model in case you wanted to store it in the datastore,
 # but we currently do not do this (for scale and reliability).
 #
+
 class Request(db.Model):
     host = db.StringProperty()
     url = db.StringProperty()
@@ -44,4 +45,7 @@ class Request(db.Model):
             self.success = False
             self.status_message = "Failed"
 
-            
+class AdTest(db.Model):
+	ad_app = db.StringProperty()
+	ad_name = db.StringProperty()
+	ad_id = db.StringProperty(required=True)        

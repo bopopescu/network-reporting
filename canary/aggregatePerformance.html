@@ -7,7 +7,7 @@
       pointStart: Date.UTC({{start.year}},{{start.month|add:"-1"}},{{start.day}},{{start.hour}},{{start.minute}}),
       pointInterval: 60000,
       'series': [
-        { 'Average': [{% for d, ms in averages reversed %}{{ms}}{% if not forloop.last %},{% endif %} {% endfor %}] }
+        { 'Average': [{% for ms in averages reversed %}{{ms}}{% if not forloop.last %},{% endif %} {% endfor %}] }
       ]
     };
  </script>

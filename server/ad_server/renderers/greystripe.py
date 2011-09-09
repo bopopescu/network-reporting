@@ -1,8 +1,8 @@
 from string import Template   
 import random                 
-from ad_server.renderers.base_html_renderer import BaseHtmlRenderer
+from ad_server.renderers.html_data_renderer import HtmlDataRenderer
 
-class GreyStripeRenderer(BaseHtmlRenderer):
+class GreyStripeRenderer(HtmlDataRenderer):
     """ For now, just do the standard """
     @classmethod
     def network_specific_rendering(cls, header_context, 
@@ -14,7 +14,6 @@ class GreyStripeRenderer(BaseHtmlRenderer):
                                    fail_url=None,
                                    track_url=None,
                                    **kwargs):   
-        context.update({"html_data": creative.html_data, "w": format_tuple[0], "h": format_tuple[1]})
         header_context.add_header("X-Launchpage","http://adsx.greystripe.com/openx/www/delivery/ck.php")
         super(GreyStripeRenderer, cls).network_specific_rendering(header_context, 
                                                                   creative=creative,  

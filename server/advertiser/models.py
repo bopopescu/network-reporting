@@ -21,6 +21,7 @@ from ad_server.renderers.millennial import MillennialRenderer
 from ad_server.renderers.custom_native import CustomNativeRenderer
 from ad_server.renderers.pure_html import PureHTMLRenderer   
 from ad_server.renderers.base_html_renderer import BaseHtmlRenderer
+from ad_server.renderers.html_data_renderer import HtmlDataRenderer
 from ad_server.renderers.brightroll import BrightRollRenderer
 from ad_server.renderers.inmobi import InmobiRenderer
 from ad_server.renderers.greystripe import GreyStripeRenderer
@@ -30,6 +31,7 @@ from ad_server.renderers.ejam import EjamRenderer
 from ad_server.renderers.jumptap import JumptapRenderer
 from ad_server.renderers.text import TextRenderer
 from ad_server.renderers.iad import iAdRenderer
+from ad_server.renderers.mobfox import MobFoxRenderer
 
 
 from ad_server.networks.appnexus import AppNexusServerSide
@@ -548,7 +550,7 @@ class MarketplaceCreative(HtmlCreative):
 class CustomCreative(HtmlCreative):    
     # TODO: For now this is redundant with HtmlCreative
     # If we don't want to add any properties to it, remove it
-    pass
+    Renderer = HtmlDataRenderer
 
 class CustomNativeCreative(HtmlCreative):
     Renderer = CustomNativeRenderer
@@ -667,6 +669,7 @@ class GreyStripeCreative(Creative):
         return ('320x320', '320x50', '300x250',)
     
 class MobFoxCreative(Creative):
+    Renderer = MobFoxRenderer
     
     ServerSide = MobFoxServerSide
   

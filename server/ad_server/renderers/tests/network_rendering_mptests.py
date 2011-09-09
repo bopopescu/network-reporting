@@ -262,7 +262,8 @@ network_names = ("adsense",
                  "custom",
                  "admob_native",
                  "millennial_native",
-                 "iAd"
+                 "iAd",
+                 "mobfox"
                  )    
 
 

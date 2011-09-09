@@ -27,7 +27,7 @@ class AdMobNativeRenderer(BaseNativeRenderer):
                 "adWidth":adunit.get_width(),
                 "adHeight":adunit.get_height()
                 }
-            header_context.add_header("X-Nativecontext", simplejson.dumps(nativecontext_dict))
+            header_context.add_header("X-Nativeparams", simplejson.dumps(nativecontext_dict))
         super(AdMobNativeRenderer, cls).network_specific_rendering(header_context, 
                                                                    creative=creative,  
                                                                    format_tuple=format_tuple,

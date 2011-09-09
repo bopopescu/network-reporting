@@ -1,8 +1,8 @@
 from string import Template   
 import random                 
-from ad_server.renderers.base_html_renderer import BaseHtmlRenderer
+from ad_server.renderers.html_data_renderer import HtmlDataRenderer
 
-class InmobiRenderer(BaseHtmlRenderer):
+class InmobiRenderer(HtmlDataRenderer):
     """ For now, just do the standard """
     @classmethod
     def network_specific_rendering(cls, header_context, 
@@ -14,6 +14,7 @@ class InmobiRenderer(BaseHtmlRenderer):
                                    fail_url=None,
                                    track_url=None,
                                    network_center=None,
+                                   success=None,
                                    **kwargs):   
         
         
@@ -30,6 +31,7 @@ class InmobiRenderer(BaseHtmlRenderer):
                                                               adunit=adunit,
                                                               track_url=track_url,
                                                               network_center=network_center,
+                                                              success=success,
                                                               **kwargs)
                     
     

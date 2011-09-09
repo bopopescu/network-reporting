@@ -97,15 +97,17 @@
 </script>
 
                     <dl class="formFields">
-                      <dt></dt>
-                      <dd>
-                        <div style="padding-left: 65px;">
-                          <input type="checkbox" value="select_all" id="select-all"/>
-                          <label for="select-all"> <h4 style="display:inline; padding:0;">Select All Ad Units</h4> </label>
-                        </div>
-                      </dd>
 
-                      <dt>Ad Units:</dt>
+
+
+
+
+
+                      <dt>
+                        Ad Units: <br />
+                        (<input type="checkbox" value="select_all" id="select-all"/>
+                        <label for="select-all">All</label>)
+                      </dt>
                       <dd>
                         {% for adunit in all_adunits %}
                           {% ifchanged adunit.app.name %}

@@ -17,6 +17,10 @@ class JumptapServerSide(ServerSide):
    
     @property
     def payload(self):
+        return None
+
+    @property
+    def key_values(self):
         key_values = {#'gateway-ip': '208.54.5.50',    # TODO: This should be the x-forwarded-for header of the device
                       'hid': self.client_context.mopub_id,
                       'client-ip': self.client_context.client_ip, # Test value: 'client-ip': '208.54.5.50'
@@ -40,7 +44,11 @@ class JumptapServerSide(ServerSide):
         spot_id = self.adunit.network_config.jumptap_pub_id if self.adunit.network_config else None
         if spot_id:
             key_values['spot'] = spot_id
-        return urllib.urlencode(key_values)
+        return key_values
+    
+    @property
+    def url(self):
+        return self.base_url + '?' + urllib.urlencode(self.key_values)
     
     @property 
     def headers(self):
@@ -66,5 +74,5 @@ class JumptapServerSide(ServerSide):
             trace_logging.info("Jumptap ad is empty")
             raise ServerSideException("Jumptap ad is empty")
        
-        width, height = self._get_size(response.content)
-        return "<div style='text-align:center'>"+response.content+"</div>", width, height
+        self.creative_width, self.creative_height = self._get_size(response.content)
+        return "<div style='text-align:center'>"+response.content+"</div>"

@@ -87,12 +87,12 @@ class TestNetworkConfig(unittest.TestCase):
                                 admob_pub_id="account-admob",
                                 brightroll_pub_id="account-brightroll",
                                 millennial_pub_id="account-millennial",
-                                jumptap_pub_id="account-jumptap")
+                                jumptap_pub_id="pa_com2us_usa_inc_")
         self.account_network_config.put()
         
         self.app_network_config = NetworkConfig(
-                                jumptap_pub_id="app-jumptap",
-                                millennial_pub_id="app-millennial")
+            jumptap_pub_id="pa_com2us_usa_inc__op_3d_lab_i_tes_iph_app",
+            millennial_pub_id="app-millennial")
                                 
         self.app_network_config.put()
 
@@ -123,19 +123,19 @@ class TestNetworkConfig(unittest.TestCase):
         ############### ServerSide Tests ###############
   
     
-    def mptest_millennial(self):
-        """ Make sure we go to lowest available level. Here app level """
-        server_side = MillennialServerSide(self.client_context, self.adunit) 
-        pub_id = server_side.get_pub_id()
+#     def mptest_millennial(self):
+#         """ Make sure we go to lowest available level. Here app level """
+#         server_side = MillennialServerSide(self.client_context, self.adunit) 
+#         pub_id = server_side.get_pub_id()
         
-        eq_(pub_id, "app-millennial")
+#         eq_(pub_id, "app-millennial")
         
-    def mptest_brightroll(self):
-        """ Make sure we go to lowest available level. Here account level """
-        server_side = BrightRollServerSide(self.client_context, self.adunit) 
-        pub_id = server_side.get_pub_id()
+#     def mptest_brightroll(self):
+#         """ Make sure we go to lowest available level. Here account level """
+#         server_side = BrightRollServerSide(self.client_context, self.adunit) 
+#         pub_id = server_side.get_pub_id()
     
-        eq_(pub_id, "account-brightroll")
+#         eq_(pub_id, "account-brightroll")
     
 #     def mptest_jumptap(self):
 #         """ Jumptap requires multiple pub ids"""
@@ -176,20 +176,47 @@ class NetworkUnitTests(unittest.TestCase):
         self.testbed.init_memcache_stub()
 
         # Set up default models
-        self.account = Account()
+
+
+        self.account_network_config = NetworkConfig(   
+                                admob_pub_id="account-admob",
+                                brightroll_pub_id="account-brightroll",
+                                millennial_pub_id="account-millennial",
+                                jumptap_pub_id="pa_com2us_usa_inc_")
+        self.account_network_config.put()
+        
+        self.app_network_config = NetworkConfig(
+            jumptap_pub_id="pa_com2us_usa_inc__op_3d_lab_i_tes_iph_app",
+            millennial_pub_id="app-millennial")
+                                
+        self.app_network_config.put()
+
+
+
+        self.account = Account(network_config=self.account_network_config)
         self.account.put()
 
-        self.app = App(account=self.account, name="Test App")
+
+
+        self.app = App(account=self.account, name="Test App", network_config=self.app_network_config)
         self.app.put()
+
+
+
 
         self.network_config = NetworkConfig(
             ejam_pub_id = '23710',
             inmobi_pub_id='4028cba630724cd90130c2adc9b6024f',
-            jumptap_pub_id='DUMMY_PUB_ID',
+#            jumptap_pub_id='pa_com2us_usa_inc__op_3d_lab_i_tes_iph_app',
             millennial_pub_id='53344',
             mobfox_pub_id='147e13e17341db4f25afe08ac0144193',
             )
         self.network_config.put()
+
+
+
+
+
 
         self.adunit = AdUnit(account=self.account, app_key=self.app, name="Test AdUnit", network_config=self.network_config, format="full")
         self.adunit.put()
@@ -236,7 +263,9 @@ class NetworkUnitTests(unittest.TestCase):
                                             raw_udid="fake_udid",   
                                             request_id="fake_request_id",
                                             now=datetime.datetime.now(),
-                                            user_agent='FakeAndroidOS')
+                                            user_agent="Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_0_2 like Mac OS X; en-us) AppleWebKit/532.9 (KHTML, like Gecko) Version/4.0.5 Mobile/8A400 Safari/6531.22.7",
+                                            mopub_id='467A52DB6F573AC18431045FB136B22E',
+                                            client_ip='204.28.127.10')
         server_side = JumptapServerSide(self.client_context, self.adunit)
         self._check_bid_and_response(server_side)
 

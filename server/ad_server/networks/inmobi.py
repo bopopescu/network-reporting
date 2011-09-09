@@ -106,11 +106,11 @@ class InMobiServerSide(ServerSide):
         if re.match("^<!--.*--\>$", response.content) == None and len(response.content) != 0:
             # TODO: do any sort of manipulation here that we want, like resizing the image, LAME
             self.parse_xml(response.content)
-            width, height = self.adunit.get_width(),self.adunit.get_height()
+            self.creative_width, self.creative_height = self.adunit.get_width(),self.adunit.get_height()
             if 'image_url' in self.url_params:
-                return banner_template.safe_substitute(self.url_params), width, height
+                return banner_template.safe_substitute(self.url_params)
             elif 'link_text' in self.url_params:
-                return text_template.safe_substitute(self.url_params), width, height
+                return text_template.safe_substitute(self.url_params)
         trace_logging.info("InMobi failed to return ad")
         raise ServerSideException("InMobi ad is empty")
 

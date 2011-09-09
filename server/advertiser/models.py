@@ -35,6 +35,7 @@ from ad_server.renderers.mobfox import MobFoxRenderer
 
 
 from ad_server.networks.appnexus import AppNexusServerSide
+from ad_server.networks.jumptap import JumptapServerSide
 from ad_server.networks.brightroll import BrightRollServerSide
 from ad_server.networks.chartboost import ChartBoostServerSide
 from ad_server.networks.ejam import EjamServerSide
@@ -597,8 +598,6 @@ class MillennialNativeCreative(MillennialCreative):
                  
     Renderer = MillennialNativeRenderer  
         
-    ServerSide = MillennialServerSide
-
     @property
     def multi_format(self):
         return ('728x90', '320x50', '300x250', 'full' ,)
@@ -651,7 +650,7 @@ class JumptapCreative(Creative):
 
     Renderer = JumptapRenderer  
         
-    ServerSide = AppNexusServerSide
+    ServerSide = JumptapServerSide
     
     @property
     def multi_format(self):

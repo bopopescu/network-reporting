@@ -19,6 +19,8 @@ class ServerSide(object):
         self.client_context = client_context
         self.adunit = adunit    
         self.rpc = urlfetch.create_rpc(self.SERVER_TIMEOUT)
+        self.creative_width = None
+        self.creative_height = None
 
     @property
     def headers(self): 
@@ -40,7 +42,7 @@ class ServerSide(object):
         except urlfetch.Error:
             raise ServerSideException("Deadline exceeded for ad_network")
             
-        return self.html_for_response(response)    
+        return self.html_for_response(response)
             
          
     

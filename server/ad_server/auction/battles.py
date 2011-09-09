@@ -291,6 +291,10 @@ class NetworkBattle(Battle):
             try:
                 # Right now we make the call, and synchronously get the reponse
                 creative.html_data = server_side.make_call_and_get_html_from_response()
+                if server_side.creative_width:
+                    creative.width = server_side.creative_width
+                if server_side.creative_height:
+                    creative.height = server_side.creative_height
                 return super(NetworkBattle, self)._process_winner(creative)
             except ServerSideException:
                 return False

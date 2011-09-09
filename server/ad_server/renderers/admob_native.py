@@ -22,12 +22,12 @@ class AdMobNativeRenderer(BaseNativeRenderer):
             header_context.add_header("X-Adtype", str(creative.ad_type))
             header_context.add_header("X-Backfill", str(creative.ad_type))
             header_context.add_header("X-Failurl", fail_url)
-            nativecontext_dict = {
-                "adUnitID":adunit.get_pub_id("admob_pub_id"),
-                "adWidth":adunit.get_width(),
-                "adHeight":adunit.get_height()
-                }
-            header_context.add_header("X-Nativeparams", simplejson.dumps(nativecontext_dict))
+        nativecontext_dict = {
+            "adUnitID":adunit.get_pub_id("admob_pub_id"),
+            "adWidth":adunit.get_width(),
+            "adHeight":adunit.get_height()
+            }
+        header_context.add_header("X-Nativeparams", simplejson.dumps(nativecontext_dict))
         super(AdMobNativeRenderer, cls).network_specific_rendering(header_context, 
                                                                    creative=creative,  
                                                                    format_tuple=format_tuple,

@@ -19,6 +19,7 @@ class AdMobRenderer(BaseHtmlRenderer):
         "bgcolor": str(adunit.app_key.admob_bgcolor or '000000') , "textcolor": str(adunit.app_key.admob_textcolor or 'FFFFFF')})  
         
         # context.update(test_mode='true' if debug else 'false')
+        context.update(test_mode='false')
         # context.update(test_ad='<a href="http://m.google.com" target="_top"><img src="/images/admob_test.png"/></a>' if debug else '')
         header_context.add_header("X-Launchpage","http://c.admob.com/")
         header_context.add_header("X-Failurl", fail_url)

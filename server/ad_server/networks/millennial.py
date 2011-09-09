@@ -34,6 +34,6 @@ class MillennialServerSide(ServerSide):
             trace_logging.info("Millennial ad is empty")
             raise ServerSideException("Millennial ad is empty")
   
-        width, height = self._get_size(response.content)
-        return "<div style='text-align:center'>"+response.content+"</div>", width, height
+        self.creative_width, self.creative_height = self._get_size(response.content)
+        return "<div style='text-align:center'>"+response.content+"</div>"
 

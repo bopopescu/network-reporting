@@ -518,7 +518,7 @@ class HtmlCreative(Creative):
 
     @property
     def Renderer(self):
-        return BaseHtmlRenderer
+        return HtmlDataRenderer
 
 
 class ImageCreative(Creative):
@@ -551,7 +551,7 @@ class MarketplaceCreative(HtmlCreative):
 class CustomCreative(HtmlCreative):    
     # TODO: For now this is redundant with HtmlCreative
     # If we don't want to add any properties to it, remove it
-    Renderer = HtmlDataRenderer
+    pass
 
 class CustomNativeCreative(HtmlCreative):
     Renderer = CustomNativeRenderer

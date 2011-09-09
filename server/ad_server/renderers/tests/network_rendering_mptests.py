@@ -154,7 +154,7 @@ class RenderingTestBase(object):
         
         self._compare_rendering_with_examples(network_type, suffix="_full")
         
-    def _compare_rendering_with_examples(self, name, suffix="", reset_example=True):
+    def _compare_rendering_with_examples(self, name, suffix="", reset_example=False):
         """ For now just test the renderer. Next test headers too.
             Uses a default value for html_data. """
                                                                                                               
@@ -179,6 +179,7 @@ class RenderingTestBase(object):
         with open('ad_server/renderers/tests/example_renderings/%s%s.rendering' % (name, suffix), 'r') as f:   
             example_creative = f.read()   
 
+        print rendered_creative
         eq_(rendered_creative, example_creative)        
        
         if reset_example:
@@ -201,6 +202,23 @@ class RenderingTests(RenderingTestBase, unittest.TestCase):
     """ Inherits that setUp and tearDown methods from RenderingTestBase. """  
 
 
+    def mptest_html_adtype(self):
+        """ Make a one-off test for image creatives. """
+        self.creative = HtmlCreative(name="image dummy",
+                                     ad_type="html", 
+                                     html_data="test html data",
+                                     format="320x50", 
+                                     format_predicates=["format=320x50"],
+                                     ad_group=self.adgroup)
+        
+        self.creative.image_width = 320
+        self.creative.image_height = 50
+        self.creative.put()    
+        
+        self._compare_rendering_with_examples("html_adtype", suffix="")
+
+
+
     # image, text and text_icon adtypes are not tested as defaults
     def mptest_image_adtype(self):
         """ Make a one-off test for image creatives. """
@@ -220,13 +238,13 @@ class RenderingTests(RenderingTestBase, unittest.TestCase):
     def mptest_text_adtype(self):
         """ Make a one-off test for image creatives. """
         self.creative = TextCreative(name="image dummy",
-                                            headline="HEADLINE!!", 
-                                            line1="Sweet line",
-                                            line2="Awesome line",
-                                            ad_type="text", 
-                                            format="320x50", 
-                                            format_predicates=["format=320x50"],
-                                            ad_group=self.adgroup)
+                                     headline="HEADLINE!!", 
+                                     line1="Sweet line",
+                                     line2="Awesome line",
+                                     ad_type="text", 
+                                     format="320x50", 
+                                     format_predicates=["format=320x50"],
+                                     ad_group=self.adgroup)
         self.creative.put()    
 
         self._compare_rendering_with_examples("text_adtype", suffix="") 
@@ -263,7 +281,7 @@ network_names = ("adsense",
                  "admob_native",
                  "millennial_native",
                  "iAd",
-                 "mobfox"
+                 "mobfox",
                  )    
 
 

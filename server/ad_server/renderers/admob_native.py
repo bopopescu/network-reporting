@@ -1,39 +1,27 @@
-from string import Template
 from ad_server.renderers.base_native_renderer import BaseNativeRenderer   
-from common.utils import simplejson
+try:
+    import json
+except ImportError:
+    try:
+        import simplejson as json
+    except ImportError:
+        from common.utils import simplejson as json
 
 class AdMobNativeRenderer(BaseNativeRenderer):
     """ For now, just do the standard """
-    @classmethod
-    def network_specific_rendering(cls, header_context, 
-                                        creative=None,  
-                                        format_tuple=None,
-                                        context=None,
-                                        keywords=None,
-                                        adunit=None,
-                                        fail_url=None,
-                                        **kwargs):            
-
-
-        if "full" in adunit.format:
-            header_context.add_header("X-Adtype", "interstitial")
-            header_context.add_header("X-Fulladtype", "admob_full")
+    
+    def _get_ad_type(self):
+        if self.adunit.is_fullscreen():
+            return 'admob_full'
         else:
-            header_context.add_header("X-Adtype", str(creative.ad_type))
-            header_context.add_header("X-Backfill", str(creative.ad_type))
-            header_context.add_header("X-Failurl", fail_url)
+            return 'admob'
+                
+    def _setup_headers(self):
+        super(AdMobNativeRenderer, self)._setup_headers()
         nativecontext_dict = {
-            "adUnitID":adunit.get_pub_id("admob_pub_id"),
-            "adWidth":adunit.get_width(),
-            "adHeight":adunit.get_height()
-            }
-        header_context.add_header("X-Nativeparams", simplejson.dumps(nativecontext_dict))
-        super(AdMobNativeRenderer, cls).network_specific_rendering(header_context, 
-                                                                   creative=creative,  
-                                                                   format_tuple=format_tuple,
-                                                                   context=context,
-                                                                   keywords=keywords,
-                                                                   adunit=adunit,
-                                                                   **kwargs)
-        
-    TEMPLATE = Template("""admob native sdk""")
+            "adUnitID": self.adunit.get_pub_id("admob_pub_id"),
+            "adWidth": self.adunit.get_width(),
+            "adHeight": self.adunit.get_height()
+        }
+        self.header_context.add_header("X-Nativeparams", 
+                                       json.dumps(nativecontext_dict))

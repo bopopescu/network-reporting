@@ -1,37 +1,8 @@
-from string import Template   
-import random                 
 from ad_server.renderers.html_data_renderer import HtmlDataRenderer
 
 class InmobiRenderer(HtmlDataRenderer):
     """ For now, just do the standard """
-    @classmethod
-    def network_specific_rendering(cls, header_context, 
-                                   creative=None,  
-                                   format_tuple=None,
-                                   context=None,
-                                   keywords=None,
-                                   adunit=None,
-                                   fail_url=None,
-                                   track_url=None,
-                                   network_center=None,
-                                   success=None,
-                                   **kwargs):   
-        
-        
-        # add the launchpage header for inmobi in case they have dynamic ads that use
-        # window.location = 'http://some.thing/asdf'
-        if creative.adgroup.network_type == "inmobi":
-            header_context.add_header("X-Launchpage","http://c.w.mkhoj.com")
-            
-        super(InmobiRenderer, cls).network_specific_rendering(header_context, 
-                                                              creative=creative,  
-                                                              format_tuple=format_tuple,
-                                                              context=context,
-                                                              keywords=keywords,
-                                                              adunit=adunit,
-                                                              track_url=track_url,
-                                                              network_center=network_center,
-                                                              success=success,
-                                                              **kwargs)
-                    
     
+    def _setup_headers(self):
+        super(InmobiRenderer, self)._setup_headers()
+        self.header_context.add_header("X-Launchpage", "http://c.w.inmobi.com")

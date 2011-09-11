@@ -1,5 +1,6 @@
 from common.utils import simplejson
 
+# TODO: Make explicit set of properties
 class HeaderContext(object):
     def __init__(self):
         self._dict = {}

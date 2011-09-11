@@ -148,6 +148,8 @@ class Site(db.Model):
     
     network_config = db.ReferenceProperty(NetworkConfig, collection_name="adunits")
     
+    def is_fullscreen(self):
+        return 'full' in self.format
     
     def get_height(self):
         if self.format == 'custom' and self.custom_height: 

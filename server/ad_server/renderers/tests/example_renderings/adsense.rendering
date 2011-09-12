@@ -5,13 +5,26 @@
   
   
     
+    <meta name="viewport" content="width=device-width; initial-scale=1.0; user-scalable=no;">
+    
   
+  
+  <script type="text/javascript">
+    function mopubFinishLoad(){
+      window.location = 'mopub://finishLoad'
+    }
+  </script>
   
   
   <script type="text/javascript">
     function trackImpressionHelper(){
       var urls = new Array();
-      urls[0]="";
+      var i = 0;
+      
+        urls[i++]="http://app.mopub.com/m/imp?c=ag1kZXZ-bW9wdWItaW5jchYLEghDcmVhdGl2ZSIIa2V5X25hbWUM&cid=ag1kZXZ-bW9wdWItaW5jchYLEghDcmVhdGl2ZSIIa2V5X25hbWUM&reqt=-462653700.0&req=my_request_id&udid=myudid&appid=&id=ag1kZXZ-bW9wdWItaW5jcgoLEgRTaXRlGAcM";
+      
+    
+    ag1kZXZ-bW9wdWItaW5jchYLEghDcmVhdGl2ZSIIa2V5X25hbWUM
 
       
       

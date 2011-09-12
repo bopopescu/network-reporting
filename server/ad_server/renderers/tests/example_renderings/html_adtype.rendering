@@ -17,8 +17,15 @@
   <script type="text/javascript">
     function trackImpressionHelper(){
       var urls = new Array();
-      urls[0]="http://app.mopub.com/m/imp?c=ahJtb3B1Yi1leHBlcmltZW50YWxyFgsSCENyZWF0aXZlIghrZXlfbmFtZQw&cid=ahJtb3B1Yi1leHBlcmltZW50YWxyFgsSCENyZWF0aXZlIghrZXlfbmFtZQw&reqt=-462653700.0&req=my_request_id&udid=myudid&appid=&id=ahJtb3B1Yi1leHBlcmltZW50YWxyCgsSBFNpdGUYBQw";
+      var i = 0;
+      
+        urls[i++]="http://app.mopub.com/m/imp?c=ag1kZXZ-bW9wdWItaW5jchYLEghDcmVhdGl2ZSIIa2V5X25hbWUM&cid=ag1kZXZ-bW9wdWItaW5jchYLEghDcmVhdGl2ZSIIa2V5X25hbWUM&reqt=-462653700.0&req=my_request_id&udid=myudid&appid=&id=ag1kZXZ-bW9wdWItaW5jcgoLEgRTaXRlGAUM";
+      
+    
+    ag1kZXZ-bW9wdWItaW5jchYLEghDcmVhdGl2ZSIIa2V5X25hbWUM
 
+      
+      urls[i++]="http://www.google.com/&rand=0932jfios"
       
       
       var hiddenSpan = document.createElement('span')

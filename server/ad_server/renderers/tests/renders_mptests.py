@@ -224,6 +224,7 @@ class RenderingTests(RenderingTestBase, unittest.TestCase):
                                      html_data="test html data",
                                      format="320x50", 
                                      format_predicates=["format=320x50"],
+                                     tracking_url="http://www.google.com/",
                                      ad_group=self.adgroup)
         
         self.creative.image_width = 320

@@ -13,10 +13,13 @@
   <script type="text/javascript">
     function trackImpressionHelper(){
       var urls = new Array();
-      urls[0]="{{impression_url|safe}}";
-
-      {% if creative.tracking_pixel %}
-      urls[1]="{{creative.tracking_pixel|safe}}&rand={{random_val}}"
+      var i = 0;
+      {% if not is_fullscreen %}
+        urls[i++]="{{impression_url|safe}}";
+      {% endif %}
+    
+      {% if creative.tracking_url %}
+      urls[i++]="{{creative.tracking_url|safe}}&rand={{random_val}}"
       {% endif %}
       
       var hiddenSpan = document.createElement('span')

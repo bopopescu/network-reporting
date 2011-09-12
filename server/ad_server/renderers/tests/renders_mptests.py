@@ -25,6 +25,8 @@ from common.utils.system_test_framework import run_auction, fake_request
 from nose.tools import eq_     
 from common.utils import simplejson
 
+from account.models import NetworkConfig
+
 from advertiser.models import (AdMobCreative,
                                AdSenseCreative,
                                HtmlCreative,     
@@ -78,11 +80,17 @@ class RenderingTestBase(object):
         self.app = App(account=self.account, name="Test App")
         self.app.put()
         
+        
+        self.network_config = NetworkConfig(admob_pub_id='myadmobsiteid')
+        self.network_config.put()
+        
         self.adunit = AdUnit(account=self.account, 
                              app_key=self.app, 
                              name="Test AdUnit",
-                             format="320x50")
+                             format="320x50",
+                             network_config=self.network_config)
         self.adunit.put()           
+        
         
         self.adgroup = AdGroup(account=self.account, 
                                campaign=self.campaign, 
@@ -93,23 +101,25 @@ class RenderingTestBase(object):
 
         
         self.host = "app.mopub.com"
-        self.url = """app.mopub.com/m/ad?test_url"""
+        self.url = """http://app.mopub.com/m/ad?test_url"""
+        self.request_id = 'my_request_id'
           
         self.keywords = ["awesome","stuff"]
         
-        self.version_number = 2 # Not sure what this is used for
+        self.version_number = 6 # Not sure what this is used for
         
         self.track_url = "test_track_url"
         
         self.on_fail_exclude_adgroups = ["test_on_fail_adgroup1", "test_on_fail_adgroup2"]
         
 
-        self.request = fake_request(self.adunit.key())
+        # self.request = fake_request(self.adunit.key())
         adunit_id = str(self.adunit.key())
 
         self.adunit_context = AdUnitContextQueryManager.cache_get_or_insert(adunit_id)      
         
         self.dt = datetime.datetime(1955,5,5,5,5)
+        self.udid = 'myudid'
 
     def tearDown(self):
         self.testbed.deactivate()
@@ -122,12 +132,13 @@ class RenderingTestBase(object):
         self.adunit = AdUnit(account=self.account, 
                              app_key=self.app, 
                              name="Test AdUnit",
-                             format="320x50")
+                             format="320x50",
+                             network_config=self.network_config)
         self.adunit.put()
         self.adgroup.network_type = network_type  
         self.adgroup.put()
 
-        self.creative = self.adgroup.default_creative()   
+        self.creative = self.adgroup.default_creative(key_name='key_name')   
         self.creative.html_data = "fake data" # TODO: Use the actual serverside methods to build this 
 
         self.creative.put()    
@@ -139,38 +150,42 @@ class RenderingTestBase(object):
     def render_full_creative(self, network_type):
         """ Tests both the rendering of the creative payload 
             Uses a default value for html_data. """
+            
+        print network_type    
         self.adunit = AdUnit(account=self.account, 
                      app_key=self.app, 
                      name="Test AdUnit",
-                     format="full")
+                     format="full",
+                     network_config=self.network_config)
         self.adunit.put()
         self.adgroup.network_type = network_type  
         self.adgroup.put()
 
-        self.creative = self.adgroup.default_creative()   
+        self.creative = self.adgroup.default_creative(key_name='key_name')   
         self.creative.html_data = "fake data" # TODO: Use the actual serverside methods to build this 
 
         self.creative.put() 
         
         self._compare_rendering_with_examples(network_type, suffix="_full")
         
-    def _compare_rendering_with_examples(self, name, suffix="", reset_example=False):
+    def _compare_rendering_with_examples(self, name, suffix="", reset_example=True):
         """ For now just test the renderer. Next test headers too.
             Uses a default value for html_data. """
-                                                                                                              
-        rendered_creative, header_context = self.creative.Renderer.render(  
-                                       creative=self.creative,
-                                       now=self.dt,
-                                       adunit=self.adunit, 
-                                       keywords=self.keywords, 
-                                       request_host=self.host, # Needed for serving static files
-                                       request_url=self.url, # Needed for onfail urls          
-                                       version_number=self.version_number,
-                                       track_url=self.track_url,   
-                                       on_fail_exclude_adgroups=self.on_fail_exclude_adgroups,
-                                       random_val="0932jfios")   
-                                       
-   
+        
+        creative_renderer = self.creative.Renderer(creative=self.creative,
+                                                   adunit=self.adunit,
+                                                   udid=self.udid,
+                                                   now=self.dt,
+                                                   request_host=self.host,
+                                                   request_url=self.url,
+                                                   request_id=self.request_id,
+                                                   version=self.version_number,
+                                                   on_fail_exclude_adgroups=self.on_fail_exclude_adgroups,
+                                                   keywords=['hi','bye'],
+                                                   random_val='0932jfios')
+        
+        rendered_creative, header_context = creative_renderer.render()                                           
+                                                                                                                 
 
         if reset_example:
             with open('ad_server/renderers/tests/example_renderings/%s%s.rendering' % (name, suffix), 'w') as f:   
@@ -203,11 +218,13 @@ class RenderingTests(RenderingTestBase, unittest.TestCase):
 
     def mptest_html_adtype(self):
         """ Make a one-off test for image creatives. """
-        self.creative = HtmlCreative(name="image dummy",
+        self.creative = HtmlCreative(key_name="key_name",
+                                     name="image dummy",
                                      ad_type="html", 
                                      html_data="test html data",
                                      format="320x50", 
                                      format_predicates=["format=320x50"],
+                                     tracking_url="http://www.google.com/",
                                      ad_group=self.adgroup)
         
         self.creative.image_width = 320
@@ -216,45 +233,47 @@ class RenderingTests(RenderingTestBase, unittest.TestCase):
         
         self._compare_rendering_with_examples("html_adtype", suffix="")
 
-
-
     # image, text and text_icon adtypes are not tested as defaults
     def mptest_image_adtype(self):
         """ Make a one-off test for image creatives. """
-        self.creative = ImageCreative(name="image dummy",
+        self.creative = ImageCreative(key_name="key_name",
+                                      name="image dummy",
                                       image_blob="blobby",
+                                      url="http://www.google.com",
                                       ad_type="image", 
                                       format="320x50", 
                                       format_predicates=["format=320x50"],
                                       ad_group=self.adgroup)
-
+    
         self.creative.image_width = 320
         self.creative.image_height = 50
         self.creative.put()    
-
+    
         self._compare_rendering_with_examples("image_adtype", suffix="")
 
-    def mptest_text_adtype(self):
-        """ Make a one-off test for image creatives. """
-        self.creative = TextCreative(name="image dummy",
-                                     headline="HEADLINE!!", 
-                                     line1="Sweet line",
-                                     line2="Awesome line",
-                                     ad_type="text", 
-                                     format="320x50", 
-                                     format_predicates=["format=320x50"],
-                                     ad_group=self.adgroup)
-        self.creative.put()    
-
-        self._compare_rendering_with_examples("text_adtype", suffix="") 
-
+    # def mptest_text_adtype(self):
+    #     """ Make a one-off test for image creatives. """
+    #     self.creative = TextCreative(key_name="key_name",
+    #                                  name="image dummy",
+    #                                  headline="HEADLINE!!", 
+    #                                  line1="Sweet line",
+    #                                  line2="Awesome line",
+    #                                  ad_type="text", 
+    #                                  format="320x50", 
+    #                                  format_predicates=["format=320x50"],
+    #                                  ad_group=self.adgroup)
+    #     self.creative.put()    
+    # 
+    #     self._compare_rendering_with_examples("text_adtype", suffix="") 
 
     def mptest_text_icon_adtype(self):
         """ Make a one-off test for image creatives. """
-        self.creative = TextAndTileCreative(name="image dummy",
+        self.creative = TextAndTileCreative(key_name="key_name",
+                                            name="image dummy",
                                             image_blob="blobby", 
                                             line1="Sweet line",
                                             line2="Awesome line",
+                                            url="http://www.google.com",
                                             ad_type="text_icon", 
                                             format="320x50", 
                                             format_predicates=["format=320x50"],
@@ -266,8 +285,7 @@ class RenderingTests(RenderingTestBase, unittest.TestCase):
 
 ##### TEST GENERATORS ######     
 
-network_names = ("adsense",
-                 "brightroll",
+network_names = ("admob",
                  "jumptap",
                  "ejam",
                  "chartboost",
@@ -275,12 +293,16 @@ network_names = ("adsense",
                  "inmobi",
                  "greystripe",
                  "appnexus",
-                 "custom_native",
+                 "mobfox",
                  "custom",
+                 
+                 "adsense",
+                 "brightroll",
+                 
+                 "custom_native",
                  "admob_native",
                  "millennial_native",
                  "iAd",
-                 "mobfox",
                  )    
 
 

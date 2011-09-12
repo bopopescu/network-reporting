@@ -135,15 +135,15 @@ class BrightRollServerSide(ServerSide):
         #     self.parse_xml(response.content)
         # except:
         #     raise ServerSideException("BrightRoll ad is empty") 
-        scripts = """
-        <script type="text/javascript">
-            window.addEventListener("load", function() { window.location="mopub://finishLoad";}, false);
-            function webviewDidAppear(){playAdVideo(); %(track_pixels)s;};
-            //function webviewDidAppear(){alert(window.innerWidth+" "+window.innerHeight)};
-            windowInnerWidth = 320;
-        </script>"""  
-               
-        self.url_params.update(mopub_scripts=scripts) 
+        # scripts = """
+        # <script type="text/javascript">
+        #     window.addEventListener("load", function() { window.location="mopub://finishLoad";}, false);
+        #     function webviewDidAppear(){playAdVideo(); %(track_pixels)s;};
+        #     //function webviewDidAppear(){alert(window.innerWidth+" "+window.innerHeight)};
+        #     windowInnerWidth = 320;
+        # </script>"""  
+        #        
+        # self.url_params.update(mopub_scripts=scripts) 
         logging.info(self.url_params)   
         return template.safe_substitute(self.url_params)
         # return 0.0,string.replace(response.content,"<head>","<head><script type=\"text/javascript\">\nwindow.addEventListener(\"load\", function() { loadAdVideo();playAdVideo();}, false);function webviewDidAppear(){playAdVideo();}\n</script>",1)
@@ -152,44 +152,49 @@ class BrightRollServerSide(ServerSide):
         
         
 template = string.Template("""
-<!DOCTYPE HTML> 
-<html> 
-	<head id="head"> 
-	   <!-- BEGIN MoPub injection --> 
-	   $mopub_scripts
-       <!-- END MoPub injection --> 
- 	
-	
+<style type="text/css">
+	        body {
+	            background-color: black;
+	            width: 320px;
+	            height: 480px;
+	        }
+	    </style>
 		<script type="text/javascript"> 
+		    document.body.onload = loadAdVideo;
+		    
+		    function webviewDidAppearHelper(){
+		        playAdVideo();
+		    }
+		
 			var success = "success"; //tells iphone that there is an ad.  The iPhone can't grab the status code for a UIWebView
 
-      var urls = {
-        companionImage: "$companion_image",
-        imp: $impression_urls,
-        mid: $midpoint_urls,
-        end: $end_urls,
-        landing: $click_urls
-      }
+    var urls = {
+      companionImage: "$companion_image",
+      imp: $impression_urls,
+      mid: $midpoint_urls,
+      end: $end_urls,
+      landing: $click_urls
+    }
 
-      function goToLanding(delay)
-      {
-        document.body.removeChild(document.getElementById("center"));
-        document.getElementById("loader").style.display = "";
-        delay = delay || 0;
-        setTimeout(function(){ document.location.href = urls.landing[0] }, delay);
-      }
+    function goToLanding(delay)
+    {
+      document.body.removeChild(document.getElementById("center"));
+      document.getElementById("loader").style.display = "";
+      delay = delay || 0;
+      setTimeout(function(){ document.location.href = urls.landing[0] }, delay);
+    }
 
-      function fireEvents(eventUrls, callback)
+    function fireEvents(eventUrls, callback)
+    {
+      eventUrls.forEach(function(url)
       {
-        eventUrls.forEach(function(url)
-        {
-          var pixel = document.createElement('img');
-          pixel.width = 0;
-          pixel.height = 0;
-          pixel.src = url;
-          pixel.onload = callback;
-          document.body.appendChild(pixel);
-        });
+        var pixel = document.createElement('img');
+        pixel.width = 0;
+        pixel.height = 0;
+        pixel.src = url;
+        pixel.onload = callback;
+        document.body.appendChild(pixel);
+      });
 			}
 
 			function isIOS3()
@@ -211,7 +216,7 @@ template = string.Template("""
 				adVideo.load();
 				adVideo.play();
 
-        fireEvents(urls.imp);
+      fireEvents(urls.imp);
 			}
 
 			function playAdVideo()
@@ -241,57 +246,54 @@ template = string.Template("""
 				adVideo = document.getElementById("adVideo");
 				var firedMid = false;
 
-        adVideo.addEventListener('loadeddata', function()
-        {
-          document.getElementById("loader").style.display = "none";
-        });
+      adVideo.addEventListener('loadeddata', function()
+      {
+        document.getElementById("loader").style.display = "none";
+      });
 
 				adVideo.addEventListener('timeupdate', function()
 				{
 					if(!firedMid && ((2 * adVideo.currentTime) >= adVideo.duration))
 					{
-            fireEvents(urls.mid);
+          fireEvents(urls.mid);
 						firedMid = true;
 					}
 				});
 
 				adVideo.addEventListener('ended', function()
 				{
-          fireEvents(urls.end, goToLanding);
+        fireEvents(urls.end, goToLanding);
 
-          if (isIOS3())
-          {
-            goToLanding(500);
-          }
+        if (isIOS3())
+        {
+          goToLanding(500);
+        }
 				});
 
 				adVideo.addEventListener('pause', function()
 				{
-          goToLanding(500);
+        goToLanding(500);
 				});
 			}
 
-      function layoutElements()
-      {
-        var meta = document.createElement("meta");
-        meta.name = "viewport";
-        meta.content = "width=device-width,minimum-scale=1.0,maximum-scale=1.0";
+    function layoutElements()
+    {
+      var meta = document.createElement("meta");
+      meta.name = "viewport";
+      meta.content = "width=device-width,minimum-scale=1.0,maximum-scale=1.0";
 
-        document.getElementById("head").appendChild(meta);
-        document.getElementById("loader").style.display = "";
-      }
+      document.getElementById("head").appendChild(meta);
+      document.getElementById("loader").style.display = "";
+    }
 		</script> 
-	</head> 
-
-	<body style="background-color: black; width: 320px; height: 480px" onload="loadAdVideo()"> 
+	
+	
     <img id="loader" src="http://amscdn.btrll.com/production/3411/ajax-loader.gif" style="position:fixed;top:50%;left:50%;margin-top:-8px;margin-left:-8px;display:none"/>
 		<center id="center"> 
 			<!-- Dynamically Generate the Following Line --> 
 			<video src="$video_url" width="$video_width" height="$video_height" id="adVideo" controls="true"></video> 
 		</center> 
 		<script></script><!-- If you remove this line, the video won't autoplay in iOS3 :-\  --> 
-	</body> 
-</html>
 """)    
     
 template2 = string.Template("""<!DOCTYPE HTML> 

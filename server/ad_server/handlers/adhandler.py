@@ -236,19 +236,19 @@ class AdHandler(webapp.RequestHandler):
                 ad_click_url += cost_tracker
         
             
-            Renderer = creative.Renderer
+            creative_renderer = creative.Renderer(creative=creative,
+                                         adunit=adunit,
+                                         udid=raw_udid,
+                                         now=now,
+                                         request_host=self.request.host,
+                                         request_url=self.request.url,
+                                         request_id=request_id,
+                                         version=int(self.request.get('v','0')),
+                                         on_fail_exclude_adgroups=on_fail_exclude_adgroups,
+                                         keywords=keywords)
             
-            rendered_creative, header_context = Renderer.render(    
-                                                   creative=creative,
-                                                   adunit=adunit, 
-                                                   keywords=keywords, 
-                                                   request_host=self.request.host, # Needed for serving static files
-                                                   request_url=self.request.url, # Needed for onfail urls  
-                                                   version_number=int(self.request.get('v') or 0),
-                                                   track_url=track_url,  
-                                                   ad_click_url=ad_click_url, 
-                                                   on_fail_exclude_adgroups = on_fail_exclude_adgroups)       
-        
+            
+            rendered_creative, header_context = creative_renderer.render()
             # Add header context values to response.headers
             for key, value in header_context.items():
                 self.response.headers.add_header(key, value)      

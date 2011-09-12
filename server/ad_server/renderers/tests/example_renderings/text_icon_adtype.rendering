@@ -1,27 +1,101 @@
 <html>
-      <head>
-        <script>function mopubFinishLoad(){window.location="mopub://finishLoad";}</script>
-        <script> 
-          if(typeof mopubFinishLoad == 'function') {
-              window.onload = mopubFinishLoad;
-          }
-        </script>
-        <script>
-          function webviewDidClose(){}
-          function webviewDidAppear(){}
-        </script>
-        <title></title>
-      </head>
-      <body style="top-margin:0;margin:0;width:320px;padding:0;background-color:#000000;font-size:12px;font-family:Arial,sans-serif;">
-      <div id='highlight' style="position:relative;height:50px;background:-webkit-gradient(linear, left top, left bottom, from(rgba(255,255,255,0.35)),
-        to(rgba(255,255,255,0.06))); -webkit-background-origin: padding-box; -webkit-background-clip: content-box;">
-        <div style="margin:5px;width:40px;height:40px;float:left"><img id="thumb" src="http://localhost:8080/_ah/img/blobby" style="-webkit-border-radius:6px;-moz-border-radius:6px" width=40 height=40/></div>
-        <div style="float:left;width:230">
-          <div style="color:white;font-weight:bold;margin:0px 0 0 5px;padding-top:8;">Sweet line</div>
-          <div style="color:white;margin-top:6px;margin:5px 0 0 5px;">Awesome line</div>
-        </div>
-        <div style="padding-top:5px;position:absolute;top:0;right:0;"><a href="#" target="_top"><img src="http://app.mopub.com/images/download_arrow4.png" width=40 height=40/></a></div>
-        <span style="display:none;"><img src="test_track_url"/></span>
-      </div>
-      </body>
-    </html>
+  <head>
+  
+  
+    
+    <meta name="viewport" content="width=device-width; initial-scale=1.0; user-scalable=no;">
+    
+  
+  
+  <script type="text/javascript">
+    function mopubFinishLoad(){
+      window.location = 'mopub://finishLoad'
+    }
+  </script>
+  
+  
+  <script type="text/javascript">
+    function trackImpressionHelper(){
+      var urls = new Array();
+      var i = 0;
+      
+        urls[i++]="http://app.mopub.com/m/imp?c=ag1kZXZ-bW9wdWItaW5jchYLEghDcmVhdGl2ZSIIa2V5X25hbWUM&cid=ag1kZXZ-bW9wdWItaW5jchYLEghDcmVhdGl2ZSIIa2V5X25hbWUM&reqt=-462653700.0&req=my_request_id&udid=myudid&appid=&id=ag1kZXZ-bW9wdWItaW5jcgoLEgRTaXRlGAUM";
+      
+    
+    ag1kZXZ-bW9wdWItaW5jchYLEghDcmVhdGl2ZSIIa2V5X25hbWUM
+
+      
+      
+      var hiddenSpan = document.createElement('span')
+      hiddenSpan.style.display = 'none';
+
+      var i=0;
+      for (var i=0;i<urls.length;i++)
+      {
+        var img = document.createElement('img')
+        img.src = urls[i];
+        hiddenSpan.appendChild(img);
+      }    
+
+      var body = document.getElementsByTagName('body')[0] ;
+      body.appendChild(hiddenSpan);
+    }
+  </script>
+
+  <script type="text/javascript">
+    function webviewDidClose(){
+      if(typeof webviewDidCloseHelper == 'function') {
+         webviewDidCloseHelper();
+      }
+    }
+    function webviewDidAppear(){
+        // inserts impression tracking
+        // when the interstitial is presented on screen
+        
+        // calls a user defined function if it exists
+        // useful for starting animations, videos, etc
+        // this would exist as part of the html for the 
+        // "html" creative
+        if(typeof webviewDidAppearHelper == 'function') { 
+          webviewDidAppearHelper(); 
+        }
+    }
+    window.addEventListener("load", function() {
+      var links = document.getElementsByTagName('a');
+      for(var i=0; i < links.length; i++) {
+        links[i].setAttribute('target','_top');
+      }
+    }, false);
+  </script>
+  
+  </head>
+  <body style="margin:0;padding:0;">
+    
+  <div id='highlight' style="position:relative;height:50px;background:-webkit-gradient(linear, left top, left bottom, from(rgba(255,255,255,0.35)),
+    to(rgba(255,255,255,0.06))); -webkit-background-origin: padding-box; -webkit-background-clip: content-box;">
+  <div style="margin:5px;width:40px;height:40px;float:left"><img id="thumb" src="http://localhost:8080/_ah/img/blobby" style="-webkit-border-radius:6px;-moz-border-radius:6px" width=40 height=40/></div>
+  <div style="float:left;width:230">
+    <div style="color:white;font-weight:bold;margin:0px 0 0 5px;padding-top:8;">Sweet line</div>
+    <div style="color:white;margin-top:6px;margin:5px 0 0 5px;">Awesome line</div>
+  </div>
+  
+  
+  <script type="text/javascript">
+    // just call mopubFinishLoad upon window's load
+    if (typeof htmlWillCallFinishLoad == "undefined" || !htmlWillCallFinishLoad) { 
+      if(typeof mopubFinishLoad == 'function') {
+        window.onload = mopubFinishLoad;
+      }
+    }
+
+    
+      if(typeof trackImpressionHelper == 'function') {
+        trackImpressionHelper();
+      }
+    
+
+  </script>
+
+  
+  </body>
+</html>

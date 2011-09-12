@@ -1,38 +1,28 @@
-from string import Template
 from ad_server.renderers.base_native_renderer import BaseNativeRenderer   
-from common.utils import simplejson
+try:
+    import json
+except ImportError:
+    try:
+        import simplejson as json
+    except ImportError:
+        from common.utils import simplejson as json
 
 class MillennialNativeRenderer(BaseNativeRenderer):
     """ For now, just do the standard """
-    @classmethod
-    def network_specific_rendering(cls, header_context, 
-                                        creative=None,  
-                                        format_tuple=None,
-                                        context=None,
-                                        keywords=None,
-                                        adunit=None,
-                                        fail_url=None,
-                                        **kwargs):            
-        if "full" in adunit.format:
-            header_context.add_header("X-Adtype", "interstitial")
-            header_context.add_header("X-Fulladtype", "millennial_full")
-        else:
-            header_context.add_header("X-Adtype", str(creative.ad_type))
-            header_context.add_header("X-Backfill", str(creative.ad_type))
-        header_context.add_header("X-Failurl", fail_url)
-        nativecontext_dict = {
-            "adUnitID":adunit.get_pub_id("millennial_pub_id"),
-            "adWidth":adunit.get_width(),
-            "adHeight":adunit.get_height()
-        }
-        header_context.add_header("X-Nativeparams", simplejson.dumps(nativecontext_dict))                  
-        super(MillennialNativeRenderer, cls).network_specific_rendering(header_context, 
-                                                                        creative=creative,  
-                                                                        format_tuple=format_tuple,
-                                                                        context=context,
-                                                                        keywords=keywords,
-                                                                        adunit=adunit,
-                                                                        **kwargs)
-                
     
-    TEMPLATE = Template("""millennial native sdk""")
+    def _get_ad_type(self):
+        if self.adunit.is_fullscreen():
+            return 'millennial_full'
+        else:
+            return 'millennial_native'    
+    
+    def _setup_headers(self):
+        super(MillennialNativeRenderer, self)._setup_headers()
+        nativecontext_dict = {
+            "adUnitID": self.adunit.get_pub_id("millennial_pub_id"),
+            "adWidth": self.adunit.get_width(),
+            "adHeight": self.adunit.get_height()
+        }
+        self.header_context.add_header("X-Nativeparams", 
+                                       json.dumps(nativecontext_dict))
+    

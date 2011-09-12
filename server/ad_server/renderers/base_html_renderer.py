@@ -1,28 +1,32 @@
-from string import Template
-import random                 
+import os
+
 from ad_server.renderers.creative_renderer import BaseCreativeRenderer
+# NOTE: appengine specific, but can be just django
+from google.appengine.ext.webapp import template
 
 class BaseHtmlRenderer(BaseCreativeRenderer):
     """ For now, just do the standard """
-    @classmethod
-    def network_specific_rendering(cls, header_context, 
-                                   creative=None,  
-                                   format_tuple=None,
-                                   context=None,
-                                   keywords=None,
-                                   adunit=None,
-                                   fail_url=None,
-                                   request_host=None,
-                                   track_url=None,
-                                   network_center=None,
-                                   success=None,
-                                   **kwargs):   
-        header_context.add_header("X-Adtype", str('html'))
-        if 'full' in adunit.format:
-            context['trackingPixel'] = ""
-            trackImpressionHelper = "<script>\nfunction trackImpressionHelper(){\n%s\n}\n</script>"%success
-            context.update(trackImpressionHelper=trackImpressionHelper)
-        else:
-            context['trackImpressionHelper'] = ''    
-                
-
+    
+    TEMPLATE = 'base.html'
+    
+    def __init__(self, *args, **kwargs):
+        super(BaseHtmlRenderer, self).__init__(*args, **kwargs)
+        
+        self.html_context = {}
+        self._setup_html_context()
+        
+    def _setup_html_context(self):
+        self.html_context['creative'] = self.creative
+        self.html_context['version'] = self.version
+        self.html_context['impression_url'] = self.impression_url
+        self.html_context['is_fullscreen'] = self.adunit.is_fullscreen()
+        
+    def _get_ad_type(self):
+        return 'html'
+        
+    def _setup_content(self):
+        path = os.path.join(os.path.dirname(__file__), 
+                            'templates', 
+                            self.TEMPLATE)
+        self.rendered_creative = template.render(path, self.html_context)
+    

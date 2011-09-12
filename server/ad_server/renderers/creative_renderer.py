@@ -177,6 +177,6 @@ def _build_fail_url(original_url, on_fail_exclude_adgroups):
     if not on_fail_exclude_adgroups:
         return clean_url
     else:
-        return clean_url + '&exclude='.join(on_fail_exclude_adgroups)
+        return clean_url + '&exclude=' + '&exclude='.join(on_fail_exclude_adgroups)
  
 

@@ -16,6 +16,8 @@ class ImageRenderer(BaseHtmlRenderer):
         self.html_context['h'] = img_height
         self.html_context['w_divided_2'] = img_width/2
         self.html_context['h_divided_2'] = img_height/2
-        
-        image_url = images.get_serving_url(self.creative.image_blob) 
+        try:
+            image_url = images.get_serving_url(self.creative.image_blob)  
+        except InvalidBlobKeyError:
+            logging.error("Could not find blobkey. Perhaps you are on mopub-experimental.")    
         self.html_context["image_url"] = image_url

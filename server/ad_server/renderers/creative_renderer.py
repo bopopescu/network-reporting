@@ -78,11 +78,12 @@ class BaseCreativeRenderer(object):
         return track_url, ad_click_url
 
     def _setup_headers(self):
-        if self.adunit.is_fullscreen():
-            self.header_context.add_header("X-Adtype", "interstitial")
-            self.header_context.add_header("X-Fulladtype", self._get_ad_type())
+        ad_type = self._get_ad_type()
+        if ad_type == 'html' or not self.adunit.is_fullscreen():
+            self.header_context.add_header("X-Adtype", ad_type)    
         else:
-            self.header_context.add_header("X-Adtype", self._get_ad_type())    
+            self.header_context.add_header("X-Adtype", "interstitial")
+            self.header_context.add_header("X-Fulladtype", ad_type)
         
         self.header_context.add_header("X-Clickthrough", 
                                        str(self.click_url))   

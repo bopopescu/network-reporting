@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block head %}
+  {{ block.super }}
+  {% if version >= 2 %}
+  <script type="text/javascript">
+    function mopubFinishLoad(){
+      window.location = 'mopub://finishLoad'
+    }
+  </script>
+  {% endif %}
+  
+  <script type="text/javascript">
+    function trackImpressionHelper(){
+      var urls = new Array();
+      urls[0]="{{impression_url|safe}}";
+
+      {% if creative.tracking_pixel %}
+      urls[1]="{{creative.tracking_pixel|safe}}&rand={{random_val}}"
+      {% endif %}
+      
+      var hiddenSpan = document.createElement('span')
+      hiddenSpan.style.display = 'none';
+
+      var i=0;
+      for (var i=0;i<urls.length;i++)
+      {
+        var img = document.createElement('img')
+        img.src = urls[i];
+        hiddenSpan.appendChild(img);
+      }    
+
+      var body = document.getElementsByTagName('body')[0] ;
+      body.appendChild(hiddenSpan);
+    }
+  </script>
+
+  <script type="text/javascript">
+    function webviewDidClose(){
+      if(typeof webviewDidCloseHelper == 'function') {
+         webviewDidCloseHelper();
+      }
+    }
+    function webviewDidAppear(){
+        // inserts impression tracking
+        // when the interstitial is presented on screen
+        {% if is_fullscreen %}
+        if(typeof trackImpressionHelper == 'function') {
+          trackImpressionHelper();
+        }
+        {% endif %}
+        // calls a user defined function if it exists
+        // useful for starting animations, videos, etc
+        // this would exist as part of the html for the 
+        // "html" creative
+        if(typeof webviewDidAppearHelper == 'function') { 
+          webviewDidAppearHelper(); 
+        }
+    }
+    window.addEventListener("load", function() {
+      var links = document.getElementsByTagName('a');
+      for(var i=0; i < links.length; i++) {
+        links[i].setAttribute('target','_top');
+      }
+    }, false);
+  </script>
+{% endblock head %}
+
+{% block body %}
+  {{html_data|safe}}
+  <script type="text/javascript">
+    // just call mopubFinishLoad upon window's load
+    if (typeof htmlWillCallFinishLoad == "undefined" || !htmlWillCallFinishLoad) { 
+      if(typeof mopubFinishLoad == 'function') {
+        window.onload = mopubFinishLoad;
+      }
+    }
+
+    {% if not is_fullscreen %}
+      if(typeof trackImpressionHelper == 'function') {
+        trackImpressionHelper();
+      }
+    {% endif %}
+
+  </script>
+{% endblock %}

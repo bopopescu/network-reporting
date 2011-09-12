@@ -9,7 +9,7 @@ class CustomNativeRenderer(BaseNativeRenderer):
     def _setup_headers(self):
         super(CustomNativeRenderer, self)._setup_headers()
         self.header_context.add_header("X-Customselector", 
-                                        self.creative.html_data)
+                                       self.creative.html_data.rstrip(":"))
         
     def _setup_content(self):
         self.rendered_creative = 'custom selector: %s' % \

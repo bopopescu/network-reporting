@@ -585,14 +585,16 @@ class AdMobNativeCreative(AdMobCreative):
     
 class MillennialCreative(Creative):
 
-    Renderer = MillennialRenderer
+    Renderer = MillennialRenderer     
+    
+    ServerSide = MillennialServerSide
 
     
     @property
     def multi_format(self):
         return ('728x90', '320x50', '300x250',)
 
-class MillennialNativeCreative(MillennialCreative):
+class MillennialNativeCreative(Creative):
                  
     Renderer = MillennialNativeRenderer  
         

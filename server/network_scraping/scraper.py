@@ -1,3 +1,19 @@
+import re
+
+import cookielib
+import mechanize
+
+
+class MyCookieJar(cookielib.LWPCookieJar):
+
+    def _cookie_from_cookie_tuple(self, tup, request):
+        name, value, standard, rest = tup
+        version = standard.get('version', None)
+        if version is not None:
+            standard['version'] = version.strip('"')
+        return cookielib.LWPCookieJar._cookie_from_cookie_tuple(self, tup, request)
+
+
 class ScraperSite(object):
     def __init__(self, id, name, url, description):
         self.id = id
@@ -23,12 +39,39 @@ class Scraper(object):
     this class and it's methods.  They're all going to be weird as fuck
     with roughly 0 in common though...'''
     
+    # This needs to be set for all scrapers
+    NETWORK_NAME = None
+    
     def __init__(self, credentials):
         ''' Credentials has a 'network' field, in the subclasses
-        double check to make sure they are correct.  For sanity '''
+        double check to make sure they are correct.  Also automatically
+        autheticates the scraper since they're all gonna do that anyway.'''
+        if credentials.network != self.NETWORK_NAME:
+            raise "Invalid credentials.  Attempting to use %s credentials for an %s scraper" % (credentials.network, self.NETWORK_NAME)
         self.account = credentials.account
         self.username = credentials.username
         self.password = credentials.password
+
+        # Initialize the mechanize stuff
+        self.browser = mechanize.Browser()
+
+        cj = MyCookieJar()
+        self.browser.set_cookiejar(cj)
+
+        # Browser opts
+        self.browser.set_handle_equiv(True)
+        self.browser.set_handle_gzip(True)
+        self.browser.set_handle_redirect(True)
+        self.browser.set_handle_referer(True)
+        self.browser.set_handle_robots(False)
+
+        self.browser.set_handle_refresh(mechanize._http.HTTPRefreshProcessor(), max_time=1)
+
+    
+        # Engage super cheats
+        self.browser.addheaders = [('User-agent', 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.1) Gecko/2008071615 Fedora/3.0.1-1.fc9 Firefox/3.0.1')]
+
+        self.authenticate()
 
     def authenticate(self, **kwargs):
         ''' This function should do two things: if we need cookies and stuff to mess

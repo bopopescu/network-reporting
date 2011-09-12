@@ -220,13 +220,6 @@ class AdHandler(webapp.RequestHandler):
         
         else:    
             # Output the request_id and the winning creative_id if an impression happened
-
-            user_adgroup_daily_key = frequency_capping.memcache_key_for_date(raw_udid, now, creative.ad_group.key())
-            user_adgroup_hourly_key = frequency_capping.memcache_key_for_hour(raw_udid, now, creative.ad_group.key())
-            trace_logging.warning("user_adgroup_daily_key: %s"%user_adgroup_daily_key)
-            trace_logging.warning("user_adgroup_hourly_key: %s"%user_adgroup_hourly_key)
-            memcache.offset_multi({user_adgroup_daily_key:1,user_adgroup_hourly_key:1}, key_prefix='', namespace=None, initial_value=0)
-
             request_time = time.mktime(now.timetuple())
     
             # Create an ad clickthrough URL

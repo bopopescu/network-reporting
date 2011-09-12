@@ -19,7 +19,7 @@ from google.appengine.ext import webapp, db
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.api import images
-
+from ad_server import frequency_capping   
 from publisher.models import *
 from advertiser.models import *
 
@@ -74,12 +74,26 @@ class AdImpressionHandler(webapp.RequestHandler):
         creative = adunit_context.get_creative_by_key(creative_id)
         if creative.ad_group.bid_strategy == 'cpm':
             budget_service.apply_expense(creative.ad_group.campaign, creative.ad_group.bid/1000)
+       
+        raw_udid = self.request.get("udid")  
+        AdImpressionHandler.increment_frequency_counts(creative=creative,
+                                   raw_udid=raw_udid)
         
         if not self.request.get('testing') == TEST_MODE:
             stats_accumulator.log(self.request,event=stats_accumulator.IMP_EVENT,adunit=adunit_context.adunit)  
             
         self.response.out.write("OK")
     
+    @classmethod
+    def increment_frequency_counts(cls, creative=None,
+                                   raw_udid=None,
+                                   now=datetime.datetime.now()):
+          user_adgroup_daily_key = frequency_capping.memcache_key_for_date(raw_udid, now, creative.ad_group.key())
+          user_adgroup_hourly_key = frequency_capping.memcache_key_for_hour(raw_udid, now, creative.ad_group.key())
+          trace_logging.warning("user_adgroup_daily_key: %s"%user_adgroup_daily_key)
+          trace_logging.warning("user_adgroup_hourly_key: %s"%user_adgroup_hourly_key)
+          memcache.offset_multi({user_adgroup_daily_key:1,user_adgroup_hourly_key:1}, key_prefix='', namespace=None, initial_value=0)      
+             
 class AdClickHandler(webapp.RequestHandler):
     # /m/aclk?udid=james&appid=angrybirds&id=ahRldmVudHJhY2tlcnNjYWxldGVzdHILCxIEU2l0ZRipRgw&cid=ahRldmVudHJhY2tlcnNjYWxldGVzdHIPCxIIQ3JlYXRpdmUYoh8M
     def get(self):

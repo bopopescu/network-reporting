@@ -331,7 +331,10 @@ class ImageCreativeForm(AbstractCreativeForm):
         initial = kwargs.get('initial',None)
       
         if instance:
-            image_url = images.get_serving_url(instance.image_blob)
+            if instance.image_blob:
+                image_url = images.get_serving_url(instance.image_blob)
+            else:
+                image_url = None    
             if not initial:
                 initial = {}
             initial.update(image_url=image_url)  

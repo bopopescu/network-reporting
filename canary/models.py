@@ -46,6 +46,7 @@ class Request(db.Model):
             self.status_message = "Failed"
 
 class AdTest(db.Model):
-	ad_app = db.StringProperty()
-	ad_name = db.StringProperty()
-	ad_id = db.StringProperty(required=True)        
+	adunit_app_name = db.StringProperty()
+	adunit_name = db.StringProperty()
+	adunit_id = db.StringProperty(required=True)  
+	active = db.BooleanProperty(default=False)      

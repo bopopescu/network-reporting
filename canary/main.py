@@ -2,7 +2,7 @@
 #
 import os
 import sys
-import json
+import simplejson
 os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 
 from google.appengine.dist import use_library
@@ -30,8 +30,9 @@ URLS = ["&udid=mopubcanary&q=",
         "&udid=mopubcanary&q=keywords",
         "&udid=mopubcanary&q=geo-location&ll=37.0625,-95.677068"]
 
-AdTest(ad_app="", ad_name="Test ad 1", ad_id="agltb3B1Yi1pbmNyDAsSBFNpdGUYwLQgDA").put()
-AdTest(ad_app="", ad_name="Test ad 2", ad_id="agltb3B1Yi1pbmNyDAsSBFNpdGUYrLwgDA").put()
+# AdTest(adunit_app_name="", adunit_name="Test ad 1", adunit_id="agltb3B1Yi1pbmNyDAsSBFNpdGUYwLQgDA", active=True).put()
+# AdTest(adunit_app_name="", adunit_name="Test ad 2", adunit_id="agltb3B1Yi1pbmNyDAsSBFNpdGUYrLwgDA", active=False).put()
+# AdTest(adunit_app_name="Nearby", adunit_name="What's Nearby", adunit_id="agltb3B1Yi1pbmNyDAsSBFNpdGUYsbIDDA").put()
 
 MAX_REQUESTS = 100
 LAST_SUCCESS_THRESHOLD = 3
@@ -66,7 +67,7 @@ class PerformanceHandler(webapp.RequestHandler):
 
         self.response.out.write(template.render('aggregatePerformance.html',
                      {"averages": averages[:50],
-                      "last": last[:50], #memcache.get("agltb3B1Yi1pbmNyDAsSBFNpdGUYwLQgDA-last-requests")
+                      "last": last[:50],
                       "error": error, "warning": warning, "ok": ok,
                       "now": now,
                       "start": now - datetime.timedelta(minutes=50),
@@ -119,19 +120,21 @@ class PingHandler(webapp.RequestHandler):
         rpcs = []
         ad_tests = AdTest.all()
         for ad_test in ad_tests:
-            rpc = urlfetch.create_rpc()
-            urlfetch.make_fetch_call(rpc, 'http://%s/ping/%s' % (self.request.host.replace('8080','8081'), ad_test.ad_id))
-            rpcs.append(rpc)
+            if ad_test.active:
+                rpc = urlfetch.create_rpc()
+                # urlfetch.make_fetch_call(rpc, 'http://%s/ping/%s' % (self.request.host.replace('8080','8081'), ad_test.adunit_id))
+                urlfetch.make_fetch_call(rpc, 'http://mopub-canary.appspot.com/ping/%s' % ad_test.adunit_id)
+                rpcs.append(rpc)
         
         # calculate average latency
         latency_sum = 0
         latency_count = 0
         for rpc in rpcs:
-            latency_sum += json.loads(rpc.get_result().content)['request_ms']
+            latency_sum += simplejson.loads(rpc.get_result().content)['request_ms']
             latency_count += 1
         
         # pick a random request
-        request_dict = json.loads(rpcs[int(random.random() * len(rpcs))].get_result().content)
+        request_dict = simplejson.loads(rpcs[int(random.random() * len(rpcs))].get_result().content)
         now = datetime.datetime.now()
         r = Request(host=request_dict['host'], url=request_dict['url'], success=request_dict['success'], status_code=request_dict['status_code'],
         status_message=request_dict['status_message'], request_ms=request_dict['request_ms'], response_size=request_dict['response_size'],
@@ -157,7 +160,7 @@ class PingIdHandler(webapp.RequestHandler):
         # write out JSON response to return to PingHandler
         d = {'host': r.host, 'url': r.url, 'success': r.success, 'status_code': r.status_code, 'status_message': r.status_message,
         'request_ms': r.request_ms, 'response_size': r.response_size}
-        self.response.out.write(json.dumps(d))
+        self.response.out.write(simplejson.dumps(d))
 	    
 ###
 # Recalculates fun statistics for all ads
@@ -171,11 +174,13 @@ class RecalculateHandler(webapp.RequestHandler):
         
         ad_tests = AdTest.all()
         for ad_test in ad_tests:
-            # recalculate statistics for all ad ids asynchronously
-            rpc = urlfetch.create_rpc()
-            urlfetch.make_fetch_call(rpc, 'http://%s/r/%s' % (self.request.host.replace('8080','8081'), ad_test.ad_id))
+            if ad_test.active:
+                # recalculate statistics for all ad ids asynchronously
+                rpc = urlfetch.create_rpc()
+                # urlfetch.make_fetch_call(rpc, 'http://%s/r/%s' % (self.request.host.replace('8080','8081'), ad_test.adunit_id))
+                urlfetch.make_fetch_call(rpc, 'http://mopub-canary.appspot.com/r/%s' % ad_test.adunit_id)
             
-            id_last = memcache.get("%s-last-requests" % ad_test.ad_id) or []
+            id_last = memcache.get("%s-last-requests" % ad_test.adunit_id) or []
 
             # update running totals for statistics
             failure_sum += sum(0 if x.success else 1 for x in id_last)
@@ -232,15 +237,25 @@ class RecalculateIdHandler(webapp.RequestHandler):
             # store latency stats in memcache
             memcache.set("%s-avg_latency" % id, avg_latency)
             memcache.set("%s-median_latency" % id, median_latency)
+            
+class LinksHandler(webapp.RequestHandler):
+    def get(self):
+        adunits = [(ad_test.adunit_name, ad_test.adunit_id) for ad_test in AdTest.all() if ad_test.active]
+        logging.info("ad_test.adunit_name " + adunits[0][0])
+        logging.info("ad_test.adunit_id " + adunits[0][1])
+        self.response.out.write(template.render('links.html',
+                     {"adunits": adunits
+                     }))       
 
 application = webapp.WSGIApplication([
                   ('/', PerformanceHandler),
-                  ('/performance', PerformanceHandler), # shows a splash page containing aggregate performance data
+                  ('/performance', PerformanceHandler),                     # shows a splash page containing aggregate performance data
                   ('/performance/([A-Za-z0-9]*)', PerformanceIdHandler),    # shows a splash page containing performance data for ad id
 				  ('/ping', PingHandler),                                   # pings all ad ids
                   ('/ping/([A-Za-z0-9]*)', PingIdHandler),                  # pings ad server URL for ad id
                   ('/r', RecalculateHandler),                               # recalculates overall status
                   ('/r/([A-Za-z0-9]*)', RecalculateIdHandler),              # recalculates status for ad id
+                  ('/links', LinksHandler),                                 # shows links to all ad id performance pages
                   ], debug=True)
 
 def main():

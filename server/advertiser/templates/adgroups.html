@@ -58,7 +58,7 @@
 </div>
 {% ifequal account.status "step4" %}
           <div class="alertMessage">
-            Finally, you will need to set up at least one ad campaign to serve into your inventory.  A <strong>Guaranteed</strong> ad campaign is typically a direct sold ad campaign.  <strong>Promotional</strong> campaigns are for house ads like an upsell.  A <strong>Network</strong> ad is an ad served from a ad network like AdMob.
+            Finally, you will need to set up at least one ad campaign to serve into your inventory.  A <strong>Guaranteed</strong> ad campaign is typically a direct sold ad campaign.  <strong>Promotional</strong> campaigns are for house ads like an upsell.  A <strong>Network</strong> ad is an ad served from an ad network like AdMob.
           </div>
 {% endifequal %}
 {% ifequal account.status "step3" %}
@@ -329,7 +329,7 @@
                   {% endfor %}
                 </tbody>
               </table>{% endif %}
-              <span class='marketplace'>
+              {% if marketplace %}
               <h2>Marketplace {% if not marketplace %}<span class="muted">(None)</span>{% endif %}
                   <img id="marketplace-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img>
               </h2>
@@ -339,13 +339,13 @@
                   <tr>
                     <th class="campaignData-icon"></th>
                     <th class="dataTable-name">Name</th>
-                    <th class="dataTable-data numeric"></th>
+                    <th class="dataTable-data numeric">Revenue</th>
+                    <th class="dataTable-data numeric">eCPM</th>
                     <th class="dataTable-data numeric">Attempts</th>
                     <th class="dataTable-data numeric">Impressions</th>
                     <th class="dataTable-data numeric">Fillrate</th>
                     <th class="dataTable-data numeric">Clicks</th>
                     <th class="dataTable-data numeric">CTR</th>
-                    <th class="dataTable-data numeric">&nbsp;</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -364,18 +364,18 @@
 
                       <span class="muted">MoPub Marketplace Beta</span>
                     </th>
-                    <td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric marketplace-rev rev">--</td>
+                    <td class="dataTable-data numeric marketplace-ecpm ecpm">--</td>
                     <td class="dataTable-data numeric marketplace-req req">--</td>
                     <td class="dataTable-data numeric marketplace-imp imp">--</td>
                     <td class="dataTable-data numeric marketplace-fill fill">--</td>
                     <td class="dataTable-data numeric marketplace-clk clk">--</td>
                     <td class="dataTable-data numeric marketplace-ctr ctr">--</td>
-                    <td class="dataTable-data numeric">&nbsp;</td>
                   </tr>
                   {% endfor %}
                 </tbody>
               </table>{% endif %}
-              </span>
+              {% endif %}
 
               <h2>Network  {% if not network %}<span class="muted">(None)</span>{% endif %}
                   <img id="network-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img>
@@ -449,6 +449,7 @@
                   {% endfor %}
                 </tbody>
               </table>{% endif %}
+
               <h2>Backfill Promotional {% if not backfill_promo %}<span class="muted">(None)</span>{% endif %}
                   <img id="bfill-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img>
               </h2>
@@ -530,6 +531,53 @@
                   {% endfor %}
                 </tbody>
               </table>{% endif %}
+              {% if backfill_marketplace %}
+              <h2>Backfill Marketplace {% if not backfill_marketplace %}<span class="muted">(None)</span>{% endif %}
+                  <img id="marketplace-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img>
+              </h2>
+              {% if backfill_marketplace %}
+              <table class="dataTable campaignData-main">
+                <thead>
+                  <tr>
+                    <th class="campaignData-icon"></th>
+                    <th class="dataTable-name">Name</th>
+                    <th class="dataTable-data numeric">Revenue</th>
+                    <th class="dataTable-data numeric">eCPM</th>
+                    <th class="dataTable-data numeric">Attempts</th>
+                    <th class="dataTable-data numeric">Impressions</th>
+                    <th class="dataTable-data numeric">Fillrate</th>
+                    <th class="dataTable-data numeric">Clicks</th>
+                    <th class="dataTable-data numeric">CTR</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for adgroup in backfill_marketplace %}
+                  <tr class="campaignData backfill_marketplace_row campaign-status-all campaign-targeting-all incomplete 
+                    {% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}"
+                    id="{{adgroup.key}}">
+                    <th class="campaignData-icon">
+                      <input type="checkbox" name="id" value="{{adgroup.key}}"/>
+                      {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9 />{% endif %}
+                      {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
+                      {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
+                    </th> 
+                    <th class="dataTable-name">
+                      <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
+
+                      <span class="muted">MoPub Marketplace Beta</span>
+                    </th>
+                    <td class="dataTable-data numeric backfill_marketplace-rev rev">--</td>
+                    <td class="dataTable-data numeric backfill_marketplace-ecpm ecpm">--</td>
+                    <td class="dataTable-data numeric backfill_marketplace-req req">--</td>
+                    <td class="dataTable-data numeric backfill_marketplace-imp imp">--</td>
+                    <td class="dataTable-data numeric backfill_marketplace-fill fill">--</td>
+                    <td class="dataTable-data numeric backfill_marketplace-clk clk">--</td>
+                    <td class="dataTable-data numeric backfill_marketplace-ctr ctr">--</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>{% endif %}
+             {% endif %}
               
               <div class="form-submit-left"> 
                 <span class="buttonWrap">
@@ -582,7 +630,7 @@
         mopub.accountStats = {{account_stats|safe}};
     });
 </script>
-<script src="/js/mopub-advertiser.js?v=60"></script>
+<script src="/js/mopub-advertiser.js?v=80"></script>
 <script src='/js/tokenize_in.js'></script>
 <script src='/js/countries.js'></script>
 {% endblock extraScripts %}

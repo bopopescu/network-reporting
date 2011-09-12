@@ -1,4 +1,4 @@
-total_storage_limit: 10G
+total_storage_limit: 30G
 
 queue:
 
@@ -136,6 +136,12 @@ queue:
 - name: inapp-recorder-00
   rate: 100/s
   bucket_size: 100
+
+- name: stats-updater
+  rate: 10/s
+  bucket_size: 10
+  retry_parameters:
+    task_retry_limit: 1
   
 - name: file-finalizer-00
   rate: 100/s

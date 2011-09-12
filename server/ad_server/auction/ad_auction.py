@@ -174,8 +174,7 @@ class AdAuction(object):
                         active_filter(), 
                         lat_lon_filter(ll),
                         kw_filter(keywords), 
-                        geo_filter(geo_predicates), 
-                        device_filter(device_predicates),
+                        geo_filter(geo_predicates),           
                         os_filter(user_agent),
                         budget_filter(),
                        ) 
@@ -262,7 +261,7 @@ class AdAuction(object):
                     if not eligible_adgroups:
                         continue
                     # if we're on marketplace level, do that marketplace shit
-                    if p == 'marketplace':
+                    if p in ['marketplace', 'backfill_marketplace']:
                         # Build a big dict
                         mk_args = build_marketplace_dict(adunit = adunit,
                                                          kws = keywords,
@@ -276,7 +275,7 @@ class AdAuction(object):
                         trace_logging.info("\nSending to MPX: %s\n" % mk_args)
                         mpx_url = 'http://mpx.mopub.com/req?' + urllib.urlencode(mk_args)
                         xhtml = None
-                        charge_price = None
+                        pub_rev = None
                         # Try to get a response
                         crtv = adunit_context.get_creatives_for_adgroups(eligible_adgroups)
                         if isinstance(crtv, list):
@@ -284,26 +283,30 @@ class AdAuction(object):
                         # set the creative as having done w/e
                         mp_logging.log(None, event=mp_logging.REQ_EVENT, adunit=adunit, creative=crtv, user_agent=user_agent, headers=request.headers, udid=udid)
                         try:
-                            fetched = urlfetch.fetch(mpx_url, deadline=.2)
+                            t1 = datetime.datetime.now()
+                            trace_logging.warning('MPX REQUEST:%s'%mpx_url)
+                            fetched = urlfetch.fetch(mpx_url, deadline=.5)
+                            t2 = datetime.datetime.now()
                             # Make sure it's a good response
-                            trace_logging.info('MPX RESPONES CODE:%s'%fetched.status_code)
+                            trace_logging.info('MPX RESPONES CODE:%s timing: %s'%(fetched.status_code, t2-t1))
                             if fetched.status_code == 200:
+                                trace_logging.warning('MPX RESPONES:%s'%fetched.content)
                                 data = simplejson.loads(fetched.content)
                                 trace_logging.info('MPX REPSONSE:%s'%data)    
                                 # With valid data
-                                if data.has_key('xhtml') and data.has_key('charge_price') and data['xhtml']:
-                                    xhtml = data['xhtml']
-                                    charge_price = data['charge_price']
+                                if data.has_key('xhtml_real') and data.has_key('revenue') and data['xhtml_real']:
+                                    xhtml = data['xhtml_real']
+                                    pub_rev = data['revenue']
                                 else:
                                     continue
                         except urlfetch.DownloadError, e:
                             pass
-                        trace_logging.info('\n\nMPX Charge: %s\nMPX HTML: %s\n' % (charge_price, xhtml))
+                        trace_logging.info('\n\nMPX Charge: %s\nMPX HTML: %s\n' % (pub_rev, xhtml))
                         if xhtml:
                             # Should only be one
                             crtv.html_data = xhtml
                             # Should really be the pub's cut
-                            crtv.adgroup.bid = charge_price
+                            crtv.adgroup.bid = pub_rev
                             # I think we should log stuff here but I don't know how to do that
                             return [crtv, on_fail_exclude_adgroups]
                         else:

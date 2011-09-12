@@ -92,14 +92,25 @@ class AppQueryManager(QueryManager):
     Model = App
     
     @classmethod
-    def get_apps(cls, account=None, deleted=False, limit=MAX_OBJECTS, alphabetize=False):
+    def get_apps(cls, account=None, deleted=False, limit=MAX_OBJECTS, alphabetize=False, offset=None):
         apps = cls.Model.all().filter("deleted =", deleted)
         if account:
             apps = apps.filter("account =", account)
             if alphabetize:
                 apps = apps.order("name")
-        return apps.fetch(limit)    
-
+        if offset:
+            apps = apps.filter("__key__ >", offset)
+        return apps.fetch(limit)
+    
+    @classmethod
+    def get_all_apps(cls, account=None, deleted=False, alphabetize=False):
+        num_apps = 0
+        apps = cls.get_apps(limit=1000)
+        while len(apps) > num_apps:
+            num_apps = len(apps)
+            apps.extend(cls.get_apps(limit=1000, offset=apps[-1].key()))
+        return apps
+            
     @classmethod
     def reports_get_apps(cls, account=None, publisher=None, advertiser=None, deleted=False, limit=MAX_OBJECTS):
         '''Given account or pub, or adv or some combination thereof return a list of apps that (correctly) 

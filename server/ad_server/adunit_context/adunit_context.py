@@ -1,5 +1,3 @@
-import logging
-
 from common.utils.query_managers import CachedQueryManager
 
 from google.appengine.ext import db
@@ -61,6 +59,9 @@ class AdUnitContext(object):
         if self.adunit.network_config:
             self.adunit.network_config.admob_pub_id
         
+        # We also deference the marketplace configs
+        if self.adunit.account.marketplace_config:
+            self.adunit.account.marketplace_config.price_floor
 
 
     def _get_ctr(self, creative, date=datetime.date.today(), date_hour=None, min_sample_size=1000):
@@ -93,7 +94,7 @@ class AdUnitContext(object):
         
     @classmethod
     def fetch_adgroups(cls, adunit, limit=MAX_OBJECTS):
-        logging.info("getting adgroups from db")
+        trace_logging.info("getting adgroups from db")
         adgroups = AdGroup.all().filter("site_keys =",adunit.key()).\
                                   filter("deleted =",False).\
                                   fetch(limit)
@@ -101,10 +102,10 @@ class AdUnitContext(object):
 
     @classmethod
     def fetch_creatives(cls, adunit, adgroups, limit=MAX_OBJECTS):
-        logging.info("getting creatives from db")
+        trace_logging.info("getting creatives from db")
         creatives = Creative.all().filter("account =", adunit.account.key()).\
-                    filter("active =",True).filter("deleted =",False).\
-                    fetch(limit)
+                    filter("active =",True).filter("deleted =",False)
+                    # fetch(limit)
         # creatives = Creative.all().filter("ad_group IN", adgroups).\
         #             filter("active =",True).filter("deleted =",False).\
         #             fetch(limit)
@@ -123,7 +124,7 @@ class AdUnitContext(object):
     @classmethod
     def fetch_campaigns(cls, adgroups):  
         # campaign exclusions... budget + time
-        logging.info("attach eligible campaigns")
+        trace_logging.info("attach eligible campaigns")
         campaigns = []
         for adgroup in adgroups:
             campaign = db.get(adgroup.campaign.key())

@@ -1,11 +1,12 @@
 from string import Template
     
 image = Template("""<html>
+                      $viewportMetaTag
                         <head>                          
                           $finishLoad
-                          <script>
+                          <script> 
                             if(typeof mopubFinishLoad == 'function') {
-                                mopubFinishLoad();
+                                window.onload = mopubFinishLoad;
                             }
                           </script>
                           <script>

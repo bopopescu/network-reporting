@@ -182,7 +182,6 @@ echo "deleting remote uniq user counts S3 part files at" $S3_LOGFILE.pp.out
 s3cmd del --recursive $S3_LOGFILE.pp.out
 ################
 
-
 # split advanced log counts stats file by account: log+YYMMDD+<account>+.adv.lc.stats
 echo
 echo "splitting" $LOCAL_LOGFILE.adv.lc.stats " by day and account..."
@@ -211,7 +210,6 @@ python $APP_DIR/reporting/aws_logging/blob_uploader.py -d $LOG_DIR
 # python $APP_DIR/reporting/aws_logging/uniq_user_stats_updater.py -f $LOCAL_LOGFILE.uu.stats -n 8
 # STOP_TIME=$(date +%s)
 # echo "updating GAE datastore took" $((STOP_TIME-START_TIME)) "seconds"
-
 
 # uploading stats files to S3
 echo

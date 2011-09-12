@@ -80,7 +80,7 @@ def main():
 
     # pub:adv:country_code:time (hour & day)
     basic_count_step = StreamingStep(
-        name='basic log count step',
+        name='log count step',
         mapper=BASIC_LOG_MAPPER,
         reducer=LOG_REDUCER,
         cache_files=[S3_CODE_DIR+'/utils.py#utils.py', S3_CODE_DIR+'/parse_utils.py#parse_utils.py', S3_CODE_DIR+'/wurfl.py#wurfl.py'],
@@ -90,7 +90,7 @@ def main():
 
     # pub:adv:country_code:brand_name:marketing_name:os:os_version:hour
     advanced_count_step = StreamingStep(
-        name='advanced log count step',
+        name='log count step',
         mapper=ADVANCED_LOG_MAPPER,
         reducer=LOG_REDUCER,
         cache_files=[S3_CODE_DIR+'/utils.py#utils.py', S3_CODE_DIR+'/parse_utils.py#parse_utils.py', S3_CODE_DIR+'/wurfl.py#wurfl.py'],

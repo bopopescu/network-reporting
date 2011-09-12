@@ -3,6 +3,7 @@ from __future__ import with_statement
 import logging, os, re, datetime, hashlib
 
 from urllib import urlencode
+from urllib2 import urlopen
 import time
 
 from google.appengine.api import users, images
@@ -33,9 +34,13 @@ from google.appengine.api import taskqueue
 
 from admin import beatbox
 from common.utils.decorators import cache_page_until_post
+from common.utils import simplejson
 
 MEMCACHE_KEY = "jpayne:admin/d:render_p"
 NUM_DAYS = 14
+
+BIDDER_SPENT_URL = "http://mpx.mopub.com/spent"
+BIDDER_SPENT_MAX = 2000
 
 @login_required
 @cache_page_until_post()
@@ -79,7 +84,9 @@ def dashboard_prep(request, *args, **kwargs):
     days = StatsModel.lastdays(NUM_DAYS)
     # gets all undeleted applications
     start_date = datetime.date.today() - datetime.timedelta(days=NUM_DAYS) # NOTE: change
-    apps = AppQueryManager.get_apps(limit=1000)    
+
+    apps = AppQueryManager.get_all_apps()
+    
     # get all the daily stats for the undeleted apps
     # app_stats = StatsModelQueryManager(None,offline=offline).get_stats_for_apps(apps=apps,num_days=30)
 
@@ -110,6 +117,11 @@ def dashboard_prep(request, *args, **kwargs):
                 totals[str(app_stat.date)].user_count = user_count
             if app_stat._publisher:
                 _incr_dict(unique_apps,str(app_stat._publisher),app_stat)
+        # Calculate a 1 day delta between yesterday and the day before that
+        if app_stats[-2].date and app_stats[-3].date and app_stats[-2]._publisher and app_stats[-3].request_count > 0:
+            unique_apps[str(app_stats[-2]._publisher)].requests_delta1day = \
+                float(app_stats[-2].request_count - app_stats[-3].request_count) / app_stats[-3].request_count
+            
     
     # organize daily stats by date
     total_stats = totals.values()
@@ -163,7 +175,8 @@ def dashboard(request, *args, **kwargs):
         task = taskqueue.Task(name=task_name,
                               params=dict(offline="1" if offline else "0"),
                               method='GET',
-                              url='/admin/prep/')
+                              url='/admin/prep/',
+                              target='stats-updater')
         try:                      
             task.add("admin-dashboard-queue")
             return HttpResponseRedirect(reverse('admin_dashboard')+'?loading=1')
@@ -273,3 +286,23 @@ def migrate_image(request, *args, **kwargs):
         
     except Exception, e:
         return HttpResponse(str(e))         
+
+def bidder_spent(request, *args, **kwargs):
+    num_sent = 0
+    try:
+        f = urlopen(BIDDER_SPENT_URL)
+        spent_dict = simplejson.loads(f.read())
+        for id, spent_vals in spent_dict.iteritems():
+            #send email if bidder is over quota
+            if float(spent_vals['spent']) > BIDDER_SPENT_MAX:
+                body = "Bidder (%s) is over budget. Has spent $%s today<br />"%(spent_vals['bidder_name'],spent_vals['spent'])
+                mail.send_mail_to_admins(sender="olp@mopub.com",
+                                         subject="Bidder Over Quota",
+                                         body="%s"%body)
+                num_sent += 1
+    except:
+        pass
+    return HttpResponse(str(num_sent))
+
+
+    

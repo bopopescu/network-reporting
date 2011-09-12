@@ -37,6 +37,13 @@
               </li>
               {% endifnotequal %}
               {% ifequal site.app_key.app_type "iphone" %}
+              {% ifequal site.format "full" %}
+              <li>
+                <p>
+                  Follow the <a href="https://github.com/mopub/mopub-client/wiki/IntegrationHowToInterstitialsIOS">Interstitial Integration for iOS</a> instructions in the code repository.
+                </p>
+              </li>
+              {% else %}
               <li>
                 <p>
                   Add the following code to your view's <code>viewDidLoad</code> method (or another suitable place):
@@ -65,8 +72,14 @@ adView.delegate = self;
 }
                   </code>
                 </div>
-              </li>{% endifequal %}
+              </li>{% endifequal %}{% endifequal %}
               {% ifequal site.app_key.app_type "android" %}
+              {% ifequal site.format "full" %}
+              <li>
+                <p>
+                  Follow the <a href="https://github.com/mopub/mopub-client/wiki/IntegrationHowToInterstitialsAndroid">Interstitial Integration for Android</a> instructions in the code repository.
+                </p>
+              </li>{% else %}
               <li>
                 <p>
                   Add the following XML block to your layout definition (eg. main.xml):
@@ -93,8 +106,7 @@ mpv.setAdUnitId("{{site.key}}");
 mpv.loadAd();</pre>
                   </code>
                 </div>
-              </li>
-            {% endifequal %}
+              </li>            {% endifequal %}{% endifequal %}
             {% ifequal site.app_key.app_type "mweb" %}
               <li>
                 <p>Add the following code snippet into your mobile webpage where you'd like to see ads appear:

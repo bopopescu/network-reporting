@@ -17,7 +17,7 @@ from google.appengine.api import taskqueue
 from google.appengine.ext import db
 from google.appengine.ext import webapp
 from advertiser.models import Campaign
-from budget.models import NoSpendingForIncompleteLogError, BudgetSlicer
+from budget.models import NoSpendingForIncompleteLogError, BudgetSlicer, DEFAULT_TIMESLICES
 
 # The constraints: 
 # The maximum bucket size is 100
@@ -127,7 +127,7 @@ def budget_view(request, adgroup_key):
                                                                 
                                                                 
     slicer = BudgetSlicer.get_or_insert_for_campaign(camp)
-    ts_logs = slicer.timeslice_logs.order("-end_date").fetch(1440)
+    ts_logs = slicer.timeslice_logs.order("-end_date").fetch(DEFAULT_TIMESLICES)
         
     #### Build budgetslicer address ####
     # prefix = "http://localhost:8080/_ah/admin/datastore/edit?key="

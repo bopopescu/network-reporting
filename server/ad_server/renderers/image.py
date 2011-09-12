@@ -1,5 +1,7 @@
 from ad_server.renderers.base_html_renderer import BaseHtmlRenderer 
-
+                                                                     
+from google.appengine.api.images import InvalidBlobKeyError
+import logging
 from google.appengine.api import images 
 
 class ImageRenderer(BaseHtmlRenderer):

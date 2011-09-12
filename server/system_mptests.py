@@ -13,7 +13,8 @@ from publisher.models import Site as AdUnit
 
 from advertiser.models import ( Campaign,
                                 AdGroup,
-                                Creative,
+                                Creative, 
+                                HtmlCreative,
                                 )
 from google.appengine.ext.webapp import ( Request,
                                           Response,
@@ -95,7 +96,7 @@ class TestBudgetEndToEnd(unittest.TestCase):
 
 
 
-        self.expensive_creative = Creative(account=self.account,
+        self.expensive_creative = HtmlCreative(account=self.account,
                                 ad_group=self.expensive_adgroup,
                                 tracking_url="test-tracking-url", 
                                 cpc=.03,
@@ -118,7 +119,7 @@ class TestBudgetEndToEnd(unittest.TestCase):
         self.cheap_adgroup.put()
 
 
-        self.cheap_creative = Creative(account=self.account,
+        self.cheap_creative = HtmlCreative(account=self.account,
                                 ad_group=self.cheap_adgroup,
                                 tracking_url="test-tracking-url", 
                                 cpc=.03,

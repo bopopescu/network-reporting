@@ -153,7 +153,7 @@ class TestAdAuction(unittest.TestCase):
         
         adhandler.get()   
                                  
-        eq_(adhandler.response.out.getvalue(), "iAd")
+        eq_(adhandler.response.out.getvalue(), "iAd native")
         # eq_(adhandler.response.headers["thing"], "stuffs")     
    
 

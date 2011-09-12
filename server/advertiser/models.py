@@ -19,7 +19,6 @@ from ad_server.renderers.image import ImageRenderer
 from ad_server.renderers.millennial_native import MillennialNativeRenderer
 from ad_server.renderers.millennial import MillennialRenderer
 from ad_server.renderers.custom_native import CustomNativeRenderer
-from ad_server.renderers.pure_html import PureHTMLRenderer   
 from ad_server.renderers.base_html_renderer import BaseHtmlRenderer
 from ad_server.renderers.html_data_renderer import HtmlDataRenderer
 from ad_server.renderers.brightroll import BrightRollRenderer
@@ -29,7 +28,6 @@ from ad_server.renderers.appnexus import AppNexusRenderer
 from ad_server.renderers.chartboost import ChartBoostRenderer
 from ad_server.renderers.ejam import EjamRenderer
 from ad_server.renderers.jumptap import JumptapRenderer
-from ad_server.renderers.text import TextRenderer
 from ad_server.renderers.iad import iAdRenderer
 from ad_server.renderers.mobfox import MobFoxRenderer
 
@@ -491,7 +489,7 @@ class TextCreative(Creative):
 
     @property
     def Renderer(self):
-        return TextRenderer
+        return None
     
     def __repr__(self):
         return "'%s'" % (self.headline,)

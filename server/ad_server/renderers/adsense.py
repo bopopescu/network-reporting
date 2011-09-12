@@ -18,6 +18,7 @@ class AdSenseRenderer(BaseHtmlRenderer):
         return 'adsense'
         
     def _setup_html_context(self):
+        super(AdSenseRenderer, self)._setup_html_context()
         self.html_context['format'] = '320x50mb'
         self.html_context['title'] = ','.join(self.keywords)
         self.html_context['pub_id'] = self.adunit.get_pub_id('adsense_pub_id')

@@ -6,6 +6,7 @@ class HtmlDataRenderer(BaseHtmlRenderer):
     TEMPLATE = 'html_data.html'
     
     def _setup_html_context(self):
+        super(HtmlDataRenderer, self)._setup_html_context()
         self.html_context['html_data'] = self.creative.html_data
         self.html_context['random_value'] = self.random_val
-        super(HtmlDataRenderer, self)._setup_html_context()
+        

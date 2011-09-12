@@ -6,7 +6,8 @@ class TextAndTileRenderer(BaseHtmlRenderer):
     TEMPLATE = 'text_icon.html'
     
     def _setup_html_context(self):
+        super(TextAndTileRenderer, self)._setup_html_context()
         image_url = images.get_serving_url(self.creative.image_blob) 
         self.html_context["image_url"] = image_url
         
-        super(TextAndTileRenderer, self)._setup_html_context()
+        

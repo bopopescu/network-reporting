@@ -101,7 +101,8 @@ class TestAdAuction(unittest.TestCase):
         self.frequency_adgroup = AdGroup(account=self.account, 
                                           name="frequency",
                                           campaign=self.frequency_c, 
-                                          daily_frequency_cap=2,
+                                          hourly_frequency_cap=2, 
+                                          daily_frequency_cap=3,
                                           site_keys=[self.adunit.key()],
                                           bid_strategy="cpm",
                                           bid=100000.0) # 100 per click
@@ -127,8 +128,8 @@ class TestAdAuction(unittest.TestCase):
     def tearDown(self):
         self.testbed.deactivate()       
           
-    def mptest_frequency_filter(self):
-        """ Make sure that frequency filtering works properly """     
+    def mptest_frequency_filter_hourly(self):
+        """ Make sure that frequency filtering works properly for hourly limits """     
         
         # All the contexts use the same udid 
         raw_udid = "some_arbitrary_udid"      
@@ -163,16 +164,72 @@ class TestAdAuction(unittest.TestCase):
         # Can only win twice            
         eq_(creative, None)           
         
+        
+        
+               
+    def mptest_frequency_filter_daily(self):
+        """ Make sure that frequency filtering works properly for hourly limits """     
+        
+        # All the contexts use the same udid 
+        raw_udid = "some_arbitrary_udid"      
+        dt = datetime.datetime(1987,4,4,4,4)# save some test time 
+        dt2 = dt+datetime.timedelta(hours=1)   
+        dt3 = dt+datetime.timedelta(hours=2)   
+        dt4 = dt+datetime.timedelta(hours=3)   
+         
+        # Make multiple copies so that excluded_adgroup_keys doesn't cause trouble   
+        client_context1 = self.make_test_context(udid=raw_udid, dt=dt)   
+                                    
+        client_context2 = self.make_test_context(udid=raw_udid, dt=dt2)       
+                                       
+        client_context3 = self.make_test_context(udid=raw_udid,dt=dt3)  
+        
+        client_context4 = self.make_test_context(udid=raw_udid,dt=dt4)      
+         
 
-    def make_test_context(self, udid):
+
+        # Unpack results
+        creative, on_fail_exclude_adgroups = ad_auction.run(client_context1, self.adunit_context)                    
+                                       
+        eq_obj(creative, self.frequency_creative)  
+        
+        # Increment count to 1
+        AdImpressionHandler.increment_frequency_counts(creative=creative,
+                                                       raw_udid=raw_udid,
+                                                       now=dt)        
+        
+        creative, on_fail_exclude_adgroups = ad_auction.run(client_context2, self.adunit_context)  
+        
+        
+        eq_obj(creative, self.frequency_creative)     
+        # Increment count to 2
+        AdImpressionHandler.increment_frequency_counts(creative=creative,
+                                                       raw_udid=raw_udid,
+                                                       now=dt2)        
+        
+        creative, on_fail_exclude_adgroups = ad_auction.run(client_context3, self.adunit_context)  
+        
+        
+        eq_obj(creative, self.frequency_creative)     
+        # Increment count to 3
+        AdImpressionHandler.increment_frequency_counts(creative=creative,
+                                                       raw_udid=raw_udid,
+                                                       now=dt3)        
+                                                                                 
+        creative, on_fail_exclude_adgroups = ad_auction.run(client_context4, self.adunit_context)  
+        # removed due to daily limit           
+        eq_(creative, None)           
+        
+
+    def make_test_context(self, udid, dt=datetime.datetime.now()):
         return ClientContext(adunit=self.adunit,
                                            keywords=None,
                                            country_code=None,
                                            excluded_adgroup_keys=[],
                                            raw_udid=udid, 
-                                           ll=None,
-                                           request_id=None,
-                                           now=datetime.datetime.now(),
+                                           ll=None, 
+                                           now=dt,
+                                           request_id=None,            
                                            user_agent='FakeAndroidOS',
                                            experimental=False)       
         

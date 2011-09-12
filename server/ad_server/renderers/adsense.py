@@ -25,6 +25,7 @@ class AdSenseRenderer(BaseHtmlRenderer):
         
     
     def _setup_headers(self):
+        super(AdSenseRenderer, self)._setup_headers()
         params = {
           "Gclientid":str(self.adunit.get_pub_id("adsense_pub_id")),
           "Gcompanyname":str(self.adunit.account.adsense_company_name),
@@ -54,4 +55,4 @@ class AdSenseRenderer(BaseHtmlRenderer):
         self.header_context.add_header("X-Failurl", self.fail_url)
         self.header_context.add_header("X-Format",'300x250_as')
         self.header_context.add_header("X-Backgroundcolor","0000FF") 
-
+        

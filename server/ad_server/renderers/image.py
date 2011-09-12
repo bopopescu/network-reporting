@@ -8,6 +8,7 @@ class ImageRenderer(BaseHtmlRenderer):
     TEMPLATE = 'image.html'
     
     def _setup_html_context(self):
+        super(ImageRenderer, self)._setup_html_context()
         img_height = self.creative.image_height
         img_width = self.creative.image_width
         
@@ -18,5 +19,3 @@ class ImageRenderer(BaseHtmlRenderer):
         
         image_url = images.get_serving_url(self.creative.image_blob) 
         self.html_context["image_url"] = image_url
-        
-        super(ImageRenderer, self)._setup_html_context()

@@ -1,7 +1,7 @@
 import os
 
 from ad_server.renderers.creative_renderer import BaseCreativeRenderer
-
+# NOTE: appengine specific, but can be just django
 from google.appengine.ext.webapp import template
 
 class BaseHtmlRenderer(BaseCreativeRenderer):

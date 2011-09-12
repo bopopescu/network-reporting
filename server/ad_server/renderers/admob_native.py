@@ -14,7 +14,7 @@ class AdMobNativeRenderer(BaseNativeRenderer):
         if self.adunit.is_fullscreen():
             return 'admob_full'
         else:
-            return 'admob'
+            return 'admob_native'
                 
     def _setup_headers(self):
         super(AdMobNativeRenderer, self)._setup_headers()

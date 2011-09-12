@@ -14,7 +14,7 @@ class MillennialNativeRenderer(BaseNativeRenderer):
         if self.adunit.is_fullscreen():
             return 'millennial_full'
         else:
-            return 'millennial'    
+            return 'millennial_native'    
     
     def _setup_headers(self):
         super(MillennialNativeRenderer, self)._setup_headers()

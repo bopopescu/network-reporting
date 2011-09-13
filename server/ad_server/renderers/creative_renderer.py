@@ -103,9 +103,9 @@ class BaseCreativeRenderer(object):
                                            str(self.creative.height))
     
         # adds network info to the header_context
-        if self.creative.adgroup.network_type:
+        if self.creative.network_name:
             self.header_context.add_header("X-Networktype", 
-                                    self.creative.adgroup.network_type)
+                                    self.creative.network_name)
 
         if self.creative.launchpage:
             self.header_context.add_header("X-Launchpage", 

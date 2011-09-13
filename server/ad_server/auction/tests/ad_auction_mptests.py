@@ -45,10 +45,7 @@ from ad_server.auction.client_context import ClientContext
 from server.ad_server.auction import ad_auction     
 from google.appengine.ext import testbed
 ################# End to End #################
-
-from common.utils.system_test_framework import run_auction, fake_request     
-
-
+                                                            
 from ad_server.auction.battles import (Battle, 
                                        GteeBattle, 
                                        GteeHighBattle,
@@ -133,9 +130,7 @@ class TestAdAuction(unittest.TestCase):
                                 cpc=.03,
                                 ad_type="clear")
         self.cheap_creative.put()
-    
-        
-        self.request = fake_request(self.adunit.key())
+                                                         
         adunit_id = str(self.adunit.key())
 
         self.adunit_context = AdUnitContextQueryManager.cache_get_or_insert(adunit_id)

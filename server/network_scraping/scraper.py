@@ -87,6 +87,7 @@ class Scraper(object):
         raise "Not implemented yet"
 
     def get_site_stats(self, start_date, end_date, ids=None, **kwargs):
+        ''' Start_date and end_date are datetime objects '''
         raise "Not implemented yet"
 
     def get_adunit_stats(self, start_date, end_date, ids=None, **kwargs):

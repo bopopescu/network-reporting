@@ -3,8 +3,11 @@ import urllib2
 import time
 import sys
 
+from datetime import datetime
+
 sys.path.append('..')
 from BeautifulSoup import BeautifulSoup
+from selenium import selenium
 from network_scraping.scraper import Scraper
 
 class NetworkConfidential(object):
@@ -19,37 +22,79 @@ class IAdScraper(Scraper):
 
     NETWORK_NAME = 'iad'
     STATS_PAGE = 'https://iad.apple.com/itcportal/#app_homepage'
-    APP_STATS = ('revenune', 'ecpm', 'requests', 'impressions', 'fill_rate', 'ctr')
+    APP_STATS = ('revenue', 'ecpm', 'requests', 'impressions', 'fill_rate', 'ctr')
     MONEY_STATS = ['revenue', 'ecpm']
     PCT_STATS = ['fill_rate', 'ctr']
 
     def authenticate(self):
-        self.browser.open(self.STATS_PAGE)
-        self.browser.select_form(name='appleConnectForm')
-        self.browser['theAccountName'] = self.username
-        self.browser['theAccountPW'] = self.password
-        self.browser.submit()
-
+        # Must have selenium running or something
+        self.selenium = selenium('localhost', 4444, '*chrome', self.STATS_PAGE)
+        self.selenium.start()
+        self.selenium.open(self.STATS_PAGE)
+        self.selenium.type('name=theAccountName', self.username)
+        self.selenium.type('name=theAccountPW', self.password)
+        self.selenium.click('name=1.Continue')
+        # There are some redirects and shit that happens, chill out for a bit
+        time.sleep(3)
         # We should now have cookies assuming things worked how I think they worked
 
+    def set_dates(self, start_date, end_date):
+        # Set up using custom stuff
+        self.selenium.select('css=select', 'value=customDateRange')
+        self.set_date('css=#gwt-debug-date-range-selector-start-date-box', start_date)
+        self.set_date('css=#gwt-debug-date-range-selector-end-date-box', end_date)
+        time.sleep(8)
+
+    def get_cal_date(self):
+        return datetime.strptime(self.selenium.get_text('css=td.datePickerMonth'), '%b %Y')
+
+    def set_date(self, selector, date):
+        # Open up the date box
+        self.selenium.click(selector)
+        curr_month = self.get_cal_date()
+        # Which way do we go
+        if curr_month > date:
+            button = 'css=td>div.datePickerPreviousButton-up'
+        else:
+            button = 'css=td>div.datePickerNextButton-up'
+        #b2 = button + ' input'
+        # GO ALL THE WAY
+        while self.get_cal_date().month != date.month:
+            self.selenium.mouse_down(button)
+            self.selenium.mouse_up(button+'-hovering')
+            #self.selenium.click(b2)
+        sel1 = 'css=td[class="datePickerDay "]:contains("^%s$")'
+        sel2 = 'css=td[class="datePickerDay datePickerDayIsWeekend "]:contains("^%s$")'
+        sel3 = 'css=td[class="datePickerDay datePickerDayIsToday "]:contains("^%s$")'
+        sel4 = 'css=td[class="datePickerDay datePickerDayIsWeekend datePickerDayIsToday "]:contains("^%s$")'
+        sels = [sel1,sel2,sel3,sel4]
+        sels = [sel % date.day for sel in sels]
+        for sel in sels:
+            try:
+                self.selenium.click(sel)
+                return
+            except Exception, e:
+                pass
 
     def get_site_stats(self, start_date, end_date, ids=None):
-        self.browser.open(self.STATS_PAGE)
-        page = self.browser.response().read()
-        print page
+        # Set the dates
+        self.set_dates(start_date, end_date)
+
+        # read the shit
+        page = self.selenium.get_html_source()
         soup = BeautifulSoup(page)
         # Find all the apps since their TR's aren't named easily
-        apps = soup.findAll({'class':'td_app'})
+        apps = soup.findAll('td',{'class':'td_app'})
         # Get all the tr's
         app_rows = [app.parent for app in apps]
         app_data = []
         for row in app_rows:
-            app_name = row.findAll(p, {"class":"app_text"})
+            app_name = row.findAll('p', {"class":"app_text"})[0].text
             app_dict = dict(name = app_name)
             # Find desired stats
             for stat in self.APP_STATS:
                 class_name = 'td_' + stat
-                data = row.findAll({"class":class_name})[0].contents
+                data = str(row.findAll('td',{"class":class_name})[0].text)
                 if stat in self.MONEY_STATS:
                     # Skip the dollar sign
                     # TODO probably need to do multi-country support because 
@@ -65,56 +110,17 @@ class IAdScraper(Scraper):
             app_data.append(app_dict)
         return app_data
 
-
-
-
-def iad_scraper(network_credential, from_date, to_date):
-    br = mechanize.Browser()
-    br.open('http://developer.apple.com/appstore/resources/iad/')
-    br.select_form(name='appleConnectForm')
-    br['theAccountName'] = network_credential.apple_id
-    br['theAccountPW'] = network_credential.password
-    br.submit()
-    request = mechanize.Request('http://developer.apple.com/appstore/resources/iad/', ' ')
-    response = br.open(request)
-    #for line in response: print line
-
-    # headers = response.readline().split(',')
-    # 
-    # imp_index = headers.index('Paid Impressions')
-    # click_index = headers.index('Clicks')
-    # net_rev_index = headers.index('Net Revenue$')
-    # requests_index = headers.index('Requests')
-    # cpc_index = headers.index('Net Cost Per Click')
-    # app_index = headers.index('Site')
-    # adunit_index = headers.index('Spot')
-    # 
-    # scrape_records = {}
-    # for line in response:
-    #     vals = line.split(',')
-    #     if vals[0] != 'Totals':
-    #         nsr = NetworkScrapeRecord()
-    #         nsr.impressions = vals[imp_index]
-    #         nsr.clicks = vals[click_index]
-    #         nsr.net_revenue = vals[net_rev_index]
-    #         nsr.requests = vals[requests_index]
-    #         nsr.cpc = vals[cpc_index]
-    #         nsr.app_name = vals[app_index]
-    #         nsr.adunit_name = vals[adunit_index]
-    #         scrape_records['%s||%s'%(vals[app_index],vals[adunit_index])] = nsr
-    #         
-    # return scrape_records
-    
-    # for key in scrape_records.keys():
-    #     print key
-    #     print scrape_records[key].impressions, ' ', scrape_records[key].clicks, ' ', scrape_records[key].net_revenue, ' ', scrape_records[key].requests, ' ', scrape_records[key].cpc, ' ', scrape_records[key].app_name, ' ', scrape_records[key].adunit_name
-
 if __name__ == '__main__':
     nc = NetworkConfidential()
+    s = datetime(2011, 7, 15)
+    e = datetime(2011, 9, 15)
     nc.account = None
     nc.username = nc.apple_id ='rawrmaan@me.com'
     nc.password ='606mCV&#dS'
     nc.network = 'iad'
     iads = IAdScraper(nc)
-    iad_scraper(nc,'','')
-    print iads.get_site_stats(None,None)
+    try:
+        print iads.get_site_stats(s,e)
+    except:
+        pass
+    iads.selenium.stop()

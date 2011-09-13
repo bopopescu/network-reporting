@@ -129,7 +129,8 @@ class RenderingTestBase(object):
             Uses a default value for html_data. """        
             
         print network_type
-        self.adunit = AdUnit(account=self.account, 
+        self.adunit = AdUnit(key_name='key_name',
+                             account=self.account, 
                              app_key=self.app, 
                              name="Test AdUnit",
                              format="320x50",

@@ -3,7 +3,9 @@ from ad_server.renderers.base_html_renderer import BaseHtmlRenderer
 from google.appengine.api import images 
 
 class AdMobRenderer(BaseHtmlRenderer):
-    """ For now, just do the standard """
+    """ 
+    Uses specific admob TEMPLATE for rendering
+    """
     
     TEMPLATE = 'admob.html'
     
@@ -15,4 +17,4 @@ class AdMobRenderer(BaseHtmlRenderer):
         
     def _setup_headers(self):
         super(AdMobRenderer, self)._setup_headers()
-        self.header_context.add_header("X-Failurl", self.fail_url)
+        self.header_context.fail_url = self.fail_url

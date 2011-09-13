@@ -7,7 +7,18 @@ import time
 from ad_server.renderers.header_context import HeaderContext
  
 class BaseCreativeRenderer(object):  
-    """ Probides basic interface for renderers. """
+    """ 
+    Base class for all renderers.
+
+    In general this should not be subclassed directly. All renderers
+    currently fall into two categories:
+    1.) HTML (BaseHtmlRenderer)
+    2.) HTML DATA (HtmlDataRenderer, extends BaseHtmlRenderer)
+        used if creative.html_data is present
+    3.) Native (BaseNativeRenderer)
+    When creating a new renderer, you should subclass whichever one of these
+    is most apropriate
+    """
     
     TEMPLATE = None
     
@@ -22,6 +33,12 @@ class BaseCreativeRenderer(object):
                        on_fail_exclude_adgroups,
                        keywords=None,
                        random_val=None): 
+        """
+        Initialize renderer with all information that will be necessary to
+        render the creative. When subclassing it may be necessary to override
+        this method. Always call the superclass __init__ from the overriding
+        implementation
+        """
         self.creative = creative
         self.adunit = adunit
         self.udid = udid
@@ -41,6 +58,14 @@ class BaseCreativeRenderer(object):
         self.rendered_creative = None
 
     def render(self, version_number=None):
+        """
+        Entrance point for rendering once the Renderer has been initialized.
+        Two main tasks are:
+        1.) Setting up headers
+        2.) Setting up content
+        When creating new renderers you should only have to override these 
+        helper methods, and not the render method itself
+        """
         version_number = version_number # quiet PyLint
         self.log_winner()
 
@@ -78,43 +103,50 @@ class BaseCreativeRenderer(object):
         return track_url, ad_click_url
 
     def _setup_headers(self):
+        """
+        Set up the headers that are used by all renderers. When overriding this
+        method it will generally be necessary to still call this base method.
+        """
         ad_type = self._get_ad_type()
         if ad_type == 'html' or not self.adunit.is_fullscreen():
-            self.header_context.add_header("X-Adtype", ad_type)    
+            self.header_context.ad_type = ad_type
         else:
-            self.header_context.add_header("X-Adtype", "interstitial")
-            self.header_context.add_header("X-Fulladtype", ad_type)
+            self.header_context.ad_type = "interstitial"
+            self.header_context.full_ad_type = ad_type
         
-        self.header_context.add_header("X-Clickthrough", 
-                                       str(self.click_url))   
+        self.header_context.click_through = str(self.click_url)
         # add creative ID for testing (also prevents that one 
         # bad bug from happening)
-        self.header_context.add_header("X-Creativeid", 
-                                       "%s" % self.creative.key())
-        self.header_context.add_header("X-Imptracker", 
-                                       str(self.impression_url))
+        self.header_context.creative_id = "%s" % self.creative.key()
+        self.header_context.imp_tracker = str(self.impression_url)
         # pass the creative height and width if they are explicity set
         trace_logging.warning("creative size:%s" % self.creative.format)
         if self.creative.width and self.creative.height \
           and not self.adunit.is_fullscreen():
-            self.header_context.add_header("X-Width", 
-                                           str(self.creative.width))
-            self.header_context.add_header("X-Height", 
-                                           str(self.creative.height))
+            self.header_context.width = str(self.creative.width)
+            self.header_context.height = str(self.creative.height)
     
         # adds network info to the header_context
+
         if self.creative.network_name:
-            self.header_context.add_header("X-Networktype", 
-                                    self.creative.network_name)
+            self.header_context.network_name = self.creative.network_name
+
 
         if self.creative.launchpage:
-            self.header_context.add_header("X-Launchpage", 
-                                    self.creative.launchpage)
+            self.header_context.launch_page = self.creative.launchpage
             
     def _get_ad_type(self):
+        """
+        Abstract method. Returns the ad type of the renderer. This method 
+        can be overridden 
+        """
         raise NotImplementedError
         
     def _setup_content(self):
+        """
+        Abstract method used to set up the content portion of the creative.
+        Must be overridden
+        """
         raise NotImplementedError
         
     def log_winner(self):

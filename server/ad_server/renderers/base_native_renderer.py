@@ -1,9 +1,14 @@
 from ad_server.renderers.creative_renderer import BaseCreativeRenderer
 
 class BaseNativeRenderer(BaseCreativeRenderer):
-    """ For now, just do the standard """
-
+    """
+    Base class to be used for all native renderers
+    """
+    
     def _get_ad_type(self):
+        """
+        Each native renderer must override this method
+        """
         raise NotImplementedError
 
     def _setup_content(self):
@@ -11,4 +16,4 @@ class BaseNativeRenderer(BaseCreativeRenderer):
         
     def _setup_headers(self):
         super(BaseNativeRenderer, self)._setup_headers()
-        self.header_context.add_header('X-Failurl', self.fail_url)    
+        self.header_context.fail_url = self.fail_url

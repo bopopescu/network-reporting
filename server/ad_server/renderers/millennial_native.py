@@ -8,7 +8,6 @@ except ImportError:
         from common.utils import simplejson as json
 
 class MillennialNativeRenderer(BaseNativeRenderer):
-    """ For now, just do the standard """
     
     def _get_ad_type(self):
         if self.adunit.is_fullscreen():
@@ -23,6 +22,5 @@ class MillennialNativeRenderer(BaseNativeRenderer):
             "adWidth": self.adunit.get_width(),
             "adHeight": self.adunit.get_height()
         }
-        self.header_context.add_header("X-Nativeparams", 
-                                       json.dumps(nativecontext_dict))
+        self.header_context.native_params = json.dumps(nativecontext_dict)
     

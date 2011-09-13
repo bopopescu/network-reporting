@@ -8,13 +8,17 @@ except ImportError:
         from common.utils import simplejson as json
         
 class AdSenseRenderer(BaseHtmlRenderer):
-    """ For now, just do the standard """
+    """
+    Uses custom adsense TEMPLATE for rendering
+    """
     
     TEMPLATE = "adsense.html"
     
     def _get_ad_type(self):
-        # Override the adtype so that it requires a native adapter 
-        # in-app and shows up as html in mobile web
+        """
+        Override the adtype so that it requires a native adapter 
+        in-app and shows up as html in mobile web
+         """
         return 'adsense'
         
     def _setup_html_context(self):
@@ -52,8 +56,8 @@ class AdSenseRenderer(BaseHtmlRenderer):
         # is about to show a PSA.
         # "Gallowadsafemedium":,
         }
-        self.header_context.add_header("X-Nativeparams", json.dumps(params))
-        self.header_context.add_header("X-Failurl", self.fail_url)
-        self.header_context.add_header("X-Format",'300x250_as')
-        self.header_context.add_header("X-Backgroundcolor","0000FF") 
+        self.header_context.native_params = json.dumps(params)
+        self.header_context.fail_url = self.fail_url
+        self.header_context.format = '300x250_as'
+        self.header_context.background_color = "0000FF"
         

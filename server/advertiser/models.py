@@ -485,7 +485,10 @@ class iAdCreative(Creative):
         return ('728x90', '320x50', 'full_tablet')
     
 class AdSenseCreative(Creative):
-    pass
+
+    @property
+    def multi_format(self):
+        return ('320x50', '300x250')
 
 class AdMobCreative(Creative):
     pass

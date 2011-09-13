@@ -10,8 +10,7 @@ for k in [k for k in sys.modules if k.startswith('django')]:
     del sys.modules[k]
 use_library('django', '1.2')
 
-from models import Request
-from models import AdTest
+from models import *
 
 from google.appengine.api import users, mail
 import datetime, time, random, logging
@@ -26,13 +25,15 @@ from google.appengine.ext import db
 
 template.register_template_library('filters.filters')
 
+#makes changes required for local testing / production servers
+IS_PRODUCTION = True
+if not IS_PRODUCTION:
+    from load_adunits import *
+    AdTest(adunit_app_name="", adunit_name="", adunit_id="agltb3B1Yi1pbmNyDAsSBFNpdGUYrLwgDA", active=True).put()
+
 URLS = ["&udid=mopubcanary&q=",
         "&udid=mopubcanary&q=keywords",
         "&udid=mopubcanary&q=geo-location&ll=37.0625,-95.677068"]
-
-# AdTest(adunit_app_name="", adunit_name="Test ad 1", adunit_id="agltb3B1Yi1pbmNyDAsSBFNpdGUYwLQgDA", active=True).put()
-# AdTest(adunit_app_name="", adunit_name="Test ad 2", adunit_id="agltb3B1Yi1pbmNyDAsSBFNpdGUYrLwgDA", active=False).put()
-# AdTest(adunit_app_name="Nearby", adunit_name="What's Nearby", adunit_id="agltb3B1Yi1pbmNyDAsSBFNpdGUYsbIDDA").put()
 
 MAX_REQUESTS = 100
 LAST_SUCCESS_THRESHOLD = 3
@@ -81,7 +82,7 @@ class PerformanceHandler(webapp.RequestHandler):
 # health of the ad server with the given id.
             
 class PerformanceIdHandler(webapp.RequestHandler):
-    def get(self, id):
+    def get(self, id='agltb3B1Yi1pbmNyDAsSBFNpdGUYrLwgDA'):
         last = memcache.get("%s-last-requests" % id) or []
         failure_rate = memcache.get("%s-failure_rate" % id)
         last_success = memcache.get("%s-last_success" % id)
@@ -122,15 +123,21 @@ class PingHandler(webapp.RequestHandler):
         for ad_test in ad_tests:
             if ad_test.active:
                 rpc = urlfetch.create_rpc()
-                # urlfetch.make_fetch_call(rpc, 'http://%s/ping/%s' % (self.request.host.replace('8080','8081'), ad_test.adunit_id))
-                urlfetch.make_fetch_call(rpc, 'http://mopub-canary.appspot.com/ping/%s' % ad_test.adunit_id)
+                if IS_PRODUCTION:
+                    urlfetch.make_fetch_call(rpc, 'http://mopub-canary.appspot.com/ping/%s' % ad_test.adunit_id)
+                else:
+                    urlfetch.make_fetch_call(rpc, 'http://%s/ping/%s' % (self.request.host.replace('8080','8081'), ad_test.adunit_id))
                 rpcs.append(rpc)
         
         # calculate average latency
         latency_sum = 0
         latency_count = 0
         for rpc in rpcs:
-            latency_sum += simplejson.loads(rpc.get_result().content)['request_ms']
+            # try to wait for result of ping request if it's timing out pass
+            try:
+                latency_sum += simplejson.loads(rpc.get_result().content)['request_ms']
+            except:
+                pass
             latency_count += 1
         
         # pick a random request
@@ -177,25 +184,39 @@ class RecalculateHandler(webapp.RequestHandler):
             if ad_test.active:
                 # recalculate statistics for all ad ids asynchronously
                 rpc = urlfetch.create_rpc()
-                # urlfetch.make_fetch_call(rpc, 'http://%s/r/%s' % (self.request.host.replace('8080','8081'), ad_test.adunit_id))
-                urlfetch.make_fetch_call(rpc, 'http://mopub-canary.appspot.com/r/%s' % ad_test.adunit_id)
+                if IS_PRODUCTION:
+                    urlfetch.make_fetch_call(rpc, 'http://mopub-canary.appspot.com/r/%s' % ad_test.adunit_id)
+                else:
+                    urlfetch.make_fetch_call(rpc, 'http://%s/r/%s' % (self.request.host.replace('8080','8081'), ad_test.adunit_id))
             
-            id_last = memcache.get("%s-last-requests" % ad_test.adunit_id) or []
+                id_last = memcache.get("%s-last-requests" % ad_test.adunit_id) or []
 
-            # update running totals for statistics
-            failure_sum += sum(0 if x.success else 1 for x in id_last)
-            request_count += len(id_last)
-            id_last_successes = [i for i, v in enumerate(id_last) if v.success]
-            if len(id_last_successes) > 0:
-                last_successes.append(min(id_last_successes))
-            latencies.extend([x.request_ms for x in id_last if x.request_ms is not None])
+                # update running totals for statistics
+                failure_sum += sum(0 if x.success else 1 for x in id_last)
+                request_count += len(id_last)
+                id_last_successes = [i for i, v in enumerate(id_last) if v.success]
+                if len(id_last_successes) > 0:
+                    last_successes.append(min(id_last_successes))
+                latencies.extend([x.request_ms for x in id_last if x.request_ms is not None])
         
+        logging.info("request_count = %d" % request_count)
         # determine aggregate ad serving status    
         if request_count > 0:
             failure_rate = failure_sum / float(request_count);
             last_success = min(last_successes)
             memcache.set("failure_rate", failure_rate)
             memcache.set("last_success", last_success)
+            
+            logging.info("last_success = %d" % last_success)
+            logging.info("EMAIL SHOULD SHOW HERE")
+            
+            # if there is a failure alert condition, send an email
+            # Yes, this should continue to be sent until the failure condition has been addressed
+            if last_success > LAST_SUCCESS_THRESHOLD:
+                mail.send_mail(sender='olp@mopub.com', 
+                               to='eng@mopub.com',
+                               subject="CODE RED: ad server has been down for several tries", 
+                               body="Failure count=%d. See more at http://stats.mopub.com" % last_success)
         
             latencies.sort()
             if len(latencies) > 0:
@@ -218,14 +239,6 @@ class RecalculateIdHandler(webapp.RequestHandler):
         last_success = min(i for i, v in enumerate(last) if v.success)
         memcache.set("%s-failure_rate" % id, failure_rate)
         memcache.set("%s-last_success" % id, last_success)
-
-        # if there is a failure alert condition, send an email
-        # Yes, this should continue to be sent until the failure condition has been addressed
-        if last_success > LAST_SUCCESS_THRESHOLD:
-            mail.send_mail(sender='jpayne@mopub.com', 
-                           to='tiago@mopub.com', #'eng@mopub.com'
-                           subject="CODE RED: ad server has been down for several tries", 
-                           body="Failure count=%d. See more at http://stats.mopub.com" % last_success)
          
         # recalculate latency median and average
         latencies = [x.request_ms for x in last if x.request_ms is not None]
@@ -248,14 +261,14 @@ class LinksHandler(webapp.RequestHandler):
                      }))       
 
 application = webapp.WSGIApplication([
-                  ('/', PerformanceHandler),
-                  ('/performance', PerformanceHandler),                     # shows a splash page containing aggregate performance data
-                  ('/performance/([A-Za-z0-9]*)', PerformanceIdHandler),    # shows a splash page containing performance data for ad id
-				  ('/ping', PingHandler),                                   # pings all ad ids
-                  ('/ping/([A-Za-z0-9]*)', PingIdHandler),                  # pings ad server URL for ad id
-                  ('/r', RecalculateHandler),                               # recalculates overall status
-                  ('/r/([A-Za-z0-9]*)', RecalculateIdHandler),              # recalculates status for ad id
-                  ('/links', LinksHandler),                                 # shows links to all ad id performance pages
+                  ('/', PerformanceIdHandler),                    # shows a splash page containing performance data for a fast ad id
+                  ('/performance', PerformanceHandler),           # shows a splash page containing aggregate performance data
+                  ('/performance/(.*)', PerformanceIdHandler),    # shows a splash page containing performance data for ad id
+				  ('/ping', PingHandler),                         # pings all ad ids
+                  ('/ping/(.*)', PingIdHandler),                  # pings ad server URL for ad id
+                  ('/r', RecalculateHandler),                     # recalculates overall status
+                  ('/r/(.*)', RecalculateIdHandler),              # recalculates status for ad id
+                  ('/links', LinksHandler),                       # shows links to all ad id performance pages
                   ], debug=True)
 
 def main():

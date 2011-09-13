@@ -129,12 +129,10 @@ class BrightRollServerSide(ServerSide):
         if response == '<VAST version="2.0" />':
             raise ServerSideException
         
-        
-        self.parse_xml(response.content)
-        # try:
-        #     self.parse_xml(response.content)
-        # except:
-        #     raise ServerSideException("BrightRoll ad is empty") 
+        try:
+            self.parse_xml(response.content)
+        except IndexError:
+            raise ServerSideException("BrightRoll xml parsing failed...empty ad?")
         # scripts = """
         # <script type="text/javascript">
         #     window.addEventListener("load", function() { window.location="mopub://finishLoad";}, false);

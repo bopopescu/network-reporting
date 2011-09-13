@@ -206,6 +206,8 @@ class RenderingTestBase(object):
             example_headers = HeaderContext.from_json(unicode(example_headers_string))
         
         print "running file name: %s" % name
+        print header_context
+        print example_headers
         eq_(header_context, example_headers)             
         
          

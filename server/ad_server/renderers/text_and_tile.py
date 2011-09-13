@@ -4,7 +4,9 @@ from google.appengine.api.images import InvalidBlobKeyError
 import logging
 
 class TextAndTileRenderer(BaseHtmlRenderer):
-    """ For now, just do the standard """
+    """
+    Uses specific TEMPLATE for rendering text/tile creative
+    """
     TEMPLATE = 'text_icon.html'
     
     def _setup_html_context(self):

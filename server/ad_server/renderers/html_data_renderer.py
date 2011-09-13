@@ -1,7 +1,11 @@
 from ad_server.renderers.base_html_renderer import BaseHtmlRenderer
 
 class HtmlDataRenderer(BaseHtmlRenderer):
-    """ For now, just do the standard """
+    """ 
+    Simple extension to BaseHtmlRenderer. Overrides _setup_html_context
+    to provide additional 'html_data' field for rendering. To be used
+    when creative.html_data is present
+    """
     
     TEMPLATE = 'html_data.html'
     

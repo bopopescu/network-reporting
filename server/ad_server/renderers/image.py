@@ -5,7 +5,9 @@ import logging
 from google.appengine.api import images 
 
 class ImageRenderer(BaseHtmlRenderer):
-    """ For now, just do the standard """
+    """
+    Uses image specific TEMPLATE for rendering image creative
+    """
     
     TEMPLATE = 'image.html'
     

@@ -101,7 +101,7 @@ class AddReportHandler(RequestHandler):
         if edit:
             self.request.flash['report_edit'] = 'The requested edit requires the report to be re-run.  The request has been submitted and you will be notified via email when it has completed'
         else:
-            self.request.flash['report_success'] = 'Your report has been successfully submitted, you will be notified via email when it as completed!'
+            self.request.flash['report_success'] = 'Your report has been successfully submitted, you will be notified via email when it has completed!'
         return HttpResponseRedirect('/reports/')
 
 @login_required

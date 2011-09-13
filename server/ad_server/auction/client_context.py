@@ -1,5 +1,6 @@
 import datetime   
-from common.utils.marketplace_helpers import get_width_and_height
+from common.utils.marketplace_helpers import get_width_and_height      
+from common.utils.helpers import to_uni, to_ascii    
 
 class ClientContext(object):
     """ All of the information provided to us by the client.
@@ -102,7 +103,8 @@ def build_marketplace_dict(adunit, kws, udid, ua, ll, ip, adunit_context, countr
         none_keys = []
         for k,v in ret.iteritems():
             if v is None:
-                none_keys.append(k)
+                none_keys.append(k) 
+            ret[k] = to_ascii(v)
         for key in none_keys:
             del(ret[key])
         return ret

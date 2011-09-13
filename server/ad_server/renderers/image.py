@@ -21,5 +21,6 @@ class ImageRenderer(BaseHtmlRenderer):
         try:
             image_url = images.get_serving_url(self.creative.image_blob)  
         except InvalidBlobKeyError:
-            logging.error("Could not find blobkey. Perhaps you are on mopub-experimental.")    
+            logging.error("Could not find blobkey. Perhaps you are on mopub-experimental.")   
+            image_url = "" 
         self.html_context["image_url"] = image_url

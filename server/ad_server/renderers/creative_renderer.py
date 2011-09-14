@@ -129,6 +129,12 @@ class BaseCreativeRenderer(object):
         # adds network info to the header_context
         if self.creative.adgroup.network_type:
             self.header_context.network_type = self.creative.adgroup.network_type
+            
+            
+        # adds refresh interval for non-fullscreens
+        refresh = self.adunit.refresh_interval
+        if refresh and not self.adunit.is_fullscreen():
+            self.header_context.refresh_time = refresh    
 
         if self.creative.launchpage:
             self.header_context.launch_page = self.creative.launchpage

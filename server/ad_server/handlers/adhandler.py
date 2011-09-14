@@ -205,10 +205,6 @@ class AdHandler(webapp.RequestHandler):
         # animation_type = random.randint(0,6)
         # self.response.headers.add_header("X-Animation",str(animation_type))    
         
-
-        refresh = adunit.refresh_interval
-        if refresh:
-            self.response.headers.add_header("X-Refreshtime",str(refresh))
         
         if not creative:
             trace_logging.info('Auction returning None')

@@ -1,13 +1,18 @@
+#!/usr/bin/python
+
+import base64
 import mechanize
-import urllib2
-import time
 import sys
+import time
+import traceback
+import urllib2
 
 from datetime import datetime
 
 sys.path.append('..')
 from BeautifulSoup import BeautifulSoup
-from selenium import selenium
+from selenium import webdriver 
+from pyvirtualdisplay import Display
 from network_scraping.scraper import Scraper
 
 class NetworkConfidential(object):
@@ -21,69 +26,80 @@ class NetworkScrapeRecord(object):
 class IAdScraper(Scraper):
 
     NETWORK_NAME = 'iad'
+    SS_FNAME = 'ScraperScreen_%s.png'
     STATS_PAGE = 'https://iad.apple.com/itcportal/#app_homepage'
+    LOGIN_TITLE = 'iTunes Connect - iAd Network Sign In'
     APP_STATS = ('revenue', 'ecpm', 'requests', 'impressions', 'fill_rate', 'ctr')
     MONEY_STATS = ['revenue', 'ecpm']
     PCT_STATS = ['fill_rate', 'ctr']
 
     def authenticate(self):
         # Must have selenium running or something
-        self.selenium = selenium('localhost', 4444, '*chrome', self.STATS_PAGE)
-        self.selenium.start()
-        self.selenium.open(self.STATS_PAGE)
-        self.selenium.type('name=theAccountName', self.username)
-        self.selenium.type('name=theAccountPW', self.password)
-        self.selenium.click('name=1.Continue')
-        # There are some redirects and shit that happens, chill out for a bit
-        time.sleep(10)
+        self.disp = Display(visible = 0, size = (1024, 768))
+        self.disp.start()
+        self.browser = webdriver.Chrome()
+        self.browser.get(self.STATS_PAGE)
+        while self.browser.title == self.LOGIN_TITLE:
+            login = self.browser.find_element_by_css_selector('#accountname')
+            login.click()
+            login.send_keys(self.username)
+            pw = self.browser.find_element_by_name('theAccountPW')
+            pw.click()
+            pw.send_keys(self.password)
+            self.browser.find_element_by_name('appleConnectForm').submit()
+            # There are some redirects and shit that happens, chill out for a bit
+            time.sleep(10)
         # We should now have cookies assuming things worked how I think they worked
+
+    def get_ss(self):
+        self.browser.get_screenshot_as_file('/home/ubuntu/' + self.SS_FNAME % time.time())
 
     def set_dates(self, start_date, end_date):
         # Set up using custom stuff
-        self.selenium.select('css=select', 'value=customDateRange')
-        self.set_date('css=#gwt-debug-date-range-selector-start-date-box', start_date)
-        self.set_date('css=#gwt-debug-date-range-selector-end-date-box', end_date)
+        self.browser.find_element_by_css_selector('select').find_element_by_css_selector('option[value=customDateRange]').click()
+        self.set_date('#gwt-debug-date-range-selector-start-date-box', start_date)
+        self.set_date('#gwt-debug-date-range-selector-end-date-box', end_date)
         time.sleep(3)
 
     def get_cal_date(self):
-        return datetime.strptime(self.selenium.get_text('css=td.datePickerMonth'), '%b %Y')
+        return datetime.strptime(self.browser.find_element_by_css_selector('td.datePickerMonth').text, '%b %Y')
 
     def set_date(self, selector, date):
         # Open up the date box
-        self.selenium.click(selector)
+        self.browser.find_element_by_css_selector(selector).click()
         curr_date = self.get_cal_date()
         # Which way do we go
         if curr_date > date:
-            button = 'css=td>div.datePickerPreviousButton'
+            button = 'td>div.datePickerPreviousButton'
         else:
-            button = 'css=td>div.datePickerNextButton'
+            button = 'td>div.datePickerNextButton'
         #b2 = button + ' input'
         # GO ALL THE WAY
         while curr_date.month != date.month or curr_date.year != date.year:
-            self.selenium.mouse_over(button)
-            self.selenium.mouse_down(button)
-            self.selenium.mouse_up(button)
+            self.browser.find_element_by_css_selector(button).click()
+            #self.selenium.mouse_over(button)
+            #self.selenium.mouse_down(button)
+            #self.selenium.mouse_up(button)
             curr_date = self.get_cal_date()
             #self.selenium.click(b2)
-        sel1 = 'css=td[class="datePickerDay "]:contains(%s)'
-        sel2 = 'css=td[class="datePickerDay datePickerDayIsWeekend "]:contains(%s)'
-        sel3 = 'css=td[class="datePickerDay datePickerDayIsToday "]:contains(%s)'
-        sel4 = 'css=td[class="datePickerDay datePickerDayIsWeekend datePickerDayIsToday "]:contains(%s)'
-        sels = [sel1,sel2,sel3,sel4]
-        sels = [sel % date.day for sel in sels]
-        for sel in sels:
-            try:
-                self.selenium.click(sel)
-                return
-            except Exception, e:
-                pass
+        days = self.browser.find_elements_by_css_selector('.datePickerDay')
+        for day in days:
+            if 'datePickDayIsFiller' in day.get_attribute('class'):
+                continue
+            if day.text == str(date.day):
+                day.click()
+                break
 
     def get_site_stats(self, start_date, end_date, ids=None):
         # Set the dates
         self.set_dates(start_date, end_date)
-
         # read the shit
-        page = self.selenium.get_html_source()
+        page = None
+        while page is None:
+            try:
+                page = self.browser.page_source
+            except:
+                print "failed getting source"
         soup = BeautifulSoup(page)
         # Find all the apps since their TR's aren't named easily
         apps = soup.findAll('td',{'class':'td_app'})
@@ -124,6 +140,7 @@ if __name__ == '__main__':
     try:
         print iads.get_site_stats(s,e)
     except:
-        print sys.exc_info()
+        print traceback.print_exc() 
         pass
-    iads.selenium.stop()
+    iads.browser.quit()
+    iads.disp.stop()

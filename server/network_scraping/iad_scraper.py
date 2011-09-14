@@ -35,7 +35,7 @@ class IAdScraper(Scraper):
         self.selenium.type('name=theAccountPW', self.password)
         self.selenium.click('name=1.Continue')
         # There are some redirects and shit that happens, chill out for a bit
-        time.sleep(3)
+        time.sleep(10)
         # We should now have cookies assuming things worked how I think they worked
 
     def set_dates(self, start_date, end_date):
@@ -43,7 +43,7 @@ class IAdScraper(Scraper):
         self.selenium.select('css=select', 'value=customDateRange')
         self.set_date('css=#gwt-debug-date-range-selector-start-date-box', start_date)
         self.set_date('css=#gwt-debug-date-range-selector-end-date-box', end_date)
-        time.sleep(8)
+        time.sleep(3)
 
     def get_cal_date(self):
         return datetime.strptime(self.selenium.get_text('css=td.datePickerMonth'), '%b %Y')
@@ -51,22 +51,24 @@ class IAdScraper(Scraper):
     def set_date(self, selector, date):
         # Open up the date box
         self.selenium.click(selector)
-        curr_month = self.get_cal_date()
+        curr_date = self.get_cal_date()
         # Which way do we go
-        if curr_month > date:
-            button = 'css=td>div.datePickerPreviousButton-up'
+        if curr_date > date:
+            button = 'css=td>div.datePickerPreviousButton'
         else:
-            button = 'css=td>div.datePickerNextButton-up'
+            button = 'css=td>div.datePickerNextButton'
         #b2 = button + ' input'
         # GO ALL THE WAY
-        while self.get_cal_date().month != date.month:
+        while curr_date.month != date.month or curr_date.year != date.year:
+            self.selenium.mouse_over(button)
             self.selenium.mouse_down(button)
-            self.selenium.mouse_up(button+'-hovering')
+            self.selenium.mouse_up(button)
+            curr_date = self.get_cal_date()
             #self.selenium.click(b2)
-        sel1 = 'css=td[class="datePickerDay "]:contains("^%s$")'
-        sel2 = 'css=td[class="datePickerDay datePickerDayIsWeekend "]:contains("^%s$")'
-        sel3 = 'css=td[class="datePickerDay datePickerDayIsToday "]:contains("^%s$")'
-        sel4 = 'css=td[class="datePickerDay datePickerDayIsWeekend datePickerDayIsToday "]:contains("^%s$")'
+        sel1 = 'css=td[class="datePickerDay "]:contains(%s)'
+        sel2 = 'css=td[class="datePickerDay datePickerDayIsWeekend "]:contains(%s)'
+        sel3 = 'css=td[class="datePickerDay datePickerDayIsToday "]:contains(%s)'
+        sel4 = 'css=td[class="datePickerDay datePickerDayIsWeekend datePickerDayIsToday "]:contains(%s)'
         sels = [sel1,sel2,sel3,sel4]
         sels = [sel % date.day for sel in sels]
         for sel in sels:
@@ -112,7 +114,7 @@ class IAdScraper(Scraper):
 
 if __name__ == '__main__':
     nc = NetworkConfidential()
-    s = datetime(2011, 7, 15)
+    s = datetime(2010, 10, 15)
     e = datetime(2011, 9, 15)
     nc.account = None
     nc.username = nc.apple_id ='rawrmaan@me.com'
@@ -122,5 +124,6 @@ if __name__ == '__main__':
     try:
         print iads.get_site_stats(s,e)
     except:
+        print sys.exc_info()
         pass
     iads.selenium.stop()

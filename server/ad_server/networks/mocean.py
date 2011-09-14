@@ -20,6 +20,6 @@ class MoceanServerSide(ServerSide):
     def _bid_and_html_for_response(self,response):
         if re.match("^<!--.*--\>$", response.content) == None and len(response.content) != 0:
             trace_logging.warning("Received " + self.network_name + " response: %s"%cgi.escape(response.content))
-            return 0.0, response.content
+            return 0.0, "<div style='text-align:center'>"+response.content+"</div>"
         trace_logging.info(self.network_name + " failed to return ad")
         raise Exception(self.network_name + " ad is empty")

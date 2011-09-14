@@ -196,7 +196,31 @@ class RenderingTestBase(object):
         
          
                     
-      
+class HeaderContextTests(unittest.TestCase):
+
+    def mptest_basic_header_test(self):
+        """
+        Very basic test of HeaderContext. Just ensures that passed in parameter
+        values get translated correctly into the actual header names while
+        excluding 'None' values
+        """
+        header_context = HeaderContext(refresh_time=1,
+                                       intercept_links="link!",
+                                       click_through='11',
+                                       imp_tracker="imp_tracker.com",
+                                       orientation=1,
+                                       launch_page='aaa',
+                                       scrollable='scrollable_val'
+                                       )
+        header_dict = {'X-Interceptlinks': 'link!',
+                       'X-Clickthrough': '11',
+                       'X-Scrollable': 'scrollable_val', 
+                       'X-Orientation': '1', 
+                       'X-Launchpage': 'aaa', 
+                       'X-Imptracker': 'imp_tracker.com', 
+                       'X-Refreshtime': '1'}
+        eq_(header_context._dict, header_dict)
+
              
 class RenderingTests(RenderingTestBase, unittest.TestCase):  
     """ Inherits that setUp and tearDown methods from RenderingTestBase. """  

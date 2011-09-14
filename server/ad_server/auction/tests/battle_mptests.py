@@ -186,7 +186,33 @@ class TestAdAuction(unittest.TestCase):
     def tearDown(self):
         self.testbed.deactivate()
 
-    def mptest_basic(self): 
+    def mptest_client_context_mk_dict(self):
+        self.adunit_context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit_id)
+        mk_dict = self.client_context.make_marketplace_dict(self.adunit_context)
+        expected_dict = {'price_floor': 0.25,
+                         'app_name': 'Test App',
+                         'mopub_id': 'awesome_test_udid',
+                         'app_id': 'ag1kZXZ-bW9wdWItaW5jcgkLEgNBcHAYAww',
+                         'height': 50,
+                         'paid': 0,
+                         'keywords': ['rocks', 'paper'],
+                         'pub_rev_share': 0.90000000000000002,
+                         'adunit_id': 'ag1kZXZ-bW9wdWItaW5jcgoLEgRTaXRlGAQM',
+                         'pub_id': 'ag1kZXZ-bW9wdWItaW5jcg0LEgdBY2NvdW50GAIM',
+                         'format': '320x50',
+                         'width': 320,
+                         'user_agent': 'Mozilla/5.0 (iPad; U; CPU OS 3.2 like Mac OS X; en-us)'\
+                             ' AppleWebKit/531.21.10 (KHTML, like Gecko) Version/4.0.4 Mobile/7B314 Safari/531.21.10'
+                         }
+        eq_(mk_dict, expected_dict)
+
+    def mptest_client_context_from_request(self):
+        """stub of a test. from_request currently just returns an empty client_context"""
+        client_context_1 = ClientContext.from_request(self.request)
+        client_context_2 = ClientContext()
+        eq_(client_context_1, client_context_2)
+        
+    def mtest_basic(self): 
         self.adunit_context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit_id) 
         gtee_battle = GteeBattle(self.client_context, self.adunit_context)
         creative = gtee_battle.run() 

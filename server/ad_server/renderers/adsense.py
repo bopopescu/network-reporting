@@ -10,6 +10,9 @@ except ImportError:
 class AdSenseRenderer(BaseHtmlRenderer):
     """
     Uses custom adsense TEMPLATE for rendering
+    
+    Inheritance Hierarchy:  
+    AdSenseRenderer => BaseHtmlRenderer => BaseCreativeRenderer
     """
     
     TEMPLATE = "adsense.html"

@@ -8,6 +8,9 @@ class BaseHtmlRenderer(BaseCreativeRenderer):
     """ 
     All HTML renderers will need to subclass this.
 
+    Inheritance Hierarchy:  
+    BaseHtmlRenderer => BaseCreativeRenderer
+
     NOTE: If the creative type to be rendered has an html_data field
     you should subclass HtmlDataRenderer (which subclasses BaseHtmlRenderer)
     rather than subclassing BaseHtmlRenderer directly

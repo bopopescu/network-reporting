@@ -5,6 +5,9 @@ from google.appengine.api import images
 class AdMobRenderer(BaseHtmlRenderer):
     """ 
     Uses specific admob TEMPLATE for rendering
+
+    Inheritance Hierarchy:  
+    AdMobRenderer => BaseHtmlRenderer => BaseCreativeRenderer
     """
     
     TEMPLATE = 'admob.html'

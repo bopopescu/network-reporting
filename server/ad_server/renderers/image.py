@@ -7,6 +7,9 @@ from google.appengine.api import images
 class ImageRenderer(BaseHtmlRenderer):
     """
     Uses image specific TEMPLATE for rendering image creative
+
+    Inheritance Hierarchy:  
+    ImageRenderer => BaseHtmlRenderer => BaseCreativeRenderer
     """
     
     TEMPLATE = 'image.html'

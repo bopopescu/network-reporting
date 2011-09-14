@@ -8,7 +8,10 @@ except ImportError:
         from common.utils import simplejson as json
 
 class AdMobNativeRenderer(BaseNativeRenderer):
-
+    """
+    Inheritance Hierarchy:  
+    AdMobNativeRenderer => BaseNativeRenderer => BaseCreativeRenderer
+    """
     def _get_ad_type(self):
         if self.adunit.is_fullscreen():
             return 'admob_full'

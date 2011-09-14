@@ -5,6 +5,9 @@ class HtmlDataRenderer(BaseHtmlRenderer):
     Simple extension to BaseHtmlRenderer. Overrides _setup_html_context
     to provide additional 'html_data' field for rendering. To be used
     when creative.html_data is present
+
+    Inheritance Hierarchy:  
+    HtmlDataRenderer => BaseHtmlRenderer => BaseCreativeRenderer 
     """
     
     TEMPLATE = 'html_data.html'

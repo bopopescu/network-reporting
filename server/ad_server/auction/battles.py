@@ -219,14 +219,10 @@ class MarketplaceBattle(Battle):
         # TODO: Can we get relevant information without passing request
         mk_args = self.client_context.make_marketplace_dict(self.adunit_context)
 
-
         trace_logging.info("\nSending to MPX: %s\n" % mk_args)
         mpx_url = 'http://mpx.mopub.com/req?' + urllib.urlencode(mk_args)
         xhtml = None
         charge_price = None
-        # Try to get a response
-
-
         # set the creative as having done w/e
         stats_accumulator.log(None, event=stats_accumulator.REQ_EVENT,
                        adunit=self.adunit_context.adunit,
@@ -237,8 +233,6 @@ class MarketplaceBattle(Battle):
             fetched = urlfetch.fetch(mpx_url, deadline=5)
             # Make sure it's a good response
             trace_logging.info('MPX RESPONES CODE:%s'%fetched.status_code)
-            print fetched.status_code
-            print mpx_url
             if fetched.status_code == 200:
                 self._process_marketplace_response(fetched.content, creative)
 

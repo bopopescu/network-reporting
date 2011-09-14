@@ -58,9 +58,21 @@ class ClientContext(object):
                                       adunit_context,
                                       self.country_code)
             
-        
-        
-        
+    def __eq__(self, other):
+        return self.adunit == other.adunit \
+            and self.keywords == other.keywords \
+            and self.country_code == other.country_code \
+            and self.region_code == other.region_code \
+            and self.excluded_adgroup_keys == other.excluded_adgroup_keys \
+            and self.raw_udid == other.raw_udid \
+            and self.mopub_id == other.mopub_id \
+            and self.ll == other.ll \
+            and self.request_id == other.request_id \
+            and self.now == other.now \
+            and self.user_agent == other.user_agent \
+            and self.experimental == other.experimental \
+            and self.geo_predicates == other.geo_predicates \
+            and self.client_ip == other.client_ip
         
 
 def build_marketplace_dict(adunit, kws, udid, ua, ll, ip, adunit_context, country):

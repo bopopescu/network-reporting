@@ -25,6 +25,7 @@ class BaseCreativeRenderer(object):
     def __init__(self, creative,
                        adunit,
                        udid,
+                       client_context,
                        now,
                        request_host,
                        request_url,
@@ -42,6 +43,7 @@ class BaseCreativeRenderer(object):
         self.creative = creative
         self.adunit = adunit
         self.udid = udid
+        self.client_context = client_context
         self.keywords = keywords or []
         
         self.now = now

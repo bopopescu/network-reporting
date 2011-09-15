@@ -1,7 +1,7 @@
 <html>
   <head>
   {% block head %}
-    {% if version >= 6 %}
+    {% if version >= 6 or os == 'android' %}
     <meta name="viewport" content="width=device-width; initial-scale=1.0; user-scalable=no;">
     {% endif %}
   {% endblock head %}  

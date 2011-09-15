@@ -26,6 +26,7 @@ from advertiser.models import (HtmlCreative,
                                TextAndTileCreative, 
                                )
 
+from ad_server.auction.client_context import ClientContext
 from ad_server.renderers.creative_renderer import BaseCreativeRenderer
 from ad_server.renderers.header_context import HeaderContext
 
@@ -84,7 +85,9 @@ class RenderingTestBase(object):
         
         self.on_fail_exclude_adgroups = ["test_on_fail_adgroup1", 
                                          "test_on_fail_adgroup2"]
-        
+                                         
+        self.ios_client_context = ClientContext(user_agent='iphone adfsdf')
+        self.android_client_context = ClientContext(user_agent='iphone adfsdf')
 
         # self.request = fake_request(self.adunit.key())
         adunit_id = str(self.adunit.key())
@@ -146,13 +149,14 @@ class RenderingTestBase(object):
         self._compare_rendering_with_examples(network_type, suffix="_full")
         
     def _compare_rendering_with_examples(self, name, suffix="", 
-                                               reset_example=False):
+                                               reset_example=True):
         """ For now just test the renderer. Next test headers too.
             Uses a default value for html_data. """
         
         creative_renderer = self.creative.Renderer(creative=self.creative,
                        adunit=self.adunit,
                        udid=self.udid,
+                       client_context=self.ios_client_context,
                        now=self.dt,
                        request_host=self.host,
                        request_url=self.url,
@@ -248,6 +252,7 @@ class RenderingTests(RenderingTestBase, unittest.TestCase):
                      request_url=self.url,
                      request_id=self.request_id,
                      version=self.version_number,
+                     client_context=self.android_client_context,
                      on_fail_exclude_adgroups=self.on_fail_exclude_adgroups,
                      keywords=['hi','bye'],
                      random_val='0932jfios')

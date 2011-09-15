@@ -235,6 +235,7 @@ class AdHandler(webapp.RequestHandler):
             creative_renderer = creative.Renderer(creative=creative,
                                          adunit=adunit,
                                          udid=raw_udid,
+                                         client_context=client_context,
                                          now=now,
                                          request_host=self.request.host,
                                          request_url=self.request.url,

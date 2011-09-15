@@ -158,6 +158,10 @@ class ScheduledReport(db.Model):
         else:
             return self.interval.title()
 
+    @property
+    def status(self):
+        return self.most_recent.status
+
 class Report(db.Model):
     #standard
     account = db.ReferenceProperty(collection_name='reports')
@@ -177,6 +181,7 @@ class Report(db.Model):
 
     # maybe useful for internal analytics//informing users
     completed_at = db.DateTimeProperty()
+    status = db.StringProperty(default='Pending')
 
 
     def notify_complete(self):

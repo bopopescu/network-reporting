@@ -93,6 +93,11 @@ def setup_remote_api():
     host = '38-aws.latest.mopub-inc.appspot.com'
     remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', auth_func, host)
 
+def report_failed(report_key):
+    rep = Report.get(report_key)
+    rep.status = 'Failed'
+    rep.put()
+    # If I were a better person I'd email people when their reports fail
 
 def job_failed(state):
     if state == u'FAILED':
@@ -112,6 +117,7 @@ def upload_file(fd):
     datagen, headers = multipart_encode({'file' : fd})
 
     upload_url_req = urllib2.Request(HOST + URL_HANDLER_PATH)
+    log(HOST+URL_HANDLER_PATH)
     upload_url = urllib2.urlopen(upload_url_req).read()
 
     file_upload_req = urllib2.Request(upload_url, datagen, headers)
@@ -182,10 +188,12 @@ def main_loop():
                 for msg in msgs:
                     log("Processing %s" % msg.get_body())
                     if msg in to_del:
+                        log("Msg in to_del, continuing")
                         continue
                     # Start the MR job
                     job_id, steps, fname = submit_job(*parse_msg(msg))
                     if not job_id:
+                        log("No valid job id, report %s failed" % )
                         to_del.append(msg)
                         continue
 
@@ -218,6 +226,9 @@ def main_loop():
                         processed_jobs.append(job.jobflowid)
                         if fail_dict[msg.get_body()] < 3:
                             report_queue.write(msg)
+                        else:
+                            d1, d2, d3, start, end, rep, acct = parse_msg(msg)
+                            report_failed(rep)
                 # Notify GAE when a report is finished
                     elif job_succeeded(job.state):
                         notify_appengine(fname, msg)
@@ -239,6 +250,10 @@ def main_loop():
                         
         except Exception, e:
             log("Encountered exception: %s" % e)
+            tb_file = open('/home/ubuntu/poller.log', 'a')
+            tb_file.write("\n\n")
+            traceback.print_exc(file=tb_file)
+            tb_file.close()
 
 
 

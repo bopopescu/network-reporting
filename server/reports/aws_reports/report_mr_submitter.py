@@ -1,4 +1,7 @@
 import logging, os, time
+import traceback
+
+
 from optparse import OptionParser
 
 from boto.emr.connection import EmrConnection
@@ -7,6 +10,7 @@ from boto.s3.connection import S3Connection
 
 from parse_utils import gen_days, gen_report_fname, get_waiting_jobflow
 from parse_utils import AWS_ACCESS_KEY, AWS_SECRET_KEY, JOBFLOW_NAME
+from queue_poller import report_failed
 
 S3_CONN = S3Connection(AWS_ACCESS_KEY, AWS_SECRET_KEY)
 BUCK = S3_CONN.get_bucket('mopub-aws-logging')
@@ -91,5 +95,11 @@ def submit_job(d1, d2, d3, start, end, report_key, account):
                     enable_debugging=True,
                     )
     except Exception, e:
+        report_failed(report_key)
+        log("Exception when submitting job")
+        tb_file = open('/home/ubuntu/poller.log', 'a')
+        tb_file.write("\n\n")
+        traceback.print_exc(file=tb_file)
+        tb_file.close()
         return False, False, False
     return jobid, steps, output_name

@@ -33,6 +33,12 @@ KEEP_ALIVE = True
 
 LOG_FORMAT = "%s:\t%s\n"
 
+
+class MRSubmitError(Exception):
+    def __init__(self, reason, report_key):
+        self.reason = reason
+        self.report_key = report_key
+
 def log(mesg):
     my_log = open('/home/ubuntu/poller.log', 'a')
     my_log.write(LOG_FORMAT % (time.time(), mesg))
@@ -61,7 +67,7 @@ def submit_job(d1, d2, d3, start, end, report_key, account):
 
     inputs, output_dir = build_puts(start, end, account)
     if len(inputs) == 0:
-        return False, False, False
+        raise MRSubmitError('No inputs', report_key)
     instances = 10
     output_name = gen_report_fname(d1, d2, d3, start, end)
     start = start.strftime('%y%m%d')
@@ -95,11 +101,5 @@ def submit_job(d1, d2, d3, start, end, report_key, account):
                     enable_debugging=True,
                     )
     except Exception, e:
-        report_failed(report_key)
-        log("Exception when submitting job")
-        tb_file = open('/home/ubuntu/poller.log', 'a')
-        tb_file.write("\n\n")
-        traceback.print_exc(file=tb_file)
-        tb_file.close()
-        return False, False, False
+        raise MRSubmitError('No valid Job ID', report_key)
     return jobid, steps, output_name

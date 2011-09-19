@@ -38,7 +38,7 @@ from google.appengine.ext.remote_api import remote_api_stub
 ############### Mopub Imports ############### 
 from parse_utils import gen_report_fname, parse_msg
 from parse_utils import AWS_ACCESS_KEY, AWS_SECRET_KEY
-from report_mr_submitter import submit_job
+from report_mr_submitter import submit_job, MRSubmitError
 
 from reports.models import Report
 
@@ -248,10 +248,11 @@ def main_loop():
                 del(job_msg_map[job_id])
             time.sleep(10)
                         
+        except MRSubmitError, e:
         except Exception, e:
             log("Encountered exception: %s" % e)
-            tb_file = open('/home/ubuntu/poller.log', 'a')
-            tb_file.write("\n\n")
+            tb_file = open('/home/ubuntu/tb.log', 'a')
+            tb_file.write("\nERROR---\n%s" % time.time())
             traceback.print_exc(file=tb_file)
             tb_file.close()
 

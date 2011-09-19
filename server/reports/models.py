@@ -265,7 +265,7 @@ class Report(db.Model):
             return None
         
     def get_export_data(self, level, level_total, names, stats_dict):
-        if self.dims[level] == DAY:
+        if self.dims[level] == DAY and self.report_blob:
             # sort days numerically
             keys = sorted(stats_dict.keys(), key=lambda a: int(a[:a.find('day')]))
         else:

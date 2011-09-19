@@ -511,7 +511,7 @@ class Report(db.Model):
                 # This should only ever be called by the EC2 instance, so
                 # this should be safe
                 f = open('/home/ubuntu/tb.log', 'a')
-                traceback.print_tb(sys.exc_info()[2], file=f)
+                traceback.print_exc(file=f)
                 f.close()
                 return None, None
         return None, None

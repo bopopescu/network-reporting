@@ -1,5 +1,9 @@
 #!/usr/bin/python
-import time, sys, os, time, urllib2
+import time
+import sys
+import os
+import time
+import urllib2
 from datetime import datetime
 import traceback
 
@@ -132,8 +136,10 @@ def job_failed(state):
     else:
         return False
 
-def job_succeeded(state):
-    if state in [u'COMPLETED']:#, u'WAITING']:#, u'TERMINATED', u'WAITING']:
+def job_succeeded(job, job_step_map):
+    if job.state in [u'COMPLETED']:#, u'WAITING']:#, u'TERMINATED', u'WAITING']:
+        return True
+    elif job.state == u'WAITING' and len([step for step in job.steps if step.state == u'COMPLETED']) > job_step_map[job.jobflowid]:
         return True
     else:
         return False
@@ -225,10 +231,16 @@ def main_loop():
                         log("Msg in to_del, continuing")
                         continue
                     # Start the MR job
-                    job_id, steps, fname = submit_job(*parse_msg(msg))
-                    if not job_id:
-                        log("No valid job id, report %s failed" % )
+                    try:
+                        job_id, steps, fname = submit_job(*parse_msg(msg))
+                    except ReportException, e:
+                        # Submission Failed, delete this message
                         to_del.append(msg)
+                        # Notify GAE that this report failed
+                        report_failed(e.report_key)
+                        # Log that shit
+                        default_exc_handle(e)
+                        # Keep calm, carry on
                         continue
 
                     job_step_map[job_id] = steps
@@ -264,10 +276,7 @@ def main_loop():
                             d1, d2, d3, start, end, rep, acct = parse_msg(msg)
                             report_failed(rep)
                 # Notify GAE when a report is finished
-                    elif job_succeeded(job.state):
-                        notify_appengine(fname, msg)
-                        processed_jobs.append(job.jobflowid)
-                    elif job.state == u'WAITING' and len([step for step in job.steps if step.state == u'COMPLETED']) > job_step_map[job.jobflowid]:
+                    elif job_succeeded(job, job_step_map):
                         notify_appengine(fname, msg)
                         processed_jobs.append(job.jobflowid)
                         # Don't worry about clearing job_step_map because it will reset itself if it is reused

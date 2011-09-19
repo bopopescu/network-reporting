@@ -1,4 +1,6 @@
-import logging, os, time
+import logging
+import os
+import time
 import traceback
 
 
@@ -62,7 +64,7 @@ def verify_inputs(inputs, account):
 
 def submit_job(d1, d2, d3, start, end, report_key, account):
     """ Returns Jobid, steps completed, and output name if job is added properly
-    returns False for all values if there are no valid input files or the job doens't add properly"""
+    returns False for all values if there are no valid input files """
     conn = EmrConnection(AWS_ACCESS_KEY, AWS_SECRET_KEY)
 
     inputs, output_dir = build_puts(start, end, account)
@@ -100,6 +102,6 @@ def submit_job(d1, d2, d3, start, end, report_key, account):
                     keep_alive=KEEP_ALIVE,
                     enable_debugging=True,
                     )
-    except Exception, e:
+    except Exception:
         raise MRSubmitError('No valid Job ID', report_key)
     return jobid, steps, output_name

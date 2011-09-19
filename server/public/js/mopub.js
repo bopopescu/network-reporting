@@ -332,21 +332,30 @@ mopub.Utils = mopub.Utils || {};
     // log(cache);
   };
 
+    // Creates a dropdown menu
+    // Usage: `$(dropdown-trigger).dropdown(things-that-dropdown);`
     $.fn.dropdown = function(selector) {
+        var self = this;
         var over_trigger, over_body = false;
+
+        // Make sure the dropdown starts closed (in case class="invisible" wasnt set)
+        dropdownClose();
 
         function dropdownOpen() {
             if ($(selector).hasClass('invisible')); {
                 $(selector).removeClass('invisible');
             }
+            $(self).addClass('hovered');
         }
 
         function dropdownClose() {
             if (!$(selector).hasClass('invisible')) {
                 $(selector).addClass('invisible');
             }
+            $(self).removeClass('hovered');
         }
 
+        // Check whats being hovered
         $(this).hover(function() {
             over_trigger = true;
         }, function () {
@@ -359,13 +368,15 @@ mopub.Utils = mopub.Utils || {};
             over_body = false;
         });
 
+        // Open/close the dropdown if the state has changed
+        // Breaks in firefox if setInterval isn't given a number for the time.
         setInterval(function() {
             if (over_trigger || over_body) {
                 dropdownOpen();
             } else {
                 dropdownClose();
             }
-        });
+        }, 1);
     };
 
   // helper fn for console logging
@@ -375,7 +386,7 @@ mopub.Utils = mopub.Utils || {};
     // use apply to preserve context and invocations with multiple arguments
     log = function () { console.log.apply(console, arguments); };
   } else {
-    log = function(){ return; }
+    log = function(){ return; };
   }
 
   /*---------------------------------------/

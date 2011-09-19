@@ -2415,3 +2415,10 @@ a.dropdown-head, a.dropdown-head:active {
     -moz-border-radius: 5px 5px 0 0;
     border-radius: 5px 5px 0 0;
 }
+
+header nav a.hovered {
+    color: #fff;
+    text-shadow: #000 0 1px 0;
+    background: #1a1a1a;
+    text-decoration: none;
+}

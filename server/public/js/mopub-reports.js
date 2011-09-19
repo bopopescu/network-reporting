@@ -17,11 +17,15 @@
     $('input[name="start"]').datepicker().change(function (e) {
         var dte = new Date($(this).val());
         $('input[name="end"]').datepicker('option', 'minDate', dte);
+        dte.setDate(dte.getDate()+31)
+        $('input[name="end"]').datepicker('option', 'maxDate', dte);
     });
 
     $('input[name="end"]').datepicker({maxDate: new Date()}).change(function (e) {
         var dte = new Date($(this).val());
         $('input[name="start"]').datepicker('option', 'maxDate', dte);
+        dte.setDate(dte.getDate() - 31);
+        $('input[name="start"]').datepicker('option', 'minDate', dte);
     });
 
     function rep_validate(form) {

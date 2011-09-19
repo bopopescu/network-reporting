@@ -4,6 +4,8 @@ import time
 import traceback
 import sys
 
+from sets import Set
+
 from datetime import datetime, timedelta
 
 from django.template import loader
@@ -53,6 +55,8 @@ TIME_DIMS = (MO, WEEK, DAY, HOUR)
 AU_DIMS = (APP, AU)
 WURFL_DIMS = (MAR, BRND, OS, OS_VER)
 
+ONLINE_DIMS = CRTV_DIMS + AU_DIMS
+
 NO_REQ = CRTV_DIMS
 
 def build_stat_dict(stats):
@@ -95,7 +99,7 @@ def statsify(stats_dict):
 
             
 
-#class ScheduledReport -> has a "next report" time, "report every ____" time, report type, when it's tim
+#class ScheduledReport -> has a "next report" time, "report every ____" time, report type, when it's time
 #   to gen a report, this guy makes report objects
 class ScheduledReport(db.Model):
     account = db.ReferenceProperty(collection_name='scheduled_reports')
@@ -205,6 +209,10 @@ class Report(db.Model):
     @property
     def d3(self):
         return self.schedule.d3
+        
+    @property
+    def dims(self):
+        return [self.d1, self.d2, self.d3]
 
     @property
     def name(self):
@@ -248,7 +256,15 @@ class Report(db.Model):
         #    return None
     @property
     def export_data(self):
-        """ Turns the dictionary into a list lists """ 
+        """ Turns the dictionary into a list lists """
+        if self.data:
+            level_total = sum([1 for d in self.dims if d])
+            data = self.get_export_data(0, level_total - 1, [], self.data)
+            return data
+        else:
+            return None
+
+        
         if self.data:
             d2 = d3 = False
             if self.d2:
@@ -292,6 +308,37 @@ class Report(db.Model):
         else:
             return None
         return ret
+        
+    def get_export_data(self, level, level_total, names, stats_dict):
+        if self.dims[level] == DAY:
+            # sort days numerically
+            keys = sorted(stats_dict.keys(), key=lambda a: int(a[:a.find('day')]))
+        else:
+            # sort everything else alphabetically
+            keys = sorted(stats_dict.keys())
+
+        data_list = []
+        for key in keys:
+            value = stats_dict[key]
+            data = list(names)
+            data.append(value['name'])
+
+            for i in range(level_total - level):
+                data.append('')
+    
+            if isinstance(value['stats'], dict):
+                data += [value['stats']['request_count'], value['stats']['impression_count'], value['stats']['click_count'], value['stats']['conversion_count']]
+            else:
+                data += [value['stats'].request_count, value['stats'].impression_count, value['stats'].click_count, value['stats'].conversion_count] 
+
+            data_list.append(data)
+            if 'sub_stats' in value:
+                temp_names = list(names)
+                temp_names.append(value['name'])
+                data_list += (self.get_export_data(level + 1, level_total, temp_names, value['sub_stats']))
+    
+        return data_list
+        
 
     
     @property
@@ -363,8 +410,8 @@ class Report(db.Model):
             vals = eval(vals)
             req, att = self.get_stats_info(keys)
             #I'm using list comprehension for you Nafis
-            bid_infos = [self.get_bid_info(idx, key, memo) for idx, key in enumerate(keys)]
-            keys = [self.get_key_name(idx, key, memo) for idx,key in enumerate(keys)]
+            bid_infos = [self.get_bid_info(idx, key, memo, True) for idx, key in enumerate(keys)]
+            keys = [self.get_key_name(idx, key, memo, True) for idx,key in enumerate(keys)]
 
             # Invalid key somewhere in this line, don't use it
             if None in keys:
@@ -417,9 +464,34 @@ class Report(db.Model):
                         if not temp[key].has_key('sub_stats'):
                             temp[key]['sub_stats'] = {}
                         temp = temp[key]['sub_stats']
-        logging.debug(final)
+        
+        # add missing days on a request for a range
+        self.add_missing_dates(0, final)
+                      
+        # logging.debug(final)
+        
         return self.rollup_revenue(statsify(final))
+        
 
+    def add_missing_dates(self, level, stats_dict):
+        d = self.dims[level]
+        if d == DAY:
+            dates = Set()
+            for key in stats_dict.keys():
+                # key is in '%y%m%dday' format
+                dates.add(key)
+            stats_len = len(stats_dict[stats_dict.keys()[0]]['stats'])
+            # go from start date to end date checking if date is in the hash set
+            # if it's not add it to final
+            for single_date in date_magic.gen_days(self.start, self.end - timedelta(days=1)):
+                if single_date.strftime('%y%m%dday') not in dates:
+                    stats_dict[single_date.strftime('%y%m%dday')] = {'stats' : [0] * stats_len,
+                                                                     'name'  : date_magic.date_name(single_date, d)}
+        else:
+            for key in stats_dict.keys():
+                # sub_stats is not in dict when it isn't used
+                if 'sub_stats' in stats_dict[key]:
+                    self.add_missing_dates(level + 1, stats_dict[key]['sub_stats'])
 
     def rollup_revenue(self, stats):
         def rollup_help(stats, depth):
@@ -450,7 +522,7 @@ class Report(db.Model):
 
 
 
-    def get_stats_info(self, keys):
+    def get_stats_info(self, keys, offline = False):
         depth = len(keys)
         #If any of the dims are an adv, reqs is meaningless
         req = True
@@ -478,7 +550,7 @@ class Report(db.Model):
                     att = False
         return (req, att)
 
-    def get_bid_info(self, idx, key, memo): 
+    def get_bid_info(self, idx, key, memo, offline = False): 
         if idx == 0:
             dim = self.d1
         elif idx == 1:
@@ -487,6 +559,9 @@ class Report(db.Model):
             dim = self.d3
         else:
             dim = None
+            
+        if offline:
+            return None, None
 
         if dim in [CAMP, CRTV]:
             try:
@@ -511,7 +586,7 @@ class Report(db.Model):
         return None, None
 
 
-    def get_key_name(self, idx, key, memo):
+    def get_key_name(self, idx, key, memo, offline=False):
         """ Turns arbitrary keys and things into human-readable names to 
             be output to the report
 
@@ -532,6 +607,9 @@ class Report(db.Model):
         else:
             logging.error("Impossible dim level when rebuilding blob keys")
             dim = None
+            
+        if dim in ONLINE_DIMS and offline:
+            return ('%s-%s' % (dim, key), key)
 
         if dim in CRTV_DIMS:
             try:

@@ -1,4 +1,4 @@
-{% load filters %}{% load googletags %}<!doctype html>  
+{% load filters %}{% load googletags %}<!doctype html>
 
 <!--[if lt IE 7 ]> <html lang="en" class="no-js ie6"> <![endif]-->
 <!--[if IE 7 ]>    <html lang="en" class="no-js ie7"> <![endif]-->
@@ -20,16 +20,16 @@
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
   <!-- CSS -->
-  <link rel="stylesheet" href="/js/mylibs/jquery-ui-1.8.7.custom/css/mopub/jquery-ui-1.8.7.custom.css" />  
+  <link rel="stylesheet" href="/js/mylibs/jquery-ui-1.8.7.custom/css/mopub/jquery-ui-1.8.7.custom.css" />
   <link rel="stylesheet" href="/css/style.css?v=40">
   {% block extraCSS %}{% endblock %}
- 
+
   <!-- modernizr -->
   <script src="/js/mylibs/modernizr-1.6.min.js"></script>
 
   <!-- sorttable -->
   <script src="/js/sorttable.js"></script>
-   
+
   <!-- Google load for jquery and jqueryui -->
   <script src="https://www.google.com/jsapi?key=ABQIAAAAbRw2cYJlVhkm8Sy9e32IvhSp_nRSlbw3drc-oo9CvDm6lSB7YhTn-1GvX4YW6_H-c4ZV_1LYTj_jrw" type="text/javascript"></script>
   <script type="text/javascript">
@@ -37,24 +37,24 @@
       google.load("jquery", "1.4.4");
       google.load("jqueryui", "1.8.7");
   </script>
-        
+
   <!--jQuery and jQuery UI Plugins. These are aggregated from all the *.min.js files in /public/js/mylibs/*-->
-  <script src="/js/mylibs/jquery.mopub.js"></script> 
+  <script src="/js/mylibs/jquery.mopub.js"></script>
 
    <!--jQuery UI SelectMenu Plugins TODO: Where should this go? -->
-  <script src="/js/mylibs/jquery-ui-1.8.7.custom/development-bundle/ui/jquery.ui.selectmenu.js"></script> 
+  <script src="/js/mylibs/jquery-ui-1.8.7.custom/development-bundle/ui/jquery.ui.selectmenu.js"></script>
 
-  <script src="/js/mylibs/jquery.treeview/jquery.treeview.js"></script> 
+  <script src="/js/mylibs/jquery.treeview/jquery.treeview.js"></script>
   <link rel="stylesheet" href="/js/mylibs/jquery.treeview/jquery.treeview.css" />
-  <script src="/js/mylibs/jquery.cookie.js"></script> 
+  <script src="/js/mylibs/jquery.cookie.js"></script>
 
   <!-- Highcharts -->
   <script src="/js/mylibs/highcharts/highcharts.js"></script>
-  
+
   <!-- MoPub -->
-  <script src="/js/mopub.js?v=32"></script>
+  <script src="/js/mopub.js?v=33"></script>
   {% block extraScripts %}<script src="/js/mopub-dashboard.js?v=32"></script>{% endblock extraScripts %}
-  
+
   <!-- KISSmetrics -->
   <script type="text/javascript">
     var _kmq = _kmq || [];
@@ -66,17 +66,17 @@
     }
     _kms('//i.kissmetrics.com/i.js');_kms('//doug1izaerwt3.cloudfront.net/bac035c888be28f161fd88b0e4d2325d67acb2a9.1.js');
   </script>
-  
+
   <!-- Mixpanel -->
   <script type="text/javascript">
     var mpq=[];
     mpq.push(["init","2941bda924fcaaff6ec23f27b41f0129"]);
     (function(){var a=document.createElement("script");a.type="text/javascript";a.async=true;a.src=(document.location.protocol==="https:"?"https:":"http:")+"//api.mixpanel.com/site_media/js/api/mixpanel.js";var b=document.getElementsByTagName("script")[0];b.parentNode.insertBefore(a,b)})();
-    {% if user.is_authenticated %}  
+    {% if user.is_authenticated %}
     // Track by name
     mpq.push(["name_tag", "{{user.email}}"]);
     {% endif %}
-    
+
   </script>
   <!-- End Mixpanel -->
 
@@ -84,7 +84,7 @@
     <script src="/js/mylibs/dd_belatedpng.js"></script>
     <script> DD_belatedPNG.fix('img, .png_bg'); </script>
   <![endif]-->
-  
+
   <script type="text/javascript">
   var _gaq = _gaq || [];
   _gaq.push(['_setAccount', 'UA-20014961-2']);
@@ -108,11 +108,11 @@
       JavaScript is currently disabled. This site requires JavaScript to function correctly.
       Please <a href="http://enable-javascript.com/"> enable JavaScript in your browser</a>!
     </div>
-    
+
     <header>
       <div class="pageWidth">
         <div id="logo"><a class="ir" href="/">MoPub</a></div>
-        
+
         <nav id="nav1">
           <ul>
             {% block navLinks %}
@@ -122,12 +122,22 @@
             {% endblock navLinks %}
           </ul>
         </nav>
-        
+
         <nav id="nav2">
           <ul>
-            <li><a href="{% url account_index %}">Your account</a></li>
+            <li>
+              <a href="#" class="dropdown-head"> Your Account <span class="dropdown-icon"> </span></a>
+              <div class="dropdown invisible">
+                <ul>
+                  <li> <a href="#">Settings</a> </li>
+                  <li> <a href="#">Ad Network Settings </a> </li>
+                  <li> <a href="#">Payment History </a> </li>
+                </ul>
+              </div>
+            </li>
+
             <li><a href="http://help.mopub.com/" target="_blank">Help</a></li>
-            {% if user.is_authenticated %}  
+            {% if user.is_authenticated %}
             <li><a href="{% url django.contrib.auth.views.logout %}">Log out</a></li>
             {% endif %}
             <!-- <li><a href="{% google_login_url %}">Google Log In</a></li>
@@ -136,7 +146,7 @@
         </nav>
       </div>
     </header>
-    
+
     <div id="main">
       <div id="titlebar">
         <div class="pageWidth">
@@ -217,49 +227,49 @@
               </tbody>
             </table>
           </section>{% endblock messageCenter %}
-          
-          
+
+
           {% block flash %}
             {% if flash %}
                 <!-- There's one or more flash-scoped objects -->
 
                 {% for key, value in flash.items %}
-                    <div class="flash_{{ key }} alertMessage">  
-                        {% autoescape off %} 
+                    <div class="flash_{{ key }} alertMessage">
+                        {% autoescape off %}
                         {{ value }}
                         {% endautoescape %}
                     </div>
                 {% endfor %}
-            {% endif %}    
+            {% endif %}
           {% endblock flash %}
-          
+
           {% block content %}{% endblock content %}
         </div>
       </div>
     </div>
     <div class="clear"></div>
-    
+
     <footer>
       <div id="footer-inner">
         <div class="pageWidth">
-          <div id="footer-links"> 
+          <div id="footer-links">
             <ul id="menu-footer">
-              <li class="menu-item menu-item-type-post_type menu-item-58">&copy; 2011 MoPub Inc.</li> 
-              <li id="menu-item-58" class="menu-item menu-item-type-post_type menu-item-58"><a href="http://www.mopub.com/privacy/">Privacy</a></li> 
-              <li id="menu-item-57" class="menu-item menu-item-type-post_type menu-item-57"><a href="http://www.mopub.com/mopub-ads-privacy-policy/">Privacy &#8211; Ad Serving</a></li> 
-              <li id="menu-item-59" class="menu-item menu-item-type-post_type menu-item-59"><a href="http://www.mopub.com/terms/">Terms of Service</a></li> 
-              <li id="menu-item-279" class="menu-item menu-item-type-custom menu-item-279"><a href="http://www.mopub.com/resources">Resources</a></li> 
-            </ul>           
+              <li class="menu-item menu-item-type-post_type menu-item-58">&copy; 2011 MoPub Inc.</li>
+              <li id="menu-item-58" class="menu-item menu-item-type-post_type menu-item-58"><a href="http://www.mopub.com/privacy/">Privacy</a></li>
+              <li id="menu-item-57" class="menu-item menu-item-type-post_type menu-item-57"><a href="http://www.mopub.com/mopub-ads-privacy-policy/">Privacy &#8211; Ad Serving</a></li>
+              <li id="menu-item-59" class="menu-item menu-item-type-post_type menu-item-59"><a href="http://www.mopub.com/terms/">Terms of Service</a></li>
+              <li id="menu-item-279" class="menu-item menu-item-type-custom menu-item-279"><a href="http://www.mopub.com/resources">Resources</a></li>
+            </ul>
             <ul id="menu-social">
               <li class="menu-item menu-item-type-post_type menu-item-58">&nbsp;</li>
-              <li id="menu-item-60" class="menu-item menu-item-type-custom menu-item-60"><a href="http://www.twitter.com/mopub">@mopub</a></li> 
-              <li id="menu-item-268" class="menu-item menu-item-type-post_type menu-item-268"><a href="http://www.mopub.com/about/">About</a></li> 
-              <li id="menu-item-61" class="menu-item menu-item-type-post_type menu-item-61"><a href="http://www.mopub.com/contact/">Contact Us</a></li> 
-              <li id="menu-item-270" class="menu-item menu-item-type-post_type menu-item-270"><a href="http://www.mopub.com/jobs/">Jobs</a></li> 
-            </ul>         
+              <li id="menu-item-60" class="menu-item menu-item-type-custom menu-item-60"><a href="http://www.twitter.com/mopub">@mopub</a></li>
+              <li id="menu-item-268" class="menu-item menu-item-type-post_type menu-item-268"><a href="http://www.mopub.com/about/">About</a></li>
+              <li id="menu-item-61" class="menu-item menu-item-type-post_type menu-item-61"><a href="http://www.mopub.com/contact/">Contact Us</a></li>
+              <li id="menu-item-270" class="menu-item menu-item-type-post_type menu-item-270"><a href="http://www.mopub.com/jobs/">Jobs</a></li>
+            </ul>
           </div>
           <div id="footer-account">
-            {% if user.is_authenticated %}  
+            {% if user.is_authenticated %}
             Logged in as <a href="{% url account_index %}">{{user.email}}</a>
             {% endif %}
 {% block adminSelect %}
@@ -288,7 +298,7 @@
                   </script>
 {% endif %}
 {% endblock adminSelect %}
-            {% if user.is_authenticated %}  
+            {% if user.is_authenticated %}
             <span class="sep">&middot;</span>
             <a href="{% url django.contrib.auth.views.logout %}">Log out</a>
             {% endif %}

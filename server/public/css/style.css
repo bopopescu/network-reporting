@@ -2382,3 +2382,36 @@ td.numeric, th.numeric, .numeric TD {
     -moz-border-radius: 5px;
     border-radius: 5px;
 }
+
+span.dropdown-icon {
+    background: url('../images/ui/ui-icons-progress.png') no-repeat -69px -22px;
+    width: 7px;
+    height: 5px;
+    display: inline-block;
+}
+
+#nav2 .dropdown {
+    position: absolute;
+    display: block;
+    top: 20px;
+    background: #191919;
+    z-index: 10;
+    -webkit-border-radius: 0 5px 5px 5px;
+    -moz-border-radius: 0 5px 5px 5px;
+    border-radius: 0 5px 5px 5px;
+
+}
+
+#nav2 .dropdown a:hover {
+    background-color: #444;
+}
+
+#nav2 .dropdown li {
+    display: block;
+}
+
+a.dropdown-head, a.dropdown-head:active {
+    -webkit-border-radius: 5px 5px 0 0;
+    -moz-border-radius: 5px 5px 0 0;
+    border-radius: 5px 5px 0 0;
+}

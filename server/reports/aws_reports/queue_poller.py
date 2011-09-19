@@ -80,6 +80,33 @@ UPDATE_STATS_HANDLER_PATH = '/offline/update_stats'
 ################## Constants ###################
 LOG_FORMAT = "%s:\t%s\n"
 
+class ReportException(Exception):
+    def __init__(self, key=None):
+        self.report_key = key
+
+class ReportParseError(ReportException):
+    pass
+
+class BlobUploadError(ReportException):
+    pass
+
+class S3Error(ReportException):
+    pass
+
+class ReportPutError(ReportException):
+    pass
+
+class ReportNotifyError(ReportException):
+    pass
+
+
+def default_exc_handle(e):
+    log("Encountered exception: %s" % e)
+    tb_file = open('/home/ubuntu/tb.log', 'a')
+    tb_file.write("\nERROR---\n%s" % time.time())
+    traceback.print_exc(file=tb_file)
+    tb_file.close()
+
 def log(mesg):
     my_log = open('/home/ubuntu/poller.log', 'a')
     my_log.write(LOG_FORMAT % (time.time(), mesg))
@@ -130,13 +157,22 @@ def finalize_report(rep, blob_key):
     report = Report.get(rep)
     report.report_blob = blob_key
     log("Parsing report blob for %s" % rep)
-    data = report.parse_report_blob(report.report_blob.open())
+    try:
+        data = report.parse_report_blob(report.report_blob.open())
+    except:
+        raise ReportParseError(rep)
     report.data = data
     report.completed_at = datetime.now()
     log("Putting finished Report %s" % rep)
-    report.put()
+    try:
+        report.put()
+    except:
+        raise ReportPutError(rep)
     log("Notifying recipients: %s  on completion of %s" % (report.recipients, rep))
-    report.notify_complete()
+    try:
+        report.notify_complete()
+    except:
+        raise ReportNotifyError(rep)
     log("Finished Finalizing, Exiting")
     sys.exit(0)
 
@@ -160,8 +196,9 @@ def notify_appengine(fname, msg):
     else:
         try:
             finalize_report(rep, blob_key)
-        except Exception, e:
+        except ReportException, e:
             # Don't endlessly cycle and shit, log the error and hten kill yourself
+            report_failed(e.report_key)
             log("%s" % e)
             f = open('/home/ubuntu/tb.log', 'a')
             traceback.print_tb(sys.exc_info()[2], file=f)
@@ -248,15 +285,11 @@ def main_loop():
                 del(job_msg_map[job_id])
             time.sleep(10)
                         
-        except MRSubmitError, e:
+        except ReportException, e:
+            report_failed(e.report_key)
+            default_exc_handle(e)
         except Exception, e:
-            log("Encountered exception: %s" % e)
-            tb_file = open('/home/ubuntu/tb.log', 'a')
-            tb_file.write("\nERROR---\n%s" % time.time())
-            traceback.print_exc(file=tb_file)
-            tb_file.close()
-
-
+            default_exc_handle(e)
 
 if __name__ == '__main__':
     main_loop()

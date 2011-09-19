@@ -195,7 +195,7 @@ class Report(db.Model):
                 try:
                     mesg.send()
                 except InvalidEmailError, e:
-                    pass
+                    continue
         else:
             return
 

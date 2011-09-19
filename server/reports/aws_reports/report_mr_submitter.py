@@ -10,7 +10,7 @@ from boto.s3.connection import S3Connection
 
 from parse_utils import gen_days, gen_report_fname, get_waiting_jobflow
 from parse_utils import AWS_ACCESS_KEY, AWS_SECRET_KEY, JOBFLOW_NAME
-from queue_poller import report_failed
+from queue_poller import report_failed, ReportException
 
 S3_CONN = S3Connection(AWS_ACCESS_KEY, AWS_SECRET_KEY)
 BUCK = S3_CONN.get_bucket('mopub-aws-logging')
@@ -34,7 +34,7 @@ KEEP_ALIVE = True
 LOG_FORMAT = "%s:\t%s\n"
 
 
-class MRSubmitError(Exception):
+class MRSubmitError(ReportException):
     def __init__(self, reason, report_key):
         self.reason = reason
         self.report_key = report_key

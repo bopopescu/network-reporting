@@ -142,6 +142,9 @@ class LogoutHandler(RequestHandler):
     def get(self):
         return HttpResponseRedirect(users.create_logout_url('/main/'))
 
+def logout(request,*args,**kwargs):
+    return LogoutHandler()(request,*args,**kwargs)
+
 
 class PaymentInfoChangeHandler(RequestHandler):
     def get(self, payment_form=None, *args, **kwargs):
@@ -168,5 +171,23 @@ class PaymentInfoChangeHandler(RequestHandler):
 def payment_info_change(request, *args, **kwargs):
     return PaymentInfoChangeHandler()(request, *args, **kwargs)
 
-def logout(request,*args,**kwargs):
-    return LogoutHandler()(request,*args,**kwargs)
+
+class PaymentHistoryHandler(RequestHandler):
+    def get(self, *args, **kwargs):
+
+        # payment_history = PaymentHistoryApi.get(self.account.key(),
+        #                                         self.account.date_added,
+        #                                         datetime.date.today())
+        payment_history = [{'amount': '103.43', 'month': 'June', 'status':'Payment Sent to 111-22-3333'},
+                           {'amount': '328.19', 'month': 'July', 'status':'Payment Sent to 111-22-3333'},
+                           {'amount': '655.30', 'month': 'August', 'status':'Error: Description'},
+                           {'amount': '799.94', 'month': 'September', 'status':'Pending'}]
+
+        # parse payment_history if needed
+        return render_to_response(self.request,
+                                  'account/payment_history.html',
+                                  {'payment_history': payment_history})
+
+@login_required
+def payment_history(request, *args, **kwargs):
+    return PaymentHistoryHandler()(request, *args, **kwargs)

@@ -377,6 +377,8 @@
 
               <dl class="formFields flat">
                 {% if account.paymentinfo %}
+                  <a href="{% url payment_history %}"> Click here to view your payment history </a>.
+                  <br /><br />
                 <h3> Tax Information </h3>
                 <dt> Business Name: </dt> <dd>{{account.paymentinfo.business_name}} </dd>
                 <dt> Country: </dt> <dd>{{account.paymentinfo.country|country_code_to_name}} </dd>
@@ -400,6 +402,7 @@
                     <dt> Bank SWIFT Code: </dt> <dd>{{account.paymentinfo.bank_swift_code}} </dd>
                     {% endif %}
                   {% endif %}
+
                 {% else %}
                   <h3> You haven't supplied any payment information yet. </h3>
                 {% endif %}

@@ -249,6 +249,13 @@ def main_loop():
             time.sleep(10)
                         
         except MRSubmitError, e:
+            log("Encountered exception: %s" % e)
+            tb_file = open('/home/ubuntu/tb.log', 'a')
+            tb_file.write("\nERROR---\n%s" % time.time())
+            traceback.print_exc(file=tb_file)
+            tb_file.close()
+            report_failed(e.report_key)
+
         except Exception, e:
             log("Encountered exception: %s" % e)
             tb_file = open('/home/ubuntu/tb.log', 'a')

@@ -6,6 +6,9 @@ import logging
 class TextAndTileRenderer(BaseHtmlRenderer):
     """
     Uses specific TEMPLATE for rendering text/tile creative
+
+    Inheritance Hierarchy:  
+    TextAndTileRenderer => BaseHtmlRenderer => BaseCreativeRenderer
     """
     TEMPLATE = 'text_icon.html'
     

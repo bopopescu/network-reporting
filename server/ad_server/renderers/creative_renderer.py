@@ -25,6 +25,7 @@ class BaseCreativeRenderer(object):
     def __init__(self, creative,
                        adunit,
                        udid,
+                       client_context,
                        now,
                        request_host,
                        request_url,
@@ -42,6 +43,7 @@ class BaseCreativeRenderer(object):
         self.creative = creative
         self.adunit = adunit
         self.udid = udid
+        self.client_context = client_context
         self.keywords = keywords or []
         
         self.now = now
@@ -129,8 +131,12 @@ class BaseCreativeRenderer(object):
         # adds network info to the header_context
 
         if self.creative.network_name:
-            self.header_context.network_name = self.creative.network_name
-
+            self.header_context.network_name = self.creative.network_name   
+            
+        # adds refresh interval for non-fullscreens
+        refresh = self.adunit.refresh_interval
+        if refresh and not self.adunit.is_fullscreen():
+            self.header_context.refresh_time = refresh    
 
         if self.creative.launchpage:
             self.header_context.launch_page = self.creative.launchpage

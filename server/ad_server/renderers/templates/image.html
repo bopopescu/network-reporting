@@ -10,7 +10,8 @@
           margin-top: -{{h_divided_2}}px !important;
           }
     </style>
-    <div class="center">    
+    {# TODO: WTF Android centering is screwed up with the 'center' style #}
+    <div class="{% if os == 'iphone' %}center{% endif %}">    
         <a href="{{creative.url|safe}}" target="_top"><img src="{{image_url}}" width="{{w}}" height="{{h}}"/></a>
     </div>
     {{ block.super }}

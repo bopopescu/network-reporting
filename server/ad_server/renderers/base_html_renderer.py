@@ -8,6 +8,9 @@ class BaseHtmlRenderer(BaseCreativeRenderer):
     """ 
     All HTML renderers will need to subclass this.
 
+    Inheritance Hierarchy:  
+    BaseHtmlRenderer => BaseCreativeRenderer
+
     NOTE: If the creative type to be rendered has an html_data field
     you should subclass HtmlDataRenderer (which subclasses BaseHtmlRenderer)
     rather than subclassing BaseHtmlRenderer directly
@@ -35,6 +38,17 @@ class BaseHtmlRenderer(BaseCreativeRenderer):
         self.html_context['version'] = self.version
         self.html_context['impression_url'] = self.impression_url
         self.html_context['is_fullscreen'] = self.adunit.is_fullscreen()
+        
+        # determine user agent
+        # TODO: we probably want to have different iphone and android version
+        ua = self.client_context.user_agent.lower()
+        if 'iphone' in ua:
+            os = 'iphone'
+        elif 'android' in ua:
+            os = 'android'
+        else:
+            os = None
+        self.html_context['os'] = os
         
     def _get_ad_type(self):
         return 'html'

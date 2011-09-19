@@ -1,6 +1,10 @@
 from ad_server.renderers.base_native_renderer import BaseNativeRenderer   
 
 class CustomNativeRenderer(BaseNativeRenderer):
+    """
+    Inheritance Hierarchy:  
+    CustomNativeRenderer => BaseNativeRenderer => BaseCreativeRenderer
+    """
     
     def _get_ad_type(self):
         return 'custom'

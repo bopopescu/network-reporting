@@ -26,6 +26,7 @@ from advertiser.models import (HtmlCreative,
                                TextAndTileCreative, 
                                )
 
+from ad_server.auction.client_context import ClientContext
 from ad_server.renderers.creative_renderer import BaseCreativeRenderer
 from ad_server.renderers.header_context import HeaderContext
 
@@ -84,7 +85,9 @@ class RenderingTestBase(object):
         
         self.on_fail_exclude_adgroups = ["test_on_fail_adgroup1", 
                                          "test_on_fail_adgroup2"]
-        
+                                         
+        self.ios_client_context = ClientContext(user_agent='iphone adfsdf')
+        self.android_client_context = ClientContext(user_agent='iphone adfsdf')
 
         # self.request = fake_request(self.adunit.key())
         adunit_id = str(self.adunit.key())
@@ -153,6 +156,7 @@ class RenderingTestBase(object):
         creative_renderer = self.creative.Renderer(creative=self.creative,
                        adunit=self.adunit,
                        udid=self.udid,
+                       client_context=self.ios_client_context,
                        now=self.dt,
                        request_host=self.host,
                        request_url=self.url,
@@ -196,7 +200,31 @@ class RenderingTestBase(object):
         
          
                     
-      
+class HeaderContextTests(unittest.TestCase):
+
+    def mptest_basic_header_test(self):
+        """
+        Very basic test of HeaderContext. Just ensures that passed in parameter
+        values get translated correctly into the actual header names while
+        excluding 'None' values
+        """
+        header_context = HeaderContext(refresh_time=1,
+                                       intercept_links="link!",
+                                       click_through='11',
+                                       imp_tracker="imp_tracker.com",
+                                       orientation=1,
+                                       launch_page='aaa',
+                                       scrollable='scrollable_val'
+                                       )
+        header_dict = {'X-Interceptlinks': 'link!',
+                       'X-Clickthrough': '11',
+                       'X-Scrollable': 'scrollable_val', 
+                       'X-Orientation': '1', 
+                       'X-Launchpage': 'aaa', 
+                       'X-Imptracker': 'imp_tracker.com', 
+                       'X-Refreshtime': '1'}
+        eq_(header_context._dict, header_dict)
+
              
 class RenderingTests(RenderingTestBase, unittest.TestCase):  
     """ Inherits that setUp and tearDown methods from RenderingTestBase. """  
@@ -224,6 +252,7 @@ class RenderingTests(RenderingTestBase, unittest.TestCase):
                      request_url=self.url,
                      request_id=self.request_id,
                      version=self.version_number,
+                     client_context=self.android_client_context,
                      on_fail_exclude_adgroups=self.on_fail_exclude_adgroups,
                      keywords=['hi','bye'],
                      random_val='0932jfios')

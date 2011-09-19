@@ -172,7 +172,8 @@ def date_addition_mptest():
     # Should work....I think....
     rep.data = rep.parse_report_blob(f)
     check_missing_dates(0, [sched.d1, sched.d2, sched.d3], rep.data, sched.days)
-    assert False, rep.export_data
+    rep.export_data
+    # assert False, rep.export_data
     
 def check_missing_dates(level, dims, stats_dict, num_days):
     d = dims[level]

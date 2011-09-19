@@ -199,10 +199,7 @@ def notify_appengine(fname, msg):
         except ReportException, e:
             # Don't endlessly cycle and shit, log the error and hten kill yourself
             report_failed(e.report_key)
-            log("%s" % e)
-            f = open('/home/ubuntu/tb.log', 'a')
-            traceback.print_tb(sys.exc_info()[2], file=f)
-            f.close()
+            default_exc_handle(e)
             sys.exit(0)
     
 

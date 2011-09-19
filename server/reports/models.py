@@ -503,7 +503,6 @@ class Report(db.Model):
                     camp = crtv.adgroup.campaign
                     return (crtv.adgroup.bid_strategy, crtv.adgroup.bid)
             except:
-                log("Exception in bid info")
                 f = open('/home/ubuntu/tb.log', 'a')
                 traceback.print_tb(sys.exc_info()[2], file=f)
                 f.close()

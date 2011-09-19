@@ -38,7 +38,7 @@ from google.appengine.ext.remote_api import remote_api_stub
 ############### Mopub Imports ############### 
 from parse_utils import gen_report_fname, parse_msg
 from parse_utils import AWS_ACCESS_KEY, AWS_SECRET_KEY
-from report_mr_submitter import submit_job
+from report_mr_submitter import submit_job, MRSubmitError
 
 from reports.models import Report
 
@@ -239,6 +239,10 @@ def main_loop():
                         
         except Exception, e:
             log("Encountered exception: %s" % e)
+            f = open('/home/ubuntu/tb.log', 'a')
+            f.write("\nERROR---\n%s" % time.time())
+            traceback.print_tb(sys.exc_info()[2], file=f)
+            f.close()
 
 
 

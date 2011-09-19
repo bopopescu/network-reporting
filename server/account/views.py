@@ -15,7 +15,21 @@ from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManag
 import logging
 from common.utils.request_handler import RequestHandler
 
-class AccountHandler(RequestHandler):
+class GeneralSettingsHandler(RequestHandler):
+    def get(self, *args, **kwargs):
+        self.account.paymentinfo = self.account.payment_infos.get()
+        user = self.account.mpuser
+        return render_to_response(self.request,
+                                  "account/general_settings.html",
+                                  {"account": self.account,
+                                   "user":user})
+
+@login_required
+def index(request, *args, **kwargs):
+    return GeneralSettingsHandler()(request, *args, **kwargs)
+
+
+class AdNetworkSettingsHandler(RequestHandler):
     def get(self,account_form=None):
         if self.params.get("skip"):
             self.account.status = "step4"
@@ -27,8 +41,6 @@ class AccountHandler(RequestHandler):
 
         networks = ['admob_status','adsense_status','brightroll_status','chartboost_status','ejam_status','greystripe_status','inmobi_status','jumptap_status','millennial_status','mobfox_status']
         network_config_status = {}
-
-        self.account.paymentinfo = self.account.payment_infos.get()
 
         def _get_net_status(account,network):
             status = 0
@@ -57,7 +69,7 @@ class AccountHandler(RequestHandler):
             network_config_status[network] = _get_net_status(self.account,network)
 
 
-        return render_to_response(self.request,'account/account.html', dict({'account': self.account,
+        return render_to_response(self.request,'account/ad_network_settings.html', dict({'account': self.account,
                                                                       'account_form': account_form,
                                                                       'user': user,
                                                                       "apps": apps_for_account}.items() + network_config_status.items()))
@@ -106,8 +118,9 @@ class AccountHandler(RequestHandler):
         return self.get(account_form=account_form)
 
 @login_required
-def index(request,*args,**kwargs):
-    return AccountHandler()(request,*args,**kwargs)
+def ad_network_settings(request,*args,**kwargs):
+    return AdNetworkSettingsHandler()(request,*args,**kwargs)
+
 
 class NewAccountHandler(RequestHandler):
     def get(self,account_form=None):
@@ -148,6 +161,7 @@ def logout(request,*args,**kwargs):
 
 class PaymentInfoChangeHandler(RequestHandler):
     def get(self, payment_form=None, *args, **kwargs):
+
         form = payment_form or PaymentInfoForm(instance=self.account.payment_infos.get())
         return render_to_response(self.request,
                                   'account/paymentinfo_change.html',
@@ -175,6 +189,7 @@ def payment_info_change(request, *args, **kwargs):
 class PaymentHistoryHandler(RequestHandler):
     def get(self, *args, **kwargs):
 
+        # TO DO: Implement a Payment History API
         # payment_history = PaymentHistoryApi.get(self.account.key(),
         #                                         self.account.date_added,
         #                                         datetime.date.today())

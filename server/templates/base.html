@@ -129,9 +129,9 @@
               <a href="#" class="dropdown-head"> Your Account <span class="dropdown-icon"> </span></a>
               <div class="dropdown invisible">
                 <ul>
-                  <li> <a href="#">Settings</a> </li>
-                  <li> <a href="#">Ad Network Settings </a> </li>
-                  <li> <a href="#">Payment History </a> </li>
+                  <li> <a href="{% url account_index %}">General Settings</a> </li>
+                  <li> <a href="{% url ad_network_settings %}">Ad Network Settings </a> </li>
+                  <li> <a href="{% url payment_history %}">Payment History </a> </li>
                 </ul>
               </div>
             </li>

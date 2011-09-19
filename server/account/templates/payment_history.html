@@ -10,7 +10,6 @@
   <thead>
     <th class="dataTable-date-short">Month</th>
     <th class="dataTable-data">Revenue</th>
-    <th class="dataTable-data">Total Revenue</th>
     <th class="dataTable-data">Payment Status</th>
   </thead>
   <tbody>
@@ -18,7 +17,6 @@
       <tr class="alternating-color">
         <td>{{payment.month}}</td>
         <td>${{payment.amount}}</td>
-        <td>(total)</td>
         <td>{{payment.status}}</td>
       </tr>
     {% endfor %}

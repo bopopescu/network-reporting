@@ -36,5 +36,6 @@ class MoceanServerSide(ServerSide):
         if re.match("^<!--.*--\>$", response.content) == None and len(response.content) != 0:
             trace_logging.warning("Received " + self.network_name + " response: %s"%cgi.escape(response.content))
             return response.content
+
         trace_logging.info(self.network_name + " failed to return ad")
         raise ServerSideException(self.network_name + " ad is empty")

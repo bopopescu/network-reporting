@@ -31,6 +31,7 @@ class NetworkConfigForm(mpforms.MPModelForm):
 
     class Meta:
         model = NetworkConfig
+        exclude = ("rev_share", "price_floor")
 
     def clean(self):
         cleaned_data = self.cleaned_data

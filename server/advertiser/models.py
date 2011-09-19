@@ -572,6 +572,10 @@ class AdSenseCreative(Creative):
 
     Renderer = AdSenseRenderer
 
+    @property
+    def multi_format(self):
+        return ('320x50', '300x250')
+
 class AdMobCreative(Creative):
     network_name = "admob"
 

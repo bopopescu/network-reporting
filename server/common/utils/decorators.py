@@ -98,20 +98,25 @@ def cache_page_until_post(time=5*60):
                 else:
                     # Build the response
                     view_response = view(request, *args, **kw)
-                    memcache.set(page_cache_key, view_response, time=time)
-              
+                    memcache_succes = False
+                    try:
+                        memcache.set(page_cache_key, view_response, time=time)
+                        memcache_succes = True
+                    except ValueError: # too big
+                        memcache_succes = False
+                        pass
                     # Add the cached page's key to the list of all the pages
                     # we have cached since the last POST 
-                    session_cache_key = _build_session_cache_key(request)
-                    logging.info("session_cache_key: %s" % session_cache_key)
-                    session_cache_key_set = memcache.get(session_cache_key)
-                    if session_cache_key_set is None:
-                        session_cache_key_set = set()
-                    session_cache_key_set.add(page_cache_key)
+                    if memcache_succes:
+                        session_cache_key = _build_session_cache_key(request)
+                        logging.info("session_cache_key: %s" % session_cache_key)
+                        session_cache_key_set = memcache.get(session_cache_key)
+                        if session_cache_key_set is None:
+                            session_cache_key_set = set()
+                        session_cache_key_set.add(page_cache_key)
     
-                    memcache.set(session_cache_key,
-                                 session_cache_key_set)
-
+                        memcache.set(session_cache_key,
+                                     session_cache_key_set)
                     return view_response
 
         return new_view

@@ -150,7 +150,7 @@ class ReportQueryManager(CachedQueryManager):
         return reports, adding_reps
                     
     def new_report(self, report, now=None, testing=False):
-        if not isinstance(report, db.Model()) or isinstance(report, str) or isinstance(report, unicode):
+        if not isinstance(report, db.Model) or isinstance(report, str) or isinstance(report, unicode):
             report = self.get_report_by_key(report)
 
         dt = datetime.timedelta(days=report.days) 

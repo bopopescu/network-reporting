@@ -70,6 +70,9 @@ class AddReportHandler(RequestHandler):
         if start:
             start = datetime.datetime.strptime(start, '%m/%d/%Y').date()
             days = (end - start).days
+            if days > 31:
+                self.request.flash['error'] = 'Please limit reports to one months worth of data.'
+                return HttpResponseRedirect('/reports/')
         edit = False
         man = ReportQueryManager(self.account)
         if report_key is not None:

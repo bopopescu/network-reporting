@@ -60,13 +60,13 @@ from common.utils.decorators import cache_page_until_post
 class AppIndexHandler(RequestHandler):
   def get(self):
     report = self.request.POST.get('report')
-    
+
     # Set start date if passed in, otherwise get most recent days
     if self.start_date:
       days = StatsModel.get_days(self.start_date, self.date_range)
     else:
       days = StatsModel.lastdays(self.date_range)
-      
+
 
     apps = AppQueryManager.get_apps(self.account)
     if len(apps) == 0:
@@ -82,17 +82,17 @@ class AppIndexHandler(RequestHandler):
     apps = sorted(apps, key=lambda app: app.name)
 
     totals_list = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(days=days)
-    
+
     today = totals_list[-1]
     try:
         yesterday = totals_list[-2]
     except IndexError:
-        yesterday = StatsModel()    
+        yesterday = StatsModel()
     totals = reduce(lambda x, y: x+y, totals_list, StatsModel())
     # this is the max active users over the date range
     # NOT total unique users
     totals.user_count = max([t.user_count for t in totals_list])
-    
+
     # prepare account_stats object
     key = "||"
     stats_dict = {}
@@ -100,17 +100,17 @@ class AppIndexHandler(RequestHandler):
     stats_dict[key]['name'] = "||"
     stats_dict[key]['daily_stats'] = [s.to_dict() for s in totals_list]
     summed_stats = sum(totals_list, StatsModel())
-    stats_dict[key]['sum'] = summed_stats.to_dict()        
-    
+    stats_dict[key]['sum'] = summed_stats.to_dict()
+
     response_dict = {}
     response_dict['status'] = 200
     response_dict['all_stats'] = stats_dict
-    
+
     logging.warning("ACCOUNT: %s"%self.account.key())
     logging.warning("YESTERDAY: %s"%yesterday.key())
     logging.warning("TODAY: %s"%today.key())
 
-    return render_to_response(self.request,'publisher/index.html', 
+    return render_to_response(self.request,'publisher/index.html',
       {'apps': apps,
        'account_stats': simplejson.dumps(response_dict),
        'start_date': days[0],
@@ -123,7 +123,7 @@ class AppIndexHandler(RequestHandler):
 
 @login_required
 def index(request,*args,**kwargs):
-  return AppIndexHandler()(request,*args,**kwargs)     
+  return AppIndexHandler()(request,*args,**kwargs)
 
 class AppIndexGeoHandler(RequestHandler):
   def get(self):
@@ -135,50 +135,50 @@ class AppIndexGeoHandler(RequestHandler):
       days = StatsModel.lastdays(self.date_range)
 
     now = datetime.now()
-    
+
     apps = AppQueryManager.get_apps(self.account)
-    
+
     if len(apps) == 0:
       return HttpResponseRedirect(reverse('publisher_app_create'))
 
     geo_dict = {}
     totals = StatsModel(date=now) # sum across all days and countries
-    
+
     # hydrate geo count dicts with stats counts on account level
-    all_stats = StatsModelQueryManager(self.account,self.offline,include_geo=True).get_stats_for_days(days=days) 
+    all_stats = StatsModelQueryManager(self.account,self.offline,include_geo=True).get_stats_for_days(days=days)
     for stats in all_stats:
-      totals = totals + StatsModel(request_count=stats.request_count, 
-                                   impression_count=stats.impression_count, 
-                                   click_count=stats.click_count, 
+      totals = totals + StatsModel(request_count=stats.request_count,
+                                   impression_count=stats.impression_count,
+                                   click_count=stats.click_count,
                                    user_count=stats.user_count,
-                                   date=now)                                   
+                                   date=now)
       countries = stats.get_countries()
       for c in countries:
         geo_dict[c] = geo_dict.get(c, StatsModel(country=c, date=now)) + \
-                        StatsModel(country=c,  
-                                   request_count=stats.get_geo(c, GEO_COUNTS[0]), 
-                                   impression_count=stats.get_geo(c, GEO_COUNTS[1]), 
-                                   click_count=stats.get_geo(c, GEO_COUNTS[2]), 
+                        StatsModel(country=c,
+                                   request_count=stats.get_geo(c, GEO_COUNTS[0]),
+                                   impression_count=stats.get_geo(c, GEO_COUNTS[1]),
+                                   click_count=stats.get_geo(c, GEO_COUNTS[2]),
                                    date=now)
-    
-    # creates a sorted table based on request count 
+
+    # creates a sorted table based on request count
     geo_table = []
     keys = geo_dict.keys()
     keys.sort(lambda x,y: cmp(geo_dict[y].request_count, geo_dict[x].request_count))
     for k in keys:
       geo_table.append((k, geo_dict[k]))
-    
+
     # create copy of geo_dict with counts on log scale
     geo_log_dict = {}
     for c, stats in geo_dict.iteritems():
       geo_log_dict[c] = StatsModel(country=c,
                                    # check to see if count is 0 since log 0 is invalid; +0.5 at the end for rounding
-                                   request_count=int(math.log10(stats.request_count if stats.request_count > 0 else 1) + 0.5), 
+                                   request_count=int(math.log10(stats.request_count if stats.request_count > 0 else 1) + 0.5),
                                    impression_count=int(math.log10(stats.impression_count if stats.impression_count > 0 else 1) + 0.5),
                                    click_count=int(math.log10(stats.click_count if stats.click_count > 0 else 1) + 0.5),
                                    date=now)
-    
-    return render_to_response(self.request, 'publisher/index_geo.html', 
+
+    return render_to_response(self.request, 'publisher/index_geo.html',
       {'geo_dict': geo_dict,
        'geo_log_dict': geo_log_dict,
        'geo_table': geo_table,
@@ -186,9 +186,9 @@ class AppIndexGeoHandler(RequestHandler):
        'date_range': self.date_range,
        'account': self.account})
 
-@login_required     
+@login_required
 def index_geo(request,*args,**kwargs):
-  return AppIndexGeoHandler()(request,*args,**kwargs)     
+  return AppIndexGeoHandler()(request,*args,**kwargs)
 
 class AppCreateHandler(RequestHandler):
   def get(self, app_form=None,adunit_form=None,reg_complete=None):
@@ -199,8 +199,8 @@ class AppCreateHandler(RequestHandler):
     if reg_complete:
         self.account.reg_complete = 1
 
-    return render_to_response(self.request,'publisher/new_app.html', {"app_form": app_form, 
-                                                                      "adunit_form":adunit_form,  
+    return render_to_response(self.request,'publisher/new_app.html', {"app_form": app_form,
+                                                                      "adunit_form":adunit_form,
                                                                       "account": self.account})
 
   def post(self):
@@ -210,7 +210,7 @@ class AppCreateHandler(RequestHandler):
       app_form = AppForm(data=self.request.POST, files = self.request.FILES, instance=app)
     else:
       app_form = AppForm(data=self.request.POST, files = self.request.FILES )
-      
+
     adunit_form = AdUnitForm(data=self.request.POST, prefix="adunit")
     if app_form.is_valid():
       if not app_form.instance: #ensure form posts do not change ownership
@@ -219,12 +219,12 @@ class AppCreateHandler(RequestHandler):
         account = app_form.instance.account
       app = app_form.save(commit=False)
       app.account = account
-      
+
       # Nafis: Took this away b/c this page both things need to be valid before continuing
       # If we get the adunit information, try to create that too
       # if not self.request.POST.get("adunit_name"):
       #   return HttpResponseRedirect(reverse('publisher_app_show',kwargs={'app_key':app.key()}))
-      
+
     if adunit_form.is_valid():
         if not adunit_form.instance: #ensure form posts do not change ownership
           account = self.account
@@ -235,13 +235,13 @@ class AppCreateHandler(RequestHandler):
 
         # update the database
         AppQueryManager.put(app)
-        
+
         adunit.app_key = app
-        
+
         AdUnitQueryManager.put(adunit)
 
         # Check if this is the first ad unit for this account
-        if len(AdUnitQueryManager.get_adunits(account=self.account,limit=2)) == 1:      
+        if len(AdUnitQueryManager.get_adunits(account=self.account,limit=2)) == 1:
           add_demo_campaign(adunit)
         # Check if this is the first app for this account
         status = "success"
@@ -252,10 +252,10 @@ class AppCreateHandler(RequestHandler):
         return HttpResponseRedirect(reverse('publisher_generate',kwargs={'adunit_key':adunit.key()})+'?status='+status)
     return self.get(app_form,adunit_form)
 
-@login_required  
+@login_required
 def app_create(request,*args,**kwargs):
   return AppCreateHandler()(request,*args,**kwargs)
-    
+
 class CreateAdUnitHandler(RequestHandler):
  def post(self):
     f = AdUnitForm(data=self.request.POST)
@@ -268,25 +268,25 @@ class CreateAdUnitHandler(RequestHandler):
       adunit = f.save(commit=False)
       acunit.account = account
       adunit.app_key = a
-      
+
       # update the database
       AdUnitQueryManager.put(adunit)
-      
-      # update the cache as necessary 
+
+      # update the cache as necessary
       # replace=True means don't do anything if not already in the cache
       AdUnitContextQueryManager.cache_delete_from_adunits(adunit)
-      
+
       # Check if this is the first ad unit for this account
       # if Site.gql("where account = :1 limit 2", self.account).count() == 1:
-      if len(AdUnitQueryManager.get_adunits(account=self.account,limit=2)) == 1:      
+      if len(AdUnitQueryManager.get_adunits(account=self.account,limit=2)) == 1:
         add_demo_campaign(adunit)
       return HttpResponseRedirect(reverse('publisher_generate',kwargs={'adunit_key':adunit.key()})+'?status=success')
     else:
       print f.errors
 
-@login_required  
+@login_required
 def adunit_create(request,*args,**kwargs):
-  return CreateAdUnitHandler()(request,*args,**kwargs)   
+  return CreateAdUnitHandler()(request,*args,**kwargs)
 
 def add_demo_campaign(site):
     # Set up a test campaign that returns a demo ad
@@ -317,7 +317,7 @@ def add_demo_campaign(site):
                          format=site.format,
                          name="Demo HTML Creative",
                          html_data="<style type=\"text/css\">body {font-size: 12px;font-family:helvetica,arial,sans-serif;margin:0;padding:0;text-align:center;background:white} .creative_headline {font-size: 18px;} .creative_promo {color: green;text-decoration: none;}</style><div class=\"creative_headline\">Welcome to mopub!</div><div class=\"creative_promo\"><a href=\"http://www.mopub.com\">Click here to test ad</a></div><div>You can now set up a new campaign to serve other ads.</div>")
-        
+
     else:
         h = HtmlCreative(ad_type="html",
                          ad_group=ag,
@@ -326,7 +326,7 @@ def add_demo_campaign(site):
                          name="Demo HTML Creative",
                          html_data="<style type=\"text/css\">body {font-size: 12px;font-family:helvetica,arial,sans-serif;margin:0;padding:0;text-align:center;background:white} .creative_headline {font-size: 18px;} .creative_promo {color: green;text-decoration: none;}</style><div class=\"creative_headline\">Welcome to mopub!</div><div class=\"creative_promo\"><a href=\"http://www.mopub.com\">Click here to test ad</a></div><div>You can now set up a new campaign to serve other ads.</div>")
     CreativeQueryManager.put(h)
-  
+
 class ShowAppHandler(RequestHandler):
   def get(self,app_key):
     # Set start date if passed in, otherwise get most recent days
@@ -337,26 +337,26 @@ class ShowAppHandler(RequestHandler):
 
     # load the site
     app = AppQueryManager.get(app_key)
-    
+
     # check to see that the user has viewership rights, ow return 404
     if app.account.key() != self.account.key():
       raise Http404
 
     app.adunits = AdUnitQueryManager.get_adunits(app=app)
-    
+
     # organize impressions by days
     if len(app.adunits) > 0:
       for adunit in app.adunits:
         adunit.all_stats = StatsModelQueryManager(self.account,self.offline).get_stats_for_days(publisher=adunit, days=days)
         adunit.stats = reduce(lambda x, y: x+y, adunit.all_stats, StatsModel())
-      
+
     app.adunits = sorted(app.adunits, key=lambda adunit: adunit.stats.request_count, reverse=True)
-      
+
     app_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=app, days=days)
     app.all_stats = app_stats
 
     help_text = 'Create an Ad Unit below' if len(app.adunits) == 0 else None
-    
+
     if app.icon:
       app.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(app.icon)
 
@@ -369,12 +369,12 @@ class ShowAppHandler(RequestHandler):
     app_form_fragment = AppUpdateAJAXHandler(self.request).get(app=app)
     # in order to have a creat adunit form
     adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(app=app)
-    
+
     today = app_stats[-1]
     try:
         yesterday = app_stats[-2]
     except IndexError:
-        yesterday = StatsModel()    
+        yesterday = StatsModel()
     app.stats = reduce(lambda x, y: x+y, app_stats, StatsModel())
     # this is the max active users over the date range
     # NOT total unique users
@@ -382,12 +382,12 @@ class ShowAppHandler(RequestHandler):
 
     # get adgroups targeting this app
     app.adgroups = AdGroupQueryManager.get_adgroups(app=app)
-        
+
     for ag in app.adgroups:
       ag.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=app,advertiser=ag,days=days)
       ag.stats = reduce(lambda x, y: x+y, ag.all_stats, StatsModel())
       ag.percent_delivered = budget_service.percent_delivered(ag.campaign)
-    
+
     promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], app.adgroups)
     promo_campaigns = sorted(promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
 
@@ -410,14 +410,14 @@ class ShowAppHandler(RequestHandler):
 
     backfill_promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_promo'], app.adgroups)
     backfill_promo_campaigns = sorted(backfill_promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
-    
+
     backfill_marketplace_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_marketplace'], app.adgroups)
     backfill_marketplace_campaigns = sorted(backfill_marketplace_campaigns, lambda x,y: cmp(x.bid, y.bid))
-    
 
 
-    return render_to_response(self.request,'publisher/app.html', 
-        {'app': app,  
+
+    return render_to_response(self.request,'publisher/app.html',
+        {'app': app,
          'app_form_fragment':app_form_fragment,
          'adunit_form_fragment':adunit_form_fragment,
          'start_date': days[0],
@@ -427,23 +427,23 @@ class ShowAppHandler(RequestHandler):
          'yesterday': yesterday,
          'account': self.account,
          'helptext': help_text,
-         'gtee': gtee_levels, 
+         'gtee': gtee_levels,
          'promo': promo_campaigns,
          'marketplace': marketplace_campaigns,
          'network': network_campaigns,
          'backfill_promo': backfill_promo_campaigns,
          'backfill_marketplace': backfill_marketplace_campaigns})
-         
+
 
 @login_required
 def app_show(request,*args,**kwargs):
-  return ShowAppHandler()(request,*args,**kwargs)   
+  return ShowAppHandler()(request,*args,**kwargs)
 
 
 class ExportFileHandler( RequestHandler ):
     def get( self, key, key_type, f_type ):
-        #XXX make sure this is the right way to do it 
-        spec = self.params.get('spec') 
+        #XXX make sure this is the right way to do it
+        spec = self.params.get('spec')
         if self.start_date:
             days = StatsModel.get_days( self.start_date, self.date_range )
         else:
@@ -457,7 +457,7 @@ class ExportFileHandler( RequestHandler ):
 
     def get_desired_stats(self, key, key_type, days, spec=None):
         manager = StatsModelQueryManager(self.account, offline=self.offline)
-        """ Given a key, key_type, and specificity, return 
+        """ Given a key, key_type, and specificity, return
         the appropriate stats to get AND their names"""
         #default for all
         stat_names = (IMP_STAT, CLK_STAT, CTR_STAT)
@@ -469,7 +469,7 @@ class ExportFileHandler( RequestHandler ):
 
 
         #Set up attr getters/names
-        if key_type == 'app' or (key_type == 'account' and spec == 'apps') or (key_type == 'adunit' and spec == 'days'): 
+        if key_type == 'app' or (key_type == 'account' and spec == 'apps') or (key_type == 'adunit' and spec == 'days'):
             stat_names = (REQ_STAT,) + stat_names
             if spec == 'days':
                 stat_names = (DTE_STAT,) + stat_names
@@ -491,7 +491,7 @@ class ExportFileHandler( RequestHandler ):
                 if len(apps) == 0:
                     #should probably handle this more gracefully
                     logging.warning("Apps for account is empty")
-                return (stat_names, [manager.get_stat_rollup_for_days(publisher=a, days=days) for a in apps]) 
+                return (stat_names, [manager.get_stat_rollup_for_days(publisher=a, days=days) for a in apps])
             elif spec == 'campaigns':
                 camps = CampaignQueryManager.get_campaigns(account=self.account)
                 if len(camps) == 0:
@@ -508,10 +508,10 @@ class ExportFileHandler( RequestHandler ):
                 adunits = map(lambda x: Site.get(x), AdGroupQueryManager.get(key).site_keys)
                 if len(adunits) == 0:
                     logging.warning("Adunits for adgroup is empty")
-                return (stat_names, [manager.get_stat_rollup_for_days(advertiser=key, publisher=a, days=days) for a in adunits]) 
+                return (stat_names, [manager.get_stat_rollup_for_days(advertiser=key, publisher=a, days=days) for a in adunits])
             if spec == 'days':
                 return (stat_names, manager.get_stats_for_days(advertiser=key, days=days))
-        #Rollups + not-rollup for adunit data            
+        #Rollups + not-rollup for adunit data
         elif key_type == 'adunit':
             if spec == 'campaigns':
                 adgroups = AdGroupQueryManager.get_adgroups(adunit=key)
@@ -532,7 +532,7 @@ class ExportFileHandler( RequestHandler ):
 def export_file( request, *args, **kwargs ):
     return ExportFileHandler()( request, *args, **kwargs )
 
-            
+
 
 class AdUnitShowHandler(RequestHandler):
   def get(self,adunit_key):
@@ -540,14 +540,14 @@ class AdUnitShowHandler(RequestHandler):
     adunit = AdUnitQueryManager.get(adunit_key)
     if adunit.account.key() != adunit.account.key():
       raise Http404
-      
+
     # Set start date if passed in, otherwise get most recent days
     if self.start_date:
       days = StatsModel.get_days(self.start_date, self.date_range)
     else:
       days = StatsModel.lastdays(self.date_range)
-    days = [day if type(day) == datetime else datetime.combine(day, time()) for day in days] 
-    
+    days = [day if type(day) == datetime else datetime.combine(day, time()) for day in days]
+
     adunit.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=adunit,days=days)
     #XXX Wat?
     for i in range(len(days)):
@@ -562,11 +562,11 @@ class AdUnitShowHandler(RequestHandler):
       ag.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=adunit,advertiser=ag,days=days)
       ag.stats = reduce(lambda x, y: x+y, ag.all_stats, StatsModel())
       ag.percent_delivered = budget_service.percent_delivered(ag.campaign)
-    
+
     # to allow the adunit to be edited
     adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(adunit=adunit)
 
-    
+
     promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], adunit.adgroups)
     promo_campaigns = sorted(promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
 
@@ -589,19 +589,19 @@ class AdUnitShowHandler(RequestHandler):
 
     backfill_promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_promo'], adunit.adgroups)
     backfill_promo_campaigns = sorted(backfill_promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
-    
+
     backfill_marketplace_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_marketplace'], adunit.adgroups)
     backfill_marketplace_campaigns = sorted(backfill_marketplace_campaigns, lambda x,y: cmp(x.bid, y.bid))
-    
-    
+
+
     today = adunit.all_stats[-1]
     try:
         yesterday = adunit.all_stats[-2]
     except:
-        yesterday = StatsModel()    
-    
+        yesterday = StatsModel()
+
     # write response
-    return render_to_response(self.request,'publisher/adunit.html', 
+    return render_to_response(self.request,'publisher/adunit.html',
         {'site': adunit,
          'adunit': adunit,
          'today': today,
@@ -609,25 +609,25 @@ class AdUnitShowHandler(RequestHandler):
          'start_date': days[0],
          'end_date': days[-1],
          'date_range': self.date_range,
-         'account': self.account, 
+         'account': self.account,
          'days': days,
          'adunit_form_fragment': adunit_form_fragment,
-         'gtee': gtee_levels, 
+         'gtee': gtee_levels,
          'promo': promo_campaigns,
-         'marketplace': marketplace_campaigns,         
+         'marketplace': marketplace_campaigns,
          'network': network_campaigns,
          'backfill_promo': backfill_promo_campaigns,
-         'backfill_marketplace': backfill_marketplace_campaigns})         
-  
+         'backfill_marketplace': backfill_marketplace_campaigns})
+
 @login_required
 def adunit_show(request,*args,**kwargs):
-  return AdUnitShowHandler()(request,*args,**kwargs)   
+  return AdUnitShowHandler()(request,*args,**kwargs)
 
 class AppUpdateAJAXHandler(RequestHandler):
   TEMPLATE  = 'publisher/forms/app_form.html'
   def get(self,app_form=None,app=None):
     app_form = app_form or AppForm(instance=app, is_edit_form=True)
-
+    app_form.is_edit_form = True
     return self.render(form=app_form)
 
   def render(self,template=None,**kwargs):
@@ -656,17 +656,17 @@ class AppUpdateAJAXHandler(RequestHandler):
       app = app_form.save(commit=False)
       app.account = account
       AppQueryManager.put(app)
-      
+
       json_dict.update(success=True)
 
       return self.json_response(json_dict)
     new_html = self.get(app_form=app_form)
-    json_dict.update(success=False,html=new_html)    
-    return self.json_response(json_dict)  
+    json_dict.update(success=False,html=new_html)
+    return self.json_response(json_dict)
 
 @login_required
 def app_update_ajax(request,*args,**kwargs):
-  return AppUpdateAJAXHandler()(request,*args,**kwargs)   
+  return AppUpdateAJAXHandler()(request,*args,**kwargs)
 
 class AdUnitUpdateAJAXHandler(RequestHandler):
   TEMPLATE  = 'publisher/forms/adunit_form.html'
@@ -702,12 +702,12 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
       adunit = adunit_form.save(commit=False)
       adunit.account = account
       AdUnitQueryManager.put(adunit)
-      
+
       json_dict.update(success=True)
       return self.json_response(json_dict)
     new_html = self.get(adunit_form=adunit_form)
-    json_dict.update(success=False,html=new_html)    
-    return self.json_response(json_dict)  
+    json_dict.update(success=False,html=new_html)
+    return self.json_response(json_dict)
 
 def adunit_update_ajax(request,*args,**kwargs):
   return AdUnitUpdateAJAXHandler()(request,*args,**kwargs)
@@ -749,10 +749,10 @@ class RemoveAppHandler(RequestHandler):
                 adunit.deleted = True
             AppQueryManager.put(app)
             AdUnitQueryManager.put(adunits)
-            
-    
+
+
         return HttpResponseRedirect(reverse('publisher_index'))
- 
+
 @login_required
 def app_delete(request,*args,**kwargs):
     return RemoveAppHandler()(request,*args,**kwargs)
@@ -762,10 +762,10 @@ class GenerateHandler(RequestHandler):
     adunit = AdUnitQueryManager.get(adunit_key)
     status = self.params.get('status')
     return render_to_response(self.request,'publisher/code.html', {'site': adunit, 'status': status, 'account': self.account})
-  
+
 @login_required
 def generate(request,*args,**kwargs):
-  return GenerateHandler()(request,*args,**kwargs) 
+  return GenerateHandler()(request,*args,**kwargs)
 
 class AppExportHandler(RequestHandler):
     def post(self, app_key, file_type, start, end):

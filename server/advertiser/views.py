@@ -444,8 +444,8 @@ class CreateCampaignAJAXHander(RequestHandler):
              ##Check if creative exists for this network type, if yes
              #update, if no, delete old and create new
                 if campaign.campaign_type in ['marketplace', 'backfill_marketplace']:
-                    creative = adgroup.default_creative()
                     if not has_adgroup_instance: #ensure form posts do not change ownership
+                        creative = adgroup.default_creative()
                         creative.account = self.account
                     CreativeQueryManager.put(creative)
 

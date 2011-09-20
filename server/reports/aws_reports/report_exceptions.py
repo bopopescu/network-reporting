@@ -7,6 +7,9 @@ class MRSubmitError(ReportException):
         self.reason = reason
         self.report_key = report_key
 
+class NoDataError(MRSubmitError):
+    pass
+
 class ReportParseError(ReportException):
     pass
 

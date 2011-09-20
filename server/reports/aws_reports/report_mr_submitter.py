@@ -66,7 +66,7 @@ def submit_job(d1, d2, d3, start, end, report_key, account):
 
     inputs, output_dir = build_puts(start, end, account)
     if len(inputs) == 0:
-        raise MRSubmitError('No inputs', report_key)
+        raise NoDataError('No inputs', report_key)
     instances = 10
     output_name = gen_report_fname(d1, d2, d3, start, end)
     start = start.strftime('%y%m%d')

@@ -50,6 +50,7 @@ from reports.aws_reports.report_exceptions import (ReportParseError,
                                                    ReportPutError,
                                                    ReportNotifyError,
                                                    ReportException,
+                                                   NoDataError,
                                                    )
 
 
@@ -113,10 +114,16 @@ def setup_remote_api():
     remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', auth_func, host)
 
 def report_failed(report_key):
+    log("Indicating that report %s failed" % report_key)
     rep = Report.get(report_key)
     rep.status = 'Failed'
     rep.put()
     # If I were a better person I'd email people when their reports fail
+
+def report_empty(report_key):
+    rep = Report.get(report_key)
+    rep.status = 'No Data'
+    rep.put()
 
 def job_failed(state):
     if state == u'FAILED':
@@ -221,6 +228,11 @@ def main_loop():
                     # Start the MR job
                     try:
                         job_id, steps, fname = submit_job(*parse_msg(msg))
+                    except NoDataError, e:
+                        report_empty(e.report_key)
+                        to_del.append(msg)
+                        default_exc_handle(e)
+                        continue
                     except ReportException, e:
                         # Submission Failed, delete this message
                         to_del.append(msg)

@@ -42,9 +42,15 @@ from google.appengine.ext.remote_api import remote_api_stub
 ############### Mopub Imports ############### 
 from parse_utils import gen_report_fname, parse_msg
 from parse_utils import AWS_ACCESS_KEY, AWS_SECRET_KEY
-from report_mr_submitter import submit_job, MRSubmitError
-
+from report_mr_submitter import submit_job
 from reports.models import Report
+from reports.aws_reports.report_exceptions import (ReportParseError, 
+                                                   BlobUploadError,
+                                                   S3Error,
+                                                   ReportPutError,
+                                                   ReportNotifyError,
+                                                   ReportException,
+                                                   )
 
 
 ################## PID Stuff ######################
@@ -84,24 +90,6 @@ UPDATE_STATS_HANDLER_PATH = '/offline/update_stats'
 ################## Constants ###################
 LOG_FORMAT = "%s:\t%s\n"
 
-class ReportException(Exception):
-    def __init__(self, key=None):
-        self.report_key = key
-
-class ReportParseError(ReportException):
-    pass
-
-class BlobUploadError(ReportException):
-    pass
-
-class S3Error(ReportException):
-    pass
-
-class ReportPutError(ReportException):
-    pass
-
-class ReportNotifyError(ReportException):
-    pass
 
 
 def default_exc_handle(e):

@@ -3,15 +3,29 @@ from query_managers import StatsModelQueryManager
 from models import StatsModel, HourCounts, Counts
 from utils import mongo_connection
 
-StatsModelQueryManager.update_counts(creative_id="creative_id", 
-                                     adgroup_id="adgroup_id", 
-                                     campaign_id="campaign_id",
-                                     adunit_id="adunit_id",
-                                     app_id="app_id",
-                                     fields={'req_count':1, 'imp_count':2})
+
+# mongo_connection.ensure_connection()
+# vals = StatsModel.objects
+# for val in vals:
+#2011-09:app_id:creative_id
+StatsModelQueryManager.get_stats_within_month(pub_id="app_id",
+                                              adv_id="creative_id",
+                                              year_month="2011-09",
+                                              start_day=1,
+                                              end_day=31)
+    #print val
+#print obj
+# StatsModelQueryManager.update_counts(creative_id="creative_id", 
+#                                      adgroup_id="adgroup_id", 
+#                                      campaign_id="campaign_id",
+#                                      adunit_id="adunit_id",
+#                                      app_id="app_id",
+#                                      fields={'req_count':1, 'imp_count':2})
+
+#StatsModelQueryManager.get_stats()
 #import mongoengine as mdb
 
-#mongo_connection.ensure_connection()
+
 # cnt = Cnt()
 # Base.objects().update(push__cnts=cnt)
 

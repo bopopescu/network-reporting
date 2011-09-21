@@ -20,7 +20,7 @@ class StatsModelQueryManager(object):
         mongo_connection.ensure_connection()
         fields = fields or {}
         dt = dt or datetime.now(Pacific_tzinfo())
-
+        
         ids_to_update = _get_ids(dt,
                                  [app_id, adunit_id, cls._WILD],
                                  [creative_id, adgroup_id, campaign_id, cls._WILD])
@@ -28,12 +28,55 @@ class StatsModelQueryManager(object):
         update_params = _get_update_params(fields, dt.day, dt.hour)
         num_updated = StatsModel.objects(_id__in=ids_to_update).\
             update(**update_params)
-
+        
+        #if not updated, means key was not present in mongo. Run through all keys
+        #initializing StatsModel for each that is missing
         if num_updated < len(ids_to_update):
             for id in ids_to_update:
                 if not StatsModel.objects(_id=id):
                     cls.create_stats_model(id, update_params)
     
+    @classmethod
+    def get_stats(cls,
+                  pub_id=None,
+                  adv_id=None,
+                  start_date=None,
+                  end_date=None):
+        """
+        pub_id refers to one of the following: App, AdUnit, *
+        adv_id refers to one of the following: Campaign, AdGroup, Creative
+        """
+        start_date = start_date or datetime.now(Pacific_tzinfo()).date()
+        end_date = end_date or datetime.now(Pacific_tzinfo()).date()
+#         for month in range of months:
+#             get_stats_within_month(...)
+#         aggregate_stats
+        
+    @classmethod
+    def get_stats_within_month(cls,
+                               pub_id=None,
+                               adv_id=None,
+                               year_month=None,
+                               start_day=None,
+                               end_day=None):
+        """
+        stub implementation for testing
+        """
+        mongo_connection.ensure_connection()
+        key = StatsModel.get_primary_key(year_month, pub_id, adv_id)
+        objs = StatsModel.objects(_id=key)
+        req_count = 0
+        imp_count = 0
+        #better way to sum?
+        for count in objs[0].day_counts:
+            req_count += count.req_count
+            imp_count += count.imp_count
+        print req_count
+        print imp_count
+        
+        
+        
+
     @classmethod
     def create_stats_model(cls, id, update_params):
         """
@@ -61,7 +104,7 @@ class StatsModelQueryManager(object):
 def _get_update_params(fields, day, hour):
     #TODO: NEXT TWO LINES FOR TESTING ONLY
     day = 1
-    hour = 0
+    hour = 1
     day_index = day-1
     hour_index = 24*(day-1) + hour
     params = {}

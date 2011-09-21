@@ -110,7 +110,7 @@
                       </dt>
                       <dd>
                         {% for adunit in all_adunits %}
-                          {% ifchanged adunit.app.name %}
+                          {% ifchanged adunit.app.key %}
 
                             {% if not forloop.first %}
                               </ul>
@@ -123,7 +123,7 @@
                             </div>
 
                             <div class="adgroupForm-Network" style="float:left;">
-                              <div class="appData-name">{{adunit.app.name}}</div>
+                              <div class="appData-name">{{adunit.app.name}} <span class="muted">({% ifequal adunit.app.app_type "iphone" %}iOS{% endifequal %}{% ifequal adunit.app.app_type "android" %}Android{% endifequal %}{% ifequal adunit.app.app_type "mweb" %}Mobile Web{% endifequal %})</span></div>
                               <div class="campaignDependent network hidden">
 
                                 <div class="networkDependent admob admob_native hidden">

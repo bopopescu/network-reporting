@@ -4,15 +4,17 @@ from models import StatsModel, HourCounts, Counts
 from utils import mongo_connection
 
 
+StatsModelQueryManager.get_stats(start_date=date(2011,9,1), 
+                                 end_date=date(2011,9,25))
 # mongo_connection.ensure_connection()
 # vals = StatsModel.objects
 # for val in vals:
 #2011-09:app_id:creative_id
-StatsModelQueryManager.get_stats_within_month(pub_id="app_id",
-                                              adv_id="creative_id",
-                                              year_month="2011-09",
-                                              start_day=1,
-                                              end_day=31)
+# StatsModelQueryManager.get_stats_within_month(pub_id="app_id",
+#                                               adv_id="creative_id",
+#                                               year_month="2011-09",
+#                                               start_day=1,
+#                                               end_day=31)
     #print val
 #print obj
 # StatsModelQueryManager.update_counts(creative_id="creative_id", 

@@ -1,7 +1,8 @@
 from utils import mongo_connection
 import mongoengine as mdb
 from utils.timezones import Pacific_tzinfo
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
+from dateutil.relativedelta import relativedelta
 from models import StatsModel, Counts, HourCounts
 
 class StatsModelQueryManager(object):
@@ -38,8 +39,8 @@ class StatsModelQueryManager(object):
     
     @classmethod
     def get_stats(cls,
-                  pub_id=None,
-                  adv_id=None,
+                  pub_id='*',
+                  adv_id='*',
                   start_date=None,
                   end_date=None):
         """
@@ -48,33 +49,43 @@ class StatsModelQueryManager(object):
         """
         start_date = start_date or datetime.now(Pacific_tzinfo()).date()
         end_date = end_date or datetime.now(Pacific_tzinfo()).date()
-#         for month in range of months:
-#             get_stats_within_month(...)
-#         aggregate_stats
+        results = {"req_count" : {},
+                   "imp_count" : {},
+                   "click_count" : {},
+                   "conv_count" : {},
+                   "att_count" : {}
+                   }
+        for year, month, start_day, end_day \
+                in _gen_range(start=start_date,end=end_date):
+            cls.get_stats_within_month(pub_id=pub_id,
+                                   adv_id=adv_id,
+                                   year_month="%s-%02d" % (year, month),
+                                   start_day=start_day,
+                                   end_day=end_day,
+                                   results=results)
+        print results
         
     @classmethod
     def get_stats_within_month(cls,
-                               pub_id=None,
-                               adv_id=None,
+                               pub_id='*',
+                               adv_id='*',
                                year_month=None,
                                start_day=None,
-                               end_day=None):
+                               end_day=None,
+                               results=None):
         """
         stub implementation for testing
         """
         mongo_connection.ensure_connection()
         key = StatsModel.get_primary_key(year_month, pub_id, adv_id)
         objs = StatsModel.objects(_id=key)
-        req_count = 0
-        imp_count = 0
-        #better way to sum?
-        for count in objs[0].day_counts:
-            req_count += count.req_count
-            imp_count += count.imp_count
-        print req_count
-        print imp_count
-        
-        
+        if len(objs):
+            for count in objs[0].day_counts:
+                date_str = "%s-%02d" % (year_month, count.day)
+                if date_str in results["req_count"]:
+                    results["req_count"][date_str] += count.req_count
+                else:
+                    results["req_count"][date_str] = count.req_count
         
 
     @classmethod
@@ -100,6 +111,29 @@ class StatsModelQueryManager(object):
         #TODO: combine these two steps
         stats_model.save()
         StatsModel.objects(_id=id).update(**update_params)
+
+def _gen_range(start, end):
+    """
+    Takes in a start and end date
+    Generates a list of tuples representing the range of days
+    that should be summed for each month. Each tuple is of the form:
+      (year, month, start_day, end_day)
+    For example, with inputs of start=2011-01-05 and end=2011-03-15, we gen:
+    (2011, 1, 5, 31)
+    (2011, 2, 1, 31)
+    (2011, 3, 1, 15)
+    Note: for simplicity, we assume each month has 31 days. This is safe b/c
+    the model assumes this as well and initializes counts for all days to be 0
+    so this will never cause incorrect count calculations
+    """
+    while start <= end:
+        if (start.year == end.year and start.month == end.month):
+            #final month in sequence, end day will be end.day
+            yield (start.year, start.month, start.day, end.day)
+        else:
+            #not final month in sequence, so include until end of month
+            yield (start.year, start.month, start.day, 31)
+        start = date(start.year, start.month, 1) + relativedelta(months=+1)
         
 def _get_update_params(fields, day, hour):
     #TODO: NEXT TWO LINES FOR TESTING ONLY

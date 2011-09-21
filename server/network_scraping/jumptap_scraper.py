@@ -1,13 +1,8 @@
 import urllib2
 import urllib
-import json
 
 from scraper import Scraper, ScraperSite
-
-#can specify app or not specify app, breaks down by adunit.
-
-class NetworkConfidential(object):
-    pass
+from datetime import date
 
 class NetworkScrapeRecord(object):
     pass
@@ -17,15 +12,19 @@ class JumpTapScraper(Scraper):
     SITE_STAT_URL = 'https://pa.jumptap.com/pa-2.0/pub-services/v10/report.html'
 
     def __init__(self, credentials):
-        if credentials.network != self.NETWORK_NAME:
-            raise "Invalid credentials.  Attempting to use %s credentials for an AdMob scraper" % credentials.network
+        if credentials['network'] != self.NETWORK_NAME:
+            raise "Invalid credentials.  Attempting to use %s credentials for an JumpTap scraper" % credentials['network']
         super(JumpTapScraper, self).__init__(credentials)
 
-    def get_site_stats(self, from_date, to_date):
+    # Note: a date range is not supported
+    def get_site_stats(self, from_date, to_date=None):
+        if to_date is None:
+            to_date = from_date
+           
         query_dict = {"user": self.username,
                           "pass": self.password,
-                          "fromDate": from_date,
-                          "toDate": to_date,
+                          "fromDate": from_date.strftime("%m/%d/%Y"),
+                          "toDate": to_date.strftime("%m/%d/%Y"),
                           "groupBy": "spot"}
 
         req = urllib2.Request(self.SITE_STAT_URL,
@@ -34,80 +33,61 @@ class JumpTapScraper(Scraper):
 
         headers = response.readline().split(',')
 
+        request_index = headers.index('Requests')
         imp_index = headers.index('Paid Impressions')
         click_index = headers.index('Clicks')
-        net_rev_index = headers.index('Net Revenue$')
-        requests_index = headers.index('Requests')
-        cpc_index = headers.index('Net Cost Per Click')
+        cpm_index = headers.index('Net eCPM')
         app_index = headers.index('Site')
         adunit_index = headers.index('Spot')
 
+        # dict stores list of nsrs for each 'spot' or ad unit where the key in the dict is the app
         scrape_records = {}
         for line in response:
             vals = line.split(',')
             if vals[0] != 'Totals':
                 nsr = NetworkScrapeRecord()
-                nsr.impressions = vals[imp_index]
-                nsr.clicks = vals[click_index]
-                nsr.net_revenue = vals[net_rev_index]
-                nsr.requests = vals[requests_index]
-                nsr.cpc = vals[cpc_index]
+                nsr.requests = int(vals[request_index])
+                nsr.impressions = int(vals[imp_index])
+                nsr.clicks = int(vals[click_index])
+                nsr.cpm = float(vals[cpm_index])
                 nsr.app_name = vals[app_index]
                 nsr.adunit_name = vals[adunit_index]
-                # key doesn't include the date so we can't include more than one day
-                # in the time span otherwise it will only grab the last one
-                scrape_records['%s||%s' % (vals[app_index], vals[adunit_index])] = nsr
-
-        return scrape_records
-   
-def jumptap_scraper(network_credential, from_date, to_date):  
-    some_dict ={"user": network_credential.username, "pass": network_credential.password, "fromDate": from_date, "toDate": to_date, "groupBy": "spot"}
- 
-    if network_credential.app_name:
-        some_dict['sites'] = network_credential.app_name
-    
-    req = urllib2.Request('https://pa.jumptap.com/pa-2.0/pub-services/v10/report.html?'+urllib.urlencode(some_dict))
-    response = urllib2.urlopen(req)
-    
-    headers = response.readline().split(',')
-    
-    imp_index = headers.index('Paid Impressions')
-    click_index = headers.index('Clicks')
-    net_rev_index = headers.index('Net Revenue$')
-    requests_index = headers.index('Requests')
-    cpc_index = headers.index('Net Cost Per Click')
-    app_index = headers.index('Site')
-    adunit_index = headers.index('Spot')
-    
-    scrape_records = {}
-    for line in response:
-        vals = line.split(',')
-        if vals[0] != 'Totals':
+                # doesn't work for a date range
+                if nsr.app_name not in scrape_records:
+                    scrape_records[nsr.app_name] = [nsr]
+                else:
+                    scrape_records[nsr.app_name] += [nsr]
+        
+        records = []
+        for k, v in scrape_records.iteritems():
             nsr = NetworkScrapeRecord()
-            nsr.impressions = vals[imp_index]
-            nsr.clicks = vals[click_index]
-            nsr.net_revenue = vals[net_rev_index]
-            nsr.requests = vals[requests_index]
-            nsr.cpc = vals[cpc_index]
-            nsr.app_name = vals[app_index]
-            nsr.adunit_name = vals[adunit_index]
-            scrape_records['%s||%s'%(vals[app_index], vals[adunit_index])] = nsr
+            nsr.attempts = 0
+            nsr.impressions = 0
+            nsr.clicks = 0
+            cost = 0
             
-    # return scrape_records
-    for key in scrape_records.keys():
-        print key
-        print scrape_records[key].impressions, ' ', scrape_records[key].clicks, ' ', scrape_records[key].net_revenue, ' ', scrape_records[key].requests, ' ', scrape_records[key].cpc, ' ', scrape_records[key].app_name, ' ', scrape_records[key].adunit_name
-    
+            for n in v:
+                nsr.attempts += n.requests
+                nsr.impressions += n.impressions
+                nsr.clicks += n.clicks
+                cost += n.cpm * n.impressions
+               
+            nsr.fill_rate = nsr.impressions / float(nsr.attempts)
+            nsr.ctr = nsr.clicks / float(nsr.impressions)
+            nsr.cpm = cost / float(nsr.impressions)
+            
+            nsr.app_tag = v[0].app_name
+            records.append(nsr)
+
+        return records
+
+# for testing   
 if __name__ == '__main__':
-    nc = NetworkConfidential()
-    nc.account = 3
-    nc.username = 'vrubba'
-    nc.password = 'fluik123!'
-    nc.app_name = None
-    #nc.app_name = 'pa_fluik_entertain_office_jerk_fre_drd_app'
-    nc.network = 'jumptap'
+    nc = {}
+    nc['username'] = 'vrubba'
+    nc['password'] = 'fluik123!'
+    nc['network'] = 'jumptap'
     scraper = JumpTapScraper(nc)
-    print scraper.get_site_stats('7/1/2011','7/1/2011')
-    jumptap_scraper(nc, '7/1/2011','7/1/2011')
+    print scraper.get_site_stats(date.today())
     
     

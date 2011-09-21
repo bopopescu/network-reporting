@@ -4,11 +4,10 @@ import json
 import time
 
 from scraper import Scraper, ScraperSite
+from datetime import date
 
-#gets all sites, but would be possible to specify, not broken down by adunit.
-class NetworkConfidential():
+class NetworkScrapeRecord(object):
     pass
-
 
 def admob_list_encode(list, var_name):
     list_var_name = var_name + '[]'
@@ -28,9 +27,10 @@ class AdMobScraper(Scraper):
     SITE_STAT_URL = API_URL + '/v2/site/stats'
 
     def __init__(self, credentials):
-        if credentials.network != self.NETWORK_NAME:
+        if credentials['network'] != self.NETWORK_NAME:
             raise "Invalid credentials.  Attempting to use %s credentials for an AdMob scraper" % credentials.network
-        self.client_key = credentials.api_key
+        self.client_key = credentials['client_key']
+        self.app_name_dict = credentials['app_name_dict']
         super(AdMobScraper, self).__init__(credentials)
         # authenticate on creation
         self.authenticate()
@@ -57,7 +57,10 @@ class AdMobScraper(Scraper):
             sites.append(ScraperSite(**new_dict))
         return sites
 
-    def get_site_stats(self, start_date, end_date, ids=None, obj_dim=None, time_dim=None, order_by=None):
+    def get_site_stats(self, start_date, end_date=None, ids=None, obj_dim=None, time_dim=None, order_by=None):
+        if end_date is None:
+            end_date = start_date
+        
         if ids is None:
             ids = [str(site.id) for site in self.get_sites()]
             # Admob API has a rate limit, don't piss them off
@@ -70,63 +73,43 @@ class AdMobScraper(Scraper):
         else:
             query_string = 'site_id=%s' % ids[0]
 
-        query_dict = dict(start_date = start_date, end_date = end_date)
+        query_dict = dict(start_date = start_date.strftime("%Y-%m-%d"),
+                          end_date = end_date.strftime("%Y-%m-%d"),
+                          object_dimension = 'site')
         query_dict.update(self.auth_dict)
         req = urllib2.Request(str(self.SITE_STAT_URL + '?' + query_string + '&' + urllib.urlencode(query_dict)))
-        resp = urllib2.urlopen(req)
-        stats = json.load(urllib2.urlopen(req))
-        #TODO make stats not a json dict lol
-        return stats
-
-
-
-
-def admob_scraper(nc, from_date, to_date):
-    req = urllib2.Request('https://api.admob.com/v2/auth/login', urllib.urlencode({'client_key': nc.client_key, 'email': nc.email, 'password': nc.password}))
-    token = json.load(urllib2.urlopen(req))['data']['token']
-    
-    req = urllib2.Request('http://api.admob.com/v2/site/search?' + urllib.urlencode({'client_key': nc.client_key, 'token': token}))
-    response = urllib2.urlopen(req)
+        #TODO pagination stuff with the 'page' part
+        site_stats = json.load(urllib2.urlopen(req))
         
-    site_ids = []
-    for site in json.loads(response.readline())['data']:
-        site_ids.append(site['id'])
+        records = []
+        for stats in site_stats['data']:
+            nsr = NetworkScrapeRecord()
+            
+            nsr.attempts = stats['requests']
+            nsr.impressions = stats['impressions']
+            nsr.fill_rate = stats['fill_rate']
+            nsr.clicks = stats['clicks']
+            nsr.ctr = stats['ecpm']
+            
+            if 'site_id' in stats:
+                nsr.app_tag = self.app_name_dict[stats['site_id']]
+            else:
+                nsr.app_tag = self.app_name_dict[ids[0]]
+            records.append(nsr)
+            
+        return records
 
-    scrape_records = {}
-    for site_id in site_ids:
-        req = urllib2.Request('http://api.admob.com/v2/site/stats?' + urllib.urlencode({'client_key': nc.client_key, 'token': token, 'site_id': site_id,
-        'start_date': from_date, 'end_date': to_date}))
-        response = urllib2.urlopen(req)
-
-        stats = json.loads(response.readline())['data']
-        print stats
-                
-        #nsr = NetworkScrapeRecord()
-        #nsr.impressions = stats['impressions']
-        #nsr.clicks = stats['clicks']
-        #nsr.net_revenue = stats['revenue']
-        #nsr.requests = stats['requests']
-        #nsr.ecpm = stats['ecpm']
-        #nsr.fill_rate = stats['fill_rate']
-        #nsr.ctr = stats['ctr']
-                
-        #scrape_records[site_id] = nsr
-        
-    return scrape_records
-    
-    # for key in scrape_records.keys():
-    #     print key
-    #     print scrape_records[key].impressions, ' ', scrape_records[key].clicks, ' ', scrape_records[key].net_revenue, ' ', scrape_records[key].requests, ' ', scrape_records[key].ecpm, ' ', scrape_records[key].fill_rate, ' ', scrape_records[key].ctr
-
+# for testing
 if __name__ == '__main__':
-    nc = NetworkConfidential()
-    nc2 = NetworkConfidential
-    nc2.account = 3
-    nc2.username = nc.email ='njamal@stanford.edu'
-    nc2.password = nc.password ='xckjhfn3xprkxksm'
-    nc2.api_key = nc.client_key = 'k907a03ee39cecb699b5ad45c5eded01'
-    nc2.network = 'admob'
-    scraper = AdMobScraper(nc2)
-    print scraper.get_site_stats('2011-07-24','2011-07-25')
-    time.sleep(1)
-    admob_scraper(nc, '2011-07-24','2011-07-25')
+    nc = {}
+    nc['username'] = 'njamal@stanford.edu'
+    nc['password'] = 'xckjhfn3xprkxksm'
+    nc['client_key'] = 'k907a03ee39cecb699b5ad45c5eded01'
+    nc['app_name_dict'] = {}
+    for i, site_id in enumerate(['a14a9ed9bf1fdcd', 'a14a7143850a745', 'a14a71435d8d5b3',
+                                 'a14a7142ee96329', 'a14a7142acad145', 'a14a6e18d6610af', 
+                                 'a14a6b5458b0447', 'a1497a459250ea5', 'a14970f6ad53c3c']):
+        nc['app_name_dict'][site_id] = 'test%d' % i
+    nc['network'] = 'admob'
+    scraper = AdMobScraper(nc)
+    print scraper.get_site_stats(date.today())

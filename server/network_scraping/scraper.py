@@ -26,9 +26,9 @@ class Scraper(object):
     def __init__(self, credentials):
         ''' Credentials has a 'network' field, in the subclasses
         double check to make sure they are correct.  For sanity '''
-        self.account = credentials.account
-        self.username = credentials.username
-        self.password = credentials.password
+        # self.account = credentials.account
+        self.username = credentials['username']
+        self.password = credentials['password']
 
     def authenticate(self, **kwargs):
         ''' This function should do two things: if we need cookies and stuff to mess

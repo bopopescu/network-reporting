@@ -365,8 +365,8 @@ class Report(db.Model):
             vals = eval(vals)
             req, att = self.get_stats_info(keys)
             #I'm using list comprehension for you Nafis
-            bid_infos = [self.get_bid_info(idx, key, memo, True) for idx, key in enumerate(keys)]
-            keys = [self.get_key_name(idx, key, memo, True) for idx,key in enumerate(keys)]
+            bid_infos = [self.get_bid_info(idx, key, memo) for idx, key in enumerate(keys)]
+            keys = [self.get_key_name(idx, key, memo) for idx,key in enumerate(keys)]
 
             # Invalid key somewhere in this line, don't use it
             if None in keys:

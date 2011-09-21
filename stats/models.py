@@ -2,38 +2,35 @@ import mongoengine as mdb
 from utils.mongo_fields import YearMonthField
 from datetime import date
 
-class StatsModel(mdb.Document):
-    _id = mdb.StringField(primary_key=True)
-    pub_id = mdb.StringField()
-    adv_id = mdb.StringField()
-    dt = YearMonthField(required=True)
 
-    country = mdb.StringField() # two letter country code
+class Counts(mdb.EmbeddedDocument):
+    day = mdb.IntField(min_value=1, max_value=1000)
     
     req_count = mdb.IntField(default=0)
     imp_count = mdb.IntField(default=0)
     click_count = mdb.IntField(default=0)
     conv_count = mdb.IntField(default=0)
+    att_count = mdb.IntField(default=0)
 
     # uniq user counts
     user_count = mdb.IntField(default=0)
     req_user_count = mdb.IntField(default=0)
     imp_user_count = mdb.IntField(default=0)
     click_user_count = mdb.IntField(default=0)
+    att_user_count = mdb.IntField(default=0)
+
+class HourCounts(Counts):
+    hour = mdb.IntField(min_value=0, max_value=1000)
     
-    reqs = mdb.ListField(mdb.StringField())
-    
-    # total revenue (cost)
-    rev = mdb.FloatField(default=0.0)
-    
-    # offline
-    offline = mdb.BooleanField(default=False)
-    
-    # mobile device and os info
-    brand_name = mdb.StringField()
-    marketing_name = mdb.StringField()
-    device_os = mdb.StringField()
-    device_os_vers = mdb.StringField()
+class StatsModel(mdb.Document):
+    _id = mdb.StringField(primary_key=True)
+    pub_id = mdb.StringField()
+    adv_id = mdb.StringField()
+    dt = YearMonthField(required=True)
+    day_counts = mdb.ListField(mdb.EmbeddedDocumentField(Counts))
+    # wanted to have hour counts nested in day_counts but mongoengine
+    # seems to have trouble dealing with nested embedded doc lists
+    hour_counts = mdb.ListField(mdb.EmbeddedDocumentField(HourCounts))
 
     def __init__(self, *args, **kwargs):
         # TODO: a bit hackish, converts passed in date to string

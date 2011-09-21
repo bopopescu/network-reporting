@@ -1,6 +1,7 @@
 from mongoengine import StringField
 from datetime import date
 
+
 class YearMonthField(StringField):
     pass
 #     def validate(self, value):

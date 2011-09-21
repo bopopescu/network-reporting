@@ -9,4 +9,4 @@ def ensure_connection():
             connect("marketplace")
             CONNECTED = True
         except:
-            pas
+            pass

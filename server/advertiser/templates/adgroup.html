@@ -1,11 +1,11 @@
 {% extends 'advertiser/base.html' %}
 {% load filters %}
 {% block pageTitle %}
-          <div class="breadcrumb">  
+          <div class="breadcrumb">
             {% if not adgroup.archived %}
-            <a class="linkIcon breadcrumb-back" href="{% url advertiser_campaign %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Campaigns</a>           
+            <a class="linkIcon breadcrumb-back" href="{% url advertiser_campaign %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Campaigns</a>
             {% else %}
-            <a class="linkIcon breadcrumb-back" href="{% url advertiser_archive %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Archived Campaigns</a>   
+            <a class="linkIcon breadcrumb-back" href="{% url advertiser_archive %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Archived Campaigns</a>
             {% endif %}
             <h1>Campaign: {{adgroup.name}}</h1>
           </div>
@@ -22,27 +22,27 @@
 
             <span class="titlebar-right">
               {% if adgroup.active %}
-              	<select name="campaign-status-options" id="campaign-status-options" class="selectmenu"> 
-              	  <option value="play" selected="selected">Running</option>
-              	  <option value="pause">Pause</option>
-              	  <option value="archive">Archive</option>
-            	    <option value="delete">Delete</option>
+                <select name="campaign-status-options" id="campaign-status-options" class="selectmenu">
+                  <option value="play" selected="selected">Running</option>
+                  <option value="pause">Pause</option>
+                  <option value="archive">Archive</option>
+                    <option value="delete">Delete</option>
                 </select>
               {% else %}
                 {% if adgroup.archived %}
-                  <select name="campaign-status-options" id="campaign-status-options" class="selectmenu">   
+                  <select name="campaign-status-options" id="campaign-status-options" class="selectmenu">
                     <option value="archive">Archived</option>
-              	    <option value="play">Resume</option>      
-            	      <option value="delete">Delete</option>
+                    <option value="play">Resume</option>
+                      <option value="delete">Delete</option>
                   </select>
                 {% else %}
-                	<select name="campaign-status-options" id="campaign-status-options" class="selectmenu"> 
-                	  <option value="pause" selected="selected">Paused</option>
-                	  <option value="play">Resume</option> 
-                	  <option value="archive">Archive</option>
-              	    <option value="delete">Delete</option>
-                  </select>    
-                {% endif %}   
+                    <select name="campaign-status-options" id="campaign-status-options" class="selectmenu">
+                      <option value="pause" selected="selected">Paused</option>
+                      <option value="play">Resume</option>
+                      <option value="archive">Archive</option>
+                    <option value="delete">Delete</option>
+                  </select>
+                {% endif %}
               {% endif %}
               <a class="button" id="advertisers-adgroups-editAdGroupButton" href="{% url advertiser_campaign_edit adgroup_key=adgroup.key %}">Edit campaign settings</a>
             </span>
@@ -78,14 +78,14 @@
                             <td class="stats-breakdown-value all"><span class="inner">{{totals.revenue|currency}}</span></td>
                             <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
                         </tr>
-                    {% endif %} 
+                    {% endif %}
                       <tr {% if not campaign.gtee %} class="active" {% endif %} id="stats-breakdown-impressions">
                         <td class="stats-breakdown-value today"><span class="inner">{{today.impression_count|withsep}}</span></td>
                         <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.impression_count|withsep}}</span></td>
                         <td class="stats-breakdown-value all"><span class="inner">{{totals.impression_count|withsep}}</span></td>
                         <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
                       </tr>
-                  {% if campaign.network %}
+                  {% if campaign.network or campaign.marketplace %}
                       <tr id="stats-breakdown-attempts">
                           <td class="stats-breakdown-value today"><span class="inner">{{today.request_count|withsep}}</span></td>
                           <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.request_count|withsep}}</span></td>
@@ -152,7 +152,7 @@
                             'conversions': [{% for a in graph_adunits %}
                                 { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.conversion_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                               ]
-                        {% endif %} {% if campaign.network %}
+                        {% endif %} {% if campaign.network  or campaign.marketplace %}
                             'attempts': [{% for a in graph_adunits %}
                                 { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                               ]
@@ -173,7 +173,7 @@
               {% else %}
               <img src="/images/paused.gif" width="9" height="9"/>
               {% endif %}
-                {{ adgroup|campaign_status }} - 
+                {{ adgroup|campaign_status }} -
                 {% if campaign.start_date and campaign.end_date %}
                 From {{campaign.start_date|format_date_compact}}-{{campaign.end_date|format_date_compact}}.
                 {% endif %} {% if campaign.start_date and not campaign.end_date %}
@@ -185,14 +185,14 @@
                 {% endif %}&nbsp;
                 {% if campaign.gtee %}{% ifequal adgroup.campaign.budget_type 'daily' %}{% if adgroup.campaign.budget %}{{adgroup.campaign.budget|currency}} daily budget.{% else %} Unlimited budget.{% endif %}{% endifequal %}
                 {% ifequal adgroup.campaign.budget_type 'full_campaign' %}{{adgroup.campaign.full_budget|currency}} campaign budget.{% endifequal %}{% endif %}
-                
-                
+
+
                 {% if user.is_admin %}
-                  <br><br><a href="/budget/view/{{adgroup.key}}"> Admin Budget View</a> 
+                  <br><br><a href="/budget/view/{{adgroup.key}}"> Admin Budget View</a>
                 {% endif %}
             </div>
            </section>
-            
+
            <section id="dashboard-apps">
                 <h2>Targeting Breakdown <span class="muted">({{start_date|format_date_compact}} to {{end_date|format_date_compact}})</span></h2>
                 <div class="appData-columnHeaders">
@@ -213,7 +213,7 @@
                         <th class="dataTable-data numeric">Clicks</th>
                         <th class="dataTable-data numeric">CTR</th>
                         <th class="dataTable-data numeric">Conv</th>
-                        {% endif %} {% if campaign.network %}
+                        {% endif %} {% if campaign.network  or campaign.marketplace %}
                         <th class="dataTable-data numeric">Attempts</th>
                         <th class="dataTable-data numeric">Impressions</th>
                         <th class="dataTable-data numeric">Fillrate</th>
@@ -244,7 +244,7 @@
                         <td class="dataTable-data numeric">{{a.stats.click_count|withsep}}</td>
                         <td class="dataTable-data numeric">{{a.stats.ctr|percentage}}</td>
                         <td class="dataTable-data numeric">{{a.stats.conversion_count|withsep}} ({{a.stats.conv_rate|percentage}})</td>
-                        {% endif %} {% if campaign.network %}
+                        {% endif %} {% if campaign.network or campaign.marketplace %}
                         <td class="dataTable-data numeric">{{a.stats.request_count|withsep}}</td>
                         <td class="dataTable-data numeric">{{a.stats.impression_count|withsep}}</td>
                         <td class="dataTable-data numeric">{{a.stats.fill_rate|percentage}}</td>
@@ -261,7 +261,7 @@
                           {% for au in a.adunits %}
                           <tr>
                             <th class="dataTable-name"><span class="inner"><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a></span></th>
-                            
+
                             {% if campaign.gtee %}
                             <td class="dataTable-data numeric">&nbsp;</td>
                             <td class="dataTable-data numeric">{{au.stats.impression_count|withsep}}</td>
@@ -274,7 +274,7 @@
                             <td class="dataTable-data numeric">{{au.stats.click_count|withsep}}</td>
                             <td class="dataTable-data numeric">{{au.stats.ctr|percentage}}</td>
                             <td class="dataTable-data numeric">{{au.stats.conversion_count|withsep}} ({{a.stats.conv_rate|percentage}})</td>
-                            {% endif %} {% if campaign.network %}
+                            {% endif %} {% if campaign.network or campaign.marketplace %}
                             <td class="dataTable-data numeric">{{au.stats.request_count|withsep}}</td>
                             <td class="dataTable-data numeric">{{au.stats.impression_count|withsep}}</td>
                             <td class="dataTable-data numeric">{{au.stats.fill_rate|percentage}}</td>
@@ -290,14 +290,14 @@
                 </div>
                 {% endfor %}
           </section>
-          
+
           {% ifnotequal campaign.campaign_type "network" %}
           {% ifnotequal campaign.campaign_type "marketplace" %}
           <section id="dashboard-apps">
             <div class="buttonBank buttonBank-right">
               <a class="button" id="advertiser-adgroups-addCreativeButton" href="#">Add a creative</a>
             </div>
-            
+
             <h2>Creatives</h2>
             <section id="advertiser-creativeAddForm" class="hidden">
               <div>
@@ -308,40 +308,40 @@
 {{creative_fragment}}
                     </div>
                     <div class="clear"></div>
-                    <div class="form-submit"> 
+                    <div class="form-submit">
                       <span id="creativeCreateForm-success" class="hidden">Success!</span>
-                      <span class="buttonWrap"><a href="#" class="button" id="creativeCreateForm-submit">Save</a></span> 
-                      <span class="buttonWrap"><a href="#" class="button" id="creativeCreateForm-cancel">Cancel</a></span> 
+                      <span class="buttonWrap"><a href="#" class="button" id="creativeCreateForm-submit">Save</a></span>
+                      <span class="buttonWrap"><a href="#" class="button" id="creativeCreateForm-cancel">Cancel</a></span>
                     </div>
                   </fieldset>
                 </form>
               </div>
             </section>
 
-        {% for c in creatives %} 
-            <div id="{{c.key}}-edit" class="hidden advertiser-creativeEditForm"> 
-              <form action="{% url advertiser_creative_create %}" method="POST" accept-charset="utf-8" id="creativeEditForm-{{forloop.counter0}}" enctype="multipart/form-data" class="creativeEditForm"> 
-                <input type="hidden" name="adgroup_key" value="{{adgroup.key}}"/> 
-                <input type="hidden" name="creative_key" value="{{c.key}}"/> 
-                <fieldset id="creativeAddForm-details-{{forloop.counter0}}" class="alt"> 
-                  <div id="creativeEditForm-fragment-{{forloop.counter0}}" class="creativeEditForm-fragment"> 
-{{c.html_fragment}} 
-                  </div> 
-                  <div class="clear"></div> 
-                  <div class="form-submit">  
-                    <span id="creativeCreateForm-success" class="hidden creativeEditForm-success">Success!</span> 
-                    <span class="buttonWrap"><a href="#" class="button creativeEditForm-submit" id="creativeCreateForm-submit">Save</a></span>  
-                    <span class="buttonWrap"><a href="#" class="button creativeEditForm-cancel" id="creativeCreateForm-cancel">Cancel</a></span>  
-                  </div>  
-                </fieldset> 
-              </form> 
-            </div> 
-        {% endfor %} 
+        {% for c in creatives %}
+            <div id="{{c.key}}-edit" class="hidden advertiser-creativeEditForm">
+              <form action="{% url advertiser_creative_create %}" method="POST" accept-charset="utf-8" id="creativeEditForm-{{forloop.counter0}}" enctype="multipart/form-data" class="creativeEditForm">
+                <input type="hidden" name="adgroup_key" value="{{adgroup.key}}"/>
+                <input type="hidden" name="creative_key" value="{{c.key}}"/>
+                <fieldset id="creativeAddForm-details-{{forloop.counter0}}" class="alt">
+                  <div id="creativeEditForm-fragment-{{forloop.counter0}}" class="creativeEditForm-fragment">
+{{c.html_fragment}}
+                  </div>
+                  <div class="clear"></div>
+                  <div class="form-submit">
+                    <span id="creativeCreateForm-success" class="hidden creativeEditForm-success">Success!</span>
+                    <span class="buttonWrap"><a href="#" class="button creativeEditForm-submit" id="creativeCreateForm-submit">Save</a></span>
+                    <span class="buttonWrap"><a href="#" class="button creativeEditForm-cancel" id="creativeCreateForm-cancel">Cancel</a></span>
+                  </div>
+                </fieldset>
+              </form>
+            </div>
+        {% endfor %}
             <section id="advertiser-creativeData">
               <table class="campaignData-main dataTable" id="dashboard-apps2-columnHeaders">
                 <thead>
                   <tr>
-                    <th class="campaignData-icon"></th>                      
+                    <th class="campaignData-icon"></th>
                     <th class="dataTable-name">Creative</th>
                     {% if campaign.gtee %}
                     <th class="dataTable-data numeric">&nbsp;</th>
@@ -355,7 +355,7 @@
                     <th class="dataTable-data numeric">Clicks</th>
                     <th class="dataTable-data numeric">CTR</th>
                     <th class="dataTable-data numeric">Conv</th>
-                    {% endif %} {% if campaign.network %}
+                    {% endif %} {% if campaign.network or campaign.marketplace %}
                     <th class="dataTable-data numeric">Attempts</th>
                     <th class="dataTable-data numeric">Impressions</th>
                     <th class="dataTable-data numeric">Fillrate</th>
@@ -370,13 +370,13 @@
                     <td class="campaignData-icon">
                       <input type="checkbox" name="creativeManagementForm-key" value="{{c.key}}"/>
                       {% if c.deleted %}
-                      <img src="/images/deleted.gif" width="9" height="9"/> 
-                      {% endif %} 
-                      {% if c.active and not c.deleted %} 
-                      <img src="/images/active.gif" width="9" height="9"/> 
-                      {% endif %} 
-                      {% if not c.active and not c.deleted %} 
-                      <img src="/images/paused.gif" width="9" height="9"/> 
+                      <img src="/images/deleted.gif" width="9" height="9"/>
+                      {% endif %}
+                      {% if c.active and not c.deleted %}
+                      <img src="/images/active.gif" width="9" height="9"/>
+                      {% endif %}
+                      {% if not c.active and not c.deleted %}
+                      <img src="/images/paused.gif" width="9" height="9"/>
                       {% endif %}
                     </td>
                     <th class="dataTable-name">
@@ -406,7 +406,7 @@
                     <td class="dataTable-data numeric">{{c.stats.click_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{c.stats.ctr|percentage}}</td>
                     <td class="dataTable-data numeric">{{c.stats.conversion_count|withsep}} ({{a.stats.conv_rate|percentage}})</td>
-                    {% endif %} {% if campaign.network %}
+                    {% endif %} {% if campaign.network or campaign.marketplace %}
                     <td class="dataTable-data numeric">{{c.stats.request_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{c.stats.impression_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{c.stats.fill_rate|percentage}}</td>
@@ -420,7 +420,7 @@
                 <a class="button" id="creativeManagementForm-pause">Pause</a>
                 <a class="button" id="creativeManagementForm-resume">Resume</a>
                 <a class="button" id="creativeManagementForm-delete">Delete</a>
-                <form method="post" action="{% url advertiser_creative_manage %}" id="creativeManagementForm"> 
+                <form method="post" action="{% url advertiser_creative_manage %}" id="creativeManagementForm">
                   <input type="hidden" id="creativeManagementForm-action" name="action" value="delete">
                   <input type="hidden" name="adgroup_key" value="{{adgroup.key}}"/>
                     {# TEMPLATE for input #}
@@ -431,7 +431,7 @@
           </section>
             {% endifnotequal %} {# endifnotequal campaign.campaign_type "marketplace" #}
             {% endifnotequal %} {# endifnotequal campaign.campaign_type "network" #}
-          
+
             {# Form for in-place updating #}
             <form method="post" action="/campaigns/adgroup/{{adgroup.key}}/" id="fake-campaignForm">
                 <input type=hidden name="action" id="action" />
@@ -453,12 +453,12 @@
            <option value='csv'>CSV</option>
        </select>
     </div>
-    <h2>Daily Counts</h2>            
+    <h2>Daily Counts</h2>
        <div class="appData-details noneg">
         <table class="dataTable appData-main">
             {% if campaign.gtee %}
             <thead>
-                <tr>  
+                <tr>
                     <th class="dataTable-name big">&nbsp;</th>
                     <th class="dataTable-name big">&nbsp;</th>
                     <th class="dataTable-data numeric special">Impressions</th>
@@ -470,7 +470,7 @@
             <tbody>
                 <tr>
                     <th class="dataTable-name big">Totals</th>
-                    <td class="dataTable-data numeric">&nbsp;</td>     
+                    <td class="dataTable-data numeric">&nbsp;</td>
                     <td class="dataTable-data numeric"><b>{{adgroup.stats.impression_count|withsep}}</b></td>
                     <td class="dataTable-data numeric"><b>{{adgroup.stats.click_count|withsep}}</b></td>
                     <td class="dataTable-data numeric"><b>{{adgroup.stats.ctr|percentage}}</b></td>
@@ -479,7 +479,7 @@
                 {% for s in adgroup.all_stats reversed %}
                 <tr class="appData-details-inner hide">
                     <th class="dataTable-name">{{s.date|format_date}}</th>
-                    <td class="dataTable-data numeric">&nbsp;</td>     
+                    <td class="dataTable-data numeric">&nbsp;</td>
                     <td class="dataTable-data numeric">{{s.impression_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{s.click_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{s.ctr|percentage}}</td>
@@ -489,7 +489,7 @@
             {% endfor %}
             {% endif %} {% if campaign.promo %}
             <thead>
-                <tr>  
+                <tr>
                     <th class="dataTable-name big">&nbsp;</th>
                     <th class="dataTable-name big">&nbsp;</th>
                     <th class="dataTable-data numeric special">Impressions</th>
@@ -501,7 +501,7 @@
             <tbody>
                 <tr>
                     <th class="dataTable-name big">Totals</th>
-                    <td class="dataTable-data numeric">&nbsp;</td>     
+                    <td class="dataTable-data numeric">&nbsp;</td>
                     <td class="dataTable-data numeric"><b>{{adgroup.stats.impression_count|withsep}}</b></td>
                     <td class="dataTable-data numeric"><b>{{adgroup.stats.click_count|withsep}}</b></td>
                     <td class="dataTable-data numeric"><b>{{adgroup.stats.ctr|percentage}}</b></td>
@@ -510,17 +510,17 @@
                 {% for s in adgroup.all_stats reversed %}
                 <tr class="appData-details-inner hide">
                     <th class="dataTable-name">{{s.date|format_date}}</th>
-                    <td class="dataTable-data numeric">&nbsp;</td>     
+                    <td class="dataTable-data numeric">&nbsp;</td>
                     <td class="dataTable-data numeric">{{s.impression_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{s.click_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{s.ctr|percentage}}</td>
                     <td class="dataTable-data numeric">{{s.conversion_count|withsep}} ({{s.conv_rate|percentage}})</td>
-                </tr>    
+                </tr>
             </tbody>
             {% endfor %}
-            {% endif %} {% if campaign.network %}
+            {% endif %} {% if campaign.network or campaign.marketplace %}
             <thead>
-                <tr>  
+                <tr>
                     <th class="dataTable-name big">&nbsp;</th>
                     <th class="dataTable-name big">&nbsp;</th>
                     <th class="dataTable-data numeric special">Attempts</th>
@@ -533,7 +533,7 @@
             <tbody>
                 <tr>
                     <th class="dataTable-name big">Totals</th>
-                    <td class="dataTable-data numeric">&nbsp;</td>     
+                    <td class="dataTable-data numeric">&nbsp;</td>
                     <td class="dataTable-data numeric"><b>{{adgroup.stats.request_count|withsep}}</b></td>
                     <td class="dataTable-data numeric"><b>{{adgroup.stats.impression_count|withsep}}</b></td>
                     <td class="dataTable-data numeric"><b>{{adgroup.stats.fill_rate|percentage}}</b></td>
@@ -543,7 +543,7 @@
                 {% for s in adgroup.all_stats reversed %}
                 <tr class="appData-details-inner hide">
                     <th class="dataTable-name">{{s.date|format_date}}</th>
-                    <td class="dataTable-data numeric">&nbsp;</td>     
+                    <td class="dataTable-data numeric">&nbsp;</td>
                     <td class="dataTable-data numeric">{{s.request_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{s.impression_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{s.fill_rate|percentage}}</td>

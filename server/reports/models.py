@@ -55,6 +55,12 @@ WURFL_DIMS = (MAR, BRND, OS, OS_VER)
 
 NO_REQ = CRTV_DIMS
 
+LOG_FORMAT = "%s:\t%s\n"
+def log(mesg):
+    my_log = open('/home/ubuntu/poller.log', 'a')
+    my_log.write(LOG_FORMAT % (time.time(), mesg))
+    my_log.close()
+
 def build_stat_dict(stats):
     """ Return a dict that appears like a StatsModel object to django
         (haha django you are so dumb and easy to fool)

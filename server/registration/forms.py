@@ -21,13 +21,13 @@ from common.constants import (ISO_COUNTRIES, US_STATES)
 from common.utils import forms as mpforms
 from common.utils import fields as mpfields
 from common.utils import widgets as mpwidgets
-from account.models import Account#, User
+from account.models import Account, NetworkConfig, MarketPlaceConfig#, User
 from account.query_managers import UserQueryManager,AccountQueryManager
-
+import logging
 
 class BaseRegistrationForm(mpforms.MPForm):
     TEMPLATE = 'registration/forms/registration_form.html'
-    
+
     first_name = mpfields.MPTextField()
     last_name = mpfields.MPTextField()
     title = mpfields.MPTextField(required=False)
@@ -41,15 +41,15 @@ class BaseRegistrationForm(mpforms.MPForm):
                                               ("200","200MM+")],
                                      widget=mpwidgets.MPSelectWidget,
                                      coerce=float)
-    
+
     mailing_list = forms.BooleanField(label=_(u'I would like to receive occasional product update emails from MoPub'),
                                       initial=True,
                                       required=False)
-    
+
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request',None)
         super(BaseRegistrationForm, self).__init__(*args, **kwargs)
-    
+
     def save(self, domain_override=""):
         """
         Create the new ``User`` and ``RegistrationProfile``, and
@@ -74,31 +74,41 @@ class BaseRegistrationForm(mpforms.MPForm):
             return d
 
         user_details = _get_model_params(User)
-        
+
         for prop_name,value in user_details.iteritems():
             if (value is None or value == ''):
                 setattr(new_user,prop_name,None)
-            else:    
+            else:
                 setattr(new_user,prop_name,value)
         new_user.put()
 
-        # create new account for this user as well        
+        # create new account for this user as well
         account_details = _get_model_params(Account)
         account = AccountQueryManager.get_current_account(user=new_user)
         for prop_name,value in account_details.iteritems():
             if (value is None or value == ''):
                 setattr(new_user,prop_name,None)
-            else:    
+            else:
                 setattr(account,prop_name,value)
+
+        network_config = NetworkConfig().put()
+        marketplace_config = MarketPlaceConfig().put()
+        account.network_config = network_config
+        account.marketplace_config = marketplace_config
         account.put()
+
+        logging.warn("\n\n\n\n\n\n\n %s" % account)
+        logging.warn("\n\n\n\n\n\n\n %s" % account.network_config)
+        logging.warn("\n\n\n\n\n\n\n %s" % account.marketplace_config)
+
         return new_user
 
 class MPGoogleRegistrationForm(BaseRegistrationForm):
     tos = forms.BooleanField(widget=forms.CheckboxInput(attrs=attrs_dict),
                              label=_(u'I have read and agree to the Terms of Service'),
                              error_messages={ 'required': u"Please accept the terms and conditions in order to start using MoPub" })
-    
-        
+
+
 class ChangeSettingsForm(BaseRegistrationForm):
     TEMPLATE='registration/forms/settings_change_form.html'
 
@@ -106,10 +116,10 @@ class ChangeSettingsForm(BaseRegistrationForm):
         # dict
         initial = kwargs.get("initial",{})
         request = kwargs.get("request")
-            
+
         user = request.user
         account = AccountQueryManager.get_current_account(user=user)
-            
+
         initial['first_name'] = user.first_name
         initial['last_name'] = user.last_name
         initial['company'] = user.company
@@ -122,28 +132,28 @@ class ChangeSettingsForm(BaseRegistrationForm):
             initial['traffic']=None
         initial['mailing_list']=user.mailing_list
         initial['tos']=True
-        
-        
-            
+
+
+
         kwargs.update(initial=initial)
-        super(ChangeSettingsForm, self).__init__(*args, **kwargs)        
-        
+        super(ChangeSettingsForm, self).__init__(*args, **kwargs)
+
 class MPUserAccountForm(BaseRegistrationForm):
-    pass        
-    
+    pass
+
 
 class MPRegistrationForm(MPGoogleRegistrationForm):
-    
+
     email = forms.EmailField(widget=mpwidgets.MPTextInput)
     password1 = forms.CharField(widget=mpwidgets.MPPasswordInput,)
     password2 = forms.CharField(widget=mpwidgets.MPPasswordInput,)
-    
+
     def save(self, domain_override=""):
         """
         Create the new ``User`` and ``RegistrationProfile``, and
         returns the ``User`` (by calling
         ``RegistrationProfile.objects.create_inactive_user()``).
-        
+
         """
         self.cleaned_data.update(password=self.cleaned_data['password1'])
         self.cleaned_data.update(username=self.cleaned_data['email'])
@@ -153,14 +163,14 @@ class MPRegistrationForm(MPGoogleRegistrationForm):
 class RegistrationForm(forms.Form):
     """
     Form for registering a new user account.
-    
+
     Validates that the requested username is not already in use, and
     requires the password to be entered twice to catch typos.
-    
+
     Subclasses should feel free to add any additional validation they
     need, but should either preserve the base ``save()`` or implement
     a ``save()`` method which returns a ``User``.
-    
+
     """
     username = forms.RegexField(regex=r'^\w+$',
                                 max_length=30,
@@ -173,18 +183,18 @@ class RegistrationForm(forms.Form):
                                 label=_(u'password'))
     password2 = forms.CharField(widget=forms.PasswordInput(attrs=attrs_dict, render_value=False),
                                 label=_(u'password (again)'))
-    
+
     def clean_username(self):
         """
         Validate that the username is alphanumeric and is not already
         in use.
-        
+
         """
         user = User.get_by_key_name("key_"+self.cleaned_data['username'].lower())
         if user:
             raise forms.ValidationError(_(u'This username is already taken. Please choose another.'))
         return self.cleaned_data['username']
-        
+
 
     def clean(self):
         """
@@ -192,19 +202,19 @@ class RegistrationForm(forms.Form):
         match. Note that an error here will end up in
         ``non_field_errors()`` because it doesn't apply to a single
         field.
-        
+
         """
         if 'password1' in self.cleaned_data and 'password2' in self.cleaned_data:
             if self.cleaned_data['password1'] != self.cleaned_data['password2']:
                 raise forms.ValidationError(_(u'You must type the same password each time'))
         return self.cleaned_data
-    
+
     def save(self, domain_override=""):
         """
         Create the new ``User`` and ``RegistrationProfile``, and
         returns the ``User`` (by calling
         ``RegistrationProfile.objects.create_inactive_user()``).
-        
+
         """
         new_user = RegistrationProfile.objects.create_inactive_user(username=self.cleaned_data['username'],
                                                                     password=self.cleaned_data['password1'],
@@ -218,7 +228,7 @@ class RegistrationFormTermsOfService(RegistrationForm):
     """
     Subclass of ``RegistrationForm`` which adds a required checkbox
     for agreeing to a site's Terms of Service.
-    
+
     """
     tos = forms.BooleanField(widget=forms.CheckboxInput(attrs=attrs_dict),
                              label=_(u'I have read and agree to the Terms of Service'),
@@ -229,13 +239,13 @@ class RegistrationFormUniqueEmail(RegistrationForm):
     """
     Subclass of ``RegistrationForm`` which enforces uniqueness of
     email addresses.
-    
+
     """
     def clean_email(self):
         """
         Validate that the supplied email address is unique for the
         site.
-        
+
         """
         email = self.cleaned_data['email'].lower()
         if User.all().filter('email =', email).count(1):
@@ -248,30 +258,30 @@ class RegistrationFormNoFreeEmail(RegistrationForm):
     Subclass of ``RegistrationForm`` which disallows registration with
     email addresses from popular free webmail services; moderately
     useful for preventing automated spam registrations.
-    
+
     To change the list of banned domains, subclass this form and
     override the attribute ``bad_domains``.
-    
+
     """
     bad_domains = ['aim.com', 'aol.com', 'email.com', 'gmail.com',
                    'googlemail.com', 'hotmail.com', 'hushmail.com',
                    'msn.com', 'mail.ru', 'mailinator.com', 'live.com']
-    
+
     def clean_email(self):
         """
         Check the supplied email address against a list of known free
         webmail domains.
-        
+
         """
         email_domain = self.cleaned_data['email'].split('@')[1]
         if email_domain in self.bad_domains:
             raise forms.ValidationError(_(u'Registration using free email addresses is prohibited. Please supply a different email address.'))
         return self.cleaned_data['email']
-        
-        
+
+
 class MPAuthenticationForm(AuthenticationForm):
     username = forms.CharField(label=_("Username"), max_length=100)    # allow for LONG emails
-    
+
     def clean(self):
         from google.appengine.api import users
         from django.core.urlresolvers import reverse
@@ -285,4 +295,4 @@ class MPAuthenticationForm(AuthenticationForm):
                                          (users.create_login_url('/inventory/'),reverse('registration_migrate_user'))
                                         ))
 
-        return super(MPAuthenticationForm, self).clean()        
+        return super(MPAuthenticationForm, self).clean()

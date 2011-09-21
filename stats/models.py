@@ -6,18 +6,19 @@ from datetime import date
 class Counts(mdb.EmbeddedDocument):
     day = mdb.IntField(min_value=1, max_value=1000)
     
-    req_count = mdb.IntField(default=0)
-    imp_count = mdb.IntField(default=0)
-    click_count = mdb.IntField(default=0)
-    conv_count = mdb.IntField(default=0)
-    att_count = mdb.IntField(default=0)
+    rev = mdb.IntField(default=0)
+    req = mdb.IntField(default=0)
+    imp = mdb.IntField(default=0)
+    click = mdb.IntField(default=0)
+    conv = mdb.IntField(default=0)
+    att = mdb.IntField(default=0)
 
     # uniq user counts
-    user_count = mdb.IntField(default=0)
-    req_user_count = mdb.IntField(default=0)
-    imp_user_count = mdb.IntField(default=0)
-    click_user_count = mdb.IntField(default=0)
-    att_user_count = mdb.IntField(default=0)
+#     user_count = mdb.IntField(default=0)
+#     req_user_count = mdb.IntField(default=0)
+#     imp_user_count = mdb.IntField(default=0)
+#     click_user_count = mdb.IntField(default=0)
+#     att_user_count = mdb.IntField(default=0)
 
 class HourCounts(Counts):
     hour = mdb.IntField(min_value=0, max_value=1000)

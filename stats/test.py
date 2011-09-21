@@ -4,8 +4,10 @@ from models import StatsModel, HourCounts, Counts
 from utils import mongo_connection
 
 
-StatsModelQueryManager.get_stats(start_date=date(2011,9,1), 
-                                 end_date=date(2011,9,25))
+#StatsModelQueryManager.create_empty_results()
+
+print StatsModelQueryManager.get_counts(start_date=date(2011,9,1), 
+                                  end_date=date(2011,9,25))
 # mongo_connection.ensure_connection()
 # vals = StatsModel.objects
 # for val in vals:
@@ -17,12 +19,12 @@ StatsModelQueryManager.get_stats(start_date=date(2011,9,1),
 #                                               end_day=31)
     #print val
 #print obj
-# StatsModelQueryManager.update_counts(creative_id="creative_id", 
+# StatsModelQueryManager.update_stats(creative_id="creative_id", 
 #                                      adgroup_id="adgroup_id", 
 #                                      campaign_id="campaign_id",
 #                                      adunit_id="adunit_id",
 #                                      app_id="app_id",
-#                                      fields={'req_count':1, 'imp_count':2})
+#                                      fields={'request':1, 'impression':2})
 
 #StatsModelQueryManager.get_stats()
 #import mongoengine as mdb

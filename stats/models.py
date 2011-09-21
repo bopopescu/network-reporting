@@ -4,7 +4,7 @@ from datetime import date
 
 
 class Counts(mdb.EmbeddedDocument):
-    day = mdb.IntField(min_value=1, max_value=1000)
+    day = mdb.IntField(min_value=1, max_value=31)
     
     rev = mdb.IntField(default=0)
     req = mdb.IntField(default=0)
@@ -21,7 +21,7 @@ class Counts(mdb.EmbeddedDocument):
 #     att_user_count = mdb.IntField(default=0)
 
 class HourCounts(Counts):
-    hour = mdb.IntField(min_value=0, max_value=1000)
+    hour = mdb.IntField(min_value=0, max_value=23)
     
 class StatsModel(mdb.Document):
     _id = mdb.StringField(primary_key=True)
@@ -32,6 +32,13 @@ class StatsModel(mdb.Document):
     # wanted to have hour counts nested in day_counts but mongoengine
     # seems to have trouble dealing with nested embedded doc lists
     hour_counts = mdb.ListField(mdb.EmbeddedDocumentField(HourCounts))
+    
+    # do not need an index on dt. Since _id start with date, can
+    # do a prefix lookup on the _id that will be as fast as an
+    # index lookup on dt alone
+    meta = {
+        'indexes' : ['pub_id', 'adv_id']
+        }
 
     def __init__(self, *args, **kwargs):
         # TODO: a bit hackish, converts passed in date to string

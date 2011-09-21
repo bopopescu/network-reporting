@@ -97,10 +97,10 @@ class StatsModelQueryManager(object):
         if stats_model:
             for counts in stats_model.day_counts:
                 date_str = "%s-%02d" % (year_month, counts.day)
-                for k in results.keys():
-                    if getattr(counts, cls._count_fields[k]) > 0: #omit 0 counts
+                for k,v in cls._count_fields.items():
+                    if getattr(counts, v) > 0: #omit 0 counts
                         results[k][date_str] = results[k].get(date_str,0) + \
-                            getattr(counts, cls._count_fields[k])
+                            getattr(counts, v)
         
             
     @classmethod

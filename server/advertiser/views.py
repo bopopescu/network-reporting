@@ -350,7 +350,7 @@ class CreateCampaignAJAXHander(RequestHandler):
 
         if adgroup_form:
             # We hide deprecated networks by default.  Show them for pre-existing adgroups though
-            if adgroup_form['network_type'].value == 'admob':
+            if adgroup_form['network_type'].value == 'admob' or self.request.user.is_staff:
                 networks.append(["admob","AdMob Javascript (deprecated)",False])
             # Allow admins to create Millennial s2s campaigns
             if adgroup_form['network_type'].value == 'millennial' or self.request.user.is_staff:

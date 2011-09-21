@@ -452,11 +452,16 @@ class AdHandler(webapp.RequestHandler):
                 params.update(admob_finish_load=success)
                 params.update(admob_fail_load='')
                 
-            # Viewport meta tag: used by the iOS client to keep interstitials properly centered.
+            # Viewport meta tag: used by the iOS SDK to keep iPad interstitials properly centered.
             # On legacy SDKs (version < 6), inclusion of this tag causes a divide-by-zero exception,
             # so we should omit it for those versions.
+            #
+            # There are a few SDK revisions tagged with version == 6 that are affected by
+            # this crash. We can't distinguish the buggy v=6 revisions from working ones, but we can
+            # limit the crashes to iPad (way less commonly used) by only sending down the tag for
+            # tablet formats. 
             
-            if version_number >= 6:
+            if version_number >= 6 and "full_tablet" in adunit.format:
                 params.update(viewportMetaTag='<meta name="viewport" content="width=device-width; initial-scale=1.0; user-scalable=no;">')
             else:
                 params.update(viewportMetaTag='')

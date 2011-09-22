@@ -10,10 +10,17 @@ from utils import mongo_connection
 # print fields2
 
 #StatsModelQueryManager.create_empty_results()
-# mongo_connection.ensure_connection()
+mongo_connection.ensure_connection()
 # stats = StatsModel(dt=date(2011,3,3), pub_id='fake_pub_id', adv_id='adv_id')
-# print stats.day_counts[23].click
 # stats.save()
+
+#hc = HourCounts()
+#stats_model = StatsModel.objects().first()
+StatsModel.objects().update(set__day_counts__a__req=1)
+#stats_model.day_counts["a"] = hc
+#stats_model.save()
+
+
 
 # print StatsModelQueryManager.get_counts(start_date=date(2012,3,1), 
 #                                         end_date=date(2012,3,25))
@@ -28,14 +35,14 @@ from utils import mongo_connection
 #                                               end_day=31)
     #print val
 #print obj
-StatsModelQueryManager.update_counts(creative_id="creative_id", 
-                                     adgroup_id="adgroup_id", 
-                                     campaign_id="campaign_id",
-                                     adunit_id="adunit_id",
-                                     app_id="app_id",
-                                     fields={'request':1, 'impression':1},
-                                     date_hour = datetime(year=2012,month=10,day=23,hour=11)
-                                     )
+# StatsModelQueryManager.update_counts(creative_id="creative_id", 
+#                                      adgroup_id="adgroup_id", 
+#                                      campaign_id="campaign_id",
+#                                      adunit_id="adunit_id",
+#                                      app_id="app_id",
+#                                      fields={'request':1, 'impression':1},
+#                                      date_hour = datetime(year=2012,month=10,day=23,hour=11)
+#                                      )
 
 
 

@@ -22,22 +22,18 @@ class Counts(mdb.EmbeddedDocument):
 class HourCounts(Counts):
     hour = mdb.IntField(min_value=0, max_value=23)
 
-"""
-empty counts used to initialize new StatsModels
-"""
-_empty_day_counts = [Counts(day=d) for d in xrange(1,32)]
-_empty_hour_counts = [HourCounts(day=1,hour=1) for d in xrange(1,32)
-                          for h in xrange(24)]
-
 class StatsModel(mdb.Document):
     _id = mdb.StringField(primary_key=True)
     pub_id = mdb.StringField()
     adv_id = mdb.StringField()
     dt = YearMonthField(required=True)
-    day_counts = mdb.ListField(mdb.EmbeddedDocumentField(Counts), default=_empty_day_counts)
+    
+    day_counts = mdb.DictField(field=mdb.EmbeddedDocumentField(Counts))
+    hour_counts = mdb.MapField(field=mdb.EmbeddedDocumentField(HourCounts))
+    #day_counts = mdb.ListField(mdb.EmbeddedDocumentField(Counts))
     # wanted to have hour counts nested in day_counts but mongoengine
     # seems to have trouble dealing with nested embedded doc lists
-    hour_counts = mdb.ListField(mdb.EmbeddedDocumentField(HourCounts), default=_empty_hour_counts)
+    #hour_counts = mdb.ListField(mdb.EmbeddedDocumentField(HourCounts))
     
     # do not need an index on dt. Since _id start with date, can
     # do a prefix lookup on the _id that will be as fast as an

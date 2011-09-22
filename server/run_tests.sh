@@ -9,7 +9,7 @@ then
     # TODO: Why does this have to use --where?
     echo "Userstore tests"
     nosetests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --where='./userstore/tests'
-     nosetests ./userstore/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./'
+    # nosetests ./userstore/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./'
     
     echo "Reporting tests"
     nosetests ./reporting/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox 

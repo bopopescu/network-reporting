@@ -282,7 +282,9 @@ class Report(db.Model):
                 data.append('')
     
             if isinstance(value['stats'], dict):
-                data += [value['stats']['request_count'], value['stats']['impression_count'], value['stats']['click_count'], value['stats']['conversion_count']]
+                impressions = float(value['stats']['impression_count'])
+                ctr = 'n/a' if impressions == 0 else value['stats']['click_count'] / impressions
+                data += [value['stats']['request_count'], value['stats']['impression_count'], value['stats']['click_count'], value['stats']['conversion_count'], value['stats']['revenue'], ctr]
             else:
                 data += [value['stats'].request_count, value['stats'].impression_count, value['stats'].click_count, value['stats'].conversion_count] 
 
@@ -431,10 +433,9 @@ class Report(db.Model):
     def add_missing_dates(self, level, stats_dict):
         d = self.dims[level]
         if d == DAY:
-            dates = Set()
-            for key in stats_dict.keys():
-                # key is in '%y%m%dday' format
-                dates.add(key)
+            # key is in '%y%m%dday' format
+            dates = Set(stats_dict.keys())
+
             stats_len = len(stats_dict[stats_dict.keys()[0]]['stats'])
             # go from start date to end date checking if date is in the hash set
             # if it's not add it to final

@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from query_managers import StatsModelQueryManager
-from models import StatsModel, HourCounts, Counts
+from models import StatsModel, Counts
 from utils import mongo_connection
 
 
@@ -10,20 +10,22 @@ from utils import mongo_connection
 # print fields2
 
 #StatsModelQueryManager.create_empty_results()
-mongo_connection.ensure_connection()
-# stats = StatsModel(dt=date(2011,3,3), pub_id='fake_pub_id', adv_id='adv_id')
-# stats.save()
+# mongo_connection.ensure_connection() # 
+#count = Counts()
+#stats = StatsModel(dt=date(2011,3,3), pub_id='fake_pub_id', adv_id='adv_id', day_counts={"1":count})
+#stats.save()
 
 #hc = HourCounts()
-#stats_model = StatsModel.objects().first()
-StatsModel.objects().update(set__day_counts__a__req=1)
+# stats_model = StatsModel.objects().first()
+# print stats_model.day_counts['2'].reqq
+#StatsModel.objects().update(inc__day_counts__2__reqq=1)
 #stats_model.day_counts["a"] = hc
 #stats_model.save()
 
 
 
-# print StatsModelQueryManager.get_counts(start_date=date(2012,3,1), 
-#                                         end_date=date(2012,3,25))
+# print StatsModelQueryManager.get_counts(start_date=date(2012,10,1), 
+#                                         end_date=date(2012,11,22))
 
 # vals = StatsModel.objects
 # for val in vals:
@@ -35,14 +37,14 @@ StatsModel.objects().update(set__day_counts__a__req=1)
 #                                               end_day=31)
     #print val
 #print obj
-# StatsModelQueryManager.update_counts(creative_id="creative_id", 
-#                                      adgroup_id="adgroup_id", 
-#                                      campaign_id="campaign_id",
-#                                      adunit_id="adunit_id",
-#                                      app_id="app_id",
-#                                      fields={'request':1, 'impression':1},
-#                                      date_hour = datetime(year=2012,month=10,day=23,hour=11)
-#                                      )
+StatsModelQueryManager.update_counts(creative_id="creative_id", 
+                                     adgroup_id="adgroup_id", 
+                                     campaign_id="campaign_id",
+                                     adunit_id="adunit_id",
+                                     app_id="app_id",
+                                     fields={'request':1, 'impression':1},
+                                     date_hour = datetime(year=2012,month=4,day=23,hour=12)
+                                     )
 
 
 

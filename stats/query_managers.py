@@ -3,7 +3,7 @@ import mongoengine as mdb
 from utils.timezones import Pacific_tzinfo
 from datetime import datetime, timedelta, date
 from dateutil.relativedelta import relativedelta
-from models import StatsModel, Counts, HourCounts
+from models import StatsModel, Counts
 
 class StatsModelQueryManager(object):
     _WILD = '*'
@@ -45,7 +45,6 @@ class StatsModelQueryManager(object):
         update_params = cls.get_update_params(fields, 
                                               date_hour.day, 
                                               date_hour.hour)
-
         num_updated = StatsModel.objects(_id__in=ids_to_update).\
             update(**update_params)
         
@@ -65,7 +64,7 @@ class StatsModelQueryManager(object):
         pub_id refers to one of the following: App, AdUnit, *
         adv_id refers to one of the following: Campaign, AdGroup, Creative, *
 
-        Returns stats for the givein pub_id, adv_id and date range
+        Returns stats for the given pub_id, adv_id and date range
         """
         start_date = start_date or datetime.now(Pacific_tzinfo()).date()
         end_date = end_date or datetime.now(Pacific_tzinfo()).date()
@@ -99,32 +98,28 @@ class StatsModelQueryManager(object):
         # excluding hour_counts as they are large and not currently necessary
         stats_model = StatsModel.objects(_id=key).exclude('hour_counts').first()
         if stats_model:
-            for counts in stats_model.day_counts:
+            #key is day of the month. value is Counts object
+            for day, counts in stats_model.day_counts.items():
                 #only process counts if between start_day and end_day inclusive
-                if counts.day >= start_day and counts.day <= end_day:
-                    date_str = "%s-%02d" % (year_month, counts.day)
+                day = int(day)
+                if day >= start_day and day <= end_day:
+                    date_str = "%s-%02d" % (year_month, day)
                     for k,v in cls._count_fields.items():
                         if getattr(counts, v) > 0: #omit 0 counts
                             results[k][date_str] = results[k].get(date_str,0) + \
                                 getattr(counts, v)
-        
-            
+
     @classmethod
     @requires_mongo
     def create_stats_model(cls, id, update_params):
         """
-        When creating stats model, initialize empty counts for entire month.
-        This will minimize data movement on the mongo end. The document
-        will be initialzed once, then simply updated throughout the month.
-        This tries to ensure that mongo initializes enough space for it from the 
-        get go and it never has to grow/be moved
+        Create stats model and save/update according to update_params
         """
 
         (dt, pub_id, adv_id) = id.split(":")
         stats_model = StatsModel(dt=dt,
                                  pub_id=pub_id,
                                  adv_id=adv_id)
-        #hour_counts=cls._empty_hour_counts)
         #TODO: combine these two steps?
         stats_model.save()
         StatsModel.objects(_id=id).update(**update_params)
@@ -135,22 +130,22 @@ class StatsModelQueryManager(object):
         Updates are done for a given day and hour. Update commands
         sent to mongo are of the form:
 
-          inc__ARRAYFIELD__INDEX__FIELD
+          inc__MAPFIELD__KEY__FIELD
 
           where: 
-            ARRAY_FIELD: the array to be updated (day_counts/hour_counts)
-            INDEX: index into ARRAY_FIELD where the udpate will occur
+            MAP_FIELD: the map of counts to be updated (day_counts/hour_counts)
+            KEY: key into MAPFIELD where the udpate will occur
             FIELD: field of the element at ARRAY_FIELD[INDEX] that is 
                to be updated
         
         The function loops through all field/increment pairs provided in
         fields param and generates all the update commands. For example, 
-        if fields = {'req' : 1, 'imp' : 2}, day=1, hour=1the generated params will look like:
+        if fields = {'req' : 1, 'imp' : 2}, day=1, hour=1 the generated params will look like:
         
         {'inc__day_counts__0__req': 1, 
          'inc__day_counts__0__imp': 2, 
-         'inc__hour_counts__1__req': 1, 
-         'inc__hour_counts__1__imp': 2
+         'inc__hour_counts__0:1__req': 1, 
+         'inc__hour_counts__0:1__imp': 2
         }
         
         These params are sent directly into mongoengine to perform atomic updates
@@ -159,18 +154,13 @@ class StatsModelQueryManager(object):
         Note: currently assuming that increment is the only operation that will
         be done when updating. This restriction can be relaxed if necessary
         """
-    #TODO: NEXT TWO LINES FOR TESTING ONLY
-#        day = 1
- #       hour = 1
-        day_index = day-1
-        hour_index = 24*(day-1) + hour
         params = {}
         update_param_template = "inc__%s__%s__%s" # assuming only increment
         for field, incr in fields.items():
             cur_day_key = update_param_template % \
-                ("day_counts", day_index, cls._count_fields[field])
+                ("day_counts", day, cls._count_fields[field])
             cur_hour_key = update_param_template % \
-                ("hour_counts", hour_index, cls._count_fields[field])
+                ("hour_counts", "%s:%s" % (day, hour), cls._count_fields[field])
             params[cur_day_key] = incr
             params[cur_hour_key] = incr
         return params

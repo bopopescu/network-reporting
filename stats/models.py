@@ -3,8 +3,11 @@ from utils.mongo_fields import YearMonthField
 from datetime import date
 
 class Counts(mdb.EmbeddedDocument):
-    day = mdb.IntField(min_value=1, max_value=31)
-    
+    """
+    Count class is used to store day_counts as well as hour_counts
+    If this class definition is changed, it is necessary to update
+    StatsModelQueryManager._count_fields accordingly
+    """
     rev = mdb.IntField(default=0)
     req = mdb.IntField(default=0)
     imp = mdb.IntField(default=0)
@@ -12,32 +15,17 @@ class Counts(mdb.EmbeddedDocument):
     conv = mdb.IntField(default=0)
     att = mdb.IntField(default=0)
 
-    # uniq user counts
-#     user_count = mdb.IntField(default=0)
-#     req_user_count = mdb.IntField(default=0)
-#     imp_user_count = mdb.IntField(default=0)
-#     click_user_count = mdb.IntField(default=0)
-#     att_user_count = mdb.IntField(default=0)
-
-class HourCounts(Counts):
-    hour = mdb.IntField(min_value=0, max_value=23)
-
 class StatsModel(mdb.Document):
     _id = mdb.StringField(primary_key=True)
     pub_id = mdb.StringField()
     adv_id = mdb.StringField()
     dt = YearMonthField(required=True)
     
-    day_counts = mdb.DictField(field=mdb.EmbeddedDocumentField(Counts))
-    hour_counts = mdb.MapField(field=mdb.EmbeddedDocumentField(HourCounts))
-    #day_counts = mdb.ListField(mdb.EmbeddedDocumentField(Counts))
-    # wanted to have hour counts nested in day_counts but mongoengine
-    # seems to have trouble dealing with nested embedded doc lists
-    #hour_counts = mdb.ListField(mdb.EmbeddedDocumentField(HourCounts))
+    # key is day of month
+    day_counts = mdb.MapField(field=mdb.EmbeddedDocumentField(Counts))
+    # key is "day:hour"
+    hour_counts = mdb.MapField(field=mdb.EmbeddedDocumentField(Counts))
     
-    # do not need an index on dt. Since _id start with date, can
-    # do a prefix lookup on the _id that will be as fast as an
-    # index lookup on dt alone
     meta = {
         'indexes' : ['pub_id', 'adv_id']
         }

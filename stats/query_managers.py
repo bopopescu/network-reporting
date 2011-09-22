@@ -29,19 +29,22 @@ class StatsModelQueryManager(object):
                       adunit_id=None,
                       app_id=None,
                       fields=None,
-                      dt=None):
+                      date_hour=None):
         """
         Updates counts in mongo based on passed in parameters. If an item 
-        is not present, it is created/stores in mongo
+        is not present, it is created/stored in mongo
         """
         fields = fields or {}
-        dt = dt or datetime.now(Pacific_tzinfo())
+        date_hour = date_hour or datetime.now(Pacific_tzinfo())
         
-        ids_to_update = _get_ids(dt, 
+        ids_to_update = _get_ids(date_hour, 
                                  [app_id, adunit_id, cls._WILD],
                                  [creative_id, adgroup_id, campaign_id, cls._WILD])
         
-        update_params = cls.get_update_params(fields, dt.day, dt.hour)
+        update_params = cls.get_update_params(fields, 
+                                              date_hour.day, 
+                                              date_hour.hour)
+
         num_updated = StatsModel.objects(_id__in=ids_to_update).\
             update(**update_params)
         
@@ -96,11 +99,13 @@ class StatsModelQueryManager(object):
         stats_model = StatsModel.objects(_id=key).exclude('hour_counts').first()
         if stats_model:
             for counts in stats_model.day_counts:
-                date_str = "%s-%02d" % (year_month, counts.day)
-                for k,v in cls._count_fields.items():
-                    if getattr(counts, v) > 0: #omit 0 counts
-                        results[k][date_str] = results[k].get(date_str,0) + \
-                            getattr(counts, v)
+                #only process counts if between start_day and end_day inclusive
+                if counts.day >= start_day and counts.day <= end_day:
+                    date_str = "%s-%02d" % (year_month, counts.day)
+                    for k,v in cls._count_fields.items():
+                        if getattr(counts, v) > 0: #omit 0 counts
+                            results[k][date_str] = results[k].get(date_str,0) + \
+                                getattr(counts, v)
         
             
     @classmethod
@@ -116,9 +121,9 @@ class StatsModelQueryManager(object):
         day_counts = []
         hour_counts = []
         #TODO: use actual # of days/hour in month
-        for day in xrange(1, 4):
+        for day in xrange(1, 32):
             day_counts.append(Counts(day=day))
-            for hour in xrange(3):
+            for hour in xrange(24):
                 hour_counts.append(HourCounts(day=day, hour=hour))
         (dt, pub_id, adv_id) = id.split(":")
         stats_model = StatsModel(dt=dt,
@@ -161,8 +166,8 @@ class StatsModelQueryManager(object):
         be done when updating. This restriction can be relaxed if necessary
         """
     #TODO: NEXT TWO LINES FOR TESTING ONLY
-        day = 1
-        hour = 1
+#        day = 1
+ #       hour = 1
         day_index = day-1
         hour_index = 24*(day-1) + hour
         params = {}

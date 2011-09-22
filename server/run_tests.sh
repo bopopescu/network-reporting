@@ -43,11 +43,11 @@ then
     echo "Network Config tests"
     nosetests network_config_mptests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox
     echo "More Ad Server tests"
-     nosetests ad_server_tests --gae-datastore='./test_data/basic_test.datastore' --with-gae --gae-application='./' --without-sandbox
+    # nosetests ad_server_tests --gae-datastore='./test_data/basic_test.datastore' --with-gae --gae-application='./' --without-sandbox
    
 else
     nosetests --with-coverage --with-xunit --gae-lib-root="$1" --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --where='./userstore/tests'
-     nosetests ./userstore/tests --with-coverage --with-xunit --gae-lib-root="$1" --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./'
+    # nosetests ./userstore/tests --with-coverage --with-xunit --gae-lib-root="$1" --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./'
     
     
     nosetests ./reporting/tests --with-coverage --with-xunit --gae-lib-root="$1" --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox 

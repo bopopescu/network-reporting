@@ -72,15 +72,15 @@ mopub.Utils = mopub.Utils || {};
         $('.validate').validate();
 
         // set up treeview
-    // $(".treeview").treeview({
-    //        animated: "fast",
-    //        collapsed: true,
-    //        unique: true,
-    //        persist: "cookie",
-    //        })
-    //
+        // $(".treeview").treeview({
+        //        animated: "fast",
+        //        collapsed: true,
+        //        unique: true,
+        //        persist: "cookie",
+        //        })
+        //
 
-    $(".tree").treeview()
+        $(".tree").treeview();
 
 
 
@@ -319,18 +319,19 @@ mopub.Utils = mopub.Utils || {};
     / Image Preloader
     /---------------------------------------*/
 
-  var cache = [];
-  // Arguments are image paths relative to the current page.
-  $.preLoadImages = function() {
-    var args_len = arguments.length;
-    for (var i = args_len; i--;) {
-      var cacheImage = document.createElement('img');
-      cacheImage.src = arguments[i];
-      cache.push(cacheImage);
-    }
-    // Commented out for cleanliness
-    // log(cache);
-  };
+    var cache = [];
+
+    // Arguments are image paths relative to the current page.
+    $.preLoadImages = function() {
+        var args_len = arguments.length;
+        for (var i = args_len; i--;) {
+            var cacheImage = document.createElement('img');
+            cacheImage.src = arguments[i];
+            cache.push(cacheImage);
+        }
+        // Commented out for cleanliness
+        // log(cache);
+    };
 
     // Creates a dropdown menu
     // Usage: `$(dropdown-trigger).dropdown(things-that-dropdown);`
@@ -379,15 +380,19 @@ mopub.Utils = mopub.Utils || {};
         }, 1);
     };
 
-  // helper fn for console logging
-  var log;
+    $.fn.htmlDecode(value) = function(value) {
+        return $('<div/>').html(value).text();
+    };
 
-  if (window.console && typeof console.log === "function"){
-    // use apply to preserve context and invocations with multiple arguments
-    log = function () { console.log.apply(console, arguments); };
-  } else {
-    log = function(){ return; };
-  }
+    // helper fn for console logging
+    var log;
+
+    if (window.console && typeof console.log === "function"){
+        // use apply to preserve context and invocations with multiple arguments
+        log = function () { console.log.apply(console, arguments); };
+    } else {
+        log = function(){ return; };
+    }
 
   /*---------------------------------------/
   / Utility functions.

@@ -1,5 +1,6 @@
 import mechanize
 
+from datetime import date
 from scraper import Scraper, ScraperSite
 
 class NetworkScrapeRecord(object):
@@ -26,7 +27,18 @@ class IAdScraper(Scraper):
         self.br.select_form(name = self.LOGIN_FORM_NAME)
         self.br[self.LOGIN_ACCOUNT_INPUT_NAME] = self.username
         self.br[self.LOGIN_PW_INPUT_NAME] = self.password
-        response = self.br.submit()
+        
+        # can't click on the form element not sure why
+        self.br.form.find_control(name="1.Continue", nr=1).click()
+        
+    def get_site_stats(self, start_date, end_date=None):
+        if end_date is None:
+            end_date = start_date
+        
+        response = self.br.follow_link(text = "iAd Network")
+        print response.geturl()
+        
+        response = self.br.follow_link(text = "Download Report")
         
         for line in response: print line
         
@@ -78,5 +90,6 @@ if __name__ == '__main__':
     nc['password'] = '606mCV&#dS'
     nc['network'] = 'iad'
     scraper = IAdScraper(nc)
+    print scraper.get_site_stats(date.today())
     
     # iad_scraper(nc, '','')

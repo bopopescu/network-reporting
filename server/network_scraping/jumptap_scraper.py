@@ -1,8 +1,8 @@
 import urllib2
 import urllib
 
-from scraper import Scraper, ScraperSite
 from datetime import date
+from scraper import Scraper, ScraperSite
 
 class NetworkScrapeRecord(object):
     pass

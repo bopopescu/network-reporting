@@ -19,6 +19,7 @@ class StatsModelQueryManager(object):
                      'click' : 'click',
                      'conversion' : 'conv',
                      'attempt' :'att'}
+
     
     @classmethod
     @requires_mongo
@@ -118,19 +119,12 @@ class StatsModelQueryManager(object):
         This tries to ensure that mongo initializes enough space for it from the 
         get go and it never has to grow/be moved
         """
-        day_counts = []
-        hour_counts = []
-        #TODO: use actual # of days/hour in month
-        for day in xrange(1, 32):
-            day_counts.append(Counts(day=day))
-            for hour in xrange(24):
-                hour_counts.append(HourCounts(day=day, hour=hour))
+
         (dt, pub_id, adv_id) = id.split(":")
         stats_model = StatsModel(dt=dt,
                                  pub_id=pub_id,
-                                 adv_id=adv_id,
-                                 day_counts=day_counts,
-                                 hour_counts=hour_counts)
+                                 adv_id=adv_id)
+        #hour_counts=cls._empty_hour_counts)
         #TODO: combine these two steps?
         stats_model.save()
         StatsModel.objects(_id=id).update(**update_params)
@@ -151,7 +145,7 @@ class StatsModelQueryManager(object):
         
         The function loops through all field/increment pairs provided in
         fields param and generates all the update commands. For example, 
-        if fields = {'req' : 1, 'imp' : 2}, the generated params will look like:
+        if fields = {'req' : 1, 'imp' : 2}, day=1, hour=1the generated params will look like:
         
         {'inc__day_counts__0__req': 1, 
          'inc__day_counts__0__imp': 2, 

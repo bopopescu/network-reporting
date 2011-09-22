@@ -4,32 +4,40 @@ from models import StatsModel, HourCounts, Counts
 from utils import mongo_connection
 
 
-import json
-fields2 = json.loads('{"request":1, "impression":2}')
-fields = json.loads('{"bar":"baz"}')
-print fields2
+# import json
+# fields2 = json.loads('{"request":1, "impression":2}')
+# fields = json.loads('{"bar":"baz"}')
+# print fields2
 
 #StatsModelQueryManager.create_empty_results()
-
-# print StatsModelQueryManager.get_counts(start_date=date(2011,9,1), 
-#                                   end_date=date(2011,9,25))
 # mongo_connection.ensure_connection()
+# stats = StatsModel(dt=date(2011,3,3), pub_id='fake_pub_id', adv_id='adv_id')
+# print stats.day_counts[23].click
+# stats.save()
+
+# print StatsModelQueryManager.get_counts(start_date=date(2012,3,1), 
+#                                         end_date=date(2012,3,25))
+
 # vals = StatsModel.objects
 # for val in vals:
 #2011-09:app_id:creative_id
 # StatsModelQueryManager.get_stats_within_month(pub_id="app_id",
 #                                               adv_id="creative_id",
-#                                               year_month="2011-09",
+#                                               year_month="2012-02",
 #                                               start_day=1,
 #                                               end_day=31)
     #print val
 #print obj
-# StatsModelQueryManager.update_stats(creative_id="creative_id", 
-#                                     adgroup_id="adgroup_id", 
-#                                     campaign_id="campaign_id",
-#                                     adunit_id="adunit_id",
-#                                     app_id="app_id",
-#                                     fields={'request':1, 'impression':2})
+StatsModelQueryManager.update_counts(creative_id="creative_id", 
+                                     adgroup_id="adgroup_id", 
+                                     campaign_id="campaign_id",
+                                     adunit_id="adunit_id",
+                                     app_id="app_id",
+                                     fields={'request':1, 'impression':1},
+                                     date_hour = datetime(year=2012,month=10,day=23,hour=11)
+                                     )
+
+
 
 #StatsModelQueryManager.get_stats()
 #import mongoengine as mdb

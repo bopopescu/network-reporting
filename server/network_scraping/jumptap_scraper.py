@@ -7,7 +7,8 @@ from datetime import date
 class NetworkScrapeRecord(object):
     pass
 
-class JumpTapScraper(Scraper): 
+class JumpTapScraper(Scraper):
+    
     NETWORK_NAME = 'jumptap'
     SITE_STAT_URL = 'https://pa.jumptap.com/pa-2.0/pub-services/v10/report.html'
 

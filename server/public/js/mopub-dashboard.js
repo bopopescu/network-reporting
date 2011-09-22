@@ -22,7 +22,6 @@ var mopub = mopub || {};
          if (jsonData.success) {
              window.location.reload();
          } else {
-             console.log(htmlDecode(jsonData.html));
              $('#appForm-fragment').html(htmlDecode(jsonData.html));
              // reimplement the onload event
              appFormOnload();

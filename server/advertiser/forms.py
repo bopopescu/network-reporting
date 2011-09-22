@@ -28,6 +28,13 @@ import cgi
 
 from common.constants import IOS_VERSION_CHOICES, ANDROID_VERSION_CHOICES
 
+def get_filetype_extension(filename):
+    if not type(filename) == str:
+        filename = str(filename)
+    if filename.find('.') >= 0:
+        return filename.split('.')[-1]
+    return None
+
 class CampaignForm(mpforms.MPModelForm):
     TEMPLATE = 'advertiser/forms/campaign_form.html'
     gtee_level = forms.Field(widget = forms.Select)
@@ -341,9 +348,22 @@ class ImageCreativeForm(AbstractCreativeForm):
             kwargs.update(initial=initial)
         super(ImageCreativeForm,self).__init__(*args,**kwargs)
 
-    def save(self,commit=True):
+
+    def clean_image_file(self):
+        if self.cleaned_data['image_file']:
+            img = self.files.get('image_file', None)
+            is_valid_image_type = any([str(img).endswith(ftype) for ftype in ['.png', '.jpeg', '.jpg', '.gif']])
+            if not (img and is_valid_image_type):
+                extension = get_filetype_extension(img)
+                if extension:
+                    raise forms.ValidationError('Filetype (.%s) not supported.' % extension)
+                else:
+                    raise forms.ValidationError('Filetype not supported.')
+        return self.cleaned_data
+
+    def save(self, commit=True):
         obj = super(ImageCreativeForm,self).save(commit=False)
-        if self.files.get('image_file',None):
+        if self.files.get('image_file', None):
             image_data = self.files.get('image_file').read()
             img = images.Image(image_data)
             obj.image_width = img.width
@@ -355,6 +375,8 @@ class ImageCreativeForm(AbstractCreativeForm):
             files.finalize(fname)
             blob_key = files.blobstore.get_blob_key(fname)
             obj.image_blob = blob_key
+        else:
+            commit = False
 
         if commit:
             obj.put()

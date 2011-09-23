@@ -55,6 +55,12 @@ WURFL_DIMS = (MAR, BRND, OS, OS_VER)
 
 NO_REQ = CRTV_DIMS
 
+LOG_FORMAT = "%s:\t%s\n"
+def log(mesg):
+    my_log = open('/home/ubuntu/poller.log', 'a')
+    my_log.write(LOG_FORMAT % (time.time(), mesg))
+    my_log.close()
+
 def build_stat_dict(stats):
     """ Return a dict that appears like a StatsModel object to django
         (haha django you are so dumb and easy to fool)
@@ -158,6 +164,10 @@ class ScheduledReport(db.Model):
         else:
             return self.interval.title()
 
+    @property
+    def status(self):
+        return self.most_recent.status
+
 class Report(db.Model):
     #standard
     account = db.ReferenceProperty(collection_name='reports')
@@ -177,6 +187,7 @@ class Report(db.Model):
 
     # maybe useful for internal analytics//informing users
     completed_at = db.DateTimeProperty()
+    status = db.StringProperty(default='Pending')
 
 
     def notify_complete(self):
@@ -190,7 +201,7 @@ class Report(db.Model):
                 try:
                     mesg.send()
                 except InvalidEmailError, e:
-                    pass
+                    continue
         else:
             return
 
@@ -503,9 +514,10 @@ class Report(db.Model):
                     camp = crtv.adgroup.campaign
                     return (crtv.adgroup.bid_strategy, crtv.adgroup.bid)
             except:
-                log("Exception in bid info")
+                # This should only ever be called by the EC2 instance, so
+                # this should be safe
                 f = open('/home/ubuntu/tb.log', 'a')
-                traceback.print_tb(sys.exc_info()[2], file=f)
+                traceback.print_exc(file=f)
                 f.close()
                 return None, None
         return None, None

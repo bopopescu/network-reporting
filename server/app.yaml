@@ -13,14 +13,14 @@ builtins:
 # - appstats: on
 
 inbound_services:
-- warmup     
+- warmup
 
 
 handlers:
 - url: /mapreduce(/.*)?
   script: mapreduce/main.py
   login: admin
-  
+
 - url: /robots.txt
   static_files: public/robots.txt
   upload: public/robots.txt
@@ -35,7 +35,7 @@ handlers:
 # - url: /m/req
 #   static_files: public/dummy/req.txt
 #   upload: public/dummy/req.txt
-  
+
 - url: /css
   static_dir: public/css
 
@@ -59,8 +59,8 @@ handlers:
 
 - url: /admin/sfdc/
   script: main.py
-  login: admin 
-  
+  login: admin
+
 - url: /m/clear
   script: ad_server/main.py
   login: admin
@@ -73,7 +73,7 @@ handlers:
 
 - url: /_ah/queue/.*
   script: mopub_logging/views.py
-  login: admin  
+  login: admin
 
 - url: /offline/.*
   script: reporting/aws_logging/blob_server.py

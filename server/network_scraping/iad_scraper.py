@@ -1,4 +1,6 @@
-import mechanize
+from selenium import webdriver
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.support.ui import WebDriverWait
 
 from datetime import date
 from scraper import Scraper, ScraperSite
@@ -19,28 +21,28 @@ class IAdScraper(Scraper):
             raise "Invalid credentials.  Attempting to use %s credentials for an iAd scraper" % credentials.network
         super(IAdScraper, self).__init__(credentials)
         # authenticate on creation
-        self.br = mechanize.Browser()
+        self.driver = webdriver.Firefox()
         self.authenticate()
     
     def authenticate(self):
-        self.br.open(self.LOGIN_URL)
-        self.br.select_form(name = self.LOGIN_FORM_NAME)
-        self.br[self.LOGIN_ACCOUNT_INPUT_NAME] = self.username
-        self.br[self.LOGIN_PW_INPUT_NAME] = self.password
+        self.driver.get(self.LOGIN_URL)
+        self.driver.find_element_by_name(self.LOGIN_ACCOUNT_INPUT_NAME).send_keys(self.username)
+        self.driver.find_element_by_name(self.LOGIN_PW_INPUT_NAME).send_keys(self.password)
         
+        print self.driver.find_elements_by_name("1.Continue")
         # can't click on the form element not sure why
-        self.br.form.find_control(name="1.Continue", nr=1).click()
+        self.driver.find_elements_by_name("1.Continue")[1].click()
         
     def get_site_stats(self, start_date, end_date=None):
         if end_date is None:
             end_date = start_date
         
-        response = self.br.follow_link(text = "iAd Network")
-        print response.geturl()
+        self.driver.find_elements_by_link_text("iAd Network")[1].click()
         
-        response = self.br.follow_link(text = "Download Report")
+        WebDriverWait(self.driver, 10).until(lambda d : d.title.lower().startswith("my"))
+        self.driver.find_element_by_link_text("Download Report").click()
         
-        for line in response: print line
+        # for line in response: print line
         
     def iad_scraper(network_credential, from_date, to_date):
         br = mechanize.Browser()

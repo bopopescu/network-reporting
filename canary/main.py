@@ -170,7 +170,7 @@ class PingIdHandler(webapp.RequestHandler):
         self.response.out.write(simplejson.dumps(d))
 	    
 ###
-# Recalculates fun statistics for all ads
+# Recalculates fun statistics for all ads and potentially sends canary email
 	    
 class RecalculateHandler(webapp.RequestHandler):
     def get(self):
@@ -207,9 +207,6 @@ class RecalculateHandler(webapp.RequestHandler):
             memcache.set("failure_rate", failure_rate)
             memcache.set("last_success", last_success)
             
-            logging.info("last_success = %d" % last_success)
-            logging.info("EMAIL SHOULD SHOW HERE")
-            
             # if there is a failure alert condition, send an email
             # Yes, this should continue to be sent until the failure condition has been addressed
             if last_success > LAST_SUCCESS_THRESHOLD:
@@ -228,7 +225,7 @@ class RecalculateHandler(webapp.RequestHandler):
                 memcache.set("median_latency", median_latency)
         
 ###
-# Recalculates fun statistics and potentially sends canary emails for an ad id
+# Recalculates fun statistics
 
 class RecalculateIdHandler(webapp.RequestHandler):
     def get(self, id):       

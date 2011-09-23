@@ -8,7 +8,7 @@ class Counts(mdb.EmbeddedDocument):
     If this class definition is changed, it is necessary to update
     StatsModelQueryManager._count_fields accordingly
     """
-    rev = mdb.IntField(default=0)
+    rev = mdb.FloatField(default=0.0)
     req = mdb.IntField(default=0)
     imp = mdb.IntField(default=0)
     click = mdb.IntField(default=0)
@@ -35,8 +35,8 @@ class StatsModel(mdb.Document):
         if isinstance(kwargs['dt'], date):
             kwargs['dt'] = "%s-%02d" % (kwargs['dt'].year, kwargs['dt'].month)
         dt = kwargs['dt']
-        pub_id = kwargs['pub_id']
-        adv_id = kwargs['adv_id']
+        pub_id = kwargs.get('pub_id','*')
+        adv_id = kwargs.get('adv_id','*')
         kwargs['_id'] = self.get_primary_key(dt, pub_id, adv_id)
         super(StatsModel, self).__init__(*args, **kwargs)
 

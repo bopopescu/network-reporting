@@ -19,10 +19,15 @@ class StatsHandler(tornado.web.RequestHandler):
         except:
             self.write("bad date format")
         else:
-            results = StatsModelQueryManager.get_counts(pub_id=pub,
-                                                        adv_id=adv,
-                                                        start_date=start_date,
-                                                        end_date=end_date)
+            (daily_stats, sum) = StatsModelQueryManager.\
+                get_counts(pub_id=pub,
+                           adv_id=adv,
+                           start_date=start_date,
+                           end_date=end_date)
+            results = {'status' : 200, 
+                       'all_stats' : {'%s||%s' % (pub, adv) : 
+                                      {"daily_stats" : daily_stats, 
+                                       "sum" : sum}}}
             self.write(json.dumps(results))
         
         

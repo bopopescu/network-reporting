@@ -14,11 +14,11 @@ class StatsModelQueryManager(object):
     update this dictionary to reflect the change
     """ 
     _count_fields = {'revenue' : 'rev',
-                     'request' : 'req',
-                     'impression': 'imp',
-                     'click' : 'click',
-                     'conversion' : 'conv',
-                     'attempt' :'att'}
+                     'request_count' : 'req',
+                     'impression_count': 'imp',
+                     'click_count' : 'click',
+                     'conversion_count' : 'conv',
+                     'attempt_count' :'att'}
 
     
     @classmethod
@@ -68,26 +68,29 @@ class StatsModelQueryManager(object):
         """
         start_date = start_date or datetime.now(Pacific_tzinfo()).date()
         end_date = end_date or datetime.now(Pacific_tzinfo()).date()
-        results = dict([(k, {}) for k in cls._count_fields.keys()])
+        daily_stats = []
+        sum = dict([(k,0) for k in cls._count_fields.keys()])
         for year, month, start_day, end_day \
                 in _gen_range(start=start_date,end=end_date):
-            cls.get_counts_single_month(pub_id=pub_id,
-                                        adv_id=adv_id,
-                                        year_month="%s-%02d" % (year, month),
-                                        start_day=start_day,
-                                        end_day=end_day,
-                                        results=results)
-        return results
-        
+            cls.get_daily_counts_single_month(pub_id=pub_id,
+                                              adv_id=adv_id,
+                                              year_month="%s-%02d" % (year, month),
+                                              start_day=start_day,
+                                              end_day=end_day,
+                                              daily_stats=daily_stats,
+                                              sum=sum)
+        return (daily_stats, sum)
+
     @classmethod
     @requires_mongo
-    def get_counts_single_month(cls,
-                               pub_id='*',
-                               adv_id='*',
-                               year_month=None,
-                               start_day=None,
-                               end_day=None,
-                               results=None):
+    def get_daily_counts_single_month(cls,
+                                      pub_id='*',
+                                      adv_id='*',
+                                      year_month=None,
+                                      start_day=None,
+                                      end_day=None,
+                                      daily_stats=None,
+                                      sum=None):
         """
         Populates results with stats for year_month-start_day through 
         year_month-end_day (inclusive). 
@@ -96,19 +99,17 @@ class StatsModelQueryManager(object):
         """
         key = StatsModel.get_primary_key(year_month, pub_id, adv_id)
         # excluding hour_counts as they are large and not currently necessary
-        stats_model = StatsModel.objects(_id=key).exclude('hour_counts').first()
-        if stats_model:
-            #key is day of the month. value is Counts object
-            for day, counts in stats_model.day_counts.items():
-                #only process counts if between start_day and end_day inclusive
-                day = int(day)
-                if day >= start_day and day <= end_day:
-                    date_str = "%s-%02d" % (year_month, day)
-                    for k,v in cls._count_fields.items():
-                        if getattr(counts, v) > 0: #omit 0 counts
-                            results[k][date_str] = results[k].get(date_str,0) + \
-                                getattr(counts, v)
-
+        stats_model = StatsModel.objects(_id=key).exclude('hour_counts').first() or StatsModel(dt=year_month)
+        for day in xrange(start_day, end_day + 1):
+            day_stats = dict([(k, 0) for k in cls._count_fields.keys()])
+            counts = stats_model.day_counts.get(str(day), Counts())
+            for k in day_stats.keys():
+                inc_val = getattr(counts, cls._count_fields[k])
+                day_stats[k] += inc_val
+                sum[k] += inc_val
+            day_stats['date'] = "%s-%02d" % (year_month, day)
+            daily_stats.append(day_stats)
+                
     @classmethod
     @requires_mongo
     def create_stats_model(cls, id, update_params):

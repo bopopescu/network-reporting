@@ -30,21 +30,24 @@ from utils import mongo_connection
 # vals = StatsModel.objects
 # for val in vals:
 #2011-09:app_id:creative_id
-# StatsModelQueryManager.get_stats_within_month(pub_id="app_id",
-#                                               adv_id="creative_id",
-#                                               year_month="2012-02",
-#                                               start_day=1,
-#                                               end_day=31)
+# daily_stats =[]
+# StatsModelQueryManager.get_daily_counts_single_month(pub_id="app_id",
+#                                                     adv_id="creative_id",
+#                                                     year_month="2011-09",
+#                                                     start_day=1,
+#                                                     end_day=31,
+#                                                     daily_stats=daily_stats)
+# print daily_stats
     #print val
 #print obj
-StatsModelQueryManager.update_counts(creative_id="creative_id", 
-                                     adgroup_id="adgroup_id", 
-                                     campaign_id="campaign_id",
-                                     adunit_id="adunit_id",
-                                     app_id="app_id",
-                                     fields={'request':1, 'impression':1},
-                                     date_hour = datetime(year=2012,month=4,day=23,hour=12)
-                                     )
+# StatsModelQueryManager.update_counts(creative_id="creative_id", 
+#                                      adgroup_id="adgroup_id", 
+#                                      campaign_id="campaign_id",
+#                                      adunit_id="adunit_id",
+#                                      app_id="app_id",
+#                                      fields={'request':1, 'impression':1},
+#                                      date_hour = datetime(year=2011,month=9,day=23,hour=12)
+#                                      )
 
 
 

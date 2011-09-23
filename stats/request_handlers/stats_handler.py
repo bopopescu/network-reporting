@@ -14,8 +14,6 @@ class StatsHandler(tornado.web.RequestHandler):
             start_date=None,
             end_date=None):
         try:
-            #TODO: handle converting argument to date object better
-            # maybe use unix timestamp as argument?
             start_date = get_date_from_str(start_date).date()
             end_date = get_date_from_str(end_date).date()
         except:

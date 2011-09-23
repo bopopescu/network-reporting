@@ -155,14 +155,14 @@ def gen_report_fname(d1, d2, d3, start, end):
 
 def parse_msg(msg):
     data = str(msg.get_body())
-    d1, d2, d3, start, end, rep_key, acct_key = data.split(DELIM)
+    d1, d2, d3, start, end, rep_key, acct_key, ts = data.split(DELIM)
     if d2 == 'None':
         d2 = None
     if d3 == 'None':
         d3 = None
     start = datetime.strptime(start, '%y%m%d')
     end = datetime.strptime(end, '%y%m%d')
-    return (d1, d2, d3, start, end, rep_key, acct_key)
+    return (d1, d2, d3, start, end, rep_key, acct_key, ts)
 
 
 def get_waiting_jobflow(conn):

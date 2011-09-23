@@ -14,6 +14,14 @@ from parse_utils import gen_days, gen_report_fname, get_waiting_jobflow
 from parse_utils import AWS_ACCESS_KEY, AWS_SECRET_KEY, JOBFLOW_NAME
 from reports.aws_reports.report_exceptions import (MRSubmitError, ReportException, NoDataError)
 
+############### Poster Imports ############### 
+from poster.encode import multipart_encode
+from poster.streaminghttp import register_openers
+
+############### GAE Imports ############### 
+from google.appengine.ext import blobstore
+from google.appengine.ext.webapp import blobstore_handlers
+from google.appengine.ext.remote_api import remote_api_stub
 
 S3_CONN = S3Connection(AWS_ACCESS_KEY, AWS_SECRET_KEY)
 BUCK = S3_CONN.get_bucket('mopub-aws-logging')
@@ -34,6 +42,14 @@ MASTER_INSTANCE_TYPE = 'm1.large'
 SLAVE_INSTANCE_TYPE = 'm1.large'
 KEEP_ALIVE = True
 
+################## GAE Uploading Stuff ##############
+BACKEND = 'stats-updater'
+APP = 'mopub-inc'
+HOST = 'http://%s.%s.appspot.com' % (BACKEND, APP)
+URL_HANDLER_PATH = '/offline/get_upload_url'
+UPDATE_STATS_HANDLER_PATH = '/offline/update_stats'
+
+################## Constants ###################
 LOG_FORMAT = "%s:\t%s\n"
 
 
@@ -58,47 +74,23 @@ def verify_inputs(inputs, account):
     input_dir = SHORT_ACCT_DIR + '/%s/daily_logs' % account
     return [file for file in inputs if BUCK.get_key(input_dir + '/' + file) is not None]
 
+def upload_file(fd):
 
-def submit_job(d1, d2, d3, start, end, report_key, account):
-    """ Returns Jobid, steps completed, and output name if job is added properly
-    returns False for all values if there are no valid input files """
-    conn = EmrConnection(AWS_ACCESS_KEY, AWS_SECRET_KEY)
+    register_openers()
+    datagen, headers = multipart_encode({'file' : fd})
 
-    inputs, output_dir = build_puts(start, end, account)
-    if len(inputs) == 0:
-        raise NoDataError('No inputs', report_key)
-    instances = 10
-    output_name = gen_report_fname(d1, d2, d3, start, end)
-    start = start.strftime('%y%m%d')
-    end = end.strftime('%y%m%d')
+    upload_url_req = urllib2.Request(HOST + URL_HANDLER_PATH)
+    log(HOST+URL_HANDLER_PATH)
+    upload_url = urllib2.urlopen(upload_url_req).read()
 
-    output = output_dir + '/' + output_name
+    file_upload_req = urllib2.Request(upload_url, datagen, headers)
+    blob_key = urllib2.urlopen(file_upload_req).read()
+    return blob_key
 
-    gen_report_step = StreamingStep(
-            name = 'Generate Report Step',
-            mapper = REPORT_MAPPER % (d1, d2, d3),
-            reducer = LOG_REDUCER,
-            cache_files = [REPORTING_S3_CODE_DIR + '/parse_utils.py#parse_utils.py'],
-            input = inputs,
-            output = output,
-            )
+def auth_func():
+    return 'olp@mopub.com', 'N47935'
 
-    steps_to_add = [gen_report_step]
-    jobid, steps = get_waiting_jobflow(conn)
-    try:
-        if jobid:
-            conn.add_jobflow_steps(jobid, steps_to_add)
-        else:
-            jobid = conn.run_jobflow(
-                    name = JOBFLOW_NAME,
-                    steps = steps_to_add,
-                    log_uri = LOG_URI,
-                    num_instances = instances,
-                    master_instance_type = MASTER_INSTANCE_TYPE,
-                    slave_instance_type = SLAVE_INSTANCE_TYPE,
-                    keep_alive=KEEP_ALIVE,
-                    enable_debugging=True,
-                    )
-    except Exception:
-        raise MRSubmitError('No valid Job ID', report_key)
-    return jobid, steps, output_name
+def setup_remote_api():
+    app_id = 'mopub-inc'
+    host = '38-aws.latest.mopub-inc.appspot.com'
+    remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', auth_func, host)

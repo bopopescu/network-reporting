@@ -4,6 +4,7 @@ from utils.timezones import Pacific_tzinfo
 from datetime import datetime, timedelta, date
 from dateutil.relativedelta import relativedelta
 from models import StatsModel, Counts
+from calendar import monthrange
 
 class StatsModelQueryManager(object):
     _WILD = '*'
@@ -65,6 +66,16 @@ class StatsModelQueryManager(object):
         adv_id refers to one of the following: Campaign, AdGroup, Creative, *
 
         Returns stats for the given pub_id, adv_id and date range
+        Return Values:
+        daily_stats:
+          [{"field_1" : val, ... , "field_n" : val, "date" : date} , ... 
+          {"field_1" : val_m, ... , "field_n" : val_m, "date" : date_m}]
+          where field_x corresponds to cls._count_fields keys
+          
+        sum:
+          {"field_1" : sum , ... , "field_n' : sum}
+          where sum is the sum over all elements in daily_stats for the 
+          given field
         """
         start_date = start_date or datetime.now(Pacific_tzinfo()).date()
         end_date = end_date or datetime.now(Pacific_tzinfo()).date()
@@ -94,14 +105,14 @@ class StatsModelQueryManager(object):
         """
         Populates results with stats for year_month-start_day through 
         year_month-end_day (inclusive). 
-
-        Note: currently omits any 0 value counts
         """
         key = StatsModel.get_primary_key(year_month, pub_id, adv_id)
         # excluding hour_counts as they are large and not currently necessary
-        stats_model = StatsModel.objects(_id=key).exclude('hour_counts').first() or StatsModel(dt=year_month)
-        for day in xrange(start_day, end_day + 1):
-            day_stats = dict([(k, 0) for k in cls._count_fields.keys()])
+        stats_model = StatsModel.objects(_id=key).exclude('hour_counts').first()\
+            or StatsModel(dt=year_month)
+        for day in xrange(start_day, end_day + 1): 
+            # init counts to 0 for all fields in cls._count_fields
+            day_stats = dict([(k, 0) for k in cls._count_fields.keys()]) 
             counts = stats_model.day_counts.get(str(day), Counts())
             for k in day_stats.keys():
                 inc_val = getattr(counts, cls._count_fields[k])
@@ -121,7 +132,6 @@ class StatsModelQueryManager(object):
         stats_model = StatsModel(dt=dt,
                                  pub_id=pub_id,
                                  adv_id=adv_id)
-        #TODO: combine these two steps?
         stats_model.save()
         StatsModel.objects(_id=id).update(**update_params)
     
@@ -176,9 +186,6 @@ def _gen_range(start, end):
     (2011, 1, 5, 31)
     (2011, 2, 1, 31)
     (2011, 3, 1, 15)
-    Note: for simplicity, we assume each month has 31 days. This is safe b/c
-    the model assumes this as well and initializes counts for all days to be 0
-    so this will never cause incorrect count calculations
     """
     while start <= end:
         if (start.year == end.year and start.month == end.month):
@@ -186,9 +193,9 @@ def _gen_range(start, end):
             yield (start.year, start.month, start.day, end.day)
         else:
             #not final month in sequence, so include until end of month
-            yield (start.year, start.month, start.day, 31)
+            yield (start.year, start.month, start.day, 
+                   monthrange(start.year, start.month)[1])
         start = date(start.year, start.month, 1) + relativedelta(months=+1)
-        
 
 def _get_ids(dt, pub_list, adv_list):
     """

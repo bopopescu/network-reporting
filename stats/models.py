@@ -31,7 +31,7 @@ class StatsModel(mdb.Document):
         }
 
     def __init__(self, *args, **kwargs):
-        # TODO: a bit hackish, converts passed in date to string
+        #TODO: clean up a bit?
         if isinstance(kwargs['dt'], date):
             kwargs['dt'] = "%s-%02d" % (kwargs['dt'].year, kwargs['dt'].month)
         dt = kwargs['dt']

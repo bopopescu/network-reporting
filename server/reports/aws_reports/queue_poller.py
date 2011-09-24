@@ -121,9 +121,12 @@ def report_failed(report_key):
     # If I were a better person I'd email people when their reports fail
 
 def report_empty(report_key):
-    rep = Report.get(report_key)
-    rep.status = 'No Data'
-    rep.put()
+    try:
+        rep = Report.get(report_key)
+        rep.status = 'No Data'
+        rep.put()
+    except:
+        return
 
 def job_failed(state):
     if state == u'FAILED':
@@ -183,7 +186,7 @@ def notify_appengine(fname, msg):
     report_dir = report_dir % acct
     file = report_dir + fname
     files = BUCK.list(prefix = file + '/part')
-    f = open('/home/ubuntu/mopub/server/reports/aws_reports/reports/finished_%s.rep' % rep, 'a')
+    f = open('/home/ubuntu/mopub/server/reports/aws_reports/reports/finished_%s.rep' % rep, 'w')
     for ent in files:
         ent.get_contents_to_file(f)
     f.close()

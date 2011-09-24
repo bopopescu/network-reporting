@@ -49,7 +49,7 @@ from reports.aws_reports.report_exceptions import (ReportParseError,
                                                    ReportNotifyError,
                                                    ReportException,
                                                    )
-from reports.aws_reports.helpers import (upload_file, setup_remote_api, log, build_puts, get_waiting_jobflow)
+from reports.aws_reports.helpers import (upload_file, setup_remote_api, log, build_puts, get_waiting_jobflow, JOBFLOW_NAME)
 
 # Setup the remote API
 setup_remote_api()
@@ -139,9 +139,12 @@ class ReportMessageHandler(MessageHandler):
             sys.exit(0)
 
     def notify_failure(self, message, reason):
-        rep = Report.get(message.report_key)
-        rep.status = reason
-        rep.put()
+        try:
+            rep = Report.get(message.report_key)
+            rep.status = reason
+            rep.put()
+        except:
+            return
 
     def finalize_report(self, message, blob_key):
         report = Report.get(message.report_key)
@@ -188,13 +191,16 @@ class ReportMessageHandler(MessageHandler):
                     # No data, can't retry
                     self.to_del.append(e.message)
                     self.notify_failure(e.message, 'No Data')
+                    default_exc_handle(e)
                 except MRSubmitError, e:
                     # Failed too many times, stop retrying (delete from the queue)
                     if self.msg_failures[e.message] > MAX_RETRIES:
                         self.to_del.append(e.message)
                         self.notify_failure(e.message, 'Failed')
+                    default_exc_handle(e)
                     self.msg_failures[e.message] += 1
-                except Exception:
+                except Exception, e:
+                    default_exc_handle(e)
                     continue
 
             # Delete handled messages from the queue

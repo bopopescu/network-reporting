@@ -155,7 +155,11 @@ def gen_report_fname(d1, d2, d3, start, end):
 
 def parse_msg(msg):
     data = str(msg.get_body())
-    d1, d2, d3, start, end, rep_key, acct_key, ts = data.split(DELIM)
+    try:
+        d1, d2, d3, start, end, rep_key, acct_key, ts = data.split(DELIM)
+    except:
+        d1, d2, d3, start, end, rep_key, acct_key = data.split(DELIM)
+        ts = None
     if d2 == 'None':
         d2 = None
     if d3 == 'None':

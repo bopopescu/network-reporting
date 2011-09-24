@@ -25,6 +25,7 @@ InstallAppengineHelperForDjango()
 ############### Boto Imports ############### 
 from boto.emr.connection import EmrConnection
 from boto.sqs.connection import SQSConnection
+from boto.emr.step import StreamingStep
 from boto.sqs.message import Message
 from boto.s3.connection import S3Connection as s3
 
@@ -48,13 +49,15 @@ from reports.aws_reports.report_exceptions import (ReportParseError,
                                                    ReportPutError,
                                                    ReportNotifyError,
                                                    ReportException,
+                                                   NoDataError,
+                                                   MRSubmitError,
                                                    )
 from reports.aws_reports.helpers import (upload_file, setup_remote_api, log, build_puts, get_waiting_jobflow, JOBFLOW_NAME)
 
 # Setup the remote API
 setup_remote_api()
 
-S3_CONN = S3Connection(AWS_ACCESS_KEY, AWS_SECRET_KEY)
+S3_CONN = s3(AWS_ACCESS_KEY, AWS_SECRET_KEY)
 BUCK = S3_CONN.get_bucket('mopub-aws-logging')
 
 S3_BUCKET = 's3://mopub-aws-logging'
@@ -76,16 +79,25 @@ KEEP_ALIVE = True
 MAX_RETRIES = 3
 FINISHED_FILE = '/home/ubuntu/mopub/server/reports/aws_reports/reports/finished_%s.rep'
 
-STEP_NAME = "Generate_report_%s-%s-%s-%s'
+STEP_NAME = "Generate_report_%s-%s-%s-%s"
 
-class ReportMessage(Message):
+MAX_MSGS = 5
+
+def default_exc_handle(e):
+    log("Encountered exception: %s" % e)
+    tb_file = open('/home/ubuntu/tb.log', 'a')
+    tb_file.write("\nERROR---\n%s" % time.time())
+    traceback.print_exc(file=tb_file)
+    tb_file.close()
+
+class ReportMessage(object):
 
     def __init__(self, msg):
         self.msg = msg
         self.d1, self.d2, self.d3, self.start, self.end, self.report_key, self.account, self.ts = parse_msg(msg)
         self.start_str = self.start.strftime('%y%m%d')
         self.end_str = self.end.strftime('%y%m%d')
-        self.fname = get_report_fname(self.d1, self.d2, self.d3, self.start, self.end)
+        self.fname = gen_report_fname(self.d1, self.d2, self.d3, self.start, self.end)
         self.step_name = STEP_NAME % (self.d1, self.d2, self.d3, self.ts)
 
 class ReportMessageHandler(MessageHandler):
@@ -184,7 +196,7 @@ class ReportMessageHandler(MessageHandler):
             for msg in msgs:
                 message = ReportMessage(msg)
                 try:
-                    self.handle_message(msg)
+                    self.handle_message(message)
                     
                 # Commence Robust Exception Handling 
                 except NoDataError, e:
@@ -206,10 +218,12 @@ class ReportMessageHandler(MessageHandler):
             # Delete handled messages from the queue
             for i in range(len(self.to_del)):
                 msg = self.to_del.pop(0)
-                if not report_queue.delete_message(msg.msg):
+                if not self.queue.delete_message(msg.msg):
                     self.to_del.append(msg)
 
     def get_jobflow_statuses(self, ids):
+        if not ids:
+            return None
         retry = 0
         while retry < 5:
             try:
@@ -227,7 +241,6 @@ class ReportMessageHandler(MessageHandler):
             Rets: None
             Throws: Whatever the notify's throw
             """
-        retry = 0:
         # Get the status of the jobflows we are using
         jobflows = self.get_jobflow_statuses(self.working_jobids)
         # Each jobflow can have multiple steps.  Ideally we only ever have one jobflow
@@ -239,6 +252,8 @@ class ReportMessageHandler(MessageHandler):
     
     def handle_jobflow(self, jobflow):
         jobid = jobflow.jobflowid
+        if not self.jobid_message_map.has_key(jobid):
+            return
         messages = self.jobid_message_map[jobid]
         completed_steps = [step.name for step in jobflow.steps if step.state == u'COMPLETED']
         failed_steps = [step.name for step in jobflow.steps if step.state == u'FAILED']
@@ -277,7 +292,7 @@ class ReportMessageHandler(MessageHandler):
         # Add a failure dict. This must be done before any possible failures
         if not self.msg_failures.has_key(message):
             self.msg_failures[message] = 0
-        log("Handling %s" % msg.get_body())
+        log("Handling %s" % message.msg.get_body())
         # If processed don't do anything with it
         if message in self.to_del:
             return
@@ -299,19 +314,21 @@ class ReportMessageHandler(MessageHandler):
 
     def submit_job(self, message):
         inputs, output_dir = build_puts(message.start, message.end, message.account)
-        if len(inputs) = 0:
+        if len(inputs) == 0:
             # No data, can't retry :(
             raise NoDataError('No inputs', message)
         output = output_dir + '/' + message.fname
         gen_report_step = StreamingStep(
                 name = message.step_name,
-                mapper = REPORT_MAPPER % (message.d1, message.d2, message.d3)
+                mapper = REPORT_MAPPER % (message.d1, message.d2, message.d3),
                 reducer = LOG_REDUCER,
-                cache_files = [REPORTING_S3_CODE_DIR + '/parse_utils.py#parse_utils.py']
+                cache_files = [REPORTING_S3_CODE_DIR + '/parse_utils.py#parse_utils.py'],
                 input = inputs,
                 output = output,
                 )
+        steps_to_add = [gen_report_step]
         jobid = get_waiting_jobflow(self.emr_conn, self.working_jobids)
+        instances = 10
         try:
             if jobid:
                 self.emr_conn.add_jobflow_steps(jobid, steps_to_add)
@@ -329,7 +346,8 @@ class ReportMessageHandler(MessageHandler):
                 # Created a new job.  Record the time of creation
                 self.jobid_creations[jobid] = datetime.now()
         # Boto can fail for a few reasons, other random erorrs.  Catch all of them and raise a simple one
-        except Exception:
+        except Exception, e:
+            default_exc_handle(e)
             raise MRSubmitError('Error adding job to EMR', message)
 
         return jobid

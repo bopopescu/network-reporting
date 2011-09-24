@@ -85,15 +85,6 @@ def default_exc_handle(e):
 def main_loop():
     report_queue = SQS_CONN.create_queue('report_queue')
     rep_handler = ReportMessageHandler(report_queue)
-    # Links jobs to messages
-    job_msg_map = {}
-    # Links jobs to previous steps completed, useful for waiting jobflows
-    job_step_map = {}
-    # Count for a job as to how many times it has failed
-    fail_dict = {}
-    # List of messages to delete from SQS
-    to_del = []
-    setup_remote_api()
     while True:
         try:
             # Throws no unhandled errors

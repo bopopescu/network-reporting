@@ -51,6 +51,7 @@ UPDATE_STATS_HANDLER_PATH = '/offline/update_stats'
 
 ################## Constants ###################
 LOG_FORMAT = "%s:\t%s\n"
+JOBFLOW_NAME = 'generating report job'
 
 
 
@@ -94,3 +95,19 @@ def setup_remote_api():
     app_id = 'mopub-inc'
     host = '38-aws.latest.mopub-inc.appspot.com'
     remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', auth_func, host)
+
+def get_waiting_jobflow(conn, jobflow_ids):
+    waiting_jobflows = conn.describe_jobflows(jobflow_ids= jobflow_ids)
+    for jobflow in waiting_jobflows:
+        if jobflow.name != JOBFLOW_NAME:
+            continue
+        jid = jobflow.jobflowid
+        print 'found waitingjobflow %s with %i steps completed' % (jid, num_steps)
+        if num_steps > 250 and jobflow.state != u'RUNNING':
+            print 'num of steps near limit of 256: terminating jobflow %s ...' % (jobid)
+            conn.terminate_jobflow(jid)
+        else:
+            return jid
+    return None
+
+

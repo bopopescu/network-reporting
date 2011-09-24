@@ -38,6 +38,7 @@ from google.appengine.ext.webapp import blobstore_handlers
 from google.appengine.ext.remote_api import remote_api_stub
 
 ############### Mopub Imports ############### 
+from reports.aws_reports.messages import Message, MessageHandler
 from reports.aws_reports.parse_utils import gen_report_fname, parse_msg
 from reports.aws_reports.parse_utils import AWS_ACCESS_KEY, AWS_SECRET_KEY
 from reports.models import Report
@@ -48,7 +49,8 @@ from reports.aws_reports.report_exceptions import (ReportParseError,
                                                    ReportNotifyError,
                                                    ReportException,
                                                    )
-from reports.aws_reports.helpers import (upload_file, setup_remote_api, log, build_puts)
+from reports.aws_reports.helpers import (upload_file, setup_remote_api, log, build_puts, get_waiting_jobflow)
+
 # Setup the remote API
 setup_remote_api()
 
@@ -114,7 +116,7 @@ class ReportMessageHandler(MessageHandler):
         report_dir = report_dir % message.account
         file = report_dir + message.fname
         files = BUCK.list(prefix = file + '/part')
-        f = open(FINSIHED_FILE % message.report_key, 'a')
+        f = open(FINSIHED_FILE % message.report_key, 'w')
         for ent in files:
             ent.get_contents_to_file(f)
         f.close() 
@@ -303,7 +305,7 @@ class ReportMessageHandler(MessageHandler):
                 input = inputs,
                 output = output,
                 )
-        jobid, steps = get_waiting_jobflow(self.emr_conn)
+        jobid = get_waiting_jobflow(self.emr_conn, self.working_jobids)
         try:
             if jobid:
                 self.emr_conn.add_jobflow_steps(jobid, steps_to_add)

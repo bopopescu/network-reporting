@@ -1,45 +1,19 @@
 import time
 import sys
 import os
-import urllib2
 from datetime import datetime
 import traceback
-
-sys.path.append("..")
-sys.path.append("../..")
-
-sys.path.append("/home/ubuntu/mopub/server")
-sys.path.append("/home/ubuntu/mopub/server/reports")
-sys.path.append("/home/ubuntu/google_appengine")
-sys.path.append("/home/ubuntu/google_appengine/lib/fancy_urllib")
-sys.path.append("/home/ubuntu/google_appengine/lib/webob")
-sys.path.append("/home/ubuntu/google_appengine/lib/ipaddr")
-sys.path.append("/home/ubuntu/google_appengine/lib/antlr3")
-sys.path.append("/home/ubuntu/google_appengine/lib/django_1_2")
-sys.path.append("/home/ubuntu/google_appengine/lib/yaml/lib")
-
 
 from appengine_django import InstallAppengineHelperForDjango
 InstallAppengineHelperForDjango()
 
 ############### Boto Imports ############### 
 from boto.emr.connection import EmrConnection
-from boto.sqs.connection import SQSConnection
 from boto.emr.step import StreamingStep
-from boto.sqs.message import Message
 from boto.s3.connection import S3Connection as s3
 
-############### Poster Imports ############### 
-from poster.encode import multipart_encode
-from poster.streaminghttp import register_openers
-
-############### GAE Imports ############### 
-from google.appengine.ext import blobstore
-from google.appengine.ext.webapp import blobstore_handlers
-from google.appengine.ext.remote_api import remote_api_stub
-
 ############### Mopub Imports ############### 
-from reports.aws_reports.messages import Message, MessageHandler
+from reports.aws_reports.messages import MessageHandler
 from reports.aws_reports.parse_utils import gen_report_fname, parse_msg
 from reports.aws_reports.parse_utils import AWS_ACCESS_KEY, AWS_SECRET_KEY
 from reports.models import Report
@@ -52,7 +26,14 @@ from reports.aws_reports.report_exceptions import (ReportParseError,
                                                    NoDataError,
                                                    MRSubmitError,
                                                    )
-from reports.aws_reports.helpers import (upload_file, setup_remote_api, log, build_puts, get_waiting_jobflow, JOBFLOW_NAME)
+from reports.aws_reports.helpers import (upload_file, 
+                                         setup_remote_api, 
+                                         log, 
+                                         build_puts, 
+                                         get_waiting_jobflow, 
+                                         default_exc_handle,
+                                         JOBFLOW_NAME,
+                                         )
 
 # Setup the remote API
 setup_remote_api()
@@ -67,6 +48,7 @@ REPORTING_S3_CODE_DIR = S3_BUCKET + '/reports_code0'
 
 REPORT_MAPPER = REPORTING_S3_CODE_DIR + '/%s_%s_%s_report_mapper.py'
 LOG_REDUCER = REPORTING_S3_CODE_DIR + '/log_reducer.py'
+PARSE_UTILS = '/parse_utils.py#parse_utils.py'
 
 ACCOUNT_DIR = S3_BUCKET + '/account_data'
 SHORT_ACCT_DIR = 'account_data'
@@ -83,22 +65,27 @@ STEP_NAME = "Generate_report_%s-%s-%s-%s"
 
 MAX_MSGS = 5
 
-def default_exc_handle(e):
-    log("Encountered exception: %s" % e)
-    tb_file = open('/home/ubuntu/tb.log', 'a')
-    tb_file.write("\nERROR---\n%s" % time.time())
-    traceback.print_exc(file=tb_file)
-    tb_file.close()
-
 class ReportMessage(object):
 
     def __init__(self, msg):
         self.msg = msg
-        self.d1, self.d2, self.d3, self.start, self.end, self.report_key, self.account, self.ts = parse_msg(msg)
-        self.start_str = self.start.strftime('%y%m%d')
-        self.end_str = self.end.strftime('%y%m%d')
-        self.fname = gen_report_fname(self.d1, self.d2, self.d3, self.start, self.end)
-        self.step_name = STEP_NAME % (self.d1, self.d2, self.d3, self.ts)
+        self.dim1, self.dim2, self.dim3, self.start, self.end, self.report_key, self.account, self.timestamp = parse_msg(msg)
+        self.step_name = STEP_NAME % (self.dim1, self.dim2, self.dim3, self.timestamp)
+
+        @property
+        def dims(self):
+            return (self.dim1, self.dim2, self.dim3)
+
+        @property
+        def start_str(self):
+            return self.start.strftime('%y%m%d')
+        @property
+        def end_str(self):
+            return self.end.strftime('%y%m%d')
+
+        @property
+        def fname(self):
+            return gen_report_fname(self.dim1, self.dim2, self.dim3, self.start, self.end)
 
 class ReportMessageHandler(MessageHandler):
     """ Usage: 
@@ -127,14 +114,15 @@ class ReportMessageHandler(MessageHandler):
     def notify_success(self, message):
         report_dir = SHORT_ACCT_DIR + '/%s/reports/'
         report_dir = report_dir % message.account
-        file = report_dir + message.fname
-        files = BUCK.list(prefix = file + '/part')
-        f = open(FINSIHED_FILE % message.report_key, 'w')
+        out_file = report_dir + message.fname
+        files = BUCK.list(prefix = out_file + '/part')
+        finished_file = open(FINISHED_FILE % message.report_key, 'w')
         for ent in files:
-            ent.get_contents_to_file(f)
-        f.close() 
-        f = open(FINISHED_FILE % message.report_key)
-        blob_key = self.upload_file(f)
+            ent.get_contents_to_file(finished_file)
+        finished_file.close() 
+        finished_file = open(FINISHED_FILE % message.report_key)
+        blob_key = upload_file(finished_file)
+        finished_file.close()
         pid = os.fork()
         if pid:
             return
@@ -144,10 +132,10 @@ class ReportMessageHandler(MessageHandler):
                 try:
                     self.finalize_report(message, blob_key)
                     break
-                except ReportException, e:
+                except ReportException:
                     # Keep trying!
                     retry += 1
-            if retry == MAX_RETRIES:
+            if retry >= MAX_RETRIES:
                 self.notify_failure(message, 'Failed')
             sys.exit(0)
 
@@ -156,7 +144,7 @@ class ReportMessageHandler(MessageHandler):
             rep = Report.get(message.report_key)
             rep.status = reason
             rep.put()
-        except:
+        except Exception:
             return
 
     def finalize_report(self, message, blob_key):
@@ -200,7 +188,9 @@ class ReportMessageHandler(MessageHandler):
             for msg in msgs:
                 message = ReportMessage(msg)
                 try:
-                    self.handle_message(msg, force_no_data = force_no_data, force_submit_error = force_submit_error)
+                    self.handle_message(message, 
+                                        force_no_data = force_no_data, 
+                                        force_submit_error = force_submit_error)
                 # Commence Robust Exception Handling 
                 except NoDataError, e:
                     # No data, can't retry
@@ -251,7 +241,23 @@ class ReportMessageHandler(MessageHandler):
         if jobflows is None:
             return
         for jobflow in jobflows:
-            self.handle_jobflow(jobflow)
+            try:
+                self.handle_jobflow(jobflow)
+            except BlobUploadError, e:
+                # Blob didn't upload, nbd
+                pass
+            except ReportPutError, e:
+                # Put failed
+                pass
+            except S3Error, e:
+                # S3 Failed
+                pass
+            except ReportNotifyError, e:
+                # Notifying Failed
+                pass
+            except Exception, e:
+                # Something else
+                pass
     
     def handle_jobflow(self, jobflow):
         jobid = jobflow.jobflowid
@@ -268,7 +274,7 @@ class ReportMessageHandler(MessageHandler):
             self.on_success(message, jobid)
 
         # Handle failed messages
-        for messge in failed_messages:
+        for message in failed_messages:
             self.on_failure(message, jobid)
         
         # This jobflow is exhausted, remove it from the list of working jobids
@@ -291,7 +297,7 @@ class ReportMessageHandler(MessageHandler):
         
         self.jobid_message_map[jobid] = [msg for msg in self.jobid_message_map[jobid] if msg != message]
 
-    def handle_message(self, message, force_no_data = False, force_sumit_error = False):
+    def handle_message(self, message, force_no_data = False, force_submit_error = False):
         # Add a failure dict. This must be done before any possible failures
         if not self.msg_failures.has_key(message):
             self.msg_failures[message] = 0
@@ -329,9 +335,9 @@ class ReportMessageHandler(MessageHandler):
         output = output_dir + '/' + message.fname
         gen_report_step = StreamingStep(
                 name = message.step_name,
-                mapper = REPORT_MAPPER % (message.d1, message.d2, message.d3),
+                mapper = REPORT_MAPPER % message.dims,
                 reducer = LOG_REDUCER,
-                cache_files = [REPORTING_S3_CODE_DIR + '/parse_utils.py#parse_utils.py'],
+                cache_files = [REPORTING_S3_CODE_DIR + PARSE_UTILS],
                 input = inputs,
                 output = output,
                 )
@@ -354,7 +360,8 @@ class ReportMessageHandler(MessageHandler):
                     )
                 # Created a new job.  Record the time of creation
                 self.jobid_creations[jobid] = datetime.now()
-        # Boto can fail for a few reasons, other random erorrs.  Catch all of them and raise a simple one
+        # Boto can fail for a few reasons, other random erorrs.  
+        # Catch all of them and raise a simple one
         except Exception, e:
             default_exc_handle(e)
             raise MRSubmitError('Error adding job to EMR', message)

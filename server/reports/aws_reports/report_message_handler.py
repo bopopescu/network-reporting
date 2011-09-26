@@ -99,8 +99,9 @@ class ReportMessageHandler(MessageHandler):
             """
 
 
-    def __init__(self, queue):
+    def __init__(self, queue, testing=False):
         self.queue = queue
+        self.testing = testing
         self.to_del = []
         self.jobid_message_map = {}
         self.msg_failures = {}
@@ -173,19 +174,21 @@ class ReportMessageHandler(MessageHandler):
                 del(self.jobid_creations[jobid])
 
 
-    def handle_messages(self):
+    def handle_messages(self, force_no_data=False, force_submit_error=False):
         """
         Args: None
         Rets: None
         Throws: None
         """ 
+        # Don't allowing testing stuff if not testing (Just in case)
+        if not self.testing:
+            force_no_data = force_submit_error = False
         if self.queue.count() > 0:
             msgs = self.queue.get_messages(MAX_MSGS)
             for msg in msgs:
                 message = ReportMessage(msg)
                 try:
-                    self.handle_message(msg)
-                    
+                    self.handle_message(msg, force_no_data = force_no_data, force_submit_error = force_submit_error)
                 # Commence Robust Exception Handling 
                 except NoDataError, e:
                     # No data, can't retry
@@ -273,10 +276,17 @@ class ReportMessageHandler(MessageHandler):
         
         self.jobid_message_map[jobid] = [msg for msg in self.jobid_message_map[jobid] if msg != message]
 
-    def handle_message(self, message):
+    def handle_message(self, message, force_no_data = False, force_sumit_error = False):
         # Add a failure dict. This must be done before any possible failures
         if not self.msg_failures.has_key(message):
             self.msg_failures[message] = 0
+
+        # For testing
+        if force_no_data:
+            raise NoDataError('No inputs', message)
+        if force_submit_error:
+            raise MRSubmitError("Error adding job to EMR", message)
+
         log("Handling %s" % msg.get_body())
         # If processed don't do anything with it
         if message in self.to_del:

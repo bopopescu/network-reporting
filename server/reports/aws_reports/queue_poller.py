@@ -74,6 +74,7 @@ URL_HANDLER_PATH = '/offline/get_upload_url'
 UPDATE_STATS_HANDLER_PATH = '/offline/update_stats'
 
 ################## Constants ###################
+REPORT_QUEUE = 'report_queue'
 
 def default_exc_handle(e):
     log("Encountered exception: %s" % e)
@@ -83,7 +84,7 @@ def default_exc_handle(e):
     tb_file.close()
 
 def main_loop():
-    report_queue = SQS_CONN.create_queue('report_queue')
+    report_queue = SQS_CONN.create_queue(REPORT_QUEUE)
     rep_handler = ReportMessageHandler(report_queue)
     # Links jobs to messages
     job_msg_map = {}

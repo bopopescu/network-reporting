@@ -54,6 +54,7 @@ AU_DIMS = (APP, AU)
 WURFL_DIMS = (MAR, BRND, OS, OS_VER)
 
 NO_REQ = CRTV_DIMS
+REPORT_MSG = '%s|%s|%s|%s|%s|%s|%s|%s'
 
 LOG_FORMAT = "%s:\t%s\n"
 def log(mesg):
@@ -188,6 +189,11 @@ class Report(db.Model):
     # maybe useful for internal analytics//informing users
     completed_at = db.DateTimeProperty()
     status = db.StringProperty(default='Pending')
+
+
+    @property
+    def message(self):
+        return REPORT_MSG % (self.d1, self.d2, self.d3, self.start.strftime('%y%m%d'), self.end.strftime('%y%m%d'), self.key(), self.account.key(), time.time())
 
 
     def notify_complete(self):

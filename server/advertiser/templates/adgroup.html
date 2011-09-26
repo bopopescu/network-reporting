@@ -71,7 +71,7 @@
                 <div class="stats-breakdown">
                   <table>
                     <tbody>
-                    {% if campaign.gtee %}
+                    {% if campaign.gtee or campaign.marketplace %}
                         <tr class="active" id="stats-breakdown-revenue">
                             <td class="stats-breakdown-value today"><span class="inner">{{today.revenue|currency}}</span></td>
                             <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.revenue|currency}}</span></td>
@@ -79,13 +79,13 @@
                             <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
                         </tr>
                     {% endif %}
-                      <tr {% if not campaign.gtee %} class="active" {% endif %} id="stats-breakdown-impressions">
+                      <tr {% if campaign.network or campaign.promo %} class="active" {% endif %} id="stats-breakdown-impressions">
                         <td class="stats-breakdown-value today"><span class="inner">{{today.impression_count|withsep}}</span></td>
                         <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.impression_count|withsep}}</span></td>
                         <td class="stats-breakdown-value all"><span class="inner">{{totals.impression_count|withsep}}</span></td>
                         <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
                       </tr>
-                  {% if campaign.network or campaign.marketplace %}
+                  {% if campaign.network %}
                       <tr id="stats-breakdown-attempts">
                           <td class="stats-breakdown-value today"><span class="inner">{{today.request_count|withsep}}</span></td>
                           <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.request_count|withsep}}</span></td>
@@ -144,7 +144,7 @@
                       'users': [{% for a in graph_adunits %}
                         { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                       ],
-                      {% if campaign.gtee %}
+                      {% if campaign.gtee or campaign.marketplace %}
                             'revenue': [{% for a in graph_adunits %}
                                 { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.revenue}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                               ]
@@ -152,7 +152,7 @@
                             'conversions': [{% for a in graph_adunits %}
                                 { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.conversion_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                               ]
-                        {% endif %} {% if campaign.network  or campaign.marketplace %}
+                        {% endif %} {% if campaign.network %}
                             'attempts': [{% for a in graph_adunits %}
                                 { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
                               ]
@@ -183,7 +183,7 @@
                 {% endif %} {% if not campaign.start_date and not campaign.end_date %}
                 All dates.
                 {% endif %}&nbsp;
-                {% if campaign.gtee %}{% ifequal adgroup.campaign.budget_type 'daily' %}{% if adgroup.campaign.budget %}{{adgroup.campaign.budget|currency}} daily budget.{% else %} Unlimited budget.{% endif %}{% endifequal %}
+                {% if campaign.gtee or campaign.marketplace %}{% ifequal adgroup.campaign.budget_type 'daily' %}{% if adgroup.campaign.budget %}{{adgroup.campaign.budget|currency}} daily budget.{% else %} Unlimited budget.{% endif %}{% endifequal %}
                 {% ifequal adgroup.campaign.budget_type 'full_campaign' %}{{adgroup.campaign.full_budget|currency}} campaign budget.{% endifequal %}{% endif %}
 
 
@@ -201,7 +201,7 @@
                       <tr>
                         <th class="appData-icon"></th>
                         <th class="dataTable-name"></th>
-                        {% if campaign.gtee %}
+                        {% if campaign.gtee  or campaign.marketplace %}
                         <th class="dataTable-data numeric">&nbsp;</th>
                         <th class="dataTable-data numeric">Impressions</th>
                         <th class="dataTable-data numeric">Clicks</th>
@@ -213,7 +213,7 @@
                         <th class="dataTable-data numeric">Clicks</th>
                         <th class="dataTable-data numeric">CTR</th>
                         <th class="dataTable-data numeric">Conv</th>
-                        {% endif %} {% if campaign.network  or campaign.marketplace %}
+                        {% endif %} {% if campaign.network %}
                         <th class="dataTable-data numeric">Attempts</th>
                         <th class="dataTable-data numeric">Impressions</th>
                         <th class="dataTable-data numeric">Fillrate</th>
@@ -232,7 +232,7 @@
                         <td class="appData-icon"><a href="{% url publisher_app_show app_key=a.key %}"><img src="{% if a.icon_url %}{{a.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" /></a></td>
                         <th class="dataTable-name"><span class="inner"><a href="{% url publisher_app_show app_key=a.key %}">{{a.name}}</a> <span class="muted unbold">({% ifequal a.app_type "iphone" %}iOS{% endifequal %}{% ifequal a.app_type "android" %}Android{% endifequal %}{% ifequal a.app_type "mweb" %}Mobile Web{% endifequal %})</span></span></th>
 
-                        {% if campaign.gtee %}
+                        {% if campaign.gtee  or campaign.marketplace %}
                         <td class="dataTable-data numeric">&nbsp;</td>
                         <td class="dataTable-data numeric">{{a.stats.impression_count|withsep}}</td>
                         <td class="dataTable-data numeric">{{a.stats.click_count|withsep}}</td>
@@ -244,7 +244,7 @@
                         <td class="dataTable-data numeric">{{a.stats.click_count|withsep}}</td>
                         <td class="dataTable-data numeric">{{a.stats.ctr|percentage}}</td>
                         <td class="dataTable-data numeric">{{a.stats.conversion_count|withsep}} ({{a.stats.conv_rate|percentage}})</td>
-                        {% endif %} {% if campaign.network or campaign.marketplace %}
+                        {% endif %} {% if campaign.network %}
                         <td class="dataTable-data numeric">{{a.stats.request_count|withsep}}</td>
                         <td class="dataTable-data numeric">{{a.stats.impression_count|withsep}}</td>
                         <td class="dataTable-data numeric">{{a.stats.fill_rate|percentage}}</td>
@@ -262,7 +262,7 @@
                           <tr>
                             <th class="dataTable-name"><span class="inner"><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a></span></th>
 
-                            {% if campaign.gtee %}
+                            {% if campaign.gtee  or campaign.marketplace%}
                             <td class="dataTable-data numeric">&nbsp;</td>
                             <td class="dataTable-data numeric">{{au.stats.impression_count|withsep}}</td>
                             <td class="dataTable-data numeric">{{au.stats.click_count|withsep}}</td>
@@ -274,7 +274,7 @@
                             <td class="dataTable-data numeric">{{au.stats.click_count|withsep}}</td>
                             <td class="dataTable-data numeric">{{au.stats.ctr|percentage}}</td>
                             <td class="dataTable-data numeric">{{au.stats.conversion_count|withsep}} ({{a.stats.conv_rate|percentage}})</td>
-                            {% endif %} {% if campaign.network or campaign.marketplace %}
+                            {% endif %} {% if campaign.network %}
                             <td class="dataTable-data numeric">{{au.stats.request_count|withsep}}</td>
                             <td class="dataTable-data numeric">{{au.stats.impression_count|withsep}}</td>
                             <td class="dataTable-data numeric">{{au.stats.fill_rate|percentage}}</td>
@@ -343,7 +343,7 @@
                   <tr>
                     <th class="campaignData-icon"></th>
                     <th class="dataTable-name">Creative</th>
-                    {% if campaign.gtee %}
+                    {% if campaign.gtee  or campaign.marketplace %}
                     <th class="dataTable-data numeric">&nbsp;</th>
                     <th class="dataTable-data numeric">Impressions</th>
                     <th class="dataTable-data numeric">Clicks</th>
@@ -355,7 +355,7 @@
                     <th class="dataTable-data numeric">Clicks</th>
                     <th class="dataTable-data numeric">CTR</th>
                     <th class="dataTable-data numeric">Conv</th>
-                    {% endif %} {% if campaign.network or campaign.marketplace %}
+                    {% endif %} {% if campaign.network %}
                     <th class="dataTable-data numeric">Attempts</th>
                     <th class="dataTable-data numeric">Impressions</th>
                     <th class="dataTable-data numeric">Fillrate</th>
@@ -394,7 +394,7 @@
                       </div>
                       <div class="clear"></div>
                     </th>
-                    {% if campaign.gtee %}
+                    {% if campaign.gtee or campaign.marketplace%}
                     <td class="dataTable-data numeric">&nbsp;</td>
                     <td class="dataTable-data numeric">{{c.stats.impression_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{c.stats.click_count|withsep}}</td>
@@ -406,7 +406,7 @@
                     <td class="dataTable-data numeric">{{c.stats.click_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{c.stats.ctr|percentage}}</td>
                     <td class="dataTable-data numeric">{{c.stats.conversion_count|withsep}} ({{a.stats.conv_rate|percentage}})</td>
-                    {% endif %} {% if campaign.network or campaign.marketplace %}
+                    {% endif %} {% if campaign.network %}
                     <td class="dataTable-data numeric">{{c.stats.request_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{c.stats.impression_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{c.stats.fill_rate|percentage}}</td>
@@ -456,7 +456,7 @@
     <h2>Daily Counts</h2>
        <div class="appData-details noneg">
         <table class="dataTable appData-main">
-            {% if campaign.gtee %}
+            {% if campaign.gtee or campaign.marketplace%}
             <thead>
                 <tr>
                     <th class="dataTable-name big">&nbsp;</th>
@@ -518,7 +518,7 @@
                 </tr>
             </tbody>
             {% endfor %}
-            {% endif %} {% if campaign.network or campaign.marketplace %}
+            {% endif %} {% if campaign.network %}
             <thead>
                 <tr>
                     <th class="dataTable-name big">&nbsp;</th>

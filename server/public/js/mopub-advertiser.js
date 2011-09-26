@@ -428,11 +428,13 @@ var mopub = mopub || {};
                   $('#creativeCreateForm-success').show();
                   window.location.reload();
               } else {
+
                   $('#creativeAddForm-fragment').html($.decodeHtml(jsonData.html));
                   // reimplement the onload event
                   creativeCreateFormOnLoad();
                   window.location.hash = '';
                   window.location.hash = 'advertiser-creativeAddForm';
+                  $('#campaignAdgroupForm-submit').button({'label':'Continue','disabled':false});
               }
           },
           error: function(jqXHR, textStatus, errorThrown){

@@ -380,8 +380,14 @@ mopub.Utils = mopub.Utils || {};
         }, 1);
     };
 
-    $.fn.decodeHtml = function(value) {
-        return $('<div/>').html(value).text();
+    $.escapeHtml = function(value) {
+        return $("<div/>").text(value);
+    };
+
+    $.decodeHtml = function(value) {
+        var escaped = $("<div/>").text(value);
+        var unescaped = $("<div/>").html(escaped).text();
+        return unescaped;
     };
 
     // helper fn for console logging

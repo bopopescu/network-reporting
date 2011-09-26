@@ -9,14 +9,14 @@
 
 {% block titleBarRight %}
 <span class="titlebar-link">
-  <a class="linkIcon" href="{% url publisher_index_geo %}">Performance by region <span class="ui-icon ui-icon-triangle-1-e"></span></a> 
+  <a class="linkIcon" href="{% url publisher_index_geo %}">Performance by region <span class="ui-icon ui-icon-triangle-1-e"></span></a>
 </span>
 {% endblock titleBarRight %}
 
 {% block content %}
 <div id="ajaxFailure" style="display:none">
     <a href="#" id="ajaxDismiss"><img src="../images/icons/199_16x16.png"></img></a>
-    There was a problem retrieving data for some of your apps / sites. 
+    There was a problem retrieving data for some of your apps / sites.
     <a href="#" id="ajaxRetry"><img src="../images/icons/92_16x16.png"></img> <strong>Retry</strong></a>
 </div>
 {% ifequal account.status "step3" %}
@@ -80,7 +80,7 @@
               <a class="button" id="dashboard-apps-addAppButton" href="{% url publisher_app_create %}">Add an app</a>
             </div>
             <h2>Apps and sites</h2>
-            
+
             <div class="appData-columnHeaders">
               <table class="dataTable" id="dashboard-apps-columnHeaders" width="100%">
                 <thead>
@@ -104,7 +104,7 @@
                     <td class="appData-icon"><a href="{% url publisher_app_show app_key=a.key %}"><img src="{% if a.icon_url %}{{a.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" /></a></td>
                     <th class="dataTable-name">
                         <span class="inner">
-                            <a href="{% url publisher_app_show app_key=a.key %}">{{a.name}}</a> 
+                            <a href="{% url publisher_app_show app_key=a.key %}">{{a.name}}</a>
                             <span class="muted unbold">({% ifequal a.app_type "iphone" %}iOS{% endifequal %}{% ifequal a.app_type "android" %}Android{% endifequal %}{% ifequal a.app_type "mweb" %}Mobile Web{% endifequal %})</span>
                             <img id="{{a.key}}-img" class="loading-img" style="display:none;" src="../images/icons-custom/spinner-12.gif"></img>
                         </span>
@@ -123,7 +123,7 @@
                     <tbody>
                       {% for au in a.adunits %}
                       <tr class="adunit-row incomplete" id="{{au.key}}">
-                        <th class="dataTable-name"><span class="inner"><div class="appData-id muted hidden">Ad Unit ID: {{au.key}}</div><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a></span></th>
+                        <th class="dataTable-name"><span class="inner"><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a><div class="appData-id muted hidden">Ad Unit ID: {{au.key}}</div></span></th>
                         <td class="dataTable-data numeric req">--</td>
                         <td class="dataTable-data numeric imp">--</td>
                         <td class="dataTable-data numeric fill">--</td>
@@ -137,14 +137,14 @@
               </div>
             </div>
           {% endfor %}</section>{% endblock content %}
-          
+
 {% block extraScripts %}
 <script>
     var mopub = mopub || {};
     $(function() {
         mopub.isDashboardPage = true;
-        mopub.graphStartDate = Date.UTC({{start_date.year}}, 
-              {{start_date.month|add:"-1"}}, 
+        mopub.graphStartDate = Date.UTC({{start_date.year}},
+              {{start_date.month|add:"-1"}},
               {{start_date.day}});
         mopub.accountStats = {{account_stats|safe}};
     });

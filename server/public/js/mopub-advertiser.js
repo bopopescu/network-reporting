@@ -24,10 +24,6 @@ var mopub = mopub || {};
           $('.admin_only').hide();
       }
 
-      // TODO: merge unto mopub.Utils
-      function htmlDecode(value){
-          return $('<div/>').html(value).text();
-      }
 
       function calculateAndShowBudget() {
           $('#campaignAdgroupForm-budget-display').hide();
@@ -304,7 +300,7 @@ var mopub = mopub || {};
                   window.location = jsonData.new_page;
                   $('#campaignAdgroupForm-submit').button({'label':'Success...','disabled':true});
               } else {
-                  $('#campaignAdgroupForm-fragment').html(htmlDecode(jsonData.html));
+                  $('#campaignAdgroupForm-fragment').html($.decodeHtml(jsonData.html));
                   // reimplement the onload event
                   campaignAdgroupFormOnLoad();
                   // clear and reset the hash
@@ -432,7 +428,7 @@ var mopub = mopub || {};
                   $('#creativeCreateForm-success').show();
                   window.location.reload();
               } else {
-                  $('#creativeAddForm-fragment').html(htmlDecode(jsonData.html));
+                  $('#creativeAddForm-fragment').html($.decodeHtml(jsonData.html));
                   // reimplement the onload event
                   creativeCreateFormOnLoad();
                   window.location.hash = '';
@@ -458,7 +454,7 @@ var mopub = mopub || {};
             $form.find('.creativeCreateForm-success').hide();
             window.location.reload();
           } else {
-              $form.find('.creativeEditForm-fragment').html(htmlDecode(jsonData.html));
+              $form.find('.creativeEditForm-fragment').html($.decodeHtml(jsonData.html));
             // re-implement onload
             $('.creativeEditForm input[name="ad_type"]')
               .click(function(e){

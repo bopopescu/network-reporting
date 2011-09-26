@@ -7,9 +7,7 @@ var mopub = mopub || {};
   // dom ready
   $(document).ready(function() {
 
-      function htmlDecode(value){
-          return $('<div/>').html(value).text();
-      }
+
     /*----------------------------------------/
     / TODO: Re-organize AJAX stuff            /
     /----------------------------------------*/
@@ -22,7 +20,7 @@ var mopub = mopub || {};
          if (jsonData.success) {
              window.location.reload();
          } else {
-             $('#appForm-fragment').html(htmlDecode(jsonData.html));
+             $('#appForm-fragment').html($.decodeHtml(jsonData.html));
              // reimplement the onload event
              appFormOnload();
              window.location.hash = '';
@@ -41,8 +39,8 @@ var mopub = mopub || {};
           if (jsonData.success) {
               window.location.reload();
           } else {
-              console.log(htmlDecode(jsonData.html));
-              $('#adunitForm-fragment').html(htmlDecode(jsonData.html));
+              console.log($.decodeHtml(jsonData.html));
+              $('#adunitForm-fragment').html($.decodeHtml(jsonData.html));
               // reimplement the onload event
               appFormOnload();
               setupAdUnitForm();

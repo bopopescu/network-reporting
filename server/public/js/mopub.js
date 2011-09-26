@@ -380,7 +380,7 @@ mopub.Utils = mopub.Utils || {};
         }, 1);
     };
 
-    $.fn.htmlDecode = function(value) {
+    $.fn.decodeHtml = function(value) {
         return $('<div/>').html(value).text();
     };
 

@@ -97,10 +97,6 @@ class BaseRegistrationForm(mpforms.MPForm):
         account.marketplace_config = marketplace_config
         account.put()
 
-        logging.warn("\n\n\n\n\n\n\n %s" % account)
-        logging.warn("\n\n\n\n\n\n\n %s" % account.network_config)
-        logging.warn("\n\n\n\n\n\n\n %s" % account.marketplace_config)
-
         return new_user
 
 class MPGoogleRegistrationForm(BaseRegistrationForm):

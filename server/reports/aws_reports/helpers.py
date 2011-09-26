@@ -99,13 +99,16 @@ def setup_remote_api():
 def get_waiting_jobflow(conn, jobflow_ids):
     waiting_jobflows = conn.describe_jobflows(jobflow_ids= jobflow_ids)
     for jobflow in waiting_jobflows:
-        if jobflow.name != JOBFLOW_NAME:
+        if jobflow.name != JOBFLOW_NAME or jobflow.state not in [u'WAITING', u'RUNNING']:
             continue
         jid = jobflow.jobflowid
+        num_steps = len(jobflow.steps)
         print 'found waitingjobflow %s with %i steps completed' % (jid, num_steps)
-        if num_steps > 250 and jobflow.state != u'RUNNING':
-            print 'num of steps near limit of 256: terminating jobflow %s ...' % (jobid)
-            conn.terminate_jobflow(jid)
+        if num_steps > 250: 
+            if jobflow.state != u'RUNNING':
+                print 'num of steps near limit of 256: terminating jobflow %s ...' % (jobid)
+                conn.terminate_jobflow(jid)
+                print "Only jobflow is full"
         else:
             return jid
     return None

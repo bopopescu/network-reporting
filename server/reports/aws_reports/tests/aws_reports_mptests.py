@@ -7,6 +7,9 @@ TEST_REPORT_QUEUE = 'test_report_queue'
 TEST_QUEUE = SQS_CONN.create_queue(TEST_REPORT_QUEUE)
 TEST_RMH = ReportMessageHandler(TEST_QUEUE, testing=True)
 
+
+
+class TestMessageHandler(unittest.TestCase)
 def queue_writer(queue):
     def writer(mesg_data):
         m = Message()

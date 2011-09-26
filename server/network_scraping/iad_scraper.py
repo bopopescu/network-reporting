@@ -4,6 +4,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 from datetime import date
 from scraper import Scraper, ScraperSite
+import time
 
 class NetworkScrapeRecord(object):
     pass
@@ -29,8 +30,6 @@ class IAdScraper(Scraper):
         self.driver.find_element_by_name(self.LOGIN_ACCOUNT_INPUT_NAME).send_keys(self.username)
         self.driver.find_element_by_name(self.LOGIN_PW_INPUT_NAME).send_keys(self.password)
         
-        print self.driver.find_elements_by_name("1.Continue")
-        # can't click on the form element not sure why
         self.driver.find_elements_by_name("1.Continue")[1].click()
         
     def get_site_stats(self, start_date, end_date=None):
@@ -39,10 +38,26 @@ class IAdScraper(Scraper):
         
         self.driver.find_elements_by_link_text("iAd Network")[1].click()
         
-        WebDriverWait(self.driver, 10).until(lambda d : d.title.lower().startswith("my"))
-        self.driver.find_element_by_link_text("Download Report").click()
+        self.driver.implicitly_wait(30)
+        # not working:
+        # select_date = self.driver.find_elements_by_class_name("itc_listBox mid")
+        # not sure if I can find an element by value
+        # select_date.find_element_by_value("oneDay").click()
         
-        # for line in response: print line
+        # for option in select_date:
+        #     if option.text == "1 Day":
+        #         option.click()
+        
+        
+        
+        self.driver.find_element_by_xpath("//select/option[@value='today']").click()
+        
+        # have to wait for report to load before downloading it
+        time.sleep(2)
+        
+        self.driver.find_element_by_link_text("Download Report").click()
+                         
+        # self.driver.find_element_by_xpath("//a[@title='download csv report']").click()
         
     def iad_scraper(network_credential, from_date, to_date):
         br = mechanize.Browser()

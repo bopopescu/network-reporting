@@ -36,10 +36,9 @@ class AdMobScraper(Scraper):
         self.authenticate()
 
     def authenticate(self):
-        auth_dict = dict(client_key=self.client_key,
+        auth_dict = dict(client_key = self.client_key,
                          email = self.username,
-                         password = self.password,
-                         )
+                         password = self.password)
         req = urllib2.Request(self.AUTH_URL, urllib.urlencode(auth_dict))
         self.token = json.load(urllib2.urlopen(req))['data']['token']
         self.auth_dict = dict(client_key = self.client_key, token=self.token)

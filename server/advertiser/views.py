@@ -67,6 +67,11 @@ class AdGroupIndexHandler(RequestHandler):
         for campaign in campaigns:
             campaigns_dict[campaign.key()] = campaign
 
+        # if they have a marketplace campaign and they havent accepted the marketplace
+        # tos, we need to pop up an error.
+        has_marketplace_campaign = any([campaign.marketplace() for campaign in campaigns])
+
+
         if campaigns:
             adgroups = AdGroupQueryManager().get_adgroups(account=self.account)
         else:
@@ -74,36 +79,17 @@ class AdGroupIndexHandler(RequestHandler):
 
         # Roll up and attach various stats to adgroups
         for adgroup in adgroups:
-            # Get stats for date range:
-            # request_count
-            # impression_count
-            # fill_rate
-            # click_count
-            # adgroup.all_stats = StatsModelQueryManager(self.account, offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)
-
-            # Get total for the range
-            # adgroup.summed_stats = reduce(lambda x, y: x+y, adgroup.all_stats, StatsModel())
-
-            # derefernce campaign from the local cache
             adgroup.campaign = campaigns_dict[adgroup._campaign]
 
-            #adgroup.percent_delivered = budget_service.percent_delivered(adgroup.campaign)
 
         # memoize
         adunits_dict = {}
         apps_dict = {}
 
-        # Graph totals are the summed counts across all the adgroups
-        # account_level_stats = _calc_app_level_stats(adgroups)
-        # account_level_summed_stats = sum(account_level_stats,StatsModel())
-
         # gets account level stats
 
         stats_model = StatsModelQueryManager(self.account, offline=self.offline)
-
-        stats = stats_model.get_stats_for_days(publisher=None,
-                                               advertiser=None,
-                                               days=days)
+        stats = stats_model.get_stats_for_days(publisher=None, advertiser=None, days=days)
 
         key = "||"
         stats_dict = {}
@@ -144,34 +130,8 @@ class AdGroupIndexHandler(RequestHandler):
 
         guarantee_levels = _sort_guarantee_levels(guaranteed_campaigns)
 
-        # adgroups = sorted(adgroups, key=lambda adgroup: adgroup.summed_stats.impression_count, reverse=True)
 
         help_text = None
-
-        # graph_adgroups = adgroups[0:4]
-        # if len(adgroups) > 4:
-        #     graph_adgroups[3] = AdGroup(name='Others')
-        #     graph_adgroups[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[c.all_stats for c in adgroups[3:]])]
-
-        # create special list of gtee adgroups to show revenue in graph
-        # visible_gtee_adgroups = []
-        # for level in guarantee_levels:
-        #     if level['display']:   # only get levels to show
-        #         visible_gtee_adgroups.extend(level['adgroups'])
-
-        # sort visible gtee adgroups by summed impression count
-        # visible_gtee_adgroups = sorted(visible_gtee_adgroups, key=lambda adgroup: adgroup.summed_stats.impression_count, reverse=True)
-
-        # if more than 4 visible gtee adgroups, condense 4th and remaining into 'Others'
-        # graph_gtee_adgroups = visible_gtee_adgroups[0:4]
-        # if len(visible_gtee_adgroups) > 4:
-        #     graph_gtee_adgroups[3] = AdGroup(name='Others')
-        #     graph_gtee_adgroups[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[c.all_stats for c in visible_gtee_adgroups[3:]])]
-
-        # try:
-        #     yesterday = sum([c.all_stats[-2] for c in graph_adgroups], StatsModel())
-        # except IndexError:
-        #     yesterday = StatsModel()
 
 
         return render_to_response(self.request,
@@ -196,7 +156,8 @@ class AdGroupIndexHandler(RequestHandler):
                                    'network': network_campaigns,
                                    'backfill_promo': backfill_promo_campaigns,
                                    'account': self.account,
-                                   'helptext':help_text })
+                                   'helptext':help_text,
+                                   'has_marketplace_campaign': has_marketplace_campaign})
 
 ####### Helpers for campaign page #######
 

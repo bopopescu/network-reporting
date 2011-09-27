@@ -56,18 +56,29 @@
     There was a problem retrieving data for some of your campaigns.
     <a href="#" id="ajaxRetry"><img src="../images/icons/92_16x16.png"></img> <strong>Retry</strong></a>
 </div>
+
+{% if has_marketplace_campaign and not account.accepted_mpx_tos %}
+  <div class="alert-message clearfix">
+    We've released new Terms of Service for our Marketplace Campaigns.
+
+    <span class="right">
+      <a class="button" href="#"> More Information </a> <a class="button" href="#"> Accept New Terms</a>
+    </span>
+  </div>
+{% endif %}
+
 {% ifequal account.status "step4" %}
-          <div class="alertMessage">
+          <div class="alert-message block-message">
             Finally, you will need to set up at least one ad campaign to serve into your inventory.  A <strong>Guaranteed</strong> ad campaign is typically a direct sold ad campaign.  <strong>Promotional</strong> campaigns are for house ads like an upsell.  A <strong>Network</strong> ad is an ad served from an ad network like AdMob.
           </div>
 {% endifequal %}
 {% ifequal account.status "step3" %}
-          <div class="alertMessage">
+          <div class="alert-message block-message">
             The next step is to set up your ad networks.  Visit your <a href="{% url ad_network_settings %}">Ad Network Settings</a> page to enable your ad networks.
           </div>
 {% endifequal %}
 {% if not apps %}
-          <div class="alertMessage">
+          <div class="alert-message block-message">
             Before you set up your ad campaigns, we recommend that you set up your App inventory.  Visit the <a href="{% url publisher_index %}">Dashboard</a> to add your Apps.
           </div>
 {% endif %}

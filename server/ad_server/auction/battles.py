@@ -207,6 +207,16 @@ class MarketplaceBattle(Battle):
 
     starting_message = "Beginning marketplace campaigns..."
     campaign_type = "marketplace"
+    
+    def _filter_creatives(self, creatives):
+        """
+        Returns only the first marketplace creatives
+        TODO: shouldn't be possible
+        """
+        filtered_creatives = super(MarketplaceBattle, self).\
+                                _filter_creatives(creatives)
+        return filtered_creatives[:1]
+    
 
     def _process_winner(self, creative):
         """ Fan out to the marketplace and see if there is a bid """
@@ -228,7 +238,8 @@ class MarketplaceBattle(Battle):
             # Make sure it's a good response
             trace_logging.info('MPX RESPONES CODE:%s'%fetched.status_code)
             if fetched.status_code == 200:
-                self._process_marketplace_response(fetched.content, creative)
+                creative = self._process_marketplace_response(fetched.content, creative)
+                return super(MarketplaceBattle, self)._process_winner(creative)
 
         except urlfetch.DownloadError, e:
             # There was no valid bid
@@ -246,9 +257,7 @@ class MarketplaceBattle(Battle):
             # Do we need to do anything with the bid info?
             trace_logging.info('\n\nMPX Charge: %s\nMPX HTML: %s\n' % (pub_rev, creative.html_data))
             creative.adgroup.bid = pub_rev
-            # I think we should log stuff here but I don't know how to do that
-            return super(MarketplaceBattle, self)._process_winner(creative)
-
+            return creative
 
 class NetworkBattle(Battle):
     """ Fans out to each of the networks """

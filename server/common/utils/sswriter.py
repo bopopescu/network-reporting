@@ -192,8 +192,10 @@ def write_report(file_type, report_key, account):
     s_str = report.start.strftime('%m%d%Y')
     e_str = report.end.strftime('%m%d%Y')
     f_name = '%s %s-%s.%s' % (report.name, s_str, e_str, file_type)
-    response['Content-disposition'] = 'attachment; filename=%s' % f_name 
+    response['Content-disposition'] = 'attachment; filename=%s' % f_name
     stats_headers = ['Requests', 'Impressions', 'Clicks', 'Conversions']
+    if report.report_blob:
+        stats_headers += ['Revenue', 'CTR']  
     headers = [report.d1.title()]
     if report.d2:
         headers.append(report.d2.title())

@@ -105,21 +105,24 @@ def last_seven(d):
     delta = timedelta(days=7)
     return (d-delta, d)
 
-def gen_days(start, end):
+def gen_days(start, end, hours=False):
     dt = timedelta(days=1)
     temp = start
     days = [temp]
     while temp != end:
         temp = temp + dt
         days.append(temp)
-    return days
+    if hours:
+        return reduce(lambda x,y: x+y, get_hours(days))
+    else:
+        return days
 
-def get_hours(days):
+def get_hours(days, hpd = 24):
     '''Turn a list of days into a list of lists where
     each list is a list of date_hours where the date
     ranges over the given days and the hour is held constant'''
     ret = []
-    for hour in range(24):
+    for hour in range(hpd):
         ent = []
         for day in days:
             date = day.day
@@ -183,14 +186,26 @@ HOUR = 'hour'
 
 def date_name(val, dim):
     if dim == MO:
-        name = val[0].strftime('%B, %Y')
+        name = val.strftime('%B, %Y')
     elif dim == WEEK:
         #I think this is the right order...
-        name = val[0].strftime('%b %d') + ' - ' + val[-1].strftime('%b %d, %Y')
+        dte1, dte2 = val
+        name = dte1.strftime('%b %d') + ' - ' + dte2.strftime('%b %d, %Y')
     elif dim == DAY:
-        name = val[0].strftime('%b %d, %Y')
+        name = val.strftime('%b %d, %Y')
     elif dim == HOUR:
-        name = val[0].strftime('%H:%M')
+        name = val.strftime('%H:00')
     else:
         name = 'Impossible State'
     return name
+
+
+def date_key(time, dim):
+    if dim == MO:
+        return time.strftime('%y%m')
+    elif dim == WEEK:
+        return time.strftime('%y%m%W')
+    elif dim == DAY:
+        return time.strftime('%y%m%d')
+    elif dim == HOUR:
+        return time.strftime('%y%m%d%H')

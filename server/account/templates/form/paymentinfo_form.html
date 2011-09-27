@@ -1,0 +1,43 @@
+{% load filters %}
+ <fieldset class="alt">
+ <h2>Tax Information</h2>
+ <dl class="formFields">
+
+   {# always needed #}
+   {{form.country|attrs:'{"class":"required"}'}}
+   {{form.business_name|attrs:'{"label":"Business Name", "class":"required"}'}}
+   <div class="us_only hidden">
+   {{form.us_tax_id|attrs:'{"label":"US Tax ID", "placeholder":"xxx-xx-xxxx or xx-xxxxxx"}'}}
+   </div>
+   <div class="non_us_only hidden">
+   {{form.local_tax_id|attrs:'{"label":"Local Tax ID"}'}}
+   </div>
+ </dl>
+ </fieldset>
+ <fieldset>
+ <h2>Payment Details</h2>
+ <dl class="formFields">
+   {{form.payment_preference|attrs:'{"label":"Payment Preference", "class":"required"}'}}
+
+   <div id="paypal_only">
+     {{form.paypal_email|attrs:'{"label":"Paypal Email"}'}}
+   </div>
+
+   <div id="wire_only">
+     {{form.beneficiary_name|attrs:'{"label":"Beneficiary Name"}'}}
+     {{form.bank_name|attrs:'{"label":"Bank Name"}'}}
+     {{form.bank_address|attrs:'{"label":"Bank Address"}'}}
+     {{form.account_number|attrs:'{"label":"Account Number"}'}}
+     <div class="us_only hidden">
+     {{form.ach_routing_number|attrs:'{"label":"ACH Routing Number"}'}}
+     </div>
+     <div class="non_us_only hidden">
+     {{form.bank_swift_code|attrs:'{"label":"Bank SWIFT Code"}'}}
+     </div>
+   </div>
+
+ </dl>
+ </fieldset>
+ <div class="form-submit">
+   <button id="guy" class="button"> Submit </button>
+ </div>

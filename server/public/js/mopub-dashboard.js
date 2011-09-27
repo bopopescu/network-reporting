@@ -43,6 +43,7 @@ var mopub = mopub || {};
            $('#adunitForm-fragment').html(jsonData.html);
            // reimplement the onload event
            appFormOnload();
+           setupAdUnitForm();
            window.location.hash = '';
            window.location.hash = 'adunitForm';
         }
@@ -55,131 +56,16 @@ var mopub = mopub || {};
     / Chart
     /---------------------------------------*/
     
-    function chartError() {
-      $('#dashboard-stats-chart').removeClass('chart-loading').addClass('chart-error');
+    function getCurrentChartSeriesType() {
+        var activeBreakdownsElem = $('#dashboard-stats .stats-breakdown .active');
+        if (activeBreakdownsElem.attr('id') == 'stats-breakdown-ctr') return 'line';
+        else return 'area';
     }
-    
-    function setupDashboardStatsChart() {
-      // get active metric from breakdown
-      var metricElement = $('#dashboard-stats .stats-breakdown .active');
-      if (metricElement === null || metricElement.length === 0) {
-          return; 
-      }
-      var metricElementIdComponents = metricElement.attr('id').split('-');
-      var activeMetric = metricElementIdComponents[metricElementIdComponents.length - 1];
-
-      // get data
-      var data = mopub.dashboardStatsChartData;
-      if(typeof data == 'undefined') {
-        chartError();
-        return;
-      }
-      
-      // set up series
-      var colors = ['#0090d9', '#e57300', '#53a600', '#444444'];
-      var chartSeries = [];
-      var activeData = data[activeMetric];
-      if(typeof activeData == 'undefined') {
-        chartError();
-        return;
-      }
-      $.each(activeData, function(i, seriesObject) {
-        var seriesName, seriesData;
-        $.each(seriesObject, function(name, value) {
-          seriesName = name;
-          seriesData = value;
-        });
-        chartSeries.push({
-          name: seriesName,
-          data: seriesData,
-          color: colors[i]
-        });
-      });
-
-      // setup HighCharts chart
-      this.trafficChart = new Highcharts.Chart({
-        chart: {
-          renderTo: 'dashboard-stats-chart',
-          defaultSeriesType: 'area',
-          marginTop: 0,
-          marginBottom: 55
-        },
-        plotOptions: {
-          series: {
-            pointStart: data.pointStart,
-            pointInterval: data.pointInterval
-          }
-        },
-        legend: {
-          verticalAlign: "bottom",
-          y: -7,
-          enabled: (chartSeries.length > 1)
-        },
-        yAxis: {
-          labels: {
-            formatter: function() {
-              if(activeMetric == 'revenue') {
-                text = '$' + Highcharts.numberFormat(this.value, 0);
-              } else {
-                if (this.value >= 1000000000) {
-                  return Highcharts.numberFormat(this.value / 1000000000, 0) + "B";
-                } else if (this.value >= 1000000) {
-                  return Highcharts.numberFormat(this.value / 1000000, 0) + "M";
-                } else if (this.value >= 1000) {
-                  return Highcharts.numberFormat(this.value / 1000, 0) + "K";
-                } else if (this.value > 0) {
-                  return Highcharts.numberFormat(this.value, 0);
-                } else {
-                  return "0";
-                }
-              }
-            }
-          }
-        },
-        tooltip: {
-          formatter: function() {
-            var text = '', value = '', total = '';
-
-            if(activeMetric == 'revenue') {
-              value = '$' + Highcharts.numberFormat(this.y, 0);
-              total = '$' + Highcharts.numberFormat(this.total, 0) + ' total';
-            }
-            else if (activeMetric == 'clicks') {
-              value = Highcharts.numberFormat(this.y, 0) + ' ' + activeMetric + " (" + this.point.name + ")";
-              total = Highcharts.numberFormat(this.total, 0) + ' total ' + activeMetric;
-            }
-            else {
-              value = Highcharts.numberFormat(this.y, 0) + ' ' + activeMetric;
-              total = Highcharts.numberFormat(this.total, 0) + ' total ' + activeMetric;
-            }
-
-            text += '<span style="font-size: 14px;">' + Highcharts.dateFormat('%A, %B %e, %Y', this.x) + '</span><br/>';
-            text += '<span style="padding: 0; font-weight: 600; color: ' + this.series.color + '">' + this.series.name + '</span>' + ': <strong style="font-weight: 600;">' + value + '</strong><br/>';
-            
-            if(chartSeries.length > 1) {
-              text += '<span style="font-size: 12px; color: #666;">';
-              if(this.total > 0) {
-                text += '(' + Highcharts.numberFormat(this.percentage, 0) + '% of ' + total + ')';
-              }
-              else {
-                text += '(' + total + ')';
-              }
-              text += '</span>';
-            }
-            return text;
-          }
-        },
-        series: chartSeries
-      });
-      
-      $('#dashboard-stats-chart').removeClass('chart-loading');
-    }
-    setupDashboardStatsChart();
     
     // Use breakdown to switch charts
     $('.stats-breakdown tr').click(function(e) {
       $('#dashboard-stats-chart').fadeOut(100, function() {
-        setupDashboardStatsChart();
+        mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
         $(this).show();
       });
     });
@@ -292,15 +178,17 @@ var mopub = mopub || {};
     //   .click(function(e) {
     //     e.preventDefault();
     //   });
-    
     $('#appEditForm-submit')
       .button({ 
         icons: { secondary: "ui-icon-circle-triangle-e" } 
       })
       .click(function(e) {
-        e.preventDefault();
-        $('#appEditForm-loading').show();
-        $('#appForm').submit();
+        e.preventDefault();            
+        
+        if ($("#appForm-name").val() != ""){
+          $('#appEditForm-loading').show();
+          $('#appForm').submit();     
+        }
       });
     $('#appEditForm-cancel')
       .click(function(e) {
@@ -385,6 +273,18 @@ var mopub = mopub || {};
       });
     });
     
+    $('.appData-id').each(function() {
+        var id = $(this)
+        var td = id.parents('tr');
+        td.hover(
+          function() {
+            id.show();
+          },
+          function() {
+            id.hide();
+          });
+      });
+        
     // set up toggle all app details button
     // $('#dashboard-apps-toggleAllButton').click(function(e) {
     //   e.preventDefault();
@@ -557,61 +457,103 @@ var mopub = mopub || {};
     / Ad Unit Form
     /---------------------------------------*/
    
-    // Set up device format selection UI
-    $("#adunit-device_format_phone").parent().buttonset();
-    $('#adunit-device_format_phone').click(function(e){
-      $('#adForm-tablet-container').hide();
-      $('#adForm-phone-container').show().find('input[type="radio"]')[0].click();
-    });
-    
-    $('#adunit-device_format_tablet').click(function(e){
-      $('#adForm-phone-container').hide();
-      $('#adForm-tablet-container').show().find('input[type="radio"]')[0].click();
-    });
-    
-    // Set up format selection UI for phone
-    $('#adForm-phone-formats').each(function() {
-      var container = $(this);
-      $('input[type="radio"]', container).click(function(e) {
-        var radio = $(this);
-        var formatContainer = radio.parents('.adForm-format');
-        $('.adForm-format-image').css({ opacity: 0.5 });
-        $('.adForm-format-image', formatContainer).css({ opacity: 1 });
-        
-        var $full_onlys = $(".full_only");
-        var $banner_onlys = $(".banner_only");
-        if ($(this).attr("id") == "appForm-adUnitFormat-full-tablet" ||
-            $(this).attr("id") == "appForm-adUnitFormat-full"){
-                $full_onlys.show();
-                $banner_onlys.hide();
-            }
-        else{
-                $full_onlys.hide();
-                $banner_onlys.show();
-        }    
-        
-        var $custom_onlys = $(".custom_only");
-        if ($(this).attr("id") == "appForm-adUnitFormat-tablet-custom" || $(this).attr("id") == "appForm-adUnitFormat-custom"){
-            $custom_onlys.show();
-        }
-        else{
-            $custom_onlys.hide();
-        }
-        
-      }).filter(':checked').click();
-      
-      $('.adForm-format-image', container).click(function(e) {
-        var image = $(this);
-        var formatContainer = image.parents('.adForm-format');
-        $('input[type="radio"]', formatContainer).click();
+    function setupAdUnitForm() {
+      // Set up device format selection UI
+      $("#adunit-device_format_phone").parent().buttonset();
+      $('#adunit-device_format_phone').click(function(e){
+        $('#adForm-tablet-container').hide();
+        $('#adForm-phone-container').show().find('input[type="radio"]')[0].click();
       });
-      
-      $('.adForm-format-details input[type="text"]', container).focus(function() {
-        var input = $(this);
-        var formatContainer = input.parents('.adForm-format');
-        $('input[type="radio"]', formatContainer).click();
+    
+      $('#adunit-device_format_tablet').click(function(e){
+        $('#adForm-phone-container').hide();
+        $('#adForm-tablet-container').show().find('input[type="radio"]')[0].click();
       });
-    });
+    
+      // Set up format selection UI for phone
+      $('#adForm-phone-formats').each(function() {
+        var container = $(this);
+        $('input[type="radio"]', container).click(function(e) {
+          var radio = $(this);
+          var formatContainer = radio.parents('.adForm-format');
+          $('.adForm-format-image').css({ opacity: 0.5 });
+          $('.adForm-format-image', formatContainer).css({ opacity: 1 });
+        
+          var $full_onlys = $(".full_only");
+          var $banner_onlys = $(".banner_only");
+          if ($(this).attr("id") == "appForm-adUnitFormat-full-tablet" ||
+              $(this).attr("id") == "appForm-adUnitFormat-full"){
+                  $full_onlys.show();
+                  $banner_onlys.hide();
+              }
+          else{
+                  $full_onlys.hide();
+                  $banner_onlys.show();
+          }    
+        
+          var $custom_onlys = $(".custom_only");
+          if ($(this).attr("id") == "appForm-adUnitFormat-tablet-custom" || $(this).attr("id") == "appForm-adUnitFormat-custom"){
+              $custom_onlys.show();
+          }
+          else{
+              $custom_onlys.hide();
+          }
+        
+        }).filter(':checked').click();
+      
+        $('.adForm-format-image', container).click(function(e) {
+          var image = $(this);
+          var formatContainer = image.parents('.adForm-format');
+          $('input[type="radio"]', formatContainer).click();
+        });
+      
+        $('.adForm-format-details input[type="text"]', container).focus(function() {
+          var input = $(this);
+          var formatContainer = input.parents('.adForm-format');
+          $('input[type="radio"]', formatContainer).click();
+        });
+      });
+      // Set up format selection UI for tablet
+      $('#adForm-tablet-formats').each(function(){
+          var container = $(this);
+          //bind radio buttons to images
+            $(this).find('input[type="radio"]').click(function(e){
+              var index = $(this).parent().index();
+              var images = $("#adForm-images-container");
+              images.children().hide();
+              var image = images.children()[index]
+              $(image).show().css({ opacity: 1 });
+
+              var $full_onlys = $(".full_only");
+              var $banner_onlys = $(".banner_only");
+              if ($(this).attr("id") == "appForm-adUnitFormat-full-tablet" ||
+                  $(this).attr("id") == "appForm-adUnitFormat-full"){
+                      $full_onlys.show();
+                      $banner_onlys.hide();
+                  }
+              else{
+                      $full_onlys.hide();
+                      $banner_onlys.show();
+              }    
+
+              var $custom_onlys = $(".custom_only");
+              if ($(this).attr("id") == "appForm-adUnitFormat-tablet-custom" || $(this).attr("id") == "appForm-adUnitFormat-custom"){
+                  $custom_onlys.show();
+              }
+              else{
+                  $custom_onlys.hide();
+              }
+
+          }).first().click(); //initialize by activating the first
+        });
+      //initialize checked elements
+      $("#adunit-device_format_phone").parent().children().filter(':checked').click().each(function(){
+        var deviceFormat = $(this).val(); //either tablet or phone
+        var container = "#adForm-"+deviceFormat+"-container"
+        $(container).find('.possible-format').click(); 
+      });
+    }
+    setupAdUnitForm();
     
     // /*---------------------------------------/
     // / Stats Geo Breakdown
@@ -636,46 +578,6 @@ var mopub = mopub || {};
     // 
     // $('#allMaps').addClass('map-requests');
     
-    
-    // Set up format selection UI for tablet
-    $('#adForm-tablet-formats').each(function(){
-        var container = $(this);
-        //bind radio buttons to images
-          $(this).find('input[type="radio"]').click(function(e){
-            var index = $(this).parent().index();
-            var images = $("#adForm-images-container");
-            images.children().hide();
-            var image = images.children()[index]
-            $(image).show().css({ opacity: 1 });
-            
-            var $full_onlys = $(".full_only");
-            var $banner_onlys = $(".banner_only");
-            if ($(this).attr("id") == "appForm-adUnitFormat-full-tablet" ||
-                $(this).attr("id") == "appForm-adUnitFormat-full"){
-                    $full_onlys.show();
-                    $banner_onlys.hide();
-                }
-            else{
-                    $full_onlys.hide();
-                    $banner_onlys.show();
-            }    
-            
-            var $custom_onlys = $(".custom_only");
-            if ($(this).attr("id") == "appForm-adUnitFormat-tablet-custom" || $(this).attr("id") == "appForm-adUnitFormat-custom"){
-                $custom_onlys.show();
-            }
-            else{
-                $custom_onlys.hide();
-            }
-            
-        }).first().click(); //initialize by activating the first
-      });
-      
-    $("#appForm-adUnitFormat-full-tablet,#appForm-adUnitFormat-full").click(function(e){
-        
-    })  
-
-
       $('#advertisers-testAdServer')
         .button({ icons : {secondary : 'ui-icon-circle-triangle-e'} })
         .click(function(e) {
@@ -684,15 +586,7 @@ var mopub = mopub || {};
            buttons: { "Close": function() { $(this).dialog("close"); } }
          });
          $('#adserverTest-iFrame').attr('src',$('#adserverTest-iFrame-src').text());
-      });
-
-      //initialize checked elements
-      $("#adunit-device_format_phone").parent().children().filter(':checked').click().each(function(){
-        var deviceFormat = $(this).val(); //either tablet or phone
-        var container = "#adForm-"+deviceFormat+"-container"
-        $(container).find('.possible-format').click(); 
-      });
-  
+      });  
     // Do Campaign Export Select stuff
     $('#publisher-app-exportSelect')
      .change(function(e) {
@@ -710,8 +604,284 @@ var mopub = mopub || {};
 
     // Hide unneeded li entry
     $('#publisher-app-exportSelect-menu').find('li').first().hide();
-  });
   
+    // *********************************************************************
+    // Begin -- Inventory AJAX
+    // *********************************************************************
+  
+    // Map specific stats from our JSON object to HTML class attributes.
+    var jsonKeyToHtmlClassMap = {
+        impression_count: "imp",
+        request_count: "req",
+        click_count: "clk",
+        ctr: "ctr",
+        fill_rate: "fill",
+    };
+  
+    var adUnitToAppMap = {};
+    var statsMap = {};
+    var fetchObject;
+  
+    function isAppId(id) {
+      return $("#" + id).hasClass("app-row");
+    }
+  
+    function getAppIdForAdUnitId(adUnitId) {
+      return adUnitToAppMap[adUnitId];
+    }
+    
+    function getAllAppIds() {
+      return $(".app-row").map(function() { return this.id; });
+    }
+  
+    // Entry point.
+    // =====================================================================
+  
+    if (mopub.isDashboardPage) {
+      // setTimeout is a workaround for Chrome: without it, the loading indicator doesn't 
+      // disappear until all "onload" AJAX requests are complete.
+      setTimeout(initInventoryPage, 0);
+    } else {
+      mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
+    }
+  
+    function initInventoryPage() {
+      setupAjaxStatusPopup();
+      populateGraphWithAccountStats(mopub.accountStats);
+    
+      var toFetch = [];
+    
+      // Set up the lists of app/adunit ID lists that we'll need for our AjaxChunkedFetches,
+      // as well as the initial statsMap and adUnitToAppMap objects.
+      $('.appData').each(function(index, appDataNode) {
+        var appRowNode = $(appDataNode).find(".app-row")[0];
+      
+        var appId = appRowNode.id;
+        toFetch.push(appId);
+        statsMap[appId] = {};
+      
+        setAppLoadingSpinnerHidden(appId, false);
+      
+        var adunitsForApp = $(appDataNode).find(".adunit-row");
+        adunitsForApp.each(function(index, adunitNode) {
+          var adunitId = adunitNode.id;
+        
+          toFetch.push(adunitId);
+          statsMap[adunitId] = {};
+          adUnitToAppMap[adunitId] = appId;
+        });
+      });
+    
+      fetchObject = new mopub.Utils.AjaxChunkedFetch({
+        days: getNumDaysToFetch() || 14,
+        startDate: getStartDate(),
+        items: toFetch,
+        urlConstructor: inventoryUrlConstructor,
+        chunkComplete: inventoryChunkComplete,
+        chunkFailure: inventoryChunkFailure,
+        fetchComplete: inventoryFetchComplete
+      });
+      fetchObject.start();
+    }
+  
+    function populateGraphWithAccountStats(stats) {
+      var dailyStats = stats["all_stats"]["||"]["daily_stats"];
+  
+      mopub.dashboardStatsChartData = {
+        pointStart: mopub.graphStartDate,
+        pointInterval: 86400000,
+        requests: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "request_count")}],
+        impressions: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "impression_count")}],
+        clicks: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "click_count")}],
+        users: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "user_count")}]
+      };
+  
+      mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
+    }
+  
+    function setupAjaxStatusPopup() {
+      $("#ajaxRetry").click(function(event) {
+        retryFailedFetches();
+        $("#ajaxFailure").fadeOut();
+        event.preventDefault();
+      });
+
+      $("#ajaxDismiss").click(function(event) {
+       $("#ajaxFailure").fadeOut(); 
+       event.preventDefault();
+      });
+    }
+    
+    function retryFailedFetches() {
+      // Show the loading spinner for all apps with unfetched ad units.
+      var apps = getAllAppIds();
+      apps.each(function(index, app) {
+        if (!allAdUnitsCompletedForApp(app)) setAppLoadingSpinnerHidden(app, false);
+      });
+      
+      fetchObject.retry();
+    }
+  
+    function getNumDaysToFetch() {
+      var daysRadioVal = $("input[name=dashboard-dateOptions-option]:checked").val();
+      if (!daysRadioVal || daysRadioVal == "custom") {
+        var currentUrl = document.location.href;
+        var daysRegex = /r=(\d+)/g;
+        var match = daysRegex.exec(currentUrl);
+        if (!match || match.length < 2) return null;
+        else return match[1];
+      }
+      else return daysRadioVal;
+    }
+  
+    function getStartDate() {
+      var currentUrl = document.location.href;
+      var startDateRegex = /s=(\d+-\d+-\d+)/g;
+      var match = startDateRegex.exec(currentUrl);
+      if (!match || match.length < 2) return null;
+      else return match[1];
+    }
+  
+    function inventoryUrlConstructor(chunk, fetchObj) {
+      var url = "/campaigns/stats/ajax/?";
+      $.each(chunk, function(index, item) {
+        if (index == 0) url += "pub=" + item;
+        else url += "&pub=" + item;
+      });
+      if (fetchObj.days) url += "&date_range=" + fetchObj.days;
+      if (fetchObj.startDate) url += "&start_date=" + fetchObj.startDate;
+      return url;
+    }
+  
+    function formatStatsForDisplay(sumStats) {
+      var results = $.extend(true, {}, sumStats);
+      results.impression_count = mopub.Utils.formatNumberWithCommas(results.impression_count);
+      results.request_count = mopub.Utils.formatNumberWithCommas(results.request_count);
+      results.click_count = mopub.Utils.formatNumberWithCommas(results.click_count);
+      results.ctr = mopub.Utils.formatNumberAsPercentage(results.ctr);
+      results.fill_rate = mopub.Utils.formatNumberAsPercentage(results.fill_rate);
+      return results;
+    }
+  
+    function inventoryChunkComplete(data, chunk, fetchObj) {
+      var allStats = data["all_stats"];
+
+      for (var key in allStats) {
+        var id = key.split("||")[0];
+        var sumStats = allStats[key]["sum"];
+      
+        // Store the stats so that we can build the chart later.
+        statsMap[id] = allStats[key];
+      
+        var formattedStats = formatStatsForDisplay(sumStats);
+        $.each(formattedStats, function(key, value) {
+          updateStatField(id, key, value);
+        });
+      }
+    
+      $.each(chunk, function(index, id) {
+        var appId = id;
+        
+        if (!isAppId(id)) {
+          markRowCompleted(id);
+          appId = getAppIdForAdUnitId(id);
+        }
+        
+        if (allAdUnitsCompletedForApp(appId)) setAppLoadingSpinnerHidden(appId, true);
+      });
+    }
+  
+    function allAdUnitsCompletedForApp(id) {
+      return ($("#appData-" + id).find(".incomplete").length == 0);
+    }
+  
+    function markRowCompleted(id) {
+      $("#" + id).removeClass("incomplete").addClass("complete");
+    }
+  
+    function updateStatField(id, field, data) {
+      if (!id) return;
+
+      var classType = jsonKeyToHtmlClassMap[field];
+      if (!classType) return;
+
+      var selector = "#" + id + " ." + classType;
+      $(selector).html(data);
+    }
+  
+    function inventoryChunkFailure(chunk, fetchObj) {
+      $("#ajaxFailure").show();
+      $.each(chunk, function(index, id) {
+        var appId = isAppId(id) ? id : getAppIdForAdUnitId(id);
+        setAppLoadingSpinnerHidden(appId, true);
+      });
+    }
+  
+    function setAppLoadingSpinnerHidden(appId, hidden) {
+      var selector = "#" + appId + "-img";
+      if (hidden) $(selector).hide();
+      else $(selector).show();
+    }
+  
+    function inventoryFetchComplete(fetchObj) {
+      prepareGraphFromAppData();
+    }
+    
+    function prepareGraphFromAppData() {
+      mopub.dashboardStatsChartData = {
+        pointStart: mopub.graphStartDate,
+        pointInterval: 86400000,
+        requests: getGraphRequestStats(),
+        impressions: getGraphImpressionStats(),
+        clicks: getGraphClickStats(),
+        users: getGraphUserStats()
+      };
+      
+      mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
+    }
+    
+    function getFetchedAppData() {
+      var apps = [];
+      
+      $.each(statsMap, function(key, value) {
+        if (isAppId(key)) {
+          var dict = {};
+          dict.key = value["name"].replace("||", "");
+          dict.stats = value;
+          apps.push(dict);
+        }
+      });
+      return apps;
+    }
+    
+    function getGraphRequestStats() {
+      var allApps = getFetchedAppData();
+      var sortedApps = mopub.Stats.sortStatsObjectsByStat(allApps, "request_count");
+      return mopub.Stats.getGraphSummedStatsForStatName("request_count", sortedApps);
+    }
+    
+    function getGraphImpressionStats() {
+      var allApps = getFetchedAppData();
+      var sortedApps = mopub.Stats.sortStatsObjectsByStat(allApps, "impression_count");
+      return mopub.Stats.getGraphSummedStatsForStatName("impression_count", sortedApps);
+    }
+    
+    function getGraphClickStats() {
+      var allApps = getFetchedAppData();
+      var sortedApps = mopub.Stats.sortStatsObjectsByStat(allApps, "click_count");
+      return mopub.Stats.getGraphSummedStatsForStatName("click_count", sortedApps);
+    }
+    
+    function getGraphUserStats() {
+      var allApps = getFetchedAppData();
+      var sortedApps = mopub.Stats.sortStatsObjectsByStat(allApps, "user_count");
+      return mopub.Stats.getGraphSummedStatsForStatName("user_count", sortedApps);
+    }
+  
+    // *********************************************************************
+    // End -- Inventory AJAX
+    // *********************************************************************
+  });
 })(this.jQuery);
 
 

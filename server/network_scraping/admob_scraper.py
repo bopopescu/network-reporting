@@ -5,9 +5,7 @@ import time
 
 from datetime import date
 from scraper import Scraper, ScraperSite
-
-class NetworkScrapeRecord(object):
-    pass
+from network_scrape_record import NetworkScrapeRecord
 
 def admob_list_encode(list, var_name):
     list_var_name = var_name + '[]'
@@ -27,12 +25,10 @@ class AdMobScraper(Scraper):
     SITE_STAT_URL = API_URL + '/v2/site/stats'
 
     def __init__(self, credentials):
-        if credentials['network'] != self.NETWORK_NAME:
-            raise "Invalid credentials.  Attempting to use %s credentials for an AdMob scraper" % credentials.network
         self.client_key = credentials['client_key']
         self.app_name_dict = credentials['app_name_dict']
         super(AdMobScraper, self).__init__(credentials)
-        # authenticate on creation
+        
         self.authenticate()
 
     def authenticate(self):
@@ -77,23 +73,23 @@ class AdMobScraper(Scraper):
                           object_dimension = 'site')
         query_dict.update(self.auth_dict)
         req = urllib2.Request(str(self.SITE_STAT_URL + '?' + query_string + '&' + urllib.urlencode(query_dict)))
+
         #TODO pagination stuff with the 'page' part
         site_stats = json.load(urllib2.urlopen(req))
         
         records = []
         for stats in site_stats['data']:
-            nsr = NetworkScrapeRecord()
-            
-            nsr.attempts = stats['requests']
-            nsr.impressions = stats['impressions']
-            nsr.fill_rate = stats['fill_rate']
-            nsr.clicks = stats['clicks']
-            nsr.ctr = stats['ecpm']
+            nsr = NetworkScrapeRecord(attempts = stats['requests'],
+                                      impressions = stats['impressions'],
+                                      fill_rate = stats['fill_rate'],
+                                      clicks = stats['clicks'],
+                                      ctr = stats['ctr'],
+                                      ecpm = stats['ecpm'])
             
             if 'site_id' in stats:
-                nsr.app_tag = self.app_name_dict[stats['site_id']]
+                nsr.app_name = self.app_name_dict[stats['site_id']]
             else:
-                nsr.app_tag = self.app_name_dict[ids[0]]
+                nsr.app_name = self.app_name_dict[ids[0]]
             records.append(nsr)
             
         return records

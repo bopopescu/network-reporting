@@ -93,7 +93,7 @@ class RecalculateHandler(webapp.RequestHandler):
         # Yes, this should continue to be sent until the failure condition has been addressed
         if last_success > LAST_SUCCESS_THRESHOLD:
             mail.send_mail(sender='jpayne@mopub.com', 
-                           to='support@mopub.com',
+                           to='eng@mopub.com',
                            subject="CODE RED: ad server has been down for several tries", 
                            body="Failure count=%d. See more at http://stats.mopub.com" % last_success)
          

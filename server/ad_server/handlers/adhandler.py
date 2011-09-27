@@ -93,7 +93,12 @@ class AdHandler(webapp.RequestHandler):
         else:
             admin_debug_mode = False 
 
-        trace_logging.start()
+        if self.request.get('log_to_console','0') == '1':
+            log_to_console = True
+        else:
+            log_to_console = False    
+
+        trace_logging.start(log_to_console=log_to_console)
         trace_logging.response = self.response
         
         adunit_id = self.request.get("id")
@@ -116,7 +121,11 @@ class AdHandler(webapp.RequestHandler):
         
         trace_logging.warning("User Agent: %s"%helpers.get_user_agent(self.request))
 
-        countries = [helpers.get_country_code(headers = self.request.headers)]
+        # check if the country is overriden manually
+        if self.request.get('country'):
+            countries = [self.request.get('country')]
+        else:
+            countries = [helpers.get_country_code(headers = self.request.headers)]
         if len(countries) == 1:
             countries = [c.upper() for c in countries]
             country_tuple = tuple(countries)
@@ -358,7 +367,8 @@ class AdHandler(webapp.RequestHandler):
                 params.update(channel_id=site.adsense_channel_id or '')
                 # self.response.headers.add_header("X-Launchpage","http://googleads.g.doubleclick.net")
             elif creative.ad_type == "admob":
-                params.update({"title": ','.join(keywords), "w": format[0], "h": format[1], "client": site.get_pub_id("admob_pub_id")})
+                params.update({"title": ','.join(keywords), "w": format[0], "h": format[1], "client": site.get_pub_id("admob_pub_id"), \
+                    "bgcolor": str(site.app_key.admob_bgcolor or '000000') , "textcolor": str(site.app_key.admob_textcolor or 'FFFFFF')})
                 params.update(test_mode='true' if debug else 'false')
                 # params.update(test_ad='<a href="http://m.google.com" target="_top"><img src="/images/admob_test.png"/></a>' if debug else '')
                 self.response.headers.add_header("X-Launchpage","http://c.admob.com/")
@@ -415,7 +425,7 @@ class AdHandler(webapp.RequestHandler):
                 # add the launchpage header for inmobi in case they have dynamic ads that use
                 # window.location = 'http://some.thing/asdf'
                 if creative.adgroup.network_type == "inmobi":
-                    self.response.headers.add_header("X-Launchpage","http://c.w.mkhoj.com")
+                    self.response.headers.add_header("X-Launchpage","http://c.w.inmobi.com")
 
                 
             elif creative.ad_type == "html_full":
@@ -441,6 +451,15 @@ class AdHandler(webapp.RequestHandler):
                 # extra parameters used only by admob template
                 params.update(admob_finish_load=success)
                 params.update(admob_fail_load='')
+                
+            # Viewport meta tag: used by the iOS client to keep interstitials properly centered.
+            # On legacy SDKs (version < 6), inclusion of this tag causes a divide-by-zero exception,
+            # so we should omit it for those versions.
+            
+            if version_number >= 6:
+                params.update(viewportMetaTag='<meta name="viewport" content="width=device-width; initial-scale=1.0; user-scalable=no;">')
+            else:
+                params.update(viewportMetaTag='')
             
             # indicate to the client the winning creative type, in case it is natively implemented (iad, clear)
             

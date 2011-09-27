@@ -1,13 +1,11 @@
+from __future__ import with_statement
 import os
 import sys
 import time
 import traceback
 import logging
-import multiprocessing
 
 from datetime import datetime
-from multiprocessing import Pool
-from multiprocessing.pool import ThreadPool
 from optparse import OptionParser
 
 
@@ -213,6 +211,8 @@ def parse_line(line):
 
                     
 def process_input_file(input_file, num_workers):
+    from multiprocessing.pool import ThreadPool
+
     print 'uniq user: processing stats file %s with %i workers...' % (input_file, num_workers)
     pool = ThreadPool(processes=num_workers)
     line_count = 0
@@ -230,10 +230,8 @@ def process_input_file(input_file, num_workers):
         update_models(pool)
     except KeyboardInterrupt:
         print 'controller received control-c'
-        break
     except:
         traceback.print_exc()
-                    
 
 
 def single_thread_process_input_file(input_file):
@@ -252,7 +250,7 @@ def main():
     parser = OptionParser()
     parser.add_option('-f', '--input_file', dest='input_file')
     parser.add_option("-s", '--single_thread', action='store_true', dest='single_thread', default=False)
-    parser.add_option('-n', '--num_workers', type='int', dest='num_workers', default=multiprocessing.cpu_count())
+    parser.add_option('-n', '--num_workers', type='int', dest='num_workers', default=4)
 
     (options, args) = parser.parse_args()
     

@@ -3,9 +3,7 @@ import urllib
 
 from datetime import date
 from scraper import Scraper, ScraperSite
-
-class NetworkScrapeRecord(object):
-    pass
+from network_scrape_record import NetworkScrapeRecord
 
 class JumpTapScraper(Scraper):
     
@@ -13,8 +11,6 @@ class JumpTapScraper(Scraper):
     SITE_STAT_URL = 'https://pa.jumptap.com/pa-2.0/pub-services/v10/report.html'
 
     def __init__(self, credentials):
-        if credentials['network'] != self.NETWORK_NAME:
-            raise "Invalid credentials.  Attempting to use %s credentials for an JumpTap scraper" % credentials['network']
         super(JumpTapScraper, self).__init__(credentials)
 
     # Note: a date range is not supported
@@ -39,20 +35,18 @@ class JumpTapScraper(Scraper):
         click_index = headers.index('Clicks')
         cpm_index = headers.index('Net eCPM')
         app_index = headers.index('Site')
-        adunit_index = headers.index('Spot')
+        # adunit_index = headers.index('Spot')
 
         # dict stores list of nsrs for each 'spot' or ad unit where the key in the dict is the app
         scrape_records = {}
         for line in response:
             vals = line.split(',')
             if vals[0] != 'Totals':
-                nsr = NetworkScrapeRecord()
-                nsr.requests = int(vals[request_index])
-                nsr.impressions = int(vals[imp_index])
-                nsr.clicks = int(vals[click_index])
-                nsr.cpm = float(vals[cpm_index])
-                nsr.app_name = vals[app_index]
-                nsr.adunit_name = vals[adunit_index]
+                nsr = NetworkScrapeRecord(attempts = int(vals[request_index]),
+                                          impressions = int(vals[request_index]),
+                                          clicks = int(vals[click_index]),
+                                          ecpm = float(vals[cpm_index]),
+                                          app_name = vals[app_index])
                 # doesn't work for a date range
                 if nsr.app_name not in scrape_records:
                     scrape_records[nsr.app_name] = [nsr]
@@ -60,7 +54,7 @@ class JumpTapScraper(Scraper):
                     scrape_records[nsr.app_name] += [nsr]
         
         records = []
-        for k, v in scrape_records.iteritems():
+        for v in scrape_records.values():
             nsr = NetworkScrapeRecord()
             nsr.attempts = 0
             nsr.impressions = 0
@@ -71,13 +65,13 @@ class JumpTapScraper(Scraper):
                 nsr.attempts += n.requests
                 nsr.impressions += n.impressions
                 nsr.clicks += n.clicks
-                cost += n.cpm * n.impressions
+                cost += n.ecpm * n.impressions
                
             nsr.fill_rate = nsr.impressions / float(nsr.attempts)
             nsr.ctr = nsr.clicks / float(nsr.impressions)
-            nsr.cpm = cost / float(nsr.impressions)
+            nsr.ecpm = cost / float(nsr.impressions)
             
-            nsr.app_tag = v[0].app_name
+            nsr.app_name = v[0].app_name
             records.append(nsr)
 
         return records

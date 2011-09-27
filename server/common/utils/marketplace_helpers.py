@@ -1,3 +1,5 @@
+from common.utils import helpers
+
 def build_marketplace_dict(adunit, kws, udid, ua, ll, ip, adunit_context, country):
         app = adunit.app_key
         adunit_width, adunit_height = get_width_and_height(adunit)
@@ -19,12 +21,13 @@ def build_marketplace_dict(adunit, kws, udid, ua, ll, ip, adunit_context, countr
                     ip = ip,
                     app_id = str(app.key()),
                     global_app_id = app.global_id or None,
-                    app_name = app.name,
+                    app_name = helpers.to_ascii(app.name),
                     #app_domain = app.package if app.app_type in ('iphone', 'ipad') else None,
                     pub_id = str(app.account.key()),
-                    pub_name = app.account.company,
+                    pub_name = helpers.to_ascii(app.account.company),
                     pub_domain = app.account.domain,
-                    pub_rev_share = app.account.marketplace_rev_share,
+                    pub_rev_share = app.account.network_config.rev_share,
+                    price_floor = app.account.network_config.price_floor,
                     primary_category = primary_category, 
                     secondary_category = secondary_category,
                     #app_bundle = app.package if app.app_type == 'android' else None,

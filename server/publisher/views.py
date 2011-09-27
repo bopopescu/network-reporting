@@ -66,6 +66,7 @@ class AppIndexHandler(RequestHandler):
       days = StatsModel.get_days(self.start_date, self.date_range)
     else:
       days = StatsModel.lastdays(self.date_range)
+      
 
     apps = AppQueryManager.get_apps(self.account)
     if len(apps) == 0:
@@ -76,22 +77,9 @@ class AppIndexHandler(RequestHandler):
         app.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(app.icon)
 
       # attaching adunits onto the app object
-      app.adunits = AdUnitQueryManager.get_adunits(app=app)
+      app.adunits = sorted(AdUnitQueryManager.get_adunits(app=app), key=lambda adunit:adunit.name)
 
-      # organize impressions by days
-      for adunit in app.adunits:
-        adunit.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=adunit,days=days)
-
-        # sum of stats for this date range
-        adunit.stats = reduce(lambda x, y: x+y, adunit.all_stats, StatsModel())
-
-      app.adunits = sorted(app.adunits, key=lambda adunit: adunit.stats.request_count, reverse=True)
-
-      # We have to read the datastore at the app level since we need to get the de-duped user_count
-      app.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=app,days=days)
-      app.stats = reduce(lambda x, y: x+y, app.all_stats, StatsModel())
-
-    apps = sorted(apps, key=lambda app: app.stats.request_count, reverse=True)
+    apps = sorted(apps, key=lambda app: app.name)
 
     totals_list = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(days=days)
     
@@ -105,19 +93,26 @@ class AppIndexHandler(RequestHandler):
     # NOT total unique users
     totals.user_count = max([t.user_count for t in totals_list])
     
+    # prepare account_stats object
+    key = "||"
+    stats_dict = {}
+    stats_dict[key] = {}
+    stats_dict[key]['name'] = "||"
+    stats_dict[key]['daily_stats'] = [s.to_dict() for s in totals_list]
+    summed_stats = sum(totals_list, StatsModel())
+    stats_dict[key]['sum'] = summed_stats.to_dict()        
+    
+    response_dict = {}
+    response_dict['status'] = 200
+    response_dict['all_stats'] = stats_dict
+    
     logging.warning("ACCOUNT: %s"%self.account.key())
     logging.warning("YESTERDAY: %s"%yesterday.key())
     logging.warning("TODAY: %s"%today.key())
 
-    # In the graph, only show the top 3 apps and bundle the rest if there are more than 4
-    graph_apps = apps[0:4]
-    if len(apps) > 4:
-      graph_apps[3] = App(name='Others')
-      graph_apps[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[a.all_stats for a in apps[3:]])]
-
     return render_to_response(self.request,'publisher/index.html', 
       {'apps': apps,
-       'graph_apps': graph_apps,
+       'account_stats': simplejson.dumps(response_dict),
        'start_date': days[0],
        'end_date': days[-1],
        'date_range': self.date_range,
@@ -217,20 +212,26 @@ class AppCreateHandler(RequestHandler):
       app_form = AppForm(data=self.request.POST, files = self.request.FILES )
       
     adunit_form = AdUnitForm(data=self.request.POST, prefix="adunit")
-      
     if app_form.is_valid():
+      if not app_form.instance: #ensure form posts do not change ownership
+        account = self.account  # attach account info
+      else:
+        account = app_form.instance.account
       app = app_form.save(commit=False)
-      app.account = self.account # attach account info
-
-
+      app.account = account
+      
       # Nafis: Took this away b/c this page both things need to be valid before continuing
       # If we get the adunit information, try to create that too
       # if not self.request.POST.get("adunit_name"):
       #   return HttpResponseRedirect(reverse('publisher_app_show',kwargs={'app_key':app.key()}))
       
-      if adunit_form.is_valid():
+    if adunit_form.is_valid():
+        if not adunit_form.instance: #ensure form posts do not change ownership
+          account = self.account
+        else:
+          account = adunit_form.instance.account
         adunit = adunit_form.save(commit=False)
-        adunit.account = self.account
+        adunit.account = account
 
         # update the database
         AppQueryManager.put(app)
@@ -260,8 +261,12 @@ class CreateAdUnitHandler(RequestHandler):
     f = AdUnitForm(data=self.request.POST)
     a = AppQueryManager.get(self.request.POST.get('id'))
     if f.is_valid():
+      if not f.instance: #ensure form posts do not change ownership
+        account = self.account
+      else:
+        acccount = f.instance.account
       adunit = f.save(commit=False)
-      adunit.account = self.account
+      acunit.account = account
       adunit.app_key = a
       
       # update the database
@@ -397,11 +402,18 @@ class ShowAppHandler(RequestHandler):
         level_camps = filter(lambda x:x.campaign.campaign_type == this_level, guarantee_campaigns)
         gtee_levels.append(dict(name = name, adgroups = level_camps))
 
+    marketplace_campaigns = filter(lambda x: x.campaign.campaign_type in ['marketplace'], app.adgroups)
+    marketplace_campaigns = sorted(marketplace_campaigns, lambda x,y: cmp(x.bid, y.bid))
+
     network_campaigns = filter(lambda x: x.campaign.campaign_type in ['network'], app.adgroups)
     network_campaigns = sorted(network_campaigns, lambda x,y: cmp(y.bid, x.bid))
 
     backfill_promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_promo'], app.adgroups)
     backfill_promo_campaigns = sorted(backfill_promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
+    
+    backfill_marketplace_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_marketplace'], app.adgroups)
+    backfill_marketplace_campaigns = sorted(backfill_marketplace_campaigns, lambda x,y: cmp(x.bid, y.bid))
+    
 
 
     return render_to_response(self.request,'publisher/app.html', 
@@ -417,8 +429,10 @@ class ShowAppHandler(RequestHandler):
          'helptext': help_text,
          'gtee': gtee_levels, 
          'promo': promo_campaigns,
+         'marketplace': marketplace_campaigns,
          'network': network_campaigns,
-         'backfill_promo': backfill_promo_campaigns})
+         'backfill_promo': backfill_promo_campaigns,
+         'backfill_marketplace': backfill_marketplace_campaigns})
          
 
 @login_required
@@ -567,11 +581,17 @@ class AdUnitShowHandler(RequestHandler):
         level_camps = filter(lambda x:x.campaign.campaign_type == this_level, guarantee_campaigns)
         gtee_levels.append(dict(name = name, adgroups = level_camps))
 
+    marketplace_campaigns = filter(lambda x: x.campaign.campaign_type in ['marketplace'], adunit.adgroups)
+    marketplace_campaigns = sorted(marketplace_campaigns, lambda x,y: cmp(x.bid, y.bid))
+
     network_campaigns = filter(lambda x: x.campaign.campaign_type in ['network'], adunit.adgroups)
     network_campaigns = sorted(network_campaigns, lambda x,y: cmp(y.bid, x.bid))
 
     backfill_promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_promo'], adunit.adgroups)
     backfill_promo_campaigns = sorted(backfill_promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
+    
+    backfill_marketplace_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_marketplace'], adunit.adgroups)
+    backfill_marketplace_campaigns = sorted(backfill_marketplace_campaigns, lambda x,y: cmp(x.bid, y.bid))
     
     
     today = adunit.all_stats[-1]
@@ -594,8 +614,10 @@ class AdUnitShowHandler(RequestHandler):
          'adunit_form_fragment': adunit_form_fragment,
          'gtee': gtee_levels, 
          'promo': promo_campaigns,
+         'marketplace': marketplace_campaigns,         
          'network': network_campaigns,
-         'backfill_promo': backfill_promo_campaigns})
+         'backfill_promo': backfill_promo_campaigns,
+         'backfill_marketplace': backfill_marketplace_campaigns})         
   
 @login_required
 def adunit_show(request,*args,**kwargs):
@@ -627,8 +649,12 @@ class AppUpdateAJAXHandler(RequestHandler):
     json_dict = {'success':False,'html':None}
 
     if app_form.is_valid():
+      if not app_form.instance: #ensure form posts do not change ownership
+        account = self.account
+      else:
+        account = app_form.instance.account
       app = app_form.save(commit=False)
-      app.account = self.account
+      app.account = account
       AppQueryManager.put(app)
       
       json_dict.update(success=True)
@@ -669,8 +695,12 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
     json_dict = {'success':False,'html':None}
 
     if adunit_form.is_valid():
+      if not adunit_form.instance: #ensure form posts do not change ownership
+        account = self.account
+      else:
+        account = adunit_form.instance.account
       adunit = adunit_form.save(commit=False)
-      adunit.account = self.account
+      adunit.account = account
       AdUnitQueryManager.put(adunit)
       
       json_dict.update(success=True)

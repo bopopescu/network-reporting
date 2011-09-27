@@ -3,3 +3,6 @@ REPORT_FINISHED_SIMPLE = \
 
     http://app.mopub.com/reports/view/%(report_key)s/
 """
+
+REPORT_FAILED_SIMPLE = \
+""" Your report for %(dim1)s - %(dim2)s - %(dim3)s ranging from dates %(start)s to %(end)s has failed.  This could either be due to your account not having any data for the days specified or other transient errors. """ 

@@ -127,7 +127,6 @@ class AdGroup(db.Model):
     campaign = db.ReferenceProperty(Campaign,collection_name="adgroups")
     net_creative = db.ReferenceProperty(collection_name='creative_adgroups')
     name = db.StringProperty()
-    network_type = db.StringProperty()
 
     # start and end dates
     start_date = db.DateProperty()
@@ -136,7 +135,7 @@ class AdGroup(db.Model):
     created = db.DateTimeProperty(auto_now_add=True)
 
     # the priority level at which this ad group should be auctioned
-
+    network_type = db.StringProperty(choices=["adsense", "iAd", "admob","millennial","ejam","chartboost","appnexus","inmobi","mobfox","jumptap","brightroll","greystripe", "custom", "custom_native", "admob_native", "millennial_native"])
 
     # Note that bid has different meaning depending on the bidding strategy.
     # if CPM: bid = cost per 1000 impressions

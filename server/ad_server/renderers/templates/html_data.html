@@ -1,9 +1,5 @@
 {% extends "base.html" %}
 
-{% block bodyTagOpen %}
-<body style="margin:0;padding:0;" onload="loadAdVideo();">
-{% endblock bodyTagOpen %}
-
 {% block head %}
   {{ block.super }}
   {% if version >= 2 %}

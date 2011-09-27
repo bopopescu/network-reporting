@@ -6,6 +6,9 @@ class BrightRollRenderer(HtmlDataRenderer):
     BrightRollRenderer => HtmlDataRenderer => 
         BaseHtmlRenderer => BaseCreativeRenderer
     """
+    
+    TEMPLATE = 'brightroll.html'
+    
     def _setup_headers(self):
         super(BrightRollRenderer, self)._setup_headers()
         self.header_context.scrollable = "1"

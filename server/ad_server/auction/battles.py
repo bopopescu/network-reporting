@@ -239,7 +239,9 @@ class MarketplaceBattle(Battle):
             trace_logging.info('MPX RESPONES CODE:%s'%fetched.status_code)
             if fetched.status_code == 200:
                 creative = self._process_marketplace_response(fetched.content, creative)
-                return super(MarketplaceBattle, self)._process_winner(creative)
+                if creative:
+                    return super(MarketplaceBattle, self)._process_winner(creative)
+                return False
 
         except urlfetch.DownloadError, e:
             # There was no valid bid

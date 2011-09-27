@@ -264,7 +264,7 @@ class MarketplaceBattle(Battle):
 class NetworkBattle(Battle):
     """ Fans out to each of the networks """
 
-    starting_message = "Beginning marketplace campaigns..."
+    starting_message = "Beginning network campaigns..."
     campaign_type = "network"
 
     def _process_winner(self, creative):

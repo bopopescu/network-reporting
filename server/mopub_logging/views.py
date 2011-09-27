@@ -4,6 +4,7 @@ import sys
 import time
 import traceback
 import urllib
+import urllib2
 
 from appengine_django import InstallAppengineHelperForDjango
 InstallAppengineHelperForDjango()
@@ -19,6 +20,7 @@ from google.appengine.api import memcache
 from google.appengine.api import taskqueue
 from google.appengine.ext import webapp
 from google.appengine.ext.blobstore import BlobInfo
+from google.appengine.ext.db import BadKeyError
 from google.appengine.ext.webapp import blobstore_handlers
 from google.appengine.ext.webapp.util import run_wsgi_app
 
@@ -32,6 +34,9 @@ from reporting import models as r_models
 from reporting import query_managers
 
 from account.models import Account
+from advertiser.models import Campaign, AdGroup, Creative
+from publisher.models import Site as AdUnit, App
+
 
 
 OVERFLOW_TASK_QUEUE_NAME_FORMAT = "bulk-log-processor-overflow-%02d"
@@ -44,6 +49,9 @@ MAX_TAIL = 1000 # implies max 100 qps
 MAX_PUT_SIZE = 8
 
 STATS_MODEL_QUERY_KEY = "sm"
+
+MDB_STATS_UPDATER_IP = 'http://ec2-67-202-42-225.compute-1.amazonaws.com:8000'
+MDB_STATS_UPDATER_HANDLER_PATH = '/update'
 
 def increment_stats(stats):
     # datastore get
@@ -83,6 +91,103 @@ def update_stats(stats_dict,publisher,advertiser,date_hour,country,attribute,req
           stats_dict[key].reqs.append(req)
     except Exception, e:
         logging.warning("Error in update_stats: %s"%e)      
+    
+    
+def _create_mdb_json(stats_to_put):
+    # format of d:
+    # { (adunit, creative, date_hour): 
+    #   {'request_count': int, 'attempt_count': int, 'impression_count': int, 'click_count': int, 'conversion_count': int, 'revenue': float}
+    # }
+    d = {}
+    
+    for s in stats_to_put:
+        key_name = s.key().name()
+
+        if key_name.endswith('offline'):
+            logging.error('Error in parsing StatsModel keyname %s -- should not be offline' %key_name)
+            continue
+
+        parts = key_name.split(':')
+        
+        # remove country
+        adunit = parts[1]
+        creative = parts[2]
+        date_hour = parts[-1]   # for real-time StatsModels, the date section should always be last!
+        key_tuple = '%s:%s:%s' % (adunit, creative, date_hour)
+        
+        counts = {}
+        if not creative:    # REQUEST: /m/ad    
+            counts['request_count'] = s.request_count
+            counts['attempt_count'] = 0
+        else:               # ATTEMPT: /m/req
+            counts['request_count'] = 0
+            counts['attempt_count'] = s.request_count
+            
+        counts['impression_count'] = s.impression_count
+        counts['click_count'] = s.click_count
+        counts['conversion_count'] = s.conversion_count
+        counts['revenue'] = s.revenue
+
+        # roll up stat counts across all countries
+        if key_tuple in d:
+            # sum up the 2 arrays if key already exists
+            d[key_tuple]['request_count'] += counts['request_count']
+            d[key_tuple]['attempt_count'] += counts['attempt_count']
+            d[key_tuple]['impression_count'] += counts['impression_count']
+            d[key_tuple]['click_count'] += counts['click_count']
+            d[key_tuple]['conversion_count'] += counts['conversion_count']
+            d[key_tuple]['revenue'] += counts['revenue']
+        else:
+            d[key_tuple] = counts
+
+    return simplejson.dumps(d)
+    
+
+# returns app_str
+def _deref_adunit(adunit_str):
+    try:
+        adunit_key = db.Key(adunit_str)
+        adunit = AdUnit.get(adunit_key)
+        app_str = str(adunit._app_key)
+        return app_str
+    except BadKeyError, e:
+        logging.error('EXCEPTION on adunit %s: %s' %(adunit_str, e))
+        return None
+    except Exception, e:
+        logging.error(e)
+        return None
+    
+        
+# returns adgroup_str, campaign_str
+def _deref_creative(creative_str):
+    try:
+        creative_key = db.Key(creative_str)
+        creative = Creative.get(creative_key)
+        adgroup_str = str(creative._ad_group)        
+        campaign_str = _deref_adgroup(adgroup_str)
+        return adgroup_str, campaign_str
+    except BadKeyError, e:
+        logging.error('EXCEPTION on creative %s: %s' %(creative_str, e))
+        return None, None
+    except Exception, e:
+        logging.error(e)
+        return None, None
+
+
+# returns campaign_str
+def _deref_adgroup(adgroup_str):
+    try:
+        adgroup_key = db.Key(adgroup_str)
+        adgroup = AdGroup.get(adgroup_key)
+        campaign_str = str(adgroup._campaign)
+        return campaign_str
+    except BadKeyError, e:
+        logging.error('EXCEPTION on adgroup %s: %s' %(adgroup_str, e))
+        return None
+    except Exception, e:
+        logging.error(e)
+        return None
+
     
 class LogTaskHandler(webapp.RequestHandler):
   def get(self):
@@ -230,10 +335,10 @@ class LogTaskHandler(webapp.RequestHandler):
           start += MAX_KEYS # proceed to the next "page"    
 
       query_manager = query_managers.StatsModelQueryManager(account_name)
+      
       try:
-          # raise db.BadRequestError('asdf')
           stats_to_put = stats_dict.values()
-          
+      
           # if account_name == "agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww":
           #     try:
           #         mail.send_mail_to_admins(sender="olp@mopub.com",
@@ -242,12 +347,26 @@ class LogTaskHandler(webapp.RequestHandler):
           #                                       [(str(s._advertiser), str(s._publisher), s.country, s.impression_count) for s in stats_to_put if str(s.country) == 'US']))
           #     except Exception, e:
           #         logging.error("MAIL ERROR: %s",e)
-                                                 
+      
+      
+          # post to MDB servers
+          mdb_json = _create_mdb_json(stats_to_put)
+          try:
+              taskqueue.add(name='mdb-'+task_name,
+                            queue_name=queue_name,
+                            method='post',
+                            url='/mdb/update_stats',
+                            payload=mdb_json)
+          except taskqueue.TaskAlreadyExistsError:
+              logging.info('task %s already exists' % ('mdb-'+task_name))
+
+          # traditional put to GAE datastore
           query_manager.put_stats(stats_to_put)
           total_stats = query_manager.all_stats_deltas
       # if the transaction is too large then we split it up and try again    
       # except db.BadRequestError:
       #     async_put_models(account_name,stats_dict.values(),MAX_PUT_SIZE)
+      
       except:
           if retry_count > 5:
               exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
@@ -432,6 +551,57 @@ class ServeLogHandler(blobstore_handlers.BlobstoreDownloadHandler):
         self.send_blob(blob_info)
         
         
+class MongoUpdateStatsHandler(webapp.RequestHandler):
+    def post(self):
+        mdb_post_list = []
+        post_body = simplejson.loads(self.request.body)
+        logging.info('POST_BODY: %s' % post_body)
+        
+        # key format -> adunit:creative:date_hour
+        # value format -> {'request_count':int, 'attempt_count':int, 'impression_count':int, 'click_count':int, 'conversion_count':int, 'revenue':float}
+        for k, v in post_body.iteritems():
+            parts = k.split(':')
+            if len(parts) != 3:
+                err_msg = 'Error parsing %s -- expecting format adunit:creative:date_hour' % k
+                logging.error(err_msg)
+                #respond immediately without posting any data to MongoDB
+                self.response.out.write(err_msg)
+                
+            [adunit, creative, date_hour] = parts
+            app = _deref_adunit(adunit)
+            (adgroup, campaign) = _deref_creative(creative) if creative else ('', '')
+            
+            if None not in [app, adgroup, campaign]:
+                post_dict = {'adunit': adunit,
+                             'app': app,
+                             'creative': creative,
+                             'adgroup': adgroup,
+                             'campaign': campaign,
+                             'date_hour': date_hour,
+                             'request_count': v['request_count'],
+                             'attempt_count': v['attempt_count'],
+                             'impression_count': v['impression_count'],
+                             'click_count': v['click_count'],
+                             'conversion_count': v['conversion_count'],
+                             'revenue': v['revenue']}
+                mdb_post_list.append(post_dict)
+            else:
+                err_msg = 'None deref for key_tuple %s: app=%s, adgroup=%s, campaign=%s' % (k, app, adgroup, campaign)
+                logging.error(err_msg)
+                #respond immediately without posting any data to MongoDB
+                self.response.out.write(err_msg)
+                
+        # post the list of dicts to MongoDB
+        post_data = simplejson.dumps(mdb_post_list)
+        logging.info('POST TO MDB: %s' % post_data)
+        post_url = MDB_STATS_UPDATER_IP + MDB_STATS_UPDATER_HANDLER_PATH # ex: http://ec2-67-202-42-225.compute-1.amazonaws.com:8000/update
+        post_request = urllib2.Request(post_url, post_data)
+        post_response = urllib2.urlopen(post_request).read()
+    
+        logging.info('response from %s: %s\ndata:\n%s' % (post_url, post_response, post_data))
+        self.response.out.write('response from %s: %s\ndata:\n%s' % (post_url, post_response, post_data))
+
+                
 application = webapp.WSGIApplication([('/_ah/queue/bulk-log-processor', LogTaskHandler),
                                       ('/_ah/queue/bulk-log-processor-00', LogTaskHandler),
                                       ('/_ah/queue/bulk-log-processor-01', LogTaskHandler),
@@ -447,6 +617,7 @@ application = webapp.WSGIApplication([('/_ah/queue/bulk-log-processor', LogTaskH
                                       ('/files/finalize', FinalizeHandler),
                                       ('/files/download', DownloadLogsHandler),
                                       ('/files/serve/([^/]+)?', ServeLogHandler),
+                                      ('/mdb/update_stats', MongoUpdateStatsHandler),
                                      ],
                                      debug=True)
 

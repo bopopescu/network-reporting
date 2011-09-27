@@ -251,8 +251,8 @@ class MarketplaceBattle(Battle):
         marketplace_response_dict = simplejson.loads(content)
         trace_logging.info('MPX REPSONSE:%s'%marketplace_response_dict)
         # With valid data
-        if marketplace_response_dict.has_key('xhtml_real') and \
-                marketplace_response_dict.has_key('revenue'):
+        if marketplace_response_dict.get('xhtml_real', None) and \
+                marketplace_response_dict.get('revenue', None):
             creative.html_data = marketplace_response_dict['xhtml_real']
             pub_rev = marketplace_response_dict['revenue']
             # Should really be the pub's cut

@@ -105,6 +105,7 @@ def last_seven(d):
     delta = timedelta(days=7)
     return (d-delta, d)
 
+# start and end are inclusive
 def gen_days(start, end, hours=False):
     dt = timedelta(days=1)
     temp = start

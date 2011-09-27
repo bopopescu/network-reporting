@@ -118,6 +118,7 @@ def report_failed(report_key):
     rep = Report.get(report_key)
     rep.status = 'Failed'
     rep.put()
+    rep.notify_failure()
     # If I were a better person I'd email people when their reports fail
 
 def report_empty(report_key):
@@ -125,6 +126,7 @@ def report_empty(report_key):
         rep = Report.get(report_key)
         rep.status = 'No Data'
         rep.put()
+        rep.notify_failure()
     except:
         return
 

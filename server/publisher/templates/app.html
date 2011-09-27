@@ -21,11 +21,11 @@
                   <div id="appForm-fragment">
 {{app_form_fragment}}
                   </div>
-                  <div class="form-submit"> 
+                  <div class="form-submit">
                     <span class="hidden" id="appEditForm-loading"><img src="/images/loading2.gif"/></span>
-                    <span class="buttonWrap"><a href="#" class="button" id="appEditForm-cancel">Cancel</a></span> 
-                    <span class="buttonWrap"><a href="#" class="button" id="appEditForm-submit">Save</a></span> 
-                  </div> 
+                    <span class="buttonWrap"><a href="#" class="button" id="appEditForm-cancel">Cancel</a></span>
+                    <span class="buttonWrap"><a href="#" class="button" id="appEditForm-submit">Save</a></span>
+                  </div>
                 </fieldset>
               </form>
             </div>
@@ -100,15 +100,15 @@
             </div>
             <div class="clear"></div>
           </section>
-          
+
           <div class="clear"></div>
-          
+
           <section id="dashboard-apps">
             <div class="buttonBank buttonBank-right">
               <a class="button" id="dashboard-apps-addAdUnitButton" href="#">Add an ad unit</a>
             </div>
             <h2>Ad units</h2>
-            
+
             <section id="dashboard-adunitAddForm" class="hidden">
               <div>
                 <a name="adunitForm" class="hidden">anchor</a>
@@ -117,16 +117,16 @@
                     <div id="adunitForm-fragment">
                       {{adunit_form_fragment}}
                     </div>
-                    <div class="form-submit"> 
+                    <div class="form-submit">
                       <span class="hidden" id="adunitForm-loading"><img src="/images/loading2.gif"/></span>
-                      <span class="buttonWrap"><a href="#" class="button" id="adunitAddForm-cancel">Cancel</a></span> 
-                      <span class="buttonWrap"><a href="#" class="button" id="adunitAddForm-submit">Save</a></span> 
-                    </div> 
+                      <span class="buttonWrap"><a href="#" class="button" id="adunitAddForm-cancel">Cancel</a></span>
+                      <span class="buttonWrap"><a href="#" class="button" id="adunitAddForm-submit">Save</a></span>
+                    </div>
                   </fieldset>
                 </form>
               </div>
             </section>
-            
+
             <div class="appData-columnHeaders">
               <table class="dataTable" id="dashboard-apps-columnHeaders">
                 <thead>
@@ -162,7 +162,7 @@
                     <tbody>
                       {% for au in app.adunits %}
                       <tr>
-                        <th class="dataTable-name"><span class="inner"><div class="appData-id muted hidden">Ad Unit ID: {{au.key}}</div><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a></span></th>
+                        <th class="dataTable-name"><span class="inner"><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a><div class="appData-id muted hidden">Ad Unit ID: {{au.key}}</div></span></th>
                         <td class="dataTable-data numeric">{{au.stats.request_count|withsep}}</td>
                         <td class="dataTable-data numeric">{{au.stats.impression_count|withsep}}</td>
                         <td class="dataTable-data numeric">{{au.stats.fill_rate|percentage_rounded}}</td>
@@ -175,21 +175,21 @@
                 </div>
               </div>
             </div>
-            
+
             <div class="divSpacer"></div>
-            
+
             <h2>Campaigns targeting {{app.name}}</h2>
             <div>
             {% if app.adgroups %}
 
-    			  <div class="appData alternating-color">	
+    			  <div class="appData alternating-color">
     				<div class="appData-details noneg">
     	      <div class="appData-details-inner show">
     	        <table class="dataTable appData-main">
     						<thead>
     						  <tr>
     						    <th class="dataTable-name big">Guaranteed</th>
-    						    <th class="dataTable-data numeric special">&nbsp;</th>		
+    						    <th class="dataTable-data numeric special">&nbsp;</th>
     						    <th class="dataTable-data numeric special">CPM</th>
     		            <th class="dataTable-data numeric special">Revenue</th>
     		            <th class="dataTable-data numeric special">Impressions</th>
@@ -221,9 +221,9 @@
                           {% ifequal adgroup.campaign.budget_type 'full_campaign' %}{{adgroup.campaign.full_budget|currency}} campaign budget.{% endifequal %}
                           {% if adgroup.percent_delivered %}({{adgroup.percent_delivered|floatformat:1}}%){%endif %}
                       </span>
-                    </th> 
+                    </th>
 
-                    <td class="dataTable-data numeric">&nbsp;</td>                    
+                    <td class="dataTable-data numeric">&nbsp;</td>
                     <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
                     <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>
       	            <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
@@ -235,11 +235,11 @@
     						  {% endfor %}
     	          </tbody>
     	        </table>
-    	      </div>       
+    	      </div>
             </div>
-    			  </div>	
+    			  </div>
 
-    			  <div class="appData alternating-color">	
+    			  <div class="appData alternating-color">
     				<div class="appData-details noneg">
     	      <div class="appData-details-inner show">
     	        <table class="dataTable appData-main">
@@ -247,8 +247,8 @@
     						  <tr>
     						    <th class="dataTable-name big">Promotional</th>
     						    <th class="dataTable-data numeric special">&nbsp;</th>
-    						    <th class="dataTable-data numeric special">&nbsp;</th>				
-    						    <th class="dataTable-data numeric special">CPM</th>				    
+    						    <th class="dataTable-data numeric special">&nbsp;</th>
+    						    <th class="dataTable-data numeric special">CPM</th>
     			          <th class="dataTable-data numeric special">Impressions</th>
     			          <th class="dataTable-data numeric special">Clicks</th>
     			          <th class="dataTable-data numeric special">CTR</th>
@@ -275,11 +275,11 @@
                           {% endif %}
                           {% if adgroup.campaign.budget %}{{adgroup.campaign.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
                       </span>
-                    </th> 
+                    </th>
 
                     <td class="dataTable-data numeric">&nbsp;</td>
                     <td class="dataTable-data numeric">&nbsp;</td>
-                    <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>                                             
+                    <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
                     <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{adgroup.stats.click_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{adgroup.stats.ctr|percentage|withsep}}</td>
@@ -288,23 +288,23 @@
                   {% endfor %}
                 </tbody>
               </table>
-            </div>       
             </div>
-    			  </div>	
+            </div>
+    			  </div>
 
             {% if marketplace %}
-    			  <div class="appData alternating-color">	
+    			  <div class="appData alternating-color">
     				<div class="appData-details noneg">
     	      <div class="appData-details-inner show">
     	        <table class="dataTable appData-main">
     						<thead>
     						  <tr>
     						    <th class="dataTable-name big">Marketplace</th>
-    					      <th class="dataTable-data numeric special">Revenue</th>		
-    					      <th class="dataTable-data numeric special">ECPM</th>		
+    					      <th class="dataTable-data numeric special">Revenue</th>
+    					      <th class="dataTable-data numeric special">ECPM</th>
     		            <th class="dataTable-data numeric special">Attempts</th>
     		            <th class="dataTable-data numeric special">Impressions</th>
-    		            <th class="dataTable-data numeric special">Fillrate</th>		          
+    		            <th class="dataTable-data numeric special">Fillrate</th>
     		            <th class="dataTable-data numeric special">Clicks</th>
     		            <th class="dataTable-data numeric special">CTR</th>
     				      </tr>
@@ -318,7 +318,7 @@
                       {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
                       <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a>
                       <span class="muted">MoPub Marketplace Beta</span>
-                    </th> 
+                    </th>
 
                     <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>
                     <td class="dataTable-data numeric">{{adgroup.stats.cpm|currency}}</td>
@@ -329,25 +329,25 @@
                     <td class="dataTable-data numeric">{{adgroup.stats.ctr|percentage}}</td>
                   </tr>
                   {% endfor %}
-                </tbody>			      
+                </tbody>
               </table>
-    	      </div>       
+    	      </div>
             </div>
-    			  </div>	
+    			  </div>
             {% endif %}
 
-    			  <div class="appData alternating-color">	
+    			  <div class="appData alternating-color">
     				<div class="appData-details noneg">
     	      <div class="appData-details-inner show">
     	        <table class="dataTable appData-main">
     						<thead>
     						  <tr>
     						    <th class="dataTable-name big">Network</th>
-    						    <th class="dataTable-data numeric special">&nbsp;</th>    						    
-    					      <th class="dataTable-data numeric special">ECPM</th>		
+    						    <th class="dataTable-data numeric special">&nbsp;</th>
+    					      <th class="dataTable-data numeric special">ECPM</th>
     		            <th class="dataTable-data numeric special">Attempts</th>
     		            <th class="dataTable-data numeric special">Impressions</th>
-    		            <th class="dataTable-data numeric special">Fillrate</th>		          
+    		            <th class="dataTable-data numeric special">Fillrate</th>
     		            <th class="dataTable-data numeric special">Clicks</th>
     		            <th class="dataTable-data numeric special">CTR</th>
     				      </tr>
@@ -361,7 +361,7 @@
                       {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
                       <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a>
                       <span class="muted">{{adgroup.network_type}}</span>
-                    </th> 
+                    </th>
 
                     <td class="dataTable-data numeric">&nbsp;</td>
                     <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
@@ -372,13 +372,13 @@
                     <td class="dataTable-data numeric">{{adgroup.stats.ctr|percentage}}</td>
                   </tr>
                   {% endfor %}
-                </tbody>			      
+                </tbody>
               </table>
-    	      </div>       
+    	      </div>
             </div>
-    			  </div>	
+    			  </div>
 
-            <div class="appData alternating-color">	
+            <div class="appData alternating-color">
       			<div class="appData-details noneg">
       	    <div class="appData-details-inner show">
       	      <table class="dataTable appData-main">
@@ -387,7 +387,7 @@
     						    <th class="dataTable-name big">Backfill Promotional</th>
         						<th class="dataTable-data numeric special">&nbsp;</th>
         						<th class="dataTable-data numeric special">&nbsp;</th>
-        						<th class="dataTable-data numeric special">CPM</th>				    
+        						<th class="dataTable-data numeric special">CPM</th>
         			      <th class="dataTable-data numeric special">Impressions</th>
         			      <th class="dataTable-data numeric special">Clicks</th>
         			      <th class="dataTable-data numeric special">CTR</th>
@@ -414,11 +414,11 @@
                           {% endif %}
                           {% if adgroup.campaign.budget %}{{adgroup.campaign.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
                       </span>
-                    </th> 
+                    </th>
 
                     <td class="dataTable-data numeric">&nbsp;</td>
                     <td class="dataTable-data numeric">&nbsp;</td>
-                    <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>                                             
+                    <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
                     <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{adgroup.stats.click_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{adgroup.stats.ctr|percentage|withsep}}</td>
@@ -427,23 +427,23 @@
                   {% endfor %}
                 </tbody>
     	        </table>
-            </div>       
+            </div>
             </div>
     		    </div>
 
             {% if backfill_marketplace %}
-    			  <div class="appData alternating-color">	
+    			  <div class="appData alternating-color">
     				<div class="appData-details noneg">
     	      <div class="appData-details-inner show">
     	        <table class="dataTable appData-main">
     						<thead>
     						  <tr>
     						    <th class="dataTable-name big">Backfill Marketplace</th>
-    					      <th class="dataTable-data numeric special">Revenue</th>		
-    					      <th class="dataTable-data numeric special">ECPM</th>		
+    					      <th class="dataTable-data numeric special">Revenue</th>
+    					      <th class="dataTable-data numeric special">ECPM</th>
     		            <th class="dataTable-data numeric special">Attempts</th>
     		            <th class="dataTable-data numeric special">Impressions</th>
-    		            <th class="dataTable-data numeric special">Fillrate</th>		          
+    		            <th class="dataTable-data numeric special">Fillrate</th>
     		            <th class="dataTable-data numeric special">Clicks</th>
     		            <th class="dataTable-data numeric special">CTR</th>
     				      </tr>
@@ -457,7 +457,7 @@
                       {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
                       <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a>
                       <span class="muted">MoPub Marketplace Beta</span>
-                    </th> 
+                    </th>
 
                     <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>
                     <td class="dataTable-data numeric">{{adgroup.stats.cpm|currency}}</td>
@@ -468,16 +468,16 @@
                     <td class="dataTable-data numeric">{{adgroup.stats.ctr|percentage}}</td>
                   </tr>
                   {% endfor %}
-                </tbody>			      
+                </tbody>
               </table>
-    	      </div>       
+    	      </div>
             </div>
-    			  </div>	
+    			  </div>
             {% endif %}
 
 
 			      {% else %}
-			      <div class="appData alternating-color">	
+			      <div class="appData alternating-color">
     				<div class="appData-details noneg">
     	      <div class="appData-details-inner show">
     	        <table class="dataTable appData-main">
@@ -489,11 +489,11 @@
     			    </table>
     			  <div>
     			  <div>
-    			  <div>    			      
+    			  <div>
             {% endif %}
-            </div>                  	      
+            </div>
           </section>
-          
+
 <form id='appExportForm' style='display:none;' method='POST' accept-charset='utf-8' action='{% url app_export %}'>
     <input name='app_key' type='text' value='{{app.key}}' />
     <input name='file_type' id='appExportType' type='text' value='' />
@@ -508,11 +508,11 @@
                       <option value='csv'>CSV</option>
                   </select>
               </div>
-              <h2>Daily Counts</h2>            
+              <h2>Daily Counts</h2>
                  <div class="appData-details noneg">
                   <table class="dataTable appData-main">
                       <thead>
-                          <tr>  
+                          <tr>
                               <th class="dataTable-name big">&nbsp;</th>
                               <th class="dataTable-name big">&nbsp;</th>
                               <th class="dataTable-data numeric special">Requests</th>
@@ -525,7 +525,7 @@
                       <tbody>
                           <tr>
                               <th class="dataTable-name big">Totals</th>
-                              <td class="dataTable-data numeric">&nbsp;</td>     
+                              <td class="dataTable-data numeric">&nbsp;</td>
                               <td class="dataTable-data numeric special"><b>{{app.stats.request_count|withsep}}</b></td>
                               <td class="dataTable-data numeric special"><b>{{app.stats.impression_count|withsep}}</b></td>
                               <td class="dataTable-data numeric special"><b>{{app.stats.fill_rate|percentage}}</b></td>
@@ -535,7 +535,7 @@
                           {% for s in app.all_stats reversed %}
                           <tr class="appData-details-inner hide">
                               <th class="dataTable-name">{{s.date|format_date}}</th>
-                              <td class="dataTable-data numeric">&nbsp;</td>     
+                              <td class="dataTable-data numeric">&nbsp;</td>
                               <td class="dataTable-data numeric">{{s.request_count|withsep}}</td>
                               <td class="dataTable-data numeric">{{s.impression_count|withsep}}</td>
                               <td class="dataTable-data numeric">{{s.fill_rate|percentage}}</td>
@@ -548,9 +548,9 @@
                   <a class="button button-small appData-details-toggleButton" href="#">Hide details</a>
               </div>
           </section>
-          
+
           <div class="clear"></div>
-          
+
           <div style="margin-top: 1em">
               <div class="buttonBank buttonBank-right">
                   <form method="post" id="dashboard-deleteForm" action="{% url publisher_app_delete app_key=app.key %}"><a href="#" id="dashboard-delete-link">Remove app from dashboard</a></form>

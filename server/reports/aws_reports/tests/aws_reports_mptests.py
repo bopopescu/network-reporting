@@ -1,15 +1,29 @@
+import sys
+import os
+from datetime import datetime
+import logging
+sys.path.append(os.environ['PWD'])
+import time
+
+import common.utils.test.setup
+import unittest
+
 from reports.models import Report, ScheduledReport
+from reports.aws_reports.helpers import AWS_ACCESS_KEY, AWS_SECRET_KEY
+from reports.aws_reports.report_message_handler import ReportMessageHandler, ReportMessage
+from account.models import Account
 from boto.sqs.connection import SQSConnection
 from boto.sqs.message import Message
 
+from nose.tools import with_setup
+from budget import budget_service
+
+from google.appengine.ext import testbed
+
+
 SQS_CONN = SQSConnection(AWS_ACCESS_KEY, AWS_SECRET_KEY)
 TEST_REPORT_QUEUE = 'test_report_queue'
-TEST_QUEUE = SQS_CONN.create_queue(TEST_REPORT_QUEUE)
-TEST_RMH = ReportMessageHandler(TEST_QUEUE, testing=True)
 
-
-
-class TestMessageHandler(unittest.TestCase)
 def queue_writer(queue):
     def writer(mesg_data):
         m = Message()
@@ -17,41 +31,139 @@ def queue_writer(queue):
         queue.write(m)
     return writer
 
-test_queue_write = queue_writer(TEST_QUEUE)
+
+class TestMessageHandler(unittest.TestCase):
 
 
-def handle_message_no_data_mptest():
-    
-    
+    def setUp(self):
+        # First, create an instance of the Testbed class.
+        self.testbed = testbed.Testbed()
+        # Then activate the testbed, which prepares the service stubs for use.
+        self.testbed.activate()
+        # Next, declare which service stubs you want to use.
+        self.testbed.init_datastore_v3_stub()
+        self.testbed.init_memcache_stub()
+        self.account = Account()
+        self.account.put()
+        test_queue = SQS_CONN.create_queue(TEST_REPORT_QUEUE)
+        test_queue.clear()
+        self.queue_write = queue_writer(test_queue)
+        self.sched = ScheduledReport(account = self.account,
+                                d1 = 'app',
+                                end = datetime.now().date(),
+                                days = 1,
+                                )
+        self.sched.put()
+        logging.warning("Putting report")
+        self.rep = Report(account = self.account,
+                          schedule = self.sched,
+                          start = datetime.now().date(),
+                          end = datetime.now().date(),
+                          )
+        self.rep.put()
+        self.rmh = ReportMessageHandler(test_queue, testing=True)
 
-    # No data, make sure message is failed, marked as failed, and not in queue
-    pass
+    def tearDown(self):
+        self.testbed.deactivate()
 
-def handle_message_mr_submit_error_mptest():
-    # MR Submit Error, make sure message is readded to queue 2(3?) times, marked as failed, then not in queue
-    pass
+    def assert_empty_queue(self):
+        # If the queue says there are messages, make sure we can't actually get them
+        while not self.rmh.queue.count() == 0:
+            assert not self.rmh.handle_messages()
+            # Fucking timeout
+            time.sleep(1)
+        return True
 
-def handle_message_ignore_deleted():
-    # If message in to_del but somehow being processed, ignore it
-    pass
+    def handle_message_no_data_mptest(self):
+        # No data, make sure message is failed, marked as failed, and not in queue
+        self.queue_write(self.rep.message)
+        # There is a message in the queue, it was just written, keep trying
+        # Until it's processed
+        while not self.rmh.handle_messages(force_no_data=True):
+            time.sleep(.5)
+        # Assert that all messages have been handled
+        assert len(self.rmh.to_del) == 0
+        self.assert_empty_queue()
 
-def handle_message_mptest():
-    # No Errors, nothing happens to message, not in queue
-    pass
+        assert Report.get(self.rep.key()).status == "No Data"
 
 
-def handle_jobflow_success():
-    # List of jobs, one job is finished, finished job marked as finished, removed from list of finished jobs, marked as finished
-    pass
+    def handle_message_mr_submit_error_mptest(self):
+        # MR Submit Error, make sure message is readded to queue 2(3?) times, marked as failed, then not in queue
+        self.queue_write(self.rep.message)
+        retry = 0
+        success = False
+        while not success:
+            # Force an error while handling
+            handled = self.rmh.handle_messages(force_submit_error = True)
+            if handled:
+                retry += 1
+                for k,v in self.rmh.msg_failures.iteritems():
+                    assert v == retry
+                timeout_retry = 0
+                # Make sure it was readded to the Queue
+                while self.rmh.queue.count() == 0 and retry <= 3:
+                    timeout_retry += 1
+                    if timeout_retry == 10:
+                        assert False
+                    time.sleep(.5)
 
-def handle_jobflow_failure():
-    # List of jobs, one job is failed, make sure in queue, fail again.  Do this three times, assert in the queue every time, on third failure remove from queue, don't process again, marked as failed
-    pass
+            # 3 failures, 4th retry and fail = end
+            if retry == 4:
+                # Make sure it's not in the queue
+                assert len(self.rmh.to_del) == 0
+                if self.assert_empty_queue():
+                    success = True
+                assert success
+        # make sure it failed for the right reason
+        assert Report.get(self.rep.key()).status == "Failed"
 
-def on_success_blobstore_failure():
-    # Blobstore fails, make sure the report isn't replicated a million times (whoops)
-    pass
+    def handle_message_ignore_deleted_mptest(self):
+        # If message in to_del but somehow being processed, ignore it
+        self.queue_write(self.rep.message)
+        # should run, message should be in to_del, but not handled
+        while not self.rmh.handle_messages(force_delete_error=True):
+            time.sleep(.5)
+        assert len(self.rmh.to_del) == 1
+        
+        # Report ran with no failures, but didn't get pushed to EMR (testing, duh)
+        # so it should be stuck in pending
+        assert Report.get(self.rep.key()).status == 'Pending'
 
-def on_success_finalize_failure():
-    # Make sure message isnt' removed from the 'to process' list
-    pass
+        # Force no data, to_del is checked first, should ignore everything else
+        while not self.rmh.handle_messages(force_no_data=True):
+            time.sleep(.5)
+
+        assert len(self.rmh.to_del) == 0
+        # Normally force_no_data would cause this to read 'No Data'
+        # but that's not the case
+        assert Report.get(self.rep.key()).status == 'Pending'
+        
+
+    def handle_message_mptest(self):
+        self.queue_write(self.rep.message)
+        # No Errors, nothing happens to message, not in queue
+        while not self.rmh.handle_messages():
+            time.sleep(.5)
+        assert len(self.rmh.to_del) == 0
+        assert Report.get(self.rep.key()).status == 'Pending'
+        self.assert_empty_queue()
+        assert self.rmh.msg_failures.values()[0] == 0
+
+
+    def handle_jobflow_success_mptest(self):
+        self.queue_write(self.rep.message)
+        # List of jobs, one job is finished, finished job marked as finished, removed from list of finished jobs, marked as finished
+        pass
+
+    def handle_jobflow_failure_mptest(self):
+        # List of jobs, one job is failed, make sure in queue, fail again.  Do this three times, assert in the queue every time, on third failure remove from queue, don't process again, marked as failed
+        pass
+
+    def on_success_blobstore_failure_mptest(self):
+        # Blobstore fails, make sure the report isn't replicated a million times (whoops)
+        pass
+
+    def on_success_finalize_failure_mptest(self):
+        # Make sure message isnt' removed from the 'to process' list
+        pass

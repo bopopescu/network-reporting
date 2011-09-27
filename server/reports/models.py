@@ -193,7 +193,7 @@ class Report(db.Model):
 
     @property
     def message(self):
-        return REPORT_MSG % (self.d1, self.d2, self.d3, self.start.strftime('%y%m%d'), self.end.strftime('%y%m%d'), self.key(), self.account.key(), time.time())
+        return REPORT_MSG % (self.d1, self.d2, self.d3, self.start.strftime('%y%m%d'), self.end.strftime('%y%m%d'), self.key(), self.account.key(), time.mktime(self.created_at.utctimetuple()))
 
 
     def notify_complete(self):

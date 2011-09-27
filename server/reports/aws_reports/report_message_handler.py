@@ -3,6 +3,7 @@ import sys
 import os
 from datetime import datetime
 import traceback
+import logging
 
 from appengine_django import InstallAppengineHelperForDjango
 InstallAppengineHelperForDjango()
@@ -33,10 +34,11 @@ from reports.aws_reports.helpers import (upload_file,
                                          get_waiting_jobflow, 
                                          default_exc_handle,
                                          JOBFLOW_NAME,
+                                         LOG_URI,
+
                                          )
 
 # Setup the remote API
-setup_remote_api()
 
 S3_CONN = s3(AWS_ACCESS_KEY, AWS_SECRET_KEY)
 BUCK = S3_CONN.get_bucket('mopub-aws-logging')
@@ -65,6 +67,9 @@ STEP_NAME = "Generate_report_%s-%s-%s-%s"
 
 MAX_MSGS = 5
 
+# Suppress non-critical boto messages
+logging.getLogger('boto').setLevel(logging.CRITICAL)
+
 class ReportMessage(object):
 
     def __init__(self, msg):
@@ -72,20 +77,46 @@ class ReportMessage(object):
         self.dim1, self.dim2, self.dim3, self.start, self.end, self.report_key, self.account, self.timestamp = parse_msg(msg)
         self.step_name = STEP_NAME % (self.dim1, self.dim2, self.dim3, self.timestamp)
 
-        @property
-        def dims(self):
-            return (self.dim1, self.dim2, self.dim3)
+    def __key(self):
+        return (self.dim1, self.dim2, self.dim3, self.start, self.end, self.report_key, self.account, self.timestamp)
 
-        @property
-        def start_str(self):
-            return self.start.strftime('%y%m%d')
-        @property
-        def end_str(self):
-            return self.end.strftime('%y%m%d')
+    def __hash__(self):
+        return hash(self.__key())
 
-        @property
-        def fname(self):
-            return gen_report_fname(self.dim1, self.dim2, self.dim3, self.start, self.end)
+    def __eq__(self, other):
+        if not type(self) == type(other):
+            return False
+        else:
+            return self.__key() == other.__key()
+
+    def __cmp__(self, other):
+        return cmp(str(self), str(other))
+
+    def __repr__(self):
+        repr_str = 'Dim1:%s\tDim2:%s\tDim3:%s\tStart:%s\tEnd:%s\tReport:%s\tAccount:%s\tTimestamp:%s'
+        keys = self.__key()
+        new_keys = []
+        for key in keys:
+            if isinstance(key, datetime):
+                new_keys.append(key.strftime('%y%m%d'))
+            else:
+                new_keys.append(key)
+        return repr_str % tuple(new_keys)
+
+    @property
+    def dims(self):
+        return (self.dim1, self.dim2, self.dim3)
+
+    @property
+    def start_str(self):
+        return self.start.strftime('%y%m%d')
+    @property
+    def end_str(self):
+        return self.end.strftime('%y%m%d')
+
+    @property
+    def fname(self):
+        return gen_report_fname(self.dim1, self.dim2, self.dim3, self.start, self.end)
 
 class ReportMessageHandler(MessageHandler):
     """ Usage: 
@@ -99,6 +130,8 @@ class ReportMessageHandler(MessageHandler):
 
 
     def __init__(self, queue, testing=False):
+        if not testing:
+            setup_remote_api()
         self.queue = queue
         self.testing = testing
         self.to_del = []
@@ -145,6 +178,7 @@ class ReportMessageHandler(MessageHandler):
             rep.status = reason
             rep.put()
         except Exception:
+            logging.warning("Report notify failed")
             return
 
     def finalize_report(self, message, blob_key):
@@ -174,45 +208,66 @@ class ReportMessageHandler(MessageHandler):
                 del(self.jobid_creations[jobid])
 
 
-    def handle_messages(self, force_no_data=False, force_submit_error=False):
+    def handle_messages(self, force_no_data=False, force_submit_error=False, force_delete_error=False):
         """
         Args: None
-        Rets: None
+        Rets: True if messages were handled, False if no messages handled
         Throws: None
         """ 
         # Don't allowing testing stuff if not testing (Just in case)
         if not self.testing:
-            force_no_data = force_submit_error = False
+            force_no_data = force_submit_error = force_delete_error = False
+            timeout = 10
+        else:
+            timeout = 1
         if self.queue.count() > 0:
-            msgs = self.queue.get_messages(MAX_MSGS)
+            msgs = self.queue.get_messages(MAX_MSGS, visibility_timeout = timeout)
+            if len(msgs) == 0:
+                # Actually no messages, return False 
+                return False
             for msg in msgs:
+                logging.warning("Message from Queue:%s" % msg.get_body())
                 message = ReportMessage(msg)
                 try:
                     self.handle_message(message, 
                                         force_no_data = force_no_data, 
                                         force_submit_error = force_submit_error)
+
                 # Commence Robust Exception Handling 
                 except NoDataError, e:
                     # No data, can't retry
-                    self.to_del.append(e.message)
-                    self.notify_failure(e.message, 'No Data')
-                    default_exc_handle(e)
+                    logging.warning("No Data Error on %s", e.report_message)
+                    self.to_del.append(e.report_message)
+                    self.notify_failure(e.report_message, 'No Data')
+                    if not self.testing:
+                        default_exc_handle(e)
+
                 except MRSubmitError, e:
                     # Failed too many times, stop retrying (delete from the queue)
-                    if self.msg_failures[e.message] > MAX_RETRIES:
-                        self.to_del.append(e.message)
-                        self.notify_failure(e.message, 'Failed')
-                    default_exc_handle(e)
-                    self.msg_failures[e.message] += 1
-                except Exception, e:
-                    default_exc_handle(e)
-                    continue
+                    logging.warning("Submit Error on %s" % e.report_message)
+                    if self.msg_failures[e.report_message] >= MAX_RETRIES:
+                        logging.warning("Message %s has failed the maximum number of times" % e.report_message)
+                        self.to_del.append(e.report_message)
+                        self.notify_failure(e.report_message, 'Failed')
+
+                    self.msg_failures[e.report_message] += 1
+                    if not self.testing:
+                        default_exc_handle(e)
+
+                #except Exception, e:
+                #    default_exc_handle(e)
+                #    continue
 
             # Delete handled messages from the queue
             for i in range(len(self.to_del)):
                 msg = self.to_del.pop(0)
-                if not self.queue.delete_message(msg.msg):
+                logging.warning("Deleting: %s" % msg)
+                if force_delete_error or not self.queue.delete_message(msg.msg):
+                    logging.warning("Failed to delete message")
                     self.to_del.append(msg)
+        else:
+            return False
+        return True
 
     def get_jobflow_statuses(self, ids):
         if not ids:
@@ -297,28 +352,31 @@ class ReportMessageHandler(MessageHandler):
         
         self.jobid_message_map[jobid] = [msg for msg in self.jobid_message_map[jobid] if msg != message]
 
+
+
     def handle_message(self, message, force_no_data = False, force_submit_error = False):
         # Add a failure dict. This must be done before any possible failures
         if not self.msg_failures.has_key(message):
             self.msg_failures[message] = 0
+        # If processed don't do anything with it
+        if message in self.to_del:
+            return
         # For testing
         if force_no_data:
             raise NoDataError('No inputs', message)
         if force_submit_error:
             raise MRSubmitError("Error adding job to EMR", message)
 
-        log("Handling %s" % message.msg.get_body())
-        # If processed don't do anything with it
-        if message in self.to_del:
-            return
+        #log("Handling %s" % message.msg.get_body())
 
-        # Submit the job
-        jobid = self.submit_job(message)
+        if not self.testing:
+            # Submit the job
+            jobid = self.submit_job(message)
 
-        # List of messages being handled by this jobflow
-        if not self.jobid_message_map.has_key(jobid):
-            self.jobid_message_map[jobid] = []
-        self.jobid_message_map[jobid].append(message)
+            # List of messages being handled by this jobflow
+            if not self.jobid_message_map.has_key(jobid):
+                self.jobid_message_map[jobid] = []
+            self.jobid_message_map[jobid].append(message)
 
         # Notify that it has been handled
         self.to_del.append(message)

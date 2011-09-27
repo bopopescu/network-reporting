@@ -7,7 +7,7 @@ class BrightRollRenderer(HtmlDataRenderer):
         BaseHtmlRenderer => BaseCreativeRenderer
     """
     
-    TEMPLATE = 'brightroll.html'
+    # TEMPLATE = 'brightroll.html'
     
     def _setup_headers(self):
         super(BrightRollRenderer, self)._setup_headers()

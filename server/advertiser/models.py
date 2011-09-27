@@ -127,6 +127,7 @@ class AdGroup(db.Model):
     campaign = db.ReferenceProperty(Campaign,collection_name="adgroups")
     net_creative = db.ReferenceProperty(collection_name='creative_adgroups')
     name = db.StringProperty()
+    network_type = db.StringProperty()
 
     # start and end dates
     start_date = db.DateProperty()

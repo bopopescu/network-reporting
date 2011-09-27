@@ -10,7 +10,7 @@ class TextAndTileRenderer(BaseHtmlRenderer):
     Inheritance Hierarchy:  
     TextAndTileRenderer => BaseHtmlRenderer => BaseCreativeRenderer
     """
-    TEMPLATE = 'text_icon.html'
+    TEMPLATE = 'text_tile.html'
     
     def _setup_html_context(self):
         super(TextAndTileRenderer, self)._setup_html_context()  

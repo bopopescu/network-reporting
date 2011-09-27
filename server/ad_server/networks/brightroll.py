@@ -110,9 +110,11 @@ class BrightRollServerSide(ServerSide):
         
         self.url_params.update(video_width=video_width,video_height=video_height,
                                video_url=video_url)
-        
-        companion_image = self._getURL(inline.getElementsByTagName("CompanionAds")[0].\
-                                       getElementsByTagName("StaticResource")[0])
+        try:
+            companion_image = self._getURL(inline.getElementsByTagName("CompanionAds")[0].\
+                                           getElementsByTagName("StaticResource")[0])
+        except:
+            companion_image = ''                                   
         self.url_params.update(companion_image=companion_image)                               
         
         ####################

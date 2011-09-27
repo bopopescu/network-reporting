@@ -252,9 +252,9 @@ class MarketplaceBattle(Battle):
         trace_logging.info('MPX REPSONSE:%s'%marketplace_response_dict)
         # With valid data
         if marketplace_response_dict.has_key('xhtml_real') and \
-                marketplace_response_dict.has_key('pub_rev'):
+                marketplace_response_dict.has_key('revenue'):
             creative.html_data = marketplace_response_dict['xhtml_real']
-            pub_rev = marketplace_response_dict['pub_rev']
+            pub_rev = marketplace_response_dict['revenue']
             # Should really be the pub's cut
             # Do we need to do anything with the bid info?
             trace_logging.info('\n\nMPX Charge: %s\nMPX HTML: %s\n' % (pub_rev, creative.html_data))

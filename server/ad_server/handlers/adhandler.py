@@ -215,21 +215,21 @@ class AdHandler(webapp.RequestHandler):
             rendered_creative = None 
         
         else:    
-            # Output the request_id and the winning creative_id if an impression happened
-            request_time = time.mktime(now.timetuple())
-    
-            # Create an ad clickthrough URL
-            appid = creative.conv_appid or ''
-            ad_click_url = "http://%s/m/aclk?id=%s&cid=%s&c=%s&req=%s&reqt=%s&udid=%s&appid=%s" % (self.request.host, adunit_id, creative.key(), creative.key(),request_id, request_time, raw_udid, appid)
-            # Add an impression tracker URL
-            track_url = "http://%s/m/imp?id=%s&cid=%s&udid=%s&appid=%s&req=%s&reqt=%s&random=%s" % (self.request.host, adunit_id, creative.key(), raw_udid, appid, request_id, request_time, random.random())
-            cost_tracker = "&rev=%.07f" 
-            if creative.adgroup.bid_strategy == 'cpm':
-                cost_tracker = cost_tracker % (float(creative.adgroup.bid)/1000)
-                track_url += cost_tracker
-            elif creative.adgroup.bid_strategy == 'cpc':
-                cost_tracker = cost_tracker % creative.adgroup.bid
-                ad_click_url += cost_tracker
+        #     # Output the request_id and the winning creative_id if an impression happened
+        #     request_time = time.mktime(now.timetuple())
+        #     
+        #     # Create an ad clickthrough URL
+        #     appid = creative.conv_appid or ''
+        #     ad_click_url = "http://%s/m/aclk?id=%s&cid=%s&c=%s&req=%s&reqt=%s&udid=%s&appid=%s" % (self.request.host, adunit_id, creative.key(), creative.key(),request_id, request_time, raw_udid, appid)
+        #     # Add an impression tracker URL
+        #     track_url = "http://%s/m/imp?id=%s&cid=%s&udid=%s&appid=%s&req=%s&reqt=%s&random=%s" % (self.request.host, adunit_id, creative.key(), raw_udid, appid, request_id, request_time, random.random())
+        #     cost_tracker = "&rev=%.07f" 
+        #     if creative.adgroup.bid_strategy == 'cpm':
+        #         cost_tracker = cost_tracker % (float(creative.adgroup.bid)/1000)
+        #         track_url += cost_tracker
+        #     elif creative.adgroup.bid_strategy == 'cpc':
+        #         cost_tracker = cost_tracker % creative.adgroup.bid
+        #         ad_click_url += cost_tracker      
         
             
             creative_renderer = creative.Renderer(creative=creative,

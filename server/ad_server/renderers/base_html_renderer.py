@@ -41,16 +41,16 @@ class BaseHtmlRenderer(BaseCreativeRenderer):
         
         # determine user agent
         # TODO: we probably want to have different iphone and android version
-        ua = self.client_context.user_agent.lower()
-        
+        user_agent = self.client_context.user_agent.lower()
+
         # sets os to 'ios' for ipad and iphone
-        if 'iphone' in ua 'ipad' in ua:
-            os = 'ios'
-        elif 'android' in ua:
-            os = 'android'
+        if 'iphone' in user_agent or 'ipad' in user_agent:
+            os_type = 'ios'
+        elif 'android' in user_agent:
+            os_type = 'android'
         else:
-            os = None
-        self.html_context['os'] = os
+            os_type = None
+        self.html_context['os'] = os_type
         
     def _get_ad_type(self):
         return 'html'

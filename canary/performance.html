@@ -72,17 +72,7 @@
     <div class="chart chart-loading stats-chart" id="dashboard-stats-chart"> 
       <div class="chart-loading-text">Loading ...</div> 
       <div class="chart-error-text">Could not load chart</div> 
-      <script type="text/javascript"> 
-        // chart data
-        mopub.dashboardStatsChartData = {
-          pointStart: Date.UTC({{start.year}},{{start.month|add:"-1"}},{{start.day}},{{start.hour}},{{start.minute}}),
-          pointInterval: 60000,
-          'series': [
-            { 'OK': [{% for r in last reversed %}{% if r.success %}{{r.request_ms}}{% else %}null{% endif %}{% if not forloop.last %},{% endif %} {% endfor %}] },
-            { 'Failure': [{% for r in last reversed %}{% if not r.success %}{{r.request_ms}}{% else %}null{% endif %}{% if not forloop.last %},{% endif %} {% endfor %}] }
-          ]
-        };
-      </script> 
+      {% block graph %}{% endblock %}
     </div> 
   </div> 
   <div class="clear"></div> 

@@ -257,7 +257,7 @@ class AdHandler(webapp.RequestHandler):
         else:
             trace_logging.rendered_creative = rendered_creative
             trace_logging.render()
-    
+
     def rgeocode(self, ll):
         url = "http://maps.google.com/maps/geo?%s" % urlencode({"q": ll, 
             "key": MAPS_API_KEY, 

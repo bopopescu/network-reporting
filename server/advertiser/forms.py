@@ -331,7 +331,10 @@ class ImageCreativeForm(AbstractCreativeForm):
       
         if instance:
             if instance.image_blob:
-                image_url = images.get_serving_url(instance.image_blob)
+                try:
+                    image_url = images.get_serving_url(instance.image_blob)
+                except:
+                    image_url = None    
             else:
                 image_url = None    
             if not initial:

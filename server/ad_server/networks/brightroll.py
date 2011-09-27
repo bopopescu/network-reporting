@@ -115,6 +115,7 @@ class BrightRollServerSide(ServerSide):
                                            getElementsByTagName("StaticResource")[0])
         except:
             companion_image = ''                                   
+
         self.url_params.update(companion_image=companion_image)                               
         
         ####################

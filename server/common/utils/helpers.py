@@ -29,16 +29,12 @@ STAT_KEY = "%s:%s:%s:%s:%s:%s:%s:%s"
 
 def cust_sum(vals):
     tot = 0
-    cur_type = None
     for val in vals:
-        if cur_type is None:
-            cur_type = type(val)
-        elif not isinstance(val, cur_type):
-            logging.warning(cur_type)
-            logging.warning(val)
+        if tot == 0 and isinstance(val, float):
+            tot = 0.0
         if tot == 0 and isinstance(val, str):
             tot = val
-        elif isinstance(val, int):
+        elif not isinstance(val, str):
             tot += val
     return tot
 

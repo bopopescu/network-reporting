@@ -25,8 +25,7 @@ class AdMobScraper(Scraper):
     SITE_STAT_URL = API_URL + '/v2/site/stats'
 
     def __init__(self, credentials):
-        self.client_key = credentials['client_key']
-        self.app_name_dict = credentials['app_name_dict']
+        self.client_key = credentials.client_key
         super(AdMobScraper, self).__init__(credentials)
         
         self.authenticate()
@@ -87,24 +86,22 @@ class AdMobScraper(Scraper):
                                       ecpm = stats['ecpm'])
             
             if 'site_id' in stats:
-                nsr.app_name = self.app_name_dict[stats['site_id']]
+                nsr.app_tag = stats['site_id']
             else:
-                nsr.app_name = self.app_name_dict[ids[0]]
+                nsr.app_tag = ids[0]
             records.append(nsr)
             
         return records
+        
+class NetworkConfidential:
+    pass
 
 # for testing
 if __name__ == '__main__':
-    nc = {}
-    nc['username'] = 'njamal@stanford.edu'
-    nc['password'] = 'xckjhfn3xprkxksm'
-    nc['client_key'] = 'k907a03ee39cecb699b5ad45c5eded01'
-    nc['app_name_dict'] = {}
-    for i, site_id in enumerate(['a14a9ed9bf1fdcd', 'a14a7143850a745', 'a14a71435d8d5b3',
-                                 'a14a7142ee96329', 'a14a7142acad145', 'a14a6e18d6610af', 
-                                 'a14a6b5458b0447', 'a1497a459250ea5', 'a14970f6ad53c3c']):
-        nc['app_name_dict'][site_id] = 'test%d' % i
-    nc['network'] = 'admob'
+    nc = NetworkConfidential()
+    nc.username = 'njamal@stanford.edu'
+    nc.password = 'xckjhfn3xprkxksm'
+    nc.client_key = 'k907a03ee39cecb699b5ad45c5eded01'
+    nc.ad_network_name = 'admob'
     scraper = AdMobScraper(nc)
     print scraper.get_site_stats(date.today())

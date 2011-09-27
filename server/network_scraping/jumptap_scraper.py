@@ -46,42 +46,47 @@ class JumpTapScraper(Scraper):
                                           impressions = int(vals[request_index]),
                                           clicks = int(vals[click_index]),
                                           ecpm = float(vals[cpm_index]),
-                                          app_name = vals[app_index])
+                                          app_tag = vals[app_index])
                 # doesn't work for a date range
-                if nsr.app_name not in scrape_records:
-                    scrape_records[nsr.app_name] = [nsr]
+                if nsr.app_tag not in scrape_records:
+                    scrape_records[nsr.app_tag] = [nsr]
                 else:
-                    scrape_records[nsr.app_name] += [nsr]
+                    scrape_records[nsr.app_tag] += [nsr]
         
         records = []
         for v in scrape_records.values():
-            nsr = NetworkScrapeRecord()
-            nsr.attempts = 0
-            nsr.impressions = 0
-            nsr.clicks = 0
+            attempts = 0
+            impressions = 0
+            clicks = 0
             cost = 0
             
             for n in v:
-                nsr.attempts += n.requests
-                nsr.impressions += n.impressions
-                nsr.clicks += n.clicks
+                attempts += n.attempts
+                impressions += n.impressions
+                clicks += n.clicks
                 cost += n.ecpm * n.impressions
-               
-            nsr.fill_rate = nsr.impressions / float(nsr.attempts)
-            nsr.ctr = nsr.clicks / float(nsr.impressions)
-            nsr.ecpm = cost / float(nsr.impressions)
             
-            nsr.app_name = v[0].app_name
+            nsr = NetworkScrapeRecord(attempts = attempts,
+                                impressions = impressions,
+                                clicks = clicks,
+                                fill_rate = impressions / float(attempts),
+                                ctr = clicks / float(impressions),
+                                ecpm = cost / float(impressions),
+                                app_tag = v[0].app_tag)
+                                
             records.append(nsr)
 
         return records
 
+class NetworkConfidential:
+    pass
+    
 # for testing   
 if __name__ == '__main__':
-    nc = {}
-    nc['username'] = 'vrubba'
-    nc['password'] = 'fluik123!'
-    nc['network'] = 'jumptap'
+    nc = NetworkConfidential()
+    nc.username = 'vrubba'
+    nc.password = 'fluik123!'
+    nc.ad_network_name = 'jumptap'
     scraper = JumpTapScraper(nc)
     print scraper.get_site_stats(date.today())
     

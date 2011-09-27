@@ -24,7 +24,7 @@ then
 
     echo "Network Scraping tests"
     nosetests ./network_scraping/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox 
-    
+
     # Adserver Tests
     # echo "Ad Server Optimizer tests"
     # nosetests ./ad_server/optimizer/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox 

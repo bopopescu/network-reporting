@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-from selenium import webdriver
-from selenium.common.exceptions import TimeoutException
-from selenium.webdriver.support.ui import WebDriverWait
-=======
 #!/usr/bin/python
 
 import base64
@@ -18,107 +13,51 @@ from BeautifulSoup import BeautifulSoup
 from selenium import webdriver 
 from pyvirtualdisplay import Display
 from network_scraping.scraper import Scraper
->>>>>>> 516b7cd7532692ffc1b32531bed6322d5dd065bd
 
 from datetime import date
-from scraper import Scraper, ScraperSite
-import time
 
-class NetworkScrapeRecord(object):
-    pass
-
-<<<<<<< HEAD
-class IAdScraper(Scraper):
-    
-    NETWORK_NAME = 'iad'
-    LOGIN_URL = 'https://itunesconnect.apple.com/WebObjects/iTunesConnect.woa'
-    LOGIN_FORM_NAME = 'appleConnectForm'
-    LOGIN_ACCOUNT_INPUT_NAME = 'theAccountName'
-    LOGIN_PW_INPUT_NAME = 'theAccountPW'
-    
-    def __init__(self, credentials):
-        if credentials['network'] != self.NETWORK_NAME:
-            raise "Invalid credentials.  Attempting to use %s credentials for an iAd scraper" % credentials.network
-        super(IAdScraper, self).__init__(credentials)
-        # authenticate on creation
-        self.driver = webdriver.Firefox()
-        self.authenticate()
-    
-    def authenticate(self):
-        self.driver.get(self.LOGIN_URL)
-        self.driver.find_element_by_name(self.LOGIN_ACCOUNT_INPUT_NAME).send_keys(self.username)
-        self.driver.find_element_by_name(self.LOGIN_PW_INPUT_NAME).send_keys(self.password)
-        
-        self.driver.find_elements_by_name("1.Continue")[1].click()
-        
-    def get_site_stats(self, start_date, end_date=None):
-        if end_date is None:
-            end_date = start_date
-        
-        self.driver.find_elements_by_link_text("iAd Network")[1].click()
-        
-        self.driver.implicitly_wait(30)
-        # not working:
-        # select_date = self.driver.find_elements_by_class_name("itc_listBox mid")
-        # not sure if I can find an element by value
-        # select_date.find_element_by_value("oneDay").click()
-        
-        # for option in select_date:
-        #     if option.text == "1 Day":
-        #         option.click()
-        
-        
-        
-        self.driver.find_element_by_xpath("//select/option[@value='today']").click()
-        
-        # have to wait for report to load before downloading it
-        time.sleep(2)
-        
-        self.driver.find_element_by_link_text("Download Report").click()
-                         
-        # self.driver.find_element_by_xpath("//a[@title='download csv report']").click()
-        
-    def iad_scraper(network_credential, from_date, to_date):
-        br = mechanize.Browser()
-        br.open('https://itunesconnect.apple.com/WebObjects/iTunesConnect.woa')
-        br.select_form(name='appleConnectForm')
-        br['theAccountName'] = network_credential.apple_id
-        br['theAccountPW'] = network_credential.password
-        response = br.submit()
-        #request = mechanize.Request('http://developer.apple.com/appstore/resources/iad/', ' ')
-        #response = br.open(request)
-        for line in response: print line
-
-        # headers = response.readline().split(',')
-        # 
-        # imp_index = headers.index('Paid Impressions')
-        # click_index = headers.index('Clicks')
-        # net_rev_index = headers.index('Net Revenue$')
-        # requests_index = headers.index('Requests')
-        # cpc_index = headers.index('Net Cost Per Click')
-        # app_index = headers.index('Site')
-        # adunit_index = headers.index('Spot')
-        # 
-        # scrape_records = {}
-        # for line in response:
-        #     vals = line.split(',')
-        #     if vals[0] != 'Totals':
-        #         nsr = NetworkScrapeRecord()
-        #         nsr.impressions = vals[imp_index]
-        #         nsr.clicks = vals[click_index]
-        #         nsr.net_revenue = vals[net_rev_index]
-        #         nsr.requests = vals[requests_index]
-        #         nsr.cpc = vals[cpc_index]
-        #         nsr.app_name = vals[app_index]
-        #         nsr.adunit_name = vals[adunit_index]
-        #         scrape_records['%s||%s'%(vals[app_index],vals[adunit_index])] = nsr
-        #         
-        # return scrape_records
-    
-        # for key in scrape_records.keys():
-        #     print key
-        #     print scrape_records[key].impressions, ' ', scrape_records[key].clicks, ' ', scrape_records[key].net_revenue, ' ', scrape_records[key].requests, ' ', scrape_records[key].cpc, ' ', scrape_records[key].app_name, ' ', scrape_records[key].adunit_name
-=======
+# <<<<<<< HEAD
+# class IAdScraper(Scraper):
+#     
+#     NETWORK_NAME = 'iad'
+#     LOGIN_URL = 'https://itunesconnect.apple.com/WebObjects/iTunesConnect.woa'
+#     LOGIN_FORM_NAME = 'appleConnectForm'
+#     LOGIN_ACCOUNT_INPUT_NAME = 'theAccountName'
+#     LOGIN_PW_INPUT_NAME = 'theAccountPW'
+#     
+#     def __init__(self, credentials):
+#         if credentials['network'] != self.NETWORK_NAME:
+#             raise "Invalid credentials.  Attempting to use %s credentials for an iAd scraper" % credentials.network
+#         super(IAdScraper, self).__init__(credentials)
+#         # authenticate on creation
+#         self.driver = webdriver.Firefox()
+#         self.authenticate()
+#     
+#     def authenticate(self):
+#         self.driver.get(self.LOGIN_URL)
+#         self.driver.find_element_by_name(self.LOGIN_ACCOUNT_INPUT_NAME).send_keys(self.username)
+#         self.driver.find_element_by_name(self.LOGIN_PW_INPUT_NAME).send_keys(self.password)
+#         
+#         self.driver.find_elements_by_name("1.Continue")[1].click()
+#         
+#     def get_site_stats(self, start_date, end_date=None):
+#         if end_date is None:
+#             end_date = start_date
+#         
+#         self.driver.find_elements_by_link_text("iAd Network")[1].click()
+#         
+#         self.driver.implicitly_wait(30)
+#         
+#         self.driver.find_element_by_xpath("//select/option[@value='today']").click()
+#         
+#         # have to wait for report to load before downloading it
+#         time.sleep(2)
+#         
+#         self.driver.find_element_by_link_text("Download Report").click()
+#                          
+#         # self.driver.find_element_by_xpath("//a[@title='download csv report']").click()
+#         
+# =======
 
 
 class IAdScraper(Scraper):
@@ -188,7 +127,10 @@ class IAdScraper(Scraper):
                 day.click()
                 break
 
-    def get_site_stats(self, start_date, end_date, ids=None):
+    def get_site_stats(self, start_date, end_date=None, ids=None):
+        if end_date is None:
+            end_date = start_date
+        
         # Set the dates
         self.set_dates(start_date, end_date)
         # read the shit
@@ -225,33 +167,21 @@ class IAdScraper(Scraper):
                 app_dict[stat] = data
             app_data.append(app_dict)
         return app_data
->>>>>>> 516b7cd7532692ffc1b32531bed6322d5dd065bd
 
+class NetworkConfidential:
+    pass
+            
 # for testing
 if __name__ == '__main__':
-<<<<<<< HEAD
-    nc = {}
-    nc['username'] = 'rawrmaan@me.com'
-    nc['password'] = '606mCV&#dS'
-    nc['network'] = 'iad'
-    scraper = IAdScraper(nc)
-    print scraper.get_site_stats(date.today())
-    
-    # iad_scraper(nc, '','')
-=======
     nc = NetworkConfidential()
-    s = datetime(2010, 10, 15)
-    e = datetime(2011, 9, 15)
-    nc.account = None
-    nc.username = nc.apple_id ='rawrmaan@me.com'
+    nc.username = 'rawrmaan@me.com'
     nc.password ='606mCV&#dS'
-    nc.network = 'iad'
-    iads = IAdScraper(nc)
+    nc.ad_network_name = 'iad'
+    scraper = IAdScraper(nc)
     try:
-        print iads.get_site_stats(s,e)
+        print scraper.get_site_stats(date.today())
     except:
         print traceback.print_exc() 
         pass
-    iads.browser.quit()
-    iads.disp.stop()
->>>>>>> 516b7cd7532692ffc1b32531bed6322d5dd065bd
+    scraper.browser.quit()
+    scraper.disp.stop()

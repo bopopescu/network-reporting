@@ -7,10 +7,12 @@ class AdNetworkLoginInfo(db.Model):
     #(account,ad_network_name)
     
     account = db.ReferenceProperty(Account, collection_name='login_info')
-    ad_network = db.StringProperty()
-    dictionary = db.StringProperty()
+    ad_network_name = db.StringProperty()
+    username = db.StringProperty()
+    password = db.StringProperty()
+    client_key = db.StringProperty()
 
-class AdNetworkAppsMapper(db.Model):
+class AdNetworkAppMapper(db.Model):
     #(ad_network_name,publisher_id) -> application
     ad_network_login = db.ReferenceProperty(AdNetworkLoginInfo, collection_name='ad_networks')
     ad_network_name = db.StringProperty()
@@ -31,7 +33,7 @@ class AdNetworkScrapeStats(db.Model):
     #(AdNetwork, date)
     #(AdNetworkName, App, date)
     
-    ad_network = db.ReferenceProperty(AdNetwork, collection_name='ad_network_stats')
+    ad_network_app_mapper = db.ReferenceProperty(AdNetworkAppMapper, collection_name='ad_network_stats')
     date = db.DateProperty(auto_now_add=True)
     
     # stats info for a specific day

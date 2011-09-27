@@ -5,9 +5,7 @@ from ad_server.filters.filters import (budget_filter,
                                     mega_filter,
                                     format_filter,
                                     exclude_filter,
-                                    ecpm_filter,
                                     freq_filter,
-                                    all_freq_filter,
                                     lat_lon_filter,
                                     os_filter,
                                    )
@@ -63,8 +61,7 @@ class Battle(object):
         """ Runs the set of adgroup filters on our adgroups.
             Returns a filtered subset of adgroups. """
 
-        # TODO: refactor logging on filters (make them oo)
-
+        # TODO: refactor logging on filters (make them oo)   
 
         # Build a list of all the users' frequency capping info we care about.
         user_frequency_capping_keys = []
@@ -153,9 +150,6 @@ class Battle(object):
 
         trace_logging.info(u"Filtered adgroups are: %s" % ", ".join(["%s" % a.name for a in filtered_adgroups]))
 
-        # TODO: Add in frequency capping.
-
-
         creatives = self.adunit_context.get_creatives_for_adgroups(filtered_adgroups)
         trace_logging.info("---------------------------------")
         trace_logging.info(u"Creatives from filtered adgroups are: %s" % ", ".join(["%s" % a.name for a in creatives]))
@@ -216,14 +210,14 @@ class MarketplaceBattle(Battle):
 
     def _process_winner(self, creative):
         """ Fan out to the marketplace and see if there is a bid """
-        # TODO: Can we get relevant information without passing request
         mk_args = self.client_context.make_marketplace_dict(self.adunit_context)
 
         trace_logging.info("\nSending to MPX: %s\n" % mk_args)
         mpx_url = 'http://mpx.mopub.com/req?' + urllib.urlencode(mk_args)
         xhtml = None
         charge_price = None
-        # set the creative as having done w/e
+        # set the creative as having done w/e   
+        # TODO: Use charge_price in logging
         stats_accumulator.log(None, event=stats_accumulator.REQ_EVENT,
                        adunit=self.adunit_context.adunit,
                        creative=creative,
@@ -263,7 +257,7 @@ class NetworkBattle(Battle):
     campaign_type = "network"
 
     def _process_winner(self, creative):
-        """ Fan out to a network and see if it can fill the request. """
+        """ Fan out to a network and see if it can fill the adunit. """
         # If the network is a native network, then it does not require an rpc
 
         if not creative.ServerSide:

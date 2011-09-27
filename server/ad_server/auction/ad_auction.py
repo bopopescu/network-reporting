@@ -1,5 +1,4 @@
-from ad_server.auction.battles import (Battle,
-                                       GteeBattle,
+from ad_server.auction.battles import (GteeBattle,
                                        GteeHighBattle,
                                        GteeLowBattle,
                                        PromoBattle,
@@ -52,8 +51,4 @@ def geo_predicates_from_country_code(country_code):
 
     # TODO: Ask Nafis - is multiple country codes a real thing?
 
-    #if only one geo_pred (it's a country) check to see if this country has multiple
-    #possible codes.  If it does, get all of them and use them all
-    # if len(country_tuple) == 1 and ACCEPTED_MULTI_COUNTRY.has_key(country_tuple[0]):
-    #     geo_predicates = reduce(lambda x,y: x+y, [geo_predicates_for_rgeocode([country_tupleess]) for country_tupleess in ACCEPTED_MULTI_COUNTRY[country_tuple[0]]])
 

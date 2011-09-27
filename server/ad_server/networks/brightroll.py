@@ -161,8 +161,6 @@ template = string.Template("""
 	        }
 	    </style>
 		<script type="text/javascript"> 
-		    document.body.onload = loadAdVideo;
-		    
 		    function webviewDidAppearHelper(){
 		        playAdVideo();
 		    }
@@ -295,6 +293,7 @@ template = string.Template("""
 			<video src="$video_url" width="$video_width" height="$video_height" id="adVideo" controls="true"></video> 
 		</center> 
 		<script></script><!-- If you remove this line, the video won't autoplay in iOS3 :-\  --> 
+		<script>loadAdVideo();</script>
 """)    
     
 template2 = string.Template("""<!DOCTYPE HTML> 

@@ -6,6 +6,7 @@ import string
 import time
 
 from xml.dom import minidom
+from xml.parsers import expat
 from ad_server.networks.server_side import ServerSideException  
 
 class BrightRollServerSide(ServerSide):
@@ -131,7 +132,7 @@ class BrightRollServerSide(ServerSide):
         
         try:
             self.parse_xml(response.content)
-        except IndexError:
+        except (IndexError, expat.ExpatError):
             raise ServerSideException("BrightRoll xml parsing failed...empty ad?")
         # scripts = """
         # <script type="text/javascript">

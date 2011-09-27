@@ -25,6 +25,8 @@ from server.ad_server.main import  ( AdClickHandler,
                                      TestHandler,
                                      )
 from server.ad_server.handlers.adhandler import AdHandler    
+from ad_server.networks.server_side import ServerSideException  
+                                     
                                      
 ############# Integration Tests #############
 import unittest
@@ -295,5 +297,11 @@ class NetworkUnitTests(unittest.TestCase):
         
 
     def _check_bid_and_response(this, network_server_side):
-        html = network_server_side.make_call_and_get_html_from_response()
+        """
+        Confirms that we get back HTML or that a ServerSideException is raised
+        """
+        try:
+            html = network_server_side.make_call_and_get_html_from_response()
+        except ServerSideException:
+            return
         assert(html)

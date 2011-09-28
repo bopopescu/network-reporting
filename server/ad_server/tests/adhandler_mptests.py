@@ -23,9 +23,12 @@ from server.ad_server.main import  ( AdClickHandler,
                                      AppOpenHandler,
                                      TestHandler,
                                      )
-from server.ad_server.handlers import adhandler
+                                                    
+from server.ad_server.renderers import creative_renderer  
+
 from server.ad_server.handlers.adhandler import AdHandler                                     
-from server.ad_server.auction.ad_auction import AdAuction
+
+from advertiser.models import HtmlCreative, iAdCreative
 
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 ############# Integration Tests #############
@@ -89,7 +92,8 @@ class TestAdAuction(unittest.TestCase):
         # Make Expensive Campaign
         self.expensive_c = Campaign(name="expensive",
                                     budget=1000.0,
-                                    budget_strategy="evenly")
+                                    budget_strategy="evenly",
+                                    campaign_type="network")
         self.expensive_c.put()
 
         self.expensive_adgroup = AdGroup(account=self.account, 
@@ -102,8 +106,9 @@ class TestAdAuction(unittest.TestCase):
 
 
 
-        self.expensive_creative = Creative(account=self.account,
-                                ad_group=self.expensive_adgroup,
+        self.expensive_creative = iAdCreative(account=self.account,
+                                ad_group=self.expensive_adgroup,  
+                                html_data="expensive_test_data",
                                 tracking_url="test-tracking-url", 
                                 cpc=.03,
                                 ad_type="clear")
@@ -124,7 +129,8 @@ class TestAdAuction(unittest.TestCase):
         self.cheap_adgroup.put()
 
 
-        self.cheap_creative = Creative(account=self.account,
+        self.cheap_creative = HtmlCreative(account=self.account, 
+                                html_data="cheap_test_data",
                                 ad_group=self.cheap_adgroup,
                                 tracking_url="test-tracking-url", 
                                 cpc=.03,
@@ -139,31 +145,42 @@ class TestAdAuction(unittest.TestCase):
    
     def tearDown(self):
         self.testbed.deactivate()
+        
+        
+    def mptest_run_adhandler_basic(self):  
+        adhandler = AdHandler()
+        adhandler.initialize(self.request, Response())
+        
+        adhandler.get()   
+                                 
+        eq_(adhandler.response.out.getvalue(), "iAd native")
+        # eq_(adhandler.response.headers["thing"], "stuffs")     
+   
 
     def mptest_build_fail_url(self):
         original_url = "http://ads.mopub.com/m/ad?id=asdf&blah&foo&bar&IMPORTANT"
         on_fail_exclude_adgroups = ["admob", "millennial"]
-        fail_url = adhandler._build_fail_url(original_url, on_fail_exclude_adgroups)
+        fail_url = creative_renderer._build_fail_url(original_url, on_fail_exclude_adgroups)
     
         eq_(fail_url,"http://ads.mopub.com/m/ad?id=asdf&blah&foo&bar&IMPORTANT&exclude=admob&exclude=millennial")
 
     def mptest_build_fail_url_replace(self):
         original_url = "http://ads.mopub.com/m/ad?id=asdf2&blah&foo&bar&IMPORTANT&exclude=admob"
         on_fail_exclude_adgroups = ["admob", "millennial"]
-        fail_url = adhandler._build_fail_url(original_url, on_fail_exclude_adgroups)
+        fail_url = creative_renderer._build_fail_url(original_url, on_fail_exclude_adgroups)
 
         eq_(fail_url,"http://ads.mopub.com/m/ad?id=asdf2&blah&foo&bar&IMPORTANT&exclude=admob&exclude=millennial")
 
     def mptest_build_fail_url_multiple_replace(self):
         original_url = "http://ads.mopub.com/m/ad?id=asdf3&blah&foo&bar&IMPORTANT&exclude=admob&exclude=millennial"
         on_fail_exclude_adgroups = ["admob"]
-        fail_url = adhandler._build_fail_url(original_url, on_fail_exclude_adgroups)
+        fail_url = creative_renderer._build_fail_url(original_url, on_fail_exclude_adgroups)
 
         eq_(fail_url,"http://ads.mopub.com/m/ad?id=asdf3&blah&foo&bar&IMPORTANT&exclude=admob")
 
     def mptest_build_fail_url_multiple_replace_suffix(self):
         original_url = "http://ads.mopub.com/m/ad?id=asdf3&blah&foo&bar&exclude=admob&exclude=millennial&other=ok"
         on_fail_exclude_adgroups = ["admob"]
-        fail_url = adhandler._build_fail_url(original_url, on_fail_exclude_adgroups)
+        fail_url = creative_renderer._build_fail_url(original_url, on_fail_exclude_adgroups)
 
         eq_(fail_url,"http://ads.mopub.com/m/ad?id=asdf3&blah&foo&bar&other=ok&exclude=admob")

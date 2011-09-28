@@ -6,22 +6,18 @@ import urllib
 import urllib2
 
 from xml.dom import minidom
-from ad_server.debug_console import trace_logging
+from ad_server.debug_console import trace_logging  
+from ad_server.networks.server_side import ServerSideException  
 
 class MobFoxServerSide(ServerSide):
     base_url = "http://my.mobfox.com/request.php?v=api_mopub" # live
     pub_id_attr = 'mobfox_pub_id'
     network_name = 'MobFox'
     
-
     def __init__(self,request,adunit=None,*args,**kwargs):
         self.html_params = {}
         return super(MobFoxServerSide,self).__init__(request,adunit,*args,**kwargs)
 
-    @property
-    def url(self):
-        return self.base_url
-        
     def _device_overide(self):
         ua = self.get_user_agent().lower()
         if 'ipad' in ua:
@@ -33,6 +29,10 @@ class MobFoxServerSide(ServerSide):
         else:
             return 'wap'          
 
+    @property
+    def headers(self):
+        return {}
+        
     @property  
     def payload(self):
         data = {'rt': 'api',
@@ -48,24 +48,10 @@ class MobFoxServerSide(ServerSide):
                 'device_override' : self._device_overide(),
               }
               
-        return urllib.urlencode(data) + '&' + self._add_extra_headers()
+        return urllib.urlencode(data)
         
-    def _add_extra_headers(self):
-        """
-        add extra headers to the post because shouldn't escape the brackets (e.g. h[])
-        hence we can't just use the generic paylod method.
-        return valid looks something like h[foo]=bar&h[foo2]=bar2
-        """
-        exclude_headers = ['Keep-Alive','Connection','Cookie','Cache-Control','Content-Length']
-        headers = [] # list of (header,value) tuples
-        # select only ones not in the exclue header list
-        for header,value in self.request.headers.iteritems():
-            if not header in exclude_headers:
-                headers.append((header,value))
-        return '&'.join(['h[%s]=%s'%(urllib.quote_plus(h),urllib.quote_plus(v)) for h,v in  headers])
-
     def get_response(self):
-        req = urllib2.Request(self.url)
+        req = urllib2.Request(self.url, self.payload)
         response = urllib2.urlopen(req)
         return response.read()
 
@@ -107,11 +93,11 @@ class MobFoxServerSide(ServerSide):
         elif ad_type == "noAd":
             ad_type = None            
         else:
-            raise Exception("unsupported ad type")
+            raise ServerSideException("unsupported ad type")
         return ad_type    
          
 
-    def _bid_and_html_for_response(self,response):
+    def html_for_response(self, response):
         image_template = """<div style='text-align:center'><a href="%(clickurl)s" target="_blank"><img src="%(imageurl)s" width=%(bannerwidth)s height=%(bannerheight)s/></a></div>"""
         text_template = """%(htmlString)s"""
         # Image: 
@@ -128,7 +114,7 @@ class MobFoxServerSide(ServerSide):
             content = text_template % self.html_params
         else:    
             trace_logging.info("MobFox ad is empty")
-            raise Exception("MobFox ad is empty")
-        return 0.0, content
+            raise ServerSideException("MobFox ad is empty")
+        return content
         
         

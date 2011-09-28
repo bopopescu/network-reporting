@@ -23,7 +23,7 @@ from common.utils import date_magic
 from common.utils.helpers import cust_sum
 from common.wurfl.query_managers import WurflQueryManager
 from publisher.models import AdUnit
-from mail.mails import REPORT_FINISHED_SIMPLE
+from mail.mails import REPORT_FINISHED_SIMPLE, REPORT_FAILED_SIMPLE
 
 APP = 'app'
 AU = 'adunit'
@@ -196,7 +196,8 @@ class Report(db.Model):
 
     def notify_complete(self):
         mesg = mail.EmailMessage(sender = 'olp@mopub.com',
-                                 subject = 'Your report has completed')
+                                 subject = 'Your report has completed',
+                                 bcc = 'report-monitoring@mopub.com')
         mesg_dict = dict(report_key = str(self.schedule.key()))
         mesg.body = REPORT_FINISHED_SIMPLE % mesg_dict
         if self.recipients:
@@ -208,6 +209,26 @@ class Report(db.Model):
                     continue
         else:
             return
+
+
+    def notify_failure(self):
+        mesg = mail.EmailMessage(sender = 'olp@mopub.com',
+                                 subject = 'Your report has failed',
+                                 bcc = 'report-monitoring@mopub.com',
+                                 )
+        mesg_dict = dict(dim1 = self.d1, dim2 = self.d2, dim3 = self.d3, start = self.start.strftime('%m/%d/%y'), end = self.end.strftime('%m/%d/%y'))
+        mesg.body = REPORT_FAILED_SIMPLE % mesg_dict
+        if self.recipients:
+            for recipient in self.recipients:
+                mesg.to = recipient
+                try:
+                    mesg.send()
+                except InvalidEmailError, e:
+                    continue
+        else:
+            return
+
+                                
 
     @property
     def d1(self):

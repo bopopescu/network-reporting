@@ -15,7 +15,7 @@ from common.utils.timezones import Pacific_tzinfo
 from django.views.decorators.cache import cache_page
 from django.conf import settings
 
-from mopub_logging.log_service import LogService
+from stats.log_service import LogService
 
 audit_logger = LogService(blob_file_name='audit', flush_lines=1)
 

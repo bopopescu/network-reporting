@@ -790,16 +790,17 @@ def bid_pause(request,*args,**kwargs):
 #
 class AddCreativeHandler(RequestHandler):
     TEMPLATE    = 'advertiser/forms/creative_form.html'
-    def get(self,base_creative_form=None,
-                             text_creative_form=None,
-                             image_creative_form=None,
-                             text_tile_creative_form=None,
-                             html_creative_form=None,
-                             creative=None,
-                             text_creative=None,
-                             image_creative=None,
-                             text_tile_creative=None,
-                             html_creative=None):
+    def get(self,
+            base_creative_form=None,
+            text_creative_form=None,
+            image_creative_form=None,
+            text_tile_creative_form=None,
+            html_creative_form=None,
+            creative=None,
+            text_creative=None,
+            image_creative=None,
+            text_tile_creative=None,
+            html_creative=None):
 
         # TODO: Shouldn't I be able to just cast???
         if creative:
@@ -844,6 +845,7 @@ class AddCreativeHandler(RequestHandler):
         else:
             creative = None
 
+        creative_form = None
         text_creative = None
         image_creative = None
         text_tile_creative = None
@@ -867,7 +869,8 @@ class AddCreativeHandler(RequestHandler):
         text_tile_creative_form = TextAndTileCreativeForm(data=self.request.POST,files=self.request.FILES,instance=text_tile_creative)
         html_creative_form = HtmlCreativeForm(data=self.request.POST,instance=html_creative)
 
-        jsonDict = {'success':False,'html':None}
+
+        jsonDict = {'success':False,'errors':[]}
         if base_creative_form.is_valid():
             base_creative = base_creative_form.save(commit=False)
             ad_type = base_creative.ad_type
@@ -893,9 +896,12 @@ class AddCreativeHandler(RequestHandler):
                 jsonDict.update(success=True)
                 return self.json_response(jsonDict)
 
-        new_html = self.get(base_creative_form,text_creative_form,image_creative_form,\
-                                                text_tile_creative_form,html_creative_form)
-        jsonDict.update(success=False,html=new_html)
+        flatten_errors = lambda frm : [(k, unicode(v[0])) for k, v in frm.errors.items()]
+        grouped_errors = flatten_errors(base_creative_form)
+        if creative_form:
+            grouped_errors.extend(flatten_errors(creative_form))
+
+        jsonDict.update(success=False, errors=grouped_errors)
         return self.json_response(jsonDict)
 
 

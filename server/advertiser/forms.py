@@ -268,6 +268,12 @@ class BaseCreativeForm(AbstractCreativeForm):
         model = Creative
         fields = ('ad_type','name','tracking_url','url','display_url','format','custom_height','custom_width','landscape', 'conv_appid', 'launchpage')
 
+    def clean_name(self):
+        if not self.cleaned_data.get('name', None):
+            raise forms.ValidationError('You must give your creative a name.')
+        return self.cleaned_data
+
+
 class TextCreativeForm(AbstractCreativeForm):
     TEMPLATE = 'advertiser/forms/text_creative_form.html'
 
@@ -348,9 +354,9 @@ class ImageCreativeForm(AbstractCreativeForm):
             kwargs.update(initial=initial)
         super(ImageCreativeForm,self).__init__(*args,**kwargs)
 
-
     def clean_image_file(self):
         if self.cleaned_data['image_file']:
+            logging.warn(cleaned_data['image_file'])
             img = self.files.get('image_file', None)
             is_valid_image_type = any([str(img).endswith(ftype) for ftype in ['.png', '.jpeg', '.jpg', '.gif']])
             if not (img and is_valid_image_type):
@@ -359,6 +365,10 @@ class ImageCreativeForm(AbstractCreativeForm):
                     raise forms.ValidationError('Filetype (.%s) not supported.' % extension)
                 else:
                     raise forms.ValidationError('Filetype not supported.')
+        else:
+            logging.warn(self.cleaned_data['ad_type'])
+            if self.cleaned_data['ad_type'] == 'image':
+                raise forms.ValidationError('You must upload an image file for a creative of this type.')
         return self.cleaned_data
 
     def save(self, commit=True):

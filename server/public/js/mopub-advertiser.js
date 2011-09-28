@@ -300,7 +300,7 @@ var mopub = mopub || {};
                   window.location = jsonData.new_page;
                   $('#campaignAdgroupForm-submit').button({'label':'Success...','disabled':true});
               } else {
-                  $('#campaignAdgroupForm-fragment').html($.decodeHtml(jsonData.html));
+                  $('#campaignAdgroupForm-fragment').html(jsonData.html);
                   // reimplement the onload event
                   campaignAdgroupFormOnLoad();
                   // clear and reset the hash
@@ -419,6 +419,8 @@ var mopub = mopub || {};
               var $form = $('#creativeManagementForm');
           });
 
+
+      // Creative form ajax options
       options = {
           data: { ajax: true },
           dataType : 'json',
@@ -428,8 +430,17 @@ var mopub = mopub || {};
                   $('#creativeCreateForm-success').show();
                   window.location.reload();
               } else {
+                  console.log(jsonData.errors);
+                  $.each(jsonData.errors, function (iter, item) {
+                      $('.form-error-text', "#creativeCreateForm").remove();
+                      var name = item[0];
+                      var error_div = $("<div>").append(item[1]).addClass('form-error-text');
 
-                  $('#creativeAddForm-fragment').html($.decodeHtml(jsonData.html));
+                      $("input[name=" + name + "]", "#creativeCreateForm")
+                          .addClass('error')
+                          .parent().append(error_div);
+
+                  });
                   // reimplement the onload event
                   creativeCreateFormOnLoad();
                   window.location.hash = '';

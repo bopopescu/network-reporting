@@ -317,13 +317,15 @@ class AdGroup(db.Model):
     @property
     def created_date(self):
         return self.created.date()
+
+
 class Creative(polymodel.PolyModel):
-    name = db.StringProperty(default='Creative')
+    name = db.StringProperty()
     custom_width = db.IntegerProperty()
     custom_height = db.IntegerProperty()
     landscape = db.BooleanProperty(default=False) # TODO: make this more flexible later
 
-    ad_group = db.ReferenceProperty(AdGroup,collection_name="creatives")
+    ad_group = db.ReferenceProperty(AdGroup, collection_name="creatives")
 
     active = db.BooleanProperty(default=True)
     deleted = db.BooleanProperty(default=False)

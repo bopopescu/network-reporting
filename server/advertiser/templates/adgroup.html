@@ -50,17 +50,17 @@
 
 {% block content %}
 {% if not apps %}
-          <div class="alertMessage error">
+          <div class="alert-message">
             This campaign is not targeted at any <strong>Ad Units</strong>.  In order for this campaign to deliver, you will need to target at least one Ad Unit.
           </div>
 {% endif %}
 {% if not creatives %}
-          <div class="alertMessage error">
+          <div class="alert-message">
             This campaign needs to have at least one <strong>Creative</strong> in order to serve.  Set up a creative below.
           </div>
 {% endif %}
 {% if message  %}
-          <div class="alertMessage error">
+          <div class="alert-message block-message error">
             {{message|safe}}
           </div>
 {% endif %}

@@ -62,7 +62,7 @@ mopub.Utils = mopub.Utils || {};
         $('.buttonset').buttonset().css({ visibility: 'visible' });
 
         // gray out any buttonsets that ought to be disabled
-        $('.buttonset-start-disabled').buttonset()
+        $('.buttonset-start-disabled').buttonset();
         $('.buttonset-start-disabled').buttonset({ disabled: true });
 
         // set up selectmenus
@@ -380,15 +380,15 @@ mopub.Utils = mopub.Utils || {};
         }, 1);
     };
 
-    $.escapeHtml = function(value) {
-        return $("<div/>").text(value);
+    $.unescapeHTML = function (html) {
+        return $("<div />").html(html).text();
     };
 
-    $.decodeHtml = function(value) {
-        var escaped = $("<div/>").text(value);
-        var unescaped = $("<div/>").html(escaped).text();
-        return unescaped;
+    $.escapeHTML = function (html) {
+        return $("<div />").text(html).html();
     };
+
+
 
     // helper fn for console logging
     var log;

@@ -1,75 +1,115 @@
-import hashlib
 import re
 
 from ad_server.debug_console import trace_logging
-from common.utils import helpers
+from common.utils import helpers                    
+from common.utils.decorators import returns_unicode 
+from google.appengine.api import urlfetch  
+
+from google.appengine.runtime import DeadlineExceededError
 
 
 class ServerSide(object):
     base_url = "http://www.test.com/ad?"
     no_pub_id_warning = 'Warning: no %s Publisher ID has been specified'
-    pub_id_attr = 'None' # must be specified by sub class
+    pub_id_attr = 'None' # Must be specified by sub class
     network_name = 'Generic Server Side'
+    SERVER_TIMEOUT = 1 # We time out after 2000 ms
     
-    def __init__(self,request,adunit=None,*args,**kwargs):
-        self.request = request
-        self.adunit = adunit
+    def __init__(self, client_context, adunit, *args, **kwargs):
+        self.client_context = client_context
+        self.adunit = adunit    
+        self.rpc = urlfetch.create_rpc(self.SERVER_TIMEOUT)
+        self.creative_width = None
+        self.creative_height = None
+
+    @property
+    def headers(self): 
+        """ The headers that we send to the ad network when making our request """
+        raise NotImplementedError
+
+    @property  
+    def payload(self):
+        """ The payload that we send to the ad network when making our request """
+        raise NotImplementedError
+    
+    def make_call_and_get_html_from_response(self):   
+        """ When we don't need to do any asynchronous processing while
+            we wait for a result, we can call this function. """         
+            
+        try:    
+            self.make_fetch_call()
+            response = self.get_result()     
+        except urlfetch.Error:
+            raise ServerSideException("Deadline exceeded for ad_network")
+            
+        return self.html_for_response(response)
+            
+         
+    
+    def make_fetch_call(self): 
+        """ Initiates the rpc to get the html from the network. Result is 
+            accessed with get_html_from_result"""
+        if self.payload == None:
+            urlfetch.make_fetch_call(self.rpc, 
+                                     self.url, 
+                                     headers=self.headers)
+        else:
+            urlfetch.make_fetch_call(self.rpc, 
+                                     self.url, 
+                                     headers=self.headers, 
+                                     method=urlfetch.POST, 
+                                     payload=self.payload)
+        
+        
+    def get_result(self):  
+        """ Called after make_fetch_call. Waits for callback to resolve and then
+            returns the html provided by the network. Returns a response object """ 
+        return self.rpc.get_result()
+    
+    @returns_unicode
+    def html_for_response(self, response): 
+        raise NotImplementedError  
+        
+        # Here is an example html parsing
+        
+        self.get_pub_id(warn=True) # get the pub id and warn if not present
+        if response.status_code == 200:
+            return "<html>BLAH</html>"       
+        else:    
+            trace_logging.info("Failed to load ad from %s"%self.network_name)    
+            return None
+
+ 
+ 
+    # TODO: MAKE THESE HELPER METHODS PRIVATE
     @property
     def format(self):
-        return self.adunit.format
-  
-    def get_udid(self,udid=None):
-        """
-        udid from the device comes as 
-        udid=md5:asdflkjbaljsadflkjsdf (new clients) or
-        udid=pqesdlsdfoqeld (old clients)
-        For the newer clients we can just pass over the hashed string
-        after "md5:"
+        return self.adunit.format  
 
-        For older clients we must md5 hash the udid with salt 
-        "mopub-" prepended.
-
-        returns hashed_udid
-
-        """  
-        raw_udid = udid or self.request.get('udid')
-        raw_udid_parts = raw_udid.split('md5:')
-
-        # if has md5: then just pull out value
-        if len(raw_udid_parts) == 2:
-            # get the part after 'md5:'
-            hashed_udid = raw_udid_parts[-1]
-        # else salt the udid and hash it    
-        else:
-            m = hashlib.md5()
-            m.update('mopub-')
-            m.update(raw_udid_parts[0])
-            hashed_udid = m.hexdigest().upper()
-        return hashed_udid    
     def get_ip(self):
-        """gets ths ip from either a query parameter or the header"""
-        return helpers.get_ip(self.request)
-    
+        """ Gets the client's ip from either a query parameter or the header"""   
+        return self.client_context.client_ip
+
     def get_user_agent(self):
         """gets the user agent from either a query paramter or the header"""
-        return helpers.get_user_agent(self.request)
+        return self.client_context.user_agent
+
+    def get_udid(self):
+        return self.client_context.raw_udid
         
-    def get_pub_id(self,warn=False):
+    @property
+    def url(self):
+        return self.base_url
+    
+    def get_pub_id(self, warn=False):
         """ Gets the most specifically defined pub id """
         pub_id = self.adunit.get_pub_id(self.pub_id_attr)
         if warn and not pub_id:
             trace_logging.info(self.no_pub_id_warning%self.network_name)  
         return pub_id
-
-    @property
-    def headers(self):
-        return {}  
-
-    @property  
-    def payload(self):
-        return None
+     
         
-    def _get_size(self,content):
+    def _get_size(self, content):
         width_pat = re.compile(r'width="(?P<width>\d+?)"')
         height_pat = re.compile(r'height="(?P<height>\d+?)"')
 
@@ -83,20 +123,14 @@ class ServerSide(object):
             height = int(height_match.groups('height')[0])
         return width,height      
 
-    def bid_and_html_for_response(self,response):
-        self.get_pub_id(warn=True) # get the pub id and warn if not present
-        if response.status_code == 200:
-            response_tuple = list(self._bid_and_html_for_response(response))
-            
-            # Encode incoming text
-            unencoded = response_tuple[1]
-            if isinstance(unencoded, basestring):
-                  if not isinstance(unencoded, unicode):
-                      response_tuple[1] = unicode(unencoded, 'utf-8')
-            return tuple(response_tuple)          
-        else:    
-            trace_logging.info("Failed to load ad from %s"%self.network_name)    
-            return None
-        
-    def _bid_and_html_for_response(self,response):
-        return 0.0,"<html>BLAH</html>"     
+
+class ServerSideException(Exception):     
+    """ Something has gone wrong with the serverside. """
+    def __init__(self, message, error_dict={}):     
+
+        # Call the base class constructor with the parameters it needs
+        Exception.__init__(self, message)
+
+        # Now for your custom code...
+        self.error_dict = error_dict
+

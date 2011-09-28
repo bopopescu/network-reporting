@@ -700,7 +700,7 @@ class ShowAdGroupHandler(RequestHandler):
               graph_adunits[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[au.all_stats for au in adunits[3:]])]
 
         # Load creatives if we are supposed to
-        if not (adgroup.network_type or adgroup.campaign.campaign_type in ['marketplace', 'backfill_marketplace']):
+        if not (adgroup.campaign.campaign_type in ['network', 'marketplace', 'backfill_marketplace']):
             # In order to have add creative
             creative_handler = AddCreativeHandler(self.request)
             creative_fragment = creative_handler.get() # return the creative fragment

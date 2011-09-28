@@ -23,8 +23,7 @@ from server.ad_server.main import  ( AdClickHandler,
                                      AppOpenHandler,
                                      TestHandler,
                                      )
-from server.ad_server.handlers.adhandler import AdHandler                                     
-from server.ad_server.auction.ad_auction import AdAuction
+from server.ad_server.handlers.adhandler import AdHandler    
                                      
 ############# Integration Tests #############
 import unittest
@@ -47,7 +46,9 @@ from ad_server.networks.brightroll import BrightRollServerSide
 
 from common.utils.system_test_framework import run_auction, fake_request
 
-from account.models import Account, NetworkConfig
+from account.models import Account, NetworkConfig    
+
+from ad_server.auction.client_context import ClientContext
 
 
 """ This module is where all of our system and end-to-end tests can live. """
@@ -92,7 +93,15 @@ class TestNetworkConfig(unittest.TestCase):
 
         
         self.adunit = AdUnit(account=self.account, app_key=self.app, name="Test AdUnit")
-        self.adunit.put()
+        self.adunit.put()    
+        
+        self.client_context = ClientContext(adunit=self.adunit,
+                                            country_code="US", # Two characater country code.  
+                                            raw_udid="fake_udid",   
+                                            request_id="fake_request_id",
+                                            now=datetime.datetime.now(),
+                                            user_agent="Mozilla/5.0 (iPad; U; CPU OS 3.2 like Mac OS X; en-us) AppleWebKit/531.21.10 (KHTML, like Gecko) Version/4.0.4 Mobile/7B314 Safari/531.21.10")   
+        
             
     def tearDown(self):
         self.testbed.deactivate()
@@ -121,41 +130,3 @@ class TestNetworkConfig(unittest.TestCase):
         eq_(self.adunit.get_pub_id("jumptap_pub_id"), "adunit-jumptap")
         
         
-        
-    ############### ServerSide Tests ###############
-    
-    def mptest_millennial(self):
-        """ Make sure we go to lowest available level. Here app level """
-        server_side = MillennialServerSide(fake_request(self.adunit), self.adunit) 
-        pub_id = server_side.get_pub_id()
-        
-        eq_(pub_id, "app-millennial")
-        
-    def mptest_brightroll(self):
-        """ Make sure we go to lowest available level. Here account level """
-        server_side = BrightRollServerSide(fake_request(self.adunit), self.adunit) 
-        pub_id = server_side.get_pub_id()
-    
-        eq_(pub_id, "account-brightroll")
-    
-    def mptest_jumptap(self):
-        """ Jumptap requires multiple pub ids"""
-        server_side = JumptapServerSide(fake_request(self.adunit), self.adunit) 
-        key_values = server_side.get_key_values()
-        eq_(key_values["pub"],"account-jumptap")
-        eq_(key_values["site"],"app-jumptap")
-        
-    
-    def mptest_jumptap_no_adunit(self):
-        """ Make sure that the key value dictionary sent to jumptap does not
-        contain any keys for unspecified pub ids """
-        server_side = JumptapServerSide(fake_request(self.adunit), self.adunit) 
-        key_values = server_side.get_key_values()
-    
-        try:
-            adunit_pub_id = key_values["spot"] # this should raise a keyerror
-        except KeyError:
-            pass
-        else:
-            # If no key error was thrown, fail
-            eq_(adunit_pub_id, "A key error should have been raised")

@@ -5,9 +5,6 @@ from common.utils import helpers
 from common.utils.decorators import returns_unicode 
 from google.appengine.api import urlfetch  
 
-from google.appengine.runtime import DeadlineExceededError
-
-
 class ServerSide(object):
     base_url = "http://www.test.com/ad?"
     no_pub_id_warning = 'Warning: no %s Publisher ID has been specified'
@@ -39,7 +36,8 @@ class ServerSide(object):
         try:    
             self.make_fetch_call()
             response = self.get_result()     
-        except urlfetch.Error:
+        # TODO: catch the appropriate exceptions
+        except Exception, err:
             raise ServerSideException("Deadline exceeded for ad_network")
             
         return self.html_for_response(response)

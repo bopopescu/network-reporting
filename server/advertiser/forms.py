@@ -269,9 +269,10 @@ class BaseCreativeForm(AbstractCreativeForm):
         fields = ('ad_type','name','tracking_url','url','display_url','format','custom_height','custom_width','landscape', 'conv_appid', 'launchpage')
 
     def clean_name(self):
-        if not self.cleaned_data.get('name', None):
+        data = self.cleaned_data.get('name', None)
+        if not data:
             raise forms.ValidationError('You must give your creative a name.')
-        return self.cleaned_data
+        return data
 
 
 class TextCreativeForm(AbstractCreativeForm):
@@ -355,8 +356,10 @@ class ImageCreativeForm(AbstractCreativeForm):
         super(ImageCreativeForm,self).__init__(*args,**kwargs)
 
     def clean_image_file(self):
-        if self.cleaned_data['image_file']:
-            logging.warn(cleaned_data['image_file'])
+        data = self.cleaned_data.get('image_file', None)
+
+        # Check the image file type. We only support png, jpg, jpeg, and gif.
+        if data:
             img = self.files.get('image_file', None)
             is_valid_image_type = any([str(img).endswith(ftype) for ftype in ['.png', '.jpeg', '.jpg', '.gif']])
             if not (img and is_valid_image_type):
@@ -365,11 +368,16 @@ class ImageCreativeForm(AbstractCreativeForm):
                     raise forms.ValidationError('Filetype (.%s) not supported.' % extension)
                 else:
                     raise forms.ValidationError('Filetype not supported.')
-        else:
-            logging.warn(self.cleaned_data['ad_type'])
-            if self.cleaned_data['ad_type'] == 'image':
+
+        # Check to make sure an image file or url was provided.
+        # We only need to check this if it's a new form being submitted
+
+        if not self.instance:
+            if not (self.cleaned_data.get('image_file', None) or self.cleaned_data.get('image_url', None)):
                 raise forms.ValidationError('You must upload an image file for a creative of this type.')
-        return self.cleaned_data
+
+        return data
+
 
     def save(self, commit=True):
         obj = super(ImageCreativeForm,self).save(commit=False)

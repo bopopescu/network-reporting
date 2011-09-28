@@ -460,28 +460,38 @@ var mopub = mopub || {};
               data: { ajax : true },
               dataType: 'json',
               success: function(jsonData, statusText, xhr, $form){
-          $form.find('.creativeEditForm-loading').hide();
+                  $form.find('.creativeEditForm-loading').hide();
                   if (jsonData.success){
-            $form.find('.creativeCreateForm-success').show();
-            $form.parent();
-            $form.find('.creativeCreateForm-success').hide();
-            window.location.reload();
-          } else {
-              $form.find('.creativeEditForm-fragment').html($.decodeHtml(jsonData.html));
-            // re-implement onload
-            $('.creativeEditForm input[name="ad_type"]')
-              .click(function(e){
-                $(this).parents('form') // gets the form to which this belongs
-                  .find('.adTypeDependent').hide().end()
-                  .find('.'+$(this).val()).show().end();
-              }).filter(':checked').click();
-            window.location.hash = '';
-            window.location.hash = $form.prev("a").attr('name');
-          }
-        }
-      };
-      $(this).ajaxForm(options);
-    });
+                      $form.find('.creativeCreateForm-success').show();
+                      $form.parent();
+                      $form.find('.creativeCreateForm-success').hide();
+                      window.location.reload();
+                  } else {
+                      //$form.find('.creativeEditForm-fragment').html($.decodeHtml(jsonData.html));
+                      $.each(jsonData.errors, function (iter, item) {
+                          $('.form-error-text', $form).remove();
+                          var name = item[0];
+                          var error_div = $("<div>").append(item[1]).addClass('form-error-text');
+
+                          $("input[name=" + name + "]", $form)
+                              .addClass('error')
+                              .parent().append(error_div);
+
+                      });
+                      // re-implement onload
+                      $('.creativeEditForm input[name="ad_type"]')
+                          .click(function(e){
+                              $(this).parents('form') // gets the form to which this belongs
+                                  .find('.adTypeDependent').hide().end()
+                                  .find('.'+$(this).val()).show().end();
+                          }).filter(':checked').click();
+                      window.location.hash = '';
+                      window.location.hash = $form.prev("a").attr('name');
+                  }
+              }
+          };
+          $(this).ajaxForm(options);
+      });
 
     $('.creativeEditForm-submit')
       .button()

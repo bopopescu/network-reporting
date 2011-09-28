@@ -253,7 +253,7 @@ class AdHandler(webapp.RequestHandler):
         if jsonp:
             try:
                 click_url = creative_renderer.click_url
-            except AttributeError:
+            except UnboundLocalError:
                 click_url = ''
             self.response.out.write('%s(%s)' % (callback, dict(ad=str(rendered_creative or ''), click_url = str(click_url), ufid=str(ufid))))
         elif not (debug):                                                    

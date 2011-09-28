@@ -267,7 +267,7 @@ class RenderingTests(RenderingTestBase, unittest.TestCase):
         ok_(False, "Exceptions not raised")    
 
     def mptest_html_adtype(self):
-        """ Make a one-off test for image creatives. """
+        """ Make a one-off test for html creatives. """
         
         adgroup = AdGroup(account=self.account, 
                           campaign=self.campaign, 
@@ -292,7 +292,18 @@ class RenderingTests(RenderingTestBase, unittest.TestCase):
         
         _on_fail_exclude_adgroups = [e for e in self.on_fail_exclude_adgroups]
         self.on_fail_exclude_adgroups = []
+        
+        
+        # For this test we want to makes sure that the templates
+        # are correct for fullscreen tablets
+        # (i.e. the meta tag)
+        old_format = self.adunit.format
+        self.adunit.format = 'full_tablet'
+        
         self._compare_rendering_with_examples("html_adtype", suffix="")
+        
+        self.adunit.format = old_format
+        
         self.on_fail_exclude_adgroups = _on_fail_exclude_adgroups
 
     # image, text and text_icon adtypes are not tested as defaults

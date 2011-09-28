@@ -251,42 +251,16 @@ class AdHandler(webapp.RequestHandler):
                 self.response.headers.add_header(key, value)      
                                       
         if jsonp:
-            self.response.out.write('%s(%s)' % (callback, dict(ad=str(rendered_creative or ''), click_url = str(ad_click_url), ufid=str(ufid))))
+            try:
+                click_url = creative_renderer.click_url
+            except AttributeError:
+                click_url = ''
+            self.response.out.write('%s(%s)' % (callback, dict(ad=str(rendered_creative or ''), click_url = str(click_url), ufid=str(ufid))))
         elif not (debug):                                                    
             self.response.out.write(rendered_creative)
         else:
             trace_logging.rendered_creative = rendered_creative
             trace_logging.render()
-
-    def rgeocode(self, ll):
-        url = "http://maps.google.com/maps/geo?%s" % urlencode({"q": ll, 
-            "key": MAPS_API_KEY, 
-            "sensor": "false", 
-            "output": "json"})
-        json = urlfetch.fetch(url).content
-        try:
-            geocode = simplejson.loads(json)
-
-            if geocode.get("Placemark"):
-                for placemark in geocode["Placemark"]:
-                    if placemark.get("AddressDetails").get("Accuracy") == 8:
-                        trace_logging.warning("rgeocode Accuracy == 8")
-
-                        country = placemark.get("AddressDetails").get("Country")
-                        administrativeArea = country.get("AdministrativeArea") if country else None
-                        subAdministrativeArea = administrativeArea.get("SubAdministrativeArea") if administrativeArea else None
-                        locality = (subAdministrativeArea.get("Locality") if subAdministrativeArea else administrativeArea.get("Locality")) if administrativeArea else None
-                        trace_logging.warning("country=%s, administrativeArea=%s, subAdminArea=%s, locality=%s" % (country, administrativeArea, subAdministrativeArea, locality))
-
-                        return (locality.get("LocalityName") if locality else "", 
-                                        administrativeArea.get("AdministrativeAreaName") if administrativeArea else "",
-                                        country.get("CountryNameCode") if country else "")
-                return ()
-            else:
-                return ()
-        except:
-            trace_logging.error("rgeocode failed to parse %s" % json)
-            return ()
             
     def _redirect_to_experimental(self, experimental_app_name, adunit_id):
         # Create new id for alternate server

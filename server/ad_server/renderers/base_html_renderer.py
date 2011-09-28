@@ -38,6 +38,7 @@ class BaseHtmlRenderer(BaseCreativeRenderer):
         self.html_context['version'] = self.version
         self.html_context['impression_url'] = self.impression_url
         self.html_context['is_fullscreen'] = self.adunit.is_fullscreen()
+        self.html_context['is_tablet'] = self.adunit.is_tablet()
         
         # determine user agent
         # TODO: we probably want to have different iphone and android version

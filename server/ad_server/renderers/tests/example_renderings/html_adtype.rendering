@@ -19,8 +19,6 @@
       var urls = new Array();
       var i = 0;
       
-        urls[i++]="http://app.mopub.com/m/imp?c=agltb3B1Yi1pbmNyFgsSCENyZWF0aXZlIghrZXlfbmFtZQw&cid=agltb3B1Yi1pbmNyFgsSCENyZWF0aXZlIghrZXlfbmFtZQw&reqt=-462653700.0&req=my_request_id&udid=myudid&appid=&id=agltb3B1Yi1pbmNyCgsSBFNpdGUYBQw&rev=0.1000000";
-      
     
       
       urls[i++]="http://www.google.com/&rand=0932jfios"
@@ -52,6 +50,10 @@
         // inserts impression tracking
         // when the interstitial is presented on screen
         
+        if(typeof trackImpressionHelper == 'function') {
+          trackImpressionHelper();
+        }
+        
         // calls a user defined function if it exists
         // useful for starting animations, videos, etc
         // this would exist as part of the html for the 
@@ -80,10 +82,6 @@
       }
     }
 
-    
-      if(typeof trackImpressionHelper == 'function') {
-        trackImpressionHelper();
-      }
     
 
   </script>

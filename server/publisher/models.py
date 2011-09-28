@@ -150,6 +150,9 @@ class Site(db.Model):
     
     def is_fullscreen(self):
         return 'full' in self.format
+
+    def is_tablet(self):
+        return 'tablet' in self.format
     
     def get_height(self):
         if self.format == 'custom' and self.custom_height: 

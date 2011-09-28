@@ -8,6 +8,7 @@ from account.models import NetworkConfig
 
 from network_scraping.models import *
 from network_scraping.admob_scraper import AdMobScraper
+from network_scraping.iad_scraper import IAdScraper
 from network_scraping.jumptap_scraper import JumpTapScraper
 from network_scraping.network_scrape_record import NetworkScrapeRecord
 
@@ -34,7 +35,8 @@ class Network:
 
 # dictionary of Networks
 networks = {'admob' : Network(constructor = AdMobScraper, get_pub_id = get_pub_id),
-            'jumptap' : Network(constructor = JumpTapScraper, get_pub_id = get_jump_tap_pub_id)}
+            'jumptap' : Network(constructor = JumpTapScraper, get_pub_id = get_jump_tap_pub_id),
+            'iad' : Network(constructor = IAdScraper, get_pub_id = get_pub_id)}
 
 def update_ad_networks():
     today = date.today()

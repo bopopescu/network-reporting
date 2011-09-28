@@ -12,53 +12,10 @@ sys.path.append('..')
 from BeautifulSoup import BeautifulSoup
 from selenium import webdriver 
 from pyvirtualdisplay import Display
+from network_scraping.network_scrape_record import NetworkScrapeRecord
 from network_scraping.scraper import Scraper
 
 from datetime import date
-
-# <<<<<<< HEAD
-# class IAdScraper(Scraper):
-#     
-#     NETWORK_NAME = 'iad'
-#     LOGIN_URL = 'https://itunesconnect.apple.com/WebObjects/iTunesConnect.woa'
-#     LOGIN_FORM_NAME = 'appleConnectForm'
-#     LOGIN_ACCOUNT_INPUT_NAME = 'theAccountName'
-#     LOGIN_PW_INPUT_NAME = 'theAccountPW'
-#     
-#     def __init__(self, credentials):
-#         if credentials['network'] != self.NETWORK_NAME:
-#             raise "Invalid credentials.  Attempting to use %s credentials for an iAd scraper" % credentials.network
-#         super(IAdScraper, self).__init__(credentials)
-#         # authenticate on creation
-#         self.driver = webdriver.Firefox()
-#         self.authenticate()
-#     
-#     def authenticate(self):
-#         self.driver.get(self.LOGIN_URL)
-#         self.driver.find_element_by_name(self.LOGIN_ACCOUNT_INPUT_NAME).send_keys(self.username)
-#         self.driver.find_element_by_name(self.LOGIN_PW_INPUT_NAME).send_keys(self.password)
-#         
-#         self.driver.find_elements_by_name("1.Continue")[1].click()
-#         
-#     def get_site_stats(self, start_date, end_date=None):
-#         if end_date is None:
-#             end_date = start_date
-#         
-#         self.driver.find_elements_by_link_text("iAd Network")[1].click()
-#         
-#         self.driver.implicitly_wait(30)
-#         
-#         self.driver.find_element_by_xpath("//select/option[@value='today']").click()
-#         
-#         # have to wait for report to load before downloading it
-#         time.sleep(2)
-#         
-#         self.driver.find_element_by_link_text("Download Report").click()
-#                          
-#         # self.driver.find_element_by_xpath("//a[@title='download csv report']").click()
-#         
-# =======
-
 
 class IAdScraper(Scraper):
 
@@ -66,15 +23,20 @@ class IAdScraper(Scraper):
     SS_FNAME = 'ScraperScreen_%s.png'
     STATS_PAGE = 'https://iad.apple.com/itcportal/#app_homepage'
     LOGIN_TITLE = 'iTunes Connect - iAd Network Sign In'
-    APP_STATS = ('revenue', 'ecpm', 'requests', 'impressions', 'fill_rate', 'ctr')
-    MONEY_STATS = ['revenue', 'ecpm']
+    APP_STATS = ('ecpm', 'requests', 'impressions', 'fill_rate', 'ctr')
+    MONEY_STATS = ['ecpm']
     PCT_STATS = ['fill_rate', 'ctr']
+
+    def __init__(self, credentials):
+        super(IAdScraper, self).__init__(credentials)
+        
+        self.authenticate()
 
     def authenticate(self):
         # Must have selenium running or something
         self.disp = Display(visible = 0, size = (1024, 768))
         self.disp.start()
-        self.browser = webdriver.Chrome()
+        self.browser = webdriver.Chrome('/Applications/ChromeDriver')
         self.browser.get(self.STATS_PAGE)
         while self.browser.title == self.LOGIN_TITLE:
             login = self.browser.find_element_by_css_selector('#accountname')
@@ -99,7 +61,7 @@ class IAdScraper(Scraper):
         time.sleep(3)
 
     def get_cal_date(self):
-        return datetime.strptime(self.browser.find_element_by_css_selector('td.datePickerMonth').text, '%b %Y')
+        return datetime.strptime(self.browser.find_element_by_css_selector('td.datePickerMonth').text, '%b %Y').date()
 
     def set_date(self, selector, date):
         # Open up the date box
@@ -145,10 +107,10 @@ class IAdScraper(Scraper):
         apps = soup.findAll('td',{'class':'td_app'})
         # Get all the tr's
         app_rows = [app.parent for app in apps]
-        app_data = []
+        records = []
         for row in app_rows:
             app_name = row.findAll('p', {"class":"app_text"})[0].text
-            app_dict = dict(name = app_name)
+            app_dict = dict(apple_id = app_name[app_name.find(' ') + 1:])
             # Find desired stats
             for stat in self.APP_STATS:
                 class_name = 'td_' + stat
@@ -165,9 +127,18 @@ class IAdScraper(Scraper):
                 else:
                     data = eval(data)
                 app_dict[stat] = data
-            app_data.append(app_dict)
-        return app_data
+                
+            nsr = NetworkScrapeRecord(attempts = app_dict['requests'],
+                                      impressions = app_dict['impressions'],
+                                      fill_rate = app_dict['fill_rate'],
+                                      clicks = app_dict['ctr'] * app_dict['impressions'],
+                                      ctr = app_dict['ctr'],
+                                      ecpm = app_dict['ecpm'],
+                                      app_tag = app_dict['apple_id'])
+            records.append(nsr)
+        return records
 
+# [{'fill_rate': 0.0, 'name': u'AppleID: 362641118', 'ctr': 0.0, 'revenue': 0.0, 'ecpm': 0.0, 'impressions': '0', 'requests': '0'}]
 class NetworkConfidential:
     pass
             

@@ -10,9 +10,6 @@ class JumpTapScraper(Scraper):
     NETWORK_NAME = 'jumptap'
     SITE_STAT_URL = 'https://pa.jumptap.com/pa-2.0/pub-services/v10/report.html'
 
-    def __init__(self, credentials):
-        super(JumpTapScraper, self).__init__(credentials)
-
     # Note: a date range is not supported
     def get_site_stats(self, from_date, to_date=None):
         if to_date is None:

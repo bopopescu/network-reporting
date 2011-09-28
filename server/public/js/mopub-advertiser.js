@@ -468,8 +468,9 @@ var mopub = mopub || {};
                       window.location.reload();
                   } else {
                       //$form.find('.creativeEditForm-fragment').html($.decodeHtml(jsonData.html));
+                      $('.form-error-text', $form).remove();
                       $.each(jsonData.errors, function (iter, item) {
-                          $('.form-error-text', $form).remove();
+
                           var name = item[0];
                           var error_div = $("<div>").append(item[1]).addClass('form-error-text');
 

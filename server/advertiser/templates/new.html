@@ -22,9 +22,9 @@
 {% block dateButtons %}{% endblock %}
 {% block content %}
           <section id="advertiser-adgroupCreateForm">
-            <div class="content-main"> 
+            <div class="content-main">
               {% if campaign_form.errors or adgroup_form.errors %}
-              <div class="alertMessage error">{{campaign_form.errors}}{{adgroup_form.errors}} </div>
+              <div class="alert-message error">{{campaign_form.errors}}{{adgroup_form.errors}} </div>
               {% endif %}
               <a name="adgroupEditForm" class="hidden">anchor</a>
               <form action="{% url advertiser_campaign_create_ajax %}" method="POST" accept-charset="utf-8" id="campaignAdgroupForm" class="validate">
@@ -33,10 +33,10 @@
 {{campaign_create_form_fragment}}
                   </div>
                   <div class="clear"></div>
-        
-                  <div class="form-submit"> 
-                    <span class="buttonWrap"><a href="#" class="button" id="campaignAdgroupForm-submit">Continue</a></span> 
-                  </div> 
+
+                  <div class="form-submit">
+                    <span class="buttonWrap"><a href="#" class="button" id="campaignAdgroupForm-submit">Continue</a></span>
+                  </div>
               </form>
             </div>
           </section>

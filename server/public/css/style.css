@@ -51,7 +51,6 @@ q:before, q:after { content:''; content:none; }
 
 a { margin:0; padding:0; font-size:100%; vertical-align:baseline; background:transparent; }
 
-.alertMessage.error a { color:#ac6f6f; margin:0; padding:0; font-size:100%; vertical-align:baseline; background:transparent; }
 #campaignForm-customHtml-helpLink {
     vertical-align: top;
 }
@@ -1026,30 +1025,6 @@ label.error {
   display: none;
 }
 
-/* Page alerts */
-
-.alertMessage {
-  margin: 0 0 30px 0;
-  padding: 10px 14px 14px 14px;
-  border: 1px solid #e6d2b8;
-  background: #fffdf2;
-  color: #664729;
-  -webkit-border-radius: 5px;
-  -moz-border-radius: 5px;
-  border-radius: 5px;
-}
-
-.alertMessage.success, .flash_message{
-  color: #5d8c00;
-  background: #fbfff2;
-  border-color: #cee6ac;
-}
-
-.alertMessage.error, .flash_error {
-  color: #cc2929;
-  background: #fff2f2;
-  border-color: #e6a1a1;
-}
 
 /* Stats */
 

@@ -632,7 +632,9 @@ class AppUpdateAJAXHandler(RequestHandler):
 
   def render(self,template=None,**kwargs):
     template_name = template or self.TEMPLATE
-    return render_to_string(self.request,template_name=template_name,data=kwargs)
+    return render_to_string(self.request,
+                            template_name = template_name,
+                            data = kwargs)
 
   def json_response(self,json_dict):
     return JSONResponse(json_dict)
@@ -644,10 +646,12 @@ class AppUpdateAJAXHandler(RequestHandler):
     else:
       app = None
 
-    app_form = AppForm(data=self.request.POST, files = self.request.FILES, instance=app, is_edit_form=True)
+    app_form = AppForm(data = self.request.POST,
+                       files = self.request.FILES,
+                       instance = app,
+                       is_edit_form = True)
 
-    json_dict = {'success':False,'html':None}
-
+    json_dict = {'success':False,'errors':[]}
     if app_form.is_valid():
       if not app_form.instance: #ensure form posts do not change ownership
         account = self.account
@@ -660,8 +664,11 @@ class AppUpdateAJAXHandler(RequestHandler):
       json_dict.update(success=True)
 
       return self.json_response(json_dict)
-    new_html = self.get(app_form=app_form)
-    json_dict.update(success=False,html=new_html)
+
+    flatten_errors = lambda frm : [(k, unicode(v[0])) for k, v in frm.errors.items()]
+    grouped_errors = flatten_errors(app_form)
+
+    json_dict.update(success = False, errors = grouped_errors)
     return self.json_response(json_dict)
 
 @login_required
@@ -692,7 +699,7 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
       adunit = None
 
     adunit_form = AdUnitForm(data=self.request.POST,instance=adunit, prefix="adunit")
-    json_dict = {'success':False,'html':None}
+    json_dict = {'success':False, 'errors': []}
 
     if adunit_form.is_valid():
       if not adunit_form.instance: #ensure form posts do not change ownership
@@ -705,8 +712,11 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
 
       json_dict.update(success=True)
       return self.json_response(json_dict)
-    new_html = self.get(adunit_form=adunit_form)
-    json_dict.update(success=False,html=new_html)
+
+    flatten_errors = lambda frm : [(k, unicode(v[0])) for k, v in frm.errors.items()]
+    grouped_errors = flatten_errors(adunit_form)
+
+    json_dict.update(success=False, errors = grouped_errors)
     return self.json_response(json_dict)
 
 def adunit_update_ajax(request,*args,**kwargs):

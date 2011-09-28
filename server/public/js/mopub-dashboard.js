@@ -20,7 +20,23 @@ var mopub = mopub || {};
          if (jsonData.success) {
              window.location.reload();
          } else {
-             $('#appForm-fragment').html($.decodeHtml(jsonData.html));
+             $('.form-error-text', "#appForm").remove();
+             console.log(jsonData.errors);
+             $.each(jsonData.errors, function (iter, item) {
+                 var name = item[0];
+                 var error_div = $("<div>").append(item[1]).addClass('form-error-text');
+
+                 $("input[name=" + name + "]", "#appForm")
+                     .addClass('error')
+                     .parent().append(error_div);
+
+                 $("select[name=" + name + "]", "#appForm")
+                     .addClass('error')
+                     .parent().append(error_div);
+
+
+             });
+
              // reimplement the onload event
              appFormOnload();
              window.location.hash = '';
@@ -28,28 +44,39 @@ var mopub = mopub || {};
         }
       }
     };
-    // Added on a class to differenitate from the the app creation page
-    $('#appForm.appEditForm').ajaxForm(options);
+      // Added on a class to differenitate from the the app creation page
+      $('#appForm.appEditForm').ajaxForm(options);
 
-    options = {
-      data: { ajax: true },
-      dataType: 'json',
-      success: function(jsonData, statusText, xhr, $form) {
-          $('#adunitForm-loading').hide();
-          if (jsonData.success) {
-              window.location.reload();
-          } else {
-              console.log($.decodeHtml(jsonData.html));
-              $('#adunitForm-fragment').html($.decodeHtml(jsonData.html));
-              // reimplement the onload event
-              appFormOnload();
-              setupAdUnitForm();
-              window.location.hash = '';
-              window.location.hash = 'adunitForm';
+      options = {
+          data: { ajax: true },
+          dataType: 'json',
+          success: function(jsonData, statusText, xhr, $form) {
+              $('#adunitForm-loading').hide();
+              if (jsonData.success) {
+                  window.location.reload();
+              } else {
+                  //$('#adunitForm-fragment').html($.decodeHtml(jsonData.html));
+                  $('.form-error-text', "#adunitAddForm").remove();
+                  console.log(jsonData);
+                  $.each(jsonData.errors, function (iter, item) {
+                      var name = item[0];
+                      var error_div = $("<div>").append(item[1]).addClass('form-error-text');
+
+                      $("input[name=" + name + "]", "#adunitAdForm")
+                          .addClass('error')
+                          .parent().append(error_div);
+
+                  });
+                  // reimplement the onload event
+                  appFormOnload();
+                  setupAdUnitForm();
+                  window.location.hash = '';
+                  window.location.hash = 'adunitForm';
+              }
           }
-      }
-    };
-    $('#adunitAddForm').ajaxForm(options);
+      };
+
+      $('#adunitAddForm').ajaxForm(options);
 
 
     /*---------------------------------------/
@@ -184,12 +211,10 @@ var mopub = mopub || {};
       })
       .click(function(e) {
         e.preventDefault();
-
-        if ($("#appForm-name").val() != ""){
           $('#appEditForm-loading').show();
           $('#appForm').submit();
-        }
       });
+
     $('#appEditForm-cancel')
       .click(function(e) {
         e.preventDefault();

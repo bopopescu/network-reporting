@@ -1,6 +1,18 @@
 {% extends "html_data.html" %}
 
   {% block body %}
+    <style>
+    .body {
+      top-margin:0;
+      margin:0;
+      width:320px;
+      padding:0;
+      font-size:12px;
+      font-family:Arial,sans-serif;
+      background-color:#{{c.color}};
+    }
+    </style>
+  
     <div{% if creative.gradient %}
           id='highlight' style="position:relative;height:50px;background:-webkit-gradient(linear, left top, left bottom, from(rgba(255,255,255,0.35)), to(rgba(255,255,255,0.06))); -webkit-background-origin: padding-box; -webkit-background-clip: content-box;" 
          {% endif %}>

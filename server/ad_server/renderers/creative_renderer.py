@@ -110,7 +110,7 @@ class BaseCreativeRenderer(object):
         method it will generally be necessary to still call this base method.
         """
         ad_type = self._get_ad_type()
-        if ad_type == 'html' or not self.adunit.is_fullscreen():
+        if ad_type in ['html','custom'] or not self.adunit.is_fullscreen():
             self.header_context.ad_type = ad_type
         else:
             self.header_context.ad_type = "interstitial"

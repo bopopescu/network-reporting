@@ -53,6 +53,9 @@ STATS_MODEL_QUERY_KEY = "sm"
 MDB_STATS_UPDATER_IP = 'http://ec2-67-202-42-225.compute-1.amazonaws.com:8000'
 MDB_STATS_UPDATER_HANDLER_PATH = '/update'
 
+DEREF_CACHE = {}
+
+
 def increment_stats(stats):
     # datastore get
     key_name = stats.key()
@@ -143,13 +146,18 @@ def _create_mdb_json(stats_to_put):
     return simplejson.dumps(d)
     
 
-# returns app_str
+# returns [app_str]
 def _deref_adunit(adunit_str):
+    if adunit_str in DEREF_CACHE:
+        logging.info('found adunit in cache')
+        return DEREF_CACHE[adunit_str]
+
     try:
         adunit_key = db.Key(adunit_str)
         adunit = AdUnit.get(adunit_key)
         app_str = str(adunit._app_key)
-        return app_str
+        DEREF_CACHE[adunit_str] = [app_str]
+        return [app_str]
     except BadKeyError, e:
         logging.error('EXCEPTION on adunit %s: %s' %(adunit_str, e))
         return None
@@ -157,30 +165,42 @@ def _deref_adunit(adunit_str):
         logging.error(e)
         return None
     
-        
-# returns adgroup_str, campaign_str
+
+# returns [adgroup_str, campaign_str]
 def _deref_creative(creative_str):
+    if creative_str in DEREF_CACHE:
+        logging.info('found creative in cache')        
+        return DEREF_CACHE[creative_str]
+
     try:
         creative_key = db.Key(creative_str)
         creative = Creative.get(creative_key)
         adgroup_str = str(creative._ad_group)        
-        campaign_str = _deref_adgroup(adgroup_str)
-        return adgroup_str, campaign_str
+        adgroup_deref_results = _deref_adgroup(adgroup_str)
+        if adgroup_deref_results:
+            [campaign_str] = adgroup_deref_results
+            DEREF_CACHE[creative_str] = [adgroup_str, campaign_str]
+            return [adgroup_str, campaign_str]
     except BadKeyError, e:
         logging.error('EXCEPTION on creative %s: %s' %(creative_str, e))
-        return None, None
+        return None
     except Exception, e:
         logging.error(e)
-        return None, None
+        return None
 
 
-# returns campaign_str
+# returns [campaign_str]
 def _deref_adgroup(adgroup_str):
+    if adgroup_str in DEREF_CACHE:
+        logging.info('found adgroup in cache')        
+        return DEREF_CACHE[adgroup_str]
+
     try:
         adgroup_key = db.Key(adgroup_str)
         adgroup = AdGroup.get(adgroup_key)
         campaign_str = str(adgroup._campaign)
-        return campaign_str
+        DEREF_CACHE[adgroup_str] = [campaign_str]
+        return [campaign_str]
     except BadKeyError, e:
         logging.error('EXCEPTION on adgroup %s: %s' %(adgroup_str, e))
         return None
@@ -568,8 +588,8 @@ class MongoUpdateStatsHandler(webapp.RequestHandler):
                 self.response.out.write(err_msg)
                 
             [adunit, creative, date_hour] = parts
-            app = _deref_adunit(adunit)
-            (adgroup, campaign) = _deref_creative(creative) if creative else ('', '')
+            [app] = _deref_adunit(adunit)
+            [adgroup, campaign] = _deref_creative(creative) if creative else ['', '']
             
             if None not in [app, adgroup, campaign]:
                 post_dict = {'adunit': adunit,
@@ -596,10 +616,16 @@ class MongoUpdateStatsHandler(webapp.RequestHandler):
         logging.info('POST TO MDB: %s' % post_data)
         post_url = MDB_STATS_UPDATER_IP + MDB_STATS_UPDATER_HANDLER_PATH # ex: http://ec2-67-202-42-225.compute-1.amazonaws.com:8000/update
         post_request = urllib2.Request(post_url, post_data)
-        post_response = urllib2.urlopen(post_request).read()
-    
-        logging.info('response from %s: %s\ndata:\n%s' % (post_url, post_response, post_data))
-        self.response.out.write('response from %s: %s\ndata:\n%s' % (post_url, post_response, post_data))
+        post_response = urllib2.urlopen(post_request)
+        status_code = post_response.code
+        response_msg = post_response.read()
+        
+        if status_code == 200: # OK 
+            logging.info('%i response from %s: %s\npayload:\n%s' % (status_code, post_url, response_msg, post_data))
+        else:   # failed    
+            logging.error('%i response from %s: %s\npayload:\n%s' % (status_code, post_url, response_msg, post_data))
+        
+        self.response.out.write('%i response from %s: %s\npayload:\n%s' % (status_code, post_url, response_msg, post_data))
 
                 
 application = webapp.WSGIApplication([('/_ah/queue/bulk-log-processor', LogTaskHandler),

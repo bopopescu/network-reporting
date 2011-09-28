@@ -185,20 +185,9 @@ class PaymentInfoChangeHandler(RequestHandler):
 def payment_info_change(request, *args, **kwargs):
     return PaymentInfoChangeHandler()(request, *args, **kwargs)
 
-
 class PaymentHistoryHandler(RequestHandler):
     def get(self, *args, **kwargs):
-
-        # TO DO: Implement a Payment History API
-        # payment_history = PaymentHistoryApi.get(self.account.key(),
-        #                                         self.account.date_added,
-        #                                         datetime.date.today())
-        payment_history = [{'amount': '103.43', 'month': 'June', 'status':'Payment Sent to 111-22-3333'},
-                           {'amount': '328.19', 'month': 'July', 'status':'Payment Sent to 111-22-3333'},
-                           {'amount': '655.30', 'month': 'August', 'status':'Error: Description'},
-                           {'amount': '799.94', 'month': 'September', 'status':'Pending'}]
-
-        # parse payment_history if needed
+        payment_history = self.account.payment_records.get()
         return render_to_response(self.request,
                                   'account/payment_history.html',
                                   {'payment_history': payment_history})

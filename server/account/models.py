@@ -160,3 +160,10 @@ class PaymentInfo(db.Model):
 
     def uses_paypal(self):
         return self.payment_preference == 'paypal'
+
+class PaymentRecord(db.Model):
+    account = db.ReferenceProperty(Account, collection_name="payment_records")
+    amount = db.StringProperty()
+    month = db.IntegerProperty()
+    year = db.IntegerProperty()
+    status = db.StringProperty()

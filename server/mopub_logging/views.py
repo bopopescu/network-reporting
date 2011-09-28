@@ -79,19 +79,19 @@ def update_stats(stats_dict,publisher,advertiser,date_hour,country,attribute,req
                                                date_hour=date_hour,
                                                country=country)
         if not key in stats_dict:
-          stats_dict[key] = r_models.StatsModel(publisher=publisher,
-                                                advertiser=advertiser,
-                                                date_hour=date_hour,
-                                                country=country)
+            stats_dict[key] = r_models.StatsModel(publisher=publisher,
+                                                  advertiser=advertiser,
+                                                  date_hour=date_hour,
+                                                  country=country)
 
         if attribute:
-          # stats_dict[key].attribute += incr
-          setattr(stats_dict[key],attribute,getattr(stats_dict[key],attribute)+incr) 
+            # stats_dict[key].attribute += incr
+            setattr(stats_dict[key],attribute,getattr(stats_dict[key],attribute)+incr) 
       
-          if revenue:
-              stats_dict[key].revenue += revenue
+            if revenue:
+                stats_dict[key].revenue += revenue
         if req:      
-          stats_dict[key].reqs.append(req)
+            stats_dict[key].reqs.append(req)
     except Exception, e:
         logging.warning("Error in update_stats: %s"%e)      
     

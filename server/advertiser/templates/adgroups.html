@@ -62,7 +62,8 @@
     We've released new Terms of Service for our Marketplace Campaigns.
 
     <span class="right">
-      <a class="button" href="#"> More Information </a> <a class="button" href="#"> Accept New Terms</a>
+      <a class="button" id="more_info" href="#"> More Information </a>
+      <a class="button" id="accept_terms" href="#"> Accept New Terms</a>
     </span>
   </div>
 {% endif %}
@@ -628,6 +629,8 @@
 
           </div>
 
+          {% include "mpx_tos.html" %}
+
 {% endblock content %}
 
 {% block extraScripts %}
@@ -639,6 +642,21 @@
             {{start_date.month|add:"-1"}},
             {{start_date.day}});
         mopub.accountStats = {{account_stats|safe}};
+
+        $("#terms").dialog({
+            autoOpen: false,
+            buttons: {
+                "Accept Terms": function() {
+                },
+                "Not right now": function() {
+                    $(this).dialog("close");
+                }
+
+            }
+        });
+        $("#accept_terms").click(function() {
+            $("#terms").dialog('open');
+        });
     });
 </script>
 <script src="/js/mopub-advertiser.js?v=80"></script>

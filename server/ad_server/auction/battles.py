@@ -22,7 +22,9 @@ from common.utils import simplejson
 from google.appengine.api import users, urlfetch, memcache  
 
 from ad_server import frequency_capping
-from common.utils.helpers import to_uni, to_ascii
+from common.utils.helpers import to_uni, to_ascii      
+
+import random
 
 class Battle(object):
     """ Determines the best creative available within a subset of adgroups.
@@ -44,12 +46,18 @@ class Battle(object):
         creative_ecpm_dict = optimizer.get_ecpms(self.adunit_context,
                                                  creatives,
                                                  sampling_fraction=0.0)
+                                                     
 
-        # Make this negative so high ecpm comes first
-        ecpm_lookup = lambda creative: -creative_ecpm_dict[creative]
+        # We make a comparator function for sorting by ecpm
+        def calc_ecpm_with_noise(creative):             
+            # Build in tiny, insignificant amount of random noise to break ties   
+            noise = random.random() * 10 ** -9      
+
+            # Make this negative so high ecpm comes first, add noise        
+            return -creative_ecpm_dict[creative] + noise
 
         # Sort using the ecpm as the key.
-        return sorted(creatives, key=ecpm_lookup)
+        return sorted(creatives, key=calc_ecpm_with_noise)
 
 
     def _get_adgroups_for_level(self):

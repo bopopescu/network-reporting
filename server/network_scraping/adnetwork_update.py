@@ -28,7 +28,7 @@ def get_jump_tap_pub_id(app_name, login_info):
     else:
         return None
 
-class Network:
+class Network(object):
     def __init__(self, constructor, get_pub_id):
         self.constructor = constructor
         self.get_pub_id = get_pub_id
@@ -36,7 +36,8 @@ class Network:
 # dictionary of Networks
 networks = {'admob' : Network(constructor = AdMobScraper, get_pub_id = get_pub_id),
             'jumptap' : Network(constructor = JumpTapScraper, get_pub_id = get_jump_tap_pub_id),
-            'iad' : Network(constructor = IAdScraper, get_pub_id = get_pub_id)}
+            'iad' : Network(constructor = IAdScraper, get_pub_id = get_pub_id),
+            'inmobi' : Network(constructor = InMobiScraper, get_pub_id = get_pub_id)}
 
 def update_ad_networks():
     today = date.today()

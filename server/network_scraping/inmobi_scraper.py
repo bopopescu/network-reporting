@@ -1,6 +1,6 @@
 import base64
-import hashlib
-import hmac
+from hashlib import sha1
+from hmac import new as hmac
 import time
 import urllib2
 
@@ -8,11 +8,8 @@ from datetime import datetime
 from datetime import date
 from xml.dom.minidom import parseString
 
+from network_scrape_record import NetworkScrapeRecord
 from scraper import Scraper, ScraperSite
-
-#TODO This needs a lot of work, I have no idea what it's doing
-class NetworkCredentials:
-    pass
 
 class InMobiScraper(Scraper):
 
@@ -23,14 +20,15 @@ class InMobiScraper(Scraper):
     DATE_FMT = '%a, %d %b %Y %H:%M:%S PDT'
     PLATFORM = 'all'
 
+
     def __init__(self, credentials):
         super(InMobiScraper, self).__init__(credentials)
 	self.authenticate()
 
+
     def authenticate(self):
         '''the inmobi token is generated each time, all authenticate can do is 
         prep everything so that the token generation is hella easy '''
-        self.token = None
         def get_stats_request(start_date, end_date=None):
             ''' Each request needs an individual token and things
             so each time we want to make a request, call this function
@@ -45,12 +43,9 @@ class InMobiScraper(Scraper):
             now = datetime.now().strftime(self.DATE_FMT)
             full_url = self.API_URL + url
 
-            # I'm not sure which is right, java uses the uncommented but
-            # it just doesn't feel right.  Who knows - will test both
             final_str = 'GET\n' + now + '\n' + url
-            #final_str = 'GET\n' + now + '\n' + full_url
 
-            encoded_url = hmac.new(self.password, final_str, hashlib.sha1).digest().encode('base64')[:-1]
+            encoded_url = hmac(self.password, final_str, sha1).digest().encode('base64')[:-1]
 
             req = urllib2.Request(full_url)
             req.add_header('Authorization', 'Inmobi WS token :%s' % encoded_url)
@@ -59,17 +54,41 @@ class InMobiScraper(Scraper):
             return req
         self.get_stats_request = get_stats_request
 
+
     def get_site_stats(self, start_date, end_date=None):
         req = self.get_stats_request(start_date, end_date)
         resp = urllib2.urlopen(req)
         line = resp.read()
-        dom = parseString(line)
         
-        reports = dom.getElementsByTagName("reports")[0]
-        for node in reports.childNodes:
+        # Unfortunately we can't get it back as a json dict since we're using python and
+        # not PHP or Java which support the API so we must parse the xml
+        self.dom = parseString(line)
+        
+        reports = []
+        errors = self.dom.getElementsByTagName('error')
+        if len(errors) == 0:   
+            for app_stats in zip(self.get_data_list('req'), self.get_data_list('imp'), self.get_data_list('fr'),
+                                 self.get_data_list('clk'), self.get_data_list('ctr'), self.get_data_list('ecpm'),
+                                 self.get_data_list('excol')):
+                nsr = NetworkScrapeRecord(attempts = int(app_stats[0]), impressions = int(app_stats[1]),
+                                          fill_rate = float(app_stats[2]), clicks = int(app_stats[3]),
+                                          ctr = float(app_stats[4]), ecpm = float(app_stats[5]),
+                                          app_tag = str(app_stats[6]))
+                reports.append(nsr)
+        else:
+            print errors.childNodes[0].data
+            # logging.error()
             
-
+        return reports
+        
+        
+    def get_data_list(self, name):
+        return [e.childNodes[0].data for e in self.dom.getElementsByTagName(name)]
+        
 # for testing
+class NetworkCredentials:
+    pass
+
 if __name__ == '__main__':
     nc = NetworkCredentials()
     # access_id

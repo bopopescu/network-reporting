@@ -8,9 +8,16 @@ class AdNetworkLoginInfo(db.Model):
     
     account = db.ReferenceProperty(Account, collection_name='login_info')
     ad_network_name = db.StringProperty()
+    
+    # needed for all networks but mobfox
     username = db.StringProperty()
     password = db.StringProperty()
+    
+    # needed for admob and mobfox
     client_key = db.StringProperty()
+    
+    # needed for mobfox
+    publisher_ids = db.StringListProperty()
 
 class AdNetworkAppMapper(db.Model):
     #(ad_network_name,publisher_id) -> application

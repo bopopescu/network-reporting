@@ -26,7 +26,10 @@ from account.models import Account
 from reporting.models import StatsModel
 
 LIMIT = 100
-DATES = [datetime.date(2011,04,18),datetime.date(2011,04,19)]
+DATES = [datetime.date(2011,8,27),datetime.date(2011,04,27)]
+START_DATE = datetime.date(2011, 8, 27)
+END_DATE = datetime.date(2011, 8, 28)
+
 
 def main(app_id="mopub-inc",host="38-aws.latest.mopub-inc.appspot.com"):
     def auth_func():
@@ -36,15 +39,21 @@ def main(app_id="mopub-inc",host="38-aws.latest.mopub-inc.appspot.com"):
     remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', auth_func, host)
     
     times = []
-    for date in DATES:
+    start_dt = datetime.datetime(START_DATE.year, START_DATE.month, START_DATE.day)
+    end_dt = datetime.datetime(END_DATE.year, END_DATE.month, END_DATE.day)
+    
+    dt = start_dt
+    while dt <= end_dt:
+        date = dt.date()
         times.append(date)
         for hour in xrange(24):
             times.append(datetime.datetime(date.year,date.month,date.day,hour))
+        dt += datetime.timedelta(1)    
             
     
-    accounts = Account.all().fetch(1000)
+    # accounts = Account.all().fetch(1000)
     # accounts = accounts[:1]
-    # accounts = [Account.get('agltb3B1Yi1pbmNyIgsSB0FjY291bnQiFTEwNjIyMjAxMTg3NzEyNjE0MzA5OQw')]
+    accounts = [Account.get('agltb3B1Yi1pbmNyEAsSB0FjY291bnQY09GeAQw')]
     
     for account in accounts:
         if account.user:

@@ -6,18 +6,18 @@
             <script type="text/javascript">
             mpq.push(["track", "Sign up: Set up app"]);
             </script>
-            <div class="stepProgress"> 
-              <span class="stepProgress-step stepProgress-active">Step 1: Add app</span> 
-              <span class="ui-icon ui-icon-arrow-1-e"></span> 
-              <span class="stepProgress-step">Step 2: Integrate</span> 
-              <span class="ui-icon ui-icon-arrow-1-e"></span> 
-              <span class="stepProgress-step">Step 3: Add campaigns</span> 
+            <div class="stepProgress">
+              <span class="stepProgress-step stepProgress-active">Step 1: Add app</span>
+              <span class="ui-icon ui-icon-arrow-1-e"></span>
+              <span class="stepProgress-step">Step 2: Integrate</span>
+              <span class="ui-icon ui-icon-arrow-1-e"></span>
+              <span class="stepProgress-step">Step 3: Add campaigns</span>
             </div>{% endifequal %}{% endblock titleBarRight %}
 {% block messageCenter %}{% endblock messageCenter %}
 {% block content %}
-          <section> 
+          <section>
             <div class="content-main">{% ifequal account.status "new" %}
-              <div class="alertMessage">
+              <div class="alert-message">
                 {% if account.reg_complete %}
                 <div class="strong">
                     <h3>Thanks! Your account is all set up. </h3>
@@ -27,22 +27,22 @@
               </div>{% endifequal %}
               <form enctype='multipart/form-data' action="" method="POST" accept-charset="utf-8" id="appForm" class="validate">{% if app_key %}
                 <input type="hidden" name="app_key" value="{{app_key}}"/>{% endif %}
-                <fieldset id="appForm-details" class="alt"> 
-                  <legend>App Details</legend> 
+                <fieldset id="appForm-details" class="alt">
+                  <legend>App Details</legend>
 {{app_form.as_template}}
-                </fieldset> 
-                <fieldset id="appForm-ad" class="adForm"> 
-                  <legend>Ad Unit</legend> 
-                  <p> 
+                </fieldset>
+                <fieldset id="appForm-ad" class="adForm">
+                  <legend>Ad Unit</legend>
+                  <p>
                     An ad unit is a single place in your app or mobile website where an ad of a specific size can appear. Your app can have any number of ad units. A first ad unit has been created for you below. Feel free to modify it or ignore it for now.
-                  </p> 
-{{adunit_form.as_template}} 
-                </fieldset> 
-                <div class="form-submit"> 
+                  </p>
+{{adunit_form.as_template}}
+                </fieldset>
+                <div class="form-submit">
                   <span id="appForm-loading" class="hidden"><img src="/images/loading2.gif"/></span>
-                  <span class="buttonWrap"><a href="#" class="button" id="appForm-submit">Continue</a></span> 
-                </div> 
-              </form> 
-            </div> 
+                  <span class="buttonWrap"><a href="#" class="button" id="appForm-submit">Continue</a></span>
+                </div>
+              </form>
+            </div>
           </section>
 {% endblock content %}

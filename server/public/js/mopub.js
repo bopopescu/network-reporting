@@ -388,8 +388,6 @@ mopub.Utils = mopub.Utils || {};
         return $("<div />").text(html).html();
     };
 
-
-
     // helper fn for console logging
     var log;
 

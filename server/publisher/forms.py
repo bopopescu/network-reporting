@@ -90,6 +90,13 @@ class AppForm(mpforms.MPModelForm):
             obj.put()
         return obj
 
+    def clean_name(self):
+        data = self.cleaned_data['name']
+        if not data:
+            raise forms.ValidationError('Please provide a name for your app.')
+        return data
+
+
 ANIMATION_CHOICES = (
         (u'0', 'No Animation'),
         (u'1', 'Random'),

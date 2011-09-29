@@ -13,7 +13,7 @@
 {% block content %}
           <section>
 {% ifequal status 'welcome' %}
-            <div class="alert-message">
+            <div class="alert-message block-message">
               Your first app is now set up.  The next step is to add the SDK to your code and test that ads are serving correctly.  A sample ad campaign <strong>MoPub Demo Campaign</strong> has been created and you should be able to see the test ad after you add the MoPub code snippet and run the emulator.
             </div>{% endifequal %}
 {% ifequal status 'success' %}
@@ -23,8 +23,7 @@
             <h2>Ad Unit ID</h2>
             <div class="alert-message">
               <code>
-                <pre>
-{{site.key}}</pre>
+                <pre>{{site.key}}</pre>
               </code>
             </div>
             <h2>Code Integration</h2>
@@ -48,7 +47,7 @@
                 <p>
                   Add the following code to your view's <code>viewDidLoad</code> method (or another suitable place):
                 </p>
-                <div class="alert-message">
+                <div class="alert-message block-message">
                   <code>
                     <pre>
 #import "MPAdView.h"
@@ -84,7 +83,7 @@ adView.delegate = self;
                 <p>
                   Add the following XML block to your layout definition (eg. main.xml):
                 </p>
-                <div class="alert-message">
+                <div class="alert-message block-message">
                   <code>
                     <pre>
 &lt;com.mopub.mobileads.MoPubView
@@ -98,7 +97,7 @@ android:layout_height="50px"/&gt;</pre>
                 <p>
                   Add the following code snippet in your Activity's onCreate() instance (or another suitable place):
                 </p>
-                <div class="alert-message">
+                <div class="alert-message block-message">
                   <code>
                     <pre>
 MoPubView mpv = (MoPubView) findViewById(R.id.adview);
@@ -111,7 +110,7 @@ mpv.loadAd();</pre>
               <li>
                 <p>Add the following code snippet into your mobile webpage where you'd like to see ads appear:
                 </p>
-                <div class="alert-message">
+                <div class="alert-message block-message">
                     <code>
                         <pre>
 &lt;script type="text/javascript"&gt;

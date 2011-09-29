@@ -232,9 +232,8 @@
           {% block flash %}
             {% if flash %}
                 <!-- There's one or more flash-scoped objects -->
-
                 {% for key, value in flash.items %}
-                    <div class="flash_{{ key }} alertMessage">
+                    <div class="{{ key }} alert-message">
                         {% autoescape off %}
                         {{ value }}
                         {% endautoescape %}

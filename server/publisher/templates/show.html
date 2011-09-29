@@ -13,7 +13,7 @@
 {% block messageCenter %}{% endblock messageCenter %}
 
 {% block content %}{% if not adunit.adgroups %}
-          <div class="alertMessage">
+          <div class="alert-message block-message">
             There are no campaigns targeting this ad unit.  To show ads here, set up a new ad campaign or add this ad unit to an existing campaign on the <a href="{% url advertiser_campaign %}">Campaigns</a> page.
           </div>
 {% endif %}
@@ -25,12 +25,12 @@
                   <input type="hidden" name="adunit_key" value="{{adunit.key}}"/>
                   <div id="adunitForm-fragment">
                     {{adunit_form_fragment}}
-                  </div>  
-                  <div class="form-submit"> 
+                  </div>
+                  <div class="form-submit">
                     <span class="hidden" id="adunitForm-loading"><img src="/images/loading2.gif"/></span>
-                    <span class="buttonWrap"><a href="#" class="button" id="adunitEditForm-submit">Save</a></span> 
-                    <span class="buttonWrap"><a href="#" class="button" id="adunitEditForm-cancel">Cancel</a></span> 
-                  </div> 
+                    <span class="buttonWrap"><a href="#" class="button" id="adunitEditForm-submit">Save</a></span>
+                    <span class="buttonWrap"><a href="#" class="button" id="adunitEditForm-cancel">Cancel</a></span>
+                  </div>
                 </fieldset>
               </form>
             </div>
@@ -156,11 +156,11 @@
               </table>
               {% endif %}
             </div>
-            
+
           </section>
 
           <section id="dashboard-apps">
-            <h2>Daily Counts</h2>            
+            <h2>Daily Counts</h2>
             <div class="appData-columnHeaders">
               <table class="dataTable" id="dashboard-apps-columnHeaders">
                 <thead>

@@ -183,6 +183,9 @@ class Report(db.Model):
     #the actual report (As of 6/13/11 with MR)
     report_blob = blobstore.BlobReferenceProperty()
 
+    # This should never, ever be set on prod
+    test_report_blob = db.Blob()
+
     #the actual report
     data = DictProperty()
 

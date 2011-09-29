@@ -31,6 +31,26 @@ def queue_writer(queue):
         queue.write(m)
     return writer
 
+############ spoofed boto shit ##############
+
+class FakeJobFlow(object):
+
+    def __init__(self, jobflowid, steps, state):
+        self.jobflowid = jobflowid
+        self.steps = steps
+        self.state = state
+
+
+class FakeJobFlowStep(object):
+    
+    def __init__(self, id, state, name):
+        self.id = id
+        self.state = state
+        self.name = name 
+
+############ this is why python rules #######
+# (otherwise you'd actually have to implement something the right way)
+
 
 class TestMessageHandler(unittest.TestCase):
 
@@ -152,18 +172,37 @@ class TestMessageHandler(unittest.TestCase):
 
 
     def handle_jobflow_success_mptest(self):
-        self.queue_write(self.rep.message)
         # List of jobs, one job is finished, finished job marked as finished, removed from list of finished jobs, marked as finished
-        pass
+        jobflow, message = self.create_jobflow()
+        self.rmh.handle_working_jobs(jobflows=[jobflow])
+        assert self.rmh.jobid_message_map == {}
 
     def handle_jobflow_failure_mptest(self):
         # List of jobs, one job is failed, make sure in queue, fail again.  Do this three times, assert in the queue every time, on third failure remove from queue, don't process again, marked as failed
+        jobflow, message = self.create_jobflow()
+        self.rmh.handle_working_jobs(jobflows = [jobflow], force_failure = True)
         pass
 
     def on_success_blobstore_failure_mptest(self):
         # Blobstore fails, make sure the report isn't replicated a million times (whoops)
+        jobflow, message = self.create_jobflow()
         pass
 
     def on_success_finalize_failure_mptest(self):
-        # Make sure message isnt' removed from the 'to process' list
+        # make sure message isnt' removed from the 'to process' list
+        jobflow, message = self.create_jobflow()
         pass
+
+
+    def create_jobflow(self):
+        m = Message()
+        m.set_body(self.rep.message)
+        good_message = ReportMessage(m)
+        good_step = FakeJobFlowStep(id = 1, state = u'COMPLETED', name = good_message.step_name)
+        steps = [good_step]
+        for i in range(4):
+            steps.append(FakeJobFlowStep(id=i+1, state=u'RUNNING', name = 'irrelevant_step_%s' % i))
+        jobflow = FakeJobFlow(jobflowid = 1, steps = steps, state = u'RUNNING')
+        self.rmh.jobid_message_map[jobflow.jobflowid] = [good_message]
+        return jobflow, good_message
+

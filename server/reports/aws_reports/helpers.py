@@ -2,6 +2,8 @@ import logging
 import time
 import urllib2
 import traceback
+import random
+import string
 
 
 from boto.s3.connection import S3Connection
@@ -46,7 +48,15 @@ UPDATE_STATS_HANDLER_PATH = '/offline/update_stats'
 LOG_FORMAT = "%s:\t%s\n"
 JOBFLOW_NAME = 'generating report job'
 
+if not sys.platform == 'darwin':
+    logging.basicConfig(level = logging.DEBUG,
+                        format = '%(asctimes) %(name)-12s %(levelname)-8s %(message)s',
+                        datefmt = '%m-%d %H:%M',
+                        filename = '/home/ubuntu/poller_%d.log' % time.time(), 
+                        filemode = 'w')
 
+def get_logger(name):
+    return logging.getLogger(name)
 
 def log(mesg):
     my_log = open('/home/ubuntu/poller.log', 'a')
@@ -114,4 +124,8 @@ def get_waiting_jobflow(conn, jobflow_ids):
             return jid
     return None
 
+def gen_random_fname(chars = string.letters, length=16, prefix = '', suffix = ''):
+    fname = ''.join([random.choice(chars) for i in range(length)])
+    fname = prefix + fname + suffix
+    return fname
 

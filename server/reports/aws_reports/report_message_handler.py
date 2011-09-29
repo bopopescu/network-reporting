@@ -1,9 +1,9 @@
 import time
 import sys
 import os
-from datetime import datetime
 import traceback
 import logging
+from datetime import datetime, timedelta
 
 from appengine_django import InstallAppengineHelperForDjango
 InstallAppengineHelperForDjango()
@@ -28,18 +28,19 @@ from reports.aws_reports.report_exceptions import (ReportParseError,
                                                    MRSubmitError,
                                                    )
 from reports.aws_reports.helpers import (upload_file, 
+                                         get_logger,
                                          setup_remote_api, 
-                                         log, 
                                          build_puts, 
                                          get_waiting_jobflow, 
                                          default_exc_handle,
                                          JOBFLOW_NAME,
                                          LOG_URI,
-
                                          )
+MY_DIR = os.path.split(os.path.abspath(__file__))[0]
+TEST_DATA_DIR = os.path.join(MY_DIR, 'tests/test_data')
+TEST_PARTS_DIR = os.path.join(MY_DIR, 'tests/test_data/parts')
 
-# Setup the remote API
-
+############### set up S3 stuff ###############
 S3_CONN = s3(AWS_ACCESS_KEY, AWS_SECRET_KEY)
 BUCK = S3_CONN.get_bucket('mopub-aws-logging')
 
@@ -66,9 +67,27 @@ FINISHED_FILE = '/home/ubuntu/mopub/server/reports/aws_reports/reports/finished_
 STEP_NAME = "Generate_report_%s-%s-%s-%s"
 
 MAX_MSGS = 5
+########### SET UP COMPLETION STATUS ########
+STEP_NAME = 'CSTEP%s'
+UPLOAD = STEP_NAME % 0 
+BLOB_KEY_PUT = STEP_NAME % 1
+PARSE = STEP_NAME % 2
+POST_PARSE_PUT = STEP_NAME % 3 # I wanted to call this P3 but I took pity
+NOTIFY = STEP_NAME % 4
 
+PARSING = 'parsing'
+
+# All steps must be completed to do things
+MESSAGE_COMPLETION_STEPS = [UPLOAD, BLOB_KEY_PUT, PARSE, POST_PARSE_PUT, NOTIFY]
+
+
+
+############ SETUP LOGGING SHIT ##############
 # Suppress non-critical boto messages
 logging.getLogger('boto').setLevel(logging.CRITICAL)
+
+# Set up logger for here
+logger = get_logger('reports.aws_reports.report_message_handler')
 
 class ReportMessage(object):
 
@@ -76,6 +95,8 @@ class ReportMessage(object):
         self.msg = msg
         self.dim1, self.dim2, self.dim3, self.start, self.end, self.report_key, self.account, self.timestamp = parse_msg(msg)
         self.step_name = STEP_NAME % (self.dim1, self.dim2, self.dim3, self.timestamp)
+
+
 
     def __key(self):
         return (self.dim1, self.dim2, self.dim3, self.start, self.end, self.report_key, self.account, self.timestamp)
@@ -93,7 +114,7 @@ class ReportMessage(object):
         return cmp(str(self), str(other))
 
     def __repr__(self):
-        repr_str = 'Dim1:%s\tDim2:%s\tDim3:%s\tStart:%s\tEnd:%s\tReport:%s\tAccount:%s\tTimestamp:%s'
+        repr_str = 'ReportMessage(Dims:(%s, %s, %s), Range(%s, %s), Report(%s), Account(%s), %s)'
         keys = self.__key()
         new_keys = []
         for key in keys:
@@ -125,11 +146,13 @@ class ReportMessageHandler(MessageHandler):
             rmh.handle_messages()
             rmh.handle_working_jobs()
             rmh.kill_waiting_jobflows()
+            rmh.cleanup()
             time.sleep(10)
             """
 
 
     def __init__(self, queue, testing=False):
+
         if not testing:
             setup_remote_api()
         self.queue = queue
@@ -139,12 +162,110 @@ class ReportMessageHandler(MessageHandler):
         self.msg_failures = {}
         self.jobid_creations = {}
         self.emr_conn = EmrConnection(AWS_ACCESS_KEY, AWS_SECRET_KEY)
+        
+        # Dict of how far completed this Message is
+        self.message_completion_statuses = {}
+        # Dict of timeouts for each step
+        self.message_step_timeouts = {}
+        # Dict of blobs for messages that failed after blob uploading
+        self.message_blob_keys = {}
+        # Dict of datas for messages that failed after parsing
+        self.message_data = {}
+        self.message_report = {}
+
+    def init_message(self, message):
+        """ When starting to process a message, init its steps
+        and timers for when it's done"""
+        self.message_completion_statuses[message] = {}
+        self.message_step_timeouts[message] = {}
+        self.message_blob_keys[message] = None
+        self.message_data[message] = None
+        self.message_report[message] = None
+
+        for step in MESSAGE_COMPLETION_STEPS:
+            self.message_completion_statuses[message][step] = False
+            self.message_step_timeouts[message][step] = None
+
+    def get_message_report(self, message):
+        """ Gets a report for a message locally if we have it,
+        otherwise go to GAE """
+
+        if self.message_report[message] is None:
+            rep = Report.get(message.report_key)
+            self.message_report[message] = rep
+
+        return self.message_report[message] 
+
+    def set_message_report(self, message, val):
+        """ sets the value of a message report """
+        self.message_report[message] = val
+
+
+
+    def message_completion_cleanup(self, message):
+        """ dels all the dict entries, leaks suck"""
+        del(self.message_completion_statuses[message])
+        del(self.message_step_timeouts[message])
+        del(self.message_blob_keys[message])
+        del(self.message_data[message])
+
+    def completed(self, message, step):
+        """Message step completion getter"""
+        return self.message_completion_statuses[message][step]
+
+    def set_completed(self, message, step, cmpltd):
+        """Message step completion setter"""
+        self.message_completion_statuses[message][step] = cmpltd
+
+    def parsing_message(self, message):
+        self.message_completion_statuses[message][PARSE] = PARSING
+
+    def step_timeout(self, message, step):
+        """Message step timeout getter"""
+        return self.message_step_timeouts[message][step]
+
+    def set_step_timeout(self, message, step, timeout):
+        """Message step timeout setter"""
+        self.message_step_timeouts[message][step] = timeout
+
+    def step_timedout(self, message, steps):
+        if not isinstance(steps, list):
+            steps = [steps]
+        for step in steps:
+            if self.completed(message, step):
+                continue
+            elif self.step_timeout(message, step) < datetime.now():
+                return True
+        return False
 
     @property
     def working_jobids(self):
+        """ Jobflowids that have messages being EMR'd """
         return self.jobid_message_map.keys()
 
-    def notify_success(self, message):
+
+    def cleanup(self):
+        """ Removes all pointers to empty lists, deletes all dict entries
+        that point to things no longer in use, etc. """
+        pass
+
+    def upload_and_get_key(self, message):
+        if self.testing:
+            fname = gen_random_fname(suffix='.dat')
+            final = open(TEST_DATA_DIR + '/' + fname, 'w')
+            for file in os.listdir(TEST_PARTS_DIR):
+                try:
+                    name, ext = file.split('.')
+                except:
+                    continue
+                if ext == 'part':
+                    open_file = open(TEST_PARTS_DIR + '/' + file, 'r')
+                    for line in open_file:
+                        final.write(line)
+                    open_file.close()
+            final.close()
+            return fname
+
         report_dir = SHORT_ACCT_DIR + '/%s/reports/'
         report_dir = report_dir % message.account
         out_file = report_dir + message.fname
@@ -154,43 +275,28 @@ class ReportMessageHandler(MessageHandler):
             ent.get_contents_to_file(finished_file)
         finished_file.close() 
         finished_file = open(FINISHED_FILE % message.report_key)
-        blob_key = upload_file(finished_file)
+        try:
+            blob_key = upload_file(finished_file)
+        except:
+            raise BlobUploadError(message = message)
         finished_file.close()
-        pid = os.fork()
-        if pid:
-            return
-        else:
-            retry = 0
-            while retry < MAX_RETRIES:
-                try:
-                    self.finalize_report(message, blob_key)
-                    break
-                except ReportException:
-                    # Keep trying!
-                    retry += 1
-            if retry >= MAX_RETRIES:
-                self.notify_failure(message, 'Failed')
-            sys.exit(0)
+        return blob_key
+
 
     def notify_failure(self, message, reason):
+        self.message_completion_cleanup(message)
         try:
-            rep = Report.get(message.report_key)
+            rep = self.get_message_report(message)
             rep.status = reason
             rep.put()
         except Exception:
-            logging.warning("Report notify failed")
+            logger.warning("Report notify failed")
             return
 
-    def finalize_report(self, message, blob_key):
-        report = Report.get(message.report_key)
-        report.report_blob = blob_key
-        # Put before we parse just in case, this way we still got it
+    def test_finalize(self, message):
+        report = self.get_message_report(message)
+        report.status = 'Success'
         report.put()
-        data = report.parse_report_blob(report.report_blob.open())
-        report.data = data
-        report.completed_at = datetime.now()
-        report.put()
-        report.notify_complete()
 
 
     def kill_waiting_jobflows(self):
@@ -226,7 +332,7 @@ class ReportMessageHandler(MessageHandler):
                 # Actually no messages, return False 
                 return False
             for msg in msgs:
-                logging.warning("Message from Queue:%s" % msg.get_body())
+                logger.warning("Message from Queue:%s" % msg.get_body())
                 message = ReportMessage(msg)
                 try:
                     self.handle_message(message, 
@@ -236,7 +342,7 @@ class ReportMessageHandler(MessageHandler):
                 # Commence Robust Exception Handling 
                 except NoDataError, e:
                     # No data, can't retry
-                    logging.warning("No Data Error on %s", e.report_message)
+                    logger.warning("No Data Error on %s", e.report_message)
                     self.to_del.append(e.report_message)
                     self.notify_failure(e.report_message, 'No Data')
                     if not self.testing:
@@ -244,9 +350,9 @@ class ReportMessageHandler(MessageHandler):
 
                 except MRSubmitError, e:
                     # Failed too many times, stop retrying (delete from the queue)
-                    logging.warning("Submit Error on %s" % e.report_message)
+                    logger.warning("Submit Error on %s" % e.report_message)
                     if self.msg_failures[e.report_message] >= MAX_RETRIES:
-                        logging.warning("Message %s has failed the maximum number of times" % e.report_message)
+                        logger.warning("Message %s has failed the maximum number of times" % e.report_message)
                         self.to_del.append(e.report_message)
                         self.notify_failure(e.report_message, 'Failed')
 
@@ -254,16 +360,15 @@ class ReportMessageHandler(MessageHandler):
                     if not self.testing:
                         default_exc_handle(e)
 
-                #except Exception, e:
-                #    default_exc_handle(e)
-                #    continue
+                # Successfully added to EMR, init it for completion
+                self.init_message(message)
 
             # Delete handled messages from the queue
             for i in range(len(self.to_del)):
                 msg = self.to_del.pop(0)
-                logging.warning("Deleting: %s" % msg)
+                logger.warning("Deleting: %s" % msg)
                 if force_delete_error or not self.queue.delete_message(msg.msg):
-                    logging.warning("Failed to delete message")
+                    logger.warning("Failed to delete message")
                     self.to_del.append(msg)
         else:
             return False
@@ -283,38 +388,70 @@ class ReportMessageHandler(MessageHandler):
                 time.sleep(5 + (2 * retry))
         return None
 
-    def handle_working_jobs(self):
-        """ 
-            Args: None
+    def handle_working_jobs(self, jobflows = None, force_failure = False, fail_step=None):
+        """
+            For all jobs that have messages being handled, see if they're done.  If they are, 
+            process them
+
+            Args: jobflows - list of jobflows to handle, only if testing
             Rets: None
-            Throws: Whatever the notify's throw
+            Throws: None
             """
         # Get the status of the jobflows we are using
-        jobflows = self.get_jobflow_statuses(self.working_jobids)
-        # Each jobflow can have multiple steps.  Ideally we only ever have one jobflow
-        # but it's conceivable that we have two
+        if not self.testing:
+            force_failure = False
+            fail_step = None
+            jobflows = self.get_jobflow_statuses(self.working_jobids)
+
         if jobflows is None:
             return
+        # Each jobflow can have multiple steps.  Ideally we only ever have one jobflow
+        # but it's conceivable that we have two
         for jobflow in jobflows:
             try:
-                self.handle_jobflow(jobflow)
+                self.handle_jobflow(jobflow, 
+                                    force_failure = force_failure, 
+                                    fail_step=fail_step)
             except BlobUploadError, e:
-                # Blob didn't upload, nbd
-                pass
+                message = e.message
+                jobflowid = e.jobflowid
+                self.set_message_report(message, None)
+                if self.step_timedout(message, UPLOAD):
+                    self.mark_failed(message, jobflowid)
+
             except ReportPutError, e:
-                # Put failed
-                pass
-            except S3Error, e:
-                # S3 Failed
-                pass
+                # Put failed.
+                message = e.message
+                jobflowid = e.jobflowid
+                self.set_message_report(message, None)
+                if self.step_timedout(message, [BLOB_KEY_PUT, POST_PARSE_PUT]):
+                    self.mark_failed(message, jobflowid)
+
+            # This is a child process that has failed
+            # THE ONLY THING THAT THROWS THESE ARE CHILD PROCESSES!!!!!
+            except ReportParseError, e:
+                message = e.message
+                jobflowid = e.jobflowid
+                self.set_message_report(message, None)
+                # No longer parsing, and it failed
+                self.set_completed(message, PARSE, False)
+                if self.step_timedout(message, PARSE):
+                    self.mark_failed(message, jobflowid)
+                # Super kill child process
+                os._exit(0)
+
             except ReportNotifyError, e:
                 # Notifying Failed
-                pass
+                message = e.message
+                jobflowid = e.jobflowid
+                self.set_message_report(message, None)
+                if self.step_timedout(message, NOTIFY):
+                    self.mark_failed(message, jobflowid)
             except Exception, e:
-                # Something else
                 pass
     
-    def handle_jobflow(self, jobflow):
+    def handle_jobflow(self, jobflow, force_failure = False, fail_step=None):
+
         jobid = jobflow.jobflowid
         if not self.jobid_message_map.has_key(jobid):
             return
@@ -324,22 +461,14 @@ class ReportMessageHandler(MessageHandler):
         finished_messages = [msg for msg in messages if msg.step_name in completed_steps]
         failed_messages = [msg for msg in messages if msg.step_name in failed_steps]
 
-        # Handle completed messages
         for message in finished_messages:
-            self.on_success(message, jobid)
+            self.on_success(message, jobid, force_failure, fail_step)
 
-        # Handle failed messages
         for message in failed_messages:
             self.on_failure(message, jobid)
         
-        # This jobflow is exhausted, remove it from the list of working jobids
         if len(self.jobid_message_map[jobid]) == 0:
             del(self.jobid_message_map[jobid])
-            
-    def on_success(self, message, jobid):
-        self.notify_success(message)
-        # I realize we're iterating for every one, but this is the right way.
-        self.jobid_message_map[jobid] = [msg for msg in self.jobid_message_map[jobid] if msg != message]
 
     def on_failure(self, message, jobid):
         # Failed too many times, notify
@@ -352,7 +481,143 @@ class ReportMessageHandler(MessageHandler):
         
         self.jobid_message_map[jobid] = [msg for msg in self.jobid_message_map[jobid] if msg != message]
 
+    def mark_failed(self, message, jobid):
+        self.notify_failure(message, 'Failed')
+        self.jobid_message_map[jobid] = [msg for msg in self.jobid_message_map[jobid] if msg != message]
 
+    def on_success(self, message, jobid, force_failure = False, fail_step=None):
+        # Set the timeout for the first step
+        if self.step_timeout(message, MESSAGE_COMPLETION_STEPS[0]) is None:
+            self.set_step_timeout(message, MESSAGE_COMPLETION_STEPS[0], datetime.now() + timedelta(minutes = 15))
+
+        if not self.testing:
+            force_failure = False
+            fail_step = None
+
+        # There are 5 distinct steps to finalizing, all of which can fail.  If any one fails
+        # the on_success is retried.  There is no reason to try to do something again that
+        # has succeeded, so don't
+        for i, step in enumerate(MESSAGE_COMPLETION_STEPS):
+            if step == PARSE and self.parsing_message(message):
+                return 
+            if self.completed(message, step):
+                continue
+            else:
+                # If the handling succeeds mark it as such and do the next one
+                # Otherwise stop processing this message
+                if self.handle_completion_step(message, step, jobid, force_failure, fail_step):
+                    self.mark_completed(message, step, i)
+                    # The child is the only one that will return True, kill it after we've 
+                    # marked the step as completed
+                    if step == PARSE:
+                        os._exit(0)
+                else:
+                    return 
+
+        # Cleanup since we're done!
+        # I realize we're iterating for every one, but this is the right way.
+        self.jobid_message_map[jobid] = [msg for msg in self.jobid_message_map[jobid] if not msg == message]
+        self.message_completion_cleanup(message)
+    
+
+    def handle_completion_step(self, message, step, jobflowid, force_failure=False, fail_step=None):
+        """ Do what is needed for the specified step.  
+
+        THIS IS WHERE ERRORS (should be) ARE THROWN """
+        # Upload step, throws BlobUploadErrors
+        if step == UPLOAD:
+            if self.testing:
+                blob_key = None
+            else:
+                # This guy throws
+                blob_key = self.upload_and_get_key(message)
+            self.message_blob_keys[message] = blob_key
+            if force_failure and fail_step == step:
+                raise BlobUploadError(message = message, jobflowid = jobflowid)
+            return True
+
+        # First put, throws ReportPutErrors
+        elif step == BLOB_KEY_PUT:
+            try:
+                rep = self.get_message_report(message)
+                if self.testing:
+                    self.test_report_blob = db.Blob(open(os.path.join(TEST_DATA_DIR, self.message_blob_keys[message], 'r')).read())
+                else:
+                    rep.report_blob = self.message_blob_keys[message]
+                rep.put()
+            except:
+                raise ReportPutError(message = message, jobflowid = jobflowid)
+            if force_failure and fail_step == step:
+                raise ReportPutError(message = message, jobflowid = jobflowid)
+            return True
+
+        # Parse error, throws ReportParseErrors
+        # SPAWNS CHILD THREAD (because it takes so damn long)
+        elif step == PARSE:
+            # Indicate that we are currently working on this step
+            self.set_completed(message, step, PARSING)
+            pid = os.fork()
+            if pid:
+                return False
+            else:
+                rep = self.get_message_report(message)
+                try:
+                    if self.testing:
+                        pass
+                    else:
+                        data = rep.parse_report_blob(rep.report_blob.open())
+                        
+                except:
+                    raise ReportParseError(message = message, jobflowid = jobflowid)
+                self.message_data[message] = data
+                if force_failure and fail_step == step:
+                    raise ReportParseError(message = message, jobflowid = jobflowid)
+                return True
+
+        # Second put, throws ReportPutErrors
+        elif step == POST_PARSE_PUT:
+            try:
+                rep = self.get_message_report(message)
+                rep.data = self.message_data[message]
+                rep.completed_at = datetime.now()
+                rep.put()
+            except:
+                raise ReportPutError(message = message, jobflowid = jobflowid)
+
+            if force_failure and fail_step == step:
+                raise ReportPutError(message = message, jobflowid = jobflowid)
+            return True
+
+        # Notify, throws ReportNotifyErrors
+        elif step == NOTIFY:
+            try:
+                rep = self.get_message_report(message)
+                rep.notify_complete()
+            except:
+                raise ReportNotifyError(message = message, jobflowid = jobflowid)
+
+            if force_failure and fail_step == step:
+                raise ReportNotifyError(message = message, jobflowid = jobflowid)
+            return True
+
+    def mark_completed(self, message, step, i):
+        """ Mark the specified step for the given message as completed, 
+        set the timeout for the next step """
+        self.set_completed(message, step, True)
+        # Last step, don't set a new timeout
+        if i+1 == len(MESSAGE_COMPLETION_STEPS):
+            return
+        # Not last step, set timeout for next step
+        else:
+            next_step = MESSAGE_COMPLETION_STEPS[i+1]
+            now = datetime.now()
+            dt = timedelta(minutes = 15)
+            if next_step == PARSE:
+                dt = timedelta(minutes = 30)
+            if self.testing:
+                dt = timedelta(seconds = 30)
+            timeout = now + dt
+            self.set_step_timeout(message, step, timeout)
 
     def handle_message(self, message, force_no_data = False, force_submit_error = False):
         # Add a failure dict. This must be done before any possible failures
@@ -367,7 +632,7 @@ class ReportMessageHandler(MessageHandler):
         if force_submit_error:
             raise MRSubmitError("Error adding job to EMR", message)
 
-        #log("Handling %s" % message.msg.get_body())
+        #logger.info("Handling %s" % message.msg.get_body())
 
         if not self.testing:
             # Submit the job

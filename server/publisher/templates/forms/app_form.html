@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+{% load filters %}
+>>>>>>> master
 <dl class="formFields">
   <dt>Platform:</dt>
   <dd>
@@ -16,7 +20,8 @@
       <label class="mweb" for="appForm-name">Site name:</label>
   </dt>
   <dd class="appForm-platformDependent">
-    <input type="text" class="input-text required {% if form.name.errors %}form-error{% endif %}" name="name" value="{{form.name.value}}" id="appForm-name" />
+    <input type="text" class="input-text {% if form.name.errors %}form-error{% endif %} required" name="name" value="{{form.name.value}}" id="appForm-name" />
+
     <div class="formFields-field-help" id="appForm-search">
       <a href="#" class="button iphone" id="appForm-search-button">Search App Store</a>
       <!-- Commented out since Android search is blocked <a href="#" class="button android" id="appForm-market-search-button">Search Android Market</a> -->

@@ -311,7 +311,7 @@ class CreateCampaignAJAXHander(RequestHandler):
 
         if adgroup_form:
             # We hide deprecated networks by default.  Show them for pre-existing adgroups though
-            if adgroup_form['network_type'].value == 'admob':
+            if adgroup_form['network_type'].value == 'admob' or self.request.user.is_staff:
                 networks.append(["admob","AdMob Javascript (deprecated)",False])
             # Allow admins to create Millennial s2s campaigns
             if adgroup_form['network_type'].value == 'millennial' or self.request.user.is_staff:
@@ -405,8 +405,8 @@ class CreateCampaignAJAXHander(RequestHandler):
              ##Check if creative exists for this network type, if yes
              #update, if no, delete old and create new
                 if campaign.campaign_type in ['marketplace', 'backfill_marketplace']:
-                    creative = adgroup.default_creative()
                     if not has_adgroup_instance: #ensure form posts do not change ownership
+                        creative = adgroup.default_creative()
                         creative.account = self.account
                     CreativeQueryManager.put(creative)
 
@@ -661,7 +661,7 @@ class ShowAdGroupHandler(RequestHandler):
               graph_adunits[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[au.all_stats for au in adunits[3:]])]
 
         # Load creatives if we are supposed to
-        if not (adgroup.network_type or adgroup.campaign.campaign_type in ['marketplace', 'backfill_marketplace']):
+        if not (adgroup.campaign.campaign_type in ['network', 'marketplace', 'backfill_marketplace']):
             # In order to have add creative
             creative_handler = AddCreativeHandler(self.request)
             creative_fragment = creative_handler.get() # return the creative fragment

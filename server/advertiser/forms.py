@@ -143,7 +143,6 @@ class AdGroupForm(mpforms.MPModelForm):
     site_keys = mpfields.MPModelMultipleChoiceField(AdUnit,required=False)
     keywords = mpfields.MPKeywordsField(required=False)
     geo = forms.Field(widget=forms.MultipleHiddenInput, required=False)
-    device_predicates = mpfields.MPTextareaField(required=False)
     custom_html = mpfields.MPTextareaField(required=False)
     custom_method = mpfields.MPTextField(required=False)
     cities = forms.Field(widget=forms.MultipleHiddenInput, required=False)
@@ -164,7 +163,8 @@ class AdGroupForm(mpforms.MPModelForm):
 
     class Meta:
         model = AdGroup
-        fields = ('name', 'network_type', 'priority_level', 'keywords',
+
+        fields = ('name', 'network_type', 'keywords',
                   'bid', 'bid_strategy',
                   'percent_users', 'site_keys',
                   'hourly_frequency_cap','daily_frequency_cap','allocation_percentage',
@@ -346,7 +346,10 @@ class ImageCreativeForm(AbstractCreativeForm):
 
         if instance:
             if instance.image_blob:
-                image_url = images.get_serving_url(instance.image_blob)
+                try:
+                    image_url = images.get_serving_url(instance.image_blob)
+                except:
+                    image_url = None
             else:
                 image_url = None
             if not initial:

@@ -66,13 +66,13 @@ handlers:
   login: admin
 
 - url: /files/.*
-  script: mopub_logging/views.py
+  script: stats/views.py
 
 - url: /m/.*
   script: ad_server/main.py
 
 - url: /_ah/queue/.*
-  script: mopub_logging/views.py
+  script: stats/views.py
   login: admin
 
 - url: /offline/.*

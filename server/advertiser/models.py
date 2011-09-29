@@ -9,6 +9,45 @@ from common.constants import MIN_IOS_VERSION, MAX_IOS_VERSION, MIN_ANDROID_VERSI
 import datetime
 from budget.tzinfo import Pacific
 
+
+from ad_server.renderers.creative_renderer import BaseCreativeRenderer
+from ad_server.renderers.admob import AdMobRenderer
+from ad_server.renderers.admob_native import AdMobNativeRenderer
+from ad_server.renderers.text_and_tile import TextAndTileRenderer
+from ad_server.renderers.adsense import AdSenseRenderer
+from ad_server.renderers.image import ImageRenderer
+from ad_server.renderers.millennial_native import MillennialNativeRenderer
+from ad_server.renderers.millennial import MillennialRenderer
+from ad_server.renderers.custom_native import CustomNativeRenderer
+from ad_server.renderers.base_html_renderer import BaseHtmlRenderer
+from ad_server.renderers.html_data_renderer import HtmlDataRenderer
+from ad_server.renderers.brightroll import BrightRollRenderer
+from ad_server.renderers.inmobi import InmobiRenderer
+from ad_server.renderers.greystripe import GreyStripeRenderer
+from ad_server.renderers.appnexus import AppNexusRenderer
+from ad_server.renderers.chartboost import ChartBoostRenderer
+from ad_server.renderers.ejam import EjamRenderer
+from ad_server.renderers.jumptap import JumptapRenderer
+from ad_server.renderers.iad import iAdRenderer
+from ad_server.renderers.mobfox import MobFoxRenderer
+
+
+from ad_server.networks.appnexus import AppNexusServerSide
+from ad_server.networks.jumptap import JumptapServerSide
+from ad_server.networks.brightroll import BrightRollServerSide
+from ad_server.networks.chartboost import ChartBoostServerSide
+from ad_server.networks.ejam import EjamServerSide
+from ad_server.networks.greystripe import GreyStripeServerSide
+from ad_server.networks.inmobi import InMobiServerSide
+from ad_server.networks.jumptap import JumptapServerSide
+from ad_server.networks.millennial import MillennialServerSide
+from ad_server.networks.mobfox import MobFoxServerSide
+from ad_server.networks.dummy_server_side import (DummyServerSideSuccess,
+                                                  DummyServerSideFailure
+                                                 )
+
+from common.utils.helpers import to_uni, to_ascii
+
 # from budget import budget_service
 #
 # A campaign.    Campaigns have budgetary and time based restrictions.
@@ -99,8 +138,7 @@ class AdGroup(db.Model):
     created = db.DateTimeProperty(auto_now_add=True)
 
     # the priority level at which this ad group should be auctioned
-    priority_level = db.IntegerProperty(default=1)
-    network_type = db.StringProperty(choices=["adsense", "iAd", "admob","millennial","ejam","chartboost","appnexus","inmobi","mobfox","jumptap","brightroll","greystripe", "custom", "custom_native", "admob_native", "millennial_native"])
+    network_type = db.StringProperty(choices=["dummy","adsense", "iAd", "admob","millennial","ejam","chartboost","appnexus","inmobi","mobfox","jumptap","brightroll","greystripe", "custom", "custom_native", "admob_native", "millennial_native"])
 
     # Note that bid has different meaning depending on the bidding strategy.
     # if CPM: bid = cost per 1000 impressions
@@ -212,38 +250,32 @@ class AdGroup(db.Model):
     # Each incoming request will be matched against all of these combinations
     geo_predicates = db.StringListProperty(default=["country_name=*"])
 
-    # Device and platform preferences are listed similarly:
-    #
-    # model_name=X,brand_name=X
-    # brand_name=X,platform_name=X
-    # platform_name=X
-    device_predicates = db.StringListProperty(default=["platform_name=*"])
-
-    def default_creative(self, custom_html=None):
+    def default_creative(self, custom_html=None, key_name=None):
         # TODO: These should be moved to ad_server/networks or some such
         c = None
-        if self.network_type == 'adsense': c = AdSenseCreative(name="adsense dummy",ad_type="adsense", format="320x50", format_predicates=["format=*"])
-        elif self.network_type == 'iAd': c = iAdCreative(name="iAd dummy",ad_type="iAd", format="320x50", format_predicates=["format=320x50"])
-        elif self.network_type == 'admob': c = AdMobCreative(name="admob dummy",ad_type="admob", format="320x50", format_predicates=["format=320x50"])
-        elif self.network_type == 'brightroll': c = BrightRollCreative(name="brightroll dummy",ad_type="html_full", format="full",format_predicates=["format=*"])
-        elif self.network_type == 'chartboost': c = ChartBoostCreative(name="chartboost dummy",ad_type="html",format="320x50",format_predicates=["format=320x50"])
-        elif self.network_type == 'ejam': c = EjamCreative(name="ejam dummy",ad_type="html",format="320x50",format_predicates=["format=320x50"])
-        elif self.network_type == 'jumptap': c = JumptapCreative(name="jumptap dummy",ad_type="html", format="320x50",format_predicates=["format=320x50"])
-        elif self.network_type == 'millennial': c = MillennialCreative(name="millennial dummy",ad_type="html",format="320x50", format_predicates=["format=320x50"]) # TODO: make sure formats are right
-        elif self.network_type == 'inmobi': c = InMobiCreative(name="inmobi dummy",ad_type="html",format="320x50", format_predicates=["format=320x50"]) # TODO: make sure formats are right
-        elif self.network_type == 'greystripe' : c = GreyStripeCreative(name="greystripe dummy",ad_type="greystripe", format="320x50", format_predicates=["format=*"]) # TODO: only formats 320x320, 320x48, 300x250
-        elif self.network_type == 'appnexus': c = AppNexusCreative(name="appnexus dummy",ad_type="html",format="320x50",format_predicates=["format=300x250"])
-        elif self.network_type == 'mobfox' : c = MobFoxCreative(name="mobfox dummy",ad_type="html",format="320x50",format_predicates=["format=320x50"])
-        elif self.network_type == 'custom': c = CustomCreative(name='custom', ad_type='html', format='', format_predicates=['format=*'], html_data=custom_html)
-        elif self.network_type == 'custom_native': c = CustomNativeCreative(name='custom native dummy', ad_type='custom_native', format='320x50', format_predicates=['format=*'], html_data=custom_html)
-        elif self.network_type == 'admob_native': c = AdMobNativeCreative(name="admob native dummy",ad_type="admob_native",format="320x50",format_predicates=["format=320x50"])
-        elif self.network_type == 'millennial_native': c = MillennialNativeCreative(name="millennial native dummy",ad_type="millennial_native",format="320x50",format_predicates=["format=320x50"])
-        elif self.campaign.campaign_type in ['marketplace', 'backfill_marketplace']: c = MarketplaceCreative(name='marketplace dummy', ad_type='html')
+        if self.network_type == 'adsense': c = AdSenseCreative(key_name=key_name, name="adsense dummy",ad_type="adsense", format="320x50", format_predicates=["format=*"])
+        elif self.network_type == 'iAd': c = iAdCreative(key_name=key_name, name="iAd dummy",ad_type="iAd", format="320x50", format_predicates=["format=320x50"])
+        elif self.network_type == 'admob': c = AdMobCreative(key_name=key_name, name="admob dummy",ad_type="admob", format="320x50", format_predicates=["format=320x50"])
+        elif self.network_type == 'brightroll': c = BrightRollCreative(key_name=key_name, name="brightroll dummy",ad_type="html_full", format="full",format_predicates=["format=*"])
+        elif self.network_type == 'chartboost': c = ChartBoostCreative(key_name=key_name, name="chartboost dummy",ad_type="html",format="320x50",format_predicates=["format=320x50"])
+        elif self.network_type == 'ejam': c = EjamCreative(key_name=key_name, name="ejam dummy",ad_type="html",format="320x50",format_predicates=["format=320x50"])
+        elif self.network_type == 'jumptap': c = JumptapCreative(key_name=key_name, name="jumptap dummy",ad_type="html", format="320x50",format_predicates=["format=320x50"])
+        elif self.network_type == 'millennial': c = MillennialCreative(key_name=key_name, name="millennial dummy",ad_type="html",format="320x50", format_predicates=["format=320x50"]) # TODO: make sure formats are right
+        elif self.network_type == 'inmobi': c = InMobiCreative(key_name=key_name, name="inmobi dummy",ad_type="html",format="320x50", format_predicates=["format=320x50"]) # TODO: make sure formats are right
+        elif self.network_type == 'greystripe' : c = GreyStripeCreative(key_name=key_name, name="greystripe dummy",ad_type="greystripe", format="320x50", format_predicates=["format=*"]) # TODO: only formats 320x320, 320x48, 300x250
+        elif self.network_type == 'appnexus': c = AppNexusCreative(key_name=key_name, name="appnexus dummy",ad_type="html",format="320x50",format_predicates=["format=300x250"])
+        elif self.network_type == 'mobfox' : c = MobFoxCreative(key_name=key_name, name="mobfox dummy",ad_type="html",format="320x50",format_predicates=["format=320x50"])
+        elif self.network_type == 'custom': c = CustomCreative(key_name=key_name, name='custom', ad_type='html', format='', format_predicates=['format=*'], html_data=custom_html)
+        elif self.network_type == 'custom_native': c = CustomNativeCreative(key_name=key_name, name='custom native dummy', ad_type='custom_native', format='320x50', format_predicates=['format=*'], html_data=custom_html)
+        elif self.network_type == 'admob_native': c = AdMobNativeCreative(key_name=key_name, name="admob native dummy",ad_type="admob_native",format="320x50",format_predicates=["format=320x50"])
+        elif self.network_type == 'millennial_native': c = MillennialNativeCreative(key_name=key_name, name="millennial native dummy",ad_type="millennial_native",format="320x50",format_predicates=["format=320x50"])
+        elif self.campaign.campaign_type in ['marketplace', 'backfill_marketplace']: c = MarketplaceCreative(key_name=key_name, name='marketplace dummy', ad_type='html')
+
         if c: c.ad_group = self
         return c
 
     def __repr__(self):
-        return "AdGroup:'%s'" % self.name
+        return u"AdGroup:%s" % to_uni(self.name)
 
     @property
     def uses_default_device_targeting(self):
@@ -320,12 +352,13 @@ class AdGroup(db.Model):
 
 
 class Creative(polymodel.PolyModel):
-    name = db.StringProperty()
+    name = db.StringProperty(default='Creative')
     custom_width = db.IntegerProperty()
     custom_height = db.IntegerProperty()
     landscape = db.BooleanProperty(default=False) # TODO: make this more flexible later
 
     ad_group = db.ReferenceProperty(AdGroup, collection_name="creatives")
+
 
     active = db.BooleanProperty(default=True)
     deleted = db.BooleanProperty(default=False)
@@ -363,6 +396,25 @@ class Creative(polymodel.PolyModel):
     #         return float(self.p_ctr() * self.ad_group.bid * 1000)
     #     elif self.ad_group.bid_strategy == 'cpm':
     #         return float(self.ad_group.bid)
+
+    network_name = None
+
+    @property
+    def intercept_url(self):
+        """ A URL prefix for which navigation should be intercepted and
+            forwarded to a full-screen browser.
+
+            For some ad networks, a click event actually results in navigation
+            via "window.location = [TARGET_URL]". Since this kind of navigation is
+            not limited exclusively to clicks, only a subset of all observed
+            [TARGET_URL]s should be intercepted. This header is used as part of
+            prefix-matching to distinguish true click events.
+        """
+        return self.launchpage
+
+    # Set up the basic Renderers and ServerSides for the creative
+    Renderer = BaseCreativeRenderer
+    ServerSide = None  # Non-server-bound creatives don't need a serverside
 
     @property
     def multi_format(self):
@@ -438,6 +490,10 @@ class TextCreative(Creative):
     line1 = db.StringProperty()
     line2 = db.StringProperty()
 
+    @property
+    def Renderer(self):
+        return None
+
     def __repr__(self):
         return "'%s'" % (self.headline,)
 
@@ -451,10 +507,20 @@ class TextAndTileCreative(Creative):
     font_color = db.StringProperty(default="FFFFFF")
     gradient = db.BooleanProperty(default=False)
 
+    @property
+    def Renderer(self):
+        return TextAndTileRenderer
+
 class HtmlCreative(Creative):
-    # html ad properties
-    # html_name = db.StringProperty(required=True)
+    """ This creative has pure html that has been added by the user.
+        This should not be confused with ad_type=html, which means that the
+        payload is html as opposed to a native request. """
     html_data = db.TextProperty()
+
+    @property
+    def Renderer(self):
+        return HtmlDataRenderer
+
 
 class ImageCreative(Creative):
     # image properties
@@ -473,32 +539,58 @@ class ImageCreative(Creative):
         fp = IMAGE_PREDICATES.get("%dx%d" % (img.width, img.height))
         return [fp] if fp else None
 
+
+    @property
+    def Renderer(self):
+        return ImageRenderer
+
 class MarketplaceCreative(HtmlCreative):
-    pass
+    """ If this is targetted to an adunit, lets the ad_auction know to
+        run the marketplace battle. """
+
 
 class CustomCreative(HtmlCreative):
-    pass
+    # TODO: For now this is redundant with HtmlCreative
+    # If we don't want to add any properties to it, remove it
+    network_name = "custom"
 
 class CustomNativeCreative(HtmlCreative):
+    network_name = "custom_native"
+    Renderer = CustomNativeRenderer
+
+
     @property
     def multi_format(self):
         return ('728x90', '320x50','300x250', 'full')
 
 class iAdCreative(Creative):
+    network_name = "iAd"
+
+    Renderer = iAdRenderer
+
     @property
     def multi_format(self):
         return ('728x90', '320x50', 'full_tablet')
 
 class AdSenseCreative(Creative):
+    network_name = "adsense"
+
+    Renderer = AdSenseRenderer
 
     @property
     def multi_format(self):
         return ('320x50', '300x250')
 
 class AdMobCreative(Creative):
-    pass
+    network_name = "admob"
+
+
+    Renderer = AdMobRenderer
 
 class AdMobNativeCreative(AdMobCreative):
+    network_name = "admob_native"
+
+    Renderer = AdMobNativeRenderer
 
     @property
     def multi_format(self):
@@ -506,11 +598,22 @@ class AdMobNativeCreative(AdMobCreative):
 
 class MillennialCreative(Creative):
 
+    network_name = "millennial"
+
+    Renderer = MillennialRenderer
+
+    ServerSide = MillennialServerSide
+
     @property
     def multi_format(self):
         return ('728x90', '320x50', '300x250',)
 
 class MillennialNativeCreative(MillennialCreative):
+    network_name = "millennial_native"
+
+    Renderer = MillennialNativeRenderer
+
+    ServerSide = None
 
     @property
     def multi_format(self):
@@ -518,45 +621,90 @@ class MillennialNativeCreative(MillennialCreative):
 
 class ChartBoostCreative(Creative):
 
+    network_name = "chartboost"
+
+    Renderer = ChartBoostRenderer
+
+    ServerSide = ChartBoostServerSide
+
     @property
     def multi_format(self):
         return ('320x50', 'full',)
 
 class EjamCreative(Creative):
-    pass
+    network_name = "ejam"
+
+    Renderer = ChartBoostRenderer
+
+    ServerSide = EjamServerSide
 
 class InMobiCreative(Creative):
+
+    network_name = "inmobi"
+
+    Renderer = InmobiRenderer
+
+    ServerSide = InMobiServerSide
 
     @property
     def multi_format(self):
         return ('728x90', '320x50', '300x250', '468x60', '120x600',)
 
 class AppNexusCreative(Creative):
-    pass
+    network_name = "appnexus"
+
+    Renderer = AppNexusRenderer
+
+    ServerSide = AppNexusServerSide
+
 
 class BrightRollCreative(Creative):
+    network_name = "brightroll"
+
+    Renderer = BrightRollRenderer
+
+    ServerSide = BrightRollServerSide
+
     @property
     def multi_format(self):
         return ('full', 'full_tablet')
 
 class JumptapCreative(Creative):
+    network_name = "jumptap"
+
+    Renderer = JumptapRenderer
+
+    ServerSide = JumptapServerSide
+
     @property
     def multi_format(self):
         return ('728x90', '320x50', '300x250')
 
 class GreyStripeCreative(Creative):
+    network_name = "greystripe"
+
+    Renderer = GreyStripeRenderer
+
+    ServerSide = GreyStripeServerSide
 
     @property
     def multi_format(self):
         return ('320x320', '320x50', '300x250',)
 
 class MobFoxCreative(Creative):
-    pass
+
+    network_name = "mobfox"
+    Renderer = MobFoxRenderer
+
+    ServerSide = MobFoxServerSide
 
 
 class NullCreative(Creative):
     pass
 
-class TempImage(db.Model):
-    image = db.BlobProperty()
+class DummyServerSideFailureCreative(Creative):
+    ServerSide = DummyServerSideFailure
 
+
+class DummyServerSideSuccessCreative(Creative):
+    ServerSide = DummyServerSideSuccess

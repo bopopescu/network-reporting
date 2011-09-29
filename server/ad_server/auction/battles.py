@@ -209,7 +209,6 @@ class PromoBattle(Battle):
     starting_message = "Beginning promotional campaigns..."
     campaign_type = "promo"
 
-
 class MarketplaceBattle(Battle):
     """ Queries out to the marketplace """
 
@@ -247,15 +246,19 @@ class MarketplaceBattle(Battle):
             trace_logging.info('MPX RESPONES CODE:%s'%fetched.status_code)
             if fetched.status_code == 200:
                 creative = self._process_marketplace_response(fetched.content, creative)
-                if creative:
-                    return super(MarketplaceBattle, self)._process_winner(creative)
+                if creative:  
+                    # Do not ever add marketplace adgroups to the excluded_adgroup_keys
+                    return creative
                 return False
 
         except urlfetch.DownloadError, e:
             # There was no valid bid
             return False
 
-    def _process_marketplace_response(self, content, creative):
+    def _process_marketplace_response(self, content, creative):  
+        """ NOTE: pub_rev is CPM this means that the pub is paid pub_rev / 1000  
+            Further, the bid_strategy for the adgroup is always "cpm"
+        """
         marketplace_response_dict = simplejson.loads(content)
         trace_logging.info('MPX REPSONSE:%s'%marketplace_response_dict)
         # With valid data
@@ -265,10 +268,22 @@ class MarketplaceBattle(Battle):
             pub_rev = marketplace_response_dict['revenue']
             # Should really be the pub's cut
             # Do we need to do anything with the bid info?
-            trace_logging.info('\n\nMPX Charge: %s\nMPX HTML: %s\n' % (pub_rev, creative.html_data))
+            trace_logging.info('\n\nMPX Charge: %s\nMPX HTML: %s\n' % (pub_rev, creative.html_data))     
+            
+            # Attach bid to adgroup - see docstring for details on pub_rev and bid
             creative.adgroup.bid = pub_rev
-            return creative
-
+            return creative     
+            
+class DummyMarketplaceBattle(MarketplaceBattle):
+    """ Like Marketplace but always returns a creative.
+        For Testing purposes. """ 
+    cpm_of_winning_bid = 0.50 # Arbitrary default value for testing        
+    
+    def _process_winner(self, creative):
+        """ return a creative with a default bid. """     
+        creative.adgroup.bid = cpm_of_winning_bid
+        return creative                
+    
 class NetworkBattle(Battle):
     """ Fans out to each of the networks """
 

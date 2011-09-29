@@ -149,7 +149,7 @@ class RenderingTestBase(object):
         self._compare_rendering_with_examples(network_type, suffix="_full")
         
     def _compare_rendering_with_examples(self, name, suffix="", 
-                                               reset_example=True):
+                                               reset_example=False):
         """ For now just test the renderer. Next test headers too.
             Uses a default value for html_data. """
         

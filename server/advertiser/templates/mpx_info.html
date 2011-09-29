@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load filters %}
+{% block extraScripts %}
+<script type="text/javascript">
+$(function () {
+    $("#dashboard-dateOptions").remove();
+    $("#titlebar").remove();
+});
+</script>
+{% endblock extraScripts %}
+{% block extraCSS %}
+<style type="text/css" media="screen">
+#about_mpx {
+    border: 1px solid #111;
+    border-radius: 5px;
+    box-shadow: 0px 1px 10px #333;
+    padding: 10px 15px;
+    }
+
+#actions {
+    width: 380px;
+    margin: 0 auto;
+    text-align: center;
+     }
+#mpx_desc {
+    width: 320px;
+    padding: 40px;
+    }
+
+.btn {
+    font-size: 34px;
+    }
+</style>
+{% endblock extraCSS %}
+{% block messageCenter %}{% endblock %}
+{% block pageTitle %}{% endblock pageTitle %}
+{% block content %}
+
+  <div id="about_mpx">
+    <div class="clearfix">
+      <div id="mpx_logo">
+      </div>
+      <div id="mpx_desc" class="right">
+        <h2> Get Mopub Marketplace </h2>
+        <h3>Plug in to MoPub’s marketplace and increase your demand sources instantly.</h3>
+      <h3> No added cost and seconds to integrate.</h3>
+      </div>
+    </div>
+      <h4>MPX offers you:</h4>
+      <ul>
+        <li>
+          <h4>Better fill rates</h4>
+          Don’t leave inventory on the table. MPX is a real-time bidding platform that connects you to more buyers that compete directly with your ad network prices and fill any excess inventory you have, instantly.
+        </li>
+        <li>
+          <h4>Greater ad diversity and control</h4>
+          Marketplace gives you access to multiple Demand Side Platforms (DSPs) that offer more ad sources than just simply using ad networks. We’ll be rolling out block lists, ad creative screening, and more controls soon!
+        </li>
+        <li>
+          <h4>Easier payment</h4>
+          Receive just one check from all the marketplace bidders and ad networks.
+        </li>
+      </ul>
+
+    <div class="clearfix" id="actions">
+
+      <a href="#" class="left primary btn"> Try it now </a>
+      <a href="#" class="right"> Learn more </a>
+    </div>
+  </div>
+{% endblock content %}
+

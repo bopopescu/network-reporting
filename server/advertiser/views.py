@@ -1148,3 +1148,14 @@ class CampaignExporter(RequestHandler):
 
 def campaign_export(request, *args, **kwargs):
     return CampaignExporter()(request, *args, **kwargs)
+
+
+class MPXInfoHandler(RequestHandler):
+    def get(self):
+        return render_to_response(self.request,
+                                  "advertiser/mpx_info.html",
+                                  {})
+
+@login_required
+def mpx_info(request, *args, **kwargs):
+    return MPXInfoHandler()(request, *args, **kwargs)

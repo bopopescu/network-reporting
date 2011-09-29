@@ -5,7 +5,7 @@
 {% endblock pageTitle %}
 {% block content %}
 
-{% if payment_history %}
+{% if monthly_records %}
 <table class="dataTable campaignData-main" id="campaignDataTable-direct-">
   <thead>
     <th class="dataTable-date-short">Month</th>
@@ -13,11 +13,11 @@
     <th class="dataTable-data">Payment Status</th>
   </thead>
   <tbody>
-    {% for payment in payment_history %}
+    {% for record in monthly_records %}
       <tr class="alternating-color">
-        <td>{{payment.month}}</td>
-        <td>${{payment.amount}}</td>
-        <td>{{payment.status}}</td>
+        <td>{{record.0}}</td>
+        <td>${{record.1}}</td>
+        <td>{{record.2}}</td>
       </tr>
     {% endfor %}
   </tbody>

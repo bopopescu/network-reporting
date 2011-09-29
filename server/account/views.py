@@ -15,6 +15,11 @@ from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManag
 import logging
 from common.utils.request_handler import RequestHandler
 
+import urllib2
+import simplejson
+import datetime
+from itertools import groupby
+
 class GeneralSettingsHandler(RequestHandler):
     def get(self, *args, **kwargs):
         self.account.paymentinfo = self.account.payment_infos.get()
@@ -187,10 +192,34 @@ def payment_info_change(request, *args, **kwargs):
 
 class PaymentHistoryHandler(RequestHandler):
     def get(self, *args, **kwargs):
-        payment_history = self.account.payment_records.get()
+        payment_history = get_payment_records(self.account.key(),
+                                              self.account.date_added,
+                                              datetime.date.today())
+
+        get_month = lambda record : record['date'][0:7]
+        monthly_records = [(month, sum([r['rev'] for r in record]))  \
+                           for month, record in groupby(payment_history['daily'], get_month)]
+
+        logging.warn(monthly_records)
         return render_to_response(self.request,
                                   'account/payment_history.html',
-                                  {'payment_history': payment_history})
+                                  {'monthly_records': monthly_records})
+
+def get_payment_records(pub_id, start_date, end_date):
+
+
+    url = "http://mpx.mopub.com/pub" + \
+          "?pub=" + str(pub_id) + \
+          "&start=" + start_date.strftime("%m-%d-%Y") + \
+          "&end=" + end_date.strftime("%m-%d-%Y")
+
+    try:
+        data = urllib2.urlopen(url).read()
+    except (URLError, IOError):
+        return {'daily': [], 'sum': {'imp': 0, 'rev': 0}}
+
+    return simplejson.loads(data)
+
 
 @login_required
 def payment_history(request, *args, **kwargs):

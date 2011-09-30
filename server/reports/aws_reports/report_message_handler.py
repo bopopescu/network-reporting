@@ -33,6 +33,7 @@ from reports.aws_reports.helpers import (upload_file,
                                          build_puts, 
                                          get_waiting_jobflow, 
                                          default_exc_handle,
+                                         gen_random_fname,
                                          JOBFLOW_NAME,
                                          LOG_URI,
                                          )
@@ -68,17 +69,26 @@ STEP_NAME = "Generate_report_%s-%s-%s-%s"
 
 MAX_MSGS = 5
 ########### SET UP COMPLETION STATUS ########
-STEP_NAME = 'CSTEP%s'
-UPLOAD = STEP_NAME % 0 
-BLOB_KEY_PUT = STEP_NAME % 1
-PARSE = STEP_NAME % 2
-POST_PARSE_PUT = STEP_NAME % 3 # I wanted to call this P3 but I took pity
-NOTIFY = STEP_NAME % 4
+CSTEP_NAME = 'CSTEP%s'
+UPLOAD = CSTEP_NAME % 0 
+BLOB_KEY_PUT = CSTEP_NAME % 1
+PARSE = CSTEP_NAME % 2
+POST_PARSE_PUT = CSTEP_NAME % 3 # I wanted to call this P3 but I took pity
+NOTIFY = CSTEP_NAME % 4
+
+######## FAILURE REASONS ########
+FAILURE = 'REPFAIL%s'
+NODAT = FAILURE % 0
+MRFAILURE = FAILURE % 1
+# I'll do it later
+OTHER = FAILURE % 2
 
 PARSING = 'parsing'
 
 # All steps must be completed to do things
 MESSAGE_COMPLETION_STEPS = [UPLOAD, BLOB_KEY_PUT, PARSE, POST_PARSE_PUT, NOTIFY]
+
+TEST_FAIL_TIMEOUT = 2
 
 
 
@@ -185,12 +195,29 @@ class ReportMessageHandler(MessageHandler):
         for step in MESSAGE_COMPLETION_STEPS:
             self.message_completion_statuses[message][step] = False
             self.message_step_timeouts[message][step] = None
+    
+    @property
+    def message_maps(self):
+        return (self.message_completion_statuses,
+                self.message_step_timeouts,
+                self.message_blob_keys,
+                self.message_data,
+                self.message_report,
+                )
+
+    def message_completion_cleanup(self, message):
+        """ dels all the dict entries, leaks suck"""
+        del(self.message_completion_statuses[message])
+        del(self.message_step_timeouts[message])
+        del(self.message_blob_keys[message])
+        del(self.message_data[message])
+        del(self.message_report[message])
 
     def get_message_report(self, message):
         """ Gets a report for a message locally if we have it,
         otherwise go to GAE """
 
-        if self.message_report[message] is None:
+        if message not in self.message_report or self.message_report[message] is None:
             rep = Report.get(message.report_key)
             self.message_report[message] = rep
 
@@ -200,25 +227,19 @@ class ReportMessageHandler(MessageHandler):
         """ sets the value of a message report """
         self.message_report[message] = val
 
-
-
-    def message_completion_cleanup(self, message):
-        """ dels all the dict entries, leaks suck"""
-        del(self.message_completion_statuses[message])
-        del(self.message_step_timeouts[message])
-        del(self.message_blob_keys[message])
-        del(self.message_data[message])
-
     def completed(self, message, step):
         """Message step completion getter"""
-        return self.message_completion_statuses[message][step]
+        if step == PARSE and self.message_completion_statuses[message][step] == 'parsing':
+            return False
+        else:
+            return self.message_completion_statuses[message][step]
 
     def set_completed(self, message, step, cmpltd):
         """Message step completion setter"""
         self.message_completion_statuses[message][step] = cmpltd
 
     def parsing_message(self, message):
-        self.message_completion_statuses[message][PARSE] = PARSING
+        return self.message_completion_statuses[message][PARSE] == PARSING
 
     def step_timeout(self, message, step):
         """Message step timeout getter"""
@@ -234,8 +255,10 @@ class ReportMessageHandler(MessageHandler):
         for step in steps:
             if self.completed(message, step):
                 continue
-            elif self.step_timeout(message, step) < datetime.now():
+            elif self.step_timeout(message, step) and self.step_timeout(message, step) < datetime.now():
                 return True
+        logger.info("Timeout: %s" % self.message_step_timeouts[message][step])
+        logger.info("now: %s" % datetime.now())
         return False
 
     @property
@@ -284,14 +307,20 @@ class ReportMessageHandler(MessageHandler):
 
 
     def notify_failure(self, message, reason):
-        self.message_completion_cleanup(message)
-        try:
-            rep = self.get_message_report(message)
-            rep.status = reason
-            rep.put()
-        except Exception:
-            logger.warning("Report notify failed")
-            return
+        if reason == NODAT:
+            fail_text = 'No Data'
+        else:
+            fail_text = 'Failed'
+
+        #try:
+        rep = self.get_message_report(message)
+        rep.status = fail_text 
+        rep.put()
+        #except Exception:
+        #    logger.warning("Report notify failed")
+        #    return
+        if reason not in [NODAT, MRFAILURE]:
+            self.message_completion_cleanup(message)
 
     def test_finalize(self, message):
         report = self.get_message_report(message)
@@ -344,7 +373,7 @@ class ReportMessageHandler(MessageHandler):
                     # No data, can't retry
                     logger.warning("No Data Error on %s", e.report_message)
                     self.to_del.append(e.report_message)
-                    self.notify_failure(e.report_message, 'No Data')
+                    self.notify_failure(e.report_message, NODAT)
                     if not self.testing:
                         default_exc_handle(e)
 
@@ -354,7 +383,7 @@ class ReportMessageHandler(MessageHandler):
                     if self.msg_failures[e.report_message] >= MAX_RETRIES:
                         logger.warning("Message %s has failed the maximum number of times" % e.report_message)
                         self.to_del.append(e.report_message)
-                        self.notify_failure(e.report_message, 'Failed')
+                        self.notify_failure(e.report_message, MRFAILURE)
 
                     self.msg_failures[e.report_message] += 1
                     if not self.testing:
@@ -413,42 +442,49 @@ class ReportMessageHandler(MessageHandler):
                                     force_failure = force_failure, 
                                     fail_step=fail_step)
             except BlobUploadError, e:
-                message = e.message
+                message = e.report_message
                 jobflowid = e.jobflowid
+                #logger.warning("Message: %s  JobFlowID: %s had a BlobUploadError" % (message, jobflowid))
                 self.set_message_report(message, None)
                 if self.step_timedout(message, UPLOAD):
+                    logger.warning("TIMED OUT ON UPLOAD")
                     self.mark_failed(message, jobflowid)
 
             except ReportPutError, e:
                 # Put failed.
-                message = e.message
+                message = e.report_message
                 jobflowid = e.jobflowid
+                #logger.warning("Message: %s  JobFlowID: %s had a ReportPutError" % (message, jobflowid))
                 self.set_message_report(message, None)
                 if self.step_timedout(message, [BLOB_KEY_PUT, POST_PARSE_PUT]):
+                    logger.warning("TIMED OUT ON PUT")
                     self.mark_failed(message, jobflowid)
 
             # This is a child process that has failed
             # THE ONLY THING THAT THROWS THESE ARE CHILD PROCESSES!!!!!
             except ReportParseError, e:
-                message = e.message
+                message = e.report_message
                 jobflowid = e.jobflowid
+                #logger.warning("Message: %s  JobFlowID: %s had a ReportParseError" % (message, jobflowid))
                 self.set_message_report(message, None)
                 # No longer parsing, and it failed
                 self.set_completed(message, PARSE, False)
                 if self.step_timedout(message, PARSE):
+                    logger.warning("TIMED OUT ON PARSE")
                     self.mark_failed(message, jobflowid)
                 # Super kill child process
-                os._exit(0)
+                if not self.testing:
+                    os._exit(0)
 
             except ReportNotifyError, e:
                 # Notifying Failed
-                message = e.message
+                message = e.report_message
                 jobflowid = e.jobflowid
+                #logger.warning("Message: %s  JobFlowID: %s had a ReportNotifyError" % (message, jobflowid))
                 self.set_message_report(message, None)
                 if self.step_timedout(message, NOTIFY):
+                    logger.warning("TIMED OUT ON NOTIFY")
                     self.mark_failed(message, jobflowid)
-            except Exception, e:
-                pass
     
     def handle_jobflow(self, jobflow, force_failure = False, fail_step=None):
 
@@ -486,9 +522,13 @@ class ReportMessageHandler(MessageHandler):
         self.jobid_message_map[jobid] = [msg for msg in self.jobid_message_map[jobid] if msg != message]
 
     def on_success(self, message, jobid, force_failure = False, fail_step=None):
+        #logger.info("Message: %s success, handling" % message)
         # Set the timeout for the first step
         if self.step_timeout(message, MESSAGE_COMPLETION_STEPS[0]) is None:
-            self.set_step_timeout(message, MESSAGE_COMPLETION_STEPS[0], datetime.now() + timedelta(minutes = 15))
+            dt = timedelta(minutes = 15)
+            if self.testing:
+                dt = timedelta(seconds = TEST_FAIL_TIMEOUT)
+            self.set_step_timeout(message, MESSAGE_COMPLETION_STEPS[0], datetime.now() + dt)
 
         if not self.testing:
             force_failure = False
@@ -498,18 +538,21 @@ class ReportMessageHandler(MessageHandler):
         # the on_success is retried.  There is no reason to try to do something again that
         # has succeeded, so don't
         for i, step in enumerate(MESSAGE_COMPLETION_STEPS):
+            #logger.info("Step completion statuses for message %s\t%s" % (message, self.message_completion_statuses[message]))
             if step == PARSE and self.parsing_message(message):
                 return 
             if self.completed(message, step):
+                #logger.info("Step %s for message %s has already been completed" % (step, message))
                 continue
             else:
+                #logger.info("Handling step %s for message %s" % (step, message))
                 # If the handling succeeds mark it as such and do the next one
                 # Otherwise stop processing this message
                 if self.handle_completion_step(message, step, jobid, force_failure, fail_step):
                     self.mark_completed(message, step, i)
                     # The child is the only one that will return True, kill it after we've 
                     # marked the step as completed
-                    if step == PARSE:
+                    if step == PARSE and not self.testing:
                         os._exit(0)
                 else:
                     return 
@@ -526,34 +569,42 @@ class ReportMessageHandler(MessageHandler):
         THIS IS WHERE ERRORS (should be) ARE THROWN """
         # Upload step, throws BlobUploadErrors
         if step == UPLOAD:
-            if self.testing:
-                blob_key = None
-            else:
-                # This guy throws
-                blob_key = self.upload_and_get_key(message)
-            self.message_blob_keys[message] = blob_key
+            # This guy throws
+            blob_key = self.upload_and_get_key(message)
+
             if force_failure and fail_step == step:
                 raise BlobUploadError(message = message, jobflowid = jobflowid)
+            self.message_blob_keys[message] = blob_key
             return True
 
         # First put, throws ReportPutErrors
         elif step == BLOB_KEY_PUT:
             try:
                 rep = self.get_message_report(message)
-                if self.testing:
-                    self.test_report_blob = db.Blob(open(os.path.join(TEST_DATA_DIR, self.message_blob_keys[message], 'r')).read())
+                if  self.testing:
+                    rep.test_report_blob = open(os.path.join(TEST_DATA_DIR, self.message_blob_keys[message]), 'r').read()
                 else:
                     rep.report_blob = self.message_blob_keys[message]
+
+                if force_failure and fail_step == step:
+                    raise ReportPutError(message = message, jobflowid = jobflowid)
+
                 rep.put()
             except:
-                raise ReportPutError(message = message, jobflowid = jobflowid)
-            if force_failure and fail_step == step:
                 raise ReportPutError(message = message, jobflowid = jobflowid)
             return True
 
         # Parse error, throws ReportParseErrors
         # SPAWNS CHILD THREAD (because it takes so damn long)
         elif step == PARSE:
+            if self.testing:
+                rep = self.get_message_report(message)
+                data = rep.parse_report_blob(rep.test_report_blob, testing = self.testing)
+                if force_failure and fail_step == step:
+                    raise ReportParseError(message = message, jobflowid = jobflowid)
+                self.message_data[message] = data
+                return True
+
             # Indicate that we are currently working on this step
             self.set_completed(message, step, PARSING)
             pid = os.fork()
@@ -562,29 +613,24 @@ class ReportMessageHandler(MessageHandler):
             else:
                 rep = self.get_message_report(message)
                 try:
-                    if self.testing:
-                        pass
-                    else:
-                        data = rep.parse_report_blob(rep.report_blob.open())
-                        
+                    data = rep.parse_report_blob(rep.report_blob.open())
                 except:
                     raise ReportParseError(message = message, jobflowid = jobflowid)
                 self.message_data[message] = data
-                if force_failure and fail_step == step:
-                    raise ReportParseError(message = message, jobflowid = jobflowid)
                 return True
 
         # Second put, throws ReportPutErrors
         elif step == POST_PARSE_PUT:
             try:
                 rep = self.get_message_report(message)
+
+                if force_failure and fail_step == step:
+                    raise ReportPutError(message = message, jobflowid = jobflowid)
+
                 rep.data = self.message_data[message]
                 rep.completed_at = datetime.now()
                 rep.put()
             except:
-                raise ReportPutError(message = message, jobflowid = jobflowid)
-
-            if force_failure and fail_step == step:
                 raise ReportPutError(message = message, jobflowid = jobflowid)
             return True
 
@@ -592,12 +638,14 @@ class ReportMessageHandler(MessageHandler):
         elif step == NOTIFY:
             try:
                 rep = self.get_message_report(message)
-                rep.notify_complete()
+                if self.testing:
+                    if force_failure and fail_step == step:
+                        raise ReportNotifyError(message = message, jobflowid = jobflowid)
+                else:
+                    rep.notify_complete()
             except:
                 raise ReportNotifyError(message = message, jobflowid = jobflowid)
 
-            if force_failure and fail_step == step:
-                raise ReportNotifyError(message = message, jobflowid = jobflowid)
             return True
 
     def mark_completed(self, message, step, i):
@@ -615,9 +663,9 @@ class ReportMessageHandler(MessageHandler):
             if next_step == PARSE:
                 dt = timedelta(minutes = 30)
             if self.testing:
-                dt = timedelta(seconds = 30)
+                dt = timedelta(seconds = TEST_FAIL_TIMEOUT)
             timeout = now + dt
-            self.set_step_timeout(message, step, timeout)
+            self.set_step_timeout(message, next_step, timeout)
 
     def handle_message(self, message, force_no_data = False, force_submit_error = False):
         # Add a failure dict. This must be done before any possible failures

@@ -188,7 +188,7 @@ class Report(db.Model):
     report_blob = blobstore.BlobReferenceProperty()
 
     # This should never, ever be set on prod
-    test_report_blob = db.Blob()
+    test_report_blob = db.TextProperty()
 
     #the actual report
     data = DictProperty()
@@ -381,7 +381,7 @@ class Report(db.Model):
     all the resolution is done here.  In the future it might makes sense to take this and put it 
     into a second mapreduce job that's run when the report finalizes.
     """
-    def parse_report_blob(self, blobreader):
+    def parse_report_blob(self, blobreader, testing=False):
         """ turns a reports report_blob blobstore object into a dictionary
         
         Args:
@@ -400,6 +400,8 @@ class Report(db.Model):
         """
         final = {}
         memo = {}
+        if testing:
+            blobreader = blobreader.split('\n')[:-1]
         for line in blobreader:
             #temp now refers to top of the dictionary
             temp = final
@@ -408,8 +410,8 @@ class Report(db.Model):
             vals = eval(vals)
             req, att = self.get_stats_info(keys)
             #I'm using list comprehension for you Nafis
-            bid_infos = [self.get_bid_info(idx, key, memo) for idx, key in enumerate(keys)]
-            keys = [self.get_key_name(idx, key, memo) for idx,key in enumerate(keys)]
+            bid_infos = [self.get_bid_info(idx, key, memo, testing) for idx, key in enumerate(keys)]
+            keys = [self.get_key_name(idx, key, memo, testing) for idx,key in enumerate(keys)]
 
             # Invalid key somewhere in this line, don't use it
             if None in keys:
@@ -533,6 +535,7 @@ class Report(db.Model):
             dim_list = (self.d1, self.d2, self.d3)
         else:
             logging.warning('Invalid key length')
+            logging.warning('Keys: %s' % keys)
         if set(dim_list).intersection(set(NO_REQ)):
             req = False
         for key, dim in zip(keys,dim_list):

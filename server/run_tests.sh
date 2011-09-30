@@ -1,4 +1,4 @@
-#!/bin/sh
+!/bin/sh
 echo $1
 
 export DJANGO_SETTINGS_MODULE='settings'

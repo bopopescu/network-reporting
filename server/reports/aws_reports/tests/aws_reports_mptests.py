@@ -10,7 +10,17 @@ import unittest
 
 from reports.models import Report, ScheduledReport
 from reports.aws_reports.helpers import AWS_ACCESS_KEY, AWS_SECRET_KEY
-from reports.aws_reports.report_message_handler import ReportMessageHandler, ReportMessage
+from reports.aws_reports.report_message_handler import (
+                                            ReportMessageHandler, 
+                                            ReportMessage,
+                                            UPLOAD,
+                                            BLOB_KEY_PUT,
+                                            PARSE,
+                                            POST_PARSE_PUT,
+                                            NOTIFY,
+                                            MESSAGE_COMPLETION_STEPS,
+                                            TEST_FAIL_TIMEOUT,
+                                            )
 from account.models import Account
 from boto.sqs.connection import SQSConnection
 from boto.sqs.message import Message
@@ -20,9 +30,13 @@ from budget import budget_service
 
 from google.appengine.ext import testbed
 
+TEST_FAIL_TIMEOUT += 1
+
 
 SQS_CONN = SQSConnection(AWS_ACCESS_KEY, AWS_SECRET_KEY)
 TEST_REPORT_QUEUE = 'test_report_queue'
+MY_DIR = os.path.split(os.path.abspath(__file__))[0]
+TEST_DATA_DIR = os.path.join(MY_DIR, 'test_data')
 
 def queue_writer(queue):
     def writer(mesg_data):
@@ -69,7 +83,8 @@ class TestMessageHandler(unittest.TestCase):
         test_queue.clear()
         self.queue_write = queue_writer(test_queue)
         self.sched = ScheduledReport(account = self.account,
-                                d1 = 'app',
+                                d1 = 'campaign',
+                                d2 = 'adunit',
                                 end = datetime.now().date(),
                                 days = 1,
                                 )
@@ -86,12 +101,18 @@ class TestMessageHandler(unittest.TestCase):
     def tearDown(self):
         self.testbed.deactivate()
 
-    def assert_empty_queue(self):
+    def assert_empty_sqs_queue(self):
         # If the queue says there are messages, make sure we can't actually get them
         while not self.rmh.queue.count() == 0:
             assert not self.rmh.handle_messages()
             # Fucking timeout
             time.sleep(1)
+        return True
+    
+    def empty_rmh_maps(self):
+        for msg_map in self.rmh.message_maps:
+            if not msg_map == {}:
+                return False
         return True
 
     def handle_message_no_data_mptest(self):
@@ -103,7 +124,7 @@ class TestMessageHandler(unittest.TestCase):
             time.sleep(.5)
         # Assert that all messages have been handled
         assert len(self.rmh.to_del) == 0
-        self.assert_empty_queue()
+        self.assert_empty_sqs_queue()
 
         assert Report.get(self.rep.key()).status == "No Data"
 
@@ -132,7 +153,7 @@ class TestMessageHandler(unittest.TestCase):
             if retry == 4:
                 # Make sure it's not in the queue
                 assert len(self.rmh.to_del) == 0
-                if self.assert_empty_queue():
+                if self.assert_empty_sqs_queue():
                     success = True
                 assert success
         # make sure it failed for the right reason
@@ -167,32 +188,98 @@ class TestMessageHandler(unittest.TestCase):
             time.sleep(.5)
         assert len(self.rmh.to_del) == 0
         assert Report.get(self.rep.key()).status == 'Pending'
-        self.assert_empty_queue()
+        self.assert_empty_sqs_queue()
         assert self.rmh.msg_failures.values()[0] == 0
 
 
     def handle_jobflow_success_mptest(self):
-        # List of jobs, one job is finished, finished job marked as finished, removed from list of finished jobs, marked as finished
         jobflow, message = self.create_jobflow()
         self.rmh.handle_working_jobs(jobflows=[jobflow])
-        assert self.rmh.jobid_message_map == {}
+        logging.warning("Mesg map: %s" % self.rmh.jobid_message_map)
+        # Make sure we're clean
+        assert self.empty_rmh_maps()
+        report = open(TEST_DATA_DIR + '/sample_data.final', 'r').read()
+        logging.warning(report)
+        logging.warning(Report.get(self.rep.key()).test_report_blob)
+        # Make sure the rep is the same
+        assert Report.get(self.rep.key()).test_report_blob == report
 
-    def handle_jobflow_failure_mptest(self):
+    def handle_upload_failure_mptest(self):
         # List of jobs, one job is failed, make sure in queue, fail again.  Do this three times, assert in the queue every time, on third failure remove from queue, don't process again, marked as failed
         jobflow, message = self.create_jobflow()
-        self.rmh.handle_working_jobs(jobflows = [jobflow], force_failure = True)
-        pass
+        my_step = UPLOAD
+        now = datetime.now()
+        while (datetime.now() - now).seconds < TEST_FAIL_TIMEOUT:
+            self.rmh.handle_working_jobs(jobflows = [jobflow], force_failure = True, fail_step = my_step)
+            if not self.empty_rmh_maps():
+                assert self.success_until(message, my_step)
+                assert self.rmh.message_blob_keys[message] is None
+        assert self.empty_rmh_maps()
+        assert Report.get(self.rep.key()).status == 'Failed'
 
-    def on_success_blobstore_failure_mptest(self):
+    def handle_key_put_failure_mptest(self):
         # Blobstore fails, make sure the report isn't replicated a million times (whoops)
         jobflow, message = self.create_jobflow()
-        pass
+        my_step = BLOB_KEY_PUT
+        now = datetime.now()
+        while (datetime.now() - now).seconds < TEST_FAIL_TIMEOUT:
+            self.rmh.handle_working_jobs(jobflows = [jobflow], force_failure = True, fail_step = my_step)
+            if not self.empty_rmh_maps():
+                assert self.success_until(message, my_step)
+                assert self.rmh.message_blob_keys[message] is not None
+            assert Report.get(self.rep.key()).test_report_blob is None
+        assert self.empty_rmh_maps()
+        assert Report.get(self.rep.key()).status == 'Failed'
 
-    def on_success_finalize_failure_mptest(self):
+    def handle_parse_failure_mptest(self):
         # make sure message isnt' removed from the 'to process' list
         jobflow, message = self.create_jobflow()
-        pass
+        my_step = PARSE
+        now = datetime.now()
+        while (datetime.now() - now).seconds < TEST_FAIL_TIMEOUT:
+            self.rmh.handle_working_jobs(jobflows = [jobflow], force_failure = True, fail_step = my_step)
+            if not self.empty_rmh_maps():
+                assert self.success_until(message, my_step)
+                assert self.rmh.message_blob_keys[message] is not None
+                assert self.rmh.message_data[message] is None
+            assert Report.get(self.rep.key()).test_report_blob is not None
+        assert self.empty_rmh_maps()
+        assert Report.get(self.rep.key()).status == 'Failed'
+ 
+    def handle_post_parse_failure_mptest(self):
+        jobflow, message = self.create_jobflow()
+        my_step = POST_PARSE_PUT
+        now = datetime.now()
+        while (datetime.now() - now).seconds < TEST_FAIL_TIMEOUT:
+            self.rmh.handle_working_jobs(jobflows = [jobflow], force_failure = True, fail_step = my_step)
+            if not self.empty_rmh_maps():
+                assert self.success_until(message, my_step)
+                assert self.rmh.message_blob_keys[message] is not None
+                assert self.rmh.message_data[message] is not None
+            rep = Report.get(self.rep.key())
+            assert rep.test_report_blob is not None
+            assert rep.completed_at is None
+            assert rep.data == {}
+        logging.warning(self.rmh.message_maps)
+        assert self.empty_rmh_maps()
+        assert Report.get(self.rep.key()).status == 'Failed'
 
+    def handle_notify_failure_mptest(self):
+        jobflow, message = self.create_jobflow()
+        my_step = NOTIFY
+        now = datetime.now()
+        while (datetime.now() - now).seconds < TEST_FAIL_TIMEOUT:
+            self.rmh.handle_working_jobs(jobflows = [jobflow], force_failure = True, fail_step = my_step)
+            if not self.empty_rmh_maps():
+                assert self.success_until(message, my_step)
+                assert self.rmh.message_blob_keys[message] is not None
+                assert self.rmh.message_data[message] is not None
+            rep = Report.get(self.rep.key())
+            assert rep.test_report_blob is not None
+            assert rep.completed_at is not None
+            assert rep.data is not None
+        assert self.empty_rmh_maps()
+        assert Report.get(self.rep.key()).status == 'Failed'
 
     def create_jobflow(self):
         m = Message()
@@ -204,5 +291,17 @@ class TestMessageHandler(unittest.TestCase):
             steps.append(FakeJobFlowStep(id=i+1, state=u'RUNNING', name = 'irrelevant_step_%s' % i))
         jobflow = FakeJobFlow(jobflowid = 1, steps = steps, state = u'RUNNING')
         self.rmh.jobid_message_map[jobflow.jobflowid] = [good_message]
+        self.rmh.init_message(good_message)
         return jobflow, good_message
+
+
+    def success_until(self, message, step):
+        for s in MESSAGE_COMPLETION_STEPS:
+            if s == step:
+                if not self.rmh.completed(message, s):
+                    return True
+                else:
+                    return False
+            elif not self.rmh.completed(message, s):
+                return False
 

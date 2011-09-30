@@ -37,13 +37,11 @@ def run(client_context, adunit_context, MarketplaceBattle=MarketplaceBattle):
     else:
         marketplace_cpm = 0.0
     
-    print marketplace_cpm 
     # Run NetworkBattle, we pass in a minimum cpm that the networks must beat    
     network_battle = NetworkBattle(client_context,
                                    adunit_context,
                                    min_cpm=marketplace_cpm)
     network_creative = network_battle.run()    
-    print network_creative
     if network_creative:
         return (network_creative, client_context.excluded_adgroup_keys)                   
     # If the networks couldn't beat the marketplace bid, return marketplace

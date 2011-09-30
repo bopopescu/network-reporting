@@ -275,16 +275,6 @@ class MarketplaceBattle(Battle):
             # Attach bid to adgroup - see docstring for details on pub_rev and bid
             creative.adgroup.bid = pub_rev
             return creative     
-            
-class DummyMarketplaceBattle(MarketplaceBattle):
-    """ Like Marketplace but always returns a creative.
-        For Testing purposes. """ 
-    cpm_of_winning_bid = 0.50 # Arbitrary default value for testing        
-    
-    def _process_winner(self, creative):
-        """ return a creative with a default bid. """     
-        creative.adgroup.bid = self.cpm_of_winning_bid
-        return creative                
     
 class NetworkBattle(Battle):
     """ Fans out to each of the networks """
@@ -339,8 +329,4 @@ class NetworkBattle(Battle):
 class BackfillPromoBattle(PromoBattle):
     starting_message = "Beginning backfill promotional campaigns..."
     campaign_type = "backfill_promo"
-
-
-class BackfillMarketplaceBattle(MarketplaceBattle):
-    starting_message = "Beginning backfill marketplace campaigns..."
-    campaign_type = "backfill_marketplace"
+                                      

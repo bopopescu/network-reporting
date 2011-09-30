@@ -57,8 +57,18 @@ from ad_server.auction.battles import (Battle,
                                        GteeBattle,
                                        GteeHighBattle,
                                        GteeLowBattle,
-                                       DummyMarketplaceBattle
-                                      )
+                                       MarketplaceBattle,         
+                                      )        
+
+class DummyMarketplaceBattle(MarketplaceBattle):
+    """ Like Marketplace but always returns a creative.
+        For Testing purposes. """ 
+    cpm_of_winning_bid = 0.50 # Arbitrary default value for testing        
+
+    def _process_winner(self, creative):
+        """ return a creative with a default bid. """     
+        creative.adgroup.bid = self.cpm_of_winning_bid
+        return creative                                      
 
 class TestAdAuction(unittest.TestCase):
 

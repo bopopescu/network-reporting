@@ -51,8 +51,7 @@ from ad_server.auction.battles import (Battle,
                                        PromoBattle,
                                        MarketplaceBattle,  
                                        NetworkBattle,
-                                       BackfillPromoBattle,   
-                                       BackfillMarketplaceBattle
+                                       BackfillPromoBattle,        
                                       )
   
 from ad_server.auction.client_context import ClientContext   

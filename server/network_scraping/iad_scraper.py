@@ -37,13 +37,17 @@ class IAdScraper(Scraper):
         self.disp = Display(visible = 0, size = (1024, 768))
         self.disp.start()
         self.browser = webdriver.Chrome('/Applications/ChromeDriver')
+        # Set max wait time to find an element on a page
+        self.browser.implicitly_wait(10)
         self.browser.get(self.STATS_PAGE)
         while self.browser.title == self.LOGIN_TITLE:
             login = self.browser.find_element_by_css_selector('#accountname')
             login.click()
+            login.clear()
             login.send_keys(self.username)
             pw = self.browser.find_element_by_name('theAccountPW')
             pw.click()
+            pw.clear()
             pw.send_keys(self.password)
             self.browser.find_element_by_name('appleConnectForm').submit()
             # There are some redirects and shit that happens, chill out for a bit
@@ -55,8 +59,6 @@ class IAdScraper(Scraper):
 
     def set_dates(self, start_date, end_date):
         # Set up using custom stuff
-        # Wait for browser to load
-        time.sleep(1)
         self.browser.find_element_by_css_selector('select').find_element_by_css_selector('option[value=customDateRange]').click()
         self.set_date('#gwt-debug-date-range-selector-start-date-box', start_date)
         self.set_date('#gwt-debug-date-range-selector-end-date-box', end_date)

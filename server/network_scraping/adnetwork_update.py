@@ -13,8 +13,19 @@ from network_scraping.jumptap_scraper import JumpTapScraper
 from network_scraping.inmobi_scraper import InMobiScraper
 from network_scraping.mobfox_scraper import MobFoxScraper
 from network_scraping.network_scrape_record import NetworkScrapeRecord
+from network_scraping.query_managers import *
 
 from publisher.models import App
+
+import network_scraping.query_managers
+
+def setup_remote_api():
+    app_id = 'mopub-experimental'
+    host = '38-aws.latest.mopub-inc.appspot.com'
+    remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', auth_func, host)
+
+def auth_func():
+    return 'olp@mopub.com', 'N47935'
 
 def get_pub_id(pub_id, login_info):
     return pub_id
@@ -88,4 +99,9 @@ def update_ad_networks():
             else:
                 ad_network.ctr = float('NaN')
                 ad_network.ecpm = float('NaN')
+                
+if __name__ == "__main__":
+    # _setup_remote_api()
+    setup_remote_api()
+    main()                
                 

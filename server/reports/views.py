@@ -70,6 +70,9 @@ class AddReportHandler(RequestHandler):
         if start:
             start = datetime.datetime.strptime(start, '%m/%d/%Y').date()
             days = (end - start).days
+            if days > 31:
+                self.request.flash['error'] = 'Please limit reports to one months worth of data.'
+                return HttpResponseRedirect('/reports/')
         edit = False
         man = ReportQueryManager(self.account)
         if report_key is not None:
@@ -101,7 +104,7 @@ class AddReportHandler(RequestHandler):
         if edit:
             self.request.flash['report_edit'] = 'The requested edit requires the report to be re-run.  The request has been submitted and you will be notified via email when it has completed'
         else:
-            self.request.flash['report_success'] = 'Your report has been successfully submitted, you will be notified via email when it as completed!'
+            self.request.flash['report_success'] = 'Your report has been successfully submitted, you will be notified via email when it has completed!'
         return HttpResponseRedirect('/reports/')
 
 @login_required

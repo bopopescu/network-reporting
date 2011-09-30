@@ -4,6 +4,8 @@ import time
 import traceback
 import sys
 
+from sets import Set
+
 from datetime import datetime, timedelta
 
 from django.template import loader
@@ -21,7 +23,7 @@ from common.utils import date_magic
 from common.utils.helpers import cust_sum
 from common.wurfl.query_managers import WurflQueryManager
 from publisher.models import AdUnit
-from mail.mails import REPORT_FINISHED_SIMPLE
+from mail.mails import REPORT_FINISHED_SIMPLE, REPORT_FAILED_SIMPLE
 
 APP = 'app'
 AU = 'adunit'
@@ -53,7 +55,15 @@ TIME_DIMS = (MO, WEEK, DAY, HOUR)
 AU_DIMS = (APP, AU)
 WURFL_DIMS = (MAR, BRND, OS, OS_VER)
 
+ONLINE_DIMS = CRTV_DIMS + AU_DIMS
+
 NO_REQ = CRTV_DIMS
+
+LOG_FORMAT = "%s:\t%s\n"
+def log(mesg):
+    my_log = open('/home/ubuntu/poller.log', 'a')
+    my_log.write(LOG_FORMAT % (time.time(), mesg))
+    my_log.close()
 
 def build_stat_dict(stats):
     """ Return a dict that appears like a StatsModel object to django
@@ -95,7 +105,7 @@ def statsify(stats_dict):
 
             
 
-#class ScheduledReport -> has a "next report" time, "report every ____" time, report type, when it's tim
+#class ScheduledReport -> has a "next report" time, "report every ____" time, report type, when it's time
 #   to gen a report, this guy makes report objects
 class ScheduledReport(db.Model):
     account = db.ReferenceProperty(collection_name='scheduled_reports')
@@ -158,6 +168,10 @@ class ScheduledReport(db.Model):
         else:
             return self.interval.title()
 
+    @property
+    def status(self):
+        return self.most_recent.status
+
 class Report(db.Model):
     #standard
     account = db.ReferenceProperty(collection_name='reports')
@@ -177,11 +191,13 @@ class Report(db.Model):
 
     # maybe useful for internal analytics//informing users
     completed_at = db.DateTimeProperty()
+    status = db.StringProperty(default='Pending')
 
 
     def notify_complete(self):
         mesg = mail.EmailMessage(sender = 'olp@mopub.com',
-                                 subject = 'Your report has completed')
+                                 subject = 'Your report has completed',
+                                 bcc = 'report-monitoring@mopub.com')
         mesg_dict = dict(report_key = str(self.schedule.key()))
         mesg.body = REPORT_FINISHED_SIMPLE % mesg_dict
         if self.recipients:
@@ -190,9 +206,29 @@ class Report(db.Model):
                 try:
                     mesg.send()
                 except InvalidEmailError, e:
-                    pass
+                    continue
         else:
             return
+
+
+    def notify_failure(self):
+        mesg = mail.EmailMessage(sender = 'olp@mopub.com',
+                                 subject = 'Your report has failed',
+                                 bcc = 'report-monitoring@mopub.com',
+                                 )
+        mesg_dict = dict(dim1 = self.d1, dim2 = self.d2, dim3 = self.d3, start = self.start.strftime('%m/%d/%y'), end = self.end.strftime('%m/%d/%y'))
+        mesg.body = REPORT_FAILED_SIMPLE % mesg_dict
+        if self.recipients:
+            for recipient in self.recipients:
+                mesg.to = recipient
+                try:
+                    mesg.send()
+                except InvalidEmailError, e:
+                    continue
+        else:
+            return
+
+                                
 
     @property
     def d1(self):
@@ -205,6 +241,10 @@ class Report(db.Model):
     @property
     def d3(self):
         return self.schedule.d3
+        
+    @property
+    def dims(self):
+        return [self.d1, self.d2, self.d3]
 
     @property
     def name(self):
@@ -248,50 +288,46 @@ class Report(db.Model):
         #    return None
     @property
     def export_data(self):
-        """ Turns the dictionary into a list lists """ 
+        """ Turns the dictionary into a list of lists """
         if self.data:
-            d2 = d3 = False
-            if self.d2:
-                d2 = True
-            if self.d3:
-                d3 = True
-            ret = []
-            for key, value in self.data.iteritems():
-                dat = [value['name']]
-                if d2:
-                    dat.append('')
-                if d3:
-                    dat.append('')
-                if isinstance(value['stats'], dict):
-                    stat_dat = [value['stats']['request_count'],value['stats']['impression_count'], value['stats']['click_count'], value['stats']['conversion_count']]
-                else:
-                    stat_dat = [value['stats'].request_count, value['stats'].impression_count, value['stats'].click_count, value['stats'].conversion_count] 
-                dat += stat_dat
-                ret.append(dat)
-                #There's a smarter way to do this, but I'm in a hurry and (hopefully) this isn't needed for long
-                if value.has_key('sub_stats'):
-                    for key2, value2 in value['sub_stats'].iteritems():
-                        dat2 = [value['name'], value2['name']]
-                        if d3:
-                            dat2.append('')
-                        if isinstance(value2['stats'], dict):
-                            stat_dat2 = [value2['stats']['request_count'],value2['stats']['impression_count'], value2['stats']['click_count'], value2['stats']['conversion_count']]
-                        else:
-                            stat_dat2 = [value2['stats'].request_count, value2['stats'].impression_count, value2['stats'].click_count, value2['stats'].conversion_count] 
-                        dat2 += stat_dat2
-                        ret.append(dat2)
-                        #Really stupid
-                        if value2.has_key('sub_stats'):
-                            for key3, value3 in value2['sub_stats'].iteritems():
-                                if isinstance(value3['stats'], dict):
-                                    stat_dat3 = [value3['stats']['request_count'],value3['stats']['impression_count'], value3['stats']['click_count'], value3['stats']['conversion_count']]
-                                else:
-                                    stat_dat3 = [value3['stats'].request_count, value3['stats'].impression_count, value3['stats'].click_count, value3['stats'].conversion_count] 
-                                dat3 = [value['name'], value2['name'], value3['name']] + stat_dat3
-                                ret.append(dat3)
+            level_total = sum([1 for d in self.dims if d])
+            data = self.get_export_data(0, level_total - 1, [], self.data)
+            return data
         else:
             return None
-        return ret
+        
+    def get_export_data(self, level, level_total, names, stats_dict):
+        if self.dims[level] == DAY and self.report_blob:
+            # sort days numerically
+            keys = sorted(stats_dict.keys(), key=lambda a: int(a[:a.find('day')]))
+        else:
+            # sort everything else alphabetically
+            keys = sorted(stats_dict.keys())
+
+        data_list = []
+        for key in keys:
+            value = stats_dict[key]
+            data = list(names)
+            data.append(value['name'])
+
+            for i in range(level_total - level):
+                data.append('')
+    
+            if isinstance(value['stats'], dict):
+                impressions = float(value['stats']['impression_count'])
+                ctr = 'n/a' if impressions == 0 else value['stats']['click_count'] / impressions
+                data += [value['stats']['request_count'], value['stats']['impression_count'], value['stats']['click_count'], value['stats']['conversion_count'], value['stats']['revenue'], ctr]
+            else:
+                data += [value['stats'].request_count, value['stats'].impression_count, value['stats'].click_count, value['stats'].conversion_count] 
+
+            data_list.append(data)
+            if 'sub_stats' in value:
+                temp_names = list(names)
+                temp_names.append(value['name'])
+                data_list += (self.get_export_data(level + 1, level_total, temp_names, value['sub_stats']))
+    
+        return data_list
+        
 
     
     @property
@@ -417,9 +453,33 @@ class Report(db.Model):
                         if not temp[key].has_key('sub_stats'):
                             temp[key]['sub_stats'] = {}
                         temp = temp[key]['sub_stats']
-        logging.debug(final)
+        
+        # add missing days on a request for a range
+        self.add_missing_dates(0, final)
+                      
+        # logging.debug(final)
+        
         return self.rollup_revenue(statsify(final))
+        
 
+    def add_missing_dates(self, level, stats_dict):
+        d = self.dims[level]
+        if d == DAY:
+            # key is in '%y%m%dday' format
+            dates = Set(stats_dict.keys())
+
+            stats_len = len(stats_dict[stats_dict.keys()[0]]['stats'])
+            # go from start date to end date checking if date is in the hash set
+            # if it's not add it to final
+            for single_date in date_magic.gen_days(self.start, self.end - timedelta(days=1)):
+                if single_date.strftime('%y%m%dday') not in dates:
+                    stats_dict[single_date.strftime('%y%m%dday')] = {'stats' : [0] * stats_len,
+                                                                     'name'  : date_magic.date_name(single_date, d)}
+        else:
+            for key in stats_dict.keys():
+                # sub_stats is not in dict when it isn't used
+                if 'sub_stats' in stats_dict[key]:
+                    self.add_missing_dates(level + 1, stats_dict[key]['sub_stats'])
 
     def rollup_revenue(self, stats):
         def rollup_help(stats, depth):
@@ -450,7 +510,7 @@ class Report(db.Model):
 
 
 
-    def get_stats_info(self, keys):
+    def get_stats_info(self, keys, offline = False):
         depth = len(keys)
         #If any of the dims are an adv, reqs is meaningless
         req = True
@@ -478,7 +538,7 @@ class Report(db.Model):
                     att = False
         return (req, att)
 
-    def get_bid_info(self, idx, key, memo): 
+    def get_bid_info(self, idx, key, memo, offline = False): 
         if idx == 0:
             dim = self.d1
         elif idx == 1:
@@ -487,6 +547,9 @@ class Report(db.Model):
             dim = self.d3
         else:
             dim = None
+            
+        if offline:
+            return None, None
 
         if dim in [CAMP, CRTV]:
             try:
@@ -503,15 +566,16 @@ class Report(db.Model):
                     camp = crtv.adgroup.campaign
                     return (crtv.adgroup.bid_strategy, crtv.adgroup.bid)
             except:
-                log("Exception in bid info")
+                # This should only ever be called by the EC2 instance, so
+                # this should be safe
                 f = open('/home/ubuntu/tb.log', 'a')
-                traceback.print_tb(sys.exc_info()[2], file=f)
+                traceback.print_exc(file=f)
                 f.close()
                 return None, None
         return None, None
 
 
-    def get_key_name(self, idx, key, memo):
+    def get_key_name(self, idx, key, memo, offline=False):
         """ Turns arbitrary keys and things into human-readable names to 
             be output to the report
 
@@ -532,6 +596,9 @@ class Report(db.Model):
         else:
             logging.error("Impossible dim level when rebuilding blob keys")
             dim = None
+            
+        if dim in ONLINE_DIMS and offline:
+            return ('%s-%s' % (dim, key), key)
 
         if dim in CRTV_DIMS:
             try:

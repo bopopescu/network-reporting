@@ -1,4 +1,9 @@
-import logging, os, time
+import logging
+import os
+import time
+import traceback
+
+
 from optparse import OptionParser
 
 from boto.emr.connection import EmrConnection
@@ -7,6 +12,8 @@ from boto.s3.connection import S3Connection
 
 from parse_utils import gen_days, gen_report_fname, get_waiting_jobflow
 from parse_utils import AWS_ACCESS_KEY, AWS_SECRET_KEY, JOBFLOW_NAME
+from reports.aws_reports.report_exceptions import (MRSubmitError, ReportException, NoDataError)
+
 
 S3_CONN = S3Connection(AWS_ACCESS_KEY, AWS_SECRET_KEY)
 BUCK = S3_CONN.get_bucket('mopub-aws-logging')
@@ -28,6 +35,8 @@ SLAVE_INSTANCE_TYPE = 'm1.large'
 KEEP_ALIVE = True
 
 LOG_FORMAT = "%s:\t%s\n"
+
+
 
 def log(mesg):
     my_log = open('/home/ubuntu/poller.log', 'a')
@@ -52,12 +61,12 @@ def verify_inputs(inputs, account):
 
 def submit_job(d1, d2, d3, start, end, report_key, account):
     """ Returns Jobid, steps completed, and output name if job is added properly
-    returns False for all values if there are no valid input files or the job doens't add properly"""
+    returns False for all values if there are no valid input files """
     conn = EmrConnection(AWS_ACCESS_KEY, AWS_SECRET_KEY)
 
     inputs, output_dir = build_puts(start, end, account)
     if len(inputs) == 0:
-        return False, False, False
+        raise NoDataError('No inputs', report_key)
     instances = 10
     output_name = gen_report_fname(d1, d2, d3, start, end)
     start = start.strftime('%y%m%d')
@@ -90,6 +99,6 @@ def submit_job(d1, d2, d3, start, end, report_key, account):
                     keep_alive=KEEP_ALIVE,
                     enable_debugging=True,
                     )
-    except Exception, e:
-        return False, False, False
+    except Exception:
+        raise MRSubmitError('No valid Job ID', report_key)
     return jobid, steps, output_name

@@ -20,3 +20,4 @@ counts.csv
 server/common/wurfl/*.xml
 *~
 *#
+*#*

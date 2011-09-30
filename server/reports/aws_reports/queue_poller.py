@@ -1,5 +1,9 @@
 #!/usr/bin/python
-import time, sys, os, time, urllib2
+import time
+import sys
+import os
+import time
+import urllib2
 from datetime import datetime
 import traceback
 
@@ -39,8 +43,15 @@ from google.appengine.ext.remote_api import remote_api_stub
 from parse_utils import gen_report_fname, parse_msg
 from parse_utils import AWS_ACCESS_KEY, AWS_SECRET_KEY
 from report_mr_submitter import submit_job
-
 from reports.models import Report
+from reports.aws_reports.report_exceptions import (ReportParseError, 
+                                                   BlobUploadError,
+                                                   S3Error,
+                                                   ReportPutError,
+                                                   ReportNotifyError,
+                                                   ReportException,
+                                                   NoDataError,
+                                                   )
 
 
 ################## PID Stuff ######################
@@ -80,6 +91,15 @@ UPDATE_STATS_HANDLER_PATH = '/offline/update_stats'
 ################## Constants ###################
 LOG_FORMAT = "%s:\t%s\n"
 
+
+
+def default_exc_handle(e):
+    log("Encountered exception: %s" % e)
+    tb_file = open('/home/ubuntu/tb.log', 'a')
+    tb_file.write("\nERROR---\n%s" % time.time())
+    traceback.print_exc(file=tb_file)
+    tb_file.close()
+
 def log(mesg):
     my_log = open('/home/ubuntu/poller.log', 'a')
     my_log.write(LOG_FORMAT % (time.time(), mesg))
@@ -93,6 +113,22 @@ def setup_remote_api():
     host = '38-aws.latest.mopub-inc.appspot.com'
     remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', auth_func, host)
 
+def report_failed(report_key):
+    log("Indicating that report %s failed" % report_key)
+    rep = Report.get(report_key)
+    rep.status = 'Failed'
+    rep.put()
+    rep.notify_failure()
+    # If I were a better person I'd email people when their reports fail
+
+def report_empty(report_key):
+    try:
+        rep = Report.get(report_key)
+        rep.status = 'No Data'
+        rep.put()
+        rep.notify_failure()
+    except:
+        return
 
 def job_failed(state):
     if state == u'FAILED':
@@ -100,8 +136,10 @@ def job_failed(state):
     else:
         return False
 
-def job_succeeded(state):
-    if state in [u'COMPLETED']:#, u'WAITING']:#, u'TERMINATED', u'WAITING']:
+def job_succeeded(job, job_step_map):
+    if job.state in [u'COMPLETED']:#, u'WAITING']:#, u'TERMINATED', u'WAITING']:
+        return True
+    elif job.state == u'WAITING' and len([step for step in job.steps if step.state == u'COMPLETED']) > job_step_map[job.jobflowid]:
         return True
     else:
         return False
@@ -112,6 +150,7 @@ def upload_file(fd):
     datagen, headers = multipart_encode({'file' : fd})
 
     upload_url_req = urllib2.Request(HOST + URL_HANDLER_PATH)
+    log(HOST+URL_HANDLER_PATH)
     upload_url = urllib2.urlopen(upload_url_req).read()
 
     file_upload_req = urllib2.Request(upload_url, datagen, headers)
@@ -124,13 +163,22 @@ def finalize_report(rep, blob_key):
     report = Report.get(rep)
     report.report_blob = blob_key
     log("Parsing report blob for %s" % rep)
-    data = report.parse_report_blob(report.report_blob.open())
+    try:
+        data = report.parse_report_blob(report.report_blob.open())
+    except:
+        raise ReportParseError(rep)
     report.data = data
     report.completed_at = datetime.now()
     log("Putting finished Report %s" % rep)
-    report.put()
+    try:
+        report.put()
+    except:
+        raise ReportPutError(rep)
     log("Notifying recipients: %s  on completion of %s" % (report.recipients, rep))
-    report.notify_complete()
+    try:
+        report.notify_complete()
+    except:
+        raise ReportNotifyError(rep)
     log("Finished Finalizing, Exiting")
     sys.exit(0)
 
@@ -140,7 +188,7 @@ def notify_appengine(fname, msg):
     report_dir = report_dir % acct
     file = report_dir + fname
     files = BUCK.list(prefix = file + '/part')
-    f = open('/home/ubuntu/mopub/server/reports/aws_reports/reports/finished_%s.rep' % rep, 'a')
+    f = open('/home/ubuntu/mopub/server/reports/aws_reports/reports/finished_%s.rep' % rep, 'w')
     for ent in files:
         ent.get_contents_to_file(f)
     f.close()
@@ -154,12 +202,10 @@ def notify_appengine(fname, msg):
     else:
         try:
             finalize_report(rep, blob_key)
-        except Exception, e:
+        except ReportException, e:
             # Don't endlessly cycle and shit, log the error and hten kill yourself
-            log("%s" % e)
-            f = open('/home/ubuntu/tb.log', 'a')
-            traceback.print_tb(sys.exc_info()[2], file=f)
-            f.close()
+            report_failed(e.report_key)
+            default_exc_handle(e)
             sys.exit(0)
     
 
@@ -182,11 +228,24 @@ def main_loop():
                 for msg in msgs:
                     log("Processing %s" % msg.get_body())
                     if msg in to_del:
+                        log("Msg in to_del, continuing")
                         continue
                     # Start the MR job
-                    job_id, steps, fname = submit_job(*parse_msg(msg))
-                    if not job_id:
+                    try:
+                        job_id, steps, fname = submit_job(*parse_msg(msg))
+                    except NoDataError, e:
+                        report_empty(e.report_key)
                         to_del.append(msg)
+                        default_exc_handle(e)
+                        continue
+                    except ReportException, e:
+                        # Submission Failed, delete this message
+                        to_del.append(msg)
+                        # Notify GAE that this report failed
+                        report_failed(e.report_key)
+                        # Log that shit
+                        default_exc_handle(e)
+                        # Keep calm, carry on
                         continue
 
                     job_step_map[job_id] = steps
@@ -218,11 +277,11 @@ def main_loop():
                         processed_jobs.append(job.jobflowid)
                         if fail_dict[msg.get_body()] < 3:
                             report_queue.write(msg)
+                        else:
+                            d1, d2, d3, start, end, rep, acct = parse_msg(msg)
+                            report_failed(rep)
                 # Notify GAE when a report is finished
-                    elif job_succeeded(job.state):
-                        notify_appengine(fname, msg)
-                        processed_jobs.append(job.jobflowid)
-                    elif job.state == u'WAITING' and len([step for step in job.steps if step.state == u'COMPLETED']) > job_step_map[job.jobflowid]:
+                    elif job_succeeded(job, job_step_map):
                         notify_appengine(fname, msg)
                         processed_jobs.append(job.jobflowid)
                         # Don't worry about clearing job_step_map because it will reset itself if it is reused
@@ -237,10 +296,11 @@ def main_loop():
                 del(job_msg_map[job_id])
             time.sleep(10)
                         
+        except ReportException, e:
+            report_failed(e.report_key)
+            default_exc_handle(e)
         except Exception, e:
-            log("Encountered exception: %s" % e)
-
-
+            default_exc_handle(e)
 
 if __name__ == '__main__':
     main_loop()

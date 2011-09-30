@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block pageTitle %}<h1>MoPub Canary!</h1>{% endblock %}
+
+{% block messageCenter %}{% endblock %}
+
+{% block content %}
+<ul>
+  {% for adunit_name, adunit_id in adunits %}
+  	<li><a href="http://stats.mopub.com/performance/{{adunit_id}}">{{adunit_name}}</a></li>
+  {% endfor %}
+</ul>
+{% endblock %}

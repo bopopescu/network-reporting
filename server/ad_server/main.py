@@ -1,4 +1,8 @@
 # !/usr/bin/env python
+
+""" Provides handlers for all the ad server functions. For the handler for m/ad
+    look at ad_server/handlers/adhandler.py."""
+
 from appengine_django import InstallAppengineHelperForDjango
 InstallAppengineHelperForDjango()
 
@@ -7,9 +11,7 @@ import os
 import urllib
 import datetime
 
-urllib.getproxies_macosx_sysconf = lambda: {}
-                          
-from ad_server.adserver_templates import TEMPLATES
+urllib.getproxies_macosx_sysconf = lambda: {}        
 
 from google.appengine.api import users, urlfetch, memcache
 from google.appengine.api import taskqueue
@@ -17,7 +19,7 @@ from google.appengine.ext import webapp, db
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.api import images
-
+from ad_server import frequency_capping   
 from publisher.models import *
 from advertiser.models import *
 
@@ -28,7 +30,7 @@ from userstore.query_managers import ClickEventManager, AppOpenEventManager
 
 from urllib import unquote
 
-from mopub_logging import mp_logging
+from stats import stats_accumulator
 from budget import budget_service
 from google.appengine.ext.db import Key
 
@@ -72,18 +74,32 @@ class AdImpressionHandler(webapp.RequestHandler):
         creative = adunit_context.get_creative_by_key(creative_id)
         if creative.ad_group.bid_strategy == 'cpm':
             budget_service.apply_expense(creative.ad_group.campaign, creative.ad_group.bid/1000)
+       
+        raw_udid = self.request.get("udid")  
+        AdImpressionHandler.increment_frequency_counts(creative=creative,
+                                   raw_udid=raw_udid)
         
         if not self.request.get('testing') == TEST_MODE:
-            mp_logging.log(self.request,event=mp_logging.IMP_EVENT,adunit=adunit_context.adunit)  
+            stats_accumulator.log(self.request,event=stats_accumulator.IMP_EVENT,adunit=adunit_context.adunit)  
             
         self.response.out.write("OK")
     
+    @classmethod
+    def increment_frequency_counts(cls, creative=None,
+                                   raw_udid=None,
+                                   now=datetime.datetime.now()):
+          user_adgroup_daily_key = frequency_capping.memcache_key_for_date(raw_udid, now, creative.ad_group.key())
+          user_adgroup_hourly_key = frequency_capping.memcache_key_for_hour(raw_udid, now, creative.ad_group.key())
+          trace_logging.warning("user_adgroup_daily_key: %s"%user_adgroup_daily_key)
+          trace_logging.warning("user_adgroup_hourly_key: %s"%user_adgroup_hourly_key)
+          memcache.offset_multi({user_adgroup_daily_key:1,user_adgroup_hourly_key:1}, key_prefix='', namespace=None, initial_value=0)      
+             
 class AdClickHandler(webapp.RequestHandler):
     # /m/aclk?udid=james&appid=angrybirds&id=ahRldmVudHJhY2tlcnNjYWxldGVzdHILCxIEU2l0ZRipRgw&cid=ahRldmVudHJhY2tlcnNjYWxldGVzdHIPCxIIQ3JlYXRpdmUYoh8M
     def get(self):
         
         if not self.request.get('testing') == TEST_MODE:
-            mp_logging.log(self.request, event=mp_logging.CLK_EVENT)  
+            stats_accumulator.log(self.request, event=stats_accumulator.CLK_EVENT)  
   
         udid = self.request.get('udid')
         mobile_app_id = self.request.get('appid')
@@ -130,7 +146,7 @@ class AppOpenHandler(webapp.RequestHandler):
         aoe, conversion_logged = aoe_manager.log_conversion(udid, mobile_appid, time=datetime.datetime.now())
 
         if aoe and conversion_logged:
-            mp_logging.log(self.request, event=mp_logging.CONV_EVENT, adunit_id=aoe.conversion_adunit, creative_id=aoe.conversion_creative, udid=udid)
+            stats_accumulator.log(self.request, event=stats_accumulator.CONV_EVENT, adunit_id=aoe.conversion_adunit, creative_id=aoe.conversion_creative, udid=udid)
             self.response.out.write("ConversionLogged:"+str(conversion_logged)+":"+str(aoe.key())) 
         else:
             self.response.out.write("ConversionLogged:"+str(conversion_logged)) 
@@ -143,8 +159,8 @@ class PurchaseHandler(webapp.RequestHandler):
         from google.appengine.api import taskqueue
         trace_logging.info(self.request.get("receipt"))
         trace_logging.info(self.request.get("udid"))
-        mp_logging.log_inapp_purchase(request=self.request,
-                                      event=mp_logging.INAPP_EVENT,
+        stats_accumulator.log_inapp_purchase(request=self.request,
+                                      event=stats_accumulator.INAPP_EVENT,
                                       udid=self.request.get('udid'),
                                       receipt=self.request.get('receipt'),
                                       mobile_appid=self.request.get('appid'),)

@@ -51,22 +51,12 @@
 {% endifnotequal %}{% endblock dateButtons %}
 
 {% block content %}
-<div id="ajaxFailure" style="display:none">
+  <div id="ajaxFailure" style="display:none">
     <a href="#" id="ajaxDismiss"><img src="../images/icons/199_16x16.png"></img></a>
     There was a problem retrieving data for some of your campaigns.
     <a href="#" id="ajaxRetry"><img src="../images/icons/92_16x16.png"></img> <strong>Retry</strong></a>
-</div>
-
-{% if has_marketplace_campaign and not account.accepted_mpx_tos %}
-  <div class="alert-message clearfix">
-    We've released new Terms of Service for our Marketplace Campaigns.
-
-    <span class="right">
-      <a class="button" id="more_info" href="{% url mpx_info %}"> More Information </a>
-      <a class="button" id="accept_terms" href="#"> Accept New Terms</a>
-    </span>
   </div>
-{% endif %}
+
 
 {% ifequal account.status "step4" %}
           <div class="alert-message block-message">

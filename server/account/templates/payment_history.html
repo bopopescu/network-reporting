@@ -5,7 +5,6 @@
 {% endblock pageTitle %}
 {% block content %}
 
-{% if monthly_records %}
 <table class="dataTable campaignData-main" id="campaignDataTable-direct-">
   <thead>
     <th class="dataTable-date-short">Month</th>
@@ -13,18 +12,22 @@
     <th class="dataTable-data">Payment Status</th>
   </thead>
   <tbody>
-    {% for record in monthly_records %}
-      <tr class="alternating-color">
-        <td>{{record.0}}</td>
-        <td>${{record.1}}</td>
-        <td>{{record.2}}</td>
-      </tr>
-    {% endfor %}
+
+    <tr>
+      <td></td>
+      <td>There are no payments in your payment history. Please check back later.</td>
+      <td></td>
+
+    </tr>
+
+    {% comment %}
+      We're going to include this data when it exists in better form.
+
+      {% endcomment %}
+
   </tbody>
 </table>
 
-{% else %}
-  <strong> There are no payments in your payment history. Please check back later. </strong>
-{% endif %}
+
 
 {% endblock content %}

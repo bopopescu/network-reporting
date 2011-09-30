@@ -21,7 +21,6 @@ var mopub = mopub || {};
              window.location.reload();
          } else {
              $('.form-error-text', "#appForm").remove();
-             console.log(jsonData.errors);
              $.each(jsonData.errors, function (iter, item) {
                  var name = item[0];
                  var error_div = $("<div>").append(item[1]).addClass('form-error-text');
@@ -56,17 +55,16 @@ var mopub = mopub || {};
                   window.location.reload();
               } else {
                   //$('#adunitForm-fragment').html($.decodeHtml(jsonData.html));
-                  $('.form-error-text', "#adunitAddForm").remove();
-                  console.log(jsonData);
-                  $.each(jsonData.errors, function (iter, item) {
-                      var name = item[0];
-                      var error_div = $("<div>").append(item[1]).addClass('form-error-text');
+                  // $('.form-error-text', "#adunitAddForm").remove();
+                  // $.each(jsonData.errors, function (iter, item) {
+                  //     var name = item[0];
+                  //     var error_div = $("<div>").append(item[1]).addClass('form-error-text');
 
-                      $("input[name=" + name + "]", "#adunitAdForm")
-                          .addClass('error')
-                          .parent().append(error_div);
+                  //     $("input[name=adunit-" + name + "]", "#adunitAddForm")
+                  //         .addClass('error')
+                  //         .parent().append(error_div);
 
-                  });
+                  // });
                   // reimplement the onload event
                   appFormOnload();
                   setupAdUnitForm();
@@ -640,7 +638,7 @@ var mopub = mopub || {};
         request_count: "req",
         click_count: "clk",
         ctr: "ctr",
-        fill_rate: "fill",
+        fill_rate: "fill"
     };
 
     var adUnitToAppMap = {};

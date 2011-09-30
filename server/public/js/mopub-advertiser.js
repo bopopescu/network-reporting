@@ -81,14 +81,21 @@ var mopub = mopub || {};
                   // rename so we don't have duplicates
                   $('#adgroupForm-bid_strategy-select').attr('name','bid_strategy_std');
                   $('#adgroupForm-bid_strategy-select-network').attr('name','bid_strategy');
-              } else {
-                  // rename so we dont have duplicates
+              } else {                  // rename so we dont have duplicates
                   $('#bid-network').attr('name','bid-network');
                   $('#bid-max').attr('name','bid');
 
                   // rename so we don't have duplicates
                   $('#adgroupForm-bid_strategy-select').attr('name','bid_strategy');
                   $('#adgroupForm-bid_strategy-select-network').attr('name','bid_strategy_network');
+              }
+
+              if ($(this).val() == 'marketplace') {
+                  $("#mpx_message").removeClass('hidden');
+                  $('.ui-button-text', "#campaignAdgroupForm-submit").text('Accept New Terms and Continue');
+              } else {
+                  $("#mpx_message").addClass('hidden');
+                  $('.ui-button-text', "#campaignAdgroupForm-submit").text('Continue');
               }
           }).change(); // make sure we're in sync when the page loads
 
@@ -214,6 +221,18 @@ var mopub = mopub || {};
           $('#bid-max').keyup(function() {
               calculateAndShowBudget();
           });
+
+        $("#terms").dialog({
+            autoOpen: false,
+            buttons: {
+                "OK": function() {
+                    $(this).dialog("close");
+                }
+            }
+        });
+        $("#accept_terms").click(function() {
+            $("#terms").dialog('open');
+        });
       }
 
       campaignAdgroupFormOnLoad();
@@ -430,7 +449,6 @@ var mopub = mopub || {};
                   $('#creativeCreateForm-success').show();
                   window.location.reload();
               } else {
-                  console.log(jsonData.errors);
                   $.each(jsonData.errors, function (iter, item) {
                       $('.form-error-text', "#creativeCreateForm").remove();
                       var name = item[0];

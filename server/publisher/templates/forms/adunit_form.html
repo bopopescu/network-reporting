@@ -1,38 +1,39 @@
 {% load filters %}
 <input type="hidden" name="{% if form.prefix %}{{form.prefix}}-{% endif %}{{form.app_key.name}}" value="{{form.app_key.value}}"/>
-<dl class="formFields formatDependent" id="adunitFormFields"> 
+<dl class="formFields formatDependent" id="adunitFormFields">
 
-	{{ form.name|attrs:'{"id":"appForm-adUnitName"}' }}
-	{{ form.description|attrs:'{"id":"appForm-adUnitDescription"}' }}
-	{{ form.device_format }}
-	{{ form.format|raw }}
-	
-	<dt class="full_only">
-    	Landscape:
+  {{ form.name|attrs:'{"id":"appForm-adUnitName"}' }}
+  {{ form.description|attrs:'{"id":"appForm-adUnitDescription"}' }}
+  {{ form.device_format }}
+  {{ form.format|raw }}
+
+  <dt class="full_only">
+    Landscape:
+  </dt>
+  <dd class="full_only">
+    {{ form.landscape|raw }}
+  </dd>
+
+  <div class = "custom_only">
+    <dt>
+      Custom size:
     </dt>
-    <dd class="full_only">
-        {{ form.landscape|raw }}
-    </dd>    	
-	<div class = "custom_only">
-	<dt>
-        Custom size:
-    </dt>    
     <dd>
-        {{ form.custom_width|raw|attrs:'{"placeholder":"Width"}' }}
-&times;
-{{ form.custom_height|raw|attrs:'{"placeholder":"Height"}' }}
+      {{ form.custom_width|raw|attrs:'{"placeholder":"Width"}' }}
+      &times;
+      {{ form.custom_height|raw|attrs:'{"placeholder":"Height"}' }}
     </dd>
-</div>
-	<!-- {{ form.animation_type }}  -->
-	<dt class="banner_only">
-    	Refresh interval:
-    </dt>
-	<dd class="banner_only">
-		{{ form.refresh_interval|raw|attrs:'{"style":"width:50px;","suffix":"seconds (default: 0 for no refresh)"}' }}
-	</dd>
+  </div>
+  <!-- {{ form.animation_type }}  -->
+  <dt class="banner_only">
+    Refresh interval:
+  </dt>
+  <dd class="banner_only">
+    {{ form.refresh_interval|raw|attrs:'{"style":"width:50px;","suffix":"seconds (default: 0 for no refresh)"}' }}
+  </dd>
   {# <dt>Default keywords:</dt>  #}
   {# <dd>  #}
   {#   <textarea name="{{form.keywords.name}}" id="appForm-adUnitKeywords" rows="3" cols="40" placeholder="e.g. coffee, espresso, cafe, iced tea">{{form.keywords.value}}</textarea>  #}
   {# </dd>  #}
-</dl> 
-<div class="clear"></div> 
+</dl>
+<div class="clear"></div>

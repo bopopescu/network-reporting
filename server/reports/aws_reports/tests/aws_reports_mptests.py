@@ -32,7 +32,6 @@ from google.appengine.ext import testbed
 
 TEST_FAIL_TIMEOUT += 1
 
-
 SQS_CONN = SQSConnection(AWS_ACCESS_KEY, AWS_SECRET_KEY)
 TEST_REPORT_QUEUE = 'test_report_queue'
 MY_DIR = os.path.split(os.path.abspath(__file__))[0]

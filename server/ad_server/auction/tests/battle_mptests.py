@@ -14,9 +14,7 @@ from publisher.models import Site as AdUnit
 from advertiser.models import ( Campaign,
                                 AdGroup,
                                 Creative,
-                                )          
-                                
-                     
+                                )             
 from google.appengine.ext.webapp import ( Request,
                                           Response,
                                           )
@@ -186,7 +184,8 @@ class TestAdAuction(unittest.TestCase):
     def tearDown(self):
         self.testbed.deactivate()
 
-    def mptest_client_context_mk_dict(self):
+    def _client_context_mk_dict(self):   
+        """ REMOVED (append mptest to function def to add back)"""
         self.adunit_context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit_id)
         mk_dict = self.client_context.make_marketplace_dict(self.adunit_context)
         expected_dict = {'price_floor': 0.25,
@@ -257,7 +256,56 @@ class TestAdAuction(unittest.TestCase):
         creative = network_battle.run() 
         eq_obj(creative, self.dummy_network_creative)   
         
+        eq_(creative.html_data, "<html> FAKE RESPONSE </html>")     
+        
+        
+    def mptest_network_min_cpm_success(self):   
+        """ We can add in a minimum cpm, do this and let it pass """
+                                                             
+        self.dummy_network_creative = DummyServerSideSuccessCreative(account=self.account,
+                                ad_group=self.dummy_adgroup,
+                                tracking_url="test-tracking-url", 
+                                cpc=.03,
+                                ad_type="clear") 
+
+        self.dummy_network_creative.put()   
+        
+        self.adunit_context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit_id)         
+                                                                                 
+        # ecpm if 100000
+        eq_(optimizer.get_ecpm(self.adunit_context, self.expensive_creative), 100000)  
+         
+        # We make the limit min below the ecpm
+        network_battle = NetworkBattle(self.client_context,
+                                       self.adunit_context,
+                                       min_cpm=0.0)
+        creative = network_battle.run() 
+        eq_obj(creative, self.dummy_network_creative)   
+
         eq_(creative.html_data, "<html> FAKE RESPONSE </html>") 
+    
+    def mptest_network_min_cpm_failure(self):   
+        """ We can add in a minimum cpm, do this and make it fail """
+
+        self.dummy_network_creative = DummyServerSideSuccessCreative(account=self.account,
+                                ad_group=self.dummy_adgroup,
+                                tracking_url="test-tracking-url", 
+                                cpc=.03,
+                                ad_type="clear") 
+
+        self.dummy_network_creative.put()   
+
+        self.adunit_context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit_id)         
+
+        # ecpm if 100000
+        eq_(optimizer.get_ecpm(self.adunit_context, self.expensive_creative), 100000)  
+
+        # We make the min_cpm more than the ecpm
+        network_battle = NetworkBattle(self.client_context,
+                                       self.adunit_context,
+                                       min_cpm=200000)
+        creative = network_battle.run() 
+        eq_(creative, None)                
         
     def mptest_network_failure(self):      
         

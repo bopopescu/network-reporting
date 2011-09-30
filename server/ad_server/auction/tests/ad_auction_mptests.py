@@ -230,32 +230,6 @@ class TestAdAuction(unittest.TestCase):
         creative, on_fail_exclude_adgroups = ad_auction.run(client_context, self.adunit_context)                    
                                        
         eq_obj(creative, self.expensive_creative)
-        
-    def mptest_network_beating_marketplace(self):
-        """ If a network with an ecpm higher than the best marketplace bid
-            returns a valid creative, use it """   
-            
-     
-    def mptest_marketplace_is_not_excluded(self):
-        """ The marketplace should never be added to the list of 
-            excluded adgroups """   
-                                           
-            
-            
-    def mptest_marketplace_beating_failed_networks(self):
-        """ If the best marketplace bid with .50, and there are two networks worth
-            1.00 and .25, then if the 1.00 fails, go directly to the marketplace
-            without pinging the crappier network. """   
-                                           
-            
-         
-    def mptest_marketplace_beating_failed_networks_with_exclusion(self):
-        """ If the best marketplace bid with .50, and there are two networks worth
-            1.00 and .25, then if the 1.00 is excluded, go directly to the 
-            marketplace without pinging the crappier network. """   
-                                        
-                                                        
-                                                    
-        
+                                                 
 def eq_obj(obj1, obj2):
     eq_(obj1.key(), obj2.key())

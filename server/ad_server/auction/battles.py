@@ -46,7 +46,9 @@ class Battle(object):
         creative_ecpm_dict = optimizer.get_ecpms(self.adunit_context,
                                                  creatives,
                                                  sampling_fraction=0.0)
-                                                     
+        
+        for creative in creatives:
+            creative._battle_ecpm = creative_ecpm_dict[creative]                                             
 
         # We make a comparator function for sorting by ecpm
         def calc_ecpm_with_noise(creative):             
@@ -54,7 +56,7 @@ class Battle(object):
             noise = random.random() * 10 ** -9      
 
             # Make this negative so high ecpm comes first, add noise        
-            return -creative_ecpm_dict[creative] + noise
+            return -creative._battle_ecpm + noise
 
         # Sort using the ecpm as the key.
         return sorted(creatives, key=calc_ecpm_with_noise)
@@ -281,7 +283,7 @@ class DummyMarketplaceBattle(MarketplaceBattle):
     
     def _process_winner(self, creative):
         """ return a creative with a default bid. """     
-        creative.adgroup.bid = cpm_of_winning_bid
+        creative.adgroup.bid = self.cpm_of_winning_bid
         return creative                
     
 class NetworkBattle(Battle):
@@ -289,11 +291,22 @@ class NetworkBattle(Battle):
 
     starting_message = "Beginning network campaigns..."
     campaign_type = "network"
+       
+    def __init__(self, client_context, adunit_context, min_cpm=0.0):  
+        """ Network Battles can take an additional """
+        self.client_context = client_context
+        self.adunit_context = adunit_context     
+        self.min_cpm = min_cpm
+    
 
     def _process_winner(self, creative):
-        """ Fan out to a network and see if it can fill the adunit. """
+        """ Fan out to a network and see if it can fill the adunit. """      
+        
+        # If the ecpm for the network is less than the min_cpm, drop it
+        if creative._battle_ecpm < self.min_cpm:
+            return False
+        
         # If the network is a native network, then it does not require an rpc
-
         if not creative.ServerSide:
 
             # TODO: refactor logging

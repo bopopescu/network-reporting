@@ -128,6 +128,12 @@ class BaseCreativeRenderer(object):
             self.header_context.width = str(self.creative.width)
             self.header_context.height = str(self.creative.height)
     
+        # lock orientation
+        if self.adunit.landscape:
+            self.header_context.orientation = 'l'
+        else:
+            self.header_context.orientation = 'p'
+    
         # adds network info to the header_context
 
         if self.creative.network_name:

@@ -55,6 +55,8 @@ class IAdScraper(Scraper):
 
     def set_dates(self, start_date, end_date):
         # Set up using custom stuff
+        # Wait for browser to load
+        time.sleep(1)
         self.browser.find_element_by_css_selector('select').find_element_by_css_selector('option[value=customDateRange]').click()
         self.set_date('#gwt-debug-date-range-selector-start-date-box', start_date)
         self.set_date('#gwt-debug-date-range-selector-end-date-box', end_date)
@@ -131,7 +133,7 @@ class IAdScraper(Scraper):
             nsr = NetworkScrapeRecord(attempts = app_dict['requests'],
                                       impressions = app_dict['impressions'],
                                       fill_rate = app_dict['fill_rate'],
-                                      clicks = app_dict['ctr'] * app_dict['impressions'],
+                                      clicks = int(app_dict['ctr'] * app_dict['impressions']),
                                       ctr = app_dict['ctr'],
                                       ecpm = app_dict['ecpm'],
                                       app_tag = app_dict['apple_id'])

@@ -2,7 +2,7 @@ import logging
 import os, sys
 sys.path.append(os.environ['PWD'])
 
-from datetime import date
+from datetime import date, timedelta
 
 from account.models import NetworkConfig
 
@@ -10,23 +10,14 @@ from network_scraping.models import *
 from network_scraping.admob_scraper import AdMobScraper
 from network_scraping.iad_scraper import IAdScraper
 from network_scraping.jumptap_scraper import JumpTapScraper
+from network_scraping.inmobi_scraper import InMobiScraper
+from network_scraping.mobfox_scraper import MobFoxScraper
 from network_scraping.network_scrape_record import NetworkScrapeRecord
 
 from publisher.models import App
 
 def get_pub_id(pub_id, login_info):
     return pub_id
-
-def get_jump_tap_pub_id(app_name, login_info):
-    query = App.all()
-    query.filter("name =", app_name)
-    query.filter("account =", login_info.account)
-    publisher_id = query.get()
-    
-    if publisher_id:
-        return publisher_id.network_config.jumptap_pub_id
-    else:
-        return None
 
 class Network(object):
     def __init__(self, constructor, get_pub_id):
@@ -37,18 +28,19 @@ class Network(object):
 networks = {'admob' : Network(constructor = AdMobScraper, get_pub_id = get_pub_id),
             'jumptap' : Network(constructor = JumpTapScraper, get_pub_id = get_jump_tap_pub_id),
             'iad' : Network(constructor = IAdScraper, get_pub_id = get_pub_id),
-            'inmobi' : Network(constructor = InMobiScraper, get_pub_id = get_pub_id)}
+            'inmobi' : Network(constructor = InMobiScraper, get_pub_id = get_pub_id),
+            'mobfox' : Network(constructor = MobFoxScraper, get_pub_id = get_pub_id)}
 
 def update_ad_networks():
-    today = date.today()
+    yesterday = date.today() - timedelta(days = 1)
 
     # log in to ad networks and update stats for each user 
     for login_info in AdNetworkLoginInfo.all():
 
         scraper = networks[login_info.ad_network_name].constructor(login_info)
 
-        # returns a list of NetworkScrapeRecord objects of stats for each app for today
-        stats_list = scraper.get_site_stats(today)
+        # returns a list of NetworkScrapeRecord objects of stats for each app for yesterday
+        stats_list = scraper.get_site_stats(yesterday)
 
         for stats in stats_list:
     
@@ -57,10 +49,7 @@ def update_ad_networks():
             publisher_id = networks[login_info.ad_network_name].get_pub_id(stats.app_tag, login_info)
             
             # Using GQL to get the ad_network object that corresponds to the login_info and stats
-            query = AdNetworkAppMapper.all()
-            query.filter("ad_network_login =", login_info)
-            query.filter("publisher_id =", publisher_id)
-            ad_network = query.get()
+            ad_network = get_ad_network_app_mapper(publisher_id, login_info)
             
             if ad_network is None:
                 # App is not registered in MoPub but is still in the ad network
@@ -71,7 +60,9 @@ def update_ad_networks():
                 logging.info('%(account)s has pub id %(pub_id)s on %(ad_network)s that\'s in MoPub' %
                              dict(account = login_info.account.title, pub_id = stats.app_tag, ad_network = login_info.ad_network_name))
         
+            logging.warning('')
             AdNetworkScrapeStats(ad_network_app_mapper = ad_network,
+                                 date = yesterday,
                                  attempts = stats.attempts,
                                  impressions = stats.impressions,
                                  fill_rate = float(stats.fill_rate),
@@ -97,3 +88,4 @@ def update_ad_networks():
             else:
                 ad_network.ctr = float('NaN')
                 ad_network.ecpm = float('NaN')
+                

@@ -1,11 +1,12 @@
 import base64
 from hashlib import sha1
 from hmac import new as hmac
+import logging
 import time
 import urllib2
 
 from datetime import datetime
-from datetime import date
+from datetime import date, timedelta
 from xml.dom.minidom import parseString
 
 from network_scrape_record import NetworkScrapeRecord
@@ -43,8 +44,10 @@ class InMobiScraper(Scraper):
             now = datetime.now().strftime(self.DATE_FMT)
             full_url = self.API_URL + url
 
-            final_str = 'GET\n' + now + '\n' + url
+            final_str = 'GET\n%s\n%s' % (now, url)
 
+            # Strings are stored as unicode in appengine
+            self.password = str(self.password)
             encoded_url = hmac(self.password, final_str, sha1).digest().encode('base64')[:-1]
 
             req = urllib2.Request(full_url)
@@ -56,14 +59,20 @@ class InMobiScraper(Scraper):
 
 
     def get_site_stats(self, start_date, end_date=None):
+        # Date can't be today
+        if end_date is None:
+            end_date = start_date
+            # range can't start and end on the same date for InMobi
+            start_date -= timedelta(days = 1)
+
         req = self.get_stats_request(start_date, end_date)
         resp = urllib2.urlopen(req)
         line = resp.read()
-        
+    
         # Unfortunately we can't get it back as a json dict since we're using python and
         # not PHP or Java which support the API so we must parse the xml
         self.dom = parseString(line)
-        
+    
         reports = []
         errors = self.dom.getElementsByTagName('error')
         if len(errors) == 0:   
@@ -76,7 +85,8 @@ class InMobiScraper(Scraper):
                                           app_tag = str(app_stats[6]))
                 reports.append(nsr)
         else:
-            print errors.childNodes[0].data
+            print ('Day range (%s to %s) selected for InMobi doesn\'t have any data' % 
+                    (start_date.strftime("%Y %m %d"), end_date.strftime("%Y %m %d")))
             # logging.error()
             
         return reports
@@ -97,4 +107,4 @@ if __name__ == '__main__':
     nc.password = '84585161'
     nc.ad_network_name = 'inmobi'
     scraper = InMobiScraper(nc)
-    print scraper.get_site_stats(date(2010, 10, 20), date(2010, 11, 15))
+    print scraper.get_site_stats(date.today() - timedelta(days = 1))

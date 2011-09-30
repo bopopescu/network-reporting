@@ -3,6 +3,8 @@ from google.appengine.ext import db
 from account.models import Account
 from publisher.models import App
 
+import logging
+
 class AdNetworkLoginInfo(db.Model):
     #(account,ad_network_name)
     
@@ -21,10 +23,10 @@ class AdNetworkLoginInfo(db.Model):
 
 class AdNetworkAppMapper(db.Model):
     #(ad_network_name,publisher_id) -> application
-    ad_network_login = db.ReferenceProperty(AdNetworkLoginInfo, collection_name='ad_networks')
+    ad_network_login = db.ReferenceProperty(AdNetworkLoginInfo, collection_name='ad_network_app_mappers')
     ad_network_name = db.StringProperty()
-
-    application = db.ReferenceProperty(App, collection_name='ad_networks')
+    
+    application = db.ReferenceProperty(App, collection_name='ad_network_app_mappers')
     # Is this needed for admob?
     publisher_id = db.StringProperty()
     
@@ -41,7 +43,7 @@ class AdNetworkScrapeStats(db.Model):
     #(AdNetworkName, App, date)
     
     ad_network_app_mapper = db.ReferenceProperty(AdNetworkAppMapper, collection_name='ad_network_stats')
-    date = db.DateProperty(auto_now_add=True)
+    date = db.DateProperty()
     
     # stats info for a specific day
     attempts = db.IntegerProperty()
@@ -50,3 +52,33 @@ class AdNetworkScrapeStats(db.Model):
     clicks = db.IntegerProperty()
     ctr = db.FloatProperty()
     ecpm = db.FloatProperty()
+   
+# Query functions
+''' Get the aggregate stats for the different apps given an account '''
+def get_ad_network_totals(account):
+    for l in AdNetworkLoginInfo.all().filter('account =', account):
+        for n in AdNetworkAppMapper.all().filter('ad_network_login =', l):
+            yield n
+
+''' Get the AdNetworkStats for a given ad_network_app_mapper sorted chronologically by day '''
+def get_ad_network_app_stats(ad_network_app_mapper):
+    q = AdNetworkScrapeStats.all()
+    q.filter('ad_network_app_mapper =', ad_network_app_mapper)
+    return q
+    
+def get_jump_tap_pub_id(app_name, login_info):
+    query = App.all()
+    query.filter("name =", app_name)
+    query.filter("account =", login_info.account)
+    publisher_id = query.get()
+
+    if publisher_id:
+        return publisher_id.network_config.jumptap_pub_id
+    else:
+        return None
+        
+def get_ad_network_app_mapper(publisher_id, login_info):
+    query = AdNetworkAppMapper.all()
+    query.filter("ad_network_login =", login_info)
+    query.filter("publisher_id =", publisher_id)
+    return query.get()

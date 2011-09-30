@@ -1,7 +1,7 @@
 import urllib2
 import urllib
 import time
-import datetime
+from datetime import date, timedelta
 from xml.dom import minidom
 
 from network_scrape_record import NetworkScrapeRecord
@@ -17,8 +17,10 @@ class MobFoxScraper(object):
     def get_site_stats(self, from_date, to_date=None):
         if  to_date is None:
             to_date = from_date
+            # range can't start and end on the same date for MobFox
+            from_date -= timedelta(days = 1)
         
-        req_dict ={"api_key": self.API_KEY, "start_date": time.mktime(from_date.timetuple()), "end_date": time.mktime(to_date.timetuple())}
+        req_dict ={"api_key" : self.API_KEY, "start_date" : time.mktime(from_date.timetuple()), "end_date" : time.mktime(to_date.timetuple()), "report_type" : 2}
         
         reports = []
         for pub_id in self.publisher_ids:
@@ -28,19 +30,24 @@ class MobFoxScraper(object):
             response = urllib2.urlopen(req)
             self.dom = minidom.parseString(response.read())
         
-            nsr = NetworkScrapeRecord(impressions = self.get_value("impressions"),
-                                      clicks = self.get_value("clicks"),
-                                      net_revenue = self.get_value("earnings"),
-                                      ecpm = self.get_value("ecpm"),
-                                      ctr = self.get_value("ctr"),
-                                      app_tag = pub_id)
-    
-            reports.append(nsr)
+            try:
+                nsr = NetworkScrapeRecord(attempts = 0, # We can't get the number of attempts / requests
+                                          impressions = int(self.get_value("impressions")),
+                                          fill_rate = 0.0, # We can't get this and we don't have # attempts so we can't calculate it
+                                          clicks = int(self.get_value("clicks")),
+                                          ecpm = float(self.get_value("ecpm")),
+                                          ctr = float(self.get_value("ctr")),
+                                          app_tag = pub_id)
+                reports.append(nsr)
+            except Exception as e:
+                print ('Day range (%s to %s) selected for mobfox doesn\'t have any data' % 
+                        (from_date.strftime("%Y %m %d"), to_date.strftime("%Y %m %d")))
+                # logging.error()
         
         return reports
     
     def get_value(self, name):
-        self.dom.getElementsByTagName(name)[0].childNodes[0].nodeValue
+        return self.dom.getElementsByTagName(name)[0].childNodes[0].nodeValue
     
 class NetworkConfidential(object):
     pass
@@ -49,4 +56,4 @@ if __name__ == '__main__':
     nc = NetworkConfidential()
     nc.publisher_ids = ['fb8b314d6e62912617e81e0f7078b47e']
     scraper = MobFoxScraper(nc)
-    print scraper.get_site_stats(datetime.date(2011,8,10))
+    print scraper.get_site_stats(date.today())

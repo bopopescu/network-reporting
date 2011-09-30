@@ -164,7 +164,8 @@ def finalize_report(rep, blob_key):
     report.report_blob = blob_key
     log("Parsing report blob for %s" % rep)
     try:
-        data = report.parse_report_blob(report.report_blob.open())
+        dimkey_to_obj = report.batch_get_objs(report.report_blob.open())
+        data = report.parse_report_blob(report.report_blob.open(), dimkey_to_obj)
     except:
         raise ReportParseError(rep)
     report.data = data

@@ -93,7 +93,7 @@ def statsify(stats_dict):
         Returns:
             stats_dict, with objects instead of lists
     """
-    for k,v in stats_dict.iteritems():
+    for k, v in stats_dict.iteritems():
         #if it's stats, make them object-like
         if isinstance(v, list):
             stats_dict[k] = build_stat_dict(v)
@@ -124,7 +124,7 @@ class ScheduledReport(db.Model):
     end = db.DateProperty(required=True)
     days = db.IntegerProperty(required=True)
     #daily, weekly, monthly
-    interval = db.StringProperty(choices=['today','yesterday', '7days', 'lmonth', 'custom'], default='custom')
+    interval = db.StringProperty(choices=['today', 'yesterday', '7days', 'lmonth', 'custom'], default='custom')
     
     sched_interval = db.StringProperty(choices = ['none', 'daily', 'weekly', 'monthly', 'quarterly'], default='none')
     next_sched_date = db.DateProperty(default=datetime.now().date())
@@ -364,7 +364,90 @@ class Report(db.Model):
             det = "at least one dim is required"
         return det.title()
 
-            
+
+    def batch_get_objs(self, blobreader, offline=False):
+        """ Takes a blobreader, goes through the lines and gets the keys that 
+        neede a db get and batches them, then gets all of them and derefs
+        them to the appropriate obj (apps from adunits for example)"""
+        if offline:
+            return None
+        batch = {}
+        key_dims = {}
+        # Map everything to objects by (dim, key) since everything of 
+        # simliar types has the same key, but the dims are different
+        # so the (dim, key) pairs are unique
+        dimkey_to_obj = {}
+        for line in blobreader:
+            keys, vals = line.split('\t')
+            keys = keys.split(':')
+            for i,key in enumerate(keys):
+
+
+                if i == 0:
+                    dim = self.d1
+                elif i == 1:
+                    dim = self.d2
+                elif i == 2:
+                    dim = self.d3
+
+                if dim not in ONLINE_DIMS:
+                    continue
+
+                if key not in key_dims:
+                    key_dims[key] = []
+
+                if dim not in key_dims[key]:
+                    key_dims[key].append(dim)
+
+                if dim in CRTV_DIMS:
+                    if CRTV not in batch:
+                        batch[CRTV] = []
+                    if key not in batch[CRTV]:
+                        batch[CRTV].append(key)
+                    
+                elif dim in AU_DIMS:
+                    if AU not in batch:
+                        batch[AU] = []
+                    if key not in batch[AU]:
+                        batch[AU].append(key)
+
+        if offline:
+            return dimkey_to_obj
+
+        # list of everything
+        adunits = AdUnit.get(batch[AU])
+        crtvs = Creative.get(batch[CRTV])
+
+        for adunit in adunits:
+            obj_key = str(adunit.key())
+            for dim in key_dims[obj_key]:
+                key_tuple = (dim, obj_key)
+                if dim == AU:
+                    dimkey_to_obj[key_tuple] = adunit
+                elif dim == APP:
+                    dimkey_to_obj[key_tuple] = adunit.app_key
+
+        for crtv in crtvs:
+            obj_key = str(crtv.key())
+            for dim in key_dims[obj_key]:
+                key_tuple = (dim, obj_key)
+
+                if dim == CRTV:
+                    dimkey_to_obj[key_tuple] = crtv
+                elif dim == CAMP:
+                    dimkey_to_obj[key_tuple] = crtv.adgroup.campaign
+                elif dim == P:
+                    priority = crtv.adgroup.campaign.campaign_type
+                    if 'gtee' in priority:
+                        priority = 'guaranteed'
+                    dimkey_to_obj[key_tuple] = priority
+
+        return dimkey_to_obj
+
+                    
+
+
+                
     #keys will either make sense, or be AU, CRTV
     """This is a second reduce.  It is possible to construct a worst-case scenario 
     (tons of creatives, very few campaigns (among others)) where this gets hella slow.
@@ -372,7 +455,7 @@ class Report(db.Model):
     all the resolution is done here.  In the future it might makes sense to take this and put it 
     into a second mapreduce job that's run when the report finalizes.
     """
-    def parse_report_blob(self, blobreader):
+    def parse_report_blob(self, blobreader, dimkey_to_obj):
         """ turns a reports report_blob blobstore object into a dictionary
         
         Args:
@@ -390,17 +473,16 @@ class Report(db.Model):
                           }
         """
         final = {}
-        memo = {}
         for line in blobreader:
             #temp now refers to top of the dictionary
             temp = final
             keys, vals = line.split('\t')
             keys = keys.split(':')
             vals = eval(vals)
-            req, att = self.get_stats_info(keys)
+            req, att = self.get_stats_info(keys, dimkey_to_obj)
             #I'm using list comprehension for you Nafis
-            bid_infos = [self.get_bid_info(idx, key, memo) for idx, key in enumerate(keys)]
-            keys = [self.get_key_name(idx, key, memo) for idx,key in enumerate(keys)]
+            bid_infos = [self.get_bid_info(idx, key, dimkey_to_obj) for idx, key in enumerate(keys)]
+            keys = [self.get_key_name(idx, key, dimkey_to_obj) for idx, key in enumerate(keys)]
 
             # Invalid key somewhere in this line, don't use it
             if None in keys:
@@ -409,7 +491,7 @@ class Report(db.Model):
                 vals[0] = '---'
             if not att:
                 vals[1] = '---'
-            for i,((key,name), (bid_strat, bid)) in enumerate(zip(keys, bid_infos)):
+            for i, ((key, name), (bid_strat, bid)) in enumerate(zip(keys, bid_infos)):
                 # Preprocess the values to add revenue
                 if len(vals) == 5:
                     rev = 0
@@ -445,7 +527,7 @@ class Report(db.Model):
                         #doing Datastore reads) there is a possibility for 
                         #dupes.  If there are dupes, don't overwrite, sum
                         if temp[key].has_key('stats'):
-                            temp[key]['stats'] = [cust_sum(zipt) for zipt in zip(vals,temp[key]['stats'])]
+                            temp[key]['stats'] = [cust_sum(zipt) for zipt in zip(vals, temp[key]['stats'])]
                         else:
                             temp[key]['stats'] = vals
                     else:
@@ -484,7 +566,7 @@ class Report(db.Model):
     def rollup_revenue(self, stats):
         def rollup_help(stats, depth):
             rev = 0.0
-            for k,v in stats.iteritems():
+            for k, v in stats.iteritems():
                 if depth == 0:
                     # Bottom level, just roll up
                     rev += v['stats']['revenue']
@@ -498,19 +580,19 @@ class Report(db.Model):
             return stats
         elif self.d2 in [CRTV, CAMP]:
             depth = 0
-        elif self.d3 in [CRTV,CAMP]:
+        elif self.d3 in [CRTV, CAMP]:
             depth = 1
         else:
             # No levels have rev
             return stats
 
-        for k,v in stats.iteritems():
+        for k, v in stats.iteritems():
             stats[k]['stats']['revenue'] = rollup_help(v['sub_stats'], depth)
         return stats
 
 
 
-    def get_stats_info(self, keys, offline = False):
+    def get_stats_info(self, keys, dimkey_to_obj, offline = False):
         depth = len(keys)
         #If any of the dims are an adv, reqs is meaningless
         req = True
@@ -526,19 +608,30 @@ class Report(db.Model):
             logging.warning('Invalid key length')
         if set(dim_list).intersection(set(NO_REQ)):
             req = False
-        for key, dim in zip(keys,dim_list):
+        for key, dim in zip(keys, dim_list):
             if dim in CRTV_DIMS:
-                try:
-                    crtv = Creative.get(key)
-                #doesn't matter if we're crtv, camp, or priority, want to know the
-                #campaign type and if it's a network regardless
-                    if crtv.adgroup.campaign.campaign_type == 'network':
-                        att = True
-                except:
-                    att = False
+                key_tuple = (dim, key)
+                if dim == CRTV:
+                    crtv = dimkey_to_obj[key_tuple]
+                    priority = crtv.adgroup.campaign.campaign_type
+
+                elif dim == CAMP:
+                    camp = dimkey_to_obj[key_tuple]
+                    priority = camp.campaign_type
+
+                elif dim == P:
+                    priority = dimkey_to_obj[key_tuple]
+                
+                else:
+                    priority = None
+                if priority == 'network':
+                    att = True
+
+        if offline:
+            att = False
         return (req, att)
 
-    def get_bid_info(self, idx, key, memo, offline = False): 
+    def get_bid_info(self, idx, key, dimkey_to_obj, offline = False): 
         if idx == 0:
             dim = self.d1
         elif idx == 1:
@@ -551,31 +644,25 @@ class Report(db.Model):
         if offline:
             return None, None
 
+        key_tuple = (CRTV, key)
         if dim in [CAMP, CRTV]:
+            crtv = dimkey_to_obj[key_tuple]
             try:
-                if memo.has_key(key):
-                    crtv = memo[key]
-                else:
-                    crtv = Creative.get(key)
-                    memo[key] = crtv
                 if crtv.adgroup.campaign.campaign_type == 'network':
                     return None, None
-                if dim == CRTV:
+                else:
                     return (crtv.adgroup.bid_strategy, crtv.adgroup.bid)
-                elif dim == CAMP:
-                    camp = crtv.adgroup.campaign
-                    return (crtv.adgroup.bid_strategy, crtv.adgroup.bid)
-            except:
+            except Exception:
                 # This should only ever be called by the EC2 instance, so
                 # this should be safe
                 f = open('/home/ubuntu/tb.log', 'a')
                 traceback.print_exc(file=f)
                 f.close()
                 return None, None
+
         return None, None
 
-
-    def get_key_name(self, idx, key, memo, offline=False):
+    def get_key_name(self, idx, key, dimkey_to_obj, offline=False):
         """ Turns arbitrary keys and things into human-readable names to 
             be output to the report
 
@@ -600,40 +687,26 @@ class Report(db.Model):
         if dim in ONLINE_DIMS and offline:
             return ('%s-%s' % (dim, key), key)
 
+        key_tuple = (dim, key)
+
         if dim in CRTV_DIMS:
-            try:
-                if memo.has_key(key):
-                    crtv = memo[key]
-                else:
-                    crtv = Creative.get(key)
-                    memo[key] = crtv
-                if dim == CRTV:
-                    return (str(crtv.key()), crtv.name)
-                elif dim == CAMP:
-                    camp = crtv.adgroup.campaign
-                    return (str(camp.key()), camp.name)
-                elif dim == P:
-                    p = crtv.adgroup.campaign.campaign_type
-                    if 'gtee' in p:
-                        p = 'guaranteed'
-                    return (p, p.title())
-            except:
-                return None
+            if dim == CRTV:
+                crtv = dimkey_to_obj[key_tuple]
+                return (str(crtv.key()), crtv.name)
+            elif dim == CAMP:
+                camp = dimkey_to_obj[key_tuple]
+                return (str(camp.key()), camp.name)
+            elif dim == P:
+                priority = dimkey_to_obj[key_tuple]
+                return (priority, priority.tilte())
 
         elif dim in AU_DIMS:
-            try:
-                if memo.has_key(key):
-                    au = memo[key]
-                else:
-                    au = AdUnit.get(key)
-                    memo[key] = au
-                if dim == AU:
-                    return (str(au.key()), au.name)
-                elif dim == APP:
-                    app = au.app_key
-                    return (str(app.key()), app.name)
-            except:
-                return None
+            if dim == AU:
+                adunit = dimkey_to_obj[key_tuple]
+                return (str(adunit.key()), adunit.name)
+            elif dim == APP:
+                app = dimkey_to_obj[key_tuple]
+                return (str(app.key()), app.name)
 
         elif dim in TIME_DIMS:
             #This is cool that this was this easy
@@ -642,30 +715,26 @@ class Report(db.Model):
             #was requested, and the keys will be the same, this way they are uniquely 
             #ID'd
             try:
-                if memo.has_key(key):
-                    time = memo[key]
+                if dim == MO:
+                    time_key = datetime.strptime(key,'%y%m')
+                elif dim == WEEK:
+                    key1 = '1' + key
+                    key2 = '0' + key
+                    time_key = (datetime.strptime(key1,'%w%y%W'), datetime.strptime(key2,'%w%y%W'))
+                elif dim == DAY:
+                    time_key = datetime.strptime(key,'%y%m%d')
+                elif dim == HOUR:
+                    time_key = datetime.strptime(key,'%H')
                 else:
-                    if dim == MO:
-                        time = datetime.strptime(key,'%y%m')
-                    elif dim == WEEK:
-                        key1 = '1' + key
-                        key2 = '0' + key
-                        time = (datetime.strptime(key1,'%w%y%W'), datetime.strptime(key2,'%w%y%W'))
-                    elif dim == DAY:
-                        time = datetime.strptime(key,'%y%m%d')
-                    elif dim == HOUR:
-                        time = datetime.strptime(key,'%H')
-                    else:
-                        time = None
-                    memo[key] = time
-                return (key + dim, date_magic.date_name(time, dim))
-            except:
+                    time_key = None
+                return (key + dim, date_magic.date_name(time_key, dim))
+            except Exception:
                 return None
 
         elif dim in WURFL_DIMS:
             try:
                 return (key, WurflQueryManager().get_wurfl_name(key, dim))
-            except:
+            except Exception:
                 return None
 
         elif dim == CO:

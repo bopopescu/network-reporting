@@ -19,24 +19,31 @@ $(function () {
     width: 260px;
     padding: 10px;
     margin: 10px;
-    min-height: 250px;
-
-background: -webkit-gradient(linear, left top, left bottom, from(#eee), to(#fff));
-background: -moz-linear-gradient(top,  #eee,  #fff);
-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#eeeeee', endColorstr='#ffffff');
+    height: 250px;
+    background: -webkit-gradient(linear, left top, left bottom, from(#eee), to(#fff));
+    background: -moz-linear-gradient(top,  #eee,  #fff);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#eeeeee', endColorstr='#ffffff');
     }
 
 .inset_box h5 {
-    font-size: 18px;
+    font-size: 20px;
     text-align: center;
     text-shadow: 0px 1px 1px #fff;
     letter-spacing: -1px
     }
 
 .inset_box p {
-    font-size: 14px;
-    text-align: center;
+    font-size: 15px;
+    text-shadow: 0px 1px 1px #fff;
+    padding: 0px 5px;
     }
+
+.inset_box p img {
+    display: block;
+    width: 75px;
+    margin: 0 auto;
+    }
+
 #about_mpx {
 
     padding: 10px 15px;
@@ -56,9 +63,11 @@ filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#eeeeee', endC
 }
 
 #heading .beta {
-    color: orange;
+    color: #FF7536;
+    text-shadow: 0px 1px 1px orange;
     float: right;
     margin-top: 15px;
+    font-size: 16px;
     }
 
 #subheading {
@@ -86,16 +95,7 @@ filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#eeeeee', endC
 .btn {
     font-size: 34px;
     }
-#mpx_logo {
-    background: url('/images/mpx-logo.png') no-repeat;
-    width: 220px;
-    height: 100px;
-    float:left;
-}
 
-#earn_more, #control, #payment {
-
-    }
 </style>
 {% endblock extraCSS %}
 {% block messageCenter %}{% endblock %}
@@ -136,13 +136,14 @@ filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#eeeeee', endC
       <p>
         <img src="/images/ontime.png" />
         <br />
-      Getting paid shouldn’t be a headache. So we consolidated your ad revenue from all your marketplace bidders - demand side platforms, ad agencies, and RTB ad networks - into one monthly direct deposit. Simple as that.</p>
+      Getting paid shouldn't be a headache. So we consolidated your ad revenue from all your marketplace bidders - demand side platforms, ad agencies, and RTB ad networks - into one monthly direct deposit. Simple as that.</p>
 
     </div>
 </div>
 
     <div id="actions">
-      <a href="#" class="primary btn"> Try it now </a>
+      <br />
+      <a href="{% url advertiser_campaign_create %}#marketplace" class="primary btn"> Try it now </a>
       <br />
       <br />
       <a href="#" > Learn more </a>

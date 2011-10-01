@@ -1153,7 +1153,7 @@ def campaign_export(request, *args, **kwargs):
 class MPXInfoHandler(RequestHandler):
     def get(self):
         return render_to_response(self.request,
-                                  "advertiser/mpx_info.html",
+                                  "advertiser/mpx_splash.html",
                                   {})
 
 @login_required

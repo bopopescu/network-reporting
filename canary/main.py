@@ -192,7 +192,7 @@ class RecalculateHandler(webapp.RequestHandler):
                 id_last = memcache.get("%s-last-requests" % ad_test.adunit_id) or []
 
                 # update running totals for statistics
-                failure_sum += sum(0 if x.success else 1 for x in id_last)
+                failure_sum += sum([1 for x in id_last if not x.success])
                 request_count += len(id_last)
                 id_last_successes = [i for i, v in enumerate(id_last) if v.success]
                 if len(id_last_successes) > 0:
@@ -225,7 +225,7 @@ class RecalculateIdHandler(webapp.RequestHandler):
 
         # determines ad serving status for the given id
         failure_sum = sum([1 for x in last if not x.success])
-        failure_rate = failure_sum / float(len(last)) if float(len(last)) != 0 else float('NaN')
+        failure_rate = failure_sum / float(len(last)) if len(last) != 0 else float('NaN')
         last_success = min(i for i, v in enumerate(last) if v.success)
         memcache.set("%s-failure_rate" % id, failure_rate)
         memcache.set("%s-last_success" % id, last_success)

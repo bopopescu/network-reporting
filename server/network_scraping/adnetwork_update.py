@@ -2,6 +2,22 @@ import logging
 import os, sys
 sys.path.append(os.environ['PWD'])
 
+sys.path.append(os.getcwd()+'/../../')
+ 
+# for ubuntu EC2
+sys.path.append('/home/ubuntu/mopub/server')
+sys.path.append('/home/ubuntu/mopub/server/reporting')
+sys.path.append('/home/ubuntu/google_appengine')
+sys.path.append('/home/ubuntu/google_appengine/lib/antlr3')
+sys.path.append('/home/ubuntu/google_appengine/lib/django_1_2')
+sys.path.append('/home/ubuntu/google_appengine/lib/fancy_urllib')
+sys.path.append('/home/ubuntu/google_appengine/lib/ipaddr')
+sys.path.append('/home/ubuntu/google_appengine/lib/webob')
+sys.path.append('/home/ubuntu/google_appengine/lib/yaml/lib')
+
+from appengine_django import InstallAppengineHelperForDjango
+InstallAppengineHelperForDjango()
+
 from datetime import date, timedelta
 
 from account.models import NetworkConfig
@@ -21,7 +37,7 @@ import network_scraping.query_managers
 
 def setup_remote_api():
     app_id = 'mopub-experimental'
-    host = '38-aws.latest.mopub-inc.appspot.com'
+    host = '38.latest.mopub-inc.appspot.com'
     remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', auth_func, host)
 
 def auth_func():
@@ -101,7 +117,6 @@ def update_ad_networks():
                 ad_network.ecpm = float('NaN')
                 
 if __name__ == "__main__":
-    # _setup_remote_api()
     setup_remote_api()
-    main()                
+    update_ad_networks()                
                 

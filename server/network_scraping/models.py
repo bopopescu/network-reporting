@@ -1,5 +1,8 @@
 from google.appengine.ext import db
 
+from appengine_django import InstallAppengineHelperForDjango
+InstallAppengineHelperForDjango()
+
 from account.models import Account
 from publisher.models import App
 

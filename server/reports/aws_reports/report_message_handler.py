@@ -661,19 +661,12 @@ class ReportMessageHandler(MessageHandler):
 
             # Indicate that we are currently working on this step
             self.set_completed(message, step, PARSING)
-<<<<<<< HEAD
             rep = self.get_message_report(message)
 
             sub_proc = Process(target = parse_process, args=(self, rep, message, jobflowid, self.parse_lock(message)))
             sub_proc.start()
 
             return False
-                    data = rep.parse_report_blob(rep.report_blob.open(), obj_dimkeys)
-                except:
-                    raise ReportParseError(message = message, jobflowid = jobflowid)
-                self.message_data[message] = data
-                return True
->>>>>>> d9059838f2a55a10bf2be8c829e83fbb18652642
 
         # Second put, throws ReportPutErrors
         elif step == POST_PARSE_PUT:

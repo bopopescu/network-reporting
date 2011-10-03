@@ -389,9 +389,8 @@ class Report(db.Model):
         for line in blobreader:
             keys, vals = line.split('\t')
             keys = keys.split(':')
+            log("Keys: %s" % keys)
             for i, key in enumerate(keys):
-
-
                 if i == 0:
                     dim = self.d1
                 elif i == 1:
@@ -449,6 +448,7 @@ class Report(db.Model):
                         priority = 'guaranteed'
                     dimkey_to_obj[key_tuple] = priority
 
+        blobreader.close()
         return dimkey_to_obj
 
                     
@@ -549,7 +549,7 @@ class Report(db.Model):
         self.add_missing_dates(0, final)
                       
         # logging.debug(final)
-        
+        blobreader.close()       
         return self.rollup_revenue(statsify(final))
         
 

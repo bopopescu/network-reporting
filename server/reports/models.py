@@ -387,7 +387,7 @@ class Report(db.Model):
         for line in blobreader:
             keys, vals = line.split('\t')
             keys = keys.split(':')
-            for i,key in enumerate(keys):
+            for i, key in enumerate(keys):
 
 
                 if i == 0:
@@ -422,6 +422,7 @@ class Report(db.Model):
             return dimkey_to_obj
 
         # list of everything
+        logging.warning("Batch[AU]: %s" % batch[AU])
         adunits = AdUnit.get(batch[AU])
         crtvs = Creative.get(batch[CRTV])
 

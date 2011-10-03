@@ -240,10 +240,12 @@ class ReportMessageHandler(MessageHandler):
         if step == PARSE:
             lock = self.parse_lock(message)
             lock.acquire()
-            if self.message_completion_statuses[message][step] == 'parsing':
+
+            val = self.message_completion_statuses[message][step]
+            if val == PARSING or val == PARSE_ERROR:
                 ret = False
             else:
-                ret = True
+                ret = val
             lock.release()
             return ret
         else:
@@ -588,12 +590,14 @@ class ReportMessageHandler(MessageHandler):
         for i, step in enumerate(MESSAGE_COMPLETION_STEPS):
             if step == PARSE:
                 if self.parsing_message(message):
+                    logger.info("Parsing message")
                     return 
                 elif self.parse_error(message):
+                    logger.info("Parsing error")
                     raise ReportParseError(message = message, jobflowid = jobid)
                 
             if self.completed(message, step):
-                #logger.info("Step %s for message %s has already been completed" % (step, message))
+                logger.info("Step %s for %s completed" % (step, message))
                 continue
             else:
                 #logger.info("Handling step %s for message %s" % (step, message))
@@ -670,7 +674,7 @@ class ReportMessageHandler(MessageHandler):
 
         # Second put, throws ReportPutErrors
         elif step == POST_PARSE_PUT:
-            logger.info("Handling notify for %s" % message)
+            logger.info("Handling second put for %s" % message)
             try:
                 rep = self.get_message_report(message)
 
@@ -686,7 +690,7 @@ class ReportMessageHandler(MessageHandler):
 
         # Notify, throws ReportNotifyErrors
         elif step == NOTIFY:
-            logger.info("Handling upload for %s" % message)
+            logger.info("Handling notify for %s" % message)
             try:
                 rep = self.get_message_report(message)
                 if self.testing:

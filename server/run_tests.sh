@@ -14,8 +14,9 @@ then
     echo "Reporting tests"  
     nosetests ./reporting/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox 
     echo "Reports tests"  
-    echo "REPORTS TESTS ARE CURRENTLY BROKEN. @NICK, FIX THIS WHEN YOU GET BACK \r\n"    
-    # nosetests ./reports/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox 
+    nosetests ./reports/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox 
+    echo "Reports AWS Tests"
+    nosetests ./reports/aws_reports/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox 
     echo "Budget tests"
     nosetests ./budget/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox
     echo "Account tests"

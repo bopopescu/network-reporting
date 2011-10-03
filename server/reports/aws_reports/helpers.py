@@ -1,28 +1,27 @@
 import logging
-import os
+import random
+import string
+import sys
 import time
 import traceback
+import urllib2
 
 
-from optparse import OptionParser
-
-from boto.emr.connection import EmrConnection
-from boto.emr.step import StreamingStep
 from boto.s3.connection import S3Connection
 
-from parse_utils import gen_days, gen_report_fname, get_waiting_jobflow
-from parse_utils import AWS_ACCESS_KEY, AWS_SECRET_KEY, JOBFLOW_NAME
-from reports.aws_reports.report_exceptions import (MRSubmitError, ReportException, NoDataError)
+from reports.aws_reports.parse_utils import gen_days
+from reports.aws_reports.parse_utils import AWS_ACCESS_KEY, AWS_SECRET_KEY, JOBFLOW_NAME
+#from reports.aws_reports.report_exceptions import (MRSubmitError, ReportException, NoDataError)
 
 ############### Poster Imports ############### 
 from poster.encode import multipart_encode
 from poster.streaminghttp import register_openers
 
 ############### GAE Imports ############### 
-from google.appengine.ext import blobstore
-from google.appengine.ext.webapp import blobstore_handlers
 from google.appengine.ext.remote_api import remote_api_stub
 
+
+############# AWS Magic ###################
 S3_CONN = S3Connection(AWS_ACCESS_KEY, AWS_SECRET_KEY)
 BUCK = S3_CONN.get_bucket('mopub-aws-logging')
 
@@ -37,7 +36,6 @@ LOG_REDUCER = REPORTING_S3_CODE_DIR + '/log_reducer.py'
 ACCOUNT_DIR = S3_BUCKET + '/account_data'
 SHORT_ACCT_DIR = 'account_data'
 
-NUM_INSTANCES = 1
 MASTER_INSTANCE_TYPE = 'm1.large'
 SLAVE_INSTANCE_TYPE = 'm1.large'
 KEEP_ALIVE = True
@@ -53,12 +51,28 @@ UPDATE_STATS_HANDLER_PATH = '/offline/update_stats'
 LOG_FORMAT = "%s:\t%s\n"
 JOBFLOW_NAME = 'generating report job'
 
+if not sys.platform == 'darwin':
+    logging.basicConfig(level = logging.DEBUG,
+                        format = '%(asctimes) %(name)-12s %(levelname)-8s %(message)s',
+                        datefmt = '%m-%d %H:%M',
+                        filename = '/home/ubuntu/poller_%d.log' % time.time(), 
+                        filemode = 'w')
 
+def get_logger(name):
+    return logging.getLogger(name)
 
 def log(mesg):
     my_log = open('/home/ubuntu/poller.log', 'a')
     my_log.write(LOG_FORMAT % (time.time(), mesg))
     my_log.close()
+
+def default_exc_handle(e):
+    log("Encountered exception: %s" % e)
+    tb_file = open('/home/ubuntu/tb.log', 'a')
+    tb_file.write("\nERROR---\n%s" % time.time())
+    traceback.print_exc(file=tb_file)
+    tb_file.close()
+
 
 def build_puts(start, end, account):
     input_dir = ACCOUNT_DIR + ('/%s/daily_logs' % account)
@@ -67,13 +81,13 @@ def build_puts(start, end, account):
     days = gen_days(start, end)
     input_files = verify_inputs(['log+%s+%s+.adv.lc.stats' % (day.strftime('%y%m%d'), account) for day in days], account)
     log("Cleaned inputs: %s" % input_files)
-    inputs = [input_dir + '/' + file for file in input_files]
+    inputs = [input_dir + '/' + input_file for input_file in input_files]
     return (inputs, output_dir)
 
 def verify_inputs(inputs, account):
     log("Dirtayy inputs: %s" % inputs)
     input_dir = SHORT_ACCT_DIR + '/%s/daily_logs' % account
-    return [file for file in inputs if BUCK.get_key(input_dir + '/' + file) is not None]
+    return [input_file for input_file in inputs if BUCK.get_key(input_dir + '/' + input_file) is not None]
 
 def upload_file(fd):
 
@@ -106,11 +120,15 @@ def get_waiting_jobflow(conn, jobflow_ids):
         print 'found waitingjobflow %s with %i steps completed' % (jid, num_steps)
         if num_steps > 250: 
             if jobflow.state != u'RUNNING':
-                print 'num of steps near limit of 256: terminating jobflow %s ...' % (jobid)
+                print 'num of steps near limit of 256: terminating jobflow %s ...' % (jid)
                 conn.terminate_jobflow(jid)
                 print "Only jobflow is full"
         else:
             return jid
     return None
 
+def gen_random_fname(chars = string.letters, length=16, prefix = '', suffix = ''):
+    fname = ''.join([random.choice(chars) for i in range(length)])
+    fname = prefix + fname + suffix
+    return fname
 

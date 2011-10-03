@@ -42,17 +42,14 @@ DATE_FMT_HR = '%y%m%d%H'
 DATE_HR_LEN = 8
 DATE_LEN = 6
 
-def gen_days(start, end, hours=False):
+def gen_days(start, end):
     dt = timedelta(days=1)
     temp = start
     days = [temp]
     while temp != end:
         temp = temp + dt
         days.append(temp)
-    if hours:
-        return reduce(lambda x,y: x+y, get_hours(days))
-    else:
-        return days
+    return days
 
 def get_key(line_dict, dim):
     """ Returns the key for a dim
@@ -64,33 +61,33 @@ def get_key(line_dict, dim):
     #worry about resolving these when rendering the report, need for speed RIGHT NAO
     if APP == dim:
         return line_dict['adunit']
-    if AU == dim:
+    elif AU == dim:
         return line_dict['adunit']
-    if CAMP == dim:
+    elif CAMP == dim:
         return line_dict['creative']
-    if CRTV == dim:
+    elif CRTV == dim:
         return line_dict['creative']
-    if P == dim:
+    elif P == dim:
         return line_dict['creative']
-    if MO == dim:
+    elif MO == dim:
         return line_dict['time'].strftime('%y%m')
-    if WEEK == dim: 
+    elif WEEK == dim: 
         return line_dict['time'].strftime('%y%W')
-    if DAY == dim:
+    elif DAY == dim:
         return line_dict['time'].strftime('%y%m%d')
-    if HOUR == dim:
+    elif HOUR == dim:
         return line_dict['time'].strftime('%H')
-    if CO == dim:
+    elif CO == dim:
         #TODO somehow get the full country name from the 2 letter country code
         return line_dict['country']
-    if MAR == dim: 
+    elif MAR == dim: 
         return line_dict['marketing_name']
-    if BRND == dim:
+    elif BRND == dim:
         return line_dict['brand_name']
-    if OS == dim:
+    elif OS == dim:
         return line_dict['os']
     #iPhone:2.2 and Android:2.2 would both yield the same thing, this is wrong
-    if OS_VER == dim:
+    elif OS_VER == dim:
         return line_dict['os'] + '_'+ line_dict['os_ver']
 
 
@@ -107,12 +104,12 @@ def parse_line(line):
     key, value = line.split('\t', 1)
     vals = eval(value)
     #ph = k, needed a placeholder 
-    ph, adunit_id, creative_id, country, brand, marketing, os, os_ver, time = key.split(':')
+    ph, adunit_id, creative_id, country, brand, marketing, os, os_ver, log_time = key.split(':')
 
-    if len(time) == DATE_LEN:
-        time = datetime.strptime(time, DATE_FMT)
-    elif len(time) == DATE_HR_LEN:
-        time = datetime.strptime(time, DATE_FMT_HR)
+    if len(log_time) == DATE_LEN:
+        log_time = datetime.strptime(log_time, DATE_FMT)
+    elif len(log_time) == DATE_HR_LEN:
+        log_time = datetime.strptime(log_time, DATE_FMT_HR)
 
     au = adunit_id
     crtv = creative_id
@@ -125,63 +122,46 @@ def parse_line(line):
                 marketing_name = marketing,
                 os = os,
                 os_ver = os_ver,
-                time = time,
+                time = log_time,
                 vals = vals,
                 )
 
-def build_keys(line_dict, d1, d2, d3):
+def build_keys(line_dict, dim1, dim2, dim3):
     #if we're on a line w/ no creative it's a request line, return what we have
-    if line_dict['creative'] == '' and d1 in NO_REQUESTS:
+    if line_dict['creative'] == '' and dim1 in NO_REQUESTS:
         return []
-    d1_key = get_key(line_dict, d1)   
-    keys = [MR1_KEY % d1_key]
-    if d2:
-        if line_dict['creative'] == '' and d2 in NO_REQUESTS:
+    dim1_key = get_key(line_dict, dim1)   
+    keys = [MR1_KEY % dim1_key]
+    if dim2:
+        if line_dict['creative'] == '' and dim2 in NO_REQUESTS:
             return keys
-        d2_key = get_key(line_dict, d2)
-        keys.append(MR2_KEY % (d1_key, d2_key))
-    if d3:
-        if line_dict['creative'] == '' and d3 in NO_REQUESTS:
+        dim2_key = get_key(line_dict, dim2)
+        keys.append(MR2_KEY % (dim1_key, dim2_key))
+    if dim3:
+        if line_dict['creative'] == '' and dim3 in NO_REQUESTS:
             return keys 
-        d3_key = get_key(line_dict, d3)
-        keys.append(MR3_KEY % (d1_key, d2_key, d3_key))
+        dim3_key = get_key(line_dict, dim3)
+        keys.append(MR3_KEY % (dim1_key, dim2_key, dim3_key))
     return keys
 
 
-def gen_report_fname(d1, d2, d3, start, end):
-    fname = REPORT_NAME % (d1, d2, d3, start.strftime('%y%m%d'), end.strftime('%y%m%d'), int(time.time()))
+def gen_report_fname(dim1, dim2, dim3, start, end):
+    fname = REPORT_NAME % (dim1, dim2, dim3, start.strftime('%y%m%d'), end.strftime('%y%m%d'), int(time.time()))
     return fname
 
 
 def parse_msg(msg):
     data = str(msg.get_body())
     try:
-        d1, d2, d3, start, end, rep_key, acct_key, ts = data.split(DELIM)
-    except:
-        d1, d2, d3, start, end, rep_key, acct_key = data.split(DELIM)
-        ts = None
-    if d2 == 'None':
-        d2 = None
-    if d3 == 'None':
-        d3 = None
+        dim1, dim2, dim3, start, end, rep_key, acct_key, timestamp = data.split(DELIM)
+    except Exception:
+        dim1, dim2, dim3, start, end, rep_key, acct_key = data.split(DELIM)
+        timestamp = None
+    if dim2 == 'None':
+        dim2 = None
+    if dim3 == 'None':
+        dim3 = None
     start = datetime.strptime(start, '%y%m%d')
     end = datetime.strptime(end, '%y%m%d')
-    return (d1, d2, d3, start, end, rep_key, acct_key, ts)
-
-
-def get_waiting_jobflow(conn):
-    waiting_jobflows = conn.describe_jobflows([u'WAITING'])
-    for jobflow in waiting_jobflows:
-        if jobflow.name != JOBFLOW_NAME:
-            continue
-        jid = jobflow.jobflowid
-        num_steps = len(jobflow.steps)
-        print 'found waitingjobflow %s with %i steps completed' % (jid, num_steps)
-        if num_steps > 250:
-            print 'num of steps near limit of 256: terminating jobflow %s ...' % (jobid)
-            conn.terminate_jobflow(jid)
-        else:
-            return jid, num_steps
-    return None, 0
-
+    return (dim1, dim2, dim3, start, end, rep_key, acct_key, timestamp)
 

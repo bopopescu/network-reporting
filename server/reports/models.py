@@ -384,6 +384,8 @@ class Report(db.Model):
         # simliar types has the same key, but the dims are different
         # so the (dim, key) pairs are unique
         dimkey_to_obj = {}
+        batch[CRTV] = []
+        batch[AU] = []
         for line in blobreader:
             keys, vals = line.split('\t')
             keys = keys.split(':')
@@ -407,14 +409,10 @@ class Report(db.Model):
                     key_dims[key].append(dim)
 
                 if dim in CRTV_DIMS:
-                    if CRTV not in batch:
-                        batch[CRTV] = []
                     if key not in batch[CRTV]:
                         batch[CRTV].append(key)
                     
                 elif dim in AU_DIMS:
-                    if AU not in batch:
-                        batch[AU] = []
                     if key not in batch[AU]:
                         batch[AU].append(key)
 

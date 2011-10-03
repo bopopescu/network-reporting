@@ -120,7 +120,7 @@ class CampaignForm(mpforms.MPModelForm):
                 elif lev == 'backfill':
                     type_ = 'backfill_marketplace'
                 else:
-                    logging.warning("Invalid MPX level")
+                    type_ = 'marketplace'
                 obj.campaign_type = type_
             if obj.budget_type == "full_campaign":
                 obj.budget = None

@@ -276,7 +276,6 @@ class CreateCampaignAJAXHander(RequestHandler):
         initial = {}
         if campaign and campaign.campaign_type in ['marketplace', 'backfill_marketplace']:
             initial.update(price_floor=self.account.network_config.price_floor)
-        logging.info("\n\n\n\n\nafasdfasdfasdf\n\n\n\n:%s\n\n\n"%initial)
         campaign_form = campaign_form or CampaignForm(instance=campaign, initial=initial)
         adgroup_form = adgroup_form or AdGroupForm(instance=adgroup)
         networks = [['admob_native', 'AdMob', False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["chartboost","ChartBoost",False],["ejam","eJam",False],\
@@ -408,7 +407,7 @@ class CreateCampaignAJAXHander(RequestHandler):
                     if not has_adgroup_instance: #ensure form posts do not change ownership
                         creative = adgroup.default_creative()
                         creative.account = self.account
-                    CreativeQueryManager.put(creative)
+                        CreativeQueryManager.put(creative)
 
                 elif campaign.campaign_type == "network":
                     html_data = None

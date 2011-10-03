@@ -73,6 +73,13 @@
             Before you set up your ad campaigns, we recommend that you set up your App inventory.  Visit the <a href="{% url publisher_index %}">Dashboard</a> to add your Apps.
           </div>
 {% endif %}
+{% if not has_marketplace_campaign %}
+          <div class="alert-message">
+            We've just launched MoPub Marketplace, our state of the art real-time bidding exchange.
+            <a class="btn" href="{% url advertiser_campaign_create %}#marketplace">Add a marketplace campaign</a>
+
+          </div>
+  {% endif %}
           <div class="separated">
             <section class="offset nomargin" id="dashboard-stats">
               <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>

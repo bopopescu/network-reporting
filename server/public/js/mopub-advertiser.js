@@ -65,6 +65,7 @@ var mopub = mopub || {};
           // Select the appropriate form field options based on the type of campaign
           $('#campaign_type_select').change(function(e) {
               var campaign_type = $(this).val();
+              window.location.hash = "#" + campaign_type;
               $('.campaignDependent', '#campaignAdgroupForm').hide();
               $('.'+campaign_type+'.campaignDependent', '#campaignAdgroupForm').show();
               $('#campaignAdgroupForm')

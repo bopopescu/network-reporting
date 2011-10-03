@@ -422,7 +422,7 @@ class Report(db.Model):
             return dimkey_to_obj
 
         # list of everything
-        logging.warning("Batch[AU]: %s" % batch[AU])
+        log("Batch[AU]: %s" % batch[AU])
         adunits = AdUnit.get(batch[AU])
         crtvs = Creative.get(batch[CRTV])
 

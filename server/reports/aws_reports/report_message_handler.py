@@ -1,11 +1,12 @@
 import logging
 import os
+import pickle
 import sys
 import time
 import traceback
 
 from datetime import datetime, timedelta
-from multiprocessing import Process, Lock
+from multiprocessing import Process, Pipe
 
 from appengine_django import InstallAppengineHelperForDjango
 InstallAppengineHelperForDjango()
@@ -93,6 +94,14 @@ MESSAGE_COMPLETION_STEPS = [UPLOAD, BLOB_KEY_PUT, PARSE, POST_PARSE_PUT, NOTIFY]
 
 TEST_FAIL_TIMEOUT = 2
 
+############## PIPELINES!!!! ########
+MSG = '%s|%s'
+########### Message Types ############
+OBJ = 'OBJECT'
+STEP_STATUS_CHANGE = 'SSCHG'
+MSG_DATA = 'MSGDATA'
+
+VALID_TYPES = (OBJ, STEP_STATUS_CHANGE, MSG_DATA)
 
 
 ############ SETUP LOGGING SHIT ##############
@@ -185,7 +194,7 @@ class ReportMessageHandler(MessageHandler):
         # Dict of datas for messages that failed after parsing
         self.message_data = {}
         self.message_report = {}
-        self.message_lock = {}
+        self.message_parse_pipe = {}
 
     def init_message(self, message):
         """ When starting to process a message, init its steps
@@ -195,12 +204,17 @@ class ReportMessageHandler(MessageHandler):
         self.message_blob_keys[message] = None
         self.message_data[message] = None
         self.message_report[message] = None
-        self.message_lock[message] = Lock()
+        self.message_parse_pipe[message] = None
 
         for step in MESSAGE_COMPLETION_STEPS:
             self.message_completion_statuses[message][step] = False
             self.message_step_timeouts[message][step] = None
     
+    def init_message_pipe(self, message):
+        p_pipe, c_pipe = Pipe()
+        self.set_message_parse_pipe(message, p_pipe)
+        return c_pipe
+
     @property
     def message_maps(self):
         return (self.message_completion_statuses,
@@ -219,7 +233,31 @@ class ReportMessageHandler(MessageHandler):
         del(self.message_blob_keys[message])
         del(self.message_data[message])
         del(self.message_report[message])
-        del(self.message_lock[message])
+        del(self.message_parse_pipe[message])
+
+    def set_message_parse_pipe(self, message, p_conn):
+        self.message_parse_pipe[message] = p_conn
+
+    def get_message_parse_pipe(self, message):
+        return self.message_parse_pipe[message]
+
+    def listen_to_parse_pipe(self, message):
+        pipe_conn = self.get_message_parse_pipe(message)
+        # There is data
+        while pipe_conn.poll():
+            msg_type = pipe_conn.recv()
+            data = pipe_conn.recv()
+            self.handle_pipe_message(message, msg_type, data)
+
+
+    def handle_pipe_message(self, message, msg_type, data):
+        if msg_type == STEP_STATUS_CHANGE:
+            step, state = data
+            self.set_completed(message, step, state)
+        elif msg_type == MSG_DATA:
+            self.message_data[message] = data
+
+            
 
     def get_message_report(self, message):
         """ Gets a report for a message locally if we have it,
@@ -238,48 +276,24 @@ class ReportMessageHandler(MessageHandler):
     def completed(self, message, step):
         """Message step completion getter"""
         if step == PARSE:
-            lock = self.parse_lock(message)
-            lock.acquire()
-
             val = self.message_completion_statuses[message][step]
             if val == PARSING or val == PARSE_ERROR:
-                ret = False
+                return False
             else:
-                ret = val
-            lock.release()
-            return ret
+                return val
         else:
             return self.message_completion_statuses[message][step]
 
     def set_completed(self, message, step, cmpltd):
         """Message step completion setter"""
-        if step == PARSE:
-            lock = self.parse_lock(message)
-            lock.acquire()
-
         self.message_completion_statuses[message][step] = cmpltd
 
-        if step == PARSE:
-            lock = self.parse_lock(message)
-            lock.release()
-
-
-    def parse_lock(self, message):
-        return self.message_lock[message]
 
     def parsing_message(self, message):
-        lock = self.parse_lock(message)
-        lock.acquire()
-        val = self.message_completion_statuses[message][PARSE] 
-        lock.release()
-        return val == PARSING
+        return self.message_completion_statuses[message][PARSE] == PARSING
 
     def parse_error(self, message):
-        lock = self.parse_lock(message)
-        lock.acquire()
-        val = self.message_completion_statuses[message][PARSE] 
-        lock.release()
-        return val == PARSE_ERROR
+        return self.message_completion_statuses[message][PARSE] == PARSE_ERROR
 
 
 
@@ -590,6 +604,7 @@ class ReportMessageHandler(MessageHandler):
         for i, step in enumerate(MESSAGE_COMPLETION_STEPS):
             if step == PARSE:
                 if self.parsing_message(message):
+                    self.listen_to_parse_pipe(message)
                     logger.info("Parsing message")
                     return 
                 elif self.parse_error(message):
@@ -654,6 +669,7 @@ class ReportMessageHandler(MessageHandler):
         # SPAWNS CHILD THREAD (because it takes so damn long)
         elif step == PARSE:
             logger.info("Handling parse for %s" % message)
+
             if self.testing:
                 rep = self.get_message_report(message)
                 data = rep.parse_report_blob(rep.test_report_blob, {}, testing = self.testing)
@@ -665,8 +681,9 @@ class ReportMessageHandler(MessageHandler):
             # Indicate that we are currently working on this step
             self.set_completed(message, step, PARSING)
             rep = self.get_message_report(message)
+            c_conn = self.init_message_pipe(message)
 
-            sub_proc = Process(target = parse_process, args=(self, rep, message, jobflowid, self.parse_lock(message)))
+            sub_proc = Process(target = parse_process, args=(rep, message, c_conn))
             sub_proc.start()
 
             return False
@@ -794,7 +811,7 @@ class ReportMessageHandler(MessageHandler):
 
         return jobid
         
-def parse_process(handler, rep, message, jobflowid, lock):
+def parse_process(rep, message, pipe_conn):
     try:
         logger.info("getting dimkeys")
         obj_dimkeys = rep.batch_get_objs(rep.report_blob.open())
@@ -802,13 +819,20 @@ def parse_process(handler, rep, message, jobflowid, lock):
         logger.info("Parsing the acutal shit w/ batched keys")
         data = rep.parse_report_blob(rep.report_blob.open(), obj_dimkeys)
         logger.info("Data is: %s" % data)
+        pipe_send_message(pipe_conn, MSG_DATA, data)
+        pipe_send_message(pipe_conn, STEP_STATUS_CHANGE, (PARSE, True))
     except Exception, e:
         logger.info("\n\nParse error\n\n")
-        handler.set_completed(message, PARSE, PARSE_ERROR)
         default_exc_handle(e)
+        pipe_send_message(pipe_conn, STEP_STATUS_CHANGE, (PARSE, PARSE_ERROR))
+        pipe_conn.close()
         return
-    lock.acquire()
-    handler.message_data[message] = data
-    lock.release()
-    handler.set_completed(message, PARSE, True)
- 
+
+
+def pipe_send_message(pipe, type, data):
+    if type not in VALID_TYPES:
+        return False
+    pipe.send(type)
+    pipe.send(data)
+    return True
+

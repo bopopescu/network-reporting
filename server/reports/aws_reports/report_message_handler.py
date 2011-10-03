@@ -514,8 +514,6 @@ class ReportMessageHandler(MessageHandler):
                     logger.warning("TIMED OUT ON PARSE")
                     self.mark_failed(message, jobflowid)
                 # Super kill child process
-                if not self.testing:
-                    os._exit(0)
 
             except ReportNotifyError, e:
                 # Notifying Failed
@@ -597,8 +595,6 @@ class ReportMessageHandler(MessageHandler):
                     self.mark_completed(message, step, i)
                     # The child is the only one that will return True, kill it after we've 
                     # marked the step as completed
-                    if step == PARSE and not self.testing:
-                        os._exit(0)
                 else:
                     return 
 

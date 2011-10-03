@@ -792,7 +792,7 @@ class ReportMessageHandler(MessageHandler):
         return jobid
         
 def parse_process(handler, rep, message, jobflowid, lock):
-    try
+    try:
         obj_dimkeys = rep.batch_get_objs(rep.report_blob.open())
         data = rep.parse_report_blob(rep.report_blob.open(), obj_dimkeys)
     except Exception, e:

@@ -39,7 +39,9 @@ class LogService(object):
             try:
                 self.flush()
             except apiproxy_errors.OverQuotaError:
-                logging.error("Over quota a bit")    
+                logging.error("Over quota a bit")
+            except:
+                logging.error("wtf")
             
     def _should_flush(self):
         """

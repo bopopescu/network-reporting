@@ -224,8 +224,8 @@ class RecalculateIdHandler(webapp.RequestHandler):
         last = memcache.get("%s-last-requests" % id) or []
 
         # determines ad serving status for the given id
-        success_sum = sum([1 for x in last if x.success])
-        failure_rate = success_sum / float(len(last)) if success_sum != 0 else float('NaN')
+        failure_sum = sum([1 for x in last if not x.success])
+        failure_rate = failure_sum / float(len(last)) if float(len(last)) != 0 else float('NaN')
         last_success = min(i for i, v in enumerate(last) if v.success)
         memcache.set("%s-failure_rate" % id, failure_rate)
         memcache.set("%s-last_success" % id, last_success)

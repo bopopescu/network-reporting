@@ -206,17 +206,6 @@ class RecalculateHandler(webapp.RequestHandler):
             last_success = min(last_successes)
             memcache.set("failure_rate", failure_rate)
             memcache.set("last_success", last_success)
-            
-            logging.info("last_success = %d" % last_success)
-            logging.info("EMAIL SHOULD SHOW HERE")
-            
-            # if there is a failure alert condition, send an email
-            # Yes, this should continue to be sent until the failure condition has been addressed
-            if last_success > LAST_SUCCESS_THRESHOLD:
-                mail.send_mail(sender='olp@mopub.com', 
-                               to='eng@mopub.com',
-                               subject="CODE RED: ad server has been down for several tries", 
-                               body="Failure count=%d. See more at http://stats.mopub.com" % last_success)
         
             latencies.sort()
             if len(latencies) > 0:
@@ -235,11 +224,21 @@ class RecalculateIdHandler(webapp.RequestHandler):
         last = memcache.get("%s-last-requests" % id) or []
 
         # determines ad serving status for the given id
-        failure_rate = sum(0 if x.success else 1 for x in last) / float(len(last))
+        success_sum = sum([1 for x in last if x.success])
+        failure_rate = success_sum / float(len(last)) if success_sum != 0 else float('NaN')
         last_success = min(i for i, v in enumerate(last) if v.success)
         memcache.set("%s-failure_rate" % id, failure_rate)
         memcache.set("%s-last_success" % id, last_success)
          
+        # if there is a failure alert condition, send an email
+        # Yes, this should continue to be sent until the failure condition has been addressed
+        if last_success > LAST_SUCCESS_THRESHOLD:
+	    logging.error("Last success has exceeded the threshold")
+            mail.send_mail(sender='olp@mopub.com', 
+                           to='eng@mopub.com',
+                           subject="CODE RED: ad server has been down for several tries", 
+                           body="Failure count=%d. See more at http://stats.mopub.com" % last_success)
+
         # recalculate latency median and average
         latencies = [x.request_ms for x in last if x.request_ms is not None]
         latencies.sort()
@@ -264,7 +263,7 @@ application = webapp.WSGIApplication([
                   ('/', PerformanceIdHandler),                    # shows a splash page containing performance data for a fast ad id
                   ('/performance', PerformanceHandler),           # shows a splash page containing aggregate performance data
                   ('/performance/(.*)', PerformanceIdHandler),    # shows a splash page containing performance data for ad id
-				  ('/ping', PingHandler),                         # pings all ad ids
+		  ('/ping', PingHandler),                         # pings all ad ids
                   ('/ping/(.*)', PingIdHandler),                  # pings ad server URL for ad id
                   ('/r', RecalculateHandler),                     # recalculates overall status
                   ('/r/(.*)', RecalculateIdHandler),              # recalculates status for ad id

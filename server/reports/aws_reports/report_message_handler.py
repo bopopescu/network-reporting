@@ -484,6 +484,7 @@ class ReportMessageHandler(MessageHandler):
                                     fail_step=fail_step)
             except BlobUploadError, e:
                 message = e.report_message
+                logger.warning("Blob upload error for %s" % message)
                 jobflowid = e.jobflowid
                 #logger.warning("Message: %s  JobFlowID: %s had a BlobUploadError" % (message, jobflowid))
                 self.set_message_report(message, None)
@@ -494,6 +495,7 @@ class ReportMessageHandler(MessageHandler):
             except ReportPutError, e:
                 # Put failed.
                 message = e.report_message
+                logger.warning("Report Put error for %s" % message)
                 jobflowid = e.jobflowid
                 #logger.warning("Message: %s  JobFlowID: %s had a ReportPutError" % (message, jobflowid))
                 self.set_message_report(message, None)
@@ -504,12 +506,16 @@ class ReportMessageHandler(MessageHandler):
             # This is a child process that has failed
             # THE ONLY THING THAT THROWS THESE ARE CHILD PROCESSES!!!!!
             except ReportParseError, e:
+                default_exc_handle(e)
                 message = e.report_message
+                logger.warning("Parse error for %s" % message)
                 jobflowid = e.jobflowid
                 #logger.warning("Message: %s  JobFlowID: %s had a ReportParseError" % (message, jobflowid))
                 self.set_message_report(message, None)
                 # No longer parsing, and it failed
                 self.set_completed(message, PARSE, False)
+                logger.warning("Should be resetting stuff to parse again")
+                logger.info("Step completion statuses for message %s\t%s" % (message, self.message_completion_statuses[message]))
                 if self.step_timedout(message, PARSE):
                     logger.warning("TIMED OUT ON PARSE")
                     self.mark_failed(message, jobflowid)
@@ -518,6 +524,7 @@ class ReportMessageHandler(MessageHandler):
             except ReportNotifyError, e:
                 # Notifying Failed
                 message = e.report_message
+                logger.warning("Notify error for %s" % message)
                 jobflowid = e.jobflowid
                 #logger.warning("Message: %s  JobFlowID: %s had a ReportNotifyError" % (message, jobflowid))
                 self.set_message_report(message, None)
@@ -531,6 +538,7 @@ class ReportMessageHandler(MessageHandler):
         if not self.jobid_message_map.has_key(jobid):
             return
         messages = self.jobid_message_map[jobid]
+        logger.info("Messages for this jobid: %s" % messages)
         completed_steps = [step.name for step in jobflow.steps if step.state == u'COMPLETED']
         failed_steps = [step.name for step in jobflow.steps if step.state == u'FAILED']
         finished_messages = [msg for msg in messages if msg.step_name in completed_steps]
@@ -576,8 +584,8 @@ class ReportMessageHandler(MessageHandler):
         # There are 5 distinct steps to finalizing, all of which can fail.  If any one fails
         # the on_success is retried.  There is no reason to try to do something again that
         # has succeeded, so don't
+        logger.info("Step completion statuses for message %s\t%s" % (message, self.message_completion_statuses[message]))
         for i, step in enumerate(MESSAGE_COMPLETION_STEPS):
-            #logger.info("Step completion statuses for message %s\t%s" % (message, self.message_completion_statuses[message]))
             if step == PARSE:
                 if self.parsing_message(message):
                     return 
@@ -610,6 +618,7 @@ class ReportMessageHandler(MessageHandler):
         THIS IS WHERE ERRORS (should be) ARE THROWN """
         # Upload step, throws BlobUploadErrors
         if step == UPLOAD:
+            logger.info("Handling upload for %s" % message)
             # This guy throws
             blob_key = self.upload_and_get_key(message)
 
@@ -622,6 +631,7 @@ class ReportMessageHandler(MessageHandler):
 
         # First put, throws ReportPutErrors
         elif step == BLOB_KEY_PUT:
+            logger.info("Handling first put for %s" % message)
             try:
                 rep = self.get_message_report(message)
                 if  self.testing:
@@ -640,6 +650,7 @@ class ReportMessageHandler(MessageHandler):
         # Parse error, throws ReportParseErrors
         # SPAWNS CHILD THREAD (because it takes so damn long)
         elif step == PARSE:
+            logger.info("Handling parse for %s" % message)
             if self.testing:
                 rep = self.get_message_report(message)
                 data = rep.parse_report_blob(rep.test_report_blob, {}, testing = self.testing)
@@ -650,15 +661,23 @@ class ReportMessageHandler(MessageHandler):
 
             # Indicate that we are currently working on this step
             self.set_completed(message, step, PARSING)
+<<<<<<< HEAD
             rep = self.get_message_report(message)
 
             sub_proc = Process(target = parse_process, args=(self, rep, message, jobflowid, self.parse_lock(message)))
             sub_proc.start()
 
             return False
+                    data = rep.parse_report_blob(rep.report_blob.open(), obj_dimkeys)
+                except:
+                    raise ReportParseError(message = message, jobflowid = jobflowid)
+                self.message_data[message] = data
+                return True
+>>>>>>> d9059838f2a55a10bf2be8c829e83fbb18652642
 
         # Second put, throws ReportPutErrors
         elif step == POST_PARSE_PUT:
+            logger.info("Handling notify for %s" % message)
             try:
                 rep = self.get_message_report(message)
 
@@ -674,6 +693,7 @@ class ReportMessageHandler(MessageHandler):
 
         # Notify, throws ReportNotifyErrors
         elif step == NOTIFY:
+            logger.info("Handling upload for %s" % message)
             try:
                 rep = self.get_message_report(message)
                 if self.testing:
@@ -779,8 +799,9 @@ class ReportMessageHandler(MessageHandler):
         return jobid
         
 def parse_process(handler, rep, message, jobflowid, lock):
-    try:
-        data = rep.parse_report_blob(rep.report_blob.open())
+    try
+        obj_dimkeys = rep.batch_get_objs(rep.report_blob.open())
+        data = rep.parse_report_blob(rep.report_blob.open(), obj_dimkeys)
     except Exception, e:
         handler.set_completed(message, PARSE, PARSE_ERROR)
         default_exc_handle(e)

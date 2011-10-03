@@ -241,7 +241,7 @@
             else {
                 return;
             }
-        });
+        }).change();
 
     $('.date-field')
         .change(function(e) {

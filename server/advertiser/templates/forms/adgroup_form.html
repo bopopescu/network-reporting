@@ -309,22 +309,6 @@
                           <div class="form-error-text">{{error}}</div>
                           {% endfor %}
                         </dd>
-                        <dt>Keywords:</dt>
-                        <dd>
-                          {{ form.keywords.as_widget }}
-                          <a href="#" id="campaignForm-keyword-helpLink">What's this?</a>
-                          <div id='campaignForm-keyword-helpContent' class='hidden'>
-                            <h3>Keywords</h3>
-                            <p>
-                              Keywords may be used to target select requests and user data. Enter one group of keywords per line. Within each line the keywords are ANDed by using the seperator "AND". All lines are otherwised ORed together.
-                              <br/><br/>
-                              e.g. In order to target 24-year-old males or any 25-year-old you can use  special keywords
-                              <br/><br/>
-                              m_age:24 AND m_gender:M <br/>
-                              m_age:25
-                            </p>
-                          </div>
-                        </dd>
                         <dt>Device Targeting:</dt>
 
                         <dd>
@@ -401,6 +385,25 @@
                         {#   <div class="form-error-text">{{error}}</div> #}
                         {#   {% endfor %} #}
                         {# </dd> #}
+                        <dt>Keywords:</dt>
+                        <dd>
+                          {{ form.keywords.as_widget }}
+                          <a href="#" id="campaignForm-keyword-helpLink">What's this?</a>
+                          <div id='campaignForm-keyword-helpContent' class='hidden'>
+                            <h3>Keywords</h3>
+                            <p>
+                              Keywords may be used to target select requests and user data. Enter one group of keywords per line. Within each line the keywords are ANDed by using the seperator "AND". All lines are otherwised ORed together.
+                              <br/><br/>
+                              e.g. In order to target 24-year-old males or any 25-year-old you can use  special keywords
+                              <br/><br/>
+                              m_age:24 AND m_gender:M <br/>
+                              m_age:25<br/>
+                              <br/>
+                              Note: Keywords should only be used if your app is sending keywords with the ad request.
+                            </p>
+                          </div>
+                        </dd>
+
                       </div>
                       <dt><a class="button button-small adgroupForm-advanced-toggleButton" id="adgroupForm-advanced-toggleButton" href="#">Show Advanced Targeting</a></dt>
                       <dd></dd>

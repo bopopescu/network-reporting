@@ -57,6 +57,8 @@ class TestReports():
 NOW = datetime.datetime(2011, 1, 1).date()
 one_day = datetime.timedelta(days=1)
 
+
+
 def make_get_data(d1, d2=None, d3=None):
     """ Don't care about days because we're assuming that's all handled properly """
     file = open(DIR + '/test_data2.dat')
@@ -134,40 +136,88 @@ def report_runner(d1):
             DONE_COMBOS.append((d2,d3))
             assert verify_data(make_get_data(d1, d2=d2, d3=d3), d1, d2, d3)
 
+def date_addition_mptest():
+    end = datetime.date(2011, 8, 30)
+    last_run = datetime.datetime(2011, 8, 30, 9, 47, 49, 727180)
+    next_sched_date = datetime.date(2011, 8, 30)
+    sched = ScheduledReport(d1 = 'campaign', 
+                            d2 = 'creative',
+                            d3 = 'day',
+                            days = 7,
+                            default = False,
+                            deleted = False,
+                            email = False,
+                            end = end,
+                            interval = '7days',
+                            last_run = last_run,
+                            name = 'Campaign > Creative > Day - Last 7 Days',
+                            next_sched_date = next_sched_date,
+                            saved = True,
+                            sched_interval = None
+                            )
+    sched.put()
+    completed_at = datetime.datetime(2011, 8, 30, 9, 54, 49, 164974)
+    created_at = datetime.datetime(2011, 8, 30, 9, 47, 49, 624807)
+    
+    f = open(DIR + '/needs_days_added.dat')
+    
+    start = datetime.date(2011, 8, 23)
+    rep = Report(completed_at = completed_at,
+                 created_at = created_at,
+                 end = end, # maybe these should be seperate objects
+                 report_blob = f,
+                 schedule = sched,
+                 start = start
+                 )
+    # Should work....I think....
+    rep.data = rep.parse_report_blob(f)
+    check_missing_dates(0, [sched.d1, sched.d2, sched.d3], rep.data, sched.days)
+    rep.export_data
+    #assert False, rep.export_data
+    
+def check_missing_dates(level, dims, stats_dict, num_days):
+    d = dims[level]
+    if d in TIME_DIMS and d == 'day':
+        assert len(stats_dict.keys()) == num_days, (stats_dict.keys(), num_days)
+    else:
+        for key in stats_dict.keys():
+            # assumes sub_stats is not even in dict when it isn't used
+            if 'sub_stats' in stats_dict[key]:
+                check_missing_dates(level + 1, dims, stats_dict[key]['sub_stats'], num_days)
 
 
-def os_mptest():
-    report_runner('os')
-
-def app_mptest():
-    report_runner('app')
-
-def adunit_mptest():
-    report_runner('adunit')
-
-def campaign_mptest():
-    report_runner('campaign')
-
-def creative_mptest():
-    report_runner('creative')
-
-def day_mptest():
-    report_runner('day')
-
-def hour_mptest():
-    report_runner('hour')
-
-def country_mptest():
-    report_runner('country')
-
-def marketing_mptest():
-    report_runner('marketing')
-            
-def brand_mptest():
-    report_runner('brand')
-
-def os_ver_mptest():
-    report_runner('os_ver')
+# def os_mptest():
+#     report_runner('os')
+# 
+# def app_mptest():
+#     report_runner('app')
+# 
+# def adunit_mptest():
+#     report_runner('adunit')
+# 
+# def campaign_mptest():
+#     report_runner('campaign')
+# 
+# def creative_mptest():
+#     report_runner('creative')
+# 
+# def day_mptest():
+#     report_runner('day')
+# 
+# def hour_mptest():
+#     report_runner('hour')
+# 
+# def country_mptest():
+#     report_runner('country')
+# 
+# def marketing_mptest():
+#     report_runner('marketing')
+#             
+# def brand_mptest():
+#     report_runner('brand')
+# 
+# def os_ver_mptest():
+#     report_runner('os_ver')
 
 #***********************#
 #   SCHEDULED  REPORT   #

@@ -5,6 +5,7 @@ import time
 import traceback
 
 from datetime import datetime, timedelta
+from multiprocessing import Process, Lock
 
 from appengine_django import InstallAppengineHelperForDjango
 InstallAppengineHelperForDjango()
@@ -85,6 +86,7 @@ MRFAILURE = FAILURE % 1
 OTHER = FAILURE % 2
 
 PARSING = 'parsing'
+PARSE_ERROR = 'parsingerror'
 
 # All steps must be completed to do things
 MESSAGE_COMPLETION_STEPS = [UPLOAD, BLOB_KEY_PUT, PARSE, POST_PARSE_PUT, NOTIFY]
@@ -183,6 +185,7 @@ class ReportMessageHandler(MessageHandler):
         # Dict of datas for messages that failed after parsing
         self.message_data = {}
         self.message_report = {}
+        self.message_lock = {}
 
     def init_message(self, message):
         """ When starting to process a message, init its steps
@@ -192,6 +195,7 @@ class ReportMessageHandler(MessageHandler):
         self.message_blob_keys[message] = None
         self.message_data[message] = None
         self.message_report[message] = None
+        self.message_lock[message] = Lock()
 
         for step in MESSAGE_COMPLETION_STEPS:
             self.message_completion_statuses[message][step] = False
@@ -215,6 +219,7 @@ class ReportMessageHandler(MessageHandler):
         del(self.message_blob_keys[message])
         del(self.message_data[message])
         del(self.message_report[message])
+        del(self.message_lock[message])
 
     def get_message_report(self, message):
         """ Gets a report for a message locally if we have it,
@@ -232,17 +237,49 @@ class ReportMessageHandler(MessageHandler):
 
     def completed(self, message, step):
         """Message step completion getter"""
-        if step == PARSE and self.message_completion_statuses[message][step] == 'parsing':
-            return False
+        if step == PARSE:
+            lock = self.parse_lock(message)
+            lock.acquire()
+            if self.message_completion_statuses[message][step] == 'parsing':
+                ret = False
+            else:
+                ret = True
+            lock.release()
+            return ret
         else:
             return self.message_completion_statuses[message][step]
 
     def set_completed(self, message, step, cmpltd):
         """Message step completion setter"""
+        if step == PARSE:
+            lock = self.parse_lock(message)
+            lock.acquire()
+
         self.message_completion_statuses[message][step] = cmpltd
 
+        if step == PARSE:
+            lock = self.parse_lock(message)
+            lock.release()
+
+
+    def parse_lock(self, message):
+        return self.message_lock[message]
+
     def parsing_message(self, message):
-        return self.message_completion_statuses[message][PARSE] == PARSING
+        lock = self.parse_lock(message)
+        lock.acquire()
+        val = self.message_completion_statuses[message][PARSE] 
+        lock.release()
+        return val == PARSING
+
+    def parse_error(self, message):
+        lock = self.parse_lock(message)
+        lock.acquire()
+        val = self.message_completion_statuses[message][PARSE] 
+        lock.release()
+        return val == PARSE_ERROR
+
+
 
     def step_timeout(self, message, step):
         """Message step timeout getter"""
@@ -440,6 +477,7 @@ class ReportMessageHandler(MessageHandler):
         # Each jobflow can have multiple steps.  Ideally we only ever have one jobflow
         # but it's conceivable that we have two
         for jobflow in jobflows:
+            logger.info("Handling: %s" % jobflow.jobflowid)
             try:
                 self.handle_jobflow(jobflow, 
                                     force_failure = force_failure, 
@@ -542,8 +580,12 @@ class ReportMessageHandler(MessageHandler):
         # has succeeded, so don't
         for i, step in enumerate(MESSAGE_COMPLETION_STEPS):
             #logger.info("Step completion statuses for message %s\t%s" % (message, self.message_completion_statuses[message]))
-            if step == PARSE and self.parsing_message(message):
-                return 
+            if step == PARSE:
+                if self.parsing_message(message):
+                    return 
+                elif self.parse_error(message):
+                    raise ReportParseError(message = message, jobflowid = jobid)
+                
             if self.completed(message, step):
                 #logger.info("Step %s for message %s has already been completed" % (step, message))
                 continue
@@ -612,17 +654,12 @@ class ReportMessageHandler(MessageHandler):
 
             # Indicate that we are currently working on this step
             self.set_completed(message, step, PARSING)
-            pid = os.fork()
-            if pid:
-                return False
-            else:
-                rep = self.get_message_report(message)
-                try:
-                    data = rep.parse_report_blob(rep.report_blob.open())
-                except:
-                    raise ReportParseError(message = message, jobflowid = jobflowid)
-                self.message_data[message] = data
-                return True
+            rep = self.get_message_report(message)
+
+            sub_proc = Process(target = parse_process, args=(self, rep, message, jobflowid, self.parse_lock(message)))
+            sub_proc.start()
+
+            return False
 
         # Second put, throws ReportPutErrors
         elif step == POST_PARSE_PUT:
@@ -652,6 +689,7 @@ class ReportMessageHandler(MessageHandler):
                 raise ReportNotifyError(message = message, jobflowid = jobflowid)
 
             return True
+
 
     def mark_completed(self, message, step, i):
         """ Mark the specified step for the given message as completed, 
@@ -744,3 +782,14 @@ class ReportMessageHandler(MessageHandler):
 
         return jobid
         
+def parse_process(handler, rep, message, jobflowid, lock):
+    try:
+        data = rep.parse_report_blob(rep.report_blob.open())
+    except Exception, e:
+        handler.set_completed(message, PARSE, PARSE_ERROR)
+        default_exc_handle(e)
+    lock.acquire()
+    handler.message_data[message] = data
+    lock.release()
+    handler.set_completed(message, PARSE, True)
+ 

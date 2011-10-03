@@ -295,19 +295,18 @@ class NetworkBattle(Battle):
         # If the ecpm for the network is less than the min_cpm, drop it
         if creative._battle_ecpm < self.min_cpm:
             return False
+    
+        # TODO: refactor logging
+        stats_accumulator.log(None,
+                       event=stats_accumulator.REQ_EVENT,
+                       adunit=self.client_context.adunit,
+                       creative=creative,
+                       user_agent=self.client_context.user_agent,
+                       udid=self.client_context.raw_udid,
+                       country_code=self.client_context.country_code)
         
         # If the network is a native network, then it does not require an rpc
         if not creative.ServerSide:
-
-            # TODO: refactor logging
-            stats_accumulator.log(None,
-                           event=stats_accumulator.REQ_EVENT,
-                           adunit=self.client_context.adunit,
-                           creative=creative,
-                           user_agent=self.client_context.user_agent,
-                           udid=self.client_context.raw_udid,
-                           country_code=self.client_context.country_code)
-
             return super(NetworkBattle, self)._process_winner(creative)
 
         # All non-native networks need rpcs

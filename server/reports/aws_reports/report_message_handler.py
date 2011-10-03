@@ -1,8 +1,9 @@
-import time
-import sys
-import os
-import traceback
 import logging
+import os
+import sys
+import time
+import traceback
+
 from datetime import datetime, timedelta
 
 from appengine_django import InstallAppengineHelperForDjango
@@ -14,19 +15,6 @@ from boto.emr.step import StreamingStep
 from boto.s3.connection import S3Connection as s3
 
 ############### Mopub Imports ############### 
-from reports.aws_reports.messages import MessageHandler
-from reports.aws_reports.parse_utils import gen_report_fname, parse_msg
-from reports.aws_reports.parse_utils import AWS_ACCESS_KEY, AWS_SECRET_KEY
-from reports.models import Report
-from reports.aws_reports.report_exceptions import (ReportParseError, 
-                                                   BlobUploadError,
-                                                   S3Error,
-                                                   ReportPutError,
-                                                   ReportNotifyError,
-                                                   ReportException,
-                                                   NoDataError,
-                                                   MRSubmitError,
-                                                   )
 from reports.aws_reports.helpers import (upload_file, 
                                          get_logger,
                                          setup_remote_api, 
@@ -37,6 +25,19 @@ from reports.aws_reports.helpers import (upload_file,
                                          JOBFLOW_NAME,
                                          LOG_URI,
                                          )
+from reports.aws_reports.messages import MessageHandler
+from reports.aws_reports.parse_utils import gen_report_fname, parse_msg
+from reports.aws_reports.parse_utils import AWS_ACCESS_KEY, AWS_SECRET_KEY
+from reports.aws_reports.report_exceptions import (ReportParseError, 
+                                                   BlobUploadError,
+                                                   S3Error,
+                                                   ReportPutError,
+                                                   ReportNotifyError,
+                                                   ReportException,
+                                                   NoDataError,
+                                                   MRSubmitError,
+                                                   )
+from reports.models import Report
 MY_DIR = os.path.split(os.path.abspath(__file__))[0]
 TEST_DATA_DIR = os.path.join(MY_DIR, 'tests/test_data')
 TEST_PARTS_DIR = os.path.join(MY_DIR, 'tests/test_data/parts')
@@ -207,6 +208,8 @@ class ReportMessageHandler(MessageHandler):
 
     def message_completion_cleanup(self, message):
         """ dels all the dict entries, leaks suck"""
+        if self.testing and self.message_blob_keys[message]:
+            os.remove(os.path.join(TEST_DATA_DIR, self.message_blob_keys[message]))
         del(self.message_completion_statuses[message])
         del(self.message_step_timeouts[message])
         del(self.message_blob_keys[message])
@@ -257,8 +260,8 @@ class ReportMessageHandler(MessageHandler):
                 continue
             elif self.step_timeout(message, step) and self.step_timeout(message, step) < datetime.now():
                 return True
-        logger.info("Timeout: %s" % self.message_step_timeouts[message][step])
-        logger.info("now: %s" % datetime.now())
+        #logger.info("Timeout: %s" % self.message_step_timeouts[message][step])
+        #logger.info("now: %s" % datetime.now())
         return False
 
     @property
@@ -573,6 +576,8 @@ class ReportMessageHandler(MessageHandler):
             blob_key = self.upload_and_get_key(message)
 
             if force_failure and fail_step == step:
+                # Cleanup before we throw otherwise it'll never get cleaned
+                os.remove(os.path.join(TEST_DATA_DIR, blob_key))
                 raise BlobUploadError(message = message, jobflowid = jobflowid)
             self.message_blob_keys[message] = blob_key
             return True
@@ -599,7 +604,7 @@ class ReportMessageHandler(MessageHandler):
         elif step == PARSE:
             if self.testing:
                 rep = self.get_message_report(message)
-                data = rep.parse_report_blob(rep.test_report_blob, testing = self.testing)
+                data = rep.parse_report_blob(rep.test_report_blob, {}, testing = self.testing)
                 if force_failure and fail_step == step:
                     raise ReportParseError(message = message, jobflowid = jobflowid)
                 self.message_data[message] = data

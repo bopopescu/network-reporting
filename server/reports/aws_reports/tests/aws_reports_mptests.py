@@ -201,6 +201,7 @@ class TestMessageHandler(unittest.TestCase):
         logging.warning(report)
         logging.warning(Report.get(self.rep.key()).test_report_blob)
         # Make sure the rep is the same
+        assert self.empty_rmh_maps()
         assert Report.get(self.rep.key()).test_report_blob == report
 
     def handle_upload_failure_mptest(self):

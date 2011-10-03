@@ -1,4 +1,4 @@
-!/bin/sh
+#!/bin/sh
 echo $1
 
 export DJANGO_SETTINGS_MODULE='settings'
@@ -7,15 +7,14 @@ if [ -z "$1" ] # if $1 does not exist
 then
     
     # TODO: Why does this have to use --where?
-    #echo "Userstore tests"
-    #nosetests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --where='./userstore/tests'
+    echo "Userstore tests"
+    nosetests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --where='./userstore/tests'
     # nosetests ./userstore/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./'
     
     echo "Reporting tests"  
     nosetests ./reporting/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox 
     echo "Reports tests"  
-    echo "REPORTS TESTS ARE CURRENTLY BROKEN. @NICK, FIX THIS WHEN YOU GET BACK \r\n"    
-    # nosetests ./reports/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox 
+    nosetests ./reports/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox 
     echo "Reports AWS Tests"
     nosetests ./reports/aws_reports/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox 
     echo "Budget tests"

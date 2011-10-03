@@ -1,10 +1,10 @@
 import logging
-import time
-import urllib2
-import traceback
 import random
 import string
 import sys
+import time
+import traceback
+import urllib2
 
 
 from boto.s3.connection import S3Connection
@@ -20,6 +20,8 @@ from poster.streaminghttp import register_openers
 ############### GAE Imports ############### 
 from google.appengine.ext.remote_api import remote_api_stub
 
+
+############# AWS Magic ###################
 S3_CONN = S3Connection(AWS_ACCESS_KEY, AWS_SECRET_KEY)
 BUCK = S3_CONN.get_bucket('mopub-aws-logging')
 

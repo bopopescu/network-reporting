@@ -597,7 +597,6 @@ class ReportMessageHandler(MessageHandler):
                     raise ReportParseError(message = message, jobflowid = jobid)
                 
             if self.completed(message, step):
-                logger.info("Step %s for %s completed" % (step, message))
                 continue
             else:
                 #logger.info("Handling step %s for message %s" % (step, message))
@@ -797,7 +796,9 @@ class ReportMessageHandler(MessageHandler):
         
 def parse_process(handler, rep, message, jobflowid, lock):
     try:
+        logger.info("getting dimkeys")
         obj_dimkeys = rep.batch_get_objs(rep.report_blob.open())
+        logger.info("Parsing the acutal shit w/ batched keys")
         data = rep.parse_report_blob(rep.report_blob.open(), obj_dimkeys)
     except Exception, e:
         handler.set_completed(message, PARSE, PARSE_ERROR)

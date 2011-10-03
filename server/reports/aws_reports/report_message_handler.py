@@ -798,8 +798,10 @@ def parse_process(handler, rep, message, jobflowid, lock):
     try:
         logger.info("getting dimkeys")
         obj_dimkeys = rep.batch_get_objs(rep.report_blob.open())
+        logger.info("Obj_dimkeys: %s" % obj_dimkeys)
         logger.info("Parsing the acutal shit w/ batched keys")
         data = rep.parse_report_blob(rep.report_blob.open(), obj_dimkeys)
+        logger.info("Data is: %s" % data)
     except Exception, e:
         logger.info("\n\nParse error\n\n")
         handler.set_completed(message, PARSE, PARSE_ERROR)

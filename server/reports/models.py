@@ -421,6 +421,7 @@ class Report(db.Model):
 
         # list of everything
         log("Batch[AU]: %s" % batch[AU])
+        log("Batch[CRTV]: %s" % batch[CRTV])
         adunits = AdUnit.get(batch[AU])
         crtvs = Creative.get(batch[CRTV])
 

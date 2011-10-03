@@ -802,6 +802,7 @@ def parse_process(handler, rep, message, jobflowid, lock):
     except Exception, e:
         handler.set_completed(message, PARSE, PARSE_ERROR)
         default_exc_handle(e)
+        return
     lock.acquire()
     handler.message_data[message] = data
     lock.release()

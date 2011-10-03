@@ -505,7 +505,10 @@ class Report(db.Model):
             return stats
 
         for k,v in stats.iteritems():
-            stats[k]['stats']['revenue'] = rollup_help(v['sub_stats'], depth)
+            if 'sub_stats' in v:
+                stats[k]['stats']['revenue'] = rollup_help(v['sub_stats'], depth)
+            else:
+                stats[k]['stats']['revenue'] = '---'
         return stats
 
 

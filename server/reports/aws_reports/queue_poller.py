@@ -165,7 +165,8 @@ def finalize_report(rep, blob_key):
     log("Parsing report blob for %s" % rep)
     try:
         data = report.parse_report_blob(report.report_blob.open())
-    except:
+    except Exception, e:
+        default_exc_handle(e)
         raise ReportParseError(rep)
     report.data = data
     report.completed_at = datetime.now()

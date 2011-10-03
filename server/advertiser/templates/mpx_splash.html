@@ -36,6 +36,7 @@ $(function () {
     font-size: 15px;
     text-shadow: 0px 1px 1px #fff;
     padding: 0px 5px;
+    text-align: left;
     }
 
 .inset_box p img {
@@ -96,6 +97,10 @@ $(function () {
     font-size: 34px;
     }
 
+#learn_more {
+    font-size: 16px;
+    }
+
 </style>
 {% endblock extraCSS %}
 {% block messageCenter %}{% endblock %}
@@ -146,7 +151,7 @@ $(function () {
       <a href="{% url advertiser_campaign_create %}#marketplace" class="primary btn"> Try it now </a>
       <br />
       <br />
-      <a href="#" > Learn more </a>
+      <a id="learn_more" href="#" > Learn more </a>
     </div>
   </div>
 {% endblock content %}

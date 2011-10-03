@@ -117,6 +117,7 @@ class ReportMessage(object):
         self.msg = msg
         self.dim1, self.dim2, self.dim3, self.start, self.end, self.report_key, self.account, self.timestamp = parse_msg(msg)
         self.step_name = STEP_NAME % (self.dim1, self.dim2, self.dim3, self.timestamp)
+        self.fname = gen_report_fname(self.dim1, self.dim2, self.dim3, self.start, self.end)
 
 
 
@@ -156,10 +157,6 @@ class ReportMessage(object):
     @property
     def end_str(self):
         return self.end.strftime('%y%m%d')
-
-    @property
-    def fname(self):
-        return gen_report_fname(self.dim1, self.dim2, self.dim3, self.start, self.end)
 
 class ReportMessageHandler(MessageHandler):
     """ Usage: 
@@ -329,6 +326,7 @@ class ReportMessageHandler(MessageHandler):
         pass
 
     def upload_and_get_key(self, message):
+
         if self.testing:
             fname = gen_random_fname(suffix='.dat')
             final = open(TEST_DATA_DIR + '/' + fname, 'w')

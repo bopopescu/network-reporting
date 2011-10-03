@@ -801,6 +801,7 @@ def parse_process(handler, rep, message, jobflowid, lock):
         logger.info("Parsing the acutal shit w/ batched keys")
         data = rep.parse_report_blob(rep.report_blob.open(), obj_dimkeys)
     except Exception, e:
+        logger.info("\n\nParse error\n\n")
         handler.set_completed(message, PARSE, PARSE_ERROR)
         default_exc_handle(e)
         return

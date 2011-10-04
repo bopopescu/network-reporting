@@ -10,10 +10,10 @@
         disable the other options.
       {% endcomment %}
       <select id="campaign_type_select" name="{{form.campaign_type.name}}">
-        <option value="gtee" {% ifequal form.campaign_type.value "marketplace"%} disabled="disabled" {% endifequal %}{% if not form.campaign_type.value or form.campaign_type.value == "gtee"%}selected{% endif %}> Guaranteed </option>
-        <option value="promo"  {% ifequal form.campaign_type.value "marketplace"%} disabled="disabled" {% endifequal %}{% ifequal form.campaign_type.value "promo" %}selected{% endifequal %} > Promotional </option>
-        <option value="marketplace" {% ifequal form.campaign_type.value "marketplace" %}selected{% endifequal %}> Marketplace</option>
-        <option value="network" {% ifequal form.campaign_type.value "marketplace"%} disabled="disabled" {% endifequal %}{% ifequal form.campaign_type.value "network" %}selected{% endifequal %}> Network</option>
+        <option value="gtee" {% if form.campaign_type.value == "marketplace" or form.campaign_type.value == "network"%} disabled="disabled" {% endif %}{% if not form.campaign_type.value or form.campaign_type.value == "gtee"%}selected{% endif %}> Guaranteed </option>
+        <option value="promo"  {% if form.campaign_type.value == "marketplace" or form.campaign_type.value == "network"%} disabled="disabled" {% endif %}{% ifequal form.campaign_type.value "promo" %}selected{% endifequal %} > Promotional </option>
+        <option value="marketplace" {% if form.campaign_type.value == "gtee" or form.campaign_type.value == "promo" or form.campaign_type.value == "network" %} disabled="disabled" {% endif %} {% ifequal form.campaign_type.value "marketplace" %}selected{% endifequal %}> Marketplace</option>
+        <option value="network" {% if form.campaign_type.value == "gtee" or form.campaign_type.value == "promo" or form.campaign_type.value == "marketplace" %} disabled="disabled" {% endif %} {% ifequal form.campaign_type.value "network" %}selected{% endifequal %}> Network</option>
       </select>
       <a href="#" id="campaignForm-type-helpLink">What's this?</a>
 

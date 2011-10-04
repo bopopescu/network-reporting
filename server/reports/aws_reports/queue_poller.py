@@ -50,7 +50,7 @@ def main_loop():
     last_day = 0
     while True:
 
-        if (DAWN_OF_TIME - time.time())/SECONDS_IN_DAY != last_day:
+        if int((time.time() - DAWN_OF_TIME)/SECONDS_IN_DAY) != last_day:
             last_day += 1
             rotate_logfile()
 

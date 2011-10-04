@@ -389,7 +389,6 @@ class Report(db.Model):
         for line in blobreader:
             keys, vals = line.split('\t')
             keys = keys.split(':')
-            log("Keys: %s" % keys)
             for i, key in enumerate(keys):
                 if i == 0:
                     dim = self.d1

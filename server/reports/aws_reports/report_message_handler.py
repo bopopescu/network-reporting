@@ -390,12 +390,12 @@ class ReportMessageHandler(MessageHandler):
             return
         for jobflow in jobflows:
             jobid = jobflow.jobflowid
-            dt = datetime.now() - self.jobid_creations[jobid]
+            dt = datetime.now() - self.jobid_creations[str(jobid)]
             minutes = (dt.seconds/60)
             # Waiting and almost 1 hour since creation
             if jobflow.state == u'WAITING' and minutes % 60 >= 50:
                 self.emr_conn.terminate_jobflow(jobid)
-                del(self.jobid_creations[jobid])
+                del(self.jobid_creations[str(jobid)])
 
 
     def handle_messages(self, force_no_data=False, force_submit_error=False, force_delete_error=False):
@@ -802,7 +802,7 @@ class ReportMessageHandler(MessageHandler):
                     enable_debugging=True,
                     )
                 # Created a new job.  Record the time of creation
-                self.jobid_creations[jobid] = datetime.now()
+                self.jobid_creations[str(jobid)] = datetime.now()
         # Boto can fail for a few reasons, other random erorrs.  
         # Catch all of them and raise a simple one
         except Exception, e:

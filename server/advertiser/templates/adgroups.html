@@ -82,9 +82,9 @@
 {#{% if not has_marketplace_campaign and not account.stats == 'step4' %}#}
           <div class="alert-message block-message clearfix">
             We've just launched MoPub Marketplace, our state of the art real-time bidding exchange.
-            Head over to the campaigns page to get started, or take a look at our <a href="{% url mpx_info %}">information page</a> if you want to know more about the Marketplace.
+            Add a new <a href="{% url advertiser_campaign_create %}#marketplace">marketplace campaign</a> to get started, or take a look at our <a href="{% url mpx_info %}">information page</a> if you want to know more about how it works.
             <br />
-            <a class="btn right" href="{% url advertiser_campaign_create %}#marketplace">Get Started</a>
+            <a class="btn right" href="{% url mpx_info %}">Get Started</a>
 
           </div>
 {#  {% endif %} #}

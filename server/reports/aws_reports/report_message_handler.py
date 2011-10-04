@@ -26,6 +26,7 @@ from reports.aws_reports.helpers import (upload_file,
                                          gen_random_fname,
                                          JOBFLOW_NAME,
                                          LOG_URI,
+                                         log,
                                          )
 from reports.aws_reports.messages import MessageHandler
 from reports.aws_reports.parse_utils import gen_report_fname, parse_msg

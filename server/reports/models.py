@@ -463,13 +463,14 @@ class Report(db.Model):
     def add_missing_dates(self, level, stats_dict):
         d = self.dims[level]
         if d == DAY:
+            dates = set(stats_dict.keys())
             stats_len = len(stats_dict[stats_dict.keys()[0]]['stats'])
 
             # go from start date to end date checking if date is in the hash set
             # if it's not add it to final
             for single_date in date_magic.gen_days(self.start, self.end - timedelta(days=1)):
                 # key is in '%y%m%dday' format
-                if single_date.strftime('%y%m%dday') not in stats_dict.keys():
+                if single_date.strftime('%y%m%dday') not in dates:
                     stats_dict[single_date.strftime('%y%m%dday')] = {'stats' : [0] * stats_len,
                                                                      'name'  : date_magic.date_name(single_date, d)}
         else:

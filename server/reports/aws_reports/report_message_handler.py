@@ -815,16 +815,12 @@ class ReportMessageHandler(MessageHandler):
         
 def parse_process(rep, message, pipe_conn):
     try:
-        logger.info("getting dimkeys")
         obj_dimkeys = rep.batch_get_objs(rep.report_blob.open())
         logger.info("Obj_dimkeys: %s" % obj_dimkeys)
-        logger.info("Parsing the acutal shit w/ batched keys")
         data = rep.parse_report_blob(rep.report_blob.open(), obj_dimkeys)
-        logger.info("Data is: %s" % data)
         pipe_send_message(pipe_conn, MSG_DATA, data)
         pipe_send_message(pipe_conn, STEP_STATUS_CHANGE, (PARSE, True))
     except Exception, e:
-        logger.info("\n\nParse error\n\n")
         default_exc_handle(e)
         pipe_send_message(pipe_conn, STEP_STATUS_CHANGE, (PARSE, PARSE_ERROR))
         return

@@ -230,7 +230,6 @@ class TestAdAuction(unittest.TestCase):
         creative, on_fail_exclude_adgroups = ad_auction.run(client_context, self.adunit_context)                    
                                        
         eq_obj(creative, self.expensive_creative)
-                                                   
-        
+                                                 
 def eq_obj(obj1, obj2):
     eq_(obj1.key(), obj2.key())

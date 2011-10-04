@@ -426,7 +426,7 @@ class Report(db.Model):
         for adunit in adunits:
             obj_key = str(adunit.key())
             for dim in key_dims[obj_key]:
-                key_tuple = (dim, obj_key)
+                key_tuple = (str(dim), obj_key)
                 if dim == AU:
                     dimkey_to_obj[key_tuple] = adunit
                 elif dim == APP:
@@ -620,7 +620,7 @@ class Report(db.Model):
             return (req, False)
         for key, dim in zip(keys, dim_list):
             if dim in CRTV_DIMS:
-                key_tuple = (dim, key)
+                key_tuple = (str(dim), str(key))
                 if dim == CRTV:
                     crtv = dimkey_to_obj[key_tuple]
                     priority = crtv.adgroup.campaign.campaign_type
@@ -652,7 +652,7 @@ class Report(db.Model):
         if offline:
             return None, None
 
-        key_tuple = (CRTV, key)
+        key_tuple = (str(dim), str(key))
         if dim in [CAMP, CRTV]:
             crtv = dimkey_to_obj[key_tuple]
             try:
@@ -695,7 +695,7 @@ class Report(db.Model):
         if dim in ONLINE_DIMS and offline:
             return ('%s-%s' % (dim, key), key)
 
-        key_tuple = (dim, key)
+        key_tuple = (str(dim), str(key))
 
         if dim in CRTV_DIMS:
             if dim == CRTV:

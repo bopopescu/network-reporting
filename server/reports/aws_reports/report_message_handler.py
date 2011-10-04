@@ -825,7 +825,6 @@ def parse_process(rep, message, pipe_conn):
         logger.info("\n\nParse error\n\n")
         default_exc_handle(e)
         pipe_send_message(pipe_conn, STEP_STATUS_CHANGE, (PARSE, PARSE_ERROR))
-        pipe_conn.close()
         return
 
 

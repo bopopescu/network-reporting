@@ -1,12 +1,8 @@
 import logging
 import os, sys
-sys.path.append(os.environ['PWD'])
-
-sys.path.append(os.getcwd()+'/../../')
  
 # for ubuntu EC2
-sys.path.append('/home/ubuntu/mopub/server')
-sys.path.append('/home/ubuntu/mopub/server/reporting')
+sys.path.append('/home/ubuntu/mopub_experimental/server')
 sys.path.append('/home/ubuntu/google_appengine')
 sys.path.append('/home/ubuntu/google_appengine/lib/antlr3')
 sys.path.append('/home/ubuntu/google_appengine/lib/django_1_2')
@@ -36,6 +32,7 @@ from publisher.models import App
 import network_scraping.query_managers
 
 def setup_remote_api():
+    from google.appengine.ext.remote_api import remote_api_stub
     app_id = 'mopub-experimental'
     host = '38.latest.mopub-inc.appspot.com'
     remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', auth_func, host)

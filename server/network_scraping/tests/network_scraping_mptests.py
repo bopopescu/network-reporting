@@ -94,11 +94,6 @@ def network_scraping_mptest():
     account.put()
     
     # AdMob login info
-    # nc['app_name_dict'] = {}
-    # for i, site_id in enumerate(['a14a9ed9bf1fdcd', 'a14a7143850a745', 'a14a71435d8d5b3',
-    #                              'a14a7142ee96329', 'a14a7142acad145', 'a14a6e18d6610af', 
-    #                              'a14a6b5458b0447', 'a1497a459250ea5', 'a14970f6ad53c3c']):
-    #     nc['app_name_dict'][site_id] = 'test%d' % i
     admob_login_info = AdNetworkLoginInfo(account = account, ad_network_name = 'admob', username = 'njamal@stanford.edu',
                                           password = 'xckjhfn3xprkxksm', client_key = 'k907a03ee39cecb699b5ad45c5eded01')
     admob_login_info.put()
@@ -146,7 +141,9 @@ def network_scraping_mptest():
     update_ad_networks()
     
     ''' Verify results '''
-    test_network_app_mappers = list(get_ad_network_totals(account))
+    manager = AdNetworkReportQueryManager(account)
+    
+    test_network_app_mappers = list(manager.get_ad_network_totals())
     assert len(test_network_app_mappers) > 0
     assert len(test_network_app_mappers) == len(network_app_mappers)
     
@@ -155,5 +152,5 @@ def network_scraping_mptest():
     # Was a day created for each app for the account?
     yesterday = date.today() - timedelta(days = 1)
     for n in test_network_app_mappers:
-        stats = get_ad_network_app_stats(n)
+        stats = manager.get_ad_network_app_stats(n)
         assert stats[0].date == yesterday

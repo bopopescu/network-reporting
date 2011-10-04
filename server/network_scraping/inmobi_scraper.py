@@ -21,43 +21,6 @@ class InMobiScraper(Scraper):
     DATE_FMT = '%a, %d %b %Y %H:%M:%S PDT'
     PLATFORM = 'all'
 
-
-    def __init__(self, credentials):
-        super(InMobiScraper, self).__init__(credentials)
-	self.authenticate()
-
-
-    def authenticate(self):
-        '''the inmobi token is generated each time, all authenticate can do is 
-        prep everything so that the token generation is hella easy '''
-        def get_stats_request(start_date, end_date=None):
-            ''' Each request needs an individual token and things
-            so each time we want to make a request, call this function
-            which builds it and does magic shit '''
-            if end_date is None:
-                end_date = start_date
-
-            start_str = start_date.strftime('%d%b%Y').lower()
-            end_str = end_date.strftime('%d%b%Y').lower()
-            auth_dict = dict(username = self.username, platform = self.PLATFORM, start_date = start_str, end_date = end_str)
-            url = self.SITE_STAT_URL % auth_dict
-            now = datetime.now().strftime(self.DATE_FMT)
-            full_url = self.API_URL + url
-
-            final_str = 'GET\n%s\n%s' % (now, url)
-
-            # Strings are stored as unicode in appengine
-            self.password = str(self.password)
-            encoded_url = hmac(self.password, final_str, sha1).digest().encode('base64')[:-1]
-
-            req = urllib2.Request(full_url)
-            req.add_header('Authorization', 'Inmobi WS token :%s' % encoded_url)
-            req.add_header('Date', now)
-            req.add_header('x-data-user', self.username)
-            return req
-        self.get_stats_request = get_stats_request
-
-
     def get_site_stats(self, start_date, end_date=None):
         # Date can't be today
         if end_date is None:
@@ -65,7 +28,24 @@ class InMobiScraper(Scraper):
             # range can't start and end on the same date for InMobi
             start_date -= timedelta(days = 1)
 
-        req = self.get_stats_request(start_date, end_date)
+        start_str = start_date.strftime('%d%b%Y').lower()
+        end_str = end_date.strftime('%d%b%Y').lower()
+        auth_dict = dict(username = self.username, platform = self.PLATFORM, start_date = start_str, end_date = end_str)
+        url = self.SITE_STAT_URL % auth_dict
+        now = datetime.now().strftime(self.DATE_FMT)
+        full_url = self.API_URL + url
+
+        final_str = 'GET\n%s\n%s' % (now, url)
+
+        # Strings are stored as unicode in appengine
+        self.password = str(self.password)
+        encoded_url = hmac(self.password, final_str, sha1).digest().encode('base64')[:-1]
+
+        req = urllib2.Request(full_url)
+        req.add_header('Authorization', 'Inmobi WS token :%s' % encoded_url)
+        req.add_header('Date', now)
+        req.add_header('x-data-user', self.username)
+            
         resp = urllib2.urlopen(req)
         line = resp.read()
     

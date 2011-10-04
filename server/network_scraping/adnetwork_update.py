@@ -1,15 +1,20 @@
 import logging
 import os, sys
- 
-# for ubuntu EC2
-sys.path.append('/home/ubuntu/mopub_experimental/server')
-sys.path.append('/home/ubuntu/google_appengine')
-sys.path.append('/home/ubuntu/google_appengine/lib/antlr3')
-sys.path.append('/home/ubuntu/google_appengine/lib/django_1_2')
-sys.path.append('/home/ubuntu/google_appengine/lib/fancy_urllib')
-sys.path.append('/home/ubuntu/google_appengine/lib/ipaddr')
-sys.path.append('/home/ubuntu/google_appengine/lib/webob')
-sys.path.append('/home/ubuntu/google_appengine/lib/yaml/lib')
+
+EC2 = False
+
+if EC2:
+    sys.path.append('/home/ubuntu/mopub_experimental/server')
+    sys.path.append('/home/ubuntu/google_appengine')
+    sys.path.append('/home/ubuntu/google_appengine/lib/antlr3')
+    sys.path.append('/home/ubuntu/google_appengine/lib/django_1_2')
+    sys.path.append('/home/ubuntu/google_appengine/lib/fancy_urllib')
+    sys.path.append('/home/ubuntu/google_appengine/lib/ipaddr')
+    sys.path.append('/home/ubuntu/google_appengine/lib/webob')
+    sys.path.append('/home/ubuntu/google_appengine/lib/yaml/lib')
+else:
+    # Assumes it is being called from server dir
+    sys.path.append(os.environ['PWD'])
 
 from appengine_django import InstallAppengineHelperForDjango
 InstallAppengineHelperForDjango()
@@ -25,7 +30,8 @@ from network_scraping.jumptap_scraper import JumpTapScraper
 from network_scraping.inmobi_scraper import InMobiScraper
 from network_scraping.mobfox_scraper import MobFoxScraper
 from network_scraping.network_scrape_record import NetworkScrapeRecord
-from network_scraping.query_managers import *
+
+import network_scraping.query_managers
 
 from publisher.models import App
 
@@ -39,9 +45,6 @@ def setup_remote_api():
 
 def auth_func():
     return 'olp@mopub.com', 'N47935'
-
-def get_pub_id(pub_id, login_info):
-    return pub_id
 
 class Network(object):
     def __init__(self, constructor, get_pub_id):
@@ -73,18 +76,23 @@ def update_ad_networks():
             publisher_id = networks[login_info.ad_network_name].get_pub_id(stats.app_tag, login_info)
             
             # Using GQL to get the ad_network object that corresponds to the login_info and stats
-            ad_network = get_ad_network_app_mapper(publisher_id, login_info)
+            manager = AdNetworkReportQueryManager(login_info.account)
+            ad_network = manager.get_ad_network_app_mapper(publisher_id = publisher_id,
+                                                           login_info = login_info)
             
             if ad_network is None:
                 # App is not registered in MoPub but is still in the ad network
                 logging.info('%(account)s has pub id %(pub_id)s on %(ad_network)s that\'s NOT in MoPub' %
-                             dict(account = login_info.account.title, pub_id = stats.app_tag, ad_network = login_info.ad_network_name))
+                             dict(account = login_info.account.title,
+                                  pub_id = stats.app_tag,
+                                  ad_network = login_info.ad_network_name))
                 continue
             else:
                 logging.info('%(account)s has pub id %(pub_id)s on %(ad_network)s that\'s in MoPub' %
-                             dict(account = login_info.account.title, pub_id = stats.app_tag, ad_network = login_info.ad_network_name))
+                             dict(account = login_info.account.title,
+                                  pub_id = stats.app_tag,
+                                  ad_network = login_info.ad_network_name))
         
-            logging.warning('')
             AdNetworkScrapeStats(ad_network_app_mapper = ad_network,
                                  date = yesterday,
                                  attempts = stats.attempts,

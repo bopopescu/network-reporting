@@ -60,7 +60,13 @@
 
 {% ifequal account.status "step4" %}
           <div class="alert-message block-message">
-            Finally, you will need to set up at least one ad campaign to serve into your inventory.  A <strong>Guaranteed</strong> ad campaign is typically a direct sold ad campaign.  <strong>Promotional</strong> campaigns are for house ads like an upsell.  A <strong>Network</strong> ad is an ad served from an ad network like AdMob.
+            Finally, you will need to set up at least one ad campaign to serve into your inventory. <br /><br />
+            <ul>
+              <li>A <strong>Guaranteed</strong> ad campaign is typically a direct sold ad campaign.</li>
+              <li><strong>Promotional</strong> campaigns are for house ads like an upsell.</li>
+              <li><strong>Marketplace</strong> campaigns use MoPub's <a href="{% url mpx_info %}">new real-time bidding technology</a> to fill your ad requests.</li>
+              <li>A <strong>Network</strong> ad is an ad served from an ad network like AdMob.</li>
+              <ul>
           </div>
 {% endifequal %}
 {% ifequal account.status "step3" %}
@@ -73,13 +79,15 @@
             Before you set up your ad campaigns, we recommend that you set up your App inventory.  Visit the <a href="{% url publisher_index %}">Dashboard</a> to add your Apps.
           </div>
 {% endif %}
-{% if not has_marketplace_campaign %}
-          <div class="alert-message">
+{#{% if not has_marketplace_campaign and not account.stats == 'step4' %}#}
+          <div class="alert-message block-message clearfix">
             We've just launched MoPub Marketplace, our state of the art real-time bidding exchange.
-            <a class="btn" href="{% url advertiser_campaign_create %}#marketplace">Add a marketplace campaign</a>
+            Head over to the campaigns page to get started, or take a look at our <a href="{% url mpx_info %}">information page</a> if you want to know more about the Marketplace.
+            <br />
+            <a class="btn right" href="{% url advertiser_campaign_create %}#marketplace">Get Started</a>
 
           </div>
-  {% endif %}
+{#  {% endif %} #}
           <div class="separated">
             <section class="offset nomargin" id="dashboard-stats">
               <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
@@ -259,7 +267,8 @@
               <h2>Promotional {% if not promo %}<span class="muted">(None)</span>{% endif %}
                   <img id="promo-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img>
               </h2>
-              {% if promo %}<div id='promo-rollups' class="campaignData-rollup">
+              {% if promo %}
+                <div id='promo-rollups' class="campaignData-rollup">
                   <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
                       <thead>
                           <tr>
@@ -338,11 +347,31 @@
                   {% endfor %}
                 </tbody>
               </table>{% endif %}
-              {% if marketplace %}
-              <h2>Marketplace {% if not marketplace %}<span class="muted">(None)</span>{% endif %}
+              <h2>Marketplace {% if not marketplace %}<span class="muted">(None)</span> <a href="{% url mpx_info %}"> Learn more </a>{% endif %}
                   <img id="marketplace-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img>
               </h2>
               {% if marketplace %}
+                <div id=marketplace-rollups' class="campaignData-rollup">
+                  <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
+                      <thead>
+                          <tr>
+                              <th width=25%>Impressions</th>
+                              <th width=25%>Clicks</th>
+                              <th width=25%>CTR</th>
+                              <th width=25%>Conversions</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          <tr>
+                              <td id='marketplace-total-imp'>--</td>
+                              <td id='marketplace-total-clk'>--</td>
+                              <td id='marketplace-total-ctr'>--</td>
+                              <td id='marketplace-total-conv'>--</td>
+                              <td></td>
+                          </tr>
+                      </tbody>
+                  </table>
+              </div>
               <table class="dataTable campaignData-main">
                 <thead>
                   <tr>
@@ -383,7 +412,7 @@
                   </tr>
                   {% endfor %}
                 </tbody>
-              </table>{% endif %}
+              </table>
               {% endif %}
 
               <h2>Network  {% if not network %}<span class="muted">(None)</span>{% endif %}

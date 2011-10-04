@@ -116,6 +116,13 @@
       <dt>Price Floor:</dt>
       <dd>
         <input class="input-text input-text-number" name="{{form.price_floor.name}}" value="{{form.price_floor.value}}"/>
+        <a class='whatsthis' id='marketplace-pricefloor-helpLink' href='#'>What's this?</a>
+        <div id='marketplace-pricefloor-helpContent' class='hidden'>
+          <h3>Price Floors</h3>
+          In Marketplace campaigns, each ad impression is bid upon by multiple ad networks.
+          The price floor is the minimum amount you'll price for a bid.
+          Bids will not be considered if they are lower than your price floor.
+        </div>
       </dd>
     </div>
 

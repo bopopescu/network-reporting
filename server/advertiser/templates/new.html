@@ -1,10 +1,6 @@
 {% extends 'advertiser/base.html' %}
 {% load filters %}
-{% block navLinks %}
-            <li><a href="{% url publisher_index %}">Dashboard</a></li>
-            <li class="active"><a href="{% url advertiser_campaign %}">Campaigns</a></li>
-            <li><a href="{% url reports_index %}">Reports</a></li>
-            {% endblock navLinks %}
+
 {% block pageTitle %}
   {% if adgroup %}
           <h1>Edit Campaign: {{ adgroup.campaign.name }} </h1>
@@ -21,23 +17,23 @@
 {% block messageCenter %}{% endblock %}
 {% block dateButtons %}{% endblock %}
 {% block content %}
-          <section id="advertiser-adgroupCreateForm">
-            <div class="content-main">
-              {% if campaign_form.errors or adgroup_form.errors %}
-              <div class="alert-message error">{{campaign_form.errors}}{{adgroup_form.errors}} </div>
-              {% endif %}
-              <a name="adgroupEditForm" class="hidden">anchor</a>
-              <form action="{% url advertiser_campaign_create_ajax %}" method="POST" accept-charset="utf-8" id="campaignAdgroupForm" class="validate">
-                {% if adgroup_key %}<input type="hidden" name="adgroup_key" value="{{adgroup_key}}"/>{% endif %}
-                  <div id="campaignAdgroupForm-fragment">
-{{campaign_create_form_fragment}}
-                  </div>
-                  <div class="clear"></div>
+  <section id="advertiser-adgroupCreateForm">
+    <div class="content-main">
+      {% if campaign_form.errors or adgroup_form.errors %}
+        <div class="alert-message error">{{campaign_form.errors}}{{adgroup_form.errors}} </div>
+      {% endif %}
+      <a name="adgroupEditForm" class="hidden">anchor</a>
+      <form action="{% url advertiser_campaign_create_ajax %}" method="POST" accept-charset="utf-8" id="campaignAdgroupForm" class="validate">
+        {% if adgroup_key %}<input type="hidden" name="adgroup_key" value="{{adgroup_key}}"/>{% endif %}
+        <div id="campaignAdgroupForm-fragment">
+          {{campaign_create_form_fragment}}
+        </div>
+        <div class="clear"></div>
 
-                  <div class="form-submit">
-                    <span class="buttonWrap"><a href="#" class="button" id="campaignAdgroupForm-submit">Continue</a></span>
-                  </div>
-              </form>
-            </div>
-          </section>
+        <div class="form-submit">
+          <span class="buttonWrap"><a href="#" class="button" id="campaignAdgroupForm-submit">Continue</a></span>
+        </div>
+      </form>
+    </div>
+  </section>
 {% endblock content %}

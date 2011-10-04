@@ -12,99 +12,99 @@
 var mopub = mopub || {};
 
 (function($){
-  // dom ready
-  $(document).ready(function() {
+    // dom ready
+    $(document).ready(function() {
 
-      //get info from page
-      if (typeof creatives=="undefined") {
-          creatives = false;
-      }
+        //get info from page
+        if (typeof creatives=="undefined") {
+            creatives = false;
+        }
 
-      if ($('#is_admin_input').val() != 'True'){
-          $('.admin_only').hide();
-      }
+        if ($('#is_admin_input').val() != 'True'){
+            $('.admin_only').hide();
+        }
 
 
-      function calculateAndShowBudget() {
-          $('#campaignAdgroupForm-budget-display').hide();
-          $('#campaignAdgroupForm-budget-display_full').hide();
-          if ($('#adgroupForm-bid_strategy-select').val() == 'cpm') {
-              var rate = $('#campaignAdgroupForm input[name="bid"]').val();
-              if ($("#adgroupForm-budget_type-select").val() == "daily") {
-                  var impressions = $('#campaignAdgroupForm input[name="impressions"]').val();
-                  var budget = rate * impressions / 1000;
-                  if (budget) {
-                      var budget_fixed = budget.toFixed(2);
-                      $('#campaignAdgroupForm-budget-display').html("("+budget_fixed +" USD / day)");
-                      $('#campaignAdgroupForm input[name="budget"]').val(budget);
-                      $('#campaignAdgroupForm-budget-display').show();
-                  } else {
-                      $('#campaignAdgroupForm-budget-display').html(null);
-                      $('#campaignAdgroupForm input[name="budget"]').val(null);
-                  }
-              } else {
-                  var impressions = $('#campaignAdgroupForm input[name="full_impressions"]').val();
-                  var full_budget = rate*impressions/1000;
-                  if (full_budget) {
-                      var full_budget_fixed = full_budget.toFixed(2);
-                      $('#campaignAdgroupForm-budget-display_full').html("("+full_budget_fixed +" total USD)");
-                      $('#campaignAdgroupForm input[name="full_budget"]').val(full_budget);
-                      $('#campaignAdgroupForm-budget-display_full').show();
-                  } else {
-                      $('#campaignAdgroupForm-budget-display_full').html(null);
-                      $('#campaignAdgroupForm input[name="full_budget"]').val(null);
-                  }
-              }
-          }
-      }
+        function calculateAndShowBudget() {
+            $('#campaignAdgroupForm-budget-display').hide();
+            $('#campaignAdgroupForm-budget-display_full').hide();
+            if ($('#adgroupForm-bid_strategy-select').val() == 'cpm') {
+                var rate = $('#campaignAdgroupForm input[name="bid"]').val();
+                if ($("#adgroupForm-budget_type-select").val() == "daily") {
+                    var impressions = $('#campaignAdgroupForm input[name="impressions"]').val();
+                    var budget = rate * impressions / 1000;
+                    if (budget) {
+                        var budget_fixed = budget.toFixed(2);
+                        $('#campaignAdgroupForm-budget-display').html("("+budget_fixed +" USD / day)");
+                        $('#campaignAdgroupForm input[name="budget"]').val(budget);
+                        $('#campaignAdgroupForm-budget-display').show();
+                    } else {
+                        $('#campaignAdgroupForm-budget-display').html(null);
+                        $('#campaignAdgroupForm input[name="budget"]').val(null);
+                    }
+                } else {
+                    var impressions = $('#campaignAdgroupForm input[name="full_impressions"]').val();
+                    var full_budget = rate*impressions/1000;
+                    if (full_budget) {
+                        var full_budget_fixed = full_budget.toFixed(2);
+                        $('#campaignAdgroupForm-budget-display_full').html("("+full_budget_fixed +" total USD)");
+                        $('#campaignAdgroupForm input[name="full_budget"]').val(full_budget);
+                        $('#campaignAdgroupForm-budget-display_full').show();
+                    } else {
+                        $('#campaignAdgroupForm-budget-display_full').html(null);
+                        $('#campaignAdgroupForm input[name="full_budget"]').val(null);
+                    }
+                }
+            }
+        }
 
-      function campaignAdgroupFormOnLoad(){
+        function campaignAdgroupFormOnLoad(){
 
-          $('#campaign_type_select').val(window.location.hash.substring(1));
+            $('#campaign_type_select').val(window.location.hash.substring(1));
 
-          // Select the appropriate form field options based on the type of campaign
-          $('#campaign_type_select').change(function(e) {
-              var campaign_type = $(this).val();
-              window.location.hash = "#" + campaign_type;
-              $('.campaignDependent', '#campaignAdgroupForm').hide();
-              $('.'+campaign_type+'.campaignDependent', '#campaignAdgroupForm').show();
-              $('#campaignAdgroupForm')
-                  .find('.campaignDependent').hide().end()
-                  .find("."+$(this).val()).show().end();
-              if ($(this).val() == "network"){
-                  $('#bid_strategy :selected').removeAttr('selected');
+            // Select the appropriate form field options based on the type of campaign
+            $('#campaign_type_select').change(function(e) {
+                var campaign_type = $(this).val();
+                window.location.hash = "#" + campaign_type;
+                $('.campaignDependent', '#campaignAdgroupForm').hide();
+                $('.'+campaign_type+'.campaignDependent', '#campaignAdgroupForm').show();
+                $('#campaignAdgroupForm')
+                    .find('.campaignDependent').hide().end()
+                    .find("."+$(this).val()).show().end();
+                if ($(this).val() == "network"){
+                    $('#bid_strategy :selected').removeAttr('selected');
 
-                  // make the network bid cpm by default
-                  $('option#bid_strategy-cpm').attr('selected','selected');
+                    // make the network bid cpm by default
+                    $('option#bid_strategy-cpm').attr('selected','selected');
 
-                  // rename so we dont have duplicates
-                  $('#bid-max').attr('name','bid-max');
-                  $('#bid-network').attr('name','bid');
+                    // rename so we dont have duplicates
+                    $('#bid-max').attr('name','bid-max');
+                    $('#bid-network').attr('name','bid');
 
-                  // rename so we don't have duplicates
-                  $('#adgroupForm-bid_strategy-select').attr('name','bid_strategy_std');
-                  $('#adgroupForm-bid_strategy-select-network').attr('name','bid_strategy');
-              } else {                  // rename so we dont have duplicates
-                  $('#bid-network').attr('name','bid-network');
-                  $('#bid-max').attr('name','bid');
+                    // rename so we don't have duplicates
+                    $('#adgroupForm-bid_strategy-select').attr('name','bid_strategy_std');
+                    $('#adgroupForm-bid_strategy-select-network').attr('name','bid_strategy');
+                } else {                  // rename so we dont have duplicates
+                    $('#bid-network').attr('name','bid-network');
+                    $('#bid-max').attr('name','bid');
 
-                  // rename so we don't have duplicates
-                  $('#adgroupForm-bid_strategy-select').attr('name','bid_strategy');
-                  $('#adgroupForm-bid_strategy-select-network').attr('name','bid_strategy_network');
-              }
+                    // rename so we don't have duplicates
+                    $('#adgroupForm-bid_strategy-select').attr('name','bid_strategy');
+                    $('#adgroupForm-bid_strategy-select-network').attr('name','bid_strategy_network');
+                }
 
-              if ($(this).val() == 'marketplace') {
-                  $("#mpx_message").removeClass('hidden');
-                  $('.ui-button-text', "#campaignAdgroupForm-submit").text('Accept New Terms and Continue');
-              } else {
-                  $("#mpx_message").addClass('hidden');
+                if ($(this).val() == 'marketplace') {
+                    $("#mpx_message").removeClass('hidden');
+                    $('.ui-button-text', "#campaignAdgroupForm-submit").text('Accept New Terms and Continue');
+                } else {
+                    $("#mpx_message").addClass('hidden');
                   $('.ui-button-text', "#campaignAdgroupForm-submit").text('Continue');
-              }
-          }).change(); // make sure we're in sync when the page loads
+                }
+            }).change(); // make sure we're in sync when the page loads
 
-          // Show appropriate options based on what network has been chosen
-          // (Network campaigns only)
-          $("#network_select").change(function(e) {
+            // Show appropriate options based on what network has been chosen
+            // (Network campaigns only)
+            $("#network_select").change(function(e) {
               var network = $(this).val();
               $('.networkDependent').hide();
               $('.'+network+'.networkDependent').show();
@@ -320,15 +320,13 @@ var mopub = mopub || {};
               $('#campaignAdgroupForm-loading').hide();
               if (jsonData.success){
                   $('#campaignAdgroupForm-success').show(); // show message
-                  window.location = jsonData.new_page;
+                  window.location = '/campaigns/';
                   $('#campaignAdgroupForm-submit').button({'label':'Success...','disabled':true});
               } else {
-                  $('#campaignAdgroupForm-fragment').html(jsonData.html);
+                  // $('#campaignAdgroupForm-fragment').html(jsonData.html);
                   // reimplement the onload event
                   campaignAdgroupFormOnLoad();
                   // clear and reset the hash
-                  window.location.hash = '';
-                  window.location.hash = 'adgroupEditForm';
                   $('#campaignAdgroupForm-submit').button({'label':'Continue','disabled':false});
 
               }
@@ -346,31 +344,54 @@ var mopub = mopub || {};
 
 
       // set up "Help" links
-      $('#campaignForm-type-helpLink').click(function(e) {
-          e.preventDefault();
-          $('#campaignForm-type-helpContent').dialog({
-              buttons: { "Close": function() { $(this).dialog("close"); } }
-          });
-      });
+      // $('#campaignForm-type-helpLink').click(function(e) {
+      //     e.preventDefault();
+      //     $('#campaignForm-type-helpContent').dialog({
+      //         buttons: { "Close": function() { $(this).dialog("close"); } }
+      //     });
+      // });
 
-      $('#campaignForm-priority-helpLink').click(function(e) {
-          e.preventDefault();
-          $('#campaignForm-priority-helpContent').dialog({
-              buttons: { "Close": function() { $(this).dialog('close'); }}
-          });
-      });
+      // $('#campaignForm-priority-helpLink').click(function(e) {
+      //     e.preventDefault();
+      //     $('#campaignForm-priority-helpContent').dialog({
+      //         buttons: { "Close": function() { $(this).dialog('close'); }}
+      //     });
+      // });
 
-      $('#campaignForm-promo-priority-helpLink').click(function(e) {
-          e.preventDefault();
-          $('#campaignForm-promo-priority-helpContent').dialog({
-              buttons: { "Close": function() { $(this).dialog('close'); }}
-          });
-      });
+      // $('#campaignForm-promo-priority-helpLink').click(function(e) {
+      //     e.preventDefault();
+      //     $('#campaignForm-promo-priority-helpContent').dialog({
+      //         buttons: { "Close": function() { $(this).dialog('close'); }}
+      //     });
+      // });
 
-      $('#campaignForm-customHtml-helpLink').click(function(e) {
-          e.preventDefault();
-          $('#campaignForm-customHtml-helpContent').dialog({
-              buttons: { "Close": function() { $(this).dialog("close"); } }
+      // $('#campaignForm-customHtml-helpLink').click(function(e) {
+      //     e.preventDefault();
+      //     $('#campaignForm-customHtml-helpContent').dialog({
+      //         buttons: { "Close": function() { $(this).dialog("close"); } }
+      //     });
+      // });
+
+      // $('#campaignForm-bid-helpLink').click(function(e) {
+      //     e.preventDefault();
+      //     $('#campaignForm-bid-helpContent').dialog({
+      //         buttons: { "Close": function() { $(this).dialog("close"); } }
+      //     });
+      // });
+      // $('#campaignForm-keyword-helpLink').click(function(e) {
+      //     e.preventDefault();
+      //     $('#campaignForm-keyword-helpContent').dialog({
+      //         buttons: { "Close": function() { $(this).dialog("close"); } }
+      //     });
+      // });
+
+
+      $.each(['type', 'priority', 'promo', 'customHtml', 'bid', 'keyword'], function(iter, link_type) {
+          $('#campaignForm-' + link_type + '-helpLink').click(function(e) {
+              e.preventDefault();
+              $('#campaignForm-' + link_type + '-helpLink').dialog({
+                  buttons: { "Close": function() { $(this).dialog("close"); } }
+              });
           });
       });
 
@@ -383,19 +404,6 @@ var mopub = mopub || {};
               });
               $('#adserverTest-iFrame').attr('src',$('#adserverTest-iFrame-src').text());
           });
-
-      $('#campaignForm-bid-helpLink').click(function(e) {
-          e.preventDefault();
-          $('#campaignForm-bid-helpContent').dialog({
-              buttons: { "Close": function() { $(this).dialog("close"); } }
-          });
-      });
-      $('#campaignForm-keyword-helpLink').click(function(e) {
-          e.preventDefault();
-          $('#campaignForm-keyword-helpContent').dialog({
-              buttons: { "Close": function() { $(this).dialog("close"); } }
-          });
-      });
 
       $('#campaignAdgroupForm input[name="start_date"]').datepicker({ minDate:0 });
       $('#campaignAdgroupForm input[name="end_date"]').datepicker({ minDate:0 });
@@ -414,23 +422,31 @@ var mopub = mopub || {};
           $form.submit();
       }
 
-      $('#creativeManagementForm-pause')
-          .click(function(e){
-              e.preventDefault();
-              creativeMange('pause');
-          });
+      // $('#creativeManagementForm-pause')
+      //     .click(function(e){
+      //         e.preventDefault();
+      //         creativeMange('pause');
+      //     });
 
-      $('#creativeManagementForm-resume')
-          .click(function(e){
-              e.preventDefault();
-              creativeMange('resume');
-          });
+      // $('#creativeManagementForm-resume')
+      //     .click(function(e){
+      //         e.preventDefault();
+      //         creativeMange('resume');
+      //     });
 
-      $('#creativeManagementForm-delete')
-          .click(function(e){
-              e.preventDefault();
-              creativeMange('delete');
+      // $('#creativeManagementForm-delete')
+      //     .click(function(e){
+      //         e.preventDefault();
+      //         creativeMange('delete');
+      //     });
+
+      $.each(['pause', 'resume', 'delete'], function(iter, form_control) {
+          $('#creativeManagementForm-' + form_control)
+              .click(function(e){
+                  e.preventDefault();
+                  creativeMange(form_control);
           });
+      });
 
       $('.creativeManagementForm-key')
           .change(function(e){
@@ -627,36 +643,44 @@ var mopub = mopub || {};
 
 
 
-    // TODO: This is not DRY
-    $('#campaignForm-pause')
-      .click(function(e) {
-        e.preventDefault();
-        $('#campaignForm').find("#action").attr("value","pause").end().submit();
-    });
+    // // TODO: This is not DRY
+    // $('#campaignForm-pause')
+    //   .click(function(e) {
+    //     e.preventDefault();
+    //     $('#campaignForm').find("#action").attr("value","pause").end().submit();
+    // });
 
-    $('#campaignForm-resume')
-      .click(function(e) {
-        e.preventDefault();
-        $('#campaignForm').find("#action").attr("value","resume").end().submit();
-    });
+    // $('#campaignForm-resume')
+    //   .click(function(e) {
+    //     e.preventDefault();
+    //     $('#campaignForm').find("#action").attr("value","resume").end().submit();
+    // });
 
-    $('#campaignForm-activate')
-      .click(function(e) {
-        e.preventDefault();
-        $('#campaignForm').find("#action").attr("value","activate").end().submit();
-    });
+    // $('#campaignForm-activate')
+    //   .click(function(e) {
+    //     e.preventDefault();
+    //     $('#campaignForm').find("#action").attr("value","activate").end().submit();
+    // });
 
-    $('#campaignForm-archive')
-      .click(function(e) {
-        e.preventDefault();
-        $('#campaignForm').find("#action").attr("value","archive").end().submit();
-    });
+    // $('#campaignForm-archive')
+    //   .click(function(e) {
+    //     e.preventDefault();
+    //     $('#campaignForm').find("#action").attr("value","archive").end().submit();
+    // });
 
-    $('#campaignForm-delete')
-      .click(function(e) {
-        e.preventDefault();
-        $('#campaignForm').find("#action").attr("value","delete").end().submit();
-    });
+    // $('#campaignForm-delete')
+    //   .click(function(e) {
+    //     e.preventDefault();
+    //     $('#campaignForm').find("#action").attr("value","delete").end().submit();
+    // });
+
+      $.each(['pause', 'resume', 'activate', 'archive', 'delete'], function(iter, action) {
+          $('#campaignForm-' + action)
+              .click(function(e) {
+                  e.preventDefault();
+                  $('#campaignForm').find("#action").attr("value", action).end().submit();
+              });
+      });
 
 
     ///// Filter Campaigns by status and targeted apps /////

@@ -359,7 +359,7 @@ class CreateCampaignAJAXHander(RequestHandler):
         sk_field = adgroup_form.fields['site_keys']
         sk_field.choices = all_adunits # TODO: doesn't work needed for validation
 
-        json_dict = {'success':False,'html':None}
+        json_dict = {'success':False,'errors': None}
 
         if campaign_form.is_valid():
             if not campaign_form.instance: #ensure form posts do not change ownership
@@ -369,7 +369,7 @@ class CreateCampaignAJAXHander(RequestHandler):
             campaign = campaign_form.save(commit=False)
             campaign.account = account
 
-            if campaign.campaign_type in ["marketplace", "backfill_marketplace"]:
+            if campaign.marketplace():
                 self.account.network_config.price_floor = float(campaign_form.cleaned_data['price_floor'])
                 AccountQueryManager.update_config_and_put(self.account, self.account.network_config)
 
@@ -474,9 +474,11 @@ class CreateCampaignAJAXHander(RequestHandler):
                 json_dict.update(success=True,new_page=reverse('advertiser_adgroup_show',kwargs={'adgroup_key':str(adgroup.key())}))
                 return self.json_response(json_dict)
 
-        new_html = self.get(campaign_form=campaign_form,
-                                                adgroup_form=adgroup_form)
-        json_dict.update(success=False,html=new_html)
+
+        flatten_errors = lambda frm : [(k, unicode(v[0])) for k, v in frm.errors.items()]
+        grouped_errors = flatten_errors(campaign_form) + flatten_errors(adgroup_form)
+
+        json_dict.update(success=False, errors=grouped_errors)
         return self.json_response(json_dict)
 
 @login_required

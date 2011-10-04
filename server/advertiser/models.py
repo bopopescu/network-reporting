@@ -116,7 +116,7 @@ class Campaign(db.Model):
         return self.campaign_type in ['network']
 
     def marketplace(self):
-        return self.campaign_type in ['marketplace']
+        return self.campaign_type in ['marketplace', 'backfill_marketplace']
 
     def is_active_for_date(self, date):
         """ Start and end dates are inclusive """

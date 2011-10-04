@@ -21,6 +21,9 @@
 
    <div id="paypal_only">
      {{form.paypal_email|attrs:'{"label":"Paypal Email"}'}}
+     <div class="warning notice" style="margin: 10px 220px 0 105px;">
+       Please note that Paypal charges transaction fees based on transfer volume. See <a href="https://www.paypal.com/us/cgi-bin/webscr?cmd=_display-receiving-fees-outside">here</a> for more information.
+     </div>
    </div>
 
    <div id="wire_only">
@@ -34,6 +37,12 @@
      <div class="non_us_only hidden">
      {{form.bank_swift_code|attrs:'{"label":"Bank SWIFT Code"}'}}
      </div>
+
+     {% comment %}
+     <div class="warning notice" style="margin: 10px 200px 0 105px;">
+       Please note that wire transfers incur a 2.05% transfer fee.
+     </div>
+     {% endcomment %}
    </div>
 
  </dl>

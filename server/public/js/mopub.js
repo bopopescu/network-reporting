@@ -1,5 +1,5 @@
 /*
-	MoPub Global JS
+    MoPub Global JS
 */
 
 //For JSLint Validation:
@@ -10,11 +10,11 @@ var mopub = mopub || {};
 mopub.Utils = mopub.Utils || {};
 
 (function($){
-	// dom ready
-	$(document).ready(function() {
-		/*---------------------------------------/
-		/ Marketplace Hiding
-		/---------------------------------------*/
+    // dom ready
+    $(document).ready(function() {
+        /*---------------------------------------/
+        / Marketplace Hiding
+        /---------------------------------------*/
 
         if ($('#is_admin_input').val()=='False') {
             $('.marketplace').hide();
@@ -23,147 +23,149 @@ mopub.Utils = mopub.Utils || {};
 
 
 
-		/*---------------------------------------/
-		/ UI Stuff
-		/---------------------------------------*/
-		
-		// preload images (defined below)
-		var JQUERY_UI_IMAGE_PATH = '/js/mylibs/jquery-ui-1.8.7.custom/css/mopub/images';
-		$.preLoadImages(
-			'/images/ui/ui-button-active.png',
-			'/images/ui/ui-button-default.png',
-			'/images/ui/ui-button-hover.png',
-			'/images/ui/ui-icons-active.png',
-			'/images/ui/ui-icons-focus.png',
-			'/images/ui/ui-icons-hover.png',
-			'/images/ui/ui-icons-progress.png',
-			JQUERY_UI_IMAGE_PATH + '/ui-bg_highlight-hard_25_e57300_1x100.png',
-			JQUERY_UI_IMAGE_PATH + '/ui-bg_highlight-hard_50_dddddd_1x100.png',
-			JQUERY_UI_IMAGE_PATH + '/ui-bg_highlight-hard_100_f3f3f3_1x100.png',
-			JQUERY_UI_IMAGE_PATH + '/ui-bg_inset-soft_25_595959_1x100.png',
-			JQUERY_UI_IMAGE_PATH + '/ui-icons_0090d9_256x240.png',
-			JQUERY_UI_IMAGE_PATH + '/ui-icons_cc2929_256x240.png',
-			JQUERY_UI_IMAGE_PATH + '/ui-icons_ffffff_256x240.png'
-		);
-		
-		// replace <legend> with <h2>
-		$('legend').each(function() {
-			var legend = $(this);
-			var h2 = $('<h2>'+legend.html()+'</h2>');
-			h2.attr('class', legend.attr('class'));
-			h2.attr('id', legend.attr('id'));
-			legend.replaceWith(h2);
-		});
-		
-		// set up buttons
-		$('.button').button().css({ visibility: 'visible' });
-		
-		// set up buttonsets
-		$('.buttonset').buttonset().css({ visibility: 'visible' });
-		
-		// gray out any buttonsets that ought to be disabled
-		$('.buttonset-start-disabled').buttonset()
-		$('.buttonset-start-disabled').buttonset({ disabled: true });
-		
-		// set up selectmenus
-		$('.selectmenu').selectmenu().css({ visibility: 'visible' });
-		
-		// set up validation to be run on form submit
+        /*---------------------------------------/
+        / UI Stuff
+        /---------------------------------------*/
+
+        // preload images (defined below)
+        var JQUERY_UI_IMAGE_PATH = '/js/mylibs/jquery-ui-1.8.7.custom/css/mopub/images';
+        $.preLoadImages(
+            '/images/ui/ui-button-active.png',
+            '/images/ui/ui-button-default.png',
+            '/images/ui/ui-button-hover.png',
+            '/images/ui/ui-icons-active.png',
+            '/images/ui/ui-icons-focus.png',
+            '/images/ui/ui-icons-hover.png',
+            '/images/ui/ui-icons-progress.png',
+            JQUERY_UI_IMAGE_PATH + '/ui-bg_highlight-hard_25_e57300_1x100.png',
+            JQUERY_UI_IMAGE_PATH + '/ui-bg_highlight-hard_50_dddddd_1x100.png',
+            JQUERY_UI_IMAGE_PATH + '/ui-bg_highlight-hard_100_f3f3f3_1x100.png',
+            JQUERY_UI_IMAGE_PATH + '/ui-bg_inset-soft_25_595959_1x100.png',
+            JQUERY_UI_IMAGE_PATH + '/ui-icons_0090d9_256x240.png',
+            JQUERY_UI_IMAGE_PATH + '/ui-icons_cc2929_256x240.png',
+            JQUERY_UI_IMAGE_PATH + '/ui-icons_ffffff_256x240.png'
+        );
+
+        // replace <legend> with <h2>
+        $('legend').each(function() {
+            var legend = $(this);
+            var h2 = $('<h2>'+legend.html()+'</h2>');
+            h2.attr('class', legend.attr('class'));
+            h2.attr('id', legend.attr('id'));
+            legend.replaceWith(h2);
+        });
+
+        // set up buttons
+        $('.button').button().css({ visibility: 'visible' });
+
+        // set up buttonsets
+        $('.buttonset').buttonset().css({ visibility: 'visible' });
+
+        // gray out any buttonsets that ought to be disabled
+        $('.buttonset-start-disabled').buttonset();
+        $('.buttonset-start-disabled').buttonset({ disabled: true });
+
+        // set up selectmenus
+        $('.selectmenu').selectmenu().css({ visibility: 'visible' });
+
+        // set up validation to be run on form submit
         $('.validate').validate();
-		
-		// set up treeview
-    // $(".treeview").treeview({
-    //        animated: "fast",
-    //        collapsed: true,
-    //        unique: true,
-    //        persist: "cookie",
-    //        })
-    // 
-    
-    $(".tree").treeview()
-		
-		
-		
-		// override default jQuery UI dialog options
-		$.extend($.ui.dialog.prototype.options, {
-			modal: true,
-			resizable: false,
-			draggable: false,
-			width: 400
-		});
-		
-		// override default jQuery UI datepicker options
-		$.datepicker.setDefaults({
-			dayNamesMin: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-		});
-		
-		// set up form placeholders
-		$('input[placeholder], textarea[placeholder]').placeholder({ preventRefreshIssues: true });
-		
-		// set up text overflow elements
-		$('#titlebar .breadcrumb h1, .dataTable-name .inner').textOverflow(' &hellip;');
-		
-		/*---------------------------------------/
-		/ Tooltips
-		/---------------------------------------*/
 
-		$.fn.qtip.styles.mopub = { 
-			background: '#303030',
-			color: '#ffffff',
-			border: {
-				radius: 5
-			},
-			tip: {
-				size: {
-					x: 10,
-					y: 10
-				}
-			},
-			name: 'dark' // Inherit the rest of the attributes from the preset dark style
-		};
+        // set up treeview
+        // $(".treeview").treeview({
+        //        animated: "fast",
+        //        collapsed: true,
+        //        unique: true,
+        //        persist: "cookie",
+        //        })
+        //
 
-		$('a[title]').qtip({ style: { name: 'mopub', tip: true } });
-		$('.formFields-field-help-link[title]').click(function(e) { e.preventDefault(); });
-		
-		/*---------------------------------------/
-		/ Message Center
-		/---------------------------------------*/
-		
-		// hide message center when page loads if there are no messages
-		function hideMessageCenterIfNoMessages() {
-			if($('.messageCenter-message').length === 0) {
-				$('#messageCenter').hide();
-			}
-		}
-		hideMessageCenterIfNoMessages();
-		
-		// set up "More info" links
-		$('.messageCenter-message-moreInfoLink').click(function(e) {
-			e.preventDefault();
-			var link = $(this);
-			var info = $('.messageCenter-message-moreInfo', link.parents('.messageCenter-message'));
-			// clone info (so the original doesn't get moved around) and make the dialog
-			info.clone().dialog({ 
-				buttons: { "Close": function() { $(this).dialog("close"); } }, 
-				close: function(e, u) { $(this).remove(); } // remove clone
-			});
-		});
-		
-		// set up "Hide this" links
-		$('.messageCenter-message-hide').click(function(e) {
-			e.preventDefault();
-			var link = $(this);
-			var message = link.parents('.messageCenter-message');
-			message.fadeOut('fast', function() {
-				message.remove();
-				hideMessageCenterIfNoMessages();
-			});
-			// TODO: tell server that message.attr('id') has been hidden
-		});
-		
-		/*---------------------------------------/
-		/ Stats Breakdown
-		/---------------------------------------*/
+        $(".tree").treeview();
+
+
+
+        // override default jQuery UI dialog options
+        $.extend($.ui.dialog.prototype.options, {
+            modal: true,
+            resizable: false,
+            draggable: false,
+            width: 400
+        });
+
+        // override default jQuery UI datepicker options
+        $.datepicker.setDefaults({
+            dayNamesMin: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+        });
+
+        // set up form placeholders
+        $('input[placeholder], textarea[placeholder]').placeholder({ preventRefreshIssues: true });
+
+        // set up text overflow elements
+        $('#titlebar .breadcrumb h1, .dataTable-name .inner').textOverflow(' &hellip;');
+
+        // set up the dropdown
+        $(".dropdown-head").dropdown('.dropdown');
+        /*---------------------------------------/
+        / Tooltips
+        /---------------------------------------*/
+
+        $.fn.qtip.styles.mopub = {
+            background: '#303030',
+            color: '#ffffff',
+            border: {
+                radius: 5
+            },
+            tip: {
+                size: {
+                    x: 10,
+                    y: 10
+                }
+            },
+            name: 'dark' // Inherit the rest of the attributes from the preset dark style
+        };
+
+        $('a[title]').qtip({ style: { name: 'mopub', tip: true } });
+        $('.formFields-field-help-link[title]').click(function(e) { e.preventDefault(); });
+
+        /*---------------------------------------/
+        / Message Center
+        /---------------------------------------*/
+
+        // hide message center when page loads if there are no messages
+        function hideMessageCenterIfNoMessages() {
+            if($('.messageCenter-message').length === 0) {
+                $('#messageCenter').hide();
+            }
+        }
+        hideMessageCenterIfNoMessages();
+
+        // set up "More info" links
+        $('.messageCenter-message-moreInfoLink').click(function(e) {
+            e.preventDefault();
+            var link = $(this);
+            var info = $('.messageCenter-message-moreInfo', link.parents('.messageCenter-message'));
+            // clone info (so the original doesn't get moved around) and make the dialog
+            info.clone().dialog({
+                buttons: { "Close": function() { $(this).dialog("close"); } },
+                close: function(e, u) { $(this).remove(); } // remove clone
+            });
+        });
+
+        // set up "Hide this" links
+        $('.messageCenter-message-hide').click(function(e) {
+            e.preventDefault();
+            var link = $(this);
+            var message = link.parents('.messageCenter-message');
+            message.fadeOut('fast', function() {
+                message.remove();
+                hideMessageCenterIfNoMessages();
+            });
+            // TODO: tell server that message.attr('id') has been hidden
+        });
+
+        /*---------------------------------------/
+        / Stats Breakdown
+        /---------------------------------------*/
 
         $('.stats-breakdown tr').click(function(e) {
          var row = $(this);
@@ -173,136 +175,136 @@ mopub.Utils = mopub.Utils || {};
              row.addClass('active');
          }
         });
-		
-		/*---------------------------------------/
-		/ Highcharts default options
-		/---------------------------------------*/
 
-		Highcharts.setOptions({
-			chart: {
-				animation: false,
-				backgroundColor: null,
-				borderRadius: 0,
-				margin: [30,0,30,45]
-			},
-			title: { text: null },
-			lang: {
-				loading: "Loading ..."
-			}, 
-			credits: { enabled: false },
-			style: {
-				fontFamily: '"myriad-pro-1", "myriad-pro-2", Helvetica, Arial, sans-serif'
-			},
-			plotOptions: {
-				series: {
-					animation: false,
-					shadow: false,
-					stickyTracking: false
-				},
-				area: {
-					lineWidth: 4,
-					fillOpacity: 0.1,
-					stacking: 'normal',
-					marker: {
-						lineWidth: 2,
-						radius: 5,
-						symbol: 'circle',
-						states: {
-							hover: {
-								lineWidth: 2,
-								radius: 7
-							}
-						}
-					},
-					states: {
-						hover: {
-							lineWidth: 4
-						}
-					}
-				}
-			},
-			xAxis: {
-				endOnTick: false,
-				gridLineWidth: 0.5,
-				gridLineColor: '#dddddd',
-				lineWidth: 1,
-				lineColor: '#cccccc',
-				type: 'datetime',
-				labels: {
-					style: {
-						fontFamily: '"myriad-pro-1", "myriad-pro-2", Helvetica, Arial, sans-serif',
-						color: '#999',
-						fontSize: '10px'
-					},
-					y: 20
-				},
-				dateTimeLabelFormats: {
-					second: '%b %e %l:%M:%S%p',
-					minute: '%b %e %l:%M%p',
-					hour: '%b %e %l:%M%p',
-					day: '%b %e',
-					week: '%b %e',
-					month: '%b %Y',
-					year: '%Y'
-				},
-				tickColor: '#dddddd',
-				tickLength: 5,
-				tickWidth: 0.5
-			},
-			yAxis: {
-				showFirstLabel: false,
-				showLastLabel: true,
-				gridLineWidth: 0.5,
-				gridLineColor: '#dddddd',
-				min: 0,
-				title: {
-					text: null
-				},
-				labels: {
-					style: {
-						fontFamily: '"myriad-pro-1", "myriad-pro-2", Helvetica, Arial, sans-serif',
-						color: '#999',
-						fontSize: '10px'
-					},
-					x: -5
-				}
-			},
-			legend: {
-				borderColor: null,
-				borderRadius: 0,
-				borderWidth: 0,
-				align: 'center',
-				verticalAlign: 'top',
-				y: -17,
-				itemStyle: {
-					fontFamily: '"myriad-pro-1", "myriad-pro-2", Helvetica, Arial, sans-serif',
-					size: '12px',
-					cursor: 'pointer',
-					color: '#444444'
-				},
-				itemHoverStyle: {
-					color: '#e57300'
-				},
-				itemHiddenStyle: {
-					color: '#ccc'
-				},
-				lineHeight: 12,
-				symbolPadding: 6,
-				symbolWidth: 12
-			},
-			tooltip: {
-				backgroundColor: "rgba(255, 255, 255, .9)",
-				style: {
-					fontFamily: '"myriad-pro-1", "myriad-pro-2", Helvetica, Arial, sans-serif',
-					fontSize: '13px',
-					padding: '10px'
-				}
-			}
-		});
+        /*---------------------------------------/
+        / Highcharts default options
+        /---------------------------------------*/
 
-	/*---------------------------------------/
-	/ What's This?-ifier 
-	/---------------------------------------*/
+        Highcharts.setOptions({
+            chart: {
+                animation: false,
+                backgroundColor: null,
+                borderRadius: 0,
+                margin: [30,0,30,45]
+            },
+            title: { text: null },
+            lang: {
+                loading: "Loading ..."
+            },
+            credits: { enabled: false },
+            style: {
+                fontFamily: '"myriad-pro-1", "myriad-pro-2", Helvetica, Arial, sans-serif'
+            },
+            plotOptions: {
+                series: {
+                    animation: false,
+                    shadow: false,
+                    stickyTracking: false
+                },
+                area: {
+                    lineWidth: 4,
+                    fillOpacity: 0.1,
+                    stacking: 'normal',
+                    marker: {
+                        lineWidth: 2,
+                        radius: 5,
+                        symbol: 'circle',
+                        states: {
+                            hover: {
+                                lineWidth: 2,
+                                radius: 7
+                            }
+                        }
+                    },
+                    states: {
+                        hover: {
+                            lineWidth: 4
+                        }
+                    }
+                }
+            },
+            xAxis: {
+                endOnTick: false,
+                gridLineWidth: 0.5,
+                gridLineColor: '#dddddd',
+                lineWidth: 1,
+                lineColor: '#cccccc',
+                type: 'datetime',
+                labels: {
+                    style: {
+                        fontFamily: '"myriad-pro-1", "myriad-pro-2", Helvetica, Arial, sans-serif',
+                        color: '#999',
+                        fontSize: '10px'
+                    },
+                    y: 20
+                },
+                dateTimeLabelFormats: {
+                    second: '%b %e %l:%M:%S%p',
+                    minute: '%b %e %l:%M%p',
+                    hour: '%b %e %l:%M%p',
+                    day: '%b %e',
+                    week: '%b %e',
+                    month: '%b %Y',
+                    year: '%Y'
+                },
+                tickColor: '#dddddd',
+                tickLength: 5,
+                tickWidth: 0.5
+            },
+            yAxis: {
+                showFirstLabel: false,
+                showLastLabel: true,
+                gridLineWidth: 0.5,
+                gridLineColor: '#dddddd',
+                min: 0,
+                title: {
+                    text: null
+                },
+                labels: {
+                    style: {
+                        fontFamily: '"myriad-pro-1", "myriad-pro-2", Helvetica, Arial, sans-serif',
+                        color: '#999',
+                        fontSize: '10px'
+                    },
+                    x: -5
+                }
+            },
+            legend: {
+                borderColor: null,
+                borderRadius: 0,
+                borderWidth: 0,
+                align: 'center',
+                verticalAlign: 'top',
+                y: -17,
+                itemStyle: {
+                    fontFamily: '"myriad-pro-1", "myriad-pro-2", Helvetica, Arial, sans-serif',
+                    size: '12px',
+                    cursor: 'pointer',
+                    color: '#444444'
+                },
+                itemHoverStyle: {
+                    color: '#e57300'
+                },
+                itemHiddenStyle: {
+                    color: '#ccc'
+                },
+                lineHeight: 12,
+                symbolPadding: 6,
+                symbolWidth: 12
+            },
+            tooltip: {
+                backgroundColor: "rgba(255, 255, 255, .9)",
+                style: {
+                    fontFamily: '"myriad-pro-1", "myriad-pro-2", Helvetica, Arial, sans-serif',
+                    fontSize: '13px',
+                    padding: '10px'
+                }
+            }
+        });
+
+    /*---------------------------------------/
+    / What's This?-ifier
+    /---------------------------------------*/
 
       $('.whatsthis').click(function(e) {
           e.preventDefault();
@@ -310,40 +312,96 @@ mopub.Utils = mopub.Utils || {};
             buttons: { "Close": function() { $(this).dialog('close');} }
           });
       });
-		
-	});
-	
-	/*---------------------------------------/
-	/ Image Preloader
-	/---------------------------------------*/
-	
-  var cache = [];
-  // Arguments are image paths relative to the current page.
-  $.preLoadImages = function() {
-    var args_len = arguments.length;
-    for (var i = args_len; i--;) {
-      var cacheImage = document.createElement('img');
-      cacheImage.src = arguments[i];
-      cache.push(cacheImage);
-    }
-    // Commented out for cleanliness
-    // log(cache); 
-  };
-  
-  // helper fn for console logging
-  var log;
 
-  if (window.console && typeof console.log === "function"){
-    // use apply to preserve context and invocations with multiple arguments
-    log = function () { console.log.apply(console, arguments); };
-  } else {
-    log = function(){ return; }
-  }
-  
+    });
+
+    /*---------------------------------------/
+    / Image Preloader
+    /---------------------------------------*/
+
+    var cache = [];
+
+    // Arguments are image paths relative to the current page.
+    $.preLoadImages = function() {
+        var args_len = arguments.length;
+        for (var i = args_len; i--;) {
+            var cacheImage = document.createElement('img');
+            cacheImage.src = arguments[i];
+            cache.push(cacheImage);
+        }
+        // Commented out for cleanliness
+        // log(cache);
+    };
+
+    // Creates a dropdown menu
+    // Usage: `$(dropdown-trigger).dropdown(things-that-dropdown);`
+    $.fn.dropdown = function(selector) {
+        var self = this;
+        var over_trigger, over_body = false;
+
+        // Make sure the dropdown starts closed (in case class="invisible" wasnt set)
+        dropdownClose();
+
+        function dropdownOpen() {
+            if ($(selector).hasClass('invisible')); {
+                $(selector).removeClass('invisible');
+            }
+            $(self).addClass('hovered');
+        }
+
+        function dropdownClose() {
+            if (!$(selector).hasClass('invisible')) {
+                $(selector).addClass('invisible');
+            }
+            $(self).removeClass('hovered');
+        }
+
+        // Check whats being hovered
+        $(this).hover(function() {
+            over_trigger = true;
+        }, function () {
+            over_trigger = false;
+        });
+
+        $(selector).hover(function() {
+            over_body = true;
+        }, function () {
+            over_body = false;
+        });
+
+        // Open/close the dropdown if the state has changed
+        // Breaks in firefox if setInterval isn't given a number for the time.
+        setInterval(function() {
+            if (over_trigger || over_body) {
+                dropdownOpen();
+            } else {
+                dropdownClose();
+            }
+        }, 1);
+    };
+
+    $.unescapeHTML = function (html) {
+        return $("<div />").html(html).text();
+    };
+
+    $.escapeHTML = function (html) {
+        return $("<div />").text(html).html();
+    };
+
+    // helper fn for console logging
+    var log;
+
+    if (window.console && typeof console.log === "function"){
+        // use apply to preserve context and invocations with multiple arguments
+        log = function () { console.log.apply(console, arguments); };
+    } else {
+        log = function(){ return; };
+    }
+
   /*---------------------------------------/
   / Utility functions.
   /---------------------------------------*/
-  
+
   mopub.Utils.formatNumberWithCommas = function(string) {
     string += '';
     x = string.split('.');
@@ -355,12 +413,12 @@ mopub.Utils = mopub.Utils || {};
     }
     return x1 + x2;
   };
-  
+
   mopub.Utils.formatNumberAsPercentage = function(string) {
     // We round to two decimal places.
     return (string*100).toFixed(2) + '%';
   };
-  
+
   mopub.Utils.getKeysFromObject = function(object) {
     var keys = [];
     for (var key in object) {
@@ -368,7 +426,7 @@ mopub.Utils = mopub.Utils || {};
     }
     return keys;
   };
-  
+
 })(this.jQuery);
 
 // =====================================================================
@@ -376,20 +434,20 @@ mopub.Utils = mopub.Utils || {};
 // =====================================================================
 
 (function(Utils, $) {
-  
+
   var AjaxChunkedFetch = Utils.AjaxChunkedFetch = function(args) {
     this.items = {};
     this.chunkComplete = function(data, chunk, fetchObj) {};
     this.chunkFailure = function(chunk, fetchObj) {};
     this.fetchComplete = function(fetchObj) {};
     $.extend(this, args);
-    
+
     // Whether the fetch has successfully fetched all items.
     this.isComplete = false;
-    
+
     // Whether any part of this fetch has failed.
     this.hasFailed = false;
-    
+
     // Keep track of the unfetched items (for internal use).
     this.unfetchedItems = {};
     var self = this;
@@ -397,7 +455,7 @@ mopub.Utils = mopub.Utils || {};
 
     return this;
   };
-  
+
   AjaxChunkedFetch.chunkArray = function(array, chunkSize) {
     if (!array) return [];
 
@@ -410,7 +468,7 @@ mopub.Utils = mopub.Utils || {};
     });
     return chunks;
   };
-  
+
   // Time to wait before terminating AJAX request.
   AjaxChunkedFetch.TIMEOUT_MILLISECONDS = 10000;
 
@@ -427,7 +485,7 @@ mopub.Utils = mopub.Utils || {};
   AjaxChunkedFetch.BACKOFF_MULTIPLIER = 1.5;
 
   AjaxChunkedFetch.prototype.unfetchedItemsEmpty = function() {
-    for (var key in this.unfetchedItems) { 
+    for (var key in this.unfetchedItems) {
       if (this.unfetchedItems.hasOwnProperty(key)) return false;
     }
     return true;
@@ -439,7 +497,7 @@ mopub.Utils = mopub.Utils || {};
     var chunks = AjaxChunkedFetch.chunkArray(this.items, AjaxChunkedFetch.DEFAULT_CHUNK_SIZE);
     this.executeFetchRequestsForChunks(chunks);
   };
-  
+
   AjaxChunkedFetch.prototype.executeFetchRequestsForChunks = function(chunks) {
     // If there are no items, automatically declare this fetch to be complete.
     if (chunks.length <= 0) {
@@ -447,16 +505,16 @@ mopub.Utils = mopub.Utils || {};
       this.fetchComplete(this);
       return;
     }
-    
+
     // If there's no URL constructor, declare this fetch failed and mark each chunk as failed.
     if (!this.urlConstructor) {
       this.hasFailed = true;
-      for (var i = 0, len = chunks.length; i < len; i++) { 
-        this.chunkFailure(chunk, this); 
+      for (var i = 0, len = chunks.length; i < len; i++) {
+        this.chunkFailure(chunk, this);
       };
       return;
     }
-    
+
     var self = this;
     $.each(chunks, function(index, chunk) {
       // Create a fetch request for each chunk and execute it.
@@ -483,35 +541,35 @@ mopub.Utils = mopub.Utils || {};
       this.fetchComplete(this);
     }
   };
-  
+
   AjaxChunkedFetch.prototype.markAsFailed = function() {
     this.hasFailed = true;
   };
-  
+
   AjaxChunkedFetch.prototype.retry = function() {
     // TODO: this might be called before all fetch requests have finished, which can result in
     // some items being fetched unnecessarily.
-    
+
     if (!this.hasFailed) return;
     var unfetched = mopub.Utils.getKeysFromObject(this.unfetchedItems);
     var chunks = AjaxChunkedFetch.chunkArray(unfetched, AjaxChunkedFetch.DEFAULT_CHUNK_SIZE);
     this.executeFetchRequestsForChunks();
   };
-  
+
   // =====================================================================
-  
+
   var FetchRequest = AjaxChunkedFetch.FetchRequest = function(args) {
     this.items = [];
     this.url = "";
-    
+
     this.success = function(data) {};
     this.failure = function() {};
-    
+
     this.failedAttempts = 0;
     this.backoffDelay = AjaxChunkedFetch.BACKOFF_TIME_MILLISECONDS;
-    
+
     $.extend(this, args);
-    
+
     return this;
   };
 
@@ -520,16 +578,16 @@ mopub.Utils = mopub.Utils || {};
 
     $.ajax({
       url: self.url,
-      
+
       dataType: 'json',
-      
+
       success: function() {
         return function(data) {
           self.success(data, self.items, self.fetchObject);
           self.fetchObject.markItemsComplete(self.items);
         };
       }(),
-      
+
       error: function() {
         self.failedAttempts++;
         if (self.failedAttempts > AjaxChunkedFetch.MAX_FAILED_ATTEMPTS) {
@@ -541,11 +599,11 @@ mopub.Utils = mopub.Utils || {};
           self.backoffDelay *= AjaxChunkedFetch.BACKOFF_MULTIPLIER;
         }
       },
-      
+
       timeout: AjaxChunkedFetch.TIMEOUT_MILLISECONDS
     });
   };
-  
+
 })(mopub.Utils = mopub.Utils || {}, this.jQuery);
 
 // =====================================================================
@@ -553,7 +611,7 @@ mopub.Utils = mopub.Utils || {};
 // =====================================================================
 
 (function(Stats, $) {
-  
+
   Stats.sortStatsObjectsByStat = function(objects, statName) {
     objects.sort(function(a, b) {
       var statA = parseFloat(a["stats"]["sum"][statName]);
@@ -564,19 +622,19 @@ mopub.Utils = mopub.Utils || {};
     });
     return objects;
   };
-  
+
   Stats.statArrayFromDailyStats = function(arrayOfDailyStats, statName) {
     return $.map(arrayOfDailyStats, function(oneDayStats) {
       return parseFloat(oneDayStats[statName]);
     });
   };
-  
+
   Stats.getGraphSummedStatsForStatName = function(statName, objects) {
     var result = [];
-    
+
     var topThreePerformers = objects.splice(0, 3);
     var otherPerformers = objects;
-  
+
     // Get stats for the top three performers.
     $.each(topThreePerformers, function(index, statsObject) {
       var name = statsObject["key"];
@@ -585,14 +643,14 @@ mopub.Utils = mopub.Utils || {};
       graphStatsObject[name] = Stats.statArrayFromDailyStats(arrayOfDailyStats, statName);
       result.push(graphStatsObject);
     });
-  
+
     if (otherPerformers.length == 0) return result;
-  
+
     // Get stats for all other performers.
     var statsForOtherPerformers = Stats.sumDailyStatsAcrossStatsObjects(otherPerformers, statName);
     var otherDict = { "Others": statsForOtherPerformers };
     result.push(otherDict);
-  
+
     return result;
   };
 
@@ -607,13 +665,13 @@ mopub.Utils = mopub.Utils || {};
     });
     return result;
   };
-  
+
   Stats.getGraphCtrStats = function(objects) {
     var result = [];
-  
+
     var topThreePerformers = objects.splice(0, 3);
     var otherPerformers = objects;
-    
+
     // Get stats for the top campaigns.
     $.each(topThreePerformers, function(index, statsObject) {
       var name = statsObject["key"];
@@ -622,28 +680,28 @@ mopub.Utils = mopub.Utils || {};
       graphStatsObject[name] = Stats.statArrayFromDailyStats(arrayOfDailyStats, "ctr");
       result.push(graphStatsObject);
     });
-  
+
     if (otherPerformers.length == 0) return result;
-  
+
     // Get stats for all other campaigns.
     var statsForOtherPerformers = Stats.getDailyCtrAcrossStatsObjects(otherPerformers);
     var otherDict = { "Others": statsForOtherPerformers };
     result.push(otherDict);
-    
+
     return result;
   };
-  
+
   Stats.getDailyCtrAcrossStatsObjects = function(objects) {
     var ctr = [];
     var clicks = Stats.sumDailyStatsAcrossStatsObjects(objects, "click_count");
     var impressions = Stats.sumDailyStatsAcrossStatsObjects(objects, "impression_count");
-  
+
     for (var i = 0, len = clicks.length; i < len; i++) {
       ctr[i] = (clicks[i] / impressions[i]) || 0;
     }
     return ctr;
   };
-  
+
 })(mopub.Stats = mopub.Stats || {}, this.jQuery);
 
 // =====================================================================
@@ -651,7 +709,7 @@ mopub.Utils = mopub.Utils || {};
 // =====================================================================
 
 (function(Chart, $) {
-  
+
   Chart.setupDashboardStatsChart = function(seriesType) {
     // get active metric from breakdown
     var metricElement = $('#dashboard-stats .stats-breakdown .active');
@@ -665,7 +723,7 @@ mopub.Utils = mopub.Utils || {};
       Chart.chartError();
       return;
     }
-    
+
     // set up series
     var colors = ['#0090d9', '#e57300', '#53a600', '#444444'];
     var chartSeries = [];
@@ -674,19 +732,19 @@ mopub.Utils = mopub.Utils || {};
       Chart.chartError();
       return;
     }
-    
+
     $.each(activeData, function(i, seriesObject) {
       var seriesName, seriesData, seriesLineWidth;
-      
+
       $.each(seriesObject, function(name, value) {
         seriesName = name;
         seriesData = value;
-        
+
         if (seriesType == 'line' && activeMetric == 'ctr') {
           seriesLineWidth = (seriesName == 'MoPub Optimized') ? 3 : 2;
         } else seriesLineWidth = 4;
       });
-      
+
       chartSeries.push({
         name: seriesName,
         data: seriesData,
@@ -719,7 +777,7 @@ mopub.Utils = mopub.Utils || {};
           formatter: function() {
             if(activeMetric == 'revenue') {
               text = '$' + Highcharts.numberFormat(this.value, 0);
-            } 
+            }
             else if(activeMetric == 'ctr') {
               text = Highcharts.numberFormat(this.value, 0) + '%';
             }
@@ -762,7 +820,7 @@ mopub.Utils = mopub.Utils || {};
 
           text += '<span style="font-size: 14px;">' + Highcharts.dateFormat('%A, %B %e, %Y', this.x) + '</span><br/>';
           text += '<span style="padding: 0; font-weight: 600; color: ' + this.series.color + '">' + this.series.name + '</span>' + ': <strong style="font-weight: 600;">' + value + '</strong><br/>';
-          
+
           if(chartSeries.length > 1) {
             text += '<span style="font-size: 12px; color: #666;">';
             if (this.total > 0 && total) {
@@ -778,14 +836,14 @@ mopub.Utils = mopub.Utils || {};
       },
       series: chartSeries
     });
-    
+
     $('#dashboard-stats-chart').removeClass('chart-loading');
   };
-  
+
   Chart.chartError = function() {
     $('#dashboard-stats-chart').removeClass('chart-loading').addClass('chart-error');
   };
-  
+
 })(mopub.Chart = mopub.Chart || {}, this.jQuery);
 
 function obj_equals(x, y) {

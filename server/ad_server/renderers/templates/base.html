@@ -1,0 +1,23 @@
+<html>
+  <head>
+  {% block head %}
+  {% comment %}
+  Viewport meta tag: used by the iOS SDK to keep iPad interstitials properly
+  centered. On legacy SDKs (version < 6), inclusion of this tag causes a
+  divide-by-zero exception, so we should omit it for those versions.
+  
+   There are a few SDK revisions tagged with version == 6 that are affected by this
+  crash. We can't distinguish the buggy v=6 revisions from working ones, but we can
+  limit the crashes to iPad (way less commonly used) by only sending down the tag
+  fortablet formats.
+  {% endcomment %}
+    {% if version >= 6 and is_tablet or os == 'android' %}
+    <meta name="viewport" content="width=device-width; initial-scale=1.0; user-scalable=no;">
+    {% endif %}
+  {% endblock head %}  
+  </head>
+  <body style="margin:0;padding:0;">
+    {% block body %}
+    {% endblock body %}
+  </body>
+</html>

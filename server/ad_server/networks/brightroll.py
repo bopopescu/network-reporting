@@ -6,6 +6,8 @@ import string
 import time
 
 from xml.dom import minidom
+from xml.parsers import expat
+from ad_server.networks.server_side import ServerSideException  
 
 class BrightRollServerSide(ServerSide):
     base_url = "http://vast.bp3844869.btrll.com/vast/"
@@ -19,6 +21,10 @@ class BrightRollServerSide(ServerSide):
         return super(BrightRollServerSide,self).__init__(request,adunit,*args,**kwargs)
     
     @property
+    def payload(self):
+        return None
+
+    @property
     def url(self):
         pub_id = self.get_pub_id() or 3844792 
         return self.base_url + str(pub_id) + '?n=%f'%time.time()
@@ -28,10 +34,6 @@ class BrightRollServerSide(ServerSide):
         # TODO: Replace with self.get_appid()
         return {}
 
-    @property    
-    def payload(self):
-        return None
-        
     def get_response(self):
         logging.info("url: %s"%self.url)
         req = urllib2.Request(self.url)
@@ -44,7 +46,7 @@ class BrightRollServerSide(ServerSide):
     def _getURL(self,node):
         return str(self._getText(node))
       
-    def parse_xml(self,document):
+    def parse_xml(self, document):
         logging.info(document)
         
         dom = minidom.parseString(document)
@@ -108,12 +110,12 @@ class BrightRollServerSide(ServerSide):
         
         self.url_params.update(video_width=video_width,video_height=video_height,
                                video_url=video_url)
-        
         try:
             companion_image = self._getURL(inline.getElementsByTagName("CompanionAds")[0].\
                                            getElementsByTagName("StaticResource")[0])
         except:
-            companion_image = ''
+            companion_image = ''                                   
+
         self.url_params.update(companion_image=companion_image)                               
         
         ####################
@@ -127,67 +129,72 @@ class BrightRollServerSide(ServerSide):
             cpm = None            
         self.url_params.update(cpm=cpm)
         
-    def _bid_and_html_for_response(self,response):
-        self.parse_xml(response.content)
-        # try:
-        #     self.parse_xml(response.content)
-        # except:
-        #     raise Exception("BrightRoll ad is empty") 
-        scripts = """
-        <script type="text/javascript">
-            window.addEventListener("load", function() { window.location="mopub://finishLoad";}, false);
-            function webviewDidAppear(){playAdVideo(); %(track_pixels)s;};
-            //function webviewDidAppear(){alert(window.innerWidth+" "+window.innerHeight)};
-            windowInnerWidth = 320;
-        </script>"""  
-               
-        self.url_params.update(mopub_scripts=scripts) 
+    def html_for_response(self, response):
+        if response == '<VAST version="2.0" />':
+            raise ServerSideException
+        
+        try:
+            self.parse_xml(response.content)
+        except (IndexError, expat.ExpatError):
+            raise ServerSideException("BrightRoll xml parsing failed...empty ad?")
+        # scripts = """
+        # <script type="text/javascript">
+        #     window.addEventListener("load", function() { window.location="mopub://finishLoad";}, false);
+        #     function webviewDidAppear(){playAdVideo(); %(track_pixels)s;};
+        #     //function webviewDidAppear(){alert(window.innerWidth+" "+window.innerHeight)};
+        #     windowInnerWidth = 320;
+        # </script>"""  
+        #        
+        # self.url_params.update(mopub_scripts=scripts) 
         logging.info(self.url_params)   
-        return self.url_params.get('cpm'),template.safe_substitute(self.url_params)
+        return template.safe_substitute(self.url_params)
         # return 0.0,string.replace(response.content,"<head>","<head><script type=\"text/javascript\">\nwindow.addEventListener(\"load\", function() { loadAdVideo();playAdVideo();}, false);function webviewDidAppear(){playAdVideo();}\n</script>",1)
         #return 0.0, "<html><body>hi</body></html>"
         #return 0.0,response.content
         
         
 template = string.Template("""
-<!DOCTYPE HTML> 
-<html> 
-	<head id="head"> 
-	   <!-- BEGIN MoPub injection --> 
-	   $mopub_scripts
-       <!-- END MoPub injection --> 
- 	
-	
+<style type="text/css">
+	        body {
+	            background-color: black;
+	            width: 320px;
+	            height: 480px;
+	        }
+	    </style>
 		<script type="text/javascript"> 
+		    function webviewDidAppearHelper(){
+		        playAdVideo();
+		    }
+		
 			var success = "success"; //tells iphone that there is an ad.  The iPhone can't grab the status code for a UIWebView
 
-      var urls = {
-        companionImage: "$companion_image",
-        imp: $impression_urls,
-        mid: $midpoint_urls,
-        end: $end_urls,
-        landing: $click_urls
-      }
+    var urls = {
+      companionImage: "$companion_image",
+      imp: $impression_urls,
+      mid: $midpoint_urls,
+      end: $end_urls,
+      landing: $click_urls
+    }
 
-      function goToLanding(delay)
-      {
-        document.body.removeChild(document.getElementById("center"));
-        document.getElementById("loader").style.display = "";
-        delay = delay || 0;
-        setTimeout(function(){ document.location.href = urls.landing[0] }, delay);
-      }
+    function goToLanding(delay)
+    {
+      document.body.removeChild(document.getElementById("center"));
+      document.getElementById("loader").style.display = "";
+      delay = delay || 0;
+      setTimeout(function(){ document.location.href = urls.landing[0] }, delay);
+    }
 
-      function fireEvents(eventUrls, callback)
+    function fireEvents(eventUrls, callback)
+    {
+      eventUrls.forEach(function(url)
       {
-        eventUrls.forEach(function(url)
-        {
-          var pixel = document.createElement('img');
-          pixel.width = 0;
-          pixel.height = 0;
-          pixel.src = url;
-          pixel.onload = callback;
-          document.body.appendChild(pixel);
-        });
+        var pixel = document.createElement('img');
+        pixel.width = 0;
+        pixel.height = 0;
+        pixel.src = url;
+        pixel.onload = callback;
+        document.body.appendChild(pixel);
+      });
 			}
 
 			function isIOS3()
@@ -209,7 +216,7 @@ template = string.Template("""
 				adVideo.load();
 				adVideo.play();
 
-        fireEvents(urls.imp);
+      fireEvents(urls.imp);
 			}
 
 			function playAdVideo()
@@ -239,57 +246,55 @@ template = string.Template("""
 				adVideo = document.getElementById("adVideo");
 				var firedMid = false;
 
-        adVideo.addEventListener('loadeddata', function()
-        {
-          document.getElementById("loader").style.display = "none";
-        });
+      adVideo.addEventListener('loadeddata', function()
+      {
+        document.getElementById("loader").style.display = "none";
+      });
 
 				adVideo.addEventListener('timeupdate', function()
 				{
 					if(!firedMid && ((2 * adVideo.currentTime) >= adVideo.duration))
 					{
-            fireEvents(urls.mid);
+          fireEvents(urls.mid);
 						firedMid = true;
 					}
 				});
 
 				adVideo.addEventListener('ended', function()
 				{
-          fireEvents(urls.end, goToLanding);
+        fireEvents(urls.end, goToLanding);
 
-          if (isIOS3())
-          {
-            goToLanding(500);
-          }
+        if (isIOS3())
+        {
+          goToLanding(500);
+        }
 				});
 
 				adVideo.addEventListener('pause', function()
 				{
-          goToLanding(500);
+        goToLanding(500);
 				});
 			}
 
-      function layoutElements()
-      {
-        var meta = document.createElement("meta");
-        meta.name = "viewport";
-        meta.content = "width=device-width,minimum-scale=1.0,maximum-scale=1.0";
+    function layoutElements()
+    {
+      var meta = document.createElement("meta");
+      meta.name = "viewport";
+      meta.content = "width=device-width,minimum-scale=1.0,maximum-scale=1.0";
 
-        document.getElementById("head").appendChild(meta);
-        document.getElementById("loader").style.display = "";
-      }
+      document.getElementById("head").appendChild(meta);
+      document.getElementById("loader").style.display = "";
+    }
 		</script> 
-	</head> 
-
-	<body style="background-color: black; width: 320px; height: 480px" onload="loadAdVideo()"> 
+	
+	
     <img id="loader" src="http://amscdn.btrll.com/production/3411/ajax-loader.gif" style="position:fixed;top:50%;left:50%;margin-top:-8px;margin-left:-8px;display:none"/>
 		<center id="center"> 
 			<!-- Dynamically Generate the Following Line --> 
 			<video src="$video_url" width="$video_width" height="$video_height" id="adVideo" controls="true"></video> 
 		</center> 
 		<script></script><!-- If you remove this line, the video won't autoplay in iOS3 :-\  --> 
-	</body> 
-</html>
+		<script>loadAdVideo();</script>
 """)    
     
 template2 = string.Template("""<!DOCTYPE HTML> 
@@ -699,50 +704,50 @@ template2 = string.Template("""<!DOCTYPE HTML>
 
 
 
-#### EXAMPLE VAST RESPONSE
-# sample_response = """<?xml version="1.0" encoding="UTF-8"?> 
-# <VAST version="2.0"> 
-#   <Ad id="brightroll_ad"> 
-#     <InLine> 
-#       <AdSystem>BrightRoll</AdSystem> 
-#       <AdTitle></AdTitle> 
-#       <Impression><![CDATA[http://2686.btrll.com/imp/2686/5573/PreRoll.182.112431/start;Video;1301955275]]></Impression> 
-#       <Impression><![CDATA[http://brxserv.btrll.com/v1/epix/6834979/3844792/2668/4881/DbzBx_CgKbAABNmkLLAAAKbAAAExEAOqq4AAAAAABc5buF6_RLfQ/event.imp/r_64.aHR0cDovL2Iuc2NvcmVjYXJkcmVzZWFyY2guY29tL3A_YzE9MSZjMj02MDAwMDA2JmMzPSZjND0mYzU9MDEwMDAwJmM2PTY4MzQ5NzkmYzEwPSZjQTE9OCZjQTI9NjAwMDAwNiZjQTM9Mzg0NDc5MiZjQTQ9MjY2OCZjQTU9ODkzJmNBNj02ODM0OTc5JmNBMTA9NDg4MSZjdj0xLjcmY2o9JnJuPTEzMDE5NTUyNzUmcj1odHRwJTNBJTJGJTJGcGl4ZWwucXVhbnRzZXJ2ZS5jb20lMkZwaXhlbCUyRnAtY2I2QzB6RkY3ZFdqSS5naWYlM0ZsYWJlbHMlM0RwLjY4MzQ5NzkuMzg0NDc5Mi4wJTJDYS44OTMuMjY2OC40ODgxJTJDdS5wcmUuMHgwJTNCbWVkaWElM0RhZCUzQnIlM0QxMzAxOTU1Mjc1]]></Impression> 
-#       <Impression><![CDATA[http://2686.btrll.com/imp/2686/5573/PreRoll.182.112432/start;Video;1301955275]]></Impression> 
-#       <Creatives> 
-#         <Creative sequence="1"> 
-#           <Linear> 
-#             <Duration>00:00:15</Duration> 
-#             <TrackingEvents> 
-#               <Tracking event="midpoint"><![CDATA[http://brxserv.btrll.com/v1/epix/6834979/3844792/2668/4881/DbzBx_CgKbAABNmkLLAAAKbAAAExEAOqq4AAAAAABc5buF6_RLfQ/event.mid/r_64.aHR0cDovLzI2ODYuYnRybGwuY29tL2ltcC8yNjg2LzU1NzMvUHJlUm9sbC4xODIuMTEyNDMxL21pZDtWaWRlbzsxMzAxOTU1Mjc1]]></Tracking> 
-#               <Tracking event="midpoint"><![CDATA[http://2686.btrll.com/imp/2686/5573/PreRoll.182.112432/mid;Video;1301955275]]></Tracking> 
-#               <Tracking event="complete"><![CDATA[http://brxserv.btrll.com/v1/epix/6834979/3844792/2668/4881/DbzBx_CgKbAABNmkLLAAAKbAAAExEAOqq4AAAAAABc5buF6_RLfQ/event.end/r_64.aHR0cDovLzI2ODYuYnRybGwuY29tL2ltcC8yNjg2LzU1NzMvUHJlUm9sbC4xODIuMTEyNDMxL2RvbmU7VmlkZW87MTMwMTk1NTI3NQ]]></Tracking> 
-#               <Tracking event="complete"><![CDATA[http://2686.btrll.com/imp/2686/5573/PreRoll.182.112432/done;Video;1301955275]]></Tracking> 
-#             </TrackingEvents> 
-#             <VideoClicks> 
-#               <ClickThrough><![CDATA[http://brxserv.btrll.com/v1/epix/6834979/3844792/2668/4881/DbzBx_CgKbAABNmkLLAAAKbAAAExEAOqq4AAAAAABc5buF6_RLfQ/event.click/r_64.aHR0cDovL3d3dy5pbnRlbC5jb20]]></ClickThrough> 
-#               <ClickTracking><![CDATA[http://brxserv.btrll.com/v1/epix/6834979/3844792/2668/4881/DbzBx_CgKbAABNmkLLAAAKbAAAExEAOqq4AAAAAABc5buF6_RLfQ/event.c_trk/r_64.aHR0cDovLzI2ODYuYnRybGwuY29tL2Nsay8yNjg2LzU1NzMvUHJlUm9sbC4xODIuMTEyNDMxL25vbmUvO1ZpZGVvOzEzMDE5NTUyNzU]]></ClickTracking> 
-#             </VideoClicks> 
-#             <MediaFiles> 
-#               <MediaFile delivery="progressive" type="video/x-flv" bitrate="400" height="240" width="320"><![CDATA[http://brxcdn2.btrll.com/production/26753/FullVideo_SoundOn.mp4]]></MediaFile> 
-#             </MediaFiles> 
-#           </Linear> 
-#         </Creative> 
-#         <Creative sequence="1"> 
-#           <CompanionAds> 
-#             <Companion width="320" height="50"> 
-#               <StaticResource creativeType="image/jpeg"><![CDATA[http://brxserv.btrll.com/v1/epix/6834979/3844792/2668/5268/IbzBx_CgAAAABNmkLLAAAKbAAAFJQAOqq4AAATEQAvf9LlkcUTsA/event.imp/r_64.aHR0cDovL2JyeGNkbi5idHJsbC5jb20vcHJvZHVjdGlvbi8yODIzNi9pbnRlbF8zMjB4NTBfdjMuZ2lm]]></StaticResource> 
-#               <CompanionClickThrough><![CDATA[http://brxserv.btrll.com/v1/epix/6834979/3844792/2668/5268/IbzBx_CgAAAABNmkLLAAAKbAAAFJQAOqq4AAATEQAvf9LlkcUTsA/event.click/r_64.aHR0cDovL3d3dy5pbnRlbC5jb20]]></CompanionClickThrough> 
-#             </Companion> 
-#           </CompanionAds> 
-#         </Creative> 
-#       </Creatives> 
-#       <Extensions> 
-#         <Extension type="LR-Pricing"> 
-#           <Price model="CPM" currency="USD">5</Price> 
-#         </Extension> 
-#       </Extensions> 
-#     </InLine> 
-#   </Ad> 
-# </VAST>
-# """
+### EXAMPLE VAST RESPONSE
+sample_response = """<?xml version="1.0" encoding="UTF-8"?> 
+<VAST version="2.0"> 
+  <Ad id="brightroll_ad"> 
+    <InLine> 
+      <AdSystem>BrightRoll</AdSystem> 
+      <AdTitle></AdTitle> 
+      <Impression><![CDATA[http://2686.btrll.com/imp/2686/5573/PreRoll.182.112431/start;Video;1301955275]]></Impression> 
+      <Impression><![CDATA[http://brxserv.btrll.com/v1/epix/6834979/3844792/2668/4881/DbzBx_CgKbAABNmkLLAAAKbAAAExEAOqq4AAAAAABc5buF6_RLfQ/event.imp/r_64.aHR0cDovL2Iuc2NvcmVjYXJkcmVzZWFyY2guY29tL3A_YzE9MSZjMj02MDAwMDA2JmMzPSZjND0mYzU9MDEwMDAwJmM2PTY4MzQ5NzkmYzEwPSZjQTE9OCZjQTI9NjAwMDAwNiZjQTM9Mzg0NDc5MiZjQTQ9MjY2OCZjQTU9ODkzJmNBNj02ODM0OTc5JmNBMTA9NDg4MSZjdj0xLjcmY2o9JnJuPTEzMDE5NTUyNzUmcj1odHRwJTNBJTJGJTJGcGl4ZWwucXVhbnRzZXJ2ZS5jb20lMkZwaXhlbCUyRnAtY2I2QzB6RkY3ZFdqSS5naWYlM0ZsYWJlbHMlM0RwLjY4MzQ5NzkuMzg0NDc5Mi4wJTJDYS44OTMuMjY2OC40ODgxJTJDdS5wcmUuMHgwJTNCbWVkaWElM0RhZCUzQnIlM0QxMzAxOTU1Mjc1]]></Impression> 
+      <Impression><![CDATA[http://2686.btrll.com/imp/2686/5573/PreRoll.182.112432/start;Video;1301955275]]></Impression> 
+      <Creatives> 
+        <Creative sequence="1"> 
+          <Linear> 
+            <Duration>00:00:15</Duration> 
+            <TrackingEvents> 
+              <Tracking event="midpoint"><![CDATA[http://brxserv.btrll.com/v1/epix/6834979/3844792/2668/4881/DbzBx_CgKbAABNmkLLAAAKbAAAExEAOqq4AAAAAABc5buF6_RLfQ/event.mid/r_64.aHR0cDovLzI2ODYuYnRybGwuY29tL2ltcC8yNjg2LzU1NzMvUHJlUm9sbC4xODIuMTEyNDMxL21pZDtWaWRlbzsxMzAxOTU1Mjc1]]></Tracking> 
+              <Tracking event="midpoint"><![CDATA[http://2686.btrll.com/imp/2686/5573/PreRoll.182.112432/mid;Video;1301955275]]></Tracking> 
+              <Tracking event="complete"><![CDATA[http://brxserv.btrll.com/v1/epix/6834979/3844792/2668/4881/DbzBx_CgKbAABNmkLLAAAKbAAAExEAOqq4AAAAAABc5buF6_RLfQ/event.end/r_64.aHR0cDovLzI2ODYuYnRybGwuY29tL2ltcC8yNjg2LzU1NzMvUHJlUm9sbC4xODIuMTEyNDMxL2RvbmU7VmlkZW87MTMwMTk1NTI3NQ]]></Tracking> 
+              <Tracking event="complete"><![CDATA[http://2686.btrll.com/imp/2686/5573/PreRoll.182.112432/done;Video;1301955275]]></Tracking> 
+            </TrackingEvents> 
+            <VideoClicks> 
+              <ClickThrough><![CDATA[http://brxserv.btrll.com/v1/epix/6834979/3844792/2668/4881/DbzBx_CgKbAABNmkLLAAAKbAAAExEAOqq4AAAAAABc5buF6_RLfQ/event.click/r_64.aHR0cDovL3d3dy5pbnRlbC5jb20]]></ClickThrough> 
+              <ClickTracking><![CDATA[http://brxserv.btrll.com/v1/epix/6834979/3844792/2668/4881/DbzBx_CgKbAABNmkLLAAAKbAAAExEAOqq4AAAAAABc5buF6_RLfQ/event.c_trk/r_64.aHR0cDovLzI2ODYuYnRybGwuY29tL2Nsay8yNjg2LzU1NzMvUHJlUm9sbC4xODIuMTEyNDMxL25vbmUvO1ZpZGVvOzEzMDE5NTUyNzU]]></ClickTracking> 
+            </VideoClicks> 
+            <MediaFiles> 
+              <MediaFile delivery="progressive" type="video/x-flv" bitrate="400" height="240" width="320"><![CDATA[http://brxcdn2.btrll.com/production/26753/FullVideo_SoundOn.mp4]]></MediaFile> 
+            </MediaFiles> 
+          </Linear> 
+        </Creative> 
+        <Creative sequence="1"> 
+          <CompanionAds> 
+            <Companion width="320" height="50"> 
+              <StaticResource creativeType="image/jpeg"><![CDATA[http://brxserv.btrll.com/v1/epix/6834979/3844792/2668/5268/IbzBx_CgAAAABNmkLLAAAKbAAAFJQAOqq4AAATEQAvf9LlkcUTsA/event.imp/r_64.aHR0cDovL2JyeGNkbi5idHJsbC5jb20vcHJvZHVjdGlvbi8yODIzNi9pbnRlbF8zMjB4NTBfdjMuZ2lm]]></StaticResource> 
+              <CompanionClickThrough><![CDATA[http://brxserv.btrll.com/v1/epix/6834979/3844792/2668/5268/IbzBx_CgAAAABNmkLLAAAKbAAAFJQAOqq4AAATEQAvf9LlkcUTsA/event.click/r_64.aHR0cDovL3d3dy5pbnRlbC5jb20]]></CompanionClickThrough> 
+            </Companion> 
+          </CompanionAds> 
+        </Creative> 
+      </Creatives> 
+      <Extensions> 
+        <Extension type="LR-Pricing"> 
+          <Price model="CPM" currency="USD">5</Price> 
+        </Extension> 
+      </Extensions> 
+    </InLine> 
+  </Ad> 
+</VAST>
+"""                                                                      

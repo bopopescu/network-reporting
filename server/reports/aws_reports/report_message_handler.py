@@ -94,6 +94,8 @@ PARSE_ERROR = 'parsingerror'
 MESSAGE_COMPLETION_STEPS = [UPLOAD, BLOB_KEY_PUT, PARSE, POST_PARSE_PUT, NOTIFY]
 
 TEST_FAIL_TIMEOUT = 2
+DEFAULT_TIMEOUT = 15
+PARSE_TIMEOUT = 15
 
 ############## PIPELINES!!!! ########
 MSG = '%s|%s'
@@ -730,9 +732,9 @@ class ReportMessageHandler(MessageHandler):
         else:
             next_step = MESSAGE_COMPLETION_STEPS[i+1]
             now = datetime.now()
-            dt = timedelta(minutes = 15)
+            dt = timedelta(minutes = DEFAULT_TIMEOUT)
             if next_step == PARSE:
-                dt = timedelta(minutes = 30)
+                dt = timedelta(minutes = PARSE_TIMEOUT)
             if self.testing:
                 dt = timedelta(seconds = TEST_FAIL_TIMEOUT)
             timeout = now + dt

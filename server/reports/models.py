@@ -706,7 +706,7 @@ class Report(db.Model):
                 return (str(camp.key()), camp.name)
             elif dim == P:
                 priority = dimkey_to_obj[key_tuple]
-                return (priority, priority.tilte())
+                return (priority, priority.title())
 
         elif dim in AU_DIMS:
             if dim == AU:

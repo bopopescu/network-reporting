@@ -602,6 +602,7 @@ class ReportMessageHandler(MessageHandler):
         # the on_success is retried.  There is no reason to try to do something again that
         # has succeeded, so don't
         logger.info("Step completion statuses for message %s\t%s" % (message, self.message_completion_statuses[message]))
+        logger.info("Now:%s\nStep timeouts for message %s\t%s" % (time.time(), message, self.message_step_timeouts[message]))
         for i, step in enumerate(MESSAGE_COMPLETION_STEPS):
             if step == PARSE:
                 if self.parsing_message(message):

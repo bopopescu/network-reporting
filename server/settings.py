@@ -136,6 +136,7 @@ INSTALLED_APPS = (
      'budget',
      'registration',
      'reports',
+     'network_scraping',
 )
 
 #TEST_RUNNER = 'django_nose.NoseTestSuitRunner'

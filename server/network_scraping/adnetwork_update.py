@@ -13,7 +13,7 @@ if EC2:
     sys.path.append('/home/ubuntu/google_appengine/lib/webob')
     sys.path.append('/home/ubuntu/google_appengine/lib/yaml/lib')
 else:
-    # Assumes it is being called from server dir
+    # Assumes it is being called from ./run_tests.sh from server dir
     sys.path.append(os.environ['PWD'])
 
 from appengine_django import InstallAppengineHelperForDjango
@@ -35,7 +35,7 @@ import network_scraping.query_managers
 
 from publisher.models import App
 
-import network_scraping.query_managers
+from network_scraping.query_managers import *
 
 def setup_remote_api():
     from google.appengine.ext.remote_api import remote_api_stub

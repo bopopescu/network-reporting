@@ -51,23 +51,48 @@ UPDATE_STATS_HANDLER_PATH = '/offline/update_stats'
 LOG_FORMAT = "%s:\t%s\n"
 JOBFLOW_NAME = 'generating report job'
 
-if not sys.platform == 'darwin':
-    logging.basicConfig(level = logging.DEBUG,
-                        format = '%(asctimes) %(name)-12s %(levelname)-8s %(message)s',
-                        datefmt = '%m-%d %H:%M',
-                        filename = '/home/ubuntu/poller_%d.log' % time.time(), 
-                        filemode = 'w')
+if sys.platform == 'darwin':
+    LOG_FILE = 'poller_%d.log'
+else:
+    LOG_FILE = '/home/ubuntu/poller_%d.log'
 
-def get_logger(name):
-    return logging.getLogger(name)
+LOGGER = logging.getLogger('aws_reports')
+LOGGER.setLevel(logging.DEBUG)
+FORMATTER = logging.Formatter(fmt = '%(asctime)s %(name)-12s %(levelname)-8s --- %(message)s', datefmt = '%m-%d %H:%M')
 
-def log(mesg):
-    my_log = open('/home/ubuntu/poller.log', 'a')
-    my_log.write(LOG_FORMAT % (time.time(), mesg))
-    my_log.close()
+HNDLR = logging.FileHandler(LOG_FILE % time.time())
+HNDLR.setFormatter(FORMATTER)
+LOGGER.addHandler(HNDLR)
+
+def rotate_logfile():
+    global HNDLR
+    global LOGGE
+    log('Rotating logfile', level='info')
+    LOGGER.removeHandler(HNDLR)
+    HNDLR = logging.FileHandler(LOG_FILE % time.time())
+    HNDLR.setFormatter(FORMATTER)
+    LOGGER.addHandler(HNDLR)
+    log('Rotated logfile', level='info')
+
+def log(mesg, level = 'warning'):
+    if level == 'info':
+        LOGGER.info(mesg)
+    elif level == 'debug':
+        LOGGER.debug(mesg)
+    elif level == 'warning':
+        LOGGER.warning(mesg)
+    elif level == 'error':
+        LOGGER.error(mesg)
+    elif level == 'critical':
+        LOGGER.error(mesg)
+    elif level == 'exception':
+        LOGGER.exception(mesg)
+    else:
+        LOGGER.info(mesg)
 
 def default_exc_handle(e):
-    log("Encountered exception: %s" % e)
+    log("Encountered exception: %s" % e, level='exception')
+
     tb_file = open('/home/ubuntu/tb.log', 'a')
     tb_file.write("\nERROR---\n%s" % time.time())
     traceback.print_exc(file=tb_file)

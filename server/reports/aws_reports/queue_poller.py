@@ -26,7 +26,7 @@ from boto.sqs.connection import SQSConnection
 ############### Mopub Imports ############### 
 from reports.aws_reports.parse_utils import AWS_ACCESS_KEY, AWS_SECRET_KEY
 from reports.aws_reports.report_message_handler import ReportMessageHandler
-from reports.aws_reports.helpers import default_exc_handle
+from reports.aws_reports.helpers import default_exc_handle, rotate_logfile
 
 ################## PID Stuff ######################
 f = open("/tmp/poller.pid", 'w')
@@ -41,10 +41,19 @@ SQS_CONN = SQSConnection(AWS_ACCESS_KEY, AWS_SECRET_KEY)
 ################## Constants ###################
 REPORT_QUEUE = 'report_queue'
 
+DAWN_OF_TIME = time.time()
+SECONDS_IN_DAY = 86400
+
 def main_loop():
     report_queue = SQS_CONN.create_queue(REPORT_QUEUE)
     rep_handler = ReportMessageHandler(report_queue)
+    last_day = 0
     while True:
+
+        if (DAWN_OF_TIME - time.time())/SECONDS_IN_DAY != last_day:
+            last_day += 1
+            rotate_logfile()
+
         try:
             # Throws no unhandled errors
             rep_handler.handle_messages()

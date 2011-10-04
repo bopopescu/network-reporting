@@ -118,9 +118,8 @@ class ReportMessage(object):
         self.msg = msg
         self.dim1, self.dim2, self.dim3, self.start, self.end, self.report_key, self.account, self.timestamp = parse_msg(msg)
         self.step_name = STEP_NAME % (self.dim1, self.dim2, self.dim3, self.timestamp)
-        self.fname = gen_report_fname(self.dim1, self.dim2, self.dim3, self.start, self.end)
 
-
+        self.fname = '%s' % gen_report_fname(self.dim1, self.dim2, self.dim3, self.start, self.end)
 
     def __key(self):
         return (self.dim1, self.dim2, self.dim3, self.start, self.end, self.report_key, self.account, self.timestamp)
@@ -347,6 +346,7 @@ class ReportMessageHandler(MessageHandler):
         report_dir = SHORT_ACCT_DIR + '/%s/reports/'
         report_dir = report_dir % message.account
         out_file = report_dir + message.fname
+        log("Output file: %s" % out_file)
         files = BUCK.list(prefix = out_file + '/part')
         finished_file = open(FINISHED_FILE % message.report_key, 'w')
         for ent in files:
@@ -775,6 +775,7 @@ class ReportMessageHandler(MessageHandler):
             # No data, can't retry :(
             raise NoDataError('No inputs', message)
         output = output_dir + '/' + message.fname
+        log("Submit output %s" % output)
         gen_report_step = StreamingStep(
                 name = message.step_name,
                 mapper = REPORT_MAPPER % message.dims,

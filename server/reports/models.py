@@ -436,7 +436,7 @@ class Report(db.Model):
         for crtv in crtvs:
             obj_key = str(crtv.key())
             for dim in key_dims[obj_key]:
-                key_tuple = (dim, obj_key)
+                key_tuple = (str(dim), obj_key)
 
                 if dim == CRTV:
                     dimkey_to_obj[key_tuple] = crtv

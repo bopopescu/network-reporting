@@ -548,7 +548,8 @@ class Report(db.Model):
         self.add_missing_dates(0, final)
                       
         # logging.debug(final)
-        blobreader.close()       
+        if not testing:
+            blobreader.close()       
         return self.rollup_revenue(statsify(final))
         
 

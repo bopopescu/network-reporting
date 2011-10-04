@@ -523,7 +523,6 @@ class ReportMessageHandler(MessageHandler):
             # This is a child process that has failed
             # THE ONLY THING THAT THROWS THESE ARE CHILD PROCESSES!!!!!
             except ReportParseError, e:
-                default_exc_handle(e)
                 message = e.report_message
                 logger.warning("Parse error for %s" % message)
                 jobflowid = e.jobflowid

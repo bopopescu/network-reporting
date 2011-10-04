@@ -60,7 +60,10 @@ var mopub = mopub || {};
 
         function campaignAdgroupFormOnLoad(){
 
-            $('#campaign_type_select').val(window.location.hash.substring(1));
+
+            if (window.location.hash.substring(1) !== '') {
+                $('#campaign_type_select').val(window.location.hash.substring(1));
+            }
 
             // Select the appropriate form field options based on the type of campaign
             $('#campaign_type_select').change(function(e) {

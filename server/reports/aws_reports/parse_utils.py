@@ -156,7 +156,7 @@ def parse_msg(msg):
         dim1, dim2, dim3, start, end, rep_key, acct_key, timestamp = data.split(DELIM)
     except Exception:
         dim1, dim2, dim3, start, end, rep_key, acct_key = data.split(DELIM)
-        timestamp = None
+        timestamp = time.time()
     if dim2 == 'None':
         dim2 = None
     if dim3 == 'None':

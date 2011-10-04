@@ -1,8 +1,8 @@
-/* 
-  HTML5 ✰ Boilerplate 
-  
+/*
+  HTML5 ✰ Boilerplate
+
   style.css contains a reset, font normalization and some base styles.
-  
+
   credit is left where credit is due.
   much inspiration was taken from these projects:
     yui.yahooapis.com/2.8.1/build/base/base.css
@@ -10,7 +10,7 @@
     praegnanz.de/weblog/htmlcssjs-kickstart
 */
 
-/* 
+/*
   html5doctor.com Reset Stylesheet (Eric Meyer's Reset Reloaded + HTML5 baseline)
   v1.4 2009-07-27 | Authors: Eric Meyer & Richard Clark
   html5doctor.com/html-5-reset-stylesheet/
@@ -25,7 +25,7 @@ b, i,
 dl, dt, dd, ol, ul, li,
 fieldset, form, label, legend,
 table, caption, tbody, tfoot, thead, tr, th, td,
-article, aside, canvas, details, figcaption, figure, 
+article, aside, canvas, details, figcaption, figure,
 footer, header, hgroup, menu, nav, section, summary,
 time, mark, audio, video {
   margin:0;
@@ -35,10 +35,10 @@ time, mark, audio, video {
   font-size:100%;
   vertical-align:baseline;
   background:transparent;
-}                  
+}
 
 article, aside, details, figcaption, figure,
-footer, header, hgroup, menu, nav, section { 
+footer, header, hgroup, menu, nav, section {
     display:block;
 }
 
@@ -51,7 +51,6 @@ q:before, q:after { content:''; content:none; }
 
 a { margin:0; padding:0; font-size:100%; vertical-align:baseline; background:transparent; }
 
-.alertMessage.error a { color:#ac6f6f; margin:0; padding:0; font-size:100%; vertical-align:baseline; background:transparent; }
 #campaignForm-customHtml-helpLink {
     vertical-align: top;
 }
@@ -86,32 +85,32 @@ body { font:13px/1.231 sans-serif; *font-size:small; } /* hack retained to prese
 
 select, input, textarea, button { font:99% sans-serif; }
 
-/* normalize monospace sizing 
+/* normalize monospace sizing
  * en.wikipedia.org/wiki/MediaWiki_talk:Common.css/Archive_11#Teletype_style_fix_for_Chrome
  */
-pre, code, kbd, samp { font-family: monospace, sans-serif; }
- 
+pre, code, kbd, samp { font-family: monospace, sans-serif; overflow-y: scroll; }
 
-/* 
- * minimal base styles 
+
+/*
+ * minimal base styles
  */
 
 
-body, select, input, textarea { 
-  /* #444 looks better than black: twitter.com/H_FJ/statuses/11800719859 */ 
-  color: #444; 
+body, select, input, textarea {
+  /* #444 looks better than black: twitter.com/H_FJ/statuses/11800719859 */
+  color: #444;
   /* set your base font here, to apply evenly */
   font-family: "myriad-pro-1","myriad-pro-2", helvetica, arial, sans-serif;
   font-weight: 400;
 }
 
 /* Headers (h1,h2,etc) have no default font-size or margin,
-   you'll want to define those yourself. */ 
+   you'll want to define those yourself. */
 h1,h2,h3,h4,h5,h6 { font-weight: 600; }
 
-/* always force a scrollbar in non-IE */ 
+/* always force a scrollbar in non-IE */
 html { overflow-y: scroll; }
- 
+
 /* Accessible focus treatment: people.opera.com/patrickl/experiments/keyboard/test */
 a:hover, a:active { outline: none; }
 
@@ -122,16 +121,16 @@ ul, ol { margin-left: 1.8em; }
 ol { list-style-type: decimal; }
 
 /* Remove margins for navigation lists */
-nav ul, nav li { margin: 0; } 
+nav ul, nav li { margin: 0; }
 
 small { font-size: 85%; }
 strong, th { font-weight: 600; }
 
-td, td img { vertical-align: top; } 
+td, td img { vertical-align: top; }
 
 sub { vertical-align: sub; font-size: smaller; }
 sup { vertical-align: super; font-size: smaller; }
- 
+
 textarea { overflow: auto; } /* thnx ivannikolic! www.sitepoint.com/blogs/2010/08/20/ie-remove-textarea-scrollbars/ */
 
 .ie6 legend, .ie7 legend { margin-left: -7px; } /* thnx ivannikolic! */
@@ -145,31 +144,31 @@ input[type="checkbox"] { vertical-align: bottom; }
 
 /* hand cursor on clickable input elements */
 label, input[type=button], input[type=submit], button { cursor: pointer; }
- 
-/* webkit browsers add a 2px margin outside the chrome of form elements */  
+
+/* webkit browsers add a 2px margin outside the chrome of form elements */
 button, input, select, textarea { margin: 0; }
 
 /* colors for form validity */
 input:valid, textarea:valid   {  }
-input:invalid, textarea:invalid { 
+input:invalid, textarea:invalid {
       border-radius: 1px;
-    -moz-box-shadow: 0px 0px 5px red; 
- -webkit-box-shadow: 0px 0px 5px red; 
+    -moz-box-shadow: 0px 0px 5px red;
+ -webkit-box-shadow: 0px 0px 5px red;
          box-shadow: 0px 0px 5px red;
 }
-.no-boxshadow input:invalid, 
+.no-boxshadow input:invalid,
 .no-boxshadow textarea:invalid { background-color: #f0dddd; }
 
-/* make buttons play nice in IE:    
+/* make buttons play nice in IE:
    www.viget.com/inspire/styling-the-button-element-in-internet-explorer/ */
 button {  width: auto; overflow: visible; }
- 
-/* bicubic resizing for non-native sized IMG: 
+
+/* bicubic resizing for non-native sized IMG:
    code.flickr.com/blog/2008/11/12/on-ui-quality-the-little-things-client-side-image-resizing/ */
 .ie7 img { -ms-interpolation-mode: bicubic; }
 
-/* 
- * Non-semantic helper classes 
+/*
+ * Non-semantic helper classes
  */
 
 /* for image replacement */
@@ -177,11 +176,11 @@ button {  width: auto; overflow: visible; }
 
 /* Hide for both screenreaders and browsers
    css-discuss.incutio.com/wiki/Screenreader_Visibility */
-.hidden { display: none; } 
+.hidden { display: none; }
 
-/* Hide only visually, but have it available for screenreaders 
+/* Hide only visually, but have it available for screenreaders
    www.webaim.org/techniques/css/invisiblecontent/  &  j.mp/visuallyhidden  */
-.visuallyhidden { position: absolute !important;    
+.visuallyhidden { position: absolute !important;
   clip: rect(1px 1px 1px 1px); /* IE6, IE7 */
   clip: rect(1px, 1px, 1px, 1px); }
 
@@ -190,8 +189,8 @@ button {  width: auto; overflow: visible; }
 
 /* >> The Magnificent CLEARFIX: Updated to prevent margin-collapsing on child elements << j.mp/bestclearfix */
 .clearfix:before, .clearfix:after {
-  content: "\0020"; display: block; height: 0; visibility: hidden;	
-} 
+  content: "\0020"; display: block; height: 0; visibility: hidden;
+}
 
 .clearfix:after { clear: both; }
 /* Fix clearfix: blueprintcss.lighthouseapp.com/projects/15318/tickets/5-extra-margin-padding-bottom-of-page */
@@ -242,7 +241,7 @@ html.wf-loading #titlebar *,
 html.wf-loading #content * {
   visibility: hidden;
 }
- 
+
 /*---------------------------------------/
 / Header
 /---------------------------------------*/
@@ -291,7 +290,7 @@ header nav ul {
 
 header nav ul li {
   display: inline-block;
-  width: auto;  
+  width: auto;
 }
 
 .ie7 header nav ul li,
@@ -751,7 +750,7 @@ a.mutedLink:hover {
   -webkit-border-radius: 3px;
   -moz-border-radius: 3px;
   border-radius: 3px;
-  
+
 }
 
 .input-text-half-width {
@@ -767,11 +766,11 @@ textarea {
   background: #fff;
   border-color: #0090d9;
   box-shadow: 0 0 5px #0090d9;
-  -webkit-box-shadow: 0 0 5px #0090d9; 
-  -moz-box-shadow: 0 0 5px #0090d9; 
+  -webkit-box-shadow: 0 0 5px #0090d9;
+  -moz-box-shadow: 0 0 5px #0090d9;
 }
 
-input::-webkit-input-placeholder, 
+input::-webkit-input-placeholder,
 textarea::-webkit-input-placeholder {
   color: #999;
   font-weight: 400;
@@ -910,7 +909,7 @@ dl.formFields.thin {
 }
 
 .formFields-field-help-link {
-  
+
 }
 
 .formFields-field-help-text {
@@ -1026,30 +1025,6 @@ label.error {
   display: none;
 }
 
-/* Page alerts */
-
-.alertMessage {
-  margin: 0 0 30px 0;
-  padding: 10px 14px 14px 14px;
-  border: 1px solid #e6d2b8;
-  background: #fffdf2;
-  color: #664729;
-  -webkit-border-radius: 5px;
-  -moz-border-radius: 5px;
-  border-radius: 5px;
-}
-
-.alertMessage.success, .flash_message{
-  color: #5d8c00;
-  background: #fbfff2;
-  border-color: #cee6ac;
-}
-
-.alertMessage.error, .flash_error {
-  color: #cc2929;
-  background: #fff2f2;
-  border-color: #e6a1a1;
-}
 
 /* Stats */
 
@@ -1249,7 +1224,7 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
 }
 .dataTable-date {
   width: 175px;
-}  
+}
 
 .dataTable-date-short {
   width: 100px;
@@ -1283,7 +1258,7 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
   width: 45px;
 }
 
-.dataTable .appData-icon a img, .dataTable .campaignData-icon a img, 
+.dataTable .appData-icon a img, .dataTable .campaignData-icon a img,
 #appForm-icon img, .dataTable .reportData-icon a img {
   -webkit-border-radius:6px;-moz-border-radius:6px
 }
@@ -1333,7 +1308,7 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
 }
 
 .appData-details .dataTable th.special{
-    font-size: 10px; 
+    font-size: 10px;
     font-weight: 300;
     background: none;
 }
@@ -1342,7 +1317,7 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
     font-size: 15px;
     font-weight: 600;
     text-transform: none;
-    background: none;    
+    background: none;
 }
 
 .appData-details.noneg
@@ -1402,7 +1377,7 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
   border: 2px dashed #ddd;
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
-  border-radius: 5px;  
+  border-radius: 5px;
   background: #f2f2f2;
   color: #bbb;
 }
@@ -1484,10 +1459,10 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
   color: #444;
 }
 
-.stepProgress .ui-icon { 
+.stepProgress .ui-icon {
   display: inline-block;
   vertical-align: -3px;
-  background-image: url(../images/ui/ui-icons-progress.png); 
+  background-image: url(../images/ui/ui-icons-progress.png);
 }
 
 /* Horizontal rule */
@@ -1520,7 +1495,7 @@ a.linkIcon .ui-icon-triangle-1-w { background-position: -102px -15px; }
 /---------------------------------------*/
 
 /* button sets (fix issue with double internal borders) */
-.ui-buttonset .ui-button { border-right-width: 0; } 
+.ui-buttonset .ui-button { border-right-width: 0; }
 .ui-buttonset .ui-corner-right { border-right-width: 1px; }
 
 /* Component containers */
@@ -1647,7 +1622,7 @@ ul.ui-selectmenu-menu {
 
 .js #jsnotice { display: none; }
 
-.no-js #jsnotice { 
+.no-js #jsnotice {
   display: block;
   padding: 5px 0 4px 0;
   background: #c00;
@@ -1702,11 +1677,11 @@ ul.ui-selectmenu-menu {
 
 /* App and ad setup forms */
 
-.mweb .android, 
-.mweb .iphone, 
+.mweb .android,
+.mweb .iphone,
 .iphone .mweb,
-.iphone .android, 
-.android .mweb, 
+.iphone .android,
+.android .mweb,
 .android .iphone {
   display: none;
 }
@@ -2211,14 +2186,14 @@ table.campaignData-main, table.reportData-table {
     padding-left: 3px;
 }
 
-#ajaxFailure { 
+#ajaxFailure {
     font-size: 14px;
-    padding: 8px; 
+    padding: 8px;
     border: 1px solid #e6d2b8;
     background: #fff2f2;
-    position: fixed; 
-    top: 1%; 
-    right: 1%; 
+    position: fixed;
+    top: 1%;
+    right: 1%;
     -webkit-border-radius: 5px;
     -moz-border-radius: 5px;
     z-index: 1000;
@@ -2244,18 +2219,18 @@ table.campaignData-main, table.reportData-table {
   padding-top: 5px;
   padding-left: 50px;
 }
-                  
+
 #archive-link{
   float: right;
   position: relative;
   bottom: 20px;
-}             
-             
+}
+
 /* Campaigns Archive */
 .dataTable-budget-delivered, .dataTable-budget-goal{
-  width:100px;    
-}   
-                             
+  width:100px;
+}
+
 /* Login */
 
 #login-left, #login-left .fieldset{
@@ -2307,41 +2282,41 @@ a.google-login-button:active { background-position: 0 -48px; }
 
 /*
  * Media queries for responsive design
- * These follow after primary styles so they will successfully override. 
+ * These follow after primary styles so they will successfully override.
  */
 
-@media all and (orientation:portrait) { 
+@media all and (orientation:portrait) {
   /* Style adjustments for portrait mode goes here */
-  
+
 }
 
-@media all and (orientation:landscape) { 
+@media all and (orientation:landscape) {
   /* Style adjustments for landscape mode goes here */
-  
+
 }
 
-/* Grade-A Mobile Browsers (Opera Mobile, iPhone Safari, Android Chrome)  
+/* Grade-A Mobile Browsers (Opera Mobile, iPhone Safari, Android Chrome)
    Consider this: www.cloudfour.com/css-media-query-for-mobile-is-fools-gold/ */
 @media screen and (max-device-width: 480px) {
-  
-  
+
+
   /* Uncomment if you don't want iOS and WinMobile to mobile-optimize the text for you
-     j.mp/textsizeadjust 
+     j.mp/textsizeadjust
   html { -webkit-text-size-adjust:none; -ms-text-size-adjust:none; } */
 }
 
-/* 
+/*
  * print styles
- * inlined to avoid required HTTP connection www.phpied.com/delay-loading-your-print-css/ 
+ * inlined to avoid required HTTP connection www.phpied.com/delay-loading-your-print-css/
  */
 @media print {
   * { background: transparent !important; color: #444 !important; text-shadow: none !important; }
   a, a:visited { color: #444 !important; text-decoration: underline; }
-  a:after { content: " (" attr(href) ")"; } 
+  a:after { content: " (" attr(href) ")"; }
   abbr:after { content: " (" attr(title) ")"; }
   .ir a:after { content: ""; }  /* Don't show links for images */
   pre, blockquote { border: 1px solid #999; page-break-inside: avoid; }
-  thead { display: table-header-group; } /* css-discuss.incutio.com/wiki/Printing_Tables */ 
+  thead { display: table-header-group; } /* css-discuss.incutio.com/wiki/Printing_Tables */
   tr, img { page-break-inside: avoid; }
   @page { margin: 0.5cm; }
   p, h2, h3 { orphans: 3; widows: 3; }
@@ -2375,5 +2350,240 @@ td.numeric, th.numeric, .numeric TD {
     margin-top: 20px;
 }
 
-    
+.warning.notice {
+    padding: 5px;
+    background-color: #FCF6D6;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+}
 
+span.dropdown-icon {
+    background: url('../images/ui/ui-icons-progress.png') no-repeat -69px -22px;
+    width: 7px;
+    height: 5px;
+    display: inline-block;
+}
+
+#nav2 .dropdown {
+    position: absolute;
+    display: block;
+    top: 20px;
+    background: #191919;
+    z-index: 10;
+    -webkit-border-radius: 0 5px 5px 5px;
+    -moz-border-radius: 0 5px 5px 5px;
+    border-radius: 0 5px 5px 5px;
+
+}
+
+#nav2 .dropdown a:hover {
+    background-color: #444;
+}
+
+#nav2 .dropdown li {
+    display: block;
+}
+
+a.dropdown-head, a.dropdown-head:active {
+    -webkit-border-radius: 5px 5px 0 0;
+    -moz-border-radius: 5px 5px 0 0;
+    border-radius: 5px 5px 0 0;
+}
+
+header nav a.hovered {
+    color: #fff;
+    text-shadow: #000 0 1px 0;
+    background: #1a1a1a;
+    text-decoration: none;
+}
+
+.alert-message {
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+  -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  -moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  -webkit-box-shadow: 0px 1px 10px #dddddd;
+  -moz-box-shadow: 0px 1px 10px #dddddd;
+  box-shadow: 0px 1px 10px #dddddd;
+  background-color: #eedc94;
+  background-repeat: repeat-x;
+  background-image: -khtml-gradient(linear, left top, left bottom, from(#fceec1), to(#eedc94));
+  background-image: -moz-linear-gradient(top, #fceec1, #eedc94);
+  background-image: -ms-linear-gradient(top, #fceec1, #eedc94);
+  background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #fceec1), color-stop(100%, #eedc94));
+  background-image: -webkit-linear-gradient(top, #fceec1, #eedc94);
+  background-image: -o-linear-gradient(top, #fceec1, #eedc94);
+  background-image: linear-gradient(top, #fceec1, #eedc94);
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+  border-color: #eedc94 #eedc94 #e4c652;
+  border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) fadein(rgba(0, 0, 0, 0.1), 15%);
+  position: relative;
+  padding: 7px 15px;
+  margin-bottom: 10px;
+  color: #444444;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  border-width: 1px;
+  border-style: solid;
+  font-size: 16px; }
+  .alert-message .close {
+    *margin-top: 3px;
+    /* IE7 spacing */ }
+  .alert-message p {
+    margin-bottom: 0;
+    font-size: 14px; }
+  .alert-message div {
+    margin-top: 5px;
+    margin-bottom: 2px;
+    line-height: 28px; }
+  .alert-message.error, .alert-message.success, .alert-message.info {
+    color: #f7f7f7;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5); }
+  .alert-message.error {
+    background-color: #ba3e33;
+    background-repeat: repeat-x;
+    background-image: -khtml-gradient(linear, left top, left bottom, from(#e15f58), to(#ba3e33));
+    background-image: -moz-linear-gradient(top, #e15f58, #ba3e33);
+    background-image: -ms-linear-gradient(top, #e15f58, #ba3e33);
+    background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #e15f58), color-stop(100%, #ba3e33));
+    background-image: -webkit-linear-gradient(top, #e15f58, #ba3e33);
+    background-image: -o-linear-gradient(top, #e15f58, #ba3e33);
+    background-image: linear-gradient(top, #e15f58, #ba3e33);
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+    border-color: #ba3e33 #ba3e33 #7e2a23;
+    border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) fadein(rgba(0, 0, 0, 0.1), 15%);
+    border-color: #f56a66; }
+  .alert-message.success {
+    background-color: #73c54f;
+    background-repeat: repeat-x;
+    background-image: -khtml-gradient(linear, left top, left bottom, from(#93d47d), to(#73c54f));
+    background-image: -moz-linear-gradient(top, #93d47d, #73c54f);
+    background-image: -ms-linear-gradient(top, #93d47d, #73c54f);
+    background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #93d47d), color-stop(100%, #73c54f));
+    background-image: -webkit-linear-gradient(top, #93d47d, #73c54f);
+    background-image: -o-linear-gradient(top, #93d47d, #73c54f);
+    background-image: linear-gradient(top, #93d47d, #73c54f);
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+    border-color: #73c54f #73c54f #509631;
+    border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) fadein(rgba(0, 0, 0, 0.1), 15%);
+    border-color: #5A9A40; }
+  .alert-message.info {
+    background-color: #68acf6;
+    background-repeat: repeat-x;
+    background-image: -khtml-gradient(linear, left top, left bottom, from(#78b7fb), to(#68acf6));
+    background-image: -moz-linear-gradient(top, #78b7fb, #68acf6);
+    background-image: -ms-linear-gradient(top, #78b7fb, #68acf6);
+    background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #78b7fb), color-stop(100%, #68acf6));
+    background-image: -webkit-linear-gradient(top, #78b7fb, #68acf6);
+    background-image: -o-linear-gradient(top, #78b7fb, #68acf6);
+    background-image: linear-gradient(top, #78b7fb, #68acf6);
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+    border-color: #68acf6 #68acf6 #2084f2;
+    border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) fadein(rgba(0, 0, 0, 0.1), 15%);
+    border-color: #76A7DA; }
+  .alert-message.block-message {
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    background-image: none;
+    background-color: #fdf5d9;
+    padding: 14px;
+    border-color: #fceec1; }
+    .alert-message.block-message ul, .alert-message.block-message p {
+      margin-right: 30px; }
+    .alert-message.block-message ul {
+      margin-bottom: 0; }
+    .alert-message.block-message li {
+      color: #444444; }
+    .alert-message.block-message .alert-actions {
+      margin-top: 5px; }
+    .alert-message.block-message.error, .alert-message.block-message.success, .alert-message.block-message.info {
+      color: #444444;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5); }
+    .alert-message.block-message.error {
+      background-color: #fddfde;
+      border-color: #fbc7c6; }
+    .alert-message.block-message.success {
+      background-color: #d1eed1;
+      border-color: #bfe7bf; }
+    .alert-message.block-message.info {
+      background-color: #ddf4fb;
+      border-color: #c6edf9; }
+
+.right {
+    float: right;
+}
+
+.btn {
+  cursor: pointer;
+  display: inline-block;
+  background-color: #e6e6e6;
+  background-repeat: no-repeat;
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#ffffff), color-stop(25%, #ffffff), to(#e6e6e6));
+  background-image: -webkit-linear-gradient(#ffffff, #ffffff 25%, #e6e6e6);
+  background-image: -moz-linear-gradient(top, #ffffff, #ffffff 25%, #e6e6e6);
+  background-image: -ms-linear-gradient(#ffffff, #ffffff 25%, #e6e6e6);
+  background-image: -o-linear-gradient(#ffffff, #ffffff 25%, #e6e6e6);
+  background-image: linear-gradient(#ffffff, #ffffff 25%, #e6e6e6);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff', endColorstr='#e6e6e6', GradientType=0);
+  padding: 5px 14px 6px;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.75);
+  color: #333;
+  font-size: 13px;
+  line-height: normal;
+  border: 1px solid #ccc;
+  border-bottom-color: #bbb;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+  -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+  -moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+  -webkit-transition: 0.1s linear all;
+  -moz-transition: 0.1s linear all;
+  -ms-transition: 0.1s linear all;
+  -o-transition: 0.1s linear all;
+  transition: 0.1s linear all;
+}
+.btn:hover {
+  background-position: 0 -15px;
+  color: #333;
+  text-decoration: none;
+}
+.btn:focus {
+  outline: 1px dotted #666;
+}
+.btn.primary {
+    color: #;
+    color: #26AEE9;
+
+  color: #ffffff;
+  background-color: #26AEE9;
+  background-repeat: repeat-x;
+  background-image: -khtml-gradient(linear, left top, left bottom, from(#52D9FF), to(#26AEE9));
+  background-image: -moz-linear-gradient(top, #52D9FF, #26AEE9);
+  background-image: -ms-linear-gradient(top, #52D9FF, #26AEE9);
+  background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #52D9FF), color-stop(100%, #26AEE9));
+  background-image: -webkit-linear-gradient(top, #52D9FF, #26AEE9);
+  background-image: -o-linear-gradient(top, #52D9FF, #26AEE9);
+  background-image: linear-gradient(top, #52D9FF, #26AEE9);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#52D9FF', endColorstr='#26AEE9', GradientType=0);
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+  border-color: #26AEE9 #26AEE9 #3E819C;
+  border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+}
+.btn:active {
+  -webkit-box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.05);
+  -moz-box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.btn.big {
+    font-size: 20px;
+}
+
+#terms {
+    overflow-y: scroll;
+    height: 500px;
+}

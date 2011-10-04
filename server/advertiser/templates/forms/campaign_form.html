@@ -1,241 +1,237 @@
 {% load filters %}
-                   <dl class="formFields"> 
-                      <dt>Campaign Type:</dt> 
-                      <dd> 
-                        <span class="radios"> 
-                            <div style='max-width:300px'>
-                          {% if form.instance and form.campaign_type.value == 'network' %}<div class="hidden">{% endif %}  
-                          <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="gtee" id="advertiser-CampaignType-gtee" {% if not form.campaign_type.value %}checked="checked"{% endif %}{% ifequal form.campaign_type.value "gtee" %}checked='checked'{% endifequal %}/> 
-                          <label for="advertiser-CampaignType-gtee">Guaranteed</label> 
-<input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="promo" id="advertiser-CampaignType-promo" {% ifequal form.campaign_type.value "promo" %}checked="checked"{% endifequal %}/>
-                          <label for="advertiser-CampaignType-promo">Promotional</label> 
-                          {% if form.instance %}
-                            {% ifequal form.campaign_type.value 'network' %}
-                          <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="network" id="advertiser-CampaignType-network" {% ifequal form.campaign_type.value "network" %}checked="checked"{% endifequal %}/> <label for="advertiser-CampaignType-network">Network</label>
-                            {% endifequal %}
-                              {% ifequal form.campaign_type.value 'marketplace' %}
-                              <br/>
-                            <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="marketplace" id="advertiser-CampaignType-network" {% ifequal form.campaign_type.value "marketplace" %}checked="checked"{% endifequal %}/> <label for="advertiser-CampaignType-marketplace">Marketplace</label>
-                              {% endifequal %}
-                            
-                          {% else %}
-                          <input type="radio" class="input-radio" name="{{form.campaign_type.name}}" value="network" id="advertiser-CampaignType-network" {% ifequal form.campaign_type.value "network" %}checked="checked"{% endifequal %}/> <label for="advertiser-CampaignType-network">Network</label>
-                          <input type="radio" class="input-radio marketplace" name="{{form.campaign_type.name}}" value="marketplace" id="advertiser-CampaignType-marketplace" {% ifequal form.campaign_type.value "marketplace" %}checked="checked"{% endifequal %}/>
-                          <label class='marketplace' for="advertiser-CampaignType-marketplace">Marketplace</label> 
-                          {% endif %}
-                          {% if form.instance and form.campaign_type.value == 'network' %}</div>
-                          <strong>Network</strong>{% endif %}
-                        </span>
-                        <a href="#" id="campaignForm-type-helpLink">What's this?</a>
-                    </div>
-                        <div id="campaignForm-type-helpContent" class="hidden"> 
-                          <h3>Campaign Type</h3>
-                          <h4>Guaranteed</h4>
-                          <p>A <strong>Guaranteed</strong> ad campaign is typically a direct sold campaign with a set CPM for a certain number of impressions and a start and end date.</p>
-                          <h4>Promotional</h4>
-                          <p>A <strong>Promotional</strong> campaign is for house ads like advertising another of your applications, ads for the paid version of your app or other functions like a "rate this app" campaign.</p>
-                          <h4>Network</h4>
-                          <p>A <strong>Network</strong> campaign is used for showing ads from an ad network like AdMob or iAd.</p>
-                          <span class='marketplace'>
-                          <h4>Marketplace</h4>
-                          <p>A <strong>Marketplace</strong> campaign enables the MoPub marketplace for the selected adunits</p>
-                          </span>
-                        </div>
-                      </dd>
-                      <div class="campaignDependent gtee">
-                        <dt>Priority:</dt>
-                        <dd>
-                          <select name='gtee_level'>
-                            <option value='high' {% ifequal form.gtee_level.value 'high' %}selected{% endifequal %}>High</option>
-                            <option value='normal' {% ifequal form.gtee_level.value 'normal' %}selected{% endifequal %}{% if not form.gtee_level.value %}selected{% endif %}>Normal</option>
-                            <option value='low' {% ifequal form.gtee_level.value 'low' %}selected{% endifequal %}>Low</option>
-                          </select>
-                          <a href="#" id="campaignForm-priority-helpLink">What's this?</a>
-                          <div id='campaignForm-priority-helpContent' class='hidden'>
-                            <h3>Priority</h3>
-                            <p>
-                              Within a given priority campaigns are run in order of CPM.  By assigning a campaign priority you set it to run before those at a lower priority level. 
-                            </p>
-                          </div>
-                        </dd>
-                      </div>
-                      <div class="campaignDependent marketplace">
-                        <dt>Priority:</dt>
-                        <dd>
-{{ form.mpx_level.as_widget }}
-                          <a href="#" id="campaignForm-marketplace-priority-helpLink">What's this?</a>
-                          <div id='campaignForm-marketplace-priority-helpContent' class='hidden'>
-                            <h3>Priority</h3>
-                            <p>
-                              For a marketplace campaign, you may pick whether it is prioritized above (<strong>Normal</strong>) or below ad networks (<strong>Backfill</strong>). 
-                            </p>
-                          </div>
-                        </dd>
-                      </div>
-                      <div class="campaignDependent promo">
-                        <dt>Priority:</dt>
-                        <dd>
-{{ form.promo_level.as_widget }}
-                          <a href="#" id="campaignForm-promo-priority-helpLink">What's this?</a>
-                          <div id='campaignForm-promo-priority-helpContent' class='hidden'>
-                            <h3>Priority</h3>
-                            <p>
-                              For a promotional campaign, you may pick whether it is prioritized above (<strong>Normal</strong>) or below ad networks (<strong>Backfill</strong>). 
-                            </p>
-                          </div>
-                        </dd>
-                      </div>
-                      <dt>Name:</dt>
-                      <dd>
-                      {{ form.name|attrs:'{"placeholder":"Campaign Name"}'|raw  }} <span id='fullCampaignError-name' style="display:none; color:#cc2929;">Required</span>
-                      </dd>
-                      {{ form.description|attrs:'{"placeholder":"Campaign for My New App"}' }}
-                      <div class="campaignDependent gtee promo backfill_promo">
-                        <dt>Dates:</dt>
-                        <dd>
-                          <input type='text' class="input-text input-text-number" name="{{form.start_date.name}}" size="15" value="{{form.start_date.value|date:"m/d/Y"}}" placeholder="Start"/> - 
-                          <input type='text' class="input-text input-text-number" name="{{form.end_date.name}}" size="15" value="{{form.end_date.value|date:"m/d/Y"}}"  placeholder="End"/>
-                          <div class='helper-text' id='fullCampaignError-date' style="display:none; color:#cc2929;">Required when delivery type set to 'total impressions' or 'total USD'</div>
-                        </dd>
-                        {# Belong to AdGroup #}
-                        <dt>Rate:</dt> 
-                        <dd> 
-                          <select name="bid_strategy" id="adgroupForm-bid_strategy-select">
-                            <option value="cpm" id="bid_strategy-cpm" {% ifequal form.bid_strategy.value "cpm"%}selected="selected"{% endifequal %}>CPM</option>
-                            <option value="cpc" {% ifequal form.bid_strategy.value "cpc"%}selected="selected"{% endifequal %}>CPC</option>
-                          </select>
-                          @ <input type="text" class="input-text input-text-number {% if form.bid.errors %}form-error{% endif %}" name="bid" value="{{form.bid.value}}" id="bid-max"/> USD
-                          <div class='helper-text' id='fullCampaignError-bid' style="display:none; color:#cc2929;">Required when delivery type set to 'total impressions' or 'total USD'</div>
-                          
-                          {% for error in form.bid.errors %}
-                          <div class="form-error-text">{{error}}</div> 
-                          {% endfor %}
-                          <span class='campaignDependent promo'>
-                              <a class='whatsthis' id='promo-cpm-helpLink' href='#'>What's this?</a>
-                              <div id='promo-cpm-helpContent' class='hidden'>
-                                <h3>Promotional CPM</h3>
-                                <p>MoPub uses CPM to prioritize which promotional campaign will be displayed.  To raise the priority of a campaign, increase the CPM.</p>
-                              </div>
-                          </span>
-                        </dd>
-                      </div>
-                      <div class="campaignDependent marketplace">
-                        <dt>Price Floor:</dt>
-                        <dd>
-                          <input class="input-text input-text-number" name="{{form.price_floor.name}}" value="{{form.price_floor.value}}"/>
-                        </dd>
-                      </div>
-                      
-                      <div class="campaignDependent gtee">                          
-                        <dt>Delivery Amount:</dt>
-                        <dd>
-                          <span class='budgetDependent full_campaign'>
-                            <span class='campaignAdgroupForm-budget' id="campaignAdgroupForm-budget-fullimpressions"><input type='text' name="full_impressions" value="" class="input-text input-text-number"/></span>
-                            <span class='campaignAdgroupForm-budget' id="campaignAdgroupForm-budget-fullbid"><input type='text' name="{{form.full_budget.name}}" value="{{form.full_budget.value}}" class="input-text input-text-number {% if form.budget.errors %}form-error{% endif %}"/></span>
-                            </span>
-                          <span class='budgetDependent daily'>
-                            <span class='campaignAdgroupForm-budget' id="campaignAdgroupForm-budget-impressions"><input type='text' name="impressions" value="" class="input-text input-text-number"/></span>
-                            <span class='campaignAdgroupForm-budget' id="campaignAdgroupForm-budget-bid"><input type='text' name="{{form.budget.name}}" value="{{form.budget.value}}" class="input-text input-text-number {% if form.budget.errors %}form-error{% endif %}"/></span>
-                          </span>
-                          <select name="budget_type" id="adgroupForm-budget_type-select">
-                            <option value="daily" {% ifequal form.budget_type.value "daily"%}selected="selected"{% endifequal %}></option>
-                            <option value="full_campaign" {% ifequal form.budget_type.value "full_campaign"%}selected="selected"{% endifequal %}></option>
-                          </select>
-                          <span class='budgetDependent full_campaign'>
-                          <div class="campaignAdgroupForm-budget success helper-text" id="campaignAdgroupForm-budget-display_full"></div>
-                          </span>
-                          <span class='budgetDependent daily'>
-                          <div class="campaignAdgroupForm-budget success helper-text" id="campaignAdgroupForm-budget-display"></div>
-                          </span>
-                          <div class='helper-text' id='fullCampaignError-budget' style="display:none; color:#cc2929;">Required when delivery type set to 'total impressions' or 'total USD'</div>
-                          {% for error in form.budget.errors %}
-                          <div class="form-error-text">{{error}}</div> 
-                          {% endfor %}
-                        </dd>
-                        {{ form.budget_strategy|label:"Delivery Speed"}}
-                      </div>
-                        
-                      <div class="campaignDependent network">
-                        {# End Belong to AdGroup #}
-                        <dt>Network Type:</dt>
-                        <dd>
-                          <select id="network_select" name="network_type">
-                            {% for network in networks %}<option class="network_option" value="{{network.0}}" {% if network.2 %}selected="selected"{%endif%}>{{network.1}}</option>
-                            {% endfor %}
-                          </select>
-                          <span id="network_select_sdk_msg" class="hidden error">(requires network SDK)</span>
-                        </dd>
+  <dl class="formFields">
+    <dt>Campaign Type:</dt>
+    <dd>
+      {% comment %}
+        Select field for the campaign type.
+        Auto selects the right field if this is an edit form.
+        If not, selects Guaranteed by default (highest on the waterfall).
+        If this is being used to edit, and the marketplace option was already selected,
+        disable the other options.
+      {% endcomment %}
+      <select id="campaign_type_select" name="{{form.campaign_type.name}}">
+        <option value="gtee" {% ifequal form.campaign_type.value "marketplace"%} disabled="disabled" {% endifequal %}{% if not form.campaign_type.value or form.campaign_type.value == "gtee"%}selected{% endif %}> Guaranteed </option>
+        <option value="promo"  {% ifequal form.campaign_type.value "marketplace"%} disabled="disabled" {% endifequal %}{% ifequal form.campaign_type.value "promo" %}selected{% endifequal %} > Promotional </option>
+        <option value="marketplace" {% ifequal form.campaign_type.value "marketplace" %}selected{% endifequal %}> Marketplace</option>
+        <option value="network" {% ifequal form.campaign_type.value "marketplace"%} disabled="disabled" {% endifequal %}{% ifequal form.campaign_type.value "network" %}selected{% endifequal %}> Network</option>
+      </select>
+      <a href="#" id="campaignForm-type-helpLink">What's this?</a>
 
+      <div id="campaignForm-type-helpContent" class="hidden">
+        <h3>Campaign Type</h3>
+        <h4>Guaranteed</h4>
+        <p>A <strong>Guaranteed</strong> ad campaign is typically a direct sold campaign with a set CPM for a certain number of impressions and a start and end date.</p>
+        <h4>Promotional</h4>
+        <p>A <strong>Promotional</strong> campaign is for house ads like advertising another of your applications, ads for the paid version of your app or other functions like a "rate this app" campaign.</p>
+        <h4>Network</h4>
+        <p>A <strong>Network</strong> campaign is used for showing ads from an ad network like AdMob or iAd.</p>
+        <span class='marketplace'>
+          <h4>Marketplace</h4>
+          <p>A <strong>Marketplace</strong> campaign enables the MoPub marketplace for the selected adunits</p>
+        </span>
+      </div>
+    </dd>
 
-                        <div class='networkDependent custom'>
-                          <dt>Custom HTML:</dt>
-                          <dd>
-                            <textarea rows=3 name='custom_html' placeholder='HTML Custom Content'>{{form.custom_html.value}}</textarea>
-                            <a href="#" id="campaignForm-customHtml-helpLink">What's this?</a>
-                          </dd>
-                          <div id='campaignForm-customHtml-helpContent' class='hidden'>
-                            <h3>Custom Network</h3>
-                            MoPub supports custom ad networks if the network provides an HTML snippet for displaying ads.  Select Custom Network then paste the HTML snippet in the box below.
-                            <br/>
-                            <br/>
-                            <h4>AdSense Example:</h4>
-                            The custom HTML snippet for AdSense is:
-                            <br/>
-                            <code> &lt;script type=&quot;text/javascript&quot;&gt;
-                            <br/>
-                            &lt;!--
-                            // XHTML should not attempt to parse these strings, declare them CDATA.<br/>
-                            /* &lt;![CDATA[ */<br/><br/>
-                            window.googleAfmcRequest = {<br/>
-                              &nbsp;&nbsp;client: 'XXXXXXXXXXXXXX',<br/>
-                              &nbsp;&nbsp;format: '320x50_mb',<br/>
-                              &nbsp;&nbsp;output: 'html',<br/>
-                              &nbsp;&nbsp;slotname: 'XXXXXXXXX',<br/>
-                            };<br/>
-                            /* ]]&gt; */<br/>
-                            //--&gt;&lt;/script&gt;<br/>
-                            &lt;script type=&quot;text/javascript&quot; src = &quot;http://pagead2.googlesyndication.com/pagead/show_afmc_ads.js&quot;&gt;&lt;/script&gt;
-                            </code>
-                          </div>
-                        </div>
+    <div class="campaignDependent gtee">
+      <dt>Priority:</dt>
+      <dd>
+        <select name='gtee_level'>
+          <option value='high' {% ifequal form.gtee_level.value 'high' %}selected{% endifequal %}>High</option>
+          <option value='normal' {% ifequal form.gtee_level.value 'normal' %}selected{% endifequal %}{% if not form.gtee_level.value %}selected{% endif %}>Normal</option>
+          <option value='low' {% ifequal form.gtee_level.value 'low' %}selected{% endifequal %}>Low</option>
+        </select>
+        <a href="#" id="campaignForm-priority-helpLink">What's this?</a>
 
-						<div class='networkDependent custom_native'>
-                          <dt>Custom method:</dt>
-                          <dd>
-							<input type="text" class="input-text" name="custom_method" placeholder='loadNativeSDK:' value='{{form.custom_method.value}}' />
-                          </dd>
-						</div>
+        <div id='campaignForm-priority-helpContent' class='hidden'>
+          <h3>Priority</h3>
+          <p>Within a given priority campaigns are run in order of CPM.  By assigning a campaign priority you set it to run before those at a lower priority level.</p>
+        </div>
+      </dd>
+    </div>
 
+    {% comment %}
+    <div class="campaignDependent marketplace">
+      <dt>Priority:</dt>
+      <dd>
+        {{ form.mpx_level.as_widget }}
+        <a href="#" id="campaignForm-marketplace-priority-helpLink">What's this?</a>
+        <div id='campaignForm-marketplace-priority-helpContent' class='hidden'>
+          <h3>Priority</h3>
+          <p>For a marketplace campaign, you may pick whether it is prioritized above (<strong>Normal</strong>) or below ad networks (<strong>Backfill</strong>).</p>
+        </div>
+      </dd>
+    </div>
 
+    {% endcomment %}
 
-                        <dt>Network Rate:</dt> 
-                        <dd> 
-                          
-                          
-                          <select name="bid_strategy" id="adgroupForm-bid_strategy-select-network">
-                            <option value="cpc" {% ifequal form.bid_strategy.value "cpc"%}selected="selected"{% endifequal %}>CPC</option>
-                            <option value="cpm" {% ifequal form.bid_strategy.value "cpm"%}selected="selected"{% endifequal %}>eCPM</option>
-                          </select>
-                          @ 
-                          <input type="text" class="input-text input-text-number {% if form.bid.errors %}form-error{% endif %}" name="bid" value="{{form.bid.value}}" id="bid-network"/> USD
-                          {% for error in form.bid.errors %}
-                          <div class="form-error-text">{{error}}</div> 
-                          {% endfor %}
-                          
-                          
-                     
-                          
-                          <a href="#" id="campaignForm-bid-helpLink">What's this?</a>
-                          <div id="campaignForm-bid-helpContent" class="hidden"> 
-                            <h3>Network Rate</h3>
-                            <h4>Cost Per Click</h4>
-                            <p>MoPub uses the CPC from the ad networks along with realtime CTR statistics from your app to calculate eCPM. Because ad network CTR is highly variable, this allows us to constantly display the most profitable ads. 
-                            </p>
-                            <p>You can find your CPC on the ad network's site.  
-                            </p>
-                            <h4>Estimated Cost Per Mille</h4>  
-                               Using a static CPM disables automatic eCPM calculation. This is useful for users who have a preexisting contract with a specific ad network.  </p>
-                          </div>
-                        </dd> 
-                      </div>
-                    </dl>
+    <div class="campaignDependent promo">
+      <dt>Priority:</dt>
+      <dd>
+        {{ form.promo_level.as_widget }}
+        <a href="#" id="campaignForm-promo-priority-helpLink">What's this?</a>
+        <div id='campaignForm-promo-priority-helpContent' class='hidden'>
+          <h3>Priority</h3>
+          <p>For a promotional campaign, you may pick whether it is prioritized above (<strong>Normal</strong>) or below ad networks (<strong>Backfill</strong>).</p>
+        </div>
+      </dd>
+    </div>
+
+    <dt>Name:</dt>
+    <dd>
+      {{ form.name|attrs:'{"placeholder":"Campaign Name"}'|raw  }} <span id='fullCampaignError-name' style="display:none; color:#cc2929;">Required</span>
+    </dd>
+    {{ form.description|attrs:'{"placeholder":"Campaign for My New App"}' }}
+    <div class="campaignDependent gtee promo backfill_promo">
+      <dt>Dates:</dt>
+      <dd>
+        <input type='text' class="input-text input-text-number" name="{{form.start_date.name}}" size="15" value="{{form.start_date.value|date:"m/d/Y"}}" placeholder="Start"/> -
+        <input type='text' class="input-text input-text-number" name="{{form.end_date.name}}" size="15" value="{{form.end_date.value|date:"m/d/Y"}}"  placeholder="End"/>
+        <div class='helper-text' id='fullCampaignError-date' style="display:none; color:#cc2929;">Required when delivery type set to 'total impressions' or 'total USD'</div>
+      </dd>
+
+      {# Belong to AdGroup #}
+      <dt>Rate:</dt>
+      <dd>
+        <select name="bid_strategy" id="adgroupForm-bid_strategy-select">
+          <option value="cpm" id="bid_strategy-cpm" {% ifequal form.bid_strategy.value "cpm"%}selected="selected"{% endifequal %}>CPM</option>
+          <option value="cpc" {% ifequal form.bid_strategy.value "cpc"%}selected="selected"{% endifequal %}>CPC</option>
+        </select>
+        @ <input type="text" class="input-text input-text-number {% if form.bid.errors %}form-error{% endif %}" name="bid" value="{{form.bid.value}}" id="bid-max"/> USD
+        <div class='helper-text' id='fullCampaignError-bid' style="display:none; color:#cc2929;">Required when delivery type set to 'total impressions' or 'total USD'</div>
+
+        {% for error in form.bid.errors %}
+          <div class="form-error-text">{{error}}</div>
+        {% endfor %}
+        <span class='campaignDependent promo'>
+          <a class='whatsthis' id='promo-cpm-helpLink' href='#'>What's this?</a>
+          <div id='promo-cpm-helpContent' class='hidden'>
+            <h3>Promotional CPM</h3>
+            <p>MoPub uses CPM to prioritize which promotional campaign will be displayed.  To raise the priority of a campaign, increase the CPM.</p>
+          </div>
+        </span>
+      </dd>
+    </div>
+
+    <div class="campaignDependent marketplace">
+      <dt>Price Floor:</dt>
+      <dd>
+        <input class="input-text input-text-number" name="{{form.price_floor.name}}" value="{{form.price_floor.value}}"/>
+        <a class='whatsthis' id='marketplace-pricefloor-helpLink' href='#'>What's this?</a>
+        <div id='marketplace-pricefloor-helpContent' class='hidden'>
+          <h3>Price Floors</h3>
+          In Marketplace campaigns, each ad impression is bid upon by multiple ad networks.
+          The price floor is the minimum amount you'll price for a bid.
+          Bids will not be considered if they are lower than your price floor.
+        </div>
+      </dd>
+    </div>
+
+    <div class="campaignDependent gtee">
+      <dt>Delivery Amount:</dt>
+      <dd>
+        <span class='budgetDependent full_campaign'>
+          <span class='campaignAdgroupForm-budget' id="campaignAdgroupForm-budget-fullimpressions"><input type='text' name="full_impressions" value="" class="input-text input-text-number"/></span>
+          <span class='campaignAdgroupForm-budget' id="campaignAdgroupForm-budget-fullbid"><input type='text' name="{{form.full_budget.name}}" value="{{form.full_budget.value}}" class="input-text input-text-number {% if form.budget.errors %}form-error{% endif %}"/></span>
+        </span>
+        <span class='budgetDependent daily'>
+          <span class='campaignAdgroupForm-budget' id="campaignAdgroupForm-budget-impressions"><input type='text' name="impressions" value="" class="input-text input-text-number"/></span>
+          <span class='campaignAdgroupForm-budget' id="campaignAdgroupForm-budget-bid"><input type='text' name="{{form.budget.name}}" value="{{form.budget.value}}" class="input-text input-text-number {% if form.budget.errors %}form-error{% endif %}"/></span>
+        </span>
+        <select name="budget_type" id="adgroupForm-budget_type-select">
+          <option value="daily" {% ifequal form.budget_type.value "daily"%}selected="selected"{% endifequal %}></option>
+          <option value="full_campaign" {% ifequal form.budget_type.value "full_campaign"%}selected="selected"{% endifequal %}></option>
+        </select>
+        <span class='budgetDependent full_campaign'>
+          <div class="campaignAdgroupForm-budget success helper-text" id="campaignAdgroupForm-budget-display_full"></div>
+        </span>
+        <span class='budgetDependent daily'>
+          <div class="campaignAdgroupForm-budget success helper-text" id="campaignAdgroupForm-budget-display"></div>
+        </span>
+        <div class='helper-text' id='fullCampaignError-budget' style="display:none; color:#cc2929;">Required when delivery type set to 'total impressions' or 'total USD'</div>
+        {% for error in form.budget.errors %}
+          <div class="form-error-text">{{error}}</div>
+        {% endfor %}
+      </dd>
+      {{ form.budget_strategy|label:"Delivery Speed"}}
+    </div>
+
+    <div class="campaignDependent network">
+      {# End Belong to AdGroup #}
+      <dt>Network Type:</dt>
+      <dd>
+        <select id="network_select" name="network_type">
+          {% for network in networks %}
+            <option class="network_option" value="{{network.0}}" {% if network.2 %}selected="selected"{%endif%}>{{network.1}}</option>
+          {% endfor %}
+        </select>
+        <span id="network_select_sdk_msg" class="hidden error">(requires network SDK)</span>
+      </dd>
+
+      <div class='networkDependent custom'>
+        <dt>Custom HTML:</dt>
+        <dd>
+          <textarea rows=3 name='custom_html' placeholder='HTML Custom Content'>{{form.custom_html.value}}</textarea>
+          <a href="#" id="campaignForm-customHtml-helpLink">What's this?</a>
+        </dd>
+        <div id='campaignForm-customHtml-helpContent' class='hidden'>
+          <h3>Custom Network</h3>
+          MoPub supports custom ad networks if the network provides an HTML snippet for displaying ads.  Select Custom Network then paste the HTML snippet in the box below.
+          <br/>
+          <br/>
+          <h4>AdSense Example:</h4>
+          The custom HTML snippet for AdSense is:
+          <br/>
+          <code> &lt;script type=&quot;text/javascript&quot;&gt;
+          <br/>
+          &lt;!--
+          // XHTML should not attempt to parse these strings, declare them CDATA.<br/>
+          /* &lt;![CDATA[ */<br/><br/>
+          window.googleAfmcRequest = {<br/>
+          &nbsp;&nbsp;client: 'XXXXXXXXXXXXXX',<br/>
+          &nbsp;&nbsp;format: '320x50_mb',<br/>
+          &nbsp;&nbsp;output: 'html',<br/>
+          &nbsp;&nbsp;slotname: 'XXXXXXXXX',<br/>
+          };<br/>
+          /* ]]&gt; */<br/>
+          //--&gt;&lt;/script&gt;<br/>
+          &lt;script type=&quot;text/javascript&quot; src = &quot;http://pagead2.googlesyndication.com/pagead/show_afmc_ads.js&quot;&gt;&lt;/script&gt;
+          </code>
+        </div>
+      </div>
+
+      <div class='networkDependent custom_native'>
+        <dt>Custom method:</dt>
+        <dd>
+          <input type="text" class="input-text" name="custom_method" placeholder='loadNativeSDK:' value='{{form.custom_method.value}}' />
+        </dd>
+      </div>
+
+      <dt>Network Rate:</dt>
+      <dd>
+        <select name="bid_strategy" id="adgroupForm-bid_strategy-select-network">
+          <option value="cpc" {% ifequal form.bid_strategy.value "cpc"%}selected="selected"{% endifequal %}>CPC</option>
+          <option value="cpm" {% ifequal form.bid_strategy.value "cpm"%}selected="selected"{% endifequal %}>eCPM</option>
+        </select>
+        @
+        <input type="text" class="input-text input-text-number {% if form.bid.errors %}form-error{% endif %}" name="bid" value="{{form.bid.value}}" id="bid-network"/> USD
+        {% for error in form.bid.errors %}
+          <div class="form-error-text">{{error}}</div>
+        {% endfor %}
+
+        <a href="#" id="campaignForm-bid-helpLink">What's this?</a>
+        <div id="campaignForm-bid-helpContent" class="hidden">
+          <h3>Network Rate</h3>
+          <h4>Cost Per Click</h4>
+          <p>
+            MoPub uses the CPC from the ad networks along with realtime CTR statistics from your app to calculate eCPM. Because ad network CTR is highly variable, this allows us to constantly display the most profitable ads.
+          </p>
+          <p>
+            You can find your CPC on the ad network's site.
+          </p>
+          <h4>Estimated Cost Per Mille</h4>
+          Using a static CPM disables automatic eCPM calculation. This is useful for users who have a preexisting contract with a specific ad network.  </p>
+        </div>
+      </dd>
+    </div>
+  </dl>
+

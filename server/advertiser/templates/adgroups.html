@@ -14,22 +14,22 @@
             <script type="text/javascript">
             mpq.push(["track", "Sign up: Campaign dashboard"]);
             </script>
-            <div class="stepProgress"> 
-              <span class="stepProgress-step">Step 1: Add app</span> 
-              <span class="ui-icon ui-icon-arrow-1-e"></span> 
-              <span class="stepProgress-step">Step 2: Integrate</span> 
-              <span class="ui-icon ui-icon-arrow-1-e"></span> 
-              <span class="stepProgress-step stepProgress-active">Step 3: Add campaigns</span> 
+            <div class="stepProgress">
+              <span class="stepProgress-step">Step 1: Add app</span>
+              <span class="ui-icon ui-icon-arrow-1-e"></span>
+              <span class="stepProgress-step">Step 2: Integrate</span>
+              <span class="ui-icon ui-icon-arrow-1-e"></span>
+              <span class="stepProgress-step stepProgress-active">Step 3: Add campaigns</span>
             </div>
-    {% else %}        
-        <span class="titlebar-right">                                                      
+    {% else %}
+        <span class="titlebar-right">
             <a class="button" id="advertisers-testAdServer" href="#">Test Campaigns</a>
         </span>
     {% endifequal %}
-            
+
 {% endblock titleBarRight %}
-    
-    
+
+
 {% block messageCenter %}{% endblock messageCenter %}
 {% block dateButtons %}{% ifnotequal account.status 'step4' %}
           <div id="titlebar-center">
@@ -51,26 +51,43 @@
 {% endifnotequal %}{% endblock dateButtons %}
 
 {% block content %}
-<div id="ajaxFailure" style="display:none">
+  <div id="ajaxFailure" style="display:none">
     <a href="#" id="ajaxDismiss"><img src="../images/icons/199_16x16.png"></img></a>
-    There was a problem retrieving data for some of your campaigns. 
+    There was a problem retrieving data for some of your campaigns.
     <a href="#" id="ajaxRetry"><img src="../images/icons/92_16x16.png"></img> <strong>Retry</strong></a>
-</div>
+  </div>
+
+
 {% ifequal account.status "step4" %}
-          <div class="alertMessage">
-            Finally, you will need to set up at least one ad campaign to serve into your inventory.  A <strong>Guaranteed</strong> ad campaign is typically a direct sold ad campaign.  <strong>Promotional</strong> campaigns are for house ads like an upsell.  A <strong>Network</strong> ad is an ad served from an ad network like AdMob.
+          <div class="alert-message block-message">
+            Finally, you will need to set up at least one ad campaign to serve into your inventory. <br /><br />
+            <ul>
+              <li>A <strong>Guaranteed</strong> ad campaign is typically a direct sold ad campaign.</li>
+              <li><strong>Promotional</strong> campaigns are for house ads like an upsell.</li>
+              <li><strong>Marketplace</strong> campaigns use MoPub's <a href="{% url mpx_info %}">new real-time bidding technology</a> to fill your ad requests.</li>
+              <li>A <strong>Network</strong> ad is an ad served from an ad network like AdMob.</li>
+              <ul>
           </div>
 {% endifequal %}
 {% ifequal account.status "step3" %}
-          <div class="alertMessage">
-            The next step is to set up your ad networks.  Visit your <a href="{% url account_index %}">Account</a> page to enable your ad networks.
+          <div class="alert-message block-message">
+            The next step is to set up your ad networks.  Visit your <a href="{% url ad_network_settings %}">Ad Network Settings</a> page to enable your ad networks.
           </div>
 {% endifequal %}
 {% if not apps %}
-          <div class="alertMessage">
+          <div class="alert-message block-message">
             Before you set up your ad campaigns, we recommend that you set up your App inventory.  Visit the <a href="{% url publisher_index %}">Dashboard</a> to add your Apps.
           </div>
 {% endif %}
+{#{% if not has_marketplace_campaign and not account.stats == 'step4' %}#}
+          <div class="alert-message block-message clearfix">
+            We've just launched MoPub Marketplace, our state of the art real-time bidding exchange.
+            Add a new <a href="{% url advertiser_campaign_create %}#marketplace">marketplace campaign</a> to get started, or take a look at our <a href="{% url mpx_info %}">information page</a> if you want to know more about how it works.
+            <br />
+            <a class="btn right" href="{% url mpx_info %}">Get Started</a>
+
+          </div>
+{#  {% endif %} #}
           <div class="separated">
             <section class="offset nomargin" id="dashboard-stats">
               <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
@@ -124,34 +141,34 @@
           <section id="dashboard-campaigns">
             <div id="campaigns-control-panel">
               <div class="center-button-bank">
-    
-                <span class="buttonset-start-disabled" id="campaigns-filterOptions"> 
-                  <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-all" checked="checked" id="campaigns-filterOptions-option-all"/> 
-                  <label for="campaigns-filterOptions-option-all">All</label> 
-                  <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Running" id="campaigns-filterOptions-option-Running"/> 
-                  <label for="campaigns-filterOptions-option-Running">Running</label> 
-                  <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Paused" id="campaigns-filterOptions-option-Paused" /> 
-                  <label for="campaigns-filterOptions-option-Paused">Paused</label> 
-                  <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Scheduled" id="campaigns-filterOptions-option-Scheduled" /> 
-                  <label for="campaigns-filterOptions-option-Scheduled">Scheduled</label> 
+
+                <span class="buttonset-start-disabled" id="campaigns-filterOptions">
+                  <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-all" checked="checked" id="campaigns-filterOptions-option-all"/>
+                  <label for="campaigns-filterOptions-option-all">All</label>
+                  <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Running" id="campaigns-filterOptions-option-Running"/>
+                  <label for="campaigns-filterOptions-option-Running">Running</label>
+                  <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Paused" id="campaigns-filterOptions-option-Paused" />
+                  <label for="campaigns-filterOptions-option-Paused">Paused</label>
+                  <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Scheduled" id="campaigns-filterOptions-option-Scheduled" />
+                  <label for="campaigns-filterOptions-option-Scheduled">Scheduled</label>
                 </span>
-              
-                <select name="campaigns-appFilterOptions" id="campaigns-appFilterOptions"> 
+
+                <select name="campaigns-appFilterOptions" id="campaigns-appFilterOptions">
                             <option id="campaigns-appFilterOptions-option-all" value="campaign-status-all">All Apps</option>
                                 {% for app in apps %}
-                                <option value="campaign-targeting-{{app.key}}">{{app.name}}</option> 
+                                <option value="campaign-targeting-{{app.key}}">{{app.name}}</option>
                                 {% endfor %}
                         </select>
               </div>
                <a class="button" id="advertisers-addCampaign" href="{% url advertiser_campaign_create %}">Add a campaign</a>
             </div>
-            
+
             <div id="adserverTest" style="display:none;">
                 <iframe height="480" width="350" id="adserverTest-iFrame" scrolling="no">
-                </iframe>    
-                <div id="adserverTest-iFrame-src" style="display:none;">{% url advertiser_adserver_test %}</div>    
-            </div>    
-            
+                </iframe>
+                <div id="adserverTest-iFrame-src" style="display:none;">{% url advertiser_adserver_test %}</div>
+            </div>
+
             <form method="post" action="{% url advertiser_bid_pause %}" id="campaignForm">
               <input type="hidden" name="action" id="action"/>
               <h2>Guaranteed {% if not guarantee_num %}<span class="muted">(None)</span>{% endif %}
@@ -179,7 +196,7 @@
               </div>
 
               {% for level in guarantee_levels %}
-              {% if level.display %} 
+              {% if level.display %}
               <table class="dataTable campaignData-main" id="campaignDataTable-direct-{{level.name}}">
                     <thead>
                       <tr>
@@ -197,7 +214,7 @@
                     <tbody>
                       {% for adgroup in level.adgroups %}
 
-                      <tr class="campaignData gtee_row campaign-status-all campaign-targeting-all incomplete 
+                      <tr class="campaignData gtee_row campaign-status-all campaign-targeting-all incomplete
                       {% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}"
                       id="{{adgroup.key}}">
                         <th class="campaignData-icon">
@@ -205,7 +222,7 @@
                             {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9 />{% endif %}
                             {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
                             {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
-                        </th> 
+                        </th>
                         <th class="dataTable-name">
                             <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
                             <span class="muted">
@@ -230,7 +247,7 @@
                         {% else %}
                         <td class="dataTable-data numeric dataTable-ecpm ecpm">--</td>
                         {% endif %}
-                        
+
                         <td class="dataTable-data numeric">
                             <div class="status">--</div>
                             <div class="on_schedule muted"></div>
@@ -250,7 +267,8 @@
               <h2>Promotional {% if not promo %}<span class="muted">(None)</span>{% endif %}
                   <img id="promo-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img>
               </h2>
-              {% if promo %}<div id='promo-rollups' class="campaignData-rollup">
+              {% if promo %}
+                <div id='promo-rollups' class="campaignData-rollup">
                   <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
                       <thead>
                           <tr>
@@ -287,7 +305,7 @@
                 </thead>
                 <tbody>
                   {% for adgroup in promo %}
-                  <tr class="campaignData promo_row campaign-status-all campaign-targeting-all incomplete 
+                  <tr class="campaignData promo_row campaign-status-all campaign-targeting-all incomplete
                     {% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}"
                     id="{{adgroup.key}}">
                     <th class="campaignData-icon">
@@ -295,7 +313,7 @@
                       {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9 />{% endif %}
                       {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
                       {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
-                    </th> 
+                    </th>
                     <th class="dataTable-name">
                         <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
                         <span class="muted">
@@ -318,7 +336,7 @@
                         {% if adgroup.bid_strategy == 'cpc' %}
                         <div class="dataTable-campaign-ecpm ecpm">--</div>
                         {% endif %}
-                    </td>    
+                    </td>
                     <td class="dataTable-data numeric status">--</td>
                     <td class="dataTable-data numeric promo-imp imp">--</td>
                     <td class="dataTable-data numeric promo-clk clk">--</td>
@@ -329,11 +347,31 @@
                   {% endfor %}
                 </tbody>
               </table>{% endif %}
-              {% if marketplace %}
-              <h2>Marketplace {% if not marketplace %}<span class="muted">(None)</span>{% endif %}
+              <h2>Marketplace {% if not marketplace %}<span class="muted">(None)</span> <a href="{% url mpx_info %}"> Learn more </a>{% endif %}
                   <img id="marketplace-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img>
               </h2>
               {% if marketplace %}
+                <div id=marketplace-rollups' class="campaignData-rollup">
+                  <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
+                      <thead>
+                          <tr>
+                              <th width=25%>Impressions</th>
+                              <th width=25%>Clicks</th>
+                              <th width=25%>CTR</th>
+                              <th width=25%>Conversions</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          <tr>
+                              <td id='marketplace-total-imp'>--</td>
+                              <td id='marketplace-total-clk'>--</td>
+                              <td id='marketplace-total-ctr'>--</td>
+                              <td id='marketplace-total-conv'>--</td>
+                              <td></td>
+                          </tr>
+                      </tbody>
+                  </table>
+              </div>
               <table class="dataTable campaignData-main">
                 <thead>
                   <tr>
@@ -350,7 +388,7 @@
                 </thead>
                 <tbody>
                   {% for adgroup in marketplace %}
-                  <tr class="campaignData marketplace_row campaign-status-all campaign-targeting-all incomplete 
+                  <tr class="campaignData marketplace_row campaign-status-all campaign-targeting-all incomplete
                     {% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}"
                     id="{{adgroup.key}}">
                     <th class="campaignData-icon">
@@ -358,7 +396,7 @@
                       {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9 />{% endif %}
                       {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
                       {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
-                    </th> 
+                    </th>
                     <th class="dataTable-name">
                       <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
 
@@ -374,7 +412,7 @@
                   </tr>
                   {% endfor %}
                 </tbody>
-              </table>{% endif %}
+              </table>
               {% endif %}
 
               <h2>Network  {% if not network %}<span class="muted">(None)</span>{% endif %}
@@ -416,9 +454,9 @@
                 </thead>
                 <tbody>
                   {% for adgroup in network %}
-                  <tr class="campaignData network_row campaign-status-all campaign-targeting-all incomplete 
+                  <tr class="campaignData network_row campaign-status-all campaign-targeting-all incomplete
                     {% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}"
-                    
+
                    id="{{adgroup.key}}">
 
                     <th class="campaignData-icon">
@@ -426,7 +464,7 @@
                       {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9 />{% endif %}
                       {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
                       {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
-                    </th> 
+                    </th>
                     <th class="dataTable-name">
                       <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
 
@@ -489,15 +527,15 @@
                 </thead>
                 <tbody>
                   {% for adgroup in backfill_promo %}
-                  <tr class="campaignData bfill_row campaign-status-all campaign-targeting-all incomplete 
-                    {% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}" 
+                  <tr class="campaignData bfill_row campaign-status-all campaign-targeting-all incomplete
+                    {% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}"
                     id="{{adgroup.key}}">
                     <th class="campaignData-icon">
                       <input type="checkbox" name="id" value="{{adgroup.key}}"/>
                       {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9></img>{% endif %}
                       {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
                       {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
-                    </th> 
+                    </th>
                     <th class="dataTable-name">
                         <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
                         <span class="muted">
@@ -520,7 +558,7 @@
                     {% else %}
                     <td class="dataTable-data numeric dataTable-ecpm ecpm">--</td>
                     {% endif %}
-                        
+
                     <td class="dataTable-data numeric status">--</td>
                     <td class="dataTable-data numeric bfill-imp imp">--</td>
                     <td class="dataTable-data numeric bfill-clk clk">--</td>
@@ -552,7 +590,7 @@
                 </thead>
                 <tbody>
                   {% for adgroup in backfill_marketplace %}
-                  <tr class="campaignData backfill_marketplace_row campaign-status-all campaign-targeting-all incomplete 
+                  <tr class="campaignData backfill_marketplace_row campaign-status-all campaign-targeting-all incomplete
                     {% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}"
                     id="{{adgroup.key}}">
                     <th class="campaignData-icon">
@@ -560,7 +598,7 @@
                       {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9 />{% endif %}
                       {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
                       {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
-                    </th> 
+                    </th>
                     <th class="dataTable-name">
                       <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
 
@@ -578,34 +616,34 @@
                 </tbody>
               </table>{% endif %}
              {% endif %}
-              
-              <div class="form-submit-left"> 
+
+              <div class="form-submit-left">
                 <span class="buttonWrap">
                 <a class="button" id="campaignForm-pause">Pause</a>
-                <a class="button" id="campaignForm-resume">Resume</a>      
-                <a class="button" id="campaignForm-archive">Archive</a>   
+                <a class="button" id="campaignForm-resume">Resume</a>
+                <a class="button" id="campaignForm-archive">Archive</a>
                 </span>
-              </div> 
-            </form>  
-            <div id="archive-link" > 
+              </div>
+            </form>
+            <div id="archive-link" >
             <a class="linkIcon" href="{% url advertiser_archive %}"> View Archived Campaigns <span class="ui-icon ui-icon-arrowthick-1-e"></span></a>
             </div>
           </section>
-          
+
           {# Help Content #}
-          <div id="campaign-ecpm-helpContent" class="hidden"> 
+          <div id="campaign-ecpm-helpContent" class="hidden">
             <h3>Revenue Optimized Campaign eCPM</h3>
             <p>We calculate the <strong>eCPM</strong> for CPC campaigns by combining the CPC of the campaign with our CTR calculated in real time. </p>
             <p> This number may vary over time. This is perfectly natural and our system will adjust to these fluctuations in real time. </p>
-            <p> Campaigns that have not yet begun use the average CTR of the entire app to calculate eCPM. </p>        
+            <p> Campaigns that have not yet begun use the average CTR of the entire app to calculate eCPM. </p>
           </div>
-          
-          <div id="campaign-osi-success-helpContent" class="hidden"> 
+
+          <div id="campaign-osi-success-helpContent" class="hidden">
             <h3>On Schedule Indicator</h3>
             <p> The on-schedule indicator tells you that your campaign is on track to hit its budget goal based on current traffic and settings. </p>
           </div>
-          
-          <div id="campaign-osi-failure-helpContent" class="hidden"> 
+
+          <div id="campaign-osi-failure-helpContent" class="hidden">
             <h3>Behind Schedule Indicator</h3>
             <p> The behind-schedule indicator tells you that your campaign is delivering at less than 95% and may not meet its delivery goal. </p>
             <p> Some possible causes of this problem are:
@@ -614,9 +652,11 @@
                 <li> Overly strict frequency capping (e.g. one per person) </li>
                 <li> Insufficient traffic </li>
               </ul>
-            
+
           </div>
-          
+
+          {% include "mpx_tos.html" %}
+
 {% endblock content %}
 
 {% block extraScripts %}
@@ -624,10 +664,25 @@
     var mopub = mopub || {};
     $(function() {
         mopub.isCampaignsPage = true;
-        mopub.graphStartDate = Date.UTC({{start_date.year}}, 
-            {{start_date.month|add:"-1"}}, 
+        mopub.graphStartDate = Date.UTC({{start_date.year}},
+            {{start_date.month|add:"-1"}},
             {{start_date.day}});
         mopub.accountStats = {{account_stats|safe}};
+
+        $("#terms").dialog({
+            autoOpen: false,
+            buttons: {
+                "Accept Terms": function() {
+                },
+                "Not right now": function() {
+                    $(this).dialog("close");
+                }
+
+            }
+        });
+        $("#accept_terms").click(function() {
+            $("#terms").dialog('open');
+        });
     });
 </script>
 <script src="/js/mopub-advertiser.js?v=80"></script>

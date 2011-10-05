@@ -18,8 +18,8 @@ INSTANCE_ID = str(uuid.uuid1())
 # MAX_TIME_BEFORE_FLUSH has elapsed since last flush
 # whichever is the first
 
-MAX_LINES_BEFORE_FLUSH = 1e10
-MAX_TIME_BEFORE_FLUSH = 600 # seconds
+MAX_LINES_BEFORE_FLUSH = 10000
+MAX_TIME_BEFORE_FLUSH = 60 # seconds
 
 FILE_QUEUE_NAME = 'file-finalizer-%02d'
 NUM_FILE_QUEUES = 1

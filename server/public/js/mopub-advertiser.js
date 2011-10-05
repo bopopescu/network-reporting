@@ -347,44 +347,54 @@ var mopub = mopub || {};
 
 
       // set up "Help" links
-      $('#campaignForm-type-helpLink').click(function(e) {
-          e.preventDefault();
-          $('#campaignForm-type-helpContent').dialog({
-              buttons: { "Close": function() { $(this).dialog("close"); } }
-          });
-      });
+      // $('#campaignForm-type-helpLink').click(function(e) {
+      //     e.preventDefault();
+      //     $('#campaignForm-type-helpContent').dialog({
+      //         buttons: { "Close": function() { $(this).dialog("close"); } }
+      //     });
+      // });
 
-      $('#campaignForm-priority-helpLink').click(function(e) {
-          e.preventDefault();
-          $('#campaignForm-priority-helpContent').dialog({
-              buttons: { "Close": function() { $(this).dialog('close'); }}
-          });
-      });
+      // $('#campaignForm-priority-helpLink').click(function(e) {
+      //     e.preventDefault();
+      //     $('#campaignForm-priority-helpContent').dialog({
+      //         buttons: { "Close": function() { $(this).dialog('close'); }}
+      //     });
+      // });
 
-      $('#campaignForm-promo-priority-helpLink').click(function(e) {
-          e.preventDefault();
-          $('#campaignForm-promo-priority-helpContent').dialog({
-              buttons: { "Close": function() { $(this).dialog('close'); }}
-          });
-      });
+      // $('#campaignForm-promo-priority-helpLink').click(function(e) {
+      //     e.preventDefault();
+      //     $('#campaignForm-promo-priority-helpContent').dialog({
+      //         buttons: { "Close": function() { $(this).dialog('close'); }}
+      //     });
+      // });
 
-      $('#campaignForm-customHtml-helpLink').click(function(e) {
-          e.preventDefault();
-          $('#campaignForm-customHtml-helpContent').dialog({
-              buttons: { "Close": function() { $(this).dialog("close"); } }
-          });
-      });
+      // $('#campaignForm-customHtml-helpLink').click(function(e) {
+      //     e.preventDefault();
+      //     $('#campaignForm-customHtml-helpContent').dialog({
+      //         buttons: { "Close": function() { $(this).dialog("close"); } }
+      //     });
+      // });
 
-      $('#campaignForm-bid-helpLink').click(function(e) {
-          e.preventDefault();
-          $('#campaignForm-bid-helpContent').dialog({
-              buttons: { "Close": function() { $(this).dialog("close"); } }
-          });
-      });
-      $('#campaignForm-keyword-helpLink').click(function(e) {
-          e.preventDefault();
-          $('#campaignForm-keyword-helpContent').dialog({
-              buttons: { "Close": function() { $(this).dialog("close"); } }
+      // $('#campaignForm-bid-helpLink').click(function(e) {
+      //     e.preventDefault();
+      //     $('#campaignForm-bid-helpContent').dialog({
+      //         buttons: { "Close": function() { $(this).dialog("close"); } }
+      //     });
+      // });
+      // $('#campaignForm-keyword-helpLink').click(function(e) {
+      //     e.preventDefault();
+      //     $('#campaignForm-keyword-helpContent').dialog({
+      //         buttons: { "Close": function() { $(this).dialog("close"); } }
+      //     });
+      // });
+
+
+      $.each(['type', 'priority', 'promo-priority', 'customHtml', 'bid', 'keyword'], function(iter, link_type) {
+          $('#campaignForm-' + link_type + '-helpLink').click(function(e) {
+              e.preventDefault();
+              $('#campaignForm-' + link_type + '-helpContent').dialog({
+                  buttons: { "Close": function() { $(this).dialog("close"); } }
+              });
           });
       });
 

@@ -659,12 +659,17 @@ class Report(db.Model):
 
         key_tuple = (str(dim), str(key))
         if dim in [CAMP, CRTV]:
-            crtv = dimkey_to_obj[key_tuple]
+            if dim == CAMP:
+                camp = dimkey_to_obj[key_tuple]
+                adgroup = camp.adgroups
+            else:
+                crtv = dimkey_to_obj[key_tuple]
+                adgroup = crtv.adgroup
             try:
-                if crtv.adgroup.campaign.campaign_type == 'network':
+                if adgroup.campaign.campaign_type == 'network':
                     return None, None
                 else:
-                    return (crtv.adgroup.bid_strategy, crtv.adgroup.bid)
+                    return (adgroup.bid_strategy, adgroup.bid)
             except Exception:
                 # This should only ever be called by the EC2 instance, so
                 # this should be safe

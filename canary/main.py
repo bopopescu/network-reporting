@@ -233,11 +233,11 @@ class RecalculateIdHandler(webapp.RequestHandler):
         # if there is a failure alert condition, send an email
         # Yes, this should continue to be sent until the failure condition has been addressed
         if last_success > LAST_SUCCESS_THRESHOLD:
-	    logging.error("Last success has exceeded the threshold")
+	    logging.error("Last success (%d) has exceeded the threshold for %s" % (last_success, id))
             mail.send_mail(sender='olp@mopub.com', 
                            to='eng@mopub.com',
-                           subject="CODE RED: ad server has been down for several tries", 
-                           body="Failure count=%d. See more at http://stats.mopub.com" % last_success)
+                           subject="CODE RED: ad server has been down for %d tries" % last_success, 
+                           body="Failure count=%d. See more at http://stats.mopub.com/performance/%s" % (last_success, id))
 
         # recalculate latency median and average
         latencies = [x.request_ms for x in last if x.request_ms is not None]

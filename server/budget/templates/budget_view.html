@@ -8,8 +8,13 @@
 
 {% block titleBarRight %}{% endblock titleBarRight %}
 
-{% block content %}
-<h3>
+{% block content %} 
+
+{% if not campaign.budget %}  
+  <h2> NOTE: This campaign does not have a budget set. It has an unlimited budget. </h2>  
+{% endif %}
+<h3>      
+  
   <table style="border-spacing:20px 2px; border-collapse:separate">
     <tr>
       <td>Base Daily Budget:</td> <td>{{campaign.budget|currency}}</td> 

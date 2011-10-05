@@ -116,9 +116,13 @@ def budget_view(request, adgroup_key):
     if camp.budget:
         remaining_daily_budget = budget_service.remaining_daily_budget(camp)
 
-    remaining_ts_budget = budget_service.remaining_ts_budget(camp)
+        remaining_ts_budget = budget_service.remaining_ts_budget(camp)
 
-    braking_fraction = budget_service.braking_fraction(camp)
+        braking_fraction = budget_service.braking_fraction(camp)      
+    else:
+        remaining_ts_budget = None
+        remaining_daily_budget = None
+        braking_fraction = None
 
     today = datetime.datetime.now(Pacific_tzinfo()).date()
     one_month_ago = today - datetime.timedelta(days=30)

@@ -970,6 +970,8 @@ function selectArtwork(index) {
   else if ( type == 'android' )
       $('#appForm input[name="package"]').val(app['trackViewUrl']);
   $('#appForm input[name="img_url"]').val(app['artworkUrl60']);
+  $('#appForm select[name="primary_category"]').val(app['primaryGenreName'].toLowerCase());
+  $('#appForm select[name="secondary_category"]').val(app['genres'][1].toLowerCase());
 
   $('#appForm-icon').append($("<img />")
     .attr("src",app.artworkUrl60)

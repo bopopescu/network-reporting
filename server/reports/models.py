@@ -436,16 +436,19 @@ class Report(db.Model):
             obj_key = str(crtv.key())
             for dim in key_dims[obj_key]:
                 key_tuple = (str(dim), obj_key)
+                crtv_tuple = (str(CRTV), obj_key)
 
                 if dim == CRTV:
                     dimkey_to_obj[key_tuple] = crtv
                 elif dim == CAMP:
                     dimkey_to_obj[key_tuple] = crtv.adgroup.campaign
+                    dimkey_to_obj[crtv_tuple] = crtv
                 elif dim == P:
                     priority = crtv.adgroup.campaign.campaign_type
                     if 'gtee' in priority:
                         priority = 'guaranteed'
                     dimkey_to_obj[key_tuple] = priority
+                    dimkey_to_obj[crtv_tuple] = crtv
 
         blobreader.close()
         return dimkey_to_obj
@@ -657,14 +660,16 @@ class Report(db.Model):
         if offline:
             return None, None
 
-        key_tuple = (str(dim), str(key))
+        key_tuple = (str(CRTV), str(key))
+
         if dim in [CAMP, CRTV]:
             crtv = dimkey_to_obj[key_tuple]
+            adgroup = crtv.adgroup
             try:
-                if crtv.adgroup.campaign.campaign_type == 'network':
+                if adgroup.campaign.campaign_type == 'network':
                     return None, None
                 else:
-                    return (crtv.adgroup.bid_strategy, crtv.adgroup.bid)
+                    return (adgroup.bid_strategy, adgroup.bid)
             except Exception:
                 # This should only ever be called by the EC2 instance, so
                 # this should be safe

@@ -367,13 +367,13 @@ class ReportMessageHandler(MessageHandler):
         else:
             fail_text = 'Failed'
 
-        #try:
-        rep = self.get_message_report(message)
-        rep.status = fail_text 
-        rep.put()
-        #except Exception:
-        #    logger.warning("Report notify failed")
-        #    return
+        try:
+            rep = self.get_message_report(message)
+            rep.status = fail_text 
+            rep.put()
+        except Exception:
+            log("Report notify failed", level = 'exception')
+            return
         if reason not in [NODAT, MRFAILURE]:
             self.message_completion_cleanup(message)
 

@@ -7,12 +7,16 @@ from network_scraping.query_managers import AdNetworkReportQueryManager
 
 IS_PRODUCTION = False
 
+if not IS_PRODUCTION:
+    from network_scraping.tests.load_test_data import TestDataLoader
+    test_data_loader = TestDataLoader()
+    test_data_loader.load_test_data()
+
 class AdNetworkReportIndexHandler(RequestHandler):
     def get(self):
         if IS_PRODUCTION:
             manager = AdNetworkReportQueryManager(self.account)
         else:
-            from network_scraping.tests.load_test_data import TestDataLoader
             manager = AdNetworkReportQueryManager(Accounts.get_by_key_name(TestDataLoader.ACCOUNT_KEY_NAME)) 
         totals = manager.get_ad_network_totals()
                 
@@ -37,15 +41,15 @@ class ViewAdNetworkReportHandler(RequestHandler):
 def view_adnetwork_app_report(request, *args, **kwargs):
     return ViewAdNetworkReportHandler()(request, *args, **kwargs)
     
-class AddLoginInfoHandler(RequestHandler):
-    def get(self):
-        """ Input login info and select what apps you want to use it for and store it in the db """
-        manager = AdNetworkReportQueryManager(self.account)
-        totals = manager.get_ad_network_totals()
-
-        return render_to_response(self.request, 'network_scraping/.html',
-                dict(totals = totals))
-
-@login_required
-def add_login_info(request, *args, **kwargs):
-    return AddLoginInfoHandler()(request, *args, **kwargs)
+# class AddLoginInfoHandler(RequestHandler):
+#     def get(self):
+#         """ Input login info and select what apps you want to use it for and store it in the db """
+#         manager = AdNetworkReportQueryManager(self.account)
+#         totals = manager.get_ad_network_totals()
+# 
+#         return render_to_response(self.request, 'network_scraping/.html',
+#                 dict(totals = totals))
+# 
+# @login_required
+# def add_login_info(request, *args, **kwargs):
+#     return AddLoginInfoHandler()(request, *args, **kwargs)

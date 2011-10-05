@@ -1,0 +1,23 @@
+<h1>{{ad_network_name}}</h1>
+<table width=100%>
+    <thead>
+        <th>DATE</th>
+        <th>ATTEMPTS</th>
+        <th>IMPRESSIONS</th>
+        <th>FILLRATE</th>
+        <th>CLICKS</th>
+        <th>CTR</th>
+    </thead>
+    <tbody>
+        {% for stats in days %}
+        <tr>
+            <td class="date">{{stats.date.month}}/{{stats.date.day}}/{{stats.date.year}}</td>
+            <td class="attempts dataTable-data numeric">{{stats.attempts}}</td>
+            <td class="impressions dataTable-data numeric">{{stats.impressions}}</td>
+            <td class="fill_rate dataTable-data numeric">{{stats.fill_rate}}</td>
+            <td class="clicks dataTable-data numeric">{{stats.clicks}}</td>
+            <td class="click dataTable-data numeric">{{stats.ctr}}</td>
+        </tr>
+		{% endfor %}
+	</tbody>
+</table>

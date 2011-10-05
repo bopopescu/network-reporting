@@ -26,7 +26,7 @@ from google.appengine.ext import db
 template.register_template_library('filters.filters')
 
 #makes changes required for local testing / production servers
-IS_PRODUCTION = False
+IS_PRODUCTION = True
 if not IS_PRODUCTION:
     from load_adunits import *
     AdTest(adunit_app_name="", adunit_name="", adunit_id="agltb3B1Yi1pbmNyDAsSBFNpdGUYrLwgDA", active=True).put()
@@ -192,7 +192,7 @@ class RecalculateHandler(webapp.RequestHandler):
                 id_last = memcache.get("%s-last-requests" % ad_test.adunit_id) or []
 
                 # update running totals for statistics
-                failure_sum += sum([1 for x in id_last if x.success])
+                failure_sum += sum([1 for x in id_last if not x.success])
                 request_count += len(id_last)
                 id_last_successes = [i for i, v in enumerate(id_last) if v.success]
                 if len(id_last_successes) > 0:

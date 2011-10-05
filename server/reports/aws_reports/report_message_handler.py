@@ -367,13 +367,13 @@ class ReportMessageHandler(MessageHandler):
         else:
             fail_text = 'Failed'
 
-        #try:
-        rep = self.get_message_report(message)
-        rep.status = fail_text 
-        rep.put()
-        #except Exception:
-        #    logger.warning("Report notify failed")
-        #    return
+        try:
+            rep = self.get_message_report(message)
+            rep.status = fail_text 
+            rep.put()
+        except Exception:
+            log("Report notify failed", level = 'exception')
+            return
         if reason not in [NODAT, MRFAILURE]:
             self.message_completion_cleanup(message)
 
@@ -464,7 +464,7 @@ class ReportMessageHandler(MessageHandler):
         retry = 0
         while retry < 5:
             try:
-                jobflows = self.emr_conn.describe_jobflows(jobflow_ids = self.working_jobids)
+                jobflows = self.emr_conn.describe_jobflows(jobflow_ids = ids)
                 return jobflows
             except Exception:
                 # Probs just a rate limit issue, sleep and try again

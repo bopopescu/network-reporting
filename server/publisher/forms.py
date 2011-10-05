@@ -8,11 +8,11 @@ from django import forms
 from django.core.urlresolvers import reverse
 from common.utils import forms as mpforms
 from common.utils import fields as mpfields
-from common.utils import widgets as mpwidgets 
+from common.utils import widgets as mpwidgets
 from publisher.models import Site, App
 
 CATEGORY_CHOICES = (
-        (u'not_selected', '-----------------'),
+        (u'', '-----------------'),
         (u'books', 'Books'),
         (u'business', 'Business'),
         (u'education', 'Education'),
@@ -41,15 +41,15 @@ class AppForm(mpforms.MPModelForm):
     img_url = forms.URLField(verify_exists=False,required=False)
     img_file = forms.FileField(required=False)
     is_edit_form = forms.BooleanField(required=False)
-    
-    primary_category = mpfields.MPChoiceField(choices=CATEGORY_CHOICES,widget=mpwidgets.MPSelectWidget)
-    secondary_category = mpfields.MPChoiceField(choices=CATEGORY_CHOICES,widget=mpwidgets.MPSelectWidget)
-    
+
+    primary_category = mpfields.MPChoiceField(choices=CATEGORY_CHOICES,widget=mpwidgets.MPSelectWidget, required=True)
+    secondary_category = mpfields.MPChoiceField(choices=CATEGORY_CHOICES,widget=mpwidgets.MPSelectWidget, required=False)
+
     def __init__(self, *args,**kwargs):
         instance = kwargs.get('instance',None)
         initial = kwargs.get('initial',None)
         is_edit_form = kwargs.pop('is_edit_form', None)
-        
+
         if instance:
             img_url = reverse('publisher_app_icon',kwargs={'app_key':str(instance.key())})
             if not initial:
@@ -62,7 +62,7 @@ class AppForm(mpforms.MPModelForm):
     class Meta:
         model = App
         fields = ('name', 'app_type', 'url', 'package', 'description', 'adsense_app_name', 'primary_category', 'secondary_category')
-        
+
     def save(self,commit=True):
         obj = super(AppForm,self).save(commit=False)
         if self.cleaned_data['img_url']:
@@ -85,10 +85,17 @@ class AppForm(mpforms.MPModelForm):
                 raise Exception('WTF2: %s'%e)
         elif self.instance: # if neither img_url or img_file come in just use the old value
             logging.info("keeping same icon because no new provided")
-            obj.icon = self.instance.icon        
+            obj.icon = self.instance.icon
         if commit:
             obj.put()
-        return obj            
+        return obj
+
+    def clean_name(self):
+        data = self.cleaned_data['name']
+        if not data:
+            raise forms.ValidationError('Please provide a name for your app.')
+        return data
+
 
 ANIMATION_CHOICES = (
         (u'0', 'No Animation'),
@@ -110,7 +117,7 @@ class AdUnitForm(mpforms.MPModelForm):
     format = mpfields.MPTextField(required=True, widget = mpwidgets.MPFormatWidget)
     device_format = mpfields.MPChoiceField(required=True, widget=mpwidgets.MPRadioWidget, choices=DEVICE_FORMAT_CHOICES)
     # animation_type = mpfields.MPChoiceField(choices=ANIMATION_CHOICES,widget=mpwidgets.MPSelectWidget)
-    
+
     class Meta:
         model = Site
         fields = ('name','description','app_key','ad_type', 'backfill', 'keywords',

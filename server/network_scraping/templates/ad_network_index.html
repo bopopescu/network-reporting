@@ -1,6 +1,7 @@
 <table width=100%>
     <thead>
-        <th>NAME</th>
+		<th>APP NAME</th>
+        <th>AD NETWORK NAME</th>
         <th>ATTEMPTS</th>
         <th>IMPRESSIONS</th>
         <th>FILLRATE</th>
@@ -8,9 +9,10 @@
         <th>CTR</th>
     </thead>
     <tbody>
-        {% for stats in totals %}
+        {% for key, stats in totals %}
         <tr>
-            <td class="name"><a href='/ad_network_reports/app_view/{{stats.key()}}'>{{stats.ad_network_name}}</a></td>
+			<td class="name">{{stats.application.name}}</td>
+            <td class="name"><a href='/ad_network_reports/app_view/{{key}}'>{{stats.ad_network_name}}</a></td>
             <td class="attempts dataTable-data numeric">{{stats.attempts}}</td>
             <td class="impressions dataTable-data numeric">{{stats.impressions}}</td>
             <td class="fill_rate dataTable-data numeric">{{stats.fill_rate}}</td>

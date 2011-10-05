@@ -3,6 +3,7 @@
 
 from google.appengine.ext import db
 
+from account.models import Account
 from common.utils.query_managers import CachedQueryManager
 from network_scraping.models import AdNetworkLoginInfo, AdNetworkAppMapper, AdNetworkScrapeStats
 from publisher.models import App
@@ -17,7 +18,7 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         elif account is None:
             self.account = None
         else:
-            self.account = db.Key(account)
+            self.account = Account.get_by_key_name(account) #db.Key(account) 
         
     def get_ad_network_totals(self):
         """ Get the aggregate stats for the different apps given an account """
@@ -37,9 +38,13 @@ class AdNetworkReportQueryManager(CachedQueryManager):
     def get_ad_network_app_mapper(self, *args, **kwargs):
         """ Get the AdNetworkAppMapper for a given publisher id and 
         login info """
-        if kwargs['ad_network_app_mapper_key']:
-            return AdNetworkAppMapper.get_by_key_name(kwargs['ad_network_app_mapper_key'])
-        elif kwargs['publisher_id'] and kwargs['login_info']:
+        ad_network_app_mapper_key = kwargs.get('ad_network_app_mapper_key', None)
+        publisher_id = kwargs.get('publisher_id', None)
+        login_info = kwargs.get('login_info', None)
+        
+        if ad_network_app_mapper_key:
+            return db.get(ad_network_app_mapper_key)
+        elif publisher_id and login_info:
             query = AdNetworkAppMapper.all()
             query.filter('publisher_id =', publisher_id)
             query.filter('ad_network_login =', login_info)

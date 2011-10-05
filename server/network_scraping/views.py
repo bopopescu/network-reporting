@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib.auth.decorators import login_required
 
 from common.ragendja.template import render_to_response
@@ -5,23 +7,28 @@ from common.utils.request_handler import RequestHandler
 
 from network_scraping.query_managers import AdNetworkReportQueryManager
 
-IS_PRODUCTION = False
+from google.appengine.ext import db
+from network_scraping.models import *
 
-if not IS_PRODUCTION:
-    from network_scraping.tests.load_test_data import TestDataLoader
-    test_data_loader = TestDataLoader()
-    test_data_loader.load_test_data()
+IS_PRODUCTION = False
 
 class AdNetworkReportIndexHandler(RequestHandler):
     def get(self):
         if IS_PRODUCTION:
             manager = AdNetworkReportQueryManager(self.account)
         else:
-            manager = AdNetworkReportQueryManager(Accounts.get_by_key_name(TestDataLoader.ACCOUNT_KEY_NAME)) 
-        totals = manager.get_ad_network_totals()
-                
+            from network_scraping.load_test_data import TestDataLoader
+            manager = AdNetworkReportQueryManager(TestDataLoader.ACCOUNT_KEY_NAME) 
+        mappers = manager.get_ad_network_totals()
+        
+        # for testing
+        query = AdNetworkAppMapper.all()
+        mappers = list(query)
+        
+        mappers = sorted(mappers, key = lambda s: s.application.name + s.ad_network_name)
+        mappers = [(s.key(), s) for s in mappers]
         return render_to_response(self.request, 'network_scraping/ad_network_index.html',
-                dict(totals = totals))
+                dict(totals = mappers))
                      
 @login_required
 def adnetwork_report_index(request, *args, **kwargs):
@@ -30,11 +37,12 @@ def adnetwork_report_index(request, *args, **kwargs):
 class ViewAdNetworkReportHandler(RequestHandler):
     def get(self, ad_network_app_mapper_key, *args, **kwargs):
         manager = AdNetworkReportQueryManager(self.account)
-        dates = manager.get_ad_network_app_stats(ad_network_app_mapper)
         
-        ad_network_name = manager.get_ad_network_app_mapper(ad_network_app_mapper_key = ad_network_app_mapper_key).ad_network_name
+        logging.warning("ad_network_app_mapper_key = %s" % ad_network_app_mapper_key)
+        ad_network_app_mapper = manager.get_ad_network_app_mapper(ad_network_app_mapper_key = ad_network_app_mapper_key)
+        dates = manager.get_ad_network_app_stats(ad_network_app_mapper)
         return render_to_response(self.request, 'network_scraping/view_app_ad_network_report.html',
-                dict(ad_network_name = ad_network_name,
+                dict(ad_network_name = ad_network_app_mapper.ad_network_name,
                      dates = dates))
 
 @login_required

@@ -9,7 +9,7 @@
         <th>CTR</th>
     </thead>
     <tbody>
-        {% for stats in days %}
+        {% for stats in dates %}
         <tr>
             <td class="date">{{stats.date.month}}/{{stats.date.day}}/{{stats.date.year}}</td>
             <td class="attempts dataTable-data numeric">{{stats.attempts}}</td>

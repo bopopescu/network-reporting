@@ -12,9 +12,9 @@ if EC2:
     sys.path.append('/home/ubuntu/google_appengine/lib/ipaddr')
     sys.path.append('/home/ubuntu/google_appengine/lib/webob')
     sys.path.append('/home/ubuntu/google_appengine/lib/yaml/lib')
-else:
-    # Assumes it is being called from ./run_tests.sh from server dir
-    sys.path.append(os.environ['PWD'])
+# else:
+#     # Assumes it is being called from ./run_tests.sh from server dir
+#     sys.path.append(os.environ['PWD'])
 
 from appengine_django import InstallAppengineHelperForDjango
 InstallAppengineHelperForDjango()

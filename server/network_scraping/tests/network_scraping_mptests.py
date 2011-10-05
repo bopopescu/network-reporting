@@ -147,10 +147,11 @@ def network_scraping_mptest():
     assert len(test_network_app_mappers) > 0
     assert len(test_network_app_mappers) == len(network_app_mappers)
     
-    logging.warning([a.key() for a in test_network_app_mappers])
+    logging.warning([a.key().name for a in test_network_app_mappers])
     
     # Was a day created for each app for the account?
     yesterday = date.today() - timedelta(days = 1)
     for n in test_network_app_mappers:
+        n = manager.get_ad_network_app_mapper(ad_network_app_mapper_key = n.key())
         stats = manager.get_ad_network_app_stats(n)
         assert stats[0].date == yesterday

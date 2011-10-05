@@ -464,7 +464,7 @@ class ReportMessageHandler(MessageHandler):
         retry = 0
         while retry < 5:
             try:
-                jobflows = self.emr_conn.describe_jobflows(jobflow_ids = self.working_jobids)
+                jobflows = self.emr_conn.describe_jobflows(jobflow_ids = ids)
                 return jobflows
             except Exception:
                 # Probs just a rate limit issue, sleep and try again

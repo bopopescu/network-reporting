@@ -37,13 +37,7 @@ class AdNetworkAppMapper(db.Model):
     ad_network_login = db.ReferenceProperty(AdNetworkLoginInfo, collection_name='ad_network_app_mappers')
     application = db.ReferenceProperty(App, collection_name='ad_network_app_mappers')
     
-    # aggregate stats info
-    attempts = db.IntegerProperty()
-    impressions = db.IntegerProperty()
-    fill_rate = db.FloatProperty()
-    clicks = db.IntegerProperty()
-    ctr = db.FloatProperty()
-    ecpm = db.FloatProperty()
+    send_email = db.BooleanProperty(default = False)
     
     def __init__(self, *args, **kwargs):
         if not kwargs.get('key', None):
@@ -57,6 +51,7 @@ class AdNetworkScrapeStats(db.Model):
     date = db.DateProperty(required = True)
     
     # stats info for a specific day
+    revenue = db.FloatProperty()
     attempts = db.IntegerProperty()
     impressions = db.IntegerProperty()
     fill_rate = db.FloatProperty()

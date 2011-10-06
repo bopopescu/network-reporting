@@ -23,8 +23,8 @@ class IAdScraper(Scraper):
     SS_FNAME = 'ScraperScreen_%s.png'
     STATS_PAGE = 'https://iad.apple.com/itcportal/#app_homepage'
     LOGIN_TITLE = 'iTunes Connect - iAd Network Sign In'
-    APP_STATS = ('ecpm', 'requests', 'impressions', 'fill_rate', 'ctr')
-    MONEY_STATS = ['ecpm']
+    APP_STATS = ('revenue', 'ecpm', 'requests', 'impressions', 'fill_rate', 'ctr')
+    MONEY_STATS = ['revenue', 'ecpm']
     PCT_STATS = ['fill_rate', 'ctr']
 
     def __init__(self, credentials):
@@ -62,9 +62,10 @@ class IAdScraper(Scraper):
         self.browser.find_element_by_css_selector('select').find_element_by_css_selector('option[value=customDateRange]').click()
         self.set_date('#gwt-debug-date-range-selector-start-date-box', start_date)
         self.set_date('#gwt-debug-date-range-selector-end-date-box', end_date)
-        time.sleep(3)
 
     def get_cal_date(self):
+        # Wait for page to load
+        time.sleep(3)
         return datetime.strptime(self.browser.find_element_by_css_selector('td.datePickerMonth').text, '%b %Y').date()
 
     def set_date(self, selector, date):
@@ -132,7 +133,8 @@ class IAdScraper(Scraper):
                     data = eval(data)
                 app_dict[stat] = data
                 
-            nsr = NetworkScrapeRecord(attempts = app_dict['requests'],
+            nsr = NetworkScrapeRecord(revenue = app_dict['revenue'],
+                                      attempts = app_dict['requests'],
                                       impressions = app_dict['impressions'],
                                       fill_rate = app_dict['fill_rate'],
                                       clicks = int(app_dict['ctr'] * app_dict['impressions']),

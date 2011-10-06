@@ -78,7 +78,8 @@ class AdMobScraper(Scraper):
         
         records = []
         for stats in site_stats['data']:
-            nsr = NetworkScrapeRecord(attempts = stats['requests'],
+            nsr = NetworkScrapeRecord(revenue = stats['revenue'],
+                                      attempts = stats['requests'],
                                       impressions = stats['impressions'],
                                       fill_rate = stats['fill_rate'],
                                       clicks = stats['clicks'],

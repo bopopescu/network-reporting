@@ -16,6 +16,8 @@ if EC2:
 #     # Assumes it is being called from ./run_tests.sh from server dir
 #     sys.path.append(os.environ['PWD'])
 
+from common.utils.date_magic import date_magic
+
 from appengine_django import InstallAppengineHelperForDjango
 InstallAppengineHelperForDjango()
 
@@ -58,68 +60,60 @@ networks = {'admob' : Network(constructor = AdMobScraper, get_pub_id = get_pub_i
             'inmobi' : Network(constructor = InMobiScraper, get_pub_id = get_pub_id),
             'mobfox' : Network(constructor = MobFoxScraper, get_pub_id = get_pub_id)}
 
-def update_ad_networks():
-    yesterday = date.today() - timedelta(days = 1)
+def update_ad_networks(start_date = None, end_date = None):
+    if start_date is None and end_date is None:
+        yesterday = date.today() - timedelta(days = 1)
+        start_date = yesterday
+        end_date = yesterday
 
-    # log in to ad networks and update stats for each user 
-    for login_info in AdNetworkLoginInfo.all():
+    for test_date in date_magic.gen_days(start_date, end_date):
+        # log in to ad networks and update stats for each user 
+        for login_info in AdNetworkLoginInfo.all():
 
-        scraper = networks[login_info.ad_network_name].constructor(login_info)
+            scraper = networks[login_info.ad_network_name].constructor(login_info)
 
-        # returns a list of NetworkScrapeRecord objects of stats for each app for yesterday
-        stats_list = scraper.get_site_stats(yesterday)
+            # returns a list of NetworkScrapeRecord objects of stats for each app for the test_date
+            try:
+                stats_list = scraper.get_site_stats(test_date)
+            except Exception:
+                logging.error("Couldn't get get stats for %s network for %s account." % (login_info.ad_network_name, login_info.account.title))
+                logging.error("Can try again later or perhaps %s changed it's API or site." % login_info.ad_network_name)
+                pass
 
-        for stats in stats_list:
+            for stats in stats_list:
     
-            ''' Add the current day to the db '''
+                ''' Add the current day to the db '''
             
-            publisher_id = networks[login_info.ad_network_name].get_pub_id(stats.app_tag, login_info)
+                publisher_id = networks[login_info.ad_network_name].get_pub_id(stats.app_tag, login_info)
             
-            # Using GQL to get the ad_network object that corresponds to the login_info and stats
-            manager = AdNetworkReportQueryManager(login_info.account)
-            ad_network = manager.get_ad_network_app_mapper(publisher_id = publisher_id,
-                                                           login_info = login_info)
+                # Using GQL to get the ad_network object that corresponds to the login_info and stats
+                manager = AdNetworkReportQueryManager(login_info.account)
+                ad_network = manager.get_ad_network_app_mapper(publisher_id = publisher_id,
+                                                               login_info = login_info)
             
-            if ad_network is None:
-                # App is not registered in MoPub but is still in the ad network
-                logging.info('%(account)s has pub id %(pub_id)s on %(ad_network)s that\'s NOT in MoPub' %
-                             dict(account = login_info.account.title,
-                                  pub_id = stats.app_tag,
-                                  ad_network = login_info.ad_network_name))
-                continue
-            else:
-                logging.info('%(account)s has pub id %(pub_id)s on %(ad_network)s that\'s in MoPub' %
-                             dict(account = login_info.account.title,
-                                  pub_id = stats.app_tag,
-                                  ad_network = login_info.ad_network_name))
+                if ad_network is None:
+                    # App is not registered in MoPub but is still in the ad network
+                    logging.info('%(account)s has pub id %(pub_id)s on %(ad_network)s that\'s NOT in MoPub' %
+                                 dict(account = login_info.account.title,
+                                      pub_id = stats.app_tag,
+                                      ad_network = login_info.ad_network_name))
+                    continue
+                else:
+                    logging.info('%(account)s has pub id %(pub_id)s on %(ad_network)s that\'s in MoPub' %
+                                 dict(account = login_info.account.title,
+                                      pub_id = stats.app_tag,
+                                      ad_network = login_info.ad_network_name))
         
-            AdNetworkScrapeStats(ad_network_app_mapper = ad_network,
-                                 date = yesterday,
-                                 attempts = stats.attempts,
-                                 impressions = stats.impressions,
-                                 fill_rate = float(stats.fill_rate),
-                                 clicks = stats.clicks,
-                                 ctr = float(stats.ctr),
-                                 ecpm = float(stats.ecpm)
-                                 ).put()
-
-            ''' Update the aggregate '''
-            
-            old_impressions_total = ad_network.impressions
-    
-            ad_network.attempts += stats.attempts
-            ad_network.impressions += stats.impressions
-            if ad_network.attempts != 0:
-                ad_network.fill_rate = ad_network.impressions / float(ad_network.attempts)
-            else:
-                ad_network.fill_rate = float('NaN')
-            ad_network.clicks += stats.clicks
-            if ad_network.impressions != 0:
-                ad_network.ctr = ad_network.clicks / float(ad_network.impressions)
-                ad_network.ecpm = (ad_network.ecpm * old_impressions_total + stats.ecpm * stats.impressions) / float(ad_network.impressions)
-            else:
-                ad_network.ctr = float('NaN')
-                ad_network.ecpm = float('NaN')
+                AdNetworkScrapeStats(ad_network_app_mapper = ad_network,
+                                     date = test_date,
+                                     revenue = float(stats.revenue),
+                                     attempts = stats.attempts,
+                                     impressions = stats.impressions,
+                                     fill_rate = float(stats.fill_rate),
+                                     clicks = stats.clicks,
+                                     ctr = float(stats.ctr),
+                                     ecpm = float(stats.ecpm)
+                                     ).put()
                 
 if __name__ == "__main__":
     setup_remote_api()

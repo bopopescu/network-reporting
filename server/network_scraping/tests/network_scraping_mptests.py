@@ -143,7 +143,7 @@ def network_scraping_mptest():
     ''' Verify results '''
     manager = AdNetworkReportQueryManager(account)
     
-    test_network_app_mappers = list(manager.get_ad_network_totals())
+    test_network_app_mappers = list(manager.get_ad_network_mappers())
     assert len(test_network_app_mappers) > 0
     assert len(test_network_app_mappers) == len(network_app_mappers)
     
@@ -155,3 +155,6 @@ def network_scraping_mptest():
         n = manager.get_ad_network_app_mapper(ad_network_app_mapper_key = n.key())
         stats = manager.get_ad_network_app_stats(n)
         assert stats[0].date == yesterday
+        
+    # Do aggregate statistics work?
+    aggregates = [manager.get_ad_network_aggregates(n, date.today() - timedelta(days = 8), date.today() - timedelta(days = 1)) for n in test_network_app_mappers]

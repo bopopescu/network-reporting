@@ -56,13 +56,13 @@ class InMobiScraper(Scraper):
         reports = []
         errors = self.dom.getElementsByTagName('error')
         if len(errors) == 0:   
-            for app_stats in zip(self.get_data_list('req'), self.get_data_list('imp'), self.get_data_list('fr'),
-                                 self.get_data_list('clk'), self.get_data_list('ctr'), self.get_data_list('ecpm'),
-                                 self.get_data_list('excol')):
-                nsr = NetworkScrapeRecord(attempts = int(app_stats[0]), impressions = int(app_stats[1]),
-                                          fill_rate = float(app_stats[2]), clicks = int(app_stats[3]),
-                                          ctr = float(app_stats[4]), ecpm = float(app_stats[5]),
-                                          app_tag = str(app_stats[6]))
+            for app_stats in zip(self.get_data_list('earn'), self.get_data_list('req'), self.get_data_list('imp'),
+                                 self.get_data_list('fr'), self.get_data_list('clk'), self.get_data_list('ctr'),
+                                 self.get_data_list('ecpm'), self.get_data_list('excol')):
+                nsr = NetworkScrapeRecord(revenue = float(app_stats[0]), attempts = int(app_stats[1]),
+                                          impressions = int(app_stats[2]), fill_rate = float(app_stats[3]),
+                                          clicks = int(app_stats[4]), ctr = float(app_stats[5]),
+                                          ecpm = float(app_stats[6]), app_tag = str(app_stats[7]))
                 reports.append(nsr)
         else:
             print ('Day range (%s to %s) selected for InMobi doesn\'t have any data' % 

@@ -27,6 +27,7 @@ class JumpTapScraper(Scraper):
 
         headers = response.readline().split(',')
 
+        revenue_index = headers.index('Net Revenue$')
         request_index = headers.index('Requests')
         imp_index = headers.index('Paid Impressions')
         click_index = headers.index('Clicks')
@@ -39,7 +40,8 @@ class JumpTapScraper(Scraper):
         for line in response:
             vals = line.split(',')
             if vals[0] != 'Totals':
-                nsr = NetworkScrapeRecord(attempts = int(vals[request_index]),
+                nsr = NetworkScrapeRecord(revenue = float(vals[revenue_index]),
+                                          attempts = int(vals[request_index]),
                                           impressions = int(vals[request_index]),
                                           clicks = int(vals[click_index]),
                                           ecpm = float(vals[cpm_index]),
@@ -52,24 +54,27 @@ class JumpTapScraper(Scraper):
         
         records = []
         for v in scrape_records.values():
+            revenue = 0
             attempts = 0
             impressions = 0
             clicks = 0
             cost = 0
             
             for n in v:
+                revenue += n.revenue
                 attempts += n.attempts
                 impressions += n.impressions
                 clicks += n.clicks
                 cost += n.ecpm * n.impressions
             
-            nsr = NetworkScrapeRecord(attempts = attempts,
-                                impressions = impressions,
-                                clicks = clicks,
-                                fill_rate = impressions / float(attempts),
-                                ctr = clicks / float(impressions),
-                                ecpm = cost / float(impressions),
-                                app_tag = v[0].app_tag)
+            nsr = NetworkScrapeRecord(revenue = revenue,
+                                      attempts = attempts,
+                                      impressions = impressions,
+                                      clicks = clicks,
+                                      fill_rate = impressions / float(attempts),
+                                      ctr = clicks / float(impressions),
+                                      ecpm = cost / float(impressions),
+                                      app_tag = v[0].app_tag)
                                 
             records.append(nsr)
 
@@ -86,5 +91,4 @@ if __name__ == '__main__':
     nc.ad_network_name = 'jumptap'
     scraper = JumpTapScraper(nc)
     print scraper.get_site_stats(date.today())
-    
     

@@ -2,6 +2,7 @@
 <table width=100%>
     <thead>
         <th>DATE</th>
+		<th>REVENUE</th>
         <th>ATTEMPTS</th>
         <th>IMPRESSIONS</th>
         <th>FILLRATE</th>
@@ -12,6 +13,7 @@
         {% for stats in dates %}
         <tr>
             <td class="date">{{stats.date.month}}/{{stats.date.day}}/{{stats.date.year}}</td>
+			<td class="revenue dataTable-data numeric">{{stats.revenue}}</td>
             <td class="attempts dataTable-data numeric">{{stats.attempts}}</td>
             <td class="impressions dataTable-data numeric">{{stats.impressions}}</td>
             <td class="fill_rate dataTable-data numeric">{{stats.fill_rate}}</td>

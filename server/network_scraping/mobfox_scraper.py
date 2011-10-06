@@ -31,7 +31,8 @@ class MobFoxScraper(object):
             self.dom = minidom.parseString(response.read())
         
             try:
-                nsr = NetworkScrapeRecord(attempts = 0, # We can't get the number of attempts / requests
+                nsr = NetworkScrapeRecord(revenue = float(self.get_value("earnings")),
+                                          attempts = 0, # We can't get the number of attempts / requests
                                           impressions = int(self.get_value("impressions")),
                                           fill_rate = 0.0, # We can't get this and we don't have # attempts so we can't calculate it
                                           clicks = int(self.get_value("clicks")),

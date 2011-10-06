@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 
 from common.ragendja.template import render_to_response
 from common.utils.request_handler import RequestHandler
-
+from datetime import timedelta, date
 from network_scraping.query_managers import AdNetworkReportQueryManager
 
 from google.appengine.ext import db
@@ -18,17 +18,23 @@ class AdNetworkReportIndexHandler(RequestHandler):
             manager = AdNetworkReportQueryManager(self.account)
         else:
             from network_scraping.load_test_data import TestDataLoader
-            manager = AdNetworkReportQueryManager(TestDataLoader.ACCOUNT_KEY_NAME) 
-        mappers = manager.get_ad_network_totals()
+            manager = AdNetworkReportQueryManager(TestDataLoader.ACCOUNT_KEY_NAME)
+        mappers = manager.get_ad_network_mappers()
         
         # for testing
         query = AdNetworkAppMapper.all()
         mappers = list(query)
         
-        mappers = sorted(mappers, key = lambda s: s.application.name + s.ad_network_name)
-        mappers = [(s.key(), s) for s in mappers]
+        keys = [s.key() for s in mappers]
+        # Get aggregate stats for all the different ad network mappers for the account between the selected date range
+        aggregates = [manager.get_ad_network_aggregates(n, date.today() - timedelta(days = 8), date.today() - timedelta(days = 1)) for n in mappers]
+        aggregate_stats = zip(keys, mappers, aggregates)
+        
+        # Sort alphabetically by application name then by ad network name
+        aggregate_stats = sorted(aggregate_stats, key = lambda s: s[1].application.name + s[1].ad_network_name)
+        
         return render_to_response(self.request, 'network_scraping/ad_network_index.html',
-                dict(totals = mappers))
+                dict(aggregate_stats = aggregate_stats))
                      
 @login_required
 def adnetwork_report_index(request, *args, **kwargs):

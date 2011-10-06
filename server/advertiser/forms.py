@@ -291,7 +291,8 @@ class TextAndTileCreativeForm(AbstractCreativeForm):
 
     class Meta:
         model = TextAndTileCreative
-        fields = ('line1','line2', 'ad_type','name','tracking_url','url','format','custom_height','custom_width','landscape', 'conv_appid', 'launchpage')
+        fields = ('action_icon', 'color', 'font_color', 'gradient') + \
+                 ('line1','line2', 'ad_type','name','tracking_url','url','format','custom_height','custom_width','landscape', 'conv_appid', 'launchpage')
 
     def __init__(self, *args,**kwargs):
         instance = kwargs.get('instance',None)

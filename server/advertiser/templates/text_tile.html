@@ -9,7 +9,7 @@
       <div style="font-weight:bold;margin:0px 0 0 5px;padding-top:8;">{{c.line1}}</div>
       <div style="margin-top:6px;margin:5px 0 0 5px;">{{c.line2}}</div>
     </div>
-    {% if c.action_icon %}
+    {% if c.action_icon != 'none' %}
     <div style="padding-top:5px;position:absolute;top:0;right:0;"><a href="{{c.url}}"><img src="/images/{{c.action_icon}}.png" width=40 height=40/></a></div>
     {% endif %}
 {% if c.gradient %}

@@ -1,4 +1,4 @@
-import hashlib
+import hashlib, datetime
 
 from ad_server.networks.server_side import ServerSide
 from ad_server.networks.greystripe import GreyStripeServerSide
@@ -15,7 +15,9 @@ from common.utils import simplejson
 from google.appengine.api import urlfetch
 from google.appengine.ext import webapp
 
-from publisher.models import AdUnit
+from publisher.models import AdUnit 
+
+from ad_server.auction.client_context import ClientContext    
 
 class TestHandler(webapp.RequestHandler):
     def get(self):
@@ -34,10 +36,20 @@ class TestHandler(webapp.RequestHandler):
             adunit = AdUnit.get(key)
             network_name = self.request.get('network','BrightRoll')
             ServerSideKlass = locals()[network_name+"ServerSide"]
+            
+            client_context = ClientContext(adunit=adunit,
+                                           keywords=None,
+                                           country_code="US",
+                                           excluded_adgroup_keys=[],
+                                           raw_udid="FakeUDID", 
+                                           ll=None,
+                                           request_id=None,
+                                           now=datetime.datetime.now(),
+                                           user_agent='FakeAndroidOS',        
+                                           experimental=False)
     
-    
-            server_side = ServerSideKlass(self.request,adunit)
-            self.response.out.write("URL: %s <br/>PAYLOAD: %s <br/> HEADERS: %s<br/><br/>"%(server_side.url,server_side.payload,server_side.headers))
+            server_side = ServerSideKlass(client_context, adunit)
+            self.response.out.write("URL: %s <br/>PAYLOAD: %s <br/> HEADERS: %s<br/><br/>"%(server_side.url, server_side.payload, server_side.headers))
     
             rpc = urlfetch.create_rpc(delay) # maximum delay we are willing to accept is 1000 ms
     
@@ -53,17 +65,10 @@ class TestHandler(webapp.RequestHandler):
             try:
                 result = rpc.get_result()
                 if result.status_code == 200:
-                    server_tuple = server_side.bid_and_html_for_response(result)
-                    bid = server_tuple[0]
-                    response = server_tuple[1]
-                    if len(server_tuple) > 2:
-                        width = server_tuple[2]
-                        height = server_tuple[3]
-                    else:
-                        width = "UNKOWN"
-                        height = "UNKOWN"    
+                    html = server_side.html_for_response(result)
+
                     # self.response.out.write(response)
-                    self.response.out.write("%s<br/> %s %s %s %s"%(server_side.url+'?'+payload if payload else '',bid,response, width, height))
+                    self.response.out.write("%s<br/> %s"%(server_side.url+'?'+payload if payload else '', html))
                 else:
                     self.response.out.write("status: %s"%result.status_code)    
             except urlfetch.DownloadError:

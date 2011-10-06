@@ -12,6 +12,45 @@ TEST_IAD_PUB_ID = '362641118' # NOT IN NetworkConfig
 TEST_INMOBI_PUB_ID ='4028cb962b75ff06012b792fc5fb0045'
 TEST_MOBFOX_PUB_ID = 'fb8b314d6e62912617e81e0f7078b47e'
 
+""" Office Jerk """
+# JumpTap login info
+jumptap_login_info = AdNetworkLoginInfo(account = account, ad_network_name = 'jumptap', username = 'vrubba',
+                                        password = 'fluik123!')
+jumptap_login_info.put()
+
+# InMobi login info
+inmobi_login_info = AdNetworkLoginInfo(account = account, ad_network_name = 'inmobi', username = 'info@fluik.com',
+                                    password = 'fluik123!')
+inmobi_login_info.put()
+
+""" Chess.com """
+# iAd login info                                        
+iad_login_info = AdNetworkLoginInfo(account = account, ad_network_name = 'iad', username = 'chesscom',
+                                       password = 'Faisal1Chess')
+iad_login_info.put()
+
+# JumpTap login info
+jumptap_login_info = AdNetworkLoginInfo(account = account, ad_network_name = 'jumptap', username = 'chesscom',
+                                        password = 'Y7u8i9o0')
+jumptap_login_info.put()
+
+# InMobi login info
+inmobi_login_info = AdNetworkLoginInfo(account = account, ad_network_name = 'inmobi', username = 'chesscom@gmail.com',
+                                    password = 'Y7u8i9o0')
+inmobi_login_info.put()
+
+""" Flashlight Zaphrox """
+# JumpTap login info
+jumptap_login_info = AdNetworkLoginInfo(account = account, ad_network_name = 'jumptap', username = 'zaphrox',
+                                        password = 'JR.7x89re0')
+jumptap_login_info.put()
+
+# InMobi login info
+inmobi_login_info = AdNetworkLoginInfo(account = account, ad_network_name = 'inmobi', username = 'JR.7x89re0',
+                                    password = '1Bom.7fG8k')
+inmobi_login_info.put()
+
+
 account = Account()
 account.put()
 
@@ -34,6 +73,7 @@ iad_login_info.put()
 inmobi_login_info = AdNetworkLoginInfo(account = account, ad_network_name = 'inmobi', username = '4028cb8b2b617f70012b792fe65e00a2',
                                     password = '84585161')
 inmobi_login_info.put()
+
 # MobFox login info
 mobfox_login_info = AdNetworkLoginInfo(account = account, ad_network_name = 'mobfox', publisher_ids = ['fb8b314d6e62912617e81e0f7078b47e'])
 mobfox_login_info.put()

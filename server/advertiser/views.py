@@ -889,13 +889,6 @@ class AddCreativeHandler(RequestHandler):
 
             if creative_form.is_valid():
 
-                logging.warn('\n\n\n\n\n\n\n\n\n\n')
-                logging.warn(ad_type)
-                logging.warn(creative_form.__dict__.keys())
-                logging.warn(creative_form.cleaned_data['font_color'])
-                logging.warn('\n\n\n\n\n\n\n\n\n\n')
-
-
                 if not creative_form.instance: #ensure form posts do not change ownership
                     account = self.account
                 else:

@@ -12,19 +12,20 @@ if EC2:
     sys.path.append('/home/ubuntu/google_appengine/lib/ipaddr')
     sys.path.append('/home/ubuntu/google_appengine/lib/webob')
     sys.path.append('/home/ubuntu/google_appengine/lib/yaml/lib')
-# else:
-#     # Assumes it is being called from ./run_tests.sh from server dir
-#     sys.path.append(os.environ['PWD'])
+else:
+    # Assumes it is being called from ./run_tests.sh from server dir
+    sys.path.append(os.environ['PWD'])
 
-from common.utils.date_magic import date_magic
+from common.utils import date_magic
 
 from appengine_django import InstallAppengineHelperForDjango
 InstallAppengineHelperForDjango()
 
+from google.appengine.api import mail
+
 from datetime import date, timedelta
 
 from account.models import NetworkConfig
-
 from network_scraping.models import *
 from network_scraping.admob_scraper import AdMobScraper
 from network_scraping.iad_scraper import IAdScraper
@@ -42,7 +43,7 @@ from network_scraping.query_managers import *
 def setup_remote_api():
     from google.appengine.ext.remote_api import remote_api_stub
     app_id = 'mopub-experimental'
-    host = '38.latest.mopub-inc.appspot.com'
+    host = '38.latest.mopub-experimental.appspot.com'
     remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', auth_func, host)
 
 def auth_func():
@@ -61,8 +62,9 @@ networks = {'admob' : Network(constructor = AdMobScraper, get_pub_id = get_pub_i
             'mobfox' : Network(constructor = MobFoxScraper, get_pub_id = get_pub_id)}
 
 def update_ad_networks(start_date = None, end_date = None):
+    yesterday = date.today() - timedelta(days = 1)
+    
     if start_date is None and end_date is None:
-        yesterday = date.today() - timedelta(days = 1)
         start_date = yesterday
         end_date = yesterday
 
@@ -86,12 +88,12 @@ def update_ad_networks(start_date = None, end_date = None):
             
                 publisher_id = networks[login_info.ad_network_name].get_pub_id(stats.app_tag, login_info)
             
-                # Using GQL to get the ad_network object that corresponds to the login_info and stats
+                # Using GQL to get the ad_network_app_mapper object that corresponds to the login_info and stats
                 manager = AdNetworkReportQueryManager(login_info.account)
-                ad_network = manager.get_ad_network_app_mapper(publisher_id = publisher_id,
+                ad_network_app_mapper = manager.get_ad_network_app_mapper(publisher_id = publisher_id,
                                                                login_info = login_info)
             
-                if ad_network is None:
+                if ad_network_app_mapper is None:
                     # App is not registered in MoPub but is still in the ad network
                     logging.info('%(account)s has pub id %(pub_id)s on %(ad_network)s that\'s NOT in MoPub' %
                                  dict(account = login_info.account.title,
@@ -104,7 +106,7 @@ def update_ad_networks(start_date = None, end_date = None):
                                       pub_id = stats.app_tag,
                                       ad_network = login_info.ad_network_name))
         
-                AdNetworkScrapeStats(ad_network_app_mapper = ad_network,
+                AdNetworkScrapeStats(ad_network_app_mapper = ad_network_app_mapper,
                                      date = test_date,
                                      revenue = float(stats.revenue),
                                      attempts = stats.attempts,
@@ -114,6 +116,21 @@ def update_ad_networks(start_date = None, end_date = None):
                                      ctr = float(stats.ctr),
                                      ecpm = float(stats.ecpm)
                                      ).put()
+                 
+                # Only email publisher if they want email and the information is relevant (ie. yesterdays stats)
+                if ad_network_app_mapper.send_email and test_date == yesterday:
+                    mail.send_mail(sender='olp@mopub.com', 
+                                   to='tiago@mopub.com',
+                                   subject="Test Email", 
+                                   body="""Scrape stats for %(test_date)s for application %(app)s:
+                                           revenue: %(revenue).2f
+                                           attempts: %(attempts)d
+                                           impressions: %(impressions)d
+                                           fill_rate: %(fill_rate).2f
+                                           clicks: %(clicks)d
+                                           ctr: %(ctr)d
+                                           ecpm: %(ecpm).2f""" %
+                                           dict([('test_date', test_date.strftime("%m/%d/%Y")), ('app', ad_network_app_mapper.application.name)] + stats.__dict__.items()))
                 
 if __name__ == "__main__":
     setup_remote_api()

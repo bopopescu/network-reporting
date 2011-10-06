@@ -125,16 +125,11 @@ def network_scraping_mptest():
     app.put()
     
     network_app_mappers = []
-    network_app_mappers.append(AdNetworkAppMapper(application = app, ad_network_name = 'admob', publisher_id = TEST_ADMOB_PUB_ID, ad_network_login = admob_login_info,
-                                         attempts = 0, impressions = 0, fill_rate = 0.0, clicks = 0, ctr = 0.0, ecpm = 0.0))
-    network_app_mappers.append(AdNetworkAppMapper(application = app, ad_network_name = 'jumptap', publisher_id = TEST_JUMPTAP_PUB_ID, ad_network_login = jumptap_login_info,
-                                       attempts = 0, impressions = 0, fill_rate = 0.0, clicks = 0, ctr = 0.0, ecpm = 0.0))
-    network_app_mappers.append(AdNetworkAppMapper(application = app, ad_network_name = 'iad', publisher_id = TEST_IAD_PUB_ID, ad_network_login = iad_login_info,
-                                       attempts = 0, impressions = 0, fill_rate = 0.0, clicks = 0, ctr = 0.0, ecpm = 0.0))
-    network_app_mappers.append(AdNetworkAppMapper(application = app, ad_network_name = 'inmobi', publisher_id = TEST_INMOBI_PUB_ID, ad_network_login = inmobi_login_info,
-                                       attempts = 0, impressions = 0, fill_rate = 0.0, clicks = 0, ctr = 0.0, ecpm = 0.0))
-    network_app_mappers.append(AdNetworkAppMapper(application = app, ad_network_name = 'mobfox', publisher_id = TEST_MOBFOX_PUB_ID, ad_network_login = mobfox_login_info,
-                                       attempts = 0, impressions = 0, fill_rate = 0.0, clicks = 0, ctr = 0.0, ecpm = 0.0))
+    network_app_mappers.append(AdNetworkAppMapper(application = app, ad_network_name = 'admob', publisher_id = TEST_ADMOB_PUB_ID, ad_network_login = admob_login_info))
+    network_app_mappers.append(AdNetworkAppMapper(application = app, ad_network_name = 'jumptap', publisher_id = TEST_JUMPTAP_PUB_ID, ad_network_login = jumptap_login_info, send_email = True))
+    network_app_mappers.append(AdNetworkAppMapper(application = app, ad_network_name = 'iad', publisher_id = TEST_IAD_PUB_ID, ad_network_login = iad_login_info))
+    network_app_mappers.append(AdNetworkAppMapper(application = app, ad_network_name = 'inmobi', publisher_id = TEST_INMOBI_PUB_ID, ad_network_login = inmobi_login_info))
+    network_app_mappers.append(AdNetworkAppMapper(application = app, ad_network_name = 'mobfox', publisher_id = TEST_MOBFOX_PUB_ID, ad_network_login = mobfox_login_info))
     db.put(network_app_mappers)
     
     ''' Call the method we are testing '''

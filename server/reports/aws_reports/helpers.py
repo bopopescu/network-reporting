@@ -66,7 +66,7 @@ LOGGER.addHandler(HNDLR)
 
 def rotate_logfile():
     global HNDLR
-    global LOGGE
+    global LOGGER
     log('Rotating logfile', level='info')
     LOGGER.removeHandler(HNDLR)
     HNDLR = logging.FileHandler(LOG_FILE % time.time())

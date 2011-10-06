@@ -15,12 +15,13 @@ InstallAppengineHelperForDjango()
 from boto.emr.connection import EmrConnection
 from boto.emr.step import StreamingStep
 from boto.s3.connection import S3Connection as s3
+from boto.s3.key import Key
 
 ############### Mopub Imports ############### 
-from reports.aws_reports.helpers import (upload_file, 
-                                         setup_remote_api, 
-                                         build_puts, 
-                                         get_waiting_jobflow, 
+from reports.aws_reports.helpers import (upload_file,
+                                         setup_remote_api,
+                                         build_puts,
+                                         get_waiting_jobflow,
                                          default_exc_handle,
                                          gen_random_fname,
                                          JOBFLOW_NAME,
@@ -30,7 +31,7 @@ from reports.aws_reports.helpers import (upload_file,
 from reports.aws_reports.messages import MessageHandler
 from reports.aws_reports.parse_utils import gen_report_fname, parse_msg
 from reports.aws_reports.parse_utils import AWS_ACCESS_KEY, AWS_SECRET_KEY
-from reports.aws_reports.report_exceptions import (ReportParseError, 
+from reports.aws_reports.report_exceptions import (ReportParseError,
                                                    BlobUploadError,
                                                    S3Error,
                                                    ReportPutError,
@@ -56,6 +57,9 @@ REPORTING_S3_CODE_DIR = S3_BUCKET + '/reports_code0'
 REPORT_MAPPER = REPORTING_S3_CODE_DIR + '/%s_%s_%s_report_mapper.py'
 LOG_REDUCER = REPORTING_S3_CODE_DIR + '/log_reducer.py'
 PARSE_UTILS = '/parse_utils.py#parse_utils.py'
+
+MAPPER_DIR = 'reports_code0'
+MAPPER_NAME = 'mapper_%s_%s_%s--%s-%s.py'
 
 ACCOUNT_DIR = S3_BUCKET + '/account_data'
 SHORT_ACCT_DIR = 'account_data'
@@ -120,6 +124,28 @@ class ReportMessage(object):
         self.step_name = STEP_NAME % (self.dim1, self.dim2, self.dim3, self.timestamp)
 
         self.fname = '%s' % gen_report_fname(self.dim1, self.dim2, self.dim3, self.start, self.end)
+        self.mapper_name = MAPPER_NAME % (self.dim1, self.dim2, self.dim3, self.start_str, self.end_str)
+
+
+    def get_mapper(self):
+        """ Builds a mapper for this message if need be.
+        Returns True if mapper previously existed, False otherwise """
+        if BUCK.get_key(MAPPER_DIR + '/' + self.mapper_name) is None:
+            mapper_args = dict(dim1 = self.dim1,
+                               dim2 = self.dim2,
+                               dim3 = self.dim3,
+                               start = self.start_str,
+                               end = self.end_str,
+                               )
+            map_key = Key(BUCK)
+            map_key.key = MAPPER_DIR + '/' + self.mapper_name
+            map_key.set_contents_from_string(MAPPER_P1 % mapper_args)
+            map_key.set_contents_from_string(MAPPER_P2)
+            map_key.close()
+            return False
+        else:
+            return True
+
 
     def __key(self):
         return (self.dim1, self.dim2, self.dim3, self.start, self.end, self.report_key, self.account, self.timestamp)
@@ -752,6 +778,10 @@ class ReportMessageHandler(MessageHandler):
             raise MRSubmitError("Error adding job to EMR", message)
 
         #logger.info("Handling %s" % message.msg.get_body())
+        if message.get_mapper():
+            log("Reusing previously generated mapper for %s" % message)
+        else:
+            log("Generating mapper for %s" % message)
 
         if not self.testing:
             # Submit the job
@@ -770,18 +800,18 @@ class ReportMessageHandler(MessageHandler):
 
 
     def submit_job(self, message):
-        inputs, output_dir = build_puts(message.start, message.end, message.account)
-        if len(inputs) == 0:
+        input_dir, relevant_inputs, output_dir = build_puts(message.start, message.end, message.account)
+        if len(relevant_inputs) == 0:
             # No data, can't retry :(
             raise NoDataError('No inputs', message)
         output = output_dir + '/' + message.fname
         log("Submit output %s" % output)
         gen_report_step = StreamingStep(
                 name = message.step_name,
-                mapper = REPORT_MAPPER % message.dims,
+                mapper = REPORTING_S3_CODE_DIR + '/' + message.mapper_name,
                 reducer = LOG_REDUCER,
                 cache_files = [REPORTING_S3_CODE_DIR + PARSE_UTILS],
-                input = inputs,
+                input = input_dir,
                 output = output,
                 )
         steps_to_add = [gen_report_step]

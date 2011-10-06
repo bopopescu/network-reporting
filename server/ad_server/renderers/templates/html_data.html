@@ -47,7 +47,7 @@
     function webviewDidAppear(){
         // inserts impression tracking
         // when the interstitial is presented on screen
-        {% if is_fullscreen %}
+        {% if is_fullscreen and not os == 'android' %}{# Our Android SDKs with v <= 4 expect that the impression pixel will be dropped immediately when the page loads. If the pixel is instead dropped upon webviewDidAppear, these SDKs will fail to track any impressions! #}
         if(typeof trackImpressionHelper == 'function') {
           trackImpressionHelper();
         }

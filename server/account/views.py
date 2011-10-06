@@ -16,7 +16,7 @@ import logging
 from common.utils.request_handler import RequestHandler
 
 import urllib2
-import simplejson
+from common.utils import simplejson
 import datetime
 from itertools import groupby
 
@@ -197,7 +197,7 @@ class PaymentHistoryHandler(RequestHandler):
                                               datetime.date.today())
 
         get_month = lambda record : record['date'][0:7]
-        monthly_records = [(month, sum([r['rev'] for r in record]))  \
+        monthly_records = [(month, sum([r['rev'] for r in record])) \
                            for month, record in groupby(payment_history['daily'], get_month)]
 
         logging.warn(monthly_records)

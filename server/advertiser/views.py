@@ -339,6 +339,9 @@ class CreateCampaignAJAXHander(RequestHandler):
         return JSONResponse(json_dict)
 
     def post(self):
+        """
+        TODO: Refactor these incredibly long views into something less mindfucky.
+        """
         adgroup_key = self.request.POST.get('adgroup_key')
         if adgroup_key:
             adgroup = AdGroupQueryManager.get(adgroup_key)
@@ -809,7 +812,7 @@ class AddCreativeHandler(RequestHandler):
                 text_creative = TextCreativeQueryManager.get(creative.key())
             elif creative.ad_type == "text_icon":
                 text_tile_creative = TextAndTileCreativeQueryManager.get(creative.key())
-            elif creative.ad_type == "image":
+            elif creative.ad_type == 'image':
                 image_creative = ImageCreativeQueryManager.get(creative.key())
             elif creative.ad_type == "html":
                 html_creative = HtmlCreativeQueryManager.get(creative.key())
@@ -885,6 +888,14 @@ class AddCreativeHandler(RequestHandler):
                 creative_form = html_creative_form
 
             if creative_form.is_valid():
+
+                logging.warn('\n\n\n\n\n\n\n\n\n\n')
+                logging.warn(ad_type)
+                logging.warn(creative_form.__dict__.keys())
+                logging.warn(creative_form.cleaned_data['font_color'])
+                logging.warn('\n\n\n\n\n\n\n\n\n\n')
+
+
                 if not creative_form.instance: #ensure form posts do not change ownership
                     account = self.account
                 else:

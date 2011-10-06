@@ -490,7 +490,7 @@ var mopub = mopub || {};
               }
           },
           error: function(jqXHR, textStatus, errorThrown){
-              log(errorThrown);
+              // console.log(errorThrown);
           }
       };
       $('#creativeCreateForm').ajaxForm(options);
@@ -1288,22 +1288,21 @@ var mopub = mopub || {};
         });
       });
 
-    $('.creativeFormAdvancedToggleButton')
-      .button('option', {icons: { primary: 'ui-icon-triangle-1-s' }})
-      .click(function(e) {
-        e.preventDefault();
-        var $options = $(this).parents('form').find('.creativeForm-advanced-options');
-        if ($options.is(':hidden')) {
-          $options.slideDown('fast');
-          $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
-          $('.ui-button-text', this).text('Less Options');
-        }
-        else {
-          $options.slideUp('fast');
-          $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
-          $('.ui-button-text', this).text('More Options');
-        }
-      });
+        $('.creativeFormAdvancedToggleButton')
+            .button('option', {icons: { primary: 'ui-icon-triangle-1-s' }})
+            .click(function(e) {
+                e.preventDefault();
+                var $options = $(this).parents('form').find('.creativeForm-advanced-options');
+                if ($options.is(':hidden')) {
+                    $options.slideDown('fast').removeClass('hidden');
+                    $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
+                    $('.ui-button-text', this).text('Less Options');
+                } else {
+                    $options.slideUp('fast').addClass('hidden');
+                    $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
+                    $('.ui-button-text', this).text('More Options');
+                }
+            });
 
     $('.creativeAddForm-url-helpLink').click(function(e) {
       e.preventDefault();

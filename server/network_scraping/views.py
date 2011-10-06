@@ -16,14 +16,13 @@ class AdNetworkReportIndexHandler(RequestHandler):
     def get(self):
         if IS_PRODUCTION:
             manager = AdNetworkReportQueryManager(self.account)
+            mappers = manager.get_ad_network_mappers()
         else:
-            from network_scraping.load_test_data import TestDataLoader
-            manager = AdNetworkReportQueryManager(TestDataLoader.ACCOUNT_KEY_NAME)
-        mappers = manager.get_ad_network_mappers()
-        
-        # for testing
-        query = AdNetworkAppMapper.all()
-        mappers = list(query)
+            # from network_scraping.load_test_data import TestDataLoader
+            # manager = AdNetworkReportQueryManager(TestDataLoader.ACCOUNT_KEY_NAME)
+            manager = AdNetworkReportQueryManager('test')
+            query = AdNetworkAppMapper.all()
+            mappers = list(query)
         
         keys = [s.key() for s in mappers]
         # Get aggregate stats for all the different ad network mappers for the account between the selected date range

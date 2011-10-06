@@ -1,10 +1,10 @@
+# magic import
+import common.utils.test.setup
+
 from account.models import Account, NetworkConfig
 from publisher.models import App
 
 from network_scraping.models import *
-
-from appengine_django import InstallAppengineHelperForDjango
-InstallAppengineHelperForDjango()
 
 TEST_JUMPTAP_PUB_ID = '12345'
 TEST_ADMOB_PUB_ID = 'a14a9ed9bf1fdcd'

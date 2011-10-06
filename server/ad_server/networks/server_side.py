@@ -93,7 +93,7 @@ class ServerSide(object):
         return self.client_context.user_agent
 
     def get_udid(self):
-        return self.client_context.raw_udid
+        return self.client_context.mopub_id
         
     @property
     def url(self):

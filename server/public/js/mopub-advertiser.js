@@ -323,7 +323,7 @@ var mopub = mopub || {};
               $('#campaignAdgroupForm-loading').hide();
               if (jsonData.success){
                   $('#campaignAdgroupForm-success').show(); // show message
-                  window.location = '/campaigns/';
+                  window.location = jsonData.new_page;
                   $('#campaignAdgroupForm-submit').button({'label':'Success...','disabled':true});
               } else {
                   // $('#campaignAdgroupForm-fragment').html(jsonData.html);

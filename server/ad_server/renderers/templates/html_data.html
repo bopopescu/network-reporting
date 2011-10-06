@@ -14,7 +14,7 @@
     function trackImpressionHelper(){
       var urls = new Array();
       var i = 0;
-      {% if not is_fullscreen %}{# The iOS client always natively pings the the MoPub impression pixel, but android expects that the html has it already#}
+      {% if os == 'android' or not is_fullscreen %}{# The iOS client always natively pings the the MoPub impression pixel, but android expects that the html has it already#}
         urls[i++]="{{impression_url|safe}}";
       {% endif %}
     

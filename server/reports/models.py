@@ -584,7 +584,8 @@ class Report(db.Model):
                     rev += v['stats']['revenue']
                 else:
                     # Not bottom level, roll up and set 
-                    rev += rollup_help(v['sub_stats'], depth-1)
+                    if 'sub_stats' in v:
+                        rev += rollup_help(v['sub_stats'], depth-1)
                     stats[k]['stats']['revenue'] = rev
             return rev
         if self.d1 in [CRTV, CAMP]:

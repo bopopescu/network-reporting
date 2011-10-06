@@ -33,12 +33,12 @@
 <div class="creativeForm-advanced-options hidden">
   <dt>Action Icon</dt>
   <dd>
-    <input type="radio" name="action_icon" value="download_arrow4" {% if form.action_icon.value %}checked{% endif %} /><img src="/images/download_arrow4.png" width="40" height="40"/>
-    <input type="radio" name="action_icon" value="access_arrow" {% if form.action_icon.value %}checked{% endif %} /><img src="/images/access_arrow.png" width="40" height="40"/>
-    <input type="radio" name="action_icon" value="none" {% if form.action_icon.value %}checked{% endif %} /> None
-    <input type="radio" name="action_icon" value="custom"  disabled/> Custom
+    <input type="radio" name="action_icon" value="download_arrow4" {% if form.action_icon.value == 'download_arrow4' %}checked{% endif %} /><img src="/images/download_arrow4.png" width="40" height="40"/>
+    <input type="radio" name="action_icon" value="access_arrow" {% if form.action_icon.value == 'access_arrow' %}checked{% endif %} /><img src="/images/access_arrow.png" width="40" height="40"/>
+    <input type="radio" name="action_icon" value="none" {% if form.action_icon.value == 'none' %}checked{% endif %} /> None
+    <input type="radio" name="action_icon" value="custom" disabled/> Custom
   </dd>
-  <dt>Color</dt>
+  <dt>Background Color</dt>
   <dd>
     <input type='text' id='color' name="{{form.color.name}}" value="{% if form.color.value %}{{form.color.value}}{% else %}000000{% endif %}" class="input-text" maxlength=6 {% if form.color.errors %}form-error{% endif %}"/>
     {% for error in form.color.errors %}

@@ -306,6 +306,29 @@ class TextAndTileCreativeForm(AbstractCreativeForm):
             kwargs.update(initial=initial)
         super(TextAndTileCreativeForm,self).__init__(*args,**kwargs)
 
+    def clean_image_file(self):
+        data = self.cleaned_data.get('image_file', None)
+
+        # Check the image file type. We only support png, jpg, jpeg, and gif.
+        if data:
+            img = self.files.get('image_file', None)
+            is_valid_image_type = any([str(img).endswith(ftype) for ftype in ['.png', '.jpeg', '.jpg', '.gif']])
+            if not (img and is_valid_image_type):
+                extension = get_filetype_extension(img)
+                if extension:
+                    raise forms.ValidationError('Filetype (.%s) not supported.' % extension)
+                else:
+                    raise forms.ValidationError('Filetype not supported.')
+
+        # Check to make sure an image file or url was provided.
+        # We only need to check this if it's a new form being submitted
+
+        if not self.instance:
+            if not (self.cleaned_data.get('image_file', None) or self.cleaned_data.get('image_url', None)):
+                raise forms.ValidationError('You must upload an image file for a creative of this type.')
+
+        return data
+
     def save(self,commit=True):
         obj = super(TextAndTileCreativeForm,self).save(commit=False)
         if self.files.get('image_file',None):

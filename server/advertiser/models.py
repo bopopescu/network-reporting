@@ -505,7 +505,7 @@ class TextAndTileCreative(Creative):
     action_icon = db.StringProperty(choices=["download_arrow4", "access_arrow", "none"], default="download_arrow4")
     color = db.StringProperty(default="000000")
     font_color = db.StringProperty(default="FFFFFF")
-    gradient = db.BooleanProperty(default=False)
+    gradient = db.BooleanProperty(default=True)
 
     @property
     def Renderer(self):

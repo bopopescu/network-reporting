@@ -66,7 +66,7 @@ LOGGER.addHandler(HNDLR)
 
 def rotate_logfile():
     global HNDLR
-    global LOGGE
+    global LOGGER
     log('Rotating logfile', level='info')
     LOGGER.removeHandler(HNDLR)
     HNDLR = logging.FileHandler(LOG_FILE % time.time())
@@ -107,7 +107,7 @@ def build_puts(start, end, account):
     input_files = verify_inputs(['log+%s+%s+.adv.lc.stats' % (day.strftime('%y%m%d'), account) for day in days], account)
     log("Cleaned inputs: %s" % input_files)
     inputs = [input_dir + '/' + input_file for input_file in input_files]
-    return (inputs, output_dir)
+    return (input_dir, inputs, output_dir)
 
 def verify_inputs(inputs, account):
     log("Dirtayy inputs: %s" % inputs)
@@ -156,4 +156,3 @@ def gen_random_fname(chars = string.letters, length=16, prefix = '', suffix = ''
     fname = ''.join([random.choice(chars) for i in range(length)])
     fname = prefix + fname + suffix
     return fname
-

@@ -299,7 +299,10 @@ class TextAndTileCreativeForm(AbstractCreativeForm):
         initial = kwargs.get('initial',None)
 
         if instance:
-            image_url = images.get_serving_url(instance.image_blob) #reverse('advertiser_creative_image',kwargs={'creative_key':str(instance.key())})
+            if instance.image_blob:
+                image_url = images.get_serving_url(instance.image_blob) #reverse('advertiser_creative_image',kwargs={'creative_key':str(instance.key())})
+            else:
+                image_url = ''
             if not initial:
                 initial = {}
             initial.update(image_url=image_url)

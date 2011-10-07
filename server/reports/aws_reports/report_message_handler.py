@@ -139,8 +139,8 @@ class ReportMessage(object):
                                )
             map_key = Key(BUCK)
             map_key.key = MAPPER_DIR + '/' + self.mapper_name
-            map_key.set_contents_from_string(MAPPER_P1 % mapper_args)
-            map_key.set_contents_from_string(MAPPER_P2)
+            map_str = (MAPPER_P1 % mapper_args + MAPPER_P2)
+            map_key.set_contents_from_string(map_str)
             map_key.close()
             return False
         else:

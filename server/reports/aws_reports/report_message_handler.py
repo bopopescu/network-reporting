@@ -28,6 +28,7 @@ from reports.aws_reports.helpers import (upload_file,
                                          LOG_URI,
                                          log,
                                          )
+from reports.aws_reports.report_mapper import MAPPER_P1, MAPPER_P2
 from reports.aws_reports.messages import MessageHandler
 from reports.aws_reports.parse_utils import gen_report_fname, parse_msg
 from reports.aws_reports.parse_utils import AWS_ACCESS_KEY, AWS_SECRET_KEY

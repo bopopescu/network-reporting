@@ -15,22 +15,24 @@ InstallAppengineHelperForDjango()
 from boto.emr.connection import EmrConnection
 from boto.emr.step import StreamingStep
 from boto.s3.connection import S3Connection as s3
+from boto.s3.key import Key
 
 ############### Mopub Imports ############### 
-from reports.aws_reports.helpers import (upload_file, 
-                                         setup_remote_api, 
-                                         build_puts, 
-                                         get_waiting_jobflow, 
+from reports.aws_reports.helpers import (upload_file,
+                                         setup_remote_api,
+                                         build_puts,
+                                         get_waiting_jobflow,
                                          default_exc_handle,
                                          gen_random_fname,
                                          JOBFLOW_NAME,
                                          LOG_URI,
                                          log,
                                          )
+from reports.aws_reports.report_mapper import MAPPER_P1, MAPPER_P2
 from reports.aws_reports.messages import MessageHandler
 from reports.aws_reports.parse_utils import gen_report_fname, parse_msg
 from reports.aws_reports.parse_utils import AWS_ACCESS_KEY, AWS_SECRET_KEY
-from reports.aws_reports.report_exceptions import (ReportParseError, 
+from reports.aws_reports.report_exceptions import (ReportParseError,
                                                    BlobUploadError,
                                                    S3Error,
                                                    ReportPutError,
@@ -56,6 +58,9 @@ REPORTING_S3_CODE_DIR = S3_BUCKET + '/reports_code0'
 REPORT_MAPPER = REPORTING_S3_CODE_DIR + '/%s_%s_%s_report_mapper.py'
 LOG_REDUCER = REPORTING_S3_CODE_DIR + '/log_reducer.py'
 PARSE_UTILS = '/parse_utils.py#parse_utils.py'
+
+MAPPER_DIR = 'reports_code0'
+MAPPER_NAME = 'mapper_%s_%s_%s--%s-%s.py'
 
 ACCOUNT_DIR = S3_BUCKET + '/account_data'
 SHORT_ACCT_DIR = 'account_data'
@@ -104,13 +109,12 @@ STEP_STATUS_CHANGE = 'SSCHG'
 MSG_DATA = 'MSGDATA'
 
 VALID_TYPES = (OBJ, STEP_STATUS_CHANGE, MSG_DATA)
-
+############## Constants ###################
+BACKOFF_FACTOR = 2
 
 ############ SETUP LOGGING SHIT ##############
 # Suppress non-critical boto messages
 logging.getLogger('boto').setLevel(logging.CRITICAL)
-
-# Set up logger for here
 
 class ReportMessage(object):
 
@@ -120,6 +124,28 @@ class ReportMessage(object):
         self.step_name = STEP_NAME % (self.dim1, self.dim2, self.dim3, self.timestamp)
 
         self.fname = '%s' % gen_report_fname(self.dim1, self.dim2, self.dim3, self.start, self.end)
+        self.mapper_name = MAPPER_NAME % (self.dim1, self.dim2, self.dim3, self.start_str, self.end_str)
+
+
+    def get_mapper(self):
+        """ Builds a mapper for this message if need be.
+        Returns True if mapper previously existed, False otherwise """
+        if BUCK.get_key(MAPPER_DIR + '/' + self.mapper_name) is None:
+            mapper_args = dict(dim1 = self.dim1,
+                               dim2 = self.dim2,
+                               dim3 = self.dim3,
+                               start = self.start_str,
+                               end = self.end_str,
+                               )
+            map_key = Key(BUCK)
+            map_key.key = MAPPER_DIR + '/' + self.mapper_name
+            map_str = (MAPPER_P1 % mapper_args + MAPPER_P2)
+            map_key.set_contents_from_string(map_str)
+            map_key.close()
+            return False
+        else:
+            return True
+
 
     def __key(self):
         return (self.dim1, self.dim2, self.dim3, self.start, self.end, self.report_key, self.account, self.timestamp)
@@ -182,16 +208,20 @@ class ReportMessageHandler(MessageHandler):
         self.jobid_creations = {}
         self.emr_conn = EmrConnection(AWS_ACCESS_KEY, AWS_SECRET_KEY)
         
-        # Dict of how far completed this Message is
+        # Map of how far completed this Message is
         self.message_completion_statuses = {}
-        # Dict of timeouts for each step
+        # Map of timeouts for each step
         self.message_step_timeouts = {}
-        # Dict of blobs for messages that failed after blob uploading
+        # Map of blobs for messages that failed after blob uploading
         self.message_blob_keys = {}
-        # Dict of datas for messages that failed after parsing
+        # Map of datas for messages that failed after parsing
         self.message_data = {}
+        # Map of messages to reports
         self.message_report = {}
+        # Map of messages to their parse pipes
         self.message_parse_pipe = {}
+        # Map of messages to the time until they should be retried
+        self.message_mr_backoff = {}
 
     def init_message(self, message):
         """ When starting to process a message, init its steps
@@ -206,11 +236,33 @@ class ReportMessageHandler(MessageHandler):
         for step in MESSAGE_COMPLETION_STEPS:
             self.message_completion_statuses[message][step] = False
             self.message_step_timeouts[message][step] = None
+        # Try/except because it's possible that there were no failures
+        # and the dict entry doesn't exist
+        try:
+            # MR job added, don't need this anymore
+            del(self.message_mr_backoff[message])
+        except Exception:
+            pass
     
     def init_message_pipe(self, message):
         p_pipe, c_pipe = Pipe()
         self.set_message_parse_pipe(message, p_pipe)
         return c_pipe
+
+
+
+    def backoff_message(self, message):
+        secs = 10 * (BACKOFF_FACTOR ** self.msg_failures[message])
+        self.message_mr_backoff[message] = datetime.now() + timedelta(seconds = secs)
+
+    def backed_off(self, message):
+        # This is going to throw a key error if it hasn't failed yet, instead
+        # of checking if it's in the dict, just know that if this errors
+        # it's because it hasn't failed so just return True
+        try:
+            return datetime.now() < self.message_mr_backoff[message]
+        except Exception:
+            return True
 
     @property
     def message_maps(self):
@@ -254,7 +306,6 @@ class ReportMessageHandler(MessageHandler):
         elif msg_type == MSG_DATA:
             self.message_data[message] = data
 
-            
 
     def get_message_report(self, message):
         """ Gets a report for a message locally if we have it,
@@ -291,8 +342,6 @@ class ReportMessageHandler(MessageHandler):
 
     def parse_error(self, message):
         return self.message_completion_statuses[message][PARSE] == PARSE_ERROR
-
-
 
     def step_timeout(self, message, step):
         """Message step timeout getter"""
@@ -403,7 +452,7 @@ class ReportMessageHandler(MessageHandler):
         Args: None
         Rets: True if messages were handled, False if no messages handled
         Throws: None
-        """ 
+        """
         # Don't allowing testing stuff if not testing (Just in case)
         if not self.testing:
             force_no_data = force_submit_error = force_delete_error = False
@@ -418,6 +467,10 @@ class ReportMessageHandler(MessageHandler):
             for msg in msgs:
                 log("Message from Queue:%s" % msg.get_body())
                 message = ReportMessage(msg)
+
+                if not self.backed_off(message):
+                    continue
+
                 try:
                     self.handle_message(message, 
                                         force_no_data = force_no_data, 
@@ -441,6 +494,7 @@ class ReportMessageHandler(MessageHandler):
                         self.notify_failure(e.report_message, MRFAILURE)
 
                     self.msg_failures[e.report_message] += 1
+                    self.backoff_message(e.report_message)
                     if not self.testing:
                         default_exc_handle(e)
 
@@ -752,6 +806,10 @@ class ReportMessageHandler(MessageHandler):
             raise MRSubmitError("Error adding job to EMR", message)
 
         #logger.info("Handling %s" % message.msg.get_body())
+        if message.get_mapper():
+            log("Reusing previously generated mapper for %s" % message)
+        else:
+            log("Generating mapper for %s" % message)
 
         if not self.testing:
             # Submit the job
@@ -770,18 +828,18 @@ class ReportMessageHandler(MessageHandler):
 
 
     def submit_job(self, message):
-        inputs, output_dir = build_puts(message.start, message.end, message.account)
-        if len(inputs) == 0:
+        input_dir, relevant_inputs, output_dir = build_puts(message.start, message.end, message.account)
+        if len(relevant_inputs) == 0:
             # No data, can't retry :(
             raise NoDataError('No inputs', message)
         output = output_dir + '/' + message.fname
         log("Submit output %s" % output)
         gen_report_step = StreamingStep(
                 name = message.step_name,
-                mapper = REPORT_MAPPER % message.dims,
+                mapper = REPORTING_S3_CODE_DIR + '/' + message.mapper_name,
                 reducer = LOG_REDUCER,
                 cache_files = [REPORTING_S3_CODE_DIR + PARSE_UTILS],
-                input = inputs,
+                input = input_dir,
                 output = output,
                 )
         steps_to_add = [gen_report_step]

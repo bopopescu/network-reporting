@@ -10,6 +10,8 @@ from network_scraping.query_managers import AdNetworkReportQueryManager
 from google.appengine.ext import db
 from network_scraping.models import *
 
+# from network_scraping import ad_networks
+
 IS_PRODUCTION = False
 
 class AdNetworkReportIndexHandler(RequestHandler):
@@ -36,7 +38,7 @@ class AdNetworkReportIndexHandler(RequestHandler):
                 dict(aggregate_stats = aggregate_stats))
                      
 @login_required
-def adnetwork_report_index(request, *args, **kwargs):
+def ad_network_report_index(request, *args, **kwargs):
     return AdNetworkReportIndexHandler()(request, *args, **kwargs)
      
 class ViewAdNetworkReportHandler(RequestHandler):
@@ -51,18 +53,35 @@ class ViewAdNetworkReportHandler(RequestHandler):
                      dates = dates))
 
 @login_required
-def view_adnetwork_app_report(request, *args, **kwargs):
+def view_ad_network_app_report(request, *args, **kwargs):
     return ViewAdNetworkReportHandler()(request, *args, **kwargs)
     
-# class AddLoginInfoHandler(RequestHandler):
-#     def get(self):
-#         """ Input login info and select what apps you want to use it for and store it in the db """
-#         manager = AdNetworkReportQueryManager(self.account)
-#         totals = manager.get_ad_network_totals()
-# 
-#         return render_to_response(self.request, 'network_scraping/.html',
-#                 dict(totals = totals))
-# 
-# @login_required
-# def add_login_info(request, *args, **kwargs):
-#     return AddLoginInfoHandler()(request, *args, **kwargs)
+class AddLoginInfoHandler(RequestHandler):
+    def get(self): #Verfify that this is SSL
+        """ Input login info and select what apps you want to use it for and store it in the db """
+
+        return render_to_response(self.request, 'network_scraping/add_login_info.html',
+                                  dict(ad_network_names = ['admob', 'jumptap', 'iad', 'inmobi', 'mobfox']))#ad_networks.ad_networks.keys()))
+                                  
+    def post(self, ad_network_name, username = None, password = None, client_key = None, send_email = False):
+        """ Create AdNetworkLoginInfo and AdNetworkAppMappers for all apps that have pub ids for this network and account """
+        
+        manager = AdNetworkReportQueryManager(self.account)
+        
+        apps_with_publisher_ids = manager.get_apps_with_publisher_ids(ad_network_name)
+        
+        # get the apps in the ad network
+        publisher_ids = [publisher_id for app, publisher_id in apps_with_publisher_ids]
+        
+        login_info = AdNetworkLoginInfo(account = self.account, ad_network_name = ad_network_name, username = username, client_key = client_key, publisher_ids = publisher_ids)
+        login_info.put()
+        
+        # Create all the different AdNetworkAppMappers for all the applications on the ad network for the user and add them to the db
+        db.put([AdNetworkAppMapper(ad_network_name = ad_network_name, publisher_id = publisher_id,
+                ad_network_login = login_info, application = app, send_email = False) for 
+                app, publisher_id in apps_with_publisher_ids])
+        
+
+@login_required
+def add_login_info(request, *args, **kwargs):
+    return AddLoginInfoHandler()(request, *args, **kwargs)

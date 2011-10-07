@@ -3,7 +3,7 @@
 
 from google.appengine.ext import db
 
-from account.models import Account
+from account.models import Account, NetworkConfig
 from common.utils import date_magic
 from common.utils.query_managers import CachedQueryManager
 from network_scraping.models import AdNetworkLoginInfo, AdNetworkAppMapper, AdNetworkScrapeStats
@@ -74,12 +74,9 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         return q
         
     # (ad_network_app_mapper_key) or (publisher_id, login_info)
-    def get_ad_network_app_mapper(self, *args, **kwargs):
+    def get_ad_network_app_mapper(self, ad_network_app_mapper_key = None, publisher_id = None, login_info = None):
         """ Get the AdNetworkAppMapper for a given publisher id and 
         login info """
-        ad_network_app_mapper_key = kwargs.get('ad_network_app_mapper_key', None)
-        publisher_id = kwargs.get('publisher_id', None)
-        login_info = kwargs.get('login_info', None)
         
         if ad_network_app_mapper_key:
             return db.get(ad_network_app_mapper_key)
@@ -90,16 +87,25 @@ class AdNetworkReportQueryManager(CachedQueryManager):
             return query.get()
         return None
         
+    def get_apps_with_publisher_ids(self, ad_network_name):
+        """ Get generator of applications with publisher ids for the account on the ad_network """
+        for n in NetworkConfig.all().filter('%s_pub_id !=' % ad_network_name, None):
+            for a in App.all().filter('account =', self.account).filter('network_config =', n):
+                yield (a, eval('n.%s_pub_id' % ad_network_name))
+        
 def get_pub_id(pub_id, login_info):
     return pub_id
 
-def get_jump_tap_pub_id(app_name, login_info):
+def get_pub_id_from_name(app_name, login_info):
     query = App.all()
     query.filter('name =', app_name)
     query.filter('account =', login_info.account)
-    publisher_id = query.get()
+    app = query.get()
 
-    if publisher_id:
-        return publisher_id.network_config.jumptap_pub_id
+    if app:
+        if login_info.ad_network_name == 'jumptap':
+            return app.network_config.jumptap_pub_id
+        elif login_info.ad_network_name == 'iad':
+            return app.network_config.iad_pub_id
     else:
         return None

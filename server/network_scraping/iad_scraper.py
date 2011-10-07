@@ -36,7 +36,7 @@ class IAdScraper(Scraper):
         # Must have selenium running or something
         self.disp = Display(visible = 0, size = (1024, 768))
         self.disp.start()
-        self.browser = webdriver.Chrome('/Applications/ChromeDriver')
+        self.browser = webdriver.Chrome('/Applications/ChromeDriver') # /usr/bin/chromedriver for EC2
         # Set max wait time to find an element on a page
         self.browser.implicitly_wait(10)
         self.browser.get(self.STATS_PAGE)
@@ -60,12 +60,13 @@ class IAdScraper(Scraper):
     def set_dates(self, start_date, end_date):
         # Set up using custom stuff
         self.browser.find_element_by_css_selector('select').find_element_by_css_selector('option[value=customDateRange]').click()
+        time.sleep(1)
         self.set_date('#gwt-debug-date-range-selector-start-date-box', start_date)
         self.set_date('#gwt-debug-date-range-selector-end-date-box', end_date)
 
     def get_cal_date(self):
         # Wait for page to load
-        time.sleep(3)
+        time.sleep(1)
         return datetime.strptime(self.browser.find_element_by_css_selector('td.datePickerMonth').text, '%b %Y').date()
 
     def set_date(self, selector, date):
@@ -115,7 +116,7 @@ class IAdScraper(Scraper):
         records = []
         for row in app_rows:
             app_name = row.findAll('p', {"class":"app_text"})[0].text
-            app_dict = dict(apple_id = app_name[app_name.find(' ') + 1:])
+            app_dict = dict(apple_id = app_name)
             # Find desired stats
             for stat in self.APP_STATS:
                 class_name = 'td_' + stat
@@ -125,12 +126,12 @@ class IAdScraper(Scraper):
                     # TODO probably need to do multi-country support because 
                     # pound signs and stuff are after the number not before like
                     # the dollar sign
-                    data = eval(data[1:])
+                    data = eval(data[1:].replace(',',''))
                 elif stat in self.PCT_STATS:
                     # Don't include the % sign
                     data = eval(data[:-1])
                 else:
-                    data = eval(data)
+                    data = eval(data.replace(',',''))
                 app_dict[stat] = data
                 
             nsr = NetworkScrapeRecord(revenue = app_dict['revenue'],
@@ -140,7 +141,7 @@ class IAdScraper(Scraper):
                                       clicks = int(app_dict['ctr'] * app_dict['impressions']),
                                       ctr = app_dict['ctr'],
                                       ecpm = app_dict['ecpm'],
-                                      app_tag = app_dict['apple_id'])
+                                      app_tag = str(BeautifulSoup(app_dict['apple_id'], convertEntities=BeautifulSoup.HTML_ENTITIES).contents[0].string))
             records.append(nsr)
         return records
 
@@ -151,8 +152,8 @@ class NetworkConfidential:
 # for testing
 if __name__ == '__main__':
     nc = NetworkConfidential()
-    nc.username = 'rawrmaan@me.com'
-    nc.password ='606mCV&#dS'
+    nc.username = 'chesscom'
+    nc.password ='Faisal1Chess'
     nc.ad_network_name = 'iad'
     scraper = IAdScraper(nc)
     try:

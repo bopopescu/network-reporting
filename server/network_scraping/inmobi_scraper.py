@@ -82,9 +82,9 @@ class NetworkCredentials:
 if __name__ == '__main__':
     nc = NetworkCredentials()
     # access_id
-    nc.username = '4028cb8b2b617f70012b792fe65e00a2'
+    nc.username = '4028cb972fe21753012ffb7680350267' #'4028cb8b2b617f70012b792fe65e00a2'
     # secret_key
-    nc.password = '84585161'
+    nc.password = '714411990588' #'84585161'
     nc.ad_network_name = 'inmobi'
     scraper = InMobiScraper(nc)
     print scraper.get_site_stats(date.today() - timedelta(days = 1))

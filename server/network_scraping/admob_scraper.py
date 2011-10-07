@@ -2,6 +2,7 @@ import urllib
 import urllib2
 import json
 import time
+import logging
 
 from datetime import date
 from scraper import Scraper, ScraperSite
@@ -35,9 +36,14 @@ class AdMobScraper(Scraper):
                          email = self.username,
                          password = self.password)
         req = urllib2.Request(self.AUTH_URL, urllib.urlencode(auth_dict))
-        self.token = json.load(urllib2.urlopen(req))['data']['token']
-        self.auth_dict = dict(client_key = self.client_key, token=self.token)
-        #TODO mechanize stuff here
+        
+        response = json.load(urllib2.urlopen(req))
+        if response['errors'] == []:
+            self.token = response['data']['token']
+            self.auth_dict = dict(client_key = self.client_key, token=self.token)
+            #TODO mechanize stuff here
+        else:
+            logging.error(response['errors'])
 
     def get_sites(self):
         req = urllib2.Request(self.SITE_SEARCH_URL + '?' + urllib.urlencode(self.auth_dict))
@@ -100,9 +106,9 @@ class NetworkConfidential:
 # for testing
 if __name__ == '__main__':
     nc = NetworkConfidential()
-    nc.username = 'njamal@stanford.edu'
-    nc.password = 'xckjhfn3xprkxksm'
-    nc.client_key = 'k907a03ee39cecb699b5ad45c5eded01'
+    nc.username = 'betmobilemail@gmail.com'
+    nc.password = 'knwyt4f5v94b61qz'
+    nc.client_key = 'k9417383a8224757c05fbe9aa1ef8e4c'
     nc.ad_network_name = 'admob'
     scraper = AdMobScraper(nc)
     print scraper.get_site_stats(date.today())

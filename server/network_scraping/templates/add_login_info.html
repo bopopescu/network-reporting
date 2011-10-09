@@ -1,6 +1,6 @@
-<form action="/ad_network_reports/input_login_info" method="post">
+<form action="/ad_network_reports/add/" method="post">
     <p>
-	<select name="ad_network">
+	<select name="ad_network_name">
 		{% for ad_network_name in ad_network_names %}
 		<option>{{ad_network_name}}</option>
 		{% endfor %}
@@ -9,6 +9,6 @@
     Password: <input type="text" name="password"><br>
     Client Key: <input type="text" name="client_key"><br>
 	<input type="checkbox" name="send_email" value="True"> Send email reports daily for each application when new stats are obtained <br>
-    <a href="/ad_network_reports"><input type="submit" value="Send"></a>
+    <input type="submit" value="Send">
     </p>
  </form>

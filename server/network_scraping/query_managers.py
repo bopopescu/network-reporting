@@ -1,5 +1,4 @@
-# import os, sys
-# sys.path.append(os.environ['PWD'])
+import logging
 
 from google.appengine.ext import db
 

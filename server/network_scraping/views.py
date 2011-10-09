@@ -1,6 +1,7 @@
 import logging
 
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect
 
 from common.ragendja.template import render_to_response
 from common.utils.request_handler import RequestHandler
@@ -59,16 +60,30 @@ def view_ad_network_app_report(request, *args, **kwargs):
 class AddLoginInfoHandler(RequestHandler):
     def get(self): #Verfify that this is SSL
         """ Input login info and select what apps you want to use it for and store it in the db """
+        from account.models import NetworkConfig
+        from publisher.models import App
+        
+        # officejerk_network_config = NetworkConfig(jumptap_pub_id = 'office_jerk_test')
+        # officejerk_network_config.put()
+        # 
+        # officejerk_app = App(account = self.account, name = "Office Jerk", network_config = officejerk_network_config)
+        # officejerk_app.put()
 
         return render_to_response(self.request, 'network_scraping/add_login_info.html',
                                   dict(ad_network_names = ['admob', 'jumptap', 'iad', 'inmobi', 'mobfox']))#ad_networks.ad_networks.keys()))
                                   
-    def post(self, ad_network_name, username = None, password = None, client_key = None, send_email = False):
+    def post(self): #, ad_network_name, username = None, password = None, client_key = None, send_email = False
         """ Create AdNetworkLoginInfo and AdNetworkAppMappers for all apps that have pub ids for this network and account """
+        ad_network_name = self.request.POST['ad_network_name']
+        username = self.request.POST['username']
+        password = self.request.POST['password']
+        client_key = self.request.POST['client_key']
+        send_email = self.request.POST.get('send_email', False)
         
         manager = AdNetworkReportQueryManager(self.account)
         
-        apps_with_publisher_ids = manager.get_apps_with_publisher_ids(ad_network_name)
+        
+        apps_with_publisher_ids = list(manager.get_apps_with_publisher_ids(ad_network_name))
         
         # get the apps in the ad network
         publisher_ids = [publisher_id for app, publisher_id in apps_with_publisher_ids]
@@ -80,6 +95,8 @@ class AddLoginInfoHandler(RequestHandler):
         db.put([AdNetworkAppMapper(ad_network_name = ad_network_name, publisher_id = publisher_id,
                 ad_network_login = login_info, application = app, send_email = False) for 
                 app, publisher_id in apps_with_publisher_ids])
+                
+        return redirect('ad_network_reports_index')
         
 
 @login_required

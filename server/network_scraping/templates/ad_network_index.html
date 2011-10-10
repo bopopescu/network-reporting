@@ -28,8 +28,8 @@
     <tbody>
         {% for key, mapper, stats in aggregate_stats %}
         <tr>
-            <td class="name">{{mapper.application.name}}</td>
-            <td class="name"><a href='/ad_network_reports/app_view/{{key}}'>{{mapper.ad_network_name}}</a></td>
+            <td class="name"><a href='/ad_network_reports/app_view/{{key}}'>{{mapper.application.name}}</a></td>
+            <td class="name">{{mapper.ad_network_name}}</td>
             <td class="revenue dataTable-data numeric">{{stats.revenue}}</td>
             <td class="attempts dataTable-data numeric">{{stats.attempts}}</td>
             <td class="impressions dataTable-data numeric">{{stats.impressions}}</td>

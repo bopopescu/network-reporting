@@ -85,10 +85,7 @@ def make_mopub_id(raw_udid):
     
     moput_id is the part after the semicolon
     """                      
-    raw_udid_parts = raw_udid.split(':')[-1]
-
-    return hashed_udid
-
+    return raw_udid.split(':')[-1]
 
 def build_key(template, template_dict):
     """ I got tired of not knowing what's what when building a key.

@@ -111,6 +111,12 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         login_info = AdNetworkLoginInfo(account = self.account, ad_network_name = ad_network_name, username = username, password = password, client_key = client_key, publisher_ids = publisher_ids)
         login_info.put()
         
+        # try:
+        #     ad_networks.ad_networks[login_info.ad_network_name].constructor(login_info)
+        # except Exception as e:
+        #     login_info.delete()
+        #     return e
+        
         # Create all the different AdNetworkAppMappers for all the applications on the ad network for the user and add them to the db
         db.put([AdNetworkAppMapper(ad_network_name = ad_network_name, publisher_id = publisher_id,
                 ad_network_login = login_info, application = app, send_email = send_email) for 
@@ -125,10 +131,6 @@ def get_pub_id_from_name(app_name, login_info):
     query.filter('account =', login_info.account)
     app = query.get()
 
-    if app:
-        if login_info.ad_network_name == 'jumptap':
-            return app.network_config.jumptap_pub_id
-        elif login_info.ad_network_name == 'iad':
-            return app.network_config.iad_pub_id
-    else:
-        return None
+    if app and login_info.ad_network_name == 'jumptap':
+        return app.network_config.jumptap_pub_id
+    return None

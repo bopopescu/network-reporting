@@ -44,6 +44,7 @@ class AdMobScraper(Scraper):
             #TODO mechanize stuff here
         else:
             logging.error(response['errors'])
+            raise Exception("\n".join([r['msg'] for r in response['errors']]))
 
     def get_sites(self):
         req = urllib2.Request(self.SITE_SEARCH_URL + '?' + urllib.urlencode(self.auth_dict))

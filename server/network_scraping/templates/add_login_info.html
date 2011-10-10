@@ -1,5 +1,6 @@
 <form action="/ad_network_reports/add/" method="post">
     <p>
+	{{error}}<br>
 	<select name="ad_network_name">
 		{% for ad_network_name in ad_network_names %}
 		<option>{{ad_network_name}}</option>

@@ -23,6 +23,7 @@ class IAdScraper(Scraper):
     SS_FNAME = 'ScraperScreen_%s.png'
     STATS_PAGE = 'https://iad.apple.com/itcportal/#app_homepage'
     LOGIN_TITLE = 'iTunes Connect - iAd Network Sign In'
+    SITE_ID_IDENTIFIER = '&siteid='
     APP_STATS = ('revenue', 'ecpm', 'requests', 'impressions', 'fill_rate', 'ctr')
     MONEY_STATS = ['revenue', 'ecpm']
     PCT_STATS = ['fill_rate', 'ctr']
@@ -114,9 +115,10 @@ class IAdScraper(Scraper):
         # Get all the tr's
         app_rows = [app.parent for app in apps]
         records = []
-        for row in app_rows:
+        
+        for index, row in enumerate(app_rows):
             app_name = row.findAll('p', {"class":"app_text"})[0].text
-            app_dict = dict(apple_id = app_name)
+            app_dict = {}
             # Find desired stats
             for stat in self.APP_STATS:
                 class_name = 'td_' + stat
@@ -132,7 +134,15 @@ class IAdScraper(Scraper):
                     data = eval(data[:-1])
                 else:
                     data = eval(data.replace(',',''))
+                
                 app_dict[stat] = data
+                
+            time.sleep(4)
+            self.browser.find_elements_by_css_selector('.app_text')[index].click()
+            time.sleep(1)
+            app_dict['apple_id'] = self.browser.current_url[self.browser.current_url.find(self.SITE_ID_IDENTIFIER) + len(self.SITE_ID_IDENTIFIER):]
+            self.browser.back()
+            time.sleep(1)
                 
             nsr = NetworkScrapeRecord(revenue = app_dict['revenue'],
                                       attempts = app_dict['requests'],
@@ -141,7 +151,7 @@ class IAdScraper(Scraper):
                                       clicks = int(app_dict['ctr'] * app_dict['impressions']),
                                       ctr = app_dict['ctr'],
                                       ecpm = app_dict['ecpm'],
-                                      app_tag = str(BeautifulSoup(app_dict['apple_id'], convertEntities=BeautifulSoup.HTML_ENTITIES).contents[0].string))
+                                      app_tag = app_dict['apple_id'])
             records.append(nsr)
         return records
 
@@ -152,8 +162,8 @@ class NetworkConfidential:
 # for testing
 if __name__ == '__main__':
     nc = NetworkConfidential()
-    nc.username = 'chesscom'
-    nc.password ='Faisal1Chess'
+    nc.username = 'betnetworks'
+    nc.password ='betjames'
     nc.ad_network_name = 'iad'
     scraper = IAdScraper(nc)
     try:

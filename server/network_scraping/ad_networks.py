@@ -14,6 +14,6 @@ class AdNetwork(object):
 # dictionary of supported ad networks
 ad_networks = {'admob' : AdNetwork(constructor = AdMobScraper, get_pub_id = query_managers.get_pub_id),
             'jumptap' : AdNetwork(constructor = JumpTapScraper, get_pub_id = query_managers.get_pub_id_from_name),
-            'iad' : AdNetwork(constructor = IAdScraper, get_pub_id = query_managers.get_pub_id_from_name),
+            'iad' : AdNetwork(constructor = IAdScraper, get_pub_id = query_managers.get_pub_id),
             'inmobi' : AdNetwork(constructor = InMobiScraper, get_pub_id = query_managers.get_pub_id),
             'mobfox' : AdNetwork(constructor = MobFoxScraper, get_pub_id = query_managers.get_pub_id)}

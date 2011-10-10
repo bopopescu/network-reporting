@@ -8,9 +8,11 @@ from common.utils.request_handler import RequestHandler
 from datetime import timedelta, date
 from network_scraping.query_managers import AdNetworkReportQueryManager
 
+AD_NETWORK_NAMES = ['admob', 'jumptap', 'iad', 'inmobi', 'mobfox']
+
 class AdNetworkReportIndexHandler(RequestHandler):
     def get(self):
-        """Get a list of aggregtate stats for the ad networks, apps and account.
+        """Generate a list of aggregtate stats for the ad networks, apps and account.
         
         Return a webpage with the list of stats in a table.
         """
@@ -34,7 +36,7 @@ def ad_network_report_index(request, *args, **kwargs):
      
 class ViewAdNetworkReportHandler(RequestHandler):
     def get(self, ad_network_app_mapper_key, *args, **kwargs):
-        """Get a list of stats for the ad network, app and account.
+        """Generate a list of stats for the ad network, app and account.
         
         Return a webpage with the list of stats in a table.
         """
@@ -62,7 +64,8 @@ class AddLoginInfoHandler(RequestHandler):
         # officejerk_app.put()
 
         return render_to_response(self.request, 'network_scraping/add_login_info.html',
-                                  dict(ad_network_names = ['admob', 'jumptap', 'iad', 'inmobi', 'mobfox']))#ad_networks.ad_networks.keys()))
+                                  dict(ad_network_names = AD_NETWORK_NAMES, #ad_networks.ad_networks.keys(),
+                                       error = ""))
                                   
     def post(self):
         """Create AdNetworkLoginInfo and AdNetworkAppMappers for all apps that have pub ids for this network and account.
@@ -73,13 +76,18 @@ class AddLoginInfoHandler(RequestHandler):
         username = self.request.POST['username']
         password = self.request.POST['password']
         client_key = self.request.POST['client_key']
-        send_email = self.request.POST.get('send_email', False)
+        send_email = eval(self.request.POST.get('send_email', 'False'))
         
         manager = AdNetworkReportQueryManager(self.account)
-        manager.create_login_info_and_mappers(ad_network_name, username, password, client_key, send_email)
-                
-        return redirect('ad_network_reports_index')
         
+        error = manager.create_login_info_and_mappers(ad_network_name, username, password, client_key, send_email)
+        
+        if error:
+            return render_to_response(self.request, 'network_scraping/add_login_info.html',
+                                      dict(ad_network_names = AD_NETWORK_NAMES, #ad_networks.ad_networks.keys(),
+                                           error = error))
+        else:
+            return redirect('ad_network_reports_index')  
 
 @login_required
 def add_login_info(request, *args, **kwargs):

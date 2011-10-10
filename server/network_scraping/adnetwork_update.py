@@ -43,6 +43,9 @@ def auth_func():
     return 'olp@mopub.com', 'N47935'
 
 def update_ad_networks(start_date = None, end_date = None):
+    """Iterate through all AdNetworkLoginInfo. Login to the ad networks saving the data for the date range in the db.
+    
+    Run daily as a cron job in EC2. Email account if account wants email upon completion of gathering stats. Email Tiago if errors occur."""
     yesterday = date.today() - timedelta(days = 1)
     
     if start_date is None and end_date is None:
@@ -58,11 +61,18 @@ def update_ad_networks(start_date = None, end_date = None):
             # returns a list of NetworkScrapeRecord objects of stats for each app for the test_date
             try:
                 stats_list = scraper.get_site_stats(test_date)
-            except Exception:
-                logging.error("Couldn't get get stats for %s network for \"%s\" account." % (login_info.ad_network_name, login_info.account.title))
-                logging.error("Can try again later or perhaps %s changed it's API or site." % login_info.ad_network_name)
+            except Exception as e:
+                logging.error("""Couldn't get get stats for %s network for \"%s\" account.
+                              Can try again later or perhaps %s changed it's API or site.
+                              """ % (login_info.ad_network_name, login_info.account.title, login_info.ad_network_name))
+                mail.send_mail(sender='olp@mopub.com', 
+                               to='tiago@mopub.com', # login_info.account.user.email
+                               subject="Ad Network Scrape Error on %s" % test_date.strftime("%m/%d/%y"), 
+                               body="Couldn't get get stats for %s network for \"%s\" account. Error: %s" % (login_info.ad_network_name, login_info.account.title, e))
                 pass
-
+                
+            email_body = ""
+            email_account = False
             for stats in stats_list:
     
                 ''' Add the current day to the db '''
@@ -76,13 +86,13 @@ def update_ad_networks(start_date = None, end_date = None):
             
                 if ad_network_app_mapper is None:
                     # App is not registered in MoPub but is still in the ad network
-                    logging.info('%(account)s has pub id %(pub_id)s on %(ad_network)s that\'s NOT in MoPub' %
+                    logging.info("%(account)s has pub id %(pub_id)s on %(ad_network)s that\'s NOT in MoPub" %
                                  dict(account = login_info.account.title,
                                       pub_id = stats.app_tag,
                                       ad_network = login_info.ad_network_name))
                     continue
                 else:
-                    logging.info('%(account)s has pub id %(pub_id)s on %(ad_network)s that\'s in MoPub' %
+                    logging.info("%(account)s has pub id %(pub_id)s on %(ad_network)s that\'s in MoPub" %
                                  dict(account = login_info.account.title,
                                       pub_id = stats.app_tag,
                                       ad_network = login_info.ad_network_name))
@@ -97,22 +107,21 @@ def update_ad_networks(start_date = None, end_date = None):
                                      ctr = float(stats.ctr),
                                      ecpm = float(stats.ecpm)
                                      ).put()
-                 
-                # Only email publisher if they want email and the information is relevant (ie. yesterdays stats)
+                                     
                 if ad_network_app_mapper.send_email and test_date == yesterday:
-                    mail.send_mail(sender='olp@mopub.com', 
-                                   to='tiago@mopub.com', # login_info.account.user.email
-                                   subject="Test Email", 
-                                   body="""Scrape stats for %(test_date)s for application %(app)s:
-                                        revenue: %(revenue).2f
-                                        attempts: %(attempts)d
-                                        impressions: %(impressions)d
-                                        fill_rate: %(fill_rate).2f
-                                        clicks: %(clicks)d
-                                        ctr: %(ctr)d
-                                        ecpm: %(ecpm).2f""" %
-                                        dict([('test_date', test_date.strftime("%m/%d/%Y")), ('app', ad_network_app_mapper.application.name)] +
-                                        stats.__dict__.items()))
+                    email_body += """%(app)25s|$%(revenue)8.2f|%(attempts)8d|%(impressions)8d|%(fill_rate)6.2f|%(clicks)8d|%(ctr)6.2f|%(ecpm)6.2f
+                                  """ % dict([('app', ad_network_app_mapper.application.name)] + stats.__dict__.items())
+                    email_account = True
+                 
+            # Only email publisher if they want email and the information is relevant (ie. yesterdays stats)
+            if email_account:
+                mail.send_mail(sender='olp@mopub.com', 
+                               to='tiago@mopub.com', # login_info.account.user.email
+                               subject="Ad Network Scrape Stats for %s" % test_date.strftime("%m/%d/%y"), 
+                               body="""%25s|%11s|%8s|%8s|%9s|%8s|%9s|%9s
+                                    %s
+                                    """ % ("Application", "Revenue", "Attempts", "Impressions", "Fill Rate", "Clicks", "CTR", "ECPM", "".join(["-" for i in range(95)])) + 
+                                    email_body)
                 
 if __name__ == "__main__":
     setup_remote_api()

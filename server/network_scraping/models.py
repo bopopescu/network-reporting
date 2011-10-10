@@ -18,7 +18,7 @@ class AdNetworkLoginInfo(db.Model):
     username = db.StringProperty()
     password = db.StringProperty()
     
-    # needed for admob and mobfox
+    # needed for admob
     client_key = db.StringProperty()
     
     # needed for mobfox

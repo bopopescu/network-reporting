@@ -101,7 +101,9 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         """
         for n in NetworkConfig.all().filter('%s_pub_id !=' % ad_network_name, None):
             for a in App.all().filter('account =', self.account).filter('network_config =', n):
-                yield (a, eval('n.%s_pub_id' % ad_network_name))
+                # example return (App, NetworkConfig.admob_pub_id)
+                yield (a, getattr(n, '%s_pub_id' % ad_network_name))
+                # yield (a, eval('n.%s_pub_id' % ad_network_name))
                 
     def create_login_info_and_mappers(self, ad_network_name, username, password, client_key, send_email):
         """Create AdNetworkLoginInfo and AdNetworkAppMapper entities."""

@@ -48,6 +48,8 @@ class InMobiScraper(Scraper):
         encoded_url = hmac(self.password, final_str, sha1).digest().encode('base64')[:-1]
 
         req = urllib2.Request(full_url)
+        print encoded_url
+        print full_url
         req.add_header('Authorization', 'Inmobi WS token :%s' % encoded_url)
         req.add_header('Date', now)
         req.add_header('x-data-user', self.username)
@@ -86,10 +88,28 @@ class NetworkCredentials:
 
 if __name__ == '__main__':
     nc = NetworkCredentials()
+    nc1 = NetworkCredentials()
+    nc2 = NetworkCredentials()
+    nc3 = NetworkCredentials()
     # access_id
-    nc.username = '4028cb972fe21753012ffef071c602f3' #'4028cb8b2b617f70012b792fe65e00a2'
+    nc.username = '4028cb8b2b617f70012b792fe65e00a2'
+    nc1.username = '4028cb972fe21753012ffb7680350267'
+    nc2.username = '4028cb972fe21753012ffef071c602f3'
+    nc3.username = '4028cb973099fe040130c2aa2a0904b5'
     # secret_key
-    nc.password = '831169420506' #'84585161'
+    nc.password = '84585161'
+    nc1.password = '714411990588'
+    nc2.password = '831169420506'
+    nc3.password = '277626578522'
     nc.ad_network_name = 'inmobi'
+    nc1.ad_network_name = 'inmobi'
+    nc2.ad_network_name = 'inmobi'
+    nc3.ad_network_name = 'inmobi'
     scraper = InMobiScraper(nc)
+    scraper1 = InMobiScraper(nc1)
+    scraper2 = InMobiScraper(nc2)
+    scraper3 = InMobiScraper(nc3)
     print scraper.get_site_stats(date.today() - timedelta(days = 1))
+    print scraper1.get_site_stats(date.today() - timedelta(days = 1))
+    print scraper2.get_site_stats(date.today() - timedelta(days = 1))
+    print scraper3.get_site_stats(date.today() - timedelta(days = 1))

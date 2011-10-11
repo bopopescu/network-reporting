@@ -35,7 +35,7 @@ if REAL_TEST_DATA:
     chess_account = Account(key_name = 'chess_com_test_account', title = 'Chess.com')
     chess_account.put()
     
-    chess_network_config = NetworkConfig(jumptap_pub_id = 'jumptap_chess_com_test', iad_pub_id = 'iad_chess_com_test')
+    chess_network_config = NetworkConfig(jumptap_pub_id = 'jumptap_chess_com_test', iad_pub_id = '329218549')
     chess_network_config.put()
     
     chess_app = App(account = chess_account, name = "Chess.com - Play & Learn Chess", network_config = chess_network_config)
@@ -87,16 +87,16 @@ if REAL_TEST_DATA:
     bet_account = Account(key_name = 'bet_test_account', title = 'BET')
     bet_account.put()
     
-    bet_jumptap_network_config = NetworkConfig(jumptap_pub_id = 'jumptap_bet_test')
-    bet_jumptap_network_config.put()
+    bet_network_config = NetworkConfig(jumptap_pub_id = 'jumptap_bet_test', admob_pub_id = 'a14c7d7e56eaff8')
+    bet_network_config.put()
     
-    bet_iad_network_config = NetworkConfig(iad_pub_id = 'iad_bet_test')
+    bet_iad_network_config = NetworkConfig(iad_pub_id = '418612824')
     bet_iad_network_config.put()
        
-    bet_app = App(account = bet_account, name = "BET WAP Site", network_config = bet_jumptap_network_config) # Name must be the same as in Jumptap
+    bet_app = App(account = bet_account, name = "BET WAP Site", network_config = bet_network_config) # Name must be the same as in Jumptap
     bet_app.put()
     
-    bet_iad_app = App(account = bet_account, name = "106 & Park", network_config = bet_iad_network_config) # Name must be the same as in iad
+    bet_iad_app = App(account = bet_account, name = "106 & Park", network_config = bet_iad_network_config)
     bet_iad_app.put()
 
     # iAd login info                                        

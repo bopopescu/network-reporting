@@ -57,6 +57,27 @@ class AddLoginInfoHandler(RequestHandler):
         from account.models import NetworkConfig
         from publisher.models import App
         
+        # Add a bunch of test data to the db
+        # from google.appengine.ext import db
+        # from account.models import Account, NetworkConfig
+        # chess_network_config = NetworkConfig(jumptap_pub_id = 'jumptap_chess_com_test', iad_pub_id = '329218549')
+        # chess_network_config.put()
+        # 
+        # chess_app = App(account = self.account, name = "Chess.com - Play & Learn Chess", network_config = chess_network_config)
+        # chess_app.put()
+        # 
+        # bet_network_config = NetworkConfig(jumptap_pub_id = 'jumptap_bet_test', admob_pub_id = 'a14c7d7e56eaff8')
+        # bet_network_config.put()
+        # 
+        # bet_iad_network_config = NetworkConfig(iad_pub_id = '418612824')
+        # bet_iad_network_config.put()
+        # 
+        # bet_app = App(account = self.account, name = "BET WAP Site", network_config = bet_network_config) # Name must be the same as in Jumptap
+        # bet_app.put()
+        # 
+        # bet_iad_app = App(account = self.account, name = "106 & Park", network_config = bet_iad_network_config)
+        # bet_iad_app.put()
+        # 
         # officejerk_network_config = NetworkConfig(jumptap_pub_id = 'office_jerk_test')
         # officejerk_network_config.put()
         # 

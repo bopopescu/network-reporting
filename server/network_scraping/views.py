@@ -45,6 +45,7 @@ class ViewAdNetworkReportHandler(RequestHandler):
         dates = manager.get_ad_network_app_stats(ad_network_app_mapper)
         return render_to_response(self.request, 'network_scraping/view_app_ad_network_report.html',
                 dict(ad_network_name = ad_network_app_mapper.ad_network_name,
+                     app_name = ad_network_app_mapper.application.name,
                      dates = dates))
 
 @login_required

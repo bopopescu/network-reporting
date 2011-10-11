@@ -112,7 +112,9 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         login_info.put()
         
         # try:
-        #     ad_networks.ad_networks[login_info.ad_network_name].constructor(login_info)
+        #     # Ping something that does this:
+        #     scraper = ad_networks.ad_networks[login_info.ad_network_name].constructor(login_info)
+        #     scraper.test_login_info() # Possibly check if exception is user error or an issue with the scraper
         # except Exception as e:
         #     login_info.delete()
         #     return e

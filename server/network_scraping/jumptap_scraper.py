@@ -1,7 +1,7 @@
 import urllib2
 import urllib
 
-from datetime import date
+from datetime import date, timedelta
 from scraper import Scraper, ScraperSite
 from network_scrape_record import NetworkScrapeRecord
 
@@ -10,10 +10,15 @@ class JumpTapScraper(Scraper):
     NETWORK_NAME = 'jumptap'
     SITE_STAT_URL = 'https://pa.jumptap.com/pa-2.0/pub-services/v10/report.html'
 
-    # Note: a date range is not supported
-    def get_site_stats(self, from_date, to_date=None):
-        if to_date is None:
-            to_date = from_date
+    def test_login_info(self):
+        """Test the username and password.
+        
+        Raise a 401 error if username or password are incorrect otherwise return None.
+        """
+        self.get_site_stats(date.today() - timedelta(days = 1))
+
+    def get_site_stats(self, from_date):
+        to_date = from_date
            
         query_dict = {"user": self.username,
                           "pass": self.password,

@@ -1,3 +1,19 @@
+{% extends 'base.html' %}
+{% load filters %}
+{% block navLinks %}
+            <li><a href="{% url publisher_index %}">Dashboard</a></li>
+            <li class="active"><a href="{% url advertiser_campaign %}">Campaigns</a></li>
+            <li><a href="{% url reports_index %}">Reports</a></li>
+{% endblock navLinks %}
+{% block messageCenter %}{% endblock messageCenter %}
+
+{% block titleBarRight %}
+<span class="titlebar-link">
+  <a class="linkIcon" href="{% url publisher_index_geo %}">Performance by region <span class="ui-icon ui-icon-triangle-1-e"></span></a>
+</span>
+{% endblock titleBarRight %}
+
+{% block content %}
 <form action="/ad_network_reports/add/" method="post">
     <p>
 	{{error}}<br>
@@ -13,3 +29,4 @@
     <input type="submit" value="Send">
     </p>
  </form>
+{% endblock content %}

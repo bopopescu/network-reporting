@@ -45,6 +45,13 @@ class AdMobScraper(Scraper):
         else:
             logging.error(response['errors'])
             raise Exception("\n".join([r['msg'] for r in response['errors']]))
+            
+    def test_login_info(self):
+        """Login info has already been tested in the constructor (via the authenticate method) so we pass.
+        
+        Return None.
+        """
+        pass
 
     def get_sites(self):
         req = urllib2.Request(self.SITE_SEARCH_URL + '?' + urllib.urlencode(self.auth_dict))

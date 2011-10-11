@@ -41,19 +41,28 @@ class IAdScraper(Scraper):
         # Set max wait time to find an element on a page
         self.browser.implicitly_wait(10)
         self.browser.get(self.STATS_PAGE)
-        while self.browser.title == self.LOGIN_TITLE:
-            login = self.browser.find_element_by_css_selector('#accountname')
-            login.click()
-            login.clear()
-            login.send_keys(self.username)
-            pw = self.browser.find_element_by_name('theAccountPW')
-            pw.click()
-            pw.clear()
-            pw.send_keys(self.password)
-            self.browser.find_element_by_name('appleConnectForm').submit()
-            # There are some redirects and shit that happens, chill out for a bit
-            time.sleep(10)
+        
+        time.sleep(1)
+        login = self.browser.find_element_by_css_selector('#accountname')
+        login.clear()
+        login.send_keys(self.username)
+        pw = self.browser.find_element_by_name('theAccountPW')
+        pw.clear()
+        pw.send_keys(self.password)
+        self.browser.find_element_by_name('appleConnectForm').submit()
+        # There are some redirects and shit that happens, chill out for a bit
+        time.sleep(10)
+            
+        if self.browser.title == self.LOGIN_TITLE:
+            raise Exception(self.browser.find_element_by_css_selector('span.dserror').text)
         # We should now have cookies assuming things worked how I think they worked
+        
+    def test_login_info(self):
+        """Login info has already been tested in the constructor (via the authenticate method) so we pass.
+        
+        Return None.
+        """
+        pass
 
     def get_ss(self):
         self.browser.get_screenshot_as_file('/home/ubuntu/' + self.SS_FNAME % time.time())

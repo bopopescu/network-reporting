@@ -5,8 +5,7 @@ import logging
 import time
 import urllib2
 
-from datetime import datetime
-from datetime import date, timedelta
+from datetime import datetime, date, timedelta
 from xml.dom.minidom import parseString
 
 from network_scrape_record import NetworkScrapeRecord
@@ -20,6 +19,13 @@ class InMobiScraper(Scraper):
     # TIMEZONE is included in DATE_FMT
     DATE_FMT = '%a, %d %b %Y %H:%M:%S PDT'
     PLATFORM = 'all'
+    
+    def test_login_info(self):
+        """Test the Access ID and Secret Key.
+        
+        Raise a 403 error if Access ID or Secret Key are incorrect otherwise return None.
+        """
+        self.get_site_stats(date.today() - timedelta(days = 1))
 
     def get_site_stats(self, start_date, end_date=None):
         # Date can't be today
@@ -65,9 +71,8 @@ class InMobiScraper(Scraper):
                                           ecpm = float(app_stats[6]), app_tag = str(app_stats[7]))
                 reports.append(nsr)
         else:
-            print ('Day range (%s to %s) selected for InMobi doesn\'t have any data' % 
+            logging.error("Day range (%s to %s) selected for InMobi doesn\'t have any data" % 
                     (start_date.strftime("%Y %m %d"), end_date.strftime("%Y %m %d")))
-            # logging.error()
             
         return reports
         

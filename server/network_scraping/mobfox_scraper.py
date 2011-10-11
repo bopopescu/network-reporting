@@ -6,13 +6,20 @@ from xml.dom import minidom
 
 from network_scrape_record import NetworkScrapeRecord
 
-''' One app stats returned per request sent. Can't break down by ad unit. '''
 class MobFoxScraper(object):
+    """One app stats returned per request sent. Can't break down by ad unit."""
     # API_KEY is MoPub specific
     API_KEY = 'e64d04079c63c14644fc9690a925c8af'
     
     def __init__(self, credentials):
         self.publisher_ids = credentials.publisher_ids
+        
+    def test_login_info(self):
+        """Test publisher_ids.
+        
+        Raise an error if one of the publisher ids is incorrect otherwise return None.
+        """
+        self.get_site_stats(date.today() - timedelta(days = 1))
     
     def get_site_stats(self, from_date, to_date=None):
         if  to_date is None:
@@ -28,7 +35,10 @@ class MobFoxScraper(object):
             req = urllib2.Request('http://account.mobfox.com/reporting_api.php?'+urllib.urlencode(req_dict))
             
             response = urllib2.urlopen(req)
-            self.dom = minidom.parseString(response.read())
+            line = response.read()
+            if line.find("error") != -1:
+                raise Exception(line)
+            self.dom = minidom.parseString(line)
         
             try:
                 nsr = NetworkScrapeRecord(revenue = float(self.get_value("earnings")),
@@ -41,9 +51,8 @@ class MobFoxScraper(object):
                                           app_tag = pub_id)
                 reports.append(nsr)
             except Exception as e:
-                print ('Day range (%s to %s) selected for mobfox doesn\'t have any data' % 
+                logging.error('Day range (%s to %s) selected for mobfox doesn\'t have any data' % 
                         (from_date.strftime("%Y %m %d"), to_date.strftime("%Y %m %d")))
-                # logging.error()
         
         return reports
     

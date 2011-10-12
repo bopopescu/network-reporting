@@ -91,8 +91,8 @@ class NetworkConfidential:
 # for testing   
 if __name__ == '__main__':
     nc = NetworkConfidential()
-    nc.username = 'chesscom'
-    nc.password = 'Y7u8i9o0'
+    nc.username = 'com2ususa'
+    nc.password = 'zjaxntm1'
     nc.ad_network_name = 'jumptap'
     scraper = JumpTapScraper(nc)
     print scraper.get_site_stats(date.today())

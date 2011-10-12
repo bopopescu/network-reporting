@@ -62,15 +62,17 @@ def update_ad_networks(start_date = None, end_date = None):
             try:
                 stats_list = scraper.get_site_stats(test_date)
             except Exception as e:
-                logging.error("""Couldn't get get stats for %s network for \"%s\" account.
-                              Can try again later or perhaps %s changed it's API or site.
+                logging.error("""
+Couldn't get get stats for %s network for \"%s\" account.
+Can try again later or perhaps %s changed it's API or site.
                               """ % (login_info.ad_network_name, login_info.account.title, login_info.ad_network_name))
                 mail.send_mail(sender='olp@mopub.com', 
                                to='tiago@mopub.com', # login_info.account.user.email
                                subject="Ad Network Scrape Error on %s" % test_date.strftime("%m/%d/%y"), 
                                body="Couldn't get get stats for %s network for \"%s\" account. Error: %s" % (login_info.ad_network_name, login_info.account.title, e))
                 pass
-                
+            
+            email_body = ""    
             email_account = False
             for stats in stats_list:
     
@@ -108,14 +110,50 @@ def update_ad_networks(start_date = None, end_date = None):
                                      ).put()
                                      
                 if ad_network_app_mapper.send_email and test_date == yesterday:
+                    email_body += ("""
+        <tr>
+            <td>%(app)s</td>
+            <td>%(ad_network_name)s</td>
+            <td>$%(revenue).2f</td>
+            <td>%(attempts)d</td>
+            <td>%(impressions)d</td>
+            <td>%(fill_rate).2f</td>
+            <td>%(clicks)d</td>
+            <td>%(ctr).2f</td>
+            <td>%(ecpm).2f</td>
+        </tr>
+                                    """ % dict([('app', ad_network_app_mapper.application.name), ('ad_network_name', ad_network_app_mapper.ad_network_name)] +
+                                        stats.__dict__.items()))
                     email_account = True
                  
             # Only email publisher if they want email and the information is relevant (ie. yesterdays stats)
             if email_account:
                 mail.send_mail(sender='olp@mopub.com', 
-                               to='tiago@mopub.com', # login_info.account.user.email
-                               subject="Ad Network Scrape Stats for %s" % test_date.strftime("%m/%d/%y"), 
-                               body="Learn more at <a href='http://mopub-experimental.appspot.com/ad_network_reports/'>MoPub</a>")
+                               to='report-monitoring@mopub.com', # login_info.account.user.email
+                               cc='tiago@mopub.com',
+                               subject="Ad Network Scrape Stats for %s" % test_date.strftime("%m/%d/%y"),
+                               body="Learn more at http://mopub-experimental.appspot.com/ad_network_reports/",
+                               html=("""
+<table width=100%>
+    <thead>
+        <th>APP NAME</th>
+        <th>AD NETWORK NAME</th>
+        <th>REVENUE</th>
+        <th>ATTEMPTS</th>
+        <th>IMPRESSIONS</th>
+        <th>FILLRATE</th>
+        <th>CLICKS</th>
+        <th>CTR</th>
+        <th>ECPM</th>
+    </thead>
+    <tbody>
+                                   """ + 
+                                   email_body +
+                                   """
+    </tbody>
+</table>
+
+Learn more at <a href='http://mopub-experimental.appspot.com/ad_network_reports/'>MoPub</a>"""))
                 
 if __name__ == "__main__":
     setup_remote_api()

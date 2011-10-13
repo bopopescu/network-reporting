@@ -92,10 +92,9 @@ def update_ad_networks(start_date = None, end_date = None):
                 email_body = ""
                 email_account = False
 
-            scraper = ad_networks[login_info.ad_network_name].constructor(login_info)
-
-            # returns a list of NetworkScrapeRecord objects of stats for each app for the test_date
             try:
+                scraper = ad_networks[login_info.ad_network_name].constructor(login_info)
+                # returns a list of NetworkScrapeRecord objects of stats for each app for the test_date
                 stats_list = scraper.get_site_stats(test_date)
             except Exception as e:
                 logging.error("""

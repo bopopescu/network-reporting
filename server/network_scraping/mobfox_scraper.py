@@ -53,6 +53,7 @@ class MobFoxScraper(object):
             except Exception as e:
                 logging.error('Day range (%s to %s) selected for mobfox doesn\'t have any data' % 
                         (from_date.strftime("%Y %m %d"), to_date.strftime("%Y %m %d")))
+                raise
         
         return reports
     

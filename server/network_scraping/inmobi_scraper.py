@@ -57,7 +57,8 @@ class InMobiScraper(Scraper):
         print line
         if line.find('error') != -1:
             logging.error("Day range (%s to %s) selected for InMobi doesn\'t have any data. %s" % 
-                    (start_date.strftime("%Y %m %d"), end_date.strftime("%Y %m %d"), dictionary['errors']))
+                    (start_date.strftime("%Y %m %d"), end_date.strftime("%Y %m %d"), line))
+            raise Exception(line)
             
         dictionary = json.loads(line)
                     

@@ -111,23 +111,25 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         apps_with_publisher_ids = list(self.get_apps_with_publisher_ids(ad_network_name))
         publisher_ids = [publisher_id for app, publisher_id in apps_with_publisher_ids]
         
-        login_info = AdNetworkLoginInfo(account = self.account, ad_network_name = ad_network_name, username = username, password = password, client_key = client_key, publisher_ids = publisher_ids)
+        login_info = AdNetworkLoginInfo(account = self.account,
+                                        ad_network_name = ad_network_name,
+                                        username = username,
+                                        password = password,
+                                        client_key = client_key,
+                                        publisher_ids = publisher_ids)
         
-        # try:
-        #     req = urllib2.Request('http://check_login_credentials.mopub.com?' + urllib.urlencode(login_info.__dict__))
-        #     response = urllib2.urlopen(req)
-        # #     # Ping something that does this:
-        # #     scraper = ad_networks.ad_networks[login_info.ad_network_name].constructor(login_info)
-        # #     scraper.test_login_info() # Possibly check if exception is user error or an issue with the scraper
-        # except Exception as e:
-        #     return e
+        import urllib
+        from google.appengine.api import urlfetch
+
+        TEST_LOGIN_CREDENTIALS_URL = "http://check_login_credentials.mopub.com"
+        result = urlfetch.fetch(url = TEST_LOGIN_CREDENTIALS_URL, payload = urllib.urlencode(login_info.__dict__), method = urlfetch.POST)
+        if result.status_code == 200:
+            login_info.put()
         
-        login_info.put()
-        
-        # Create all the different AdNetworkAppMappers for all the applications on the ad network for the user and add them to the db
-        db.put([AdNetworkAppMapper(ad_network_name = ad_network_name, publisher_id = publisher_id,
-                ad_network_login = login_info, application = app, send_email = send_email) for 
-                app, publisher_id in apps_with_publisher_ids])
+            # Create all the different AdNetworkAppMappers for all the applications on the ad network for the user and add them to the db
+            db.put([AdNetworkAppMapper(ad_network_name = ad_network_name, publisher_id = publisher_id,
+                    ad_network_login = login_info, application = app, send_email = send_email) for 
+                    app, publisher_id in apps_with_publisher_ids])
 
 def get_login_credentials():
     """Return all AdNetworkLoginInfo entities ordered by account."""

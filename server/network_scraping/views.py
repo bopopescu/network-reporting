@@ -55,9 +55,9 @@ def view_ad_network_app_report(request, *args, **kwargs):
 class AddLoginInfoHandler(RequestHandler):
     def get(self): #Verfify that this is SSL
         """Return form with ad network login info."""
-        from account.models import NetworkConfig
-        from publisher.models import App
-        
+        # from account.models import NetworkConfig
+        # from publisher.models import App
+        # 
         # Add a bunch of test data to the db
         # from google.appengine.ext import db
         # from account.models import Account, NetworkConfig

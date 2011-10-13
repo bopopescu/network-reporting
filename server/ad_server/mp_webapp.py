@@ -1,7 +1,7 @@
 import datetime
 
 from google.appengine.ext import webapp
-from mopub_logging.log_service import logger
+from stats.log_service import logger
 from common.utils.timezones import Pacific_tzinfo
 from common.utils import helpers 
 

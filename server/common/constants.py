@@ -153,4 +153,4 @@ PIPE_KEY = 'pipeline--%(type)s--%(key)s'
 REP_KEY = 'report:%(d1)s:%(d2)s:%(d3)s:%(account)s:%(start)s:%(end)s'
 CLONE_REP_KEY = 'report:%(d1)s:%(d2)s:%(d3)s:%(account)s:%(start)s:%(end)s:%(clone_count)s'
 
-MAX_OBJECTS=100
+MAX_OBJECTS = 200

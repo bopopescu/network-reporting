@@ -170,7 +170,7 @@ class PingIdHandler(webapp.RequestHandler):
         self.response.out.write(simplejson.dumps(d))
 	    
 ###
-# Recalculates fun statistics for all ads
+# Recalculates fun statistics for all ads and potentially sends canary email
 	    
 class RecalculateHandler(webapp.RequestHandler):
     def get(self):
@@ -217,7 +217,7 @@ class RecalculateHandler(webapp.RequestHandler):
                 memcache.set("median_latency", median_latency)
         
 ###
-# Recalculates fun statistics and potentially sends canary emails for an ad id
+# Recalculates fun statistics
 
 class RecalculateIdHandler(webapp.RequestHandler):
     def get(self, id):       

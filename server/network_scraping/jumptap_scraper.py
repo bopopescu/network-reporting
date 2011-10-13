@@ -31,6 +31,7 @@ class JumpTapScraper(Scraper):
         response = urllib2.urlopen(req)
 
         headers = response.readline().split(',')
+        print headers
 
         revenue_index = headers.index('Net Revenue$')
         request_index = headers.index('Requests')
@@ -43,6 +44,7 @@ class JumpTapScraper(Scraper):
         # dict stores list of nsrs for each 'spot' or ad unit where the key in the dict is the app
         scrape_records = {}
         for line in response:
+            print line
             vals = line.split(',')
             if vals[0] != 'Totals':
                 nsr = NetworkScrapeRecord(revenue = float(vals[revenue_index]),
@@ -91,9 +93,9 @@ class NetworkConfidential:
 # for testing   
 if __name__ == '__main__':
     nc = NetworkConfidential()
-    nc.username = 'com2ususa'
-    nc.password = 'zjaxntm1'
+    nc.username = 'betnetwork'
+    nc.password = 'BETjames'
     nc.ad_network_name = 'jumptap'
     scraper = JumpTapScraper(nc)
-    print scraper.get_site_stats(date.today())
+    print scraper.get_site_stats(date.today() - timedelta(days = 1))
     

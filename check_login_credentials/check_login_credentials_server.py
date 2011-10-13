@@ -1,7 +1,7 @@
 import tornado.ioloop
 import tornado.web
 
-from request_handlers import TestLoginCredentialsHandler
+from request_handlers.check_login_credentials import CheckLoginCredentialsHandler
 
 application = tornado.web.Application([
         (r'^$', TestLoginCredentialsHandler),

@@ -1,3 +1,6 @@
+import sys
+sys.path.append('/home/ubuntu/mopub_experimental/server')
+
 import json
 from utils.decorators import web_dec
 import tornado.web
@@ -5,14 +8,14 @@ import tornado.web
 from network_scraping.ad_networks import ad_networks
 from network_scraping.models import AdNetworkLoginInfo
 
-class StatsHandler(tornado.web.RequestHandler):
+class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
     @web_dec
     def post(self):
-        ad_network_name = self.request.POST['ad_network_name']
-        username = self.request.POST['username']
-        password = self.request.POST['password']
-        client_key = self.request.POST['client_key']
-        send_mail = self.request.POST['send_mail']
+        ad_network_name = self.get_argument('ad_network_name')
+        username = self.get_argument('username')
+        password = self.get_argument('password')
+        client_key = self.get_argument('client_key')
+        send_mail = self.get_argument('send_mail') == 'True'
         
         login_info = AdNetworkLoginInfo(account = self.account,
                                         ad_network_name = ad_network_name,

@@ -1,6 +1,7 @@
 import base64
 from hashlib import sha1
 from hmac import new as hmac
+import json
 import logging
 import time
 import urllib2
@@ -15,7 +16,7 @@ class InMobiScraper(Scraper):
 
     NETWORK_NAME = 'inmobi'
     API_URL = 'http://publisherapi.inmobi.com'
-    SITE_STAT_URL = '/pubData-1.0/extern/reports/%(username)s/ad-view/all/%(platform)s/publisher.xml?fromDate=%(start_date)s&toDate=%(end_date)s&filter=site'
+    SITE_STAT_URL = '/pubData-1.0/extern/reports/%(username)s/ad-view/all/%(platform)s/publisher.json?fromDate=%(start_date)s&toDate=%(end_date)s&filter=site'
     # TIMEZONE is included in DATE_FMT
     DATE_FMT = '%a, %d %b %Y %H:%M:%S PDT'
     PLATFORM = 'all'
@@ -27,12 +28,11 @@ class InMobiScraper(Scraper):
         """
         self.get_site_stats(date.today() - timedelta(days = 1))
 
-    def get_site_stats(self, start_date, end_date=None):
+    def get_site_stats(self, start_date):
         # Date can't be today
-        if end_date is None:
-            end_date = start_date
-            # range can't start and end on the same date for InMobi
-            start_date -= timedelta(days = 1)
+        end_date = start_date
+        # range can't start and end on the same date for InMobi
+        start_date -= timedelta(days = 1)
 
         start_str = start_date.strftime('%d%b%Y').lower()
         end_str = end_date.strftime('%d%b%Y').lower()
@@ -48,39 +48,29 @@ class InMobiScraper(Scraper):
         encoded_url = hmac(self.password, final_str, sha1).digest().encode('base64')[:-1]
 
         req = urllib2.Request(full_url)
-        print encoded_url
-        print full_url
         req.add_header('Authorization', 'Inmobi WS token :%s' % encoded_url)
         req.add_header('Date', now)
         req.add_header('x-data-user', self.username)
             
         resp = urllib2.urlopen(req)
         line = resp.read()
-    
-        # Unfortunately we can't get it back as a json dict since we're using python and
-        # not PHP or Java which support the API so we must parse the xml
-        self.dom = parseString(line)
-    
+        print line
+        if line.find('error') != -1:
+            logging.error("Day range (%s to %s) selected for InMobi doesn\'t have any data. %s" % 
+                    (start_date.strftime("%Y %m %d"), end_date.strftime("%Y %m %d"), dictionary['errors']))
+            
+        dictionary = json.loads(line)
+                    
+        reports_dicts = dictionary['data']['reports']
         reports = []
-        errors = self.dom.getElementsByTagName('error')
-        if len(errors) == 0:   
-            for app_stats in zip(self.get_data_list('earn'), self.get_data_list('req'), self.get_data_list('imp'),
-                                 self.get_data_list('fr'), self.get_data_list('clk'), self.get_data_list('ctr'),
-                                 self.get_data_list('ecpm'), self.get_data_list('excol')):
-                nsr = NetworkScrapeRecord(revenue = float(app_stats[0]), attempts = int(app_stats[1]),
-                                          impressions = int(app_stats[2]), fill_rate = float(app_stats[3]),
-                                          clicks = int(app_stats[4]), ctr = float(app_stats[5]),
-                                          ecpm = float(app_stats[6]), app_tag = str(app_stats[7]))
-                reports.append(nsr)
-        else:
-            logging.error("Day range (%s to %s) selected for InMobi doesn\'t have any data" % 
-                    (start_date.strftime("%Y %m %d"), end_date.strftime("%Y %m %d")))
+        for report_dict in reports_dicts:
+            nsr = NetworkScrapeRecord(revenue = float(report_dict['earn']), attempts = int(report_dict['req']),
+                                      impressions = int(report_dict['imp']), fill_rate = float(report_dict['fr']),
+                                      clicks = int(report_dict['clk']), ctr = float(report_dict['ctr']),
+                                      ecpm = float(report_dict['ecpm']), app_tag = str(report_dict['excol']))
+            reports.append(nsr)
             
         return reports
-        
-        
-    def get_data_list(self, name):
-        return [e.childNodes[0].data for e in self.dom.getElementsByTagName(name)]
         
 # for testing
 class NetworkCredentials:
@@ -88,28 +78,10 @@ class NetworkCredentials:
 
 if __name__ == '__main__':
     nc = NetworkCredentials()
-    nc1 = NetworkCredentials()
-    nc2 = NetworkCredentials()
-    nc3 = NetworkCredentials()
     # access_id
-    nc.username = '4028cb8b2b617f70012b792fe65e00a2'
-    nc1.username = '4028cb972fe21753012ffb7680350267'
-    nc2.username = '4028cb972fe21753012ffef071c602f3'
-    nc3.username = '4028cb973099fe040130c2aa2a0904b5'
+    nc.username = '4028cb973099fe040130c2aa2a0904b5'
     # secret_key
-    nc.password = '84585161'
-    nc1.password = '714411990588'
-    nc2.password = '831169420506'
-    nc3.password = '277626578522'
+    nc.password = '098233019949'
     nc.ad_network_name = 'inmobi'
-    nc1.ad_network_name = 'inmobi'
-    nc2.ad_network_name = 'inmobi'
-    nc3.ad_network_name = 'inmobi'
     scraper = InMobiScraper(nc)
-    scraper1 = InMobiScraper(nc1)
-    scraper2 = InMobiScraper(nc2)
-    scraper3 = InMobiScraper(nc3)
     print scraper.get_site_stats(date.today() - timedelta(days = 1))
-    print scraper1.get_site_stats(date.today() - timedelta(days = 1))
-    print scraper2.get_site_stats(date.today() - timedelta(days = 1))
-    print scraper3.get_site_stats(date.today() - timedelta(days = 1))

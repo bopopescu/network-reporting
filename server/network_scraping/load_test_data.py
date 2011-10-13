@@ -117,35 +117,33 @@ if REAL_TEST_DATA:
     bet_jumptap_login_info.put()
     entities.append(AdNetworkAppMapper(application = bet_app, ad_network_name = 'jumptap', publisher_id = 'jumptap_bet_test', ad_network_login = bet_jumptap_login_info, send_email = True))
 
-    # """ Com2us """
+    """ Com2us """
     # com2us_account = Account(key_name = 'com2us_test_account', title = 'Com2us')
     # com2us_account.put()
-    # 
-    # com2us_network_config = NetworkConfig(jumptap_pub_id = 'com2us_test')
-    # com2us_network_config.put()
     # 
     # com2us_app = App(account = com2us_account, name = "Slice It!", network_config = com2us_network_config)
     # com2us_app.put()
     # 
     # # JumpTap login info
     # com2us_jumptap_login_info = AdNetworkLoginInfo(account = com2us_account, ad_network_name = 'jumptap', username = 'com2ususa',
-    #                                         password = 'zjaxntm1')
+                                            # password = 'zjaxntm1')
     # com2us_jumptap_login_info.put()
-    # entities.append(AdNetworkAppMapper(application = com2us_app, ad_network_name = 'jumptap', publisher_id = 'com2us_test', ad_network_login = com2us_jumptap_login_info, send_email = True))
 
     # InMobi login info
-    # inmobi_login_info = AdNetworkLoginInfo(account = account, ad_network_name = 'inmobi', username = 'adnetwork@com2usamerica.com',
-    #                                     password = 'zjaxntm1')
+    # inmobi_login_info = AdNetworkLoginInfo(account = account, ad_network_name = 'inmobi', username = '4028cb972fe21753012ffb7680350267',
+    #                                     password = '0588884947763')
     # inmobi_login_info.put()
 
     # MobFox login info
     # need the publisher id
+    
+    # entities.append(AdNetworkAppMapper(application = com2us_app, ad_network_name = 'jumptap', publisher_id = 'com2us_test', ad_network_login = inmobi_login_info, send_email = True))
 
 else:
     TEST_JUMPTAP_PUB_ID = 'test' # Needed in network config
     TEST_ADMOB_PUB_ID = 'a14a9ed9bf1fdcd'
     TEST_IAD_PUB_ID = '329218549'
-    TEST_INMOBI_PUB_ID ='4028cb962b75ff06012b792fc5fb0045'
+    TEST_INMOBI_PUB_ID ='4028cba630724cd90130c2adc9b6024f'
     TEST_MOBFOX_PUB_ID = 'fb8b314d6e62912617e81e0f7078b47e'
 
     account = Account()
@@ -167,8 +165,8 @@ else:
     iad_login_info.put()
 
     # InMobi login info
-    inmobi_login_info = AdNetworkLoginInfo(account = account, ad_network_name = 'inmobi', username = '4028cb8b2b617f70012b792fe65e00a2',
-                                        password = '84585161')
+    inmobi_login_info = AdNetworkLoginInfo(account = account, ad_network_name = 'inmobi', username = '4028cb973099fe040130c2aa2a0904b5',
+                                        password = '098233019949')
     inmobi_login_info.put()
 
     # MobFox login info

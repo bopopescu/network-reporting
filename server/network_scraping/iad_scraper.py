@@ -32,6 +32,10 @@ class IAdScraper(Scraper):
         super(IAdScraper, self).__init__(credentials)
         
         self.authenticate()
+        
+    def __del__(self):
+        self.browser.quit()
+        self.disp.stop()
 
     def authenticate(self):
         # Must have selenium running or something
@@ -180,5 +184,3 @@ if __name__ == '__main__':
     except:
         print traceback.print_exc() 
         pass
-    scraper.browser.quit()
-    scraper.disp.stop()

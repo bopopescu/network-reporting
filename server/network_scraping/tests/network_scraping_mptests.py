@@ -9,10 +9,11 @@ from google.appengine.ext import db
 from datetime import date, timedelta
 from sets import Set
 
+from network_scraping.query_managers import AdNetworkReportQueryManager
+from network_scraping.update_ad_networks import update_ad_networks
 from account.models import Account, NetworkConfig
 from publisher.models import App
 
-from network_scraping.adnetwork_update import *
 from network_scraping.models import *
 
 import network_scraping.query_managers

@@ -236,6 +236,7 @@ class RecalculateIdHandler(webapp.RequestHandler):
 	    logging.error("Last success (%d) has exceeded the threshold for %s" % (last_success, id))
             mail.send_mail(sender='olp@mopub.com', 
                            to='eng@mopub.com',
+ 			   cc='ft@mopub.com',
                            subject="CODE RED: ad server has been down for %d tries" % last_success, 
                            body="Failure count=%d. See more at http://stats.mopub.com/performance/%s" % (last_success, id))
 

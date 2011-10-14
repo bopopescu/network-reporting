@@ -91,6 +91,8 @@ class AdGroupIndexHandler(RequestHandler):
         stats_model = StatsModelQueryManager(self.account, offline=self.offline)
         stats = stats_model.get_stats_for_days(publisher=None, advertiser=None, days=days)
 
+        logging.warn(stats)
+
         key = "||"
         stats_dict = {}
         stats_dict[key] = {}
@@ -145,9 +147,6 @@ class AdGroupIndexHandler(RequestHandler):
                                    'end_date':days[-1],
                                    'date_range': self.date_range,
                                    'apps' : apps,
-                                   # 'totals': reduce(lambda x, y: x+y.summed_stats, adgroups, StatsModel()),
-                                   # 'today': reduce(lambda x, y: x+y, [c.all_stats[-1] for c in graph_adgroups], StatsModel()),
-                                   # 'yesterday': yesterday,
                                    'guarantee_levels': guarantee_levels,
                                    'guarantee_num': len(guaranteed_campaigns),
                                    'marketplace': marketplace_campaigns,

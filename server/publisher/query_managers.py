@@ -1,7 +1,7 @@
 import logging  
 import hashlib       
 
-import hypercache   
+from hypercache import hypercache   
 import datetime
 
 from common.utils.query_managers import QueryManager, CachedQueryManager

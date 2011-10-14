@@ -33,5 +33,5 @@ cron:
 
 - description: Check how much each bidder has spent
   url: /admin/bidder_spent/
-  schedule: every 5 minutes
+  schedule: every 60 minutes
   timezone: America/Los_Angeles

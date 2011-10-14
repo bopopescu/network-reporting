@@ -1,6 +1,9 @@
-import re, logging
-import datetime
-import reporting.models as reporting_models
+import logging
+import re       
+import hashlib  
+
+
+import datetime  
 from common.constants import (KB, MB, GB)
 
 from google.appengine.ext import blobstore
@@ -10,14 +13,14 @@ from google.appengine.ext import db
 COUNTRY_PAT = re.compile(r' [a-zA-Z][a-zA-Z][-_](?P<ccode>[a-zA-Z][a-zA-Z]);*[^a-zA-Z0-9-_]')
 
 MB_PER_SHARD = 10
-
-def get_country_code(headers, default=reporting_models.DEFAULT_COUNTRY):
+    
+def get_country_code(headers, default='XX'):
     return headers.get('X-AppEngine-country', default)
     
 def get_user_agent(request):
     return request.get('ua') or request.headers['User-Agent']    
     
-def get_ip(request):
+def get_client_ip(request):
     return request.get('ip') or request.remote_addr
 
 # dte:pub:adv:CC:BN:MN:OS:OSVER
@@ -26,16 +29,12 @@ STAT_KEY = "%s:%s:%s:%s:%s:%s:%s:%s"
 
 def cust_sum(vals):
     tot = 0
-    cur_type = None
     for val in vals:
-        if cur_type is None:
-            cur_type = type(val)
-        elif not isinstance(val, cur_type):
-            logging.warning(cur_type)
-            logging.warning(val)
+        if tot == 0 and isinstance(val, float):
+            tot = 0.0
         if tot == 0 and isinstance(val, str):
             tot = val
-        elif isinstance(val, int):
+        elif not isinstance(val, str):
             tot += val
     return tot
 
@@ -75,6 +74,18 @@ def clone_entity(ent, **extra_args):
     props.update(extra_args)
     #create new object
     return klass(**props)
+
+def make_mopub_id(raw_udid):
+    """
+    we get one of 4 things
+    RAW_UDID
+    md5:MD5(mopub-<RAW_UDID>)
+    sha1:SHA1(mopub-<RAW_UDID>)
+    sha:SHA(<RAW_UDID>)
+    
+    moput_id is the part after the semicolon
+    """                      
+    return raw_udid.split(':')[-1]
 
 def build_key(template, template_dict):
     """ I got tired of not knowing what's what when building a key.

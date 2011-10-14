@@ -1,25 +1,41 @@
 from ad_server.networks.server_side import ServerSide
+from common.utils.decorators import returns_unicode
 
 import cgi
 import urllib
 import re
 
 from ad_server.debug_console import trace_logging
+from ad_server.networks.server_side import ServerSideException  
 
+"""
+    mocean is an adserving platform that lets players build on top of them. EJam is built on top of mocean
+"""
 
 class MoceanServerSide(ServerSide):
     base_url = "http://ads.mocean.mobi/ad"
     pub_id_attr = 'mocean_pub_id'
     network_name = 'Mocean'
 
-    @property
-    def url(self):
-        data =	{'zone': self.get_pub_id(), 'ip': self.get_ip(), 'ua': self.get_user_agent(), }
-        return self.base_url + "?" + urllib.urlencode(data)
+    @property  
+    def payload(self):
+        data = {'zone': self.get_pub_id(),
+                'ip': self.get_ip(),
+                'ua': self.get_user_agent(),
+                }
+              
+        return urllib.urlencode(data)
 
-    def _bid_and_html_for_response(self,response):
+
+    @property
+    def headers(self): 
+        return {}
+
+    @returns_unicode
+    def html_for_response(self, response):
         if re.match("^<!--.*--\>$", response.content) == None and len(response.content) != 0:
             trace_logging.warning("Received " + self.network_name + " response: %s"%cgi.escape(response.content))
-            return 0.0, "<div style='text-align:center'>"+response.content+"</div>"
+            return response.content
+
         trace_logging.info(self.network_name + " failed to return ad")
-        raise Exception(self.network_name + " ad is empty")
+        raise ServerSideException(self.network_name + " ad is empty")

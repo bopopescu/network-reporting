@@ -24,6 +24,7 @@ from publisher.models import App
 from publisher.models import Site as AdUnit
 from reports.models import Report, ScheduledReport
 from reports.aws_reports.report_mapper import mapper_test, reduce_test
+from reports.aws_reports.parse_utils import MO, WEEK, DAY, HOUR, DATE_FMT, DATE_FMT_HR, DATE_HR_LEN, DATE_LEN
 from reports.query_managers import ReportQueryManager
 from reporting.aws_logging.stats_updater import update_model, put_models
 from reporting.models import StatsModel
@@ -42,20 +43,11 @@ INVALID_PAIRS = [('adunit', 'app'), ('creative', 'campaign'), ('hour', 'day'), (
 STATS = ('request_count', 'impression_count', 'click_count', 'conversion_count', 'revenue')
 
 DIR = os.path.dirname(__file__)
-class TestReports():
-
-    def __init__(self, *args, **kwargs):
-        self.c = 0
-
-    def herp(self):
-        self.c = self.c+1
-        if self.c > 100:
-            return 'derp'
-
-
 
 NOW = datetime.datetime(2011, 1, 1).date()
 one_day = datetime.timedelta(days=1)
+
+
 
 def make_get_data(d1, d2=None, d3=None):
     """ Don't care about days because we're assuming that's all handled properly """
@@ -71,26 +63,41 @@ def make_get_data(d1, d2=None, d3=None):
     return map_red
 
 
-
-
-
-
 def verify_data(data, *dims):
     file = open(DIR + '/test_data2.dat')
     lines = [line for line in file]
     for datum in data:
         keys, values = datum.split("\t")
         values = eval(values)
+        logging.warning("Values is: %s" % values)
         lines_to_sum = []
         for line in lines:
             for i, key in enumerate(keys.split(':')):
                 # When building the key for os_ver we append the os on so it makes sense when reading it.
                 # This was done because wurfl is rtarded
+                key_temp = ':%s:'
                 if dims[i] in TIME_DIMS:
-                    key_temp = ':%s'
-                else:
-                    key_temp = ':%s:'
-                if dims[i] == 'os_ver':
+                    key_list, vals = line.split("\t")
+                    t_keys = key_list.split(":")
+                    time_key = t_keys[-1]
+
+                    if len(time_key) == DATE_LEN:
+                        time_obj = datetime.datetime.strptime(time_key, DATE_FMT)
+                    elif len(time_key) == DATE_HR_LEN:
+                        time_obj = datetime.datetime.strptime(time_key, DATE_FMT_HR)
+
+                    if MO == dims[i]:
+                        time_key = time_obj.strftime('%y%m')
+                    elif WEEK == dims[i]: 
+                        time_key = time_obj.strftime('%y%W')
+                    elif DAY == dims[i]:
+                        time_key = time_obj.strftime('%y%m%d')
+                    elif HOUR == dims[i]:
+                        time_key = time_obj.strftime('%H')
+                    if not time_key == key:
+                        break
+
+                elif dims[i] == 'os_ver':
                     os_ver = key.split('_')[-1]
                     os = key.replace('_'+os_ver, '')
                     if key_temp % os_ver not in line:
@@ -101,6 +108,7 @@ def verify_data(data, *dims):
                     break
             else:
                 lines_to_sum.append(line)
+        logging.warning("Lines to sum: %s" % lines_to_sum)
         vals_to_sum = []
         for line in lines_to_sum:
             key, vals = line.split('[')
@@ -109,8 +117,8 @@ def verify_data(data, *dims):
         logging.warning(keys)
         logging.warning(lines_to_sum)
         logging.warning('d1: %s, d2: %s, d3: %s' % dims)
-        logging.warning("\nFrom map_red: %s\nComputed: %s" % (values, summed_vals))
-        return values == [sum(zipt) for zipt in zip(*vals_to_sum)]
+        logging.warning("\nFrom map_red: %s\tComputed: %s\tEqual: %s" % (values, summed_vals, values == summed_vals))
+        assert values == summed_vals
                 
 
 DONE_COMBOS = []
@@ -132,13 +140,61 @@ def report_runner(d1):
                 continue
             DONE_COMBOS.append((d1,d2))
             DONE_COMBOS.append((d2,d3))
-            assert verify_data(make_get_data(d1, d2=d2, d3=d3), d1, d2, d3)
+            verify_data(make_get_data(d1, d2=d2, d3=d3), d1, d2, d3)
 
+def date_addition_mptest():
+    end = datetime.date(2011, 8, 30)
+    last_run = datetime.datetime(2011, 8, 30, 9, 47, 49, 727180)
+    next_sched_date = datetime.date(2011, 8, 30)
+    sched = ScheduledReport(d1 = 'campaign', 
+                            d2 = 'creative',
+                            d3 = 'day',
+                            days = 7,
+                            default = False,
+                            deleted = False,
+                            email = False,
+                            end = end,
+                            interval = '7days',
+                            last_run = last_run,
+                            name = 'Campaign > Creative > Day - Last 7 Days',
+                            next_sched_date = next_sched_date,
+                            saved = True,
+                            sched_interval = None
+                            )
+    sched.put()
+    completed_at = datetime.datetime(2011, 8, 30, 9, 54, 49, 164974)
+    created_at = datetime.datetime(2011, 8, 30, 9, 47, 49, 624807)
+    
+    f = open(DIR + '/needs_days_added.dat').read()
+    
+    start = datetime.date(2011, 8, 23)
+    rep = Report(completed_at = completed_at,
+                 created_at = created_at,
+                 end = end, # maybe these should be seperate objects
+                 test_report_blob = f,
+                 schedule = sched,
+                 start = start
+                 )
+    # Should work....I think....
+    rep.data = rep.parse_report_blob(f, {}, testing=True)
+    check_missing_dates(0, [sched.d1, sched.d2, sched.d3], rep.data, sched.days)
+    rep.export_data
+    #assert False, rep.export_data
+    
+def check_missing_dates(level, dims, stats_dict, num_days):
+    d = dims[level]
+    if d in TIME_DIMS and d == 'day':
+        assert len(stats_dict.keys()) == num_days, (stats_dict.keys(), num_days)
+    else:
+        for key in stats_dict.keys():
+            # assumes sub_stats is not even in dict when it isn't used
+            if 'sub_stats' in stats_dict[key]:
+                check_missing_dates(level + 1, dims, stats_dict[key]['sub_stats'], num_days)
 
 
 def os_mptest():
     report_runner('os')
-
+ 
 def app_mptest():
     report_runner('app')
 
@@ -175,17 +231,19 @@ def os_ver_mptest():
 #***********************#
 
 
-#def get_scheduled_reps(date):
-    #man = ReportQueryManager()
-    #reps = ScheduledReport.all().filter('next_sched_date =', date)
-    #return [rep for rep in reps]
+def get_scheduled_reps(date):
+    man = ReportQueryManager()
+    reps = ScheduledReport.all().filter('next_sched_date =', date)
+    return [rep for rep in reps]
 
 
 #################
 #  Simple tests #
 #################
-
-#man = ReportQueryManager(account=tester.account)
+#acct = Account()
+#acct.put()
+#
+#man = ReportQueryManager(account=acct)
 #
 #def none_mptest():
 #    s = man.add_report('app', None, None, NOW, 4, name='none_test', sched_interval = 'none', testing = True)
@@ -288,7 +346,7 @@ def os_ver_mptest():
 #    s.next_sched_date = NOW - one_day 
 #    s.put()
 #    return
-#
+##
 #def quarterly_mptest():
 #    s = man.add_report('app', None, None, NOW, 4, name='quarterly_test', sched_interval = 'quarterly', testing = True)
 #    assert len(get_scheduled_reps(NOW)) == 0

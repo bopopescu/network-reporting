@@ -4,6 +4,7 @@ from ad_server.debug_console import trace_logging
 
 from xml.dom import minidom
 import cgi
+from ad_server.networks.server_side import ServerSideException  
 
 class InMobiServerSide(ServerSide):
 
@@ -11,15 +12,10 @@ class InMobiServerSide(ServerSide):
     pub_id_attr = 'inmobi_pub_id'
     network_name = 'InMobi'
     
-    
     def __init__(self,request,adunit,*args,**kwargs):
         self.url_params = {}
         return super(InMobiServerSide,self).__init__(request,adunit,*args,**kwargs)
   
-    @property
-    def url(self):
-        return self.base_url
-        
     def get_user_agent(self):
         ua = super(InMobiServerSide, self).get_user_agent()
         if 'iPhone Simulator' in ua:
@@ -33,6 +29,7 @@ class InMobiServerSide(ServerSide):
         if "iPad" in ua:
             return ua  
         # TODO: Should return actual software and hardware versions for iPhone/iPod
+        return 'Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_3_3 like Mac OS X; en-us) AppleWebKit/533.17.9 (KHTML, like Gecko) Version/5.0.2 Mobile/8J2 Safari/6533.18.5'
         return 'InMobi_Specs_iPhoneApp=1.0.2 (iPhone; iPhone OS 3.1.2; HW iPhone1,1)'
     
     def get_inmobi_ad_size(self):
@@ -97,7 +94,7 @@ class InMobiServerSide(ServerSide):
         except:
             pass
     
-    def _bid_and_html_for_response(self,response):
+    def html_for_response(self, response):
         # Test responses
         # Simple Banner
         # response.content = '<AdResponse><Ads number="1"><Ad type="banner" actionType="android"><ImageURL>http://r.w.inmobi.com/FileData/513cc422-33a6-4274-9e22-dd12e84e23d14.png</ImageURL><ImageAltText></ImageAltText><Placement>page</Placement><AdURL>http://c.w.mkhoj.com/c.asm/3/t/c7i/pl5/2/2m/aj/u/0/0/1/354957037659003/11ba085a-012e-1000-d9a8-00020fe80003/1/829a0c01</AdURL></Ad></Ads></AdResponse>'
@@ -109,13 +106,13 @@ class InMobiServerSide(ServerSide):
         if re.match("^<!--.*--\>$", response.content) == None and len(response.content) != 0:
             # TODO: do any sort of manipulation here that we want, like resizing the image, LAME
             self.parse_xml(response.content)
-            width, height = self.adunit.get_width(),self.adunit.get_height()
+            self.creative_width, self.creative_height = self.adunit.get_width(),self.adunit.get_height()
             if 'image_url' in self.url_params:
-                return 0.0, banner_template.safe_substitute(self.url_params), width, height
+                return banner_template.safe_substitute(self.url_params)
             elif 'link_text' in self.url_params:
-                return 0.0, text_template.safe_substitute(self.url_params), width, height
+                return text_template.safe_substitute(self.url_params)
         trace_logging.info("InMobi failed to return ad")
-        raise Exception("InMobi ad is empty")
+        raise ServerSideException("InMobi ad is empty")
 
 banner_template = string.Template(
 """

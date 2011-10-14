@@ -51,15 +51,15 @@ class AddReportHandler(RequestHandler):
     def get(self):
         report_form = ReportForm(initial={'recipients':[self.user.email]})
         return render_to_response(self.request,
-                                 self.TEMPLATE, 
+                                 self.TEMPLATE,
                                  dict(report_form=report_form))
 
     def render(self,template=None,**kwargs):
         template_name = template or self.TEMPLATE
         return render_to_string(self.request, template_name=template_name, data=kwargs)
-        
+
     def post(self, d1, end, days=None, start=None, d2=None, d3=None,
-                            name=None, saved=False, interval=None, 
+                            name=None, saved=False, interval=None,
                             sched_interval=None, recipients=None, report_key=None):
         if not d2:
             d2 = None
@@ -70,6 +70,9 @@ class AddReportHandler(RequestHandler):
         if start:
             start = datetime.datetime.strptime(start, '%m/%d/%Y').date()
             days = (end - start).days
+            if days > 92:
+                self.request.flash['error'] = 'Please limit reports to three months.'
+                return HttpResponseRedirect('/reports/')
         edit = False
         man = ReportQueryManager(self.account)
         if report_key is not None:
@@ -85,15 +88,15 @@ class AddReportHandler(RequestHandler):
                 return HttpResponseRedirect('/reports/view/%s/' % sched.key())
 
         saved = True
-        recipients = [r.strip() for r in recipients.replace('\r','\n').replace(',','\n').split('\n') if r] if recipients else [] 
+        recipients = [r.strip() for r in recipients.replace('\r','\n').replace(',','\n').split('\n') if r] if recipients else []
 
-        report = man.add_report(d1, 
+        report = man.add_report(d1,
                                 d2,
-                                d3, 
-                                end, 
-                                days, 
-                                name = name, 
-                                saved = saved, 
+                                d3,
+                                end,
+                                days,
+                                name = name,
+                                saved = saved,
                                 interval = interval,
                                 sched_interval = sched_interval,
                                 recipients = recipients,
@@ -112,7 +115,7 @@ def add_report(request, *args, **kwargs):
 class RequestReportHandler(RequestHandler):
     def get(self):
         return None
-        
+
     def post(self, d1, start, end, d2=None, d3=None):
         manager = ReportQueryManager(self.account)
         rep = manager.get_report(d1, d2, d3, start, end, view=True)

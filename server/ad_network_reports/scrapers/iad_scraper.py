@@ -12,8 +12,8 @@ sys.path.append('..')
 from BeautifulSoup import BeautifulSoup
 from selenium import webdriver 
 from pyvirtualdisplay import Display
-from network_scraping.network_scrape_record import NetworkScrapeRecord
-from network_scraping.scraper import Scraper
+from ad_network_reports.scrapers.network_scrape_record import NetworkScrapeRecord
+from ad_network_reports.scrapers.scraper import Scraper
 
 from datetime import date
 

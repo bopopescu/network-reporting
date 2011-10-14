@@ -5,7 +5,7 @@ from google.appengine.ext import db
 from account.models import Account, NetworkConfig
 from common.utils import date_magic
 from common.utils.query_managers import CachedQueryManager
-from network_scraping.models import AdNetworkLoginInfo, AdNetworkAppMapper, AdNetworkScrapeStats
+from ad_network_reports.models import AdNetworkLoginInfo, AdNetworkAppMapper, AdNetworkScrapeStats
 from publisher.models import App
 
 class Stats(object):
@@ -27,7 +27,8 @@ class AdNetworkReportQueryManager(CachedQueryManager):
     def get_ad_network_mappers(self):
         """Inner join AdNetworkLoginInfo with AdNetworkAppMapper.
         
-        Return a generator of the AdNetworkAppMappers with this account."""
+        Return a generator of the AdNetworkAppMappers with this account.
+        """
         for l in AdNetworkLoginInfo.all().filter('account =', self.account):
             for n in AdNetworkAppMapper.all().filter('ad_network_login =', l):
                 yield n
@@ -35,7 +36,8 @@ class AdNetworkReportQueryManager(CachedQueryManager):
     def get_ad_network_aggregates(self, ad_network_app_mapper, start_date, end_date):
         """Calculate aggregate stats for an ad network and app between the given start date and end date.
         
-        Return the aggregate stats."""
+        Return the aggregate stats.
+        """
         q = AdNetworkScrapeStats.all()
         q.filter('ad_network_app_mapper =', ad_network_app_mapper)
         q.filter('date IN', date_magic.gen_days(start_date, end_date))
@@ -125,8 +127,11 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         from google.appengine.api import urlfetch
 
         TEST_LOGIN_CREDENTIALS_URL = "http://checklogincredentials.mopub.com:8888"
-        #TODO: handle timeouts differently int try except block
-        result = urlfetch.fetch(url = TEST_LOGIN_CREDENTIALS_URL, payload = urllib.urlencode(login_info.__dict__), method = urlfetch.POST, deadline = 10)
+        #TODO: figure out best way to handle timeouts 
+        try:
+            result = urlfetch.fetch(url = TEST_LOGIN_CREDENTIALS_URL, payload = urllib.urlencode(login_info.__dict__), method = urlfetch.POST, deadline = 10)
+        except Exception:
+            pass
         if result.status_code == 200:
             login_info.put()
         

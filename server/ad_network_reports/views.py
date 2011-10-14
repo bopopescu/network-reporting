@@ -6,7 +6,7 @@ from django.shortcuts import redirect
 from common.ragendja.template import render_to_response
 from common.utils.request_handler import RequestHandler
 from datetime import timedelta, date
-from network_scraping.query_managers import AdNetworkReportQueryManager
+from ad_network_reports.query_managers import AdNetworkReportQueryManager
 
 AD_NETWORK_NAMES = ['admob', 'jumptap', 'iad', 'inmobi', 'mobfox']
 
@@ -27,7 +27,7 @@ class AdNetworkReportIndexHandler(RequestHandler):
         # Sort alphabetically by application name then by ad network name
         aggregate_stats = sorted(aggregate_stats, key = lambda s: s[1].application.name + s[1].ad_network_name)
         
-        return render_to_response(self.request, 'network_scraping/ad_network_index.html',
+        return render_to_response(self.request, 'ad_network_reports/ad_network_index.html',
                 dict(aggregate_stats = aggregate_stats))
                      
 @login_required
@@ -43,7 +43,7 @@ class ViewAdNetworkReportHandler(RequestHandler):
         manager = AdNetworkReportQueryManager(self.account)
         ad_network_app_mapper = manager.get_ad_network_app_mapper(ad_network_app_mapper_key = ad_network_app_mapper_key)
         dates = manager.get_ad_network_app_stats(ad_network_app_mapper)
-        return render_to_response(self.request, 'network_scraping/view_app_ad_network_report.html',
+        return render_to_response(self.request, 'ad_network_reports/view_app_ad_network_report.html',
                 dict(ad_network_name = ad_network_app_mapper.ad_network_name,
                      app_name = ad_network_app_mapper.application.name,
                      dates = dates))
@@ -85,7 +85,7 @@ class AddLoginInfoHandler(RequestHandler):
         # officejerk_app = App(account = self.account, name = "Office Jerk", network_config = officejerk_network_config)
         # officejerk_app.put()
 
-        return render_to_response(self.request, 'network_scraping/add_login_info.html',
+        return render_to_response(self.request, 'ad_network_reports/add_login_info.html',
                                   dict(ad_network_names = AD_NETWORK_NAMES, #ad_networks.ad_networks.keys(),
                                        error = ""))
                                   
@@ -105,7 +105,7 @@ class AddLoginInfoHandler(RequestHandler):
         error = manager.create_login_info_and_mappers(ad_network_name, username, password, client_key, send_email)
         
         if error:
-            return render_to_response(self.request, 'network_scraping/add_login_info.html',
+            return render_to_response(self.request, 'ad_network_reports/add_login_info.html',
                                       dict(ad_network_names = AD_NETWORK_NAMES, #ad_networks.ad_networks.keys(),
                                            error = error))
         else:

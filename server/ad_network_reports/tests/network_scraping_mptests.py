@@ -9,14 +9,14 @@ from google.appengine.ext import db
 from datetime import date, timedelta
 from sets import Set
 
-from network_scraping.query_managers import AdNetworkReportQueryManager
-from network_scraping.update_ad_networks import update_ad_networks
+from ad_network_reports.query_managers import AdNetworkReportQueryManager
+from ad_network_reports.update_ad_networks import update_ad_networks
 from account.models import Account, NetworkConfig
 from publisher.models import App
 
-from network_scraping.models import *
+from ad_network_reports.models import *
 
-import network_scraping.query_managers
+import ad_network_reports.query_managers
 
 TEST_JUMPTAP_PUB_ID = '12345'
 TEST_ADMOB_PUB_ID = 'a14a9ed9bf1fdcd'
@@ -81,10 +81,10 @@ TEST_MOBFOX_PUB_ID = 'fb8b314d6e62912617e81e0f7078b47e'
 
 
 ''' Test adnetwork_update, the script that gets called by the cron job and updates the db daily with the scrape stats '''
-def network_scraping_mptest():
+def ad_network_reports_mptest():
     
     ''' Set up the default models '''
-    from network_scraping.load_test_data import *
+    from ad_network_reports.tests.load_test_data import *
     
     # account = Account()
     #     account.put()

@@ -2,10 +2,10 @@
 import common.utils.test.setup
 
 from account.models import Account, NetworkConfig
-from network_scraping.models import *
+from ad_network_reports.models import *
 from publisher.models import App
 
-REAL_TEST_DATA = True
+REAL_TEST_DATA = False
 
 entities = []
 if REAL_TEST_DATA:

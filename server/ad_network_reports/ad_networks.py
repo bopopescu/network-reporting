@@ -1,9 +1,9 @@
-from network_scraping import query_managers
-from network_scraping.admob_scraper import AdMobScraper
-from network_scraping.iad_scraper import IAdScraper
-from network_scraping.jumptap_scraper import JumpTapScraper
-from network_scraping.inmobi_scraper import InMobiScraper
-from network_scraping.mobfox_scraper import MobFoxScraper
+from ad_network_reports import query_managers
+from ad_network_reports.scrapers.admob_scraper import AdMobScraper
+from ad_network_reports.scrapers.iad_scraper import IAdScraper
+from ad_network_reports.scrapers.jumptap_scraper import JumpTapScraper
+from ad_network_reports.scrapers.inmobi_scraper import InMobiScraper
+from ad_network_reports.scrapers.mobfox_scraper import MobFoxScraper
 
 
 class AdNetwork(object):

@@ -1,5 +1,4 @@
 import logging
-import os, sys
 
 EC2 = False
 
@@ -14,9 +13,8 @@ if EC2:
     sys.path.append('/home/ubuntu/google_appengine/lib/yaml/lib')
 else:
     # Assumes it is being called from ./run_tests.sh from server dir
+    import os, sys
     sys.path.append(os.environ['PWD'])
-
-from common.utils import date_magic
 
 from appengine_django import InstallAppengineHelperForDjango
 InstallAppengineHelperForDjango()
@@ -25,11 +23,12 @@ from google.appengine.api import mail
 
 from datetime import date, timedelta
 
-from network_scraping.network_scrape_record import NetworkScrapeRecord
-from network_scraping.query_managers import AdNetworkReportQueryManager, get_login_credentials
-from network_scraping.models import AdNetworkScrapeStats
+from ad_network_reports.ad_networks import ad_networks
+from ad_network_reports.models import AdNetworkScrapeStats
+from ad_network_reports.query_managers import AdNetworkReportQueryManager, get_login_credentials
+from ad_network_reports.scrapers.network_scrape_record import NetworkScrapeRecord
+from common.utils import date_magic
 
-from network_scraping.ad_networks import ad_networks
 def setup_remote_api():
     from google.appengine.ext.remote_api import remote_api_stub
     app_id = 'mopub-experimental'
@@ -40,6 +39,7 @@ def auth_func():
     return 'olp@mopub.com', 'N47935'
     
 def send_stats_mail(test_date, email_body):           
+    """Send email with scrape stats data for the test date organized in a table."""
     mail.send_mail(sender='olp@mopub.com', 
                    to='report-monitoring@mopub.com',
                    cc='tiago@mopub.com',
@@ -109,7 +109,7 @@ Can try again later or perhaps %s changed it's API or site.
                 
             for stats in stats_list:
     
-                ''' Add the current day to the db '''
+                """Add the current day to the db"""
             
                 publisher_id = ad_networks[login_info.ad_network_name].get_pub_id(stats.app_tag, login_info)
             

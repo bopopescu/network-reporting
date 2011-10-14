@@ -1,10 +1,15 @@
+#!/usr/bin/python
+
+import sys
+sys.path.append('/home/ubuntu/mopub_experimental/check_login_credentials/request_handlers')
+
 import tornado.ioloop
 import tornado.web
 
-from request_handlers.check_login_credentials import CheckLoginCredentialsHandler
+from check_login_credentials_handler import CheckLoginCredentialsHandler
 
 application = tornado.web.Application([
-        (r'^$', TestLoginCredentialsHandler),
+        (r'/(.*)', CheckLoginCredentialsHandler),
 ], debug=False)
 
 if __name__ == "__main__":

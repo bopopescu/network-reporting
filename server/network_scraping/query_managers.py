@@ -106,7 +106,10 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                 # yield (a, eval('n.%s_pub_id' % ad_network_name))
                 
     def create_login_info_and_mappers(self, ad_network_name, username, password, client_key, send_email):
-        """Create AdNetworkLoginInfo and AdNetworkAppMapper entities."""
+        """Check login credentials by making a request to tornado on EC2. If they're valid create AdNetworkLoginInfo and AdNetworkAppMapper entities and store them in the db.
+        
+        Return None if the login credentials are correct otherwise return an error message.
+        """
         # What if len(apps_with_publisher_ids) == 0?
         apps_with_publisher_ids = list(self.get_apps_with_publisher_ids(ad_network_name))
         publisher_ids = [publisher_id for app, publisher_id in apps_with_publisher_ids]
@@ -121,8 +124,9 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         import urllib
         from google.appengine.api import urlfetch
 
-        TEST_LOGIN_CREDENTIALS_URL = "http://check_login_credentials.mopub.com"
-        result = urlfetch.fetch(url = TEST_LOGIN_CREDENTIALS_URL, payload = urllib.urlencode(login_info.__dict__), method = urlfetch.POST)
+        TEST_LOGIN_CREDENTIALS_URL = "http://checklogincredentials.mopub.com:8888"
+        #TODO: handle timeouts differently int try except block
+        result = urlfetch.fetch(url = TEST_LOGIN_CREDENTIALS_URL, payload = urllib.urlencode(login_info.__dict__), method = urlfetch.POST, deadline = 10)
         if result.status_code == 200:
             login_info.put()
         
@@ -130,6 +134,8 @@ class AdNetworkReportQueryManager(CachedQueryManager):
             db.put([AdNetworkAppMapper(ad_network_name = ad_network_name, publisher_id = publisher_id,
                     ad_network_login = login_info, application = app, send_email = send_email) for 
                     app, publisher_id in apps_with_publisher_ids])
+        else:
+            return "Incorrect login information"
 
 def get_login_credentials():
     """Return all AdNetworkLoginInfo entities ordered by account."""

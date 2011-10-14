@@ -1,37 +1,30 @@
+import logging
 import sys
 sys.path.append('/home/ubuntu/mopub_experimental/server')
 
-import json
-from utils.decorators import web_dec
 import tornado.web
 
 from network_scraping.ad_networks import ad_networks
-from network_scraping.models import AdNetworkLoginInfo
+
+class AdNetworkLoginCredentials(object):
+    pass
 
 class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
-    @web_dec
-    def post(self):
-        ad_network_name = self.get_argument('ad_network_name')
-        username = self.get_argument('username')
-        password = self.get_argument('password')
-        client_key = self.get_argument('client_key')
-        send_mail = self.get_argument('send_mail') == 'True'
+    def post(self, *args, **kwargs):
+        #logging.warning(self.request.arguments)
+
+        login_credentials = AdNetworkLoginCredentials()
+        login_credentials.ad_network_name = self.get_argument('_ad_network_name')
+        login_credentials.username = self.get_argument('_username', None)
+        login_credentials.password = self.get_argument('_password', None)
+        login_credentials.client_key = self.get_argument('_client_key', None)
+        login_credentials.publisher_ids = self.get_argument('_publisher_ids', None)
         
-        login_info = AdNetworkLoginInfo(account = self.account,
-                                        ad_network_name = ad_network_name,
-                                        username = username,
-                                        password = password,
-                                        client_key = client_key,
-                                        publisher_ids = publisher_ids)
-        
-        results = {}
-	    try:
-            scraper = ad_networks[login_info.ad_network_name].constructor(login_info)
+        try:    
+            scraper = ad_networks[login_credentials.ad_network_name].constructor(login_credentials)
             scraper.test_login_info()
         except Exception:
-            results = {'status' : 400}
-        else:
-            results = {'status' : 200}
-        self.write(json.dumps(results))
+            raise tornado.web.HTTPError(401)
+        self.write('')
         
         

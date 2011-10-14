@@ -1,31 +1,29 @@
-import sys
-import os
-import logging
 import datetime
+import logging
+import os
+import sys
+
+
+sys.path.append(os.environ['PWD'])
+import common.utils.test.setup
+
 
 from google.appengine.ext import db
 from google.appengine.api import users
 from nose.tools import assert_equals, assert_not_equals, assert_true, assert_false
 
+from advertiser.models import *
+from publisher.models import *
+from reporting.models import StatsModel
 
-MDB_IP = 'http://ec2-67-202-42-225.compute-1.amazonaws.com:8000'
-MDB_UPDATE_HANDLER_PATH = '/update'
-MDB_STATS_HANDLER_PATH = '/stats'
+from common.utils import simplejson
+from common.utils.test.test_utils import debug_key_name, debug_helper, add_lists
+from mopub_logging.views import _create_mdb_json, DEREF_CACHE
+AdUnit = Site
 
-d1 = {}
-d2 = {}
 
-def mdb_handler_endpoints_mptest():
-    mdb_post_list = 
-    post_data = simplejson.dumps(mdb_post_list)
-    post_url = MDB_IP + MDB_UPDATE_HANDLER_PATH # ex: http://ec2-67-202-42-225.compute-1.amazonaws.com:8000/update
-    post_request = urllib2.Request(post_url, post_data)
-    post_response = urllib2.urlopen(post_request)
-    status_code = post_response.code
-    
-    assert_equals(status_code, 200)
-    
-    
+
+def mdb_handler_endpoints_mptest():    
     # create and put model objects 
     user = users.User(email="test@example.com")
     account = Account(key_name="account",user=user).put()
@@ -60,251 +58,229 @@ def mdb_handler_endpoints_mptest():
                'k': 'k'}
            
 
-    # date_hours: first and last hours of pi day
+    # date_hours: first and last hours of a day
     hour1 = datetime.datetime(2011, 03, 21, 01)
     hour2 = datetime.datetime(2011, 03, 21, 23)
-    day = datetime.datetime(2011, 03, 21)
 
-    # date_hour count lists
-    a1_c1_hour1 = [28, 16, 0, 0]
-    a1_c2_hour1 = [31, 18, 12, 3]
-    a2_c1_hour1 = [16, 5, 2, 1]
-    a2_c2_hour1 = [47, 34, 10, 6]
-    a1_hour1 = [40, 0, 0, 0]
-    a2_hour1 = [50, 0, 0, 0]
-
-    a1_c1_hour2 = [26, 10, 0, 0]
-    a1_c2_hour2 = [22, 12, 5, 0]
-    a2_c1_hour2 = [0, 4, 1, 0]
-    a2_c2_hour2 = [70, 30, 10, 3]
-    a1_hour2 = [31, 0, 0, 0]
-    a2_hour2 = [49, 0, 0, 0]
-
-    # date count lists
-    a1_c1_day = add_lists([a1_c1_hour1, a1_c1_hour2])
-    a1_c2_day = add_lists([a1_c2_hour1, a1_c2_hour2])
-    a2_c1_day = add_lists([a2_c1_hour1, a2_c1_hour2])
-    a2_c2_day = add_lists([a2_c2_hour1, a2_c2_hour2])
-    a1_day = add_lists([a1_hour1, a1_hour2])
-    a2_day = add_lists([a2_hour1, a2_hour2])
-
-
-
-    obj_dict = {
-    ###########################
-    #### DATE_HOUR ROLLUPS ####
-    ###########################
-
-
-    ### ADUNITS ###
-    # Adunit-Creative-hour1
-    'k:%s:%s:%s'%(adunit_id1, creative_id1, hour1.strftime('%y%m%d%H')): a1_c1_hour1,
-    'k:%s:%s:%s'%(adunit_id1, creative_id2, hour1.strftime('%y%m%d%H')): a1_c2_hour1,
-    'k:%s:%s:%s'%(adunit_id2, creative_id1, hour1.strftime('%y%m%d%H')): a2_c1_hour1,
-    'k:%s:%s:%s'%(adunit_id2, creative_id2, hour1.strftime('%y%m%d%H')): a2_c2_hour1,
-
-    # Adunit-Creative-hour2
-    'k:%s:%s:%s'%(adunit_id1, creative_id1, hour2.strftime('%y%m%d%H')): a1_c1_hour2,
-    'k:%s:%s:%s'%(adunit_id1, creative_id2, hour2.strftime('%y%m%d%H')): a1_c2_hour2,
-    'k:%s:%s:%s'%(adunit_id2, creative_id1, hour2.strftime('%y%m%d%H')): a2_c1_hour2,
-    'k:%s:%s:%s'%(adunit_id2, creative_id2, hour2.strftime('%y%m%d%H')): a2_c2_hour2,
-
-    # Adunit-AdGroup-hour1
-    'k:%s:%s:%s'%(adunit_id1, adgroup_id, hour1.strftime('%y%m%d%H')): add_lists([a1_c1_hour1, a1_c2_hour1]),
-    'k:%s:%s:%s'%(adunit_id2, adgroup_id, hour1.strftime('%y%m%d%H')): add_lists([a2_c1_hour1, a2_c2_hour1]),
-
-    # Adunit-AdGroup-hour2
-    'k:%s:%s:%s'%(adunit_id1, adgroup_id, hour2.strftime('%y%m%d%H')): add_lists([a1_c1_hour2, a1_c2_hour2]),
-    'k:%s:%s:%s'%(adunit_id2, adgroup_id, hour2.strftime('%y%m%d%H')): add_lists([a2_c1_hour2, a2_c2_hour2]),
-
-    # Adunit-Campaign-hour1
-    'k:%s:%s:%s'%(adunit_id1, campaign_id, hour1.strftime('%y%m%d%H')): add_lists([a1_c1_hour1, a1_c2_hour1]),
-    'k:%s:%s:%s'%(adunit_id2, campaign_id, hour1.strftime('%y%m%d%H')): add_lists([a2_c1_hour1, a2_c2_hour1]),
-
-    # Adunit-Campaign-hour2
-    'k:%s:%s:%s'%(adunit_id1, campaign_id, hour2.strftime('%y%m%d%H')): add_lists([a1_c1_hour2, a1_c2_hour2]),
-    'k:%s:%s:%s'%(adunit_id2, campaign_id, hour2.strftime('%y%m%d%H')): add_lists([a2_c1_hour2, a2_c2_hour2]),
-
-    # Adunit Totals for hour1
-    'k:%s:%s:%s'%(adunit_id1,'',hour1.strftime('%y%m%d%H')): prepend_list(a1_hour1[0], add_lists([a1_c1_hour1, a1_c2_hour1])[1:]),
-    'k:%s:%s:%s'%(adunit_id2,'',hour1.strftime('%y%m%d%H')): prepend_list(a2_hour1[0], add_lists([a2_c1_hour1, a2_c2_hour1])[1:]),
-
-    # Adunit Totals for hour2
-    'k:%s:%s:%s'%(adunit_id1,'',hour2.strftime('%y%m%d%H')): prepend_list(a1_hour2[0], add_lists([a1_c1_hour2, a1_c2_hour2])[1:]),
-    'k:%s:%s:%s'%(adunit_id2,'',hour2.strftime('%y%m%d%H')): prepend_list(a2_hour2[0], add_lists([a2_c1_hour2, a2_c2_hour2])[1:]),
-
-    #### Apps ####
-    # App-Creative-hour1
-    'k:%s:%s:%s'%(app_id, creative_id1, hour1.strftime('%y%m%d%H')): add_lists([a1_c1_hour1, a2_c1_hour1]),
-    'k:%s:%s:%s'%(app_id, creative_id2, hour1.strftime('%y%m%d%H')): add_lists([a1_c2_hour1, a2_c2_hour1]),
-
-    # App-Creative-hour2
-    'k:%s:%s:%s'%(app_id, creative_id1, hour2.strftime('%y%m%d%H')): add_lists([a1_c1_hour2, a2_c1_hour2]),
-    'k:%s:%s:%s'%(app_id, creative_id2, hour2.strftime('%y%m%d%H')): add_lists([a1_c2_hour2, a2_c2_hour2]),
-
-    # App-AdGroup-hour1
-    'k:%s:%s:%s'%(app_id, adgroup_id, hour1.strftime('%y%m%d%H')): add_lists([a1_c1_hour1, a1_c2_hour1, a2_c1_hour1, a2_c2_hour1]),
-
-    # App-AdGroup-hour2
-    'k:%s:%s:%s'%(app_id, adgroup_id, hour2.strftime('%y%m%d%H')): add_lists([a1_c1_hour2, a1_c2_hour2, a2_c1_hour2, a2_c2_hour2]),
-
-    # App-Campaign-hour1
-    'k:%s:%s:%s'%(app_id, campaign_id, hour1.strftime('%y%m%d%H')): add_lists([a1_c1_hour1, a1_c2_hour1, a2_c1_hour1, a2_c2_hour1]),
-
-    # App-Campaign-hour2
-    'k:%s:%s:%s'%(app_id, campaign_id, hour2.strftime('%y%m%d%H')): add_lists([a1_c1_hour2, a1_c2_hour2, a2_c1_hour2, a2_c2_hour2]),
-
-    # App-Total-hour1
-    'k:%s:%s:%s'%(app_id, '', hour1.strftime('%y%m%d%H')): prepend_list(a1_hour1[0]+a2_hour1[0], add_lists([a1_c1_hour1, a1_c2_hour1, a2_c1_hour1, a2_c2_hour1])[1:]),
-
-    # App-Total-hour2
-    'k:%s:%s:%s'%(app_id, '', hour2.strftime('%y%m%d%H')): prepend_list(a1_hour2[0]+a2_hour2[0], add_lists([a1_c1_hour2, a1_c2_hour2, a2_c1_hour2, a2_c2_hour2])[1:]),
-
-    ### * ###
-    # *-Creative-hour1
-    'k:%s:%s:%s'%('', creative_id1, hour1.strftime('%y%m%d%H')): add_lists([a1_c1_hour1, a2_c1_hour1]),
-    'k:%s:%s:%s'%('', creative_id2, hour1.strftime('%y%m%d%H')): add_lists([a1_c2_hour1, a2_c2_hour1]),
-
-    # *-Creative-hour2
-    'k:%s:%s:%s'%('', creative_id1, hour2.strftime('%y%m%d%H')): add_lists([a1_c1_hour2, a2_c1_hour2]),
-    'k:%s:%s:%s'%('', creative_id2, hour2.strftime('%y%m%d%H')): add_lists([a1_c2_hour2, a2_c2_hour2]),
-
-    # *-AdGroup-hour1
-    'k:%s:%s:%s'%('', adgroup_id, hour1.strftime('%y%m%d%H')): add_lists([a1_c1_hour1, a1_c2_hour1, a2_c1_hour1, a2_c2_hour1]),
-
-    # *-AdGroup-hour2
-    'k:%s:%s:%s'%('', adgroup_id, hour2.strftime('%y%m%d%H')): add_lists([a1_c1_hour2, a1_c2_hour2, a2_c1_hour2, a2_c2_hour2]),
-
-    # *-Campaign-hour1
-    'k:%s:%s:%s'%('', campaign_id, hour1.strftime('%y%m%d%H')): add_lists([a1_c1_hour1, a1_c2_hour1, a2_c1_hour1, a2_c2_hour1]),
-
-    # *-Campaign-hour2
-    'k:%s:%s:%s'%('', campaign_id, hour2.strftime('%y%m%d%H')): add_lists([a1_c1_hour2, a1_c2_hour2, a2_c1_hour2, a2_c2_hour2]),
-
-    # *-*-hour1
-    'k:%s:%s:%s'%('', '', hour1.strftime('%y%m%d%H')): prepend_list(a1_hour1[0]+a2_hour1[0], add_lists([a1_c1_hour1, a1_c2_hour1, a2_c1_hour1, a2_c2_hour1])[1:]),
-
-    # *-*-hour2
-    'k:%s:%s:%s'%('', '', hour2.strftime('%y%m%d%H')): prepend_list(a1_hour2[0]+a2_hour2[0], add_lists([a1_c1_hour2, a1_c2_hour2, a2_c1_hour2, a2_c2_hour2])[1:]),
-
-
-    ####################
-    ### Date Rollups ###
-    ####################
-
-    #### ADUNITS ####
-    # Adunit-Creative
-    'k:%s:%s:%s'%(adunit_id1, creative_id1, day.strftime('%y%m%d')): a1_c1_day,
-    'k:%s:%s:%s'%(adunit_id1, creative_id2, day.strftime('%y%m%d')): a1_c2_day,
-    'k:%s:%s:%s'%(adunit_id2, creative_id1, day.strftime('%y%m%d')): a2_c1_day,
-    'k:%s:%s:%s'%(adunit_id2, creative_id2, day.strftime('%y%m%d')): a2_c2_day,
-
-    # Adunit-AdGroup
-    'k:%s:%s:%s'%(adunit_id1, adgroup_id, day.strftime('%y%m%d')): add_lists([a1_c1_day, a1_c2_day]),
-    'k:%s:%s:%s'%(adunit_id2, adgroup_id, day.strftime('%y%m%d')): add_lists([a2_c1_day, a2_c2_day]),
-
-    # Adunit-Campaign
-    'k:%s:%s:%s'%(adunit_id1, campaign_id, day.strftime('%y%m%d')): add_lists([a1_c1_day, a1_c2_day]),
-    'k:%s:%s:%s'%(adunit_id2, campaign_id, day.strftime('%y%m%d')): add_lists([a2_c1_day, a2_c2_day]),
-
-    # Adunit Totals 
-    'k:%s:%s:%s'%(adunit_id1, '', day.strftime('%y%m%d')): prepend_list(a1_day[0], add_lists([a1_c1_day, a1_c2_day])[1:]),
-    'k:%s:%s:%s'%(adunit_id2, '', day.strftime('%y%m%d')): prepend_list(a2_day[0], add_lists([a2_c1_day, a2_c2_day])[1:]),
-
-    #### Apps ####
-    # App-Creative
-    'k:%s:%s:%s'%(app_id, creative_id1, day.strftime('%y%m%d')): add_lists([a1_c1_day, a2_c1_day]),
-    'k:%s:%s:%s'%(app_id, creative_id2, day.strftime('%y%m%d')): add_lists([a1_c2_day, a2_c2_day]),
-
-    # App-AdGroup
-    'k:%s:%s:%s'%(app_id, adgroup_id, day.strftime('%y%m%d')): add_lists([a1_c1_day, a1_c2_day, a2_c1_day, a2_c2_day]),
-
-    # App-Campaign
-    'k:%s:%s:%s'%(app_id, campaign_id, day.strftime('%y%m%d')): add_lists([a1_c1_day, a1_c2_day, a2_c1_day, a2_c2_day]),
-
-    # App-Total
-    'k:%s:%s:%s'%(app_id, '', day.strftime('%y%m%d')): prepend_list(a1_day[0]+a2_day[0], add_lists([a1_c1_day, a1_c2_day, a2_c1_day, a2_c2_day])[1:]),
-
-    ### * ###
-    # *-Creative
-    'k:%s:%s:%s'%('', creative_id1, day.strftime('%y%m%d')): add_lists([a1_c1_day, a2_c1_day]),
-    'k:%s:%s:%s'%('', creative_id2, day.strftime('%y%m%d')): add_lists([a1_c2_day, a2_c2_day]),
-
-    # *-AdGroup
-    'k:%s:%s:%s'%('', adgroup_id, day.strftime('%y%m%d')): add_lists([a1_c1_day, a1_c2_day, a2_c1_day, a2_c2_day]),
-
-    # *-Campaign
-    'k:%s:%s:%s'%('', campaign_id, day.strftime('%y%m%d')): add_lists([a1_c1_day, a1_c2_day, a2_c1_day, a2_c2_day]),
-
-    # *-*
-    'k:%s:%s:%s'%('', '', day.strftime('%y%m%d')): prepend_list(a1_day[0]+a2_day[0], add_lists([a1_c1_day, a1_c2_day, a2_c1_day, a2_c2_day])[1:]),
-    }
-
-
-    # verify there's no StatsModels in datastore yet
-    assert_equals(StatsModel.all().count(), 0)
+    # count lists
+    # [req, attempt, imp, clk, conv, rev]
+    a1_c1_h1_us = [10, 22, 14, 5, 1, 2.4]
+    a1_c1_h1_gb = [30, 47, 35, 14, 8, 10.2]
+    a1_c1_h2_us = [5, 11, 8, 3, 0, 1.8]
+    a1_c1_h2_gb = [80, 120, 95, 75, 20, 35.6]
     
-    # hour1
-    # the first 4 updates should get overriden 
-    assert_true(stats_updater.update_model(adunit_key=adunit_id1, creative_key=creative_id1, counts=[100, 90, 80, 70], date_hour=hour1))
-    assert_true(stats_updater.update_model(adunit_key=adunit_id1, creative_key=creative_id2, counts=[100, 90, 80, 70], date_hour=hour1))
-    assert_true(stats_updater.update_model(adunit_key=adunit_id2, creative_key=creative_id1, counts=[100, 90, 80, 70], date_hour=hour1))
-    assert_true(stats_updater.update_model(adunit_key=adunit_id2, creative_key=creative_id2, counts=[100, 90, 80, 70], date_hour=hour1))
-       
-    stats_updater.single_thread_put_models()
+    a1_c2_h1_us = [10, 15, 9, 0, 0, 0.0]
+    a1_c2_h1_gb = [30, 18, 11, 2, 1, 17.3]
+    a1_c2_h2_us = [5, 9, 3, 1, 1, 3.1]
+    a1_c2_h2_gb = [80, 174, 123, 34, 11, 53.4]
     
-    # hour1             
-    assert_true(stats_updater.update_model(adunit_key=adunit_id1, creative_key=creative_id1, counts=a1_c1_hour1, date_hour=hour1))
-    assert_true(stats_updater.update_model(adunit_key=adunit_id1, creative_key=creative_id2, counts=a1_c2_hour1, date_hour=hour1))
-    assert_true(stats_updater.update_model(adunit_key=adunit_id2, creative_key=creative_id1, counts=a2_c1_hour1, date_hour=hour1))
-    assert_true(stats_updater.update_model(adunit_key=adunit_id2, creative_key=creative_id2, counts=a2_c2_hour1, date_hour=hour1))
-    assert_true(stats_updater.update_model(adunit_key=adunit_id1, counts=a1_hour1, date_hour=hour1))
-    assert_true(stats_updater.update_model(adunit_key=adunit_id2, counts=a2_hour1, date_hour=hour1))
-       
-    # hour2
-    assert_true(stats_updater.update_model(adunit_key=adunit_id1, creative_key=creative_id1, counts=a1_c1_hour2, date_hour=hour2))
-    assert_true(stats_updater.update_model(adunit_key=adunit_id1, creative_key=creative_id2, counts=a1_c2_hour2, date_hour=hour2))
-    assert_true(stats_updater.update_model(adunit_key=adunit_id2, creative_key=creative_id1, counts=a2_c1_hour2, date_hour=hour2))
-    assert_true(stats_updater.update_model(adunit_key=adunit_id2, creative_key=creative_id2, counts=a2_c2_hour2, date_hour=hour2))
-    assert_true(stats_updater.update_model(adunit_key=adunit_id1, counts=a1_hour2, date_hour=hour2))
-    assert_true(stats_updater.update_model(adunit_key=adunit_id2, counts=a2_hour2, date_hour=hour2))
+    a2_c1_h1_us = [20, 31, 11, 3, 0, 8.4]
+    a2_c1_h1_gb = [45, 70, 30, 10, 2, 7.2]
+    a2_c1_h2_us = [50, 91, 53, 23, 10, 11.8]
+    a2_c1_h2_gb = [75, 150, 105, 55, 2, 25.6]
 
-    # day
-    assert_true(stats_updater.update_model(adunit_key=adunit_id1, creative_key=creative_id1, counts=a1_c1_day, date=day))
-    assert_true(stats_updater.update_model(adunit_key=adunit_id1, creative_key=creative_id2, counts=a1_c2_day, date=day))
-    assert_true(stats_updater.update_model(adunit_key=adunit_id2, creative_key=creative_id1, counts=a2_c1_day, date=day))
-    assert_true(stats_updater.update_model(adunit_key=adunit_id2, creative_key=creative_id2, counts=a2_c2_day, date=day))
-    assert_true(stats_updater.update_model(adunit_key=adunit_id1, counts=a1_day, date=day))
-    assert_true(stats_updater.update_model(adunit_key=adunit_id2, counts=a2_day, date=day))
+    a2_c2_h1_us = [20, 37, 19, 10, 0, 8.8]
+    a2_c2_h1_gb = [45, 65, 31, 12, 1, 11.8]
+    a2_c2_h2_us = [50, 87, 53, 21, 14, 43.5]
+    a2_c2_h2_gb = [75, 180, 150, 15, 0, 73.2]
     
-    stats_updater.single_thread_put_models() 
+
+    stats_to_put = []
+
+    # create base stats models across all dims: adunit X creative X  hour X country
+    # xx for creative means there's no creative specified, i.e. it's a REQUEST: /m/ad
+    # note that for request_count, replacing c1 with c2 in count array's name also works
+
+    # a1 x h1: REQUESTS
+    sm_a1_xx_h1_us = StatsModel(publisher=adunit1, date_hour=hour1, country='US', request_count=a1_c1_h1_us[0]) 
+    sm_a1_xx_h1_gb = StatsModel(publisher=adunit1, date_hour=hour1, country='GB', request_count=a1_c1_h1_gb[0])
+    stats_to_put.extend([sm_a1_xx_h1_us, sm_a1_xx_h1_gb])
+
+    # a1 x h2: REQUESTS
+    sm_a1_xx_h2_us = StatsModel(publisher=adunit1, date_hour=hour2, country='US', request_count=a1_c1_h2_us[0])
+    sm_a1_xx_h2_gb = StatsModel(publisher=adunit1, date_hour=hour2, country='GB', request_count=a1_c1_h2_gb[0])
+    stats_to_put.extend([sm_a1_xx_h2_us, sm_a1_xx_h2_gb])
             
-            
-    assert_equals(App.all().count(), 1)
-    assert_equals(Campaign.all().count(), 1)
-    assert_equals(AdGroup.all().count(), 1)
-    assert_equals(AdUnit.all().count(), 2)
-    assert_equals(Creative.all().count(), 2)
+    # a2 x h1: REQUESTS
+    sm_a2_xx_h1_us = StatsModel(publisher=adunit2, date_hour=hour1, country='US', request_count=a2_c1_h1_us[0])
+    sm_a2_xx_h1_gb = StatsModel(publisher=adunit2, date_hour=hour1, country='GB', request_count=a2_c1_h1_gb[0])
+    stats_to_put.extend([sm_a2_xx_h1_us, sm_a2_xx_h1_gb])
 
-    assert_equals(len(obj_dict)+1, StatsModel.all().count())            
+    # a2 x h2: REQUESTS
+    sm_a2_xx_h2_us = StatsModel(publisher=adunit2, date_hour=hour2, country='US', request_count=a2_c1_h2_us[0])
+    sm_a2_xx_h2_gb = StatsModel(publisher=adunit2, date_hour=hour2, country='GB', request_count=a2_c1_h2_gb[0])
+    stats_to_put.extend([sm_a2_xx_h2_us, sm_a2_xx_h2_gb])
 
-    for stats in StatsModel.all():
-        key_name = stats.key().name()
-        if len(key_name.split(':')) == 2: continue # skip the account 
+
+    # ADUNIT 1
+    
+    # a1 x c1 x h1
+    sm_a1_c1_h1_us = StatsModel(publisher=adunit1, advertiser=creative1, date_hour=hour1, country='US', 
+                                request_count=a1_c1_h1_us[1], 
+                                impression_count=a1_c1_h1_us[2], 
+                                click_count=a1_c1_h1_us[3], 
+                                conversion_count=a1_c1_h1_us[4], 
+                                revenue=a1_c1_h1_us[5]
+                                )    
+    sm_a1_c1_h1_gb = StatsModel(publisher=adunit1, advertiser=creative1, date_hour=hour1, country='GB', 
+                                request_count=a1_c1_h1_gb[1], 
+                                impression_count=a1_c1_h1_gb[2], 
+                                click_count=a1_c1_h1_gb[3],  
+                                conversion_count=a1_c1_h1_gb[4],  
+                                revenue=a1_c1_h1_gb[5]
+                                )
+    stats_to_put.extend([sm_a1_c1_h1_us, sm_a1_c1_h1_gb])
+
+    # a1 x c1 x h2
+    sm_a1_c1_h2_us = StatsModel(publisher=adunit1, advertiser=creative1, date_hour=hour2, country='US', 
+                                request_count=a1_c1_h2_us[1], 
+                                impression_count=a1_c1_h2_us[2], 
+                                click_count=a1_c1_h2_us[3], 
+                                conversion_count=a1_c1_h2_us[4], 
+                                revenue=a1_c1_h2_us[5])    
+    sm_a1_c1_h2_gb = StatsModel(publisher=adunit1, advertiser=creative1, date_hour=hour2, country='GB', 
+                                request_count=a1_c1_h2_gb[1], 
+                                impression_count=a1_c1_h2_gb[2], 
+                                click_count=a1_c1_h2_gb[3], 
+                                conversion_count=a1_c1_h2_gb[4], 
+                                revenue=a1_c1_h2_gb[5])
+    stats_to_put.extend([sm_a1_c1_h2_us, sm_a1_c1_h2_gb])
+
+
+    # a1 x c2 x h1
+    sm_a1_c2_h1_us = StatsModel(publisher=adunit1, advertiser=creative2, date_hour=hour1, country='US', 
+                                request_count=a1_c2_h1_us[1], 
+                                impression_count=a1_c2_h1_us[2], 
+                                click_count=a1_c2_h1_us[3], 
+                                conversion_count=a1_c2_h1_us[4], 
+                                revenue=a1_c2_h1_us[5]
+                                )
+    sm_a1_c2_h1_gb = StatsModel(publisher=adunit1, advertiser=creative2, date_hour=hour1, country='GB', 
+                                request_count=a1_c2_h1_gb[1], 
+                                impression_count=a1_c2_h1_gb[2],
+                                click_count=a1_c2_h1_gb[3], 
+                                conversion_count=a1_c2_h1_gb[4], 
+                                revenue=a1_c2_h1_gb[5])
+    stats_to_put.extend([sm_a1_c2_h1_us, sm_a1_c2_h1_gb])
+
+    # a1 x c2 x h2
+    sm_a1_c2_h2_us = StatsModel(publisher=adunit1, advertiser=creative2, date_hour=hour2, country='US', 
+                                request_count=a1_c2_h2_us[1], 
+                                impression_count=a1_c2_h2_us[2], 
+                                click_count=a1_c2_h2_us[3], 
+                                conversion_count=a1_c2_h2_us[4], 
+                                revenue=a1_c2_h2_us[5])
+    sm_a1_c2_h2_gb = StatsModel(publisher=adunit1, advertiser=creative2, date_hour=hour2, country='GB', 
+                                request_count=a1_c2_h2_gb[1], 
+                                impression_count=a1_c2_h2_gb[2], 
+                                click_count=a1_c2_h2_gb[3], 
+                                conversion_count=a1_c2_h2_gb[4], 
+                                revenue=a1_c2_h2_gb[5])
+    stats_to_put.extend([sm_a1_c2_h2_us, sm_a1_c2_h2_gb])
+
+
+    # ADUNIT 2
+
+    # a2 x c1 x h1
+    sm_a2_c1_h1_us = StatsModel(publisher=adunit2, advertiser=creative1, date_hour=hour1, country='US', 
+                                request_count=a2_c1_h1_us[1], 
+                                impression_count=a2_c1_h1_us[2], 
+                                click_count=a2_c1_h1_us[3], 
+                                conversion_count=a2_c1_h1_us[4], 
+                                revenue=a2_c1_h1_us[5]
+                                )    
+    sm_a2_c1_h1_gb = StatsModel(publisher=adunit2, advertiser=creative1, date_hour=hour1, country='GB', 
+                                request_count=a2_c1_h1_gb[1],
+                                impression_count=a2_c1_h1_gb[2],
+                                click_count=a2_c1_h1_gb[3],
+                                conversion_count=a2_c1_h1_gb[4],
+                                revenue=a2_c1_h1_gb[5]
+                                )
+    stats_to_put.extend([sm_a2_c1_h1_us, sm_a2_c1_h1_gb])
+
+    # a2 x c1 x h2
+    sm_a2_c1_h2_us = StatsModel(publisher=adunit2, advertiser=creative1, date_hour=hour2, country='US', 
+                                request_count=a2_c1_h2_us[1], 
+                                impression_count=a2_c1_h2_us[2], 
+                                click_count=a2_c1_h2_us[3], 
+                                conversion_count=a2_c1_h2_us[4], 
+                                revenue=a2_c1_h2_us[5]
+                                )    
+    sm_a2_c1_h2_gb = StatsModel(publisher=adunit2, advertiser=creative1, date_hour=hour2, country='GB', 
+                                request_count=a2_c1_h2_gb[1], 
+                                impression_count=a2_c1_h2_gb[2], 
+                                click_count=a2_c1_h2_gb[3], 
+                                conversion_count=a2_c1_h2_gb[4], 
+                                revenue=a2_c1_h2_gb[5]
+                                )
+    stats_to_put.extend([sm_a2_c1_h2_us, sm_a2_c1_h2_gb])
+
+
+    # a2 x c2 x h1
+    sm_a2_c2_h1_us = StatsModel(publisher=adunit2, advertiser=creative2, date_hour=hour1, country='US', 
+                                request_count=a2_c2_h1_us[1], 
+                                impression_count=a2_c2_h1_us[2], 
+                                click_count=a2_c2_h1_us[3], 
+                                conversion_count=a2_c2_h1_us[4], 
+                                revenue=a2_c2_h1_us[5])
+    sm_a2_c2_h1_gb = StatsModel(publisher=adunit2, advertiser=creative2, date_hour=hour1, country='GB', 
+                                request_count=a2_c2_h1_gb[1], 
+                                impression_count=a2_c2_h1_gb[2], 
+                                click_count=a2_c2_h1_gb[3], 
+                                conversion_count=a2_c2_h1_gb[4], 
+                                revenue=a2_c2_h1_gb[5]
+                                )
+    stats_to_put.extend([sm_a2_c2_h1_us, sm_a2_c2_h1_gb])
+
+    # a2 x c2 x h2
+    sm_a2_c2_h2_us = StatsModel(publisher=adunit2, advertiser=creative2, date_hour=hour2, country='US', 
+                                request_count=a2_c2_h2_us[1], 
+                                impression_count=a2_c2_h2_us[2], 
+                                click_count=a2_c2_h2_us[3], 
+                                conversion_count=a2_c2_h2_us[4], 
+                                revenue=a2_c2_h2_us[5])
+    sm_a2_c2_h2_gb = StatsModel(publisher=adunit2, advertiser=creative2, date_hour=hour2, country='GB', 
+                                request_count=a2_c2_h2_gb[1], 
+                                impression_count=a2_c2_h2_gb[2], 
+                                click_count=a2_c2_h2_gb[3], 
+                                conversion_count=a2_c2_h2_gb[4], 
+                                revenue=a2_c2_h2_gb[5])
+    stats_to_put.extend([sm_a2_c2_h2_us, sm_a2_c2_h2_gb])
+
+    
+    mdb_json = _create_mdb_json(stats_to_put)
+    mdb_dict = simplejson.loads(mdb_json)
+
+
+    expected_d = {}
+    expected_d['%s:%s:%s'%(adunit_id1, creative_id1, hour1.strftime('%y%m%d%H'))] = add_lists([a1_c1_h1_us, a1_c1_h1_gb])
+    expected_d['%s:%s:%s'%(adunit_id1, creative_id1, hour2.strftime('%y%m%d%H'))] = add_lists([a1_c1_h2_us, a1_c1_h2_gb])
+    expected_d['%s:%s:%s'%(adunit_id1, creative_id2, hour1.strftime('%y%m%d%H'))] = add_lists([a1_c2_h1_us, a1_c2_h1_gb])
+    expected_d['%s:%s:%s'%(adunit_id1, creative_id2, hour2.strftime('%y%m%d%H'))] = add_lists([a1_c2_h2_us, a1_c2_h2_gb])
+
+    expected_d['%s:%s:%s'%(adunit_id2, creative_id1, hour1.strftime('%y%m%d%H'))] = add_lists([a2_c1_h1_us, a2_c1_h1_gb])
+    expected_d['%s:%s:%s'%(adunit_id2, creative_id1, hour2.strftime('%y%m%d%H'))] = add_lists([a2_c1_h2_us, a2_c1_h2_gb])
+    expected_d['%s:%s:%s'%(adunit_id2, creative_id2, hour1.strftime('%y%m%d%H'))] = add_lists([a2_c2_h1_us, a2_c2_h1_gb])
+    expected_d['%s:%s:%s'%(adunit_id2, creative_id2, hour2.strftime('%y%m%d%H'))] = add_lists([a2_c2_h2_us, a2_c2_h2_gb])
+    
+    
+    actual_d = {}
+    for k, v in mdb_dict.iteritems():
+        print debug_key_name(k, id_dict), v
+        actual_d[k] = [v['request_count'], v['attempt_count'], v['impression_count'], v['click_count'], v['conversion_count'], v['revenue']]
+    
+    assert_equals(len(actual_d), len(expected_d))
+
+    for k in actual_d.keys():
+        readable_key_name = debug_key_name(k, id_dict)
+        debug_helper(readable_key_name, actual_d[k], expected_d[k])
+        assert_equals(actual_d[k], expected_d[k])
         
-        # for debugging
-        readable_key_name = debug_key_name(key_name, id_dict)
-        debug_helper(readable_key_name, obj_dict[key_name], [stats.request_count, stats.impression_count, stats.click_count, stats.conversion_count])
 
-        # assert equality check
-        assert_equals(obj_dict[key_name], [stats.request_count, stats.impression_count, stats.click_count, stats.conversion_count])
-    
-    # assert False
-    
-    # invalid parameters should return False    
-    assert_false(stats_updater.update_model('blah', 'blah', a1_c1_hour2, date_hour=hour1))
-    # adunit_id cannot be None
-    assert_false(stats_updater.update_model(None, creative_id1, a1_c1_hour2, date_hour=hour1))
-    # counts cannot be None
-    assert_false(stats_updater.update_model(adunit_id1, creative_id1, None, date_hour=hour1))
+    # # invalid parameters should return False    
+    # assert_false(stats_updater.update_model('blah', 'blah', a1_c1_hour2, date_hour=hour1))
+    # # adunit_id cannot be None
+    # assert_false(stats_updater.update_model(None, creative_id1, a1_c1_hour2, date_hour=hour1))
+    # # counts cannot be None
+    # assert_false(stats_updater.update_model(adunit_id1, creative_id1, None, date_hour=hour1))
     

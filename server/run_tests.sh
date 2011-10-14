@@ -35,8 +35,8 @@ then
     nosetests ./ad_server/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox
     echo "Ad Server Parser tests"
     nosetests ./ad_server/parser/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox
-  
-  
+      
+      
     # System Tests (Must live in server root dir for some reason TODO: Fix this)
     echo "System tests"
     nosetests system_mptests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox
@@ -45,6 +45,11 @@ then
     echo "More Ad Server tests"
     # nosetests ad_server_tests --gae-datastore='./test_data/basic_test.datastore' --with-gae --gae-application='./' --without-sandbox
    
+    # mopub logging tests
+    echo "mopub logging tests"
+    nosetests ./mopub_logging/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox 
+
+
 else
     nosetests --with-coverage --with-xunit --gae-lib-root="$1" --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --where='./userstore/tests'
     # nosetests ./userstore/tests --with-coverage --with-xunit --gae-lib-root="$1" --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./'

@@ -50,7 +50,7 @@ MAX_PUT_SIZE = 8
 
 STATS_MODEL_QUERY_KEY = "sm"
 
-MDB_STATS_UPDATER_IP = 'http://ec2-67-202-42-225.compute-1.amazonaws.com:8000'
+MDB_STATS_UPDATER_IP = 'http://mongostats.mopub.com'
 MDB_STATS_UPDATER_HANDLER_PATH = '/update'
 
 DEREF_CACHE = {}
@@ -103,6 +103,8 @@ def _create_mdb_json(stats_to_put):
     # }
     d = {}
     
+    request_d = {}  # no craetive
+    
     for s in stats_to_put:
         key_name = s.key().name()
 
@@ -116,34 +118,38 @@ def _create_mdb_json(stats_to_put):
         adunit = parts[1]
         creative = parts[2]
         date_hour = parts[-1]   # for real-time StatsModels, the date section should always be last!
-        key_tuple = '%s:%s:%s' % (adunit, creative, date_hour)
         
-        counts = {}
         if not creative:    # REQUEST: /m/ad    
-            counts['request_count'] = s.request_count
-            counts['attempt_count'] = 0
+            request_d[(adunit, date_hour)] = request_d.get((adunit, date_hour), 0) + s.request_count
         else:               # ATTEMPT: /m/req
-            counts['request_count'] = 0
-            counts['attempt_count'] = s.request_count
-            
-        counts['impression_count'] = s.impression_count
-        counts['click_count'] = s.click_count
-        counts['conversion_count'] = s.conversion_count
-        counts['revenue'] = s.revenue
+            counts = {}
+            counts['attempt_count'] = s.request_count            
+            counts['impression_count'] = s.impression_count
+            counts['click_count'] = s.click_count
+            counts['conversion_count'] = s.conversion_count
+            counts['revenue'] = s.revenue
 
-        # roll up stat counts across all countries
-        if key_tuple in d:
-            # sum up the 2 arrays if key already exists
-            d[key_tuple]['request_count'] += counts['request_count']
-            d[key_tuple]['attempt_count'] += counts['attempt_count']
-            d[key_tuple]['impression_count'] += counts['impression_count']
-            d[key_tuple]['click_count'] += counts['click_count']
-            d[key_tuple]['conversion_count'] += counts['conversion_count']
-            d[key_tuple]['revenue'] += counts['revenue']
-        else:
-            d[key_tuple] = counts
+            key_tuple = (adunit, creative, date_hour)
 
-    return simplejson.dumps(d)
+            # roll up stat counts across all countries
+            if key_tuple in d:
+                # sum up the 2 arrays if key already exists
+                d[key_tuple]['attempt_count'] += counts['attempt_count']
+                d[key_tuple]['impression_count'] += counts['impression_count']
+                d[key_tuple]['click_count'] += counts['click_count']
+                d[key_tuple]['conversion_count'] += counts['conversion_count']
+                d[key_tuple]['revenue'] += counts['revenue']
+            else:
+                d[key_tuple] = counts
+
+    # create new dict with string keys (for json) and fill in request_counts from request_d 
+    json_d = {}
+    for (adunit, creative, date_hour), counts in d.iteritems():
+        k = '%s:%s:%s' % (adunit, creative, date_hour)
+        json_d[k] = d[(adunit, creative, date_hour)]
+        json_d[k]['request_count'] = request_d[(adunit, date_hour)]
+
+    return simplejson.dumps(json_d)
     
 
 # returns [app_str]
@@ -357,6 +363,9 @@ class LogTaskHandler(webapp.RequestHandler):
       query_manager = query_managers.StatsModelQueryManager(account_name)
       
       try:
+          # stats_dict structure:
+          # key is StatsModel key_name
+          # value is StatsModel object
           stats_to_put = stats_dict.values()
       
           # if account_name == "agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww":
@@ -379,6 +388,7 @@ class LogTaskHandler(webapp.RequestHandler):
                             payload=mdb_json)
           except taskqueue.TaskAlreadyExistsError:
               logging.info('task %s already exists' % ('mdb-'+task_name))
+
 
           # traditional put to GAE datastore
           query_manager.put_stats(stats_to_put)
@@ -606,7 +616,7 @@ class MongoUpdateStatsHandler(webapp.RequestHandler):
                              'revenue': v['revenue']}
                 mdb_post_list.append(post_dict)
             else:
-                err_msg = 'None deref for key_tuple %s: app=%s, adgroup=%s, campaign=%s' % (k, app, adgroup, campaign)
+                err_msg = 'None derefed for key_tuple %s: app=%s, adgroup=%s, campaign=%s' % (k, app, adgroup, campaign)
                 logging.error(err_msg)
                 #respond immediately without posting any data to MongoDB
                 self.response.out.write(err_msg)
@@ -614,18 +624,18 @@ class MongoUpdateStatsHandler(webapp.RequestHandler):
         # post the list of dicts to MongoDB
         post_data = simplejson.dumps(mdb_post_list)
         logging.info('POST TO MDB: %s' % post_data)
-        post_url = MDB_STATS_UPDATER_IP + MDB_STATS_UPDATER_HANDLER_PATH # ex: http://ec2-67-202-42-225.compute-1.amazonaws.com:8000/update
+        post_url = MDB_STATS_UPDATER_IP + MDB_STATS_UPDATER_HANDLER_PATH # ex: http://mongostats.mopub.com/update
         post_request = urllib2.Request(post_url, post_data)
         post_response = urllib2.urlopen(post_request)
         status_code = post_response.code
         response_msg = post_response.read()
         
+        handler_response = '%i response from %s: %s\npayload:\n%s' % (status_code, post_url, response_msg, post_data)
         if status_code == 200: # OK 
-            logging.info('%i response from %s: %s\npayload:\n%s' % (status_code, post_url, response_msg, post_data))
+            logging.info(handler_response)
         else:   # failed    
-            logging.error('%i response from %s: %s\npayload:\n%s' % (status_code, post_url, response_msg, post_data))
-        
-        self.response.out.write('%i response from %s: %s\npayload:\n%s' % (status_code, post_url, response_msg, post_data))
+            logging.error(handler_response)        
+        self.response.out.write(handler_response)
 
                 
 application = webapp.WSGIApplication([('/_ah/queue/bulk-log-processor', LogTaskHandler),

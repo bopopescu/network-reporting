@@ -1163,3 +1163,18 @@ class MPXInfoHandler(RequestHandler):
 @login_required
 def mpx_info(request, *args, **kwargs):
     return MPXInfoHandler()(request, *args, **kwargs)
+
+
+class MarketplaceIndexHandler(RequestHandler):
+    def get(self):
+        return render_to_response(self.request,
+                                  "advertiser/marketplace_index.html",
+                                  {})
+
+    def post(self):
+        pass
+
+
+@login_required
+def marketplace_index(request, *args, **kwargs):
+    return MarketplaceIndexHandler()(request, *args, **kwargs)

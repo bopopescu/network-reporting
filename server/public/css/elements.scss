@@ -273,15 +273,25 @@
         &.add:before {
             background-position: -2px -194px;
         }
-
         &.test:before {
             background-position: -179px -116px;
             top: 4px;
         }
-
         &.start:before {
             top: 4px;
             background-position: -19px -117px;
+        }
+        &.pause:before {
+            background-position: -20px -165px;
+            top: 5px;
+        }
+        &.play:before {
+            background-position: -5px -165px;
+            top: 5px;
+        }
+        &.stop:before {
+            background-position: -102px -166px;
+            top: 5px;
         }
     }
 }

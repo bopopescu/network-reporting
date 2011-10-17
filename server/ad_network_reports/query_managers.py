@@ -126,6 +126,7 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         Return None if the login credentials are correct otherwise return an
         error message.
         """
+        logging.warning('Creating shit')
         apps_with_publisher_ids = list(self.get_apps_with_publisher_ids(
             ad_network_name))
         publisher_ids = [publisher_id for app, publisher_id in
@@ -141,7 +142,10 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                                         client_key = client_key,
                                         publisher_ids = publisher_ids,
                                         adunits = adunits)
-
+        
+        
+        logging.warning('attempting to connect to tornado')
+        result = None
         try:
             result = urlfetch.fetch(url = self.TEST_LOGIN_CREDENTIALS_URL,
                     payload = urllib.urlencode(login_info.__dict__), method =
@@ -149,7 +153,7 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         except DownloadError:
             logging.error("Server timeout occured when attempting to check ad "
                           "network login info")
-        if result.status_code == 200:
+        if result and result.status_code == 200:
             login_info.put()
 
             # Create all the different AdNetworkAppMappers for all the

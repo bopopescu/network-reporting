@@ -262,7 +262,7 @@ class NetworkUnitTests(unittest.TestCase):
     def mptest_jumptap_basictest(self):     
         self.client_context = ClientContext(adunit=self.adunit,
                                             country_code="US", # Two characater country code.  
-                                            raw_udid="fake_udid",   
+                                            raw_udid="sha:467A52DB6F573AC18431045FB136B22E",
                                             request_id="fake_request_id",
                                             now=datetime.datetime.now(),
                                             user_agent="Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_0_2 like Mac OS X; en-us) AppleWebKit/532.9 (KHTML, like Gecko) Version/4.0.5 Mobile/8A400 Safari/6531.22.7",

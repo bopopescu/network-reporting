@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% load filters %}
+{% block extraScripts %}
+<script type="text/javascript">
+$(function () {
+    $("#dashboard-dateOptions").remove();
+    $("#titlebar").remove();
+});
+</script>
+{% endblock extraScripts %}
+{% block extraCSS %}
+<style type="text/css" media="screen">
+.inset_box {
+    box-shadow: inset 1px 1px 15px #555;
+    border-radius: 4px;
+    border: 1px solid #888;
+    border-bottom: 1px solid #aaa;
+    float: left;
+    width: 260px;
+    padding: 10px;
+    margin: 10px;
+    height: 250px;
+    background: -webkit-gradient(linear, left top, left bottom, from(#eee), to(#fff));
+    background: -moz-linear-gradient(top,  #eee,  #fff);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#eeeeee', endColorstr='#ffffff');
+    }
+
+.inset_box h5 {
+    font-size: 20px;
+    text-align: center;
+    text-shadow: 0px 1px 1px #fff;
+    letter-spacing: -1px
+    }
+
+.inset_box p {
+    font-size: 15px;
+    text-shadow: 0px 1px 1px #fff;
+    padding: 0px 5px;
+    text-align: left;
+    }
+
+.inset_box p img {
+    display: block;
+    width: 75px;
+    margin: 0 auto;
+    }
+
+#about_mpx {
+
+    padding: 10px 15px;
+
+
+}
+
+#heading {
+    width: 615px;
+    margin: 0 auto;
+    }
+
+#heading h2 {
+    font-size: 56px;
+    text-shadow: 0px 1px 1px #555;
+    float: left;
+}
+
+#heading .beta {
+    color: #FF7536;
+    text-shadow: 0px 1px 1px orange;
+    float: right;
+    margin-top: 15px;
+    font-size: 16px;
+    }
+
+#subheading {
+    margin: 0 auto;
+    width: 615px;
+}
+
+#subheading p {
+    font-size: 20px;
+    text-align: center;
+}
+
+#actions {
+    width: 380px;
+    margin: 0 auto;
+    text-align: center;
+     }
+#mpx_desc {
+    width: 600px;
+    padding: 40px;
+    }
+#mpx_desc h2 {
+
+    }
+.btn {
+    font-size: 34px;
+    }
+
+#learn_more {
+    font-size: 16px;
+    }
+
+</style>
+{% endblock extraCSS %}
+{% block messageCenter %}{% endblock %}
+{% block pageTitle %}{% endblock pageTitle %}
+{% block content %}
+
+  <div id="about_mpx">
+    <div id="heading" class="clearfix">
+      <h2> Get MoPub Marketplace </h2>
+      <span class="beta"> beta </span>
+    </div>
+    <div id="subheading">
+      <p>Increase your demand sources instantly. Watch your ad revenue rise. <br /> No added cost and seconds to activate.</p>
+      <p>Welcome to MoPub's real-time bidding exchange for mobile.</p>
+    </div>
+
+    <div class="clearfix">
+    <div id="earn_more" class="inset_box">
+      <h5> Earn more money </h5>
+      <p>
+        <img src="/images/money.png" />
+        <br />
+        The marketplace enables more sophisticated ad buyers and more demand sources, such as Demand Side Platforms (DSP), to bid in real-time for your inventory. That means a more efficient market and more ad revenue!
+      </p>
+    </div>
+
+    <div id="control" class="inset_box">
+      <h5> Greater control and transparency </h5>
+      <p>
+        <img src="/images/controls.png" />
+        <br />
+      Take control of your inventory with price floors, frequency capping and more. See performance reporting by campaign, device, or country for your marketplace inventory, just like your other demand sources. </p>
+
+    </div>
+
+    <div id="payment" class="inset_box">
+      <h5>Reliable and predictable payment </h5>
+      <p>
+        <img src="/images/ontime.png" />
+        <br />
+      Getting paid shouldn't be a headache. So we consolidated your ad revenue from all your marketplace bidders - demand side platforms, ad agencies, and RTB ad networks - into one monthly direct deposit. Simple as that.</p>
+
+    </div>
+</div>
+
+    <div id="actions">
+      <br />
+      <a href="{% url advertiser_campaign_create %}#marketplace" class="primary btn"> Try it now </a>
+      <br />
+      <br />
+      <a id="learn_more" target="_blank" href="http://help.mopub.com/customer/portal/articles/189138-marketplace-faq" > Learn more </a>
+    </div>
+  </div>
+{% endblock content %}
+

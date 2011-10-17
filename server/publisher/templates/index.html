@@ -1,10 +1,6 @@
 {% extends 'publisher/base.html' %}
 {% load filters %}
-{% block navLinks %}
-            <li class="active"><a href="{% url publisher_index %}">Dashboard</a></li>
-            <li><a href="{% url advertiser_campaign %}">Campaigns</a></li>
-            <li><a href="{% url reports_index %}">Reports</a></li>
-{% endblock navLinks %}
+
 {% block messageCenter %}{% endblock messageCenter %}
 
 {% block titleBarRight %}
@@ -20,8 +16,8 @@
     <a href="#" id="ajaxRetry"><img src="../images/icons/92_16x16.png"></img> <strong>Retry</strong></a>
 </div>
 {% ifequal account.status "step3" %}
-          <div class="alertMessage">
-            The next step is to set up your ad networks.  Visit your <a href="{% url account_index %}">Account</a> page to enable your ad networks.
+          <div class="alert-message block-message">
+            The next step is to set up your ad networks.  Visit your <a href="{% url ad_network_settings %}">Ad Network Settings</a> page to enable your ad networks.
           </div>
 {% endifequal %}
           <section class="offset nomargin" id="dashboard-stats">

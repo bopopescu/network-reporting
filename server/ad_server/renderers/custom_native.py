@@ -11,6 +11,8 @@ class CustomNativeRenderer(BaseNativeRenderer):
     
     def _setup_headers(self):
         super(CustomNativeRenderer, self)._setup_headers()
+        self.header_context.ad_type = self._get_ad_type()
+        self.header_context.full_ad_type = None
         self.header_context.custom_selector = self.creative.html_data.rstrip(":")
         
     def _setup_content(self):

@@ -3,7 +3,7 @@ import sys
 sys.path.append(os.environ['PWD'])
 import common.utils.test.setup
 
-import hypercache
+from hypercache import hypercache
              
 import copy
                      

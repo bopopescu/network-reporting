@@ -56,6 +56,11 @@ class BaseHtmlRenderer(BaseCreativeRenderer):
     def _get_ad_type(self):
         return 'html'
         
+    def _setup_headers(self):
+        super(BaseHtmlRenderer, self)._setup_headers()
+        self.header_context.ad_type = self._get_ad_type()
+        self.header_context.full_ad_type = None
+        
     def _setup_content(self):
         """
         Uses the html_context and self.TEMPLATE to generate creative html.

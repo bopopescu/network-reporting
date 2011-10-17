@@ -14,7 +14,7 @@
     function trackImpressionHelper(){
       var urls = new Array();
       var i = 0;
-      {% if not is_fullscreen %}
+      {% if os == 'android' or not is_fullscreen %}{# The iOS client always natively pings the the MoPub impression pixel, but android expects that the html has it already#}
         urls[i++]="{{impression_url|safe}}";
       {% endif %}
     
@@ -47,7 +47,7 @@
     function webviewDidAppear(){
         // inserts impression tracking
         // when the interstitial is presented on screen
-        {% if is_fullscreen %}
+        {% if is_fullscreen and not os == 'android' %}{# Our Android SDKs with v <= 4 expect that the impression pixel will be dropped immediately when the page loads. If the pixel is instead dropped upon webviewDidAppear, these SDKs will fail to track any impressions! #}
         if(typeof trackImpressionHelper == 'function') {
           trackImpressionHelper();
         }
@@ -79,7 +79,7 @@
       }
     }
 
-    {% if not is_fullscreen %}
+    {% if not is_fullscreen or os == 'android' %}{# Our Android SDKs with v <= 4 expect that the impression pixel will be dropped immediately when the page loads. If the pixel is instead dropped upon webviewDidAppear, these SDKs will fail to track any impressions! #}
       if(typeof trackImpressionHelper == 'function') {
         trackImpressionHelper();
       }

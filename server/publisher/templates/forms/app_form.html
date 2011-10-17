@@ -18,6 +18,7 @@
   </dt>
   <dd class="appForm-platformDependent">
     <input type="text" class="input-text {% if form.name.errors %}form-error{% endif %} required" name="name" value="{{form.name.value}}" id="appForm-name" />
+
     <div class="formFields-field-help" id="appForm-search">
       <a href="#" class="button iphone" id="appForm-search-button">Search App Store</a>
       <!-- Commented out since Android search is blocked <a href="#" class="button android" id="appForm-market-search-button">Search Android Market</a> -->
@@ -62,9 +63,7 @@
      <input type="hidden" name="{{form.img_url.name}}" value="" />
    </div>
   </dd>
-  <span {% if not form.is_edit_form.value %}class="hidden"{% endif %}>
   {{form.primary_category}}
   {{form.secondary_category}}
-  </span>
 </dl>
 <div class="clear"></div>

@@ -1,11 +1,12 @@
 class ReportException(Exception):
-    def __init__(self, key=None):
-        self.report_key = key
+    def __init__(self, message = None, jobflowid = None):
+        self.report_message = message 
+        self.jobflowid = jobflowid
 
 class MRSubmitError(ReportException):
-    def __init__(self, reason, report_key):
+    def __init__(self, reason, message):
         self.reason = reason
-        self.report_key = report_key
+        self.report_message = message
 
 class NoDataError(MRSubmitError):
     pass

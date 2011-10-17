@@ -1,0 +1,58 @@
+{% extends "admin/base.html" %}
+{% load filters %}
+{% block pageTitle %}<h1>MoPub Reports Dashboard</h1>{% endblock pageTitle %}
+
+{% block content %}
+<div id='reports'>
+    <table class='dataTable'>
+        <tr>
+            <th>
+                Account
+            </th>
+            <th>
+                Report
+            </th>
+            <th>
+                Created at
+            </th>
+            <th>
+                Status
+            </th>
+        </tr>
+    {% for report, status in status %}
+    <tr id={{report.key}}>
+        <td>
+            {{report.account.mpuser.email}}
+        </td>
+        <td>
+            <a href="{% url view_report report.schedule.key %}">{{report.name}}</a>
+        </td>
+        <td>
+            {{report.created_at}}
+        </td>
+        {% ifequal status "Pending" %}
+            {% if report.data %}
+            <td class='success'>
+                Complete!
+            </td>
+            {% else %}
+            <td class='pending'>
+                Pending
+            </td>
+            {% endif %}
+        {% else %}
+            {% ifequal status "No Data" %}
+            <td class='invalid'>
+                No Data
+            </td>
+            {% else %}
+            <td class='error'>
+                {{status}}
+            </td>
+            {% endifequal %}
+        {% endifequal %}
+    </tr>
+    {% endfor %}
+    </table>
+</div>
+{% endblock content %}

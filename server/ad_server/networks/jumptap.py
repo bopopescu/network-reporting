@@ -22,7 +22,7 @@ class JumptapServerSide(ServerSide):
     @property
     def key_values(self):
         key_values = {#'gateway-ip': '208.54.5.50',    # TODO: This should be the x-forwarded-for header of the device
-                      'hid': self.client_context.mopub_id,
+                      'hid_sha1': self.client_context.mopub_id,
                       'client-ip': self.client_context.client_ip, # Test value: 'client-ip': '208.54.5.50'
                       'ua': self.client_context.user_agent,
                       'v': 'v29',}

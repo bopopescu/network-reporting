@@ -55,7 +55,7 @@ from common.utils.helpers import to_uni, to_ascii
 class Campaign(db.Model):
     name = db.StringProperty(required=True)
     description = db.TextProperty()
-    campaign_type = db.StringProperty(choices=['gtee', 'gtee_high', 'gtee_low', 'promo', 'network','backfill_promo', 'marketplace', 'backfill_marketplace'], default="network")
+    campaign_type = db.StringProperty(choices=['gtee', 'gtee_high', 'gtee_low', 'promo', 'network','backfill_promo', 'marketplace', 'backfill_marketplace'])
 
     # budget per day
     budget = db.FloatProperty()
@@ -114,6 +114,9 @@ class Campaign(db.Model):
 
     def network(self):
         return self.campaign_type in ['network']
+
+    def marketplace(self):
+        return self.campaign_type in ['marketplace', 'backfill_marketplace']
 
     def is_active_for_date(self, date):
         """ Start and end dates are inclusive """
@@ -267,6 +270,7 @@ class AdGroup(db.Model):
         elif self.network_type == 'admob_native': c = AdMobNativeCreative(key_name=key_name, name="admob native dummy",ad_type="admob_native",format="320x50",format_predicates=["format=320x50"])
         elif self.network_type == 'millennial_native': c = MillennialNativeCreative(key_name=key_name, name="millennial native dummy",ad_type="millennial_native",format="320x50",format_predicates=["format=320x50"])
         elif self.campaign.campaign_type in ['marketplace', 'backfill_marketplace']: c = MarketplaceCreative(key_name=key_name, name='marketplace dummy', ad_type='html')
+
         if c: c.ad_group = self
         return c
 
@@ -348,13 +352,13 @@ class AdGroup(db.Model):
 
 
 class Creative(polymodel.PolyModel):
-
     name = db.StringProperty(default='Creative')
     custom_width = db.IntegerProperty()
     custom_height = db.IntegerProperty()
     landscape = db.BooleanProperty(default=False) # TODO: make this more flexible later
 
-    ad_group = db.ReferenceProperty(AdGroup,collection_name="creatives")
+    ad_group = db.ReferenceProperty(AdGroup, collection_name="creatives")
+
 
     active = db.BooleanProperty(default=True)
     deleted = db.BooleanProperty(default=False)
@@ -393,7 +397,7 @@ class Creative(polymodel.PolyModel):
     #     elif self.ad_group.bid_strategy == 'cpm':
     #         return float(self.ad_group.bid)
 
-    network_name = None   
+    network_name = None
 
     @property
     def intercept_url(self):
@@ -404,7 +408,8 @@ class Creative(polymodel.PolyModel):
             via "window.location = [TARGET_URL]". Since this kind of navigation is
             not limited exclusively to clicks, only a subset of all observed
             [TARGET_URL]s should be intercepted. This header is used as part of
-            prefix-matching to distinguish true click events."""
+            prefix-matching to distinguish true click events.
+        """
         return self.launchpage
 
     # Set up the basic Renderers and ServerSides for the creative
@@ -500,7 +505,7 @@ class TextAndTileCreative(Creative):
     action_icon = db.StringProperty(choices=["download_arrow4", "access_arrow", "none"], default="download_arrow4")
     color = db.StringProperty(default="000000")
     font_color = db.StringProperty(default="FFFFFF")
-    gradient = db.BooleanProperty(default=False)
+    gradient = db.BooleanProperty(default=True)
 
     @property
     def Renderer(self):
@@ -546,11 +551,11 @@ class MarketplaceCreative(HtmlCreative):
 
 class CustomCreative(HtmlCreative):
     # TODO: For now this is redundant with HtmlCreative
-    # If we don't want to add any properties to it, remove it    
-    network_name = "custom"   
+    # If we don't want to add any properties to it, remove it
+    network_name = "custom"
 
-class CustomNativeCreative(HtmlCreative): 
-    network_name = "custom_native"   
+class CustomNativeCreative(HtmlCreative):
+    network_name = "custom_native"
     Renderer = CustomNativeRenderer
 
 
@@ -592,12 +597,12 @@ class AdMobNativeCreative(AdMobCreative):
         return ('728x90', '320x50', '300x250', 'full' ,)
 
 class MillennialCreative(Creative):
+
     network_name = "millennial"
 
     Renderer = MillennialRenderer
 
     ServerSide = MillennialServerSide
-
 
     @property
     def multi_format(self):
@@ -615,12 +620,12 @@ class MillennialNativeCreative(MillennialCreative):
         return ('728x90', '320x50', '300x250', 'full' ,)
 
 class ChartBoostCreative(Creative):
+
     network_name = "chartboost"
 
     Renderer = ChartBoostRenderer
 
     ServerSide = ChartBoostServerSide
-
 
     @property
     def multi_format(self):
@@ -634,12 +639,12 @@ class EjamCreative(Creative):
     ServerSide = EjamServerSide
 
 class InMobiCreative(Creative):
+
     network_name = "inmobi"
 
     Renderer = InmobiRenderer
 
     ServerSide = InMobiServerSide
-
 
     @property
     def multi_format(self):
@@ -651,6 +656,7 @@ class AppNexusCreative(Creative):
     Renderer = AppNexusRenderer
 
     ServerSide = AppNexusServerSide
+
 
 class BrightRollCreative(Creative):
     network_name = "brightroll"
@@ -681,12 +687,12 @@ class GreyStripeCreative(Creative):
 
     ServerSide = GreyStripeServerSide
 
-
     @property
     def multi_format(self):
         return ('320x320', '320x50', '300x250',)
 
 class MobFoxCreative(Creative):
+
     network_name = "mobfox"
     Renderer = MobFoxRenderer
 

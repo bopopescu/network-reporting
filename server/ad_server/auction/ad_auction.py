@@ -12,7 +12,8 @@ def run(client_context, adunit_context, MarketplaceBattle=MarketplaceBattle):
         excluded_adgroup_keys. Pass in MarketplaceBattle as kwarg
         for testing purposes. """
 
-    client_context.geo_predicates = geo_predicates_from_country_code(client_context.country_code)
+    client_context.geo_predicates = geo_predicates_from_country_code(
+                                        client_context.country_code)
 
     # Run each of our battle levels in the appropriate order.
     gtee_and_promo_battle_classes = [GteeHighBattle,
@@ -27,9 +28,24 @@ def run(client_context, adunit_context, MarketplaceBattle=MarketplaceBattle):
         if creative:
             return (creative, client_context.excluded_adgroup_keys)
 
+    # instantiate but do not run the network battle
+    # so that we can get all the eligible network bids
+    # to the marketplace_battle which needs it to the proxy_bids. 
+    # This allows the networks to "compete" on more even footing
+    # with teh marketplace
+    network_battle = NetworkBattle(client_context,
+                                   adunit_context,
+                                   min_cpm=0.0) # init with 0.0, assign later
+    network_bids = network_battle.bids_for_level()
 
-    # Run the MarketplaceBattle, and then pass the winning bid into the NetworkBattle
-    marketplace_battle = MarketplaceBattle(client_context, adunit_context)
+
+
+    # Run the MarketplaceBattle, and then pass the winning bid into the 
+    # NetworkBattle
+    marketplace_battle = MarketplaceBattle(client_context, 
+                                       adunit_context, 
+                                       proxy_bids=network_bids)
+
     marketplace_creative = marketplace_battle.run()    
     
     if marketplace_creative:
@@ -37,13 +53,13 @@ def run(client_context, adunit_context, MarketplaceBattle=MarketplaceBattle):
     else:
         marketplace_cpm = 0.0
     
-    # Run NetworkBattle, we pass in a minimum cpm that the networks must beat    
-    network_battle = NetworkBattle(client_context,
-                                   adunit_context,
-                                   min_cpm=marketplace_cpm)
+    # Run NetworkBattle, we pass in a minimum cpm that the networks must beat
+    
+    # set the min_cpm for the actual run, to be the marketplace's cpm
+    network_battle.min_cpm = marketplace_cpm
     network_creative = network_battle.run()    
     if network_creative:
-        return (network_creative, client_context.excluded_adgroup_keys)                   
+        return (network_creative, client_context.excluded_adgroup_keys)
     # If the networks couldn't beat the marketplace bid, return marketplace
     elif marketplace_creative:
         return (marketplace_creative, client_context.excluded_adgroup_keys)

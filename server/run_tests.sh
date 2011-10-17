@@ -70,7 +70,7 @@ else
     nosetests ./ad_server/tests --with-coverage --with-xunit --gae-lib-root="$1" --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox
     nosetests ./ad_server/parser/tests --with-coverage --with-xunit --gae-lib-root="$1" --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox
     nosetests ./ad_server/renderers/tests --with-coverage --with-xunit --gae-lib-root="$1" --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox   
-      nosetests ./ad_server/neworks/tests --with-coverage --with-xunit --gae-lib-root="$1"--match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox
+    nosetests ./ad_server/neworks/tests --with-coverage --with-xunit --gae-lib-root="$1"--match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox
   
     # System T--with-coverage --with-xunit --gae-lib-root="$1" ests (Must live in server root dir for some reason TODO: Fix this)
     nosetests system_mptests --with-coverage --with-xunit --gae-lib-root="$1" --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox

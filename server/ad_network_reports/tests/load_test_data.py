@@ -12,10 +12,10 @@ if REAL_TEST_DATA:
     """ Office Jerk """
     officejerk_account = Account(key_name = 'office_jerk_test_account', title = 'Office Jerk')
     officejerk_account.put()
-    
+
     officejerk_network_config = NetworkConfig(jumptap_pub_id = 'office_jerk_test')
     officejerk_network_config.put()
-     
+
     officejerk_app = App(account = officejerk_account, name = "Office Jerk", network_config = officejerk_network_config)
     officejerk_app.put()
 
@@ -155,8 +155,9 @@ else:
     admob_login_info.put()
 
     # JumpTap login info
-    jumptap_login_info = AdNetworkLoginInfo(account = account, ad_network_name = 'jumptap', username = 'vrubba',
-                                            password = 'fluik123!')
+    jumptap_login_info = AdNetworkLoginInfo(account = account, ad_network_name
+            = 'jumptap', username = 'betnetwork', password = 'BETjames',
+            adunits = ['bet_wap_site_106andpark_top'])
     jumptap_login_info.put()
 
     # iAd login info                                  
@@ -174,20 +175,19 @@ else:
     mobfox_login_info.put()
 
     # Only needed for jumptap
-    office_jerk_network_config = NetworkConfig(jumptap_pub_id = TEST_JUMPTAP_PUB_ID)
-    office_jerk_network_config.put()
+    network_config = NetworkConfig(jumptap_pub_id = TEST_JUMPTAP_PUB_ID)
+    network_config.put()
 
     # name corresponds to jumptap login info
-    office_jerk_app = App(account = account, name = "Office Jerk", network_config = office_jerk_network_config)
-    office_jerk_app.put()
+    app = App(account = account, name = "BET WAP Site", network_config =
+            network_config)
+    app.put()
 
-    entities.append(AdNetworkAppMapper(application = office_jerk_app, ad_network_name = 'admob', publisher_id = TEST_ADMOB_PUB_ID, ad_network_login = admob_login_info))
-    entities.append(AdNetworkAppMapper(application = office_jerk_app, ad_network_name = 'jumptap', publisher_id = TEST_JUMPTAP_PUB_ID, ad_network_login = jumptap_login_info, send_email = True))
-    entities.append(AdNetworkAppMapper(application = office_jerk_app, ad_network_name = 'iad', publisher_id = TEST_IAD_PUB_ID, ad_network_login = iad_login_info))
-    entities.append(AdNetworkAppMapper(application = office_jerk_app, ad_network_name = 'inmobi', publisher_id = TEST_INMOBI_PUB_ID, ad_network_login = inmobi_login_info))
-    entities.append(AdNetworkAppMapper(application = office_jerk_app, ad_network_name = 'mobfox', publisher_id = TEST_MOBFOX_PUB_ID, ad_network_login = mobfox_login_info))
+    entities.append(AdNetworkAppMapper(application = app, ad_network_name = 'admob', publisher_id = TEST_ADMOB_PUB_ID, ad_network_login = admob_login_info))
+    entities.append(AdNetworkAppMapper(application = app, ad_network_name = 'jumptap', publisher_id = TEST_JUMPTAP_PUB_ID, ad_network_login = jumptap_login_info, send_email = True))
+    entities.append(AdNetworkAppMapper(application = app, ad_network_name = 'iad', publisher_id = TEST_IAD_PUB_ID, ad_network_login = iad_login_info))
+    entities.append(AdNetworkAppMapper(application = app, ad_network_name = 'inmobi', publisher_id = TEST_INMOBI_PUB_ID, ad_network_login = inmobi_login_info))
+    entities.append(AdNetworkAppMapper(application = app, ad_network_name = 'mobfox', publisher_id = TEST_MOBFOX_PUB_ID, ad_network_login = mobfox_login_info))
 
-    
+
 db.put(entities)
-
-

@@ -3,6 +3,7 @@ sys.path.append(os.environ['PWD'])
 
 # magic test import
 import common.utils.test.setup
+import logging
 
 from google.appengine.ext import db
 
@@ -24,131 +25,38 @@ TEST_IAD_PUB_ID = '362641118' # NOT IN NetworkConfig
 TEST_INMOBI_PUB_ID ='4028cb962b75ff06012b792fc5fb0045'
 TEST_MOBFOX_PUB_ID = 'fb8b314d6e62912617e81e0f7078b47e'
 
-''' Test all the scrapers individually '''
-# def jumptap_mptest():
-#     account = Account()
-#     account.put()
-#     jumptap_login_info = AdNetworkLoginInfo(account = account, ad_network_name = 'jumptap', username = 'vrubba',
-#                                             password = 'fluik123!')
-#     jumptap_login_info.put()
-#     
-#     scraper = JumpTapScraper(jumptap_login_info)
-#     yesterday = date.today() - timedelta(days = 1)
-#     scraper.get_site_stats(yesterday)
-#     
-# def admob_mptest():
-#     account = Account()
-#     account.put()
-#     admob_login_info = AdNetworkLoginInfo(account = account, ad_network_name = 'admob', username = 'njamal@stanford.edu',
-#                                           password = 'xckjhfn3xprkxksm', client_key = 'k907a03ee39cecb699b5ad45c5eded01')
-#     admob_login_info.put()
-# 
-#     scraper = AdMobScraper(admob_login_info)
-#     yesterday = date.today() - timedelta(days = 1)
-#     scraper.get_site_stats(yesterday)
-#     
-# def iad_mptest():
-#     account = Account()
-#     account.put()
-#     iad_login_info = AdNetworkLoginInfo(account = account, ad_network_name = 'iad', username = 'rawrmaan@me.com',
-#                                            password = '606mCV&#dS')
-#     iad_login_info.put()
-# 
-#     scraper = IAdScraper(iad_login_info)
-#     yesterday = date.today() - timedelta(days = 1)
-#     scraper.get_site_stats(yesterday)
-#     
-# def inmobi_mptest():
-#     account = Account()
-#     account.put()
-#     inmobi_login_info = AdNetworkLoginInfo(account = account, ad_network_name = 'inmobi', username = '4028cb8b2b617f70012b792fe65e00a2',
-#                                         password = '84585161')
-#     inmobi_login_info.put()
-# 
-#     scraper = InMobiScraper(inmobi_login_info)
-#     yesterday = date.today() - timedelta(days = 1)
-#     scraper.get_site_stats(yesterday)
-#     
-# def inmobi_mptest():
-#     account = Account()
-#     account.put()
-#     mobfox_login_info = AdNetworkLoginInfo(account = account, ad_network_name = 'mobfox', publisher_ids = ['fb8b314d6e62912617e81e0f7078b47e'])
-#     mobfox_login_info.put()
-# 
-#     scraper = MobFoxScraper(mobfox_login_info)
-#     yesterday = date.today() - timedelta(days = 1)
-#     scraper.get_site_stats(yesterday)
-
-
-''' Test adnetwork_update, the script that gets called by the cron job and updates the db daily with the scrape stats '''
 def ad_network_reports_mptest():
-    
-    ''' Set up the default models '''
+
     from ad_network_reports.tests.load_test_data import *
-    
-    # account = Account()
-    #     account.put()
-    #     
-    #     # AdMob login info
-    #     admob_login_info = AdNetworkLoginInfo(account = account, ad_network_name = 'admob', username = 'njamal@stanford.edu',
-    #                                           password = 'xckjhfn3xprkxksm', client_key = 'k907a03ee39cecb699b5ad45c5eded01')
-    #     admob_login_info.put()
-    #     
-    #     # JumpTap login info
-    #     jumptap_login_info = AdNetworkLoginInfo(account = account, ad_network_name = 'jumptap', username = 'vrubba',
-    #                                             password = 'fluik123!')
-    #     jumptap_login_info.put()
-    #     
-    #     # iAd login info                                        
-    #     iad_login_info = AdNetworkLoginInfo(account = account, ad_network_name = 'iad', username = 'rawrmaan@me.com',
-    #                                            password = '606mCV&#dS')
-    #     iad_login_info.put()
-    #     
-    #     # InMobi login info
-    #     inmobi_login_info = AdNetworkLoginInfo(account = account, ad_network_name = 'inmobi', username = '4028cb8b2b617f70012b792fe65e00a2',
-    #                                         password = '84585161')
-    #     inmobi_login_info.put()
-    #     # MobFox login info
-    #     mobfox_login_info = AdNetworkLoginInfo(account = account, ad_network_name = 'mobfox', publisher_ids = ['fb8b314d6e62912617e81e0f7078b47e'])
-    #     mobfox_login_info.put()
-    #     
-    #     # Only needed for jumptap
-    #     network_config = NetworkConfig(jumptap_pub_id = TEST_JUMPTAP_PUB_ID)
-    #     network_config.put()
-    #     
-    #     # name corresponds to jumptap login info
-    #     app = App(account = account, name = "Office Jerk", network_config = network_config)
-    #     app.put()
-    #     
-    #     network_app_mappers = []
-    #     network_app_mappers.append(AdNetworkAppMapper(application = app, ad_network_name = 'admob', publisher_id = TEST_ADMOB_PUB_ID, ad_network_login = admob_login_info))
-    #     network_app_mappers.append(AdNetworkAppMapper(application = app, ad_network_name = 'jumptap', publisher_id = TEST_JUMPTAP_PUB_ID, ad_network_login = jumptap_login_info, send_email = True))
-    #     network_app_mappers.append(AdNetworkAppMapper(application = app, ad_network_name = 'iad', publisher_id = TEST_IAD_PUB_ID, ad_network_login = iad_login_info))
-    #     network_app_mappers.append(AdNetworkAppMapper(application = app, ad_network_name = 'inmobi', publisher_id = TEST_INMOBI_PUB_ID, ad_network_login = inmobi_login_info))
-    #     network_app_mappers.append(AdNetworkAppMapper(application = app, ad_network_name = 'mobfox', publisher_id = TEST_MOBFOX_PUB_ID, ad_network_login = mobfox_login_info))
-    #     db.put(network_app_mappers)
-    
-    ''' Call the method we are testing '''
+
+    # Call the method we are testing.
     update_ad_networks()
-    
-    ''' Verify results '''
+
+    # Verify results.
     manager = AdNetworkReportQueryManager(account) # account
-    
-    logging.warning([(app, publisher_id) for app, publisher_id in manager.get_apps_with_publisher_ids('jumptap')])
-    
+
+    logging.warning([(app, publisher_id) for app, publisher_id in
+        manager.get_apps_with_publisher_ids('jumptap')])
+
     test_network_app_mappers = list(manager.get_ad_network_mappers())
     assert len(test_network_app_mappers) > 0
     assert len(test_network_app_mappers) == len(entities)
-    
+
     logging.warning([a.key().name for a in test_network_app_mappers])
-    
+
     # Was a day created for each app for the account?
     yesterday = date.today() - timedelta(days = 1)
     for n in test_network_app_mappers:
-        n = manager.get_ad_network_app_mapper(ad_network_app_mapper_key = n.key())
+        n = manager.get_ad_network_app_mapper(ad_network_app_mapper_key =
+                n.key())
         stats = manager.get_ad_network_app_stats(n)
-        logging.warning( "network name:%s application name: %s" % (n.ad_network_name, n.application.name))
-        assert stats[0].date == yesterday, "network name:%s application name: %s" % (n.ad_network_name, n.application.name)
-        
+        logging.warning( "network name:%s application name: %s" %
+                (n.ad_network_name, n.application.name))
+        logging.warning("network name:%s application name: %s" %
+                (n.ad_network_name, n.application.name))
+        assert stats[0].date == yesterday
+
     # Do aggregate statistics work?
-    aggregates = [manager.get_ad_network_aggregates(n, date.today() - timedelta(days = 8), date.today() - timedelta(days = 1)) for n in test_network_app_mappers]
+    aggregates = [manager.get_ad_network_aggregates(n, date.today() -
+        timedelta(days = 8), date.today() - timedelta(days = 1)) for n in
+        test_network_app_mappers]

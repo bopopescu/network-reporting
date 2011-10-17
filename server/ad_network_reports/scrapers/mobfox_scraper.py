@@ -1,70 +1,79 @@
+import logging
+import time
 import urllib2
 import urllib
-import time
+
+from ad_network_reports.scrapers.network_scrape_record import \
+        NetworkScrapeRecord
+from ad_network_reports.scrapers.scraper import NetworkConfidential
 from datetime import date, timedelta
 from xml.dom import minidom
-
-from network_scrape_record import NetworkScrapeRecord
 
 class MobFoxScraper(object):
     """One app stats returned per request sent. Can't break down by ad unit."""
     # API_KEY is MoPub specific
     API_KEY = 'e64d04079c63c14644fc9690a925c8af'
-    
+
     def __init__(self, credentials):
         self.publisher_ids = credentials.publisher_ids
-        
+
     def test_login_info(self):
         """Test publisher_ids.
-        
-        Raise an error if one of the publisher ids is incorrect otherwise return None.
+
+        Raise an error if one of the publisher ids is incorrect otherwise
+        return None.
         """
         self.get_site_stats(date.today() - timedelta(days = 1))
-    
-    def get_site_stats(self, from_date, to_date=None):
-        if  to_date is None:
-            to_date = from_date
-            # range can't start and end on the same date for MobFox
-            from_date -= timedelta(days = 1)
-        
-        req_dict ={"api_key" : self.API_KEY, "start_date" : time.mktime(from_date.timetuple()), "end_date" : time.mktime(to_date.timetuple()), "report_type" : 2}
-        
+
+    def get_site_stats(self, from_date):
+        to_date = from_date
+        # range can't start and end on the same date for MobFox
+        from_date -= timedelta(days = 1)
+
+        req_dict ={"api_key" : self.API_KEY, "start_date" : time.mktime(
+            from_date.timetuple()), "end_date" : time.mktime(to_date.
+                timetuple()), "report_type" : 2}
+
         reports = []
         for pub_id in self.publisher_ids:
             req_dict['publisher_id'] = pub_id
-            req = urllib2.Request('http://account.mobfox.com/reporting_api.php?'+urllib.urlencode(req_dict))
-            
+            req = urllib2.Request('http://account.mobfox.com/reporting_api.php?'
+                    + urllib.urlencode(req_dict))
+
             response = urllib2.urlopen(req)
             line = response.read()
             if line.find("error") != -1:
                 raise Exception(line)
             self.dom = minidom.parseString(line)
-        
+
             try:
-                nsr = NetworkScrapeRecord(revenue = float(self.get_value("earnings")),
-                                          attempts = 0, # We can't get the number of attempts / requests
-                                          impressions = int(self.get_value("impressions")),
-                                          fill_rate = 0.0, # We can't get this and we don't have # attempts so we can't calculate it
-                                          clicks = int(self.get_value("clicks")),
-                                          ecpm = float(self.get_value("ecpm")),
-                                          ctr = float(self.get_value("ctr")),
-                                          app_tag = pub_id)
+                nsr = NetworkScrapeRecord(revenue = float(self.get_value(
+                    "earnings")),
+                    # We can't get the number of attempts / requests
+                    attempts = 0,
+                    impressions = int(self.get_value("impressions")),
+                    # We can't get this and we don't have # attempts so we can't
+                    # calculate it
+                    fill_rate = 0.0,
+                    clicks = int(self.get_value("clicks")),
+                    ecpm = float(self.get_value("ecpm")),
+                    ctr = float(self.get_value("ctr")),
+                    app_tag = pub_id)
                 reports.append(nsr)
-            except Exception as e:
-                logging.error('Day range (%s to %s) selected for mobfox doesn\'t have any data' % 
-                        (from_date.strftime("%Y %m %d"), to_date.strftime("%Y %m %d")))
+            except Exception:
+                logging.error("Day range (%s to %s) selected for mobfox "
+                        "doesn\'t have any data" %
+                        (from_date.strftime("%Y %m %d"), to_date.
+                            strftime("%Y %m %d")))
                 raise
-        
+
         return reports
-    
+
     def get_value(self, name):
         return self.dom.getElementsByTagName(name)[0].childNodes[0].nodeValue
-    
-class NetworkConfidential(object):
-    pass
-        
+
 if __name__ == '__main__':
-    nc = NetworkConfidential()
-    nc.publisher_ids = ['fb8b314d6e62912617e81e0f7078b47e']
-    scraper = MobFoxScraper(nc)
-    print scraper.get_site_stats(date.today())
+    NC = NetworkConfidential()
+    NC.publisher_ids = ['fb8b314d6e62912617e81e0f7078b47e']
+    SCRAPER = MobFoxScraper(NC)
+    print SCRAPER.get_site_stats(date.today())

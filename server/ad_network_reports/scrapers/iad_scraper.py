@@ -1,10 +1,10 @@
 import sys
 import time
 
+sys.path.append('/home/ubuntu/mopub/server') # only needed for testing
 from ad_network_reports.scrapers.network_scrape_record import \
         NetworkScrapeRecord
 from ad_network_reports.scrapers.scraper import Scraper, NetworkConfidential
-sys.path.append('../..') # only needed for testing
 from BeautifulSoup import BeautifulSoup
 from datetime import date, datetime
 from pyvirtualdisplay import Display
@@ -49,7 +49,7 @@ class IAdScraper(Scraper):
         account_password.send_keys(self.password)
         self.browser.find_element_by_name('appleConnectForm').submit()
         # There are some redirects and shit that happens, chill out for a bit
-        time.sleep(10)
+        time.sleep(3)
 
         if self.browser.title == self.LOGIN_TITLE:
             raise Exception(self.browser.find_element_by_css_selector(

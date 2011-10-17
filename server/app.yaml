@@ -1,5 +1,4 @@
 application: mopub-experimental
-# application: mopub-experimental
 version: 38
 
 runtime: python

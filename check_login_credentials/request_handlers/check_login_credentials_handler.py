@@ -21,11 +21,13 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
         login_credentials.client_key = self.get_argument('_client_key', None)
         login_credentials.publisher_ids = self.get_argument('_publisher_ids',
                 None)
+        login_credentials.adunits = self.get_argument('_adunits', None)
 
         try:
-            scraper = ad_networks[login_credentials.ad_network_name]. \
+            scraper = AD_NETWORKS[login_credentials.ad_network_name]. \
                     constructor(login_credentials)
             scraper.test_login_info()
-        except Exception:
+        except Exception as e:
+            logging.error(e)
             raise tornado.web.HTTPError(401)
         self.write('')

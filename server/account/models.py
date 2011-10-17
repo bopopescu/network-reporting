@@ -68,7 +68,7 @@ class NetworkConfig(db.Model):
     millennial_pub_id = db.StringProperty()
     mobfox_pub_id = db.StringProperty()
 
-    rev_share = db.FloatProperty(default=.90)
+    rev_share = db.FloatProperty(default=.80)
     price_floor = db.FloatProperty(default=.25) # dollars CPM
 
 

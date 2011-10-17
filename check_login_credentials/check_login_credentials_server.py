@@ -1,13 +1,13 @@
 #!/usr/bin/python
 
 import sys
-sys.path.append('/home/ubuntu/mopub_experimental/check_login_credentials/'
-        'request_handlers')
+sys.path.append('/home/ubuntu/mopub/check_login_credentials/')
+sys.path.append('/home/ubuntu/mopub/server/')
 
 import tornado.ioloop
 import tornado.web
 
-from check_login_credentials_handler import CheckLoginCredentialsHandler
+from request_handlers.check_login_credentials_handler import CheckLoginCredentialsHandler
 
 application = tornado.web.Application([
         (r'/(.*)', CheckLoginCredentialsHandler),

@@ -1,10 +1,10 @@
 import logging
 import os, sys
 
-EC2 = False
+EC2 = True
 
 if EC2:
-    sys.path.append('/home/ubuntu/mopub_experimental/server')
+    sys.path.append('/home/ubuntu/mopub/server')
     sys.path.append('/home/ubuntu/google_appengine')
     sys.path.append('/home/ubuntu/google_appengine/lib/antlr3')
     sys.path.append('/home/ubuntu/google_appengine/lib/django_1_2')
@@ -16,8 +16,7 @@ else:
     # Assumes it is being called from ./run_tests.sh from server dir
     sys.path.append(os.environ['PWD'])
 
-from appengine_django import InstallAppengineHelperForDjango
-InstallAppengineHelperForDjango()
+import common.utils.test.setup
 
 from google.appengine.api import mail
 
@@ -44,8 +43,8 @@ def send_stats_mail(test_date, email_body):
     table.
     """
     mail.send_mail(sender='olp@mopub.com',
-                   to='report-monitoring@mopub.com',
-                   cc='tiago@mopub.com',
+                   #to='report-monitoring@mopub.com',
+                   to='tiago@mopub.com',
                    subject=("Ad Network Scrape Stats for %s" %
                        test_date.strftime("%m/%d/%y")),
                    body=("Learn more at http://mopub-experimental.appspot.com/"

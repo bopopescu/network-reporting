@@ -1,7 +1,8 @@
 #!/usr/bin/python
 
 import sys
-sys.path.append('/home/ubuntu/mopub_experimental/check_login_credentials/request_handlers')
+sys.path.append('/home/ubuntu/mopub_experimental/check_login_credentials/'
+        'request_handlers')
 
 import tornado.ioloop
 import tornado.web

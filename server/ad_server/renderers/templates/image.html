@@ -11,7 +11,9 @@
           }
     </style>
     {# TODO: WTF Android centering is screwed up with the 'center' style #}
-    <div class="{% if os == 'ios' %}center{% endif %}">    
+    {# TODO: More centering woes, let's just get rid of it #}
+    {# <div class="{% if os == 'ios' %}center{% endif %}">     #}
+    <div>  
         <a href="{{creative.url|safe}}" target="_top"><img src="{{image_url}}" width="{{w}}" height="{{h}}"/></a>
     </div>
     {{ block.super }}

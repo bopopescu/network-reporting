@@ -1,21 +1,13 @@
 {% extends "account/base.html" %}
 {% load filters %}
-{% block pageTitle %}<h1>{% ifequal account.status 'step3' %}Step 3: Set up ad networks{% else %}Account{% endifequal %}</h1>{% endblock pageTitle %}
-{% block titleBarRight %}{% ifequal account.status 'step3' %}            <div class="stepProgress">
-              <span class="stepProgress-step">Step 1: Add app</span>
-              <span class="ui-icon ui-icon-arrow-1-e"></span>
-              <span class="stepProgress-step">Step 2: Integrate</span>
-              <span class="ui-icon ui-icon-arrow-1-e"></span>
-              <span class="stepProgress-step stepProgress-active">Step 3: Ad networks</span>
-              <span class="ui-icon ui-icon-arrow-1-e"></span>
-              <span class="stepProgress-step">Step 4: Ad campaigns</span>
-            </div>{% endifequal %}{% endblock titleBarRight %}
+{% block pageTitle %}<h1>Your Ad Networks</h1>{% endblock pageTitle %}
+
 
 {% block content %}
           <section id="account-section">
             <div class="content-main">
 {% ifequal status 'welcome' %}
-              <div class="alertMessage">
+              <div class="alert-message">
                 Now set up any ad networks that you would like to use to serve ads into your inventory.  You may need to set up an account with the network provider first, then enter in the settings below.
               </div>
 {% endifequal %}
@@ -308,103 +300,4 @@
                 </div>
               </form>
 
-             <h2 style="margin:0 0 0 0;">Basic Account Settings <span style="font-weight:normal;">- <a href="{% url settings_change %}">Edit</a></span></h2>
-
-              <fieldset id="appForm-details">
-
-              <dl class="formFields flat">
-                  <dt>
-                      Name:
-                  </dt>
-                  <dd>
-                      {{user.first_name}} {{user.last_name}}
-                  </dd>
-                  <dt>
-                      Company:
-                  </dt>
-                  <dd>
-                      {{user.company}}
-                  </dd>
-                  <dt>
-                      Title:
-                  </dt>
-                  <dd>
-                      {% ifequal user.title None %}<i>Not specified</i>{% else %}
-                        {{user.title}}
-                        {% endifequal %}
-                  </dd>
-                  <dt>
-                      Phone Number:
-                  </dt>
-                  <dd>
-                      {% ifequal user.phone None %}<i>Not specified</i>{% else %}
-                        {{user.phone}}
-                        {% endifequal %}
-                  </dd>
-                  <dt>
-                      Country:
-                  </dt>
-                  <dd>
-                      {% ifequal user.country None %}<i>Not specified</i>{% else %}
-                      {{user.country|country_code_to_name}}
-                      {% endifequal %}
-                  </dd>
-                  <dt>
-                      Traffic:
-                  </dt>
-                  <dd>
-                      {% ifequal account.traffic None %}Haven't launched ye{% endifequal %}
-                      {% ifequal account.traffic 0 %}Haven't launched yet{% endifequal %}
-                      {% ifequal account.traffic 1 %}1-10MM{% endifequal %}
-                      {% ifequal account.traffic 10 %}10-90MM{% endifequal %}
-                      {% ifequal account.traffic 100 %}90-200MM{% endifequal %}
-                      {% ifequal account.traffic 200 %}200MM+{% endifequal %}
-                  </dd>
-                  <dt>
-                      Mailing List:
-                  </dt>
-                  <dd>
-                      {% ifequal user.mailing_list 1 %}Yes{% endifequal %}
-                      {% ifequal user.mailing_list 0 %}No{% endifequal %}
-                  </dd>
-              </dl>
-              </fieldset>
-
-
-              <h2 style="margin:0 0 0 0;">Payment Information <span style="font-weight:normal;">- <a href="{% url payment_info_change %}">Edit</a></span></h2>
-
-              <fieldset id="appForm-details">
-
-              <dl class="formFields flat">
-                {% if account.paymentinfo %}
-                <h3> Tax Information </h3>
-                <dt> Business Name: </dt> <dd>{{account.paymentinfo.business_name}} </dd>
-                <dt> Country: </dt> <dd>{{account.paymentinfo.country|country_code_to_name}} </dd>
-                {% if account.paymentinfo.country == 'US' %}
-                  <dt> US Tax ID: </dt> <dd>{{account.paymentinfo.us_tax_id}} </dd>
-                {% else %}
-                  <dt> Local Tax ID: </dt> <dd>{{account.paymentinfo.local_tax_id}} </dd>
-                {% endif %}
-                <br /><br />
-                <h3> Payment Details </h3>
-                  {% if account.paymentinfo.uses_paypal %}
-                    <dt> Paypal Account:</dt> <dd> {{account.paymentinfo.paypal_email}} </dd>
-                  {% else %}
-                    <dt> Beneficiary Name: </dt> <dd>{{account.paymentinfo.beneficiary_name}} </dd>
-                    <dt> Bank Name: </dt> <dd>{{account.paymentinfo.bank_name}} </dd>
-                    <dt> Bank Address: </dt> <dd>{{account.paymentinfo.bank_address}} </dd>
-                    <dt> Account Number: </dt> <dd>{{account.paymentinfo.account_number}} </dd>
-                    {% if account.paymentinfo.country == 'US' %}
-                    <dt> ACH Number: </dt> <dd>{{account.paymentinfo.ach_routing_number}} </dd>
-                    {% else %}
-                    <dt> Bank SWIFT Code: </dt> <dd>{{account.paymentinfo.bank_swift_code}} </dd>
-                    {% endif %}
-                  {% endif %}
-                {% else %}
-                  <h3> You haven't supplied any payment information yet. </h3>
-                {% endif %}
-              </dl>
-              </fieldset>
-            </div>
-          </section>
 {% endblock %}

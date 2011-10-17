@@ -12,7 +12,8 @@ class ServerSide(object):
     network_name = 'Generic Server Side'
     SERVER_TIMEOUT = 1 # We time out after 2000 ms
     
-    def __init__(self, client_context, adunit, *args, **kwargs):
+    def __init__(self, client_context, adunit, *args, **kwargs):   
+        # TODO: adunit is redundant, included in client_context
         self.client_context = client_context
         self.adunit = adunit    
         self.rpc = urlfetch.create_rpc(self.SERVER_TIMEOUT)
@@ -93,7 +94,7 @@ class ServerSide(object):
         return self.client_context.user_agent
 
     def get_udid(self):
-        return self.client_context.raw_udid
+        return self.client_context.mopub_id
         
     @property
     def url(self):

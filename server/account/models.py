@@ -69,7 +69,7 @@ class NetworkConfig(db.Model):
     millennial_pub_id = db.StringProperty()
     mobfox_pub_id = db.StringProperty()
 
-    rev_share = db.FloatProperty(default=.90)
+    rev_share = db.FloatProperty(default=.80)
     price_floor = db.FloatProperty(default=.25) # dollars CPM
 
 
@@ -122,7 +122,8 @@ class Account(db.Model):
     millennial_pub_id = db.StringProperty()
     mobfox_pub_id = db.StringProperty()
 
-
+    # have they accepted the marketplace terms of service?
+    accepted_mpx_tos = db.BooleanProperty(default=False)
 
     def is_admin(self):
         return users.is_current_user_admin()
@@ -141,7 +142,7 @@ class PaymentInfo(db.Model):
     If 'paypal' is selected for payment preference, we only need their paypal email.
 
     us_tax_id and ach_routing_number are only required when country == 'US'
-    
+
     local_tax_id and bank_swift_code are only required when country != 'US'
     """
     country = db.StringProperty(choices=[country[0] for country in ISO_COUNTRIES])
@@ -160,3 +161,14 @@ class PaymentInfo(db.Model):
 
     def uses_paypal(self):
         return self.payment_preference == 'paypal'
+
+    def uses_wire(self):
+        return self.payment_preference == 'wire'
+
+
+class PaymentRecord(db.Model):
+    account = db.ReferenceProperty(Account, collection_name="payment_records")
+    amount = db.StringProperty()
+    month = db.IntegerProperty()
+    year = db.IntegerProperty()
+    status = db.StringProperty()

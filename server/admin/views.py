@@ -26,6 +26,7 @@ from advertiser.forms import CampaignForm, AdGroupForm
 from admin.models import AdminPage
 from publisher.models import Site, Account, App
 from reporting.models import SiteStats,StatsModel
+from reports.models import Report
 from account.query_managers import AccountQueryManager, UserQueryManager
 from publisher.query_managers import AppQueryManager
 from reporting.query_managers import StatsModelQueryManager
@@ -152,7 +153,20 @@ def dashboard_prep(request, *args, **kwargs):
     page.put()
     
     return HttpResponse("OK")
+
+def rep_timed_out(rep):
+    return not rep.data and rep.status == 'Pending' and (datetime.datetime.now() - rep.created_at).seconds > 7200
  
+@login_required
+def reports_dashboard(request, *args, **kwargs):
+    if users.is_current_user_admin():
+        reps = Report.all().order('-created_at').fetch(50)
+        rep_status = [(rep, rep.status) if not rep_timed_out(rep) else (rep, 'Timed Out') for rep in reps]
+        render_params = dict(status = rep_status)
+        return render_to_response(request, 'admin/reports.html', render_params)
+    else:
+        return Http404()
+
 @login_required
 def dashboard(request, *args, **kwargs):
     offline = request.GET.get('offline',False)

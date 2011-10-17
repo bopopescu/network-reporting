@@ -24,7 +24,7 @@ from boto.sqs.connection import SQSConnection
 from boto.sqs.message import Message
 
 
-REPORT_MSG = '%s|%s|%s|%s|%s|%s|%s'
+REPORT_MSG = '%s|%s|%s|%s|%s|%s|%s|%s'
 REP_Q = 'report_queue'
 AWS_ACCT = 345840704531
 SQS_ENDPOINT = 'queue.amazonaws.com'
@@ -42,7 +42,7 @@ def fire_report_sqs(data):
     # Don't send shit to EMR if we're not on prod
     if not IS_PROD:
         return
-    msg_data = REPORT_MSG % (data.d1, data.d2, data.d3, data.start.strftime('%y%m%d'), data.end.strftime('%y%m%d'), str(data.key()), str(data.account.key()))
+    msg_data = REPORT_MSG % (data.d1, data.d2, data.d3, data.start.strftime('%y%m%d'), data.end.strftime('%y%m%d'), str(data.key()), str(data.account.key()), time.time())
 
 
     m = Message()

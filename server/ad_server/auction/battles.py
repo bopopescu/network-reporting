@@ -46,7 +46,9 @@ class Battle(object):
         creative_ecpm_dict = optimizer.get_ecpms(self.adunit_context,
                                                  creatives,
                                                  sampling_fraction=0.0)
-                                                     
+        
+        for creative in creatives:
+            creative._battle_ecpm = creative_ecpm_dict[creative]                                             
 
         # We make a comparator function for sorting by ecpm
         def calc_ecpm_with_noise(creative):             
@@ -54,7 +56,7 @@ class Battle(object):
             noise = random.random() * 10 ** -9      
 
             # Make this negative so high ecpm comes first, add noise        
-            return -creative_ecpm_dict[creative] + noise
+            return -creative._battle_ecpm + noise
 
         # Sort using the ecpm as the key.
         return sorted(creatives, key=calc_ecpm_with_noise)
@@ -209,7 +211,6 @@ class PromoBattle(Battle):
     starting_message = "Beginning promotional campaigns..."
     campaign_type = "promo"
 
-
 class MarketplaceBattle(Battle):
     """ Queries out to the marketplace """
 
@@ -247,15 +248,19 @@ class MarketplaceBattle(Battle):
             trace_logging.info('MPX RESPONES CODE:%s'%fetched.status_code)
             if fetched.status_code == 200:
                 creative = self._process_marketplace_response(fetched.content, creative)
-                if creative:
-                    return super(MarketplaceBattle, self)._process_winner(creative)
+                if creative:  
+                    # Do not ever add marketplace adgroups to the excluded_adgroup_keys
+                    return creative
                 return False
 
         except urlfetch.DownloadError, e:
             # There was no valid bid
             return False
 
-    def _process_marketplace_response(self, content, creative):
+    def _process_marketplace_response(self, content, creative):  
+        """ NOTE: pub_rev is CPM this means that the pub is paid pub_rev / 1000  
+            Further, the bid_strategy for the adgroup is always "cpm"
+        """
         marketplace_response_dict = simplejson.loads(content)
         trace_logging.info('MPX REPSONSE:%s'%marketplace_response_dict)
         # With valid data
@@ -265,31 +270,43 @@ class MarketplaceBattle(Battle):
             pub_rev = marketplace_response_dict['revenue']
             # Should really be the pub's cut
             # Do we need to do anything with the bid info?
-            trace_logging.info('\n\nMPX Charge: %s\nMPX HTML: %s\n' % (pub_rev, creative.html_data))
+            trace_logging.info('\n\nMPX Charge: %s\nMPX HTML: %s\n' % (pub_rev, creative.html_data))     
+            
+            # Attach bid to adgroup - see docstring for details on pub_rev and bid
             creative.adgroup.bid = pub_rev
-            return creative
-
+            return creative     
+    
 class NetworkBattle(Battle):
     """ Fans out to each of the networks """
 
     starting_message = "Beginning network campaigns..."
     campaign_type = "network"
+       
+    def __init__(self, client_context, adunit_context, min_cpm=0.0):  
+        """ Network Battles can take an additional """
+        self.client_context = client_context
+        self.adunit_context = adunit_context     
+        self.min_cpm = min_cpm
+    
 
     def _process_winner(self, creative):
-        """ Fan out to a network and see if it can fill the adunit. """
+        """ Fan out to a network and see if it can fill the adunit. """      
+        
+        # If the ecpm for the network is less than the min_cpm, drop it
+        if creative._battle_ecpm < self.min_cpm:
+            return False
+    
+        # TODO: refactor logging
+        stats_accumulator.log(None,
+                       event=stats_accumulator.REQ_EVENT,
+                       adunit=self.client_context.adunit,
+                       creative=creative,
+                       user_agent=self.client_context.user_agent,
+                       udid=self.client_context.raw_udid,
+                       country_code=self.client_context.country_code)
+        
         # If the network is a native network, then it does not require an rpc
-
         if not creative.ServerSide:
-
-            # TODO: refactor logging
-            stats_accumulator.log(None,
-                           event=stats_accumulator.REQ_EVENT,
-                           adunit=self.client_context.adunit,
-                           creative=creative,
-                           user_agent=self.client_context.user_agent,
-                           udid=self.client_context.raw_udid,
-                           country_code=self.client_context.country_code)
-
             return super(NetworkBattle, self)._process_winner(creative)
 
         # All non-native networks need rpcs
@@ -311,8 +328,4 @@ class NetworkBattle(Battle):
 class BackfillPromoBattle(PromoBattle):
     starting_message = "Beginning backfill promotional campaigns..."
     campaign_type = "backfill_promo"
-
-
-class BackfillMarketplaceBattle(MarketplaceBattle):
-    starting_message = "Beginning backfill marketplace campaigns..."
-    campaign_type = "backfill_marketplace"
+                                      

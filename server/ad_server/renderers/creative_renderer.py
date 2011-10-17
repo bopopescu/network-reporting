@@ -110,11 +110,11 @@ class BaseCreativeRenderer(object):
         method it will generally be necessary to still call this base method.
         """
         ad_type = self._get_ad_type()
-        if ad_type in ['html','custom'] or not self.adunit.is_fullscreen():
-            self.header_context.ad_type = ad_type
-        else:
+        if self.adunit.is_fullscreen():
             self.header_context.ad_type = "interstitial"
             self.header_context.full_ad_type = ad_type
+        else:
+            self.header_context.ad_type = ad_type
         
         self.header_context.click_through = str(self.click_url)
         # add creative ID for testing (also prevents that one 
@@ -127,6 +127,13 @@ class BaseCreativeRenderer(object):
           and not self.adunit.is_fullscreen():
             self.header_context.width = str(self.creative.width)
             self.header_context.height = str(self.creative.height)
+    
+        # lock orientation for fullscreen
+        if self.adunit.is_fullscreen():
+            if self.adunit.landscape:
+                self.header_context.orientation = 'l'
+            else:
+                self.header_context.orientation = 'p'
     
         # adds network info to the header_context
 
@@ -165,48 +172,6 @@ class BaseCreativeRenderer(object):
                                 % str(self.creative.key()))
         trace_logging.warning("rendering: %s" % self.creative.ad_type)
 
-
-########### HELPER FUNCTIONS ############
-
-# def _make_format_tuple_and_set_orientation(adunit,
-#                                            creative,
-#                                            header_context):
-#     """ Sets orientation appropriately. REFACTOR clean this up"""
-# 
-#     format = adunit.format.split('x')
-#     if len(format) < 2:
-#         ####################################
-#         # HACK FOR TUNEWIKI
-#         # TODO: We should make this smarter
-#         # if the adtype is not html (e.g. image)
-#         # then we set the orientation to only landscape
-#         # and the format to 480x320
-#         ####################################
-#         if not creative.ad_type == "html":
-#             if adunit.landscape:
-#                 header_context.add_header("X-Orientation","l")
-#                 format = ("480","320")
-#             else:
-#                 header_context.add_header("X-Orientation","p")
-#                 format = (320,480)    
-#                                         
-#         elif not creative.adgroup.network_type \
-#           or creative.adgroup.network_type in FULL_NETWORKS:
-#             format = (320,480)
-#         elif creative.adgroup.network_type:
-#             #TODO this should be a littttleee bit smarter. 
-#             # This is basically saying default
-#             #to 300x250 if the adunit is a full (of some kind) 
-#             #and the creative is from
-#             #an ad network that doesn't serve fulls
-#             if adunit.landscape:
-#                 header_context.add_header("X-Orientation","l")
-#             else:
-#                 header_context.add_header("X-Orientation","p")
-#             format = (300, 250)
-#             
-#     return format
-
 def _build_fail_url(original_url, on_fail_exclude_adgroups):
     """ Remove all the old &exclude= substrings and replace them with 
     our new ones 
@@ -216,6 +181,7 @@ def _build_fail_url(original_url, on_fail_exclude_adgroups):
     if not on_fail_exclude_adgroups:
         return clean_url
     else:
-        return clean_url + '&exclude=' + '&exclude='.join(on_fail_exclude_adgroups)
+        return clean_url + '&exclude=' + \
+                '&exclude='.join(on_fail_exclude_adgroups)
  
 

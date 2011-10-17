@@ -77,34 +77,15 @@ def clone_entity(ent, **extra_args):
 
 def make_mopub_id(raw_udid):
     """
-    Converts a raw_udid into a mopub_id
-    udid from the device comes as 
-    udid=md5:asdflkjbaljsadflkjsdf (new clients) or
-    udid=pqesdlsdfoqeld (old clients)
-    For the newer clients we can just pass over the hashed string
-    after "md5:"
-
-    For older clients we must md5 hash the udid with salt 
-    "mopub-" prepended.
-
-    returns hashed_udid
+    we get one of 4 things
+    RAW_UDID
+    md5:MD5(mopub-<RAW_UDID>)
+    sha1:SHA1(mopub-<RAW_UDID>)
+    sha:SHA(<RAW_UDID>)
+    
+    moput_id is the part after the semicolon
     """                      
-    raw_udid_parts = raw_udid.split('md5:')
-
-    # if has md5: then just pull out value
-    if len(raw_udid_parts) == 2:
-        # get the part after 'md5:'
-        hashed_udid = raw_udid_parts[-1]
-    # else salt the udid and hash it    
-    else:
-        m = hashlib.md5()
-        m.update('mopub-')
-        m.update(raw_udid_parts[0])
-        hashed_udid = m.hexdigest().upper() 
-        
-    # We call this hashed UDID the mopub_id
-    return hashed_udid
-
+    return raw_udid.split(':')[-1]
 
 def build_key(template, template_dict):
     """ I got tired of not knowing what's what when building a key.

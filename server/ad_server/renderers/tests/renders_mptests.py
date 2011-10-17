@@ -87,7 +87,7 @@ class RenderingTestBase(object):
                                          "test_on_fail_adgroup2"]
                                          
         self.ios_client_context = ClientContext(user_agent='iphone adfsdf')
-        self.android_client_context = ClientContext(user_agent='iphone adfsdf')
+        self.android_client_context = ClientContext(user_agent='android adfsdf')
 
         # self.request = fake_request(self.adunit.key())
         adunit_id = str(self.adunit.key())

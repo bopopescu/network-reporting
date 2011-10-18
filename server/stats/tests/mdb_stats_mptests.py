@@ -17,13 +17,16 @@ from publisher.models import *
 from reporting.models import StatsModel
 
 from common.utils import simplejson
-from common.utils.test.test_utils import debug_key_name, debug_helper, add_lists
+from common.utils.test.test_utils import debug_key_name, debug_helper, add_lists, clear_datastore
 from stats.views import _create_mdb_json, _package_mdb_post_data
 AdUnit = Site
 
 
 
 def mdb_handler_endpoint_mptest():    
+    # start off fresh
+    clear_datastore()
+    
     # create and put model objects 
     user = users.User(email="test@example.com")
     account = Account(key_name="account",user=user).put()
@@ -400,6 +403,9 @@ def mdb_handler_endpoint_mptest():
 
     assert_equals(len(expected_mdb_post_list), 0)   # assert all dicts were found
 
+    # clear local datastore
+    clear_datastore()
+        
 
 def package_mdb_post_data_bad_key_mptest():
     mdb_dict_with_bad_key = {'adunit:creative:date_hour:crap': {}}  # has extra part

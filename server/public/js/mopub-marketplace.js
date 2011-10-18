@@ -14,13 +14,10 @@
             clicks: 0,
             ctr: 0,
             price_floor: 0
-        },
-        initialize: function() {
-            console.log('adunit initialized');
         }
     });
 
-    var AdGroup = Backbone.Collection.extend({
+    var AdUnitList = Backbone.Collection.extend({
         model: AdUnit
     });
 
@@ -37,8 +34,17 @@
     });
 
     var Inventory = Backbone.Collection.extend({
-        model: App
+        model: App,
+        url: "/api/app/",
+        parse: function(response) {
+            return response.apps;
+        }
     });
+
+    window.AdUnit = AdUnit;
+    window.AdUnitList = AdUnitList;
+    window.App = App;
+    window.Inventory = Inventory;
 
     $(document).ready(function() {
 
@@ -59,6 +65,17 @@
             });
 
         });
+
+        var inventory = new Inventory();
+        inventory.fetch({
+            success: logInventory
+        });
+        function logInventory (inventory, options) {
+            inventory.each(function (app) {
+                console.log(app.get('name'));
+                window.guy = app;
+            });
+        }
     });
 
 })(this.jQuery, this.Backbone);

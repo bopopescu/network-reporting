@@ -4,6 +4,10 @@ from google.appengine.api import users
 from account.models import Account, NetworkConfig
 from advertiser.models import Creative
 
+import datetime
+import time
+import logging
+
 #
 # A mobile app, which can have multiple Sites on which ads can be displayed
 #
@@ -93,6 +97,8 @@ class App(db.Model):
     def owner_name(self):
         return None
 
+    def toJSON(self):
+        return to_dict(self, ignore = ['icon', 'account', 'network_config'])
 
 class Site(db.Model):
     DEVICE_FORMAT_CHOICES = (
@@ -156,6 +162,10 @@ class Site(db.Model):
     t = db.DateTimeProperty(auto_now_add=True)
 
     network_config = db.ReferenceProperty(NetworkConfig, collection_name="adunits")
+
+    def toJSON(self):
+        d = to_dict(self, ignore = ['account', 'network_config', 'app_key'])
+        return d
 
     def is_fullscreen(self):
         return 'full' in self.format
@@ -230,8 +240,43 @@ class Site(db.Model):
         if account_level_id:
             return account_level_id
 
+
 ###############
 # rename Site #
 ###############
 
 AdUnit = Site
+
+
+# Serialization
+
+SIMPLE_TYPES = (int, long, float, bool, dict, basestring, list)
+
+def to_dict(model, ignore = None):
+    if ignore == None:
+        ignore = []
+
+    output = {}
+    output.update(id=str(model.key()))
+    properties = model.properties().iteritems()
+
+    for key, prop in properties:
+        value = getattr(model, key)
+        if key in ignore:
+            output[key] = '_ignored'
+        elif value is None or isinstance(value, SIMPLE_TYPES):
+            output[key] = value
+        elif isinstance(value, datetime.date):
+            # Convert date/datetime to ms-since-epoch ("new Date()").
+            ms = time.mktime(value.utctimetuple()) * 1000
+            ms += getattr(value, 'microseconds', 0) / 1000
+            output[key] = int(ms)
+        elif isinstance(value, db.GeoPt):
+            output[key] = {'lat': value.lat, 'lon': value.lon}
+        elif isinstance(value, db.Model):
+            output[key] = to_dict(value)
+        else:
+            output[key] = 'Could not encode'
+            #raise ValueError('cannot encode ' + repr(prop))
+
+    return output

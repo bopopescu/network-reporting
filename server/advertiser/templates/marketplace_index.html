@@ -117,8 +117,9 @@
 
                 {# App Revenue from Marketplace #}
                 <td>
+                  0
+                  <br />
                   --
-
                   <ul class="hidden adunits adunit-data-{{app.key}}">
                     {% for adunit in app.all_adunits %}
                       <li class="adunit" id="adunit-{{adunit.key}}">
@@ -130,6 +131,8 @@
 
                 {# App eCPM, (marketplace revenue/impressions)*1000 #}
                 <td>
+                  0
+                  <br />
                   --
 
                   <ul class="hidden adunits adunit-data-{{app.key}}">
@@ -143,6 +146,8 @@
 
                 {# Attempts #}
                 <td>
+                  0
+                  <br />
                   --
 
                   <ul class="hidden adunits adunit-data-{{app.key}}">
@@ -156,6 +161,8 @@
 
                 {# Impressions (filled by the marketplace) #}
                 <td>
+                  0
+                  <br />
                   --
 
                   <ul class="hidden adunits adunit-data-{{app.key}}">
@@ -169,6 +176,8 @@
 
                 {# Fill Rate (impressions/attempts) #}
                 <td>
+                  0
+                  <br />
                   --
 
                   <ul class="hidden adunits adunit-data-{{app.key}}">
@@ -182,6 +191,8 @@
 
                 {# Clicks #}
                 <td>
+                  0
+                  <br />
                   --
 
                   <ul class="hidden adunits adunit-data-{{app.key}}">
@@ -195,9 +206,9 @@
 
                 {# CTR (click through rate, clicks/impressions) #}
                 <td>
-                  --
-
+                  <span class="ctr_total">0</span>
                   <ul class="hidden adunits adunit-data-{{app.key}}">
+                    <br />
                     {% for adunit in app.all_adunits %}
                       <li class="adunit" id="adunit-{{adunit.key}}">
                         0
@@ -208,6 +219,8 @@
 
                 {# Price Floor #}
                 <td>
+                  0
+                  <br />
                   --
 
                   <ul class="hidden adunits adunit-data-{{app.key}}">

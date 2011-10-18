@@ -1169,23 +1169,12 @@ class MarketplaceIndexHandler(RequestHandler):
     def get(self):
 
         marketplace_campaign = CampaignQueryManager.get_marketplace(self.account)
-        for app in marketplace_campaign.account.app_set:
-            if app.icon:
-                app.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(app.icon)
-
 
         return render_to_response(self.request,
                                   "advertiser/marketplace_index.html",
-                                  {'marketplace': marketplace_campaign})
-
-    def post(self):
-        pass
-
-class MarketplaceAJAXOnOff(RequestHandler):
-    def get(self):
-        return render_to_response(self.request,
-                                  "",
-                                  {})
+                                  {
+                                      'marketplace': marketplace_campaign
+                                  })
 
     def post(self):
         pass

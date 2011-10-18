@@ -1,2 +1,0 @@
-from stats_handler import StatsHandler
-from stats_update_handler import StatsUpdateHandler

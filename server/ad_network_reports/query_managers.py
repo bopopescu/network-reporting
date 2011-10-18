@@ -16,8 +16,6 @@ if EC2:
 
 # import common.utils.test.setup
 
-from google.appengine.api import urlfetch
-from google.appengine.api.urlfetch import DownloadError
 from google.appengine.ext import db
 
 from account.models import NetworkConfig
@@ -31,8 +29,6 @@ class Stats(object):
     pass
 
 class AdNetworkReportQueryManager(CachedQueryManager):
-    TEST_LOGIN_CREDENTIALS_URL = ("http://checklogincredentials.mopub.com:8888")
-
     def __init__(self, account=None):
         self.account = account
 
@@ -165,26 +161,14 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                                         publisher_ids = publisher_ids,
                                         adunits = adunits)
 
-        logging.warning('Tornado WOOSH')
-        result = None
-        try:
-            result = urlfetch.fetch(url = self.TEST_LOGIN_CREDENTIALS_URL,
-                    payload = urllib.urlencode(login_info.__dict__), method =
-                    urlfetch.POST, deadline = 10)
-        except DownloadError:
-            logging.error("Server timeout occured when attempting to check ad "
-                          "network login info")
-        if result and result.status_code == 200:
-            login_info.put()
+        login_info.put()
 
-            # Create all the different AdNetworkAppMappers for all the
-            # applications on the ad network for the user and add them to the db
-            db.put([AdNetworkAppMapper(ad_network_name = ad_network_name,
-                publisher_id = publisher_id, ad_network_login = login_info,
-                application = app, send_email = send_email) for app,
-                publisher_id in apps_with_publisher_ids])
-        else:
-            return "Incorrect login information"
+        # Create all the different AdNetworkAppMappers for all the
+        # applications on the ad network for the user and add them to the db
+        db.put([AdNetworkAppMapper(ad_network_name = ad_network_name,
+            publisher_id = publisher_id, ad_network_login = login_info,
+            application = app, send_email = send_email) for app,
+            publisher_id in apps_with_publisher_ids])
 
 def get_login_credentials():
     """Return all AdNetworkLoginInfo entities ordered by account."""

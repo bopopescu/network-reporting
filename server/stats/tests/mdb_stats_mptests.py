@@ -18,12 +18,12 @@ from reporting.models import StatsModel
 
 from common.utils import simplejson
 from common.utils.test.test_utils import debug_key_name, debug_helper, add_lists
-from mopub_logging.views import _create_mdb_json, DEREF_CACHE
+from stats.views import _create_mdb_json, _package_mdb_post_data
 AdUnit = Site
 
 
 
-def mdb_handler_endpoints_mptest():    
+def mdb_handler_endpoint_mptest():    
     # create and put model objects 
     user = users.User(email="test@example.com")
     account = Account(key_name="account",user=user).put()
@@ -269,18 +269,156 @@ def mdb_handler_endpoints_mptest():
         print debug_key_name(k, id_dict), v
         actual_d[k] = [v['request_count'], v['attempt_count'], v['impression_count'], v['click_count'], v['conversion_count'], v['revenue']]
     
+    # verify length of mdb_dict
     assert_equals(len(actual_d), len(expected_d))
 
+    # verify content of mdb_dict
     for k in actual_d.keys():
         readable_key_name = debug_key_name(k, id_dict)
         debug_helper(readable_key_name, actual_d[k], expected_d[k])
         assert_equals(actual_d[k], expected_d[k])
         
+    # package mdb_dict into derefed post data for mongoDB update stats handler
+    has_err, err_msg, post_data = _package_mdb_post_data(mdb_dict)
+    assert_false(has_err)
+    assert(err_msg is None)
+    assert(post_data is not None)
+    
+    expected_mdb_post_list = []
+    expected_mdb_post_list.append({'adunit': adunit_id1,
+                                   'creative': creative_id1,
+                                   'date_hour': hour1.strftime('%y%m%d%H'),
+                                   'app': app_id,
+                                   'adgroup': adgroup_id,
+                                   'campaign': campaign_id,
+                                   'request_count': add_lists([a1_c1_h1_us, a1_c1_h1_gb])[0],
+                                   'attempt_count': add_lists([a1_c1_h1_us, a1_c1_h1_gb])[1],
+                                   'impression_count': add_lists([a1_c1_h1_us, a1_c1_h1_gb])[2],
+                                   'click_count': add_lists([a1_c1_h1_us, a1_c1_h1_gb])[3],
+                                   'conversion_count': add_lists([a1_c1_h1_us, a1_c1_h1_gb])[4],
+                                   'revenue': add_lists([a1_c1_h1_us, a1_c1_h1_gb])[5],
+                                  })
+    expected_mdb_post_list.append({'adunit': adunit_id1,
+                                 'creative': creative_id1,
+                                 'date_hour': hour2.strftime('%y%m%d%H'),
+                                 'app': app_id,
+                                 'adgroup': adgroup_id,
+                                 'campaign': campaign_id,
+                                 'request_count': add_lists([a1_c1_h2_us, a1_c1_h2_gb])[0],
+                                 'attempt_count': add_lists([a1_c1_h2_us, a1_c1_h2_gb])[1],
+                                 'impression_count': add_lists([a1_c1_h2_us, a1_c1_h2_gb])[2],
+                                 'click_count': add_lists([a1_c1_h2_us, a1_c1_h2_gb])[3],
+                                 'conversion_count': add_lists([a1_c1_h2_us, a1_c1_h2_gb])[4],
+                                 'revenue': add_lists([a1_c1_h2_us, a1_c1_h2_gb])[5],
+                                })
+    expected_mdb_post_list.append({'adunit': adunit_id1,
+                                   'creative': creative_id2,
+                                   'date_hour': hour1.strftime('%y%m%d%H'),
+                                   'app': app_id,
+                                   'adgroup': adgroup_id,
+                                   'campaign': campaign_id,
+                                   'request_count': add_lists([a1_c2_h1_us, a1_c2_h1_gb])[0],
+                                   'attempt_count': add_lists([a1_c2_h1_us, a1_c2_h1_gb])[1],
+                                   'impression_count': add_lists([a1_c2_h1_us, a1_c2_h1_gb])[2],
+                                   'click_count': add_lists([a1_c2_h1_us, a1_c2_h1_gb])[3],
+                                   'conversion_count': add_lists([a1_c2_h1_us, a1_c2_h1_gb])[4],
+                                   'revenue': add_lists([a1_c2_h1_us, a1_c2_h1_gb])[5],
+                                  })
+    expected_mdb_post_list.append({'adunit': adunit_id1,
+                                 'creative': creative_id2,
+                                 'date_hour': hour2.strftime('%y%m%d%H'),
+                                 'app': app_id,
+                                 'adgroup': adgroup_id,
+                                 'campaign': campaign_id,
+                                 'request_count': add_lists([a1_c2_h2_us, a1_c2_h2_gb])[0],
+                                 'attempt_count': add_lists([a1_c2_h2_us, a1_c2_h2_gb])[1],
+                                 'impression_count': add_lists([a1_c2_h2_us, a1_c2_h2_gb])[2],
+                                 'click_count': add_lists([a1_c2_h2_us, a1_c2_h2_gb])[3],
+                                 'conversion_count': add_lists([a1_c2_h2_us, a1_c2_h2_gb])[4],
+                                 'revenue': add_lists([a1_c2_h2_us, a1_c2_h2_gb])[5],
+                                })
+   
+    expected_mdb_post_list.append({'adunit': adunit_id2,
+                                   'creative': creative_id1,
+                                   'date_hour': hour1.strftime('%y%m%d%H'),
+                                   'app': app_id,
+                                   'adgroup': adgroup_id,
+                                   'campaign': campaign_id,
+                                   'request_count': add_lists([a2_c1_h1_us, a2_c1_h1_gb])[0],
+                                   'attempt_count': add_lists([a2_c1_h1_us, a2_c1_h1_gb])[1],
+                                   'impression_count': add_lists([a2_c1_h1_us, a2_c1_h1_gb])[2],
+                                   'click_count': add_lists([a2_c1_h1_us, a2_c1_h1_gb])[3],
+                                   'conversion_count': add_lists([a2_c1_h1_us, a2_c1_h1_gb])[4],
+                                   'revenue': add_lists([a2_c1_h1_us, a2_c1_h1_gb])[5],
+                                  })
+    expected_mdb_post_list.append({'adunit': adunit_id2,
+                                 'creative': creative_id1,
+                                 'date_hour': hour2.strftime('%y%m%d%H'),
+                                 'app': app_id,
+                                 'adgroup': adgroup_id,
+                                 'campaign': campaign_id,
+                                 'request_count': add_lists([a2_c1_h2_us, a2_c1_h2_gb])[0],
+                                 'attempt_count': add_lists([a2_c1_h2_us, a2_c1_h2_gb])[1],
+                                 'impression_count': add_lists([a2_c1_h2_us, a2_c1_h2_gb])[2],
+                                 'click_count': add_lists([a2_c1_h2_us, a2_c1_h2_gb])[3],
+                                 'conversion_count': add_lists([a2_c1_h2_us, a2_c1_h2_gb])[4],
+                                 'revenue': add_lists([a2_c1_h2_us, a2_c1_h2_gb])[5],
+                                })
+    expected_mdb_post_list.append({'adunit': adunit_id2,
+                                   'creative': creative_id2,
+                                   'date_hour': hour1.strftime('%y%m%d%H'),
+                                   'app': app_id,
+                                   'adgroup': adgroup_id,
+                                   'campaign': campaign_id,
+                                   'request_count': add_lists([a2_c2_h1_us, a2_c2_h1_gb])[0],
+                                   'attempt_count': add_lists([a2_c2_h1_us, a2_c2_h1_gb])[1],
+                                   'impression_count': add_lists([a2_c2_h1_us, a2_c2_h1_gb])[2],
+                                   'click_count': add_lists([a2_c2_h1_us, a2_c2_h1_gb])[3],
+                                   'conversion_count': add_lists([a2_c2_h1_us, a2_c2_h1_gb])[4],
+                                   'revenue': add_lists([a2_c2_h1_us, a2_c2_h1_gb])[5],
+                                  })
+    expected_mdb_post_list.append({'adunit': adunit_id2,
+                                 'creative': creative_id2,
+                                 'date_hour': hour2.strftime('%y%m%d%H'),
+                                 'app': app_id,
+                                 'adgroup': adgroup_id,
+                                 'campaign': campaign_id,
+                                 'request_count': add_lists([a2_c2_h2_us, a2_c2_h2_gb])[0],
+                                 'attempt_count': add_lists([a2_c2_h2_us, a2_c2_h2_gb])[1],
+                                 'impression_count': add_lists([a2_c2_h2_us, a2_c2_h2_gb])[2],
+                                 'click_count': add_lists([a2_c2_h2_us, a2_c2_h2_gb])[3],
+                                 'conversion_count': add_lists([a2_c2_h2_us, a2_c2_h2_gb])[4],
+                                 'revenue': add_lists([a2_c2_h2_us, a2_c2_h2_gb])[5],
+                                })
+    
+    mdb_post_list = simplejson.loads(post_data)
+    assert_equals(len(mdb_post_list), len(expected_mdb_post_list))
+    
+    for post_dict in mdb_post_list:
+        assert(post_dict in expected_mdb_post_list) # assert dict exists in expected list
+        expected_mdb_post_list.remove(post_dict)    # remove found dict in expected list to avoid dups
 
-    # # invalid parameters should return False    
-    # assert_false(stats_updater.update_model('blah', 'blah', a1_c1_hour2, date_hour=hour1))
-    # # adunit_id cannot be None
-    # assert_false(stats_updater.update_model(None, creative_id1, a1_c1_hour2, date_hour=hour1))
-    # # counts cannot be None
-    # assert_false(stats_updater.update_model(adunit_id1, creative_id1, None, date_hour=hour1))
+    assert_equals(len(expected_mdb_post_list), 0)   # assert all dicts were found
+
+
+def package_mdb_post_data_bad_key_mptest():
+    mdb_dict_with_bad_key = {'adunit:creative:date_hour:crap': {}}  # has extra part
+    has_err, err_msg, post_data = _package_mdb_post_data(mdb_dict_with_bad_key)
+    assert_true(has_err)
+    assert('Error parsing' in err_msg)
+    assert(post_data is None)
+
+    mdb_dict_with_bad_key = {'adunit:date_hour': {}}    # missing creative part
+    has_err, err_msg, post_data = _package_mdb_post_data(mdb_dict_with_bad_key)
+    assert_true(has_err)
+    assert('Error parsing' in err_msg)
+    assert(post_data is None)
+    
+
+def package_mdb_post_data_none_deref_mptest():
+    mdb_dict_with_invalid_ids = {'adunit:creative:date_hour': {}}  # fake id's, cannot be derefed
+    has_err, err_msg, post_data = _package_mdb_post_data(mdb_dict_with_invalid_ids)
+    assert_true(has_err)
+    assert('None derefed' in err_msg)
+    assert(post_data is None)
     

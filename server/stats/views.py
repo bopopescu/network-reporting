@@ -152,7 +152,47 @@ def _create_mdb_json(stats_to_put):
     return simplejson.dumps(json_d)
     
 
-# returns [app_str]
+# takes in dict form of mdb_json from _create_mdb_json
+# returns error flag, error msg (if error flag is True), and list of dicts of derefed data in string json form (if error flag is False)
+def _package_mdb_post_data(mdb_dict):
+    mdb_post_list = []
+
+    # key format -> adunit:creative:date_hour
+    # value format -> {'request_count':int, 'attempt_count':int, 'impression_count':int, 'click_count':int, 'conversion_count':int, 'revenue':float}
+    for k, v in mdb_dict.iteritems():
+        parts = k.split(':')
+        if len(parts) != 3:
+            err_msg = 'Error parsing %s -- expecting format adunit:creative:date_hour' % k
+            return True, err_msg, None
+            
+        [adunit, creative, date_hour] = parts
+        [app] = _deref_adunit(adunit) or [None]
+        [adgroup, campaign] = _deref_creative(creative) or [None, None]
+        
+        if None not in [app, adgroup, campaign]:
+            post_dict = {'adunit': adunit,
+                         'app': app,
+                         'creative': creative,
+                         'adgroup': adgroup,
+                         'campaign': campaign,
+                         'date_hour': date_hour,
+                         'request_count': v['request_count'],
+                         'attempt_count': v['attempt_count'],
+                         'impression_count': v['impression_count'],
+                         'click_count': v['click_count'],
+                         'conversion_count': v['conversion_count'],
+                         'revenue': v['revenue']}
+            mdb_post_list.append(post_dict)
+        else:
+            err_msg = 'None derefed for key_tuple %s: app=%s, adgroup=%s, campaign=%s' % (k, app, adgroup, campaign)
+            return True, err_msg, None
+                        
+    # post the list of dicts to MongoDB
+    post_data = simplejson.dumps(mdb_post_list)
+    return False, None, post_data
+
+
+# returns [app_str] or None
 def _deref_adunit(adunit_str):
     if adunit_str in DEREF_CACHE:
         logging.info('found adunit in cache')
@@ -172,7 +212,7 @@ def _deref_adunit(adunit_str):
         return None
     
 
-# returns [adgroup_str, campaign_str]
+# returns [adgroup_str, campaign_str] or None
 def _deref_creative(creative_str):
     if creative_str in DEREF_CACHE:
         logging.info('found creative in cache')        
@@ -195,7 +235,7 @@ def _deref_creative(creative_str):
         return None
 
 
-# returns [campaign_str]
+# returns [campaign_str] or None
 def _deref_adgroup(adgroup_str):
     if adgroup_str in DEREF_CACHE:
         logging.info('found adgroup in cache')        
@@ -583,46 +623,15 @@ class ServeLogHandler(blobstore_handlers.BlobstoreDownloadHandler):
         
 class MongoUpdateStatsHandler(webapp.RequestHandler):
     def post(self):
-        mdb_post_list = []
-        post_body = simplejson.loads(self.request.body)
-        logging.info('POST_BODY: %s' % post_body)
-        
-        # key format -> adunit:creative:date_hour
-        # value format -> {'request_count':int, 'attempt_count':int, 'impression_count':int, 'click_count':int, 'conversion_count':int, 'revenue':float}
-        for k, v in post_body.iteritems():
-            parts = k.split(':')
-            if len(parts) != 3:
-                err_msg = 'Error parsing %s -- expecting format adunit:creative:date_hour' % k
-                logging.error(err_msg)
-                #respond immediately without posting any data to MongoDB
-                self.response.out.write(err_msg)
+        mdb_dict = simplejson.loads(self.request.body)
+        logging.info('POST_BODY: %s' % mdb_dict)
+
+        has_err, err_msg, post_data = _package_mdb_post_data(mdb_dict)
+        if has_err:
+            logging.error(err_msg)
+            #respond immediately without posting any data to MongoDB
+            self.response.out.write(err_msg)
                 
-            [adunit, creative, date_hour] = parts
-            [app] = _deref_adunit(adunit)
-            [adgroup, campaign] = _deref_creative(creative) if creative else ['', '']
-            
-            if None not in [app, adgroup, campaign]:
-                post_dict = {'adunit': adunit,
-                             'app': app,
-                             'creative': creative,
-                             'adgroup': adgroup,
-                             'campaign': campaign,
-                             'date_hour': date_hour,
-                             'request_count': v['request_count'],
-                             'attempt_count': v['attempt_count'],
-                             'impression_count': v['impression_count'],
-                             'click_count': v['click_count'],
-                             'conversion_count': v['conversion_count'],
-                             'revenue': v['revenue']}
-                mdb_post_list.append(post_dict)
-            else:
-                err_msg = 'None derefed for key_tuple %s: app=%s, adgroup=%s, campaign=%s' % (k, app, adgroup, campaign)
-                logging.error(err_msg)
-                #respond immediately without posting any data to MongoDB
-                self.response.out.write(err_msg)
-                
-        # post the list of dicts to MongoDB
-        post_data = simplejson.dumps(mdb_post_list)
         logging.info('POST TO MDB: %s' % post_data)
         post_url = MDB_STATS_UPDATER_IP + MDB_STATS_UPDATER_HANDLER_PATH # ex: http://mongostats.mopub.com/update
         post_request = urllib2.Request(post_url, post_data)
@@ -636,6 +645,7 @@ class MongoUpdateStatsHandler(webapp.RequestHandler):
         else:   # failed    
             logging.error(handler_response)        
         self.response.out.write(handler_response)
+
 
                 
 application = webapp.WSGIApplication([('/_ah/queue/bulk-log-processor', LogTaskHandler),

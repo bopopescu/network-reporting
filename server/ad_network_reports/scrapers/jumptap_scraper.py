@@ -39,7 +39,6 @@ class JumpTapScraper(Scraper):
         response = urllib2.urlopen(req)
 
         headers = response.readline().split(',')
-        print headers
 
         revenue_index = headers.index('Net Revenue$')
         request_index = headers.index('Requests')
@@ -53,7 +52,6 @@ class JumpTapScraper(Scraper):
         # the dict is the app
         scrape_records = {}
         for line in response:
-            print line
             vals = line.split(',')
             if vals[0] != 'Totals' and vals[adunit_index] in self.adunits or \
                     not self.adunits:

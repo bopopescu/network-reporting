@@ -123,6 +123,10 @@ class Account(db.Model):
 
     # have they accepted the marketplace terms of service?
     accepted_mpx_tos = db.BooleanProperty(default=False)
+    
+    # use MongoDB for realtime stats
+    # ex: Outblaze and Mobipeak have too many apps for GAE realtime stats to handle
+    use_mongodb_stats = db.BooleanProperty(default=False)
 
     def is_admin(self):
         return users.is_current_user_admin()

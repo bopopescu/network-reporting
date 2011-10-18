@@ -417,17 +417,24 @@ class LogTaskHandler(webapp.RequestHandler):
           #     except Exception, e:
           #         logging.error("MAIL ERROR: %s",e)
       
-      
-          # post to MDB servers
-          mdb_json = _create_mdb_json(stats_to_put)
-          try:
-              taskqueue.add(name='mdb-'+task_name,
-                            queue_name=queue_name,
-                            method='post',
-                            url='/mdb/update_stats',
-                            payload=mdb_json)
-          except taskqueue.TaskAlreadyExistsError:
-              logging.info('task %s already exists' % ('mdb-'+task_name))
+          # retrieve account object from cache if possible
+          if account_name in DEREF_CACHE:
+              account = DEREF_CACHE[account_name]
+          else:
+              account = Account.get(account_name)
+              DEREF_CACHE[account_name] = account
+          
+          # post to MDB servers if account is using MongoDB for realtime stats
+          if account and account.use_mongodb_stats:
+              mdb_json = _create_mdb_json(stats_to_put)
+              try:
+                  taskqueue.add(name='mdb-'+task_name,
+                                queue_name=queue_name,
+                                method='post',
+                                url='/mdb/update_stats',
+                                payload=mdb_json)
+              except taskqueue.TaskAlreadyExistsError:
+                  logging.info('task %s already exists' % ('mdb-'+task_name))
 
 
           # traditional put to GAE datastore
@@ -444,7 +451,7 @@ class LogTaskHandler(webapp.RequestHandler):
               total_stats = query_manager.all_stats_deltas
               number_of_stats = len(total_stats)
               max_countries = max([len(stat.get_countries()) for stat in total_stats])
-              account = Account.get(account_name)
+              # account = Account.get(account_name)
               if account:
                   user_email = account.mpuser.email
               else:

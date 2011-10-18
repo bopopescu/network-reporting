@@ -235,9 +235,7 @@ class MarketplaceBattle(Battle):
     campaign_type = "marketplace"
     
     def __init__(self, client_context, adunit_context, proxy_bids=None):  
-        """ Network Battles can take an additional """
-        self.client_context = client_context
-        self.adunit_context = adunit_context     
+        """ Marketplace Battles can take in proxy_bids """
         self.proxy_bids = proxy_bids or []
         super(MarketplaceBattle, self).__init__(client_context, adunit_context)
     
@@ -315,9 +313,7 @@ class NetworkBattle(Battle):
     campaign_type = "network"
        
     def __init__(self, client_context, adunit_context, min_cpm=0.0):  
-        """ Network Battles can take an additional """
-        self.client_context = client_context
-        self.adunit_context = adunit_context     
+        """ Network Battles can take an additional parameter"""
         self.min_cpm = min_cpm
 
         # cache so we don't calculate this more than once

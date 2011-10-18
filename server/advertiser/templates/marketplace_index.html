@@ -1,13 +1,169 @@
 {% extends "base.html" %}
 {% load filters %}
-{% block pageTitle %}<h1>Marketplace</h1>{% endblock pageTitle %}
+
+{% block extraScripts %}
+<script type="text/javascript" src="/js/mopub-marketplace.js"></script>
+{% endblock extraScripts %}
+
+{% block pageTitle %}
+  <h1>Marketplace</h1>
+{% endblock pageTitle %}
+
 {% block navLinks %}
-<li><a href="{% url publisher_index %}">Dashboard</a></li>
-<li><a href="{% url advertiser_campaign %}">Campaigns</a></li>
-<li class="active"><a href="{% url marketplace_index %}">Marketplace</a></li>
-<li><a href="{% url reports_index %}">Reports</a></li>
+  <li><a href="{% url publisher_index %}">Dashboard</a></li>
+  <li><a href="{% url advertiser_campaign %}">Campaigns</a></li>
+  <li class="active"><a href="{% url marketplace_index %}">Marketplace</a></li>
+  <li><a href="{% url reports_index %}">Reports</a></li>
 {% endblock navLinks %}
 
 
 {% block messageCenter %} {% endblock messageCenter %}
 {% block dateButtons %} {% endblock dateButtons %}
+
+
+{% block content %}
+
+  <div class="alert-message block-message clearfix">
+    <a href="#" class="close"> x </a>
+    We've just launched MoPub Marketplace, our state of the art real-time bidding exchange.
+    Flip the On/Off switch to get started,
+    or take a look at our <a href="{% url mpx_info %}">information page</a> if you want to know more about how it works.
+    <br />
+    <div class="lightswitch">
+      <div class="switch on"></div>
+    </div>
+    <a class="btn start icon right" href="{% url mpx_info %}">Get Started</a>
+  </div>
+
+
+  <ul class="tabs">
+    <li class="active"> <a href="#performance"> Performance </a> </li>
+    <li> <a href="#controls"> Creative Controls </a> </li>
+    <li> <a href="#settings"> Settings </a> </li>
+  </ul>
+
+
+  <div class="active tab-section" id="performance">
+
+    {% if marketplace %}
+
+      <div class="rollup fig3">
+        <div class="data-figure">
+          <div class="figure">
+            0
+          </div>
+          <div class="label">
+            Impressions
+          </div>
+        </div>
+        <div class="data-figure">
+          <div class="figure">
+            0
+          </div>
+          <div class="label">
+            Clicks
+          </div>
+        </div>
+          <div class="data-figure">
+
+          <div class="figure">
+            $0.00
+          </div>
+          <div class="label">
+            Revenue
+          </div>
+        </div>
+      </div>
+
+      <div id="marketplace_info">
+        <table class="zebra-striped simpletable">
+
+          <thead>
+            <th>App</th>
+            <th>Revenue</th>
+            <th>eCPM</th>
+            <th>Attempts</th>
+            <th>Impressions</th>
+            <th>Fill Rate</th>
+            <th>Clicks</th>
+            <th>CTR</th>
+            <th>Price Floor</th>
+          </thead>
+
+          <tbody>
+            {% for app in marketplace.account.app_set %}
+              <tr>
+
+                {# App Icon, Name, and Type #}
+                <td>
+                  <a href="{% url publisher_app_show app_key=app.key %}">{{app.name}}</a>
+                  <span class="muted unbold">
+                    ({% ifequal app.app_type "iphone" %}iOS{% endifequal %}{% ifequal app.app_type "android" %}Android{% endifequal %}{% ifequal app.app_type "mweb" %}Mobile Web{% endifequal %})
+                  </span>
+                  <img id="{{app.key}}-img" class="loading-img" style="display:none;" src="../images/icons-custom/spinner-12.gif"></img>
+                </td>
+
+                {# App Revenue from Marketplace #}
+                <td></td>
+
+                {# App eCPM, (marketplace revenue/impressions)*1000 #}
+                <td></td>
+
+                {# Attempts #}
+                <td></td>
+
+                {# Impressions (filled by the marketplace) #}
+                <td></td>
+
+                {# Fill Rate (impressions/attempts) #}
+                <td></td>
+
+                {# Clicks #}
+                <td></td>
+
+                {# CTR (click through rate, clicks/impressions) #}
+                <td></td>
+
+                {# Price Floor #}
+                <td></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+    {% else %}
+
+      <div class="alert-message block-message info">
+        Marketplace is a new type of campaign we're offering. You'd be a fool not to use it dude!
+      </div>
+
+    {% endif %}
+
+  </div>
+
+  <div class="tab-section" id="controls">
+
+    <div class="well">
+      DSP <br />
+      Advertiser <br />
+      Creative (preview) <br/>
+    </div>
+  </div>
+
+  <div class="clearfix tab-section" id="settings">
+    <div class="well">
+      Blindness?
+    </div>
+
+    <div class="well">
+      Awesome blocklist goes here.
+    </div>
+
+    <div class="right button-group">
+      <div class="big disabled btn"> Discard Changes </div>
+      <div class="big primary btn"> Save </div>
+    </div>
+  </div>
+
+{% endblock content %}

@@ -1167,8 +1167,21 @@ def mpx_info(request, *args, **kwargs):
 
 class MarketplaceIndexHandler(RequestHandler):
     def get(self):
+
+        marketplace_campaign = CampaignQueryManager.get_marketplace(self.account)
+        logging.warn(dir(marketplace_campaign.account))
+
         return render_to_response(self.request,
                                   "advertiser/marketplace_index.html",
+                                  {'marketplace': marketplace_campaign})
+
+    def post(self):
+        pass
+
+class MarketplaceAJAXOnOff(RequestHandler):
+    def get(self):
+        return render_to_response(self.request,
+                                  "",
                                   {})
 
     def post(self):

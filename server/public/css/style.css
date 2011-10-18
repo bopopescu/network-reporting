@@ -1409,9 +1409,9 @@ table.simpletable {
     text-align: left; }
   table.simpletable th {
     padding-top: 9px;
-    font-weight: bold;
     vertical-align: middle;
-    border-bottom: 1px solid #ddd; }
+    border-bottom: 1px solid #ddd;
+    font-size: 16px; }
   table.simpletable td {
     vertical-align: top; }
   table.simpletable th + th, table.simpletable td + td {
@@ -1799,6 +1799,11 @@ table .headerSortDown.purple {
   -webkit-transition: 0.1s linear all;
   -moz-transition: 0.1s linear all;
   transition: 0.1s linear all;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -o-user-select: none;
+  user-select: none;
   cursor: pointer;
   display: inline-block;
   padding: 5px 14px 6px;
@@ -1836,7 +1841,17 @@ table .headerSortDown.purple {
     font-size: 20px; }
   .btn.disabled {
     cursor: default;
-    background-image: none; }
+    background-image: none;
+    color: #999999;
+    filter: alpha(opacity=65);
+    -khtml-opacity: 0.65;
+    -moz-opacity: 0.65;
+    opacity: 0.65;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none; }
+    .btn.disabled:hover {
+      color: #999999; }
   .btn[disabled] {
     cursor: default;
     background-image: none;
@@ -1897,7 +1912,7 @@ table .headerSortDown.purple {
   box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
   display: inline-block;
   list-style: none;
-  padding: 0;
+  padding: 15px;
   margin: 0;
   /* IE hacks */
   zoom: 1;
@@ -1989,7 +2004,7 @@ table .headerSortDown.purple {
     border-color: #ddd;
     border-color: rgba(0, 0, 0, 0.15); }
 
-.datapanel {
+.rollup {
   zoom: 1;
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
@@ -2006,49 +2021,107 @@ table .headerSortDown.purple {
   text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
   border-color: #eeeeee #eeeeee #c8c8c8;
   border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) fadein(rgba(0, 0, 0, 0.1), 15%);
-  -webkit-box-shadow: 0 2px 10px -5px black;
-  -moz-box-shadow: 0 2px 10px -5px black;
-  box-shadow: 0 2px 10px -5px black;
   width: 940px;
   border: 1px solid #E8E8E8;
   border-bottom: 1px solid #DDD;
   text-shadow: 0 1px 1px white;
   margin-bottom: 15px; }
-  .datapanel:before, .datapanel:after {
+  .rollup:before, .rollup:after {
     content: "\0020";
     display: block;
     height: 0;
     visibility: hidden; }
-  .datapanel:after {
+  .rollup:after {
     clear: both; }
-  .datapanel h2, .datapanel h4 {
+  .rollup h2, .rollup h4 {
     width: 230px;
     margin: 0 auto;
     padding: 0;
     text-align: center; }
-  .datapanel h2 {
+  .rollup h2 {
     font-size: 24px;
     font-weight: 400; }
-  .datapanel h4 {
+  .rollup h4 {
     font-weight: 200;
     color: #999999; }
-  .datapanel .data-figure {
+  .rollup .data-figure {
     float: left;
     margin: 0 5px 5px 0;
     padding: 0 5px; }
-    .datapanel .data-figure .figure {
+    .rollup .data-figure .figure {
       font-size: 48px;
       text-align: center; }
-    .datapanel .data-figure .label {
+    .rollup .data-figure .label {
       font-size: 24px;
       text-align: center;
       font-weight: 200; }
-  .datapanel.fig2 .data-figure {
+  .rollup.fig2 .data-figure {
     width: 450px; }
-  .datapanel.fig3 .data-figure {
+  .rollup.fig3 .data-figure {
     width: 293.333px; }
-  .datapanel.fig4 .data-figure {
+  .rollup.fig4 .data-figure {
     width: 215px; }
+
+.lightswitch {
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
+  -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+  background-color: #f5f5f5;
+  border: 1px solid #999999;
+  padding: 0;
+  width: 100px;
+  height: 32px;
+  background: #eeeeee url(../images/onoff.png) no-repeat; }
+  .lightswitch:hover {
+    cursor: pointer; }
+  .lightswitch .switch {
+    margin: -1px 0px;
+    width: 53px;
+    height: 32px;
+    border: 1px solid #bbb;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    -webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    -moz-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    -webkit-transition: margin-left 0.25s ease-in-out;
+    -moz-transition: margin-left 0.25s ease-in-out;
+    transition: margin-left 0.25s ease-in-out;
+    background-color: #dddddd;
+    background-repeat: repeat-x;
+    background-image: -khtml-gradient(linear, left top, left bottom, from(#eeeeee), to(#dddddd));
+    background-image: -moz-linear-gradient(top, #eeeeee, #dddddd);
+    background-image: -ms-linear-gradient(top, #eeeeee, #dddddd);
+    background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #eeeeee), color-stop(100%, #dddddd));
+    background-image: -webkit-linear-gradient(top, #eeeeee, #dddddd);
+    background-image: -o-linear-gradient(top, #eeeeee, #dddddd);
+    background-image: linear-gradient(top, #eeeeee, #dddddd);
+    background-image: url(../images/m.png); }
+    .lightswitch .switch.on {
+      margin-left: -2px;
+      border-top-left-radius: 5px;
+      -moz-border-radius-topleft: 5px;
+      -webkit-border-top-left-radius: 5px;
+      border-bottom-left-radius: 5px;
+      -moz-border-radius-bottomleft: 5px;
+      -webkit-border-bottom-left-radius: 5px; }
+    .lightswitch .switch.off {
+      margin-left: 48px;
+      border-top-right-radius: 5px;
+      -moz-border-radius-topright: 5px;
+      -webkit-border-top-right-radius: 5px;
+      border-bottom-right-radius: 5px;
+      -moz-border-radius-bottomright: 5px;
+      -webkit-border-bottom-right-radius: 5px; }
 
 /*
  * Plugins

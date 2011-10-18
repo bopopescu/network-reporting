@@ -76,7 +76,6 @@
       <ul>
         <li>A <strong>Guaranteed</strong> ad campaign is typically a direct sold ad campaign.</li>
         <li><strong>Promotional</strong> campaigns are for house ads like an upsell.</li>
-        <li><strong>Marketplace</strong> campaigns use MoPub's <a href="{% url mpx_info %}">new real-time bidding technology</a> to fill your ad requests.</li>
         <li>A <strong>Network</strong> ad is an ad served from an ad network like AdMob.</li>
         <ul>
     </div>
@@ -93,19 +92,6 @@
       Before you set up your ad campaigns, we recommend that you set up your App inventory.  Visit the <a href="{% url publisher_index %}">Dashboard</a> to add your Apps.
     </div>
   {% endif %}
-
-
-    {#{% if not has_marketplace_campaign and not account.stats == 'step4' %}#}
-    <div class="alert-message block-message clearfix">
-      <a href="#" class="close"> x </a>
-      We've just launched MoPub Marketplace, our state of the art real-time bidding exchange.
-      Add a new <a href="{% url advertiser_campaign_create %}#marketplace">marketplace campaign</a> to get started,
-      or take a look at our <a href="{% url mpx_info %}">information page</a> if you want to know more about how it works.
-      <br />
-      <a class="btn start icon right" href="{% url mpx_info %}">Get Started</a>
-
-    </div>
-    {#  {% endif %} #}
 
 
     {# Page-level tab control #}
@@ -509,7 +495,7 @@
         </div>
 
 
-            <div class="tab-section" id="marketplace">
+        <div class="tab-section" id="marketplace">
               <a class="right btn add icon" href="{% url advertiser_campaign_create %}#marketplace">Add a campaign</a>
               <h2>Marketplace {% if not marketplace %}<span class="muted">(None)</span> <a href="{% url mpx_info %}"> Learn more </a>{% endif %}
                   <img id="marketplace-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img>
@@ -663,6 +649,8 @@
                 </tbody>
               </table>
 
+
+
               {% else %}
 
                 <div class="alert-message block-message info">
@@ -672,56 +660,6 @@
                 </div>
 
             {% endif %}
-
-
-
-              {% if backfill_marketplace %}
-              <h2>Backfill Marketplace {% if not backfill_marketplace %}<span class="muted">(None)</span>{% endif %}
-                  <img id="marketplace-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img>
-              </h2>
-              {% if backfill_marketplace %}
-              <table class="dataTable campaignData-main">
-                <thead>
-                  <tr>
-                    <th class="campaignData-icon"></th>
-                    <th class="dataTable-name">Name</th>
-                    <th class="dataTable-data numeric">Revenue</th>
-                    <th class="dataTable-data numeric">eCPM</th>
-                    <th class="dataTable-data numeric">Attempts</th>
-                    <th class="dataTable-data numeric">Impressions</th>
-                    <th class="dataTable-data numeric">Fillrate</th>
-                    <th class="dataTable-data numeric">Clicks</th>
-                    <th class="dataTable-data numeric">CTR</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for adgroup in backfill_marketplace %}
-                  <tr class="campaignData backfill_marketplace_row campaign-status-all campaign-targeting-all incomplete
-                    {% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}"
-                    id="{{adgroup.key}}">
-                    <th class="campaignData-icon">
-                      <input type="checkbox" name="id" value="{{adgroup.key}}"/>
-                      {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9 />{% endif %}
-                      {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
-                      {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
-                    </th>
-                    <th class="dataTable-name">
-                      <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
-
-                      <span class="muted">MoPub Marketplace Beta</span>
-                    </th>
-                    <td class="dataTable-data numeric backfill_marketplace-rev rev">--</td>
-                    <td class="dataTable-data numeric backfill_marketplace-ecpm ecpm">--</td>
-                    <td class="dataTable-data numeric backfill_marketplace-req req">--</td>
-                    <td class="dataTable-data numeric backfill_marketplace-imp imp">--</td>
-                    <td class="dataTable-data numeric backfill_marketplace-fill fill">--</td>
-                    <td class="dataTable-data numeric backfill_marketplace-clk clk">--</td>
-                    <td class="dataTable-data numeric backfill_marketplace-ctr ctr">--</td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>{% endif %}
-             {% endif %}
 
              </div>
 

@@ -2,7 +2,7 @@ import logging
 import sys
 import urllib
 
-EC2 = True
+EC2 = False
 
 if EC2:
     sys.path.append('/home/ubuntu/mopub/server')
@@ -14,7 +14,7 @@ if EC2:
     sys.path.append('/home/ubuntu/google_appengine/lib/webob')
     sys.path.append('/home/ubuntu/google_appengine/lib/yaml/lib')
 
-import common.utils.test.setup
+# import common.utils.test.setup
 
 from google.appengine.api import urlfetch
 from google.appengine.api.urlfetch import DownloadError
@@ -120,17 +120,18 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         return None
 
     def get_apps_with_publisher_ids(self, ad_network_name):
-        """Inner join of NetworkConfig and App.
+        """Check apps to see if there pub_id for the given ad_network is
+        defined
 
         Return generator of applications with publisher ids for the account on
         the ad_network.
         """
-        for config in NetworkConfig.all().filter('%s_pub_id !=' %
-                ad_network_name, None):
-            for app in (App.all().filter('account =',
-                self.account).filter('network_config =', config)):
+        for app in App.all().filter('account =',
+                self.account).filter('network_config !=', None):
+            pub_id = getattr(app.network_config, '%s_pub_id' % ad_network_name)
+            if pub_id != None:
                 # example return (App, NetworkConfig.admob_pub_id)
-                yield (app, getattr(config, '%s_pub_id' % ad_network_name))
+                yield (app, pub_id)
 
     def create_login_info_and_mappers(self, ad_network_name, username, password,
             client_key, send_email):
@@ -141,14 +142,20 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         Return None if the login credentials are correct otherwise return an
         error message.
         """
-        logging.warning('Creating shit')
+        logging.warning('Quering shit')
         apps_with_publisher_ids = list(self.get_apps_with_publisher_ids(
             ad_network_name))
+        logging.warning('Other stuff')
         publisher_ids = [publisher_id for app, publisher_id in
                 apps_with_publisher_ids]
-
-        adunits = [adunit.name for app, publisher_id in apps_with_publisher_ids
-                for adunit in app.all_adunits]
+        # For all the adunits in each app if they have a network_config with
+        # a pub_id for the ad_network_name defined save it to the adunits list.
+        adunits = [getattr(adunit.network_config, '%s_pub_id' % ad_network_name)
+                for app, publisher_id in apps_with_publisher_ids for adunit in
+                app.all_adunits if hasattr(adunit, 'network_config') and
+                getattr(adunit.network_config, '%s_pub_id' % ad_network_name,
+                    None) != None]
+        logging.info(adunits)
 
         login_info = AdNetworkLoginInfo(account = self.account,
                                         ad_network_name = ad_network_name,
@@ -157,9 +164,8 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                                         client_key = client_key,
                                         publisher_ids = publisher_ids,
                                         adunits = adunits)
-        
-        
-        logging.warning('attempting to connect to tornado')
+
+        logging.warning('Tornado WOOSH')
         result = None
         try:
             result = urlfetch.fetch(url = self.TEST_LOGIN_CREDENTIALS_URL,

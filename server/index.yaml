@@ -96,6 +96,11 @@ indexes:
   - name: deleted
   - name: name
 
+- kind: App
+  properties:
+  - name: account
+  - name: network_config
+
 - kind: BudgetDailyLog
   properties:
   - name: budget

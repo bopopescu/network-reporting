@@ -1,6 +1,6 @@
 class NetworkScrapeRecord(object):
-    def __init__(self, revenue, attempts, impressions, clicks, ecpm,
-            fill_rate=0, ctr=0, app_tag=None):
+    def __init__(self, revenue, attempts, impressions, clicks, ecpm=0.0,
+            fill_rate=0.0, ctr=0.0, app_tag=None):
         self.revenue = revenue
         self.attempts = attempts
         self.impressions = impressions

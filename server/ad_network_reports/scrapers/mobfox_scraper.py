@@ -1,8 +1,10 @@
 import logging
+import sys
 import time
 import urllib2
 import urllib
 
+sys.path.append('/Users/tiagobandeira/Documents/mopub/server')
 from ad_network_reports.scrapers.network_scrape_record import \
         NetworkScrapeRecord
 from ad_network_reports.scrapers.scraper import NetworkConfidential

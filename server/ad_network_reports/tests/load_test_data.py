@@ -146,7 +146,7 @@ else:
     TEST_INMOBI_PUB_ID ='4028cba630724cd90130c2adc9b6024f'
     TEST_MOBFOX_PUB_ID = 'fb8b314d6e62912617e81e0f7078b47e'
 
-    account = Account()
+    account = Account(key_name = 'test_account')
     account.put()
 
     # AdMob login info

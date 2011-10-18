@@ -39,6 +39,7 @@ class JumpTapScraper(Scraper):
         response = urllib2.urlopen(req)
 
         headers = response.readline().split(',')
+        print headers
 
         revenue_index = headers.index('Net Revenue$')
         request_index = headers.index('Requests')
@@ -52,8 +53,10 @@ class JumpTapScraper(Scraper):
         # the dict is the app
         scrape_records = {}
         for line in response:
+            print line
             vals = line.split(',')
-            if vals[0] != 'Totals' and vals[adunit_index] in self.adunits:
+            if vals[0] != 'Totals' and vals[adunit_index] in self.adunits or \
+                    not self.adunits:
                 nsr = NetworkScrapeRecord(revenue = float(vals[revenue_index]),
                                           attempts = int(vals[request_index]),
                                           impressions = int(
@@ -86,10 +89,13 @@ class JumpTapScraper(Scraper):
                                       attempts = attempts,
                                       impressions = impressions,
                                       clicks = clicks,
-                                      fill_rate = impressions / float(attempts),
-                                      ctr = clicks / float(impressions),
-                                      ecpm = cost / float(impressions),
                                       app_tag = nsr_list[0].app_tag)
+
+            if attempts != 0:
+                nsr.fill_rate = impressions / float(attempts)
+            if impressions != 0:
+                nsr.ctr = clicks / float(impressions)
+                nsr.ecpm = cost / float(impressions)
 
             records.append(nsr)
 
@@ -97,9 +103,9 @@ class JumpTapScraper(Scraper):
 
 if __name__ == '__main__':
     NC = NetworkConfidential()
-    NC.username = 'betnetwork'
-    NC.password = 'BETjames'
-    NC.adunits = ['bet_wap_site_106andpark_top']
+    NC.username = 'com2ususa'
+    NC.password = 'com2us1001'
+    NC.adunits = []
     NC.ad_network_name = 'jumptap'
     SCRAPER = JumpTapScraper(NC)
     print SCRAPER.get_site_stats(date.today() - timedelta(days = 1))

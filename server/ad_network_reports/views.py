@@ -61,36 +61,38 @@ class AddLoginInfoHandler(RequestHandler):
     def get(self): #Verfify that this is SSL
         """Return form with ad network login info."""
         # Add a bunch of test data to the db
-        # from account.models import NetworkConfig
-        # from publisher.models import App, Site
-        # from google.appengine.ext import db
-        # from account.models import Account, NetworkConfig
-        # chess_network_config = NetworkConfig(jumptap_pub_id = 'jumptap_chess_com_test', iad_pub_id = '329218549')
-        # chess_network_config.put()
-        # 
-        # chess_app = App(account = self.account, name = "Chess.com - Play & Learn Chess", network_config = chess_network_config)
-        # chess_app.put()
-        # 
-        # bet_network_config = NetworkConfig(jumptap_pub_id = 'jumptap_bet_test', admob_pub_id = 'a14c7d7e56eaff8')
-        # bet_network_config.put()
-        # 
-        # bet_iad_network_config = NetworkConfig(iad_pub_id = '418612824')
-        # bet_iad_network_config.put()
-        # 
-        # bet_app = App(account = self.account, name = "BET WAP Site", network_config = bet_network_config) # Name must be the same as in Jumptap
-        # bet_app.put()
-        # 
-        # Site(app_key = bet_app, name = 'bet_wap_site_106andpark_top').put()
-        # 
-        # bet_iad_app = App(account = self.account, name = "106 & Park", network_config = bet_iad_network_config)
-        # bet_iad_app.put()
-        # 
-        # officejerk_network_config = NetworkConfig(jumptap_pub_id = 'office_jerk_test')
-        # officejerk_network_config.put()
-        # 
-        # officejerk_app = App(account = self.account, name = "Office Jerk", network_config = officejerk_network_config)
-        # officejerk_app.put()
-        
+#        from account.models import NetworkConfig
+#        from publisher.models import App, Site
+#        from google.appengine.ext import db
+#        from account.models import Account, NetworkConfig
+#        chess_network_config = NetworkConfig(jumptap_pub_id = 'jumptap_chess_com_test', iad_pub_id = '329218549')
+#        chess_network_config.put()
+#
+#        chess_app = App(account = self.account, name = "Chess.com - Play & Learn Chess", network_config = chess_network_config)
+#        chess_app.put()
+#
+#        bet_network_config = NetworkConfig(jumptap_pub_id = 'jumptap_bet_test', admob_pub_id = 'a14c7d7e56eaff8')
+#        bet_network_config.put()
+#
+#        bet_iad_network_config = NetworkConfig(iad_pub_id = '418612824')
+#        bet_iad_network_config.put()
+#
+#        bet_app = App(account = self.account, name = "BET WAP Site", network_config = bet_network_config) # Name must be the same as in Jumptap
+#        bet_app.put()
+#
+#        adunit_network_config = NetworkConfig(jumptap_pub_id =
+#        'bet_wap_site_106andpark_top').put()
+#        Site(app_key = bet_app, network_config = adunit_network_config).put()
+#
+#        bet_iad_app = App(account = self.account, name = "106 & Park", network_config = bet_iad_network_config)
+#        bet_iad_app.put()
+#
+#        officejerk_network_config = NetworkConfig(jumptap_pub_id = 'office_jerk_test')
+#        officejerk_network_config.put()
+#
+#        officejerk_app = App(account = self.account, name = "Office Jerk", network_config = officejerk_network_config)
+#        officejerk_app.put()
+
         return render_to_response(self.request,
                 'ad_network_reports/add_login_info.html',
                 dict(ad_network_names = AD_NETWORK_NAMES, error = ""))

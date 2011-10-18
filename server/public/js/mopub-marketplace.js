@@ -2,74 +2,63 @@
  * Mopub Marketplace JS
  */
 
-(function($) {
+(function($, Backbone) {
 
-    /*
-     * lightswitch takes two functions, an on function and an off function.
-     * When the lightswitch in the page is clicked on or off, the the corresponding
-     * function is called. If the function returns true, the switch is slid.
-     *
-     * Usage:
-     *
-     * var on = function() {
-     *    console.log('BOOMSLAM');
-     *    return true;
-     * };
-     *
-     * var off = function() {
-     *    console.log('SEE YA');
-     *    return true;
-     * };
-     *
-     * $(".lightswitch").lightswitch(on, off);
-     */
-    $.fn.lightswitch = function (on_function, off_function) {
-
-        if (typeof on_function == 'undefined') {
-            on_function = function () {
-                return true;
-            };
+    var AdUnit = Backbone.Model.extend({
+        defaults : {
+            revenue: 0,
+            eCPM: 0,
+            attempts: 0,
+            impressions: 0,
+            fill_rate: 0,
+            clicks: 0,
+            ctr: 0,
+            price_floor: 0
+        },
+        initialize: function() {
+            console.log('adunit initialized');
         }
-
-        if (typeof off_function == 'undefined') {
-            off_function = function () {
-                return true;
-            };
-        }
-
-        var light_switch = $(this);
-        var switcher = $('.switch', light_switch);
-
-        light_switch.click(function () {
-            if (switcher.hasClass('on')) {
-                var result = off_function();
-                if (result) {
-                    switcher.removeClass('on').addClass('off');
-                }
-
-            } else if (switcher.hasClass('off')) {
-                var result = on_function();
-                if (result) {
-                    switcher.removeClass('off').addClass('on');
-                }
-            } else {
-                switcher.addClass('off');
-            }
-        });
-    };
-
-    $(document).ready(function() {
-        var on = function() {
-            console.log('BOOMSLAM');
-            return true;
-        };
-
-        var off = function() {
-            console.log('SEE YA');
-            return true;
-        };
-
-        $(".lightswitch").lightswitch(on, off);
     });
 
-})(this.jQuery);
+    var AdGroup = Backbone.Collection.extend({
+        model: AdUnit
+    });
+
+    var App = Backbone.Model.extend({
+        defaults : {
+            revenue: 0,
+            eCPM: 0,
+            attempts: 0,
+            impressions: 0,
+            fill_rate: 0,
+            clicks: 0,
+            ctr: 0
+        }
+    });
+
+    var Inventory = Backbone.Collection.extend({
+        model: App
+    });
+
+    $(document).ready(function() {
+
+        $(".lightswitch").lightswitch();
+
+        /*
+         * Show/hide adunits in the table under the performance tab
+         */
+        $("a.adunits").click(function() {
+            var href = $(this).attr('href').replace("#","");
+            console.log(href);
+            $(".adunit-data-" + href).each(function () {
+                if ($(this).hasClass('hidden')) {
+                    $(this).slideUp().removeClass('hidden');
+                } else {
+                    $(this).slideDown().addClass('hidden');
+                }
+            });
+
+        });
+    });
+
+})(this.jQuery, this.Backbone);

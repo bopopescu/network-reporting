@@ -2,7 +2,10 @@
 {% load filters %}
 
 {% block extraScripts %}
-<script type="text/javascript" src="/js/mopub-marketplace.js"></script>
+  <script type="text/javascript" src="/js/underscore.min.js"></script>
+  <script type="text/javascript" src="/js/json2.js"></script>
+  <script type="text/javascript" src="/js/backbone.min.js"></script>
+  <script type="text/javascript" src="/js/mopub-marketplace.js"></script>
 {% endblock extraScripts %}
 
 {% block pageTitle %}
@@ -16,10 +19,8 @@
   <li><a href="{% url reports_index %}">Reports</a></li>
 {% endblock navLinks %}
 
-
 {% block messageCenter %} {% endblock messageCenter %}
 {% block dateButtons %} {% endblock dateButtons %}
-
 
 {% block content %}
 
@@ -29,9 +30,9 @@
     Flip the On/Off switch to get started,
     or take a look at our <a href="{% url mpx_info %}">information page</a> if you want to know more about how it works.
     <br />
-    <div class="lightswitch">
-      <div class="switch on"></div>
-    </div>
+    <!-- <div class="lightswitch"> -->
+    <!--   <div class="switch on"></div> -->
+    <!-- </div> -->
     <a class="btn start icon right" href="{% url mpx_info %}">Get Started</a>
   </div>
 
@@ -95,37 +96,128 @@
               <tr>
 
                 {# App Icon, Name, and Type #}
-                <td>
-                  <a href="{% url publisher_app_show app_key=app.key %}">{{app.name}}</a>
-                  <span class="muted unbold">
-                    ({% ifequal app.app_type "iphone" %}iOS{% endifequal %}{% ifequal app.app_type "android" %}Android{% endifequal %}{% ifequal app.app_type "mweb" %}Mobile Web{% endifequal %})
-                  </span>
-                  <img id="{{app.key}}-img" class="loading-img" style="display:none;" src="../images/icons-custom/spinner-12.gif"></img>
+                <td class="clearfix">
+                  <img src="{{app.icon|binary_data|default_if_none:"/placeholders/image.gif"}}" alt="Icon" width="45" height="45" class="app-icon"/>
+                  <div class="app-detail">
+                    <a href="{% url publisher_app_show app_key=app.key %}">{{app.name}}</a>
+                    <span class="muted unbold">({{app.app_type_text}})</span>
+
+                    <br />
+                    <a href="#{{app.key}}" class="adunits">Show Adunits</a>
+                    <ul class="hidden adunits adunit-data-{{app.key}}">
+                      {% for adunit in app.all_adunits %}
+                        <li class="adunit" id="adunit-{{adunit.key}}">
+                          {{adunit.name}}
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  </div>
+
                 </td>
 
                 {# App Revenue from Marketplace #}
-                <td></td>
+                <td>
+                  --
+
+                  <ul class="hidden adunits adunit-data-{{app.key}}">
+                    {% for adunit in app.all_adunits %}
+                      <li class="adunit" id="adunit-{{adunit.key}}">
+                        0
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </td>
 
                 {# App eCPM, (marketplace revenue/impressions)*1000 #}
-                <td></td>
+                <td>
+                  --
+
+                  <ul class="hidden adunits adunit-data-{{app.key}}">
+                    {% for adunit in app.all_adunits %}
+                      <li class="adunit" id="adunit-{{adunit.key}}">
+                        0
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </td>
 
                 {# Attempts #}
-                <td></td>
+                <td>
+                  --
+
+                  <ul class="hidden adunits adunit-data-{{app.key}}">
+                    {% for adunit in app.all_adunits %}
+                      <li class="adunit" id="adunit-{{adunit.key}}">
+                        0
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </td>
 
                 {# Impressions (filled by the marketplace) #}
-                <td></td>
+                <td>
+                  --
+
+                  <ul class="hidden adunits adunit-data-{{app.key}}">
+                    {% for adunit in app.all_adunits %}
+                      <li class="adunit" id="adunit-{{adunit.key}}">
+                        0
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </td>
 
                 {# Fill Rate (impressions/attempts) #}
-                <td></td>
+                <td>
+                  --
+
+                  <ul class="hidden adunits adunit-data-{{app.key}}">
+                    {% for adunit in app.all_adunits %}
+                      <li class="adunit" id="adunit-{{adunit.key}}">
+                        0
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </td>
 
                 {# Clicks #}
-                <td></td>
+                <td>
+                  --
+
+                  <ul class="hidden adunits adunit-data-{{app.key}}">
+                    {% for adunit in app.all_adunits %}
+                      <li class="adunit" id="adunit-{{adunit.key}}">
+                        0
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </td>
 
                 {# CTR (click through rate, clicks/impressions) #}
-                <td></td>
+                <td>
+                  --
+
+                  <ul class="hidden adunits adunit-data-{{app.key}}">
+                    {% for adunit in app.all_adunits %}
+                      <li class="adunit" id="adunit-{{adunit.key}}">
+                        0
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </td>
 
                 {# Price Floor #}
-                <td></td>
+                <td>
+                  --
+
+                  <ul class="hidden adunits adunit-data-{{app.key}}">
+                    {% for adunit in app.all_adunits %}
+                      <li class="adunit" id="adunit-{{adunit.key}}">
+                        0
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </td>
               </tr>
             {% endfor %}
           </tbody>

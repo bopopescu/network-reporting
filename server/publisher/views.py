@@ -110,16 +110,19 @@ class AppIndexHandler(RequestHandler):
         logging.warning("YESTERDAY: %s"%yesterday.key())
         logging.warning("TODAY: %s"%today.key())
 
-        return render_to_response(self.request,'publisher/index.html',
-          {'apps': apps,
-           'account_stats': simplejson.dumps(response_dict),
-           'start_date': days[0],
-           'end_date': days[-1],
-           'date_range': self.date_range,
-           'today': today,
-           'yesterday': yesterday,
-           'totals': totals,
-           'account': self.account})
+        return render_to_response(self.request,
+                                  'publisher/index.html',
+                                  {
+                                      'apps': apps,
+                                      'account_stats': simplejson.dumps(response_dict),
+                                      'start_date': days[0],
+                                      'end_date': days[-1],
+                                      'date_range': self.date_range,
+                                      'today': today,
+                                      'yesterday': yesterday,
+                                      'totals': totals,
+                                      'account': self.account
+                                  })
 
 @login_required
 def index(request,*args,**kwargs):

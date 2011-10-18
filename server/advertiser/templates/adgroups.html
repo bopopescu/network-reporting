@@ -99,7 +99,7 @@
       <li class="active"> <a href="#performance">  Performance </a> </li>
       <li> <a href="#guaranteed">  Guaranteed </a> </li>
       <li> <a href="#promotional">  Promotional </a> </li>
-      <li> <a href="#marketplace">  Marketplace </a> </li>
+      {# <li> <a href="#marketplace">  Marketplace </a> </li> #}
       <li> <a href="#network">  Ad Networks </a> </li>
     </ul>
 
@@ -495,6 +495,7 @@
         </div>
 
 
+        {% comment %}
         <div class="tab-section" id="marketplace">
               <a class="right btn add icon" href="{% url advertiser_campaign_create %}#marketplace">Add a campaign</a>
               <h2>Marketplace {% if not marketplace %}<span class="muted">(None)</span> <a href="{% url mpx_info %}"> Learn more </a>{% endif %}
@@ -573,6 +574,7 @@
               {% endif %}
 
               </div>
+              {% endcomment %}
 
               <div class="tab-section" id="network">
                 <a class="right btn add icon" href="{% url advertiser_campaign_create %}#network">Add a campaign</a>
@@ -654,7 +656,7 @@
               {% else %}
 
                 <div class="alert-message block-message info">
-                  Ad Networks are awesome dogg. Get started using them now!
+                  Ad Networks are awesome. Get started using them now!
 
                   Put ad network quick adding here.
                 </div>

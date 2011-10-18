@@ -426,6 +426,194 @@ mopub.Utils = mopub.Utils || {};
         return $("<div />").text(html).html();
     };
 
+
+    /*
+     * Jquery Lightswitch
+     *
+     * lightswitch takes two functions, an on function and an off function.
+     * When the lightswitch in the page is clicked on or off, the the corresponding
+     * function is called. If the function returns true, the switch is slid.
+     *
+     * Usage:
+     *
+     * var on = function() {
+     *    console.log('BOOMSLAM');
+     *    return true;
+     * };
+     *
+     * var off = function() {
+     *    console.log('SEE YA');
+     *    return true;
+     * };
+     *
+     * $(".lightswitch").lightswitch(on, off);
+     */
+    $.fn.lightswitch = function (on_function, off_function) {
+
+        if (typeof on_function == 'undefined') {
+            on_function = function () {
+                return true;
+            };
+        }
+
+        if (typeof off_function == 'undefined') {
+            off_function = function () {
+                return true;
+            };
+        }
+
+        var light_switch = $(this);
+        var switcher = $('.switch', light_switch);
+
+        light_switch.click(function () {
+            if (switcher.hasClass('on')) {
+                var result = off_function();
+                if (result) {
+                    switcher.removeClass('on').addClass('off');
+                }
+
+            } else if (switcher.hasClass('off')) {
+                var result = on_function();
+                if (result) {
+                    switcher.removeClass('off').addClass('on');
+                }
+            } else {
+                switcher.addClass('off');
+            }
+        });
+    };
+
+    $.fn.collapser= function(options, beforeCallback, afterCallback) {
+
+        var defaults = {
+            target: 'next',
+             targetOnly: null,
+            effect: 'slide',
+            changeText: true,
+            expandHtml: 'Expand',
+            collapseHtml: 'Collapse',
+            expandClass: '',
+            collapseClass:''
+        };
+
+        var options = $.extend(defaults, options);
+
+        var expHtml,collHtml, effectShow, effectHide;
+
+        if(options.effect == 'slide'){
+            effectShow = 'slideDown';
+            effectHide = 'slideUp';
+        }else{
+            effectShow = 'fadeIn';
+            effectHide = 'fadeOut';
+        }
+
+        if(options.changeText == true){
+            expHtml = options.expandHtml;
+            collHtml = options.collapseHtml;
+        }
+
+        function callBeforeCallback(obj){
+            if(beforeCallback !== undefined){
+                beforeCallback.apply(obj);
+            }
+        }
+
+        function callAfterCallback(obj){
+            if(afterCallback !== undefined){
+                afterCallback.apply(obj);
+            }
+        }
+
+        function hideElement(obj, method){
+            callBeforeCallback(obj);
+            if(method == 1){
+                obj[options.target](options.targetOnly)[effectHide]();
+                obj.html(expHtml);
+                obj.removeClass(options.collapseClass);
+                obj.addClass(options.expandClass);
+            }else{
+                $(document).find(options.target)[effectHide]();
+                obj.html(expHtml);
+                obj.removeClass(options.collapseClass);
+                obj.addClass(options.expandClass);
+            }
+            callAfterCallback(obj);
+        }
+
+        function showElement(obj, method){
+            callBeforeCallback(obj)
+            if(method == 1){
+                obj[options.target](options.targetOnly)[effectShow]();
+                obj.html(collHtml);
+                obj.removeClass(options.expandClass);
+                obj.addClass(options.collapseClass);
+            }else{
+                $(document).find(options.target)[effectShow]();
+                obj.html(collHtml);
+                obj.removeClass(options.expandClass);
+                obj.addClass(options.collapseClass);
+            }
+            callAfterCallback(obj);
+        }
+
+        function toggleElement(obj, method){
+            if(method == 1){
+                if(obj[options.target](options.targetOnly).is(':visible')){
+                    hideElement(obj, 1);
+                }else{
+                    showElement(obj, 1);
+                }
+            }else{
+                if($(document).find(options.target).is(':visible')){
+                    hideElement(obj, 2);
+                }else{
+                    showElement(obj, 2);
+                }
+            }
+        }
+
+        return this.each(function(){
+
+           if($.fn[options.target] && $(this)[options.target]()){
+                $(this).toggle(function(){
+                    toggleElement($(this), 1);
+                },function(){
+                    toggleElement($(this), 1);
+                });
+
+           }else{
+
+               $(this).toggle(function(){
+                    toggleElement($(this), 2);
+                },function(){
+                    toggleElement($(this), 2);
+                });
+           }
+
+           // Initialize
+           if($.fn[options.target] && $(this)[options.target]()){
+                if($(this)[options.target]().is(':hidden')){
+                    $(this).html(expHtml);
+                    $(this).removeClass(options.collapseClass);
+                    $(this).addClass(options.expandClass);
+                }else{
+                    $(this).html(collHtml);
+                    $(this).removeClass(options.expandClass);
+                    $(this).addClass(options.collapseClass);
+                }
+            }else{
+                if($(document).find(options.target).is(':hidden')){
+                    $(this).html(expHtml);
+                }else{
+                    $(this).html(collHtml);
+                }
+            }
+
+        });
+    };
+
+
     // helper fn for console logging
     var log;
 

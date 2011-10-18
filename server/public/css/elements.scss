@@ -482,11 +482,11 @@
         @include transition(margin-left .25s ease-in-out);
         @include vertical-gradient(#eee, #ddd);
         background-image: url(../images/m.png);
-        &.on {
+        &.off {
             margin-left: -2px;
             @include left-border-radius(0px);
         }
-        &.off {
+        &.on {
             margin-left: 48px;
             @include right-border-radius(0px);
         }

@@ -25,13 +25,15 @@ from nose.tools import eq_,assert_almost_equal
 from nose.tools import with_setup
 from budget import budget_service
 from google.appengine.api import memcache
-from budget.models import (Budget,
+from budget import models as budgetmodels
+from budget.models import (BudgetSlicer,
                            BudgetSliceLog,
+                           BudgetDailyLog,
                            )
 
 from google.appengine.ext import testbed
 
-#from budget.query_managers import BudgetSliceLogQueryManager
+from budget.query_managers import BudgetSliceLogQueryManager
 
 class TestBudgetUnitTests(unittest.TestCase):
     
@@ -46,8 +48,8 @@ class TestBudgetUnitTests(unittest.TestCase):
         
         
         # We simplify the budgetmanger for testing purposes
-        #budgetmodels.DEFAULT_TIMESLICES = 10 # this means each campaign has 100 dollars per slice
-        #budgetmodels.DEFAULT_FUDGE_FACTOR = 0.0
+        budgetmodels.DEFAULT_TIMESLICES = 10 # this means each campaign has 100 dollars per slice
+        budgetmodels.DEFAULT_FUDGE_FACTOR = 0.0
         
         # Set up default models
         self.account = Account()
@@ -59,57 +61,52 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.adunit = AdUnit(account=self.account, app_key=self.app, name="Test AdUnit")
         self.adunit.put()
 
-        # Make AllAtOnce Campaign
-        self.aao_c = Campaign(name="allatonce",)
-        self.aao_c.put()
+        # Make Expensive Campaign
+        self.expensive_c = Campaign(name="expensive",
+                                    budget=1000.0,
+                                    budget_strategy="evenly")
+        self.expensive_c.put()
 
-        # Make Even Campaign
-        self.e_c = Campaign(name="even",)
-        self.e_c.put()
+        self.expensive_adgroup = AdGroup(account=self.account, 
+                                          campaign=self.expensive_c, 
+                                          site_keys=[self.adunit.key()],
+                                          bid_strategy="cpc",
+                                          bid=100000.0) # 100 per click
+        self.expensive_adgroup.put()
+        
+        
 
-        self.even_budget = Budget(start_datetime = datetime.datetime(2000,1,10,0),
-                                  delivery_type = 'evenly',
-                                  static_slice_budget = 50.0,
-                                  campaign = self.e_c,
-                                  )
-        self.allatonce_budget = Budget(start_datetime = datetime.datetime(2000, 1, 10, 0),
-                                       delivery_type = 'allatonce',
-                                       static_total_budget = 5000.0,
-                                       campaign = self.aao_c,
-                                       )
-        self.even_budget.put()
-        self.allatonce_budget.put()
+        self.expensive_creative = Creative(account=self.account,
+                                ad_group=self.expensive_adgroup,
+                                tracking_url="test-tracking-url", 
+                                cpc=.03)
+        self.expensive_creative.put()
+        
+        # Make cheap campaign
+        self.cheap_c = Campaign(name="expensive",
+                                budget=1000.0,
+                                budget_strategy="evenly")
+        self.cheap_c.put()
+
+        self.cheap_adgroup = AdGroup(account=self.account, 
+                              campaign=self.cheap_c, 
+                              site_keys=[self.adunit.key()],
+                              bid_strategy="cpc",
+                              budget=1000.0,
+                              budget_strategy="evenly",
+                              bid=10000.0)
+        self.cheap_adgroup.put()
 
 
-#        self.expensive_adgroup = AdGroup(account=self.account, 
-#                                          campaign=self.expensive_c, 
-#                                          site_keys=[self.adunit.key()],
-#                                          bid_strategy="cpc",
-#                                          bid=100000.0) # 100 per click
-#        self.expensive_adgroup.put()
-#
-#        self.expensive_creative = Creative(account=self.account,
-#                                ad_group=self.expensive_adgroup,
-#                                tracking_url="test-tracking-url", 
-#                                cpc=.03)
-#        self.expensive_creative.put()
-#
-#        self.cheap_adgroup = AdGroup(account=self.account, 
-#                              campaign=self.cheap_c, 
-#                              site_keys=[self.adunit.key()],
-#                              bid_strategy="cpc",
-#                              budget=1000.0,
-#                              budget_strategy="evenly",
-#                              bid=10000.0)
-#        self.cheap_adgroup.put()
-#
-#
-#        self.cheap_creative = Creative(account=self.account,
-#                                ad_group=self.cheap_adgroup,
-#                                tracking_url="test-tracking-url", 
-#                                cpc=.03)
-#        self.cheap_creative.put()
-
+        self.cheap_creative = Creative(account=self.account,
+                                ad_group=self.cheap_adgroup,
+                                tracking_url="test-tracking-url", 
+                                cpc=.03)
+        self.cheap_creative.put()
+        
+        
+        
+    
     def tearDown(self):
         self.testbed.deactivate()
         # budget_service._flush_all()
@@ -127,22 +124,26 @@ class TestBudgetUnitTests(unittest.TestCase):
         c_g.put()
     
     def mptest_load_campaigns(self):
-        eq_(5000,self.aao_c.budget_obj.static_total_budget)
-        eq_(50,self.e_c.budget_obj.static_slice_budget)
+        eq_(1000,self.expensive_c.budget)
+        eq_(1000,self.cheap_c.budget)
         
    
     def mptest_to_memcache_int(self):
         val = 123.00
-        same = budget_service._from_memcache_int(budget_service._to_memcache_int(val))
+        same = budget_service._to_memcache_int(budget_service._from_memcache_int(val))
         eq_(val,same)
 
         val = 1
-        same = budget_service._from_memcache_int(budget_service._to_memcache_int(val))
+        same = budget_service._to_memcache_int(budget_service._from_memcache_int(val))
         eq_(val,same)
 
         val = 15000000
-        same = budget_service._from_memcache_int(budget_service._to_memcache_int(val))
+        same = budget_service._to_memcache_int(budget_service._from_memcache_int(val))
         eq_(val,same)
+        
+    def mptest_timeslice_retrieval(self):
+        budget_manager = BudgetSlicer.get_or_insert_for_campaign(self.cheap_c)
+        eq_(budget_manager.timeslice_budget, 100)
 
     def mptest_memcache_rollunder(self):
         #It does not appear that memcache allows rollunders, TODO: test in devappserver
@@ -156,37 +157,37 @@ class TestBudgetUnitTests(unittest.TestCase):
         
     def mptest_basic(self):
         # We can do the bid one time
-        eq_(budget_service._apply_if_able(self.e_c, 50), True)
+        eq_(budget_service._apply_if_able(self.expensive_c, 100), True)
         
         # But it uses up all the timeslice's money and fails the second    
-        eq_(budget_service.remaining_ts_budget(self.e_c), 0)
-        eq_(budget_service._apply_if_able(self.e_c, 100), False)
-        eq_(budget_service.remaining_ts_budget(self.e_c), 0)       
+        eq_(budget_service.remaining_ts_budget(self.expensive_c), 0)
+        eq_(budget_service._apply_if_able(self.expensive_c, 100), False)
+        eq_(budget_service.remaining_ts_budget(self.expensive_c), 0)       
                                   
              
     def mptest_basic_cheap(self):
         # We can do the cheap bidding 100 times
-        for i in xrange(50):
-            eq_(budget_service._apply_if_able(self.e_c, 1), True)
+        for i in xrange(100):
+            eq_(budget_service._apply_if_able(self.cheap_c, 1), True)
 
         # But it uses up all the timeslice's money and fails the 101st time             
-        eq_(budget_service._apply_if_able(self.e_c, 1), False)
+        eq_(budget_service._apply_if_able(self.cheap_c, 1), False)
 
     def mptest_timeslices_update(self):
         # We can do the bid one time
-        eq_(budget_service._apply_if_able(self.e_c, 50), True)
+        eq_(budget_service._apply_if_able(self.expensive_c, 100), True)
         # But it uses up all the timeslice's money and fails the second             
-        eq_(budget_service._apply_if_able(self.e_c, 100), False)
-        eq_(budget_service.remaining_ts_budget(self.e_c), 0)       
+        eq_(budget_service._apply_if_able(self.expensive_c, 100), False)
+        eq_(budget_service.remaining_ts_budget(self.expensive_c), 0)       
                                   
         # Then after we advance the timeslice
-        budget_service.timeslice_advance(self.e_c, testing=True)
+        budget_service.timeslice_advance(self.expensive_c, testing=True)
         
         # We now have more budget and can do the bid one more time
-        eq_(budget_service._apply_if_able(self.e_c, 100), True)
+        eq_(budget_service._apply_if_able(self.expensive_c, 100), True)
         # But it uses up all the timeslice's money and fails the second             
-        eq_(budget_service._apply_if_able(self.e_c, 100), False)
-        eq_(budget_service.remaining_ts_budget(self.e_c), 0)
+        eq_(budget_service._apply_if_able(self.expensive_c, 100), False)
+        eq_(budget_service.remaining_ts_budget(self.expensive_c), 0)
  
     def mptest_timeslices_rollover(self):
         # We can do the bid one time

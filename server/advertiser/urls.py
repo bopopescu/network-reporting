@@ -19,4 +19,6 @@ urlpatterns = patterns('advertiser.views',
   url(r'^archive/$','archive',name='advertiser_archive'),
   url(r'^export/$', 'campaign_export', name='campaign_export'),
   url(r'^mpx/$', 'mpx_info', name='mpx_info'),
+
+  url(r'^marketplace/$', 'marketplace_index', name='marketplace_index'),
 )

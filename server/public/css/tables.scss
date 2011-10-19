@@ -1,0 +1,215 @@
+@import "common.scss";
+
+/* Data table */
+
+.dataTable {
+    thead {
+        th {
+            font-size: 10px;
+            font-weight: 300;
+            text-transform: uppercase;
+            color: #555;
+            vertical-align: bottom;
+            padding: 0 0 8px 0;
+        }
+    }
+    th, td {
+        font-size: 14px;
+        text-align: left;
+        vertical-align: top;
+        padding: 8px 0 7px 0;
+    }
+}
+
+
+
+.dataTable-name {
+    width: 500px;
+    .inner {
+        display: block;
+        width: 500px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+}
+
+.dataTable-data {
+  width: 75px;
+}
+
+.dataTable-date {
+  width: 175px;
+}
+
+.dataTable-date-short {
+  width: 100px;
+}
+
+.dataTable-ecpm {
+  width:100px;
+}
+
+.dataTable-campaign-ecpm {
+  color: #53a600;
+}
+
+
+table.simpletable {
+    @include border-radius(3px);
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 0;
+    border-collapse: separate;
+    *border-collapse: collapse;
+    border: 1px solid #ddd;
+    th, td {
+        padding: 10px 10px 9px;
+        text-align: left;
+    }
+    th {
+        padding-top: 9px;
+        vertical-align: middle;
+        border-bottom: 1px solid #ddd;
+        font-size: 16px;
+    }
+    td {
+        vertical-align: top;
+    }
+    th + th, td + td {
+        border-left: 1px solid #ddd;
+    }
+    tr + tr td {
+        border-top: 1px solid #ddd;
+    }
+    tbody tr:first-child td:first-child {
+        @include border-radius(4px 0 0 0);
+    }
+    tbody tr:first-child td:last-child {
+        @include border-radius(0 4px 0 0);
+    }
+    tbody tr:last-child td:first-child {
+        @include border-radius(0 0 0 4px);
+    }
+    tbody tr:last-child td:last-child {
+        @include border-radius(0 0 4px 0);
+    }
+}
+
+
+// ZEBRA-STRIPING
+// --------------
+
+// Default zebra-stripe styles (alternating gray and transparent backgrounds)
+.zebra-striped {
+    tbody {
+        tr:nth-child(odd) td {
+            background-color: #f9f9f9;
+        }
+        tr:hover td {
+            background-color: #EBF2F7;
+        }
+    }
+}
+
+table {
+
+    .header {
+        cursor: pointer;
+        &:after {
+            content: "";
+            float: right;
+            margin-top: 7px;
+            border-width: 0 4px 4px;
+            border-style: solid;
+            border-color: #000 transparent;
+            visibility: hidden;
+        }
+    }
+
+    .headerSortUp,
+    .headerSortDown {
+        background-color: rgba(141,192,219,.25);
+        text-shadow: 0 1px 1px rgba(255,255,255,.75);
+    }
+
+    .header:hover {
+        &:after {
+            visibility:visible;
+        }
+    }
+    // Style the descending (alphabetical) column header
+    .headerSortDown,
+    .headerSortDown:hover {
+        &:after {
+            visibility:visible;
+            @include opacity(60);
+        }
+    }
+
+    .headerSortUp {
+        &:after {
+            border-bottom: none;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-top: 4px solid #000;
+            visibility:visible;
+            @include box-shadow(none); //cant add boxshadow to downward facing arrow :(
+                @include opacity(60);
+            }
+        }
+
+    .blue {
+        color: $blue;
+        border-bottom-color: $blue;
+    }
+    .headerSortUp.blue,
+    .headerSortDown.blue {
+        background-color: lighten($blue, 40%);
+    }
+    // Green Table Headings
+    .green {
+        color: $green;
+        border-bottom-color: $green;
+    }
+    .headerSortUp.green,
+    .headerSortDown.green {
+        background-color: lighten($green, 40%);
+    }
+    // Red Table Headings
+    .red {
+        color: $red;
+        border-bottom-color: $red;
+    }
+    .headerSortUp.red,
+    .headerSortDown.red {
+        background-color: lighten($red, 50%);
+    }
+    // Yellow Table Headings
+    .yellow {
+        color: $yellow;
+        border-bottom-color: $yellow;
+    }
+    .headerSortUp.yellow,
+    .headerSortDown.yellow {
+        background-color: lighten($yellow, 40%);
+    }
+    // Orange Table Headings
+    .orange {
+        color: $orange;
+        border-bottom-color: $orange;
+    }
+    .headerSortUp.orange,
+    .headerSortDown.orange {
+        background-color: lighten($orange, 40%);
+    }
+    // Purple Table Headings
+    .purple {
+        color: $purple;
+        border-bottom-color: $purple;
+    }
+    .headerSortUp.purple,
+    .headerSortDown.purple {
+        background-color: lighten($purple, 40%);
+    }
+}

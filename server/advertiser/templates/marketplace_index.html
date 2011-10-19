@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+{% load filters %}
+
+{% block extraScripts %}
+  <script type="text/javascript" src="/js/underscore.min.js"></script>
+  <script type="text/javascript" src="/js/json2.js"></script>
+  <script type="text/javascript" src="/js/backbone.min.js"></script>
+  <script type="text/javascript" src="/js/mopub-marketplace.js"></script>
+{% endblock extraScripts %}
+
+{% block pageTitle %}
+  <h1>Marketplace</h1>
+{% endblock pageTitle %}
+
+{% block navLinks %}
+  <li><a href="{% url publisher_index %}">Dashboard</a></li>
+  <li><a href="{% url advertiser_campaign %}">Campaigns</a></li>
+  <li class="active"><a href="{% url marketplace_index %}">Marketplace</a></li>
+  <li><a href="{% url reports_index %}">Reports</a></li>
+{% endblock navLinks %}
+
+{% block messageCenter %} {% endblock messageCenter %}
+{% block dateButtons %} {% endblock dateButtons %}
+
+{% block content %}
+
+  <div class="alert-message block-message clearfix">
+    <a href="#" class="close"> x </a>
+    We've just launched MoPub Marketplace, our state of the art real-time bidding exchange.
+    Flip the On/Off switch to get started,
+    or take a look at our <a href="{% url mpx_info %}">information page</a> if you want to know more about how it works.
+    <br />
+    <!-- <div class="lightswitch"> -->
+    <!--   <div class="switch on"></div> -->
+    <!-- </div> -->
+    <a class="btn start icon right" href="{% url mpx_info %}">Get Started</a>
+  </div>
+
+
+  <ul class="tabs">
+    <li class="active"> <a href="#performance"> Performance </a> </li>
+    <li> <a href="#controls"> Creative Controls </a> </li>
+    <li> <a href="#settings"> Settings </a> </li>
+  </ul>
+
+
+  <div class="active tab-section" id="performance">
+
+    {% if marketplace %}
+
+      <div class="rollup fig3">
+        <div class="data-figure">
+          <div class="figure">
+            0
+          </div>
+          <div class="label">
+            Impressions
+          </div>
+        </div>
+        <div class="data-figure">
+          <div class="figure">
+            0
+          </div>
+          <div class="label">
+            Clicks
+          </div>
+        </div>
+          <div class="data-figure">
+
+          <div class="figure">
+            $0.00
+          </div>
+          <div class="label">
+            Revenue
+          </div>
+        </div>
+      </div>
+
+      <div id="marketplace_info">
+        <table class="zebra-striped simpletable">
+
+          <thead>
+            <th>App</th>
+            <th>Revenue</th>
+            <th>eCPM</th>
+            <th>Attempts</th>
+            <th>Impressions</th>
+            <th>Fill Rate</th>
+            <th>Clicks</th>
+            <th>CTR</th>
+            <th>Price Floor</th>
+          </thead>
+
+          <tbody>
+            {% for app in marketplace.account.app_set %}
+              <tr>
+
+                {# App Icon, Name, and Type #}
+                <td class="clearfix">
+                  <img src="{{app.icon|binary_data|default_if_none:"/placeholders/image.gif"}}" alt="Icon" width="45" height="45" class="app-icon"/>
+                  <div class="app-detail">
+                    <a href="{% url publisher_app_show app_key=app.key %}">{{app.name}}</a>
+                    <span class="muted unbold">({{app.app_type_text}})</span>
+
+                    <br />
+                    <a href="#{{app.key}}" class="adunits">Show Adunits</a>
+                    <ul class="hidden adunits adunit-data-{{app.key}}">
+                      {% for adunit in app.all_adunits %}
+                        <li class="adunit" id="adunit-{{adunit.key}}">
+                          {{adunit.name}}
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  </div>
+
+                </td>
+
+                {# App Revenue from Marketplace #}
+                <td>
+                  0
+                  <br />
+                  --
+                  <ul class="hidden adunits adunit-data-{{app.key}}">
+                    {% for adunit in app.all_adunits %}
+                      <li class="adunit" id="adunit-{{adunit.key}}">
+                        0
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </td>
+
+                {# App eCPM, (marketplace revenue/impressions)*1000 #}
+                <td>
+                  0
+                  <br />
+                  --
+
+                  <ul class="hidden adunits adunit-data-{{app.key}}">
+                    {% for adunit in app.all_adunits %}
+                      <li class="adunit" id="adunit-{{adunit.key}}">
+                        0
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </td>
+
+                {# Attempts #}
+                <td>
+                  0
+                  <br />
+                  --
+
+                  <ul class="hidden adunits adunit-data-{{app.key}}">
+                    {% for adunit in app.all_adunits %}
+                      <li class="adunit" id="adunit-{{adunit.key}}">
+                        0
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </td>
+
+                {# Impressions (filled by the marketplace) #}
+                <td>
+                  0
+                  <br />
+                  --
+
+                  <ul class="hidden adunits adunit-data-{{app.key}}">
+                    {% for adunit in app.all_adunits %}
+                      <li class="adunit" id="adunit-{{adunit.key}}">
+                        0
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </td>
+
+                {# Fill Rate (impressions/attempts) #}
+                <td>
+                  0
+                  <br />
+                  --
+
+                  <ul class="hidden adunits adunit-data-{{app.key}}">
+                    {% for adunit in app.all_adunits %}
+                      <li class="adunit" id="adunit-{{adunit.key}}">
+                        0
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </td>
+
+                {# Clicks #}
+                <td>
+                  0
+                  <br />
+                  --
+
+                  <ul class="hidden adunits adunit-data-{{app.key}}">
+                    {% for adunit in app.all_adunits %}
+                      <li class="adunit" id="adunit-{{adunit.key}}">
+                        0
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </td>
+
+                {# CTR (click through rate, clicks/impressions) #}
+                <td>
+                  <span class="ctr_total">0</span>
+                  <ul class="hidden adunits adunit-data-{{app.key}}">
+                    <br />
+                    {% for adunit in app.all_adunits %}
+                      <li class="adunit" id="adunit-{{adunit.key}}">
+                        0
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </td>
+
+                {# Price Floor #}
+                <td>
+                  0
+                  <br />
+                  --
+
+                  <ul class="hidden adunits adunit-data-{{app.key}}">
+                    {% for adunit in app.all_adunits %}
+                      <li class="adunit" id="adunit-{{adunit.key}}">
+                        0
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+    {% else %}
+
+      <div class="alert-message block-message info">
+        Marketplace is a new type of campaign we're offering. You'd be a fool not to use it dude!
+      </div>
+
+    {% endif %}
+
+  </div>
+
+  <div class="tab-section" id="controls">
+
+    <div class="well">
+      DSP <br />
+      Advertiser <br />
+      Creative (preview) <br/>
+    </div>
+  </div>
+
+  <div class="clearfix tab-section" id="settings">
+    <div class="well">
+      Blindness?
+    </div>
+
+    <div class="well">
+      Awesome blocklist goes here.
+    </div>
+
+    <div class="right button-group">
+      <div class="big disabled btn"> Discard Changes </div>
+      <div class="big primary btn"> Save </div>
+    </div>
+  </div>
+
+{% endblock content %}

@@ -72,6 +72,8 @@ class RequestHandler(object):
             self.offline = self.params.get("offline",False)
             self.offline = True if self.offline == "1" else False
 
+            logging.warn(request.method)
+
             if request.method == "GET":
                 # Now we can define get/post methods with variables instead of having to get it from the
                 # Query dict every time! hooray!
@@ -95,6 +97,22 @@ class RequestHandler(object):
                     if not kwargs.has_key(arg) and self.params.has_key(arg):
                         kwargs[arg] = self.params.get(arg)
                 return self.post(*args,**kwargs)
+
+            elif request.method == "PUT":
+                logging.warn("PUT MOTHERFUCKER")
+                f_args = getargspec(self.put)[0]
+                for arg in f_args:
+                    if not kwargs.has_key(arg) and self.params.has_key(arg):
+                        kwargs[arg] = self.params.get(arg)
+                return self.put(*args, **kwargs)
+
+            elif request.method == "DELETE":
+                f_args = getargspec(self.delete)[0]
+                for arg in f_args:
+                    if not kwargs.has_key(arg) and self.params.has_key(arg):
+                        kwargs[arg] = self.params.get(arg)
+                return self.delete(*args, **kwargs)
+
 
         # Execute our newly decorated view
         return mp_view(request, *args, **kwargs)

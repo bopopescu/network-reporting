@@ -91,6 +91,8 @@ class AdGroupIndexHandler(RequestHandler):
         stats_model = StatsModelQueryManager(self.account, offline=self.offline)
         stats = stats_model.get_stats_for_days(publisher=None, advertiser=None, days=days)
 
+        logging.warn(stats)
+
         key = "||"
         stats_dict = {}
         stats_dict[key] = {}
@@ -145,9 +147,6 @@ class AdGroupIndexHandler(RequestHandler):
                                    'end_date':days[-1],
                                    'date_range': self.date_range,
                                    'apps' : apps,
-                                   # 'totals': reduce(lambda x, y: x+y.summed_stats, adgroups, StatsModel()),
-                                   # 'today': reduce(lambda x, y: x+y, [c.all_stats[-1] for c in graph_adgroups], StatsModel()),
-                                   # 'yesterday': yesterday,
                                    'guarantee_levels': guarantee_levels,
                                    'guarantee_num': len(guaranteed_campaigns),
                                    'marketplace': marketplace_campaigns,
@@ -1164,3 +1163,23 @@ class MPXInfoHandler(RequestHandler):
 @login_required
 def mpx_info(request, *args, **kwargs):
     return MPXInfoHandler()(request, *args, **kwargs)
+
+
+class MarketplaceIndexHandler(RequestHandler):
+    def get(self):
+
+        marketplace_campaign = CampaignQueryManager.get_marketplace(self.account)
+
+        return render_to_response(self.request,
+                                  "advertiser/marketplace_index.html",
+                                  {
+                                      'marketplace': marketplace_campaign
+                                  })
+
+    def post(self):
+        pass
+
+
+@login_required
+def marketplace_index(request, *args, **kwargs):
+    return MarketplaceIndexHandler()(request, *args, **kwargs)

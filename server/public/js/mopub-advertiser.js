@@ -399,7 +399,6 @@ var mopub = mopub || {};
       });
 
       $('#advertisers-testAdServer')
-          .button({ icons : {secondary : 'ui-icon-circle-triangle-e'} })
           .click(function(e) {
               e.preventDefault();
               $('#adserverTest').dialog({
@@ -857,12 +856,12 @@ var mopub = mopub || {};
     }
 
     function initCampaignsPage() {
-      showOrHideRevenueBreakdown();
-      setupAjaxStatusPopup();
-      setCampaignFilterOptionsDisabled(true);
-      populateStatsBreakdownsWithData(mopub.accountStats);
-      populateGraphWithAccountStats(mopub.accountStats);
-      populateCampaignStats();
+        showOrHideRevenueBreakdown();
+        setupAjaxStatusPopup();
+        setCampaignFilterOptionsDisabled(true);
+        populateStatsBreakdownsWithData(mopub.accountStats);
+        populateGraphWithAccountStats(mopub.accountStats);
+        populateCampaignStats();
     }
 
     function showOrHideRevenueBreakdown() {
@@ -889,17 +888,21 @@ var mopub = mopub || {};
       });
     }
 
-    function retryFailedFetches() {
-      var fetches = [gteeFetch, promoFetch, networkFetch, bfillFetch, marketplaceFetch,
-        bfMarketplaceFetch];
+        function retryFailedFetches() {
+            var fetches = [gteeFetch,
+                           promoFetch,
+                           networkFetch,
+                           bfillFetch,
+                           marketplaceFetch,
+                           bfMarketplaceFetch];
 
-      $.each(fetches, function(index, fetch) {
-        if (fetch.hasFailed) {
-          setSectionLoadingSpinnerHidden(fetch.campaignType, false);
-          fetch.start();
+            $.each(fetches, function(index, fetch) {
+                if (fetch.hasFailed) {
+                    setSectionLoadingSpinnerHidden(fetch.campaignType, false);
+                    fetch.start();
+                }
+            });
         }
-      });
-    }
 
     function setCampaignFilterOptionsDisabled(disabled) {
       $("#campaigns-filterOptions").buttonset({"disabled": disabled});
@@ -968,18 +971,24 @@ var mopub = mopub || {};
     }
 
     function populateGraphWithAccountStats(stats) {
-      var dailyStats = stats["all_stats"]["||"]["daily_stats"];
+        var dailyStats = stats["all_stats"]["||"]["daily_stats"];
 
-      mopub.dashboardStatsChartData = {
-        pointStart: mopub.graphStartDate,
-        pointInterval: 86400000,
-        impressions: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "impression_count")}],
-        revenue: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "revenue")}],
-        clicks: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "click_count")}],
-        ctr: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "ctr")}]
-      };
+        mopub.dashboardStatsChartData = {
+            pointStart: mopub.graphStartDate,
+            pointInterval: 86400000,
+            impressions: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "impression_count")}],
+            revenue: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "revenue")}],
+            clicks: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "click_count")}],
+            ctr: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "ctr")}]
+        };
 
-      mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
+        mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
+
+
+
+//        mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
+  //      mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
+    //    mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
     }
 
     function populateCampaignStats() {

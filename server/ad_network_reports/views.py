@@ -1,3 +1,5 @@
+import logging
+
 from ad_network_reports.query_managers import AdNetworkReportQueryManager
 from common.ragendja.template import render_to_response
 from common.utils.request_handler import RequestHandler
@@ -103,6 +105,7 @@ class AddLoginInfoHandler(RequestHandler):
 
         Return a redirect to the ad nework report index.
         """
+        logging.warning(self.request)
         ad_network_name = self.request.POST['ad_network_name']
         username = self.request.POST['username']
         password = self.request.POST['password']
@@ -111,15 +114,8 @@ class AddLoginInfoHandler(RequestHandler):
 
         manager = AdNetworkReportQueryManager(self.account)
 
-        error = manager.create_login_info_and_mappers(ad_network_name, username,
+        manager.create_login_info_and_mappers(ad_network_name, username,
                 password, client_key, send_email)
-
-        if error:
-            return render_to_response(self.request,
-                    'ad_network_reports/add_login_info.html',
-                    dict(ad_network_names = AD_NETWORK_NAMES, error = error))
-        else:
-            return redirect('ad_network_reports_index')
 
 @login_required
 def add_login_info(request, *args, **kwargs):

@@ -2,16 +2,19 @@ import logging
 import sys
 import urllib
 
-sys.path.append('/home/ubuntu/mopub/server')
-sys.path.append('/home/ubuntu/google_appengine')
-sys.path.append('/home/ubuntu/google_appengine/lib/antlr3')
-sys.path.append('/home/ubuntu/google_appengine/lib/django_1_2')
-sys.path.append('/home/ubuntu/google_appengine/lib/fancy_urllib')
-sys.path.append('/home/ubuntu/google_appengine/lib/ipaddr')
-sys.path.append('/home/ubuntu/google_appengine/lib/webob')
-sys.path.append('/home/ubuntu/google_appengine/lib/yaml/lib')
+EC2 = False
 
-import common.utils.test.setup
+if EC2:
+    sys.path.append('/home/ubuntu/mopub/server')
+    sys.path.append('/home/ubuntu/google_appengine')
+    sys.path.append('/home/ubuntu/google_appengine/lib/antlr3')
+    sys.path.append('/home/ubuntu/google_appengine/lib/django_1_2')
+    sys.path.append('/home/ubuntu/google_appengine/lib/fancy_urllib')
+    sys.path.append('/home/ubuntu/google_appengine/lib/ipaddr')
+    sys.path.append('/home/ubuntu/google_appengine/lib/webob')
+    sys.path.append('/home/ubuntu/google_appengine/lib/yaml/lib')
+
+# import common.utils.test.setup
 
 from google.appengine.ext import db
 
@@ -135,10 +138,8 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         Return None if the login credentials are correct otherwise return an
         error message.
         """
-        logging.warning('Quering shit')
         apps_with_publisher_ids = list(self.get_apps_with_publisher_ids(
             ad_network_name))
-        logging.warning('Other stuff')
         publisher_ids = [publisher_id for app, publisher_id in
                 apps_with_publisher_ids]
         # For all the adunits in each app if they have a network_config with
@@ -148,7 +149,6 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                 app.all_adunits if hasattr(adunit, 'network_config') and
                 getattr(adunit.network_config, '%s_pub_id' % ad_network_name,
                     None) != None]
-        logging.info(adunits)
 
         login_info = AdNetworkLoginInfo(account = self.account,
                                         ad_network_name = ad_network_name,

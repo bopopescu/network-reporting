@@ -73,10 +73,15 @@ class MobFoxScraper(object):
         return reports
 
     def get_value(self, name):
-        return self.dom.getElementsByTagName(name)[0].childNodes[0].nodeValue
+        nodes = self.dom.getElementsByTagName(name)[0].childNodes
+        if nodes:
+            return nodes[0].nodeValue
+        else:
+            return 0
 
 if __name__ == '__main__':
     NC = NetworkConfidential()
-    NC.publisher_ids = ['b97555537b0605e4786b6b0ed6ceb9b9']
+    NC.publisher_ids = ['ddcc935d2bc034b2823e04b24ff544a9',
+            'e884e3c21a498d57f7d1cb1400c5ab9b']
     SCRAPER = MobFoxScraper(NC)
     print SCRAPER.get_site_stats(date.today())

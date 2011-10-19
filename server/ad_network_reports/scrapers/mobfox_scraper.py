@@ -14,7 +14,8 @@ from xml.dom import minidom
 class MobFoxScraper(object):
     """One app stats returned per request sent. Can't break down by ad unit."""
     # API_KEY is MoPub specific
-    API_KEY = 'e64d04079c63c14644fc9690a925c8af'
+    API_KEY = 'MOPUB30082011'
+    API_URL = 'http://account.mobfox.com/mopub_reportingapi.php?'
 
     def __init__(self, credentials):
         self.publisher_ids = credentials.publisher_ids
@@ -39,7 +40,7 @@ class MobFoxScraper(object):
         reports = []
         for pub_id in self.publisher_ids:
             req_dict['publisher_id'] = pub_id
-            req = urllib2.Request('http://account.mobfox.com/reporting_api.php?'
+            req = urllib2.Request(self.API_URL
                     + urllib.urlencode(req_dict))
 
             response = urllib2.urlopen(req)
@@ -76,6 +77,6 @@ class MobFoxScraper(object):
 
 if __name__ == '__main__':
     NC = NetworkConfidential()
-    NC.publisher_ids = ['fb8b314d6e62912617e81e0f7078b47e']
+    NC.publisher_ids = ['b97555537b0605e4786b6b0ed6ceb9b9']
     SCRAPER = MobFoxScraper(NC)
     print SCRAPER.get_site_stats(date.today())

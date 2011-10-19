@@ -40,7 +40,7 @@ class IAdScraper(Scraper):
         self.browser.implicitly_wait(10)
         self.browser.get(self.STATS_PAGE)
 
-        #time.sleep(1)
+        time.sleep(1)
         login = self.browser.find_element_by_css_selector('#accountname')
         login.clear()
         login.send_keys(self.username)
@@ -49,7 +49,7 @@ class IAdScraper(Scraper):
         account_password.send_keys(self.password)
         self.browser.find_element_by_name('appleConnectForm').submit()
         # There are some redirects and shit that happens, chill out for a bit
-        #time.sleep(1)
+        time.sleep(3)
 
         if self.browser.title == self.LOGIN_TITLE:
             raise Exception(self.browser.find_element_by_css_selector(

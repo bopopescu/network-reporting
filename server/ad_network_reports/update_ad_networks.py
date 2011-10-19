@@ -43,8 +43,8 @@ def send_stats_mail(test_date, email_body):
     table.
     """
     mail.send_mail(sender='olp@mopub.com',
-                   to='report-monitoring@mopub.com',
-                   cc='tiago@mopub.com',
+                   #to='report-monitoring@mopub.com',
+                   to='tiago@mopub.com',
                    subject=("Ad Network Scrape Stats for %s" %
                        test_date.strftime("%m/%d/%y")),
                    body=("Learn more at http://mopub-experimental.appspot.com/"

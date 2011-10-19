@@ -53,6 +53,13 @@ STATS_MODEL_QUERY_KEY = "sm"
 MDB_STATS_UPDATER_IP = 'http://mongostats.mopub.com'
 MDB_STATS_UPDATER_HANDLER_PATH = '/update'
 
+
+# DEREF_CACHE description:
+# global dict containing str(key) mappings among publisher and advertiser models:
+# {adunit_str: [app_str, account_str],
+#  adgroup_str: [campaign_str, account_str],
+#  creative_str: [adgroup_str, campaign_str, account_str],
+#  account_str: account object} 
 DEREF_CACHE = {}
 
 
@@ -99,11 +106,13 @@ def update_stats(stats_dict,publisher,advertiser,date_hour,country,attribute,req
 def _create_mdb_json(stats_to_put):
     # format of d:
     # { (adunit, creative, date_hour): 
-    #   {'request_count': int, 'attempt_count': int, 'impression_count': int, 'click_count': int, 'conversion_count': int, 'revenue': float}
+    #   {'attempt_count': int, 'impression_count': int, 'click_count': int, 'conversion_count': int, 'revenue': float}
     # }
     d = {}
     
-    request_d = {}  # no craetive
+    # format of request_d:
+    # { (adunit, date_hour): request_count }
+    request_d = {}  # no creative
     
     for s in stats_to_put:
         key_name = s.key().name()
@@ -142,7 +151,11 @@ def _create_mdb_json(stats_to_put):
             else:
                 d[key_tuple] = counts
 
-    # create new dict with string keys (for json) and fill in request_counts from request_d 
+    # create new dict json_d with string keys (for json serialization) and fill in request_counts from request_d 
+    # format of json_d:
+    # { 'adunit:creative:date_hour': 
+    #   {'request_count': int, 'attempt_count': int, 'impression_count': int, 'click_count': int, 'conversion_count': int, 'revenue': float}
+    # }
     json_d = {}
     for (adunit, creative, date_hour), counts in d.iteritems():
         k = '%s:%s:%s' % (adunit, creative, date_hour)
@@ -166,12 +179,16 @@ def _package_mdb_post_data(mdb_dict):
             return True, err_msg, None
             
         [adunit, creative, date_hour] = parts
-        [app] = _deref_adunit(adunit) or [None]
-        [adgroup, campaign] = _deref_creative(creative) or [None, None]
         
-        if None not in [app, adgroup, campaign]:
+        # NOTE: deref adunit after creative, since there's a bug where the account is not guaranteed to be retrieved from creative
+        [adgroup, campaign, account] = _deref_creative(creative) or [None, None, None]
+        [app, account] = _deref_adunit(adunit) or [None, None]
+        
+        
+        if None not in [app, account, adgroup, campaign]:
             post_dict = {'adunit': adunit,
                          'app': app,
+                         'account': account,
                          'creative': creative,
                          'adgroup': adgroup,
                          'campaign': campaign,
@@ -184,7 +201,7 @@ def _package_mdb_post_data(mdb_dict):
                          'revenue': v['revenue']}
             mdb_post_list.append(post_dict)
         else:
-            err_msg = 'None derefed for key_tuple %s: app=%s, adgroup=%s, campaign=%s' % (k, app, adgroup, campaign)
+            err_msg = 'None derefed for key_tuple %s: app=%s, account=%s, adgroup=%s, campaign=%s' % (k, app, account, adgroup, campaign)
             return True, err_msg, None
                         
     # post the list of dicts to MongoDB
@@ -192,66 +209,65 @@ def _package_mdb_post_data(mdb_dict):
     return False, None, post_data
 
 
-# returns [app_str] or None
+# returns [app_str, account_str] or None
 def _deref_adunit(adunit_str):
     if adunit_str in DEREF_CACHE:
-        logging.info('found adunit in cache')
         return DEREF_CACHE[adunit_str]
 
     try:
         adunit_key = db.Key(adunit_str)
         adunit = AdUnit.get(adunit_key)
         app_str = str(adunit._app_key)
-        DEREF_CACHE[adunit_str] = [app_str]
-        return [app_str]
+        account_str = str(adunit._account)
+        DEREF_CACHE[adunit_str] = [app_str, account_str]
+        return [app_str, account_str]
     except BadKeyError, e:
-        logging.error('EXCEPTION on adunit %s: %s' %(adunit_str, e))
+        logging.error('deref BadKeyError on adunit %s: %s' %(adunit_str, e))
         return None
     except Exception, e:
-        logging.error(e)
-        return None
-    
-
-# returns [adgroup_str, campaign_str] or None
-def _deref_creative(creative_str):
-    if creative_str in DEREF_CACHE:
-        logging.info('found creative in cache')        
-        return DEREF_CACHE[creative_str]
-
-    try:
-        creative_key = db.Key(creative_str)
-        creative = Creative.get(creative_key)
-        adgroup_str = str(creative._ad_group)        
-        adgroup_deref_results = _deref_adgroup(adgroup_str)
-        if adgroup_deref_results:
-            [campaign_str] = adgroup_deref_results
-            DEREF_CACHE[creative_str] = [adgroup_str, campaign_str]
-            return [adgroup_str, campaign_str]
-    except BadKeyError, e:
-        logging.error('EXCEPTION on creative %s: %s' %(creative_str, e))
-        return None
-    except Exception, e:
-        logging.error(e)
+        logging.error('deref error on adunit %s: %s' %(adunit_str, e))
         return None
 
 
-# returns [campaign_str] or None
-def _deref_adgroup(adgroup_str):
+# returns [campaign_str, account_str] or None
+def deref_adgroup(adgroup_str):
     if adgroup_str in DEREF_CACHE:
-        logging.info('found adgroup in cache')        
         return DEREF_CACHE[adgroup_str]
 
     try:
         adgroup_key = db.Key(adgroup_str)
         adgroup = AdGroup.get(adgroup_key)
         campaign_str = str(adgroup._campaign)
-        DEREF_CACHE[adgroup_str] = [campaign_str]
-        return [campaign_str]
+        account_str = str(adgroup._account)
+        DEREF_CACHE[adgroup_str] = [campaign_str, account_str]
+        return [campaign_str, account_str]
     except BadKeyError, e:
-        logging.error('EXCEPTION on adgroup %s: %s' %(adgroup_str, e))
+        logging.error('deref BadKeyError on adgroup %s: %s' %(adgroup_str, e))
         return None
     except Exception, e:
-        logging.error(e)
+        logging.error('deref error on adgroup %s: %s' %(adgroup_str, e))
+        return None
+
+
+# returns [adgroup_str, campaign_str, account_str] or None
+def _deref_creative(creative_str):
+    if creative_str in DEREF_CACHE:
+        return DEREF_CACHE[creative_str]
+
+    try:
+        creative_key = db.Key(creative_str)
+        creative = Creative.get(creative_key)
+        adgroup_str = str(creative._ad_group)        
+        adgroup_deref_results = deref_adgroup(adgroup_str)
+        if adgroup_deref_results:
+            [campaign_str, account_str] = adgroup_deref_results
+            DEREF_CACHE[creative_str] = [adgroup_str, campaign_str, account_str]
+            return [adgroup_str, campaign_str, account_str]
+    except BadKeyError, e:
+        logging.error('deref BadKeyError on creative %s: %s' %(creative_str, e))
+        return None
+    except Exception, e:
+        logging.error('deref error on creative %s: %s' %(creative_str, e))
         return None
 
     
@@ -630,7 +646,7 @@ class ServeLogHandler(blobstore_handlers.BlobstoreDownloadHandler):
         
 class MongoUpdateStatsHandler(webapp.RequestHandler):
     def post(self):
-        mdb_dict = simplejson.loads(self.request.body)
+        mdb_dict = simplejson.loads(self.request.body)  # mdb_dict is json_d in _create_mdb_json()
         logging.info('POST_BODY: %s' % mdb_dict)
 
         has_err, err_msg, post_data = _package_mdb_post_data(mdb_dict)

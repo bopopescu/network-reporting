@@ -1653,8 +1653,7 @@ table .headerSortDown.purple {
   color: black;
   font-size: 20px;
   font-weight: bold;
-  text-shadow: 0 1px 0 white;
-  line-height: 13.5px; }
+  text-shadow: 0 1px 0 white; }
   .close:hover {
     filter: alpha(opacity=40);
     -khtml-opacity: 0.4;
@@ -2122,6 +2121,14 @@ table .headerSortDown.purple {
       border-bottom-right-radius: 5px;
       -moz-border-radius-bottomright: 5px;
       -webkit-border-bottom-right-radius: 5px; }
+
+.search {
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  width: 250px;
+  font-size: 16px; }
 
 /*
  * Plugins

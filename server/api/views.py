@@ -26,9 +26,9 @@ class AppService(RequestHandler):
         try:
             # If an app key is provided, return the single app
             if app_key:
-                apps = AppQueryManager.get_app_by_key(app_key)
+                app = AppQueryManager.get_app_by_key(app_key)
                 response = {
-                    'apps': [app.toJSON() for app in apps]
+                    'apps': [app.toJSON()]
                 }
             # If no app key is provided, return a list of all apps for the account
             else:
@@ -42,13 +42,11 @@ class AppService(RequestHandler):
 
 
     def post(self):
-        logging.warn(self.request.POST)
-        return JSONResponse({'error': 'No app_key provided'})
+        return JSONResponse({'error': 'Not yet implemented'})
 
 
-    def put(self, app_key=None):
-        #logging.warn(self.request.PUT)
-        return JSONResponse({'error': 'No app_key provided'})
+    def put(self, app_key=None, *args, **kwargs):
+        return JSONResponse({'error': 'Not yet implemented'})
 
 
     def delete(self, app_key=None):
@@ -64,9 +62,8 @@ class AdUnitService(RequestHandler):
     """
     API Service for delivering serialized AdUnit data
     """
-    def get(self):
+    def get(self, app_key = None):
         try:
-            app_key = self.request.GET.get('app', None)
             if app_key:
                 app = AppQueryManager.get_app_by_key(app_key)
                 adunits = AdUnitQueryManager.get_adunits(app=app)

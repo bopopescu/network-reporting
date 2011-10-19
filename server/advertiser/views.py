@@ -1168,12 +1168,19 @@ def mpx_info(request, *args, **kwargs):
 class MarketplaceIndexHandler(RequestHandler):
     def get(self):
 
+        # Marketplace settings are kept as a single campaign.
+        # Only one should exist per account.
         marketplace_campaign = CampaignQueryManager.get_marketplace(self.account)
+
+        # To bootstrap the Backbone.js models in the page, create a list of
+        # JSON'ed apps. Apps are the highest level model on the page.
+        bootstrapped_apps = simplejson.dumps([app.toJSON() for app in AppQueryManager.get_apps(self.account)])
 
         return render_to_response(self.request,
                                   "advertiser/marketplace_index.html",
                                   {
-                                      'marketplace': marketplace_campaign
+                                      'marketplace': marketplace_campaign,
+                                      'bootstrapped_apps': bootstrapped_apps,
                                   })
 
     def post(self):

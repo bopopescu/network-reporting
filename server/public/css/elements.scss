@@ -22,6 +22,38 @@
  */
 
 .tabs {
+    margin: 0;
+    padding:0;
+    line-height: 1em;
+    list-style: none;
+
+    > li {
+        display: inline-block;
+        width: auto;
+    }
+
+    > li.active a {
+        color: white;
+        text-shadow: #1B83B8 0 1px 0;
+        background: #22A4E6;
+        -webkit-border-radius: 5px;
+        -mox-border-radius: 5px;
+        border-radius: 5px;
+        text-decoration: none;
+    }
+
+    > li a {
+        display: block;
+        padding: 8px 10px 0 10px;
+        height: 26px;
+        font-size: 15px;
+    }
+}
+
+.tabs3 {
+
+}
+.tabs2 {
     padding: 0px 10px;
     margin: 0 -10px 10px -10px;
     border-bottom: 1px solid $light_gray;

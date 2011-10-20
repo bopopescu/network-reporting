@@ -46,7 +46,8 @@ if (typeof window.console == "undefined") {
             JQUERY_UI_IMAGE_PATH + '/ui-bg_inset-soft_25_595959_1x100.png',
             JQUERY_UI_IMAGE_PATH + '/ui-icons_0090d9_256x240.png',
             JQUERY_UI_IMAGE_PATH + '/ui-icons_cc2929_256x240.png',
-            JQUERY_UI_IMAGE_PATH + '/ui-icons_ffffff_256x240.png'
+            JQUERY_UI_IMAGE_PATH + '/ui-icons_ffffff_256x240.png',
+            '/placeholders/image.gif'
         );
 
         // replace <legend> with <h2>

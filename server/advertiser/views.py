@@ -1174,13 +1174,13 @@ class MarketplaceIndexHandler(RequestHandler):
 
         # To bootstrap the Backbone.js models in the page, create a list of
         # JSON'ed apps. Apps are the highest level model on the page.
-        bootstrapped_apps = simplejson.dumps([app.toJSON() for app in AppQueryManager.get_apps(self.account)])
+        app_keys = simplejson.dumps([str(app_key) for app_key in AppQueryManager.get_app_keys(self.account)])
 
         return render_to_response(self.request,
                                   "advertiser/marketplace_index.html",
                                   {
                                       'marketplace': marketplace_campaign,
-                                      'bootstrapped_apps': bootstrapped_apps,
+                                      'app_keys': app_keys,
                                   })
 
     def post(self):

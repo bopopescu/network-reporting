@@ -97,8 +97,8 @@ class AppQueryManager(QueryManager):
         return app
 
     @classmethod
-    def get_apps(cls, account=None, deleted=False, limit=MAX_OBJECTS, alphabetize=False, offset=None):
-        apps = cls.Model.all().filter("deleted =", deleted)
+    def get_apps(cls, account=None, deleted=False, limit=MAX_OBJECTS, alphabetize=False, offset=None, keys_only = False):
+        apps = cls.Model.all(keys_only = keys_only).filter("deleted =", deleted)
         if account:
             apps = apps.filter("account =", account)
             if alphabetize:
@@ -106,6 +106,10 @@ class AppQueryManager(QueryManager):
         if offset:
             apps = apps.filter("__key__ >", offset)
         return apps.fetch(limit)
+
+    @classmethod
+    def get_app_keys(cls, account=None, deleted=False, limit=MAX_OBJECTS, alphabetize=False, offset=None):
+        return cls.get_apps(account, deleted, limit, alphabetize, offset, keys_only = True)
 
     @classmethod
     def get_all_apps(cls, account=None, deleted=False, alphabetize=False):

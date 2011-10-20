@@ -1,31 +1,29 @@
-<tr class="adunit-row" id="adunit-<%= (typeof id == "undefined" ? "NONE" : id ) %>">
+<tr class="adunit-row" id="adunit-<%= id %>">
   <td class="name">
-    <%= (typeof name == "undefined" ? "New Adunit" : name ) %>
+    <%= name  %>
   </td>
   <td class="revenue">
-    <%= (typeof revenue == "undefined" ? 0 : revenue ) %>
+    <%= revenue  %>
   </td>
   <td class="ecpm">
-    <%= (typeof ecpm == "undefined" ? 0 : ecpm ) %>
+    <%= ecpm %>
   </td>
   <td class="attempts">
-    <%= (typeof attempts == "undefined" ? 0 : attempts ) %>
+    <%= attempts %>
   </td>
   <td class="impressions">
-    <%= (typeof impressions == "undefined" ? 0 : impressions ) %>
+    <%= impressions %>
   </td>
-  <td class="fillrate">
-    <%= (typeof fillrate == "undefined" ? 0 : fillrate ) %>
+  <td class="fill_rate">
+    <%= fill_rate %>
   </td>
   <td class="clicks">
-    <%= (typeof clicks == "undefined" ? 0 : clicks ) %>
+    <%= clicks %>
   </td>
   <td class="ctr">
-    <%= (typeof ctr == "undefined" ? 0 : ctr ) %>
+    <%= ctr %>
   </td>
-  <% if (typeof price_floor == "undefined") { %>
-    <td class="price_floor>
-      <%= price_floor %>
-    </td>
-  <% } %>
+  <td class="price_floor">
+    <%= price_floor %>
+  </td>
 </tr>

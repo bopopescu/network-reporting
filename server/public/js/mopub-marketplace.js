@@ -9,8 +9,9 @@
      */
     var AdUnit = Backbone.Model.extend({
         defaults : {
+            name: "",
             revenue: 0,
-            eCPM: 0,
+            ecpm: 0,
             attempts: 0,
             impressions: 0,
             fill_rate: 0,
@@ -47,6 +48,19 @@
      */
 
     var App = Backbone.Model.extend({
+        defaults : {
+            name: "",
+            url:"#",
+            revenue: 0,
+            ecpm: 0,
+            attempts: 0,
+            impressions: 0,
+            fill_rate: 0,
+            clicks: 0,
+            ctr: 0,
+            price_floor: 0,
+            app_type: "iOS"
+        },
         url: function () {
             return "/api/app/" + this.id;
         },
@@ -92,10 +106,9 @@
 
         render: function () {
             var renderedContent = this.template(this.model.toJSON());
-            $(this.el + " tr:last").after(renderedContent);
+            $("tbody", this.el).append(renderedContent);
             return this;
         }
-
     });
 
     var AdUnitView = Backbone.View.extend({
@@ -106,7 +119,7 @@
 
         render: function () {
             var renderedContent = this.template(this.model.toJSON());
-            $("tr:last", this.el).after(renderedContent);
+            $("#app", this.el).append(renderedContent);
             return this;
         }
 
@@ -121,4 +134,46 @@
     window.AppView = AppView;
 
 
+    var Marketplace = {
+
+        fetchAllApps: function (app_keys) {
+            _.each(app_keys, function(app_key) {
+                var app = new App({id: app_key});
+                app.bind("change", function(current_app) {
+                    var appView = new AppView({model: current_app, el: "#marketplace_targeting"});
+                    appView.render();
+                });
+                app.fetch();
+            });
+        },
+
+        fetchAllAdUnits: function (adunit_keys) {
+            _.each(adunit_keys, function(adunit_key) {
+                var adunit = new AdUnit({id: adunit_key});
+                adunit.bind("change", function(current_adunit) {
+                    var adunitView = new AdUnitView({model: current_adunit, el: "#marketplace_targeting"});
+                    adunitView.render();
+                });
+                adunit.fetch();
+            });
+        }
+
+    };
+
+
+    window.Marketplace = Marketplace;
+
+    $(document).ready(function() {
+        $("a.adunits").click(function() {
+            var href = $(this).attr('href').replace("#","");
+            $(".adunit-data-" + href).each(function () {
+                if ($(this).hasClass('hidden')) {
+                    $(this).slideUp().removeClass('hidden');
+                } else {
+                    $(this).slideDown().addClass('hidden');
+                }
+            });
+        });
+
+    });
 })(this.jQuery, this.Backbone);

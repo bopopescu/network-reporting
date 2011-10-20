@@ -23,6 +23,7 @@ class AppService(RequestHandler):
     API Service for delivering serialized App data
     """
     def get(self, app_key=None):
+#        logging.warn(app_key)
         try:
             # If an app key is provided, return the single app
             if app_key:

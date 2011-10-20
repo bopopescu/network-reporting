@@ -1,29 +1,6 @@
 {% extends "base.html" %}
 {% load filters %}
 
-{% block extraScripts %}
-  <script type="text/html" id="app-template">
-    {% include "partials/app.html" %}
-  </script>
-  <script type="text/html" id="adunit-template">
-    {% include "partials/adunit.html" %}
-  </script>
-  <script type="text/html">
-    {% include "partials/inventory.html" %}
-  </script>
-  <script type="text/javascript" src="/js/underscore.min.js"></script>
-  <script type="text/javascript" src="/js/json2.js"></script>
-  <script type="text/javascript" src="/js/backbone.min.js"></script>
-  <script type="text/javascript" src="/js/mopub-marketplace.js"></script>
-  <script type="text/javascript">
-    $(document).ready(function() {
-        adunit = new AdUnit({revenue: 1000, id: "fuckit", ecpm: 0.50, price_floor: 0.25});
-        adunitView = new AdUnitView({model: adunit, el: "#marketplace_targeting"});
-        adunitView.render();
-    });
-  </script>
-{% endblock extraScripts %}
-
 {% block pageTitle %}
   <h1>Marketplace</h1>
 {% endblock pageTitle %}
@@ -113,7 +90,8 @@
           </thead>
 
           <tbody>
-            {% for app in marketplace.account.app_set %}
+{% comment %}
+          {% for app in marketplace.account.app_set %}
               <tr>
 
                 {# App Icon, Name, and Type #}
@@ -257,6 +235,8 @@
                 </td>
               </tr>
             {% endfor %}
+
+{% endcomment %}
           </tbody>
         </table>
       </div>
@@ -295,3 +275,26 @@
   </div>
 
 {% endblock content %}
+
+
+{% block extraScripts %}
+  <script type="text/html" id="app-template">
+    {% include "partials/app.html" %}
+  </script>
+  <script type="text/html" id="adunit-template">
+    {% include "partials/adunit.html" %}
+  </script>
+  <script type="text/html">
+    {% include "partials/inventory.html" %}
+  </script>
+  <script type="text/javascript" src="/js/underscore.min.js"></script>
+  <script type="text/javascript" src="/js/json2.js"></script>
+  <script type="text/javascript" src="/js/backbone.min.js"></script>
+  <script type="text/javascript" src="/js/mopub-marketplace.js"></script>
+  <script type="text/javascript">
+    $(document).ready(function() {
+        var app_keys = {{ app_keys|safe }};
+        Marketplace.fetchAllApps(app_keys);
+    });
+  </script>
+{% endblock extraScripts %}

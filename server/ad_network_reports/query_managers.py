@@ -139,6 +139,18 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                 # example return (App, NetworkConfig.admob_pub_id)
                 yield (app, pub_id)
 
+    def get_adunit_publisher_ids(self, ad_network_name, adunits):
+        """Get the ad unit publisher ids with the ad network from the list of
+        adunits.
+
+        Return a list of ad unit publisher ids.
+        """
+        return [getattr(adunit.network_config, '%s_pub_id' %
+            ad_network_name) for adunit in adunits if
+            hasattr(adunit, 'network_config') and
+            getattr(adunit.network_config, '%s_pub_id' %
+                ad_network_name, None)]
+
     def create_login_info_and_mappers(self, ad_network_name, username, password,
             client_key, send_email):
         """Check login credentials by making a request to tornado on EC2. If
@@ -154,19 +166,18 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                 apps_with_publisher_ids]
         # For all the adunits in each app if they have a network_config with
         # a pub_id for the ad_network_name defined save it to the adunits list.
-        adunits = [getattr(adunit.network_config, '%s_pub_id' % ad_network_name)
-                for app, publisher_id in apps_with_publisher_ids for adunit in
-                app.all_adunits if hasattr(adunit, 'network_config') and
-                getattr(adunit.network_config, '%s_pub_id' % ad_network_name,
-                    None)]
+        adunit_publisher_ids = self.get_adunit_publisher_ids(ad_network_name,
+                [adunit for app, publisher_id in apps_with_publisher_ids for
+                    adunit in app.all_adunits])
 
-        login_info = AdNetworkLoginInfo(account = self.account,
-                                        ad_network_name = ad_network_name,
-                                        username = username,
-                                        password = password,
-                                        client_key = client_key,
-                                        publisher_ids = publisher_ids,
-                                        adunits = adunits)
+        login_info = AdNetworkLoginInfo(account=self.account,
+                                        ad_network_name=ad_network_name,
+                                        username=username,
+                                        password=password,
+                                        client_key=client_key,
+                                        publisher_ids=publisher_ids,
+                                        adunit_publisher_ids=
+                                        adunit_publisher_ids)
 
         login_info.put()
 
@@ -178,7 +189,9 @@ class AdNetworkReportQueryManager(CachedQueryManager):
             publisher_id in apps_with_publisher_ids])
 
     def find_app_for_stats(self, publisher_id, login_info):
-        """Check if the publisher id is in MoPub. If it is create an
+        """Attempt to link the publisher id with an App stored in MoPub's db.
+
+        Check if the publisher id is in MoPub. If it is create an
         AdNetworkAppMapper and update the AdNetworkLoginInfo.
 
         Return the mapper or None.
@@ -198,17 +211,16 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                     login_info.publisher_ids.append(publisher_id)
                 # Get the adunit publisher ids associated with the app and
                 # ad network.
-                app_adunits = [getattr(adunit.network_config, '%s_pub_id' %
-                    ad_network_name) for adunit in app.all_adunits if
-                    hasattr(adunit, 'network_config') and
-                    getattr(adunit.network_config, '%s_pub_id' %
-                        ad_network_name, None)]
+                adunit_publisher_ids = self.get_adunit_publisher_ids(
+                        ad_network_name, app.all_adunits)
                 # Put adunit publisher ids not already in the white list
                 # into the white list.
-                adunits_set = set(login_info.adunits)
-                for adunit in app_adunits:
-                    if adunit not in adunits_set:
-                        login_info.adunits.append(adunit)
+                adunit_publisher_ids_set = set(login_info.adunit_publisher_ids)
+                for adunit_publisher_id in adunit_publisher_ids:
+                    if adunit_publisher_id not in adunit_publisher_ids_set:
+                        logging.warning("APPENDING ADUNIT PUB ID TO LOGIN INFO")
+                        login_info.adunit_publisher_ids.append(
+                                adunit_publisher_id)
 
                 login_info.put()
 

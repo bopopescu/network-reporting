@@ -2,6 +2,7 @@ import sys
 import time
 
 sys.path.append('/home/ubuntu/mopub/server') # only needed for testing
+#sys.path.append('/Users/tiagobandeira/Documents/mopub/server') # only needed for testing
 from ad_network_reports.scrapers.network_scrape_record import \
         NetworkScrapeRecord
 from ad_network_reports.scrapers.scraper import Scraper, NetworkConfidential
@@ -44,7 +45,8 @@ class IAdScraper(Scraper):
         login = self.browser.find_element_by_css_selector('#accountname')
         login.clear()
         login.send_keys(self.username)
-        account_password = self.browser.find_element_by_name('theAccountPW')
+        account_password = \
+                self.browser.find_element_by_css_selector('#accountpassword')
         account_password.clear()
         account_password.send_keys(self.password)
         self.browser.find_element_by_name('appleConnectForm').submit()
@@ -86,7 +88,9 @@ class IAdScraper(Scraper):
 
     def set_date(self, selector, test_date):
         # Open up the date box
+        time.sleep(1)
         self.browser.find_element_by_css_selector(selector).click()
+        time.sleep(1)
         curr_date = self.get_cal_date()
         # Which way do we go
         if curr_date > test_date:
@@ -170,8 +174,8 @@ class IAdScraper(Scraper):
 
 if __name__ == '__main__':
     NC = NetworkConfidential()
-    NC.username = 'betnetworks'
-    NC.password = 'betjames'
+    NC.username = 'chesscom'
+    NC.password = 'Faisal1Chess'
     NC.ad_network_name = 'iad'
     SCRAPER = IAdScraper(NC)
     print SCRAPER.get_site_stats(date.today())

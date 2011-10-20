@@ -44,7 +44,7 @@ def send_stats_mail(manager, test_date, valid_stats_list):
     """
     aggregate_stats = manager.roll_up_stats([stats for app_name,
         ad_network_name, stats in valid_stats_list])
-    logging.warning(aggregate_stats.__dict__)
+    sorted(valid_stats_list, key = lambda s: s[0] + s[1])
     email_body = ""
     for app_name, ad_network_name, stats in valid_stats_list:
         email_body += ("""
@@ -70,6 +70,12 @@ def send_stats_mail(manager, test_date, valid_stats_list):
                    body=("Learn more at http://mopub-experimental.appspot.com/"
                          "ad_network_reports/"),
                    html=("""
+<head>
+    <style type="text/css">
+    .total {
+        font-weight:bold;}
+    </style>
+</head>
 <table width=100%%>
     <thead>
         <th>APP NAME</th>
@@ -83,8 +89,8 @@ def send_stats_mail(manager, test_date, valid_stats_list):
         <th>ECPM</th>
     </thead>
     <tbody>
-        <tr>
-            <td>--</td>
+        <tr class="total">
+            <td>TOTAL</td>
             <td>--</td>
             <td>$%(revenue).2f</td>
             <td>%(attempts)d</td>
@@ -94,28 +100,19 @@ def send_stats_mail(manager, test_date, valid_stats_list):
             <td>%(ctr).2f</td>
             <td>%(ecpm).2f</td>
         </tr>
-        <tr>
-            <td>--</td>
-            <td>--</td>
-            <td>--</td>
-            <td>--</td>
-            <td>--</td>
-            <td>--</td>
-            <td>--</td>
-            <td>--</td>
-            <td>--</td>
-        </tr>
         """ % aggregate_stats.__dict__ +
         email_body +
         """
     </tbody>
 </table>
-""" +
-"Learn more at <a href='http://mopub-experimental.appspot.com/"
-"ad_network_reports/'>MoPub</a>"))
+""")) #+
+#"Learn more at <a href='http://mopub-experimental.appspot.com/"
+#"ad_network_reports/'>MoPub</a>"))
 
 def update_ad_networks(start_date = None, end_date = None):
-    """Iterate through all AdNetworkLoginInfo. Login to the ad networks saving
+    """Update ad network stats.
+
+    Iterate through all AdNetworkLoginInfo. Login to the ad networks saving
     the data for the date range in the db.
 
     Run daily as a cron job in EC2. Email account if account wants email upon
@@ -180,8 +177,8 @@ def update_ad_networks(start_date = None, end_date = None):
                 # login_info and stats.
                 manager = AdNetworkReportQueryManager(login_info.account)
                 ad_network_app_mapper = manager.get_ad_network_app_mapper(
-                        publisher_id = publisher_id,
-                        login_info = login_info)
+                        publisher_id=publisher_id,
+                        login_info=login_info)
 
                 if not ad_network_app_mapper:
                     # Check if the app has been added to MoPub prior to last

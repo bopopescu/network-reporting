@@ -9,15 +9,19 @@ from account.models import Account, NetworkConfig
 from publisher.models import App
 from advertiser.models import AdGroup
 
-next_key = False
-app_config_list = []
-app_list = []
-for account in Account.all():
+MAX = 200
+accounts = Account.all().fetch(MAX)
+accounts_new = accounts
+while accounts_new:
+    accounts_new = Account.all().filter('__key__ >', accounts[-1]).fetch(MAX)
+    accounts += accounts_new
+
+app_config_dict = {}
+for account in accounts:
     valid_setup = False
-    print 'account =' + str(account.key())
+    print 'Testing account ' + str(account.key())
     for app in App.all().filter('account =', account).filter('network_config '
             '!=', None):
-        print 'testing app =' + str(app.key())
         if not [config for config in app.network_config.__dict__.items() if
                 re.search('_pub_id', config[0]) and config[1]]:
             valid_setup = True
@@ -31,27 +35,36 @@ for account in Account.all():
                 ad_network = ad_group.network_type
                 print "AdGroup has an ad_network " + ad_network + \
                         " and site keys"
-                site = db.get(ad_group.site_keys[0])
+                for site_key in ad_group.site_keys:
+                    site = db.get(site_key)
+                    if site.app_key:
+                        break
+
                 app = site.app_key
-                ad_network = ad_network.lower()
+                if app:
+                    ad_network = ad_network.lower()
 
-                app_config = None
-                if not app.network_config:
-                    app_config = NetworkConfig()
-                else:
-                    app_config = app.network_config
+                    app_config = app_config_dict.get(str(app.key()))
+                    if not app_config:
+                        app_config = app.network_config
+                        if not app_config:
+                            app_config = NetworkConfig()
+                        app_config_dict[str(app.key())] = app_config
 
-                if hasattr(app_config, ad_network + '_pub_id'):
-                    setattr(app_config, ad_network + '_pub_id',
-                            getattr(n_config, ad_network + '_pub_id', None))
-                    print app.name + '.' + ad_network + '_pub_id = ' +  \
-                            str(getattr(n_config, ad_network + '_pub_id',
-                                None))
-                    app_config_list.append(app_config)
-                    app.network_config = app_config
-                    app_list.append(app)
-    else:
-        print "Account " + str(account.key()) + " has a valid setup"
 
-#db.put(app_config_list)
-#db.put(app_list)
+                    if hasattr(app_config, ad_network + '_pub_id'):
+                        setattr(app_config, ad_network + '_pub_id',
+                                getattr(n_config, ad_network + '_pub_id', None))
+                        print app.name + '.' + ad_network + '_pub_id = ' +  \
+                                str(getattr(n_config, ad_network + '_pub_id',
+                                    None))
+#    else:
+#        print "Account " + str(account.key()) + " has a valid setup"
+
+app_list = []
+db.put(app_config_dict.values())
+for app_key, app_config in app_config_dict.iteritems():
+    app = db.get(app_key)
+    app.network_config = app_config
+    app_list.append(app)
+db.put(app_list)

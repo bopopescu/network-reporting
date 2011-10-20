@@ -54,13 +54,22 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         query.filter('ad_network_app_mapper =', ad_network_app_mapper)
         query.filter('date IN', date_magic.gen_days(start_date, end_date))
 
+        return self.roll_up_stats(query)
+
+    def roll_up_stats(self, stats_iterable):
+        """Roll up (aggregate) stats in the stats iterable.
+
+        Take a stats iterable (query or list).
+
+        Return a stats object.
+        """
         aggregate_stats = Stats()
         aggregate_stats.revenue = 0
         aggregate_stats.attempts = 0
         aggregate_stats.impressions = 0
         aggregate_stats.clicks = 0
         aggregate_stats.ecpm = 1
-        for stats in query:
+        for stats in stats_iterable:
             old_impressions_total = stats.impressions
 
             aggregate_stats.revenue += stats.revenue
@@ -73,18 +82,18 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                     old_impressions_total + stats.ecpm * stats.impressions) /
                     float(aggregate_stats.impressions))
             else:
-                aggregate_stats.ecpm = float('NaN')
+                aggregate_stats.ecpm = 0
 
         if aggregate_stats.attempts != 0:
             aggregate_stats.fill_rate = (aggregate_stats.impressions /
                     float(aggregate_stats.attempts))
         else:
-            aggregate_stats.fill_rate = float('NaN')
+            aggregate_stats.fill_rate = 0
         if aggregate_stats.impressions != 0:
             aggregate_stats.ctr = (aggregate_stats.clicks /
                     float(aggregate_stats.impressions))
         else:
-            aggregate_stats.ctr = float('NaN')
+            aggregate_stats.ctr = 0
 
         return aggregate_stats
 
@@ -124,7 +133,8 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         """
         for app in App.all().filter('account =',
                 self.account).filter('network_config !=', None):
-            pub_id = getattr(app.network_config, '%s_pub_id' % ad_network_name)
+            pub_id = getattr(app.network_config, '%s_pub_id' % ad_network_name,
+                    None)
             if pub_id != None:
                 # example return (App, NetworkConfig.admob_pub_id)
                 yield (app, pub_id)
@@ -148,7 +158,7 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                 for app, publisher_id in apps_with_publisher_ids for adunit in
                 app.all_adunits if hasattr(adunit, 'network_config') and
                 getattr(adunit.network_config, '%s_pub_id' % ad_network_name,
-                    None) != None]
+                    None)]
 
         login_info = AdNetworkLoginInfo(account = self.account,
                                         ad_network_name = ad_network_name,
@@ -166,6 +176,43 @@ class AdNetworkReportQueryManager(CachedQueryManager):
             publisher_id = publisher_id, ad_network_login = login_info,
             application = app, send_email = send_email) for app,
             publisher_id in apps_with_publisher_ids])
+
+    def find_app_for_stats(self, publisher_id, login_info):
+        """Check if the publisher id is in MoPub. If it is create an
+        AdNetworkAppMapper and update the AdNetworkLoginInfo.
+
+        Return the mapper or None.
+        """
+        ad_network_name = login_info.ad_network_name
+        for app in App.all().filter('account =',
+                self.account).filter('network_config !=', None):
+            # Is the app in Mopub?
+            if getattr(app.network_config, ad_network_name + '_pub_id', None) \
+                    == publisher_id:
+                mapper = AdNetworkAppMapper(ad_network_name=ad_network_name,
+                                            publisher_id=publisher_id,
+                                            ad_network_login=login_info,
+                                            application=app)
+                mapper.put()
+                if publisher_id not in login_info.publisher_ids:
+                    login_info.publisher_ids.append(publisher_id)
+                # Get the adunit publisher ids associated with the app and
+                # ad network.
+                app_adunits = [getattr(adunit.network_config, '%s_pub_id' %
+                    ad_network_name) for adunit in app.all_adunits if
+                    hasattr(adunit, 'network_config') and
+                    getattr(adunit.network_config, '%s_pub_id' %
+                        ad_network_name, None)]
+                # Put adunit publisher ids not already in the white list
+                # into the white list.
+                adunits_set = set(login_info.adunits)
+                for adunit in app_adunits:
+                    if adunit not in adunits_set:
+                        login_info.adunits.append(adunit)
+
+                login_info.put()
+
+                return mapper
 
 def get_login_credentials():
     """Return all AdNetworkLoginInfo entities ordered by account."""

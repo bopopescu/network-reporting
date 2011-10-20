@@ -167,7 +167,7 @@ class PaymentInfo(db.Model):
 
 class PaymentRecord(db.Model):
     account = db.ReferenceProperty(Account, collection_name="payment_records")
-    amount = db.StringProperty()
+    amount = db.FloatProperty(default=float(0))
     status = db.StringProperty()
     payment_date = db.DateProperty()
     payment_start = db.DateProperty()

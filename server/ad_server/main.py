@@ -195,7 +195,7 @@ class PurchaseHandlerTxn(webapp.RequestHandler):
             transaction_id = receipt_dict('transaction_id', 
                 hashlib.sha1(receipt_dict['original_purchase_date']).hexdigest())
 
-            InAppPurchaseEventManager().log_inapp_purchase_event(transaction_id=,
+            InAppPurchaseEventManager().log_inapp_purchase_event(transaction_id=transaction_id,
                                                         udid=self.request.get('udid'),
                                                         receipt=simplejson.dumps(receipt_dict),
                                                         time=datetime.datetime.fromtimestamp(float(self.request.get('time'))),

@@ -22,7 +22,7 @@ class AdNetworkLoginInfo(db.Model): #(account,ad_network_name)
     publisher_ids = db.StringListProperty()
 
     # needed for jumptap
-    adunits = db.StringListProperty()
+    adunit_publisher_ids = db.StringListProperty()
 
     def __init__(self, *args, **kwargs):
         if not kwargs.get('key', None):

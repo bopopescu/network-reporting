@@ -3,7 +3,8 @@ import urllib2
 import urllib
 
 from datetime import date, timedelta
-sys.path.append('/Users/tiagobandeira/Documents/mopub/server')
+#sys.path.append('/Users/tiagobandeira/Documents/mopub/server')
+sys.path.append('/Users/tiagobandeira/Documents/mopub/server') # only needed for testing
 from ad_network_reports.scrapers.scraper import Scraper, NetworkConfidential
 from ad_network_reports.scrapers.network_scrape_record import \
         NetworkScrapeRecord
@@ -14,7 +15,7 @@ class JumpTapScraper(Scraper):
     SITE_STAT_URL = 'https://pa.jumptap.com/pa-2.0/pub-services/v10/report.html'
 
     def __init__(self, credentials):
-        self.adunits = set(credentials.adunits)
+        self.adunit_publisher_ids = set(credentials.adunit_publisher_ids)
         super(JumpTapScraper, self).__init__(credentials)
 
     def test_login_info(self):
@@ -53,8 +54,8 @@ class JumpTapScraper(Scraper):
         scrape_records = {}
         for line in response:
             vals = line.split(',')
-            if vals[0] != 'Totals' and vals[adunit_index] in self.adunits or \
-                    not self.adunits:
+            if vals[0] != 'Totals' and vals[adunit_index] in \
+            self.adunit_publisher_ids or not self.adunit_publisher_ids:
                 nsr = NetworkScrapeRecord(revenue = float(vals[revenue_index]),
                                           attempts = int(vals[request_index]),
                                           impressions = int(
@@ -103,7 +104,7 @@ if __name__ == '__main__':
     NC = NetworkConfidential()
     NC.username = 'com2ususa'
     NC.password = 'com2us1001'
-    NC.adunits = []
+    NC.adunit_publisher_ids = []
     NC.ad_network_name = 'jumptap'
     SCRAPER = JumpTapScraper(NC)
     print SCRAPER.get_site_stats(date.today() - timedelta(days = 1))

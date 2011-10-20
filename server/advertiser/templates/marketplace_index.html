@@ -2,13 +2,24 @@
 {% load filters %}
 
 {% block extraScripts %}
+  <script type="text/html" id="app-template">
+    {% include "partials/app.html" %}
+  </script>
+  <script type="text/html" id="adunit-template">
+    {% include "partials/adunit.html" %}
+  </script>
+  <script type="text/html">
+    {% include "partials/inventory.html" %}
+  </script>
   <script type="text/javascript" src="/js/underscore.min.js"></script>
   <script type="text/javascript" src="/js/json2.js"></script>
   <script type="text/javascript" src="/js/backbone.min.js"></script>
   <script type="text/javascript" src="/js/mopub-marketplace.js"></script>
   <script type="text/javascript">
     $(document).ready(function() {
-        var marketplace_targeting_table = new MarketplaceTargetingTable();
+        adunit = new AdUnit({revenue: 1000, id: "fuckit", ecpm: 0.50, price_floor: 0.25});
+        adunitView = new AdUnitView({model: adunit, el: "#marketplace_targeting"});
+        adunitView.render();
     });
   </script>
 {% endblock extraScripts %}
@@ -53,6 +64,8 @@
 
     {% if marketplace %}
 
+      <div id="marketplace_rollups"></div>
+
       <div class="rollup fig3">
         <div class="data-figure">
           <div class="figure">
@@ -84,7 +97,7 @@
 
 
       <div id="marketplace_info">
-        <input id="app_search" class="search right" />
+
         <table class="zebra-striped simpletable" id="marketplace_targeting">
 
           <thead>

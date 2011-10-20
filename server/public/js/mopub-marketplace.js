@@ -17,7 +17,14 @@
             clicks: 0,
             ctr: 0,
             price_floor: 0
+        },
+        initialize: function() {
+            var self = this;
+            self.bind('reset', function() {
+
+            });
         }
+
     });
 
     var AdUnitList = Backbone.Collection.extend({
@@ -30,11 +37,7 @@
         },
         initialize: function() {
             var self = this;
-
             self.bind("reset", function(collection) {
-                collection.each(function (adunit) {
-                    console.log(adunit.get("name"));
-                });
             });
         }
     });
@@ -44,9 +47,6 @@
      */
 
     var App = Backbone.Model.extend({
-        defaults: {
-            adunits: []
-        },
         url: function () {
             return "/api/app/" + this.id;
         },
@@ -65,52 +65,60 @@
         parse: function(response) {
             return response.apps;
         },
-
         initialize: function() {
             var self = this;
 
             // When the collection is fetched or reset, fetch all of the
             // adunits for each of the apps
             self.bind("reset", function(collection) {
-                collection.each(function (app) {
-                    console.log(app.get("name"));
-                    app.adunits = new AdUnitList();
-                    app.adunits.app_id = app.id;
-                    app.adunits.fetch();
-                });
+                //this.fetchAdUnits();
+            });
+        },
+        fetchAdUnits: function() {
+            this.each(function (app) {
+                app.adunits = new AdUnitList();
+                app.adunits.app_id = app.id;
+                app.adunits.fetch();
             });
         }
     });
 
 
-    /*
-     * Views
-     */
+    var AppView = Backbone.View.extend({
 
-    var MarketplaceAppRow = Backbone.View.extend({
-        tagName: "tr"
-    });
+        initialize: function () {
+            this.template = _.template($("#app-template").html());
+        },
 
-    var MarketplaceTargetingTable = Backbone.View.extend({
-        el: $("#marketplace_targeting"),
-        tagName: 'table',
-        id:"marketplace_targeting",
-
-        initialize: function() {
-            var inventory = new Inventory();
-            inventory.fetch();
+        render: function () {
+            var renderedContent = this.template(this.model.toJSON());
+            $(this.el + " tr:last").after(renderedContent);
+            return this;
         }
+
     });
 
-    var Rollup = Backbone.View.extend({
-       className: "rollup",
+    var AdUnitView = Backbone.View.extend({
+
+        initialize: function () {
+            this.template = _.template($("#adunit-template").html());
+        },
+
+        render: function () {
+            var renderedContent = this.template(this.model.toJSON());
+            $("tr:last", this.el).after(renderedContent);
+            return this;
+        }
+
     });
+
 
     window.AdUnit = AdUnit;
     window.AdUnitList = AdUnitList;
     window.App = App;
     window.Inventory = Inventory;
+    window.AdUnitView = AdUnitView;
+    window.AppView = AppView;
 
-    window.MarketplaceTargetingTable = MarketplaceTargetingTable;
 
 })(this.jQuery, this.Backbone);

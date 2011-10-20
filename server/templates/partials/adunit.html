@@ -1,0 +1,31 @@
+<tr class="adunit-row" id="adunit-<%= (typeof id == "undefined" ? "NONE" : id ) %>">
+  <td class="name">
+    <%= (typeof name == "undefined" ? "New Adunit" : name ) %>
+  </td>
+  <td class="revenue">
+    <%= (typeof revenue == "undefined" ? 0 : revenue ) %>
+  </td>
+  <td class="ecpm">
+    <%= (typeof ecpm == "undefined" ? 0 : ecpm ) %>
+  </td>
+  <td class="attempts">
+    <%= (typeof attempts == "undefined" ? 0 : attempts ) %>
+  </td>
+  <td class="impressions">
+    <%= (typeof impressions == "undefined" ? 0 : impressions ) %>
+  </td>
+  <td class="fillrate">
+    <%= (typeof fillrate == "undefined" ? 0 : fillrate ) %>
+  </td>
+  <td class="clicks">
+    <%= (typeof clicks == "undefined" ? 0 : clicks ) %>
+  </td>
+  <td class="ctr">
+    <%= (typeof ctr == "undefined" ? 0 : ctr ) %>
+  </td>
+  <% if (typeof price_floor == "undefined") { %>
+    <td class="price_floor>
+      <%= price_floor %>
+    </td>
+  <% } %>
+</tr>

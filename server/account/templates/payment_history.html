@@ -7,18 +7,30 @@
 
 <table class="dataTable campaignData-main" id="campaignDataTable-direct-">
   <thead>
-    <th class="dataTable-date-short">Month</th>
+    <th class="dataTable-date-short">Payment Date</th>
+    <th class="dataTable-date-short">Period Start</th>
+    <th class="dataTable-date-short">Period End</th>
     <th class="dataTable-data">Revenue</th>
     <th class="dataTable-data">Payment Status</th>
   </thead>
   <tbody>
 
+    {% for record in payment_records %}
+    <tr>
+      <td>{{record.payment_date}}</td>
+      <td>{{record.payment_start}}</td>
+      <td>{{record.payment_end}}</td>
+      <td>{{record.amount|currency}}</td>
+      <td>{{record.status}}</td>
+    </tr>
+    {% empty %}
     <tr>
       <td></td>
-      <td>There are no payments in your payment history. Please check back later.</td>
+      <td>No payments have been made for this account.</td>
       <td></td>
-
     </tr>
+
+    {% endfor %}
 
     {% comment %}
       We're going to include this data when it exists in better form.

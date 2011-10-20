@@ -10,6 +10,7 @@ from google.appengine.api import users
 
 from account.models import Account, User, PaymentRecord
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
+from common.constants import MAX_OBJECTS
 
 MEMCACHE_KEY_FORMAT = "k:%(user_id)s"
 
@@ -120,9 +121,9 @@ class PaymentRecordQueryManager(QueryManager):
     Model = PaymentRecord
 
     @classmethod
-    def get_payment_records(cls, account=None):
+    def get_payment_records(cls, account=None, limit=MAX_OBJECTS):
         records = PaymentRecord.all()
         if account:
             records = records.filter("account =",account)
-        return records.get()
+        return records.fetch(limit)
 

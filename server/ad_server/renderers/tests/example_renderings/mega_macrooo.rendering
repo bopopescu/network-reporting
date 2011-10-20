@@ -18,7 +18,7 @@
       var urls = new Array();
       var i = 0;
       
-        urls[i++]="http://app.mopub.com/m/imp?c=ag1kZXZ-bW9wdWItaW5jchYLEghDcmVhdGl2ZSIIa2V5X25hbWUM&cid=ag1kZXZ-bW9wdWItaW5jchYLEghDcmVhdGl2ZSIIa2V5X25hbWUM&reqt=-462653700.0&req=my_request_id&udid=myudid&appid=&id=ag1kZXZ-bW9wdWItaW5jchILEgRTaXRlIghrZXlfbmFtZQw";
+        urls[i++]="http://app.mopub.com/m/imp?c=ag1kZXZ-bW9wdWItaW5jchYLEghDcmVhdGl2ZSIIa2V5X25hbWUM&cid=ag1kZXZ-bW9wdWItaW5jchYLEghDcmVhdGl2ZSIIa2V5X25hbWUM&reqt=-462653700.0&req=my_request_id&udid=myudid&appid=&id=ag1kZXZ-bW9wdWItaW5jcgoLEgRTaXRlGAUM";
       
     
       
@@ -68,7 +68,16 @@
   </head>
   <body style="margin:0;padding:0;">
     
-  fake data
+  http://app.mopub.com/m/aclk?c=ag1kZXZ-bW9wdWItaW5jchYLEghDcmVhdGl2ZSIIa2V5X25hbWUM&cid=ag1kZXZ-bW9wdWItaW5jchYLEghDcmVhdGl2ZSIIa2V5X25hbWUM&reqt=-462653700.0&req=my_request_id&udid=myudid&appid=&id=ag1kZXZ-bW9wdWItaW5jcgoLEgRTaXRlGAUM&rev=100.0000000
+http%3A//app.mopub.com/m/aclk%3Fc%3Dag1kZXZ-bW9wdWItaW5jchYLEghDcmVhdGl2ZSIIa2V5X25hbWUM%26cid%3Dag1kZXZ-bW9wdWItaW5jchYLEghDcmVhdGl2ZSIIa2V5X25hbWUM%26reqt%3D-462653700.0%26req%3Dmy_request_id%26udid%3Dmyudid%26appid%3D%26id%3Dag1kZXZ-bW9wdWItaW5jcgoLEgRTaXRlGAUM%26rev%3D100.0000000
+0
+ag1kZXZ-bW9wdWItaW5jcg0LEgdBZEdyb3VwGAYM
+ag1kZXZ-bW9wdWItaW5jchYLEghDcmVhdGl2ZSIIa2V5X25hbWUM
+http://www.mopub.com
+http://www.mopub.com
+http%3A//www.mopub.com
+http%253A//www.mopub.com
+myudid
   <script type="text/javascript">
     // just call mopubFinishLoad upon window's load
     if (typeof htmlWillCallFinishLoad == "undefined" || !htmlWillCallFinishLoad) { 

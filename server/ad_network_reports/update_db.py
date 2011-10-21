@@ -37,10 +37,13 @@ for account in accounts:
                         " and site keys"
                 for site_key in ad_group.site_keys:
                     site = db.get(site_key)
-                    if site.app_key:
+                    if site and site.app_key:
                         break
 
-                app = site.app_key
+                app = None
+                if site:
+                    app = site.app_key
+
                 if app:
                     ad_network = ad_network.lower()
 

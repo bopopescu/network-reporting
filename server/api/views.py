@@ -16,7 +16,7 @@ from django.utils import simplejson
 from django.core.urlresolvers import reverse
 
 import logging
-
+import random
 
 class AppService(RequestHandler):
     """
@@ -26,6 +26,7 @@ class AppService(RequestHandler):
         try:
             # If an app key is provided, return the single app
             if app_key:
+                mpxstats = MarketplaceStatsFetcher(app_keys = [app_key]).get_app_stats(app_key)
                 app = AppQueryManager.get_app_by_key(app_key)
                 response = {
                     'apps': [app.toJSON()]
@@ -159,3 +160,35 @@ class CreativeService(RequestHandler):
 @login_required
 def creative_service(request, *args, **kwargs):
     return CreativeService()(request, *args, **kwargs)
+
+
+class MarketplaceStatsFetcher(object):
+    def __init__(self, app_keys = None, adunit_keys = None, account_keys = None):
+        if not app_key or adunit_key or account_key:
+            raise Exception("Fuck you, pass in something")
+
+            # payload = urllib2.urlopen('blah').read()
+            payload = {}
+
+        self.payload = payload
+
+    def get_app_stats(self, app):
+        return {
+            "revenue": random.randint(1, 900),
+            "impressions": random.randint(1, 10000),
+            "clicks": random.randint(1, 1000),
+        }
+
+    def get_adunit_stats(self, adunit):
+        return {
+            "revenue": random.randint(1, 100),
+            "impressions": random.randint(1, 10000),
+            "clicks": random.randint(1, 1000),
+        }
+
+    def get_account_stats(self, key):
+        return {
+            "revenue": random.randint(1, 10000),
+            "impressions": random.randint(1, 100000),
+            "clicks": random.randint(1, 1000),
+        }

@@ -5,9 +5,10 @@
 (function($, Backbone) {
 
     /*
-     * AdUnits
+     * AdUnit
      */
     var AdUnit = Backbone.Model.extend({
+        // If we don't set defaults, the templates will explode
         defaults : {
             name: "",
             revenue: 0,
@@ -21,17 +22,22 @@
         }
     });
 
-    var AdUnitList = Backbone.Collection.extend({
+    /*
+     * AdUnitCollection
+     */
+    var AdUnitCollection = Backbone.Collection.extend({
         model: AdUnit,
         url: function() {
             return '/api/app/' + this.app_id + '/adunits/';
         }
     });
 
-    /*
-     * Apps/App Inventory
-     */
 
+    /*
+     * JS Representation of an App.
+     * We might consider turning derivative values (ecpm, fill_rate, ctr) into
+     * functions.
+     */
     var App = Backbone.Model.extend({
         defaults : {
             name: "",
@@ -50,23 +56,25 @@
             return "/api/app/" + this.id;
         },
         parse: function (response) {
+            // The api returns everything from this url as a list,
+            // so that you can request one or all apps.
             return response.apps[0];
         }
     });
 
 
-    var Inventory = Backbone.Collection.extend({
+    var AppCollection = Backbone.Collection.extend({
         model: App,
-
         // If an app key isn't passed to the url, it'll return a list of all of the apps for the account
         url: "/api/app/",
 
         parse: function(response) {
             return response.apps;
         },
+        // Not used anymore, but could come in handy
         fetchAdUnits: function() {
             this.each(function (app) {
-                app.adunits = new AdUnitList();
+                app.adunits = new AdUnitCollection();
                 app.adunits.app_id = app.id;
                 app.adunits.fetch();
             });
@@ -88,31 +96,46 @@
                 e.preventDefault();
                 var href = $(this).attr('href').replace("#","");
                 Marketplace.fetchAdunitsForApp(href);
+                $(this).remove();
             });
             $("tbody", this.el).append(renderedContent);
             return this;
         }
     });
 
+
+    /*
+     * AdUnitView
+     *
+     * See templates/partials/adunit.html to see how this is rendered in HTML
+     * The main purpose of this is to render an adunit as a row in a table.
+     */
     var AdUnitView = Backbone.View.extend({
 
+        /*
+         * Define the template
+         */
         initialize: function () {
             this.template = _.template($("#adunit-template").html());
         },
 
+        /*
+         * Render the model in the template. This assumes that the table
+         * row for the app has already been rendered. This will render after it.
+         */
         render: function () {
             // render the adunit and attach it to the table after it's adunit's row
             var renderedContent = this.template(this.model.toJSON());
-            console.log(this.model.get("app_id"));
             var app_row = $("tr#app-" + this.model.get("app_id"), this.el);
-            console.log(app_row);
             app_row.after(renderedContent);
             return this;
         }
     });
 
 
-
+    /*
+     * Marketplace utility methods
+     */
     var Marketplace = {
 
         /*
@@ -137,7 +160,7 @@
          * 'show adunits' link.
          */
         fetchAdunitsForApp: function (app_key) {
-            var adunits = new AdUnitList();
+            var adunits = new AdUnitCollection();
             adunits.app_id = app_key;
             adunits.bind("reset", function(adunits_collection) {
                 _.each(adunits_collection.models, function(adunit) {
@@ -150,11 +173,13 @@
     };
 
 
-    // Make everything usable in the page
+    /*
+     * Globalize everything 8)
+     */
     window.AdUnit = AdUnit;
-    window.AdUnitList = AdUnitList;
+    window.AdUnitCollection = AdUnitCollection;
     window.App = App;
-    window.Inventory = Inventory;
+    window.AppCollection = AppCollection;
     window.AdUnitView = AdUnitView;
     window.AppView = AppView;
     window.Marketplace = Marketplace;

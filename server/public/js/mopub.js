@@ -9,6 +9,12 @@
 var mopub = mopub || {};
 mopub.Utils = mopub.Utils || {};
 
+if (typeof window.console == "undefined") {
+    window.console = {
+        log: function() {}
+    };
+}
+
 (function($){
     // dom ready
     $(document).ready(function() {
@@ -19,9 +25,6 @@ mopub.Utils = mopub.Utils || {};
         if ($('#is_admin_input').val()=='False') {
             $('.marketplace').hide();
         }
-
-
-
 
         /*---------------------------------------/
           / UI Stuff
@@ -75,8 +78,6 @@ mopub.Utils = mopub.Utils || {};
         $('.tabs').tabs();
 
         $(".tree").treeview();
-
-
 
         // override default jQuery UI dialog options
         $.extend($.ui.dialog.prototype.options, {
@@ -318,9 +319,11 @@ mopub.Utils = mopub.Utils || {};
       / Image Preloader
       /---------------------------------------*/
 
-    var cache = [];
 
-    // Arguments are image paths relative to the current page.
+    /*
+     * Caches images for faster loading
+     */
+    var cache = [];
     $.preLoadImages = function() {
         var args_len = arguments.length;
         for (var i = args_len; i--;) {
@@ -328,12 +331,66 @@ mopub.Utils = mopub.Utils || {};
             cacheImage.src = arguments[i];
             cache.push(cacheImage);
         }
-        // Commented out for cleanliness
-        // log(cache);
     };
 
-    // Creates a dropdown menu
-    // Usage: `$(dropdown-trigger).dropdown(things-that-dropdown);`
+
+    /*
+     * Template rendering.
+     *
+     * This function lets you use data to fill in predefined template strings.
+     * `str` - A template string. Templates can include javascript logic enclosed in <% %>
+     *         brackets, similar to rails' erb templates.
+     * `data` - A javascript object which contains data to fill the template with.
+     *
+     * e.g.
+     *
+     * var template = "<%= user %> is <%= desc %>.";
+     * var data1 = {user: 'John', desc: 'cool'};
+     * var data2 = {user: 'Nafis', desc: 'lame'};
+     *
+     * $.renderTemplate(template, data1); // "John is cool"
+     *
+     * For more complex examples, see http://ejohn.org/blog/javascript-micro-templating/
+     */
+    var template_cache = {};
+    $.renderTemplate = function tmpl (str, data){
+        // Figure out if we're getting a template, or if we need to
+        // load the template - and be sure to cache the result.
+        var fn = !/\W/.test(str) ?
+            template_cache[str] = template_cache[str] || tmpl(document.getElementById(str).innerHTML) :
+
+        // Generate a reusable function that will serve as a template
+        // generator (and which will be cached).
+        new Function("obj",
+                     "var p=[],print=function(){p.push.apply(p,arguments);};" +
+
+                     // Introduce the data as local variables using with(){}
+                     "with(obj){p.push('" +
+
+                     // Convert the template into pure JavaScript
+                     str
+                     .replace(/[\r\t\n]/g, " ")
+                     .split("<%").join("\t")
+                     .replace(/((^|%>)[^\t]*)'/g, "$1\r")
+                     .replace(/\t=(.*?)%>/g, "',$1,'")
+                     .split("\t").join("');")
+                     .split("%>").join("p.push('")
+                     .split("\r").join("\\'")
+                     + "');}return p.join('');");
+
+        // Provide some basic currying to the user
+        return data ? fn( data ) : fn;
+    };
+
+    $.fn.renderTemplate = function (str, data) {
+        return $(this).html($.renderTemplate(str, data));
+    };
+
+
+    /*
+     * Creates a dropdown menu
+     * Usage: `$(dropdown-trigger).dropdown(things-that-dropdown);`
+     */
     $.fn.dropdown = function(selector) {
         var self = this;
         var over_trigger, over_body = false;
@@ -379,6 +436,10 @@ mopub.Utils = mopub.Utils || {};
         }, 1);
     };
 
+
+    /*
+     *  Utility functions for activating UI items
+     */
     function isActive(item) {
         return item.hasClass('active');
     }
@@ -394,6 +455,22 @@ mopub.Utils = mopub.Utils || {};
         element.addClass('active');
     }
 
+
+    /*
+     * Turns a ul into horizontal tabs, that can be used to hide and show
+     * sections of a page.
+     *
+     * usage:
+     * - Make the ul
+     *
+     * <ul class="tabs">
+     *  <li class="active"> <a href="#s1">Section 1 </a> </li>
+     *  <li> <a href="#s1">Section 1 </a> </li>
+     * </ul>
+     *
+     * TODO: Refactor so that the first tab/section are activated if
+     * nothing is activated by default
+     */
     $.fn.tabs = function() {
         // find the sections within the page we've marked as tab activate-able
         var tab_sections = $(".tab-section");
@@ -418,6 +495,11 @@ mopub.Utils = mopub.Utils || {};
     };
 
 
+    /*
+     * Escaping/unescaping HTML.
+     *
+     * Be careful: if you escape html thats already escaped, things get weird.
+     */
     $.unescapeHTML = function (html) {
         return $("<div />").html(html).text();
     };
@@ -483,146 +565,6 @@ mopub.Utils = mopub.Utils || {};
         });
     };
 
-    $.fn.collapser= function(options, beforeCallback, afterCallback) {
-
-        var defaults = {
-            target: 'next',
-             targetOnly: null,
-            effect: 'slide',
-            changeText: true,
-            expandHtml: 'Expand',
-            collapseHtml: 'Collapse',
-            expandClass: '',
-            collapseClass:''
-        };
-
-        var options = $.extend(defaults, options);
-
-        var expHtml,collHtml, effectShow, effectHide;
-
-        if(options.effect == 'slide'){
-            effectShow = 'slideDown';
-            effectHide = 'slideUp';
-        }else{
-            effectShow = 'fadeIn';
-            effectHide = 'fadeOut';
-        }
-
-        if(options.changeText == true){
-            expHtml = options.expandHtml;
-            collHtml = options.collapseHtml;
-        }
-
-        function callBeforeCallback(obj){
-            if(beforeCallback !== undefined){
-                beforeCallback.apply(obj);
-            }
-        }
-
-        function callAfterCallback(obj){
-            if(afterCallback !== undefined){
-                afterCallback.apply(obj);
-            }
-        }
-
-        function hideElement(obj, method){
-            callBeforeCallback(obj);
-            if(method == 1){
-                obj[options.target](options.targetOnly)[effectHide]();
-                obj.html(expHtml);
-                obj.removeClass(options.collapseClass);
-                obj.addClass(options.expandClass);
-            }else{
-                $(document).find(options.target)[effectHide]();
-                obj.html(expHtml);
-                obj.removeClass(options.collapseClass);
-                obj.addClass(options.expandClass);
-            }
-            callAfterCallback(obj);
-        }
-
-        function showElement(obj, method){
-            callBeforeCallback(obj)
-            if(method == 1){
-                obj[options.target](options.targetOnly)[effectShow]();
-                obj.html(collHtml);
-                obj.removeClass(options.expandClass);
-                obj.addClass(options.collapseClass);
-            }else{
-                $(document).find(options.target)[effectShow]();
-                obj.html(collHtml);
-                obj.removeClass(options.expandClass);
-                obj.addClass(options.collapseClass);
-            }
-            callAfterCallback(obj);
-        }
-
-        function toggleElement(obj, method){
-            if(method == 1){
-                if(obj[options.target](options.targetOnly).is(':visible')){
-                    hideElement(obj, 1);
-                }else{
-                    showElement(obj, 1);
-                }
-            }else{
-                if($(document).find(options.target).is(':visible')){
-                    hideElement(obj, 2);
-                }else{
-                    showElement(obj, 2);
-                }
-            }
-        }
-
-        return this.each(function(){
-
-           if($.fn[options.target] && $(this)[options.target]()){
-                $(this).toggle(function(){
-                    toggleElement($(this), 1);
-                },function(){
-                    toggleElement($(this), 1);
-                });
-
-           }else{
-
-               $(this).toggle(function(){
-                    toggleElement($(this), 2);
-                },function(){
-                    toggleElement($(this), 2);
-                });
-           }
-
-           // Initialize
-           if($.fn[options.target] && $(this)[options.target]()){
-                if($(this)[options.target]().is(':hidden')){
-                    $(this).html(expHtml);
-                    $(this).removeClass(options.collapseClass);
-                    $(this).addClass(options.expandClass);
-                }else{
-                    $(this).html(collHtml);
-                    $(this).removeClass(options.expandClass);
-                    $(this).addClass(options.collapseClass);
-                }
-            }else{
-                if($(document).find(options.target).is(':hidden')){
-                    $(this).html(expHtml);
-                }else{
-                    $(this).html(collHtml);
-                }
-            }
-
-        });
-    };
-
-
-    // helper fn for console logging
-    var log;
-
-    if (window.console && typeof console.log === "function"){
-        // use apply to preserve context and invocations with multiple arguments
-        log = function () { console.log.apply(console, arguments); };
-    } else {
-        log = function(){ return; };
-    }
 
     /*---------------------------------------/
       / Utility functions.
@@ -645,13 +587,13 @@ mopub.Utils = mopub.Utils || {};
         return (string*100).toFixed(2) + '%';
     };
 
-        mopub.Utils.getKeysFromObject = function(object) {
-            var keys = [];
-            for (var key in object) {
-                if (object.hasOwnProperty(key)) keys.push(key);
-            }
-            return keys;
-        };
+    mopub.Utils.getKeysFromObject = function(object) {
+        var keys = [];
+        for (var key in object) {
+            if (object.hasOwnProperty(key)) keys.push(key);
+        }
+        return keys;
+    };
 
 })(this.jQuery);
 

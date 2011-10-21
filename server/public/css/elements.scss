@@ -124,7 +124,7 @@
     font-size: 20px;
     font-weight: bold;
     text-shadow: 0 1px 0 rgba(255,255,255,1);
-    line-height: 13.5px;
+//    line-height: 13.5px;
 
     &:hover {
         @include opacity(40);
@@ -339,6 +339,7 @@
     }
 }
 
+
 .button-group {
     @include well;
     display: inline-block;
@@ -523,4 +524,12 @@
             @include right-border-radius(0px);
         }
     }
+}
+
+.search {
+    @include border-radius;
+    border: 1px solid #ddd;
+    width: 250px;
+    font-size: 16px;
+
 }

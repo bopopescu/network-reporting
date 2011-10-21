@@ -280,12 +280,28 @@
   </div>
 
   <div class="clearfix tab-section" id="settings">
-    <div class="well">
-      Blindness?
-    </div>
-
-    <div class="well">
-      Awesome blocklist goes here.
+    <script type="text/javascript">
+      $(function() {
+        $('#addblocklist-submit')
+          .click(function(e) {
+            e.preventDefault();
+              $('#addblocklist').submit();
+          });
+      });
+    </script>
+    <div>
+      <h2>Blocklist</h2>
+      <div>
+        {% for url in blocklist %}
+        {{url}} <a href="{% url remove_blocklist_handler url %}">Remove</a><br />
+        {% empty %}
+        There are no blocked advertisers
+        {% endfor %}
+      </div>
+      <form action="{% url add_blocklist_handler %}" method="POST" id="addblocklist" class="validate">
+      <textarea rows="2" cols="20" placeholder="Add blocked advertiser domains here" name="blocklist"></textarea>
+      <div><a href="#" class="button" id="addblocklist-submit">Save</a></div>
+      </form>
     </div>
 
     <div class="right button-group">

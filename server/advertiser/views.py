@@ -1167,10 +1167,14 @@ def mpx_info(request, *args, **kwargs):
 
 class MarketplaceIndexHandler(RequestHandler):
     def get(self):
+        blocklist = []
 
         # Marketplace settings are kept as a single campaign.
         # Only one should exist per account.
         marketplace_campaign = CampaignQueryManager.get_marketplace(self.account)
+        network_config = self.account.network_config
+        if network_config:
+            blocklist = network_config.blocklist
 
         # To bootstrap the Backbone.js models in the page, create a list of
         # JSON'ed apps. Apps are the highest level model on the page.
@@ -1181,6 +1185,7 @@ class MarketplaceIndexHandler(RequestHandler):
                                   {
                                       'marketplace': marketplace_campaign,
                                       'bootstrapped_apps': bootstrapped_apps,
+                                      'blocklist': blocklist
                                   })
 
     def post(self):
@@ -1190,3 +1195,35 @@ class MarketplaceIndexHandler(RequestHandler):
 @login_required
 def marketplace_index(request, *args, **kwargs):
     return MarketplaceIndexHandler()(request, *args, **kwargs)
+
+class AddBlocklistHandler(RequestHandler):
+    def post(self):
+        add_blocklist_string = self.request.POST.get('blocklist')
+        add_blocklist = add_blocklist_string.replace(',',' ').split()
+
+        if add_blocklist:
+            network_config = self.account.network_config
+            network_config.blocklist.extend(add_blocklist)
+            network_config.blocklist = sorted(set(network_config.blocklist))   # Removes duplicates and sorts
+            logging.info('hiiiii')
+            logging.info(network_config.blocklist)
+            AccountQueryManager().update_config_and_put(account=self.account,network_config=network_config)
+
+        return HttpResponseRedirect(reverse('marketplace_index'))
+
+@login_required
+def add_blocklist_handler(request,*args,**kwargs):
+    return AddBlocklistHandler()(request,*args,**kwargs)
+
+class RemoveBlocklistHandler(RequestHandler):
+    def get(self, url=None):
+        network_config = self.account.network_config
+        if network_config.blocklist.count(url):
+            network_config.blocklist.remove(url)
+            AccountQueryManager().update_config_and_put(account=self.account,network_config=network_config)
+
+        return HttpResponseRedirect(reverse('marketplace_index'))
+
+@login_required
+def remove_blocklist_handler(request,*args,**kwargs):
+    return RemoveBlocklistHandler()(request,*args,**kwargs)

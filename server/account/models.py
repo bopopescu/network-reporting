@@ -70,12 +70,13 @@ class NetworkConfig(db.Model):
 
     rev_share = db.FloatProperty(default=.80)
     price_floor = db.FloatProperty(default=.25) # dollars CPM
-
+    blocklist = db.StringListProperty(indexed=False)
 
 class MarketPlaceConfig(db.Model):
     """ All marketplace related configurations """
     rev_share = db.FloatProperty(default=.90)
     price_floor = db.FloatProperty(default=.25) # dollars CPM
+    blocklist = db.StringListProperty(indexed=False)
 
 class Account(db.Model):
     user = db.UserProperty() # admin user for this account

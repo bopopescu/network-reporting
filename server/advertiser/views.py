@@ -19,7 +19,7 @@ from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
 from django.utils import simplejson
 from common.ragendja.template import render_to_response, render_to_string, JSONResponse
-
+from common.utils.marketplace_helpers import MarketplaceStatsFetcher
 # from common.ragendja.auth.decorators import google_login_required as login_required
 
 from advertiser.models import *
@@ -1175,6 +1175,8 @@ class MarketplaceIndexHandler(RequestHandler):
         # To bootstrap the Backbone.js models in the page, create a list of
         # JSON'ed apps. Apps are the highest level model on the page.
         app_keys = simplejson.dumps([str(app_key) for app_key in AppQueryManager.get_app_keys(self.account)])
+
+
 
         return render_to_response(self.request,
                                   "advertiser/marketplace_index.html",

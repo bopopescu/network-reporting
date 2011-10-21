@@ -11,12 +11,15 @@ from publisher.query_managers import AdUnitQueryManager, AppQueryManager, AdUnit
 
 from common.utils.request_handler import RequestHandler
 from common.ragendja.template import render_to_response, render_to_string, JSONResponse
+from common.utils.marketplace_helpers import MarketplaceStatsFetcher
+
 from django.contrib.auth.decorators import login_required
 from django.utils import simplejson
 from django.core.urlresolvers import reverse
 
+
 import logging
-import random
+
 
 class AppService(RequestHandler):
     """
@@ -38,8 +41,8 @@ class AppService(RequestHandler):
             for app in apps:
                 app.update(mpxstats.get_app_stats(str(app['id'])))
 
-            logging.warn(apps)
             return JSONResponse(apps)
+
         except Exception, e:
             logging.warn(e)
             return JSONResponse({'error': str(e)})
@@ -165,33 +168,6 @@ def creative_service(request, *args, **kwargs):
     return CreativeService()(request, *args, **kwargs)
 
 
-class MarketplaceStatsFetcher(object):
-    def __init__(self, app_keys = None, adunit_keys = None, account_keys = None):
-        if not app_keys or adunit_keys or account_keys:
-            raise Exception("Fuck you, pass in something")
 
-            # payload = urllib2.urlopen('blah').read()
-        payload = {}
 
-        self.payload = payload
 
-    def get_app_stats(self, app_key):
-        return {
-            "revenue": random.randint(1, 900),
-            "impressions": random.randint(1, 10000),
-            "clicks": random.randint(1, 1000),
-        }
-
-    def get_adunit_stats(self, adunit_key):
-        return {
-            "revenue": random.randint(1, 100),
-            "impressions": random.randint(1, 10000),
-            "clicks": random.randint(1, 1000),
-        }
-
-    def get_account_stats(self, account_key):
-        return {
-            "revenue": random.randint(1, 10000),
-            "impressions": random.randint(1, 100000),
-            "clicks": random.randint(1, 1000),
-        }

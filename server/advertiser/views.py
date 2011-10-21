@@ -1188,7 +1188,8 @@ class MarketplaceIndexHandler(RequestHandler):
         dsps = stats_fetcher.get_all_dsp_stats(today, two_weeks_ago)
 
         for dsp in dsps:
-            dsp.update({'creatives': stats_fetcher.get_creatives_for_dsp(dsp['key'], today, two_weeks_ago)})
+            creatives = stats_fetcher.get_creatives_for_dsp(dsp['key'], today, two_weeks_ago)
+            dsp.update({'creatives': creatives})
 
 
         return render_to_response(self.request,

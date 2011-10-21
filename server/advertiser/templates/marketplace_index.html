@@ -103,8 +103,8 @@
             <th> Impressions </th>
             <th> Clicks </th>
             <th> CTR </th>
-            <th> Revenue </th>
             <th> eCPM </th>
+            <th> Revenue </th>
           </thead>
           <tbody>
             {% for creative in dsp.creatives %}
@@ -113,35 +113,33 @@
                 <td> {{ creative.stats.imp }} </td>
                 <td> {{ creative.stats.clk }} </td>
                 <td> </td>
+                <td> </td>
                 <td> {{ creative.stats.pub_rev }} </td>
-                <td>  </td>
-
-
               </tr>
             {% endfor %}
           </tbody>
           <tfoot>
-            <th>  </th>
-            <th> {{ dsp.stats.imp }} </th>
-            <th> {{ dsp.stats.clk }} </th>
-            <th>  </th>
-            <th> {{ dsp.stats.pub_rev }} </th>
-            <th>  </th>
+            <td> Totals </td>
+            <td> {{ dsp.stats.imp }} </td>
+            <td> {{ dsp.stats.clk }} </td>
+            <td>  </td>
+            <td>  </td>
+            <td> {{ dsp.stats.pub_rev }} </td>
           </tfoot>
         </table>
-        {{ dsp.stats }}
       </div>
     {% endfor %}
 
   </div>
 
   <div class="clearfix tab-section" id="settings">
+    <h2> Marketplace Settings </h2>
     <div class="well">
-      Blindness?
     </div>
 
+    <h2> Advertiser Blocklist </h2>
     <div class="well">
-      Awesome blocklist goes here.
+      As a publisher, you might want to block certain advertisers from having their ads displayed in your app.
     </div>
 
     <div class="right button-group">

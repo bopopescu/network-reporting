@@ -94,6 +94,11 @@ table.simpletable {
     tbody tr:last-child td:last-child {
         @include border-radius(0 0 4px 0);
     }
+
+    tfoot td {
+        border-top: 2px solid #ccc;
+        font-size: 16px;
+    }
 }
 
 

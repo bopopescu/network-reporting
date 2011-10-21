@@ -1434,9 +1434,14 @@ table.simpletable {
     -webkit-border-radius: 0 0 4px 0;
     -moz-border-radius: 0 0 4px 0;
     border-radius: 0 0 4px 0; }
+  table.simpletable tfoot td {
+    border-top: 2px solid #ccc;
+    font-size: 16px; }
 
 .zebra-striped tbody tr:nth-child(odd) td {
   background-color: #f9f9f9; }
+.zebra-striped tbody tr:nth-child(even) td {
+  background-color: #fff; }
 .zebra-striped tbody tr:hover td {
   background-color: #EBF2F7; }
 

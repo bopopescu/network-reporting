@@ -31,14 +31,14 @@ class MarketplaceStatsFetcher(object):
     def get_account_stats(self, account_key):
         return {
             "revenue": random.randint(1, 10000),
-            "impressions": random.randint(1, 100000),
-            "clicks": random.randint(1, 1000),
+            "impressions": random.randint(1, 1000000),
+            "clicks": random.randint(1, 100000),
         }
 
 
     def get_all_dsp_stats(self, start, end):
         stats = {
-            "1": {
+            "DSP1": {
                 "url": "http://www.google.com/",
                 "name": "AdBlah",
                 "stats": {
@@ -50,7 +50,7 @@ class MarketplaceStatsFetcher(object):
                     "clk": 2942
                 }
             },
-            "2": {
+            "DSP2": {
                 "url": "http://www.blobmob.com/",
                 "name": "BlobMob",
                 "stats": {
@@ -63,20 +63,139 @@ class MarketplaceStatsFetcher(object):
                 }
             }
         }
-        return stats
 
-    def get_dsp_stats(self, dsp_name, start, end):
-        return {}
+        # Make the stats iterable so we can use them in a template
+        i_stats = []
+        for k, v in stats.iteritems():
+            v['key'] = k
+            i_stats.append(v)
 
-    def get_top_creatives(self, limit=None):
-        if limit = None:
+        return i_stats
+
+    def get_dsp_stats(self, dsp_key, start, end):
+        stats = {
+            "DSP1": {
+                "url": "http://www.google.com/",
+                "name": "AdBlah",
+                "stats": {
+                    "chrg": 100,
+                    "imp": 53082,
+                    "bid": 31093,
+                    "pub_rev": 4520.13,
+                    "bid_cnt": 29992,
+                    "clk": 2942
+                }
+            },
+            "DSP2": {
+                "url": "http://www.blobmob.com/",
+                "name": "BlobMob",
+                "stats": {
+                    "chrg": 430,
+                    "imp": 78282,
+                    "bid": 99793,
+                    "pub_rev": 9520.13,
+                    "bid_cnt": 87992,
+                    "clk": 9042
+                }
+            }
+        }
+
+        dsp_stats = stats[dsp_key]
+
+        # keys are often used for front-end handlers,
+        # so return the key too
+        dsp_stats['key'] = dsp_key
+
+        return dsp_stats
+
+    def get_creatives_for_dsp(self, dsp_key, start, end):
+        creative_stats = {
+            "DSP1": {
+                'CREATIVE1': {
+                    'stats': {
+                        'chrg': 2340,
+                        'imp': 23490,
+                        'bid': 24902,
+                        'bid_cnt': 2394,
+                        'pub_rev': 2030,
+                        'clk': 3012
+                    },
+                    'creative': {
+                        'body': "blah bla",
+                        '_id': "asdo2nOASINdlnasd",
+                        'url': "http://www.profilebrand.com/graphics/category/animals/4904_pitbulls-are-great-dogs.png",
+                        'dsp': "DSP1",
+                        'crtv_id': "CREATIVE1"
+                    }
+                },
+                'CREATIVE2': {
+                    'stats': {
+                        'chrg': 2340,
+                        'imp': 23490,
+                        'bid': 24902,
+                        'bid_cnt': 2394,
+                        'pub_rev': 2030,
+                        'clk': 3012
+                    },
+                    'creative': {
+                        'body': "blah bla",
+                        '_id': "asdo2nOASINdlnasd",
+                        'url': "http://www.profilebrand.com/graphics/category/animals/4904_pitbulls-are-great-dogs.png",
+                        'dsp': "DSP1",
+                        'crtv_id': "CREATIVE2"
+                    }
+                }
+            },
+            "DSP2": {
+                'CREATIVE1': {
+                    'stats': {
+                        'chrg': 2340,
+                        'imp': 23490,
+                        'bid': 24902,
+                        'bid_cnt': 2394,
+                        'pub_rev': 2030,
+                        'clk': 3012
+                    },
+                    'creative': {
+                        'body': "blah bla",
+                        '_id': "asdo2nOASINdlnasd",
+                        'url': "http://www.profilebrand.com/graphics/category/animals/4904_pitbulls-are-great-dogs.png",
+                        'dsp': "DSP2",
+                        'crtv_id': "CREATIVE1"
+                    }
+                },
+                'CREATIVE2': {
+                    'stats': {
+                        'chrg': 2340,
+                        'imp': 23490,
+                        'bid': 24902,
+                        'bid_cnt': 2394,
+                        'pub_rev': 2030,
+                        'clk': 3012
+                    },
+                    'creative': {
+                        'body': "blah bla",
+                        '_id': "asdo2nOASINdlnasd",
+                        'url': "http://www.profilebrand.com/graphics/category/animals/4904_pitbulls-are-great-dogs.png",
+                        'dsp': "DSP2",
+                        'crtv_id': "CREATIVE2"
+                    }
+                }
+            }
+        }
+
+        creatives = [creative for creative in creative_stats[dsp_key].values()]
+
+        return creatives
+
+
+
+
+    def get_top_creatives(self, dsp_key=None, limit=None):
+        if limit == None:
             limit = 3
 
         return {}
-
-    def get_creatives_for_dsp(self, dsp, start, end):
-        return {}
-
 
 
 

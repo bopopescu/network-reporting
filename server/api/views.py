@@ -29,13 +29,13 @@ class AppService(RequestHandler):
         try:
             # If an app key is provided, return the single app
             if app_key:
-                mpxstats = MarketplaceStatsFetcher(app_keys = [app_key])
                 apps = [AppQueryManager.get_app_by_key(app_key).toJSON()]
+                mpxstats = MarketplaceStatsFetcher([app_key])
 
             # If no app key is provided, return a list of all apps for the account
             else:
                 apps = [app.toJSON() for app in AppQueryManager.get_apps(self.account)]
-                mpxstats = MarketplaceStatsFetcher(app_keys = [app['id'] for app in apps])
+                mpxstats = MarketplaceStatsFetcher([app['id'] for app in apps])
 
             # get stats for each app
             for app in apps:
@@ -74,17 +74,23 @@ class AdUnitService(RequestHandler):
             if app_key:
                 app = AppQueryManager.get_app_by_key(app_key)
                 adunits = AdUnitQueryManager.get_adunits(app=app)
-                extra_data = {
-                    'app_id': app_key
-                }
+                mpxstats = MarketplaceStatsFetcher([app_key])
+
                 response = [adunit.toJSON() for adunit in adunits]
+
                 for d in response:
-                    d.update(extra_data)
+                    logging.warn(d)
+                    adunit_stats = mpxstats.get_adunit_stats(d['id'])
+                    adunit_stats.update({'app_id':app_key})
+                    d.update(adunit_stats)
+
                 logging.warn(response)
+
                 return JSONResponse(response)
             else:
                 return JSONResponse({'error':'No parameters provided'})
         except Exception, e:
+            logging.warn(e)
             return JSONResponse({'error': str(e)})
 
     def post(self):

@@ -1176,16 +1176,28 @@ class MarketplaceIndexHandler(RequestHandler):
         # JSON'ed apps. Apps are the highest level model on the page.
         app_keys = simplejson.dumps([str(app_key) for app_key in AppQueryManager.get_app_keys(self.account)])
 
+        # Set up a MarketplaceStatsFetcher with this account only
         stats_fetcher = MarketplaceStatsFetcher(account_keys=[self.account.key()])
+
+        # Get the top level marketplace stats for the account
+        top_level_mpx_stats = stats_fetcher.get_account_stats(self.account.key())
+
+        # Get all of the dsp stats
         today = datetime.date.today()
         two_weeks_ago = datetime.timedelta(0,0,0,0,0,0,2)
         dsps = stats_fetcher.get_all_dsp_stats(today, two_weeks_ago)
+
+        for dsp in dsps:
+            dsp.update({'creatives': stats_fetcher.get_creatives_for_dsp(dsp['key'], today, two_weeks_ago)})
+
 
         return render_to_response(self.request,
                                   "advertiser/marketplace_index.html",
                                   {
                                       'marketplace': marketplace_campaign,
                                       'app_keys': app_keys,
+                                      'dsps': dsps,
+                                      'top_level_mpx_stats': top_level_mpx_stats
                                   })
 
     def post(self):

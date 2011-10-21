@@ -1,5 +1,5 @@
 from google.appengine.ext import db
-from budget.helpers import get_curr_slice_num, get_slice_from_datetime
+from budget.helpers import get_curr_slice_num, get_slice_from_datetime, TS_PER_DAY
 import logging
 import math
 
@@ -30,15 +30,19 @@ class Budget(db.Model):
     # Static Slice budget is set if:
     #  -- total USD, end date,    evenly
     #  -- $/day,     end date,    evenly
-    #  -- $/day,     end date,    allatonce
     #  -- $/day,     no end date, evenly
     #  -- $/day,     no end date, allatonce
+    #  -- $/day,     end date,    allatonce
     static_slice_budget = db.FloatProperty()
 
-    total_spent = db.FloatProperty()
-    curr_slice = db.IntegerProperty()
+    total_spent = db.FloatProperty(default=0.0)
+    curr_slice = db.IntegerProperty(default=0)
+    curr_date = db.DateProperty()
 
     created_at = db.DateTimeProperty(auto_now_add=True)
+
+    def __repr__(self):
+        return "Budget(Start: %s, End: %s, Delivery_type: %s, Static_budget: %s, Static_slice_budget: %s, total_spent: %s, curr_slice: %s, curr_date: %s" % (self.start_datetime, self.end_datetime, self.delivery_type, self.static_total_budget, self.static_slice_budget, self.total_spent, self.curr_slice, self.curr_date)
 
 #    def __init__(self, parent=None, key_name=None, **kwargs):
 #        if not key_name and not kwargs.get('key', None):
@@ -94,11 +98,16 @@ class Budget(db.Model):
 
     @property
     def total_budget(self):
-        """ Returns the total budget this budget has to spend """
+        """ Returns the total budget this budget has to spend
+            if total_budget or end_datetime is set,
+            returns None otherwise
+        """
         if static_total_budget is not None:
             return static_total_budget
-        else:
+        elif self.total_slices:
             return self.static_slice_budget * self.total_slices
+        else:
+            return None
         pass
 
     @property
@@ -108,7 +117,9 @@ class Budget(db.Model):
 
     @property
     def end_slice(self):
-        """ Returns the timeslice when this budget ends """
+        """ Returns the timeslice when this budget ends
+            if end_datetime is set, returns None otherwise
+         """
         if self.end_datetime:
             return get_slice_from_datetime(self.end_datetime)
         else:
@@ -119,9 +130,46 @@ class Budget(db.Model):
         """ Returns the budget for the next timeslice.  This is a 
         function of the appropriate static budget, the total spend,
         and the desired spend """
+
+        # If we have a static total budget, it means we're allatonce
+        # spending with static_budget, dump it all RIGHT AWAY
+        if self.static_total_budget:
+            return self.static_total_budget - self.total_spent
+        # aao, but static slice budget, -> $/day, aao -> spend all that you can 
+        # for today at every time slice less what you've spent
+        elif self.delivery_type == 'allatonce' and self.static_slice_budget:
+            return self.daily_budget - self.spent_today
+
+
         difference = self.expected_spent - self.total_spent
+        # if we underspend, dump it all right away
         if difference >= 0:
             return (self.static_slice_budget + difference)
+        #TODO If we overspend, redistribute
+        else:
+            return (self.static_slice_budget + difference)
+
+    @property
+    def daily_budget(self):
+        """ Should only be used by static_budget w/ aao
+            Returns static_slice_budget * slices in a day
+        """
+        return self.static_slice_budget * TS_PER_DAY
+
+    @property
+    def spent_today(self):
+        """ Computes the amount spent today from the slicelogs
+            Uses curr_date and curr_slice to determine which logs to get
+        """
+        day_start_slice = get_slice_from_datetime(self.curr_date)
+        keys = BudgetSliceLog.get_keys_for_slices(self, xrange(day_start_slice, self.curr_slice))
+        todays_logs = BudgetSliceLog.get(keys)
+        tot = 0.0
+
+        for log in todays_logs:
+            tot += log.actual_spending
+        return tot
+
 
     @property
     def expected_spent(self):
@@ -181,7 +229,7 @@ class BudgetSliceLog(db.Model):
     desired_spending = db.FloatProperty()
 
     ######### MC SNAPSHOT #############
-   
+
     # total spending of whole budget when this TS is init'd
     prev_total_spending = db.FloatProperty()
     # Braking fraction as computed for this timeslice
@@ -189,9 +237,20 @@ class BudgetSliceLog(db.Model):
 
 
     ######### Part that is actually a log ########
-    
+
     # How much was actually spent
     actual_spending = db.FloatProperty()
+
+
+    def __init__(self, parent=None, key_name=None, **kwargs):
+        if not key_name and not kwargs.get('key', None):
+            budget = kwargs.get('budget', None)
+            slice_num = kwargs.get('slice_num', None)
+            if budget and slice_num:
+                key_name = self.get_key_name(budget, slice_num)
+        return super(BudgetSliceLog, self).__init__(parent=parent,
+                                                    key_name = key_name,
+                                                    **kwargs)
 
     @property
     def final_total_spending(self):
@@ -204,14 +263,25 @@ class BudgetSliceLog(db.Model):
         return self.desired_spending - self.actual_spending
 
     @classmethod
-    def get_current_for_campaign(cls, campaign):
-        """ Gets the curret slicelog for the given campaign """
-        curr_slice = get_curr_slice_num()
+    def get_key_name(cls, budget, slice_num):
+        if isinstance(budget, db.Model):
+            budget = str(budget.key())
+        return 'k:%s:%s' % (budget, slice_num)
+
+    @classmethod
+    def get_key(cls, budget, slice_num):
+        return db.Key.from_path(cls.kind(), cls.get_key_name(budget, slice_num))
+
+    @classmethod
+    def get_slice_log_by_budget_ts(cls, budget, timeslice):
+        """ Gets the slicelogs by budget and slice_num """
         pass
 
     @classmethod
-    def get_slice_log_by_campaign_ts(cls, campaign, timeslice):
-        """ Gets the slicelogs by campaign and slice_num """
+    def get_keys_for_slices(cls, budget, slices):
+        for slice_num in slices:
+            yield cls.get_key(budget, slice_num)
 
     #TODO: Custom init stuff, k:ts_log:<camp>:<slice>
+
 

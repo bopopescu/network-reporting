@@ -1,6 +1,8 @@
-import random
+import random 
+import logging
+from datetime import datetime, timedelta
 
-from datetime import datetime
+from google.appengine.api import memcache
 
 from ad_server.debug_console import trace_logging
 from advertiser.models import Campaign
@@ -16,17 +18,19 @@ from budget.memcache_budget import (remaining_ts_budget,
                                     _from_memcache_int,
                                     )
 
+from budget.models import BudgetSliceLog
+
+ONE_DAY = timedelta(days = 1)
+
 
 
 def has_budget(budget, cost, today=None):
-    slice_num = get_curr_slice_num()
-    #if today is None:
-    #    today = pac_today()
 
     if budget is None:
         return False
 
-    if not budget.is_active_for_timeslice(slice_num):
+    # I maintain that this is slightly fucked
+    if not budget.is_active_for_timeslice(budget.curr_slice):
         return False
 
     if random.random() > braking_fraction(budget):
@@ -41,15 +45,25 @@ def has_budget(budget, cost, today=None):
     return True
 
 ################## Used for testing #####################
+def _delete_memcache(budget):
+    keys = (_make_budget_ts_key(budget), _make_budget_spent_key(budget), _make_budget_braking_key(budget))
+
+    for key in keys:
+        memcache.delete(key, namespace = 'budget')
+
 def _apply_if_able(budget, cost, today=None):
     success = has_budget(budget, cost, today)
     if success:
         apply_expense(budget, cost, today)
-
     return success
 #########################################################
 
-def apply_expense(budget, cost, today=None):
+def remaining_daily_budget(budget):
+    ts_rem = remaining_ts_budget(budget)
+    daily_rem = budget.daily_budget - budget.spent_today
+    return daily_rem + ts_rem
+
+def apply_expense(budget, cost, curr_slice=None):
     """ Subtract $$$ from the budget, add to total spent
     This will get cleaned up later """
 
@@ -60,14 +74,19 @@ def apply_expense(budget, cost, today=None):
         spent_key = _make_budget_spent_key(budget)
 
         memcache.decr(ts_key, _to_memcache_int(cost), namespace='budget')
+
         memcache.incr(spent_key, _to_memcache_int(cost), namespace='budget', initial_value = total_spent(budget))
 
-def timeslice_advance(budget, testing=False, advance_to_slice=None):
+def timeslice_advance(budget, testing=False, advance_to_datetime = None):
     """ Update the budget_obj to have the correct total_spent at the start of this TS
     Update the old slicelog to hvae the correct total_spent at the end of it's TS
     Save the current memcache snapshot in a new slicelog
 
     TIMESLICE ADVANCE IS THE GOD OF BUDGETS. THIS METHOD CREATES, DESTROYS, UPDATES, ETC. """
+    if testing and advance_to_datetime is not None:
+        slice_num = get_slice_from_datetime(advance_to_datetime)
+    else:
+        slice_num = None
     if not budget:
         return
 
@@ -75,31 +94,61 @@ def timeslice_advance(budget, testing=False, advance_to_slice=None):
 
     # no previous slice log, this budget hasn't been initialized
     if last_log is None:
-        _initialize_budget(budget)
+        _initialize_budget(budget, testing = testing, slice_num = slice_num, date = advance_to_datetime.date())
 
     else:
-        key = _make_budget_ts_key(budget)
+        # Budget is Init'd, but we're advancing more than a single TS.  ONLY DONE WHEN TESTING
+        if slice_num is not None and testing:
+            while budget.curr_slice != slice_num:
+                key = _make_budget_ts_key(budget)
 
-        curr_total_spent = total_spent(budget)
-        spent_this_ts = curr_total_spent - budget.total_spent
+                curr_total_spent = total_spent(budget)
+                spent_this_ts = curr_total_spent - budget.total_spent
 
-        budget.curr_slice += 1
-        budget.total_spent = curr_total_spent
-        budget.put()
+                budget.total_spent = curr_total_spent
 
-        _update_budgets(budget, last_log, spent_this_timeslice = spent_this_ts)
+                budget.curr_slice += 1
+                next_day = budget.curr_date + ONE_DAY
+                # Advance the day counter if it makes sense to do so
+                if budget.curr_slice >= get_slice_from_datetime(next_day):
+                    budget.curr_date = next_day
+                budget.put()
 
-def _initialize_budget(budget, slice_num = None):
+                _update_budgets(budget, last_log, spent_this_timeslice = spent_this_ts)
+        else:
+            key = _make_budget_ts_key(budget)
+
+            curr_total_spent = total_spent(budget)
+            spent_this_ts = curr_total_spent - budget.total_spent
+
+            budget.total_spent = curr_total_spent
+
+            budget.curr_slice += 1
+            next_day = budget.curr_date + ONE_DAY
+            # Advance the day counter if it makes sense to do so
+            if budget.curr_slice >= get_slice_from_datetime(next_day):
+                budget.curr_date = next_day
+            budget.put()
+
+            _update_budgets(budget, last_log, spent_this_timeslice = spent_this_ts)
+    return budget.curr_slice
+
+def _initialize_budget(budget, testing = False, slice_num = None, date=None):
     """ Start this budget running! 
         Create slicelog
         Update spending, braking in memc
     """
     if slice_num is None:
         slice_num = get_curr_slice_num()
+    if date is None:
+        date = datetime.now().date()
 
-    if budget.start_slice != slice_num:
+    if budget.start_slice > slice_num:
+        # Don't init the budget if it shouldn't be init'd
         logging.warning("There is something wrong.  This campaign starts on slice %s, but initializing on slice: %s" % (budget.start_slice, slice_num))
+        return 
     budget.curr_slice = slice_num
+    budget.curr_date = date
     budget.put()
 
     new_log = BudgetSliceLog(budget = budget,
@@ -112,8 +161,8 @@ def _initialize_budget(budget, slice_num = None):
     ts_key = _make_budget_ts_key(budget)
     brake_key = _make_budget_braking_key(budget)
 
-    memcache.set(ts_key, _to_memcache_int(new_slice_log.desired_spending), namespace = 'budget')
-    memcache.set(brake_key, new_slice_log.prev_braking_fraction, namespace = 'budget')
+    memcache.set(ts_key, _to_memcache_int(new_log.desired_spending), namespace = 'budget')
+    memcache.set(brake_key, new_log.prev_braking_fraction, namespace = 'budget')
 
 
 def _update_slicelogs(budget, last_log, new_braking, spent_this_timeslice):
@@ -131,7 +180,7 @@ def _update_slicelogs(budget, last_log, new_braking, spent_this_timeslice):
     new_log.put()
     if budget.curr_slice != new_log.slice_num:
         logging.warning("Ayyyeee tharr be problems around.  Budget curr slice: %s  Timeslice currslice: %s" % (budget.curr_slice, new_log.slice_num))
-    return new_slice_log
+    return new_log
     
 
 def _update_budgets(budget, last_log, spent_this_timeslice=None):
@@ -143,9 +192,12 @@ def _update_budgets(budget, last_log, spent_this_timeslice=None):
 
     desired_spend = last_log.desired_spending
     old_braking = braking_fraction(budget)
-    new_braking = calc_braking_fraction(desired_spend, spent_this_timeslice, old_braking)
+    if spent_this_timeslice == 0:
+        new_braking = old_braking
+    else:
+        new_braking = calc_braking_fraction(desired_spend, spent_this_timeslice, old_braking)
 
-    new_slice_log  = _update_slicelogs(budget, last_log, spent_this_ts)
+    new_slice_log  = _update_slicelogs(budget, last_log, new_braking, spent_this_timeslice)
 
     # Update memc with values from the new slice log (since it's the backup for MC anyway)
     ts_key = _make_budget_ts_key(budget)

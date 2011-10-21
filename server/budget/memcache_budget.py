@@ -9,11 +9,11 @@ def remaining_ts_budget(budget):
     the budget for this TS and the
     (total currently spent in MC less the amount spent total previously)
     """
-    key = _make_ts_campaign_key(budget)
+    key = _make_budget_ts_key(budget)
 
     memc_budget = memcache.get(key, namespace='budget')
     if memc_budget is None:
-        logging.error("Budget cache miss campaign with key: %s" % key)
+        logging.error("Budget cache miss budget with key: %s" % key)
 
         key = _make_budget_ts_key(budget)
 
@@ -34,7 +34,7 @@ def total_spent(budget):
     memc_total = memcache.get(key, namespace='budget')
 
     if memc_total is None:
-        logging.error("Spending cache miss for campaign with key: %s" % key)
+        logging.error("Spending cache miss for budget with key: %s" % key)
 
         total = budget.total_spent
         memc_total = _to_memcache_int(total)
@@ -59,18 +59,15 @@ def braking_fraction(budget):
 
 
 def _from_memcache_int(value):
-    """ Removes the 10^5 mult factor, and then
-    takes off the offset for negative numbers """
+    """ Removes the 10^5 mult factor """
+    logging.warning("Value in memcache: %s" % value)
     value = float(value)
-    value = value/100000
-    value = value - 5000
+    value = value/10 ** 5
     return value
 
 def _to_memcache_int(value):
-    """offsets by 5000 to help w/ negative values
-    multiplies by 10^5 and converts to an int"""
-    value = value + 5000
-    return int(max(value,0)*100000)
+    """multiplies by 10^5 and converts to an int"""
+    return int(value * 10 ** 5)
 
 def _make_budget_ts_key(budget):
     return 'ts_budget:%s' % str(budget.key())

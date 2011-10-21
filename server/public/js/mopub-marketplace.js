@@ -18,28 +18,13 @@
             clicks: 0,
             ctr: 0,
             price_floor: 0
-        },
-        initialize: function() {
-            var self = this;
-            self.bind('reset', function() {
-
-            });
         }
-
     });
 
     var AdUnitList = Backbone.Collection.extend({
         model: AdUnit,
         url: function() {
             return '/api/app/' + this.app_id + '/adunits/';
-        },
-        parse: function (response) {
-            return response.adunits;
-        },
-        initialize: function() {
-            var self = this;
-            self.bind("reset", function(collection) {
-            });
         }
     });
 
@@ -79,15 +64,6 @@
         parse: function(response) {
             return response.apps;
         },
-        initialize: function() {
-            var self = this;
-
-            // When the collection is fetched or reset, fetch all of the
-            // adunits for each of the apps
-            self.bind("reset", function(collection) {
-                //this.fetchAdUnits();
-            });
-        },
         fetchAdUnits: function() {
             this.each(function (app) {
                 app.adunits = new AdUnitList();
@@ -105,7 +81,14 @@
         },
 
         render: function () {
-            var renderedContent = this.template(this.model.toJSON());
+            // When we render an appview, we also attach a handler to fetch
+            // and render it's adunits when a link is clicked.
+            var renderedContent = $(this.template(this.model.toJSON()));
+            $("a.adunits", renderedContent).click(function(e) {
+                e.preventDefault();
+                var href = $(this).attr('href').replace("#","");
+                Marketplace.fetchAdunitsForApp(href);
+            });
             $("tbody", this.el).append(renderedContent);
             return this;
         }
@@ -118,62 +101,62 @@
         },
 
         render: function () {
+            // render the adunit and attach it to the table after it's adunit's row
             var renderedContent = this.template(this.model.toJSON());
-            $("#app", this.el).append(renderedContent);
+            console.log(this.model.get("app_id"));
+            var app_row = $("tr#app-" + this.model.get("app_id"), this.el);
+            console.log(app_row);
+            app_row.after(renderedContent);
             return this;
         }
-
     });
 
 
+
+    var Marketplace = {
+
+        /*
+         * Fetches and renders all apps from a list of app_keys.
+         * Useful for bootstrapping table loads.
+         */
+        fetchAllApps: function (app_keys) {
+            _.each(app_keys, function(app_key) {
+                var app = new App({id: app_key});
+                app.bind("change", function(current_app) {
+                    var appView = new AppView({ model: current_app, el: "#marketplace_targeting" });
+                    appView.render();
+                });
+                app.fetch();
+            });
+
+        },
+
+        /*
+         * Fetches and renders all of the adunits from an app key.
+         * Useful for showing adunits when a user has clicked on a
+         * 'show adunits' link.
+         */
+        fetchAdunitsForApp: function (app_key) {
+            var adunits = new AdUnitList();
+            adunits.app_id = app_key;
+            adunits.bind("reset", function(adunits_collection) {
+                _.each(adunits_collection.models, function(adunit) {
+                    var adunitView = new AdUnitView({ model: adunit, el: "#marketplace_targeting" });
+                    adunitView.render();
+                });
+            });
+            adunits.fetch();
+        }
+    };
+
+
+    // Make everything usable in the page
     window.AdUnit = AdUnit;
     window.AdUnitList = AdUnitList;
     window.App = App;
     window.Inventory = Inventory;
     window.AdUnitView = AdUnitView;
     window.AppView = AppView;
-
-
-    var Marketplace = {
-
-        fetchAllApps: function (app_keys) {
-            _.each(app_keys, function(app_key) {
-                var app = new App({id: app_key});
-                app.bind("change", function(current_app) {
-                    var appView = new AppView({model: current_app, el: "#marketplace_targeting"});
-                    appView.render();
-                });
-                app.fetch();
-            });
-        },
-
-        fetchAllAdUnits: function (adunit_keys) {
-            _.each(adunit_keys, function(adunit_key) {
-                var adunit = new AdUnit({id: adunit_key});
-                adunit.bind("change", function(current_adunit) {
-                    var adunitView = new AdUnitView({model: current_adunit, el: "#marketplace_targeting"});
-                    adunitView.render();
-                });
-                adunit.fetch();
-            });
-        }
-
-    };
-
-
     window.Marketplace = Marketplace;
 
-    $(document).ready(function() {
-        $("a.adunits").click(function() {
-            var href = $(this).attr('href').replace("#","");
-            $(".adunit-data-" + href).each(function () {
-                if ($(this).hasClass('hidden')) {
-                    $(this).slideUp().removeClass('hidden');
-                } else {
-                    $(this).slideDown().addClass('hidden');
-                }
-            });
-        });
-
-    });
 })(this.jQuery, this.Backbone);

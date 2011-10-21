@@ -23,7 +23,6 @@ class AppService(RequestHandler):
     API Service for delivering serialized App data
     """
     def get(self, app_key=None):
-#        logging.warn(app_key)
         try:
             # If an app key is provided, return the single app
             if app_key:
@@ -68,11 +67,13 @@ class AdUnitService(RequestHandler):
             if app_key:
                 app = AppQueryManager.get_app_by_key(app_key)
                 adunits = AdUnitQueryManager.get_adunits(app=app)
-                logging.warn(adunits[0].toJSON())
-                response = {
-                    'app': app_key,
-                    'adunits': [adunit.toJSON() for adunit in adunits]
+                extra_data = {
+                    'app_id': app_key
                 }
+                response = [adunit.toJSON() for adunit in adunits]
+                for d in response:
+                    d.update(extra_data)
+                logging.warn(response)
                 return JSONResponse(response)
             else:
                 return JSONResponse({'error':'No parameters provided'})

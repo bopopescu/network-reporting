@@ -1,9 +1,11 @@
 <tr class="app-row" id="app-<%= id %>">
   <td class="name clearfix">
-    <img src="/placeholders/image.gif" alt="Icon" width="45" height="45" class="app-icon"/>
+    <img src="/placeholders/image.gif" alt="Icon" width="45" height="45" class="app-icon" />
     <div class="app-detail">
       <a href="<%= url %>"><%= name  %></a>
-      <span class="app_type"> <%= app_type %> </span>
+      <span class="muted unbold"> ( <%= app_type %> ) </span>
+      <br />
+      <a href="#<%= id %>" class="adunits" id="<%= id %>"> Show Adunits </a>
     </div>
   </td>
   <td class="revenue">

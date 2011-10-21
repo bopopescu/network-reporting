@@ -12,13 +12,20 @@
         defaults : {
             name: "",
             revenue: 0,
-            ecpm: 0,
             attempts: 0,
             impressions: 0,
             fill_rate: 0,
             clicks: 0,
-            ctr: 0,
-            price_floor: 0
+            price_floor: 0,
+            ecpm: 0,
+            ctr: 0
+
+        },
+        ecpm: function() {
+            return this.get('revenue')/(this.get('impressions')*1000);
+        },
+        ctr: function() {
+            return (this.get('clicks')/this.get('impressions'))*100;
         }
     });
 
@@ -43,14 +50,20 @@
             name: "",
             url:"#",
             revenue: 0,
-            ecpm: 0,
             attempts: 0,
             impressions: 0,
             fill_rate: 0,
             clicks: 0,
-            ctr: 0,
             price_floor: 0,
-            app_type: "iOS"
+            app_type: "iOS",
+            ecpm: 0,
+            ctr: 0
+        },
+        ecpm: function() {
+            return this.get('revenue')/(this.get('impressions')*1000);
+        },
+        ctr: function() {
+            return (this.get('clicks')/this.get('impressions'))*100;
         },
         url: function () {
             return "/api/app/" + this.id;
@@ -58,7 +71,7 @@
         parse: function (response) {
             // The api returns everything from this url as a list,
             // so that you can request one or all apps.
-            return response.apps[0];
+            return response[0];
         }
     });
 
@@ -67,10 +80,6 @@
         model: App,
         // If an app key isn't passed to the url, it'll return a list of all of the apps for the account
         url: "/api/app/",
-
-        parse: function(response) {
-            return response.apps;
-        },
         // Not used anymore, but could come in handy
         fetchAdUnits: function() {
             this.each(function (app) {
@@ -91,6 +100,7 @@
         render: function () {
             // When we render an appview, we also attach a handler to fetch
             // and render it's adunits when a link is clicked.
+
             var renderedContent = $(this.template(this.model.toJSON()));
             $("a.adunits", renderedContent).click(function(e) {
                 e.preventDefault();

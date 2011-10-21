@@ -10,19 +10,9 @@ except ImportError:
         from django.utils import simplejson as json
 
 class MarketplaceStatsFetcher(object):
-    def __init__(self, app_keys = None, adunit_keys = None, account_keys = None):
-        if not app_keys or adunit_keys or account_keys:
-            raise Exception("Fuck you, pass in something")
-
-        self.app_keys = app_keys
-        self.adunit_keys = adunit_keys
+    def __init__(self, account_keys):
         self.account_keys = account_keys
-
-    def fetch(self):
-            # payload = urllib2.urlopen('blah').read()
-        payload = {}
-
-        self.payload = payload
+        self.payload = {}
 
     def get_app_stats(self, app_key):
         return {
@@ -47,7 +37,33 @@ class MarketplaceStatsFetcher(object):
 
 
     def get_all_dsp_stats(self, start, end):
-        return {}
+        stats = {
+            "1": {
+                "url": "http://www.google.com/",
+                "name": "AdBlah",
+                "stats": {
+                    "chrg": 100,
+                    "imp": 53082,
+                    "bid": 31093,
+                    "pub_rev": 4520.13,
+                    "bid_cnt": 29992,
+                    "clk": 2942
+                }
+            },
+            "2": {
+                "url": "http://www.blobmob.com/",
+                "name": "BlobMob",
+                "stats": {
+                    "chrg": 430,
+                    "imp": 78282,
+                    "bid": 99793,
+                    "pub_rev": 9520.13,
+                    "bid_cnt": 87992,
+                    "clk": 9042
+                }
+            }
+        }
+        return stats
 
     def get_dsp_stats(self, dsp_name, start, end):
         return {}

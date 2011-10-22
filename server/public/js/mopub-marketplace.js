@@ -108,6 +108,7 @@
                 Marketplace.fetchAdunitsForApp(href);
                 $(this).remove();
             });
+
             $("tbody", this.el).append(renderedContent);
             return this;
         }
@@ -135,7 +136,13 @@
          */
         render: function () {
             // render the adunit and attach it to the table after it's adunit's row
-            var renderedContent = this.template(this.model.toJSON());
+            var current_model = this.model;
+            var renderedContent = $(this.template(this.model.toJSON()));
+            $(".price_floor_change", renderedContent).change(function(){
+                console.log('yeeeea boiiiii');
+                current_model.set({"price_floor": $(this).val()});
+                current_model.save();
+            });
             var app_row = $("tr#app-" + this.model.get("app_id"), this.el);
             app_row.after(renderedContent);
             return this;
@@ -193,5 +200,9 @@
     window.AdUnitView = AdUnitView;
     window.AppView = AppView;
     window.Marketplace = Marketplace;
+
+    $(document).ready(function(){
+
+    });
 
 })(this.jQuery, this.Backbone);

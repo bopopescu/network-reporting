@@ -194,6 +194,11 @@
             $('#addblocklist').submit();
         });
 
+        $(".price_floor_change").change(function(){
+            console.log('boomslam');
+            console.log(this.attr('id'));
+        });
+
     });
   </script>
 {% endblock extraScripts %}

@@ -84,8 +84,6 @@ class AdUnitService(RequestHandler):
                     adunit_stats.update({'app_id':app_key})
                     d.update(adunit_stats)
 
-                logging.warn(response)
-
                 return JSONResponse(response)
             else:
                 return JSONResponse({'error':'No parameters provided'})
@@ -96,8 +94,24 @@ class AdUnitService(RequestHandler):
     def post(self):
         pass
 
-    def put(self):
-        pass
+    def put(self, app_key = None, adunit_key = None):
+
+
+        put_data = simplejson.loads(self.request.raw_post_data)
+        logging.warn(put_data)
+        try:
+            new_price_floor = put_data['price_floor']
+
+            account_key = self.account.key()
+            adgroup = AdGroupQueryManager.get_marketplace_adgroup(adunit_key, account_key)
+
+            adgroup.price_floor = new_price_floor
+            AdGroupQueryManager.put(adgroup)
+
+        except KeyError, e:
+            return JSONResponse({'error':str(e)})
+
+        return JSONResponse({'success':'success'})
 
     def delete(self):
         pass

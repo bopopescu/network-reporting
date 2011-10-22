@@ -75,6 +75,10 @@ handlers:
   script: stats/views.py
   login: admin
 
+- url: /mdb/.*
+  script: mopub_logging/views.py
+  login: admin
+
 - url: /offline/.*
   script: reporting/aws_logging/blob_server.py
 

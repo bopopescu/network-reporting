@@ -17,11 +17,11 @@
               Your first app is now set up.  The next step is to add the SDK to your code and test that ads are serving correctly.  A sample ad campaign <strong>MoPub Demo Campaign</strong> has been created and you should be able to see the test ad after you add the MoPub code snippet and run the emulator.
             </div>{% endifequal %}
 {% ifequal status 'success' %}
-            <div class="alert-message success">
+            <div class="alert-message success block-message">
               The ad unit was created successfully.  To serve ads to this ad unit, you'll need to add the snippet of code below to your app.
             </div>{% endifequal %}
             <h2>Ad Unit ID</h2>
-            <div class="alert-message">
+            <div class="alert-message block-message">
               <code>
                 <pre>{{site.key}}</pre>
               </code>

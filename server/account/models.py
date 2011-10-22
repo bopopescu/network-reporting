@@ -68,7 +68,7 @@ class NetworkConfig(db.Model):
     millennial_pub_id = db.StringProperty()
     mobfox_pub_id = db.StringProperty()
 
-    rev_share = db.FloatProperty(default=.90)
+    rev_share = db.FloatProperty(default=.80)
     price_floor = db.FloatProperty(default=.25) # dollars CPM
 
 
@@ -123,6 +123,10 @@ class Account(db.Model):
 
     # have they accepted the marketplace terms of service?
     accepted_mpx_tos = db.BooleanProperty(default=False)
+    
+    # use MongoDB for realtime stats
+    # ex: Outblaze and Mobipeak have too many apps for GAE realtime stats to handle
+    use_mongodb_stats = db.BooleanProperty(default=False)
 
     def is_admin(self):
         return users.is_current_user_admin()
@@ -167,7 +171,8 @@ class PaymentInfo(db.Model):
 
 class PaymentRecord(db.Model):
     account = db.ReferenceProperty(Account, collection_name="payment_records")
-    amount = db.StringProperty()
-    month = db.IntegerProperty()
-    year = db.IntegerProperty()
+    amount = db.FloatProperty(default=float(0))
     status = db.StringProperty()
+    payment_date = db.DateProperty()
+    payment_start = db.DateProperty()
+    payment_end = db.DateProperty()

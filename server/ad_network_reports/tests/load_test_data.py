@@ -140,7 +140,7 @@ if REAL_TEST_DATA:
     # entities.append(AdNetworkAppMapper(application = com2us_app, ad_network_name = 'jumptap', publisher_id = 'com2us_test', ad_network_login = inmobi_login_info, send_email = True))
 
 else:
-    TEST_JUMPTAP_PUB_ID = 'test' # Needed in network config
+    TEST_JUMPTAP_PUB_ID = 'pa_zaphrox_zaphrox_drd_app'
     TEST_ADMOB_PUB_ID = 'a14a9ed9bf1fdcd'
     TEST_IAD_PUB_ID = '329218549'
     TEST_INMOBI_PUB_ID ='4028cba630724cd90130c2adc9b6024f'
@@ -161,16 +161,16 @@ else:
     # JumpTap login info
     jumptap_login_info = AdNetworkLoginInfo(account=account,
                                             ad_network_name='jumptap',
-                                            username='betnetwork',
-                                            password='BETjames')
+                                            username='zaphrox',
+                                            password='JR.7x89re0')
     jumptap_login_info.put()
 
     # iAd login info                                  
-    iad_login_info = AdNetworkLoginInfo(account=account,
-                                        ad_network_name='iad',
-                                        username='chesscom',
-                                        password='Faisal1Chess')
-    iad_login_info.put()
+#    iad_login_info = AdNetworkLoginInfo(account=account,
+#                                        ad_network_name='iad',
+#                                        username='chesscom',
+#                                        password='Faisal1Chess')
+#    iad_login_info.put()
 
     # InMobi login info
     inmobi_login_info = AdNetworkLoginInfo(account=account,
@@ -182,9 +182,7 @@ else:
 
     # MobFox login info
     mobfox_login_info = AdNetworkLoginInfo(account=account,
-                                           ad_network_name='mobfox',
-                                           publisher_ids=
-                                           ['fb8b314d6e62912617e81e0f7078b47e'])
+                                           ad_network_name='mobfox')
     mobfox_login_info.put()
 
     # Only needed for jumptap
@@ -207,11 +205,21 @@ else:
     jumptap_adunit.network_config = jumptap_adunit_config
     jumptap_adunit.put()
 
-#    entities.append(AdNetworkAppMapper(application = app, ad_network_name = 'admob', publisher_id = TEST_ADMOB_PUB_ID, ad_network_login = admob_login_info))
-#    entities.append(AdNetworkAppMapper(application = app, ad_network_name = 'jumptap', publisher_id = TEST_JUMPTAP_PUB_ID, ad_network_login = jumptap_login_info, send_email = True))
-#    entities.append(AdNetworkAppMapper(application = app, ad_network_name = 'iad', publisher_id = TEST_IAD_PUB_ID, ad_network_login = iad_login_info))
-#    entities.append(AdNetworkAppMapper(application = app, ad_network_name = 'inmobi', publisher_id = TEST_INMOBI_PUB_ID, ad_network_login = inmobi_login_info))
-#    entities.append(AdNetworkAppMapper(application = app, ad_network_name = 'mobfox', publisher_id = TEST_MOBFOX_PUB_ID, ad_network_login = mobfox_login_info))
+    entities.append(AdNetworkAppMapper(application=app, ad_network_name=
+        'admob', publisher_id=TEST_ADMOB_PUB_ID, ad_network_login=
+        admob_login_info))
+    entities.append(AdNetworkAppMapper(application=app, ad_network_name=
+        'jumptap', publisher_id=TEST_JUMPTAP_PUB_ID, ad_network_login=
+        jumptap_login_info, send_email=True))
+#    entities.append(AdNetworkAppMapper(application=app, ad_network_name=
+#        'iad', publisher_id=TEST_IAD_PUB_ID, ad_network_login=
+#        iad_login_info))
+#    entities.append(AdNetworkAppMapper(application=app, ad_network_name=
+#        'inmobi', publisher_id=TEST_INMOBI_PUB_ID, ad_network_login=
+#        inmobi_login_info))
+#    entities.append(AdNetworkAppMapper(application=app, ad_network_name=
+#        'mobfox', publisher_id=TEST_MOBFOX_PUB_ID, ad_network_login=
+#        mobfox_login_info))
 
 
-#db.put(entities)
+db.put(entities)

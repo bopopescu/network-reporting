@@ -18,10 +18,7 @@ class AdNetworkLoginInfo(db.Model): #(account,ad_network_name)
     # needed for admob
     client_key = db.StringProperty()
 
-    # needed for mobfox
-    publisher_ids = db.StringListProperty()
-
-    # needed for jumptap
+    # Special white list for jumptap
     adunit_publisher_ids = db.StringListProperty()
 
     def __init__(self, *args, **kwargs):

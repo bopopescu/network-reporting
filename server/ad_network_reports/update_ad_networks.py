@@ -14,7 +14,8 @@ if EC2:
     sys.path.append('/home/ubuntu/google_appengine/lib/yaml/lib')
 else:
     # Assumes it is being called from ./run_tests.sh from server dir
-    sys.path.append(os.environ['PWD'])
+    sys.path.append('/Users/tiagobandeira/Documents/mopub/server')
+    #sys.path.append(os.environ['PWD'])
 
 import common.utils.test.setup
 
@@ -25,7 +26,7 @@ from datetime import date, timedelta
 from ad_network_reports.ad_networks import AD_NETWORKS
 from ad_network_reports.models import AdNetworkScrapeStats
 from ad_network_reports.query_managers import AdNetworkReportQueryManager, \
-        get_login_credentials
+        get_all_login_credentials
 from common.utils import date_magic
 
 from google.appengine.ext import db
@@ -124,7 +125,7 @@ def update_ad_networks(start_date = None, end_date = None):
     """
     yesterday = date.today() - timedelta(days = 1)
 
-    if start_date is None and end_date is None:
+    if not start_date and not end_date:
         start_date = yesterday
         end_date = yesterday
 
@@ -134,8 +135,9 @@ def update_ad_networks(start_date = None, end_date = None):
         valid_stats_list = []
         email_account = False
         # log in to ad networks and update stats for each user 
-        for login_info in get_login_credentials():
-            account_key = login_info.account.key()
+        for login_credentials in get_all_login_credentials():
+            account_key = login_credentials.account.key()
+            ad_network_name = login_credentials.ad_network_name
             # Only email account once for all their apps amd ad networks if they
             # want email and the information is relevant (ie. yesterdays stats)
             if (account_key != previous_account_key and
@@ -146,9 +148,16 @@ def update_ad_networks(start_date = None, end_date = None):
                 email_account = False
 
             stats_list = []
+            manager = AdNetworkReportQueryManager(login_credentials.account)
+            # Is extra information besides the login credentials requeired for
+            # the ad network? If yes append it.
+            login_info = AD_NETWORKS[login_credentials.ad_network_name]. \
+                    append_extra_info(login_credentials)
+
             try:
-                scraper = AD_NETWORKS[login_info.ad_network_name].constructor(
-                        login_info)
+                scraper = AD_NETWORKS[login_credentials.ad_network_name]. \
+                        constructor(login_info)
+
                 # return a list of NetworkScrapeRecord objects of stats for
                 # each app for the test_date
                 stats_list = scraper.get_site_stats(test_date)
@@ -156,61 +165,60 @@ def update_ad_networks(start_date = None, end_date = None):
                 logging.error(("Couldn't get get stats for %s network for "
                         "\"%s\" account.  Can try again later or perhaps %s "
                         "changed it's API or site.") %
-                        (login_info.ad_network_name, login_info.account.key(),
-                            login_info.ad_network_name))
+                        (login_credentials.ad_network_name, login_credentials.account.key(),
+                            login_credentials.ad_network_name))
                 mail.send_mail(sender='olp@mopub.com',
-                               # login_info.account.user.email
+                               # login_credentials.account.user.email
                                to='tiago@mopub.com',
                                subject=("Ad Network Scrape Error on %s" %
                                    test_date.strftime("%m/%d/%y")),
                                body=("Couldn't get get stats for %s network "
                                    "for \"%s\" account. Error: %s" %
-                                   (login_info.ad_network_name,
-                                       login_info.account.key(), e)))
-                continue
+                                   (login_credentials.ad_network_name,
+                                       login_credentials.account.key(), e)))
+                raise
+            #continue
 
             for stats in stats_list:
 
                 # Add the current day to the db.
 
-                publisher_id = AD_NETWORKS[login_info.ad_network_name]. \
-                        get_pub_id(stats.app_tag, login_info)
+                publisher_id = stats.app_tag
 
                 # Get the ad_network_app_mapper object that corresponds to the
-                # login_info and stats.
-                manager = AdNetworkReportQueryManager(login_info.account)
+                # login_credentials and stats.
                 ad_network_app_mapper = manager.get_ad_network_app_mapper(
                         publisher_id=publisher_id,
-                        login_info=login_info)
+                        login_info=login_credentials)
 
                 if not ad_network_app_mapper:
                     # Check if the app has been added to MoPub prior to last
                     # update.
                     ad_network_app_mapper = manager.find_app_for_stats(
-                            publisher_id, login_info)
+                            publisher_id, login_credentials)
                     if not ad_network_app_mapper:
                         # App is not registered in MoPub but is still in the ad
                         # network.
                         logging.info("%(account)s has pub id %(pub_id)s on "
                                 "%(ad_network)s that\'s NOT in MoPub" %
-                                     dict(account = login_info.account.key(),
+                                     dict(account = login_credentials.account.key(),
                                           pub_id = stats.app_tag,
-                                          ad_network = login_info.
+                                          ad_network = login_credentials.
                                           ad_network_name))
                         continue
                     else:
                         logging.info("%(account)s has pub id %(pub_id)s on "
                                 "%(ad_network)s that was FOUND in MoPub" %
-                                     dict(account = login_info.account.key(),
+                                     dict(account = login_credentials.account.key(),
                                           pub_id = stats.app_tag,
-                                          ad_network = login_info.
+                                          ad_network = login_credentials.
                                           ad_network_name))
                 else:
                     logging.info("%(account)s has pub id %(pub_id)s on "
                             "%(ad_network)s that\'s in MoPub" %
-                            dict(account = login_info.account.key(),
+                            dict(account = login_credentials.account.key(),
                                 pub_id = stats.app_tag,
-                                ad_network = login_info.ad_network_name))
+                                ad_network = login_credentials.ad_network_name))
 
                 AdNetworkScrapeStats(ad_network_app_mapper =
                         ad_network_app_mapper,

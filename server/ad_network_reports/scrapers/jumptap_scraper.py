@@ -91,9 +91,9 @@ class JumpTapScraper(Scraper):
                                       app_tag = nsr_list[0].app_tag)
 
             if attempts != 0:
-                nsr.fill_rate = impressions / float(attempts)
+                nsr.fill_rate = impressions / float(attempts) * 100
             if impressions != 0:
-                nsr.ctr = clicks / float(impressions)
+                nsr.ctr = clicks / float(impressions) * 100
                 nsr.ecpm = cost / float(impressions)
 
             records.append(nsr)

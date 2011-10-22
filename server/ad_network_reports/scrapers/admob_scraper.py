@@ -98,9 +98,9 @@ class AdMobScraper(Scraper):
             nsr = NetworkScrapeRecord(revenue = stats['revenue'],
                                       attempts = stats['requests'],
                                       impressions = stats['impressions'],
-                                      fill_rate = stats['fill_rate'],
+                                      fill_rate = stats['fill_rate'] * 100,
                                       clicks = stats['clicks'],
-                                      ctr = stats['ctr'],
+                                      ctr = stats['ctr'] * 100,
                                       ecpm = stats['ecpm'])
 
             if 'site_id' in stats:

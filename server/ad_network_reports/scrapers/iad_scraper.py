@@ -166,7 +166,7 @@ class IAdScraper(Scraper):
                                       fill_rate = app_dict['fill_rate'],
                                       clicks = int(app_dict['ctr'] * app_dict[
                                           'impressions']),
-                                      ctr = app_dict['ctr'],
+                                      ctr = app_dict['ctr'] * 100,
                                       ecpm = app_dict['ecpm'],
                                       app_tag = app_dict['apple_id'])
             records.append(nsr)

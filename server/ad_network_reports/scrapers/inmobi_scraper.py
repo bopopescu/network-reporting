@@ -56,7 +56,6 @@ class InMobiScraper(Scraper):
 
         resp = urllib2.urlopen(req)
         line = resp.read()
-        print line
         if line.find('error') != -1:
             logging.error("Day range (%s to %s) selected for InMobi doesn\'t "
                     "have any data. %s" % (start_date.strftime("%Y %m %d"),

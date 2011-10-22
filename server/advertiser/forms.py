@@ -354,7 +354,7 @@ class HtmlCreativeForm(AbstractCreativeForm):
 
     class Meta:
         model = HtmlCreative
-        fields = ('html_data',) + \
+        fields = ('html_data', 'ormma_html') + \
                  ('ad_type','name','tracking_url','url','display_url','format','custom_height','custom_width','landscape', 'conv_appid', 'launchpage')
 
 class ImageCreativeForm(AbstractCreativeForm):

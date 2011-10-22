@@ -516,6 +516,7 @@ class HtmlCreative(Creative):
         This should not be confused with ad_type=html, which means that the
         payload is html as opposed to a native request. """
     html_data = db.TextProperty()
+    ormma_html = db.BooleanProperty(default=False)
 
     @property
     def Renderer(self):

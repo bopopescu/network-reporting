@@ -125,7 +125,7 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         return None
 
     def get_apps_with_publisher_ids(self, ad_network_name):
-        """Check apps to see if there pub_id for the given ad_network is
+        """Check apps to see if their pub_id for the given ad_network is
         defined
 
         Return generator of applications with publisher ids for the account on
@@ -139,18 +139,6 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                 # example return (App, NetworkConfig.admob_pub_id)
                 yield (app, pub_id)
 
-    def get_adunit_publisher_ids(self, ad_network_name, adunits):
-        """Get the ad unit publisher ids with the ad network from the list of
-        adunits.
-
-        Return a list of ad unit publisher ids.
-        """
-        return [getattr(adunit.network_config, '%s_pub_id' %
-            ad_network_name) for adunit in adunits if
-            hasattr(adunit, 'network_config') and
-            getattr(adunit.network_config, '%s_pub_id' %
-                ad_network_name, None)]
-
     def create_login_info_and_mappers(self, ad_network_name, username, password,
             client_key, send_email):
         """Check login credentials by making a request to tornado on EC2. If
@@ -160,27 +148,16 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         Return None if the login credentials are correct otherwise return an
         error message.
         """
-        apps_with_publisher_ids = list(self.get_apps_with_publisher_ids(
-            ad_network_name))
-        publisher_ids = [publisher_id for app, publisher_id in
-                apps_with_publisher_ids]
-        # For all the adunits in each app if they have a network_config with
-        # a pub_id for the ad_network_name defined save it to the adunits list.
-        adunit_publisher_ids = self.get_adunit_publisher_ids(ad_network_name,
-                [adunit for app, publisher_id in apps_with_publisher_ids for
-                    adunit in app.all_adunits])
-
         login_info = AdNetworkLoginInfo(account=self.account,
                                         ad_network_name=ad_network_name,
                                         username=username,
                                         password=password,
-                                        client_key=client_key,
-                                        publisher_ids=publisher_ids,
-                                        adunit_publisher_ids=
-                                        adunit_publisher_ids)
+                                        client_key=client_key)
 
         login_info.put()
 
+        apps_with_publisher_ids = self.get_apps_with_publisher_ids(
+                ad_network_name)
         # Create all the different AdNetworkAppMappers for all the
         # applications on the ad network for the user and add them to the db
         db.put([AdNetworkAppMapper(ad_network_name = ad_network_name,
@@ -207,38 +184,40 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                                             ad_network_login=login_info,
                                             application=app)
                 mapper.put()
-                if publisher_id not in login_info.publisher_ids:
-                    login_info.publisher_ids.append(publisher_id)
-                # Get the adunit publisher ids associated with the app and
-                # ad network.
-                adunit_publisher_ids = self.get_adunit_publisher_ids(
-                        ad_network_name, app.all_adunits)
-                # Put adunit publisher ids not already in the white list
-                # into the white list.
-                adunit_publisher_ids_set = set(login_info.adunit_publisher_ids)
-                for adunit_publisher_id in adunit_publisher_ids:
-                    if adunit_publisher_id not in adunit_publisher_ids_set:
-                        logging.warning("APPENDING ADUNIT PUB ID TO LOGIN INFO")
-                        login_info.adunit_publisher_ids.append(
-                                adunit_publisher_id)
-
-                login_info.put()
-
                 return mapper
 
-def get_login_credentials():
+    def get_app_publisher_ids(self, ad_network_name):
+        """Check apps to see if their pub_id for the given ad_network is
+        defined
+
+        Return generator of publisher ids at the application level for the
+        account on the ad_network.
+        """
+        for app in App.all().filter('account =',
+                self.account).filter('network_config !=', None):
+            pub_id = getattr(app.network_config, '%s_pub_id' % ad_network_name,
+                    None)
+            if pub_id != None:
+                yield pub_id
+
+    def get_adunit_publisher_ids(self, ad_network_name):
+        """Get the ad unit publisher ids with the ad network from the generator
+        of apps.
+
+        Return a generator of ad unit publisher ids.
+        """
+        for app in App.all().filter('account =', self.account):
+            for adunit in app.all_adunits:
+                if hasattr(adunit, 'network_config') and getattr(adunit.
+                        network_config, '%s_pub_id' % ad_network_name, None):
+                    yield getattr(adunit.network_config, '%s_pub_id' %
+                            ad_network_name)
+#        return [getattr(adunit.network_config, '%s_pub_id' % ad_network_name)
+#                for app in App.all().filter('account =', account) for adunit in
+#                app.all_adunits if hasattr(adunit, 'network_config') and
+#                getattr(adunit.network_config, '%s_pub_id' % ad_network_name,
+#                    None)]
+
+def get_all_login_credentials():
     """Return all AdNetworkLoginInfo entities ordered by account."""
     return AdNetworkLoginInfo.all().order('account')
-
-def get_pub_id(pub_id, login_info):
-    return pub_id
-
-def get_pub_id_from_name(app_name, login_info):
-    query = App.all()
-    query.filter('name =', app_name)
-    query.filter('account =', login_info.account)
-    app = query.get()
-
-    if app and login_info.ad_network_name == 'jumptap':
-        return app.network_config.jumptap_pub_id
-    return None

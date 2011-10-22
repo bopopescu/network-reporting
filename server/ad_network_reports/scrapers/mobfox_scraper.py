@@ -17,8 +17,12 @@ class MobFoxScraper(object):
     API_KEY = 'MOPUB30082011'
     API_URL = 'http://account.mobfox.com/mopub_reportingapi.php?'
 
-    def __init__(self, credentials):
-        self.publisher_ids = credentials.publisher_ids
+    def __init__(self, login_info):
+        """Take tuple of login credentials and app level publisher ids.
+
+        Only need publisher ids.
+        """
+        self.publisher_ids = login_info[1]
 
     def test_login_info(self):
         """Test publisher_ids.
@@ -81,7 +85,7 @@ class MobFoxScraper(object):
 
 if __name__ == '__main__':
     NC = NetworkConfidential()
-    NC.publisher_ids = ['ddcc935d2bc034b2823e04b24ff544a9',
+    publisher_ids = ['ddcc935d2bc034b2823e04b24ff544a9',
             'e884e3c21a498d57f7d1cb1400c5ab9b']
-    SCRAPER = MobFoxScraper(NC)
+    SCRAPER = MobFoxScraper((NC, publisher_ids))
     print SCRAPER.get_site_stats(date.today())

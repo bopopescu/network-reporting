@@ -33,7 +33,7 @@ def ad_network_reports_mptest():
     update_ad_networks()
 
     # Verify results.
-    manager = AdNetworkReportQueryManager(account) # account
+    manager = AdNetworkReportQueryManager(account)
 
     logging.warning([(app, publisher_id) for app, publisher_id in
         manager.get_apps_with_publisher_ids('jumptap')])

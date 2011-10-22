@@ -18,6 +18,6 @@ class HtmlDataRenderer(BaseHtmlRenderer):
         self.html_context['random_val'] = self.random_val
 
     def _get_ad_type(self):
-        if self.creative.ormma_html:
+        if getattr(self.creative, 'ormma_html', False):
             return 'ormma'
         return super(HtmlDataRenderer, self)._get_ad_type()

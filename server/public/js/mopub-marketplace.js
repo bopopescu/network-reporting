@@ -26,6 +26,12 @@
         },
         ctr: function() {
             return (this.get('clicks')/this.get('impressions'))*100;
+        },
+        validate: function(attributes) {
+            var valid_number = Number(attributes.price_floor);
+            if (valid_number == NaN) {
+                return "please enter a valid number for the price floor";
+            }
         }
     });
 

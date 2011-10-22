@@ -69,27 +69,36 @@ class AdUnitService(RequestHandler):
     """
     API Service for delivering serialized AdUnit data
     """
-    def get(self, app_key = None):
-        try:
+    def get(self, app_key = None, adunit_key = None):
+ #       try:
             if app_key:
+
                 app = AppQueryManager.get_app_by_key(app_key)
                 adunits = AdUnitQueryManager.get_adunits(app=app)
                 mpxstats = MarketplaceStatsFetcher([app_key])
 
                 response = [adunit.toJSON() for adunit in adunits]
 
-                for d in response:
-                    logging.warn(d)
-                    adunit_stats = mpxstats.get_adunit_stats(d['id'])
+                for au in response:
+                    adunit_stats = mpxstats.get_adunit_stats(au['id'])
                     adunit_stats.update({'app_id':app_key})
-                    d.update(adunit_stats)
+
+                    adgroup = AdGroupQueryManager.get_marketplace_adgroup(au['id'],
+                                                                          str(self.account.key()),
+                                                                          get_from_db=True)
+                    try:
+                        au.update(price_floor = adgroup.mktplace_price_floor)
+                    except AttributeError:
+                        au.update(price_floor = "0.25")
+
+                    au.update(adunit_stats)
 
                 return JSONResponse(response)
             else:
                 return JSONResponse({'error':'No parameters provided'})
-        except Exception, e:
-            logging.warn(e)
-            return JSONResponse({'error': str(e)})
+#        except Exception, e:
+#            logging.warn(e)
+#            return JSONResponse({'error': str(e)})
 
     def post(self):
         pass
@@ -98,14 +107,13 @@ class AdUnitService(RequestHandler):
 
 
         put_data = simplejson.loads(self.request.raw_post_data)
-        logging.warn(put_data)
         try:
             new_price_floor = put_data['price_floor']
 
             account_key = self.account.key()
             adgroup = AdGroupQueryManager.get_marketplace_adgroup(adunit_key, account_key)
 
-            adgroup.price_floor = new_price_floor
+            adgroup.mktplace_price_floor = float(new_price_floor)
             AdGroupQueryManager.put(adgroup)
 
         except KeyError, e:

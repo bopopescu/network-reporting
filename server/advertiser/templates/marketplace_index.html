@@ -109,7 +109,7 @@
           <tbody>
             {% for creative in dsp.creatives %}
               <tr>
-                <td> <img src="{{ creative.creative.url }}" /> </td>
+                <td> <iframe src="{{ creative.creative.url }}" width="320px" height="50px"></iframe> </td>
                 <td> {{ creative.stats.imp }} </td>
                 <td> {{ creative.stats.clk }} </td>
                 <td> </td>
@@ -194,10 +194,7 @@
             $('#addblocklist').submit();
         });
 
-        $(".price_floor_change").change(function(){
-            console.log('boomslam');
-            console.log(this.attr('id'));
-        });
+
 
     });
   </script>

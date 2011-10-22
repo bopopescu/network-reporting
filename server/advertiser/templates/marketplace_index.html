@@ -133,18 +133,31 @@
   </div>
 
   <div class="clearfix tab-section" id="settings">
-    <h2> Marketplace Settings </h2>
-    <div class="well">
-    </div>
 
-    <h2> Advertiser Blocklist </h2>
+    <h2> Marketplace Settings </h2>
+    <div class="well"> </div>
+
+    <h2>Blocklist</h2>
     <div class="well">
-      As a publisher, you might want to block certain advertisers from having their ads displayed in your app.
+      <div id="current_blocklist">
+        {% for url in blocklist %}
+          {{url}} <a href="{% url remove_blocklist_handler url %}">Remove</a><br />
+        {% empty %}
+          There are no blocked advertisers
+      {% endfor %}
+
+      <form action="{% url add_blocklist_handler %}" method="POST" id="addblocklist" class="validate">
+        <textarea rows="2" cols="20" placeholder="Add blocked advertiser domains here" name="blocklist"></textarea>
+      </form>
+
+      <a href="#" class="btn" id="blocklist-submit"> Add </a>
+
+      </div>
     </div>
 
     <div class="right button-group">
       <div class="big disabled btn"> Discard Changes </div>
-      <div class="big primary btn"> Save </div>
+      <div id="settings-submit" class="big primary btn"> Save All Settings </div>
     </div>
   </div>
 
@@ -170,6 +183,17 @@
     $(document).ready(function() {
         var app_keys = {{ app_keys|safe }};
         Marketplace.fetchAllApps(app_keys);
+
+        $('#settings-submit').click(function(e) {
+            e.preventDefault();
+            $('#addblocklist').submit();
+        });
+
+        $('#blocklist-submit').click(function(e) {
+            e.preventDefault();
+            $('#addblocklist').submit();
+        });
+
     });
   </script>
 {% endblock extraScripts %}

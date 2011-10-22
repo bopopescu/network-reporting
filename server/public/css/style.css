@@ -1435,6 +1435,7 @@ table.simpletable {
     -moz-border-radius: 0 0 4px 0;
     border-radius: 0 0 4px 0; }
   table.simpletable tfoot td {
+    background: white;
     border-top: 2px solid #ccc;
     font-size: 16px; }
 
@@ -1589,6 +1590,28 @@ table .headerSortDown.purple {
 /*
  * Tabs
  */
+.pills {
+  margin: 0;
+  padding: 0;
+  line-height: 1em;
+  list-style: none; }
+  .pills > li {
+    display: inline-block;
+    width: auto; }
+  .pills > li.active a {
+    color: white;
+    text-shadow: #1B83B8 0 1px 0;
+    background: #22A4E6;
+    -webkit-border-radius: 5px;
+    -mox-border-radius: 5px;
+    border-radius: 5px;
+    text-decoration: none; }
+  .pills > li a {
+    display: block;
+    padding: 8px 10px 0 10px;
+    height: 26px;
+    font-size: 15px; }
+
 .tabs {
   padding: 0px 10px;
   margin: 0 -10px 10px -10px;

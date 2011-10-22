@@ -1,5 +1,10 @@
+
 import random
 import urllib, urllib2
+
+from common_templates.templatetags.filters import currency, percentage, percentage_rounded
+
+import logging
 
 try:
     import json
@@ -15,24 +20,50 @@ class MarketplaceStatsFetcher(object):
         self.payload = {}
 
     def get_app_stats(self, app_key):
+        imp = random.randint(1, 100000)
+        rev =  random.randint(1, 100000)
+        clk = random.randint(1, imp/10)
+        ctr = (clk/float(imp))
+        ecpm = (rev/float(imp))*1000
+
         return {
-            "revenue": random.randint(1, 900),
-            "impressions": random.randint(1, 10000),
-            "clicks": random.randint(1, 1000),
+            "revenue": rev,
+            "impressions": imp,
+            "clicks": clk,
+            "ecpm": currency(ecpm),
+            "ctr": percentage(ctr)
         }
+
 
     def get_adunit_stats(self, adunit_key):
+        imp = random.randint(1, 100000)
+        rev =  random.randint(1, 100000)
+        clk = random.randint(1, imp/10)
+        ctr = (clk/float(imp))
+        ecpm = (rev/float(imp))*1000
+
         return {
-            "revenue": random.randint(1, 100),
-            "impressions": random.randint(1, 10000),
-            "clicks": random.randint(1, 1000),
+            "revenue": rev,
+            "impressions": imp,
+            "clicks": clk,
+            "ecpm": currency(ecpm),
+            "ctr": percentage(ctr)
         }
 
+
     def get_account_stats(self, account_key):
+        imp = random.randint(1, 100000)
+        rev =  random.randint(1, 100000)
+        clk = random.randint(1, imp/10)
+        ctr = (clk/float(imp))
+        ecpm = (rev/float(imp))*1000
+
         return {
-            "revenue": random.randint(1, 10000),
-            "impressions": random.randint(1, 1000000),
-            "clicks": random.randint(1, 100000),
+            "revenue": rev,
+            "impressions": imp,
+            "clicks": clk,
+            "ecpm": currency(ecpm),
+            "ctr": percentage(ctr)
         }
 
 

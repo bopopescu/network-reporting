@@ -14,48 +14,47 @@
 {% endblock pageTitle %}
 
 {% block titleBarRight %}
-    {% ifequal account.status 'step4' %}
-      <!-- MixPanel Tracking -->
-      <script type="text/javascript">
-        mpq.push(["track", "Sign up: Campaign dashboard"]);
-      </script>
-      <div class="stepProgress">
-        <span class="stepProgress-step">Step 1: Add app</span>
-        <span class="ui-icon ui-icon-arrow-1-e"></span>
-        <span class="stepProgress-step">Step 2: Integrate</span>
-        <span class="ui-icon ui-icon-arrow-1-e"></span>
-        <span class="stepProgress-step stepProgress-active">Step 3: Add campaigns</span>
-      </div>
-    {% else %}
-      <span class="titlebar-right">
-        <a class="btn test icon" id="advertisers-testAdServer" href="#">Test Campaigns</a>
-      </span>
-    {% endifequal %}
+  {% ifequal account.status 'step4' %}
+    <!-- MixPanel Tracking -->
+    <script type="text/javascript">
+      mpq.push(["track", "Sign up: Campaign dashboard"]);
+    </script>
+    <div class="stepProgress">
+      <span class="stepProgress-step">Step 1: Add app</span>
+      <span class="ui-icon ui-icon-arrow-1-e"></span>
+      <span class="stepProgress-step">Step 2: Integrate</span>
+      <span class="ui-icon ui-icon-arrow-1-e"></span>
+      <span class="stepProgress-step stepProgress-active">Step 3: Add campaigns</span>
+    </div>
+  {% else %}
+    <span class="titlebar-right">
+      <a class="btn test icon" id="advertisers-testAdServer" href="#">Test Campaigns</a>
+    </span>
+  {% endifequal %}
 {% endblock titleBarRight %}
 
 
 {% block messageCenter %}{% endblock messageCenter %}
 {% block dateButtons %}
 
-          {% ifnotequal account.status 'step4' %}
-      <div id="titlebar-center">
-            <span class="buttonset" id="dashboard-dateOptions">
-              <input type="radio" name="dashboard-dateOptions-option" value="7" id="dashboard-dateOptions-option-7" {% ifequal date_range 7 %}checked="checked" {% endifequal %}/>
-              <label for="dashboard-dateOptions-option-7">7 days</label>
-              <input type="radio" name="dashboard-dateOptions-option" value="14" id="dashboard-dateOptions-option-14" {% ifequal date_range 14 %}checked="checked" {% endifequal %}{% if not date_range %}checked="checked" {% endif %}/>
-              <label for="dashboard-dateOptions-option-14">14 days</label>
-              <input type="radio" name="dashboard-dateOptions-option" value="30" id="dashboard-dateOptions-option-30" {% ifequal date_range 30 %}checked="checked" {% endifequal %}/>
-              <label for="dashboard-dateOptions-option-30">30 days</label>
-              <input type="radio" name="dashboard-dateOptions-option" value="custom" id="dashboard-dateOptions-option-custom" {% if date_range != 7 and date_range != 14 and date_range != 30 %}checked="checked" {% endif %}/>
-              <label for="dashboard-dateOptions-option-custom">Custom ...</label>
-            </span>
-            <div id="dashboard-dateOptions-custom-modal">
-              <div id="dashboard-dateOptions-custom-from"><h4>Start date:</h4></div>
-              <div id="dashboard-dateOptions-custom-to"><h4>End date:</h4></div>
-            </div>
+  {% ifnotequal account.status 'step4' %}
+    <div id="titlebar-center">
+      <span class="buttonset" id="dashboard-dateOptions">
+        <input type="radio" name="dashboard-dateOptions-option" value="7" id="dashboard-dateOptions-option-7" {% ifequal date_range 7 %}checked="checked" {% endifequal %}/>
+        <label for="dashboard-dateOptions-option-7">7 days</label>
+        <input type="radio" name="dashboard-dateOptions-option" value="14" id="dashboard-dateOptions-option-14" {% ifequal date_range 14 %}checked="checked" {% endifequal %}{% if not date_range %}checked="checked" {% endif %}/>
+        <label for="dashboard-dateOptions-option-14">14 days</label>
+        <input type="radio" name="dashboard-dateOptions-option" value="30" id="dashboard-dateOptions-option-30" {% ifequal date_range 30 %}checked="checked" {% endifequal %}/>
+        <label for="dashboard-dateOptions-option-30">30 days</label>
+        <input type="radio" name="dashboard-dateOptions-option" value="custom" id="dashboard-dateOptions-option-custom" {% if date_range != 7 and date_range != 14 and date_range != 30 %}checked="checked" {% endif %}/>
+        <label for="dashboard-dateOptions-option-custom">Custom ...</label>
+      </span>
+      <div id="dashboard-dateOptions-custom-modal">
+        <div id="dashboard-dateOptions-custom-from"><h4>Start date:</h4></div>
+        <div id="dashboard-dateOptions-custom-to"><h4>End date:</h4></div>
       </div>
-    {% endifnotequal %}
-
+    </div>
+  {% endifnotequal %}
 {% endblock dateButtons %}
 
 {% block content %}
@@ -205,12 +204,103 @@
 
   </section>
 
+
+
       <div class="clearfix">
       <div class="pie chart" id="impressions-pie-chart"></div>
       <div class="pie chart" id="clicks-pie-chart"></div>
       <div class="pie chart" id="revenue-pie-chart"></div>
     </div>
 
+
+    <h2> Guaranteed Campaign Totals </h2>
+    <div id='gtee-rollups' class="campaignData-rollup">
+    <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
+      <thead>
+        <tr>
+          <th width=25%>Impressions</th>
+          <th width=25%>Clicks</th>
+          <th width=25%>CTR</th>
+          <th width=25%>Revenue</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td id='gtee-total-imp'>--</td>
+          <td id='gtee-total-clk'>--</td>
+          <td id='gtee-total-ctr'>--</td>
+            <td id='gtee-total-rev'>--</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2> Promotional Campaign Totals </h2>
+  <div id='promo-rollups' class="campaignData-rollup">
+            <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
+              <thead>
+                <tr>
+                  <th width=25%>Impressions</th>
+                  <th width=25%>Clicks</th>
+                  <th width=25%>CTR</th>
+                  <th width=25%>Conversions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td id='promo-total-imp'>--</td>
+                  <td id='promo-total-clk'>--</td>
+                  <td id='promo-total-ctr'>--</td>
+                  <td id='promo-total-conv'>--</td>
+                  <td></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h2> Backfill Promotional Campaign Totals </h2>
+          <div id='bfill-rollups' class="campaignData-rollup">
+                  <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
+                      <thead>
+                          <tr>
+                              <th width=25%>Impressions</th>
+                              <th width=25%>Clicks</th>
+                              <th width=25%>CTR</th>
+                              <th width=25%>Conversions</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          <tr>
+                              <td id='bfill-total-imp'>--</td>
+                              <td id='bfill-total-clk'>--</td>
+                              <td id='bfill-total-ctr'>--</td>
+                              <td id='bfill-total-conv'>--</td>
+                          </tr>
+                      </tbody>
+                  </table>
+              </div>
+
+              <h2> Network Campaign Totals </h2>
+          <div id='network-rollups' class="campaignData-rollup">
+                  <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
+                      <thead>
+                          <tr>
+                              <th width=25%>Impressions</th>
+                              <th width=25%>Clicks</th>
+                              <th width=25%>CTR</th>
+                              <th width=25%>Fill Rate (Attempts)</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          <tr>
+                              <td id='network-total-imp'>--</td>
+                              <td id='network-total-clk'>--</td>
+                              <td id='network-total-ctr'>--</td>
+                              <td id='network-total-fill'>--</td>
+                          </tr>
+                      </tbody>
+                  </table>
+              </div>
 </div>
 
 <section id="dashboard-campaigns">
@@ -232,7 +322,8 @@
     <img id="gtee-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img>
     </h2>
 
-    {% if guarantee_num %}<div id='gtee-rollups' class="campaignData-rollup">
+    {% if guarantee_num %}
+      <div id='gtee-rollups' class="campaignData-rollup">
       <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
         <thead>
           <tr>

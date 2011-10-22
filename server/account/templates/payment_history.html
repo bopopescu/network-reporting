@@ -5,26 +5,28 @@
 {% endblock pageTitle %}
 {% block content %}
 
-<table class="dataTable campaignData-main" id="campaignDataTable-direct-">
+<div class="rollup fig3">
+  <div class="data-figure">
+    <div class="figure">$0.00</div>
+    <div class="label">Current Balance</div>
+  </div>
+</div>
+<table class="simpletable" id="campaignDataTable-direct-">
   <thead>
     <th class="dataTable-date-short">Month</th>
-    <th class="dataTable-data">Revenue</th>
+    <th class="dataTable-data">Payment Amount</th>
     <th class="dataTable-data">Payment Status</th>
   </thead>
   <tbody>
-
     <tr>
       <td></td>
       <td>There are no payments in your payment history. Please check back later.</td>
       <td></td>
-
     </tr>
-
     {% comment %}
       We're going to include this data when it exists in better form.
 
       {% endcomment %}
-
   </tbody>
 </table>
 

@@ -1172,6 +1172,7 @@ class MarketplaceIndexHandler(RequestHandler):
         # Only one should exist per account.
         marketplace_campaign = CampaignQueryManager.get_marketplace(self.account)
 
+
         # To bootstrap the Backbone.js models in the page, create a list of
         # JSON'ed apps. Apps are the highest level model on the page.
         app_keys = simplejson.dumps([str(app_key) for app_key in AppQueryManager.get_app_keys(self.account)])
@@ -1187,6 +1188,12 @@ class MarketplaceIndexHandler(RequestHandler):
         two_weeks_ago = datetime.timedelta(0,0,0,0,0,0,2)
         dsps = stats_fetcher.get_all_dsp_stats(today, two_weeks_ago)
 
+        # Set up the blocklist
+        blocklist = []
+        network_config = self.account.network_config
+        if network_config:
+            blocklist = network_config.blocklist
+
         for dsp in dsps:
             creatives = stats_fetcher.get_creatives_for_dsp(dsp['key'], today, two_weeks_ago)
             dsp.update({'creatives': creatives})
@@ -1198,7 +1205,8 @@ class MarketplaceIndexHandler(RequestHandler):
                                       'marketplace': marketplace_campaign,
                                       'app_keys': app_keys,
                                       'dsps': dsps,
-                                      'top_level_mpx_stats': top_level_mpx_stats
+                                      'top_level_mpx_stats': top_level_mpx_stats,
+                                      'blocklist': blocklist
                                   })
 
     def post(self):
@@ -1208,3 +1216,35 @@ class MarketplaceIndexHandler(RequestHandler):
 @login_required
 def marketplace_index(request, *args, **kwargs):
     return MarketplaceIndexHandler()(request, *args, **kwargs)
+
+class AddBlocklistHandler(RequestHandler):
+    def post(self):
+        add_blocklist_string = self.request.POST.get('blocklist')
+        add_blocklist = add_blocklist_string.replace(',',' ').split()
+
+        if add_blocklist:
+            network_config = self.account.network_config
+            network_config.blocklist.extend(add_blocklist)
+            network_config.blocklist = sorted(set(network_config.blocklist))   # Removes duplicates and sorts
+            logging.info('hiiiii')
+            logging.info(network_config.blocklist)
+            AccountQueryManager().update_config_and_put(account=self.account,network_config=network_config)
+
+        return HttpResponseRedirect(reverse('marketplace_index'))
+
+@login_required
+def add_blocklist_handler(request,*args,**kwargs):
+    return AddBlocklistHandler()(request,*args,**kwargs)
+
+class RemoveBlocklistHandler(RequestHandler):
+    def get(self, url=None):
+        network_config = self.account.network_config
+        if network_config.blocklist.count(url):
+            network_config.blocklist.remove(url)
+            AccountQueryManager().update_config_and_put(account=self.account,network_config=network_config)
+
+        return HttpResponseRedirect(reverse('marketplace_index'))
+
+@login_required
+def remove_blocklist_handler(request,*args,**kwargs):
+    return RemoveBlocklistHandler()(request,*args,**kwargs)

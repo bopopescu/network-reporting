@@ -93,46 +93,46 @@
   {% endif %}
 
 
-    {# Page-level tab control #}
-    <ul class="tabs">
-      <li class="active"> <a href="#performance">  Performance </a> </li>
-      <li> <a href="#guaranteed">  Guaranteed </a> </li>
-      <li> <a href="#promotional">  Promotional </a> </li>
-      {# <li> <a href="#marketplace">  Marketplace </a> </li> #}
-      <li> <a href="#network">  Ad Networks </a> </li>
-    </ul>
+  {# Page-level tab control #}
+  <ul class="tabs">
+    <li class="active"> <a href="#performance">  Performance </a> </li>
+    <li> <a href="#guaranteed">  Guaranteed </a> </li>
+    <li> <a href="#promotional">  Promotional </a> </li>
+    {# <li> <a href="#marketplace">  Marketplace </a> </li> #}
+    <li> <a href="#network">  Ad Networks </a> </li>
+  </ul>
 
-    {# Controls for showing campaigns by All/Running/Paused/Scheduled #}
-    {# These need to be restyled with our new styles to remove JQueryUI #}
+  {# Controls for showing campaigns by All/Running/Paused/Scheduled #}
+  {# These need to be restyled with our new styles to remove JQueryUI #}
 
 
-    <div id="campaigns-control-panel">
-      <div class="center-button-bank">
+  <div id="campaigns-control-panel">
+    <div class="center-button-bank">
 
-        <span class="buttonset-start-disabled" id="campaigns-filterOptions">
-          <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-all" checked="checked" id="campaigns-filterOptions-option-all"/>
-          <label for="campaigns-filterOptions-option-all">
-            All
-          </label>
-          <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Running" id="campaigns-filterOptions-option-Running"/>
-          <label for="campaigns-filterOptions-option-Running">
-            Running
-          </label>
-          <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Paused" id="campaigns-filterOptions-option-Paused" />
-          <label for="campaigns-filterOptions-option-Paused">
-            Paused
-          </label>
-          <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Scheduled" id="campaigns-filterOptions-option-Scheduled" />
-          <label for="campaigns-filterOptions-option-Scheduled">
-            Scheduled
-          </label>
-        </span>
-        <select name="campaigns-appFilterOptions" id="campaigns-appFilterOptions">
-          <option id="campaigns-appFilterOptions-option-all" value="campaign-status-all">All Apps</option>
-          {% for app in apps %}
-            <option value="campaign-targeting-{{app.key}}">{{app.name}}</option>
-          {% endfor %}
-        </select>
+      <span class="buttonset-start-disabled" id="campaigns-filterOptions">
+        <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-all" checked="checked" id="campaigns-filterOptions-option-all"/>
+        <label for="campaigns-filterOptions-option-all">
+          All
+        </label>
+        <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Running" id="campaigns-filterOptions-option-Running"/>
+        <label for="campaigns-filterOptions-option-Running">
+          Running
+        </label>
+        <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Paused" id="campaigns-filterOptions-option-Paused" />
+        <label for="campaigns-filterOptions-option-Paused">
+          Paused
+        </label>
+        <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Scheduled" id="campaigns-filterOptions-option-Scheduled" />
+        <label for="campaigns-filterOptions-option-Scheduled">
+          Scheduled
+        </label>
+      </span>
+      <select name="campaigns-appFilterOptions" id="campaigns-appFilterOptions">
+        <option id="campaigns-appFilterOptions-option-all" value="campaign-status-all">All Apps</option>
+        {% for app in apps %}
+          <option value="campaign-targeting-{{app.key}}">{{app.name}}</option>
+        {% endfor %}
+      </select>
 
       </div>
     </div>
@@ -197,55 +197,50 @@
 
             <div class="chart stats-chart" id="dashboard-stats-chart"></div>
 
-    </div>
-    <div class="clear"></div>
+          </div>
+          <div class="clear"></div>
+        </section>
+
+        <div class="clearfix">
+          <div class="pie chart" id="impressions-pie-chart"></div>
+          <div class="pie chart" id="clicks-pie-chart"></div>
+          <div class="pie chart" id="revenue-pie-chart"></div>
+        </div>
 
 
+        <h2> Guaranteed Campaign Totals </h2>
+        <div id='gtee-rollups' class="campaignData-rollup">
+          <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
+            <thead>
+              <tr>
+                <th width=25%>Impressions</th>
+                <th width=25%>Clicks</th>
+                <th width=25%>CTR</th>
+                <th width=25%>Revenue</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td id='gtee-total-imp'>--</td>
+                <td id='gtee-total-clk'>--</td>
+                <td id='gtee-total-ctr'>--</td>
+                <td id='gtee-total-rev'>--</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-  </section>
-
-
-
-      <div class="clearfix">
-      <div class="pie chart" id="impressions-pie-chart"></div>
-      <div class="pie chart" id="clicks-pie-chart"></div>
-      <div class="pie chart" id="revenue-pie-chart"></div>
-    </div>
-
-
-    <h2> Guaranteed Campaign Totals </h2>
-    <div id='gtee-rollups' class="campaignData-rollup">
-    <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
-      <thead>
-        <tr>
-          <th width=25%>Impressions</th>
-          <th width=25%>Clicks</th>
-          <th width=25%>CTR</th>
-          <th width=25%>Revenue</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td id='gtee-total-imp'>--</td>
-          <td id='gtee-total-clk'>--</td>
-          <td id='gtee-total-ctr'>--</td>
-            <td id='gtee-total-rev'>--</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <h2> Promotional Campaign Totals </h2>
-  <div id='promo-rollups' class="campaignData-rollup">
-            <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
-              <thead>
-                <tr>
-                  <th width=25%>Impressions</th>
-                  <th width=25%>Clicks</th>
-                  <th width=25%>CTR</th>
-                  <th width=25%>Conversions</th>
-                </tr>
-              </thead>
+        <h2> Promotional Campaign Totals </h2>
+        <div id='promo-rollups' class="campaignData-rollup">
+          <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
+            <thead>
+              <tr>
+                <th width=25%>Impressions</th>
+                <th width=25%>Clicks</th>
+                <th width=25%>CTR</th>
+                <th width=25%>Conversions</th>
+              </tr>
+            </thead>
               <tbody>
                 <tr>
                   <td id='promo-total-imp'>--</td>

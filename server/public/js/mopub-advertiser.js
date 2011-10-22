@@ -747,67 +747,73 @@ var mopub = mopub || {};
     }
 
     function calcAndShowRollupForCampaignType(campaignType) {
-      var req, imp, clk, rev, conv, ctr, fill;
-      req = imp = clk = rev = conv = ctr = fill = 0;
+        var req, imp, clk, rev, conv, ctr, fill;
+        req = imp = clk = rev = conv = ctr = fill = 0;
 
-      var classPrefix = campaignType.split('_')[0];
+        var classPrefix = campaignType.split('_')[0];
 
-      $('.' + classPrefix + '-req:visible').each(function() {
-        req += parseIntFromStatText($(this).text());
-      });
+        $('.' + classPrefix + '-req:visible').each(function() {
+            req += parseIntFromStatText($(this).text());
+        });
 
-      $('.' + classPrefix + '-imp:visible').each(function() {
-        imp += parseIntFromStatText($(this).text());
-      });
+        $('.' + classPrefix + '-imp:visible').each(function() {
+            imp += parseIntFromStatText($(this).text());
+        });
 
-      $('.' + classPrefix + '-clk:visible').each(function() {
-        clk += parseIntFromStatText($(this).text());
-      });
+        $('.' + classPrefix + '-clk:visible').each(function() {
+            clk += parseIntFromStatText($(this).text());
+        });
 
-      // Revenue values may have the "display: none" attribute. When rolling up revenue values,
-      // we can't just add up the visible revenue <td>s; we need to filter out those that are
-      // a part of visible <tr>s.
-      $('.' + classPrefix + '_row:visible .' + classPrefix + '-rev').each(function() {
-        rev += parseIntFromStatText($(this).text().replace('$', ''));
-      });
+        // Revenue values may have the "display: none" attribute. When rolling up revenue values,
+        // we can't just add up the visible revenue <td>s; we need to filter out those that are
+        // a part of visible <tr>s.
+        $('.' + classPrefix + '_row:visible .' + classPrefix + '-rev').each(function() {
+            rev += parseIntFromStatText($(this).text().replace('$', ''));
+        });
 
-      $('.' + classPrefix + '-conv:visible').each(function() {
-        conv += parseIntFromStatText($(this).text());
-      });
+        $('.' + classPrefix + '-conv:visible').each(function() {
+            conv += parseIntFromStatText($(this).text());
+        });
 
-      ctr = (clk === 0 || imp === 0) ? 0 : clk / imp;
+        ctr = (clk === 0 || imp === 0) ? 0 : clk / imp;
 
-      fill = (imp === 0 || req === 0) ? 0 : imp / req;
+        fill = (imp === 0 || req === 0) ? 0 : imp / req;
 
-      $("#" + classPrefix + '-total-req').text(mopub.Utils.formatNumberWithCommas(req));
-      $("#" + classPrefix + '-total-imp').text(mopub.Utils.formatNumberWithCommas(imp));
-      $("#" + classPrefix + '-total-clk').text(mopub.Utils.formatNumberWithCommas(clk));
-      $("#" + classPrefix + '-total-rev').text('$' + mopub.Utils.formatNumberWithCommas(rev.toFixed(2)));
-      $("#" + classPrefix + '-total-conv').text(mopub.Utils.formatNumberWithCommas(conv));
-      $("#" + classPrefix + '-total-ctr').text(mopub.Utils.formatNumberAsPercentage(ctr));
-      $("#" + classPrefix + '-total-fill').text(
-        mopub.Utils.formatNumberAsPercentage(fill) + ' (' +
-        mopub.Utils.formatNumberWithCommas(req) + ')'
-      );
+        var tabs = ["#performance", "#guaranteed", "#promotional", "#network"];
 
-      $("#" + classPrefix + '-rollups').show();
+        $.each(tabs, function(iter, tab) {
+            $("#" + classPrefix + '-total-req', tab).text(mopub.Utils.formatNumberWithCommas(req));
+            $("#" + classPrefix + '-total-imp', tab).text(mopub.Utils.formatNumberWithCommas(imp));
+            $("#" + classPrefix + '-total-clk', tab).text(mopub.Utils.formatNumberWithCommas(clk));
+            $("#" + classPrefix + '-total-rev', tab).text('$' + mopub.Utils.formatNumberWithCommas(rev.toFixed(2)));
+            $("#" + classPrefix + '-total-conv', tab).text(mopub.Utils.formatNumberWithCommas(conv));
+            $("#" + classPrefix + '-total-ctr', tab).text(mopub.Utils.formatNumberAsPercentage(ctr));
+            $("#" + classPrefix + '-total-fill', tab).text(
+                mopub.Utils.formatNumberAsPercentage(fill) + ' (' +
+                    mopub.Utils.formatNumberWithCommas(req) + ')'
+            );
 
-      setSectionLoadingSpinnerHidden(campaignType, true);
+            $("#" + classPrefix + '-rollups').show();
+
+        });
+
+        setSectionLoadingSpinnerHidden(campaignType, true);
     }
+
 
     function calcRollups() {
         // Don't compute rollups until we've gotten all the information.
         if (!allFetchesCompleted()) return;
 
         var campaignTypes = [
-          CampaignTypeEnum.Guaranteed,
-          CampaignTypeEnum.Promotional,
-          CampaignTypeEnum.Network,
-          CampaignTypeEnum.Backfill
+            CampaignTypeEnum.Guaranteed,
+            CampaignTypeEnum.Promotional,
+            CampaignTypeEnum.Network,
+            CampaignTypeEnum.Backfill
         ];
 
         $.each(campaignTypes, function(index, type) {
-          calcAndShowRollupForCampaignType(type);
+            calcAndShowRollupForCampaignType(type);
         });
     }
 

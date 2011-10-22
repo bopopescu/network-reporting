@@ -215,7 +215,7 @@ def get_payment_records(pub_id, start_date, end_date):
 
     try:
         data = urllib2.urlopen(url).read()
-    except (URLError, IOError):
+    except (urllib2.URLError, IOError):
         return {'daily': [], 'sum': {'imp': 0, 'rev': 0}}
 
     return simplejson.loads(data)

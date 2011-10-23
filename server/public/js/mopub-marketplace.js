@@ -172,7 +172,11 @@
                     var appView = new AppView({ model: current_app, el: "#marketplace_targeting" });
                     appView.render();
                 });
-                app.fetch();
+                app.fetch({
+                    success: function(){
+                        $("table").trigger("update");
+                    }
+                });
             });
 
         },

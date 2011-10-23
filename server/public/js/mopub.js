@@ -75,6 +75,7 @@ if (typeof window.console == "undefined") {
         // set up validation to be run on form submit
         $('.validate').validate();
 
+        $(".sortable").tablesorter();
 
         $('.tabs').tabs();
 

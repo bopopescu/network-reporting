@@ -14,6 +14,10 @@ except ImportError:
     except ImportError:
         from django.utils import simplejson as json
 
+
+ctr = lambda clicks, impressions: (clicks/float(impressions))
+ecpm = lambda revenue, impressions: (revenue/float(impressions))*1000
+
 class MarketplaceStatsFetcher(object):
     def __init__(self, account_keys):
         self.account_keys = account_keys
@@ -23,15 +27,13 @@ class MarketplaceStatsFetcher(object):
         imp = random.randint(1, 100000)
         rev =  random.randint(1, 100000)
         clk = random.randint(1, imp/10)
-        ctr = (clk/float(imp))
-        ecpm = (rev/float(imp))*1000
 
         return {
             "revenue": rev,
             "impressions": imp,
             "clicks": clk,
-            "ecpm": currency(ecpm),
-            "ctr": percentage(ctr)
+            "ecpm": currency(ecpm(clk, imp)),
+            "ctr": percentage(ctr(rev, imp))
         }
 
 
@@ -39,15 +41,13 @@ class MarketplaceStatsFetcher(object):
         imp = random.randint(1, 100000)
         rev =  random.randint(1, 100000)
         clk = random.randint(1, imp/10)
-        ctr = (clk/float(imp))
-        ecpm = (rev/float(imp))*1000
 
         return {
             "revenue": rev,
             "impressions": imp,
             "clicks": clk,
-            "ecpm": currency(ecpm),
-            "ctr": percentage(ctr)
+            "ecpm": currency(ecpm(clk, imp)),
+            "ctr": percentage(ctr(rev, imp))
         }
 
 
@@ -55,20 +55,18 @@ class MarketplaceStatsFetcher(object):
         imp = random.randint(1, 100000)
         rev =  random.randint(1, 100000)
         clk = random.randint(1, imp/10)
-        ctr = (clk/float(imp))
-        ecpm = (rev/float(imp))*1000
 
         return {
             "revenue": rev,
             "impressions": imp,
             "clicks": clk,
-            "ecpm": currency(ecpm),
-            "ctr": percentage(ctr)
+            "ecpm": currency(ecpm(clk, imp)),
+            "ctr": percentage(ctr(rev, imp))
         }
 
 
     def get_all_dsp_stats(self, start, end):
-        stats = {
+        dsps = {
             "DSP1": {
                 "url": "http://www.google.com/",
                 "name": "AdBlah",
@@ -95,13 +93,20 @@ class MarketplaceStatsFetcher(object):
             }
         }
 
-        # Make the stats iterable so we can use them in a template
-        i_stats = []
-        for k, v in stats.iteritems():
-            v['key'] = k
-            i_stats.append(v)
+        # Make the stats iterable so we can use them more easily in a template
+        dsp_list = []
+        for dsp_key, dsp in dsps.iteritems():
 
-        return i_stats
+            dsp['key'] = dsp_key
+            # these values has been kind of a pain in the ass to generate
+            # in the template/on the client side, so generate them here.
+            # ideally they'd be generated client side.
+            dsp['stats']['ctr'] = ctr(dsp['stats']['clk'], dsp['stats']['imp'])
+            dsp['stats']['ecpm'] = ecpm(dsp['stats']['clk'], dsp['stats']['pub_rev'])
+
+            dsp_list.append(dsp)
+
+        return dsp_list
 
     def get_dsp_stats(self, dsp_key, start, end):
         stats = {
@@ -216,6 +221,9 @@ class MarketplaceStatsFetcher(object):
         }
 
         creatives = [creative for creative in creative_stats[dsp_key].values()]
+        for creative in creatives:
+            creative['stats'].update(ctr = ctr(creative['stats']['clk'], creative['stats']['imp']))
+            creative['stats'].update(ecpm = ecpm(creative['stats']['clk'], creative['stats']['pub_rev']))
 
         return creatives
 

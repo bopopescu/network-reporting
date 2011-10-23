@@ -1086,6 +1086,74 @@ td.numeric, th.numeric, .numeric TD {
  * Basic forms, tables, and reusable visual elements
  */
 /* Form controls */
+/*
+ * ## Colors
+ */
+/* tinges -- off white colors */
+/*
+ * ## Utility functions
+ */
+/*
+ * Visibility controls
+ */
+.left {
+  float: left; }
+
+.right {
+  float: right; }
+
+.ir {
+  display: block;
+  text-indent: -999em;
+  overflow: hidden;
+  background-repeat: no-repeat;
+  text-align: left;
+  direction: ltr; }
+
+.hidden {
+  display: none; }
+
+.visuallyhidden {
+  position: absolute !important;
+  clip: rect(1px 1px 1px 1px);
+  /* IE6, IE7 */
+  clip: rect(1px, 1px, 1px, 1px); }
+
+.invisible {
+  visibility: hidden; }
+
+/*
+ * Push floating elements into their containing box
+ */
+.clearfix {
+  zoom: 1; }
+  .clearfix:before, .clearfix:after {
+    content: "\0020";
+    display: block;
+    height: 0;
+    visibility: hidden; }
+  .clearfix:after {
+    clear: both; }
+
+.no-highlight {
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -o-user-select: none;
+  user-select: none; }
+
+/*
+ * Alternating colors, often used for tables
+ */
+.alternating-color:nth-child(odd) {
+  background: #f7f7f7; }
+
+.alternating-color:nth-child(even) {
+  background: #ffffff; }
+
+/*
+ * Corner rounding
+ */
 .radios input {
   margin: 0 2px 0 0;
   vertical-align: baseline; }
@@ -1130,9 +1198,9 @@ textarea {
   outline: none;
   background: #fff;
   border-color: #0090d9;
-  box-shadow: 0 0 5px #0090d9;
   -webkit-box-shadow: 0 0 5px #0090d9;
-  -moz-box-shadow: 0 0 5px #0090d9; }
+  -moz-box-shadow: 0 0 5px #0090d9;
+  box-shadow: 0 0 5px #0090d9; }
 
 input::-webkit-input-placeholder,
 textarea::-webkit-input-placeholder {
@@ -1238,7 +1306,8 @@ dl.formFields.thin {
 
 .formFields .appData-icon img {
   -webkit-border-radius: 6px;
-  -moz-border-radius: 6px; }
+  -moz-border-radius: 6px;
+  border-radius: 6px; }
 
 .formFields-field-help {
   display: inline-block;
@@ -1287,6 +1356,32 @@ label.error {
 .formFields-right {
   padding: 5px 0 0 0;
   text-align: right; }
+
+input.price_floor_change {
+  -webkit-transition: border linear 0.2s, box-shadow linear 0.2s, color ease-in 0.2s;
+  -moz-transition: border linear 0.2s, box-shadow linear 0.2s, color ease-in 0.2s;
+  transition: border linear 0.2s, box-shadow linear 0.2s, color ease-in 0.2s;
+  -webkit-box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+  display: inline-block;
+  width: 50px;
+  height: 16px;
+  padding: 4px;
+  font-size: 16px;
+  line-height: 16px;
+  color: #999999;
+  border: 1px solid #ccc; }
+  input.price_floor_change:focus {
+    outline: 0;
+    border-color: #0090d9;
+    -webkit-box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1), 0 0 8px rgba(82, 168, 236, 0.6);
+    -moz-box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1), 0 0 8px rgba(82, 168, 236, 0.6);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1), 0 0 8px rgba(82, 168, 236, 0.6);
+    color: black; }
 
 /*
  * ## Colors

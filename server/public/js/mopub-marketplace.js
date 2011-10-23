@@ -4,6 +4,13 @@
 
 (function($, Backbone) {
 
+
+    /*
+     * # Backbone Models
+     *
+     * TODO: Refactor these into a mopub models namespace.
+     */
+
     /*
      * AdUnit
      */
@@ -97,6 +104,13 @@
     });
 
 
+    /*
+     * ## AppView
+     *
+     * See templates/partials/app.html to see how this is rendered in HTML.
+     * This renders an app as a table row. It also adds the call to load
+     * adunits over ajax and put them in the table.
+     */
     var AppView = Backbone.View.extend({
 
         initialize: function () {
@@ -122,7 +136,7 @@
 
 
     /*
-     * AdUnitView
+     * ## AdUnitView
      *
      * See templates/partials/adunit.html to see how this is rendered in HTML
      * The main purpose of this is to render an adunit as a row in a table.
@@ -169,7 +183,7 @@
             _.each(app_keys, function(app_key) {
                 var app = new App({id: app_key});
                 app.bind("change", function(current_app) {
-                    var appView = new AppView({ model: current_app, el: "#marketplace_targeting" });
+                    var appView = new AppView({ model: current_app, el: "#marketplace_stats" });
                     appView.render();
                 });
                 app.fetch({
@@ -191,14 +205,31 @@
             adunits.app_id = app_key;
             adunits.bind("reset", function(adunits_collection) {
                 _.each(adunits_collection.models, function(adunit) {
-                    var adunitView = new AdUnitView({ model: adunit, el: "#marketplace_targeting" });
+                    var adunitView = new AdUnitView({ model: adunit, el: "#marketplace_stats" });
                     adunitView.render();
                 });
             });
             adunits.fetch();
+        },
+
+        /*
+         * If an adunit row has for-app-[app_id] as a class,
+         * strip the app_id and return it. Used for sorting
+         * adunit rows underneath their apps.
+         */
+        getAppId: function(adunit) {
+            adunit = $(adunit);
+
+            var app_id = '';
+            _.each(adunit.attr('class').split(' '), function(item) {
+                if (item.search('for-app-') >= 0) {
+                    app_id = item.replace('for-app-', '');
+                }
+            });
+
+            return app_id;
         }
     };
-
 
     /*
      * Globalize everything 8)
@@ -213,6 +244,38 @@
 
     $(document).ready(function(){
 
+        /*
+         * Table sorting doesn't work the way we'd like when adunits have been
+         * displayed. We'd like them to sort underneath their apps. Without
+         * this formatter function, they sort independently.
+         */
+        $.tablesorter.addWidget({
+            id: 'adunitSorting',
+            format: function(table) {
+                var app_id_cache = {};
+
+                $(".adunit-row", table).each(function(iter, item) {
+
+                    // find the app row for the adunit
+                    var app_id = Marketplace.getAppId(item);
+                    var app;
+                    if (app_id_cache.hasOwnProperty(app_id)) {
+                        app = app_id_cache(app_id);
+                    } else {
+                        app = $(".app-row#app-" + app_id);
+                    }
+
+                    // remove the adunit from it's current location
+                    $(item).remove();
+                    // and place it after the app row
+                    app.after(item);
+                });
+            }
+        });
+
+        $('#marketplace_stats').tablesorter({
+            widgets: ['adunitSorting']
+        });
     });
 
 })(this.jQuery, this.Backbone);

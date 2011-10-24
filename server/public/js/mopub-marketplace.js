@@ -223,7 +223,7 @@
     };
 
     /*
-     * Globalize everything 8)
+     * Globalize everything \o/
      */
     window.AdUnit = AdUnit;
     window.AdUnitCollection = AdUnitCollection;

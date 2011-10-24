@@ -1,6 +1,7 @@
 import logging
 
-from ad_network_reports.query_managers import AdNetworkReportQueryManager
+from ad_network_reports.query_managers import AdNetworkReportQueryManager, \
+        create_manager
 from common.ragendja.template import render_to_response
 from common.utils.request_handler import RequestHandler
 from datetime import timedelta, date
@@ -10,13 +11,13 @@ from django.shortcuts import redirect
 AD_NETWORK_NAMES = ['admob', 'jumptap', 'iad', 'inmobi', 'mobfox']
 
 class AdNetworkReportIndexHandler(RequestHandler):
-    def get(self):
+    def get(self, account_key=None):
         """Generate a list of aggregtate stats for the ad networks, apps and
         account.
 
         Return a webpage with the list of stats in a table.
         """
-        manager = AdNetworkReportQueryManager(self.account)
+        manager = create_manager(account_key, self.account)
         mappers = list(manager.get_ad_network_mappers())
 
         keys = [s.key() for s in mappers]
@@ -45,7 +46,7 @@ class ViewAdNetworkReportHandler(RequestHandler):
 
         Return a webpage with the list of stats in a table.
         """
-        manager = AdNetworkReportQueryManager(self.account)
+        manager = AdNetworkReportQueryManager()
         ad_network_app_mapper = manager.get_ad_network_app_mapper(
                 ad_network_app_mapper_key = ad_network_app_mapper_key)
         dates = manager.get_ad_network_app_stats(ad_network_app_mapper)
@@ -60,7 +61,8 @@ def view_ad_network_app_report(request, *args, **kwargs):
     return ViewAdNetworkReportHandler()(request, *args, **kwargs)
 
 class AddLoginInfoHandler(RequestHandler):
-    def get(self): #Verfify that this is SSL
+    #TODO: Make SSL iframe
+    def get(self, account_key=None):
         """Return form with ad network login info."""
         # Add a bunch of test data to the db
 #        from account.models import NetworkConfig
@@ -97,23 +99,22 @@ class AddLoginInfoHandler(RequestHandler):
 
         return render_to_response(self.request,
                 'ad_network_reports/add_login_info.html',
-                dict(ad_network_names = AD_NETWORK_NAMES, error = ""))
+                dict(ad_network_names=AD_NETWORK_NAMES,
+                    account_key=account_key, error=""))
 
-    def post(self):
+    def post(self, account_key=None):
         """Create AdNetworkLoginInfo and AdNetworkAppMappers for all apps that
         have pub ids for this network and account.
 
         Return a redirect to the ad nework report index.
         """
-        logging.warning(self.request)
         ad_network_name = self.request.POST['ad_network_name']
         username = self.request.POST['username']
         password = self.request.POST['password']
         client_key = self.request.POST['client_key']
         send_email = eval(self.request.POST.get('send_email', 'False'))
 
-        manager = AdNetworkReportQueryManager(self.account)
-
+        manager = create_manager(account_key, self.account)
         manager.create_login_info_and_mappers(ad_network_name, username,
                 password, client_key, send_email)
 

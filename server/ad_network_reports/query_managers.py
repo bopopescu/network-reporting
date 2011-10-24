@@ -221,3 +221,8 @@ class AdNetworkReportQueryManager(CachedQueryManager):
 def get_all_login_credentials():
     """Return all AdNetworkLoginInfo entities ordered by account."""
     return AdNetworkLoginInfo.all().order('account')
+
+def create_manager(account_key, my_account):
+    if account_key:
+        return(AdNetworkReportQueryManager(db.get(account_key)))
+    return(AdNetworkReportQueryManager(my_account))

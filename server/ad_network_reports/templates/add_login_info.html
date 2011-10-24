@@ -17,7 +17,11 @@
 {% endblock titleBarRight %}
 
 {% block content %}
-<form id="loginCredentials">
+{% if account_key %}
+<form id="loginCredentials" action="/ad_network_reports/manage/{{account_key}}/add" method="post">
+{% else %}
+<form id="loginCredentials" action="/ad_network_reports/add" method="post">
+{% endif %}
     <p>
     <div id="error">{{error}}</div><br>
 	<select name="ad_network_name">

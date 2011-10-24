@@ -89,48 +89,73 @@
 
 
   <div class="tab-section" id="controls">
-    <div class="clearfix alert-message block-message info">
-      <div class="close">x</div>
-      Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enimad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+    <div class="rollup fig3">
+      <div class="data-figure">
+        <div class="figure">
+          {{ creative_totals.imp|withsep }}
+        </div>
+        <div class="label">
+          Impressions
+        </div>
+      </div>
+      <div class="data-figure">
+        <div class="figure">
+          {{ creative_totals.clk|withsep }}
+        </div>
+        <div class="label">
+          Clicks
+        </div>
+      </div>
+      <div class="data-figure">
+        <div class="figure">
+          {{ creative_totals.pub_rev|currency|withsep }}
+        </div>
+        <div class="label">
+          Revenue
+        </div>
+      </div>
     </div>
 
-    {% for dsp in dsps %}
-      <h2> <a href="{{ dsp.url }}"> {{ dsp.name }} </a> </h2>
-      <div class="well">
-        <table class="zebra-striped sortable simpletable">
-          <thead>
-            <th> Creative </th>
-            <th> Impressions </th>
-            <th> Clicks </th>
-            <th> CTR </th>
-            <th> eCPM </th>
-            <th> Revenue </th>
-          </thead>
-          <tbody>
-            {% for creative in dsp.creatives %}
-              <tr>
-                <td> <iframe src="{{ creative.creative.url }}" width="320px" height="50px"></iframe> </td>
-                <td> {{ creative.stats.imp }} </td>
-                <td> {{ creative.stats.clk }} </td>
-                <td> {{ creative.stats.ctr|percentage }} </td>
-                <td> {{ creative.stats.ecpm|currency }} </td>
-                <td> {{ creative.stats.pub_rev }} </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-          <tfoot>
-            <td> Totals </td>
-            <td> {{ dsp.stats.imp }} </td>
-            <td> {{ dsp.stats.clk }} </td>
-            <td> {{ dsp.stats.ctr|percentage }} </td>
-            <td> {{ dsp.stats.ecpm|currency }} </td>
-            <td> {{ dsp.stats.pub_rev }} </td>
-          </tfoot>
-        </table>
-      </div>
-    {% endfor %}
+
+    <table class="zebra-striped sortable simpletable">
+      <thead>
+        <th> Creative </th>
+        <th> Advertiser </th>
+        <th> Revenue </th>
+        <th> eCPM </th>
+        <th> Impressions </th>
+        <th> Clicks </th>
+        <th> CTR </th>
+      </thead>
+      <tbody>
+        {% for dsp in dsps %}
+          {% for creative in dsp.creatives %}
+            <tr>
+              <td> <iframe src="{{ creative.creative.url }}" width="320px" height="50px"></iframe> </td>
+              <td> {{ creative.creative.advertiser }} </td>
+              <td> {{ creative.stats.pub_rev|currency }} </td>
+              <td> {{ creative.stats.ecpm|currency }} </td>
+              <td> {{ creative.stats.imp }} </td>
+              <td> {{ creative.stats.clk }} </td>
+              <td> {{ creative.stats.ctr|percentage }} </td>
+            </tr>
+          {% endfor %}
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <td> Totals </td>
+        <td></td>
+        <td> {{ creative_totals.pub_rev|currency }} </td>
+        <td> {{ creative_totals.ecpm|currency }} </td>
+        <td> {{ creative_totals.imp }} </td>
+        <td> {{ creative_totals.clk }} </td>
+        <td> {{ creative_totals.ctr|percentage }} </td>
+      </tfoot>
+    </table>
 
   </div>
+
 
   <div class="clearfix tab-section" id="settings">
 

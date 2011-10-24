@@ -1189,6 +1189,22 @@ class MarketplaceIndexHandler(RequestHandler):
         two_weeks_ago = datetime.timedelta(0,0,0,0,0,0,2)
         dsps = stats_fetcher.get_all_dsp_stats(today, two_weeks_ago)
 
+        # Get total stats for the rollup/table footer
+        creative_totals = {
+            'imp': 0,
+            'clk': 0,
+            'ctr': 0,
+            'ecpm': 0,
+            'pub_rev': 0
+        }
+
+        for dsp in dsps:
+            creative_totals['imp'] += dsp['stats']['imp']
+            creative_totals['clk'] += dsp['stats']['clk']
+            creative_totals['ctr'] += dsp['stats']['ctr']
+            creative_totals['ecpm'] += dsp['stats']['ecpm']
+            creative_totals['pub_rev'] += dsp['stats']['pub_rev']
+
         # Set up the blocklist
         blocklist = []
         network_config = self.account.network_config
@@ -1207,7 +1223,8 @@ class MarketplaceIndexHandler(RequestHandler):
                                       'app_keys': app_keys,
                                       'dsps': dsps,
                                       'top_level_mpx_stats': top_level_mpx_stats,
-                                      'blocklist': blocklist
+                                      'blocklist': blocklist,
+                                      'creative_totals': creative_totals
                                   })
 
     def post(self):

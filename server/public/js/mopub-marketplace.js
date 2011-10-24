@@ -256,7 +256,6 @@
                 var app_id_cache = {};
 
                 $('.adunit-row', table).each(function(iter, item) {
-
                     // find the app row for the adunit
                     var app_id = Marketplace.getAppId(item);
                     var app;
@@ -265,7 +264,6 @@
                     } else {
                         app = $('.app-row#app-' + app_id);
                     }
-
                     // remove the adunit from it's current location
                     $(item).remove();
                     // and place it after the app row

@@ -70,6 +70,7 @@ class MarketplaceStatsFetcher(object):
             "DSP1": {
                 "url": "http://www.google.com/",
                 "name": "AdBlah",
+                "advertiser": "stfu.com",
                 "stats": {
                     "chrg": 100,
                     "imp": 53082,
@@ -82,6 +83,7 @@ class MarketplaceStatsFetcher(object):
             "DSP2": {
                 "url": "http://www.blobmob.com/",
                 "name": "BlobMob",
+                "advertiser": "stfu.com",
                 "stats": {
                     "chrg": 430,
                     "imp": 78282,
@@ -113,6 +115,7 @@ class MarketplaceStatsFetcher(object):
             "DSP1": {
                 "url": "http://www.google.com/",
                 "name": "AdBlah",
+
                 "stats": {
                     "chrg": 100,
                     "imp": 53082,
@@ -125,6 +128,7 @@ class MarketplaceStatsFetcher(object):
             "DSP2": {
                 "url": "http://www.blobmob.com/",
                 "name": "BlobMob",
+
                 "stats": {
                     "chrg": 430,
                     "imp": 78282,
@@ -157,6 +161,7 @@ class MarketplaceStatsFetcher(object):
                         'clk': 3012
                     },
                     'creative': {
+                        'advertiser': 'hobmob.com',
                         'body': "blah bla",
                         '_id': "asdo2nOASINdlnasd",
                         'url': "http://www.profilebrand.com/graphics/category/animals/4904_pitbulls-are-great-dogs.png",
@@ -174,6 +179,7 @@ class MarketplaceStatsFetcher(object):
                         'clk': 3012
                     },
                     'creative': {
+                        'advertiser': 'ad-yo.com',
                         'body': "blah bla",
                         '_id': "asdo2nOASINdlnasd",
                         'url': "http://www.profilebrand.com/graphics/category/animals/4904_pitbulls-are-great-dogs.png",
@@ -197,6 +203,7 @@ class MarketplaceStatsFetcher(object):
                         '_id': "asdo2nOASINdlnasd",
                         'url': "http://www.profilebrand.com/graphics/category/animals/4904_pitbulls-are-great-dogs.png",
                         'dsp': "DSP2",
+                        'advertiser': 'hobmob.com',
                         'crtv_id': "CREATIVE1"
                     }
                 },
@@ -210,6 +217,7 @@ class MarketplaceStatsFetcher(object):
                         'clk': 3012
                     },
                     'creative': {
+                        'advertiser': 'ads.com',
                         'body': "blah bla",
                         '_id': "asdo2nOASINdlnasd",
                         'url': "http://www.profilebrand.com/graphics/category/animals/4904_pitbulls-are-great-dogs.png",

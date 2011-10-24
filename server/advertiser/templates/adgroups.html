@@ -142,7 +142,6 @@
     {# Contains high-level performance of all campaigns #}
     <div class="active tab-section" id="performance">
 
-      <h2> Campaign Performance </h2>
 
       <div class="separated">
         <section class="offset nomargin" id="dashboard-stats">
@@ -209,6 +208,50 @@
 
 
         <h2> Guaranteed Campaign Totals </h2>
+        <div id="gtee-rollups" class="rollup fig4">
+          <div class="data-figure">
+            <div class="figure" id="gtee-total-imp">
+              --
+            </div>
+            <div class="label">
+              Impressions
+            </div>
+          </div>
+
+          <div class="data-figure">
+            <div class="figure" id="gtee-total-clk">
+              --
+            </div>
+            <div class="label">
+              Clicks
+            </div>
+          </div>
+
+          <div class="data-figure">
+            <div class="figure" id="gtee-total-ctr">
+              --
+            </div>
+            <div class="label">
+              CTR
+            </div>
+          </div>
+
+          <div class="data-figure">
+            <div class="figure" id="gtee-total-rev">
+              --
+            </div>
+            <div class="label">
+              Revenue
+            </div>
+          </div>
+
+          <div class="right">
+            Go to Guaranteed Campaigns
+          </div>
+
+        </div>
+
+        {% comment %}
         <div id='gtee-rollups' class="campaignData-rollup">
           <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
             <thead>
@@ -229,8 +272,52 @@
             </tbody>
           </table>
         </div>
+        {% endcomment %}
+
 
         <h2> Promotional Campaign Totals </h2>
+        <div id="promo-rollups" class="rollup fig4">
+          <div class="data-figure">
+            <div class="figure" id="promo-total-imp">
+              --
+            </div>
+            <div class="label">
+              Impressions
+            </div>
+          </div>
+
+          <div class="data-figure">
+            <div class="figure" id="promo-total-clk">
+              --
+            </div>
+            <div class="label">
+              Clicks
+            </div>
+          </div>
+
+          <div class="data-figure">
+            <div class="figure" id="promo-total-ctr">
+              --
+            </div>
+            <div class="label">
+              CTR
+            </div>
+          </div>
+
+          <div class="data-figure">
+            <div class="figure" id="promo-total-rev">
+              --
+            </div>
+            <div class="label">
+              Revenue
+            </div>
+          </div>
+          <div class="right">
+            Go to Promotional Campaigns
+          </div>
+        </div>
+
+        {% comment %}
         <div id='promo-rollups' class="campaignData-rollup">
           <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
             <thead>
@@ -252,78 +339,214 @@
               </tbody>
             </table>
           </div>
+          {% endcomment %}
 
-          <h2> Backfill Promotional Campaign Totals </h2>
-          <div id='bfill-rollups' class="campaignData-rollup">
-                  <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
-                      <thead>
-                          <tr>
-                              <th width=25%>Impressions</th>
-                              <th width=25%>Clicks</th>
-                              <th width=25%>CTR</th>
-                              <th width=25%>Conversions</th>
-                          </tr>
-                      </thead>
-                      <tbody>
-                          <tr>
-                              <td id='bfill-total-imp'>--</td>
-                              <td id='bfill-total-clk'>--</td>
-                              <td id='bfill-total-ctr'>--</td>
-                              <td id='bfill-total-conv'>--</td>
-                          </tr>
-                      </tbody>
-                  </table>
-              </div>
+          <h2> Network Campaign Totals </h2>
+        <div id="network-rollups" class="rollup fig4">
+          <div class="data-figure">
+            <div class="figure" id="network-total-imp">
+              --
+            </div>
+            <div class="label">
+              Impressions
+            </div>
+          </div>
 
-              <h2> Network Campaign Totals </h2>
+          <div class="data-figure">
+            <div class="figure" id="network-total-clk">
+              --
+            </div>
+            <div class="label">
+              Clicks
+            </div>
+          </div>
+
+          <div class="data-figure">
+            <div class="figure" id="network-total-ctr">
+              --
+            </div>
+            <div class="label">
+              CTR
+            </div>
+          </div>
+
+          <div class="data-figure">
+            <div class="figure" id="network-total-rev">
+              --
+            </div>
+            <div class="label">
+              Revenue
+            </div>
+          </div>
+
+          <div class="right">
+            Go to Network Campaigns
+          </div>
+
+        </div>
+
+          {% comment %}
           <div id='network-rollups' class="campaignData-rollup">
-                  <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
-                      <thead>
-                          <tr>
-                              <th width=25%>Impressions</th>
-                              <th width=25%>Clicks</th>
-                              <th width=25%>CTR</th>
-                              <th width=25%>Fill Rate (Attempts)</th>
-                          </tr>
-                      </thead>
-                      <tbody>
-                          <tr>
-                              <td id='network-total-imp'>--</td>
-                              <td id='network-total-clk'>--</td>
-                              <td id='network-total-ctr'>--</td>
-                              <td id='network-total-fill'>--</td>
-                          </tr>
-                      </tbody>
-                  </table>
+            <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
+              <thead>
+                <tr>
+                  <th width=25%>Impressions</th>
+                  <th width=25%>Clicks</th>
+                  <th width=25%>CTR</th>
+                  <th width=25%>Fill Rate (Attempts)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td id='network-total-imp'>--</td>
+                  <td id='network-total-clk'>--</td>
+                  <td id='network-total-ctr'>--</td>
+                  <td id='network-total-fill'>--</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          {% endcomment %}
+
+
+                    <h2> Backfill Promotional Campaign Totals </h2>
+          <div id="bfill-rollups" class="rollup fig4">
+          <div class="data-figure">
+            <div class="figure" id="bfill-total-imp">
+              --
+            </div>
+            <div class="label">
+              Impressions
+            </div>
+          </div>
+
+          <div class="data-figure">
+            <div class="figure" id="bfill-total-clk">
+              --
+            </div>
+            <div class="label">
+              Clicks
+            </div>
+          </div>
+
+          <div class="data-figure">
+            <div class="figure" id="bfill-total-ctr">
+              --
+            </div>
+            <div class="label">
+              CTR
+            </div>
+          </div>
+
+          <div class="data-figure">
+            <div class="figure" id="bfill-total-rev">
+              --
+            </div>
+            <div class="label">
+              Revenue
+            </div>
+          </div>
+          <div class="right">
+            Go to Backfill Promotional Campaigns
+          </div>
+        </div>
+
+          {% comment %}
+          <div id='bfill-rollups' class="campaignData-rollup">
+            <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
+              <thead>
+                <tr>
+                  <th width=25%>Impressions</th>
+                  <th width=25%>Clicks</th>
+                  <th width=25%>CTR</th>
+                  <th width=25%>Conversions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td id='bfill-total-imp'>--</td>
+                  <td id='bfill-total-clk'>--</td>
+                  <td id='bfill-total-ctr'>--</td>
+                  <td id='bfill-total-conv'>--</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          {% endcomment %}
+
+
+
+        </div>
+
+        <section id="dashboard-campaigns">
+
+
+          <div id="adserverTest" style="display:none;">
+            <iframe height="480" width="350" id="adserverTest-iFrame" scrolling="no">
+            </iframe>
+            <div id="adserverTest-iFrame-src" style="display:none;">{% url advertiser_adserver_test %}</div>
+          </div>
+
+        </div>
+
+        <div class="tab-section" id="guaranteed">
+
+          <br />
+          <a class="right btn add icon"  href="{% url advertiser_campaign_create %}#gtee">Add a campaign</a>
+
+          <form method="post" action="{% url advertiser_bid_pause %}" id="campaignForm">
+            <input type="hidden" name="action" id="action"/>
+
+            {% if not guarantee_num %}
+              <h2> No Guaranteed Campaigns </h2>
+            {% else %}
+              <h2> Guaranteed Performance ({{start_date|format_date_compact}} to {{end_date|format_date_compact}}) </h2>
+            {% endif %}
+            <img id="gtee-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img>
+
+            {% if guarantee_num %}
+
+              {# Guaranteed Total Rollups #}
+              <div id="gtee-rollups" class="rollup fig4">
+                <div class="data-figure">
+                  <div class="figure" id="gtee-total-imp">
+                    --
+                  </div>
+                  <div class="label">
+                    Impressions
+                  </div>
+                </div>
+
+                <div class="data-figure">
+                  <div class="figure" id="gtee-total-clk">
+                    --
+                  </div>
+                  <div class="label">
+                    Clicks
+                  </div>
+                </div>
+
+                <div class="data-figure">
+                  <div class="figure" id="gtee-total-ctr">
+                    --
+                  </div>
+                  <div class="label">
+                    CTR
+                  </div>
+                </div>
+
+                <div class="data-figure">
+                  <div class="figure" id="gtee-total-rev">
+                    --
+                  </div>
+                  <div class="label">
+                    Revenue
+                  </div>
+                </div>
+
               </div>
-</div>
 
-<section id="dashboard-campaigns">
-
-
-  <div id="adserverTest" style="display:none;">
-    <iframe height="480" width="350" id="adserverTest-iFrame" scrolling="no">
-    </iframe>
-    <div id="adserverTest-iFrame-src" style="display:none;">{% url advertiser_adserver_test %}</div>
-  </div>
-
-  </div>
-
-  <div class="tab-section" id="guaranteed">
-
-    <a class="right btn add icon"  href="{% url advertiser_campaign_create %}#gtee">Add a campaign</a>
-
-    <form method="post" action="{% url advertiser_bid_pause %}" id="campaignForm">
-      <input type="hidden" name="action" id="action"/>
-      {% if not guarantee_num %}
-        <h2> No Guaranteed Campaigns </h2>
-      {% else %}
-        <h2> Guaranteed Performance ({{start_date|format_date_compact}} to {{end_date|format_date_compact}}) </h2>
-
-      {% endif %}
-      <img id="gtee-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img>
-
-    {% if guarantee_num %}
+      {% comment %}
       <div id='gtee-rollups' class="campaignData-rollup">
       <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
         <thead>
@@ -344,10 +567,11 @@
         </tbody>
       </table>
     </div>
+    {% endcomment %}
 
     {% for level in guarantee_levels %}
       {% if level.display %}
-        <table class="zebra-striped simpletable campaignData-main" id="campaignDataTable-direct-{{level.name}}">
+        <table class="sortable zebra-striped simpletable campaignData-main" id="campaignDataTable-direct-{{level.name}}">
           <thead>
             <tr>
               <th class="campaignData-icon"></th>
@@ -358,7 +582,7 @@
               <th class="dataTable-data numeric">Clicks</th>
               <th class="dataTable-data numeric">CTR</th>
               <th class="dataTable-data numeric">Conv</th>
-              <th class="dataTable-data numeric">CPA</th>
+              <th class="dataTable-data numeric">Revenue</th>
             </tr>
           </thead>
           <tbody>
@@ -423,7 +647,7 @@
                 <td class="dataTable-data numeric gtee-clk clk">--</td>
                 <td class="dataTable-data numeric gtee-ctr ctr">--</td>
                 <td class="dataTable-data numeric gtee-conv conv">--</td>
-                <td class="dataTable-data numeric gtee-cpa cpa">--</td>
+                <td class="dataTable-data numeric gtee-cpa rev">--</td>
               </tr>
             {% endfor %}
           {% endif %}
@@ -434,11 +658,56 @@
       {% endif %}
       </div>
       <div class="tab-section" id="promotional">
+        <br />
         <a class="right btn add icon" href="{% url advertiser_campaign_create %}#promo">Add a campaign</a>
-        <h2>Promotional {% if not promo %}<span class="muted">(None)</span>{% endif %}
+
+        {% if not promo%}
+          <h2> No promotional campaigns </h2>
+        {% else %}
+          <h2>Promotional Performance ({{start_date|format_date_compact}} to {{end_date|format_date_compact}})</h2>
+        {% endif %}
         <img id="promo-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img>
-        </h2>
         {% if promo %}
+          <div id="promo-rollups" class="rollup fig4">
+            <div class="data-figure">
+              <div class="figure" id="promo-total-imp">
+                --
+              </div>
+              <div class="label">
+                Impressions
+              </div>
+            </div>
+
+            <div class="data-figure">
+              <div class="figure" id="promo-total-clk">
+                --
+              </div>
+              <div class="label">
+                Clicks
+              </div>
+            </div>
+
+            <div class="data-figure">
+              <div class="figure" id="promo-total-ctr">
+                --
+              </div>
+              <div class="label">
+                CTR
+              </div>
+            </div>
+
+            <div class="data-figure">
+              <div class="figure" id="promo-total-rev">
+                --
+              </div>
+              <div class="label">
+                Revenue
+              </div>
+            </div>
+
+          </div>
+
+          {% comment %}
           <div id='promo-rollups' class="campaignData-rollup">
             <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
               <thead>
@@ -460,7 +729,10 @@
               </tbody>
             </table>
           </div>
-          <table class="zebra-striped simpletable campaignData-main">
+
+          {% endcomment %}
+
+          <table class="sortable zebra-striped simpletable campaignData-main">
             <thead>
               <tr>
                 <th class="campaignData-icon"></th>
@@ -528,10 +800,56 @@
           </table>
         {% endif %}
 
-        <h2>Backfill Promotional {% if not backfill_promo %}<span class="muted">(None)</span>{% endif %}
-                  <img id="bfill-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img>
-              </h2>
-              {% if backfill_promo %}<div id='bfill-rollups' class="campaignData-rollup">
+        {% if not backfill_promo %}
+          <h2> No backfill promotional campaigns </h2>
+        {% else %}
+          <h2>Backfill Promotional ({{start_date|format_date_compact}} to {{end_date|format_date_compact}})
+        {% endif %}
+        <img id="bfill-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img>
+
+        {% if backfill_promo %}
+
+          <div id="bfill-rollups" class="rollup fig4">
+                <div class="data-figure">
+                  <div class="figure" id="bfill-total-imp">
+                    --
+                  </div>
+                  <div class="label">
+                    Impressions
+                  </div>
+                </div>
+
+                <div class="data-figure">
+                  <div class="figure" id="bfill-total-clk">
+                    --
+                  </div>
+                  <div class="label">
+                    Clicks
+                  </div>
+                </div>
+
+                <div class="data-figure">
+                  <div class="figure" id="bfill-total-ctr">
+                    --
+                  </div>
+                  <div class="label">
+                    CTR
+                  </div>
+                </div>
+
+                <div class="data-figure">
+                  <div class="figure" id="bfill-total-rev">
+                    --
+                  </div>
+                  <div class="label">
+                    Revenue
+                  </div>
+                </div>
+
+              </div>
+
+{% comment %}
+          <div id='bfill-rollups' class="campaignData-rollup">
                   <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
                       <thead>
                           <tr>
@@ -551,7 +869,9 @@
                       </tbody>
                   </table>
               </div>
-              <table class="zebra-striped simpletable campaignData-main">
+
+{% endcomment %}
+              <table class="sortable zebra-striped simpletable campaignData-main">
                 <thead>
                   <tr>
                     <th class="campaignData-icon"></th>
@@ -695,11 +1015,56 @@
               {% endcomment %}
 
               <div class="tab-section" id="network">
+                <br />
                 <a class="right btn add icon" href="{% url advertiser_campaign_create %}#network">Add a campaign</a>
-                <h2>Network Campaigns
-                  <img id="network-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img>
-                </h2>
-                {% if network %}<div id='network-rollups' class="campaignData-rollup">
+                {% if network %}
+                  <h2>Network Performance ({{start_date|format_date_compact}} to {{end_date|format_date_compact}}) </h2>
+                {% else %}
+                  <h2>No network campaigns  </h2>
+                {% endif %}
+
+                {% if network %}
+                                <div id="network-rollups" class="rollup fig4">
+                <div class="data-figure">
+                  <div class="figure" id="network-total-imp">
+                    --
+                  </div>
+                  <div class="label">
+                    Impressions
+                  </div>
+                </div>
+
+                <div class="data-figure">
+                  <div class="figure" id="network-total-clk">
+                    --
+                  </div>
+                  <div class="label">
+                    Clicks
+                  </div>
+                </div>
+
+                <div class="data-figure">
+                  <div class="figure" id="network-total-ctr">
+                    --
+                  </div>
+                  <div class="label">
+                    CTR
+                  </div>
+                </div>
+
+                <div class="data-figure">
+                  <div class="figure" id="network-total-rev">
+                    --
+                  </div>
+                  <div class="label">
+                    Revenue
+                  </div>
+                </div>
+
+              </div>
+
+              {% comment %}
+                  <div id='network-rollups' class="campaignData-rollup">
                   <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
                       <thead>
                           <tr>
@@ -719,7 +1084,10 @@
                       </tbody>
                   </table>
               </div>
-              <table class="zebra-striped simpletable campaignData-main">
+
+              {% endcomment %}
+
+              <table class="zebra-striped sortable simpletable campaignData-main">
                 <thead>
                   <tr>
                     <th class="campaignData-icon"></th>
@@ -730,25 +1098,28 @@
                     <th class="dataTable-data numeric">Fillrate</th>
                     <th class="dataTable-data numeric">Clicks</th>
                     <th class="dataTable-data numeric">CTR</th>
-                    <th class="dataTable-data numeric">&nbsp;</th>
                   </tr>
                 </thead>
                 <tbody>
                   {% for adgroup in network %}
-                  <tr class="campaignData network_row campaign-status-all campaign-targeting-all incomplete
-                    {% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}"
-
-                   id="{{adgroup.key}}">
+                    <tr class="campaignData network_row campaign-status-all campaign-targeting-all incomplete
+                               {% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}"
+                        id="{{adgroup.key}}">
 
                     <td class="campaignData-icon">
                       <input type="checkbox" name="id" value="{{adgroup.key}}"/>
-                      {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9 />{% endif %}
-                      {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
-                      {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
+                      {% if adgroup.deleted %}
+                        <img src="/images/deleted.gif" height=9 width=9 />
+                      {% endif %}
+                      {% if adgroup.active and not adgroup.deleted %}
+                        <img src="/images/active.gif" height=9 width=9 />
+                      {% endif %}
+                      {% if not adgroup.active and not adgroup.deleted %}
+                        <img src="/images/paused.gif" height=9 width=9 />
+                      {% endif %}
                     </td>
                     <td class="dataTable-name">
                       <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
-
                       <span class="muted">{{adgroup.network_type}}</span>
                     </td>
                     {% if adgroup.cpc %}
@@ -763,7 +1134,6 @@
                     <td class="dataTable-data numeric network-fill fill">--</td>
                     <td class="dataTable-data numeric network-clk clk">--</td>
                     <td class="dataTable-data numeric network-ctr ctr">--</td>
-                    <td class="dataTable-data numeric">&nbsp;</td>
                   </tr>
                   {% endfor %}
                 </tbody>

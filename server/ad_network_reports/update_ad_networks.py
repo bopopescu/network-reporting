@@ -1,5 +1,5 @@
 import logging
-import os, sys
+import os, sys, traceback
 
 EC2 = True
 
@@ -73,8 +73,8 @@ def send_stats_mail(account, manager, test_date, valid_stats_list):
 
         # CSS doesn't work with Gmail so use horrible html style tags ex. <b>
         mail.send_mail(sender='olp@mopub.com',
-                       #to='report-monitoring@mopub.com',
-                       to='tiago@mopub.com',
+                       to='report-monitoring@mopub.com',
+                       cc='tiago@mopub.com',
                        subject=("Ad Network Scrape Stats for %s" %
                            test_date.strftime("%m/%d/%y")),
                        body=("Learn more at http://mopub-experimental.appspot.com/"
@@ -173,11 +173,11 @@ def update_ad_networks(start_date = None, end_date = None):
                                subject=("Ad Network Scrape Error on %s" %
                                    test_date.strftime("%m/%d/%y")),
                                body=("Couldn't get get stats for %s network "
-                                   "for \"%s\" account. Error: %s" %
+                                   "for \"%s\" account. Error:\n %s\n\nTraceback:\n%s" %
                                    (login_credentials.ad_network_name,
-                                       login_credentials.account.key(), e)))
-                raise
-            #continue
+                                       login_credentials.account.key(), e,
+                                       repr(traceback.extract_tb(exc_traceback)))))
+                continue
 
             for stats in stats_list:
 
@@ -240,7 +240,7 @@ def update_ad_networks(start_date = None, end_date = None):
             previous_account_key = account_key
 
         if email_account:
-            send_stats_mail(login_info.account, manager, test_date, valid_stats_list)
+            send_stats_mail(login_credentials.account, manager, test_date, valid_stats_list)
 
 if __name__ == "__main__":
     setup_remote_api()

@@ -154,10 +154,12 @@
             var renderedContent = $(this.template(this.model.toJSON()));
 
             // Ad the event handler to submit price floor changes over ajax.
-            $('.price_floor_change', renderedContent).change(function() {
-                current_model.set({'price_floor': $(this).val()});
-                current_model.save();
-            });
+            $('.price_floor_change', renderedContent)
+                .tipsy({title: 'hello', gravity: 'w', trigger: 'focus'})
+                .change(function() {
+                    current_model.set({'price_floor': $(this).val()});
+                    current_model.save();
+                });
             var app_row = $('tr#app-' + this.model.get('app_id'), this.el);
             app_row.after(renderedContent);
             return this;

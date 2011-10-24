@@ -9,6 +9,8 @@ from datetime import timedelta, date
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect
 
+from account.models import Account
+
 AD_NETWORK_NAMES = ['admob', 'jumptap', 'iad', 'inmobi', 'mobfox']
 
 class AdNetworkReportIndexHandler(RequestHandler):
@@ -123,6 +125,7 @@ class AddLoginInfoHandler(RequestHandler):
         return render_to_response(self.request,
                                   'ad_network_reports/add_login_info.html',
                                   {
+                                      'account_key' : account_key,
                                       'ad_network_names' : AD_NETWORK_NAMES,
                                       'forms' : forms,
                                       'error' : "",
@@ -134,15 +137,41 @@ class AddLoginInfoHandler(RequestHandler):
 
         Return a redirect to the ad nework report index.
         """
-        ad_network_name = self.request.POST['ad_network_name']
-        username = self.request.POST['username']
-        password = self.request.POST['password']
-        client_key = self.request.POST['client_key']
-        send_email = eval(self.request.POST.get('send_email', 'False'))
+        initial = {}
+        for network in AD_NETWORK_NAMES:
+            initial[network + '-ad_network_name'] = network
 
-        manager = create_manager(account_key, self.account)
-        manager.create_login_info_and_mappers(ad_network_name, username,
-                password, client_key, send_email)
+        ad_network = self.request.POST['ad_network_name']
+        wants_email = self.request.POST.get('email', False) and True
+
+        postcopy = copy.deepcopy(self.request.POST)
+        postcopy.update(initial)
+
+        form = LoginInfoForm(postcopy, prefix=ad_network)
+
+        errors = ""
+        if form.is_valid():
+            manager = AdNetworkReportQueryManager(self.account)
+            error = manager.create_login_info_and_mappers(ad_network,
+                                                           form.cleaned_data[
+                                                               'username'],
+                                                           form.cleaned_data[
+                                                               'password'],
+                                                           form.cleaned_data[
+                                                               'client_key'],
+                                                           wants_email)
+            if not error:
+                return redirect('ad_network_reports_index')
+
+
+        logging.warn(form.errors)
+        return render_to_response(self.request,
+                                  'network_scraping/add_login_info.html',
+                                  {
+                                      'account_key' : account_key,
+                                      'form' : form,
+                                      'error' : error
+                                  })
 
 @login_required
 def add_login_info(request, *args, **kwargs):

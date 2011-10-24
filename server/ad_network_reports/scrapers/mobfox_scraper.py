@@ -88,4 +88,4 @@ if __name__ == '__main__':
     publisher_ids = ['ddcc935d2bc034b2823e04b24ff544a9',
             'e884e3c21a498d57f7d1cb1400c5ab9b']
     SCRAPER = MobFoxScraper((NC, publisher_ids))
-    print SCRAPER.get_site_stats(date.today())
+    print SCRAPER.get_site_stats(date.today() - timedelta(days=1))

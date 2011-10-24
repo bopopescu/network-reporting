@@ -52,11 +52,12 @@ def ad_network_reports_mptest():
         stats = manager.get_ad_network_app_stats(n)
         logging.warning( "network name:%s application name: %s" %
                 (n.ad_network_name, n.application.name))
-        logging.warning("network name:%s application name: %s" %
-                (n.ad_network_name, n.application.name))
+        logging.warning(str(stats[0].__dict__))
         assert stats[0].date == yesterday
 
     # Do aggregate statistics work?
     aggregates = [manager.get_ad_network_aggregates(n, date.today() -
         timedelta(days = 8), date.today() - timedelta(days = 1)) for n in
         test_network_app_mappers]
+
+    assert False

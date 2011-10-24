@@ -1,6 +1,7 @@
 import sys
 import time
 
+import selenium
 #sys.path.append('/home/ubuntu/mopub/server') # only needed for testing
 sys.path.append('/Users/tiagobandeira/Documents/mopub/server') # only needed for testing
 from ad_network_reports.scrapers.network_scrape_record import \
@@ -29,7 +30,7 @@ class IAdScraper(Scraper):
         self.authenticate()
 
     def __del__(self):
-        self.browser.quit()
+        #self.browser.quit()
         self.disp.stop()
 
     def authenticate(self):
@@ -77,8 +78,9 @@ class IAdScraper(Scraper):
                 click()
         time.sleep(1)
         self.set_date('#gwt-debug-date-range-selector-start-date-box',
-                start_date)
-        self.set_date('#gwt-debug-date-range-selector-end-date-box', end_date)
+                 start_date)
+        self.set_date('#gwt-debug-date-range-selector-end-date-box',
+                 end_date)
 
     def get_cal_date(self):
         # Wait for page to load
@@ -88,10 +90,18 @@ class IAdScraper(Scraper):
 
     def set_date(self, selector, test_date):
         # Open up the date box
-        time.sleep(1)
         self.browser.find_element_by_css_selector(selector).click()
         time.sleep(1)
-        curr_date = self.get_cal_date()
+        exception = True
+        count = 0
+        while exception and count < 10:
+            exception = False
+            try:
+                curr_date = self.get_cal_date()
+            except selenium.common.exceptions.NoSuchElementException as \
+                    exception:
+                self.browser.find_element_by_css_selector(selector).click()
+            count += 1
         # Which way do we go
         if curr_date > test_date:
             button = 'td>div.datePickerPreviousButton'
@@ -102,6 +112,7 @@ class IAdScraper(Scraper):
                 test_date.year:
             self.browser.find_element_by_css_selector(button).click()
             curr_date = self.get_cal_date()
+            time.sleep(1)
         days = self.browser.find_elements_by_css_selector('.datePickerDay')
         for day in days:
             if 'datePickDayIsFiller' in day.get_attribute('class'):
@@ -115,6 +126,7 @@ class IAdScraper(Scraper):
 
         # Set the dates
         self.set_dates(start_date, end_date)
+        time.sleep(3)
         # read the shit
         page = None
         while page is None:

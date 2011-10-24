@@ -1,5 +1,6 @@
 import logging
-import os, sys
+import os
+import sys
 
 EC2 = False
 
@@ -21,13 +22,14 @@ import common.utils.test.setup
 
 from google.appengine.api import mail
 
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 from ad_network_reports.ad_networks import AD_NETWORKS
 from ad_network_reports.models import AdNetworkScrapeStats
 from ad_network_reports.query_managers import AdNetworkReportQueryManager, \
         get_all_login_credentials
 from common.utils import date_magic
+from pytz import timezone
 
 def setup_remote_api():
     from google.appengine.ext.remote_api import remote_api_stub
@@ -119,14 +121,15 @@ def update_ad_networks(start_date = None, end_date = None):
     Run daily as a cron job in EC2. Email account if account wants email upon
     completion of gathering stats. Email Tiago if errors occur.
     """
-    yesterday = date.today() - timedelta(days = 1)
+    # Standardize the date (required since something messes with it)
+    pacific = timezone('US/Pacific')
+    yesterday = (datetime.now(pacific) - timedelta(days=1)).date()
 
     if not start_date and not end_date:
         start_date = yesterday
         end_date = yesterday
 
     for test_date in date_magic.gen_days(start_date, end_date):
-
         previous_account_key = None
         valid_stats_list = []
         manager = None
@@ -162,7 +165,8 @@ def update_ad_networks(start_date = None, end_date = None):
                 logging.error(("Couldn't get get stats for %s network for "
                         "\"%s\" account.  Can try again later or perhaps %s "
                         "changed it's API or site.") %
-                        (login_credentials.ad_network_name, login_credentials.account.key(),
+                        (login_credentials.ad_network_name,
+                            login_credentials.account.key(),
                             login_credentials.ad_network_name))
                 mail.send_mail(sender='olp@mopub.com',
                                # login_credentials.account.user.email
@@ -206,7 +210,8 @@ def update_ad_networks(start_date = None, end_date = None):
                     else:
                         logging.info("%(account)s has pub id %(pub_id)s on "
                                 "%(ad_network)s that was FOUND in MoPub" %
-                                     dict(account = login_credentials.account.key(),
+                                     dict(account = login_credentials.account.
+                                         key(),
                                           pub_id = stats.app_tag,
                                           ad_network = login_credentials.
                                           ad_network_name))

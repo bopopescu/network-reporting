@@ -54,7 +54,6 @@
   color: #53a600;
 }
 
-
 table.simpletable {
     @include border-radius(3px);
     width: 100%;
@@ -75,6 +74,9 @@ table.simpletable {
     }
     td {
         vertical-align: top;
+        &.align_right {
+            text-align: right;
+        }
     }
     th + th, td + td {
         border-left: 1px solid #ddd;

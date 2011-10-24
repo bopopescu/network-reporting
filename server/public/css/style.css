@@ -1509,6 +1509,8 @@ table.simpletable {
     font-size: 16px; }
   table.simpletable td {
     vertical-align: top; }
+    table.simpletable td.align_right {
+      text-align: right; }
   table.simpletable th + th, table.simpletable td + td {
     border-left: 1px solid #ddd; }
   table.simpletable tr + tr td {

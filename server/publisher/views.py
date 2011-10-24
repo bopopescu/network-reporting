@@ -243,6 +243,9 @@ class AppCreateHandler(RequestHandler):
 
             AdUnitQueryManager.put(adunit)
 
+            mpx_adgroup = AdGroupQueryManager.get_marketplace_adgroup(adunit.key(), self.account.key())
+            AdGroupQueryManager.put(mpx_adgroup)
+
             # Check if this is the first ad unit for this account
             if len(AdUnitQueryManager.get_adunits(account=self.account,limit=2)) == 1:
                 add_demo_campaign(adunit)
@@ -251,6 +254,10 @@ class AppCreateHandler(RequestHandler):
             if self.account.status == "new":
                 self.account.status = "step4"  # skip to step 4 (add campaigns), but show step 2 (integrate)
                 AccountQueryManager.put_accounts(self.account)
+                mpx = CampaignQueryManager.get_marketplace(self.account)
+                mpx.active = False
+                CampaignQueryManager.put(mpx)
+
                 status = "welcome"
             return HttpResponseRedirect(reverse('publisher_generate',kwargs={'adunit_key':adunit.key()})+'?status='+status)
         return self.get(app_form,adunit_form)

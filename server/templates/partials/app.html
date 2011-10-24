@@ -1,6 +1,6 @@
 <tr class="app-row" id="app-<%= id %>">
   <td class="name clearfix">
-    <img src="/placeholders/image.gif" alt="Icon" width="45" height="45" class="app-icon" />
+    <img src="<%= icon_url %>" alt="Icon" width="45" height="45" class="app-icon" />
     <div class="app-detail">
       <a href="<%= url %>"><%= name  %></a>
       <span class="muted unbold"> ( <%= app_type %> ) </span>
@@ -8,19 +8,19 @@
       <a href="#<%= id %>" class="adunits" id="<%= id %>"> Show Adunits </a>
     </div>
   </td>
-  <td class="revenue">
+  <td class="align_right revenue" style="text-align: right;">
     <%= revenue  %>
   </td>
-  <td class="ecpm">
+  <td class="align_right ecpm" style="text-align: right;">
     <%= ecpm %>
   </td>
-  <td class="impressions">
+  <td class="impressions" style="text-align: right;">
     <%= impressions %>
   </td>
-  <td class="clicks">
+  <td class="align_right clicks" style="text-align: right;">
     <%= clicks %>
   </td>
-  <td class="ctr">
+  <td class="align_right ctr" style="text-align: right;">
     <%= ctr %>
   </td>
   <td class="price_floor">

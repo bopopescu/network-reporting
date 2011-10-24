@@ -50,6 +50,7 @@
             url:'#',
             revenue: 0,
             attempts: 0,
+            icon_url: "/placeholders/image.gif",
             impressions: 0,
             fill_rate: 0,
             clicks: 0,
@@ -104,7 +105,7 @@
 
             // When we render an appview, we also attach a handler to fetch
             // and render it's adunits when a link is clicked.
-            $('a.adunits', renderedContent).click(showAdUnits);
+            $('a.adunits', renderedContent).click(showAdUnits).click();
             $('tbody', this.el).append(renderedContent);
             return this;
         }
@@ -134,7 +135,8 @@
      * ## AdUnitView
      *
      * See templates/partials/adunit.html to see how this is rendered in HTML
-     * The main purpose of this is to render an adunit as a row in a table.
+     * Renders an adunit as a row in a table. Also ads the event handler to
+     * submit the price floor change over ajax when the price_floor field is changed.
      */
     var AdUnitView = Backbone.View.extend({
 
@@ -143,14 +145,16 @@
             this.template = _.template($('#adunit-template').html());
         },
 
-         // Render the model in the template. This assumes that the table
-         // row for the app has already been rendered. This will render after it.
+        // Render the model in the template. This assumes that the table
+        // row for the app has already been rendered. This will render underneath it's
+        // app's row.
         render: function () {
             // render the adunit and attach it to the table after it's adunit's row
             var current_model = this.model;
             var renderedContent = $(this.template(this.model.toJSON()));
-            $('.price_floor_change', renderedContent).change(function(){
-                console.log('yeeeea boiiiii');
+
+            // Ad the event handler to submit price floor changes over ajax.
+            $('.price_floor_change', renderedContent).change(function() {
                 current_model.set({'price_floor': $(this).val()});
                 current_model.save();
             });
@@ -233,6 +237,10 @@
     window.AppView = AppView;
     window.Marketplace = Marketplace;
 
+
+    /*
+     * Boomslam
+     */
     $(document).ready(function(){
 
         /*

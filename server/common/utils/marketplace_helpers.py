@@ -29,7 +29,7 @@ class MarketplaceStatsFetcher(object):
         clk = random.randint(1, imp/10)
 
         return {
-            "revenue": rev,
+            "revenue": currency(rev),
             "impressions": imp,
             "clicks": clk,
             "ecpm": currency(ecpm(clk, imp)),
@@ -43,7 +43,7 @@ class MarketplaceStatsFetcher(object):
         clk = random.randint(1, imp/10)
 
         return {
-            "revenue": rev,
+            "revenue": currency(rev),
             "impressions": imp,
             "clicks": clk,
             "ecpm": currency(ecpm(clk, imp)),
@@ -57,7 +57,7 @@ class MarketplaceStatsFetcher(object):
         clk = random.randint(1, imp/10)
 
         return {
-            "revenue": rev,
+            "revenue": currency(rev),
             "impressions": imp,
             "clicks": clk,
             "ecpm": currency(ecpm(clk, imp)),

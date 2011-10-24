@@ -16,21 +16,15 @@ if (typeof window.console == "undefined") {
 }
 
 (function($){
-    // dom ready
-    $(document).ready(function() {
-        /*---------------------------------------/
-          / Marketplace Hiding
-          /---------------------------------------*/
 
+    $(document).ready(function() {
+
+        // marketplace hiding
         if ($('#is_admin_input').val()=='False') {
             $('.marketplace').hide();
         }
 
-        /*---------------------------------------/
-          / UI Stuff
-          /---------------------------------------*/
-
-            // preload images (defined below)
+        // preload images (defined below)
         var JQUERY_UI_IMAGE_PATH = '/js/mylibs/jquery-ui-1.8.7.custom/css/mopub/images';
         $.preLoadImages(
             '/images/ui/ui-button-active.png',
@@ -107,10 +101,7 @@ if (typeof window.console == "undefined") {
             $(this).parent().fadeOut();
         });
 
-        /*---------------------------------------/
-          / Tooltips
-          /---------------------------------------*/
-
+        // tooltips
         $.fn.qtip.styles.mopub = {
             background: '#303030',
             color: '#ffffff',
@@ -304,10 +295,9 @@ if (typeof window.console == "undefined") {
             }
         });
 
-        /*---------------------------------------/
-          / What's This?-ifier
-          /---------------------------------------*/
-
+        /*
+         * What's this dialogs
+         */
         $('.whatsthis').click(function(e) {
             e.preventDefault();
             $('#'+$(this).attr('id').replace('helpLink', 'helpContent')).dialog({
@@ -317,12 +307,9 @@ if (typeof window.console == "undefined") {
 
     }); // end $(document).ready
 
-    /*---------------------------------------/
-      / Image Preloader
-      /---------------------------------------*/
-
 
     /*
+     * Image Preloader
      * Caches images for faster loading
      */
     var cache = [];
@@ -568,10 +555,10 @@ if (typeof window.console == "undefined") {
     };
 
 
-    /*---------------------------------------/
-      / Utility functions.
-      /---------------------------------------*/
 
+    /*
+     * Mopub Utility
+     */
     mopub.Utils.formatNumberWithCommas = function(string) {
         string += '';
         x = string.split('.');
@@ -599,10 +586,10 @@ if (typeof window.console == "undefined") {
 
 })(this.jQuery);
 
-// =====================================================================
-// mopub.Utils.AjaxChunkedFetch
-// =====================================================================
 
+/*
+ * Ajax Chunked Fetch
+ */
 (function(Utils, $) {
 
     var AjaxChunkedFetch = Utils.AjaxChunkedFetch = function(args) {
@@ -626,18 +613,18 @@ if (typeof window.console == "undefined") {
         return this;
     };
 
-        AjaxChunkedFetch.chunkArray = function(array, chunkSize) {
-            if (!array) return [];
+    AjaxChunkedFetch.chunkArray = function(array, chunkSize) {
+        if (!array) return [];
 
-            var chunks = [];
-            $.each(array, function(index, elem) {
-                var chunkNumber = Math.floor(index / chunkSize);
-                var indexInChunk = index % chunkSize;
-                chunks[chunkNumber] = chunks[chunkNumber] || [];
-                chunks[chunkNumber][indexInChunk] = elem;
-            });
-            return chunks;
-        };
+        var chunks = [];
+        $.each(array, function(index, elem) {
+            var chunkNumber = Math.floor(index / chunkSize);
+            var indexInChunk = index % chunkSize;
+            chunks[chunkNumber] = chunks[chunkNumber] || [];
+            chunks[chunkNumber][indexInChunk] = elem;
+        });
+        return chunks;
+    };
 
     // Time to wait before terminating AJAX request.
     AjaxChunkedFetch.TIMEOUT_MILLISECONDS = 10000;
@@ -776,10 +763,9 @@ if (typeof window.console == "undefined") {
 
 })(mopub.Utils = mopub.Utils || {}, this.jQuery);
 
-// =====================================================================
-// mopub.Stats
-// =====================================================================
-
+/*
+ * Mopub Stats
+ */
 (function(Stats, $) {
 
     Stats.sortStatsObjectsByStat = function(objects, statName) {
@@ -874,10 +860,9 @@ if (typeof window.console == "undefined") {
 
 })(mopub.Stats = mopub.Stats || {}, this.jQuery);
 
-// =====================================================================
-// mopub.Chart
-// =====================================================================
-
+/*
+ * Mopub Charting
+ */
 (function(Chart, $) {
 
     Chart.setupDashboardStatsChart = function(seriesType) {

@@ -1,38 +1,24 @@
 /*
- * Mopub Marketplace JS
+ * # Mopub Marketplace JS
  */
 
 (function($, Backbone) {
 
-
     /*
-     * # Backbone Models
-     *
-     * TODO: Refactor these into a mopub models namespace.
-     */
-
-    /*
-     * AdUnit
+     * ## AdUnit
      */
     var AdUnit = Backbone.Model.extend({
         // If we don't set defaults, the templates will explode
         defaults : {
-            name: "",
-            revenue: 0,
             attempts: 0,
-            impressions: 0,
-            fill_rate: 0,
             clicks: 0,
-            price_floor: 0,
+            ctr: 0,
             ecpm: 0,
-            ctr: 0
-
-        },
-        ecpm: function() {
-            return this.get('revenue')/(this.get('impressions')*1000);
-        },
-        ctr: function() {
-            return (this.get('clicks')/this.get('impressions'))*100;
+            fill_rate: 0,
+            impressions: 0,
+            name: '',
+            price_floor: 0,
+            revenue: 0
         },
         validate: function(attributes) {
             var valid_number = Number(attributes.price_floor);
@@ -43,7 +29,7 @@
     });
 
     /*
-     * AdUnitCollection
+     * ## AdUnitCollection
      */
     var AdUnitCollection = Backbone.Collection.extend({
         model: AdUnit,
@@ -54,32 +40,26 @@
 
 
     /*
-     * JS Representation of an App.
+     * ## App
      * We might consider turning derivative values (ecpm, fill_rate, ctr) into
      * functions.
      */
     var App = Backbone.Model.extend({
         defaults : {
-            name: "",
-            url:"#",
+            name: '',
+            url:'#',
             revenue: 0,
             attempts: 0,
             impressions: 0,
             fill_rate: 0,
             clicks: 0,
             price_floor: 0,
-            app_type: "iOS",
+            app_type: 'iOS',
             ecpm: 0,
             ctr: 0
         },
-        ecpm: function() {
-            return this.get('revenue')/(this.get('impressions')*1000);
-        },
-        ctr: function() {
-            return (this.get('clicks')/this.get('impressions'))*100;
-        },
         url: function () {
-            return "/api/app/" + this.id;
+            return '/api/app/' + this.id;
         },
         parse: function (response) {
             // The api returns everything from this url as a list,
@@ -88,11 +68,13 @@
         }
     });
 
-
+    /*
+     * ## AppCollection
+     */
     var AppCollection = Backbone.Collection.extend({
         model: App,
         // If an app key isn't passed to the url, it'll return a list of all of the apps for the account
-        url: "/api/app/",
+        url: '/api/app/',
         // Not used anymore, but could come in handy
         fetchAdUnits: function() {
             this.each(function (app) {
@@ -114,26 +96,39 @@
     var AppView = Backbone.View.extend({
 
         initialize: function () {
-            this.template = _.template($("#app-template").html());
+            this.template = _.template($('#app-template').html());
         },
 
         render: function () {
+            var renderedContent = $(this.template(this.model.toJSON()));
+
             // When we render an appview, we also attach a handler to fetch
             // and render it's adunits when a link is clicked.
-
-            var renderedContent = $(this.template(this.model.toJSON()));
-            $("a.adunits", renderedContent).click(function(e) {
-                e.preventDefault();
-                var href = $(this).attr('href').replace("#","");
-                Marketplace.fetchAdunitsForApp(href);
-                $(this).remove();
-            });
-
-            $("tbody", this.el).append(renderedContent);
+            $('a.adunits', renderedContent).click(showAdUnits);
+            $('tbody', this.el).append(renderedContent);
             return this;
         }
     });
 
+    /*
+     * Utility methods for AppView that control the showing/hiding
+     * of adunits underneath an app row.
+     */
+    function showAdUnits(event){
+        event.preventDefault();
+        var href = $(this).attr('href').replace('#','');
+        Marketplace.fetchAdunitsForApp(href);
+        $(this).text('Hide AdUnits').unbind("click").click(hideAdUnits);
+    }
+
+    function hideAdUnits(event){
+        event.preventDefault();
+        var href = $(this).attr('href').replace('#','');
+        $.each($(".for-app-" + href), function (iter, item) {
+            $(item).remove();
+        });
+        $(this).text('Show Adunits').unbind("click").click(showAdUnits);
+    }
 
     /*
      * ## AdUnitView
@@ -143,27 +138,23 @@
      */
     var AdUnitView = Backbone.View.extend({
 
-        /*
-         * Define the template
-         */
+        // Define the template
         initialize: function () {
-            this.template = _.template($("#adunit-template").html());
+            this.template = _.template($('#adunit-template').html());
         },
 
-        /*
-         * Render the model in the template. This assumes that the table
-         * row for the app has already been rendered. This will render after it.
-         */
+         // Render the model in the template. This assumes that the table
+         // row for the app has already been rendered. This will render after it.
         render: function () {
             // render the adunit and attach it to the table after it's adunit's row
             var current_model = this.model;
             var renderedContent = $(this.template(this.model.toJSON()));
-            $(".price_floor_change", renderedContent).change(function(){
+            $('.price_floor_change', renderedContent).change(function(){
                 console.log('yeeeea boiiiii');
-                current_model.set({"price_floor": $(this).val()});
+                current_model.set({'price_floor': $(this).val()});
                 current_model.save();
             });
-            var app_row = $("tr#app-" + this.model.get("app_id"), this.el);
+            var app_row = $('tr#app-' + this.model.get('app_id'), this.el);
             app_row.after(renderedContent);
             return this;
         }
@@ -171,7 +162,7 @@
 
 
     /*
-     * Marketplace utility methods
+     * ## Marketplace utility methods
      */
     var Marketplace = {
 
@@ -182,13 +173,13 @@
         fetchAllApps: function (app_keys) {
             _.each(app_keys, function(app_key) {
                 var app = new App({id: app_key});
-                app.bind("change", function(current_app) {
-                    var appView = new AppView({ model: current_app, el: "#marketplace_stats" });
+                app.bind('change', function(current_app) {
+                    var appView = new AppView({ model: current_app, el: '#marketplace_stats' });
                     appView.render();
                 });
                 app.fetch({
                     success: function(){
-                        $("table").trigger("update");
+                        $('table').trigger('update');
                     }
                 });
             });
@@ -203,9 +194,9 @@
         fetchAdunitsForApp: function (app_key) {
             var adunits = new AdUnitCollection();
             adunits.app_id = app_key;
-            adunits.bind("reset", function(adunits_collection) {
+            adunits.bind('reset', function(adunits_collection) {
                 _.each(adunits_collection.models, function(adunit) {
-                    var adunitView = new AdUnitView({ model: adunit, el: "#marketplace_stats" });
+                    var adunitView = new AdUnitView({ model: adunit, el: '#marketplace_stats' });
                     adunitView.render();
                 });
             });
@@ -254,7 +245,7 @@
             format: function(table) {
                 var app_id_cache = {};
 
-                $(".adunit-row", table).each(function(iter, item) {
+                $('.adunit-row', table).each(function(iter, item) {
 
                     // find the app row for the adunit
                     var app_id = Marketplace.getAppId(item);
@@ -262,7 +253,7 @@
                     if (app_id_cache.hasOwnProperty(app_id)) {
                         app = app_id_cache(app_id);
                     } else {
-                        app = $(".app-row#app-" + app_id);
+                        app = $('.app-row#app-' + app_id);
                     }
 
                     // remove the adunit from it's current location

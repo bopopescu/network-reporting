@@ -1,7 +1,10 @@
 import json
 import logging
+import sys
 import urllib2
 
+#sys.path.append('/home/ubuntu/mopub/server') # only needed for testing
+sys.path.append('/Users/tiagobandeira/Documents/mopub/server') # only needed for testing
 from ad_network_reports.scrapers.network_scrape_record import \
         NetworkScrapeRecord
 from ad_network_reports.scrapers.scraper import Scraper, NetworkConfidential
@@ -82,9 +85,9 @@ class InMobiScraper(Scraper):
 if __name__ == '__main__':
     NC = NetworkConfidential()
     # access_id
-    NC.username = '4028cb973099fe040130c2aa2a0904b5'
+    NC.username = '4028cb972fe21753012ffef071c602f3'
     # secret_key
-    NC.password = '098233019949'
+    NC.password = '998034911828'
     NC.ad_network_name = 'inmobi'
     SCRAPER = InMobiScraper(NC)
     print SCRAPER.get_site_stats(date.today() - timedelta(days = 1))

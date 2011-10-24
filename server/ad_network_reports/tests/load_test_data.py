@@ -141,7 +141,7 @@ if REAL_TEST_DATA:
 
 else:
     TEST_JUMPTAP_PUB_ID = 'pa_zaphrox_zaphrox_drd_app'
-    TEST_ADMOB_PUB_ID = 'a14a9ed9bf1fdcd'
+    TEST_ADMOB_PUB_ID = 'a14cf615dc654dd'
     TEST_IAD_PUB_ID = '329218549'
     TEST_INMOBI_PUB_ID ='4028cba630724cd90130c2adc9b6024f'
     TEST_MOBFOX_PUB_ID = 'fb8b314d6e62912617e81e0f7078b47e'
@@ -152,10 +152,11 @@ else:
     # AdMob login info
     admob_login_info = AdNetworkLoginInfo(account=account,
                                           ad_network_name='admob',
-                                          username='njamal@stanford.edu',
-                                          password='xckjhfn3xprkxksm',
+                                          username=
+                                          'adnetwork@com2usamerica.com',
+                                          password='4w47m82l5jfdqw1x',
                                           client_key=
-                                          'k907a03ee39cecb699b5ad45c5eded01')
+                                          'ka820827f7daaf94826ce4cee343837a')
     admob_login_info.put()
 
     # JumpTap login info

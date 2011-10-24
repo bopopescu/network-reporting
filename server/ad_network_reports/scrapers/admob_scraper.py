@@ -5,7 +5,7 @@ import logging
 import sys
 import time
 
-from datetime import date
+from datetime import date, timedelta
 sys.path.append('/Users/tiagobandeira/Documents/mopub/server')
 from ad_network_reports.scrapers.scraper import Scraper, ScraperSite, \
         NetworkConfidential
@@ -113,9 +113,9 @@ class AdMobScraper(Scraper):
 
 if __name__ == '__main__':
     NC = NetworkConfidential()
-    NC.username = 'betmobilemail@gmail.com'
-    NC.password = 'knwyt4f5v94b61qz'
-    NC.client_key = 'k9417383a8224757c05fbe9aa1ef8e4c'
+    NC.username = 'adnetwork@com2usamerica.com'
+    NC.password = '4w47m82l5jfdqw1x'
+    NC.client_key = 'ka820827f7daaf94826ce4cee343837a'
     NC.ad_network_name = 'admob'
     SCRAPER = AdMobScraper(NC)
-    print SCRAPER.get_site_stats(date.today())
+    print SCRAPER.get_site_stats(date.today()) #- timedelta(days=2))

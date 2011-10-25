@@ -155,7 +155,6 @@
 
             // Ad the event handler to submit price floor changes over ajax.
             $('.price_floor_change', renderedContent)
-                .tipsy({title: 'hello', gravity: 'w', trigger: 'focus'})
                 .change(function() {
                     current_model.set({'price_floor': $(this).val()});
                     current_model.save();

@@ -1188,9 +1188,18 @@ class MarketplaceIndexHandler(RequestHandler):
         top_level_mpx_stats = stats_fetcher.get_account_stats(self.account.key())
 
         # Get all of the dsp stats
-        today = datetime.date.today()
-        two_weeks_ago = datetime.timedelta(0,0,0,0,0,0,2)
-        dsps = stats_fetcher.get_all_dsp_stats(today, two_weeks_ago)
+        if self.start_date:
+            start_date = datetime.datetime.strptime(self.start_date, "%Y-%m-%d")
+        else:
+            start_date = datetime.date.today()
+
+        if self.date_range:
+            days = start_date - datetime.timedelta(0,0,0,0,0,int(self.date_range),0)
+        else:
+            days = datetime.timedelta(0,0,0,0,0,0,2)
+
+        dsps = stats_fetcher.get_all_dsp_stats(start_date, days)
+
 
         # Get total stats for the rollup/table footer
         creative_totals = {
@@ -1215,7 +1224,7 @@ class MarketplaceIndexHandler(RequestHandler):
             blocklist = network_config.blocklist
 
         for dsp in dsps:
-            creatives = stats_fetcher.get_creatives_for_dsp(dsp['key'], today, two_weeks_ago)
+            creatives = stats_fetcher.get_creatives_for_dsp(dsp['key'], start_date, days)
             for creative in creatives:
                 creative['creative']['advertiser_blocked'] = creative['creative']['advertiser'] in blocklist
             dsp.update({'creatives': creatives})
@@ -1230,7 +1239,8 @@ class MarketplaceIndexHandler(RequestHandler):
                                       'dsps': dsps,
                                       'top_level_mpx_stats': top_level_mpx_stats,
                                       'blocklist': blocklist,
-                                      'creative_totals': creative_totals
+                                      'creative_totals': creative_totals,
+                                      'date_range': self.date_range
                                   })
 
     def post(self):
@@ -1276,3 +1286,24 @@ class RemoveBlocklistHandler(RequestHandler):
 @login_required
 def remove_blocklist_handler(request,*args,**kwargs):
     return RemoveBlocklistHandler()(request,*args,**kwargs)
+
+
+class MarketplaceOnOffHandler(RequestHandler):
+
+    def post(self):
+        try:
+            activate = self.request.POST.get('activate', 'on')
+            mpx = CampaignQueryManager.get_marketplace(self.account)
+            if activate == 'on':
+                mpx.active = True
+            elif activate == 'off':
+                mpx.active = False
+
+            CampaignQueryManager.put(mpx)
+            return JSONResponse({'success': 'success'})
+        except Exception, e:
+            return JSONResponse({'error': e})
+
+@login_required
+def marketplace_on_off(request, *args, **kwargs):
+    return MarketplaceOnOffHandler()(request, *args, **kwargs)

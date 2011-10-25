@@ -269,37 +269,30 @@ def migrate_image(request, *args, **kwargs):
     
     params = request.POST or request.GET
      
-    try:
-        creative_key = params.get('creative_key')
-        creative = Creative.get(creative_key)
-    
-        img = images.Image(creative.image)
-    
+    app_keys = params.getlist('app_key')
+    for app_key in app_keys:
+        app = App.get(app_key)
+
         # Create the file
         file_name = files.blobstore.create(mime_type='image/png')
 
         # Open the file and write to it
         with files.open(file_name, 'a') as f:
-          f.write(creative.image)
+          f.write(app.icon)
 
         # Finalize the file. Do this before attempting to read it.
         files.finalize(file_name)
 
         # Get the file's blob key
         blob_key = files.blobstore.get_blob_key(file_name)
-                            
+                        
         # Do not delete image yet
-        # creative.image = None 
-        creative.image_blob = blob_key      
+        # app.icon = None 
+        app.icon_blob = blob_key      
+        url = images.get_serving_url(blob_key)
+        app.put()  
     
-        url = images.get_serving_url(blob_key)    
-          
-        creative.put()  
-        
-        return HttpResponse(url)                
-        
-    except Exception, e:
-        return HttpResponse(str(e))         
+    return HttpResponse('(%s, %s)' % (blob_key, url))                
 
 def bidder_spent(request, *args, **kwargs):
     num_sent = 0

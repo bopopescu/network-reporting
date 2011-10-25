@@ -2,7 +2,7 @@ import urllib2 as urllib
 import logging
 
 from google.appengine.ext import db
-from google.appengine.api import images
+from google.appengine.api import images, files
 
 from django import forms
 from django.core.urlresolvers import reverse
@@ -70,7 +70,18 @@ class AppForm(mpforms.MPModelForm):
                 try:
                     response = urllib.urlopen(self.cleaned_data['img_url'])
                     img = response.read()
-                    obj.icon = db.Blob(img)
+                    
+
+                    # add the icon it to the blob store
+                    fname = files.blobstore.create(mime_type='image/png')
+                    with files.open(fname, 'a') as f:
+                        f.write(img)
+                    files.finalize(fname)
+                    blob_key = files.blobstore.get_blob_key(fname)
+                    
+                    obj.icon_blob = blob_key
+                    obj.icon = db.Blob(img) # TODO: stop this!
+                    
                 except Exception, e: # TODO: appropriately handle the failure
                     raise Exception('WTF: %s'%e)
             else:

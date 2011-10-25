@@ -1,3 +1,4 @@
+from google.appengine.ext import blobstore
 from google.appengine.ext import db
 from google.appengine.api import users
 
@@ -53,6 +54,7 @@ class App(db.Model):
     categories = db.StringListProperty()
 
     icon = db.BlobProperty()
+    icon_blob = blobstore.BlobReferenceProperty()
 
     # Ad network overrides
     jumptap_app_id = db.StringProperty()
@@ -79,6 +81,12 @@ class App(db.Model):
             'mweb': 'Mobile Web'
         }
         return types[self.app_type]
+    
+    @property    
+    def icon_url(self):
+        from google.appengine.api import images
+        if not self.icon_blob: return None
+        return images.get_serving_url(self.icon_blob)
 
     def get_owner(self):
         return None
@@ -98,7 +106,9 @@ class App(db.Model):
         return None
 
     def toJSON(self):
-        return to_dict(self, ignore = ['icon', 'account', 'network_config'])
+        d = to_dict(self, ignore = ['icon', 'account', 'network_config'])
+        d.update(icon_url=self.icon_url)
+        return d
 
 class Site(db.Model):
     DEVICE_FORMAT_CHOICES = (

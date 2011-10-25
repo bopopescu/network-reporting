@@ -4,7 +4,7 @@ from urllib import urlencode
 from copy import deepcopy
 
 import base64, binascii
-from google.appengine.api import users, images
+from google.appengine.api import users, images, files
 from google.appengine.api.urlfetch import fetch
 from google.appengine.ext import db
 from google.appengine.ext.webapp import template

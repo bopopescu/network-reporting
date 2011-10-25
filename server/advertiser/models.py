@@ -549,6 +549,10 @@ class MarketplaceCreative(HtmlCreative):
     """ If this is targetted to an adunit, lets the ad_auction know to
         run the marketplace battle. """
 
+    @property
+    def multi_format(self):
+        return ('728x90', '320x50','300x250', '160x600', 'full', 'full_tablet')
+
 
 class CustomCreative(HtmlCreative):
     # TODO: For now this is redundant with HtmlCreative

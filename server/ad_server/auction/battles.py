@@ -138,6 +138,14 @@ class Battle(object):
         creative_filters = [format_filter(self.client_context.adunit)]
 
         filtered_creatives = filter(mega_filter(*creative_filters), creatives)
+        
+        for (func, warn, removed_creative_list) in creative_filters:
+            func = func # quiet PyLint
+            if removed_creative_list:
+                trace_logging.info(warn % ", ".join([c.name.encode('utf8') \
+                                        for c in removed_creative_list]))
+        
+        
         return filtered_creatives
 
 

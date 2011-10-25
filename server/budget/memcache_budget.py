@@ -45,7 +45,7 @@ def total_spent(budget):
 
 def braking_fraction(budget):
     key = _make_budget_braking_key(budget)
-    braking = memcache.get(key, namespace = 'budget') 
+    braking = memcache.get(key, namespace = 'budget')
     if braking:
         # Return the memc braking value if it's there
         return braking
@@ -60,7 +60,6 @@ def braking_fraction(budget):
 
 def _from_memcache_int(value):
     """ Removes the 10^5 mult factor """
-    logging.warning("Value in memcache: %s" % value)
     value = float(value)
     value = value/10 ** 5
     return value

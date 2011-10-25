@@ -1,5 +1,6 @@
 import os
 import sys
+import logging
 
 sys.path.append(os.environ['PWD'])
 import common.utils.test.setup
@@ -27,20 +28,23 @@ from budget import budget_service
 from google.appengine.api import memcache
 from budget import models as budgetmodels
 import budget
-from budget.models import (BudgetSlicer,
+from budget.models import (Budget,
                            BudgetSliceLog,
-                           BudgetDailyLog,
                            )
+from budget.memcache_budget import remaining_ts_budget
 
 from google.appengine.ext import testbed
 
-from budget.query_managers import BudgetSliceLogQueryManager
+ONE_DAY = datetime.timedelta(days=1)
+JUST_UNDER_ONE_DAY = datetime.timedelta(minutes=1435)
 
-budget.models.DEFAULT_FUDGE_FACTOR = 0.0
-
+def test_advance(budget, dtetime):
+    slice_num = budget_service.timeslice_advance(budget, testing=True, advance_to_datetime = dtetime)
+    logging.warning("Advancing....\n%s" % budget)
+    return slice_num
 
 class TestBudgetOSIUnitTests(unittest.TestCase):
-    
+
     def setUp(self):
         # First, create an instance of the Testbed class.
         self.testbed = testbed.Testbed()
@@ -49,12 +53,15 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         # Next, declare which service stubs you want to use.
         self.testbed.init_datastore_v3_stub()
         self.testbed.init_memcache_stub()
-        
-        
+
+
+        self.budget_start = datetime.datetime(2000,1,10,0)
+        self.budget_end = datetime.datetime(2000,1,11,23,59)
+
+        self.budget_arb_start = datetime.datetime(2000,1,10,4,33)
+        self.budget_arb_end = datetime.datetime(2000,1,15,14,3)
         # We simplify the budgetmanger for testing purposes
-        budgetmodels.DEFAULT_TIMESLICES = 10 # this means each campaign has 100 dollars per slice
-        budgetmodels.DEFAULT_FUDGE_FACTOR = 0.0
-        
+
         # Set up default models
         self.account = Account()
         self.account.put()
@@ -66,45 +73,50 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         self.adunit.put()
 
         # Make Expensive Campaign
-        
-        # Full c is a campaign that goes for 2 days total and spreads $2000
-        # Evenly over those two days.
-        
-        self.start_date = datetime.date(1987,4,4)
-        self.end_date = datetime.date(1987,4,5)
+
+        self.full_b = Budget(start_datetime = self.budget_start,
+                             end_datetime = self.budget_end,
+                             delivery_type = 'evenly',
+                             static_total_budget = 2400.0,
+                             testing=True,
+                             )
+        self.full_b.put()
+
         self.full_c = Campaign(name="full",
-                               full_budget=2000.0,
-                               budget_type="full_campaign",
-                               start_date=self.start_date,
-                               end_date=self.end_date,
-                               budget_strategy="evenly")
+                               budget_obj = self.full_b)
         self.full_c.put()
 
-        budget_service.update_budget(self.full_c, datetime.datetime(1987,4,4,0,0,0))
-        
-        self.full_adgroup = AdGroup(account=self.account, 
-                                          campaign=self.full_c, 
+
+        self.full_adgroup = AdGroup(account=self.account,
+                                          campaign=self.full_c,
                                           site_keys=[self.adunit.key()],
                                           bid_strategy="cpm",
                                           bid=100000.0) # 100 per click
         self.full_adgroup.put()
-        
-        
+
+
 
         self.full_creative = Creative(account=self.account,
                                 ad_group=self.full_adgroup,
-                                tracking_url="test-tracking-url", 
+                                tracking_url="test-tracking-url",
                                 cpc=.03)
         self.full_creative.put()
-        
+
         # Make a cheap campaign with a daily budget
+        self.cheap_b = Budget(start_datetime = self.budget_start,
+                              delivery_type = 'evenly',
+                              static_slice_budget = 100.0,
+                              testing = True,
+                              )
+        self.cheap_b.put()
+
         self.cheap_c = Campaign(name="cheap",
-                                budget=1000.0,
-                                budget_strategy="evenly")
+                                budget_obj = self.cheap_b,
+                                )
         self.cheap_c.put()
 
-        self.cheap_adgroup = AdGroup(account=self.account, 
-                              campaign=self.cheap_c, 
+        self.cheap_adgroup = AdGroup(account=self.account,
+                              campaign=self.cheap_c,
                               site_keys=[self.adunit.key()],
                               bid_strategy="cpc",
                               budget=1000.0,
@@ -115,220 +127,214 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
 
         self.cheap_creative = Creative(account=self.account,
                                 ad_group=self.cheap_adgroup,
-                                tracking_url="test-tracking-url", 
+                                tracking_url="test-tracking-url",
                                 cpc=.03)
         self.cheap_creative.put()
-        
-        
-    
+
+        # Init both budgets
+        slice_num = test_advance(self.full_b, self.budget_start)
+        slice_num = test_advance(self.cheap_b, self.budget_start)
+
     def tearDown(self):
         self.testbed.deactivate()
 
     def mptest_get_most_recent(self):
         # We spend it all this first time
-        eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
+        eq_(budget_service._apply_if_able(self.cheap_b, 100), True)
 
-        budget_service.timeslice_advance(self.cheap_c,testing=True)
-        
+        budget_service.timeslice_advance(self.cheap_b,testing=True)
+
         # Each slice has a budget of 100
-        eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
-        
+        eq_(budget_service._apply_if_able(self.cheap_b, 100), True)
+
         # We only spend 50 on the second one
-        budget_service.timeslice_advance(self.cheap_c, testing=True)
-        eq_(budget_service._apply_if_able(self.cheap_c, 50), True)
-        
-        most_recent = BudgetSliceLogQueryManager().get_most_recent(self.cheap_c)
-        
+        budget_service.timeslice_advance(self.cheap_b, testing=True)
+        eq_(budget_service._apply_if_able(self.cheap_b, 50), True)
+
+        most_recent = self.cheap_b.most_recent_slice_log
+
         # The 50 spending one is not complete, therefore 100 was the most recent
         eq_(most_recent.actual_spending, 100)
-        
+
         # Now the most recent was 100
-        budget_service.timeslice_advance(self.cheap_c, testing=True)
-        most_recent = BudgetSliceLogQueryManager().get_most_recent(self.cheap_c)
-    
-            
+        budget_service.timeslice_advance(self.cheap_b, testing=True)
+        most_recent = self.cheap_b.most_recent_slice_log
+        eq_(most_recent.actual_spending, 50)
+
+
     def mptest_query_managers_second_round(self):
         # Each slice has a budget of 100
-        
+
         # We spend it all this first time
-        eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
+        eq_(budget_service._apply_if_able(self.cheap_b, 100), True)
 
-        budget_service.timeslice_advance(self.cheap_c,testing=True)
+        budget_service.timeslice_advance(self.cheap_b,testing=True)
 
-        eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
+        eq_(budget_service._apply_if_able(self.cheap_b, 100), True)
 
-        budget_service.timeslice_advance(self.cheap_c,testing=True)
-        
+        budget_service.timeslice_advance(self.cheap_b,testing=True)
+
         # In the most recent completed timeslice, we spent 100%
-        last_budgetslice = BudgetSliceLogQueryManager().get_most_recent(self.cheap_c)
-        
+        last_budgetslice = self.cheap_b.most_recent_slice_log
+
         eq_(last_budgetslice.actual_spending, 100)
         eq_(last_budgetslice.desired_spending, 100)
-        
-        
+
+
     def mptest_get_osi_uninitialized(self):
         """ The first timeslice that is run, there is no previously initialized
             timeslice, so we have no recording for a desired budget. Because of
             this, we always return True initially. """
 
         # We spend it all this first time
-        eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
+        eq_(budget_service._apply_if_able(self.cheap_b, 100), True)
 
         # We only spend 50 on the second one
-        budget_service.timeslice_advance(self.cheap_c,testing=True)
-        eq_(budget_service._apply_if_able(self.cheap_c, 50), True)
+        budget_service.timeslice_advance(self.cheap_b,testing=True)
+        eq_(budget_service._apply_if_able(self.cheap_b, 50), True)
 
         # In the most recent completed timeslice, we spent 100%
-        eq_(budget_service.get_osi(self.cheap_c), True)
+        eq_(budget_service.get_osi(self.cheap_b), True)
 
         # We only spent 50 on the second one
-        budget_service.timeslice_advance(self.cheap_c,testing=True)
+        budget_service.timeslice_advance(self.cheap_b,testing=True)
 
         # In the most recent completed timeslice, we only spent 50%
-        eq_(budget_service.get_osi(self.cheap_c), False)
-    
+        eq_(budget_service.get_osi(self.cheap_b), False)
+
     def mptest_get_osi(self):
-    
+
         # Each slice has a budget of 100
         # We spend it all this first time
-        eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
-    
-        budget_service.timeslice_advance(self.cheap_c,testing=True)
-        
-        # We spend it all this first time
-        eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
-    
-        # We only spend 50 on the second one
-        budget_service.timeslice_advance(self.cheap_c,testing=True)
-        eq_(budget_service._apply_if_able(self.cheap_c, 50), True)
-        
+        eq_(budget_service._apply_if_able(self.cheap_b, 100), True)
+        budget_service.timeslice_advance(self.cheap_b,testing=True)
+
+        # We spend it all this second time
+        eq_(budget_service._apply_if_able(self.cheap_b, 100), True)
+        budget_service.timeslice_advance(self.cheap_b,testing=True)
+
+        # We only spend 50 on the third one
+        eq_(budget_service._apply_if_able(self.cheap_b, 50), True)
+
         # In the most recent completed timeslice, we spent 100%
-        eq_(budget_service.get_osi(self.cheap_c), True)
-    
-        # We only spent 50 on the second one
-        budget_service.timeslice_advance(self.cheap_c,testing=True)
-        
+        eq_(budget_service.get_osi(self.cheap_b), True)
+
+        # We only spent 50 on the third one
+        budget_service.timeslice_advance(self.cheap_b,testing=True)
+
         # In the most recent completed timeslice, we only spent 50%
-        eq_(budget_service.get_osi(self.cheap_c), False)
-    
+        eq_(budget_service.get_osi(self.cheap_b), False)
+
     def mptest_get_osi_with_changing_budget(self):
-    
-        # We do one round to set up the OSI
-        eq_(budget_service._apply_if_able(self.cheap_c, 100), True)                      
-        
-        budget_service.timeslice_advance(self.cheap_c, testing=True)
-    
+
+        eq_(budget_service._apply_if_able(self.cheap_b, 100), True)
+        budget_service.timeslice_advance(self.cheap_b, testing=True)
+
         # Each slice has a budget of 100
-        eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
-    
+        eq_(budget_service._apply_if_able(self.cheap_b, 100), True)
+
         # We only spend 50 on the second one
-        budget_service.timeslice_advance(self.cheap_c, testing=True)
-        
-        eq_(budget_service._apply_if_able(self.cheap_c, 100), True)
-        
+        budget_service.timeslice_advance(self.cheap_b, testing=True)
+
+        eq_(budget_service._apply_if_able(self.cheap_b, 100), True)
+
         # Double the daily budget right before an advance
-        self.cheap_c.budget = 2000.
-        self.cheap_c.put()
-        budget_service.update_budget(self.cheap_c, dt = datetime.datetime(1987,4,4,5,45,0))
-        
-        # In the last timeslice, we spent 100%
-        eq_(budget_service.get_osi(self.cheap_c), True)
-    
-        # Now in this new one, we have 1700/7 = $242 available
-        budget_service.timeslice_advance(self.cheap_c, testing=True)
-    
-        # In the most recent completed timeslice, we spent what we wanted
-        eq_(budget_service.get_osi(self.cheap_c), True)
-    
-        # Now we spend the full 242
-        eq_(budget_service._apply_if_able(self.cheap_c, 242), True)
-    
-        budget_service.timeslice_advance(self.cheap_c, testing=True)
-    
-        # In the most recent completed timeslice, we spent 225
-        eq_(budget_service.get_osi(self.cheap_c), True)
-    
+        self.cheap_b.set_total_daily_budget(2400.)
+        self.cheap_b.put()
+
+        slice_num = test_advance(self.cheap_b, self.budget_start + ONE_DAY)
+
+        # Several slice_logs have advanced, last one has nothing, so false
+        eq_(budget_service.get_osi(self.cheap_b), False)
+
+        # Now we spend the full 2000
+        eq_(budget_service._apply_if_able(self.cheap_b, 200), True)
+
+        budget_service.timeslice_advance(self.cheap_b, testing=True)
+
+        # In the most recent completed timeslice, we spent 200
+        eq_(budget_service.get_osi(self.cheap_b), True)
+
     def mptest_get_osi_with_weird_budget(self):
         """ When a budget doesn't match perfectly with a timeslice, we want
             the osi to still say it's ok, 95percent is fine. """
 
         # We do one round to set up the OSI
-        eq_(budget_service._apply_if_able(self.cheap_c, 100), True)                      
-        
-        budget_service.timeslice_advance(self.cheap_c, testing=True)
-        
+        eq_(budget_service._apply_if_able(self.cheap_b, 100), True)
+        budget_service.timeslice_advance(self.cheap_b, testing=True)
+
         # We spend 99
-        eq_(budget_service._apply_if_able(self.cheap_c, 33), True)
-        eq_(budget_service._apply_if_able(self.cheap_c, 33), True)
-        eq_(budget_service._apply_if_able(self.cheap_c, 33), True)
-        eq_(budget_service._apply_if_able(self.cheap_c, 2), False)                      
-                             
-        budget_service.timeslice_advance(self.cheap_c, testing=True)
-    
+        eq_(budget_service._apply_if_able(self.cheap_b, 33), True)
+        eq_(budget_service._apply_if_able(self.cheap_b, 33), True)
+        eq_(budget_service._apply_if_able(self.cheap_b, 33), True)
+        eq_(budget_service._apply_if_able(self.cheap_b, 2), False)
+
+        budget_service.timeslice_advance(self.cheap_b, testing=True)
+
         # We spent the most that we could
-    
+
         # In the most recent completed timeslice, we spent 99 out of 100
         # This is within 95% so it is ok
-        eq_(budget_service.get_osi(self.cheap_c), True)
-    
-    
-    def mptest_full_campaign_extended_dates(self):
-        """ We change a two day campaign to a four day campaign. 
-            It should slow down the delivery."""
-    
-        eq_(budget_service._apply_if_able(self.full_c, 100, today=self.start_date), True)
-        for i in xrange(9):
-            budget_service.timeslice_advance(self.full_c,testing=True)
-            eq_(budget_service._apply_if_able(self.full_c, 100, today=self.start_date), True)
-    
-        # 1000$ has been spent and the last timeslice is about to end, 
-        # the user says that the campaign must last three days.
-    
-        new_end_date = datetime.date(1987,4,6)
-        self.full_c.end_date=new_end_date
-        self.full_c.put()
-        dt = datetime.datetime(1987,4,4,23,0,0)
-        budget_service.update_budget(self.full_c, dt)
-    
-        eq_(self.full_c.budget, 2000/3.)
+        eq_(budget_service.get_osi(self.cheap_b), True)
 
-        budget_service.daily_advance(self.full_c, datetime.date(1987,4,5))
-        budget_service.timeslice_advance(self.full_c, testing=True)
-        
-        eq_(self.full_c.budget, 500)
-        
+
+    def mptest_full_campaign_extended_dates(self):
+        """ We change a two day campaign to a four day campaign.
+            It should slow down the delivery."""
+
+        eq_(budget_service._apply_if_able(self.full_b, 100), True)
+
+        for i in xrange(9):
+            budget_service.timeslice_advance(self.full_b,testing=True)
+            eq_(budget_service._apply_if_able(self.full_b, 100), True)
+
+        # 1000$ has been spent and the last timeslice is about to end,
+        # the user says that the campaign must last three days.
+
+        self.full_b.end_datetime=datetime.datetime(2000,1,13,23,59)
+        self.full_b.put()
+
+        slice_num = test_advance(self.full_b, self.budget_start + ONE_DAY)
+        slice_num = test_advance(self.full_b, self.budget_start + 2*ONE_DAY)
+        rem = remaining_ts_budget(self.full_b)
+
         # The budget should now only have $1000 to spend over 2 days
-        eq_(budget_service._apply_if_able(self.full_c, 50, today=datetime.date(1987,4,5)), True)
-        eq_(budget_service._apply_if_able(self.full_c, 1, today=datetime.date(1987,4,5)), False)
-        budget_service.timeslice_advance(self.full_c, testing=True)
-        
-        eq_(budget_service.get_osi(self.full_c), True)
-    
-        
+        eq_(budget_service._apply_if_able(self.full_b, rem), True)
+        budget_service.timeslice_advance(self.full_b, testing=True)
+
+        eq_(budget_service.get_osi(self.full_b), True)
+
+
     def mptest_full_campaign_compressed_dates(self):
-        """ We spend a full day's budget as normal, then with one ts left, 
+        """ We spend a full day's budget as normal, then with one ts left,
             we set the campaign to be one day instead of two"""
-            
-        
-        eq_(budget_service._apply_if_able(self.full_c, 100, today=self.start_date), True)
+
+
+        eq_(budget_service._apply_if_able(self.full_b, 100), True)
         for i in xrange(8):
-            budget_service.timeslice_advance(self.full_c, testing=True)
-            eq_(budget_service._apply_if_able(self.full_c, 100, today=self.start_date), True)
-        
-        # The last timeslice is about to begin, and the user says that 
+            budget_service.timeslice_advance(self.full_b, testing=True)
+            eq_(budget_service._apply_if_able(self.full_b, 100), True)
+
+        # The last timeslice is about to begin, and the user says that
         # the campaign must end tomorrow.
-        budget_service.timeslice_advance(self.full_c, testing=True)
-        
-        today = self.start_date
-        new_end_date = datetime.date(1987,4,4)
-        self.full_c.end_date=new_end_date
-        self.full_c.put()
-        
-        budget_service.update_budget(self.full_c, datetime.datetime(1987,4,4,23,40,0))
-        
+        budget_service.timeslice_advance(self.full_b, testing=True)
+
+        #self.full_b.end_datetime = self.budget_start + JUST_UNDER_ONE_DAY
+        self.full_b.end_datetime = self.budget_start + ONE_DAY
+        self.full_b.put()
+
+        budget_service.timeslice_advance(self.full_b, testing=True)
+        eq_(budget_service.get_osi(self.full_b), False)
+
         # We have spent 900 out of the $2000 total, we should now be able to spend
         # $1100
-        eq_(budget_service._apply_if_able(self.full_c, 1100, today=today), True)
-        
-        
-        
+        eq_(budget_service._apply_if_able(self.full_b, 1130.76), True)
+        budget_service.timeslice_advance(self.full_b, testing=True)
+        eq_(budget_service.get_osi(self.full_b), True)
+
+        eq_(budget_service._apply_if_able(self.full_b, 10.76), True)
+        budget_service.timeslice_advance(self.full_b, testing=True)
+        eq_(budget_service.get_osi(self.full_b), False)
+
+
+

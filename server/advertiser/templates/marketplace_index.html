@@ -35,18 +35,18 @@
 
 {% block content %}
 
+  {% if not marketplace_campaign.active %}
   <div class="alert-message block-message clearfix">
     <a href="#" class="close"> x </a>
     We've just launched MoPub Marketplace, our state of the art real-time bidding exchange.
     Flip the On/Off switch to get started,
     or take a look at our <a href="{% url mpx_info %}">information page</a> if you want to know more about how it works.
     <br />
-    <!-- <div class="lightswitch"> -->
-    <!--   <div class="switch on"></div> -->
-    <!-- </div> -->
-    <a class="btn start icon right" href="{% url mpx_info %}">Get Started</a>
+    <div class="lightswitch right">
+      <div class="switch on"></div>
+    </div>
   </div>
-
+  {% endif %}
 
   <ul class="tabs">
     <li class="active"> <a href="#performance"> App Performance </a> </li>
@@ -249,6 +249,8 @@
     $(document).ready(function() {
         var app_keys = {{ app_keys|safe }};
         Marketplace.fetchAllApps(app_keys);
+
+        $(".lightswitch").lightswitch();
     });
   </script>
 {% endblock extraScripts %}

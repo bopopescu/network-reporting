@@ -21,8 +21,13 @@ class JumpTapScraper(Scraper):
         Take login credentials and extra info which contains a generator of app
         level publisher ids and adunit level publisher ids for the account.
         """
-        credentials, self.publisher_ids, self.adunit_publisher_ids = login_info
-        self.adunit_publisher_ids = set(list(self.adunit_publisher_ids))
+        if isinstance(login_info, tuple):
+            credentials, self.publisher_ids, self.adunit_publisher_ids = login_info
+            self.adunit_publisher_ids = set(list(self.adunit_publisher_ids))
+        else:
+            credentials = login_info
+            self.publisher_ids = ['']
+            self.adunit_publisher_ids = iter([])
         super(JumpTapScraper, self).__init__(credentials)
 
     def test_login_info(self):
@@ -98,7 +103,7 @@ if __name__ == '__main__':
     NC = NetworkConfidential()
     NC.username = 'zaphrox'
     NC.password = 'JR.7x89re0'
-    publisher_ids = ['pa_zaphrox_zaphrox_drd_app']
+    publisher_ids = ['a']#['pa_zaphrox_zaphrox_drd_app']
     adunit_publisher_ids = iter([])
     NC.ad_network_name = 'jumptap'
     SCRAPER = JumpTapScraper((NC, publisher_ids, adunit_publisher_ids))

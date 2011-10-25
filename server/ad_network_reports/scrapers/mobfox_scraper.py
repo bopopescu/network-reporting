@@ -23,15 +23,15 @@ class MobFoxScraper(object):
 
         Only need publisher ids.
         """
-        self.publisher_ids = login_info[1]
+        if isinstance(login_info, tuple):
+            self.publisher_ids = login_info[1]
 
     def test_login_info(self):
-        """Test publisher_ids.
+        """Mobfox login is correct because MoPub has it.
 
-        Raise an error if one of the publisher ids is incorrect otherwise
-        return None.
+        Return None.
         """
-        self.get_site_stats(date.today() - timedelta(days = 1))
+        pass
 
     def get_site_stats(self, from_date):
         to_date = from_date

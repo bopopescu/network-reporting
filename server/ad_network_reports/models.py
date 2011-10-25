@@ -27,6 +27,10 @@ class AdNetworkLoginInfo(db.Model): #(account,ad_network_name)
                     kwargs['ad_network_name']))
         super(AdNetworkLoginInfo, self).__init__(*args, **kwargs)
 
+    @classmethod
+    def get_by_network(self, account, network):
+        return self.get_by_key_name('k:%s:%s' % (account.key(), network))
+
 class AdNetworkAppMapper(db.Model): #(ad_network_name,publisher_id)
     ad_network_name = db.StringProperty(required = True)
     publisher_id = db.StringProperty(required = True)

@@ -1,22 +1,26 @@
 import logging
 
-from ad_network_reports.query_managers import AdNetworkReportQueryManager
+from ad_network_reports.forms import LoginInfoForm
+from ad_network_reports.query_managers import AdNetworkReportQueryManager, \
+        create_manager
 from common.ragendja.template import render_to_response
 from common.utils.request_handler import RequestHandler
 from datetime import timedelta, date
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect
 
+from account.models import Account
+
 AD_NETWORK_NAMES = ['admob', 'jumptap', 'iad', 'inmobi', 'mobfox']
 
 class AdNetworkReportIndexHandler(RequestHandler):
-    def get(self):
+    def get(self, account_key=None):
         """Generate a list of aggregtate stats for the ad networks, apps and
         account.
 
         Return a webpage with the list of stats in a table.
         """
-        manager = AdNetworkReportQueryManager(self.account)
+        manager = create_manager(account_key, self.account)
         mappers = list(manager.get_ad_network_mappers())
 
         keys = [s.key() for s in mappers]
@@ -32,8 +36,10 @@ class AdNetworkReportIndexHandler(RequestHandler):
                 s[1].application.name + s[1].ad_network_name)
 
         return render_to_response(self.request,
-                'ad_network_reports/ad_network_index.html', dict(aggregate_stats
-                    = aggregate_stats))
+                                  'ad_network_reports/ad_network_index.html',
+                                  {
+                                      "aggregate_stats" : aggregate_stats,
+                                  })
 
 @login_required
 def ad_network_report_index(request, *args, **kwargs):
@@ -45,22 +51,28 @@ class ViewAdNetworkReportHandler(RequestHandler):
 
         Return a webpage with the list of stats in a table.
         """
-        manager = AdNetworkReportQueryManager(self.account)
+        manager = AdNetworkReportQueryManager()
         ad_network_app_mapper = manager.get_ad_network_app_mapper(
                 ad_network_app_mapper_key = ad_network_app_mapper_key)
         dates = manager.get_ad_network_app_stats(ad_network_app_mapper)
         return render_to_response(self.request,
-                'ad_network_reports/view_app_ad_network_report.html',
-                dict(ad_network_name = ad_network_app_mapper.ad_network_name,
-                     app_name = ad_network_app_mapper.application.name,
-                     dates = dates))
+                                  'ad_network_reports/'
+                                  'view_app_ad_network_report.html',
+                                  {
+                                      "ad_network_name" :
+                                      ad_network_app_mapper.ad_network_name,
+                                      "app_name" : ad_network_app_mapper.
+                                      application.name,
+                                       "dates" : dates
+                                  })
 
 @login_required
 def view_ad_network_app_report(request, *args, **kwargs):
     return ViewAdNetworkReportHandler()(request, *args, **kwargs)
 
 class AddLoginInfoHandler(RequestHandler):
-    def get(self): #Verfify that this is SSL
+    #TODO: Make SSL iframe
+    def get(self, account_key=None):
         """Return form with ad network login info."""
         # Add a bunch of test data to the db
 #        from account.models import NetworkConfig
@@ -94,28 +106,72 @@ class AddLoginInfoHandler(RequestHandler):
 #
 #        officejerk_app = App(account = self.account, name = "Office Jerk", network_config = officejerk_network_config)
 #        officejerk_app.put()
+        if account_key:
+            account = Account.get(account)
+        else:
+            account = self.account
+
+        forms = []
+        for name in AD_NETWORK_NAMES:
+            try:
+                instance = AdNetworkLoginInfo.get_by_network(account, name)
+                form = LoginInfoForm(instance=instance, prefix=name)
+            except Exception, error:
+                instance = None
+                form = LoginInfoForm(prefix=name)
+            form.ad_network = name
+            forms.append(form)
 
         return render_to_response(self.request,
-                'ad_network_reports/add_login_info.html',
-                dict(ad_network_names = AD_NETWORK_NAMES, error = ""))
+                                  'ad_network_reports/add_login_info.html',
+                                  {
+                                      'account_key' : account_key,
+                                      'ad_network_names' : AD_NETWORK_NAMES,
+                                      'forms' : forms,
+                                      'error' : "",
+                                  })
 
-    def post(self):
+    def post(self, account_key=None):
         """Create AdNetworkLoginInfo and AdNetworkAppMappers for all apps that
         have pub ids for this network and account.
 
         Return a redirect to the ad nework report index.
         """
-        logging.warning(self.request)
-        ad_network_name = self.request.POST['ad_network_name']
-        username = self.request.POST['username']
-        password = self.request.POST['password']
-        client_key = self.request.POST['client_key']
-        send_email = eval(self.request.POST.get('send_email', 'False'))
+        initial = {}
+        for network in AD_NETWORK_NAMES:
+            initial[network + '-ad_network_name'] = network
 
-        manager = AdNetworkReportQueryManager(self.account)
+        ad_network = self.request.POST['ad_network_name']
+        wants_email = self.request.POST.get('email', False) and True
 
-        manager.create_login_info_and_mappers(ad_network_name, username,
-                password, client_key, send_email)
+        postcopy = copy.deepcopy(self.request.POST)
+        postcopy.update(initial)
+
+        form = LoginInfoForm(postcopy, prefix=ad_network)
+
+        errors = ""
+        if form.is_valid():
+            manager = AdNetworkReportQueryManager(self.account)
+            error = manager.create_login_info_and_mappers(ad_network,
+                                                           form.cleaned_data[
+                                                               'username'],
+                                                           form.cleaned_data[
+                                                               'password'],
+                                                           form.cleaned_data[
+                                                               'client_key'],
+                                                           wants_email)
+            if not error:
+                return redirect('ad_network_reports_index')
+
+
+        logging.warn(form.errors)
+        return render_to_response(self.request,
+                                  'network_scraping/add_login_info.html',
+                                  {
+                                      'account_key' : account_key,
+                                      'form' : form,
+                                      'error' : error
+                                  })
 
 @login_required
 def add_login_info(request, *args, **kwargs):

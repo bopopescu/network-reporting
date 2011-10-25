@@ -1,35 +1,116 @@
 {% extends 'base.html' %}
 {% load filters %}
-{% block extraScripts %}
-<script src='/js/check_login_credentials.js'></script>
-{% endblock extraScripts %}
 {% block navLinks %}
             <li><a href="{% url publisher_index %}">Dashboard</a></li>
             <li class="active"><a href="{% url advertiser_campaign %}">Campaigns</a></li>
             <li><a href="{% url reports_index %}">Reports</a></li>
 {% endblock navLinks %}
+{% block pageTitle %}<h1><a href="{% url ad_network_reports_index %}"> Ad Network Reporting </a> / Settings</h1>{% endblock pageTitle %}
 {% block messageCenter %}{% endblock messageCenter %}
+{% block titleBarRight %}{% endblock titleBarRight %}
 
-{% block titleBarRight %}
-<span class="titlebar-link">
-  <a class="linkIcon" href="{% url publisher_index_geo %}">Performance by region <span class="ui-icon ui-icon-triangle-1-e"></span></a>
-</span>
-{% endblock titleBarRight %}
+
+{% block extraScripts %}
+  <script type="text/javascript"> 
+    {% if account_key %}
+      account_key = {{account_key}}
+    {% else %}
+      account_key = null
+    {% endif %}
+  </script>
+  <script src='/js/check_login_credentials.js'></script>
+  <script type="text/javascript">
+    $(function() {
+        $("#dashboard-dateOptions").remove();
+        $("#ad_network_selector").change(function() {
+            var network = $(this).val();
+            $('.network_form').each(function () {
+                if ($(this).attr('id') == network + '-fields') {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+        }).change();
+    });
+  </script>
+{% endblock extraScripts %}
+
 
 {% block content %}
-<form id="loginCredentials">
-    <p>
-    <div id="error">{{error}}</div><br>
-	<select name="ad_network_name">
-		{% for ad_network_name in ad_network_names %}
-		<option>{{ad_network_name}}</option>
-		{% endfor %}
-	</select><br>
-    Username: <input type="text" name="username"><br>
-    Password: <input type="text" name="password"><br>
-    Client Key: <input type="text" name="client_key"><br>
-	<input type="checkbox" name="send_email" value="True"> Send email reports daily for each application when new stats are obtained <br>
-    <input type="submit" value="Send">
-    </p>
- </form>
+
+  <form id="loginCredentials">
+    <div> {{error}} </div>
+    <dl class="formFields clearfix">
+      <dt> Ad Network </dt>
+      <dd>
+        <select name="ad_network_name" id="ad_network_selector">
+          {% for network in ad_network_names %}
+            <option value="{{network}}"> {{network}} </option>
+          {% endfor %}
+        </select>
+      </dd>
+
+      {% for form in forms %}
+
+        <div id="{{form.ad_network}}-fields" class="network_form">
+
+
+          {% ifequal form.ad_network "inmobi" %}
+            <dt> InMobi Access ID </dt>
+            <dd>
+              {{form.username}} {{form.username.errors}}
+              <a href="#" class="whatsthis" id="inmobi-access-helpLink"> What's This? </a>
+            </dd>
+
+            <dt> InMobi Secret Key </dt>
+            <dd>
+              <input type="password" name="{{form.ad_network}}-password"  id="id_password" class=" input-text" value="">  {{form.password.errors}}
+               <a href="#" class="whatsthis" id="inmobi-secret-helpLink"> What's This? </a>
+            </dd>
+
+          {% else %}
+            <dt> Username </dt>
+            <dd> {{form.username}} {{form.username.errors}}</dd>
+
+            <dt> Password</dt>
+            <dd> <input type="password" name="{{form.ad_network}}-password"  id="id_password" class=" input-text" value="">  {{form.password.errors}}</dd>
+          {% endifequal %}
+
+
+          {% if form.ad_network == "admob" %}
+            <dt> Client ID </dt>
+            <dd> {{form.client_key}} </dd>
+          {% endif %}
+
+
+          <dt><input name="email" type="checkbox" /> </dt>
+          <dd> Send me daily emails with my network stats </dd>
+
+        </div>
+      {% endfor %}
+
+      <input class="right btn" type="submit" value="Submit" />
+    </dl>
+  </form>
+
+
+  {# What's This? content #}
+
+  <div class="hidden" id="inmobi-access-helpContent">
+    To access publisher reports from InMobi, you will need to request an Access ID
+    and a Secret Key from their help desk. To do this, send a request to
+    <a href="mailto:helpdesk@inmobi.com"> helpdesk@inmobi.com </a> with "Enable Publisher
+    Reports" as the subject line along with your username/email. InMobi will then assign
+    you a new Access ID and Secret Key, which you can enter here.
+  </div>
+
+  <div class="hidden" id="inmobi-secret-helpContent">
+        To access publisher reports from InMobi, you will need to request an Access ID
+    and a Secret Key from their help desk. To do this, send a request to
+    <a href="mailto:helpdesk@inmobi.com"> helpdesk@inmobi.com </a> with "Enable Publisher
+    Reports" as the subject line along with your username/email. InMobi will then assign
+    you a new Access ID and Secret Key, which you can enter here.
+  </div>
+
 {% endblock content %}

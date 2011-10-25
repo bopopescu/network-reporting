@@ -11,6 +11,14 @@
 
 
 {% block extraScripts %}
+  <script type="text/javascript"> 
+    {% if account_key %}
+      account_key = {{account_key}}
+    {% else %}
+      account_key = null
+    {% endif %}
+  </script>
+  <script src='/js/check_login_credentials.js'></script>
   <script type="text/javascript">
     $(function() {
         $("#dashboard-dateOptions").remove();
@@ -31,12 +39,7 @@
 
 {% block content %}
 
-  {% if account_key %}
-    <form id="loginCredentials" action="/ad_network_reports/manage/{{account_key}}/add" method="post">
-  {% else %}
-    <form id="loginCredentials" action="/ad_network_reports/add" method="post">
-  {% endif %}
-
+  <form id="loginCredentials">
     <div> {{error}} </div>
     <dl class="formFields clearfix">
       <dt> Ad Network </dt>

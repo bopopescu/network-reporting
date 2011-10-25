@@ -1,3 +1,4 @@
+import copy
 import logging
 
 from ad_network_reports.forms import LoginInfoForm
@@ -137,6 +138,7 @@ class AddLoginInfoHandler(RequestHandler):
 
         Return a redirect to the ad nework report index.
         """
+
         initial = {}
         for network in AD_NETWORK_NAMES:
             initial[network + '-ad_network_name'] = network
@@ -149,29 +151,15 @@ class AddLoginInfoHandler(RequestHandler):
 
         form = LoginInfoForm(postcopy, prefix=ad_network)
 
-        errors = ""
         if form.is_valid():
-            manager = AdNetworkReportQueryManager(self.account)
-            error = manager.create_login_info_and_mappers(ad_network,
-                                                           form.cleaned_data[
-                                                               'username'],
-                                                           form.cleaned_data[
-                                                               'password'],
-                                                           form.cleaned_data[
-                                                               'client_key'],
-                                                           wants_email)
-            if not error:
-                return redirect('ad_network_reports_index')
-
+            manager = create_manager(account_key, self.account)
+            manager.create_login_info_and_mappers(ad_network,
+                    form.cleaned_data['username'],
+                    form.cleaned_data['password'],
+                    form.cleaned_data['client_key'],
+                    wants_email)
 
         logging.warn(form.errors)
-        return render_to_response(self.request,
-                                  'network_scraping/add_login_info.html',
-                                  {
-                                      'account_key' : account_key,
-                                      'form' : form,
-                                      'error' : error
-                                  })
 
 @login_required
 def add_login_info(request, *args, **kwargs):

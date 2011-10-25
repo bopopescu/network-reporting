@@ -3,8 +3,8 @@ import logging
 import sys
 import urllib2
 
-#sys.path.append('/home/ubuntu/mopub/server') # only needed for testing
-sys.path.append('/Users/tiagobandeira/Documents/mopub/server') # only needed for testing
+sys.path.append('/home/ubuntu/mopub/server') # only needed for testing
+#sys.path.append('/Users/tiagobandeira/Documents/mopub/server') # only needed for testing
 from ad_network_reports.scrapers.network_scrape_record import \
         NetworkScrapeRecord
 from ad_network_reports.scrapers.scraper import Scraper, NetworkConfidential
@@ -34,8 +34,6 @@ class InMobiScraper(Scraper):
     def get_site_stats(self, start_date):
         # Date can't be today
         end_date = start_date
-        # range can't start and end on the same date for InMobi
-        start_date -= timedelta(days = 1)
 
         start_str = start_date.strftime('%d%b%Y').lower()
         end_str = end_date.strftime('%d%b%Y').lower()
@@ -85,9 +83,9 @@ class InMobiScraper(Scraper):
 if __name__ == '__main__':
     NC = NetworkConfidential()
     # access_id
-    NC.username = '4028cb972fe21753012ffef071c602f3'
+    NC.username = '4028cb972fe21753012ffb7680350267'
     # secret_key
-    NC.password = '998034911828'
+    NC.password = '0588884947763'
     NC.ad_network_name = 'inmobi'
     SCRAPER = InMobiScraper(NC)
     print SCRAPER.get_site_stats(date.today() - timedelta(days = 1))

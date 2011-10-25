@@ -5,7 +5,7 @@ import urllib
 
 from datetime import date, timedelta
 # only needed for testing
-sys.path.append('/Users/tiagobandeira/Documents/mopub/server')
+#sys.path.append('/Users/tiagobandeira/Documents/mopub/server')
 from ad_network_reports.scrapers.scraper import Scraper, NetworkConfidential
 from ad_network_reports.scrapers.network_scrape_record import \
         NetworkScrapeRecord

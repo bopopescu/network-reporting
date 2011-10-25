@@ -76,9 +76,10 @@ def send_stats_mail(account, manager, test_date, valid_stats_list):
 
         # CSS doesn't work with Gmail so use horrible html style tags ex. <b>
         mail.send_mail(sender='olp@mopub.com',
-                       to='report-monitoring@mopub.com',
+                       #to='report-monitoring@mopub.com',
+                       to='matt@mopub.com',
                        cc='tiago@mopub.com',
-                       subject=("Ad Network Scrape Stats for %s" %
+                       subject=("Ad Network Revenue Reporting for %s" %
                            test_date.strftime("%m/%d/%y")),
                        body=("Learn more at http://mopub-experimental.appspot.com/"
                              "ad_network_reports/"),
@@ -87,7 +88,7 @@ def send_stats_mail(account, manager, test_date, valid_stats_list):
 <table width=100%%>
     <thead>
         <th>APP NAME</th>
-        <th>AD NETWORK NAME</th>
+        <th>AD NETWORK</th>
         <th>REVENUE</th>
         <th>ATTEMPTS</th>
         <th>IMPRESSIONS</th>
@@ -135,6 +136,9 @@ def update_ad_networks(start_date = None, end_date = None):
         end_date = yesterday
 
     for test_date in date_magic.gen_days(start_date, end_date):
+        logging.info("TEST DATE: %s" % test_date.strftime("%Y %m %d"))
+
+
         previous_account_key = None
         valid_stats_list = []
         email_account = False

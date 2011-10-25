@@ -35,7 +35,7 @@
 
 {% block content %}
 
-  {% if not marketplace_campaign.active %}
+  {% if not marketplace.active %}
   <div class="alert-message block-message clearfix">
     <a href="#" class="close"> x </a>
     We've just launched MoPub Marketplace, our state of the art real-time bidding exchange.
@@ -43,7 +43,7 @@
     or take a look at our <a href="{% url mpx_info %}">information page</a> if you want to know more about how it works.
     <br />
     <div class="lightswitch right">
-      <div class="switch on"></div>
+      <div class="switch off"></div>
     </div>
   </div>
   {% endif %}
@@ -186,11 +186,25 @@
 
     <h2> Marketplace Settings </h2>
     <div class="well">
-      <label for="blind"> Make my marketplace requests blind </label>
-      <input name="blind" type="checkbox" disabled="disabled" />
-      <br />
-      <label for="default_price_floor"> Set the default price floor for targeted adunits </label>
-      <input name="default_price_floor" type="checkbox" disabled="disabled" />
+      <div class="clearfix" style="width: 380px;">
+        <div class="lightswitch left">
+          <div class="switch {% if marketplace.active %}on{% else %}off{% endif %}"></div>
+        </div>
+        <div class="right label">
+          Turn the Marketplace on or off for your account.
+        </div>
+      </div>
+      <br/>
+      <form action="{% url marketplace_settings_change %}" method="POST" id="marketplace_settings_change">
+        <input name="blind" type="checkbox" original-title="Coming Soon"/>
+        <label for="blind"> Make my marketplace requests blind </label>
+        {% comment %}
+        <br />
+        <input name="default_price_floor_activate" type="checkbox" />
+        <input name="default_price_floor" type="text" />
+        <label for="default_price_floor"> Set the default price floor for targeted adunits </label>
+        {% endcomment %}
+      </form>
     </div>
 
     <h2>Blocklist</h2>
@@ -237,7 +251,7 @@
     {% include "partials/adunit.html" %}
   </script>
   <script type="text/html">
-    {% include "partials/inventory.html" %}
+    {% include "partials/creative-row.html" %}
   </script>
   <script src="/js/mopub-advertiser.js?v=80"></script>
   <script type="text/javascript" src="/js/underscore.min.js"></script>
@@ -250,7 +264,8 @@
         var app_keys = {{ app_keys|safe }};
         Marketplace.fetchAllApps(app_keys);
 
-        $(".lightswitch").lightswitch();
+        $(".lightswitch").lightswitch(Marketplace.turnOn, Marketplace.turnOff);
+
     });
   </script>
 {% endblock extraScripts %}

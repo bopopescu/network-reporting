@@ -17,7 +17,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils import simplejson
 from django.core.urlresolvers import reverse
 
-
+import datetime
 import logging
 
 
@@ -26,26 +26,31 @@ class AppService(RequestHandler):
     API Service for delivering serialized App data
     """
     def get(self, app_key=None):
-        try:
+#        try:
+            mpxstats = MarketplaceStatsFetcher(self.account.key())
             # If an app key is provided, return the single app
             if app_key:
                 apps = [AppQueryManager.get_app_by_key(app_key).toJSON()]
-                mpxstats = MarketplaceStatsFetcher([app_key])
+
 
             # If no app key is provided, return a list of all apps for the account
             else:
                 apps = [app.toJSON() for app in AppQueryManager.get_apps(self.account)]
-                mpxstats = MarketplaceStatsFetcher([app['id'] for app in apps])
+
+
+            # TODO: Use actual dates here.
+            end_date = datetime.datetime.today()
+            start_date = end_date - datetime.timedelta(14)
 
             # get stats for each app
             for app in apps:
-                app.update(mpxstats.get_app_stats(str(app['id'])))
+                app.update(mpxstats.get_app_stats(str(app['id']), start_date, end_date))
 
             return JSONResponse(apps)
 
-        except Exception, e:
-            logging.warn(e)
-            return JSONResponse({'error': str(e)})
+        # except Exception, e:
+        #     logging.warn(e)
+        #     return JSONResponse({'error': str(e)})
 
 
     def post(self):
@@ -71,17 +76,22 @@ class AdUnitService(RequestHandler):
     """
     def get(self, app_key = None, adunit_key = None):
  #       try:
+
+        # TODO: Use actual dates here.
+            end_date = datetime.datetime.today()
+            start_date = end_date - datetime.timedelta(14)
             if app_key:
 
                 app = AppQueryManager.get_app_by_key(app_key)
                 adunits = AdUnitQueryManager.get_adunits(app=app)
-                mpxstats = MarketplaceStatsFetcher([app_key])
+                mpxstats = MarketplaceStatsFetcher(self.account.key())
 
                 response = [adunit.toJSON() for adunit in adunits]
 
                 for au in response:
-                    adunit_stats = mpxstats.get_adunit_stats(au['id'])
+                    adunit_stats = mpxstats.get_adunit_stats(au['id'], start_date, end_date)
                     adunit_stats.update({'app_id':app_key})
+                    au.update(adunit_stats)
 
                     adgroup = AdGroupQueryManager.get_marketplace_adgroup(au['id'],
                                                                           str(self.account.key()),
@@ -90,8 +100,6 @@ class AdUnitService(RequestHandler):
                         au.update(price_floor = adgroup.mktplace_price_floor)
                     except AttributeError:
                         au.update(price_floor = "0.25")
-
-                    au.update(adunit_stats)
 
                 return JSONResponse(response)
             else:

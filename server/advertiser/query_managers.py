@@ -36,7 +36,7 @@ class CampaignQueryManager(QueryManager):
     Model = Campaign
 
     @classmethod
-    def get_marketplace(cls, account):
+    def get_marketplace(cls, account, from_db=False):
         """
         Returns the only campaign that can belong to this account.
         The magic of key_names allows us to
@@ -49,12 +49,19 @@ class CampaignQueryManager(QueryManager):
         # get the account_key from the model if necessary
         if isinstance(account, db.Model):
             account_key = account.key()
+        elif isinstance(account, (str, unicode)):
+            account_key = db.Key(account)
         else:
             account_key = account
+
         c_key_name = cls._get_marketplace_key_name(account_key)
+
+        if from_db:
+            return Campaign.get_by_key_name(c_key_name)
         return Campaign(key_name=c_key_name,
                         campaign_type='marketplace',
-                        name='MarketPlace')
+                        name='MarketPlace',
+                        account=account_key)
 
     @classmethod
     def _get_marketplace_key_name(cls, account_key):

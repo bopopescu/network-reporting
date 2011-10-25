@@ -224,6 +224,28 @@
             });
 
             return app_id;
+        },
+
+        turnOn: function() {
+            $.ajax({
+                type: 'post',
+                url: '/campaigns/marketplace/activation/',
+                data: {
+                    activate: 'on'
+                },
+            });
+            return true;
+        },
+
+        turnOff: function() {
+            $.ajax({
+                type: 'post',
+                url: '/campaigns/marketplace/activation/',
+                data: {
+                    activate: 'off'
+                },
+            });
+            return true;
         }
     };
 

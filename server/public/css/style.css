@@ -1548,9 +1548,9 @@ table.simpletable {
   box-shadow: 0px 1px 5px #eeeeee; }
 .zebra-striped tbody tr:hover td {
   background-color: #EBF2F7;
-  -webkit-box-shadow: none;
-  -moz-box-shadow: none;
-  box-shadow: none; }
+  -webkit-box-shadow: 0px 1px 10px #eeeeee;
+  -moz-box-shadow: 0px 1px 10px #eeeeee;
+  box-shadow: 0px 1px 10px #eeeeee; }
 
 table .header {
   cursor: pointer; }
@@ -2263,6 +2263,37 @@ table .headerSortDown.purple {
   border: 1px solid #ddd;
   width: 250px;
   font-size: 16px; }
+
+/*
+ * Pure CSS Arrows
+ */
+.arrow-up {
+  width: 0;
+  height: 0;
+  border-left: 20px solid transparent;
+  border-right: 20px solid transparent;
+  border-bottom: 20px solid #dddddd; }
+
+.arrow-down {
+  width: 0;
+  height: 0;
+  border-left: 20px solid transparent;
+  border-right: 20px solid transparent;
+  border-top: 20px solid #dddddd; }
+
+.arrow-right {
+  width: 0;
+  height: 0;
+  border-top: 20px solid transparent;
+  border-bottom: 20px solid transparent;
+  border-left: 20px solid #dddddd; }
+
+.arrow-left {
+  width: 0;
+  height: 0;
+  border-top: 20px solid transparent;
+  border-bottom: 20px solid transparent;
+  border-right: 20px solid #dddddd; }
 
 .tipsy {
   position: absolute;

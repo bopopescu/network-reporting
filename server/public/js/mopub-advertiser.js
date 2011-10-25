@@ -263,6 +263,25 @@ var mopub = mopub || {};
           parent.find('.adgroupForm-showNetwork').hide();
       });
 
+        function activate (element, container) {
+            if (container.length > 1) {
+                container.each(function(){
+                    $(this).removeClass('active');
+                });
+            } else {
+                container.find('.active').removeClass('active');
+            }
+            element.addClass('active');
+        }
+
+
+        $("a.tab-select").click(function(e) {
+            e.preventDefault();
+            var tab = $(this).attr('href');
+            activate($("li a[href='" + tab + "']").parent(), $(".tabs"));
+            activate($(tab), $(".tab-section"));
+        });
+
       function adgroupFormValidate(form) {
           var success = true;
           $('#formError').hide();

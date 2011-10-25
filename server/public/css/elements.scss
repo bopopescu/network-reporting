@@ -532,6 +532,58 @@
 }
 
 
+/*
+ * Pure CSS Arrows
+ */
+
+@mixin arrow-up($size:20px, $color:#ddd) {
+        width: 0;
+        height: 0;
+        border-left: $size solid transparent;
+        border-right: $size solid transparent;
+        border-bottom: $size solid $color;
+}
+
+@mixin arrow-down($size:20px, $color:#ddd) {
+        width: 0;
+        height: 0;
+        border-left: $size solid transparent;
+        border-right: $size solid transparent;
+        border-top: $size solid $color;
+}
+
+@mixin arrow-right($size:20px, $color:#ddd) {
+        width: 0;
+        height: 0;
+        border-top: $size solid transparent;
+        border-bottom: $size solid transparent;
+        border-left: $size solid $color;
+}
+
+@mixin arrow-left($size:20px, $color:#ddd) {
+        width: 0;
+        height: 0;
+        border-top: $size solid transparent;
+        border-bottom: $size solid transparent;
+        border-right:$size solid $color;
+}
+
+.arrow-up {
+    @include arrow-up;
+}
+
+.arrow-down {
+    @include arrow-down;
+}
+
+.arrow-right {
+    @include arrow-right;
+}
+
+.arrow-left {
+    @include arrow-left;
+}
+
 .tipsy {
 //    font-size: 10px;
     position: absolute;

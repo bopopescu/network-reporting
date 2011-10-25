@@ -121,7 +121,8 @@ table.simpletable {
         }
         tr:hover td {
             background-color: #EBF2F7;
-            @include box-shadow(none);
+            @include box-shadow(0px 1px 10px #eee);
+            //@include box-shadow(none);
         }
     }
 }

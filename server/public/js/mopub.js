@@ -550,6 +550,11 @@ if (typeof window.console == "undefined") {
      * `};`
      *
      * `$(".lightswitch").lightswitch(on, off);`
+     *
+     * HTML:
+     * <div class="lightswitch">
+     *   <div class="switch on"></div>
+     * </div>
      */
     $.fn.lightswitch = function (on_function, off_function) {
 

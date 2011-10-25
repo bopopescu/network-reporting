@@ -275,6 +275,42 @@
         $('#marketplace_stats').tablesorter({
             widgets: ['adunitSorting']
         });
+
+        /*
+         * Functionality for blocking advertisers from the creatives performance table
+         */
+        $('a.block').click(function (event) {
+            event.preventDefault();
+            var block_link = $(this);
+            var domain = $(this).attr('id');
+            $.ajax({
+                type: 'post',
+                url: '/campaigns/marketplace/addblocklist',
+                data: {
+                    blocklist: domain
+                },
+                success: function (a,b) {
+                    block_link.text("Blocked").unbind("click").click(function(){
+                        return false;
+                    });
+                }
+            });
+        });
+
+        /*
+         * Settings page button actions
+         */
+        $('#settings-submit').click(function(e) {
+            e.preventDefault();
+            $('#addblocklist').submit();
+        });
+
+        $('#blocklist-submit').click(function(e) {
+            e.preventDefault();
+            $('#addblocklist').submit();
+        });
+
+
     });
 
 })(this.jQuery, this.Backbone);

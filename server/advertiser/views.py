@@ -1213,7 +1213,10 @@ class MarketplaceIndexHandler(RequestHandler):
 
         for dsp in dsps:
             creatives = stats_fetcher.get_creatives_for_dsp(dsp['key'], today, two_weeks_ago)
+            for creative in creatives:
+                creative['creative']['advertiser_blocked'] = creative['creative']['advertiser'] in blocklist
             dsp.update({'creatives': creatives})
+
 
 
         return render_to_response(self.request,
@@ -1242,6 +1245,7 @@ def marketplace_index(request, *args, **kwargs):
 
 class AddBlocklistHandler(RequestHandler):
     def post(self):
+        logging.warn('sneakin sally through the alley')
         add_blocklist_string = self.request.POST.get('blocklist')
         add_blocklist = add_blocklist_string.replace(',',' ').split()
 

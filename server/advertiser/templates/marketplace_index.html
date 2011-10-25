@@ -133,12 +133,19 @@
           {% for creative in dsp.creatives %}
             <tr>
               <td> <iframe src="{{ creative.creative.url }}" width="320px" height="50px"></iframe> </td>
-              <td> {{ creative.creative.advertiser }} </td>
-              <td> {{ creative.stats.pub_rev|currency }} </td>
-              <td> {{ creative.stats.ecpm|currency }} </td>
-              <td> {{ creative.stats.imp }} </td>
-              <td> {{ creative.stats.clk }} </td>
-              <td> {{ creative.stats.ctr|percentage }} </td>
+              <td>
+                {{ creative.creative.advertiser }}
+                {% if creative.creative.advertiser_blocked %}
+                  (Blocked)
+                {% else %}
+                  <a href="#" id={{ creative.creative.advertiser }} class="block"> Block </a>
+                {% endif %}
+              </td>
+              <td style="text-align:right;"> {{ creative.stats.pub_rev|currency }} </td>
+              <td style="text-align:right;"> {{ creative.stats.ecpm|currency }} </td>
+              <td style="text-align:right;"> {{ creative.stats.imp }} </td>
+              <td style="text-align:right;"> {{ creative.stats.clk }} </td>
+              <td style="text-align:right;"> {{ creative.stats.ctr|percentage }} </td>
             </tr>
           {% endfor %}
         {% endfor %}
@@ -223,19 +230,6 @@
     $(document).ready(function() {
         var app_keys = {{ app_keys|safe }};
         Marketplace.fetchAllApps(app_keys);
-
-        $('#settings-submit').click(function(e) {
-            e.preventDefault();
-            $('#addblocklist').submit();
-        });
-
-        $('#blocklist-submit').click(function(e) {
-            e.preventDefault();
-            $('#addblocklist').submit();
-        });
-
-
-
     });
   </script>
 {% endblock extraScripts %}

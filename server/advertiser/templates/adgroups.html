@@ -206,7 +206,7 @@
           <div class="pie chart" id="revenue-pie-chart"></div>
         </div>
 
-
+        <a class="right btn add icon"  href="{% url advertiser_campaign_create %}#gtee">Add a campaign</a>
         <h2> Guaranteed Campaign Totals </h2>
         <div id="gtee-rollups" class="rollup fig4">
           <div class="data-figure">
@@ -409,7 +409,7 @@
           {% endcomment %}
 
 
-                    <h2> Backfill Promotional Campaign Totals </h2>
+          <h2> Backfill Promotional Campaign Totals </h2>
           <div id="bfill-rollups" class="rollup fig4">
           <div class="data-figure">
             <div class="figure" id="bfill-total-imp">
@@ -575,14 +575,14 @@
           <thead>
             <tr>
               <th class="campaignData-icon"></th>
-              <th class="dataTable-name"> Campaign Name </th>
-              <th class="dataTable-data numeric">eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
-              <th class="dataTable-data numeric">Status</th>
-              <th class="dataTable-data numeric">Impressions</th>
-              <th class="dataTable-data numeric">Clicks</th>
-              <th class="dataTable-data numeric">CTR</th>
-              <th class="dataTable-data numeric">Conv</th>
-              <th class="dataTable-data numeric">Revenue</th>
+              <th> Campaign Name </th>
+              <th>eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
+              <th>Status</th>
+              <th width="100">Impressions</th>
+              <th>Clicks</th>
+              <th>CTR</th>
+              <th>Conv</th>
+              <th>Revenue</th>
             </tr>
           </thead>
           <tbody>
@@ -642,12 +642,11 @@
                   <div class="status">--</div>
                   <div class="on_schedule muted"></div>
                 </td>
-                <td class='gtee-rev rev' style='display:none;'></td>
-                <td class="dataTable-data numeric gtee-imp imp">--</td>
-                <td class="dataTable-data numeric gtee-clk clk">--</td>
-                <td class="dataTable-data numeric gtee-ctr ctr">--</td>
-                <td class="dataTable-data numeric gtee-conv conv">--</td>
-                <td class="dataTable-data numeric gtee-cpa rev">--</td>
+                <td style="text-align:right;" class="dataTable-data numeric gtee-imp imp">--</td>
+                <td style="text-align:right;" class="dataTable-data numeric gtee-clk clk">--</td>
+                <td style="text-align:right;" class="dataTable-data numeric gtee-ctr ctr">--</td>
+                <td style="text-align:right;" class="dataTable-data numeric gtee-conv conv">--</td>
+                <td style="text-align:right;" class="dataTable-data numeric gtee-rev rev">--</td>
               </tr>
             {% endfor %}
           {% endif %}
@@ -736,14 +735,14 @@
             <thead>
               <tr>
                 <th class="campaignData-icon"></th>
-                <th class="dataTable-name">Name</th>
-                <th class="dataTable-data numeric">eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
-                <th class="dataTable-data numeric">Status</th>
-                <th class="dataTable-data numeric">Impressions</th>
-                <th class="dataTable-data numeric">Clicks</th>
-                <th class="dataTable-data numeric">CTR</th>
-                <th class="dataTable-data numeric">Conv</th>
-                <th class="dataTable-data numeric">CPA</th>
+                <th>Name</th>
+                <th>eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
+                <th>Status</th>
+                <th width="100">Impressions</th>
+                <th>Clicks</th>
+                <th>CTR</th>
+                <th>Conv</th>
+                <th>Revenue</th>
               </tr>
             </thead>
             <tbody>
@@ -780,7 +779,7 @@
                       {% endif %}
                     </span>
                   </td>
-                  <td class="dataTable-data numeric dataTable-ecpm ecpm">
+                  <td style="text-align:right;" class="dataTable-data numeric dataTable-ecpm ecpm">
                     {% if adgroup.bid_strategy == 'cpm' %}
                       --
                     {% endif %}
@@ -788,12 +787,12 @@
                       <div class="dataTable-campaign-ecpm ecpm">--</div>
                     {% endif %}
                   </td>
-                  <td class="dataTable-data numeric status">--</td>
-                  <td class="dataTable-data numeric promo-imp imp">--</td>
-                  <td class="dataTable-data numeric promo-clk clk">--</td>
-                  <td class="dataTable-data numeric promo-ctr ctr">--</td>
-                  <td class="dataTable-data numeric promo-conv conv">--</td>
-                  <td class="dataTable-data numeric promo-cpa cpa">--</td>
+                  <td style="text-align:right;" class="dataTable-data numeric status">--</td>
+                  <td style="text-align:right;" class="dataTable-data numeric promo-imp imp">--</td>
+                  <td style="text-align:right;" class="dataTable-data numeric promo-clk clk">--</td>
+                  <td style="text-align:right;" class="dataTable-data numeric promo-ctr ctr">--</td>
+                  <td style="text-align:right;" class="dataTable-data numeric promo-conv conv">--</td>
+                  <td style="text-align:right;" class="dataTable-data numeric promo-rev rev">--</td>
                 </tr>
               {% endfor %}
             </tbody>
@@ -875,14 +874,14 @@
                 <thead>
                   <tr>
                     <th class="campaignData-icon"></th>
-                    <th class="dataTable-name">Name</th>
-                    <th class="dataTable-data numeric">eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
-                    <th class="dataTable-data numeric">Status</th>
-                    <th class="dataTable-data numeric">Impressions</th>
-                    <th class="dataTable-data numeric">Clicks</th>
-                    <th class="dataTable-data numeric">CTR</th>
-                    <th class="dataTable-data numeric">Conv</th>
-                    <th class="dataTable-data numeric">CPA</th>
+                    <th>Name</th>
+                    <th>eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
+                    <th>Status</th>
+                    <th width="100">Impressions</th>
+                    <th>Clicks</th>
+                    <th>CTR</th>
+                    <th>Conv</th>
+                    <th>CPA</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -919,12 +918,12 @@
                     <td class="dataTable-data numeric dataTable-ecpm ecpm">--</td>
                     {% endif %}
 
-                    <td class="dataTable-data numeric status">--</td>
-                    <td class="dataTable-data numeric bfill-imp imp">--</td>
-                    <td class="dataTable-data numeric bfill-clk clk">--</td>
-                    <td class="dataTable-data numeric bfill-ctr ctr">--</td>
-                    <td class="dataTable-data numeric bfill-conv conv">--</td>
-                    <td class="dataTable-data numeric bfill-cpa cpa">--</td>
+                    <td style="text-align:right;" class="dataTable-data numeric status">--</td>
+                    <td style="text-align:right;" class="dataTable-data numeric bfill-imp imp">--</td>
+                    <td style="text-align:right;" class="dataTable-data numeric bfill-clk clk">--</td>
+                    <td style="text-align:right;" class="dataTable-data numeric bfill-ctr ctr">--</td>
+                    <td style="text-align:right;" class="dataTable-data numeric bfill-conv conv">--</td>
+                    <td style="text-align:right;" class="dataTable-data numeric bfill-cpa cpa">--</td>
                   </tr>
                   {% endfor %}
                 </tbody>
@@ -1091,13 +1090,13 @@
                 <thead>
                   <tr>
                     <th class="campaignData-icon"></th>
-                    <th class="dataTable-name">Name</th>
-                    <th class="dataTable-data numeric">eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
-                    <th class="dataTable-data numeric">Attempts</th>
-                    <th class="dataTable-data numeric">Impressions</th>
-                    <th class="dataTable-data numeric">Fillrate</th>
-                    <th class="dataTable-data numeric">Clicks</th>
-                    <th class="dataTable-data numeric">CTR</th>
+                    <th>Name</th>
+                    <th>eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
+                    <th>Attempts</th>
+                    <th width="100">Impressions</th>
+                    <th>Fillrate</th>
+                    <th>Clicks</th>
+                    <th>CTR</th>
                   </tr>
                 </thead>
                 <tbody>

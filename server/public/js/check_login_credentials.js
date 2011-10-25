@@ -9,7 +9,6 @@
 	           success: function(valid) {
 	           	   // Upon success update the database
 			   if (valid) {
-				alert("callback")
 				if (account_key) {
         			    $.post("/ad_network_reports/manage/" + account_key + "/add/",
 					    $("#loginCredentials").serialize());

@@ -1,33 +1,38 @@
 /*
-  MoPub Global JS
-*/
+ * # MoPub Global JS
+ */
 
 //For JSLint Validation:
-/*global console: true, Highcharts: true*/
+//global console: true, Highcharts: true
 
 //mopub singleton object
 var mopub = mopub || {};
 mopub.Utils = mopub.Utils || {};
 
-(function($){
-    // dom ready
-    $(document).ready(function() {
-        /*---------------------------------------/
-          / Marketplace Hiding
-          /---------------------------------------*/
+/*
+ * Make sure there's a console.log function in case we forgot to remove debug statements
+ */
+if (typeof window.console == "undefined") {
+    window.console = {
+        log: function() {}
+    };
+}
 
+/*
+ * # Global document.ready function
+ * If you want something to happen everywhere, on every page,
+ * it should go here.
+ */
+(function($){
+
+    $(document).ready(function() {
+
+        // marketplace hiding
         if ($('#is_admin_input').val()=='False') {
             $('.marketplace').hide();
         }
 
-
-
-
-        /*---------------------------------------/
-          / UI Stuff
-          /---------------------------------------*/
-
-            // preload images (defined below)
+        // preload images (defined below)
         var JQUERY_UI_IMAGE_PATH = '/js/mylibs/jquery-ui-1.8.7.custom/css/mopub/images';
         $.preLoadImages(
             '/images/ui/ui-button-active.png',
@@ -43,7 +48,8 @@ mopub.Utils = mopub.Utils || {};
             JQUERY_UI_IMAGE_PATH + '/ui-bg_inset-soft_25_595959_1x100.png',
             JQUERY_UI_IMAGE_PATH + '/ui-icons_0090d9_256x240.png',
             JQUERY_UI_IMAGE_PATH + '/ui-icons_cc2929_256x240.png',
-            JQUERY_UI_IMAGE_PATH + '/ui-icons_ffffff_256x240.png'
+            JQUERY_UI_IMAGE_PATH + '/ui-icons_ffffff_256x240.png',
+            '/placeholders/image.gif'
         );
 
         // replace <legend> with <h2>
@@ -71,14 +77,16 @@ mopub.Utils = mopub.Utils || {};
         // set up validation to be run on form submit
         $('.validate').validate();
 
+        // Tables with the 'sortable' class will be made sortable by default
+        $(".sortable").tablesorter();
 
+        // Tabify tabs
         $('.tabs').tabs();
 
+        // Where is this used?
         $(".tree").treeview();
 
-
-
-        // override default jQuery UI dialog options
+        // Override default jQuery UI dialog options
         $.extend($.ui.dialog.prototype.options, {
             modal: true,
             resizable: false,
@@ -86,28 +94,27 @@ mopub.Utils = mopub.Utils || {};
             width: 400
         });
 
-        // override default jQuery UI datepicker options
+        // Override default jQuery UI datepicker options
         $.datepicker.setDefaults({
             dayNamesMin: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
         });
 
-        // set up form placeholders
+        // Set up form placeholders
         $('input[placeholder], textarea[placeholder]').placeholder({ preventRefreshIssues: true });
 
-        // set up text overflow elements
+        // Set up text overflow elements
         $('#titlebar .breadcrumb h1, .dataTable-name .inner').textOverflow(' &hellip;');
 
-        // set up the dropdown
+        // Set up dropdowns
         $(".dropdown-head").dropdown('.dropdown');
 
+        // Set up alert-message closing
         $(".alert-message .close").click(function() {
             $(this).parent().fadeOut();
         });
 
-        /*---------------------------------------/
-          / Tooltips
-          /---------------------------------------*/
-
+        // Set up tooltips.
+        // FYI: These are being phased out
         $.fn.qtip.styles.mopub = {
             background: '#303030',
             color: '#ffffff',
@@ -126,10 +133,8 @@ mopub.Utils = mopub.Utils || {};
         $('a[title]').qtip({ style: { name: 'mopub', tip: true } });
         $('.formFields-field-help-link[title]').click(function(e) { e.preventDefault(); });
 
-        /*---------------------------------------/
-          / Message Center
-          /---------------------------------------*/
 
+        // Message Center
         // hide message center when page loads if there are no messages
         function hideMessageCenterIfNoMessages() {
             if($('.messageCenter-message').length === 0) {
@@ -138,7 +143,7 @@ mopub.Utils = mopub.Utils || {};
         }
         hideMessageCenterIfNoMessages();
 
-        // set up "More info" links
+        // Set up "More info" links
         $('.messageCenter-message-moreInfoLink').click(function(e) {
             e.preventDefault();
             var link = $(this);
@@ -150,7 +155,7 @@ mopub.Utils = mopub.Utils || {};
             });
         });
 
-        // set up "Hide this" links
+        // Set up "Hide this" links
         $('.messageCenter-message-hide').click(function(e) {
             e.preventDefault();
             var link = $(this);
@@ -162,10 +167,7 @@ mopub.Utils = mopub.Utils || {};
             // TODO: tell server that message.attr('id') has been hidden
         });
 
-        /*---------------------------------------/
-          / Stats Breakdown
-          /---------------------------------------*/
-
+        // Set up stats breakdown
         $('.stats-breakdown tr').click(function(e) {
             var row = $(this);
             if(!row.hasClass('active')) {
@@ -175,10 +177,7 @@ mopub.Utils = mopub.Utils || {};
             }
         });
 
-        /*---------------------------------------/
-          / Highcharts default options
-          /---------------------------------------*/
-
+        // Set up highcharts default options
         Highcharts.setOptions({
             chart: {
                 animation: false,
@@ -301,10 +300,7 @@ mopub.Utils = mopub.Utils || {};
             }
         });
 
-        /*---------------------------------------/
-          / What's This?-ifier
-          /---------------------------------------*/
-
+        // Set up 'What's This?' dialogs
         $('.whatsthis').click(function(e) {
             e.preventDefault();
             $('#'+$(this).attr('id').replace('helpLink', 'helpContent')).dialog({
@@ -314,13 +310,16 @@ mopub.Utils = mopub.Utils || {};
 
     }); // end $(document).ready
 
-    /*---------------------------------------/
-      / Image Preloader
-      /---------------------------------------*/
 
+    /*
+     * # MoPub-defined jQuery utility functions and extensions
+     */
+
+    /*
+     * ## Image Preloader
+     * Caches images for faster loading
+     */
     var cache = [];
-
-    // Arguments are image paths relative to the current page.
     $.preLoadImages = function() {
         var args_len = arguments.length;
         for (var i = args_len; i--;) {
@@ -328,12 +327,77 @@ mopub.Utils = mopub.Utils || {};
             cacheImage.src = arguments[i];
             cache.push(cacheImage);
         }
-        // Commented out for cleanliness
-        // log(cache);
     };
 
-    // Creates a dropdown menu
-    // Usage: `$(dropdown-trigger).dropdown(things-that-dropdown);`
+
+    /*
+     * ## Template rendering
+     *
+     * This function lets you use data to fill in predefined template strings.
+     *
+     * Usage:
+     * `str` - A template string. Templates can include javascript logic enclosed in <% %>
+     *         brackets, similar to rails' erb templates.
+     *
+     * `data` - A javascript object which contains data to fill the template with.
+     *
+     * e.g.
+     *
+     * `var template = "<%= user %> is <%= desc %>.";`
+     *
+     * `var data1 = {user: 'John', desc: 'cool'};`
+     *
+     * `var data2 = {user: 'Nafis', desc: 'lame'};`
+     *
+     * `$.renderTemplate(template, data1); // "John is cool"`
+     *
+     * For more complex examples, see [this](http://ejohn.org/blog/javascript-micro-templating/)
+     */
+    var template_cache = {};
+    $.renderTemplate = function tmpl (str, data){
+        // Figure out if we're getting a template, or if we need to
+        // load the template - and be sure to cache the result.
+        var fn = !/\W/.test(str) ?
+            template_cache[str] = template_cache[str] || tmpl(document.getElementById(str).innerHTML) :
+
+        // Generate a reusable function that will serve as a template
+        // generator (and which will be cached).
+        new Function("obj",
+                     "var p=[],print=function(){p.push.apply(p,arguments);};" +
+
+                     // Introduce the data as local variables using with(){}
+                     "with(obj){p.push('" +
+
+                     // Convert the template into pure JavaScript
+                     str
+                     .replace(/[\r\t\n]/g, " ")
+                     .split("<%").join("\t")
+                     .replace(/((^|%>)[^\t]*)'/g, "$1\r")
+                     .replace(/\t=(.*?)%>/g, "',$1,'")
+                     .split("\t").join("');")
+                     .split("%>").join("p.push('")
+                     .split("\r").join("\\'")
+                     + "');}return p.join('');");
+
+        // Provide some basic currying to the user
+        return data ? fn( data ) : fn;
+    };
+
+    /*
+     * Alternate binding for the renderTemplate function
+     */
+    $.fn.renderTemplate = function (str, data) {
+        return $(this).html($.renderTemplate(str, data));
+    };
+
+
+    /*
+     * ## Dropdown Menus
+     *
+     * Usage:
+     *
+     * `$(dropdown-trigger).dropdown(things-that-dropdown);`
+     */
     $.fn.dropdown = function(selector) {
         var self = this;
         var over_trigger, over_body = false;
@@ -379,6 +443,10 @@ mopub.Utils = mopub.Utils || {};
         }, 1);
     };
 
+
+    /*
+     * ## Activity utility functions
+     */
     function isActive(item) {
         return item.hasClass('active');
     }
@@ -394,6 +462,29 @@ mopub.Utils = mopub.Utils || {};
         element.addClass('active');
     }
 
+
+    /*
+     * ## Tabs
+     * Turns a ul into horizontal tabs, that can be used to hide and show
+     * sections of a page.
+     *
+     * Usage:
+     * `<ul class="tabs">`
+     *
+     * ` <li class="active"> <a href="#s1">Section 1 </a> </li>`
+     *
+     * ` <li> <a href="#s2">Section 2 </a> </li>`
+     *
+     * `</ul>`
+     *
+     * `<div class="active tab-section" id="s1"></div>`
+     *
+     * `<div class="tab-section" id="s2"></div>`
+     *
+     * `$(".tabs").tabs();`
+     *
+     * TODO: Refactor so that the first tab/section are activated if nothing is activated by default
+     */
     $.fn.tabs = function() {
         // find the sections within the page we've marked as tab activate-able
         var tab_sections = $(".tab-section");
@@ -418,6 +509,11 @@ mopub.Utils = mopub.Utils || {};
     };
 
 
+    /*
+     * Escaping/unescaping HTML.
+     *
+     * Be careful: if you escape html thats already escaped, things get weird.
+     */
     $.unescapeHTML = function (html) {
         return $("<div />").html(html).text();
     };
@@ -426,20 +522,75 @@ mopub.Utils = mopub.Utils || {};
         return $("<div />").text(html).html();
     };
 
-    // helper fn for console logging
-    var log;
 
-    if (window.console && typeof console.log === "function"){
-        // use apply to preserve context and invocations with multiple arguments
-        log = function () { console.log.apply(console, arguments); };
-    } else {
-        log = function(){ return; };
-    }
+    /*
+     * ## jQuery Lightswitch
+     *
+     * lightswitch takes two functions, an on function and an off function.
+     * When the lightswitch in the page is clicked on or off, the the corresponding
+     * function is called. If the function returns true, the switch is slid.
+     *
+     * Usage:
+     *
+     * `var on = function() {`
+     *
+     * `   console.log('BOOMSLAM');`
+     *
+     * `   return true;`
+     *
+     * `};`
+     *
+     *
+     * `var off = function() {`
+     *
+     * `   console.log('SEE YA');`
+     *
+     * `   return true;`
+     *
+     * `};`
+     *
+     * `$(".lightswitch").lightswitch(on, off);`
+     */
+    $.fn.lightswitch = function (on_function, off_function) {
 
-    /*---------------------------------------/
-      / Utility functions.
-      /---------------------------------------*/
+        if (typeof on_function == 'undefined') {
+            on_function = function () {
+                return true;
+            };
+        }
 
+        if (typeof off_function == 'undefined') {
+            off_function = function () {
+                return true;
+            };
+        }
+
+        var light_switch = $(this);
+        var switcher = $('.switch', light_switch);
+
+        light_switch.click(function () {
+            if (switcher.hasClass('on')) {
+                var result = off_function();
+                if (result) {
+                    switcher.removeClass('on').addClass('off');
+                }
+
+            } else if (switcher.hasClass('off')) {
+                var result = on_function();
+                if (result) {
+                    switcher.removeClass('off').addClass('on');
+                }
+            } else {
+                switcher.addClass('off');
+            }
+        });
+    };
+
+
+
+    /*
+     * ## Mopub Utility
+     */
     mopub.Utils.formatNumberWithCommas = function(string) {
         string += '';
         x = string.split('.');
@@ -457,20 +608,20 @@ mopub.Utils = mopub.Utils || {};
         return (string*100).toFixed(2) + '%';
     };
 
-        mopub.Utils.getKeysFromObject = function(object) {
-            var keys = [];
-            for (var key in object) {
-                if (object.hasOwnProperty(key)) keys.push(key);
-            }
-            return keys;
-        };
+    mopub.Utils.getKeysFromObject = function(object) {
+        var keys = [];
+        for (var key in object) {
+            if (object.hasOwnProperty(key)) keys.push(key);
+        }
+        return keys;
+    };
 
 })(this.jQuery);
 
-// =====================================================================
-// mopub.Utils.AjaxChunkedFetch
-// =====================================================================
 
+/*
+ * # Ajax Chunked Fetch
+ */
 (function(Utils, $) {
 
     var AjaxChunkedFetch = Utils.AjaxChunkedFetch = function(args) {
@@ -494,18 +645,18 @@ mopub.Utils = mopub.Utils || {};
         return this;
     };
 
-        AjaxChunkedFetch.chunkArray = function(array, chunkSize) {
-            if (!array) return [];
+    AjaxChunkedFetch.chunkArray = function(array, chunkSize) {
+        if (!array) return [];
 
-            var chunks = [];
-            $.each(array, function(index, elem) {
-                var chunkNumber = Math.floor(index / chunkSize);
-                var indexInChunk = index % chunkSize;
-                chunks[chunkNumber] = chunks[chunkNumber] || [];
-                chunks[chunkNumber][indexInChunk] = elem;
-            });
-            return chunks;
-        };
+        var chunks = [];
+        $.each(array, function(index, elem) {
+            var chunkNumber = Math.floor(index / chunkSize);
+            var indexInChunk = index % chunkSize;
+            chunks[chunkNumber] = chunks[chunkNumber] || [];
+            chunks[chunkNumber][indexInChunk] = elem;
+        });
+        return chunks;
+    };
 
     // Time to wait before terminating AJAX request.
     AjaxChunkedFetch.TIMEOUT_MILLISECONDS = 10000;
@@ -594,7 +745,7 @@ mopub.Utils = mopub.Utils || {};
         this.executeFetchRequestsForChunks();
     };
 
-    // =====================================================================
+
 
     var FetchRequest = AjaxChunkedFetch.FetchRequest = function(args) {
         this.items = [];
@@ -644,12 +795,13 @@ mopub.Utils = mopub.Utils || {};
 
 })(mopub.Utils = mopub.Utils || {}, this.jQuery);
 
-// =====================================================================
-// mopub.Stats
-// =====================================================================
-
+/*
+ * # Mopub Stats
+ */
 (function(Stats, $) {
-
+    /*
+     * ## Stat sorting
+     */
     Stats.sortStatsObjectsByStat = function(objects, statName) {
         objects.sort(function(a, b) {
             var statA = parseFloat(a["stats"]["sum"][statName]);
@@ -661,12 +813,18 @@ mopub.Utils = mopub.Utils || {};
         return objects;
     };
 
+    /*
+     * ## DOCUMENT THIS
+     */
     Stats.statArrayFromDailyStats = function(arrayOfDailyStats, statName) {
         return $.map(arrayOfDailyStats, function(oneDayStats) {
                 return parseFloat(oneDayStats[statName]);
         });
     };
 
+    /*
+     * ## DOCUMENT THIS
+     */
     Stats.getGraphSummedStatsForStatName = function(statName, objects) {
         var result = [];
 
@@ -692,6 +850,9 @@ mopub.Utils = mopub.Utils || {};
         return result;
     };
 
+    /*
+     * ## DOCUMENT THIS
+     */
     Stats.sumDailyStatsAcrossStatsObjects = function(objects, statName) {
         var result = [];
         $.each(objects, function(index, statsObject) {
@@ -704,6 +865,9 @@ mopub.Utils = mopub.Utils || {};
         return result;
     };
 
+    /*
+     * ## DOCUMENT THIS
+     */
     Stats.getGraphCtrStats = function(objects) {
         var result = [];
 
@@ -729,6 +893,9 @@ mopub.Utils = mopub.Utils || {};
         return result;
     };
 
+    /*
+     * ## DOCUMENT THIS
+     */
     Stats.getDailyCtrAcrossStatsObjects = function(objects) {
         var ctr = [];
         var clicks = Stats.sumDailyStatsAcrossStatsObjects(objects, "click_count");
@@ -742,12 +909,13 @@ mopub.Utils = mopub.Utils || {};
 
 })(mopub.Stats = mopub.Stats || {}, this.jQuery);
 
-// =====================================================================
-// mopub.Chart
-// =====================================================================
-
+/*
+ * # Mopub Charting
+ */
 (function(Chart, $) {
-
+    /*
+     * ## Dashboard Stats Chart
+     */
     Chart.setupDashboardStatsChart = function(seriesType) {
         // get active metric from breakdown
         var metricElement = $('#dashboard-stats .stats-breakdown .active');
@@ -873,7 +1041,10 @@ mopub.Utils = mopub.Utils || {};
         $('#dashboard-stats-chart').removeClass('chart-loading');
      };
 
-
+    /*
+     * ## Pie charts
+     * Utility function for creating a pie chart with default options
+     */
     Chart.setupPieChart = function (selector, title, chart_data) {
 
         this.impressionPieChart = new Highcharts.Chart({
@@ -927,31 +1098,3 @@ mopub.Utils = mopub.Utils || {};
 
 
 })(mopub.Chart = mopub.Chart || {}, this.jQuery);
-
-function obj_equals(x, y) {
-    for(p in y) {
-        if(typeof(x[p])=='undefined') {return false;}
-    }
-    for(p in y) {
-        if (y[p]) {
-            switch(typeof(y[p])) {
-              case 'object':
-                if (!y[p].equals(x[p])) { return false }; break;
-              case 'function':
-                if (typeof(x[p])=='undefined' || (p != 'equals' && y[p].toString() != x[p].toString())) { return false; }; break;
-            default:
-                if (y[p] != x[p]) { return false; }
-            }
-        }
-        else {
-            if (x[p]) {
-                return false;
-            }
-        }
-    }
-    for(p in x){
-        if(typeof(y[p])=='undefined') {return false;}
-    }
-    return true;
-}
-

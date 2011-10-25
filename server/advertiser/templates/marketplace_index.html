@@ -58,7 +58,7 @@
       </div>
       <div class="data-figure">
         <div class="figure">
-          ${{ top_level_mpx_stats.revenue|withsep }}
+          {{ top_level_mpx_stats.revenue|withsep }}
         </div>
         <div class="label">
           Revenue
@@ -135,24 +135,39 @@
   <div class="clearfix tab-section" id="settings">
 
     <h2> Marketplace Settings </h2>
-    <div class="well"> </div>
+    <div class="well">
+      <label for="blind"> Make my marketplace requests blind </label>
+      <input name="blind" type="checkbox" disabled="disabled" />
+      <br />
+      <label for="default_price_floor"> Set the default price floor for targeted adunits </label>
+      <input name="default_price_floor" type="checkbox" disabled="disabled" />
+    </div>
 
     <h2>Blocklist</h2>
     <div class="well">
-      <div id="current_blocklist">
-        {% for url in blocklist %}
-          {{url}} <a href="{% url remove_blocklist_handler url %}">Remove</a><br />
-        {% empty %}
-          There are no blocked advertisers
-      {% endfor %}
+      <div class="clearfix" style="width: 560px;">
+        <div id="current_blocklist" class="right">
+          <h3> Currently Blocked </h3>
+          {% for url in blocklist %}
+            {{url}}
+            <a href="{% url remove_blocklist_handler url %}">Remove</a>
+            <br />
+          {% empty %}
+            There are no blocked advertisers
+          {% endfor %}
+        </div>
 
-      <form action="{% url add_blocklist_handler %}" method="POST" id="addblocklist" class="validate">
-        <textarea rows="2" cols="20" placeholder="Add blocked advertiser domains here" name="blocklist"></textarea>
-      </form>
 
-      <a href="#" class="btn" id="blocklist-submit"> Add </a>
+        <form action="{% url add_blocklist_handler %}" method="POST" id="addblocklist" class="validate left">
+          <h3> Add blocked advertiser domains </h3>
+          <textarea rows="10" cols="20" placeholder="Add blocked blocked advertiser domains here. You can add as many as you want at a time." name="blocklist"></textarea>
+          <br />
+          <a href="#" class="btn" id="blocklist-submit"> Add </a>
+        </form>
 
       </div>
+
+
     </div>
 
     <div class="right button-group">
@@ -177,7 +192,7 @@
   <script type="text/javascript" src="/js/underscore.min.js"></script>
   <script type="text/javascript" src="/js/json2.js"></script>
   <script type="text/javascript" src="/js/backbone.min.js"></script>
-  <script type="text/javascript" src="/js/mustache.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.tipsy.js"></script>
   <script type="text/javascript" src="/js/mopub-marketplace.js"></script>
   <script type="text/javascript">
     $(document).ready(function() {

@@ -67,10 +67,6 @@ class AdGroupIndexHandler(RequestHandler):
         for campaign in campaigns:
             campaigns_dict[campaign.key()] = campaign
 
-        # if they have a marketplace campaign and they havent accepted the marketplace
-        # tos, we need to pop up an error.
-        has_marketplace_campaign = any([campaign.marketplace() for campaign in campaigns])
-
 
         if campaigns:
             adgroups = AdGroupQueryManager().get_adgroups(account=self.account)
@@ -79,7 +75,10 @@ class AdGroupIndexHandler(RequestHandler):
 
         # Roll up and attach various stats to adgroups
         for adgroup in adgroups:
-            adgroup.campaign = campaigns_dict[adgroup._campaign]
+            try:
+                adgroup.campaign = campaigns_dict[adgroup._campaign]
+            except KeyError:
+                pass
 
 
         # memoize
@@ -91,7 +90,6 @@ class AdGroupIndexHandler(RequestHandler):
         stats_model = StatsModelQueryManager(self.account, offline=self.offline)
         stats = stats_model.get_stats_for_days(publisher=None, advertiser=None, days=days)
 
-        logging.warn(stats)
 
         key = "||"
         stats_dict = {}
@@ -128,7 +126,7 @@ class AdGroupIndexHandler(RequestHandler):
 
         # Due to weirdness, network_campaigns and backfill_promo_campaigns are actually lists of adgroups
         sorted_campaign_groups = _sort_campaigns(adgroups)
-        promo_campaigns, guaranteed_campaigns, marketplace_campaigns, network_campaigns, backfill_promo_campaigns, backfill_marketplace_campaigns = sorted_campaign_groups
+        promo_campaigns, guaranteed_campaigns, marketplace_campaigns, network_campaigns, backfill_promo_campaigns = sorted_campaign_groups
 
         guarantee_levels = _sort_guarantee_levels(guaranteed_campaigns)
 
@@ -150,13 +148,12 @@ class AdGroupIndexHandler(RequestHandler):
                                    'guarantee_levels': guarantee_levels,
                                    'guarantee_num': len(guaranteed_campaigns),
                                    'marketplace': marketplace_campaigns,
-                                   'backfill_marketplace': backfill_marketplace_campaigns,
                                    'promo': promo_campaigns,
                                    'network': network_campaigns,
                                    'backfill_promo': backfill_promo_campaigns,
                                    'account': self.account,
                                    'helptext':help_text,
-                                   'has_marketplace_campaign': has_marketplace_campaign})
+                               })
 
 ####### Helpers for campaign page #######
 
@@ -198,10 +195,14 @@ def _sort_campaigns(adgroups):
     backfill_promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_promo'], adgroups)
     backfill_promo_campaigns = sorted(backfill_promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
 
-    backfill_marketplace_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_marketplace'], adgroups)
-    backfill_marketplace_campaigns = sorted(backfill_marketplace_campaigns, lambda x,y: cmp(x.bid, y.bid))
 
-    return [promo_campaigns, guaranteed_campaigns, marketplace_campaigns, network_campaigns, backfill_promo_campaigns, backfill_marketplace_campaigns]
+    return [
+        promo_campaigns,
+        guaranteed_campaigns,
+        marketplace_campaigns,
+        network_campaigns,
+        backfill_promo_campaigns,
+    ]
 
 def _calc_app_level_stats(adgroups):
     # adgroup1.all_stats = [StatsModel(day=1), StatsModel(day=2), StatsModel(day=3)]
@@ -1217,6 +1218,11 @@ class MarketplaceIndexHandler(RequestHandler):
 def marketplace_index(request, *args, **kwargs):
     return MarketplaceIndexHandler()(request, *args, **kwargs)
 
+
+
+
+
+
 class AddBlocklistHandler(RequestHandler):
     def post(self):
         add_blocklist_string = self.request.POST.get('blocklist')
@@ -1226,8 +1232,6 @@ class AddBlocklistHandler(RequestHandler):
             network_config = self.account.network_config
             network_config.blocklist.extend(add_blocklist)
             network_config.blocklist = sorted(set(network_config.blocklist))   # Removes duplicates and sorts
-            logging.info('hiiiii')
-            logging.info(network_config.blocklist)
             AccountQueryManager().update_config_and_put(account=self.account,network_config=network_config)
 
         return HttpResponseRedirect(reverse('marketplace_index'))

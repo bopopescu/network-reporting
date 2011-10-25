@@ -310,12 +310,18 @@
   </div>
 
   <div class="tab-section" id="guaranteed">
+
     <a class="right btn add icon"  href="{% url advertiser_campaign_create %}#gtee">Add a campaign</a>
+
     <form method="post" action="{% url advertiser_bid_pause %}" id="campaignForm">
-    <input type="hidden" name="action" id="action"/>
-    <h2>Guaranteed {% if not guarantee_num %}<span class="muted">(None)</span>{% endif %}
-    <img id="gtee-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img>
-    </h2>
+      <input type="hidden" name="action" id="action"/>
+      {% if not guarantee_num %}
+        <h2> No Guaranteed Campaigns </h2>
+      {% else %}
+        <h2> Guaranteed Performance ({{start_date|format_date_compact}} to {{end_date|format_date_compact}}) </h2>
+
+      {% endif %}
+      <img id="gtee-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img>
 
     {% if guarantee_num %}
       <div id='gtee-rollups' class="campaignData-rollup">
@@ -768,9 +774,7 @@
               {% else %}
 
                 <div class="alert-message block-message info">
-                  Ad Networks are awesome. Get started using them now!
-
-                  Put ad network quick adding here.
+                  Ad network campaigns can be set up to serve ads from any of the big ad networks. Click 'Add a campaign' to get started using ad networks.
                 </div>
 
             {% endif %}

@@ -1509,6 +1509,8 @@ table.simpletable {
     font-size: 16px; }
   table.simpletable td {
     vertical-align: top; }
+    table.simpletable td.align_right {
+      text-align: right; }
   table.simpletable th + th, table.simpletable td + td {
     border-left: 1px solid #ddd; }
   table.simpletable tr + tr td {
@@ -1535,11 +1537,20 @@ table.simpletable {
     font-size: 16px; }
 
 .zebra-striped tbody tr:nth-child(odd) td {
-  background-color: #f9f9f9; }
+  background-color: #f9f9f9;
+  -webkit-box-shadow: inset 0px 1px 5px #eeeeee;
+  -moz-box-shadow: inset 0px 1px 5px #eeeeee;
+  box-shadow: inset 0px 1px 5px #eeeeee; }
 .zebra-striped tbody tr:nth-child(even) td {
-  background-color: #fff; }
+  background-color: #fff;
+  -webkit-box-shadow: 0px 1px 5px #eeeeee;
+  -moz-box-shadow: 0px 1px 5px #eeeeee;
+  box-shadow: 0px 1px 5px #eeeeee; }
 .zebra-striped tbody tr:hover td {
-  background-color: #EBF2F7; }
+  background-color: #EBF2F7;
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none; }
 
 table .header {
   cursor: pointer; }

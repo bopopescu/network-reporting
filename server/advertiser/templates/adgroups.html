@@ -79,7 +79,12 @@
             Before you set up your ad campaigns, we recommend that you set up your App inventory.  Visit the <a href="{% url publisher_index %}">Dashboard</a> to add your Apps.
           </div>
 {% endif %}
-{#{% if not has_marketplace_campaign and not account.stats == 'step4' %}#}
+{% if marketplace %}
+<div class="alert-message block-message">
+  The revenue numbers reported for the marketplace may be incorrect.  For now, the revenue number should be disregarded.  This error will be fixed on Wednesday, October 26.  If you would like accurate revenue numbers in the meantime, email support@mopub.com and we can generate revenue reports for you.
+</div>
+{% endif %}
+{% if not marketplace %}
           <div class="alert-message block-message clearfix">
             We've just launched MoPub Marketplace, our state of the art real-time bidding exchange.
             Add a new <a href="{% url advertiser_campaign_create %}#marketplace">marketplace campaign</a> to get started, or take a look at our <a href="{% url mpx_info %}">information page</a> if you want to know more about how it works.
@@ -87,7 +92,7 @@
             <a class="btn right" href="{% url mpx_info %}">Get Started</a>
 
           </div>
-{#  {% endif %} #}
+{% endif %}
           <div class="separated">
             <section class="offset nomargin" id="dashboard-stats">
               <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>

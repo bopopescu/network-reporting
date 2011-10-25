@@ -81,12 +81,13 @@ class App(db.Model):
             'mweb': 'Mobile Web'
         }
         return types[self.app_type]
-    
-    @property    
+
+    @property
     def icon_url(self):
         from google.appengine.api import images
-        if not self.icon_blob: return None
+        if not self.icon_blob: return "/placeholders/image.gif"
         return images.get_serving_url(self.icon_blob)
+
 
     def get_owner(self):
         return None

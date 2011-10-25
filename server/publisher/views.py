@@ -73,8 +73,8 @@ class AppIndexHandler(RequestHandler):
             return HttpResponseRedirect(reverse('publisher_app_create'))
 
         for app in apps:
-            if app.icon:
-                app.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(app.icon)
+        #     if app.icon:
+        #         app.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(app.icon)
 
             # attaching adunits onto the app object
             app.adunits = sorted(AdUnitQueryManager.get_adunits(app=app), key=lambda adunit:adunit.name)
@@ -367,8 +367,8 @@ class ShowAppHandler(RequestHandler):
 
         help_text = 'Create an Ad Unit below' if len(app.adunits) == 0 else None
 
-        if app.icon:
-            app.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(app.icon)
+        # if app.icon:
+        #     app.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(app.icon)
 
         # In the graph, only show the top 3 ad units and bundle the rest if there are more than 4
         app.graph_adunits = app.adunits[0:4]

@@ -647,8 +647,8 @@ class ShowAdGroupHandler(RequestHandler):
                                                            advertiser=adgroup,
                                                            days=days)
                 app.stats = reduce(lambda x, y: x+y, app.all_stats, StatsModel())
-                if app.icon:
-                    app.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(app.icon)
+                # if app.icon:
+                #     app.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(app.icon)
                 apps[au.app_key.key()] = app
             else:
                 app.adunits += [au]
@@ -1088,8 +1088,11 @@ class AJAXStatsHandler(RequestHandler):
                     adgroup.percent_delivered = percent_delivered
 
                     summed_stats.status = filters.campaign_status(adgroup)
+
+                    logging.warn(adgroup.running)
+                    logging.warn(adgroup.campaign.budget)
                     if adgroup.running and adgroup.campaign.budget:
-                        summed_stats.on_schedule = "on pace" if budget_service.get_osi(adgroup.campaign) else "behind"
+                        summed_stats.on_schedule = str(budget_service.get_osi(adgroup.campaign) * 100)
                     else:
                         summed_stats.on_schedule = "none"
                 stats_dict[key]['sum'] = summed_stats.to_dict()

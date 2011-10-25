@@ -1,3 +1,4 @@
+from __future__ import with_statement
 import urllib2 as urllib
 import logging
 
@@ -70,7 +71,7 @@ class AppForm(mpforms.MPModelForm):
                 try:
                     response = urllib.urlopen(self.cleaned_data['img_url'])
                     img = response.read()
-                    
+
 
                     # add the icon it to the blob store
                     fname = files.blobstore.create(mime_type='image/png')
@@ -78,10 +79,10 @@ class AppForm(mpforms.MPModelForm):
                         f.write(img)
                     files.finalize(fname)
                     blob_key = files.blobstore.get_blob_key(fname)
-                    
+
                     obj.icon_blob = blob_key
                     obj.icon = db.Blob(img) # TODO: stop this!
-                    
+
                 except Exception, e: # TODO: appropriately handle the failure
                     raise Exception('WTF: %s'%e)
             else:

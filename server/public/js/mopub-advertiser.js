@@ -959,18 +959,17 @@ var mopub = mopub || {};
       results.ctr = mopub.Utils.formatNumberAsPercentage(results.ctr);
       results.fill_rate = mopub.Utils.formatNumberAsPercentage(results.fill_rate);
 
-      var onScheduleHtml = "";
-      if (results.status == "Running") {
-        if (results.on_schedule == "on pace") {
-          onScheduleHtml = '<span class="osi-success"> On pace ' +
-            '<a href="#" id="campaign-osi-success-helpLink" class="whatsthis">' +
-            '<div class="whatsthis-icon"></div></a></span>';
-        } else if (results.on_schedule == "behind") {
-          onScheduleHtml = '<span class="osi-failure""> Behind ' +
-            '<a href="#" id="campaign-osi-failure-helpLink" class="whatsthis">' +
-            '<div class="whatsthis-icon"></div></a></span>';
+
+        // Display for pacing percentage
+        // Appears underneath the status in campaigns tables
+        // add || results.stats == "Eligible" to test locally
+        var onScheduleHtml = "";
+        if (results.status == "Running") {
+            if (results.on_schedule != 'none') {
+                onScheduleHtml = "(" + results.on_schedule + ".00%) Delivered";
+            }
         }
-      }
+
       results.on_schedule = onScheduleHtml;
 
       return results;

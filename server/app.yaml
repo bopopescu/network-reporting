@@ -76,7 +76,7 @@ handlers:
   login: admin
 
 - url: /mdb/.*
-  script: mopub_logging/views.py
+  script: stats/views.py
   login: admin
 
 - url: /offline/.*

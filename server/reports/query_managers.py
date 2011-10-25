@@ -29,8 +29,8 @@ REP_Q = 'report_queue'
 AWS_ACCT = 345840704531
 SQS_ENDPOINT = 'queue.amazonaws.com'
 SQS_URI = '/%s/%s' % (REP_Q, AWS_ACCT)
-SQS_URL = 'http://%s%s' % (SQS_ENDPOINT, SQS_URI) 
- 
+SQS_URL = 'http://%s%s' % (SQS_ENDPOINT, SQS_URI)
+
 NUM_REP_QS = 1
 REP_Q_NAME = "gen-rep-%02d"
 DEFAULT_REPORT_DIM_LIST = (('app', 'Apps'), ('adunit', 'Ad Units'), ('campaign', 'Campaigns'))
@@ -50,7 +50,7 @@ def fire_report_sqs(data):
     # Write returns True if success, keep trying until it succeeds
     while not REP_Q.write(m):
         pass
-    
+
 
 
 class ReportQueryManager(CachedQueryManager):
@@ -148,12 +148,12 @@ class ReportQueryManager(CachedQueryManager):
                     adding_reps = True
                     reports.append(self.add_report(dim, None, None, None, 7, name=name, saved=True, interval='7days', default=True))
         return reports, adding_reps
-                    
+
     def new_report(self, report, now=None, testing=False):
         if not isinstance(report, db.Model) or isinstance(report, str) or isinstance(report, unicode):
             report = self.get_report_by_key(report)
 
-        dt = datetime.timedelta(days=report.days) 
+        dt = datetime.timedelta(days=report.days)
         one_day = datetime.timedelta(days=1)
         if now is None:
             now = datetime.datetime.now().date()
@@ -161,7 +161,7 @@ class ReportQueryManager(CachedQueryManager):
         # Find start and end based on interval things
         if report.interval:
             if report.interval == 'yesterday':
-                now = now - one_day 
+                now = now - one_day
             elif report.interval == 'lmonth':
                 start, end = date_magic.last_month(now)
                 now = end.date()
@@ -180,7 +180,7 @@ class ReportQueryManager(CachedQueryManager):
 
         # Set up sched to run at a later time
         report.next_sched_date = date_magic.get_next_day(report.sched_interval, now)
-        
+
         # Save the reports
         self.put_report(report)
         self.put_report(new_report)
@@ -194,17 +194,18 @@ class ReportQueryManager(CachedQueryManager):
 
         return new_report
 
-    def add_report(self, 
-                     d1, 
-                     d2, 
-                     d3, 
-                     end, 
-                     days, 
-                     name=None, 
+    def add_report(self,
+                     d1,
+                     d2,
+                     d3,
+                     end,
+                     days,
+                     name=None,
                      saved=False,
-                     interval=None, 
-                     sched_interval=None, 
-                     recipients = None, 
+                     interval=None,
+                     sched_interval=None,
+                     email=None,
+                     recipients = None,
                      default=False,
                      testing=False):
         '''Create a new scheduled report with the given specs
@@ -219,7 +220,7 @@ class ReportQueryManager(CachedQueryManager):
         if interval is None:
             interval = 'custom'
         if name is None:
-            dt = datetime.timedelta(days=days) 
+            dt = datetime.timedelta(days=days)
             start = end - dt
             name = d1
             if d2:
@@ -229,7 +230,7 @@ class ReportQueryManager(CachedQueryManager):
             name += ' -'
             if interval == 'custom':
                 name += ' ' + start.isoformat()
-                name += ' -- ' + end.isoformat() 
+                name += ' -- ' + end.isoformat()
             elif interval == '7days':
                 name += ' Last 7 days'
             elif interval == 'lmonth':
@@ -268,6 +269,7 @@ class ReportQueryManager(CachedQueryManager):
                                 name=name,
                                 saved=saved,
                                 default=default,
+                                email=email,
                                 recipients=recipients or [],
                                 )
         sched.put()
@@ -292,12 +294,12 @@ class ReportQueryManager(CachedQueryManager):
 
         fire_report_sqs(report)
 
-        return sched 
+        return sched
 
-    
+
     def clone_report(self, report, sched=False):
-        """ Does exactly what you think it will 
-        
+        """ Does exactly what you think it will
+
                 Caveat: scheduled reports that are cloned won't be rescheduled
 
         """

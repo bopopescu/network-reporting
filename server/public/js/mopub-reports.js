@@ -1,5 +1,5 @@
 (function($) {
- 
+
  $(document).ready(function() {
 
 
@@ -58,7 +58,7 @@
     else {
         sub_label = 'Save';
     }
-    
+
     $('#reportCreateForm-submit')
     .button({
         label: sub_label,
@@ -78,9 +78,9 @@
 
     function ajaxSave() {
         $.ajax({url:'http://' + window.location.host + '/reports/save/' + $('#reportKey').val() + '/',
-                success: function() { 
+                success: function() {
                     $('#reports-view-toIndex').click();
-                    } 
+                    }
                 });
     }
 
@@ -176,14 +176,14 @@
             $('#reportExportForm').submit();
         });
 
-            
+
 
     $('.int-selectmenu').selectmenu({
         style: 'popup',
         maxHeight:300,
         width:115
     });
-    
+
     $('#sched_interval').selectmenu({
         style:'popup',
         maxHeight:300,
@@ -214,15 +214,15 @@
                 switch (val) {
                     case 'yesterday':
                         today.setTime(today.getTime() - one_day);
-                        var dte = format_date(today); 
+                        var dte = format_date(today);
                         $('#end-input').val(dte).change();
                         $('#start-input').val(dte).change();
                         break;
                     case '7days':
-                        var dte = format_date(today); 
+                        var dte = format_date(today);
                         $('#end-input').val(dte).change();
                         today.setTime(today.getTime() - (7*one_day));
-                        dte = format_date(today); 
+                        dte = format_date(today);
                         $('#start-input').val(dte).change();
                         break;
                     case 'lmonth':
@@ -230,10 +230,10 @@
                         while (today.getMonth() == this_mo) {
                             today.setTime(today.getTime() - one_day);
                         }
-                        var dte = format_date(today); 
+                        var dte = format_date(today);
                         $('#end-input').val(dte).change();
                         today.setDate(1);
-                        dte = format_date(today); 
+                        dte = format_date(today);
                         $('#start-input').val(dte).change();
                         break;
                 }
@@ -270,8 +270,8 @@
         d2_sel.selectmenu('index', state.d2);
         d2_validate($('#d2'));
         d3_sel.selectmenu('index', state.d3);
-        $('#end-input').val(state.end); 
-        $('#start-input').val(state.start); 
+        $('#end-input').val(state.end);
+        $('#start-input').val(state.start);
         $('#interval').selectmenu('index', state.interv);
         $('#sched_interval').selectmenu('index', state.sched_interv);
         // Trigger those on change events what whatttt
@@ -279,7 +279,7 @@
         $('#sched_interval').change();
         $("#reportName-input").val(state.name);
         if (state.email) {
-            $('#email-input-checkbox').attr('checked',checked);
+            $('#email-input-checkbox').attr('checked');
         }
         else {
             $('#email-input-checkbox').removeAttr('checked');
@@ -290,10 +290,10 @@
         return build_state( sel_state(d1_sel),
                             sel_state(d2_sel),
                             sel_state(d3_sel),
-                            sel_state($('#interval')), 
+                            sel_state($('#interval')),
                             sel_state($('#sched_interval')),
-                            $('#end-input').val(), 
-                            $('#start-input').val(), 
+                            $('#end-input').val(),
+                            $('#start-input').val(),
                             $('#reportName-input').val(),
                             $('#email-input-checkbox')
                             )
@@ -495,7 +495,7 @@
             }
         }).change();
 
-    
+
 
 
     function d2_validate(obj) {
@@ -589,15 +589,19 @@
 
     $("#sched_interval")
     .change(function(e) {
-        $('#email-input').hide();
         $('.schedule-help').hide();
         $('.schedule-help.'+$(this).val()).show();
-        if ($(this).val() != 'none') {
-            $('#email-input').show();
+    }).change();
+
+    $("#email-input-checkbox")
+    .change(function(e) {
+        if ($(this).attr('checked')) {
+            $('#email-recipients').show();
+        } else {
+            $('#email-recipients').hide();
         }
     }).change();
 
-   
     $('#reportStateChangeForm-delete')
         .click(function(e) {
             e.preventDefault();

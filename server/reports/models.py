@@ -70,16 +70,16 @@ def build_stat_dict(stats):
 
         Args:
             stats: List of stats, must have len = 5
-        
+
         Returns:
             dict with keys like statsmodel properties
     """
     rev, req, att, imp, clk, conv = stats
     return dict(revenue = rev,
-                request_count = req, 
-                attempt_count = att, 
-                impression_count = imp, 
-                click_count = clk, 
+                request_count = req,
+                attempt_count = att,
+                impression_count = imp,
+                click_count = clk,
                 conversion_count = conv)
 
 def statsify(stats_dict):
@@ -102,7 +102,7 @@ def statsify(stats_dict):
     return stats_dict
 
 
-            
+
 
 #class ScheduledReport -> has a "next report" time, "report every ____" time, report type, when it's time
 #   to gen a report, this guy makes report objects
@@ -116,18 +116,18 @@ class ScheduledReport(db.Model):
     last_run = db.DateTimeProperty()
     default = db.BooleanProperty(default=False)
 
-    d1 = db.StringProperty(required=True) 
-    d2 = db.StringProperty() 
-    d3 = db.StringProperty() 
+    d1 = db.StringProperty(required=True)
+    d2 = db.StringProperty()
+    d3 = db.StringProperty()
 
     end = db.DateProperty(required=True)
     days = db.IntegerProperty(required=True)
     #daily, weekly, monthly
     interval = db.StringProperty(choices=['today', 'yesterday', '7days', 'lmonth', 'custom'], default='custom')
-    
+
     sched_interval = db.StringProperty(choices = ['none', 'daily', 'weekly', 'monthly', 'quarterly'], default='none')
     next_sched_date = db.DateProperty(default=datetime.now().date())
-    email = db.BooleanProperty(default=False)
+    email = db.BooleanProperty(default=True)
     recipients = db.StringListProperty(default=[])
 
     @property
@@ -145,7 +145,7 @@ class ScheduledReport(db.Model):
     @property
     def date_details(self):
         return self.most_recent.date_details(self.interval)
-    
+
     @property
     def dim_details(self):
         return self.most_recent.dim_details
@@ -205,37 +205,41 @@ class Report(db.Model):
         mesg = mail.EmailMessage(sender = 'olp@mopub.com',
                                  subject = 'Your report has completed',
                                  bcc = 'report-monitoring@mopub.com')
-        mesg_dict = dict(report_key = str(self.schedule.key()))
+        mesg_dict = dict(report_key = str(self.schedule.key()),
+                         dim1 = self.d1,
+                         dim2 = self.d2,
+                         dim3 = self.d3,
+                         start = self.start.strftime('%m/%d/%y'),
+                         end = self.end.strftime('%m/%d/%y'))
         mesg.body = REPORT_FINISHED_SIMPLE % mesg_dict
-        if self.recipients:
-            for recipient in self.recipients:
-                mesg.to = recipient
-                try:
-                    mesg.send()
-                except InvalidEmailError, e:
-                    continue
+        if self.email and self.recipients:
+            mesg.to = self.recipients
         else:
-            return
+            mesg.to = 'report-monitoring@mopub.com'
 
+        try:
+            mesg.send()
+        except mail.InvalidEmailError, e:
+            pass
 
     def notify_failure(self):
+        if not self.email:
+            return
         mesg = mail.EmailMessage(sender = 'olp@mopub.com',
                                  subject = 'Your report has failed',
                                  bcc = 'report-monitoring@mopub.com',
                                  )
         mesg_dict = dict(dim1 = self.d1, dim2 = self.d2, dim3 = self.d3, start = self.start.strftime('%m/%d/%y'), end = self.end.strftime('%m/%d/%y'))
         mesg.body = REPORT_FAILED_SIMPLE % mesg_dict
-        if self.recipients:
-            for recipient in self.recipients:
-                mesg.to = recipient
-                try:
-                    mesg.send()
-                except InvalidEmailError, e:
-                    continue
+        if self.email and self.recipients:
+            mesg.to = self.recipients
         else:
-            return
+            mesg.to = 'report-monitoring@mopub.com'
 
-                                
+        try:
+            mesg.send()
+        except mail.InvalidEmailError, e:
+            pass
 
     @property
     def d1(self):
@@ -248,7 +252,7 @@ class Report(db.Model):
     @property
     def d3(self):
         return self.schedule.d3
-        
+
     @property
     def dims(self):
         return [self.d1, self.d2, self.d3]
@@ -279,7 +283,7 @@ class Report(db.Model):
 
     def __str__(self):
         return "Report(d1=%s, d2=%s, d3=%s, start=%s, end=%s)" % (self.d1, self.d2, self.d3, self.start, self.end)
-    
+
     @property
     def html_data(self):
         return loader.render_to_string('reports/report.html', dict(all_stats=self.data))
@@ -302,7 +306,7 @@ class Report(db.Model):
             return data
         else:
             return None
-        
+
     def get_export_data(self, level, level_total, names, stats_dict):
         if self.dims[level] == DAY and self.report_blob:
             # sort days numerically
@@ -319,24 +323,24 @@ class Report(db.Model):
 
             for i in range(level_total - level):
                 data.append('')
-    
+
             if isinstance(value['stats'], dict):
                 impressions = float(value['stats']['impression_count'])
                 ctr = 'n/a' if impressions == 0 else value['stats']['click_count'] / impressions
                 data += [value['stats']['request_count'], value['stats']['impression_count'], value['stats']['click_count'], value['stats']['conversion_count'], value['stats']['revenue'], ctr]
             else:
-                data += [value['stats'].request_count, value['stats'].impression_count, value['stats'].click_count, value['stats'].conversion_count] 
+                data += [value['stats'].request_count, value['stats'].impression_count, value['stats'].click_count, value['stats'].conversion_count]
 
             data_list.append(data)
             if 'sub_stats' in value:
                 temp_names = list(names)
                 temp_names.append(value['name'])
                 data_list += (self.get_export_data(level + 1, level_total, temp_names, value['sub_stats']))
-    
-        return data_list
-        
 
-    
+        return data_list
+
+
+
     @property
     def details(self):
         def detail_helper(interval):
@@ -350,7 +354,7 @@ class Report(db.Model):
                 s_str = self.start.strftime('%m/%d/%y')
                 e_str = self.end.strftime('%m/%d/%y')
                 return '%s to %s' % (s_str, e_str)
-            else: 
+            else:
                 if interval == '7days':
                     return 'Last 7 days'
                 elif interval == 'lmonth':
@@ -358,7 +362,7 @@ class Report(db.Model):
                 else:
                     return interval.title()
         return date_helper
-    
+
     @property
     def dim_details(self):
         if self.d3:
@@ -373,14 +377,14 @@ class Report(db.Model):
 
 
     def batch_get_objs(self, blobreader, offline=False):
-        """ Takes a blobreader, goes through the lines and gets the keys that 
+        """ Takes a blobreader, goes through the lines and gets the keys that
         neede a db get and batches them, then gets all of them and derefs
         them to the appropriate obj (apps from adunits for example)"""
         if offline:
             return None
         batch = {}
         key_dims = {}
-        # Map everything to objects by (dim, key) since everything of 
+        # Map everything to objects by (dim, key) since everything of
         # simliar types has the same key, but the dims are different
         # so the (dim, key) pairs are unique
         dimkey_to_obj = {}
@@ -409,7 +413,7 @@ class Report(db.Model):
                 if dim in CRTV_DIMS:
                     if key not in batch[CRTV]:
                         batch[CRTV].append(key)
-                    
+
                 elif dim in AU_DIMS:
                     if key not in batch[AU]:
                         batch[AU].append(key)
@@ -453,27 +457,27 @@ class Report(db.Model):
         blobreader.close()
         return dimkey_to_obj
 
-                    
 
 
-                
+
+
     #keys will either make sense, or be AU, CRTV
-    """This is a second reduce.  It is possible to construct a worst-case scenario 
+    """This is a second reduce.  It is possible to construct a worst-case scenario
     (tons of creatives, very few campaigns (among others)) where this gets hella slow.
     This is done this way so the mapreduce NEVER has to touch the datastore to resolve things,
-    all the resolution is done here.  In the future it might makes sense to take this and put it 
+    all the resolution is done here.  In the future it might makes sense to take this and put it
     into a second mapreduce job that's run when the report finalizes.
     """
     def parse_report_blob(self, blobreader, dimkey_to_obj, testing=False):
         """ turns a reports report_blob blobstore object into a dictionary
-        
+
         Args:
             blobreader: Line reader for this reports report_blob
 
         Returns:
             a dictionary of values in the following format:
 
-            stats_dict = { KEY : 
+            stats_dict = { KEY :
                              { 'stats' : [req, att, etc.],
                                'name'  : <human readable name>,
                                'sub_stats' : stats_dict (recursiionnnn)
@@ -521,7 +525,7 @@ class Report(db.Model):
                 #if this key doesn't exist, build that shit
                 if not temp.has_key(key):
                     #this key doesn't exist, so no previous anything can exist
-                    temp[key] = dict(name = name) 
+                    temp[key] = dict(name = name)
                     if (i+1) == len(keys): #last key
                         temp[key]['stats'] = vals
                     else: #more keys
@@ -535,7 +539,7 @@ class Report(db.Model):
                     if (i+1) == len(keys):
                         #Since we're not doing anything smart-ish with the
                         #keys in the map/reduce phase (to speed it up by not
-                        #doing Datastore reads) there is a possibility for 
+                        #doing Datastore reads) there is a possibility for
                         #dupes.  If there are dupes, don't overwrite, sum
                         if temp[key].has_key('stats'):
                             temp[key]['stats'] = [cust_sum(zipt) for zipt in zip(vals, temp[key]['stats'])]
@@ -546,15 +550,15 @@ class Report(db.Model):
                         if not temp[key].has_key('sub_stats'):
                             temp[key]['sub_stats'] = {}
                         temp = temp[key]['sub_stats']
-        
+
         # add missing days on a request for a range
         self.add_missing_dates(0, final)
-                      
+
         # logging.debug(final)
         if not testing:
-            blobreader.close()       
+            blobreader.close()
         return self.rollup_revenue(statsify(final))
-        
+
 
     def add_missing_dates(self, level, stats_dict):
         d = self.dims[level]
@@ -583,7 +587,7 @@ class Report(db.Model):
                     # Bottom level, just roll up
                     rev += v['stats']['revenue']
                 else:
-                    # Not bottom level, roll up and set 
+                    # Not bottom level, roll up and set
                     if 'sub_stats' in v:
                         rev += rollup_help(v['sub_stats'], depth-1)
                     stats[k]['stats']['revenue'] = rev
@@ -640,7 +644,7 @@ class Report(db.Model):
 
                 elif dim == P:
                     priority = dimkey_to_obj[key_tuple]
-                
+
                 else:
                     priority = None
                 if priority == 'network':
@@ -648,7 +652,7 @@ class Report(db.Model):
 
         return (req, att)
 
-    def get_bid_info(self, idx, key, dimkey_to_obj, offline = False): 
+    def get_bid_info(self, idx, key, dimkey_to_obj, offline = False):
         if idx == 0:
             dim = self.d1
         elif idx == 1:
@@ -657,7 +661,7 @@ class Report(db.Model):
             dim = self.d3
         else:
             dim = None
-            
+
         if offline:
             return None, None
 
@@ -682,7 +686,7 @@ class Report(db.Model):
         return None, None
 
     def get_key_name(self, idx, key, dimkey_to_obj, offline=False):
-        """ Turns arbitrary keys and things into human-readable names to 
+        """ Turns arbitrary keys and things into human-readable names to
             be output to the report
 
             Args:
@@ -702,7 +706,7 @@ class Report(db.Model):
         else:
             logging.error("Impossible dim level when rebuilding blob keys")
             dim = None
-            
+
         if dim in ONLINE_DIMS and offline:
             return ('%s-%s' % (dim, key), key)
 
@@ -731,7 +735,7 @@ class Report(db.Model):
             #This is cool that this was this easy
 
             #append dim to key because it's possible that day:hour breakdown
-            #was requested, and the keys will be the same, this way they are uniquely 
+            #was requested, and the keys will be the same, this way they are uniquely
             #ID'd
             try:
                 if dim == MO:

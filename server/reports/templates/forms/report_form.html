@@ -27,6 +27,24 @@
         <input id='end-input' type='text' class='date-required input-text input-text-number date-field update-button' name='{{form.end.name}}' size='15' value='{{form.end.value|date:'m/d/Y'}}' placeholder='End'/>
         <span id='dateError' style="display:none; color:red;">* Required</span>
     </dd>
+    <dt>
+        E-mail:
+    </dt>
+    <dd>
+        {{form.email|raw|attrs:'{"id":"email-input-checkbox"}'}}&nbsp;&nbsp;<label for="email-input-checkbox">Notify me when the report finishes</label>
+    </dd>
+    <div id='email-recipients'>
+        <dt>
+            Recipients:
+        </dt>
+        <dd>
+            {{form.recipients|raw}}
+        </dd>
+    </div>
+    <div id='reports-email-helpContent' class='hidden'>
+        <h3>Emailing Scheduled Reports</h3>
+        <p>If you would like to be emailed with a copy of the report as an attachment <strong>each</strong> time that this report is run.</p>
+    </div>
     <dt>Schedule:</dt>
     <dd>
         {{ form.sched_interval|attrs:'{"class":"sched-int-selectmenu", "id": "sched_interval"}'|raw}}
@@ -47,22 +65,4 @@
             </span>
         </div>
     </dd>
-    <div id='email-input'>
-        <dt>
-            E-mail:
-        </dt>
-        <dd>
-            {{form.email|raw|attrs:'{"id":"email-input-checkbox"}'}}&nbsp;&nbsp;Notify me when report finishes.
-        </dd>
-        <dt>
-            Recipients:
-        </dt>
-        <dd>
-            {{form.recipients|raw}}
-        </dd>
-    </div>
-    <div id='reports-email-helpContent' class='hidden'>
-        <h3>Emailing Scheduled Reports</h3>
-        <p>If you would like to be emailed with a copy of the report as an attachment <strong>each</strong> time that this report is run.</p>
-    </div>
     <input id='interval-toggle' type='hidden' value=2 />

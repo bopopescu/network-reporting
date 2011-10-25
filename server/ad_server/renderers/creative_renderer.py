@@ -2,9 +2,25 @@ from ad_server.debug_console import trace_logging
 import random  
 import re      
 import urllib
+import logging
 
 import time                        
 from ad_server.renderers.header_context import HeaderContext
+from common.utils.helpers import make_mopub_id
+
+
+####################### DCLK MACROS #######################
+CLK_URL = r'%%CLICK_URL_UNESC%%'
+CLK_URL_ESC = r'%%CLICK_URL_ESC%%'
+CACHEBUSTER = r'%%CACHEBUSTER%%'
+ADGROUP_ID = r'%eaid!'
+CREATIVE_ID = r'%ecid!'
+CLK_THRU = r'%%DEST_URL%%'
+CLK_THRU_ESC = r'%%DEST_URL_ESC%%'
+CLK_THRU_2ESC = r'%%DEST_URL_ESC_ESC%%'
+UDID = r'%eudid!'
+
+CACHEBUSTER_MAX = 10000
  
 class BaseCreativeRenderer(object):  
     """ 
@@ -33,13 +49,15 @@ class BaseCreativeRenderer(object):
                        version,
                        on_fail_exclude_adgroups,
                        keywords=None,
-                       random_val=None): 
+                       random_val=None,
+                       testing = False): 
         """
         Initialize renderer with all information that will be necessary to
         render the creative. When subclassing it may be necessary to override
         this method. Always call the superclass __init__ from the overriding
         implementation
         """
+        self.testing = testing
         self.creative = creative
         self.adunit = adunit
         self.udid = udid
@@ -58,6 +76,7 @@ class BaseCreativeRenderer(object):
 
         self.header_context = HeaderContext()
         self.rendered_creative = None
+        self.macro_tuples = self._build_macro_tuples()
 
     def render(self, version_number=None):
         """
@@ -74,7 +93,34 @@ class BaseCreativeRenderer(object):
         self._setup_headers()
         self._setup_content()
 
+        for (macro, value) in self.macro_tuples:
+            #logging.warning("Macro: %s type: %s" % (macro, type(macro)))
+            #logging.warning("Value: %s type: %s" % (value, type(value)))
+            self.rendered_creative = self.rendered_creative.replace(macro, value)
+
         return self.rendered_creative, self.header_context
+
+    def _build_macro_tuples(self):
+        """
+        For this creative, builds a dictionary of the things the macros will
+        replace
+        """
+        global CACHEBUSTER_MAX
+        dest_url = self.creative.url or ''
+        if self.testing:
+            CACHEBUSTER_MAX = 0
+
+        macro_tuples = ((CACHEBUSTER, str(random.randint(0,CACHEBUSTER_MAX))),
+                            (CLK_URL, self.click_url),
+                            (CLK_URL_ESC, urllib.quote(self.click_url)),
+                            (CLK_THRU, dest_url),
+                            (CLK_THRU_ESC, urllib.quote(dest_url)),
+                            (CLK_THRU_2ESC, urllib.quote(urllib.quote(dest_url))),
+                            (ADGROUP_ID, str(self.creative.adgroup.key())),
+                            (CREATIVE_ID, str(self.creative.key())),
+                            (UDID, make_mopub_id(self.udid)),
+                           )
+        return macro_tuples
     
     def _get_imp_and_click_url(self):
         appid = self.creative.conv_appid or ''

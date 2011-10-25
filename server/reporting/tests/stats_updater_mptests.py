@@ -14,7 +14,8 @@ from publisher.models import *
 from reporting.aws_logging import stats_updater
 from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
-from test_utils import add_lists, prepend_list, clear_datastore, debug_key_name, debug_helper
+
+from common.utils.test.test_utils import add_lists, prepend_list, clear_datastore, debug_key_name, debug_helper
 
 AdUnit = Site
 

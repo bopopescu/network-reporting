@@ -520,6 +520,7 @@ class HtmlCreative(Creative):
         This should not be confused with ad_type=html, which means that the
         payload is html as opposed to a native request. """
     html_data = db.TextProperty()
+    ormma_html = db.BooleanProperty(default=False)
 
     @property
     def Renderer(self):
@@ -551,6 +552,10 @@ class ImageCreative(Creative):
 class MarketplaceCreative(HtmlCreative):
     """ If this is targetted to an adunit, lets the ad_auction know to
         run the marketplace battle. """
+
+    @property
+    def multi_format(self):
+        return ('728x90', '320x50','300x250', '160x600', 'full', 'full_tablet')
 
 
 class CustomCreative(HtmlCreative):

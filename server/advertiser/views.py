@@ -135,6 +135,23 @@ class AdGroupIndexHandler(RequestHandler):
 
         help_text = None
 
+        # Ad Network Reports
+        from ad_network_reports.query_managers import AdNetworkReportQueryManager
+        from datetime import date, timedelta
+        manager = AdNetworkReportQueryManager(self.account)
+        mappers = list(manager.get_ad_network_mappers())
+
+        keys = [s.key() for s in mappers]
+        # Get aggregate stats for all the different ad network mappers for the
+        # account between the selected date range
+        aggregates = [manager.get_ad_network_aggregates(n, date.today() -
+            timedelta(days = 8), date.today() - timedelta(days = 1)) for n in
+            mappers]
+        aggregate_stats = zip(keys, mappers, aggregates)
+
+        # Sort alphabetically by application name then by ad network name
+        aggregate_stats = sorted(aggregate_stats, key = lambda s:
+                s[1].application.name + s[1].ad_network_name)
 
         return render_to_response(self.request,
                                  'advertiser/adgroups.html',
@@ -156,7 +173,9 @@ class AdGroupIndexHandler(RequestHandler):
                                    'backfill_promo': backfill_promo_campaigns,
                                    'account': self.account,
                                    'helptext':help_text,
-                                   'has_marketplace_campaign': has_marketplace_campaign})
+                                   'has_marketplace_campaign':
+                                                has_marketplace_campaign,
+                                   'aggregate_stats' : aggregate_stats})
 
 ####### Helpers for campaign page #######
 

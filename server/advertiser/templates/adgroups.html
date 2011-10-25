@@ -99,7 +99,7 @@
     <li> <a href="#guaranteed">  Guaranteed </a> </li>
     <li> <a href="#promotional">  Promotional </a> </li>
     {# <li> <a href="#marketplace">  Marketplace </a> </li> #}
-    <li> <a href="#network">  Ad Networks </a> </li>
+    <li> <a id="network_tab" href=".network">  Ad Networks </a> </li>
   </ul>
 
   {# Controls for showing campaigns by All/Running/Paused/Scheduled #}
@@ -694,8 +694,8 @@
               </div>
               {% endcomment %}
 
-              <div class="tab-section" id="network">
-                <a class="right btn add icon" href="{% url advertiser_campaign_create %}#network">Add a campaign</a>
+              <div class="tab-section network">
+                <a class="right btn add icon" href="{% url advertiser_campaign_create %}.network">Add a campaign</a>
                 <h2>Network Campaigns
                   <img id="network-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img>
                 </h2>
@@ -841,7 +841,9 @@
             <a class="linkIcon" href="{% url advertiser_archive %}"> View Archived Campaigns <span class="ui-icon ui-icon-arrowthick-1-e"></span></a>
             </div>
 
-						{% if aggregate_stats %}
+            <div class="tab-section network">
+							<h2 style="margin-top:20px;">Ad Network Revenue Reports</h2>
+						{% if aggregate_stats and network %}
 							<table width=100%>
 								<thead>
 									<th> App </th>
@@ -871,8 +873,14 @@
 
 							<a class="right btn" href='/ad_network_reports/add'>Add more network credentials</a>
 						{% else %}
-							<a class="right btn" href='/ad_network_reports/add'>Set up network reporting</a>
+						  {% if network %}
+                <div class="alert-message block-message info">
+                  Ad network revenue reporting can be set up to see statistics from any of the big ad networks. Click 'Set up network reporting' to get started using ad network reports.
+                </div>
+							  <a class="right btn" href='/ad_network_reports/add'>Set up network reporting</a>
+						  {% endif %}
 						{% endif %}
+					</div>
           </section>
 
           {# Help Content #}
@@ -924,7 +932,7 @@
             $(".form-submit-left").hide();
         }).click();
 
-        $.each(["#marketplace", "#promotional","#guaranteed", "#network"], function(iter, item) {
+        $.each(["#marketplace", "#promotional","#guaranteed", ".network"], function(iter, item) {
             $("a[href='" + item + "']").parent().click(function () {
                 $("#campaigns-control-panel").show();
                 $(".form-submit-left").show();

@@ -155,7 +155,6 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                                         username=username,
                                         password=password,
                                         client_key=client_key)
-
         login_info.put()
 
         apps_with_publisher_ids = self.get_apps_with_publisher_ids(

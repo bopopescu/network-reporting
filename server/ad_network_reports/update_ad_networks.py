@@ -26,7 +26,7 @@ from google.appengine.api import mail
 from datetime import date, datetime, timedelta
 
 from ad_network_reports.ad_networks import AD_NETWORKS
-from ad_network_reports.models import AdNetworkScrapeStats
+from ad_network_reports.models import AdNetworkScrapeStats, AdNetworkAggregate
 from ad_network_reports.query_managers import AdNetworkReportQueryManager, \
         get_all_login_credentials
 from common.utils import date_magic
@@ -36,8 +36,10 @@ from google.appengine.ext import db
 
 def setup_remote_api():
     from google.appengine.ext.remote_api import remote_api_stub
-    app_id = 'mopub-experimental'
-    host = '38.latest.mopub-experimental.appspot.com'
+    #app_id = 'mopub-experimental'
+    #host = '38.latest.mopub-experimental.appspot.com'
+    app_id = 'mopub-inc'
+    host = '38.latest.mopub-inc.appspot.com'
     remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', auth_func,
             host)
 
@@ -45,9 +47,8 @@ def auth_func():
     return 'olp@mopub.com', 'N47935'
 
 def send_stats_mail(account, manager, test_date, valid_stats_list):
-    """Send email with scrape stats data for the test date organized in a
-    table.
-    """
+    """Send email with stats data for the test date organized in a table."""
+    emails = False
     if account and account.user:
         emails = account.user.email()
     elif account.all_mpusers:
@@ -77,8 +78,7 @@ def send_stats_mail(account, manager, test_date, valid_stats_list):
         # CSS doesn't work with Gmail so use horrible html style tags ex. <b>
         mail.send_mail(sender='olp@mopub.com',
                        #to='report-monitoring@mopub.com',
-                       to='matt@mopub.com',
-                       cc='tiago@mopub.com',
+                       to='tiago@mopub.com',
                        subject=("Ad Network Revenue Reporting for %s" %
                            test_date.strftime("%m/%d/%y")),
                        body=("Learn more at http://mopub-experimental.appspot.com/"
@@ -137,7 +137,7 @@ def update_ad_networks(start_date = None, end_date = None):
 
     for test_date in date_magic.gen_days(start_date, end_date):
         logging.info("TEST DATE: %s" % test_date.strftime("%Y %m %d"))
-
+        aggregate = AdNetworkAggregate(date=test_date)
 
         previous_account_key = None
         valid_stats_list = []
@@ -170,12 +170,14 @@ def update_ad_networks(start_date = None, end_date = None):
                 # each app for the test_date
                 stats_list = scraper.get_site_stats(test_date)
             except Exception as e:
+                aggregate.failed += 1
                 logging.error(("Couldn't get get stats for %s network for "
                         "\"%s\" account.  Can try again later or perhaps %s "
                         "changed it's API or site.") %
                         (login_credentials.ad_network_name,
                             login_credentials.account.key(),
                             login_credentials.ad_network_name))
+                exc_traceback = sys.exc_info()[2]
                 mail.send_mail(sender='olp@mopub.com',
                                # login_credentials.account.user.email
                                to='tiago@mopub.com',
@@ -189,6 +191,7 @@ def update_ad_networks(start_date = None, end_date = None):
                 continue
 
             for stats in stats_list:
+                aggregate.found += 1
 
                 # Add the current day to the db.
 
@@ -216,8 +219,9 @@ def update_ad_networks(start_date = None, end_date = None):
                                           ad_network_name))
                         continue
                     else:
+                        aggregate.mapped += 1
                         logging.info("%(account)s has pub id %(pub_id)s on "
-                                "%(ad_network)s that was FOUND in MoPub" %
+                                "%(ad_network)s that was FOUND in MoPub and mapped" %
                                      dict(account = login_credentials.account.
                                          key(),
                                           pub_id = stats.app_tag,
@@ -230,6 +234,7 @@ def update_ad_networks(start_date = None, end_date = None):
                                 pub_id = stats.app_tag,
                                 ad_network = login_credentials.ad_network_name))
 
+                aggregate.updated += 1
                 AdNetworkScrapeStats(ad_network_app_mapper =
                         ad_network_app_mapper,
                         date = test_date,
@@ -249,6 +254,7 @@ def update_ad_networks(start_date = None, end_date = None):
                         email_account = True
             previous_account_key = account_key
 
+        aggregate.put()
         if email_account:
             send_stats_mail(login_credentials.account, manager, test_date, valid_stats_list)
 

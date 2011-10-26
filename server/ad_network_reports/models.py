@@ -7,9 +7,9 @@ from account.models import Account
 from publisher.models import App
 
 class AdNetworkLoginInfo(db.Model): #(account,ad_network_name)
-    account = db.ReferenceProperty(Account, required = True,
+    account = db.ReferenceProperty(Account, required=True,
             collection_name='login_credentials')
-    ad_network_name = db.StringProperty(required = True)
+    ad_network_name = db.StringProperty(required=True)
 
     # needed for all networks but mobfox
     username = db.StringProperty()
@@ -32,15 +32,15 @@ class AdNetworkLoginInfo(db.Model): #(account,ad_network_name)
         return self.get_by_key_name('k:%s:%s' % (account.key(), network))
 
 class AdNetworkAppMapper(db.Model): #(ad_network_name,publisher_id)
-    ad_network_name = db.StringProperty(required = True)
-    publisher_id = db.StringProperty(required = True)
+    ad_network_name = db.StringProperty(required=True)
+    publisher_id = db.StringProperty(required=True)
 
     ad_network_login = db.ReferenceProperty(AdNetworkLoginInfo,
             collection_name='ad_network_app_mappers')
-    application = db.ReferenceProperty(App, collection_name =
+    application = db.ReferenceProperty(App, collection_name=
             'ad_network_app_mappers')
 
-    send_email = db.BooleanProperty(default = False)
+    send_email = db.BooleanProperty(default=False)
 
     def __init__(self, *args, **kwargs):
         if not kwargs.get('key', None):
@@ -49,9 +49,9 @@ class AdNetworkAppMapper(db.Model): #(ad_network_name,publisher_id)
         super(AdNetworkAppMapper, self).__init__(*args, **kwargs)
 
 class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
-    ad_network_app_mapper = db.ReferenceProperty(AdNetworkAppMapper, required =
+    ad_network_app_mapper = db.ReferenceProperty(AdNetworkAppMapper, required=
             True, collection_name='ad_network_stats')
-    date = db.DateProperty(required = True)
+    date = db.DateProperty(required=True)
 
     # stats info for a specific day
     revenue = db.FloatProperty()
@@ -69,3 +69,15 @@ class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
                     strftime('%Y-%m-%d')))
         super(AdNetworkScrapeStats, self).__init__(*args, **kwargs)
 
+class AdNetworkAggregate(db.Model): #(date)
+    date = db.DateProperty(required=True)
+
+    found = db.IntegerProperty(default=0)
+    updated = db.IntegerProperty(default=0)
+    mapped = db.IntegerProperty(default=0)
+    failed = db.IntegerProperty(default=0)
+
+    def __init__(self, *args, **kwargs):
+        if not kwargs.get('key', None):
+            kwargs['key_name'] = ('k:%s' % kwargs['date'].strftime('%Y-%m-%d'))
+        super(AdNetworkAggregate, self).__init__(*args, **kwargs)

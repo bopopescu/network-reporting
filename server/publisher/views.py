@@ -243,8 +243,14 @@ class AppCreateHandler(RequestHandler):
 
             AdUnitQueryManager.put(adunit)
 
+            # create marketplace adgroup for this adunit
             mpx_adgroup = AdGroupQueryManager.get_marketplace_adgroup(adunit.key(), self.account.key())
             AdGroupQueryManager.put(mpx_adgroup)
+
+            # create appropriate marketplace creative for this adunit / adgroup (same key_name)
+            mpx_creative = mpx_adgroup.default_creative(key_name=mpx_adgroup.key().name())
+            mpx_creative.adgroup = mpx_adgroup
+            CreativeQueryManager.put(mpx_creative)
 
             # Check if this is the first ad unit for this account
             if len(AdUnitQueryManager.get_adunits(account=self.account,limit=2)) == 1:
@@ -254,6 +260,8 @@ class AppCreateHandler(RequestHandler):
             if self.account.status == "new":
                 self.account.status = "step4"  # skip to step 4 (add campaigns), but show step 2 (integrate)
                 AccountQueryManager.put_accounts(self.account)
+
+                # create the marketplace account for the first time
                 mpx = CampaignQueryManager.get_marketplace(self.account)
                 mpx.active = False
                 CampaignQueryManager.put(mpx)

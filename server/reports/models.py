@@ -671,7 +671,7 @@ class Report(db.Model):
             crtv = dimkey_to_obj[key_tuple]
             adgroup = crtv.adgroup
             try:
-                if adgroup.campaign.campaign_type == 'network':
+                if adgroup.campaign.campaign_type in ('network', 'marketplace', 'backfill_marketplace'):
                     return None, None
                 else:
                     return (adgroup.bid_strategy, adgroup.bid)

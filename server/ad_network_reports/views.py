@@ -107,10 +107,11 @@ class AddLoginInfoHandler(RequestHandler):
 #
 #        officejerk_app = App(account = self.account, name = "Office Jerk", network_config = officejerk_network_config)
 #        officejerk_app.put()
-#        if account_key:
-#            account = Account.get(account)
-#        else:
-#            account = self.account
+
+        if account_key:
+            account = Account.get(account)
+        else:
+            account = self.account
 
         forms = []
         for name in AD_NETWORK_NAMES:
@@ -138,7 +139,7 @@ class AddLoginInfoHandler(RequestHandler):
 
         Return a redirect to the ad nework report index.
         """
-        logging.warning("Trying to create login info")
+        logging.warning("Trying to create login info and mappers")
 
         initial = {}
         for network in AD_NETWORK_NAMES:

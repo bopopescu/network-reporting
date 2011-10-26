@@ -199,7 +199,7 @@ class CreativeService(RequestHandler):
     """
     API Service for delivering serialized Creative data
     """
-    def get(self):
+    def get(self, creative_key=None):
         return JSONResponse({'error':'No parameters provided'})
 
     def post(self):
@@ -217,6 +217,25 @@ def creative_service(request, *args, **kwargs):
     return CreativeService()(request, *args, **kwargs)
 
 
+class DspService(RequestHandler):
+    """
+    API Service for delivering serialized Dsp data
+    """
+    def get(self, dsp_key=None):
+        return JSONResponse({'error':'No parameters provided'})
 
+    def post(self):
+        pass
+
+    def put(self):
+        pass
+
+    def delete(self):
+        pass
+
+
+@login_required
+def dsp_service(request, *args, **kwargs):
+    return DspService()(request, *args, **kwargs)
 
 

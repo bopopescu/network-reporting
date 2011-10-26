@@ -157,7 +157,7 @@ CLONE_REP_KEY = 'report:%(d1)s:%(d2)s:%(d3)s:%(account)s:%(start)s:%(end)s:%(clo
 MAX_OBJECTS = 200
 
 
-MPX_BIDDER_IDS = [
+MPX_DSP_IDS = [
     '4e45baaddadbc70de9000002', # AdSymptotic
     '4e8d03fb71729f4a1d000000', # MdotM
     '4e4d8fb01e368b22f0000000', # TapEngage

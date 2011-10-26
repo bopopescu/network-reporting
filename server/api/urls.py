@@ -17,4 +17,7 @@ urlpatterns = patterns(
 
     url(r'^creative/$', 'creative_service', name='creative_service'),
     url(r'^creative/(?P<creative_key>[-\w\.]+)$', 'creative_service', name='creative_service'),
+
+    url(r'^dsp/$', 'dsp_service', name='dsp_service'),
+    url(r'^dsp/(?P<dsp_key>[-\w\.]+)$', 'dsp_service', name='dsp_service'),
 )

@@ -47,6 +47,8 @@ from reporting.query_managers import StatsModelQueryManager
 from budget import budget_service
 from budget.models import BudgetSlicer
 
+from common.constants import MPX_DSP_IDS
+
 from django.views.decorators.cache import cache_page
 
 from ad_server.optimizer.optimizer import DEFAULT_CTR
@@ -459,7 +461,7 @@ class CreateCampaignAJAXHander(RequestHandler):
                             if app_key_identifier[0] == str(app.key()):
                                 app_network_config_data[app_key_identifier[1]] = value
 
-                        logging.warning("link" + unicode(app.name) + " " + str(app_network_config_data))
+                        # logging.warning("link" + unicode(app.name) + " " + str(app_network_config_data))
                         app_form = NetworkConfigForm(data=app_network_config_data, instance=app.network_config)
                         app_network_config = app_form.save(commit=False)
                         AppQueryManager.update_config_and_put(app, app_network_config)
@@ -1091,8 +1093,7 @@ class AJAXStatsHandler(RequestHandler):
 
                     summed_stats.status = filters.campaign_status(adgroup)
 
-                    logging.warn(adgroup.running)
-                    logging.warn(adgroup.campaign.budget)
+
                     if adgroup.running and adgroup.campaign.budget:
                         summed_stats.on_schedule = str(budget_service.get_osi(adgroup.campaign) * 100)
                     else:
@@ -1199,7 +1200,6 @@ class MarketplaceIndexHandler(RequestHandler):
             end_date = datetime.date.today()
 
         if self.date_range:
-            logging.warn(self.date_range)
             start_date = end_date - datetime.timedelta(int(self.date_range))
         else:
             start_date = end_date - datetime.timedelta(14)
@@ -1209,7 +1209,7 @@ class MarketplaceIndexHandler(RequestHandler):
         top_level_mpx_stats = stats_fetcher.get_account_stats(start_date, end_date)
 
 
-        dsps = stats_fetcher.get_all_dsp_stats(start_date, end_date)
+        # dsps = stats_fetcher.get_all_dsp_stats(start_date, end_date)
 
 
         # Get total stats for the rollup/table footer
@@ -1221,12 +1221,12 @@ class MarketplaceIndexHandler(RequestHandler):
             'pub_rev': 0
         }
 
-        for dsp in dsps:
-            creative_totals['imp'] += dsp['stats']['imp']
-            creative_totals['clk'] += dsp['stats']['clk']
-            creative_totals['ctr'] += dsp['stats']['ctr']
-            creative_totals['ecpm'] += dsp['stats']['ecpm']
-            creative_totals['pub_rev'] += dsp['stats']['pub_rev']
+        # for dsp in dsps:
+        #     creative_totals['imp'] += dsp['stats']['imp']
+        #     creative_totals['clk'] += dsp['stats']['clk']
+        #     creative_totals['ctr'] += dsp['stats']['ctr']
+        #     creative_totals['ecpm'] += dsp['stats']['ecpm']
+        #     creative_totals['pub_rev'] += dsp['stats']['pub_rev']
 
         # Set up the blocklist
         blocklist = []
@@ -1234,21 +1234,25 @@ class MarketplaceIndexHandler(RequestHandler):
         if network_config:
             blocklist = network_config.blocklist
 
-        for dsp in dsps:
-            creatives = stats_fetcher.get_creatives_for_dsp(dsp['key'], start_date, end_date)
-            for creative in creatives:
-                creative['creative']['advertiser_blocked'] = creative['creative']['ad_dmn'] in blocklist
-            dsp.update({'creatives': creatives})
+        # for dsp in dsps:
+        #     creatives = stats_fetcher.get_creatives_for_dsp(dsp['key'], start_date, end_date)
+        #     for creative in creatives:
+        #         creative['creative']['advertiser_blocked'] = creative['creative']['ad_dmn'] in blocklist
+        #     dsp.update({'creatives': creatives})
 
 
+        dsps =  simplejson.dumps([str(dsp_key) for dsp_key in MPX_DSP_IDS])
+
+        logging.warn("\n\n\n\n\n\n\n\n\n\n\n")
+        logging.warn(dsps)
 
         return render_to_response(self.request,
                                   "advertiser/marketplace_index.html",
                                   {
                                       'marketplace': marketplace_campaign,
                                       'app_keys': app_keys,
-                                      'dsps': dsps,
-                                      'top_level_mpx_stats': top_level_mpx_stats,
+                                      'dsp_keys': dsps,
+                                      # 'top_level_mpx_stats': top_level_mpx_stats,
                                       'blocklist': blocklist,
                                       'creative_totals': creative_totals,
                                       'date_range': self.date_range

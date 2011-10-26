@@ -265,7 +265,9 @@
   <script type="text/javascript">
     $(document).ready(function() {
         var app_keys = {{ app_keys|safe }};
+        var dsp_keys = {{ dsp_keys|safe }};
         Marketplace.fetchAllApps(app_keys);
+        Marketplace.fetchAllCreatives(dsp_keys);
 
         $(".lightswitch").lightswitch(Marketplace.turnOn, Marketplace.turnOff);
 

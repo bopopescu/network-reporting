@@ -101,7 +101,7 @@
             domain_blocked: false
         },
         url: function() {
-            return '/api/creative/' + this.id;
+            return '/api/creative/' +this.id;
         }
     });
 
@@ -111,7 +111,7 @@
     var CreativeCollection = Backbone.Collection.extend({
         model: Creative,
         url: function () {
-            return '/api/creatives/' + this.dsp_key;
+            return '/api/dsp/' + this.dsp_key;
         }
     });
 
@@ -143,7 +143,20 @@
     /*
      * ## CreativeView
      */
+    var CreativeView = Backbone.View.extend({
+        initialize: function() {
+            this.template = _.template($("#creative-row-template").html());
+        },
 
+        render: function () {
+            var renderedContent = $(this.template(this.model.toJSON()));
+
+            // Here: attach event handlers for stuff in the creative table row
+
+            $("tbody", this.el).append(renderedContent);
+            return this;
+        }
+    });
 
 
     /*
@@ -287,20 +300,27 @@
             return app_id;
         },
 
-        fetchCreatives: function(dsp_keys) {
+        /*
+         * Helper method for bootstrapping the creative performance table.
+         * Call this method by passing in a list of DSP Keys (see common/constants)
+         * and this will load collections of creatives for each dsp.
+         */
+        fetchAllCreatives: function(dsp_keys) {
             _.each(dsp_keys, function(dsp_key) {
 
+                // Make creative collections for each dsp
                 var creative_collection = new CreativeCollection();
                 creative_collection.dsp_key = dsp_key;
 
+                // Render all of the creatives on fetch
                 creative_collection.bind('reset', function(creatives) {
                     _.each(creatives.models, function (creative) {
                         var creative_view = new CreativeView({model: creative, el: "table#creatives"});
                         creative_view.render();
                     });
-
                 });
 
+                // Fetch the creatives and sort the table (might need to take out the success function)
                 creative_collection.fetch({
                     success: function(){
                         $('table#creatives').trigger('update');

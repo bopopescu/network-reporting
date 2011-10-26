@@ -120,21 +120,56 @@
   <div class="active tab-section" id="performance">
 
 
-    <table class="zebra-striped simpletable" id="marketplace_stats">
+    <table class="zebra-striped simpletable" id="marketplace_stats" width="100%">
 
       <thead>
-        <th>App</th>
-        <th width="70">Revenue</th>
-        <th width="70">eCPM</th>
-        {# <th>Attempts</th> #}
-        <th width="100">Impressions</th>
-        {# <th>Fill Rate</th> #}
-        <th width="70">Clicks</th>
-        <th width="70">CTR</th>
-        <th width="120">Price Floor</th>
+        <tr class="cmpaignData" style="border:none;">
+          <th width="50"></th>
+          <th>App</th>
+          <th width="70" style="text-align: right";>Revenue</th>
+          <th width="70" style="text-align: right";>eCPM</th>
+          {# <th>Attempts</th> #}
+          <th width="90" style="text-align: right";>Impressions</th>
+          {# <th>Fill Rate</th> #}
+          <th width="70" style="text-align: right";>Clicks</th>
+          <th width="70" style="text-align: right";>CTR</th>
+          <th width="130" style="text-align: right";>Price Floor</th>
+        </tr>
       </thead>
 
-      <tbody> </tbody>
+      <tbody>
+        {% for app in apps %}
+        <tr class="app-row" id="app-{{ app.key }}" style="border:none;">
+          <td class="icon">
+            <img src="{{ app.icon_url }}" alt="Icon" width="45" height="45" class="app-icon" />
+          </td>
+          <td class="name">
+            <a href="{% url publisher_app_show app.key %}" style="display:inline-block; max-width:175px;">{{ app.name }}</a>
+            <span class="muted unbold"> ( {{ app.app_type_text }}) </span>
+            <br />
+            <a href="#{{ app.key }}" class="adunits" id="{{app.key}}"> Show Adunits </a>
+          </td>
+          <td class="revenue" style="text-align: right;">
+            --
+          </td>
+          <td class="ecpm" style="text-align: right;">
+            --
+          </td>
+          <td class="impressions" style="text-align: right;">
+            --
+          </td>
+          <td class="clicks" style="text-align: right;">
+            --
+          </td>
+          <td class="ctr" style="text-align: right;">
+            --
+          </td>
+          <td class="price_floor" width="130" style="text-align: right">
+            --
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
 
     </table>
 
@@ -143,34 +178,6 @@
 
   <div class="tab-section" id="controls">
 
-    {% comment %}
-    <div class="rollup fig3">
-      <div class="data-figure">
-        <div class="figure">
-          {{ creative_totals.imp|withsep }}
-        </div>
-        <div class="label">
-          Impressions
-        </div>
-      </div>
-      <div class="data-figure">
-        <div class="figure">
-          {{ creative_totals.clk|withsep }}
-        </div>
-        <div class="label">
-          Clicks
-        </div>
-      </div>
-      <div class="data-figure">
-        <div class="figure">
-          {{ creative_totals.pub_rev|currency|withsep }}
-        </div>
-        <div class="label">
-          Revenue
-        </div>
-      </div>
-    </div>
-    {% endcomment %}
 
     <table class="{#zebra-striped sortable simpletable#}" id="report-table" width="100%">
       <thead>
@@ -255,9 +262,9 @@
       <div class="clearfix" style="width: 560px;">
         <div id="current_blocklist" class="right">
           <h3> Currently Blocked </h3>
-          {% for url in blocklist %}
-            {{url}}
-            <a href="{% url remove_blocklist_handler url %}">Remove</a>
+          {% for domain in blocklist %}
+            {{domain}}
+            <a href="{% url remove_blocklist_handler url=domain %}">Remove</a>
             <br />
           {% empty %}
             There are no blocked advertisers
@@ -310,38 +317,52 @@
   <script type="text/javascript">
     $(document).ready(function() {
       var app_keys = {{ app_keys|safe }};
-      Marketplace.fetchAllApps(app_keys);
+      Marketplace.fetchAppStats(app_keys);
 
-      table = $("#report-table").dataTable({
-        "bProcessing": true,
-        "bJQueryUI": true,
-        "sPaginationType": "full_numbers",
-        "aoColumns":[
-          {"sWidth": "360px"},
-          {"sWidth": "180px"},
-          {"sWidth": "120px"},
-          {"sWidth": "80px"},
-          {"sWidth": "80px"}
-          //{"sWidth": "80px"},
-          //{"sWidth": "80px"},
-        ],
-        "bAutoWidth":false,
-        "sAjaxSource": "/api/creatives/",
-        "fnRowCallback": function(nRow, aData, iDisplayIndex) {
-          $("td:eq(0)", nRow).html("<iframe width='320px' height='50px' src='" + aData[0] + "'></iframe>");
-//          $("td:eq(1)", nRow).html("<iframe width='320px' height='50px' src='" + aData[0] + "'></iframe>");
-          $("td:eq(2)", nRow).addClass("numeric");
-          $("td:eq(3)", nRow).addClass("numeric");
-          $("td:eq(4)", nRow).addClass("numeric");
-          return nRow;
-        }
-      });
+      var blocklist = {{ blocklist|safe }};
 
-      $(".lightswitch").lightswitch(Marketplace.turnOn, Marketplace.turnOff);
+
+        table = $("#report-table").dataTable({
+            "bProcessing": true,
+            "bJQueryUI": true,
+            "sPaginationType": "full_numbers",
+            "oLanguage": {
+                "sEmptyTable": "No creatives have been displayed for this time range."
+            },
+            "aoColumns":[
+                {"sWidth": "330px"},
+                {"sWidth": "190px"},
+                {"sWidth": "120px"},
+                {"sWidth": "90px"},
+                {"sWidth": "90px"}
+                //{"sWidth": "80px"},
+                //{"sWidth": "80px"},
+            ],
+            "bAutoWidth":false,
+            "sAjaxSource": "/api/creatives/",
+            "fnRowCallback": function(nRow, aData, iDisplayIndex) {
+                $("td:eq(0)", nRow).html("<iframe width='320px' height='50px' src='" + aData[0] + "'></iframe>");
+
+                var domain = aData[1];
+                if (_.contains(blocklist, domain)) {
+                    $("td:eq(1)", nRow).text(aData[1] + " (Blocked)");
+                } else if (domain !== null) {
+                    $("td:eq(1)", nRow).html(domain);
+                }
+                $("td:eq(2)", nRow).addClass("numeric");
+                $("td:eq(3)", nRow).addClass("numeric");
+                $("td:eq(4)", nRow).addClass("numeric");
+                return nRow;
+            }
+        });
+
+        $(".lightswitch").lightswitch(Marketplace.turnOn, Marketplace.turnOff);
 
     });
   </script>
 {% endblock extraScripts %}
+
 {% block extraCSS %}
 <link rel="stylesheet" href="/css/dt_jui.css?v=7"></link>
 {% endblock extraCSS %}
+

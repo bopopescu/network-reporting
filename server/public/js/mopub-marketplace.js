@@ -131,6 +131,17 @@
             this.template = _.template($('#app-template').html());
         },
 
+        renderInline: function () {
+            console.log(this.model.id);
+            var app_row = $("tr.app-row#app-" + this.model.id, this.el);
+            $(".revenue", app_row).text(this.model.get("revenue"));
+            $(".ecpm", app_row).text(this.model.get("ecpm"));
+            $(".impressions", app_row).text(this.model.get("impressions"));
+            $(".clicks", app_row).text(this.model.get("clicks"));
+            $(".ctr", app_row).text(this.model.get("ctr"));
+            $('a.adunits', app_row).click(showAdUnits);
+            return this;
+        },
         render: function () {
             var renderedContent = $(this.template(this.model.toJSON()));
 
@@ -244,7 +255,20 @@
             });
 
         },
-
+        fetchAppStats: function (app_keys) {
+            _.each(app_keys, function(app_key) {
+                var app = new App({id: app_key});
+                app.bind('change', function(current_app) {
+                    var appView = new AppView({ model: current_app, el: '#marketplace_stats' });
+                    appView.renderInline();
+                });
+                app.fetch({
+                    success: function(){
+                        $('table').trigger('update');
+                    }
+                });
+            });
+        },
         /*
          * Fetches and renders all of the adunits from an app key.
          * Useful for showing adunits when a user has clicked on a

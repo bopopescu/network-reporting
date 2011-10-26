@@ -55,22 +55,28 @@
 }
 
 table.simpletable {
-    @include border-radius(3px);
+//    @include border-radius(3px);
     width: 100%;
     margin-bottom: 10px;
     padding: 0;
     border-collapse: separate;
     *border-collapse: collapse;
-    border: 1px solid #ddd;
+//    border: 1px solid #ddd;
     th, td {
         padding: 10px 10px 9px;
         text-align: left;
     }
     th {
-        padding-top: 9px;
+//        padding-top: 9px;
         vertical-align: middle;
-        border-bottom: 1px solid #ddd;
-        font-size: 16px;
+//        border-bottom: 1px solid #ddd;
+//        font-size: 16px;
+        font-size: 10px;
+        font-weight: 300;
+        text-transform: uppercase;
+        color: #555;
+        //vertical-align: bottom;
+        padding: 0 0 8px 0;
     }
     td {
         vertical-align: top;
@@ -79,10 +85,10 @@ table.simpletable {
         }
     }
     th + th, td + td {
-        border-left: 1px solid #ddd;
+//        border-left: 1px solid #ddd;
     }
     tr + tr td {
-        border-top: 1px solid #ddd;
+//        border-top: 1px solid #ddd;
     }
     tbody tr:first-child td:first-child {
         @include border-radius(4px 0 0 0);
@@ -104,7 +110,9 @@ table.simpletable {
     }
 }
 
-
+.adunit-row.name {
+    padding-left: 50px;
+}
 // ZEBRA-STRIPING
 // --------------
 
@@ -112,16 +120,16 @@ table.simpletable {
 .zebra-striped {
     tbody {
         tr:nth-child(odd) td {
-             background-color: #f9f9f9;
-             @include box-shadow(inset 0px 1px 5px #eee);
+             background-color: #f7f7f7;
+             //@include box-shadow(inset 0px 1px 5px #eee);
         }
         tr:nth-child(even) td {
             background-color: #fff;
-            @include box-shadow(0px 1px 5px #eee);
+            //@include box-shadow(0px 1px 5px #eee);
         }
         tr:hover td {
             background-color: #EBF2F7;
-            @include box-shadow(0px 1px 10px #eee);
+            //@include box-shadow(0px 1px 10px #eee);
             //@include box-shadow(none);
         }
     }

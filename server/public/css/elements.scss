@@ -536,7 +536,7 @@
  * Pure CSS Arrows
  */
 
-@mixin arrow-up($size:20px, $color:#ddd) {
+@mixin arrow-up($size:8px, $color:#ddd) {
         width: 0;
         height: 0;
         border-left: $size solid transparent;
@@ -544,7 +544,7 @@
         border-bottom: $size solid $color;
 }
 
-@mixin arrow-down($size:20px, $color:#ddd) {
+@mixin arrow-down($size:8px, $color:#ddd) {
         width: 0;
         height: 0;
         border-left: $size solid transparent;
@@ -552,7 +552,7 @@
         border-top: $size solid $color;
 }
 
-@mixin arrow-right($size:20px, $color:#ddd) {
+@mixin arrow-right($size:8px, $color:#ddd) {
         width: 0;
         height: 0;
         border-top: $size solid transparent;
@@ -560,7 +560,7 @@
         border-left: $size solid $color;
 }
 
-@mixin arrow-left($size:20px, $color:#ddd) {
+@mixin arrow-left($size:8px, $color:#ddd) {
         width: 0;
         height: 0;
         border-top: $size solid transparent;
